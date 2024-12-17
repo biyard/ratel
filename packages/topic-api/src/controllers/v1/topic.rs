@@ -70,7 +70,7 @@ impl TopicControllerV1 {
 
         Path(id): Path<String>,
         Json(_body): Json<CreateTopicRequest>,
-    ) -> Result<Json<Topic>, DagitError> {
+    ) -> Result<Json<Topic>, ServiceError> {
         Ok(Json(Topic::default()))
     }
 
@@ -79,7 +79,7 @@ impl TopicControllerV1 {
 
         Path(id): Path<String>,
         Json(_body): Json<UpdateTopicRequest>,
-    ) -> Result<(), DagitError> {
+    ) -> Result<(), ServiceError> {
         Ok(())
     }
 
@@ -87,7 +87,7 @@ impl TopicControllerV1 {
         State(ctrl): State<TopicControllerV1>,
 
         Path(id): Path<String>,
-    ) -> Result<Json<Topic>, DagitError> {
+    ) -> Result<Json<Topic>, ServiceError> {
         Ok(Json(Topic::default()))
     }
 
@@ -95,7 +95,7 @@ impl TopicControllerV1 {
         State(ctrl): State<TopicControllerV1>,
 
         Path(id): Path<String>,
-    ) -> Result<(), DagitError> {
+    ) -> Result<(), ServiceError> {
         Ok(())
     }
 
@@ -103,7 +103,7 @@ impl TopicControllerV1 {
         State(ctrl): State<TopicControllerV1>,
 
         Query(pagination): Query<Pagination>,
-    ) -> Result<Json<CommonQueryResponse<Topic>>, DagitError> {
+    ) -> Result<Json<CommonQueryResponse<Topic>>, ServiceError> {
         Ok(Json(CommonQueryResponse::default()))
     }
 }
