@@ -7,4 +7,13 @@ edition.workspace = true
 repository.workspace = true
 
 [dependencies]
-serde = "1.0.216"
+serde.workspace = true
+serde_json = { workspace = true, optional = true }
+by-axum = { workspace = true, optional = true }
+slog = { workspace = true, optional = true }
+easy_dynamodb = { workspace = true, optional = true }
+
+
+[features]
+default = []
+server = ["by-axum", "serde_json", "slog", "easy_dynamodb"]

@@ -1,3 +1,4 @@
+pub mod common_query_response;
 pub mod error;
 
 use serde::{Deserialize, Serialize};

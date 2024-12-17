@@ -154,12 +154,16 @@ EOT
 
 echo "Generating controller"
 cat <<EOT >> $controller
-use by_axum::axum::{
-    extract::{Path, Query},
-    routing::{get, post},
-    Json,
+use by_axum::{
+    axum::{
+        extract::{Path, Query, State},
+        routing::{get, post},
+        Json,
+    },
+    log::root,
 };
-use shared_models::{common_query_response::CommonQueryResponse, errors::DagitError};
+use dto::{common_query_response::CommonQueryResponse, error::ServiceError};
+use slog::o;
 
 #[derive(Clone, Debug)]
 pub struct ${upper_camel_name}ControllerV1 {
@@ -226,7 +230,7 @@ impl ${upper_camel_name}ControllerV1 {
 
         Path(id): Path<String>,
         Json(_body): Json<Create${upper_camel_name}Request>,
-    ) -> Result<Json<${upper_camel_name}>, DagitError> {
+    ) -> Result<Json<${upper_camel_name}>, ServiceError> {
         Ok(Json(${upper_camel_name}::default()))
     }
 
@@ -235,7 +239,7 @@ impl ${upper_camel_name}ControllerV1 {
 
         Path(id): Path<String>,
         Json(_body): Json<Update${upper_camel_name}Request>
-    ) -> Result<(), DagitError> {
+    ) -> Result<(), ServiceError> {
         Ok(())
     }
 
@@ -243,7 +247,7 @@ impl ${upper_camel_name}ControllerV1 {
         State(ctrl): State<${upper_camel_name}ControllerV1>,
 
         Path(id): Path<String>
-    ) -> Result<Json<${upper_camel_name}>, DagitError> {
+    ) -> Result<Json<${upper_camel_name}>, ServiceError> {
         Ok(Json(${upper_camel_name}::default()))
     }
 
@@ -251,7 +255,7 @@ impl ${upper_camel_name}ControllerV1 {
         State(ctrl): State<${upper_camel_name}ControllerV1>,
 
         Path(id): Path<String>,
-    ) -> Result<(), DagitError> {
+    ) -> Result<(), ServiceError> {
         Ok(())
     }
 
@@ -259,7 +263,7 @@ impl ${upper_camel_name}ControllerV1 {
         State(ctrl): State<${upper_camel_name}ControllerV1>,
 
         Query(pagination): Query<Pagination>
-    ) -> Result<Json<CommonQueryResponse<${upper_camel_name}>>, DagitError> {
+    ) -> Result<Json<CommonQueryResponse<${upper_camel_name}>>, ServiceError> {
         Ok(Json(CommonQueryResponse::default()))
     }
 }

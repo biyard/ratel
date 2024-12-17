@@ -1342,7 +1342,10 @@ dependencies = [
 name = "dto"
 version = "0.1.0"
 dependencies = [
+ "by-axum",
  "serde",
+ "serde_json",
+ "slog",
 ]
 
 [[package]]

@@ -1,71 +1,11 @@
 use std::error::Error;
 
-use candid::CandidType;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
+#[repr(u64)]
 pub enum ServiceError {
-    Unknown(String),
-
-    /// Authentication: 100-150
-    UserNotFound(String),
-    UserPasswordNotMatched,
-    UserIdentityGenerationException,
-    UserAlreadyExists(String),
-
-    /// DynamoDB: 500-550
-    DynamoSerializeException(String),
-    DynamoPutItemException(String),
-    DynamoGetItemException(String),
-    DynamoListItemsException(String),
-    DynamoDeleteItemException(String),
-    DynamoCreateItemException(String),
-
-    // S3: 551-600
-    S3PutObejctUriException(String),
-
-    /// ICP Errors: 600-650
-    IcpCanisterCallArgsEncodeException(String),
-    IcpCanisterCallResponseDecodeException(String),
-    IcpCanisterCallException(String),
-
-    // Canister errors
-    UnknownException(String),
-
-    MintingCodeNotFound,
-    MintingException(String),
-
-    // Profile
-    ProfileNotFound,
-
-    // Credit
-    AlreadyRewarded,
-    CreditNotFound,
-
-    AlreadyFollower,
-    AlreadyReporter,
-
-    AddMemberFailed,
-    AddNftFailed,
-
-    // Agit
-    TransferAgitFailed(String),
-    AddAdminFailed(String),
-
-    // Search API
-    CreateIndexFailed(String),
-
-    // Auth
-    ConfirmVerificationException,
-
-    // Collection
-    CollectionNotFound,
-
-    // User
-    NotOwner,
-
-    // Payment
-    NotPaidYet,
+    Unknown(String) = 1000,
 }
 
 impl std::fmt::Display for ServiceError {

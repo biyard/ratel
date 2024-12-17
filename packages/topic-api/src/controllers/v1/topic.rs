@@ -6,6 +6,7 @@ use by_axum::{
     },
     log::root,
 };
+use dto::{common_query_response::CommonQueryResponse, error::ServiceError};
 use slog::o;
 
 #[derive(Clone, Debug)]
