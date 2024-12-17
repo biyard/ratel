@@ -1,5 +1,5 @@
 [workspace]
-members = ["packages/main-ui"]
+members = ["packages/main-ui", "packages/dto"]
 resolver = "2"
 
 [workspace.package]

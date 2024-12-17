@@ -14,7 +14,6 @@ pub fn Header() -> Element {
             LogoWrapper { }
             HeaderTails { }
         }
-
     }
 }
 
