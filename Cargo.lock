@@ -483,6 +483,8 @@ dependencies = [
 [[package]]
 name = "dioxus-aws"
 version = "0.6.12"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f3243ce4a2ec5d1b2394a86d03c4b9c07553cf9fb764b6a3ab214765787f4e80"
 dependencies = [
  "axum",
  "axum-core",

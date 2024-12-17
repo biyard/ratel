@@ -1,0 +1,50 @@
+{
+  "vpc-provider:account=385474633683:filter.vpc-id=vpc-09711909b78dd3e84:region=ap-northeast-2:returnAsymmetricSubnets=true": {
+    "vpcId": "vpc-09711909b78dd3e84",
+    "vpcCidrBlock": "10.1.64.0/20",
+    "ownerAccountId": "385474633683",
+    "availabilityZones": [],
+    "subnetGroups": [
+      {
+        "name": "Public",
+        "type": "Public",
+        "subnets": [
+          {
+            "subnetId": "subnet-01460bea8681f4062",
+            "cidr": "10.1.64.0/24",
+            "availabilityZone": "ap-northeast-2a",
+            "routeTableId": "rtb-0ae0cbafe23d37cd8"
+          },
+          {
+            "subnetId": "subnet-090534600a2eef7e0",
+            "cidr": "10.1.65.0/24",
+            "availabilityZone": "ap-northeast-2b",
+            "routeTableId": "rtb-0ae0cbafe23d37cd8"
+          }
+        ]
+      },
+      {
+        "name": "Private",
+        "type": "Private",
+        "subnets": [
+          {
+            "subnetId": "subnet-0d30412b35cdfaaf7",
+            "cidr": "10.1.72.0/24",
+            "availabilityZone": "ap-northeast-2a",
+            "routeTableId": "rtb-0552c1aaec22bdd7c"
+          },
+          {
+            "subnetId": "subnet-074cf60681762abc2",
+            "cidr": "10.1.73.0/24",
+            "availabilityZone": "ap-northeast-2b",
+            "routeTableId": "rtb-06802638c3f80d2bf"
+          }
+        ]
+      }
+    ]
+  },
+  "hosted-zone:account=385474633683:domainName=democrasee.me:region=ap-northeast-2": {
+    "Id": "/hostedzone/Z098010930NQH8SSWXM4A",
+    "Name": "democrasee.me."
+  }
+}

@@ -20,6 +20,7 @@ ifeq ("$(ENV)","dev")
 endif
 
 REDIRECT_URI ?= http://localhost:3000
+WORKSPACE_ROOT ?= ../..
 
 BUILD_ENV ?= ENV=$(ENV) VERSION=$(VERSION) COMMIT=$(COMMIT) LOG_LEVEL=$(LOG_LEVEL) ENV=$(ENV) DOMAIN=${DOMAIN} AWS_REGION=${REGION} AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY} SERVICE=$(SERVICE) WORKSPACE_ROOT=$(WORKSPACE_ROOT) BASE_URL=$(BASE_URL) API_ENDPOINT=$(API_ENDPOINT) REDIRECT_URI=$(REDIRECT_URI)
 
@@ -31,8 +32,19 @@ setup.tool:
 run: public/tailwind.css
 	$(BUILD_ENV) dx serve --addr 0.0.0.0 --platform web
 
-build-lambda: public/tailwind.css
+serve:
+	$(BUILD_ENV) dx serve --release --fullstack --client-features web-release
+
+build: public/tailwind.css
 	$(BUILD_ENV) dx build --release --fullstack --client-features web-release --server-features lambda
+	cp -r $(WORKSPACE_ROOT)/target/dx/$(SERVICE)/release/web $(ARTIFACT_DIR)
+	mv $(ARTIFACT_DIR)/server $(ARTIFACT_DIR)/bootstrap
 
 public/tailwind.css:
 	tailwindcss -i ./public/input.css -o ./public/tailwind.css --minify
+
+clean:
+	rm -rf public/tailwind.css
+
+build-docker: clean public/tailwind.css
+	docker run -it --rm --name $(SERVICE) -v $(PWD)/../..:/app -w /app/packages/$(SERVICE) biyard/dioxus-docker bash -c 'source ~/.cargo/env && $(BUILD_ENV) dx build --release --fullstack --client-features web-release --server-features lambda && cp -r /app/target/dx/$(SERVICE)/release/web /app/.build/$(SERVICE) && mv /app/.build/$(SERVICE)/server /app/.build/$(SERVICE)/bootstrap'
