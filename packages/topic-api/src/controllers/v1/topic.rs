@@ -61,49 +61,49 @@ impl TopicControllerV1 {
                     .delete(Self::delete_topic)
                     .put(Self::update_topic),
             )
-            .with_state(ctrl)
+            .with_state(ctrl.clone())
             .route("/", get(Self::list_topic))
             .with_state(ctrl))
     }
 
     pub async fn create_topic(
-        State(ctrl): State<TopicControllerV1>,
+        State(_ctrl): State<TopicControllerV1>,
 
-        Path(id): Path<String>,
+        Path(_id): Path<String>,
         Json(_body): Json<CreateTopicRequest>,
     ) -> Result<Json<Topic>, ServiceError> {
         Ok(Json(Topic::default()))
     }
 
     pub async fn update_topic(
-        State(ctrl): State<TopicControllerV1>,
+        State(_ctrl): State<TopicControllerV1>,
 
-        Path(id): Path<String>,
+        Path(_id): Path<String>,
         Json(_body): Json<UpdateTopicRequest>,
     ) -> Result<(), ServiceError> {
         Ok(())
     }
 
     pub async fn get_topic(
-        State(ctrl): State<TopicControllerV1>,
+        State(_ctrl): State<TopicControllerV1>,
 
-        Path(id): Path<String>,
+        Path(_id): Path<String>,
     ) -> Result<Json<Topic>, ServiceError> {
         Ok(Json(Topic::default()))
     }
 
     pub async fn delete_topic(
-        State(ctrl): State<TopicControllerV1>,
+        State(_ctrl): State<TopicControllerV1>,
 
-        Path(id): Path<String>,
+        Path(_id): Path<String>,
     ) -> Result<(), ServiceError> {
         Ok(())
     }
 
     pub async fn list_topic(
-        State(ctrl): State<TopicControllerV1>,
+        State(_ctrl): State<TopicControllerV1>,
 
-        Query(pagination): Query<Pagination>,
+        Query(_pagination): Query<Pagination>,
     ) -> Result<Json<CommonQueryResponse<Topic>>, ServiceError> {
         Ok(Json(CommonQueryResponse::default()))
     }
