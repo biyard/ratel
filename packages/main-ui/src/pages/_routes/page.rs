@@ -1,7 +1,8 @@
+#![allow(non_snake_case)]
 use dioxus::prelude::*;
 
 #[component]
-pub fn not_found_page(route: Vec<String>) -> Element {
+pub fn NotFoundPage(route: Vec<String>) -> Element {
     rsx! {
         div {
             // Header {}

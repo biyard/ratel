@@ -8,15 +8,15 @@ use dioxus::prelude::*;
 #[rustfmt::skip]
 pub enum Route {
     #[nest("/:lang")]
-    #[layout(root_layout)]
+    #[layout(RootLayout)]
     #[route("/")]
-    home_page { lang: Language },
+    HomePage { lang: Language },
     #[end_layout]
     #[end_nest]
 
-    #[redirect("/", || Route::home_page { lang: Language::default() })]
+    #[redirect("/", || Route::HomePage { lang: Language::default() })]
     #[route("/:..route")]
-    not_found_page { route: Vec<String> },
+    NotFoundPage { route: Vec<String> },
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq, Eq, Copy)]

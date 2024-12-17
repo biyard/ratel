@@ -1,10 +1,13 @@
+pub mod components;
 pub mod config;
 pub mod layouts;
 pub mod pages;
 pub mod route;
+pub mod theme;
 
 use dioxus::prelude::*;
 use route::Route;
+use theme::Theme;
 
 fn main() {
     let conf = config::get();
@@ -14,6 +17,8 @@ fn main() {
 }
 
 fn app() -> Element {
+    Theme::init();
+
     rsx! {
         head {
             title {""}
