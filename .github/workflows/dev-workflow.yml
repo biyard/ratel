@@ -76,7 +76,7 @@ jobs:
           ENABLE_LAMBDA: true
         run: |
           npm i -g aws-cdk tailwindcss
-          make deploy-if-needed
+          make deploy-web-if-needed
 
   create-release-pr:
     runs-on: ubuntu-latest

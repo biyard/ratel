@@ -74,16 +74,25 @@ export class CdkStack extends cdk.Stack {
 
     const hostedZoneDomainName = process.env.BASE_DOMAIN || "";
 
-    const zone = route53.HostedZone.fromLookup(this, "HostedZone", {
+    const hostedZone = route53.HostedZone.fromLookup(this, "HostedZone", {
       domainName: hostedZoneDomainName,
     });
+
+    const zone = route53.HostedZone.fromHostedZoneAttributes(
+      this,
+      "zone-attribute",
+      {
+        zoneName: domain,
+        hostedZoneId: hostedZone.hostedZoneId,
+      },
+    );
 
     const certificate = new certificatemanager.DnsValidatedCertificate(
       this,
       "SiteCertificate",
       {
         domainName: domain,
-        hostedZone: zone,
+        hostedZone,
         region: "us-east-1",
       },
     );
