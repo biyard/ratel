@@ -1,0 +1,21 @@
+[workspace]
+members = ["packages/main-ui"]
+resolver = "2"
+
+[workspace.package]
+authors = ["Biyard"]
+description = "Referendum"
+edition = "2021"
+repository = "https://github.com/biyard/referendum"
+
+[profile]
+
+[profile.wasm-dev]
+inherits = "dev"
+opt-level = 1
+
+[profile.server-dev]
+inherits = "dev"
+
+[profile.android-dev]
+inherits = "dev"

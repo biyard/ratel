@@ -1,0 +1,13 @@
+[application]
+name = "main"
+default_platform = "web"
+
+[web.app]
+title = ""
+
+[web.watcher]
+reload_html = true
+watch_path = ["src"]
+
+[web.resource.dev]
+script = []
