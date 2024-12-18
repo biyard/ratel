@@ -6,7 +6,6 @@ use crate::services::topic_api::TopicApi;
 #[derive(Debug, Clone, Copy)]
 pub struct Controller {
     pub topics: Resource<CommonQueryResponse<Topic>>,
-    pub topic_api: TopicApi,
 }
 
 impl Controller {
@@ -21,7 +20,7 @@ impl Controller {
                 }
             }
         })?;
-        let ctrl = Self { topics, topic_api };
+        let ctrl = Self { topics };
         use_context_provider(|| ctrl);
 
         Ok(ctrl)

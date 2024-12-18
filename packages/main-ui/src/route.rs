@@ -1,5 +1,3 @@
-use std::str::FromStr;
-
 use crate::layouts::root_layout::*;
 use crate::pages::*;
 use dioxus::prelude::*;
@@ -31,6 +29,8 @@ impl Default for Language {
     fn default() -> Self {
         #[cfg(feature = "web")]
         {
+            use std::str::FromStr;
+
             let w = web_sys::window().unwrap();
             let loc = w.location().pathname().unwrap_or_default().clone();
             let paths: Vec<_> = loc.split("/").collect();

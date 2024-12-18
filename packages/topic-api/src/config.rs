@@ -13,6 +13,7 @@ impl Default for Config {
 
 static mut CONFIG: Option<Config> = None;
 
+#[allow(static_mut_refs)]
 pub fn get() -> &'static Config {
     unsafe {
         if CONFIG.is_none() {
