@@ -21,7 +21,7 @@ ENABLE_DYNAMO ?= false
 ENABLE_FARGATE ?= false
 ENABLE_LAMBDA ?= true
 ENABLE_OPENSEARCH ?= false
-STACK ?= $(PROJECT)-$(ENV)-stack
+STACK ?= $(PROJECT)-$(SERVICE)-$(ENV)-stack
 
 ifeq ($(ENABLE_DOCKER),true)
 	DOCKER_COMMAND_SUFFUIX = -docker
