@@ -1,5 +1,6 @@
 #![allow(non_snake_case)]
 use dioxus::prelude::*;
+use dto::Topic;
 
 #[component]
 pub fn UpcomingTopics(
