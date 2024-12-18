@@ -9,15 +9,15 @@ REGION ?= $(shell aws configure get region)
 
 ifeq ("$(ENV)","prod")
 	LOG_LEVEL ?= info
-	DOMAIN ?= 
-	REDIRECT_URI = https://dagit.club
+	DOMAIN ?= democrasee.me
+	REDIRECT_URI = https://democrasee.me
 endif
 
 ifeq ("$(ENV)","dev")
-	DOMAIN ?= 
-	REDIRECT_URI = 
+	REDIRECT_URI = https://dev.democrasee.me
 endif
 
+DOMAIN ?= dev.democrasee.me
 LOG_LEVEL ?= debug
 REDIRECT_URI ?= http://localhost:3000
 WORKSPACE_ROOT ?= ../..

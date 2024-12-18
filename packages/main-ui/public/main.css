@@ -1,8 +1,8 @@
 @import url(https://cdn.jsdelivr.net/gh/moonspam/NanumSquare@2.0/nanumsquare.css);
 
 html, body {
-  background: "#2C2E42";
-  font-family: "NanumSquareAc", sans-serif;
+  background: #2C2E42;
+  font-family: NanumSquareAc, sans-serif !important;
 }
 
 @keyframes growWidth {

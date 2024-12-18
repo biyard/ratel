@@ -3,7 +3,7 @@ BASE_DOMAIN ?= democrasee.me
 DOMAIN ?= $(ENV).$(BASE_DOMAIN)
 
 PROJECT ?= $(shell basename `git rev-parse --show-toplevel`)
-SERVICE ?= web
+SERVICE ?= main-ui
 COMMIT ?= $(shell git rev-parse --short HEAD)
 
 ACCESS_KEY_ID ?= $(shell aws configure get aws_access_key_id $(AWS_FLAG))
