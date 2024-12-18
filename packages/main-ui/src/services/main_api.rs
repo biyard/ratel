@@ -12,7 +12,7 @@ impl MainApi {
     pub fn init() {
         let conf = crate::config::get();
         let srv = Self {
-            endpoint: use_signal(|| conf.topic_api_endpoint.clone()),
+            endpoint: use_signal(|| conf.main_api_endpoint.clone()),
         };
         use_context_provider(|| srv);
     }

@@ -4,7 +4,7 @@ use tracing::Level;
 pub struct Config {
     pub env: &'static str,
     pub log_level: Level,
-    pub topic_api_endpoint: String,
+    pub main_api_endpoint: String,
 }
 
 impl Default for Config {
@@ -19,10 +19,10 @@ impl Default for Config {
                 Some("error") => Level::ERROR,
                 _ => Level::INFO,
             },
-            topic_api_endpoint: match option_env!("TOPIC_API_ENDPOINT") {
+            main_api_endpoint: match option_env!("MAIN_API_ENDPOINT") {
                 Some(endpoint) => endpoint.to_string(),
                 None => format!(
-                    "https://topic-api.{}",
+                    "https://api.{}",
                     option_env!("DOMAIN").unwrap_or("dev.democrasee.me")
                 ),
             },
