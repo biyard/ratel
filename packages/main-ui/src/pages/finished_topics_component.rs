@@ -1,5 +1,6 @@
 #![allow(non_snake_case)]
 use dioxus::prelude::*;
+use dto::Topic;
 use num_format::{Locale, ToFormattedString};
 
 use crate::{
@@ -15,6 +16,7 @@ use crate::{
 pub fn FinishedTopics(
     #[props(default ="finished_topics".to_string())] id: String,
     #[props(default ="".to_string())] class: String,
+    _topics: Vec<Topic>,
 ) -> Element {
     rsx! {
         div {

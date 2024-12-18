@@ -28,3 +28,5 @@ run:
 
 build:
 	$(BUILD_ENV) cargo build --release -p $(SERVICE) --features lambda
+	mkdir -p $(WORKSPACE_ROOT)/.build/$(SERVICE)
+	cp $(WORKSPACE_ROOT)/target/release/$(SERVICE) $(WORKSPACE_ROOT)/.build/$(SERVICE)/bootstrap

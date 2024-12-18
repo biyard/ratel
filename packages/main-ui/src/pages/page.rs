@@ -25,9 +25,11 @@ pub fn HomePage(lang: Language) -> Element {
                 class: "w-full flex flex-row items-center justify-center gap-[20px] grid grid-cols-1 md:grid-cols-2",
                 FinishedTopics {
                     class: "col-span-1",
+                    _topics: ctrl.finished_topics(),
                 }
                 UpcomingTopics {
                     class: "col-span-1 bg-white",
+                    _topics: ctrl.upcoming_topics(),
                 }
             }
         }
