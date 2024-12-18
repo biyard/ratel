@@ -15,6 +15,7 @@ slog = "2.7.0"
 by-axum = { version = "0.1.7" }
 easy-dynamodb = "0.1.6"
 dto = { path = "./packages/dto" }
+reqwest = { version = "0.12.5", features = ["blocking", "json"] }
 
 [profile]
 

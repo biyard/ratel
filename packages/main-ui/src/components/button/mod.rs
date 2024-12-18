@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 use dioxus::prelude::*;
 
-use crate::theme::Theme;
+use crate::{components::icons, theme::Theme};
 
 #[component]
 pub fn Button(
@@ -28,6 +28,122 @@ pub fn Button(
                 None => format!("color: {}", color)
             },
             {children}
+        }
+    }
+}
+
+#[component]
+pub fn RoundedYesButton(
+    #[props(default = false)] disabled: bool,
+    onclick: EventHandler<Event<MouseData>>,
+) -> Element {
+    let theme_service: Theme = use_context();
+    let theme = theme_service.get_data();
+    let mut hover = use_signal(|| false);
+
+    let color = if hover() {
+        theme.grey00.as_str()
+    } else {
+        theme.active.as_str()
+    };
+    let bg = if disabled {
+        "rgba(141, 255, 88, 0.05)"
+    } else if hover() {
+        theme.active_true.as_str()
+    } else {
+        "rgba(141, 255, 88, 0.2)"
+    };
+    let border = if hover() {
+        theme.active_true.as_str()
+    } else {
+        "rgba(141, 255, 88, 0.2)"
+    };
+    let border_class = if disabled {
+        "border-[0px]"
+    } else {
+        "border-[1px]"
+    };
+    let icon = if disabled {
+        rsx! {icons::FilledVoteYes{}}
+    } else if hover() {
+        rsx! {icons::FilledVoteYes{ color: theme.grey00.as_str() }}
+    } else {
+        rsx! {icons::OutlinedVoteYes{}}
+    };
+
+    rsx! {
+        div {
+            class: "flex flex-col items-center transition-all justify-center rounded-[100px] {border_class} py-[8px] w-[291px] hover:bg-[{bg}] cursor-pointer",
+            onclick: move |evt| onclick.call(evt),
+            onmouseenter: move |_| hover.set(true),
+            onmouseleave: move |_| hover.set(false),
+            style: "color: {color}; background: {bg}; border-color: {border};",
+            div {
+                class: "flex items-center justify-center gap-[10px]",
+                span {
+                    class: "text-[15px] font-bold",
+                    "찬성"
+                }
+                {icon}
+            }
+        }
+    }
+}
+
+#[component]
+pub fn RoundedNoButton(
+    #[props(default = false)] disabled: bool,
+    onclick: EventHandler<Event<MouseData>>,
+) -> Element {
+    let theme_service: Theme = use_context();
+    let theme = theme_service.get_data();
+    let mut hover = use_signal(|| false);
+
+    let color = if hover() {
+        theme.grey00.as_str()
+    } else {
+        theme.active01.as_str()
+    };
+    let bg = if disabled {
+        "rgba(255, 66, 69, 0.05)"
+    } else if hover() {
+        theme.active01.as_str()
+    } else {
+        "rgba(255, 66, 69, 0.2)"
+    };
+    let border = if hover() {
+        theme.active01.as_str()
+    } else {
+        "rgba(255, 66, 69, 0.2)"
+    };
+    let border_class = if disabled {
+        "border-[0px]"
+    } else {
+        "border-[1px]"
+    };
+    let icon = if disabled {
+        rsx! {icons::FilledVoteNo{}}
+    } else if hover() {
+        rsx! {icons::FilledVoteNo{ color: theme.grey00.as_str() }}
+    } else {
+        rsx! {icons::OutlinedVoteNo{}}
+    };
+
+    rsx! {
+        div {
+            class: "flex flex-col items-center transition-all justify-center rounded-[100px] {border_class} py-[8px] w-[291px] hover:bg-[{bg}] cursor-pointer",
+            onclick: move |evt| onclick.call(evt),
+            onmouseenter: move |_| hover.set(true),
+            onmouseleave: move |_| hover.set(false),
+            style: "color: {color}; background: {bg}; border-color: {border};",
+            div {
+                class: "flex items-center justify-center gap-[10px]",
+                span {
+                    class: "text-[15px] font-bold",
+                    "반대"
+                }
+                {icon}
+            }
         }
     }
 }

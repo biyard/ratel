@@ -35,8 +35,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         None,
     );
 
-    let app = by_axum::new()
-        .nest("/v1/topic", TopicControllerV1::route()?);
+    let app = by_axum::new().nest("/v1/topics", TopicControllerV1::route()?);
 
     let port = option_env!("PORT").unwrap_or("3000");
     let listener = TcpListener::bind(format!("0.0.0.0:{}", port))

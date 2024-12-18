@@ -14,11 +14,11 @@ ifeq ("$(ENV)","prod")
 endif
 
 ifeq ("$(ENV)","dev")
-	LOG_LEVEL ?= debug
 	DOMAIN ?= 
 	REDIRECT_URI = 
 endif
 
+LOG_LEVEL ?= debug
 REDIRECT_URI ?= http://localhost:3000
 WORKSPACE_ROOT ?= ../..
 
@@ -29,11 +29,11 @@ setup.tool:
 	cargo install toml-cli
 	npm i -g tailwindcss
 
-run: public/tailwind.css
+run: clean public/tailwind.css
 	$(BUILD_ENV) dx serve --addr 0.0.0.0 --platform web
 
-serve:
-	$(BUILD_ENV) dx serve --release --fullstack --client-features web-release
+serve: clean public/tailwind.css
+	$(BUILD_ENV) dx serve --fullstack --client-features web-release
 
 build: public/tailwind.css
 	$(BUILD_ENV) dx build --release --fullstack --client-features web-release --server-features lambda

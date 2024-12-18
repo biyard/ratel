@@ -32,6 +32,9 @@ BUILD_CDK_ENV ?= AWS_ACCESS_KEY_ID=$(ACCESS_KEY_ID) AWS_SECRET_ACCESS_KEY=$(SECR
 run:
 	cd packages/$(SERVICE) && make run
 
+serve:
+	cd packages/$(SERVICE) && make serve
+
 clean:
 	rm -rf .build/$(SERVICE)
 

@@ -3,21 +3,25 @@ pub mod config;
 pub mod layouts;
 pub mod pages;
 pub mod route;
+pub mod services;
 pub mod theme;
 
 use dioxus::prelude::*;
 use route::Route;
+use services::topic_api::TopicApi;
 use theme::Theme;
 
 fn main() {
     let conf = config::get();
     dioxus_logger::init(conf.log_level).expect("failed to init logger");
+    tracing::debug!("config: {:?}", conf);
 
     dioxus_aws::launch(app);
 }
 
 fn app() -> Element {
     Theme::init();
+    TopicApi::init();
 
     rsx! {
         head {

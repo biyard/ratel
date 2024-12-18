@@ -3,11 +3,18 @@ pub mod error;
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct VotingTopicResponse {
+#[derive(Debug, Clone, Serialize, Deserialize, Default, Eq, PartialEq)]
+pub struct Topic {
     pub id: String,
+    pub r#type: String,
+    pub created_at: u64,
+    pub updated_at: u64,
+    pub deleted_at: Option<u64>,
+    pub author: String,
+
     pub title: String,
     pub content: String,
+
     // The image URLs of the voting topic
     pub images: Vec<String>,
     pub results: Vec<Vote>,

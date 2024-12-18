@@ -1,3 +1,4 @@
+#![allow(unused)]
 use by_axum::{
     axum::{
         extract::{Path, Query, State},
@@ -6,7 +7,7 @@ use by_axum::{
     },
     log::root,
 };
-use dto::{common_query_response::CommonQueryResponse, error::ServiceError};
+use dto::{common_query_response::CommonQueryResponse, error::ServiceError, *};
 use slog::o;
 
 #[derive(Clone, Debug)]
@@ -14,38 +15,20 @@ pub struct TopicControllerV1 {
     log: slog::Logger,
 }
 
-// NOTE: if already have other pagination, please remove this and use defined one.
-#[derive(serde::Deserialize)]
+#[derive(Debug, serde::Deserialize)]
 pub struct Pagination {
-    page: usize,
-    size: usize,
-    bookmark: String,
+    size: Option<usize>,
+    bookmark: Option<String>,
 }
 
-#[derive(serde::Deserialize)]
+#[derive(Debug, serde::Deserialize)]
 pub struct CreateTopicRequest {
     name: String,
 }
 
-#[derive(serde::Deserialize)]
+#[derive(Debug, serde::Deserialize)]
 pub struct UpdateTopicRequest {
     name: Option<String>,
-}
-
-// NOTE: This is a real model and recommended to be moved to shared_models
-#[derive(serde::Deserialize, serde::Serialize, Default)]
-pub struct Topic {
-    id: String,
-    r#type: String,
-    created_at: u64,
-    updated_at: u64,
-    deleted_at: Option<u64>,
-
-    name: Option<String>,
-
-    // Indexes, if deleted_at is set, all values of indexes must be empty.
-    gsi1: String,
-    gsi2: String,
 }
 
 impl TopicControllerV1 {
@@ -62,49 +45,128 @@ impl TopicControllerV1 {
                     .put(Self::update_topic),
             )
             .with_state(ctrl.clone())
-            .route("/", get(Self::list_topic))
+            .route("/", get(Self::list_topics))
             .with_state(ctrl))
     }
 
     pub async fn create_topic(
-        State(_ctrl): State<TopicControllerV1>,
+        State(ctrl): State<TopicControllerV1>,
 
-        Path(_id): Path<String>,
-        Json(_body): Json<CreateTopicRequest>,
+        Path(id): Path<String>,
+        Json(body): Json<CreateTopicRequest>,
     ) -> Result<Json<Topic>, ServiceError> {
+        let log = ctrl.log.new(o!("api" => "create_topic"));
+        slog::debug!(log, "create topic({:?}) {:?}", id, body);
+
         Ok(Json(Topic::default()))
     }
 
     pub async fn update_topic(
-        State(_ctrl): State<TopicControllerV1>,
+        State(ctrl): State<TopicControllerV1>,
 
-        Path(_id): Path<String>,
-        Json(_body): Json<UpdateTopicRequest>,
+        Path(id): Path<String>,
+        Json(body): Json<UpdateTopicRequest>,
     ) -> Result<(), ServiceError> {
+        let log = ctrl.log.new(o!("api" => "update_topic"));
+        slog::debug!(log, "update topic({:?}) {:?}", id, body);
+
         Ok(())
     }
 
     pub async fn get_topic(
-        State(_ctrl): State<TopicControllerV1>,
+        State(ctrl): State<TopicControllerV1>,
 
-        Path(_id): Path<String>,
+        Path(id): Path<String>,
     ) -> Result<Json<Topic>, ServiceError> {
+        let log = ctrl.log.new(o!("api" => "get_topic"));
+        slog::debug!(log, "get topic {:?}", id);
         Ok(Json(Topic::default()))
     }
 
     pub async fn delete_topic(
-        State(_ctrl): State<TopicControllerV1>,
+        State(ctrl): State<TopicControllerV1>,
 
-        Path(_id): Path<String>,
+        Path(id): Path<String>,
     ) -> Result<(), ServiceError> {
+        let log = ctrl.log.new(o!("api" => "delete_topic"));
+        slog::debug!(log, "delete topic {:?}", id);
         Ok(())
     }
 
-    pub async fn list_topic(
-        State(_ctrl): State<TopicControllerV1>,
+    pub async fn list_topics(
+        State(ctrl): State<TopicControllerV1>,
 
-        Query(_pagination): Query<Pagination>,
+        Query(pagination): Query<Pagination>,
     ) -> Result<Json<CommonQueryResponse<Topic>>, ServiceError> {
-        Ok(Json(CommonQueryResponse::default()))
+        let log = ctrl.log.new(o!("api" => "list_topics"));
+        slog::debug!(log, "list topics {:?}", pagination);
+
+        let started_at = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
+        let day = 60 * 60 * 24;
+        let ended_at = started_at + day * 7;
+
+        let ret = CommonQueryResponse {
+            items: vec![
+                Topic {
+                    id: "1".to_string(),
+                    r#type: "type".to_string(),
+                    created_at: 0,
+                    updated_at: 0,
+                    deleted_at: None,
+                    author: "author".to_string(),
+
+                    title: "윤대통령 2차 탄핵안 절차 게시될까?".to_string(),
+                    content: "민주당과 조국혁신당, 개혁신당 등 야 6당이 함께 윤석열 대통령에 대한 두 번째 탄핵소추안을 국회에 제출했습니다.  지난 7일, 국민의힘 의원 대부분이 표결에 불참해 1차 탄핵소추안이 의결정족수 미달로...".to_string(),
+                    images: vec!["https://dev.democrasee.me/images/sample.png".to_string()],
+                    results: vec![Vote::Yes(30), Vote::No(20)],
+                    donations: vec![Donation::Yes(30), Donation::No(20)],
+                    started_at,
+                    ended_at,
+                    voters: 100,
+                    replies: 100,
+                },
+                Topic {
+                    id: "1".to_string(),
+                    r#type: "type".to_string(),
+                    created_at: 0,
+                    updated_at: 0,
+                    deleted_at: None,
+                    author: "author".to_string(),
+
+                    title: "윤대통령 2차 탄핵안 절차 게시될까?".to_string(),
+                    content: "민주당과 조국혁신당, 개혁신당 등 야 6당이 함께 윤석열 대통령에 대한 두 번째 탄핵소추안을 국회에 제출했습니다.  지난 7일, 국민의힘 의원 대부분이 표결에 불참해 1차 탄핵소추안이 의결정족수 미달로...".to_string(),
+                    images: vec!["https://dev.democrasee.me/images/sample.png".to_string()],
+                    results: vec![Vote::Yes(30), Vote::No(20)],
+                    donations: vec![Donation::Yes(30), Donation::No(20)],
+                    started_at,
+                    ended_at,
+                    voters: 100,
+                    replies: 100,
+                },
+                Topic {
+                    id: "1".to_string(),
+                    r#type: "type".to_string(),
+                    created_at: 0,
+                    updated_at: 0,
+                    deleted_at: None,
+                    author: "author".to_string(),
+
+                    title: "윤대통령 2차 탄핵안 절차 게시될까?".to_string(),
+                    content: "민주당과 조국혁신당, 개혁신당 등 야 6당이 함께 윤석열 대통령에 대한 두 번째 탄핵소추안을 국회에 제출했습니다.  지난 7일, 국민의힘 의원 대부분이 표결에 불참해 1차 탄핵소추안이 의결정족수 미달로...".to_string(),
+                    images: vec!["https://dev.democrasee.me/images/sample.png".to_string()],
+                    results: vec![Vote::Yes(30), Vote::No(20)],
+                    donations: vec![Donation::Yes(30), Donation::No(20)],
+                    started_at,
+                    ended_at,
+                    voters: 100,
+                    replies: 100,
+                }
+            ],
+            bookmark: None,
+        };
+        Ok(Json(ret))
     }
 }
