@@ -17,7 +17,7 @@ pub fn RootLayout(lang: Language) -> Element {
             class: "flex flex-col items-center justify-start w-full min-h-[100vh] text-white",
             style: "background: {theme.background}",
             div {
-                class: "max-w-[1440px] grid-cols-[repeat(16,_minmax(0,_1fr))] w-full",
+                class: "max-w-[1440px] w-full",
                 Header {}
             }
             Outlet::<Route> {}

@@ -35,25 +35,27 @@ pub fn Button(
 #[component]
 pub fn RoundedYesButton(
     #[props(default = false)] disabled: bool,
-    onclick: EventHandler<Event<MouseData>>,
+    onclick: Option<EventHandler<Event<MouseData>>>,
+    #[props(default = 100)] rounded: i32,
+    #[props(default = "w-[291px]".to_string())] class: String,
 ) -> Element {
     let theme_service: Theme = use_context();
     let theme = theme_service.get_data();
     let mut hover = use_signal(|| false);
 
-    let color = if hover() {
+    let color = if hover() && onclick.is_some() {
         theme.grey00.as_str()
     } else {
         theme.active.as_str()
     };
     let bg = if disabled {
         "rgba(141, 255, 88, 0.05)"
-    } else if hover() {
+    } else if hover() && onclick.is_some() {
         theme.active_true.as_str()
     } else {
         "rgba(141, 255, 88, 0.2)"
     };
-    let border = if hover() {
+    let border = if hover() && onclick.is_some() {
         theme.active_true.as_str()
     } else {
         "rgba(141, 255, 88, 0.2)"
@@ -65,7 +67,7 @@ pub fn RoundedYesButton(
     };
     let icon = if disabled {
         rsx! {icons::FilledVoteYes{}}
-    } else if hover() {
+    } else if hover() && onclick.is_some() {
         rsx! {icons::FilledVoteYes{ color: theme.grey00.as_str() }}
     } else {
         rsx! {icons::OutlinedVoteYes{}}
@@ -73,8 +75,10 @@ pub fn RoundedYesButton(
 
     rsx! {
         div {
-            class: "flex flex-col items-center transition-all justify-center rounded-[100px] {border_class} py-[8px] w-[291px] hover:bg-[{bg}] cursor-pointer",
-            onclick: move |evt| onclick.call(evt),
+            class: "flex flex-col items-center transition-all justify-center rounded-[{rounded}px] {border_class} py-[8px] {class} hover:bg-[{bg}] cursor-pointer",
+            onclick: move |evt| if onclick.is_some(){
+                onclick.unwrap().call(evt)
+            },
             onmouseenter: move |_| hover.set(true),
             onmouseleave: move |_| hover.set(false),
             style: "color: {color}; background: {bg}; border-color: {border};",
@@ -93,25 +97,27 @@ pub fn RoundedYesButton(
 #[component]
 pub fn RoundedNoButton(
     #[props(default = false)] disabled: bool,
-    onclick: EventHandler<Event<MouseData>>,
+    onclick: Option<EventHandler<Event<MouseData>>>,
+    #[props(default = 100)] rounded: i32,
+    #[props(default = "w-[291px]".to_string())] class: String,
 ) -> Element {
     let theme_service: Theme = use_context();
     let theme = theme_service.get_data();
     let mut hover = use_signal(|| false);
 
-    let color = if hover() {
+    let color = if hover() && onclick.is_some() {
         theme.grey00.as_str()
     } else {
         theme.active01.as_str()
     };
     let bg = if disabled {
         "rgba(255, 66, 69, 0.05)"
-    } else if hover() {
+    } else if hover() && onclick.is_some() {
         theme.active01.as_str()
     } else {
         "rgba(255, 66, 69, 0.2)"
     };
-    let border = if hover() {
+    let border = if hover() && onclick.is_some() {
         theme.active01.as_str()
     } else {
         "rgba(255, 66, 69, 0.2)"
@@ -131,8 +137,10 @@ pub fn RoundedNoButton(
 
     rsx! {
         div {
-            class: "flex flex-col items-center transition-all justify-center rounded-[100px] {border_class} py-[8px] w-[291px] hover:bg-[{bg}] cursor-pointer",
-            onclick: move |evt| onclick.call(evt),
+            class: "flex flex-col items-center transition-all justify-center rounded-[{rounded}px] {border_class} py-[8px] {class} hover:bg-[{bg}] cursor-pointer",
+            onclick: move |evt| if onclick.is_some(){
+                onclick.unwrap().call(evt)
+            },
             onmouseenter: move |_| hover.set(true),
             onmouseleave: move |_| hover.set(false),
             style: "color: {color}; background: {bg}; border-color: {border};",
