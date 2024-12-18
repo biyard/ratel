@@ -1,4 +1,6 @@
 #![allow(unused)]
+use std::str::FromStr;
+
 use by_axum::{
     axum::{
         extract::{Path, Query, State},
@@ -16,9 +18,10 @@ pub struct TopicControllerV1 {
 }
 
 #[derive(Debug, serde::Deserialize)]
-pub struct Pagination {
+pub struct ListTopicsRequest {
     size: Option<usize>,
     bookmark: Option<String>,
+    status: Option<String>,
 }
 
 #[derive(Debug, serde::Deserialize)]
@@ -96,10 +99,10 @@ impl TopicControllerV1 {
     pub async fn list_topics(
         State(ctrl): State<TopicControllerV1>,
 
-        Query(pagination): Query<Pagination>,
+        Query(req): Query<ListTopicsRequest>,
     ) -> Result<Json<CommonQueryResponse<Topic>>, ServiceError> {
         let log = ctrl.log.new(o!("api" => "list_topics"));
-        slog::debug!(log, "list topics {:?}", pagination);
+        slog::debug!(log, "list topics {:?}", req);
 
         let started_at = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
@@ -107,6 +110,8 @@ impl TopicControllerV1 {
             .as_secs();
         let day = 60 * 60 * 24;
         let ended_at = started_at + day * 7;
+        let status = TopicStatus::from_str(&req.status.unwrap_or("ongoing".to_string()))
+            .unwrap_or(TopicStatus::Draft);
 
         let ret = CommonQueryResponse {
             items: vec![
@@ -127,6 +132,7 @@ impl TopicControllerV1 {
                     ended_at,
                     voters: 100,
                     replies: 100,
+                    status: status.clone(),
                 },
                 Topic {
                     id: "1".to_string(),
@@ -145,6 +151,7 @@ impl TopicControllerV1 {
                     ended_at,
                     voters: 100,
                     replies: 100,
+                    status: status.clone(),
                 },
                 Topic {
                     id: "1".to_string(),
@@ -163,6 +170,7 @@ impl TopicControllerV1 {
                     ended_at,
                     voters: 100,
                     replies: 100,
+                    status: status.clone(),
                 }
             ],
             bookmark: None,

@@ -1,6 +1,8 @@
 pub mod common_query_response;
 pub mod error;
 
+use std::{fmt::Display, str::FromStr};
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, Eq, PartialEq)]
@@ -27,6 +29,51 @@ pub struct Topic {
     pub voters: u64,
     // The number of replies
     pub replies: u64,
+    pub status: TopicStatus,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+#[serde(untagged)]
+pub enum TopicStatus {
+    Finished,
+    Ongoing,
+    Scheduled,
+    Cancelled,
+    Draft,
+}
+
+impl Default for TopicStatus {
+    fn default() -> Self {
+        TopicStatus::Draft
+    }
+}
+
+impl Display for TopicStatus {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            TopicStatus::Finished => write!(f, "finished"),
+            TopicStatus::Ongoing => write!(f, "ongoing"),
+            TopicStatus::Scheduled => write!(f, "scheduled"),
+            TopicStatus::Cancelled => write!(f, "cancelled"),
+            TopicStatus::Draft => write!(f, "draft"),
+        }
+    }
+}
+
+impl FromStr for TopicStatus {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "finished" => Ok(TopicStatus::Finished),
+            "ongoing" => Ok(TopicStatus::Ongoing),
+            "scheduled" => Ok(TopicStatus::Scheduled),
+            "cancelled" => Ok(TopicStatus::Cancelled),
+            "draft" => Ok(TopicStatus::Draft),
+            _ => Err(format!("unknown topic status: {}", s)),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]

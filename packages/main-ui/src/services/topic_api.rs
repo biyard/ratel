@@ -1,7 +1,7 @@
 pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
 use dioxus::prelude::*;
-use dto::{common_query_response::CommonQueryResponse, Topic};
+use dto::{common_query_response::CommonQueryResponse, Topic, TopicStatus};
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct TopicApi {
@@ -21,6 +21,7 @@ impl TopicApi {
         &self,
         size: usize,
         bookmark: Option<&str>,
+        status: Option<TopicStatus>,
     ) -> Result<CommonQueryResponse<Topic>> {
         let client = reqwest::Client::builder().build()?;
 
@@ -28,6 +29,10 @@ impl TopicApi {
 
         if let Some(bookmark) = bookmark {
             url.push_str(&format!("&bookmark={}", bookmark));
+        }
+
+        if let Some(status) = status {
+            url.push_str(&format!("&status={}", status));
         }
 
         tracing::debug!("url: {}", url);

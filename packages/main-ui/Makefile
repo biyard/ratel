@@ -29,14 +29,14 @@ setup.tool:
 	cargo install toml-cli
 	npm i -g tailwindcss
 
-run: clean public/tailwind.css
-	$(BUILD_ENV) dx serve --addr 0.0.0.0 --platform web
-
 serve: clean public/tailwind.css
-	$(BUILD_ENV) dx serve --fullstack --client-features web-release
+	$(BUILD_ENV) dx serve --addr 0.0.0.0 --platform web  --client-features web-only
+
+run: clean public/tailwind.css
+	$(BUILD_ENV) dx serve --fullstack
 
 build: public/tailwind.css
-	$(BUILD_ENV) dx build --release --fullstack --client-features web-release --server-features lambda
+	$(BUILD_ENV) dx build --release --fullstack --server-features lambda
 	cp -r $(WORKSPACE_ROOT)/target/dx/$(SERVICE)/release/web $(ARTIFACT_DIR)
 	mv $(ARTIFACT_DIR)/server $(ARTIFACT_DIR)/bootstrap
 
@@ -47,4 +47,4 @@ clean:
 	rm -rf public/tailwind.css
 
 build-docker: clean public/tailwind.css
-	docker run -it --rm --name $(SERVICE) -v $(PWD)/../..:/app -w /app/packages/$(SERVICE) biyard/dioxus-docker bash -c 'source ~/.cargo/env && $(BUILD_ENV) dx build --release --fullstack --client-features web-release --server-features lambda && cp -r /app/target/dx/$(SERVICE)/release/web /app/.build/$(SERVICE) && mv /app/.build/$(SERVICE)/server /app/.build/$(SERVICE)/bootstrap'
+	docker run -it --rm --name $(SERVICE) -v $(PWD)/../..:/app -w /app/packages/$(SERVICE) biyard/dioxus-docker bash -c 'source ~/.cargo/env && $(BUILD_ENV) dx build --release --fullstack --server-features lambda && cp -r /app/target/dx/$(SERVICE)/release/web /app/.build/$(SERVICE) && mv /app/.build/$(SERVICE)/server /app/.build/$(SERVICE)/bootstrap'
