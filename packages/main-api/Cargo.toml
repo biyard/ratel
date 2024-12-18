@@ -1,5 +1,5 @@
 [package]
-name = "topic-api"
+name = "main-api"
 version = "0.2.0"
 authors.workspace = true
 description.workspace = true
