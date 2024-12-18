@@ -80,11 +80,10 @@ pub fn FinishedTopic(
                                 "{title}"
                             }
                         }
-                        // TODO: according to result
                         if accepted {
-                            RoundedYesButton { rounded: 6, class: "w-full" }
+                            RoundedYesButton { rounded: 6, class: "w-full", disabled: true }
                         } else {
-                            RoundedNoButton { rounded: 6, class: "w-full" }
+                            RoundedNoButton { rounded: 6, class: "w-full", disabled: true }
                         }
 
                     }
