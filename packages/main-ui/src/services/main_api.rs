@@ -4,11 +4,11 @@ use dioxus::prelude::*;
 use dto::{common_query_response::CommonQueryResponse, Topic, TopicStatus};
 
 #[derive(Debug, Clone, Copy, Default)]
-pub struct TopicApi {
+pub struct MainApi {
     pub endpoint: Signal<String>,
 }
 
-impl TopicApi {
+impl MainApi {
     pub fn init() {
         let conf = crate::config::get();
         let srv = Self {

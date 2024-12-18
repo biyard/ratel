@@ -1,7 +1,7 @@
 use dioxus_aws::prelude::*;
 use dto::{common_query_response::CommonQueryResponse, Topic, TopicStatus};
 
-use crate::services::topic_api::TopicApi;
+use crate::services::main_api::MainApi;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Controller {
@@ -12,7 +12,7 @@ pub struct Controller {
 
 impl Controller {
     pub fn new() -> Result<Self, RenderError> {
-        let topic_api: TopicApi = use_context();
+        let topic_api: MainApi = use_context();
         let topics = use_server_future(move || async move {
             match topic_api
                 .list_topics(10, None, Some(TopicStatus::Ongoing))

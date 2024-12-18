@@ -9,7 +9,7 @@ pub mod theme;
 use dioxus::prelude::*;
 use dioxus_popup::PopupService;
 use route::Route;
-use services::topic_api::TopicApi;
+use services::main_api::MainApi;
 use theme::Theme;
 
 fn main() {
@@ -22,7 +22,7 @@ fn main() {
 
 fn app() -> Element {
     Theme::init();
-    TopicApi::init();
+    MainApi::init();
     PopupService::init();
 
     rsx! {
