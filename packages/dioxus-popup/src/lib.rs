@@ -71,11 +71,12 @@ pub fn default() -> Element {
 #[component]
 pub fn PopupZone() -> Element {
     let mut popup: PopupService = use_context();
+    let mut hover_close = use_signal(|| false);
 
     rsx! {
         div {
             class: format!("{}", match popup.is_opened() {
-                true => "fixed top-0 left-0 w-screen h-screen bg-black bg-opacity-50 flex justify-center items-center backdrop-blur-[10px] bg-[#21344C]/30 z-[101]",
+                true => "fixed top-0 left-0 w-screen h-screen bg-black bg-opacity-50 flex justify-center items-center backdrop-blur-[4px] bg-black/25 z-[101]",
                 false => "hidden"
             }),
             onclick: move |_| {
@@ -83,56 +84,66 @@ pub fn PopupZone() -> Element {
             },
             if popup.is_opened() {
                 div {
-                    class: "relative bg-white rounded-lg p-[30px] min-w-[350px]",
+                    class: "relative bg-[#424563] rounded-[12px] border-[#292B3C] border-[1px] p-[25px] min-w-[350px]",
                     onclick: move |e| {
                         e.stop_propagation();
                     },
                     div {
-                        class: "absolute top-0 right-0 m-4 cursor-pointer",
+                        class: format!("absolute top-[25px] right-[25px] rounded-[4px] cursor-pointer {}", if hover_close() { "bg-[#2C2E42]" } else { "" }),
                         onclick: move |_| {
                             popup.close();
                         },
-                        CancelIcon {}
+                        onmouseenter: move |_| {
+                            hover_close.set(true);
+                        },
+                        onmouseleave: move |_| {
+                            hover_close.set(false);
+                        },
+                        Close {
+                            color: if hover_close() {
+                                "#74789E"
+                            } else {
+                                "white"
+                            }
+                        }
                     }
-                    {popup.render()}
+                    div {
+                        id: popup.get_id(),
+                        class: "flex flex-col items-center justify-center gap-[25px]",
+                        match popup.get_title() {
+                            Some(title) => {
+                                rsx! {
+                                    div {
+                                        class: "text-[20px] font-bold text-white",
+                                        "{title}"
+                                    }
+                                }
+                            }
+                            None => rsx! {}
+                        }
+                        {popup.render()}
+                    }
                 }
             }
         }
-
     }
 }
 
-#[derive(PartialEq, Props, Clone)]
-pub struct IconProps {
-    #[props(default = "black".to_string())]
-    stroke: String,
-    #[props(default = "none".to_string())]
-    fill: String,
-    #[props(default = "24px".to_string())]
-    width: String,
-    #[props(default = "24px".to_string())]
-    height: String,
-    class: Option<String>,
-}
-
-pub fn CancelIcon(props: IconProps) -> Element {
+#[component]
+pub fn Close(#[props(default = "white".to_string())] color: String) -> Element {
     rsx! {
         svg {
-            width: "{props.width}",
-            height: "{props.height}",
-            "stroke-linecap": "square",
-            "stroke-width": "1",
-            "viewBox": "0 0 24 24",
-            fill: "{props.fill}",
-            "xmlns": "http://www.w3.org/2000/svg",
-            "stroke-linejoin": "miter",
+            width: "24",
+            height: "24",
+            view_box: "0 0 24 24",
+            fill: "none",
+            xmlns: "http://www.w3.org/2000/svg",
             path {
-                "d": "M4.92893219,19.0710678 C1.02368927,15.1658249 1.02368927,8.83417511 4.92893219,4.92893219 C8.83417511,1.02368927 15.1658249,1.02368927 19.0710678,4.92893219 C22.9763107,8.83417511 22.9763107,15.1658249 19.0710678,19.0710678 C15.1658249,22.9763107 8.83417511,22.9763107 4.92893219,19.0710678 Z",
-                stroke: "black"
-            }
-            path {
-                "d": "M15.5355339 15.5355339L8.46446609 8.46446609M15.5355339 8.46446609L8.46446609 15.5355339",
-                stroke: props.stroke
+                d: "M16.9498 7.05029L7.05029 16.9498M7.05029 7.05029L16.9498 16.9498",
+                stroke: "{color}",
+                stroke_width: "2",
+                stroke_linecap: "round",
+                stroke_linejoin: "round",
             }
         }
     }

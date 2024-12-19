@@ -1,8 +1,9 @@
 #![allow(non_snake_case)]
 use dioxus::prelude::*;
+use dioxus_popup::PopupZone;
 
 use crate::{
-    layouts::{header::Header, popup_template::PopupZone},
+    layouts::header::Header,
     route::{Language, Route},
     theme::Theme,
 };

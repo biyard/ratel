@@ -4,6 +4,7 @@ use dioxus_popup::PopupService;
 
 use crate::{
     components::{button::Button, logo::LogoWrapper},
+    layouts::signup_popup::SignupPopup,
     theme::Theme,
 };
 
@@ -37,17 +38,7 @@ pub fn HeaderTails() -> Element {
                 background: "{theme.primary06}",
                 onclick: move |_| {
                     tracing::debug!("회원가입 버튼 클릭");
-                    popup.open(rsx! {
-                        div {
-                            onclick: move |e| {
-                                e.stop_propagation();
-                            },
-                            div {
-                                class: "flex flex-col gap-[20px]",
-                                "테스트"
-                            }
-                        }
-                    }).with_id("signup").with_title("회원가입");
+                    popup.open(rsx! {SignupPopup { class: "w-[400px]" }}).with_id("signup").with_title("회원가입");
                 },
                 "회원가입"
             }

@@ -1,8 +1,6 @@
 #![allow(non_snake_case)]
 use dioxus::prelude::*;
 
-use crate::theme::Theme;
-
 #[component]
 pub fn Close(#[props(default = "white".to_string())] color: String) -> Element {
     rsx! {
