@@ -4,7 +4,7 @@ use dioxus_popup::PopupService;
 
 use crate::{
     components::{button::Button, logo::LogoWrapper},
-    layouts::signup_popup::SignupPopup,
+    layouts::{signup_popup::SignupPopup, user_setup_popup::UserSetupPopup},
     theme::Theme,
 };
 
@@ -38,11 +38,15 @@ pub fn HeaderTails() -> Element {
                 background: "{theme.primary06}",
                 onclick: move |_| {
                     tracing::debug!("회원가입 버튼 클릭");
+                    let mut p = popup.clone();
                     popup.open(rsx! {
                         SignupPopup {
                             class: "w-[400px]",
-                            onclick: |_| {
-                                tracing::debug!("Google로 계속하기 버튼 클릭")
+                            onclick:move  |_| {
+                                tracing::debug!("Google로 계속하기 버튼 클릭");
+                                p.open(rsx!{
+                                    UserSetupPopup {}
+                                }).with_id("user_setup_popup").with_title("계정 생성하기");
                             },
                         }
                     }).with_id("signup").with_title("회원가입");
