@@ -3,6 +3,8 @@ use dioxus::prelude::*;
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct PopupService {
+    pub id: Signal<Option<String>>,
+    pub title: Signal<Option<String>>,
     pub data: Signal<Option<Element>>,
 }
 
@@ -10,6 +12,8 @@ impl PopupService {
     pub fn init() {
         let srv = Self {
             data: Signal::new(None),
+            id: Signal::new(None),
+            title: Signal::new(None),
         };
         use_context_provider(|| srv);
     }
@@ -22,12 +26,36 @@ impl PopupService {
         (self.data)().is_some()
     }
 
-    pub fn open(&mut self, popup: Element) {
+    pub fn get_id(&self) -> String {
+        (self.id)().clone().unwrap_or("popup-zone".to_string())
+    }
+
+    pub fn get_title(&self) -> Option<String> {
+        (self.title)().clone()
+    }
+
+    pub fn open(&mut self, popup: Element) -> &mut Self {
         (self.data).set(Some(popup));
+
+        self
+    }
+
+    pub fn with_id(&mut self, id: &str) -> &mut Self {
+        (self.id).set(Some(id.to_string()));
+
+        self
+    }
+
+    pub fn with_title(&mut self, title: &str) -> &mut Self {
+        (self.title).set(Some(title.to_string()));
+
+        self
     }
 
     pub fn close(&mut self) {
         (self.data).set(None);
+        (self.id).set(None);
+        (self.title).set(None);
     }
 
     pub fn use_popup_service() -> PopupService {

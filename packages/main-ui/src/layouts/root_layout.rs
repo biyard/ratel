@@ -2,7 +2,7 @@
 use dioxus::prelude::*;
 
 use crate::{
-    layouts::header::Header,
+    layouts::{header::Header, popup_template::PopupZone},
     route::{Language, Route},
     theme::Theme,
 };
@@ -25,5 +25,6 @@ pub fn RootLayout(lang: Language) -> Element {
                 Outlet::<Route> {}
             }
         }
+        PopupZone {  }
     }
 }

@@ -1,5 +1,6 @@
 #![allow(non_snake_case)]
 use dioxus::prelude::*;
+use dioxus_popup::PopupService;
 
 use crate::{
     components::{button::Button, logo::LogoWrapper},
@@ -21,6 +22,7 @@ pub fn Header() -> Element {
 pub fn HeaderTails() -> Element {
     let theme_service: Theme = use_context();
     let theme = theme_service.get_data();
+    let mut popup: PopupService = use_context();
 
     rsx! {
         div {
@@ -33,7 +35,20 @@ pub fn HeaderTails() -> Element {
             Button {
                 color: "{theme.primary00}",
                 background: "{theme.primary06}",
-                onclick: move |_| {},
+                onclick: move |_| {
+                    tracing::debug!("회원가입 버튼 클릭");
+                    popup.open(rsx! {
+                        div {
+                            onclick: move |e| {
+                                e.stop_propagation();
+                            },
+                            div {
+                                class: "flex flex-col gap-[20px]",
+                                "테스트"
+                            }
+                        }
+                    }).with_id("signup").with_title("회원가입");
+                },
                 "회원가입"
             }
         }
