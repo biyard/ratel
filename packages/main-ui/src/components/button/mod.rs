@@ -9,6 +9,7 @@ pub fn Button(
     color: Option<String>,
     background: Option<String>,
     onclick: EventHandler<Event<MouseData>>,
+    #[props(default = "".to_string())] class: String,
 ) -> Element {
     let theme_service: Theme = use_context();
     let theme = theme_service.get_data();
@@ -21,13 +22,16 @@ pub fn Button(
 
     rsx! {
         div {
-            class: "{font_theme.bold15} px-[16px] py-[10px] opacity-70 hover:opacity-100 cursor-pointer rounded-[8px]",
-            onclick: move |evt| onclick.call(evt),
-            style: match background {
-                Some(bg) => format!("background-color: {}; color: {}", bg, color),
-                None => format!("color: {}", color)
-            },
-            {children}
+            class: "{class}",
+            div {
+                class: "{font_theme.bold15} px-[16px] py-[10px] opacity-70 hover:opacity-100 cursor-pointer rounded-[8px]",
+                onclick: move |evt| onclick.call(evt),
+                style: match background {
+                    Some(bg) => format!("background-color: {}; color: {}", bg, color),
+                    None => format!("color: {}", color)
+                },
+                {children}
+            }
         }
     }
 }

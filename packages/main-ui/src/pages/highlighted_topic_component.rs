@@ -13,51 +13,62 @@ use crate::{
 };
 
 #[component]
-pub fn HighlightedTopics(topics: Vec<Topic>, onselect: EventHandler<usize>) -> Element {
+pub fn HighlightedTopics(
+    #[props(default ="highlighted_topics".to_string())] id: String,
+    #[props(default ="".to_string())] class: String,
+
+    topics: Vec<Topic>,
+    onselect: EventHandler<usize>,
+) -> Element {
     let mut selected = Signal::new(0);
     let theme: Theme = use_context();
     let theme_data = theme.get_data();
 
     rsx! {
         div {
-            class: "flex flex-col",
-            for (i, topic) in topics.iter().enumerate() {
-                if i == selected() {
-                    HighlightedTopic {
-                        id: topic.id.clone(),
-                        // image: topic.image.clone(),
-                        // title: topic.title.clone(),
-                        // description: topic.description.clone(),
-                        // period: topic.period.clone(),
-                        // donations: topic.donations,
-                        // replies: topic.replies,
-                        // yes: topic.yes,
-                        // no: topic.no,
+            id,
+            class,
+            div {
+                class: "flex flex-col w-full max-w-[1440px]",
+                for (i, topic) in topics.iter().enumerate() {
+                    if i == selected() {
+                        HighlightedTopic {
+                            id: topic.id.clone(),
+                            // image: topic.image.clone(),
+                            // title: topic.title.clone(),
+                            // description: topic.description.clone(),
+                            // period: topic.period.clone(),
+                            // donations: topic.donations,
+                            // replies: topic.replies,
+                            // yes: topic.yes,
+                            // no: topic.no,
+                        }
+                    }
+                }
+
+                div {
+                    class: "flex flex-row w-full items-center justify-center gap-[10px] p-[10px]",
+                    for i in 0..topics.len() {
+                        div {
+                            class: format!(
+                                "h-[8px] transition-all rounded-full cursor-pointer {} bg-[{}] hover:bg-white",
+                                if i == selected() {
+                                    "w-[90px]"
+                                } else {
+                                    "w-[52px] hover:w-[70px]"
+                                },
+                                theme_data.primary06
+                            ),
+                            onclick: move |_| {
+                                tracing::debug!("selected: {}", i);
+                                selected.set(i);
+                                onselect(i);
+                            },
+                        }
                     }
                 }
             }
 
-            div {
-                class: "flex flex-row w-full items-center justify-center gap-[10px] p-[10px]",
-                for i in 0..topics.len() {
-                    div {
-                        class: format!(
-                            "h-[8px] transition-all rounded-full cursor-pointer {} bg-[{}] hover:bg-white",
-                            if i == selected() {
-                                "w-[90px]"
-                            } else {
-                                "w-[52px] hover:w-[70px]"
-                            },
-                            theme_data.primary06
-                        ),
-                        onclick: move |_| {
-                            tracing::debug!("selected: {}", i);
-                            selected.set(i);
-                            onselect(i);
-                        },
-                    }
-                }
-            }
         }
     }
 }
@@ -78,28 +89,36 @@ pub fn HighlightedTopic(
     let theme: Theme = use_context();
     let theme_data = theme.get_data();
 
+    #[allow(unused_mut)]
+    let mut visible = true;
+
+    #[cfg(feature = "web-only")]
+    {
+        let window_size = dioxus_sdk::utils::window::use_window_size();
+        visible = window_size().width > 560;
+    }
+
     rsx! {
         div {
             id,
-            class: "relative w-[1440px] h-[496px]",
-            div {
-                class: "w-full flex flex-row items-end justify-start gap-[44px] pt-[36px]",
-                img {
-                    src: image,
-                    class: "w-[619px] h-[327px] rounded-[8px] z-[10] object-cover",
-                }
-                div {
-                    class: "flex flex-col justify-start items-start pt-[41px] z-[10] gap-[33px]",
-                    ContentWrapper { title, description, period, donations, replies }
-                    div {
-                        class: "flex flex-row w-full justify-start items-center gap-[17px]",
-                        VoteResultBars {
-                            class: "grow",
-                            yes,
-                            no,
-                        }
-                        Button {
 
+            class: "w-full grid grid-cols-12 grid-rows-11 gap-x-[20px] gap-y-[40px] h-[496px]",
+            img {
+                src: image,
+                class: "row-start-2 row-span-8 col-start-1 col-span-5 w-full h-full rounded-[8px] z-[10] object-cover",
+            }
+            div {
+                class: "col-start-6 row-start-3 col-span-6 row-span-7 flex flex-col justify-start items-start z-[10] gap-[33px]",
+                ContentWrapper { title, description, period, donations, replies }
+                div {
+                    class: "flex flex-row w-full justify-start items-center gap-[17px]",
+                    VoteResultBars {
+                        class: "grow",
+                        yes,
+                        no,
+                    }
+                    if visible {
+                        Button {
                             background: "rgba(130, 143, 165, 0.05)",
                             onclick: |_| {},
                             div {
@@ -114,16 +133,16 @@ pub fn HighlightedTopic(
                     }
                 }
             }
+
             div {
-                class: "absolute top-0 z-[9] left-[71px] w-[calc(100%-71px)] h-full flex flex-row gap-[16px] items-end justify-center backdrop-blur-[10px] rounded-[8px] py-[32px]",
+                class: "col-start-1 col-span-12 row-start-1 row-span-11 ml-[71px] z-[9] flex flex-row gap-[16px] items-end justify-center backdrop-blur-[10px] rounded-[8px] py-[32px] px-[10px]",
                 style: "background: {theme_data.primary05};",
                 RoundedYesButton { onclick: |_| {} }
                 RoundedNoButton { onclick: |_| {} }
-
             }
+
             div {
-                class: "absolute left-[71px] top-[387px] z-[10] h-[1px] w-[1368px]",
-                style: "background: {theme_data.background};",
+                class: "flex flex-row items-center justify-center col-start-4 col-span-5 row-start-10 row-span-2 px-[18px] py-[13px] gap-[16px] z-[10]",
             }
         }
     }
@@ -144,7 +163,7 @@ pub fn ContentWrapper(
         div {
             class: "flex flex-col gap-[22px] items-start justify-start h-[209px]",
             h1 {
-                class: "text-[42px] font-extrabold tracking-normal",
+                class: "text-[42px] font-extrabold tracking-normal line-clamp-1",
                 "{title}"
             }
             p {

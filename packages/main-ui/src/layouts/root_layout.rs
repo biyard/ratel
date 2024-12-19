@@ -14,13 +14,16 @@ pub fn RootLayout(lang: Language) -> Element {
 
     rsx! {
         div {
-            class: "flex flex-col items-center justify-start w-full min-h-[100vh] text-white",
+            class: "flex flex-col items-center justify-start w-full min-h-[100vh] text-white max-[1440px]:px-[10px]",
             style: "background: {theme.background}",
             div {
-                class: "max-w-[1440px] w-full",
+                class: "max-w-[1440px] w-full ",
                 Header {}
             }
-            Outlet::<Route> {}
+            div {
+                class: "w-full max-w-[1440px]",
+                Outlet::<Route> {}
+            }
         }
     }
 }

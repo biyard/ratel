@@ -16,19 +16,20 @@ pub fn HomePage(lang: Language) -> Element {
 
     rsx! {
         div {
-            class: "flex flex-col gap-[100px]",
+            class: "flex flex-col gap-[100px] grid grid-cols-1",
             HighlightedTopics {
+                class: "col-span-1",
                 topics: ctrl.ongoing_topics(),
                 onselect: |_| {},
             }
             div {
-                class: "w-full flex flex-row items-center justify-center gap-[20px] grid grid-cols-1 md:grid-cols-2",
+                class: "col-span-1 w-full flex flex-row items-start justify-center gap-[20px] grid grid-cols-1 md:grid-cols-2",
                 FinishedTopics {
                     class: "col-span-1",
                     _topics: ctrl.finished_topics(),
                 }
                 UpcomingTopics {
-                    class: "col-span-1 bg-white",
+                    class: "col-span-1",
                     _topics: ctrl.upcoming_topics(),
                 }
             }
