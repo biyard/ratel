@@ -38,7 +38,14 @@ pub fn HeaderTails() -> Element {
                 background: "{theme.primary06}",
                 onclick: move |_| {
                     tracing::debug!("회원가입 버튼 클릭");
-                    popup.open(rsx! {SignupPopup { class: "w-[400px]" }}).with_id("signup").with_title("회원가입");
+                    popup.open(rsx! {
+                        SignupPopup {
+                            class: "w-[400px]",
+                            onclick: |_| {
+                                tracing::debug!("Google로 계속하기 버튼 클릭")
+                            },
+                        }
+                    }).with_id("signup").with_title("회원가입");
                 },
                 "회원가입"
             }

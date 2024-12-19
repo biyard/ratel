@@ -7,6 +7,7 @@ use crate::components::icons;
 pub fn SignupPopup(
     #[props(default ="signup_popup".to_string())] id: String,
     #[props(default ="".to_string())] class: String,
+    onclick: EventHandler<Event<MouseData>>,
 ) -> Element {
     rsx! {
         div {
@@ -14,6 +15,7 @@ pub fn SignupPopup(
             class,
             div {
                 class: "w-full flex flex-row my-[10px] p-[8px] bg-[#6D7AFF] rounded-[8px] justify-start items-center gap-[17px] cursor-pointer hover:bg-[#5C6BFF]",
+                onclick,
                 div {
                     class: "rounded-[8px] bg-white w-[62px] h-[62px] flex items-center justify-center",
                     icons::Google {}
