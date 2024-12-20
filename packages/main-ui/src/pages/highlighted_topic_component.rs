@@ -117,7 +117,10 @@ pub fn HighlightedTopic(
                 })
             }
             div {
-                class: "col-start-6 row-start-3 col-span-6 row-span-7 flex flex-col justify-start items-start z-[10] gap-[33px]",
+                class: format!("col-start-6 {} col-span-6 row-end-10 flex flex-col justify-start items-start z-[10] gap-[34px]", match draft_choice() {
+                    Some(_) => "row-start-2",
+                    _ => "row-start-3",
+                }),
                 if draft_choice().is_some() {
                     CloseButton {
                         class: "absolute top-[48px] right-[44px]",
@@ -210,7 +213,7 @@ pub fn DonationSelector(
           id,
           class,
           div {
-              class: "w-full flex flex-row items-center justify-start gap-[40px] px-[32px] py-[9px] rounded-[8px] bg-[{theme.background}] h-full opacity-90 hover:opacity-100 cursor-pointer",
+              class: "w-full flex flex-row items-center justify-start gap-[40px] px-[32px] py-[9px] rounded-[8px] bg-[{theme.background}] h-full opacity-80 hover:opacity-100 cursor-pointer",
               onclick: move |_| {
                   if value() == 0 {
                       value.set(1000);
@@ -278,7 +281,7 @@ pub fn DescriptionWrapper(title: String) -> Element {
             p {
                 class: "text-[16px] max-w-[674px] font-regular leading-[24px] tracking-[0.5px] line-clamp-4",
                 style: "color: {theme_data.primary00};",
-                dangerous_inner_html: "이 국민투표는 찬반 선택과 함께 최대 <b>1,000원 이하의 기부금</b>으로 열정과 의지를 표현하는 방식입니다. </br> <b>기부금은 실제 기부가 아니며</b>, 투표 참여의 상징적 의미를 더하기 위해 사용됩니다.</br><span style=\"color:red\">*</span>기부금 금액은 선택 사항이며, 투표 결과에 영향을 미치지 않습니다."
+                dangerous_inner_html: "이 국민투표는 찬반 선택과 함께 최대 <b>1,000원 이하의 기부금</b>으로 열정과 의지를 표현하는 방식입니다. </br> <b>기부금은 실제 기부가 아니며</b>, 투표 참여의 상징적 의미를 더하기 위해 사용됩니다.</br><div class=\"mt-[10px]\"><span style=\"color:red\">*</span>기부금 금액은 선택 사항이며, 투표 결과에 영향을 미치지 않습니다.</div>"
             }
         }
     }
