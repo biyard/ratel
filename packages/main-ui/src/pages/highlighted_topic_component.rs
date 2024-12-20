@@ -5,7 +5,7 @@ use num_format::{Locale, ToFormattedString};
 
 use crate::{
     components::{
-        button::{Button, RoundedNoButton, RoundedYesButton},
+        button::{Button, CloseButton, RoundedNoButton, RoundedYesButton},
         icon_text::IconText,
         icons,
     },
@@ -73,6 +73,12 @@ pub fn HighlightedTopics(
     }
 }
 
+#[derive(Debug, Clone)]
+enum DraftChoice {
+    Yes,
+    No,
+}
+
 #[component]
 pub fn HighlightedTopic(
     #[props(default = "highlighed-topic".to_string())] id: String,
@@ -88,6 +94,7 @@ pub fn HighlightedTopic(
 ) -> Element {
     let theme: Theme = use_context();
     let theme_data = theme.get_data();
+    let mut draft_choice = use_signal(|| None);
 
     #[allow(unused_mut)]
     let mut visible = true;
@@ -101,33 +108,56 @@ pub fn HighlightedTopic(
     rsx! {
         div {
             id,
-
-            class: "w-full grid grid-cols-12 grid-rows-11 gap-x-[20px] gap-y-[40px] h-[496px]",
+            class: "w-full grid grid-cols-12 grid-rows-11 gap-x-[20px] gap-y-[40px] h-[496px] relative",
             img {
                 src: image,
-                class: "row-start-2 row-span-8 col-start-1 col-span-5 w-full h-full rounded-[8px] z-[10] object-cover",
+                class: format!("transition-all row-start-2 row-span-8 {} col-start-1 col-end-5 w-full h-full rounded-[8px] z-[10] object-cover", match draft_choice() {
+                    Some(_) => "ml-[24px]",
+                    _ => "",
+                })
             }
             div {
                 class: "col-start-6 row-start-3 col-span-6 row-span-7 flex flex-col justify-start items-start z-[10] gap-[33px]",
-                ContentWrapper { title, description, period, donations, replies }
-                div {
-                    class: "flex flex-row w-full justify-start items-center gap-[17px]",
-                    VoteResultBars {
-                        class: "grow",
+                if draft_choice().is_some() {
+                    CloseButton {
+                        class: "absolute top-[48px] right-[44px]",
+                        onclick: move |_| {
+                            draft_choice.set(None);
+                        }
+                    }
+                    DescriptionWrapper { title }
+                    VoteResultHorizontalBars {
+                        class: "w-full",
                         yes,
                         no,
                     }
-                    if visible {
-                        Button {
-                            background: "rgba(130, 143, 165, 0.05)",
-                            onclick: |_| {},
-                            div {
-                                class: "flex flex-row items-center justify-center gap-[10px]",
-                                span {
-                                    class: "text-[14px] font-bold",
-                                    "더보기"
+                    DonationSelector {
+                        class: "w-full h-[54px]",
+                        onselect: |donation| {
+                            tracing::debug!("select donation : {donation}");
+                        }
+                    }
+                } else {
+                    ContentWrapper { title, description, period, donations, replies }
+                    div {
+                        class: "flex flex-row w-full justify-start items-center gap-[17px]",
+                        VoteResultBars {
+                            class: "grow",
+                            yes,
+                            no,
+                        }
+                        if visible {
+                            Button {
+                                background: "rgba(130, 143, 165, 0.05)",
+                                onclick: |_| {},
+                                div {
+                                    class: "flex flex-row items-center justify-center gap-[10px]",
+                                    span {
+                                        class: "text-[14px] font-bold",
+                                        "더보기"
+                                    }
+                                    icons::RightArrow {}
                                 }
-                                icons::RightArrow {}
                             }
                         }
                     }
@@ -135,14 +165,120 @@ pub fn HighlightedTopic(
             }
 
             div {
-                class: "col-start-1 col-span-12 row-start-1 row-span-11 ml-[71px] z-[9] flex flex-row gap-[16px] items-end justify-center backdrop-blur-[10px] rounded-[8px] py-[32px] px-[10px]",
+                class: format!("transition-all col-start-1 col-span-12 row-start-1 row-span-11 z-[9] flex flex-row gap-[16px] items-end justify-center backdrop-blur-[10px] rounded-[8px] py-[32px] px-[10px] {}", match draft_choice() {
+                    Some(_) => "",
+                    _ => "ml-[71px]",
+                }),
                 style: "background: {theme_data.primary05};",
-                RoundedYesButton { onclick: |_| {} }
-                RoundedNoButton { onclick: |_| {} }
+                RoundedYesButton {
+                    class: format!("transition-all {}", match draft_choice() {
+                        Some(DraftChoice::Yes) => "w-[520px]",
+                        Some(DraftChoice::No) => "hidden",
+                        _ => "w-[291px]",
+                    }),
+                    onclick: move |_| {
+                        draft_choice.set(Some(DraftChoice::Yes));
+                    }
+                }
+                RoundedNoButton {
+                    class: format!("transition-all {}", match draft_choice() {
+                        Some(DraftChoice::No) => "w-[520px]",
+                        Some(DraftChoice::Yes) => "hidden",
+                        _ => "w-[291px]",
+                    }),
+                    onclick: move |_| {
+                        draft_choice.set(Some(DraftChoice::No));
+                    }
+                }
             }
+        }
+    }
+}
 
-            div {
-                class: "flex flex-row items-center justify-center col-start-4 col-span-5 row-start-10 row-span-2 px-[18px] py-[13px] gap-[16px] z-[10]",
+#[component]
+pub fn DonationSelector(
+    #[props(default ="donation_selector".to_string())] id: String,
+    #[props(default ="".to_string())] class: String,
+    onselect: EventHandler<u64>,
+) -> Element {
+    let theme: Theme = use_context();
+    let theme = theme.get_data();
+    let mut value = use_signal(|| 0);
+
+    rsx! {
+      div {
+          id,
+          class,
+          div {
+              class: "w-full flex flex-row items-center justify-start gap-[40px] px-[32px] py-[9px] rounded-[8px] bg-[{theme.background}] h-full opacity-90 hover:opacity-100 cursor-pointer",
+              onclick: move |_| {
+                  if value() == 0 {
+                      value.set(1000);
+                      onselect(1000);
+                  } else {
+                      value.set(0);
+                      onselect(0);
+                  }
+              },
+              div {
+                  class: "relative w-full h-[8px] rounded-full bg-[#1F202E]",
+                  style: "position: relative;",
+                  div {
+                      class: "absolute top-0 left-0 h-[8px] w-[calc({value/10}%)] bg-gradient-to-r from-[#5A68FF] to-[#68D36C] rounded-full",
+                  }
+                  input {
+                      r#type: "range",
+                      min: "0",
+                      max: "1000",
+                      disabled: true,
+                      value: "{value().to_formatted_string(&Locale::en)}",
+                      class: "absolute w-full h-4 opacity-0 cursor-pointer",
+                      // oninput: move |evt| {
+                      //     value.set(evt.value().parse::<i32>().unwrap_or(0));
+                      // }
+                  }
+                  div {
+                      class: "absolute flex items-center top-[-8px] justify-center shadow-md",
+                      style: "left: calc({value/10}% - 12px);",
+                      icons::SlideBall {}
+                  }
+              }
+
+              div {
+                  class: "flex flex-row items-center gap-[8px]",
+                  input {
+                      r#type: "number",
+                      value: "{value}",
+                      disabled: true,
+                      class: "w-[210px] h-[39px] text-[18px] font-bold text-white bg-[#1F202E] rounded-[6px] text-right py-[8px] px-[20px] cursor-pointer",
+                      {format!("{}", value().to_formatted_string(&Locale::en))}
+                  }
+                  span {
+                      class: "text-[16px] font-bold text-[{theme.primary03}]",
+                      "원"
+                  }
+              }
+          }
+      }
+    }
+}
+
+#[component]
+pub fn DescriptionWrapper(title: String) -> Element {
+    let theme: Theme = use_context();
+    let theme_data = theme.get_data();
+
+    rsx! {
+        div {
+            class: "flex flex-col gap-[22px] items-start justify-start",
+            h1 {
+                class: "text-[28px] font-extrabold tracking-normal line-clamp-1",
+                "{title}"
+            }
+            p {
+                class: "text-[16px] max-w-[674px] font-regular leading-[24px] tracking-[0.5px] line-clamp-4",
+                style: "color: {theme_data.primary00};",
+                dangerous_inner_html: "이 국민투표는 찬반 선택과 함께 최대 <b>1,000원 이하의 기부금</b>으로 열정과 의지를 표현하는 방식입니다. </br> <b>기부금은 실제 기부가 아니며</b>, 투표 참여의 상징적 의미를 더하기 위해 사용됩니다.</br><span style=\"color:red\">*</span>기부금 금액은 선택 사항이며, 투표 결과에 영향을 미치지 않습니다."
             }
         }
     }
@@ -228,6 +364,46 @@ pub fn VoteResultBars(
                     span { class: "z-[30]", "{no}%" }
                 }
 
+            }
+        }
+    }
+}
+
+#[component]
+pub fn VoteResultHorizontalBars(
+    yes: u64,
+    no: u64,
+    #[props(default = "w-[580px]".to_string())] class: String,
+) -> Element {
+    let sum = yes + no;
+    let yes = (yes as f64 / sum as f64) * 100.0;
+    let no = (no as f64 / sum as f64) * 100.0;
+
+    rsx! {
+        div {
+            class: "flex flex-col justify-start gap-[4px] {class}",
+            div {
+                class: "w-[{yes}%]",
+                div {
+                    class: "relative animate-grow flex flex-row justify-end items-center px-[20px] text-[15px] font-bold w-[calc(50%-6px)] h-[28px] rounded-[6px]",
+                    style: "background: linear-gradient(90deg, #212231 0%, rgba(104, 211, 108, 0.5) 100%);",
+                    div {
+                        class: "absolute z-[20] h-[22px] w-[22px] right-[2.46px] top-[3px] rounded-[6px] bg-[#68D36C] opacity-50",
+                    }
+                    span { class: "z-[30]", "{yes}%" }
+                }
+            }
+
+            div {
+                class: "w-[{no}%]",
+                div {
+                    class: "relative animate-grow flex flex-row justify-end items-center px-[20px] text-[15px] font-bold w-[calc(50%-6px)] h-[28px] rounded-[6px]",
+                    style: "background: linear-gradient(90deg, #212231 0%, rgba(255, 90, 93, 0.5) 100%);",
+                    div {
+                        class: "absolute z-[20] h-[22px] w-[22px] right-[2.46px] top-[3px] rounded-[6px] bg-[#FF5A5D] opacity-50",
+                    }
+                    span { class: "z-[30]", "{no}%" }
+                }
             }
         }
     }

@@ -1,7 +1,10 @@
 #![allow(non_snake_case)]
 use dioxus::prelude::*;
 
-use crate::{components::icons, theme::Theme};
+use crate::{
+    components::icons::{self, Close},
+    theme::Theme,
+};
 
 #[component]
 pub fn Button(
@@ -79,12 +82,17 @@ pub fn RoundedYesButton(
 
     rsx! {
         div {
-            class: "flex flex-col items-center transition-all justify-center rounded-[{rounded}px] {border_class} py-[8px] {class} hover:bg-[{bg}] cursor-pointer",
+            class: "flex flex-col items-center justify-center rounded-[{rounded}px] {border_class} py-[8px] {class} hover:bg-black cursor-pointer",
             onclick: move |evt| if onclick.is_some(){
                 onclick.unwrap().call(evt)
             },
-            onmouseenter: move |_| hover.set(true),
-            onmouseleave: move |_| hover.set(false),
+            onmouseenter: move |_| {
+                tracing::debug!("hover");
+                hover.set(true)
+            },
+            onmouseleave: move |_| {
+                hover.set(false)
+            } ,
             style: "color: {color}; background: {bg}; border-color: {border};",
             div {
                 class: "flex items-center justify-center gap-[10px]",
@@ -155,6 +163,35 @@ pub fn RoundedNoButton(
                     "반대"
                 }
                 {icon}
+            }
+        }
+    }
+}
+
+#[component]
+pub fn CloseButton(
+    #[props(default ="close_button".to_string())] id: String,
+    #[props(default ="".to_string())] class: String,
+    onclick: EventHandler<Event<MouseData>>,
+) -> Element {
+    let mut hover_close = use_signal(|| false);
+
+    rsx! {
+        div {
+            class: format!("{class} rounded-[4px] cursor-pointer {}", if hover_close() { "bg-[#2C2E42]" } else { "" }),
+            onclick,
+            onmouseenter: move |_| {
+                hover_close.set(true);
+            },
+            onmouseleave: move |_| {
+                hover_close.set(false);
+            },
+            Close {
+                color: if hover_close() {
+                    "#74789E"
+                } else {
+                    "white"
+                }
             }
         }
     }
