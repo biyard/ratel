@@ -96,31 +96,21 @@ pub fn HighlightedTopic(
     let theme_data = theme.get_data();
     let mut draft_choice = use_signal(|| None);
 
-    #[allow(unused)]
-    let mut visible = true;
-
-    #[cfg(feature = "web-only")]
-    {
-        let window_size = dioxus_sdk::utils::window::use_window_size();
-        visible = window_size().width > 560;
-        tracing::debug!("window size: {:?}", window_size());
-    }
-
     rsx! {
         div {
             id,
             class: "w-full grid grid-cols-12 grid-rows-11 gap-x-[20px] max-[800px]:gap-x-[0px] gap-y-[40px] h-[496px] max-[500px]:h-auto relative",
             img {
                 src: image,
-                class: format!("transition-all row-start-2 row-span-8 {} col-start-1 col-end-5 max-[1000px]:col-end-6 w-full h-full rounded-[8px] z-[10] object-cover", match draft_choice() {
-                    Some(_) => "ml-[24px]",
-                    _ => "max-[550px]:hidden",
+                class: format!("transition-all row-start-2 row-span-8 {} col-start-1 col-end-5 w-full h-full rounded-[8px] z-[10] object-cover", match draft_choice() {
+                    Some(_) => "ml-[24px] max-[550px]:hidden",
+                    _ => "max-[550px]:hidden max-[1000px]:col-end-6",
                 })
             }
             div {
                 class: format!("transition-all col-start-6 {} col-span-6 row-end-10 flex flex-col justify-start items-start z-[10] gap-[34px]", match draft_choice() {
-                    Some(_) => "row-start-2",
-                    _ => "row-start-3 max-[1000px]:ml-[20px] max-[550px]:col-start-2",
+                    Some(_) => "row-start-2 max-[550px]:col-start-2 max-[550px]:col-span-10",
+                    _ => "row-start-3 max-[1000px]:ml-[20px] max-[550px]:col-start-2 max-[550px]:col-span-10",
                 }),
                 if draft_choice().is_some() {
                     CloseButton {
@@ -150,7 +140,8 @@ pub fn HighlightedTopic(
                             yes,
                             no,
                         }
-                        if visible {
+                        div {
+                            class: "max-[550px]:w-[0px] overflow-hidden",
                             Button {
                                 background: "rgba(130, 143, 165, 0.05)",
                                 onclick: |_| {},
@@ -249,12 +240,12 @@ pub fn DonationSelector(
               }
 
               div {
-                  class: "flex flex-row items-center gap-[8px]",
+                  class: "flex flex-row items-center gap-[8px] max-[600px]:hidden overflow-hidden",
                   input {
                       r#type: "number",
                       value: "{value}",
                       disabled: true,
-                      class: "w-[210px] h-[39px] text-[18px] font-bold text-white bg-[#1F202E] rounded-[6px] text-right py-[8px] px-[20px] cursor-pointer",
+                      class: "w-[90px] h-[39px] text-[18px] font-bold text-white bg-[#1F202E] rounded-[6px] text-right py-[8px] px-[20px] cursor-pointer",
                       {format!("{}", value().to_formatted_string(&Locale::en))}
                   }
                   span {
