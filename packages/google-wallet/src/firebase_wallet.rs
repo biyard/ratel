@@ -4,6 +4,8 @@ use dioxus::prelude::*;
 use dioxus_oauth::prelude::{Credential, FirebaseService};
 use gloo_storage::LocalStorage;
 
+pub const IDENTITY_KEY: &str = "identity";
+
 #[derive(Debug, Clone, Copy, Default)]
 pub struct FirebaseWallet {
     #[cfg(feature = "web")]
