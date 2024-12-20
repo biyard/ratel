@@ -96,30 +96,31 @@ pub fn HighlightedTopic(
     let theme_data = theme.get_data();
     let mut draft_choice = use_signal(|| None);
 
-    #[allow(unused_mut)]
+    #[allow(unused)]
     let mut visible = true;
 
     #[cfg(feature = "web-only")]
     {
         let window_size = dioxus_sdk::utils::window::use_window_size();
         visible = window_size().width > 560;
+        tracing::debug!("window size: {:?}", window_size());
     }
 
     rsx! {
         div {
             id,
-            class: "w-full grid grid-cols-12 grid-rows-11 gap-x-[20px] max-[800px]:gap-x-[0px] gap-y-[40px] h-[496px] relative",
+            class: "w-full grid grid-cols-12 grid-rows-11 gap-x-[20px] max-[800px]:gap-x-[0px] gap-y-[40px] h-[496px] max-[500px]:h-auto relative",
             img {
                 src: image,
-                class: format!("transition-all row-start-2 row-span-8 {} col-start-1 col-end-5 max-[800px]:col-end-6 w-full h-full rounded-[8px] z-[10] object-cover", match draft_choice() {
+                class: format!("transition-all row-start-2 row-span-8 {} col-start-1 col-end-5 max-[1000px]:col-end-6 w-full h-full rounded-[8px] z-[10] object-cover", match draft_choice() {
                     Some(_) => "ml-[24px]",
                     _ => "max-[550px]:hidden",
                 })
             }
             div {
-                class: format!("col-start-6 {} col-span-6 row-end-10 flex flex-col justify-start items-start z-[10] gap-[34px]", match draft_choice() {
+                class: format!("transition-all col-start-6 {} col-span-6 row-end-10 flex flex-col justify-start items-start z-[10] gap-[34px]", match draft_choice() {
                     Some(_) => "row-start-2",
-                    _ => "row-start-3 max-[800px]:ml-[20px] max-[550px]:col-start-2",
+                    _ => "row-start-3 max-[1000px]:ml-[20px] max-[550px]:col-start-2",
                 }),
                 if draft_choice().is_some() {
                     CloseButton {
@@ -170,7 +171,7 @@ pub fn HighlightedTopic(
             div {
                 class: format!("transition-all col-start-1 col-span-12 row-start-1 row-span-11 z-[9] flex flex-row gap-[16px] items-end justify-center backdrop-blur-[10px] rounded-[8px] py-[32px] px-[10px] {}", match draft_choice() {
                     Some(_) => "",
-                    _ => "ml-[71px]",
+                    _ => "min-[550px]:ml-[71px]",
                 }),
                 style: "background: {theme_data.primary05};",
                 RoundedYesButton {
