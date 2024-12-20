@@ -6,7 +6,6 @@ pub mod route;
 pub mod services;
 pub mod theme;
 
-use components::icons;
 use dioxus::prelude::*;
 use dioxus_popup::PopupService;
 use route::Route;

@@ -33,8 +33,8 @@ pub fn HighlightedTopics(
                 for (i, topic) in topics.iter().enumerate() {
                     if i == selected() {
                         HighlightedTopic {
-                            id: topic.id.clone(),
-                            // image: topic.image.clone(),
+                            id: "highlighted-topic-{topic.id.clone()}",
+                            image: topic.images[0].clone(),
                             // title: topic.title.clone(),
                             // description: topic.description.clone(),
                             // period: topic.period.clone(),
