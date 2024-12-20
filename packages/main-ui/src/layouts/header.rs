@@ -25,6 +25,9 @@ pub fn HeaderTails() -> Element {
     let theme = theme_service.get_data();
     let mut popup: PopupService = use_context();
 
+    #[cfg(feature = "web")]
+    let firebase: dioxus_oauth::prelude::FirebaseService = use_context();
+
     rsx! {
         div {
             class: "flex flex-row gap-[30px] justify-start items-center",
@@ -42,11 +45,17 @@ pub fn HeaderTails() -> Element {
                     popup.open(rsx! {
                         SignupPopup {
                             class: "w-[400px]",
-                            onclick:move  |_| {
+                            onclick:move  |_| async move {
                                 tracing::debug!("Google로 계속하기 버튼 클릭");
-                                p.open(rsx!{
-                                    UserSetupPopup {}
-                                }).with_id("user_setup_popup").with_title("계정 생성하기");
+                                #[cfg(feature = "web")]
+                                {
+                                    firebase.sign_in_with_popup(vec![
+                                        "https://www.googleapis.com/auth/drive.appdata".to_string(),
+                                    ]).await;
+                                    p.open(rsx!{
+                                        UserSetupPopup {}
+                                    }).with_id("user_setup_popup").with_title("계정 생성하기");
+                                }
                             },
                         }
                     }).with_id("signup").with_title("회원가입");

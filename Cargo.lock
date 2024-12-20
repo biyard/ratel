@@ -1708,6 +1708,38 @@ dependencies = [
 ]
 
 [[package]]
+name = "dioxus-oauth"
+version = "0.6.1"
+dependencies = [
+ "dioxus",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "tracing",
+ "url",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+]
+
+[[package]]
+name = "dioxus-oauth"
+version = "0.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5c26ae4a97c53c656e7e9249375ad8a992602ca5b5af437f80e814ed75d8a1fd"
+dependencies = [
+ "dioxus",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "tracing",
+ "url",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+]
+
+[[package]]
 name = "dioxus-popup"
 version = "0.1.0"
 dependencies = [
@@ -2588,6 +2620,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "gloo-storage"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fbc8031e8c92758af912f9bc08fbbadd3c6f3cfcbf6b64cdf3d6a81f0139277a"
+dependencies = [
+ "gloo-utils",
+ "js-sys",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "wasm-bindgen",
+ "web-sys",
+]
+
+[[package]]
 name = "gloo-utils"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2609,6 +2656,18 @@ dependencies = [
  "glib-sys",
  "libc",
  "system-deps",
+]
+
+[[package]]
+name = "google-wallet"
+version = "0.1.0"
+dependencies = [
+ "base64 0.22.1",
+ "dioxus",
+ "dioxus-oauth 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "gloo-storage",
+ "reqwest",
+ "serde",
 ]
 
 [[package]]
@@ -3589,6 +3648,7 @@ dependencies = [
  "dioxus",
  "dioxus-aws",
  "dioxus-logger 0.5.1",
+ "dioxus-oauth 0.6.1",
  "dioxus-popup",
  "dioxus-sdk",
  "dioxus-web",
@@ -6367,7 +6427,7 @@ version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf221c93e13a30d793f7645a0e7762c55d169dbb0a49671918a2319d289b10bb"
 dependencies = [
- "windows-sys 0.52.0",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]

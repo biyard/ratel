@@ -16,8 +16,10 @@ use crate::{
 pub fn FinishedTopics(
     #[props(default ="finished_topics".to_string())] id: String,
     #[props(default ="".to_string())] class: String,
-    _topics: Vec<Topic>,
+    topics: Vec<Topic>,
 ) -> Element {
+    let len = if topics.len() > 2 { 2 } else { topics.len() };
+
     rsx! {
         div {
             id,
@@ -31,12 +33,19 @@ pub fn FinishedTopics(
 
                 div {
                     class: "w-full grid grid-cols-2 max-[635px]:grid-cols-1 gap-[20px] rounded-[8px] flex items-center justify-center",
-                    FinishedTopic {
-                        class: "col-span-1 h-[209px]",
-                    }
-
-                    FinishedTopic {
-                        class: "col-span-1 h-[209px]",
+                    for topic in topics.iter().take(len) {
+                        FinishedTopic {
+                            id: "finished-topic-{topic.id}",
+                            class: "col-span-1 h-[209px]",
+                            image: topic.images.get(0).unwrap_or(&"".to_string()),
+                            title: topic.title.to_string(),
+                            accepted: match topic.result {
+                                Some(TopicResult::Accepted) => true,
+                                _ => false,
+                            },
+                            donations: topic.donations.iter().map(|d| d.amount).sum(),
+                            replies: topic.replies,
+                        }
                     }
                 }
             }

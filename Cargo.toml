@@ -1,5 +1,5 @@
 [workspace]
-members = ["packages/main-ui", "packages/dto", "packages/main-api", "packages/dioxus-popup"]
+members = ["packages/main-ui", "packages/dto", "packages/main-api", "packages/dioxus-popup", "packages/google-wallet"]
 resolver = "2"
 
 [workspace.package]

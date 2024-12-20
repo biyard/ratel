@@ -35,13 +35,13 @@ pub fn HighlightedTopics(
                         HighlightedTopic {
                             id: "highlighted-topic-{topic.id.clone()}",
                             image: topic.images[0].clone(),
-                            // title: topic.title.clone(),
-                            // description: topic.description.clone(),
-                            // period: topic.period.clone(),
-                            // donations: topic.donations,
-                            // replies: topic.replies,
-                            // yes: topic.yes,
-                            // no: topic.no,
+                            title: topic.title.clone(),
+                            description: topic.description.clone(),
+                            period: topic.period.clone(),
+                            donations: topic.donations,
+                            replies: topic.replies,
+                            yes: topic.number_of_yes(),
+                            no: topic.number_of_no(),
                         }
                     }
                 }

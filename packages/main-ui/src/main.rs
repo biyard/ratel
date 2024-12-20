@@ -24,6 +24,16 @@ fn app() -> Element {
     Theme::init();
     MainApi::init();
     PopupService::init();
+    #[cfg(feature = "web")]
+    dioxus_oauth::prelude::FirebaseService::init(
+        "AIzaSyCRMf_KsChxGfO-oHZSrLmivhVpdp9vqj8",
+        "democrasee-51d6b.firebaseapp.com",
+        "democrasee-51d6b",
+        "democrasee-51d6b.firebasestorage.app",
+        "258116650101",
+        "1:258116650101:web:395d905ac16de47c46a43c",
+        "G-2B1VZE70HK",
+    );
 
     rsx! {
         head {

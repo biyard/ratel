@@ -24,10 +24,11 @@ num-format = "0.4.4"
 
 dioxus-popup = { path = "../dioxus-popup" }
 dioxus-sdk = { version = "0.6.0", features = ["window_size"], optional = true }
+dioxus-oauth = { path = "../../../dioxus-oauth", features = ["web"], optional = true }
 
 [features]
 default = []
 web = ["web-only", "dioxus-aws/web"]
-web-only = ["web-sys", "wasm-bindgen", "wasm-bindgen-futures", "dioxus-aws/web-only", "dioxus-web", "dioxus-sdk"]
+web-only = ["web-sys", "wasm-bindgen", "wasm-bindgen-futures", "dioxus-aws/web-only", "dioxus-web", "dioxus-sdk", "dioxus-oauth"]
 server = ["dioxus-aws/server"]
 lambda = ["server", "dioxus-aws/lambda"]
