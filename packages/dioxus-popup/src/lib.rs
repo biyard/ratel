@@ -6,6 +6,7 @@ pub struct PopupService {
     pub id: Signal<Option<String>>,
     pub title: Signal<Option<String>>,
     pub data: Signal<Option<Element>>,
+    pub close: Signal<bool>,
 }
 
 impl PopupService {
@@ -14,6 +15,7 @@ impl PopupService {
             data: Signal::new(None),
             id: Signal::new(None),
             title: Signal::new(None),
+            close: Signal::new(true),
         };
         use_context_provider(|| srv);
     }
@@ -52,10 +54,17 @@ impl PopupService {
         self
     }
 
+    pub fn without_close(&mut self) -> &mut Self {
+        (self.close).set(false);
+
+        self
+    }
+
     pub fn close(&mut self) {
         (self.data).set(None);
         (self.id).set(None);
         (self.title).set(None);
+        (self.close).set(true);
     }
 
     pub fn use_popup_service() -> PopupService {
@@ -88,22 +97,24 @@ pub fn PopupZone() -> Element {
                     onclick: move |e| {
                         e.stop_propagation();
                     },
-                    div {
-                        class: format!("absolute top-[25px] right-[25px] rounded-[4px] cursor-pointer {}", if hover_close() { "bg-[#2C2E42]" } else { "" }),
-                        onclick: move |_| {
-                            popup.close();
-                        },
-                        onmouseenter: move |_| {
-                            hover_close.set(true);
-                        },
-                        onmouseleave: move |_| {
-                            hover_close.set(false);
-                        },
-                        Close {
-                            color: if hover_close() {
-                                "#74789E"
-                            } else {
-                                "white"
+                    if (popup.close)() {
+                        div {
+                            class: format!("absolute top-[25px] right-[25px] rounded-[4px] cursor-pointer {}", if hover_close() { "bg-[#2C2E42]" } else { "" }),
+                            onclick: move |_| {
+                                popup.close();
+                            },
+                            onmouseenter: move |_| {
+                                hover_close.set(true);
+                            },
+                            onmouseleave: move |_| {
+                                hover_close.set(false);
+                            },
+                            Close {
+                                color: if hover_close() {
+                                    "#74789E"
+                                } else {
+                                    "white"
+                                }
                             }
                         }
                     }

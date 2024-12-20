@@ -3,6 +3,7 @@
 html, body {
   background: #2C2E42;
   font-family: NanumSquareAc, sans-serif !important;
+  color: white;
 }
 
 @keyframes growWidth {

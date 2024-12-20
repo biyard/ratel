@@ -34,6 +34,14 @@ pub struct UpdateTopicRequest {
     name: Option<String>,
 }
 
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+#[serde(untagged)]
+pub enum AddtionalActionRequest {
+    Action1(String),
+    Action2(String),
+}
+
 impl TopicControllerV1 {
     pub fn route() -> Result<by_axum::axum::Router, Box<dyn std::error::Error>> {
         let log = root().new(o!("api-controller" => "TopicControllerV1"));

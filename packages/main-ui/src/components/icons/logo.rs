@@ -2,11 +2,11 @@
 use dioxus::prelude::*;
 
 #[component]
-pub fn Logo() -> Element {
+pub fn Logo(#[props(default = 22)] width: u32, #[props(default = 26)] height: u32) -> Element {
     rsx! {
         svg {
-            width: "22",
-            height: "26",
+            width: "{width}",
+            height: "{height}",
             view_box: "0 0 22 26",
             fill: "none",
             xmlns: "http://www.w3.org/2000/svg",
