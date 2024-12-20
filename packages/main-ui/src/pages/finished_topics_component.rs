@@ -30,13 +30,13 @@ pub fn FinishedTopics(
                 }
 
                 div {
-                    class: "w-full grid grid-cols-2 gap-[20px] h-[209px] rounded-[8px] flex items-center justify-center",
+                    class: "w-full grid grid-cols-2 max-[635px]:grid-cols-1 gap-[20px] rounded-[8px] flex items-center justify-center",
                     FinishedTopic {
-                        class: "col-span-1",
+                        class: "col-span-1 h-[209px]",
                     }
 
                     FinishedTopic {
-                        class: "col-span-1",
+                        class: "col-span-1 h-[209px]",
                     }
                 }
             }

@@ -108,18 +108,18 @@ pub fn HighlightedTopic(
     rsx! {
         div {
             id,
-            class: "w-full grid grid-cols-12 grid-rows-11 gap-x-[20px] gap-y-[40px] h-[496px] relative",
+            class: "w-full grid grid-cols-12 grid-rows-11 gap-x-[20px] max-[800px]:gap-x-[0px] gap-y-[40px] h-[496px] relative",
             img {
                 src: image,
-                class: format!("transition-all row-start-2 row-span-8 {} col-start-1 col-end-5 w-full h-full rounded-[8px] z-[10] object-cover", match draft_choice() {
+                class: format!("transition-all row-start-2 row-span-8 {} col-start-1 col-end-5 max-[800px]:col-end-6 w-full h-full rounded-[8px] z-[10] object-cover", match draft_choice() {
                     Some(_) => "ml-[24px]",
-                    _ => "",
+                    _ => "max-[550px]:hidden",
                 })
             }
             div {
                 class: format!("col-start-6 {} col-span-6 row-end-10 flex flex-col justify-start items-start z-[10] gap-[34px]", match draft_choice() {
                     Some(_) => "row-start-2",
-                    _ => "row-start-3",
+                    _ => "row-start-3 max-[800px]:ml-[20px] max-[550px]:col-start-2",
                 }),
                 if draft_choice().is_some() {
                     CloseButton {

@@ -23,7 +23,7 @@ pub fn HomePage(lang: Language) -> Element {
                 onselect: |_| {},
             }
             div {
-                class: "col-span-1 w-full flex flex-row items-start justify-center gap-[20px] grid grid-cols-1 md:grid-cols-2",
+                class: "col-span-1 w-full flex flex-row items-start justify-center gap-[20px] grid grid-cols-2 max-[1000px]:grid-cols-1",
                 FinishedTopics {
                     class: "col-span-1",
                     _topics: ctrl.finished_topics(),
