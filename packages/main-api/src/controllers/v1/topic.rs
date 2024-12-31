@@ -1,4 +1,3 @@
-#![allow(unused)]
 use std::str::FromStr;
 
 use by_axum::{
@@ -9,7 +8,8 @@ use by_axum::{
     },
     log::root,
 };
-use dto::{common_query_response::CommonQueryResponse, error::ServiceError, *};
+use dto::{common_query_response::CommonQueryResponse, *};
+use serde::{Deserialize, Serialize};
 use slog::o;
 
 #[derive(Clone, Debug)]
@@ -43,7 +43,7 @@ pub enum AddtionalActionRequest {
 }
 
 impl TopicControllerV1 {
-    pub fn route() -> Result<by_axum::axum::Router, Box<dyn std::error::Error>> {
+    pub fn route() -> Result<by_axum::axum::Router> {
         let log = root().new(o!("api-controller" => "TopicControllerV1"));
         let ctrl = TopicControllerV1 { log };
 
@@ -65,7 +65,7 @@ impl TopicControllerV1 {
 
         Path(id): Path<String>,
         Json(body): Json<CreateTopicRequest>,
-    ) -> Result<Json<Topic>, ServiceError> {
+    ) -> dto::Result<Json<Topic>> {
         let log = ctrl.log.new(o!("api" => "create_topic"));
         slog::debug!(log, "create topic({:?}) {:?}", id, body);
 
@@ -77,7 +77,7 @@ impl TopicControllerV1 {
 
         Path(id): Path<String>,
         Json(body): Json<UpdateTopicRequest>,
-    ) -> Result<(), ServiceError> {
+    ) -> Result<()> {
         let log = ctrl.log.new(o!("api" => "update_topic"));
         slog::debug!(log, "update topic({:?}) {:?}", id, body);
 
@@ -88,7 +88,7 @@ impl TopicControllerV1 {
         State(ctrl): State<TopicControllerV1>,
 
         Path(id): Path<String>,
-    ) -> Result<Json<Topic>, ServiceError> {
+    ) -> Result<Json<Topic>> {
         let log = ctrl.log.new(o!("api" => "get_topic"));
         slog::debug!(log, "get topic {:?}", id);
         Ok(Json(Topic::default()))
@@ -98,7 +98,7 @@ impl TopicControllerV1 {
         State(ctrl): State<TopicControllerV1>,
 
         Path(id): Path<String>,
-    ) -> Result<(), ServiceError> {
+    ) -> Result<()> {
         let log = ctrl.log.new(o!("api" => "delete_topic"));
         slog::debug!(log, "delete topic {:?}", id);
         Ok(())
@@ -108,14 +108,13 @@ impl TopicControllerV1 {
         State(ctrl): State<TopicControllerV1>,
 
         Query(req): Query<ListTopicsRequest>,
-    ) -> Result<Json<CommonQueryResponse<Topic>>, ServiceError> {
+    ) -> Result<Json<CommonQueryResponse<Topic>>> {
         let log = ctrl.log.new(o!("api" => "list_topics"));
         slog::debug!(log, "list topics {:?}", req);
-
         let started_at = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
-            .as_secs();
+            .as_secs() as i64;
         let day = 60 * 60 * 24;
         let ended_at = started_at + day * 7;
         let status = TopicStatus::from_str(&req.status.unwrap_or("ongoing".to_string()))
@@ -141,6 +140,7 @@ impl TopicControllerV1 {
                     voters: 100,
                     replies: 100,
                     status: status.clone(),
+                    result: None,
                 },
                 Topic {
                     id: "1".to_string(),
@@ -160,6 +160,7 @@ impl TopicControllerV1 {
                     voters: 100,
                     replies: 100,
                     status: status.clone(),
+                    result: None,
                 },
                 Topic {
                     id: "1".to_string(),
@@ -179,6 +180,7 @@ impl TopicControllerV1 {
                     voters: 100,
                     replies: 100,
                     status: status.clone(),
+                    result: None,
                 }
             ],
             bookmark: None,

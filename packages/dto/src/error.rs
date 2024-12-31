@@ -40,14 +40,12 @@ unsafe impl Sync for ServiceError {}
 #[cfg(feature = "server")]
 impl by_axum::axum::response::IntoResponse for ServiceError {
     fn into_response(self) -> by_axum::axum::response::Response {
-        use serde_json::json;
+        let default_status_code = by_axum::axum::http::StatusCode::BAD_REQUEST;
 
-        let body = by_axum::axum::Json(json!({
-            "error": {
-                "message": self.to_string(),
-            }
-        }));
-
-        (by_axum::axum::http::StatusCode::BAD_REQUEST, body).into_response()
+        (
+            default_status_code,
+            serde_json::to_value(self).unwrap().to_string(),
+        )
+            .into_response()
     }
 }

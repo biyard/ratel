@@ -1,7 +1,7 @@
 use dioxus_aws::prelude::*;
 use dto::{common_query_response::CommonQueryResponse, Topic, TopicStatus};
 
-use crate::services::main_api::MainApi;
+use crate::services::topic_service::TopicService;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Controller {
@@ -12,10 +12,11 @@ pub struct Controller {
 
 impl Controller {
     pub fn new() -> Result<Self, RenderError> {
-        let topic_api: MainApi = use_context();
+        let topic_api: TopicService = use_context();
+
         let topics = use_server_future(move || async move {
             match topic_api
-                .list_topics(10, None, Some(TopicStatus::Ongoing))
+                .list_topics_by_status(10, None, Some(TopicStatus::Ongoing))
                 .await
             {
                 Ok(res) => res,
@@ -28,7 +29,7 @@ impl Controller {
 
         let finished_topics = use_server_future(move || async move {
             match topic_api
-                .list_topics(10, None, Some(TopicStatus::Finished))
+                .list_topics_by_status(10, None, Some(TopicStatus::Finished))
                 .await
             {
                 Ok(res) => res,
@@ -41,7 +42,7 @@ impl Controller {
 
         let upcoming_topics = use_server_future(move || async move {
             match topic_api
-                .list_topics(10, None, Some(TopicStatus::Scheduled))
+                .list_topics_by_status(10, None, Some(TopicStatus::Scheduled))
                 .await
             {
                 Ok(res) => res,

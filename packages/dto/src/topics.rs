@@ -1,5 +1,6 @@
 use std::{fmt::Display, str::FromStr};
 
+use chrono::Datelike;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, Eq, PartialEq)]
@@ -16,13 +17,14 @@ pub struct Topic {
 
     // The image URLs of the voting topic
     pub images: Vec<String>,
+    #[serde(default)]
     pub result: Option<TopicResult>,
     pub votes: Vec<Vote>,
     pub donations: Vec<Donation>,
     // The start time of the vote
-    pub started_at: u64,
+    pub started_at: i64,
     // The end time of the vote
-    pub ended_at: u64,
+    pub ended_at: i64,
     // The number of voters
     pub voters: u64,
     // The number of replies
@@ -49,6 +51,34 @@ impl Topic {
                 _ => None,
             })
             .sum()
+    }
+
+    pub fn donations(&self) -> u64 {
+        self.donations
+            .iter()
+            .map(|r| match r {
+                Donation::Yes(y) => y,
+                Donation::No(n) => n,
+            })
+            .sum::<u64>()
+    }
+
+    pub fn period(&self) -> String {
+        // to "12/15 - 1/22"
+        let start = chrono::DateTime::from_timestamp(self.started_at, 0)
+            .unwrap_or_default()
+            .naive_local();
+        let end = chrono::DateTime::from_timestamp(self.ended_at, 0)
+            .unwrap_or_default()
+            .naive_local();
+
+        format!(
+            "{:02}/{:02} - {:02}/{:02}",
+            start.month(),
+            start.day(),
+            end.month(),
+            end.day()
+        )
     }
 }
 

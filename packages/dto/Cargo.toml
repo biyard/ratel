@@ -12,6 +12,7 @@ serde_json = { workspace = true, optional = true }
 by-axum = { workspace = true, optional = true }
 slog = { workspace = true, optional = true }
 easy-dynamodb = { workspace = true, optional = true }
+chrono = "0.4.39"
 
 
 [features]

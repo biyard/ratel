@@ -9,7 +9,7 @@ pub mod theme;
 use dioxus::prelude::*;
 use dioxus_popup::PopupService;
 use route::Route;
-use services::main_api::MainApi;
+use services::topic_service::TopicService;
 use theme::Theme;
 
 fn main() {
@@ -21,18 +21,20 @@ fn main() {
 }
 
 fn app() -> Element {
+    let conf = config::get();
+
     Theme::init();
-    MainApi::init();
+    TopicService::init();
     PopupService::init();
     #[cfg(feature = "web")]
     dioxus_oauth::prelude::FirebaseService::init(
-        "AIzaSyCRMf_KsChxGfO-oHZSrLmivhVpdp9vqj8",
-        "democrasee-51d6b.firebaseapp.com",
-        "democrasee-51d6b",
-        "democrasee-51d6b.firebasestorage.app",
-        "258116650101",
-        "1:258116650101:web:395d905ac16de47c46a43c",
-        "G-2B1VZE70HK",
+        &conf.firebase.api_key,
+        &conf.firebase.auth_domain,
+        &conf.firebase.project_id,
+        &conf.firebase.storage_bucket,
+        &conf.firebase.messaging_sender_id,
+        &conf.firebase.app_id,
+        &conf.firebase.measurement_id,
     );
 
     rsx! {

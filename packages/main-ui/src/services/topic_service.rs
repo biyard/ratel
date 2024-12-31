@@ -1,14 +1,14 @@
-pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
+pub type Result<T> = std::result::Result<T, ServiceError>;
 
 use dioxus::prelude::*;
-use dto::{common_query_response::CommonQueryResponse, Topic, TopicStatus};
+use dto::{common_query_response::CommonQueryResponse, error::ServiceError, Topic, TopicStatus};
 
 #[derive(Debug, Clone, Copy, Default)]
-pub struct MainApi {
+pub struct TopicService {
     pub endpoint: Signal<String>,
 }
 
-impl MainApi {
+impl TopicService {
     pub fn init() {
         let conf = crate::config::get();
         let srv = Self {
@@ -17,7 +17,7 @@ impl MainApi {
         use_context_provider(|| srv);
     }
 
-    pub async fn list_topics(
+    pub async fn list_topics_by_status(
         &self,
         size: usize,
         bookmark: Option<&str>,
@@ -36,8 +36,12 @@ impl MainApi {
         }
 
         tracing::debug!("url: {}", url);
-        let request = client.request(reqwest::Method::GET, url);
+        let res = client.request(reqwest::Method::GET, url).send().await?;
 
-        Ok(request.send().await?.json().await?)
+        if res.status().is_success() {
+            Ok(res.json().await?)
+        } else {
+            Err(res.json().await?)
+        }
     }
 }
