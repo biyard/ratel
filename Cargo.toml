@@ -4,9 +4,9 @@ resolver = "2"
 
 [workspace.package]
 authors = ["Biyard"]
-description = "Referendum"
+description = "DemocraSee"
 edition = "2021"
-repository = "https://github.com/biyard/referendum"
+repository = "https://github.com/biyard/democrasee"
 
 [workspace.dependencies]
 serde = { version = "1.0.197", features = ["derive"] }
@@ -15,7 +15,7 @@ slog = "2.7.0"
 by-axum = { version = "0.1.7" }
 easy-dynamodb = "0.1.6"
 dto = { path = "./packages/dto" }
-reqwest = { version = "0.12.5", features = ["blocking", "json"] }
+reqwest = { version = "0.12.5", features = ["blocking", "json", "multipart"] }
 
 [profile]
 

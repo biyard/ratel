@@ -1,19 +1,19 @@
-use std::error::Error;
-
 use by_axum::logger::root;
 use controllers::v1::topic::TopicControllerV1;
+use dto::error::ServiceError;
 use tokio::net::TcpListener;
 
 mod controllers {
     pub mod v1 {
         pub mod topic;
+        pub mod users;
     }
 }
 
 pub mod config;
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn Error>> {
+async fn main() -> Result<(), ServiceError> {
     let log = root();
 
     easy_dynamodb::init(

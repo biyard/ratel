@@ -9,7 +9,7 @@ pub mod theme;
 use dioxus::prelude::*;
 use dioxus_popup::PopupService;
 use route::Route;
-use services::topic_service::TopicService;
+use services::{topic_service::TopicService, user_service::UserService};
 use theme::Theme;
 
 fn main() {
@@ -21,21 +21,10 @@ fn main() {
 }
 
 fn app() -> Element {
-    let conf = config::get();
-
     Theme::init();
+    UserService::init();
     TopicService::init();
     PopupService::init();
-    #[cfg(feature = "web")]
-    dioxus_oauth::prelude::FirebaseService::init(
-        &conf.firebase.api_key,
-        &conf.firebase.auth_domain,
-        &conf.firebase.project_id,
-        &conf.firebase.storage_bucket,
-        &conf.firebase.messaging_sender_id,
-        &conf.firebase.app_id,
-        &conf.firebase.measurement_id,
-    );
 
     rsx! {
         document::Title { "DemocraSee" }
