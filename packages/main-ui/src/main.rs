@@ -36,37 +36,20 @@ fn app() -> Element {
     );
 
     rsx! {
-        head {
-            title {""}
-            meta {
-                name: "description",
-                content: ""
-            }
-            meta {
-                name: "viewport",
-                content: "width=device-width, initial-scale=1.0"
-            }
-            link {
-                id: "favicon",
-                rel: "icon",
-                href: asset!("/public/favicon.ico"),
-            }
-            link {
-                rel: "stylesheet",
-                href: asset!("/public/main.css"),
-            }
-            link {
-                rel: "stylesheet",
-                href: asset!("/public/tailwind.css")
-            }
-            script {
-                src: "https://cdn.tailwindcss.com/3.4.16",
-            }
-            link {
-                rel: "stylesheet",
-                href: "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.1/css/all.min.css",
-            }
+        document::Title { "DemocraSee" }
+        document::Meta { name: "description", content: "" }
+        document::Meta {
+            name: "viewport",
+            content: "width=device-width, initial-scale=1.0",
         }
+        document::Link { id: "favicon", rel: "icon", href: asset!("/public/favicon.ico") }
+        document::Link { rel: "stylesheet", href: asset!("/public/main.css") }
+        document::Link { rel: "stylesheet", href: asset!("/public/tailwind.css") }
+        document::Link {
+            rel: "stylesheet",
+            href: "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.1/css/all.min.css",
+        }
+        document::Script { src: "https://cdn.tailwindcss.com/3.4.16" }
 
         Router::<Route> {}
     }
