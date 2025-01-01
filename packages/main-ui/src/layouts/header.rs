@@ -35,14 +35,12 @@ pub fn HeaderTails() -> Element {
                 background: "{theme.primary06}",
                 onclick: move |_| {
                     tracing::debug!("회원가입 버튼 클릭");
-                    let mut p = popup.clone();
                     popup
                         .open(rsx! {
                             SignupPopup {
                                 class: "w-[400px]",
                                 onclick: move |_| async move {
                                     tracing::debug!("Google로 계속하기 버튼 클릭");
-                                    user_service.login().await;
                                 },
                             }
                         })

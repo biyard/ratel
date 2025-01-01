@@ -62,6 +62,20 @@ impl UserService {
                             return;
                         }
                     };
+                    tracing::debug!(
+                        "UserService::login: email={} name={} profile_url={}",
+                        email,
+                        name,
+                        profile_url
+                    );
+                    // self.popup.open(rsx! {
+                    //     crate::layouts::user_setup_popup::UserSetupPopup {
+                    //         class: "w-[400px]",
+                    //         nickname: name,
+                    //         profile_url,
+                    //         email,
+                    //     }
+                    // });
                 }
                 google_wallet::WalletEvent::Login => {
                     tracing::debug!("UserService::login: SignOut");

@@ -1,6 +1,6 @@
 use base64::{engine::general_purpose, Engine};
 use dioxus::prelude::*;
-use dioxus_oauth::prelude::{Credential, FirebaseService};
+use dioxus_oauth::prelude::FirebaseService;
 use gloo_storage::{errors::StorageError, LocalStorage, Storage};
 use ic_agent::{identity::BasicIdentity, Identity};
 use ring::{rand::SystemRandom, signature::Ed25519KeyPair};
