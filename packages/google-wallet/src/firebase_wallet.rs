@@ -1,5 +1,4 @@
 use base64::{engine::general_purpose, Engine};
-use dioxus::prelude::*;
 use dioxus_oauth::prelude::FirebaseService;
 use gloo_storage::{errors::StorageError, LocalStorage, Storage};
 use ic_agent::{identity::BasicIdentity, Identity};
@@ -7,23 +6,14 @@ use ring::{rand::SystemRandom, signature::Ed25519KeyPair};
 
 pub const IDENTITY_KEY: &str = "identity";
 
-#[derive(Debug, Clone, Copy, Default)]
+#[derive(Debug, Clone)]
 pub struct FirebaseWallet {
+    pub principal: Option<String>,
     pub firebase: FirebaseService,
-
-    pub principal: Signal<Option<String>>,
-    pub public_key: Signal<Option<Vec<u8>>>,
-    pub private_key: Signal<Option<String>>,
-
-    pub key_pair: Signal<Option<Vec<u8>>>,
-
-    pub email: Signal<Option<String>>,
-    pub name: Signal<Option<String>>,
-    pub photo_url: Signal<Option<String>>,
 }
 
 impl FirebaseWallet {
-    pub fn init(
+    pub fn new(
         api_key: &str,
         auth_domain: &str,
         project_id: &str,
@@ -31,8 +21,8 @@ impl FirebaseWallet {
         messaging_sender_id: &str,
         app_id: &str,
         measurement_id: &str,
-    ) {
-        FirebaseService::init(
+    ) -> Self {
+        let firebase = FirebaseService::new(
             api_key,
             auth_domain,
             project_id,
@@ -42,49 +32,24 @@ impl FirebaseWallet {
             measurement_id,
         );
 
-        let mut srv = Self {
-            firebase: use_context(),
+        // let mut srv = Self {
+        // };
 
-            principal: use_signal(|| None),
-            public_key: use_signal(|| None),
-            private_key: use_signal(|| None),
-            key_pair: use_signal(|| None),
+        // use_context_provider(|| srv);
 
-            email: use_signal(|| None),
-            name: use_signal(|| None),
-            photo_url: use_signal(|| None),
-        };
-
-        use_context_provider(|| srv);
-
-        use_future(move || async move {
-            srv.try_setup_from_storage();
-        });
-    }
-
-    pub fn get_user_info(&self) -> Option<(String, String, String)> {
-        let email = (self.email)().clone();
-        let name = (self.name)().clone();
-        let photo_url = (self.photo_url)().clone();
-
-        if email.is_none() || name.is_none() || photo_url.is_none() {
-            return None;
-        }
-
-        Some((email.unwrap(), name.unwrap(), photo_url.unwrap()))
+        // use_future(move || async move {
+        //     srv.try_setup_from_storage();
+        // });
+        Self::default()
     }
 
     pub fn get_login(&self) -> bool {
-        (self.principal)().is_some()
-    }
-
-    pub fn get_principal(&self) -> String {
-        (self.principal)().unwrap_or_default()
+        self.is_some()
     }
 
     pub fn try_setup_from_storage(&mut self) -> Option<String> {
         if self.get_login() {
-            return Some(self.get_principal());
+            return self.principal;
         }
 
         tracing::debug!("try_setup_from_storage");

@@ -1,0 +1,21 @@
+[package]
+name = "example"
+version = "0.1.1"
+authors = ["hackartists <hackartists@gmail.com>"]
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+serde = { version = "1.0.197", features = ["derive"] }
+
+dioxus = { workspace = true, features = ["fullstack", "router"] }
+dioxus-oauth = { path = "../../packages/dioxus-oauth" }
+
+# Debug
+dioxus-logger = "0.5.1"
+
+[features]
+default = []
+server = ["dioxus/server"]
+web = ["dioxus/web", "dioxus-oauth/web"]

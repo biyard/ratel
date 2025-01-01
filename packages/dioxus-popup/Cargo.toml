@@ -7,4 +7,4 @@ edition.workspace = true
 repository.workspace = true
 
 [dependencies]
-dioxus = "0.6.1"
+dioxus.workspace = true

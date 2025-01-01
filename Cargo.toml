@@ -1,5 +1,5 @@
 [workspace]
-members = ["packages/main-ui", "packages/dto", "packages/main-api", "packages/dioxus-popup", "packages/google-wallet"]
+members = ["packages/main-ui", "packages/dto", "packages/main-api", "packages/dioxus-popup", "packages/google-wallet", "packages/dioxus-oauth", "examples/oauth"]
 resolver = "2"
 
 [workspace.package]
@@ -16,6 +16,7 @@ by-axum = { version = "0.1.7" }
 easy-dynamodb = "0.1.6"
 dto = { path = "./packages/dto" }
 reqwest = { version = "0.12.5", features = ["blocking", "json", "multipart"] }
+dioxus = { version = "0.6.1" }
 
 [profile]
 

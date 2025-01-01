@@ -8,9 +8,8 @@ repository.workspace = true
 
 [dependencies]
 base64 = "0.22.1"
-dioxus = { version = "0.6.0", features = ["web"] }
-dioxus-oauth = { path = "../../../dioxus-oauth", version = "0.6.1", features = [ "web" ] }
-# getrandom = { version = "0.2.15", features = [ "js" ] }
+dioxus = { workspace = true, features = ["web"] }
+dioxus-oauth = { path = "../dioxus-oauth", features = [ "web" ] }
 gloo-storage = "0.3.0"
 ic-agent = { version = "0.39.2", features = ["ring", "wasm-bindgen"] }
 reqwest = { workspace = true, features = ["blocking", "json"] }
