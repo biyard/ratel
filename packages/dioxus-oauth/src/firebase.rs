@@ -4,13 +4,13 @@ use wasm_bindgen::prelude::*;
 extern "C" {
     #[wasm_bindgen(js_name = initializeApp)]
     fn initialize_app(
-        api_key: &str,
-        auth_domain: &str,
-        project_id: &str,
-        storage_bucket: &str,
-        messaging_sender_id: &str,
-        app_id: &str,
-        measurement_id: &str,
+        api_key: String,
+        auth_domain: String,
+        project_id: String,
+        storage_bucket: String,
+        messaging_sender_id: String,
+        app_id: String,
+        measurement_id: String,
     );
 
     #[wasm_bindgen(catch, js_name = signInWithPopup)]
@@ -31,13 +31,13 @@ pub struct FirebaseService {}
 
 impl FirebaseService {
     pub fn new(
-        api_key: &str,
-        auth_domain: &str,
-        project_id: &str,
-        storage_bucket: &str,
-        messaging_sender_id: &str,
-        app_id: &str,
-        measurement_id: &str,
+        api_key: String,
+        auth_domain: String,
+        project_id: String,
+        storage_bucket: String,
+        messaging_sender_id: String,
+        app_id: String,
+        measurement_id: String,
     ) -> Self {
         tracing::debug!("FirebaseService::init: {api_key}, {auth_domain}, {project_id}, {storage_bucket}, {messaging_sender_id}, {app_id}, {measurement_id}");
 

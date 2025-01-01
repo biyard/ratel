@@ -3,10 +3,10 @@ use dioxus::prelude::*;
 
 use crate::config;
 
-#[derive(Debug, Clone, Copy, Default)]
+#[derive(Debug, Clone, Copy)]
 pub struct UserService {
     #[cfg(feature = "web-only")]
-    pub firebase: google_wallet::FirebaseWallet,
+    pub firebase: Signal<google_wallet::FirebaseWallet>,
 }
 
 impl UserService {
@@ -14,19 +14,19 @@ impl UserService {
         let conf = config::get();
 
         #[cfg(feature = "web-only")]
-        google_wallet::FirebaseWallet::init(
-            &conf.firebase.api_key,
-            &conf.firebase.auth_domain,
-            &conf.firebase.project_id,
-            &conf.firebase.storage_bucket,
-            &conf.firebase.messaging_sender_id,
-            &conf.firebase.app_id,
-            &conf.firebase.measurement_id,
+        let firebase = google_wallet::FirebaseWallet::new(
+            conf.firebase.api_key.clone(),
+            conf.firebase.auth_domain.clone(),
+            conf.firebase.project_id.clone(),
+            conf.firebase.storage_bucket.clone(),
+            conf.firebase.messaging_sender_id.clone(),
+            conf.firebase.app_id.clone(),
+            conf.firebase.measurement_id.clone(),
         );
 
         use_context_provider(|| Self {
             #[cfg(feature = "web-only")]
-            firebase: use_context(),
+            firebase: Signal::new(firebase),
         });
     }
 
@@ -35,7 +35,8 @@ impl UserService {
 
         #[cfg(feature = "web-only")]
         {
-            let evt = match self.firebase.request_wallet_with_google().await {
+            let mut firebase = self.firebase.write();
+            let evt = match firebase.request_wallet_with_google().await {
                 Ok(evt) => {
                     tracing::debug!("UserService::login: cred={:?}", evt);
                     evt
@@ -50,12 +51,13 @@ impl UserService {
                 google_wallet::WalletEvent::Signup => {
                     tracing::debug!("UserService::login: SignIn: ");
 
-                    let principal = self.firebase.get_principal();
+                    let principal = firebase.get_principal();
                     if principal.is_empty() {
                         tracing::error!("UserService::login: principal is empty");
                         return;
                     }
-                    let (email, name, profile_url) = match self.firebase.get_user_info() {
+
+                    let (email, name, profile_url) = match firebase.get_user_info() {
                         Some(v) => v,
                         None => {
                             tracing::error!("UserService::login: None");
