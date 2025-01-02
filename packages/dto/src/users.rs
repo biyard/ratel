@@ -15,15 +15,10 @@ pub enum UserActionRequest {
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize, Default)]
 pub struct User {
-    id: String,
-    r#type: String,
-    crated_at: u64,
-    updated_at: u64,
-    deleted_at: Option<u64>,
+    pub created_at: u64,
+    pub updated_at: u64,
 
-    name: Option<String>,
-
-    // Indexes, if deleted_at is set, all values of indexes must be empty.
-    gsi1: String,
-    gsi2: String,
+    pub nickname: String,
+    pub email: String,
+    pub profile_url: String,
 }

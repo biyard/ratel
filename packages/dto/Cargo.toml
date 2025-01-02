@@ -13,6 +13,10 @@ by-axum = { workspace = true, optional = true }
 slog = { workspace = true, optional = true }
 easy-dynamodb = { workspace = true, optional = true }
 chrono = "0.4.39"
+base64 = "0.22.1"
+ring = "0.17.8"
+simple_asn1 = "0.6.2"
+candid = "0.10.11"
 
 
 [features]

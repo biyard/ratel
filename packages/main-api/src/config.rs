@@ -1,12 +1,14 @@
 #[derive(Debug)]
 pub struct Config {
-    pub env: String,
+    pub env: &'static str,
+    pub domain: &'static str,
 }
 
 impl Default for Config {
     fn default() -> Self {
         Config {
-            env: option_env!("env").expect("You must set ENV").to_string(),
+            env: option_env!("ENV").expect("You must set ENV"),
+            domain: option_env!("DOMAIN").expect("You must set DOMAIN"),
         }
     }
 }

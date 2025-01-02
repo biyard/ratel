@@ -2193,11 +2193,15 @@ checksum = "f25c0e292a7ca6d6498557ff1df68f32c99850012b6ea401cf8daf771f22ff53"
 name = "dto"
 version = "0.1.0"
 dependencies = [
+ "base64 0.22.1",
  "by-axum",
+ "candid",
  "chrono",
  "easy-dynamodb",
+ "ring",
  "serde",
  "serde_json",
+ "simple_asn1",
  "slog",
 ]
 
@@ -2224,9 +2228,7 @@ checksum = "92773504d58c093f6de2459af4af33faa518c13451eb8f2b5698ed3d36e7c813"
 
 [[package]]
 name = "easy-dynamodb"
-version = "0.1.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9b1fc7652b3bbad6ef2c90e995eee0c4d2fd7dd4563ecf35a2d648222148fef0"
+version = "0.1.7"
 dependencies = [
  "aws-config",
  "aws-credential-types",
@@ -2964,6 +2966,7 @@ name = "google-wallet"
 version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
+ "candid",
  "dioxus",
  "dioxus-oauth",
  "gloo-storage",
@@ -4109,6 +4112,7 @@ name = "main-api"
 version = "0.2.0"
 dependencies = [
  "by-axum",
+ "chrono",
  "dto",
  "easy-dynamodb",
  "serde",
