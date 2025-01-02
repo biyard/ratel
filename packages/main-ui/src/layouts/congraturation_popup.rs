@@ -14,21 +14,13 @@ pub fn CongraturationPopup(
     let mut popup: PopupService = use_context();
 
     rsx! {
-        div {
-            id,
-            class,
-            div {
-                class: "pt-[10px] flex flex-col items-center justify-start gap-[15px]",
-                div {
-                    class: "flex flex-row items-center justify-center w-[88px] h-[88px] bg-[#2C2E42] rounded-[50%]",
-                    Logo {
-                        width: 36,
-                        height: 43,
-                    }
+        div { id, class,
+            div { class: "pt-[10px] flex flex-col items-center justify-start gap-[15px]",
+                div { class: "flex flex-row items-center justify-center w-[88px] h-[88px] bg-[#2C2E42] rounded-[50%]",
+                    Logo { width: 36, height: 43 }
                 }
 
-                div {
-                    class: "leading-[24px] text-[16px] font-regular text-white flex flex-row items-center justify-center text-center tracking-[0.005em]",
+                div { class: "leading-[24px] text-[16px] font-regular text-white flex flex-row items-center justify-center text-center tracking-[0.005em]",
                     pre {
                         "‘서비스명’에 오신 것을 환영합니다!\n익명성과 신뢰를 바탕으로 안전한 투표 환경을 제공합니다."
                     }

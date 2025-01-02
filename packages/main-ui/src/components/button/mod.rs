@@ -24,14 +24,13 @@ pub fn Button(
     };
 
     rsx! {
-        div {
-            class: "{class}",
+        div { class: "{class}",
             div {
                 class: "{font_theme.bold15} px-[16px] py-[10px] opacity-70 hover:opacity-100 cursor-pointer rounded-[8px]",
                 onclick: move |evt| onclick.call(evt),
                 style: match background {
                     Some(bg) => format!("background-color: {}; color: {}", bg, color),
-                    None => format!("color: {}", color)
+                    None => format!("color: {}", color),
                 },
                 {children}
             }
@@ -73,33 +72,35 @@ pub fn RoundedYesButton(
         "border-[1px]"
     };
     let icon = if disabled {
-        rsx! {icons::FilledVoteYes{}}
+        rsx! {
+            icons::FilledVoteYes {}
+        }
     } else if hover() && onclick.is_some() {
-        rsx! {icons::FilledVoteYes{ color: theme.grey00.as_str() }}
+        rsx! {
+            icons::FilledVoteYes { color: theme.grey00.as_str() }
+        }
     } else {
-        rsx! {icons::OutlinedVoteYes{}}
+        rsx! {
+            icons::OutlinedVoteYes {}
+        }
     };
 
     rsx! {
         div {
             class: "flex flex-col items-center justify-center rounded-[{rounded}px] {border_class} py-[8px] {class} hover:bg-black cursor-pointer",
-            onclick: move |evt| if onclick.is_some(){
-                onclick.unwrap().call(evt)
+            onclick: move |evt| {
+                if onclick.is_some() {
+                    onclick.unwrap().call(evt)
+                }
             },
             onmouseenter: move |_| {
                 tracing::debug!("hover");
                 hover.set(true)
             },
-            onmouseleave: move |_| {
-                hover.set(false)
-            } ,
+            onmouseleave: move |_| { hover.set(false) },
             style: "color: {color}; background: {bg}; border-color: {border};",
-            div {
-                class: "flex items-center justify-center gap-[10px]",
-                span {
-                    class: "text-[15px] font-bold",
-                    "찬성"
-                }
+            div { class: "flex items-center justify-center gap-[10px]",
+                span { class: "text-[15px] font-bold", "찬성" }
                 {icon}
             }
         }
@@ -140,28 +141,32 @@ pub fn RoundedNoButton(
         "border-[1px]"
     };
     let icon = if disabled {
-        rsx! {icons::FilledVoteNo{}}
+        rsx! {
+            icons::FilledVoteNo {}
+        }
     } else if hover() {
-        rsx! {icons::FilledVoteNo{ color: theme.grey00.as_str() }}
+        rsx! {
+            icons::FilledVoteNo { color: theme.grey00.as_str() }
+        }
     } else {
-        rsx! {icons::OutlinedVoteNo{}}
+        rsx! {
+            icons::OutlinedVoteNo {}
+        }
     };
 
     rsx! {
         div {
             class: "flex flex-col items-center transition-all justify-center rounded-[{rounded}px] {border_class} py-[8px] {class} hover:bg-[{bg}] cursor-pointer",
-            onclick: move |evt| if onclick.is_some(){
-                onclick.unwrap().call(evt)
+            onclick: move |evt| {
+                if onclick.is_some() {
+                    onclick.unwrap().call(evt)
+                }
             },
             onmouseenter: move |_| hover.set(true),
             onmouseleave: move |_| hover.set(false),
             style: "color: {color}; background: {bg}; border-color: {border};",
-            div {
-                class: "flex items-center justify-center gap-[10px]",
-                span {
-                    class: "text-[15px] font-bold",
-                    "반대"
-                }
+            div { class: "flex items-center justify-center gap-[10px]",
+                span { class: "text-[15px] font-bold", "반대" }
                 {icon}
             }
         }
@@ -178,7 +183,10 @@ pub fn CloseButton(
 
     rsx! {
         div {
-            class: format!("{class} rounded-[4px] cursor-pointer {}", if hover_close() { "bg-[#2C2E42]" } else { "" }),
+            class: format!(
+                "{class} rounded-[4px] cursor-pointer {}",
+                if hover_close() { "bg-[#2C2E42]" } else { "" },
+            ),
             onclick,
             onmouseenter: move |_| {
                 hover_close.set(true);
@@ -186,13 +194,7 @@ pub fn CloseButton(
             onmouseleave: move |_| {
                 hover_close.set(false);
             },
-            Close {
-                color: if hover_close() {
-                    "#74789E"
-                } else {
-                    "white"
-                }
-            }
+            Close { color: if hover_close() { "#74789E" } else { "white" } }
         }
     }
 }

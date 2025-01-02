@@ -81,7 +81,7 @@ pub fn FinishedTopic(
                         } else {
                             RoundedNoButton { rounded: 6, class: "w-full", disabled: true }
                         }
-
+                    
                     }
                 }
 

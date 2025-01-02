@@ -3,13 +3,12 @@ use std::str::FromStr;
 use by_axum::{
     axum::{
         extract::{Path, Query, State},
-        routing::{get, post},
+        routing::get,
         Json,
     },
     log::root,
 };
-use dto::{common_query_response::CommonQueryResponse, *};
-use serde::{Deserialize, Serialize};
+use dto::*;
 use slog::o;
 
 #[derive(Clone, Debug)]
@@ -19,27 +18,9 @@ pub struct TopicControllerV1 {
 
 #[derive(Debug, serde::Deserialize)]
 pub struct ListTopicsRequest {
-    size: Option<usize>,
-    bookmark: Option<String>,
+    _size: Option<usize>,
+    _bookmark: Option<String>,
     status: Option<String>,
-}
-
-#[derive(Debug, serde::Deserialize)]
-pub struct CreateTopicRequest {
-    name: String,
-}
-
-#[derive(Debug, serde::Deserialize)]
-pub struct UpdateTopicRequest {
-    name: Option<String>,
-}
-
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-#[serde(untagged)]
-pub enum AddtionalActionRequest {
-    Action1(String),
-    Action2(String),
 }
 
 impl TopicControllerV1 {
@@ -48,40 +29,10 @@ impl TopicControllerV1 {
         let ctrl = TopicControllerV1 { log };
 
         Ok(by_axum::axum::Router::new()
-            .route(
-                "/:id",
-                post(Self::create_topic)
-                    .get(Self::get_topic)
-                    .delete(Self::delete_topic)
-                    .put(Self::update_topic),
-            )
+            .route("/:id", get(Self::get_topic))
             .with_state(ctrl.clone())
             .route("/", get(Self::list_topics))
             .with_state(ctrl))
-    }
-
-    pub async fn create_topic(
-        State(ctrl): State<TopicControllerV1>,
-
-        Path(id): Path<String>,
-        Json(body): Json<CreateTopicRequest>,
-    ) -> dto::Result<Json<Topic>> {
-        let log = ctrl.log.new(o!("api" => "create_topic"));
-        slog::debug!(log, "create topic({:?}) {:?}", id, body);
-
-        Ok(Json(Topic::default()))
-    }
-
-    pub async fn update_topic(
-        State(ctrl): State<TopicControllerV1>,
-
-        Path(id): Path<String>,
-        Json(body): Json<UpdateTopicRequest>,
-    ) -> Result<()> {
-        let log = ctrl.log.new(o!("api" => "update_topic"));
-        slog::debug!(log, "update topic({:?}) {:?}", id, body);
-
-        Ok(())
     }
 
     pub async fn get_topic(
@@ -92,16 +43,6 @@ impl TopicControllerV1 {
         let log = ctrl.log.new(o!("api" => "get_topic"));
         slog::debug!(log, "get topic {:?}", id);
         Ok(Json(Topic::default()))
-    }
-
-    pub async fn delete_topic(
-        State(ctrl): State<TopicControllerV1>,
-
-        Path(id): Path<String>,
-    ) -> Result<()> {
-        let log = ctrl.log.new(o!("api" => "delete_topic"));
-        slog::debug!(log, "delete topic {:?}", id);
-        Ok(())
     }
 
     pub async fn list_topics(

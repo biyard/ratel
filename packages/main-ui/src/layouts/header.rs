@@ -5,7 +5,7 @@ use dioxus_popup::PopupService;
 use crate::{
     components::{button::Button, logo::LogoWrapper},
     layouts::{signup_popup::SignupPopup, user_setup_popup::UserSetupPopup},
-    services::user_service::UserService,
+    services::user_service::{UserEvent, UserService},
     theme::Theme,
 };
 
@@ -41,7 +41,31 @@ pub fn HeaderTails() -> Element {
                                 class: "w-[400px]",
                                 onclick: move |_| async move {
                                     tracing::debug!("Google로 계속하기 버튼 클릭");
-                                    user_service.login().await;
+                                    match user_service.login().await {
+                                        UserEvent::Signup(email, nickname, profile_url) => {
+                                            popup.open(rsx! {
+                                                UserSetupPopup {
+                                                    class: "w-[400px]",
+                                                    nickname,
+                                                    profile_url,
+                                                    email,
+                                                }
+                                            });
+                                        }
+                                        UserEvent::Login(email, nickname, profile_url) => {
+                                            popup.open(rsx! {
+                                                UserSetupPopup {
+                                                    class: "w-[400px]",
+                                                    nickname,
+                                                    profile_url,
+                                                    email,
+                                                }
+                                            });
+                                        }
+                                        _ => {
+                                            popup.close();
+                                        }
+                                    };
                                 },
                             }
                         })

@@ -18,12 +18,28 @@ pub fn UserSetupPopup(
     let mut popup: PopupService = use_context();
     let mut valid = use_signal(|| true);
     let mut nickname = use_signal(|| nickname.to_string());
+    let mut agreed = use_signal(|| false);
     let theme: Theme = use_context();
     let theme = theme.get_data();
+    let btn_color = use_memo(move || {
+        if agreed() {
+            theme.primary100.clone()
+        } else {
+            theme.primary03.clone()
+        }
+    });
 
     rsx! {
         div { id, class,
             div { class: "flex flex-col items-start justify-start w-full pt-[10px] gap-[25px]",
+
+                // Profile
+                div { class: "w-full flex items-center justify-center",
+                    img {
+                        class: "w-[100px] h-[100px] rounded-[50%] object-contain",
+                        src: profile_url,
+                    }
+                }
 
                 // Email
                 if !email.is_empty() {
@@ -33,7 +49,7 @@ pub fn UserSetupPopup(
                         }
                         div { class: "flex flex-col items-start w-full mt-[10px] gap-[8px]",
                             input {
-                                class: "w-[400px] max-[400px]:w-[300px] h-[59px] px-[24px] py-[17.5px] bg-[#2C2E42] text-[18px] font-bold leading-[24px] rounded-[4px] placeholder-[{theme.primary07}] rounded-[8px]",
+                                class: "w-[400px] max-[400px]:w-[300px] h-[59px] px-[24px] py-[17.5px] bg-[#2C2E42] text-[18px] font-bold leading-[24px] rounded-[4px] placeholder-[{theme.primary07}] rounded-[8px] text-[{theme.primary04}]",
                                 value: email,
                                 disabled: true,
                             }
@@ -57,7 +73,6 @@ pub fn UserSetupPopup(
                                 valid.set(value.chars().all(|c| c.is_alphanumeric()));
                                 nickname.set(value);
                             },
-
                         }
                         if !valid() {
                             span { class: "text-[14px] font-bold leading-[24px] text-[{theme.primary04}]",
@@ -68,7 +83,12 @@ pub fn UserSetupPopup(
                 }
 
                 div { class: "flex flex-row gap-[10px] items-center",
-                    Checkbox { title: "[필수] 이메일 및 계정주소 수집에 동의합니다." }
+                    Checkbox {
+                        title: "[필수] 이메일 및 계정주소 수집에 동의합니다.",
+                        onchange: move |check| {
+                            agreed.set(check);
+                        },
+                    }
                                 // button { class: "px-[10px] py-[2px] rounded-[4px] bg-[{theme.primary11}] hover:bg-[{theme.primary05}]",
                 //     div { class: "text-[14px] font-bold h-[24px] text-center text-white align-middle flex items-center justify-center",
                 //         "자세히보기"
@@ -77,15 +97,17 @@ pub fn UserSetupPopup(
                 }
 
                 button {
-                    class: "w-full mt-[10px] rounded-[12px] bg-[{theme.primary03}] opacity-50 hover:opacity-100 text-[18px] font-extrabold leading-[24px] text-[{theme.primary05}] h-[59px] flex items-center justify-center",
+                    class: "w-full mt-[10px] rounded-[12px] bg-[{btn_color}] opacity-50 hover:opacity-100 text-[18px] font-extrabold leading-[24px] text-[{theme.primary05}] h-[59px] flex items-center justify-center",
                     onclick: move |_| {
-                        popup
-                            .open(rsx! {
-                                CongraturationPopup {}
-                            })
-                            .with_id("congraturation_popup")
-                            .with_title("환영합니다!")
-                            .without_close();
+                        if agreed() {
+                            popup
+                                .open(rsx! {
+                                    CongraturationPopup {}
+                                })
+                                .with_id("congraturation_popup")
+                                .with_title("환영합니다!")
+                                .without_close();
+                        }
                     },
                     "다음"
                 }

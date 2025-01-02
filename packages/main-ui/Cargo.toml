@@ -27,6 +27,7 @@ dioxus-sdk = { version = "0.6.0", features = ["window_size"], optional = true }
 dioxus-oauth = { path = "../dioxus-oauth", features = ["web"], optional = true }
 google-wallet = { path = "../google-wallet", optional = true }
 chrono = "0.4.39"
+base64 = "0.22.1"
 
 [features]
 default = []

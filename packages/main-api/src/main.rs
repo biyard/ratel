@@ -35,7 +35,12 @@ async fn main() -> Result<(), ServiceError> {
         None,
     );
 
-    let app = by_axum::new().nest("/v1/topics", TopicControllerV1::route()?);
+    let app = by_axum::new()
+        .nest("/v1/topics", TopicControllerV1::route()?)
+        .nest(
+            "/v1/users",
+            controllers::v1::users::UserControllerV1::route()?,
+        );
 
     let port = option_env!("PORT").unwrap_or("3000");
     let listener = TcpListener::bind(format!("0.0.0.0:{}", port))

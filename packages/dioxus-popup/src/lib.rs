@@ -84,10 +84,15 @@ pub fn PopupZone() -> Element {
 
     rsx! {
         div {
-            class: format!("{}", match popup.is_opened() {
-                true => "fixed top-0 left-0 w-screen h-screen bg-black bg-opacity-50 flex justify-center items-center backdrop-blur-[4px] bg-black/25 z-[101]",
-                false => "hidden"
-            }),
+            class: format!(
+                "{}",
+                match popup.is_opened() {
+                    true => {
+                        "fixed top-0 left-0 w-screen h-screen bg-black bg-opacity-50 flex justify-center items-center backdrop-blur-[4px] bg-black/25 z-[101]"
+                    }
+                    false => "hidden",
+                },
+            ),
             onclick: move |_| {
                 popup.close();
             },
@@ -99,7 +104,10 @@ pub fn PopupZone() -> Element {
                     },
                     if (popup.close)() {
                         div {
-                            class: format!("absolute top-[25px] right-[25px] rounded-[4px] cursor-pointer {}", if hover_close() { "bg-[#2C2E42]" } else { "" }),
+                            class: format!(
+                                "absolute top-[25px] right-[25px] rounded-[4px] cursor-pointer {}",
+                                if hover_close() { "bg-[#2C2E42]" } else { "" },
+                            ),
                             onclick: move |_| {
                                 popup.close();
                             },
@@ -109,13 +117,7 @@ pub fn PopupZone() -> Element {
                             onmouseleave: move |_| {
                                 hover_close.set(false);
                             },
-                            Close {
-                                color: if hover_close() {
-                                    "#74789E"
-                                } else {
-                                    "white"
-                                }
-                            }
+                            Close { color: if hover_close() { "#74789E" } else { "white" } }
                         }
                     }
                     div {
@@ -124,13 +126,10 @@ pub fn PopupZone() -> Element {
                         match popup.get_title() {
                             Some(title) => {
                                 rsx! {
-                                    div {
-                                        class: "text-[20px] font-bold text-white",
-                                        "{title}"
-                                    }
+                                    div { class: "text-[20px] font-bold text-white", "{title}" }
                                 }
                             }
-                            None => rsx! {}
+                            None => rsx! {},
                         }
                         {popup.render()}
                     }

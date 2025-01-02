@@ -60,7 +60,7 @@ pub fn HighlightedTopics(
                     }
                 }
             }
-
+        
         }
     }
 }
@@ -330,7 +330,7 @@ pub fn VoteResultBars(
                     div { class: "absolute z-[20] h-[22px] w-[22px] left-[2.46px] top-[3px] rounded-[6px] bg-[#FF5A5D] opacity-50" }
                     span { class: "z-[30]", "{no}%" }
                 }
-
+            
             }
         }
     }

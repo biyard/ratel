@@ -2,7 +2,10 @@ use base64::{engine::general_purpose, Engine};
 use dioxus_oauth::prelude::FirebaseService;
 use gloo_storage::{errors::StorageError, LocalStorage, Storage};
 use ic_agent::{identity::BasicIdentity, Identity};
-use ring::{rand::SystemRandom, signature::Ed25519KeyPair};
+use ring::{
+    rand::SystemRandom,
+    signature::{Ed25519KeyPair, Signature},
+};
 
 pub const IDENTITY_KEY: &str = "identity";
 
@@ -11,6 +14,7 @@ pub struct FirebaseWallet {
     pub principal: Option<String>,
     pub firebase: FirebaseService,
     pub private_key: Option<String>,
+    pub public_key: Option<String>,
     pub key_pair: Option<Vec<u8>>,
 
     pub email: Option<String>,
@@ -38,18 +42,11 @@ impl FirebaseWallet {
             measurement_id,
         );
 
-        // let mut srv = Self {
-        // };
-
-        // use_context_provider(|| srv);
-
-        // use_future(move || async move {
-        //     srv.try_setup_from_storage();
-        // });
         Self {
             firebase,
             principal: None,
             private_key: None,
+            public_key: None,
             key_pair: None,
 
             email: None,
@@ -146,7 +143,7 @@ impl FirebaseWallet {
                     return Err("failed to upload file".to_string());
                 };
 
-                // self.try_setup_from_private_key(private_key);
+                self.try_setup_from_private_key(private_key.clone());
 
                 (WalletEvent::Signup, private_key)
             }
@@ -160,12 +157,30 @@ impl FirebaseWallet {
         Ok(evt)
     }
 
+    pub fn sign(&self, msg: &str) -> Option<Signature> {
+        let private_key_bytes = general_purpose::STANDARD
+            .decode(self.private_key.clone()?)
+            .unwrap_or_default();
+
+        let key_pair =
+            Ed25519KeyPair::from_pkcs8(&private_key_bytes).expect("invalid private key format");
+
+        Some(key_pair.sign(msg.as_bytes()))
+    }
+
     pub fn try_setup_from_private_key(&mut self, private_key: String) -> Option<String> {
-        let id = match general_purpose::STANDARD.decode(private_key.clone()) {
+        let id = match general_purpose::STANDARD.decode(&private_key) {
             Ok(key) => {
                 tracing::debug!("key setup");
                 self.private_key = Some(private_key.clone());
-                self.init_or_get_identity(Some(key.as_ref()))
+                match self.init_or_get_identity(Some(key.as_ref())) {
+                    Some(id) => {
+                        let public_key = general_purpose::STANDARD.encode(id.public_key().unwrap());
+                        self.public_key = Some(public_key);
+                        Some(id)
+                    }
+                    None => None,
+                }
             }
             Err(e) => {
                 tracing::error!("Decode Error: {e}");

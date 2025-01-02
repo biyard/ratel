@@ -6,6 +6,9 @@ use serde::{Deserialize, Serialize};
 #[repr(u64)]
 pub enum ServiceError {
     Unknown(String) = 1000,
+
+    Unauthorized,
+    SignException,
 }
 
 impl std::fmt::Display for ServiceError {
