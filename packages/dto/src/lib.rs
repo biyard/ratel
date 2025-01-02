@@ -4,6 +4,7 @@ pub mod topics;
 pub mod users;
 
 pub use common_query_response::*;
+pub use error::*;
 pub use topics::*;
 pub use users::*;
 

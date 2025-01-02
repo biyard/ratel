@@ -104,7 +104,7 @@ impl UserService {
         }
     }
 
-    pub async fn signup(&self, email: &str, nickname: &str, profile_url: &str) {
+    pub async fn signup(&self, email: &str, nickname: &str, profile_url: &str) -> Result<()> {
         tracing::debug!(
             "UserService::signup: email={} nickname={} profile_url={}",
             email,

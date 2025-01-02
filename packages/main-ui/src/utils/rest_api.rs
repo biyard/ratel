@@ -100,11 +100,8 @@ where
 {
     let client = reqwest::Client::builder().build()?;
 
-    let req = if body.is_some() {
-        client.post(url).json(&body)
-    } else {
-        client.post(url)
-    };
+    let req = client.post(url).json(&body);
+
     #[cfg(feature = "web-only")]
     let req = sign_request(req);
 
