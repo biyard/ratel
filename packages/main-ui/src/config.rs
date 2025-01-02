@@ -14,6 +14,7 @@ pub struct FirebaseConfig {
 #[derive(Debug)]
 pub struct Config {
     pub env: &'static str,
+    pub domain: &'static str,
     pub log_level: Level,
     pub main_api_endpoint: String,
     pub firebase: FirebaseConfig,
@@ -23,6 +24,7 @@ impl Default for Config {
     fn default() -> Self {
         Config {
             env: option_env!("ENV").expect("You must set ENV"),
+            domain: option_env!("DOMAIN").expect("You must set DOMAIN"),
             log_level: match option_env!("LOG_LEVEL") {
                 Some("trace") => Level::TRACE,
                 Some("debug") => Level::DEBUG,

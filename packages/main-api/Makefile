@@ -24,7 +24,7 @@ AWS_REGION ?= $(shell aws configure get region)
 BUILD_ENV ?= ENV=$(ENV) LOG_LEVEL=$(LOG_LEVEL) NODE=$(NODE) TABLE_NAME=$(TABLE_NAME) AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) AWS_SECRET_ACCESS_KEY=$(AWS_SECRET_ACCESS_KEY) AWS_REGION=$(AWS_REGION) VERSION=$(VERSION) COMMIT=$(COMMIT) SECRET_TOKEN=$(SECRET_TOKEN)
 
 run:
-	$(BUILD_ENV) cargo watch -x run -w src
+	$(BUILD_ENV) cargo watch -x run -w ../../pakcages
 
 build:
 	$(BUILD_ENV) cargo build --release -p $(SERVICE) --features lambda

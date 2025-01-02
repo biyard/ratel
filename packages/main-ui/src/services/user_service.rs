@@ -1,12 +1,18 @@
 #![allow(non_snake_case)]
 use dioxus::prelude::*;
+use dto::error::ServiceError;
 
-use crate::config;
+use crate::{
+    config,
+    utils::rest_api::{Signature, SignatureAlgorithm, Signer},
+};
 
 #[derive(Debug, Clone, Copy)]
 pub struct UserService {
     #[cfg(feature = "web-only")]
     pub firebase: Signal<google_wallet::FirebaseWallet>,
+
+    pub endpoint: Signal<String>,
 }
 
 impl UserService {
@@ -14,7 +20,7 @@ impl UserService {
         let conf = config::get();
 
         #[cfg(feature = "web-only")]
-        let firebase = google_wallet::FirebaseWallet::new(
+        let mut firebase = google_wallet::FirebaseWallet::new(
             conf.firebase.api_key.clone(),
             conf.firebase.auth_domain.clone(),
             conf.firebase.project_id.clone(),
@@ -24,9 +30,18 @@ impl UserService {
             conf.firebase.measurement_id.clone(),
         );
 
+        #[cfg(feature = "web-only")]
+        {
+            let w = firebase.try_setup_from_storage();
+            if w.is_some() {
+                tracing::debug!("UserService::init: wallet={:?}", w);
+            }
+        }
+
         use_context_provider(|| Self {
             #[cfg(feature = "web-only")]
             firebase: Signal::new(firebase),
+            endpoint: Signal::new(conf.main_api_endpoint.clone()),
         });
     }
 
@@ -87,5 +102,33 @@ impl UserService {
                 }
             }
         }
+    }
+
+    // pub async fn signup(&self, email: &str, nickname: &str, profile_url: &str) {}
+}
+
+#[cfg(feature = "web-only")]
+impl Signer for UserService {
+    fn signer(&self) -> String {
+        (self.firebase)().get_principal()
+    }
+
+    fn sign(&self, msg: &str) -> dto::Result<Signature> {
+        let firebase = (self.firebase)();
+
+        if !firebase.get_login() {
+            return Err(ServiceError::Unauthorized);
+        }
+
+        let sig = firebase.sign(msg);
+        if sig.is_none() {
+            return Err(ServiceError::SignException);
+        }
+
+        Ok(Signature {
+            signature: sig.unwrap().as_ref().to_vec(),
+            public_key: firebase.public_key.clone().unwrap_or_default(),
+            algorithm: SignatureAlgorithm::EdDSA,
+        })
     }
 }

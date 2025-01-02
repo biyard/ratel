@@ -6,7 +6,6 @@ use by_axum::{
     },
     log::root,
 };
-use common_query_response::CommonQueryResponse;
 use dto::*;
 use serde::{Deserialize, Serialize};
 use slog::o;
@@ -16,30 +15,17 @@ pub struct UserControllerV1 {
     log: slog::Logger,
 }
 
-// NOTE: if already have other pagination, please remove this and use defined one.
-#[derive(Debug, serde::Deserialize)]
-pub struct Pagination {
-    page: Option<usize>,
-    size: Option<usize>,
-    bookmark: Option<usize>,
-}
-
-#[derive(Debug, serde::Deserialize)]
-pub struct CreateUserRequest {
-    name: String,
-}
-
-#[derive(Debug, serde::Deserialize)]
-pub struct UpdateUserRequest {
-    name: Option<String>,
+#[derive(Debug, Serialize, PartialEq, Eq, Clone, Deserialize)]
+pub struct SignupRequest {
+    email: String,
+    nickname: String,
+    wallet_address: String,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-#[serde(untagged)]
-pub enum ActionUserRequest {
-    Action1(String),
-    Action2(String),
+pub enum UserActionRequest {
+    Signup(SignupRequest),
 }
 
 // NOTE: This is a real model and recommended to be moved to shared_models
@@ -64,66 +50,16 @@ impl UserControllerV1 {
         let ctrl = UserControllerV1 { log };
 
         Ok(by_axum::axum::Router::new()
-            .route("/:id", get(Self::get_user).post(Self::act_user_by_id))
-            .with_state(ctrl.clone())
-            .route("/", post(Self::act_user).get(Self::list_user))
+            .route("/", post(Self::act_user))
             .with_state(ctrl.clone()))
     }
 
     pub async fn act_user(
         State(ctrl): State<UserControllerV1>,
-        Json(body): Json<ActionUserRequest>,
+        Json(body): Json<UserActionRequest>,
     ) -> Result<Json<User>> {
         let log = ctrl.log.new(o!("api" => "create_user"));
         slog::debug!(log, "list_user {:?}", body);
         Ok(Json(User::default()))
-    }
-
-    pub async fn update_user(
-        State(ctrl): State<UserControllerV1>,
-        Path(id): Path<String>,
-        Json(body): Json<UpdateUserRequest>,
-    ) -> Result<()> {
-        let log = ctrl.log.new(o!("api" => "update_user"));
-        slog::debug!(log, "list_user {:?} {:?}", id, body);
-        Ok(())
-    }
-
-    pub async fn act_user_by_id(
-        State(ctrl): State<UserControllerV1>,
-        Path(id): Path<String>,
-        Json(body): Json<ActionUserRequest>,
-    ) -> Result<()> {
-        let log = ctrl.log.new(o!("api" => "update_user"));
-        slog::debug!(log, "list_user {:?} {:?}", id, body);
-        Ok(())
-    }
-
-    pub async fn get_user(
-        State(ctrl): State<UserControllerV1>,
-        Path(id): Path<String>,
-    ) -> Result<Json<User>> {
-        let log = ctrl.log.new(o!("api" => "get_user"));
-        slog::debug!(log, "get_user {:?}", id);
-        Ok(Json(User::default()))
-    }
-
-    pub async fn delete_user(
-        State(ctrl): State<UserControllerV1>,
-        Path(id): Path<String>,
-    ) -> Result<()> {
-        let log = ctrl.log.new(o!("api" => "delete_user"));
-        slog::debug!(log, "delete_user {:?}", id);
-        Ok(())
-    }
-
-    pub async fn list_user(
-        State(ctrl): State<UserControllerV1>,
-        Query(pagination): Query<Pagination>,
-    ) -> Result<Json<CommonQueryResponse<User>>> {
-        let log = ctrl.log.new(o!("api" => "list_user"));
-        slog::debug!(log, "list_user {:?}", pagination);
-
-        Ok(Json(CommonQueryResponse::default()))
     }
 }
