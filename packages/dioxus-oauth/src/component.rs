@@ -10,7 +10,9 @@ pub fn OAuthPopup() -> Element {
             Some(window) => window,
             None => {
                 tracing::error!("Window not found");
-                return rsx! {div { "Window not found" }};
+                return rsx! {
+                    div { "Window not found" }
+                };
             }
         };
         let url = window.location().href().unwrap_or_default();
@@ -19,7 +21,9 @@ pub fn OAuthPopup() -> Element {
             Ok(opener) => opener.into(),
             Err(e) => {
                 tracing::debug!("e={e:?}");
-                return rsx! { div{ "opener not found" } };
+                return rsx! {
+                    div { "opener not found" }
+                };
             }
         };
         let url = Url::parse(&url).expect("Failed to parse URL");
@@ -39,6 +43,6 @@ pub fn OAuthPopup() -> Element {
     }
 
     rsx! {
-      div { ""}
+        div { "" }
     }
 }
