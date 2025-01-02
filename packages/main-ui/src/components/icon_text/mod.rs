@@ -13,13 +13,10 @@ pub fn IconText(
             class: "flex flex-row items-center justify-center gap-[4px] {class} rounded-[8px]",
             style: match background {
                 Some(bg) => format!("background: {}", bg),
-                None => "".to_string()
+                None => "".to_string(),
             },
             {children}
-            span {
-                class: "text-[14px] font-bold",
-                "{text}"
-            }
+            span { class: "text-[14px] font-bold", "{text}" }
         }
     }
 }

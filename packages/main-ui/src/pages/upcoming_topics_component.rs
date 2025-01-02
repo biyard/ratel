@@ -11,15 +11,9 @@ pub fn UpcomingTopics(
     _topics: Vec<Topic>,
 ) -> Element {
     rsx! {
-        div {
-            id,
-            class,
-            div {
-                class: "flex flex-col gap-[16px] items-start justify-start w-full",
-                span {
-                    class: "text-[18px] font-semibold",
-                    "다가올 투표"
-                }
+        div { id, class,
+            div { class: "flex flex-col gap-[16px] items-start justify-start w-full",
+                span { class: "text-[18px] font-semibold", "다가올 투표" }
                 UpcomingTopic {}
                 UpcomingTopic {}
             }
@@ -41,33 +35,21 @@ pub fn UpcomingTopic(
     let month = month_name(month);
 
     rsx! {
-        div {
-            class: "w-full flex flex-row gap-[19px] items-center justify-start px-[24px] py-[20px] rounded-[8px] bg-[{theme_data.primary07}]",
-            div {
-                class: " flex flex-col gap-[4px] items-center justify-start",
-                span {
-                    class: "text-[24px] leading-[25px] font-extrabold text-center",
+        div { class: "w-full flex flex-row gap-[19px] items-center justify-start px-[24px] py-[20px] rounded-[8px] bg-[{theme_data.primary07}]",
+            div { class: " flex flex-col gap-[4px] items-center justify-start",
+                span { class: "text-[24px] leading-[25px] font-extrabold text-center",
                     "{day}"
                 }
-                span {
-                    class: "text-[12px] leading-[15px] font-extrabold text-center",
+                span { class: "text-[12px] leading-[15px] font-extrabold text-center",
                     "{month}"
                 }
             }
 
-            img {
-                class: "w-[60px] h-[60px] rounded-[9.57px]",
-                src: image,
-            }
+            img { class: "w-[60px] h-[60px] rounded-[9.57px]", src: image }
 
-            div {
-                class: "w-full flex flex-col gap-[9px] items-start justify-start",
-                span {
-                    class: "text-[16px] leading-[23px] font-extrabold",
-                    "{title}"
-                }
-                div {
-                    class: "rounded-[4px] px-[6px] py-[4px] bg-[{theme_data.primary03}] text-[10px] leading-[12px] font-extrabold text-[{theme_data.primary05}]",
+            div { class: "w-full flex flex-col gap-[9px] items-start justify-start",
+                span { class: "text-[16px] leading-[23px] font-extrabold", "{title}" }
+                div { class: "rounded-[4px] px-[6px] py-[4px] bg-[{theme_data.primary03}] text-[10px] leading-[12px] font-extrabold text-[{theme_data.primary05}]",
                     "{date}"
                 }
             }

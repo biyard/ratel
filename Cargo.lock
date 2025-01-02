@@ -4122,6 +4122,7 @@ dependencies = [
 name = "main-ui"
 version = "0.3.0"
 dependencies = [
+ "base64 0.22.1",
  "chrono",
  "dioxus",
  "dioxus-aws",
