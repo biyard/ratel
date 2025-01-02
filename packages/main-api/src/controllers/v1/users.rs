@@ -1,47 +1,13 @@
 use by_axum::{
-    axum::{
-        extract::{Path, Query, State},
-        routing::{get, post},
-        Json,
-    },
+    axum::{extract::State, routing::post, Json},
     log::root,
 };
 use dto::*;
-use serde::{Deserialize, Serialize};
 use slog::o;
 
 #[derive(Clone, Debug)]
 pub struct UserControllerV1 {
     log: slog::Logger,
-}
-
-#[derive(Debug, Serialize, PartialEq, Eq, Clone, Deserialize)]
-pub struct SignupRequest {
-    email: String,
-    nickname: String,
-    wallet_address: String,
-}
-
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum UserActionRequest {
-    Signup(SignupRequest),
-}
-
-// NOTE: This is a real model and recommended to be moved to shared_models
-#[derive(serde::Deserialize, serde::Serialize, Default)]
-pub struct User {
-    id: String,
-    r#type: String,
-    crated_at: u64,
-    updated_at: u64,
-    deleted_at: Option<u64>,
-
-    name: Option<String>,
-
-    // Indexes, if deleted_at is set, all values of indexes must be empty.
-    gsi1: String,
-    gsi2: String,
 }
 
 impl UserControllerV1 {

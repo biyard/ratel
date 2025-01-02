@@ -44,6 +44,12 @@ pub fn set_signer(signer: Box<dyn Signer>) {
     }
 }
 
+pub fn remove_signer() {
+    unsafe {
+        SIGNER = None;
+    }
+}
+
 pub fn sign_request(req: RequestBuilder) -> RequestBuilder {
     if let Some(signer) = unsafe { &SIGNER } {
         let signer = signer.read().unwrap();
@@ -87,7 +93,7 @@ where
     }
 }
 
-pub async fn post<R, T>(url: &str, body: Option<R>) -> Result<T>
+pub async fn post<R, T>(url: &str, body: R) -> Result<T>
 where
     R: Serialize,
     T: serde::de::DeserializeOwned,

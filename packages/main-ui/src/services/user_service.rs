@@ -1,10 +1,10 @@
 #![allow(non_snake_case)]
 use dioxus::prelude::*;
-use dto::error::ServiceError;
+use dto::*;
 
 use crate::{
     config,
-    utils::rest_api::{Signature, SignatureAlgorithm, Signer},
+    utils::rest_api::{self, Signature, SignatureAlgorithm, Signer},
 };
 
 #[derive(Debug, Clone, Copy)]
@@ -104,7 +104,27 @@ impl UserService {
         }
     }
 
-    // pub async fn signup(&self, email: &str, nickname: &str, profile_url: &str) {}
+    pub async fn signup(&self, email: &str, nickname: &str, profile_url: &str) {
+        tracing::debug!(
+            "UserService::signup: email={} nickname={} profile_url={}",
+            email,
+            nickname,
+            profile_url
+        );
+
+        let endpoint = (self.endpoint)();
+        let url = format!("{}/users/signup", endpoint);
+
+        let body = dto::UserActionRequest::Signup(SignupRequest {
+            email: email.to_string(),
+            nickname: nickname.to_string(),
+            profile_url: profile_url.to_string(),
+        });
+
+        let res: Result<User> = rest_api::post(&url, &body).await;
+
+        tracing::debug!("UserService::signup: user={:?}", res);
+    }
 }
 
 #[cfg(feature = "web-only")]
