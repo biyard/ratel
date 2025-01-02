@@ -1,6 +1,7 @@
 ENV ?= dev
 BASE_DOMAIN ?= democrasee.me
 DOMAIN ?= $(ENV).$(BASE_DOMAIN)
+PACKAGES=dioxus-oauth
 
 PROJECT ?= $(shell basename `git rev-parse --show-toplevel`)
 SERVICE ?= main-ui
@@ -73,3 +74,9 @@ s3-deploy:
 	cp -r packages/$(SERVICE)/public/* .build/$(SERVICE)/public
 	aws s3 sync .build/$(SERVICE)/public s3://$(DOMAIN) $(AWS_FLAG)
 	aws cloudfront create-invalidation --distribution-id $(CDN_ID) --paths "/*" $(AWS_FLAG) > /dev/null
+
+.PHONY: publish
+publish: $(patsubst %,publish.%,$(PACKAGES))
+
+publish.%:
+	./publish.sh $*
