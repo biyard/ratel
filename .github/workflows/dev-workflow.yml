@@ -31,9 +31,14 @@ jobs:
           target: wasm32-unknown-unknown
           toolchain: stable
 
+      - name: Install binstall
+        run: |
+          cargo install cargo-binstall
+
+
       - name: Install dioxus-cli
         run: |
-          cargo install dioxus-cli --version 0.6.0
+          cargo binstall dioxus-cli --version 0.6.1
           cargo install toml-cli
 
       - name: Cache builder

@@ -25,7 +25,7 @@ jobs:
 
       - name: Install dioxus-cli
         run: |
-          cargo install dioxus-cli --version 0.6.0
+          cargo install dioxus-cli --version 0.6.1
           cargo install toml-cli
 
       - name: Checking violate
