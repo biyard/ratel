@@ -175,10 +175,10 @@ impl FirebaseWallet {
             .decode(self.private_key.clone()?)
             .unwrap_or_default();
 
-        let key =
+        let key_pair =
             Ed25519KeyPair::from_pkcs8(&private_key_bytes).expect("invalid private key format");
 
-        Some(key.public_key().as_ref().to_vec())
+        Some(key_pair.public_key().as_ref().to_vec())
     }
 
     pub fn try_setup_from_private_key(&mut self, private_key: String) -> Option<String> {
