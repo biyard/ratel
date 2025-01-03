@@ -1,11 +1,16 @@
 use by_axum::{
-    axum::{extract::State, middleware, routing::post, Extension, Json},
+    axum::{
+        extract::{Query, State},
+        middleware,
+        routing::get,
+        Extension, Json,
+    },
     log::root,
 };
 use dto::*;
 use slog::o;
 
-use crate::utils::middlewares::authorization_middleware;
+use crate::{models, utils::middlewares::authorization_middleware};
 
 #[derive(Clone, Debug)]
 pub struct UserControllerV1 {
@@ -18,7 +23,7 @@ impl UserControllerV1 {
         let ctrl = UserControllerV1 { log };
 
         Ok(by_axum::axum::Router::new()
-            .route("/", post(Self::act_user))
+            .route("/", get(Self::read_user).post(Self::act_user))
             .with_state(ctrl.clone())
             .layer(middleware::from_fn(authorization_middleware)))
     }
@@ -33,10 +38,51 @@ impl UserControllerV1 {
 
         match body {
             UserActionRequest::Signup(req) => {
+                let principal = sig.principal()?;
+
+                if let Some(user) = models::User::get(&log, &principal).await? {
+                    if &user.email == &req.email {
+                        return Err(ServiceError::UserAlreadyExists);
+                    } else {
+                        return Err(ServiceError::Unauthorized);
+                    }
+                }
+
                 let user = ctrl.signup(&sig.principal()?, req).await?;
 
-                return Ok(Json(user));
+                Ok(Json(user))
             }
+        }
+    }
+
+    pub async fn read_user(
+        State(ctrl): State<UserControllerV1>,
+        Extension(sig): Extension<Signature>,
+
+        Query(req): Query<UserReadActionRequest>,
+    ) -> Result<Json<User>> {
+        let log = ctrl.log.new(o!("api" => "read_user"));
+        slog::debug!(log, "read_user: sig={:?}", sig);
+
+        let principal = sig.principal()?;
+
+        let user = models::User::get(&log, &principal).await?;
+
+        if user.is_none() {
+            return Err(ServiceError::NotFound);
+        }
+
+        let user = user.unwrap();
+
+        match req.action {
+            ReadActionType::CheckEmail => {
+                if user.email == req.email.unwrap_or_default() {
+                    Ok(Json(user.into()))
+                } else {
+                    Err(ServiceError::Unauthorized)
+                }
+            }
+            ReadActionType::UserInfo => Ok(Json(user.into())),
         }
     }
 }
