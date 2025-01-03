@@ -41,9 +41,9 @@ impl MemberControllerV1 {
         let log = ctrl.log.new(o!("api" => "act_member"));
 
         let openapi = OpenAPI::new();
-        let response = openapi.get_active_member(
+        let response = openapi.get_active_members(
             Some(req._page.unwrap_or(1).to_string()), // start from 1 not 0
-            Some(req._size.unwrap_or(5).to_string()),
+            Some(req._size.unwrap_or(10).to_string()),
             None,
             None,
             None,

@@ -16,7 +16,7 @@ impl OpenAPI {
         }
     }
 
-    pub async fn get_active_member(
+    pub async fn get_active_members(
         &self, 
         p_index: Option<String>, // 페이지번호 default: 1
         p_size: Option<String>, // 페이지당 요청 건수 default: 10
