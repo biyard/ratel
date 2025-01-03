@@ -1,4 +1,5 @@
 use base64::{engine::general_purpose, Engine};
+use ring::signature::{UnparsedPublicKey, ED25519};
 use simple_asn1::{
     oid, to_der,
     ASN1Block::{BitString, ObjectIdentifier, Sequence},
@@ -80,15 +81,14 @@ impl Signature {
     pub fn verify(&self, msg: &str) -> crate::Result<String> {
         match self.algorithm {
             SignatureAlgorithm::EdDSA => {
-                let unparsed_public_key = ring::signature::UnparsedPublicKey::new(
-                    &ring::signature::ED25519,
-                    &self.public_key,
-                );
-                unparsed_public_key
+                let pk = self.public_key.clone();
+                let public_key = UnparsedPublicKey::new(&ED25519, &pk);
+                public_key
                     .verify(msg.as_bytes(), &self.signature)
                     .map_err(|e| {
                         crate::error::ServiceError::VerifyException(format!(
-                            "verification error: {e:?}"
+                            "Verification failed: {}",
+                            e
                         ))
                     })?;
 
@@ -98,7 +98,7 @@ impl Signature {
     }
 
     pub fn principal(&self) -> crate::Result<String> {
-        let public_key = general_purpose::STANDARD.decode(&self.public_key)?;
+        let public_key = self.public_key.clone();
 
         let id_ed25519 = oid!(1, 3, 101, 112);
         let algorithm = Sequence(0, vec![ObjectIdentifier(0, id_ed25519)]);

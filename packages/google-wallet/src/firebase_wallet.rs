@@ -2,6 +2,7 @@ use base64::{engine::general_purpose, Engine};
 use dioxus_oauth::prelude::FirebaseService;
 use gloo_storage::{errors::StorageError, LocalStorage, Storage};
 use ring::{
+    pkcs8,
     rand::SystemRandom,
     signature::{Ed25519KeyPair, KeyPair, Signature},
 };
@@ -18,7 +19,7 @@ pub struct FirebaseWallet {
     pub firebase: FirebaseService,
     pub private_key: Option<String>,
     pub public_key: Option<Vec<u8>>,
-    pub key_pair: Option<Vec<u8>>,
+    pub pkcs8: Option<Vec<u8>>,
 
     pub email: Option<String>,
     pub name: Option<String>,
@@ -50,7 +51,7 @@ impl FirebaseWallet {
             principal: None,
             private_key: None,
             public_key: None,
-            key_pair: None,
+            pkcs8: None,
 
             email: None,
             name: None,
@@ -61,10 +62,6 @@ impl FirebaseWallet {
     pub fn get_login(&self) -> bool {
         self.principal.is_some()
     }
-
-    // pub fn get_principal(&self) -> String {
-    //     self.principal.clone().unwrap_or_default()
-    // }
 
     pub fn get_principal(&self) -> String {
         let public_key = self.public_key.clone().unwrap_or_default();
@@ -127,7 +124,7 @@ impl FirebaseWallet {
         };
         tracing::debug!("data: {data:?}");
 
-        let (evt, private_key) = match data
+        let (evt, pkcs8) = match data
             .iter()
             .find(|x| x.name == option_env!("ENV").unwrap_or("local").to_string())
         {
@@ -158,13 +155,11 @@ impl FirebaseWallet {
                     return Err("failed to upload file".to_string());
                 };
 
-                self.try_setup_from_private_key(private_key.clone());
-
                 (WalletEvent::Signup, private_key)
             }
         };
 
-        self.try_setup_from_private_key(private_key);
+        self.try_setup_from_private_key(pkcs8);
         self.name = Some(cred.display_name);
         self.email = Some(cred.email);
         self.photo_url = Some(cred.photo_url);
@@ -173,23 +168,13 @@ impl FirebaseWallet {
     }
 
     pub fn sign(&self, msg: &str) -> Option<Signature> {
-        let private_key_bytes = general_purpose::STANDARD
-            .decode(self.private_key.clone()?)
-            .unwrap_or_default();
-
-        let key_pair =
-            Ed25519KeyPair::from_pkcs8(&private_key_bytes).expect("invalid private key format");
+        let key_pair = self.get_identity()?;
 
         Some(key_pair.sign(msg.as_bytes()))
     }
 
     pub fn public_key(&self) -> Option<Vec<u8>> {
-        let private_key_bytes = general_purpose::STANDARD
-            .decode(self.private_key.clone()?)
-            .unwrap_or_default();
-
-        let key_pair =
-            Ed25519KeyPair::from_pkcs8(&private_key_bytes).expect("invalid private key format");
+        let key_pair = self.get_identity()?;
 
         Some(key_pair.public_key().as_ref().to_vec())
     }
@@ -217,16 +202,18 @@ impl FirebaseWallet {
         Some(self.get_principal())
     }
 
-    pub fn init_or_get_identity(&mut self, id: Option<&[u8]>) -> Option<Ed25519KeyPair> {
-        if self.key_pair.is_none() && id.is_some() {
-            self.key_pair = Some(id.unwrap().to_vec().clone());
+    pub fn init_or_get_identity(&mut self, pkcs8: Option<&[u8]>) -> Option<Ed25519KeyPair> {
+        if self.pkcs8.is_none() && pkcs8.is_some() {
+            self.pkcs8 = Some(pkcs8.unwrap().to_vec());
         }
 
-        if self.key_pair.is_some() {
-            let key = ring::signature::Ed25519KeyPair::from_pkcs8(
-                self.key_pair.clone().unwrap().as_ref(),
-            )
-            .expect("Could not read the key pair.");
+        self.get_identity()
+    }
+
+    pub fn get_identity(&self) -> Option<Ed25519KeyPair> {
+        if let Some(pkcs8) = &self.pkcs8 {
+            let key = ring::signature::Ed25519KeyPair::from_pkcs8(pkcs8)
+                .expect("Could not read the key pair.");
             Some(key)
         } else {
             None
