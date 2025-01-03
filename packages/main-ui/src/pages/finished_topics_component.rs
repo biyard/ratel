@@ -1,6 +1,6 @@
 #![allow(non_snake_case)]
 use dioxus::prelude::*;
-use dto::{Donation, Topic, TopicResult};
+use dto::*;
 use num_format::{Locale, ToFormattedString};
 
 use crate::{
@@ -81,7 +81,6 @@ pub fn FinishedTopic(
                         } else {
                             RoundedNoButton { rounded: 6, class: "w-full", disabled: true }
                         }
-                    
                     }
                 }
 
