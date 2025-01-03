@@ -11,6 +11,8 @@ mod controllers {
 }
 
 pub mod config;
+pub mod models;
+pub mod utils;
 
 #[tokio::main]
 async fn main() -> Result<(), ServiceError> {

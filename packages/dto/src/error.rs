@@ -9,6 +9,7 @@ pub enum ServiceError {
 
     Unauthorized,
     SignException,
+    VerifyException(String),
 }
 
 impl std::fmt::Display for ServiceError {

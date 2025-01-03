@@ -4,7 +4,11 @@ use gloo_storage::{errors::StorageError, LocalStorage, Storage};
 use ic_agent::{identity::BasicIdentity, Identity};
 use ring::{
     rand::SystemRandom,
-    signature::{Ed25519KeyPair, Signature},
+    signature::{Ed25519KeyPair, KeyPair, Signature},
+};
+use simple_asn1::{
+    oid, to_der,
+    ASN1Block::{BitString, ObjectIdentifier, Sequence},
 };
 
 pub const IDENTITY_KEY: &str = "identity";
@@ -14,7 +18,6 @@ pub struct FirebaseWallet {
     pub principal: Option<String>,
     pub firebase: FirebaseService,
     pub private_key: Option<String>,
-    pub public_key: Option<String>,
     pub key_pair: Option<Vec<u8>>,
 
     pub email: Option<String>,
@@ -46,7 +49,6 @@ impl FirebaseWallet {
             firebase,
             principal: None,
             private_key: None,
-            public_key: None,
             key_pair: None,
 
             email: None,
@@ -168,17 +170,24 @@ impl FirebaseWallet {
         Some(key_pair.sign(msg.as_bytes()))
     }
 
+    pub fn public_key(&self) -> Option<Vec<u8>> {
+        let private_key_bytes = general_purpose::STANDARD
+            .decode(self.private_key.clone()?)
+            .unwrap_or_default();
+
+        let key =
+            Ed25519KeyPair::from_pkcs8(&private_key_bytes).expect("invalid private key format");
+
+        Some(key.public_key().as_ref().to_vec())
+    }
+
     pub fn try_setup_from_private_key(&mut self, private_key: String) -> Option<String> {
         let id = match general_purpose::STANDARD.decode(&private_key) {
             Ok(key) => {
                 tracing::debug!("key setup");
                 self.private_key = Some(private_key.clone());
                 match self.init_or_get_identity(Some(key.as_ref())) {
-                    Some(id) => {
-                        let public_key = general_purpose::STANDARD.encode(id.public_key().unwrap());
-                        self.public_key = Some(public_key);
-                        Some(id)
-                    }
+                    Some(id) => Some(id),
                     None => None,
                 }
             }
