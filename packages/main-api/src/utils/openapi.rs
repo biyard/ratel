@@ -1,6 +1,5 @@
 use reqwest::Error;
 use std::collections::HashMap;
-use serde::Deserialize;
 use serde_json::Value;
 
 pub struct OpenAPI {

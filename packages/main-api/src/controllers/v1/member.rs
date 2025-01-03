@@ -39,9 +39,9 @@ impl MemberControllerV1 {
         Query(req): Query<ListMemberRequest>,
     ) -> Result<Json<CommonQueryResponse<Member>>> {
         let log = ctrl.log.new(o!("api" => "act_member"));
+        slog::debug!(log, "list act member {:?}", req);
 
-        let openapi = OpenAPI::new();
-        let response = openapi.get_active_members(
+        let response =  OpenAPI::new().get_active_members(
             Some(req._page.unwrap_or(1).to_string()), // start from 1 not 0
             Some(req._size.unwrap_or(10).to_string()),
             None,
