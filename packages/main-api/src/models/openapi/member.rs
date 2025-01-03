@@ -1,0 +1,27 @@
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "UPPERCASE")] // for parsing
+pub struct Member {
+    hg_nm: String,
+    hj_nm: String,
+    eng_nm: String,
+    bth_gbn_nm: String,
+    bth_date: String,
+    job_res_nm: String,
+    poly_nm: String,
+    orig_nm: String,
+    elect_gbn_nm: String,
+    cmit_nm: String,
+    cmits: String,
+    reele_gbn_nm: String,
+    units: String,
+    sex_gbn_nm: String,
+    tel_no: String,
+    e_mail: String,
+    homepage: Option<String>,
+    staff: String,
+    secretary: String,
+    secretary2: String,
+    mona_cd: String,
+    mem_title: String,
+    assem_addr: String,
+}

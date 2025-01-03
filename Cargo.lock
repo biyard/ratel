@@ -3759,6 +3759,7 @@ dependencies = [
  "chrono",
  "dto",
  "easy-dynamodb",
+ "reqwest",
  "serde",
  "serde_json",
  "slog",
