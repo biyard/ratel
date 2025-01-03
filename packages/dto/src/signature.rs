@@ -1,4 +1,5 @@
 use base64::{engine::general_purpose, Engine};
+use ring::signature::VerificationAlgorithm;
 use simple_asn1::{
     oid, to_der,
     ASN1Block::{BitString, ObjectIdentifier, Sequence},
@@ -72,8 +73,6 @@ impl FromStr for Signature {
             public_key,
         };
 
-        println!("Signature: {:?}", sig);
-
         Ok(sig)
     }
 }
@@ -86,16 +85,17 @@ impl Signature {
                     &ring::signature::ED25519,
                     &self.public_key,
                 );
-                if unparsed_public_key
+                unparsed_public_key
                     .verify(msg.as_bytes(), &self.signature)
-                    .is_ok()
-                {
-                    return Ok(self.principal()?);
-                }
+                    .map_err(|e| {
+                        crate::error::ServiceError::VerifyException(format!(
+                            "verification error: {e:?}"
+                        ))
+                    })?;
+
+                self.principal()
             }
         }
-
-        Err(crate::ServiceError::Unauthorized)
     }
 
     pub fn principal(&self) -> crate::Result<String> {

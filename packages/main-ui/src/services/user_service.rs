@@ -190,14 +190,6 @@ impl Signer for UserService {
             public_key: firebase.public_key().unwrap_or_default(),
             algorithm: SignatureAlgorithm::EdDSA,
         };
-        match sig.verify(msg) {
-            Ok(_) => {
-                tracing::debug!("verification success");
-            }
-            Err(e) => {
-                tracing::error!("verification error: {:?}", e);
-            }
-        };
 
         Ok(sig)
     }

@@ -2203,6 +2203,7 @@ dependencies = [
  "serde_json",
  "simple_asn1",
  "slog",
+ "untrusted",
 ]
 
 [[package]]
@@ -2229,6 +2230,8 @@ checksum = "92773504d58c093f6de2459af4af33faa518c13451eb8f2b5698ed3d36e7c813"
 [[package]]
 name = "easy-dynamodb"
 version = "0.1.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e60c5672adbb230d4fc6399e245788a7ae85a80084856e3efcbf81a4e6541df0"
 dependencies = [
  "aws-config",
  "aws-credential-types",
