@@ -25,7 +25,7 @@ impl TopicService {
     ) -> Result<CommonQueryResponse<Topic>> {
         let client = reqwest::Client::builder().build()?;
 
-        let mut url = format!("{}/topics?size={size}", (self.endpoint)(),);
+        let mut url = format!("{}/v1/topics?size={size}", (self.endpoint)(),);
 
         if let Some(bookmark) = bookmark {
             url.push_str(&format!("&bookmark={}", bookmark));
