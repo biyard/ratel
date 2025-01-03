@@ -168,6 +168,7 @@ impl FirebaseWallet {
     }
 
     pub fn sign(&self, msg: &str) -> Option<Signature> {
+        tracing::debug!("sign: {msg}");
         let key_pair = self.get_identity()?;
 
         Some(key_pair.sign(msg.as_bytes()))
@@ -187,6 +188,7 @@ impl FirebaseWallet {
                 if let Some(key_pair) = self.init_or_get_identity(Some(key.as_ref())) {
                     self.public_key = Some(key_pair.public_key().as_ref().to_vec());
                     self.principal = Some(self.get_principal());
+                    tracing::debug!("wallet initialized");
                 }
             }
             Err(e) => {
