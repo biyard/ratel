@@ -42,23 +42,25 @@ pub fn HeaderTails() -> Element {
                                 onclick: move |_| async move {
                                     tracing::debug!("Google로 계속하기 버튼 클릭");
                                     match user_service.login().await {
-                                        UserEvent::Signup(email, nickname, profile_url) => {
+                                        UserEvent::Signup(principal, email, nickname, profile_url) => {
                                             popup.open(rsx! {
                                                 UserSetupPopup {
                                                     class: "w-[400px]",
                                                     nickname,
                                                     profile_url,
                                                     email,
+                                                    principal,
                                                 }
                                             });
                                         }
-                                        UserEvent::Login(email, nickname, profile_url) => {
+                                        UserEvent::Login(principal, email, nickname, profile_url) => {
                                             popup.open(rsx! {
                                                 UserSetupPopup {
                                                     class: "w-[400px]",
                                                     nickname,
                                                     profile_url,
                                                     email,
+                                                    principal,
                                                 }
                                             });
                                         }

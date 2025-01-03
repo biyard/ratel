@@ -4,21 +4,23 @@ use dioxus_popup::PopupService;
 
 use crate::{
     components::checkbox::Checkbox, layouts::congraturation_popup::CongraturationPopup,
-    theme::Theme,
+    services::user_service::UserService, theme::Theme,
 };
 
 #[component]
 pub fn UserSetupPopup(
     #[props(default ="user_setup_popup".to_string())] id: String,
     #[props(default ="".to_string())] class: String,
-    #[props(default ="".to_string())] nickname: String,
-    #[props(default ="".to_string())] profile_url: String,
-    #[props(default ="".to_string())] email: String,
+    nickname: String,
+    profile_url: String,
+    email: String,
+    principal: String,
 ) -> Element {
     let mut popup: PopupService = use_context();
     let mut valid = use_signal(|| true);
     let mut nickname = use_signal(|| nickname.to_string());
     let mut agreed = use_signal(|| false);
+    let user_service: UserService = use_context();
     let theme: Theme = use_context();
     let theme = theme.get_data();
     let btn_color = use_memo(move || {
@@ -37,7 +39,7 @@ pub fn UserSetupPopup(
                 div { class: "w-full flex items-center justify-center",
                     img {
                         class: "w-[100px] h-[100px] rounded-[50%] object-contain",
-                        src: profile_url,
+                        src: "{profile_url}",
                     }
                 }
 
@@ -50,7 +52,7 @@ pub fn UserSetupPopup(
                         div { class: "flex flex-col items-start w-full mt-[10px] gap-[8px]",
                             input {
                                 class: "w-[400px] max-[400px]:w-[300px] h-[59px] px-[24px] py-[17.5px] bg-[#2C2E42] text-[18px] font-bold leading-[24px] rounded-[4px] placeholder-[{theme.primary07}] rounded-[8px] text-[{theme.primary04}]",
-                                value: email,
+                                value: "{email}",
                                 disabled: true,
                             }
                         }
@@ -100,13 +102,27 @@ pub fn UserSetupPopup(
                     class: "w-full mt-[10px] rounded-[12px] bg-[{btn_color}] opacity-50 hover:opacity-100 text-[18px] font-extrabold leading-[24px] text-[{theme.primary05}] h-[59px] flex items-center justify-center",
                     onclick: move |_| {
                         if agreed() {
-                            popup
-                                .open(rsx! {
-                                    CongraturationPopup {}
-                                })
-                                .with_id("congraturation_popup")
-                                .with_title("환영합니다!")
-                                .without_close();
+                            let nickname = nickname();
+                            let principal = principal.clone();
+                            let email = email.clone();
+                            let profile_url = profile_url.clone();
+                            spawn(async move {
+                                if let Err(e) = user_service
+                                    .signup(&principal, &email, &nickname, &profile_url)
+                                    .await
+                                {
+                                    tracing::error!("UserSetupPopup::signup: error={:?}", e);
+                                } else {
+                                    tracing::debug!("UserSetupPopup::signup: success");
+                                    popup
+                                        .open(rsx! {
+                                            CongraturationPopup {}
+                                        })
+                                        .with_id("congraturation_popup")
+                                        .with_title("환영합니다!")
+                                        .without_close();
+                                }
+                            });
                         }
                     },
                     "다음"

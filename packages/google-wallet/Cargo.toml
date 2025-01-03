@@ -8,6 +8,7 @@ repository.workspace = true
 
 [dependencies]
 base64 = "0.22.1"
+candid = "0.10.11"
 dioxus = { workspace = true, features = ["web"] }
 dioxus-oauth = { path = "../dioxus-oauth", features = [ "web" ] }
 gloo-storage = "0.3.0"

@@ -2,14 +2,11 @@
 use dioxus::prelude::*;
 use dto::*;
 
-use crate::{
-    config,
-    utils::rest_api::{self, Signature, SignatureAlgorithm, Signer},
-};
+use crate::{config, utils::rest_api};
 
 pub enum UserEvent {
-    Signup(String, String, String),
-    Login(String, String, String),
+    Signup(String, String, String, String),
+    Login(String, String, String, String),
     Logout,
 }
 
@@ -22,6 +19,7 @@ pub struct UserService {
     pub email: Signal<String>,
     pub nickname: Signal<String>,
     pub profile_url: Signal<String>,
+    pub principal: Signal<String>,
 }
 
 impl UserService {
@@ -54,6 +52,7 @@ impl UserService {
             email: Signal::new("".to_string()),
             nickname: Signal::new("".to_string()),
             profile_url: Signal::new("".to_string()),
+            principal: Signal::new("".to_string()),
         });
     }
 
@@ -95,7 +94,7 @@ impl UserService {
         tracing::debug!("UserService::login");
         #[cfg(feature = "web-only")]
         {
-            let (evt, _principal, email, name, profile_url) =
+            let (evt, principal, email, name, profile_url) =
                 self.request_to_firebase().await.unwrap();
             match evt {
                 google_wallet::WalletEvent::Signup => {
@@ -106,7 +105,7 @@ impl UserService {
                         profile_url
                     );
 
-                    return UserEvent::Signup(email, name, profile_url);
+                    return UserEvent::Signup(principal, email, name, profile_url);
                 }
                 google_wallet::WalletEvent::Login => {
                     tracing::debug!(
@@ -116,7 +115,7 @@ impl UserService {
                         profile_url
                     );
 
-                    return UserEvent::Login(email, name, profile_url);
+                    return UserEvent::Login(principal, email, name, profile_url);
                 }
                 google_wallet::WalletEvent::Logout => {
                     tracing::debug!("UserService::login: SignOut");
@@ -134,6 +133,9 @@ impl UserService {
         nickname: &str,
         profile_url: &str,
     ) -> Result<()> {
+        #[cfg(feature = "web-only")]
+        rest_api::set_signer(Box::new(*self));
+
         tracing::debug!(
             "UserService::signup: principal={} email={} nickname={} profile_url={}",
             principal,
@@ -143,7 +145,7 @@ impl UserService {
         );
 
         let endpoint = (self.endpoint)();
-        let url = format!("{}/users/signup", endpoint);
+        let url = format!("{}/v1/users", endpoint);
 
         let body = dto::UserActionRequest::Signup(SignupRequest {
             email: email.to_string(),
@@ -151,7 +153,14 @@ impl UserService {
             profile_url: profile_url.to_string(),
         });
 
-        let res: Result<User> = rest_api::post(&url, &body).await;
+        let res: User = match rest_api::post(&url, &body).await {
+            Ok(v) => v,
+            Err(e) => {
+                tracing::error!("UserService::signup: error={:?}", e);
+                rest_api::remove_signer();
+                return Err(ServiceError::from(e));
+            }
+        };
 
         tracing::debug!("UserService::signup: user={:?}", res);
         Ok(())
@@ -165,6 +174,7 @@ impl Signer for UserService {
     }
 
     fn sign(&self, msg: &str) -> dto::Result<Signature> {
+        tracing::debug!("UserService::sign: msg={}", msg);
         let firebase = (self.firebase)();
 
         if !firebase.get_login() {
@@ -175,11 +185,12 @@ impl Signer for UserService {
         if sig.is_none() {
             return Err(ServiceError::SignException);
         }
-
-        Ok(Signature {
+        let sig = Signature {
             signature: sig.unwrap().as_ref().to_vec(),
-            public_key: firebase.public_key.clone().unwrap_or_default(),
+            public_key: firebase.public_key().unwrap_or_default(),
             algorithm: SignatureAlgorithm::EdDSA,
-        })
+        };
+
+        Ok(sig)
     }
 }
