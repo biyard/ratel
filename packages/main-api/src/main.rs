@@ -7,6 +7,7 @@ mod controllers {
     pub mod v1 {
         pub mod topic;
         pub mod users;
+        pub mod member;
     }
 }
 
@@ -42,6 +43,10 @@ async fn main() -> Result<(), ServiceError> {
         .nest(
             "/v1/users",
             controllers::v1::users::UserControllerV1::route()?,
+        )
+        .nest(
+            "/v1/members", 
+            controllers::v1::member::MemberControllerV1::route()?
         );
 
     let port = option_env!("PORT").unwrap_or("3000");
