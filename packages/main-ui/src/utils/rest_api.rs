@@ -20,7 +20,7 @@ pub fn remove_signer() {
 
 pub fn sign_request(req: RequestBuilder) -> RequestBuilder {
     tracing::debug!("Signing request");
-
+    #[allow(static_mut_refs)]
     if let Some(signer) = unsafe { &SIGNER } {
         let signer = signer.read().unwrap();
         let address = signer.signer();

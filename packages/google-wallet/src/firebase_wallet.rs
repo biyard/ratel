@@ -1,7 +1,6 @@
 use base64::{engine::general_purpose, Engine};
 use dioxus_oauth::prelude::FirebaseService;
 use gloo_storage::{errors::StorageError, LocalStorage, Storage};
-use ic_agent::{identity::BasicIdentity, Identity};
 use ring::{
     rand::SystemRandom,
     signature::{Ed25519KeyPair, KeyPair, Signature},
@@ -18,6 +17,7 @@ pub struct FirebaseWallet {
     pub principal: Option<String>,
     pub firebase: FirebaseService,
     pub private_key: Option<String>,
+    pub public_key: Option<Vec<u8>>,
     pub key_pair: Option<Vec<u8>>,
 
     pub email: Option<String>,
@@ -49,6 +49,7 @@ impl FirebaseWallet {
             firebase,
             principal: None,
             private_key: None,
+            public_key: None,
             key_pair: None,
 
             email: None,
@@ -61,8 +62,20 @@ impl FirebaseWallet {
         self.principal.is_some()
     }
 
+    // pub fn get_principal(&self) -> String {
+    //     self.principal.clone().unwrap_or_default()
+    // }
+
     pub fn get_principal(&self) -> String {
-        self.principal.clone().unwrap_or_default()
+        let public_key = self.public_key.clone().unwrap_or_default();
+
+        let id_ed25519 = oid!(1, 3, 101, 112);
+        let algorithm = Sequence(0, vec![ObjectIdentifier(0, id_ed25519)]);
+        let subject_public_key = BitString(0, public_key.len() * 8, public_key);
+        let subject_public_key_info = Sequence(0, vec![algorithm, subject_public_key]);
+        let der_public_key = to_der(&subject_public_key_info).unwrap();
+        let wallet_address = candid::Principal::self_authenticating(der_public_key);
+        wallet_address.to_text()
     }
 
     pub fn get_user_info(&self) -> Option<(String, String, String)> {
@@ -182,44 +195,29 @@ impl FirebaseWallet {
     }
 
     pub fn try_setup_from_private_key(&mut self, private_key: String) -> Option<String> {
-        let id = match general_purpose::STANDARD.decode(&private_key) {
+        match general_purpose::STANDARD.decode(&private_key) {
             Ok(key) => {
                 tracing::debug!("key setup");
                 self.private_key = Some(private_key.clone());
-                match self.init_or_get_identity(Some(key.as_ref())) {
-                    Some(id) => Some(id),
-                    None => None,
+                if let Some(key_pair) = self.init_or_get_identity(Some(key.as_ref())) {
+                    self.public_key = Some(key_pair.public_key().as_ref().to_vec());
+                    self.principal = Some(self.get_principal());
                 }
             }
             Err(e) => {
                 tracing::error!("Decode Error: {e}");
-                None
+
+                return None;
             }
         };
 
-        tracing::debug!("id: {id:?}");
+        use gloo_storage::Storage;
+        let _ = gloo_storage::LocalStorage::set(IDENTITY_KEY, private_key);
 
-        if id.is_none() {
-            return None;
-        }
-        let id = id.unwrap();
-        let principal = id.sender();
-        if principal.is_err() {
-            return None;
-        }
-        let principal = principal.unwrap();
-        tracing::debug!("principal: {principal:?}");
-
-        self.principal = Some(principal.to_text());
-        tracing::debug!("logged in as {}", principal.to_text());
-        {
-            use gloo_storage::Storage;
-            let _ = gloo_storage::LocalStorage::set(IDENTITY_KEY, private_key);
-        }
-        Some(principal.to_text())
+        Some(self.get_principal())
     }
 
-    pub fn init_or_get_identity(&mut self, id: Option<&[u8]>) -> Option<BasicIdentity> {
+    pub fn init_or_get_identity(&mut self, id: Option<&[u8]>) -> Option<Ed25519KeyPair> {
         if self.key_pair.is_none() && id.is_some() {
             self.key_pair = Some(id.unwrap().to_vec().clone());
         }
@@ -229,7 +227,7 @@ impl FirebaseWallet {
                 self.key_pair.clone().unwrap().as_ref(),
             )
             .expect("Could not read the key pair.");
-            Some(BasicIdentity::from_key_pair(key))
+            Some(key)
         } else {
             None
         }
