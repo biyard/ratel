@@ -34,6 +34,7 @@ impl Serialize for Member {
     where
         S: Serializer,
     {
+        // custom serialization
         let mut state = serializer.serialize_struct("Member", 23)?;
         state.serialize_field("name", &self.hg_nm)?;
         state.serialize_field("hj_nm", &self.hj_nm)?;
