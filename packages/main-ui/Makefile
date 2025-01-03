@@ -11,6 +11,7 @@ ifeq ("$(ENV)","prod")
 	LOG_LEVEL ?= info
 	DOMAIN ?= democrasee.me
 	REDIRECT_URI = https://democrasee.me
+	MAIN_API_ENDPOINT ?= https://api.democrasee.me
 endif
 
 ifeq ("$(ENV)","dev")
@@ -21,6 +22,7 @@ DOMAIN ?= dev.democrasee.me
 LOG_LEVEL ?= debug
 REDIRECT_URI ?= http://localhost:3000
 WORKSPACE_ROOT ?= ../..
+MAIN_API_ENDPOINT ?= https://api.dev.democrasee.me
 
 BUILD_ENV ?= ENV=$(ENV) VERSION=$(VERSION) COMMIT=$(COMMIT) LOG_LEVEL=$(LOG_LEVEL) ENV=$(ENV) DOMAIN=${DOMAIN} AWS_REGION=${REGION} AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY} SERVICE=$(SERVICE) WORKSPACE_ROOT=$(WORKSPACE_ROOT) BASE_URL=$(BASE_URL) MAIN_API_ENDPOINT=$(MAIN_API_ENDPOINT) REDIRECT_URI=$(REDIRECT_URI)
 
