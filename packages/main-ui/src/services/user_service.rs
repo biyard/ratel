@@ -153,12 +153,14 @@ impl UserService {
             profile_url: profile_url.to_string(),
         });
 
+        tracing::debug!("UserService::signup: url={}", url);
+
         let res: User = match rest_api::post(&url, &body).await {
             Ok(v) => v,
             Err(e) => {
                 tracing::error!("UserService::signup: error={:?}", e);
                 rest_api::remove_signer();
-                return Err(ServiceError::from(e));
+                return Err(e);
             }
         };
 

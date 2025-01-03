@@ -37,7 +37,7 @@ pub fn OAuthPopup() -> Element {
                 tracing::error!("");
                 return rsx! { "{e:?}" };
             } else {
-                window.close();
+                let _ = window.close();
             };
         }
     }

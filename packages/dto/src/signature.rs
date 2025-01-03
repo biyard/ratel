@@ -1,5 +1,4 @@
 use base64::{engine::general_purpose, Engine};
-use ring::signature::VerificationAlgorithm;
 use simple_asn1::{
     oid, to_der,
     ASN1Block::{BitString, ObjectIdentifier, Sequence},
