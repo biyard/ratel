@@ -1,5 +1,5 @@
 {
-  "vpc-provider:account=385474633683:filter.vpc-id=vpc-09711909b78dd3e84:region=ap-northeast-2:returnAsymmetricSubnets=true": {
+  "vpc-provider:account=385474633683:.vpc-id=vpc-09711909b78dd3e84:region=ap-northeast-2:returnAsymmetricSubnets=true": {
     "vpcId": "vpc-09711909b78dd3e84",
     "vpcCidrBlock": "10.1.64.0/20",
     "ownerAccountId": "385474633683",
