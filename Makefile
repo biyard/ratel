@@ -1,7 +1,7 @@
 ENV ?= dev
 BASE_DOMAIN ?= democrasee.me
 DOMAIN ?= $(ENV).$(BASE_DOMAIN)
-PACKAGES=dioxus-oauth dioxus-popup
+PACKAGES=dioxus-oauth dioxus-popup dioxus-translate
 
 PROJECT ?= $(shell basename `git rev-parse --show-toplevel`)
 SERVICE ?= main-ui
