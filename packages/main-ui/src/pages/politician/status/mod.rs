@@ -24,7 +24,7 @@ pub fn PoliticianStatusTable() -> Element {
 
     rsx! {
         div { class: "w-full h-full flex flex-col bg-[{theme_data.primary06}] rounded-[8px] text-white",
-            div { class: "w-full flex flex-row items-center gap-[90px] px-[15px] py-[10px]",
+            div { class: "w-full flex flex-row items-center gap-[90px] px-[15px] py-[10px] border-b-[1px] border-[#323342]", 
                 div { class: "w-[280px]", 
                     span {
                         class: "text-xs font-semibold",
@@ -36,7 +36,7 @@ pub fn PoliticianStatusTable() -> Element {
                 div { class: "text-xs font-semibold w-[210px]", "STANCE ON CRTPTO" }
                 div { class: "text-xs font-semibold w-[210px]", "PROCLAIM" }
             }
-            div { class: "w-full h-full flex flex-col gap-[10px] px-[20px] py-[10px]",
+            div { class: "w-full h-full flex flex-col gap-[10px] px-[15px] py-[10px]",
                 PoliticianStatusRow {}
                 PoliticianStatusRow {}
                 PoliticianStatusRow {}
@@ -48,14 +48,26 @@ pub fn PoliticianStatusTable() -> Element {
 }
 
 #[component]
-pub fn PoliticianStatusRow() -> Element {
+pub fn PoliticianStatusRow(
+    #[props(default = "None".to_string())] name: String,
+    #[props(default = "None".to_string())] party: String,
+    #[props(default = "None".to_string())] district: String,
+    #[props(default = "Neutral".to_string())] stance: String,
+) -> Element {
+    let theme: Theme = use_context();
+    let theme_data: crate::theme::ThemeData = theme.get_data();
+
     rsx! {
-        div { class: "w-full h-[50px] flex flex-row items-center justify-start gap-[20px]",
-            span { class: "text-[16px] font-semibold", "이름" }
-            span { class: "text-[16px] font-semibold", "상태" }
-            span { class: "text-[16px] font-semibold", "투표" }
-            span { class: "text-[16px] font-semibold", "토론" }
-            span { class: "text-[16px] font-semibold", "평가" }
+        div { class: "w-full h-[50px] flex flex-row items-center justify-start gap-[90px]",
+            div { class: "w-[280px]",
+                span { class: "text-xs font-semibold", "{name}" }
+            }
+            div { class: "text-sm w-[150px]", "{party}" }
+            div { class: "text-sm w-[200px]", "{district}" }
+            div { class: "text-sm w-[210px]", "{stance}" }
+            div { class: "px-[10px] py-[5px] bg-[#323342] rounded-[5px]", 
+                span { class: "text-sm font-semibold", "# Change Stance" }
+            }
         }
     }
 }
