@@ -2,9 +2,11 @@
 name = "dioxus-translate-macro"
 version = "0.1.0"
 authors.workspace = true
-description.workspace = true
 edition.workspace = true
-repository.workspace = true
+description = "Libraries for internalization on Dioxus"
+license = "MIT"
+keywords = ["dioxus", "web", "i18n", "translate"]
+repository = "https://github.com/biyard/democrasee/tree/main/packages/dioxus-translate-macro"
 
 [dependencies]
 proc-macro2 = "1.0.92"
