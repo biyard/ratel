@@ -6,11 +6,19 @@ use dioxus::prelude::*;
 #[rustfmt::skip]
 pub enum Route {
     #[nest("/:lang")]
-    #[layout(RootLayout)]
-    #[route("/")]
-    HomePage { lang: Language },
-    #[end_layout]
+        #[layout(RootLayout)]
+            #[route("/")]
+            HomePage { lang: Language },
+
+            #[nest("/politician")]
+                #[route("/status")]
+                PoliticianStatusPage { lang: Language },
+            #[end_nest]
+
+        #[end_layout]
     #[end_nest]
+
+    
 
     #[redirect("/", || Route::HomePage { lang: Language::default() })]
     #[route("/:..route")]
