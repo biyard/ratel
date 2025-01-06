@@ -1,6 +1,7 @@
 #[derive(Debug, Clone)]
 pub struct ThemeData {
     pub active: String,
+    pub active00: String,
     pub active01: String,
     pub active_true: String,
     pub active_false: String,
@@ -36,6 +37,7 @@ impl Default for ThemeData {
     fn default() -> Self {
         ThemeData {
             active: "#68D36C".to_string(), // bg-[#68D36C] text-[#68D36C] border-[#68D36C]
+            active00: "#68D36C".to_string(), // bg-[#68D36C] text-[#68D36C] border-[#68D36C]
             active01: "#FF5A5D".to_string(), // bg-[#FF5A5D] text-[#FF5A5D] border-[#FF5A5D]
             active_true: "#3FA451".to_string(), // bg-[#3FA451] text-[#3FA451] border-[#3FA451]
             active_false: "#DA4447".to_string(), // bg-[#DA4447] text-[#DA4447] border-[#DA4447]
