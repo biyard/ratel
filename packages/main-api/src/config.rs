@@ -2,6 +2,7 @@
 pub struct Config {
     pub env: &'static str,
     pub domain: &'static str,
+    pub openapi_key: &'static str,
 }
 
 impl Default for Config {
@@ -9,6 +10,7 @@ impl Default for Config {
         Config {
             env: option_env!("ENV").expect("You must set ENV"),
             domain: option_env!("DOMAIN").expect("You must set DOMAIN"),
+            openapi_key: option_env!("OPENAPI_KEY").expect("OPENAPI_KEY is required"),
         }
     }
 }

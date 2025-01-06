@@ -1,64 +1,85 @@
-use serde::{Serialize, Serializer};
-use serde::ser::SerializeStruct;
-
-#[derive(Debug, serde::Deserialize)]
-#[serde(rename_all = "UPPERCASE")] // for parsing
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct Member {
-    hg_nm: String,
-    hj_nm: String,
-    eng_nm: String,
+    #[serde(rename(deserialize = "HG_NM"))]
+    name: String, // 한글 이름
+    #[serde(skip_serializing)]
+    #[serde(skip_deserializing)]
+    #[allow(dead_code)]
+    hj_nm: String, // 한자 이름
+    #[serde(rename(deserialize = "ENG_NM"))]
+    eng_name: String, // 영문 이름
+    #[serde(skip_serializing)]
+    #[serde(skip_deserializing)]
+    #[allow(dead_code)]
     bth_gbn_nm: String,
+    #[serde(skip_serializing)]
+    #[serde(skip_deserializing)]
+    #[allow(dead_code)]
     bth_date: String,
+    #[serde(skip_serializing)]
+    #[serde(skip_deserializing)]
+    #[allow(dead_code)]
     job_res_nm: String,
-    poly_nm: String,
-    orig_nm: String,
-    elect_gbn_nm: String,
-    cmit_nm: String,
-    cmits: String,
-    reele_gbn_nm: String,
+    #[serde(rename(deserialize = "POLY_NM"))]
+    party: String, // 정당명
+    #[serde(rename(deserialize = "ORIG_NM"))]
+    district: String, // 선거구명    
+    #[serde(skip_serializing)]
+    #[serde(skip_deserializing)]
+    #[allow(dead_code)]
+    elect_gbn_nm: String, // 지역구 or 비례대표
+    #[serde(skip_serializing)]
+    #[serde(skip_deserializing)]
+    #[allow(dead_code)]
+    cmit_nm: String, // 대표 위원회
+    #[serde(skip_serializing)]
+    #[serde(skip_deserializing)]
+    #[allow(dead_code)]
+    cmits: String, // 소속 위원회 목록
+    #[serde(skip_serializing)]
+    #[serde(skip_deserializing)]
+    #[allow(dead_code)]
+    reele_gbn_nm: String, // 재선
+    #[serde(skip_serializing)]
+    #[serde(skip_deserializing)]
+    #[allow(dead_code)]
     units: String,
+    #[serde(skip_serializing)]
+    #[serde(skip_deserializing)]
+    #[allow(dead_code)]
     sex_gbn_nm: String,
+    #[serde(skip_serializing)]
+    #[serde(skip_deserializing)]
+    #[allow(dead_code)]
     tel_no: String,
+    #[serde(skip_serializing)]
+    #[serde(skip_deserializing)]
+    #[allow(dead_code)]
     e_mail: String,
+    #[serde(skip_serializing)]
+    #[serde(skip_deserializing)]
+    #[allow(dead_code)]
     homepage: Option<String>,
+    #[serde(skip_serializing)]
+    #[serde(skip_deserializing)]
+    #[allow(dead_code)]
     staff: String,
+    #[serde(skip_serializing)]
+    #[serde(skip_deserializing)]
+    #[allow(dead_code)]
     secretary: String,
+    #[serde(skip_serializing)]
+    #[serde(skip_deserializing)]
+    #[allow(dead_code)]
     secretary2: String,
-    mona_cd: String,
+    #[serde(rename(deserialize = "MONA_CD"))]
+    code: String, // 고유식별번호
+    #[serde(skip_serializing)]
+    #[serde(skip_deserializing)]
+    #[allow(dead_code)]
     mem_title: String,
+    #[serde(skip_serializing)]
+    #[serde(skip_deserializing)]
+    #[allow(dead_code)]
     assem_addr: String,
-}
-
-impl Serialize for Member {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        // custom serialization
-        let mut state = serializer.serialize_struct("Member", 23)?;
-        state.serialize_field("name", &self.hg_nm)?;
-        state.serialize_field("hj_nm", &self.hj_nm)?;
-        state.serialize_field("eng_name", &self.eng_nm)?;
-        state.serialize_field("bth_gbn_nm", &self.bth_gbn_nm)?;
-        state.serialize_field("bth_date", &self.bth_date)?;
-        state.serialize_field("job_res_nm", &self.job_res_nm)?;
-        state.serialize_field("poly_nm", &self.poly_nm)?;
-        state.serialize_field("orig_nm", &self.orig_nm)?;
-        state.serialize_field("elect_gbn_nm", &self.elect_gbn_nm)?;
-        state.serialize_field("cmit_nm", &self.cmit_nm)?;
-        state.serialize_field("cmits", &self.cmits)?;
-        state.serialize_field("reele_gbn_nm", &self.reele_gbn_nm)?;
-        state.serialize_field("units", &self.units)?;
-        state.serialize_field("sex_gbn_nm", &self.sex_gbn_nm)?;
-        state.serialize_field("tel_no", &self.tel_no)?;
-        state.serialize_field("e_mail", &self.e_mail)?;
-        state.serialize_field("homepage", &self.homepage)?;
-        state.serialize_field("staff", &self.staff)?;
-        state.serialize_field("secretary", &self.secretary)?;
-        state.serialize_field("secretary2", &self.secretary2)?;
-        state.serialize_field("mona_cd", &self.mona_cd)?;
-        state.serialize_field("mem_title", &self.mem_title)?;
-        state.serialize_field("assem_addr", &self.assem_addr)?;
-        state.end()
-    }
 }

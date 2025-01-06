@@ -28,7 +28,7 @@ pub fn sign_request(req: RequestBuilder) -> RequestBuilder {
             return req;
         }
 
-        let conf = crate::config::get();
+        let conf = ::get();
 
         let timestamp = chrono::Utc::now().timestamp();
         let msg = format!("{}-{}", conf.domain, timestamp);
