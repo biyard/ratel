@@ -45,7 +45,7 @@ async fn main() -> Result<(), ServiceError> {
             controllers::v1::users::UserControllerV1::route()?,
         )
         .nest(
-            "/v1/members", 
+            "/v1/national-assembly/members", 
             controllers::v1::member::MemberControllerV1::route()?
         );
 
