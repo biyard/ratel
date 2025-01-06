@@ -13,6 +13,7 @@ mod tooltip;
 mod pros;
 mod cons;
 mod hand_palm;
+mod double_arrow;
 
 pub use arrows::*;
 pub use chat::*;
@@ -29,3 +30,4 @@ pub use tooltip::*;
 pub use pros::*;
 pub use cons::*;
 pub use hand_palm::*;
+pub use double_arrow::*;
