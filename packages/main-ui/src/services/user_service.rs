@@ -6,7 +6,7 @@ use crate::{config, utils::rest_api};
 
 pub enum UserEvent {
     Signup(String, String, String, String),
-    Login(String, String, String, String),
+    Login,
     Logout,
 }
 
@@ -38,12 +38,7 @@ impl UserService {
         );
 
         #[cfg(feature = "web-only")]
-        {
-            let w = firebase.try_setup_from_storage();
-            if w.is_some() {
-                tracing::debug!("UserService::init: wallet={:?}", w);
-            }
-        }
+        let _ = firebase.try_setup_from_storage();
 
         use_context_provider(|| Self {
             #[cfg(feature = "web-only")]
@@ -54,6 +49,60 @@ impl UserService {
             profile_url: Signal::new("".to_string()),
             principal: Signal::new("".to_string()),
         });
+
+        #[cfg(feature = "web-only")]
+        {
+            let mut user = use_context::<UserService>();
+            let firebase = (user.firebase)();
+            if firebase.get_login() {
+                tracing::debug!("UserService::init: wallet={:?}", firebase);
+                spawn(async move {
+                    user.get_user_info_from_server().await;
+                });
+            }
+        }
+    }
+
+    #[cfg(feature = "web-only")]
+    pub async fn get_user_info_from_server(&mut self) {
+        let endpoint = (self.endpoint)();
+        rest_api::set_signer(Box::new(*self));
+
+        let req = UserReadActionRequest {
+            action: ReadActionType::UserInfo,
+            email: None,
+        };
+
+        let url = format!("{}/v1/users?{}", endpoint, req);
+
+        tracing::debug!("UserService::get_user_info_from_server: url={}", url);
+
+        let user: User = match rest_api::get(&url).await {
+            Ok(v) => v,
+            Err(e) => match e {
+                ServiceError::NotFound => {
+                    return;
+                }
+                e => {
+                    tracing::error!("UserService::get_user_info_from_server: error={:?}", e);
+                    return;
+                }
+            },
+        };
+
+        self.nickname.set(user.nickname);
+        self.profile_url.set(user.profile_url);
+    }
+
+    pub fn get_user_info(&self) -> Option<(String, String)> {
+        let nickname = (self.nickname)();
+        let profile_url = (self.profile_url)();
+
+        if profile_url.is_empty() || nickname.is_empty() {
+            return None;
+        }
+
+        Some((nickname, profile_url))
     }
 
     #[cfg(feature = "web-only")]
@@ -114,8 +163,41 @@ impl UserService {
                         name,
                         profile_url
                     );
+                    rest_api::set_signer(Box::new(*self));
+                    let endpoint = (self.endpoint)();
 
-                    return UserEvent::Login(principal, email, name, profile_url);
+                    let req = UserReadActionRequest {
+                        action: ReadActionType::CheckEmail,
+                        email: Some(email.clone()),
+                    };
+
+                    let url = format!("{}/v1/users?{}", endpoint, req);
+
+                    tracing::debug!("UserService::login: url={}", url);
+
+                    let user: User = match rest_api::get(&url).await {
+                        Ok(v) => v,
+                        Err(e) => {
+                            rest_api::remove_signer();
+
+                            match e {
+                                ServiceError::NotFound => {
+                                    return UserEvent::Signup(principal, email, name, profile_url);
+                                }
+                                e => {
+                                    tracing::error!("UserService::login: error={:?}", e);
+                                    return UserEvent::Logout;
+                                }
+                            }
+                        }
+                    };
+
+                    self.email.set(email);
+                    self.nickname.set(user.nickname);
+                    self.profile_url.set(user.profile_url);
+                    self.principal.set(principal);
+
+                    return UserEvent::Login;
                 }
                 google_wallet::WalletEvent::Logout => {
                     tracing::debug!("UserService::login: SignOut");
@@ -126,7 +208,7 @@ impl UserService {
         UserEvent::Logout
     }
 
-    pub async fn signup(
+    pub async fn login_or_signup(
         &self,
         principal: &str,
         email: &str,
@@ -145,8 +227,9 @@ impl UserService {
         );
 
         let endpoint = (self.endpoint)();
-        let url = format!("{}/v1/users", endpoint);
 
+        // Signup
+        let url = format!("{}/v1/users", endpoint);
         let body = dto::UserActionRequest::Signup(SignupRequest {
             email: email.to_string(),
             nickname: nickname.to_string(),
@@ -180,6 +263,7 @@ impl Signer for UserService {
         let firebase = (self.firebase)();
 
         if !firebase.get_login() {
+            tracing::debug!("UserService::sign: not login {firebase:?}");
             return Err(ServiceError::Unauthorized);
         }
 
