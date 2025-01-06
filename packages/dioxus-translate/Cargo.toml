@@ -9,8 +9,8 @@ keywords = ["dioxus", "web", "i18n", "translate"]
 repository = "https://github.com/biyard/democrasee/tree/main/packages/dioxus-translate"
 
 [dependencies]
-dioxus-translate-macro = { path = "../dioxus-translate-macro" }
-dioxus-translate-types = { path = "../dioxus-translate-types" }
+dioxus-translate-macro = { path = "../dioxus-translate-macro", version = "0.1.0" }
+dioxus-translate-types = { path = "../dioxus-translate-types", version = "0.1.0" }
 serde.workspace = true
 web-sys = { version = "0.3.76", optional = true }
 
