@@ -2,14 +2,18 @@ use std::error::Error;
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, PartialEq, Eq, Deserialize)]
 #[repr(u64)]
 pub enum ServiceError {
-    Unknown(String) = 1000,
+    Unknown(String),
 
+    NotFound,
     Unauthorized,
-    SignException,
+    UserAlreadyExists,
+
     VerifyException(String),
+    SignException,
+    DatabaseException(String),
 }
 
 impl std::fmt::Display for ServiceError {

@@ -1,18 +1,19 @@
+use dto::Result;
 use dto::ServiceError;
 use easy_dynamodb::Document;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct User {
-    id: String,
-    r#type: String,
-    created_at: u64,
-    updated_at: u64,
-    deleted_at: Option<u64>,
+    pub id: String,
+    pub r#type: String,
+    pub created_at: u64,
+    pub updated_at: u64,
+    pub deleted_at: Option<u64>,
 
-    nickname: String,
-    email: String,
-    profile_url: String,
+    pub nickname: String,
+    pub email: String,
+    pub profile_url: String,
 }
 
 impl Document for User {
@@ -57,16 +58,15 @@ impl Into<dto::User> for User {
 }
 
 impl User {
-    pub async fn create(&self, log: &slog::Logger) -> Result<(), ServiceError> {
+    pub async fn create(&self, log: &slog::Logger) -> Result<()> {
         let cli = easy_dynamodb::get_client(log);
         cli.create(self).await.map_err(|e| ServiceError::from(e))
     }
 
-    pub async fn get(
-        log: &slog::Logger,
-        id: &str,
-    ) -> Result<Option<User>, easy_dynamodb::error::DynamoException> {
+    pub async fn get(log: &slog::Logger, id: &str) -> Result<Option<User>> {
         let cli = easy_dynamodb::get_client(log);
-        cli.get::<User>(id).await.map_err(|e| e)
+        cli.get::<User>(id)
+            .await
+            .map_err(|e| ServiceError::DatabaseException(format!("{e}")))
     }
 }

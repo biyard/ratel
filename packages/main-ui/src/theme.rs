@@ -19,12 +19,14 @@ pub struct ThemeData {
 
 #[derive(Debug, Clone)]
 pub struct FontTheme {
+    pub exbold15: String,
     pub bold15: String,
 }
 
 impl Default for FontTheme {
     fn default() -> Self {
         FontTheme {
+            exbold15: "font-extrabold text-[15px] leading-[22.5px]".to_string(),
             bold15: "font-bold text-[15px] leading[22.5px]".to_string(),
         }
     }

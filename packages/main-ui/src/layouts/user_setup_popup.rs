@@ -1,6 +1,7 @@
 #![allow(non_snake_case)]
 use dioxus::prelude::*;
 use dioxus_popup::PopupService;
+use dto::ServiceError;
 
 use crate::{
     components::checkbox::Checkbox, layouts::congraturation_popup::CongraturationPopup,
@@ -108,10 +109,18 @@ pub fn UserSetupPopup(
                             let profile_url = profile_url.clone();
                             spawn(async move {
                                 if let Err(e) = user_service
-                                    .signup(&principal, &email, &nickname, &profile_url)
+                                    .login_or_signup(&principal, &email, &nickname, &profile_url)
                                     .await
                                 {
-                                    tracing::error!("UserSetupPopup::signup: error={:?}", e);
+                                    match e {
+                                        ServiceError::UserAlreadyExists => {
+                                            popup.close();
+                                            return;
+                                        }
+                                        e => {
+                                            tracing::error!("UserSetupPopup::signup: error={:?}", e);
+                                        }
+                                    }
                                 } else {
                                     tracing::debug!("UserSetupPopup::signup: success");
                                     popup
