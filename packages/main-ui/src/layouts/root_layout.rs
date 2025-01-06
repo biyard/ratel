@@ -1,12 +1,9 @@
 #![allow(non_snake_case)]
 use dioxus::prelude::*;
 use dioxus_popup::PopupZone;
+use dioxus_translate::*;
 
-use crate::{
-    layouts::header::Header,
-    route::{Language, Route},
-    theme::Theme,
-};
+use crate::{layouts::header::Header, route::Route, theme::Theme};
 
 #[component]
 pub fn RootLayout(lang: Language) -> Element {
@@ -17,7 +14,9 @@ pub fn RootLayout(lang: Language) -> Element {
         div {
             class: "flex flex-col items-center justify-start w-full min-h-[100vh] text-white max-[1440px]:px-[10px]",
             style: "background: {theme.background}",
-            div { class: "max-w-[1440px] w-full ", Header {} }
+            div { class: "max-w-[1440px] w-full ",
+                Header { lang }
+            }
             div { class: "w-full max-w-[1440px]", Outlet::<Route> {} }
         }
         PopupZone {}

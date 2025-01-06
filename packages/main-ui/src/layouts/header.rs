@@ -1,40 +1,46 @@
 #![allow(non_snake_case)]
 use dioxus::prelude::*;
 use dioxus_popup::PopupService;
+use dioxus_translate::*;
 
 use crate::{
     components::{button::Button, logo::LogoWrapper},
-    layouts::{signup_popup::SignupPopup, user_setup_popup::UserSetupPopup},
+    layouts::{i18n::HeaderTranslate, signup_popup::SignupPopup, user_setup_popup::UserSetupPopup},
+    // route::{translate},
     services::user_service::{UserEvent, UserService},
     theme::Theme,
 };
 
 #[component]
-pub fn Header() -> Element {
+pub fn Header(lang: Language) -> Element {
     rsx! {
         div { class: "flex flex-row items-center justify-between w-full pt-[47px] pb-[39px]",
             LogoWrapper {}
-            HeaderTails {}
+            HeaderTails { lang }
         }
     }
 }
 
 #[component]
-pub fn HeaderTails() -> Element {
+pub fn HeaderTails(lang: Language) -> Element {
     let theme_service: Theme = use_context();
     let theme = theme_service.get_data();
     let mut popup: PopupService = use_context();
 
     let mut user_service: UserService = use_context();
+    tracing::debug!("lang: {:?}", lang);
+
+    let i18n_header: HeaderTranslate = translate(&lang);
+    tracing::debug!("i18n_header: {:?}", i18n_header);
 
     let onclick = move |_| {
-        tracing::debug!("회원가입 버튼 클릭");
+        tracing::debug!("signup button clicked");
         popup
             .open(rsx! {
                 SignupPopup {
                     class: "w-[400px]",
                     onclick: move |_| async move {
-                        tracing::debug!("Google로 계속하기 버튼 클릭");
+                        tracing::debug!("Signup with Google clicked");
                         match user_service.login().await {
                             UserEvent::Signup(principal, email, nickname, profile_url) => {
                                 popup.open(rsx! {
@@ -51,7 +57,7 @@ pub fn HeaderTails() -> Element {
                                 popup.close();
                             }
                             _ => {
-                                tracing::error!("회원가입 실패");
+                                tracing::error!("Failed to signup with Google");
                                 popup.close();
                             }
                         };
@@ -73,12 +79,12 @@ pub fn HeaderTails() -> Element {
                     p { class: "{theme.font_theme.exbold15} uppercase", "{nickname}" }
                 }
             } else {
-                Button { color: "{theme.primary00}", onclick, "로그인" }
+                Button { color: "{theme.primary00}", onclick, "{i18n_header.login}" }
                 Button {
                     color: "{theme.primary00}",
                     background: "{theme.primary06}",
                     onclick,
-                    "회원가입"
+                    "{i18n_header.signup}"
                 }
             }
         }
