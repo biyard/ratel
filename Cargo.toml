@@ -1,5 +1,5 @@
 [workspace]
-members = ["packages/main-ui", "packages/dto", "packages/main-api", "packages/dioxus-popup", "packages/google-wallet", "packages/dioxus-oauth", "examples/oauth"]
+members = ["packages/main-ui", "packages/dto", "packages/main-api", "packages/dioxus-popup", "packages/google-wallet", "packages/dioxus-oauth", "examples/oauth", "packages/dioxus-translate-macro", "packages/dioxus-translate", "packages/dioxus-translate-types"]
 resolver = "2"
 
 [workspace.package]
@@ -7,6 +7,7 @@ authors = ["Biyard"]
 description = "DemocraSee"
 edition = "2021"
 repository = "https://github.com/biyard/democrasee"
+license = "MIT"
 
 [workspace.dependencies]
 serde = { version = "1.0.197", features = ["derive"] }
