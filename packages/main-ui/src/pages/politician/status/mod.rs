@@ -1,6 +1,6 @@
 #![allow(non_snake_case)]
 use dioxus::prelude::*;
-use crate::route::Language;
+use dioxus_translate::Language;
 use crate::theme::Theme;
 use crate::components::{
     icons,
