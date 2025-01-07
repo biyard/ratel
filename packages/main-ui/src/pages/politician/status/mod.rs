@@ -7,7 +7,7 @@ use crate::components::{
     tooltip::Tooltip,
 };
 
-mod controller;
+// mod controller;
 
 #[component]
 pub fn PoliticianStatusPage(lang: Language) -> Element {
