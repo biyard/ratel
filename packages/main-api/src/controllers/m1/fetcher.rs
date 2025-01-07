@@ -1,7 +1,7 @@
 use by_axum::{
     axum::{
         extract::{Query, State}, 
-        routing::get, 
+        routing::post, 
         Json
     },
     log::root,
@@ -14,7 +14,7 @@ use crate::{
 };
 
 #[derive(Clone, Debug)]
-pub struct MemberControllerV1 {
+pub struct FetcherControllerM1 {
     log: slog::Logger,
 }
 
@@ -24,26 +24,27 @@ pub struct ListMemberRequest {
     _page: Option<usize>,
 }
 
-impl MemberControllerV1 {
+impl FetcherControllerM1 {
     pub fn route() -> Result<by_axum::axum::Router> {
-        let log = root().new(o!("api-controller" => "MemberControllerV1"));
-        let ctrl = MemberControllerV1 { log };
+        let log = root().new(o!("api-controller" => "FetcherControllerM1"));
+        let ctrl = FetcherControllerM1 { log };
 
         Ok(by_axum::axum::Router::new()
-            .route("/", get(Self::list_act_member))
+            .route("/", post(Self::fetch_act_member))
             .with_state(ctrl.clone()))
     }
 
-    pub async fn list_act_member(
-        State(ctrl): State<MemberControllerV1>,
+    // TODO: Implement get -> post method
+    pub async fn fetch_act_member(
+        State(ctrl): State<FetcherControllerM1>,
         Query(req): Query<ListMemberRequest>,
     ) -> Result<Json<CommonQueryResponse<Member>>> {
         let log = ctrl.log.new(o!("api" => "act_member"));
-        slog::debug!(log, "list act member {:?}", req);
+        slog::debug!(log, "fetch act member {:?}", req);
 
         let response =  OpenAPI::new().get_active_members(
             Some(req._page.unwrap_or(1).to_string()), // start from 1 not 0
-            Some(req._size.unwrap_or(10).to_string()),
+            Some(req._size.unwrap_or(300).to_string()),
             None,
             None,
             None,
