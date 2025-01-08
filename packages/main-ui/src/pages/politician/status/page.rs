@@ -75,6 +75,7 @@ pub fn PoliticianStatusTable(lang: Language) -> Element {
                 }
             }
             div { class: "w-full h-full flex flex-col gap-[10px]",
+                // TODO: replace dummy data
                 PoliticianStatusRow { lang, stance: CryptoStance::Supportive }
                 PoliticianStatusRow { lang, stance: CryptoStance::Against }
                 PoliticianStatusRow { lang, stance: CryptoStance::Neutral }
