@@ -1,0 +1,22 @@
+[package]
+name = "dioxus-translate-macro"
+version = "0.1.0"
+authors.workspace = true
+edition.workspace = true
+description = "Libraries for internalization on Dioxus"
+license = "MIT"
+keywords = ["dioxus", "web", "i18n", "translate"]
+repository = "https://github.com/biyard/democrasee/tree/main/packages/dioxus-translate-macro"
+
+[dependencies]
+proc-macro2 = "1.0.92"
+quote = "1.0.38"
+syn = "2.0.95"
+dioxus-translate-types = { path = "../dioxus-translate-types", version = "0.1.0" }
+
+[lib]
+proc-macro = true
+
+[features]
+default = []
+ko = []

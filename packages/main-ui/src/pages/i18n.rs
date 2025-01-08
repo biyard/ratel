@@ -1,15 +1,10 @@
-use crate::route::Language;
+use dioxus_translate::*;
 
-pub struct PagesTranslate<'a> {
-    pub _text: &'a str,
-}
+translate! {
+    PagesTranslate;
 
-pub fn translate_pages<'a>(lang: &'a Language) -> PagesTranslate<'a> {
-    if lang.clone() == Language::Ko {
-        PagesTranslate {
-            _text: "homepage page",
-        }
-    } else {
-        todo!()
-    }
+    _text: {
+        ko: "홈페이지",
+        en: "homepage",
+    },
 }

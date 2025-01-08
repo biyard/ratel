@@ -12,6 +12,9 @@ mod controllers {
     pub mod m1 {
         pub mod fetcher;
     }
+    pub mod m1 {
+        pub mod assembly_members;
+    }
 }
 
 pub mod config;
@@ -48,8 +51,8 @@ async fn main() -> Result<(), ServiceError> {
             controllers::v1::users::UserControllerV1::route()?,
         )
         .nest(
-            "/m1/assembly-members", 
-            controllers::m1::fetcher::FetcherControllerM1::route()?
+            "/m1/assembly_members",
+            controllers::m1::assembly_members::AssemblyMemberControllerV1::route()?,
         );
 
     let port = option_env!("PORT").unwrap_or("3000");
