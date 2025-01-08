@@ -7,7 +7,6 @@ mod controllers {
     pub mod v1 {
         pub mod topic;
         pub mod users;
-        // pub mod member;
     }
     pub mod m1 {
         pub mod assembly_members;
