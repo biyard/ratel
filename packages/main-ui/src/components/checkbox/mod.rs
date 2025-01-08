@@ -1,6 +1,6 @@
 #![allow(non_snake_case)]
 use dioxus::prelude::*;
-use dioxus_theme::Theme;
+use crate::theme::Theme;
 
 #[component]
 pub fn Checkbox(
