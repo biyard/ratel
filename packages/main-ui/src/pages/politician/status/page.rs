@@ -32,7 +32,7 @@ pub fn PoliticianStatusTable(lang: Language) -> Element {
     // TODO: mobile view
     rsx! {
         div { class: "w-full h-full flex flex-col bg-[{theme_data.primary06}] rounded-[8px] text-white",
-            div { class: "w-full flex flex-row items-center gap-[90px] px-[15px] py-[10px] border-b-[1px] border-[#323342]", 
+            div { class: "w-full flex flex-row items-center gap-[90px] px-[15px] py-[10px] border-b-[1px] border-[{theme_data.hover}]", 
                 div { class: "flex items-center w-[280px] gap-[2px]", 
                     span {
                         class: "text-xs font-semibold",
@@ -83,7 +83,7 @@ pub fn PoliticianStatusTable(lang: Language) -> Element {
             }
             // TODO: 다음 10개 미리 떙겨놓고 값 없으면 hide
             div {
-                class: "w-full h-[36px] flex flex-row items-center justify-center gap-[10px] hover:bg-[#323342]",
+                class: "w-full h-[36px] flex flex-row items-center justify-center gap-[10px] hover:bg-[{theme_data.hover}]",
                 span {
                     class: "text-sm",
                     "{tr.more}"
@@ -107,6 +107,7 @@ pub fn PoliticianStatusRow(
     let theme_data: crate::theme::ThemeData = theme.get_data();
     let tr: PoliticianStanceTranslate = translate(&lang);
 
+    // TODO: feat oppacity on hover
     rsx! {
         div { class: "w-full h-[60px] px-[15px] py-[10px] flex flex-row items-center justify-start gap-[90px] hover:bg-[#32334280]",
             div { class: "flex text-sm font-semibold w-[280px] gap-[10px] items-center",
