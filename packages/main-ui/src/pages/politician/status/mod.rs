@@ -1,13 +1,93 @@
 #![allow(non_snake_case)]
 use dioxus::prelude::*;
-use dioxus_translate::Language;
+use serde::{Deserialize, Serialize};
+use dioxus_translate::*;
 use crate::theme::Theme;
 use crate::components::{
     icons,
     tooltip::Tooltip,
 };
+// use crate::pages::politician::status::i18n::PoliticianStanceTranslate;
 
 // mod controller;
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum PoliticianStance {
+    #[serde(rename = "supportive")]
+    Supportive,
+    #[serde(rename = "against")]
+    Against,
+    #[serde(rename = "neutral")]
+    Neutral,
+}
+
+impl std::fmt::Display for PoliticianStance {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            PoliticianStance::Supportive => write!(f, "supportive"),
+            PoliticianStance::Against => write!(f, "against"),
+            PoliticianStance::Neutral => write!(f, "neutral"),
+        }
+    }
+}
+
+impl std::str::FromStr for PoliticianStance {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "supportive" => Ok(PoliticianStance::Supportive),
+            "against" => Ok(PoliticianStance::Against),
+            "neutral" => Ok(PoliticianStance::Neutral),
+            _ => Err("no stance".to_string()),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct PoliticianStanceTranslate {
+    pub supportive: String,
+    pub against: String,
+    pub neutral: String,
+    pub no_stance: String,
+    pub more: String,
+    pub name: String,
+    pub party: String,
+    pub district: String,
+    pub stance_on_crypto: String,
+    pub proclaim: String,
+}
+
+impl dioxus_translate::Translator for PoliticianStanceTranslate {
+    fn en() -> Self {
+        Self {
+            supportive: "Supportive".to_string(),
+            against: "Against".to_string(),
+            neutral: "Neutral".to_string(),
+            no_stance: "No stance".to_string(),
+            more: "MORE".to_string(),
+            name: "NAME".to_string(),
+            party: "PARTY".to_string(),
+            district: "DISTRICT".to_string(),
+            stance_on_crypto: "STANCE ON CRTPTO".to_string(),
+            proclaim: "PROCLAIM".to_string(),
+        }
+    }
+    fn ko() -> Self {
+        Self {
+            supportive: "찬성".to_string(),
+            against: "반대".to_string(),
+            neutral: "중립".to_string(),
+            no_stance: "의견 없음".to_string(),
+            more: "더보기".to_string(),
+            name: "이름".to_string(),
+            party: "정당".to_string(),
+            district: "지역구".to_string(),
+            stance_on_crypto: "암호화폐에 대한 입장".to_string(),
+            proclaim: "PROCLAIM".to_string(),
+        }
+    }
+}
 
 #[component]
 pub fn PoliticianStatusPage(lang: Language) -> Element {
@@ -17,15 +97,16 @@ pub fn PoliticianStatusPage(lang: Language) -> Element {
                 class: "text-xl font-semibold text-white",
                 "Politicians"
             },
-            PoliticianStatusTable {}
+            PoliticianStatusTable { lang: lang }
         }
     }
 }
 
 #[component]
-pub fn PoliticianStatusTable() -> Element {
+pub fn PoliticianStatusTable(lang: Language) -> Element {
     let theme: Theme = use_context();
     let theme_data = theme.get_data();
+    let tr: PoliticianStanceTranslate = translate(&lang);
     // TODO: mobile view
     rsx! {
         div { class: "w-full h-full flex flex-col bg-[{theme_data.primary06}] rounded-[8px] text-white",
@@ -33,35 +114,35 @@ pub fn PoliticianStatusTable() -> Element {
                 div { class: "flex items-center w-[280px] gap-[2px]", 
                     span {
                         class: "text-xs font-semibold",
-                        "NAME",
+                        "{tr.name}"
                     }
                     icons::Search { color: "white" }
                 }
                 div { class: "flex items-center w-[150px] gap-[2px]", 
                     span {
                         class: "text-xs font-semibold",
-                        "PARTY",
+                        "{tr.party}"
                     }
                     icons::Sort { color: "white", filled: false }
                 }
                 div { class: "flex items-center w-[200px] gap-[2px]", 
                     span {
                         class: "text-xs font-semibold",
-                        "DISTRICT",
+                        "{tr.district}"
                     }
                     icons::Sort { color: "white", filled: true }
                 }
                 div { class: "flex items-center w-[210px] gap-[2px]", 
                     span {
                         class: "text-xs font-semibold",
-                        "STANCE ON CRTPTO",
+                        "{tr.stance_on_crypto}"
                     }
                     icons::Sort { color: "white", filled: false }
                 }
                 div { class: "flex items-start w-[210px] gap-[1px]", 
                     span {
                         class: "text-xs font-semibold",
-                        "PROCLAIM",
+                        "{tr.proclaim}"
                     }
                     Tooltip {
                         inner_class: "text-xs text-white font-bold bg-[#2C2E42] px-[15px] py-[10px] rounded-[8px] shadow-2xl w-[230px] h-[80px]".to_string(),
@@ -72,18 +153,18 @@ pub fn PoliticianStatusTable() -> Element {
                 }
             }
             div { class: "w-full h-full flex flex-col gap-[10px]",
-                PoliticianStatusRow { stance: "supportive" }
-                PoliticianStatusRow { stance: "against" }
-                PoliticianStatusRow { stance: "neutral" }
-                PoliticianStatusRow { stance: "a" }
-                PoliticianStatusRow {}
+                PoliticianStatusRow { lang, stance: PoliticianStance::Supportive }
+                PoliticianStatusRow { lang, stance: PoliticianStance::Against }
+                PoliticianStatusRow { lang, stance: PoliticianStance::Neutral }
+                PoliticianStatusRow { lang, stance: None }
+                PoliticianStatusRow { lang }
             }
             // TODO: 다음 10개 미리 떙겨놓고 값 없으면 hide
             div {
                 class: "w-full h-[36px] flex flex-row items-center justify-center gap-[10px] hover:bg-[#323342]",
                 span {
                     class: "text-sm",
-                    "MORE"
+                    {"{tr.more}"}
                 }
                 icons::DoubleArrowDown { color: "white" }
             }
@@ -93,14 +174,16 @@ pub fn PoliticianStatusTable() -> Element {
 
 #[component]
 pub fn PoliticianStatusRow(
+    lang: Language,
     #[props(default = "-".to_string())] name: String,
     #[props(default = "-".to_string())] party: String,
     #[props(default = "-".to_string())] district: String,
     #[props(default = "https://s3-alpha-sig.figma.com/img/1656/3e71/c59ce479012efb94f2c8e2de7e8edb01?Expires=1737331200&Key-Pair-Id=APKAQ4GOSFWCVNEHN3O4&Signature=eAYKpzVwViWK-SS69oVrWA7uXV19jcw1kNTCYqwyVTH8ZSb6X5MiPGEdtzMMIcsSibtPZn4HcMI8~GkegFgoxMMTL46Q3yhlyNWcYBhB6JAeOYP48igQbIhqJQDPhF3VLpobYfwkMlhFbwIHVaT5m0~HWSB7-pUUZduDGDkKFZ0UZeoxJPbHFopGJB1AZplTRwm4xV9veeHFKyaWxjMY~JidYJeyCz5Rloq1nXOJ2ma3RSU-BKRjuZgpEybj0dRXEyC2wz1oh9V1sQmciKNVAKUGk9X~Fm2xiA9qjx81KLlPvvM0QmwS5q3t9N21CcneNyBKe4y2MnAE-HIdksIC5A__".to_string())] image: String,
-    #[props(default = None)] stance: Option<String>,
+    #[props(default = None)] stance: Option<PoliticianStance>,
 ) -> Element {
     let theme: Theme = use_context();
     let theme_data: crate::theme::ThemeData = theme.get_data();
+    let tr: PoliticianStanceTranslate = translate(&lang);
 
     rsx! {
         div { class: "w-full h-[60px] px-[15px] py-[10px] flex flex-row items-center justify-start gap-[90px] hover:bg-[#32334280]",
@@ -115,18 +198,20 @@ pub fn PoliticianStatusRow(
             div { class: "text-sm w-[200px]", "{district}" }
             div { class: "flex items-center text-sm w-[210px] gap-[10px]", 
                 if let Some(stance) = stance {
-                    if stance == "supportive" {
+                    if stance == PoliticianStance::Supportive {
                         icons::Pros { color: "{theme_data.active00}" },
-                        "Supportive"
-                    } else if stance == "against" {
+                        "{tr.supportive}"
+                    } else if stance == PoliticianStance::Against {
                         icons::Cons { color: "{theme_data.active_false}" },
-                        "Against"
-                    } else {
+                        "{tr.against}"
+                    } else if stance == PoliticianStance::Neutral {
                         icons::HandPalm { color: "#E7D8C6" },
-                        "Neutral"
+                        "{tr.neutral}"
+                    } else {
+                        "{tr.no_stance}"
                     }
                 } else {
-                    "No Stance"
+                    "{tr.no_stance}"
                 }
             }
             div { class: "px-[10px] py-[5px] bg-[#323342] rounded-[5px]", 
