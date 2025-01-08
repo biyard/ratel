@@ -67,4 +67,14 @@ translate! {
         ko: "입장 변경",
         en: "CHANGE STANCE",
     }
+
+    search_title: {
+        ko: "검색하기",
+        en: "SEARCH",
+    }
+
+    name_placeholder: {
+        ko: "이름을 입력해주세요.",
+        en: "Enter the name.",
+    }
 }
