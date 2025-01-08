@@ -10,9 +10,6 @@ mod controllers {
         // pub mod member;
     }
     pub mod m1 {
-        pub mod fetcher;
-    }
-    pub mod m1 {
         pub mod assembly_members;
     }
 }

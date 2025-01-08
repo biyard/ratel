@@ -8,26 +8,22 @@ use by_axum::{
 };
 use dto::*;
 use slog::o;
+use crate::{
+    models::{
+        assembly_member::AssemblyMember,
+        openapi::member::{EnMember, Member}
+    }, 
+    utils::openapi::*
+};
 
 #[derive(Clone, Debug)]
 pub struct AssemblyMemberControllerV1 {
     log: slog::Logger,
 }
 
-// NOTE: This is a real model and recommended to be moved to shared_models
-#[derive(serde::Deserialize, serde::Serialize, Default)]
-pub struct AssemblyMember {
-    id: String,
-    r#type: String,
-    crated_at: u64,
-    updated_at: u64,
-    deleted_at: Option<u64>,
-
-    name: Option<String>,
-
-    // Indexes, if deleted_at is set, all values of indexes must be empty.
-    gsi1: String,
-    gsi2: String,
+#[derive(Debug, serde::Deserialize)]
+pub struct FetchMemberRequest {   
+    _lang: Option<String>,
 }
 
 impl AssemblyMemberControllerV1 {
@@ -48,8 +44,32 @@ impl AssemblyMemberControllerV1 {
     ) -> Result<Json<AssemblyMember>> {
         let log = ctrl.log.new(o!("api" => "create_assembly_member"));
         slog::debug!(log, "act_assembly_member {:?}", body);
-        // TODO: implement it
+        let cli = easy_dynamodb::get_client(&log);
 
+        if body == ActionAssemblyMemberRequest::FetchMembers {
+            if let Some(rows) = get_active_members().await?["row"].as_array() {
+                for row in rows {
+                    // korean info
+                    let member: Member = serde_json::from_value(row.clone())?;
+
+                    // profile image
+                    let image_url = get_member_profile_image(member.code.clone()).await?;
+
+                    cli.create(
+                        &AssemblyMember::try_from((member.code.clone(), image_url.clone(), "ko", &member))
+                    )
+                    .await?;
+
+                    // english info
+                    if let Some(en_row) = get_active_member_en(member.code.clone()).await?["row"].as_array() {
+                        for en_row in en_row {
+                            let en_member: EnMember = serde_json::from_value(en_row.clone())?;
+                            println!("{:?}", en_member);
+                        }
+                    }
+                }
+            }
+        }
         Ok(Json(AssemblyMember::default()))
     }
 
