@@ -64,7 +64,6 @@ impl AssemblyMemberControllerV1 {
                     if let Some(en_row) = get_active_member_en(member.code.clone()).await?["row"].as_array() {
                         for en_row in en_row {
                             let en_member: EnMember = serde_json::from_value(en_row.clone())?;
-                            println!("{:?}", en_member);
                         }
                     }
                 }
