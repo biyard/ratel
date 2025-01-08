@@ -46,7 +46,7 @@ pub fn RoundedYesButton(
     #[props(default = "w-[291px]".to_string())] class: String,
 ) -> Element {
     let theme_service: Theme = use_context();
-    let theme = theme_service.get_data();
+    let theme: crate::theme::ThemeData = theme_service.get_data();
     let mut hover = use_signal(|| false);
 
     let color = if hover() && onclick.is_some() {

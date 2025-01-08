@@ -1,5 +1,6 @@
 #![allow(non_snake_case)]
 use dioxus::prelude::*;
+use dioxus_theme::Theme;
 
 #[component]
 pub fn Checkbox(
@@ -26,7 +27,7 @@ pub fn Checkbox(
 
 #[component]
 pub fn CheckboxIcon(checked: bool) -> Element {
-    let theme_service = use_context::<Theme>();
+    let theme_service: Theme = use_context();
     let theme = theme_service.get_data();
 
     rsx! {
