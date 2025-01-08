@@ -180,12 +180,14 @@ pub fn CloseButton(
     onclick: EventHandler<Event<MouseData>>,
 ) -> Element {
     let mut hover_close = use_signal(|| false);
+    let theme_service: Theme = use_context();
+    let theme: crate::theme::ThemeData = theme_service.get_data();
 
     rsx! {
         div {
             class: format!(
                 "{class} rounded-[4px] cursor-pointer {}",
-                if hover_close() { "bg-[#2C2E42]" } else { "" },
+                if hover_close() { "bg-[{theme.}]" } else { "" },
             ),
             onclick,
             onmouseenter: move |_| {
@@ -194,7 +196,7 @@ pub fn CloseButton(
             onmouseleave: move |_| {
                 hover_close.set(false);
             },
-            Close { color: if hover_close() { "#74789E" } else { "white" } }
+            Close { color: if hover_close() { "{theme.primary03}" } else { "white" } }
         }
     }
 }
