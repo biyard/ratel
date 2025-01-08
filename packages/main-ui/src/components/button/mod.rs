@@ -187,7 +187,7 @@ pub fn CloseButton(
         div {
             class: format!(
                 "{class} rounded-[4px] cursor-pointer {}",
-                if hover_close() { "bg-[{theme.}]" } else { "" },
+                if hover_close() { "bg-[{theme.background}]" } else { "" },
             ),
             onclick,
             onmouseenter: move |_| {
