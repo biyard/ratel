@@ -1,6 +1,6 @@
 use crate::models::openapi::member::Member;
 use easy_dynamodb::Document;
-use dto::CryptoStance;
+use dto::ServiceError;
 
 // NOTE: This is a real model and recommended to be moved to shared_models
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize, Default)]
@@ -59,10 +59,10 @@ impl AssemblyMember {
 }
 
 impl TryFrom<(String, String, &str, &Member)> for AssemblyMember {
-    type Error = String;
+    type Error = ServiceError;
     fn try_from(
         (code, image_url, lang, member): (String, String, &str, &Member),
-    ) -> Result<Self, Self::Error> {
+    ) -> Result<Self, Self::ServiceError> {
         let now = chrono::Utc::now().timestamp_nanos_opt().unwrap_or(0) as u64;
 
         Ok(Self {

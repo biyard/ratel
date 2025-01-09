@@ -1,21 +1,21 @@
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct Member {
     #[serde(rename(deserialize = "HG_NM"))]
-    pub name: String, // 한글 이름
+    pub name: String, // Korean Name
     #[serde(rename(deserialize = "POLY_NM"))]
-    pub party: String, // 정당명
+    pub party: String, // Korean Party Name
     #[serde(rename(deserialize = "ORIG_NM"))]
-    pub district: String, // 선거구명
+    pub district: String, // Korean District Name
     #[serde(rename(deserialize = "MONA_CD"))]
-    pub code: String, // 고유식별번호
+    pub code: String, // Unique Code
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct EnMember {
     #[serde(rename(deserialize = "NAAS_EN_NM"))]
-    pub name: String, // 영문 이름
+    pub name: String, // English Name
     #[serde(rename(deserialize = "PLPT_NM"))]
-    pub party: String, // 영문 정당명
+    pub party: String, // English Party Name
     #[serde(rename(deserialize = "ELECD_NM"))]
-    pub district: String, // 영문 선거구명
+    pub district: String, // English District Name
 }

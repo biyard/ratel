@@ -4,12 +4,14 @@ use dto::error::ServiceError;
 use tokio::net::TcpListener;
 
 mod controllers {
-    pub mod v1 {
-        pub mod topic;
-        pub mod users;
+    pub mod topic {
+        pub mod v1;
     }
-    pub mod m1 {
-        pub mod assembly_members;
+    pub mod users {
+        pub mod v1;
+    }
+    pub mod assembly_members {
+        pub mod m1;
     }
 }
 
@@ -44,11 +46,11 @@ async fn main() -> Result<(), ServiceError> {
         .nest("/v1/topics", TopicControllerV1::route()?)
         .nest(
             "/v1/users",
-            controllers::v1::users::UserControllerV1::route()?,
+            controllers::users::v1::UserControllerV1::route()?,
         )
         .nest(
             "/m1/assembly_members",
-            controllers::m1::assembly_members::AssemblyMemberControllerV1::route()?,
+            controllers::assembly_members::m1::AssemblyMemberControllerV1::route()?,
         );
 
     let port = option_env!("PORT").unwrap_or("3000");
