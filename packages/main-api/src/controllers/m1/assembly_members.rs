@@ -47,17 +47,10 @@ impl AssemblyMemberControllerV1 {
         let cli = easy_dynamodb::get_client(&log);
 
         if body == ActionAssemblyMemberRequest::FetchMembers {
-            if let Some(rows) = get_active_members().await?["row"].as_array() {
-                for row in rows {
-                    // korean info
-                    let member: Member = serde_json::from_value(row.clone())?;
-
-                    // profile image
-                    let image_url = get_member_profile_image(member.code.clone()).await?;
-
-                    cli.create(
-                        &AssemblyMember::try_from((member.code.clone(), image_url.clone(), "ko", &member))
-                    )
+            let members =  get_active_members().await?; 
+            let image_url = get_member_profile_image(member.code.clone()).await?;
+            let doc:AssemblyMember = members.try_into()?.with_profile_url(image_url);
+            cli.create(&doc)
                     .await?;
 
                     // english info
