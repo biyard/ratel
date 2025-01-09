@@ -8,7 +8,6 @@ use crate::{
         icons,
         tooltip::Tooltip,
     },
-    layouts::user_setup_popup::UserSetupPopup,
 };
 use dto::CryptoStance;
 use super::{
@@ -37,7 +36,7 @@ pub fn PoliticianStatusTable(lang: Language) -> Element {
     let tr: PoliticianStanceTranslate = translate(&lang);
     // TODO: mobile view
     rsx! {
-        div { class: "w-full h-full flex flex-col bg-[{theme_data.primary06}] rounded-[8px] text-white",
+        div { class: "w-full h-full flex flex-col bg-[{theme.primary06}] rounded-[8px] text-white",
             PoliticianStatusHeader { lang }
             div { class: "w-full h-full flex flex-col gap-[10px]",
                 // TODO: replace dummy data

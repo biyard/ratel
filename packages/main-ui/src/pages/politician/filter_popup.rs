@@ -5,7 +5,6 @@ use crate::{
     theme::Theme,
     components::dropdown::Dropdown,
 };
-use dto::{CryptoStance, ServiceError};
 use super::i18n::PoliticianStanceTranslate;
 
 #[component]
