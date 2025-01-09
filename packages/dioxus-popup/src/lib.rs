@@ -106,7 +106,7 @@ pub fn PopupZone() -> Element {
                         div {
                             class: format!(
                                 "absolute top-[25px] right-[25px] rounded-[4px] cursor-pointer {}",
-                                if hover_close() { "bg-[#2C2E42]" } else { "" },
+                                if hover_close() { "bg-[{theme.background}]" } else { "" },
                             ),
                             onclick: move |_| {
                                 popup.close();
