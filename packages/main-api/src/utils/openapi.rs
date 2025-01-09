@@ -8,13 +8,13 @@ pub async fn get_active_members() -> Result<Value, Error> {
     params.insert("KEY", config.openapi_key.to_string());
     params.insert("type", "json".to_string());
     params.insert("pIndex", "1".to_string()); // 페이지번호 default: 1, start from 1 not 0
-    params.insert("pSize", "5".to_string()); // 페이지당 요청 건수 default: 300
+    params.insert("pSize", "300".to_string()); // 페이지당 요청 건수 default: 300
 
     let client = reqwest::Client::new();
     let response = client
         .get("https://open.assembly.go.kr/portal/openapi/nwvrqwxyaytdsfvhu")
         .query(&params)
-        .header(reqwest::header::USER_AGENT, "biyard") // 필수
+        .header(reqwest::header::USER_AGENT, "biyard") // Required
         .send()
         .await?
         .text()
@@ -41,7 +41,7 @@ pub async fn get_active_member_en(
     let response = client
         .get("https://open.assembly.go.kr/portal/openapi/ENNAMEMBER")
         .query(&params)
-        .header(reqwest::header::USER_AGENT, "biyard") // 필수
+        .header(reqwest::header::USER_AGENT, "biyard") // Required
         .send()
         .await?
         .text()
@@ -68,7 +68,7 @@ pub async fn get_member_profile_image(
     let response = client
         .get("https://open.assembly.go.kr/portal/openapi/ALLNAMEMBER")
         .query(&params)
-        .header(reqwest::header::USER_AGENT, "biyard") // 필수
+        .header(reqwest::header::USER_AGENT, "biyard") // Required
         .send()
         .await?
         .text()
@@ -80,5 +80,5 @@ pub async fn get_member_profile_image(
         return Ok(ret.to_string());
     }
 
-    Ok("232".to_string())
+    Ok("".to_string())
 }
