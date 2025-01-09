@@ -217,7 +217,7 @@ pub fn DonationSelector(
                 div {
                     class: "relative w-full h-[8px] rounded-full bg-[#1F202E]",
                     style: "position: relative;",
-                    div { class: "absolute top-0 left-0 h-[8px] w-[calc({value/10}%)] bg-gradient-to-r from-[#5A68FF] to-[#68D36C] rounded-full" }
+                    div { class: "absolute top-0 left-0 h-[8px] w-[calc({value/10}%)] bg-gradient-to-r from-[#5A68FF] to-[{theme.active}] rounded-full" }
                     input {
                         r#type: "range",
                         min: "0",
@@ -311,14 +311,16 @@ pub fn VoteResultBars(
     let sum = yes + no;
     let yes = (yes as f64 / sum as f64) * 100.0;
     let no = (no as f64 / sum as f64) * 100.0;
+    let theme_service: Theme = use_context();
+    let theme = theme_service.get_data();
 
     rsx! {
         div { class: "flex flex-row justify-around {class}",
             div { class: "w-[calc(50%-6px)]",
                 div {
                     class: "relative animate-grow flex flex-row justify-end items-center px-[20px] text-[15px] font-bold w-[calc(50%-6px)] h-[28px] rounded-[6px]",
-                    style: "background: linear-gradient(90deg, #212231 0%, rgba(104, 211, 108, 0.5) 100%);",
-                    div { class: "absolute z-[20] h-[22px] w-[22px] right-[2.46px] top-[3px] rounded-[6px] bg-[#68D36C] opacity-50" }
+                    style: "background: linear-gradient(90deg, {theme.primary05} 0%, rgba(104, 211, 108, 0.5) 100%);",
+                    div { class: "absolute z-[20] h-[22px] w-[22px] right-[2.46px] top-[3px] rounded-[6px] bg-[{theme.active}] opacity-50" }
                     span { class: "z-[30]", "{yes}%" }
                 }
             }
@@ -326,8 +328,8 @@ pub fn VoteResultBars(
             div { class: "relative w-[calc(50%-6px)]",
                 div {
                     class: "absolute right-[0px] relative animate-grow-to-left flex flex-row justify-start items-center px-[20px] text-[15px] font-bold w-[calc(50%-6px)] h-[28px] rounded-[6px]",
-                    style: "background: linear-gradient(90deg, rgba(255, 90, 93, 0.5) 0%, #212231 100%);",
-                    div { class: "absolute z-[20] h-[22px] w-[22px] left-[2.46px] top-[3px] rounded-[6px] bg-[#FF5A5D] opacity-50" }
+                    style: "background: linear-gradient(90deg, rgba(255, 90, 93, 0.5) 0%, {theme.primary05} 100%);",
+                    div { class: "absolute z-[20] h-[22px] w-[22px] left-[2.46px] top-[3px] rounded-[6px] bg-[{theme.active01}] opacity-50" }
                     span { class: "z-[30]", "{no}%" }
                 }
             
@@ -345,14 +347,16 @@ pub fn VoteResultHorizontalBars(
     let sum = yes + no;
     let yes = (yes as f64 / sum as f64) * 100.0;
     let no = (no as f64 / sum as f64) * 100.0;
+    let theme_service: Theme = use_context();
+    let theme = theme_service.get_data();
 
     rsx! {
         div { class: "flex flex-col justify-start gap-[4px] {class}",
             div { class: "w-[{yes}%]",
                 div {
                     class: "relative animate-grow flex flex-row justify-end items-center px-[20px] text-[15px] font-bold w-[calc(50%-6px)] h-[28px] rounded-[6px]",
-                    style: "background: linear-gradient(90deg, #212231 0%, rgba(104, 211, 108, 0.5) 100%);",
-                    div { class: "absolute z-[20] h-[22px] w-[22px] right-[2.46px] top-[3px] rounded-[6px] bg-[#68D36C] opacity-50" }
+                    style: "background: linear-gradient(90deg, {theme.primary05} 0%, rgba(104, 211, 108, 0.5) 100%);",
+                    div { class: "absolute z-[20] h-[22px] w-[22px] right-[2.46px] top-[3px] rounded-[6px] bg-[{theme.active}] opacity-50" }
                     span { class: "z-[30]", "{yes}%" }
                 }
             }
@@ -360,8 +364,8 @@ pub fn VoteResultHorizontalBars(
             div { class: "w-[{no}%]",
                 div {
                     class: "relative animate-grow flex flex-row justify-end items-center px-[20px] text-[15px] font-bold w-[calc(50%-6px)] h-[28px] rounded-[6px]",
-                    style: "background: linear-gradient(90deg, #212231 0%, rgba(255, 90, 93, 0.5) 100%);",
-                    div { class: "absolute z-[20] h-[22px] w-[22px] right-[2.46px] top-[3px] rounded-[6px] bg-[#FF5A5D] opacity-50" }
+                    style: "background: linear-gradient(90deg, {theme.primary05} 0%, rgba(255, 90, 93, 0.5) 100%);",
+                    div { class: "absolute z-[20] h-[22px] w-[22px] right-[2.46px] top-[3px] rounded-[6px] bg-[{theme.active01}] opacity-50" }
                     span { class: "z-[30]", "{no}%" }
                 }
             }
