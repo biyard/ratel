@@ -10,7 +10,7 @@ use super::i18n::PoliticianStanceTranslate;
 #[component]
 pub fn FilterPopup(
     #[props(default = "politician_status_filter_popup".to_string())] id: String,
-    #[props(default ="".to_string())] class: String,
+    #[props(default = "".to_string())] class: String,
     lang: Language,
 ) -> Element {
     let theme_service: Theme = use_context();
