@@ -16,7 +16,7 @@ pub fn CongraturationPopup(
     rsx! {
         div { id, class,
             div { class: "pt-[10px] flex flex-col items-center justify-start gap-[15px]",
-                div { class: "flex flex-row items-center justify-center w-[88px] h-[88px] bg-[#2C2E42] rounded-[50%]",
+                div { class: "flex flex-row items-center justify-center w-[88px] h-[88px] bg-[{theme.background}] rounded-[50%]",
                     Logo { width: 36, height: 43 }
                 }
 
