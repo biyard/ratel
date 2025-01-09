@@ -52,7 +52,7 @@ pub fn UserSetupPopup(
                         }
                         div { class: "flex flex-col items-start w-full mt-[10px] gap-[8px]",
                             input {
-                                class: "w-[400px] max-[400px]:w-[300px] h-[59px] px-[24px] py-[17.5px] bg-[#2C2E42] text-[18px] font-bold leading-[24px] rounded-[4px] placeholder-[{theme.primary07}] rounded-[8px] text-[{theme.primary04}]",
+                                class: "w-[400px] max-[400px]:w-[300px] h-[59px] px-[24px] py-[17.5px] bg-[{theme.background}] text-[18px] font-bold leading-[24px] rounded-[4px] placeholder-[{theme.primary07}] rounded-[8px] text-[{theme.primary04}]",
                                 value: "{email}",
                                 disabled: true,
                             }
@@ -68,7 +68,7 @@ pub fn UserSetupPopup(
                     }
                     div { class: "flex flex-col items-start w-full mt-[10px] gap-[8px]",
                         input {
-                            class: "w-[400px] max-[400px]:w-[300px] h-[59px] px-[24px] py-[17.5px] bg-[#2C2E42] text-[18px] font-bold leading-[24px] rounded-[4px] placeholder-[{theme.primary07}] rounded-[8px]",
+                            class: "w-[400px] max-[400px]:w-[300px] h-[59px] px-[24px] py-[17.5px] bg-[{theme.background}] text-[18px] font-bold leading-[24px] rounded-[4px] placeholder-[{theme.primary07}] rounded-[8px]",
                             placeholder: "닉네임을 입력해주세요.",
                             value: nickname(),
                             oninput: move |e| {
