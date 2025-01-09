@@ -8,11 +8,13 @@ use crate::{
         icons,
         tooltip::Tooltip,
     },
-    pages::politician::status::i18n::PoliticianStanceTranslate,
     layouts::user_setup_popup::UserSetupPopup,
 };
 use dto::CryptoStance;
-use super::filter_popup::FilterPopup;
+use super::{
+    filter_popup::FilterPopup,
+    i18n::PoliticianStanceTranslate,
+};
 
 #[component]
 pub fn PoliticianStatusPage(lang: Language) -> Element {
@@ -176,7 +178,7 @@ pub fn PoliticianStatusMoreRow(text: String) -> Element {
 
     rsx!(
         div {
-            class: "w-full h-[36px] flex flex-row items-center justify-center gap-[10px] hover:bg-[{theme_data.hover}]",
+            class: "w-full h-[36px] flex flex-row items-center justify-center gap-[10px] hover:bg-[{theme_data.hover}] transition-colors",
             span {
                 class: "text-sm",
                 "{text}"

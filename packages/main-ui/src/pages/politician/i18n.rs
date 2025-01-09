@@ -77,4 +77,24 @@ translate! {
         ko: "이름을 입력해주세요.",
         en: "Enter the name.",
     }
+    
+    stance_placeholder: {
+        ko: "암호화폐에 대한 입장",
+        en: "Stance",
+    }
+
+    party_placeholder: {
+        ko: "정당을 입력해주세요.",
+        en: "Party",
+    }
+
+    city_placeholder: {
+        ko: "도시",
+        en: "City",
+    }
+
+    district_placeholder: {
+        ko: "지역구",
+        en: "District",
+    }
 }

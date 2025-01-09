@@ -5,10 +5,8 @@ mod highlighted_topic_component;
 mod i18n;
 pub mod page;
 mod upcoming_topics_component;
-pub mod politician {
-    pub mod status;
-}
+pub mod politician;
 
 pub use _routes::*;
 pub use page::*;
-pub use politician::status::*;
+pub use politician::*;
