@@ -65,14 +65,6 @@ pub fn PoliticianStatusHeader(lang: Language) -> Element {
                     class: "w-[452px]",
                     lang: lang.clone(),
                 }
-                // UserSetupPopup {
-                //     id: "user_setup_popup".to_string(),
-                //     class: "".to_string(),
-                //     nickname: "nickname".to_string(),
-                //     profile_url: "profile_url".to_string(),
-                //     email: "email".to_string(),
-                //     principal: "principal".to_string(),
-                // }
             })
             .with_id("politician_status_filter_popup")
             .with_title(tr.search_title);
