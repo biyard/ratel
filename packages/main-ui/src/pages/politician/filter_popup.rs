@@ -5,7 +5,7 @@ use crate::{
     theme::Theme,
     components::dropdown::Dropdown,
 };
-use dto::ServiceError;
+use dto::{CryptoStance, ServiceError};
 use super::i18n::PoliticianStanceTranslate;
 
 #[component]
@@ -50,7 +50,12 @@ pub fn FilterPopup(
                         span { class: "text-[14px] font-bold leading-[24px]", "{tr.stance_on_crypto}" }
                     }
                     Dropdown {
-                        items: vec!["찬성".to_string(), "반대".to_string(), "중립".to_string(), "무단".to_string()],
+                        items: vec![
+                            tr.supportive.to_string(),
+                            tr.against.to_string(),
+                            tr.neutral.to_string(),
+                            tr.no_stance.to_string(),
+                        ],
                         placeholder: "{tr.stance_placeholder}",
                         value: None,
                         onclick: move |value| {
@@ -66,7 +71,8 @@ pub fn FilterPopup(
                         span { class: "text-[14px] font-bold leading-[24px]", "{tr.party}" }
                     }
                     Dropdown {
-                        items: vec!["더불어민주당".to_string(), "미래통합당".to_string(), "정의당".to_string(), "국민의당".to_string(), "기타".to_string()],
+                        // TODO: replace dummy data
+                        items: vec!["더불어민주당".to_string(), "국민의힘".to_string(), "조국혁신당".to_string(), "기타".to_string()],
                         placeholder: "{tr.party_placeholder}",
                         value: None,
                         onclick: move |value| {
@@ -81,6 +87,7 @@ pub fn FilterPopup(
                     span { class: "text-[14px] font-bold leading-[24px]", "{tr.district}" }
                     div { class: "flex flex-row w-full gap-[2px]",
                         Dropdown {
+                            // TODO: replace dummy data
                             items: vec!["서울특별시".to_string(), "부산광역시".to_string(), "대구광역시".to_string(), "인천광역시".to_string(), "광주광역시".to_string(), "대전광역시".to_string(), "울산광역시".to_string(), "세종특별자치시".to_string(), "경기도".to_string(), "강원도".to_string(), "충청북도".to_string(), "충청남도".to_string(), "전라북도".to_string(), "전라남도".to_string(), "경상북도".to_string(), "경상남도".to_string(), "제주특별자치도".to_string()],
                             placeholder: "{tr.city_placeholder}",
                             value: None,
@@ -90,6 +97,7 @@ pub fn FilterPopup(
                             bg_color: theme.background.clone(),
                         }
                         Dropdown {
+                            // TODO: replace dummy data
                             items: vec!["서울특별시".to_string(), "부산광역시".to_string(), "대구광역시".to_string(), "인천광역시".to_string(), "광주광역시".to_string(), "대전광역시".to_string(), "울산광역시".to_string(), "세종특별자치시".to_string(), "경기도".to_string(), "강원도".to_string(), "충청북도".to_string(), "충청남도".to_string(), "전라북도".to_string(), "전라남도".to_string(), "경상북도".to_string(), "경상남도".to_string(), "제주특별자치도".to_string()],
                             placeholder: "{tr.district_placeholder}",
                             value: None,
