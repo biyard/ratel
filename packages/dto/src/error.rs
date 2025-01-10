@@ -15,6 +15,8 @@ pub enum ServiceError {
     SignException,
     DatabaseException(String),
     OpenApiResponseError(String),
+    BadRequest,
+    JsonDeserializeError(String),
 }
 
 impl std::fmt::Display for ServiceError {

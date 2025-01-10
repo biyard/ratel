@@ -4,13 +4,16 @@ use serde_json::Value;
 use crate::models::openapi::member::{Member, EnMember};
 use dto::ServiceError;
 
+const DEFAULT_PAGE_INDEX: u32 = 1; // page num; start from 1 not 0
+const DEFAULT_PAGE_SIZE: u32 = 300; // request per page
+
 pub async fn get_active_members() -> Result<Vec<Member>, ServiceError> {
     let config = crate::config::get();
     let mut params = HashMap::new();
     params.insert("KEY", config.openapi_key.to_string());
     params.insert("type", "json".to_string());
-    params.insert("pIndex", "1".to_string()); // page num default: 1, start from 1 not 0
-    params.insert("pSize", "300".to_string()); // request per page default: 300
+    params.insert("pIndex", DEFAULT_PAGE_INDEX.to_string()); 
+    params.insert("pSize", DEFAULT_PAGE_SIZE.to_string()); 
 
     let client = reqwest::Client::new();
     let response = client
@@ -25,7 +28,14 @@ pub async fn get_active_members() -> Result<Vec<Member>, ServiceError> {
     if let Ok(json) = serde_json::from_str::<Value>(&response) {
         let response = json["nwvrqwxyaytdsfvhu"].clone();
         let rows = response[1]["row"].as_array().unwrap().clone();
-        let rst: Vec<Member> = rows.into_iter().map(|row| serde_json::from_value(row.clone()).unwrap()).collect();
+        let rst: Vec<Member> = rows.into_iter().map(
+            |row| match serde_json::from_value(row.clone()) {
+                Ok(rst) => rst,
+                Err(e) => {
+                    return Err(ServiceError::JsonDeserializeError(e.to_string()));
+                }
+            }
+        ).collect();
         return Ok(rst);
     } else {
         return Err(ServiceError::OpenApiResponseError("Failed to parse response".to_string()));    }
@@ -53,8 +63,12 @@ pub async fn get_active_member_en(
     if let Ok(json) = serde_json::from_str::<Value>(&response) {
         let response = json["ENNAMEMBER"].clone();
         let rows = response[1]["row"].as_array().unwrap().clone();
-        println!("{:?}", rows);
-        let rst: EnMember = serde_json::from_value(rows[0].clone()).unwrap();
+        let rst: EnMember = match serde_json::from_value(rows[0].clone()) {
+            Ok(rst) => rst,
+            Err(e) => {
+                return Err(ServiceError::JsonDeserializeError(e.to_string()));
+            }
+        };
         return Ok(rst)
     } else {
         return Err(ServiceError::OpenApiResponseError("Failed to parse response".to_string()));

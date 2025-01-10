@@ -23,6 +23,7 @@ pub struct AssemblyMemberResponse {
     pub request_id: String,
 }
 
+// TODO: add authorization (service key or signiture)
 impl AssemblyMemberControllerV1 {
     pub fn route() -> Result<by_axum::axum::Router> {
         let log = root().new(o!("api-controller" => "AssemblyMemberControllerV1"));
@@ -44,7 +45,10 @@ impl AssemblyMemberControllerV1 {
 
         if body == ActionAssemblyMemberRequest::FetchMembers {
             ctrl.fetch_members().await?;
+        } else {
+            return Err(ServiceError::BadRequest);
         }
+
         Ok(Json(AssemblyMemberResponse {
             request_id: uuid::Uuid::new_v4().to_string(),
         }))
@@ -71,12 +75,12 @@ impl AssemblyMemberControllerV1 {
         for member in members {
             let image_url = get_member_profile_image(member.code.clone()).await?;
             let doc: AssemblyMember = AssemblyMember::try_from((member.code.clone(), image_url.clone(), "ko", &member))?;
-            cli.upsert(&doc).await?;
+            cli.upsert(&doc).await.map_err(|e| ServiceError::from(e))?;
             
             // TODO: handle missing value for district field
             let en_member = get_active_member_en(member.code.clone()).await?;
             let en_doc: AssemblyMember = AssemblyMember::try_from((member.code.clone(), image_url.clone(), "en", &en_member))?;
-            cli.upsert(&en_doc).await?;
+            cli.upsert(&en_doc).await.map_err(|e| ServiceError::from(e))?;
         }
 
         Ok(())
