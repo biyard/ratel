@@ -14,6 +14,7 @@ pub enum ServiceError {
     VerifyException(String),
     SignException,
     DatabaseException(String),
+    OpenApiResponseError(String),
 }
 
 impl std::fmt::Display for ServiceError {
