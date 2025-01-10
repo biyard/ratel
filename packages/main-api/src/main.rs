@@ -1,5 +1,5 @@
 use by_axum::logger::root;
-use controllers::v1::topic::TopicControllerV1;
+use controllers::topic::v1::TopicControllerV1;
 use dto::error::ServiceError;
 use tokio::net::TcpListener;
 

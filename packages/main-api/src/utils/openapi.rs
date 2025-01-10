@@ -1,14 +1,16 @@
 use reqwest::Error;
 use std::collections::HashMap;
 use serde_json::Value;
+use crate::models::openapi::member::{Member, EnMember};
+use dto::ServiceError;
 
-pub async fn get_active_members() -> Result<Value, Error> {
+pub async fn get_active_members() -> Result<Vec<Member>, ServiceError> {
     let config = crate::config::get();
     let mut params = HashMap::new();
     params.insert("KEY", config.openapi_key.to_string());
     params.insert("type", "json".to_string());
-    params.insert("pIndex", "1".to_string()); // 페이지번호 default: 1, start from 1 not 0
-    params.insert("pSize", "300".to_string()); // 페이지당 요청 건수 default: 300
+    params.insert("pIndex", "1".to_string()); // page num default: 1, start from 1 not 0
+    params.insert("pSize", "300".to_string()); // request per page default: 300
 
     let client = reqwest::Client::new();
     let response = client
@@ -22,15 +24,16 @@ pub async fn get_active_members() -> Result<Value, Error> {
 
     if let Ok(json) = serde_json::from_str::<Value>(&response) {
         let response = json["nwvrqwxyaytdsfvhu"].clone();
-        return Ok(response[1].clone());
-    }
-
-    Ok(Value::Null)
+        let rows = response[1]["row"].as_array().unwrap().clone();
+        let rst: Vec<Member> = rows.into_iter().map(|row| serde_json::from_value(row.clone()).unwrap()).collect();
+        return Ok(rst);
+    } else {
+        return Err(ServiceError::OpenApiResponseError("Failed to parse response".to_string()));    }
 }
 
 pub async fn get_active_member_en(
     code: String, // assembly member code
-) -> Result<Value, Error> {
+) -> Result<EnMember, ServiceError> {
     let config = crate::config::get();
     let mut params = HashMap::new();
     params.insert("KEY", config.openapi_key.to_string());
@@ -49,10 +52,13 @@ pub async fn get_active_member_en(
 
     if let Ok(json) = serde_json::from_str::<Value>(&response) {
         let response = json["ENNAMEMBER"].clone();
-        return Ok(response[1].clone());
+        let rows = response[1]["row"].as_array().unwrap().clone();
+        println!("{:?}", rows);
+        let rst: EnMember = serde_json::from_value(rows[0].clone()).unwrap();
+        return Ok(rst)
+    } else {
+        return Err(ServiceError::OpenApiResponseError("Failed to parse response".to_string()));
     }
-
-    Ok(Value::Null)
 }
 
 pub async fn get_member_profile_image(

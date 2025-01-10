@@ -1,6 +1,6 @@
-use crate::models::openapi::member::Member;
 use easy_dynamodb::Document;
 use dto::ServiceError;
+use super::openapi::member::MemberTrait;
 
 // NOTE: This is a real model and recommended to be moved to shared_models
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize, Default)]
@@ -21,7 +21,7 @@ pub struct AssemblyMember {
 
     // Indexes, if deleted_at is set, all values of indexes must be empty.
     gsi1: String, // language
-    gsi2: String,
+    // gsi2: String,
 }
 
 impl Document for AssemblyMember {
@@ -38,6 +38,7 @@ impl AssemblyMember {
         party: String,
         district: String,
         image_url: String,
+        lang: String,
     ) -> Self {
         let now = chrono::Utc::now().timestamp_nanos_opt().unwrap_or(0) as u64;
 
@@ -52,32 +53,32 @@ impl AssemblyMember {
             party: Some(party),
             district: Some(district),
             image_url: Some(image_url),
-            gsi1: "".to_string(),
-            gsi2: "".to_string(),
+            gsi1: lang.to_string(),
+            // gsi2: "".to_string(),
         }
     }
 }
 
-impl TryFrom<(String, String, &str, &Member)> for AssemblyMember {
+impl<T: MemberTrait> TryFrom<(String, String, &str, &T)> for AssemblyMember {
     type Error = ServiceError;
     fn try_from(
-        (code, image_url, lang, member): (String, String, &str, &Member),
-    ) -> Result<Self, Self::ServiceError> {
+        (code, image_url, lang, member): (String, String, &str, &T),
+    ) -> Result<Self, ServiceError> {
         let now = chrono::Utc::now().timestamp_nanos_opt().unwrap_or(0) as u64;
 
         Ok(Self {
             id: format!("{}-{}", lang, code),
-            code: member.code.clone(),
+            code,
             r#type: AssemblyMember::document_type(),
             created_at: now,
             updated_at: now,
             deleted_at: None,
-            name: Some(member.name.clone()),
-            party: Some(member.party.clone()),
-            district: Some(member.district.clone()),
+            name: Some(member.name().to_string()),
+            party: Some(member.party().to_string()),
+            district: Some(member.district().to_string()),
             image_url: Some(image_url),
             gsi1: lang.to_string(),
-            gsi2: "".to_string(),
+            // gsi2: "".to_string(),
         })
     }
 }

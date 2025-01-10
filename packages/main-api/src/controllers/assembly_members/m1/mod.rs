@@ -9,10 +9,7 @@ use by_axum::{
 use dto::*;
 use slog::o;
 use crate::{
-    models::{
-        assembly_member::AssemblyMember,
-        openapi::member::{EnMember, Member}
-    }, 
+    models::assembly_member::AssemblyMember,
     utils::openapi::*
 };
 
@@ -21,9 +18,9 @@ pub struct AssemblyMemberControllerV1 {
     log: slog::Logger,
 }
 
-#[derive(Debug, serde::Deserialize)]
-pub struct FetchMemberRequest {   
-    _lang: Option<String>,
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct AssemblyMemberResponse {
+    pub request_id: String,
 }
 
 impl AssemblyMemberControllerV1 {
@@ -41,28 +38,16 @@ impl AssemblyMemberControllerV1 {
     pub async fn act_assembly_member(
         State(ctrl): State<AssemblyMemberControllerV1>,
         Json(body): Json<ActionAssemblyMemberRequest>,
-    ) -> Result<Json<AssemblyMember>> {
+    ) -> Result<Json<AssemblyMemberResponse>> {
         let log = ctrl.log.new(o!("api" => "create_assembly_member"));
         slog::debug!(log, "act_assembly_member {:?}", body);
-        let cli = easy_dynamodb::get_client(&log);
 
         if body == ActionAssemblyMemberRequest::FetchMembers {
-            let members =  get_active_members().await?; 
-            let image_url = get_member_profile_image(member.code.clone()).await?;
-            let doc:AssemblyMember = members.try_into()?.with_profile_url(image_url);
-            cli.create(&doc)
-                    .await?;
-
-                    // english info
-                    if let Some(en_row) = get_active_member_en(member.code.clone()).await?["row"].as_array() {
-                        for en_row in en_row {
-                            let en_member: EnMember = serde_json::from_value(en_row.clone())?;
-                        }
-                    }
-                }
-            }
+            ctrl.fetch_members().await?;
         }
-        Ok(Json(AssemblyMember::default()))
+        Ok(Json(AssemblyMemberResponse {
+            request_id: uuid::Uuid::new_v4().to_string(),
+        }))
     }
 
     pub async fn act_assembly_member_by_id(
@@ -73,6 +58,26 @@ impl AssemblyMemberControllerV1 {
         let log = ctrl.log.new(o!("api" => "update_assembly_member"));
         slog::debug!(log, "act_assembly_member_by_id {:?} {:?}", id, body);
         // TODO: implement it
+
+        Ok(())
+    }
+
+    async fn fetch_members(&self) -> Result<()> {
+        let log = self.log.new(o!("api" => "fetch_members"));
+        let cli = easy_dynamodb::get_client(&log);
+
+        let members =  get_active_members().await?;
+
+        for member in members {
+            let image_url = get_member_profile_image(member.code.clone()).await?;
+            let doc: AssemblyMember = AssemblyMember::try_from((member.code.clone(), image_url.clone(), "ko", &member))?;
+            cli.upsert(&doc).await?;
+            
+            // TODO: handle missing value for district field
+            let en_member = get_active_member_en(member.code.clone()).await?;
+            let en_doc: AssemblyMember = AssemblyMember::try_from((member.code.clone(), image_url.clone(), "en", &en_member))?;
+            cli.upsert(&en_doc).await?;
+        }
 
         Ok(())
     }
