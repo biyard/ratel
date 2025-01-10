@@ -39,7 +39,7 @@ impl AssemblyMember {
         district: String,
         image_url: String,
     ) -> Self {
-        let now = chrono::Utc::now().timestamp_nanos_opt().unwrap_or(0) as u64;
+        let now = chrono::Utc::now().timestamp_nanos_opt().unwrap_or_else(|| { log::error!("Failed to get timestamp"); 0 }) as u64;
 
         Self {
             id,
