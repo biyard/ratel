@@ -17,6 +17,8 @@ easy-dynamodb.workspace = true
 tokio = { version = "1.40.0", features = ["full"] }
 tower = "0.5.1"
 chrono = "0.4.39"
+reqwest.workspace = true
+uuid = { version = "1.10.1", features = ["v4"] }
 
 [features]
 default = []
