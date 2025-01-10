@@ -5,12 +5,13 @@ authors.workspace = true
 description.workspace = true
 edition.workspace = true
 repository.workspace = true
+license.workspace = true
 
 [dependencies]
 base64 = "0.22.1"
 candid = "0.10.11"
 dioxus = { workspace = true, features = ["web"] }
-dioxus-oauth = { path = "../dioxus-oauth", features = [ "web" ] }
+dioxus-oauth = { path = "../dioxus-oauth", version = "0.6.3", features = [ "web" ] }
 gloo-storage = "0.3.0"
 reqwest = { workspace = true, features = ["blocking", "json"] }
 ring = { version = "0.17.8", features = ["wasm32_unknown_unknown_js"] }
