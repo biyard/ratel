@@ -7,6 +7,7 @@
 
 ``` bash
 export SERVICE=main-api
+export OPENAPI_KEY=`your openapi key`
 make run
 ```
 
