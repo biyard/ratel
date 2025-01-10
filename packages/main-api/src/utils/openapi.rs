@@ -17,7 +17,7 @@ pub async fn get_active_members() -> Result<Vec<Member>, ServiceError> {
 
     let client = reqwest::Client::new();
     let response = client
-        .get("https://open.assembly.go.kr/portal/openapi/nwvrqwxyaytdsfvhu")
+        .get(format!("{}/nwvrqwxyaytdsfvhu", config.openapi_url))
         .query(&params)
         .header(reqwest::header::USER_AGENT, "biyard") // Required
         .send()
@@ -27,15 +27,18 @@ pub async fn get_active_members() -> Result<Vec<Member>, ServiceError> {
 
     if let Ok(json) = serde_json::from_str::<Value>(&response) {
         let response = json["nwvrqwxyaytdsfvhu"].clone();
-        let rows = response[1]["row"].as_array().unwrap().clone();
-        let rst: Vec<Member> = rows.into_iter().map(
-            |row| match serde_json::from_value(row.clone()) {
-                Ok(rst) => rst,
-                Err(e) => {
-                    return Err(ServiceError::JsonDeserializeError(e.to_string()));
-                }
+        let rows = match response[1]["row"].as_array() {
+            Some(rows) => rows,
+            None => {
+                return Err(ServiceError::OpenApiResponseError("Failed to parse response".to_string()));
             }
-        ).collect();
+        };
+        let rst: Vec<Member> = match serde_json::from_value(serde_json::Value::Array(rows.clone())) {
+            Ok(rst) => rst,
+            Err(e) => {
+                return Err(ServiceError::JsonDeserializeError(e.to_string()));
+            }
+        };
         return Ok(rst);
     } else {
         return Err(ServiceError::OpenApiResponseError("Failed to parse response".to_string()));    }
@@ -52,7 +55,7 @@ pub async fn get_active_member_en(
 
     let client = reqwest::Client::new();
     let response = client
-        .get("https://open.assembly.go.kr/portal/openapi/ENNAMEMBER")
+        .get(format!("{}/ENNAMEMBER", config.openapi_url))
         .query(&params)
         .header(reqwest::header::USER_AGENT, "biyard") // Required
         .send()
@@ -62,7 +65,12 @@ pub async fn get_active_member_en(
 
     if let Ok(json) = serde_json::from_str::<Value>(&response) {
         let response = json["ENNAMEMBER"].clone();
-        let rows = response[1]["row"].as_array().unwrap().clone();
+        let rows = match response[1]["row"].as_array() {
+            Some(rows) => rows,
+            None => {
+                return Err(ServiceError::OpenApiResponseError("Failed to parse response".to_string()));
+            }
+        };
         let rst: EnMember = match serde_json::from_value(rows[0].clone()) {
             Ok(rst) => rst,
             Err(e) => {
@@ -86,7 +94,7 @@ pub async fn get_member_profile_image(
 
     let client = reqwest::Client::new();
     let response = client
-        .get("https://open.assembly.go.kr/portal/openapi/ALLNAMEMBER")
+        .get(format!("{}/ALLNAMEMBER", config.openapi_url))
         .query(&params)
         .header(reqwest::header::USER_AGENT, "biyard") // Required
         .send()
@@ -96,8 +104,8 @@ pub async fn get_member_profile_image(
 
     if let Ok(json) = serde_json::from_str::<Value>(&response) {
         let response = json["ALLNAMEMBER"].clone();
-        let ret = response[1]["row"][0]["NAAS_PIC"].as_str().unwrap_or("");
-        return Ok(ret.to_string());
+        let rst = response[1]["row"][0]["NAAS_PIC"].as_str().unwrap_or("");
+        return Ok(rst.to_string());
     }
 
     Ok("".to_string())
