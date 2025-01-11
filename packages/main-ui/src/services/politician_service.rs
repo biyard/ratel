@@ -1,5 +1,8 @@
+pub type Result<T> = std::result::Result<T, ServiceError>;
+
 use dioxus::prelude::*;
-use dto::*;
+use dioxus_translate::*;
+use dto::{common_query_response::CommonQueryResponse, error::ServiceError, AssemblyMember};
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct PoliticianService {
@@ -18,10 +21,20 @@ impl PoliticianService {
     pub async fn list_politicians(
         &self,
         size: usize,
+        bookmark: Option<&str>,
+        lang: Option<Language>,
     ) -> Result<CommonQueryResponse<AssemblyMember>> {
         let client = reqwest::Client::builder().build()?;
 
-        let url = format!("{}/v1/politicians?size={}", (self.endpoint)(), size);
+        let mut url = format!("{}/v1/assembly_members?size={size}", (self.endpoint)(),);
+
+        if let Some(bookmark) = bookmark {
+            url.push_str(&format!("&bookmark={}", bookmark));
+        }
+
+        if let Some(lang) = lang {
+            url.push_str(&format!("&lang={}", lang));
+        }
 
         tracing::debug!("url: {}", url);
         let res = client.request(reqwest::Method::GET, url).send().await?;

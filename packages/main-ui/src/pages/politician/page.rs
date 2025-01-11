@@ -34,16 +34,23 @@ pub fn PoliticianStatusTable(lang: Language) -> Element {
     let theme_service: Theme = use_context();
     let theme = theme_service.get_data();
     let tr: PoliticianStanceTranslate = translate(&lang);
+    let ctrl = super::controller::Controller::new(lang)?;
     // TODO: mobile view
     rsx! {
         div { class: "w-full h-full flex flex-col bg-[{theme.primary06}] rounded-[8px] text-white",
             PoliticianStatusHeader { lang }
             div { class: "w-full h-full flex flex-col gap-[10px]",
-                // TODO: replace dummy data
-                PoliticianStatusRow { lang, stance: CryptoStance::Supportive }
-                PoliticianStatusRow { lang, stance: CryptoStance::Against }
-                PoliticianStatusRow { lang, stance: CryptoStance::Neutral }
-                PoliticianStatusRow { lang, stance: CryptoStance::NoStance }
+                for politician in ctrl.politicians() {
+                    PoliticianStatusRow {
+                        lang: lang.clone(),
+                        name: politician.name.unwrap_or_default(),
+                        party: politician.party.unwrap_or_default(),
+                        district: politician.district.unwrap_or_default(),
+                        image: politician.image_url.unwrap_or_default(),
+                        // replace with real data
+                        stance: CryptoStance::NoStance,
+                    }
+                }
             }
             // TODO: 다음 10개 미리 떙겨놓고 값 없으면 hide
             PoliticianStatusMoreRow { text: tr.more }

@@ -1,18 +1,27 @@
+use dioxus_aws::prelude::*;
+use dioxus_translate::Language;
+use dto::{common_query_response::CommonQueryResponse, AssemblyMember};
+use crate::services::politician_service::PoliticianService;
+
 #[derive(Debug, Clone, Copy)]
 pub struct Controller {
-    pub politicians: Resource<CommonQueryResponse<Politician>>,
+    pub politicians: Resource<CommonQueryResponse<AssemblyMember>>,
 }
 
 impl Controller {
-    pub fn new() -> Result<Self, RenderError> {
+    pub fn new(lang: Language) -> Result<Self, RenderError> {
         let politician_api: PoliticianService = use_context();
 
         let politicians = use_server_future(move || async move {
-            match politician_api.list_politicians(10).await {
+            match politician_api.list_politicians(
+                10,
+                None,
+                Some(lang),
+            ).await {
                 Ok(res) => res,
                 Err(e) => {
                     tracing::error!("list politicians error: {:?}", e);
-                    CommonQueryResponse::<Politician>::default()
+                    CommonQueryResponse::<AssemblyMember>::default()
                 }
             }
         })?;
@@ -21,5 +30,16 @@ impl Controller {
         use_context_provider(|| ctrl);
 
         Ok(ctrl)
+    }
+
+    pub fn politicians(&self) -> Vec<AssemblyMember> {
+        self.politicians.with(|f| {
+            tracing::debug!("politicians: {:?}", f);
+            if let Some(value) = f {
+                value.items.clone()
+            } else {
+                Vec::new()
+            }
+        })
     }
 }
