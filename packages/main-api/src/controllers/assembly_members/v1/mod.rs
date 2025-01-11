@@ -38,13 +38,14 @@ impl AssemblyMemberControllerV1 {
         let log = ctrl.log.new(o!("api" => "list_assembly_members"));
         slog::debug!(log, "list assembly members {:?}", req);
         let cli = easy_dynamodb::get_client(&log);
+        let filter = req.lang.map(|lang| vec![("gsi1", format!("assembly_member#{}", lang))]);
 
         let (members, bookmark): (Option<Vec<AssemblyMember>>, Option<String>) = cli
             .find(
                 "gsi1-index",
                 req.bookmark,
                 req.size.map(|s| s as i32),
-                vec![("gsi1", format!("assembly_member#{}", req.lang.unwrap_or_default()))],
+                filter.unwrap_or_default(),
             )
             .await?;
 
