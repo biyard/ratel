@@ -13,6 +13,7 @@ serde_json.workspace = true
 slog.workspace = true
 by-axum.workspace = true
 easy-dynamodb.workspace = true
+dioxus-translate = { path = "../dioxus-translate", features = ["ko"] }
 
 tokio = { version = "1.40.0", features = ["full"] }
 tower = "0.5.1"
