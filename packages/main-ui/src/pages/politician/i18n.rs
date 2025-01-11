@@ -67,4 +67,44 @@ translate! {
         ko: "입장 변경",
         en: "CHANGE STANCE",
     }
+
+    search_title: {
+        ko: "검색하기",
+        en: "SEARCH",
+    }
+
+    name_placeholder: {
+        ko: "이름을 입력해주세요.",
+        en: "Enter the name.",
+    }
+    
+    stance_placeholder: {
+        ko: "암호화폐에 대한 입장",
+        en: "Stance",
+    }
+
+    party_placeholder: {
+        ko: "정당을 입력해주세요.",
+        en: "Party",
+    }
+
+    city_placeholder: {
+        ko: "도시",
+        en: "City",
+    }
+
+    district_placeholder: {
+        ko: "지역구",
+        en: "District",
+    }
+    
+    search: {
+        ko: "검색",
+        en: "SEARCH",
+    }
+
+    clear: {
+        ko: "초기화",
+        en: "CLEAR",
+    }
 }

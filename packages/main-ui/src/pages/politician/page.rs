@@ -1,14 +1,19 @@
 #![allow(non_snake_case)]
 use dioxus::prelude::*;
 use dioxus_translate::*;
-use crate::theme::Theme;
-use crate::components::{
-    icons,
-    tooltip::Tooltip,
+use dioxus_popup::PopupService;
+use crate::{
+    theme::Theme,
+    components::{
+        icons,
+        tooltip::Tooltip,
+    },
 };
-
 use dto::CryptoStance;
-use crate::pages::politician::status::i18n::PoliticianStanceTranslate;
+use super::{
+    filter_popup::FilterPopup,
+    i18n::PoliticianStanceTranslate,
+};
 
 #[component]
 pub fn PoliticianStatusPage(lang: Language) -> Element {
@@ -32,48 +37,7 @@ pub fn PoliticianStatusTable(lang: Language) -> Element {
     // TODO: mobile view
     rsx! {
         div { class: "w-full h-full flex flex-col bg-[{theme.primary06}] rounded-[8px] text-white",
-            div { class: "w-full flex flex-row items-center gap-[90px] px-[15px] py-[10px] border-b-[1px] border-[{theme.hover}]", 
-                div { class: "flex items-center w-[280px] gap-[2px]", 
-                    span {
-                        class: "text-xs font-semibold",
-                        "{tr.name}"
-                    }
-                    icons::Search { color: "white" }
-                }
-                div { class: "flex items-center w-[150px] gap-[2px]", 
-                    span {
-                        class: "text-xs font-semibold",
-                        "{tr.party}"
-                    }
-                    icons::Sort { color: "white", filled: false }
-                }
-                div { class: "flex items-center w-[200px] gap-[2px]", 
-                    span {
-                        class: "text-xs font-semibold",
-                        "{tr.district}"
-                    }
-                    icons::Sort { color: "white", filled: true }
-                }
-                div { class: "flex items-center w-[210px] gap-[2px]", 
-                    span {
-                        class: "text-xs font-semibold",
-                        "{tr.stance_on_crypto}"
-                    }
-                    icons::Sort { color: "white", filled: false }
-                }
-                div { class: "flex items-start w-[210px] gap-[1px]", 
-                    span {
-                        class: "text-xs font-semibold",
-                        "{tr.proclaim}"
-                    }
-                    Tooltip {
-                        inner_class: "text-xs text-white font-bold bg-[{theme.background}] px-[15px] py-[10px] rounded-[8px] shadow-2xl w-[230px] h-[80px]".to_string(),
-                        text: "Proclaim 은 해당 의원의 암호화폐에 대한 정책적 긍정 및 부정에 대한 의사를 표현하는 것입니다. 해당 의원실 소속원만 변경할 수 있습니다.",
-                        bg_color: "{theme.background}".to_string(),
-                        icons::Tooltip { color: "{theme.primary00}" }
-                    }
-                }
-            }
+            PoliticianStatusHeader { lang }
             div { class: "w-full h-full flex flex-col gap-[10px]",
                 // TODO: replace dummy data
                 PoliticianStatusRow { lang, stance: CryptoStance::Supportive }
@@ -82,13 +46,71 @@ pub fn PoliticianStatusTable(lang: Language) -> Element {
                 PoliticianStatusRow { lang, stance: CryptoStance::NoStance }
             }
             // TODO: 다음 10개 미리 떙겨놓고 값 없으면 hide
-            div {
-                class: "w-full h-[36px] flex flex-row items-center justify-center gap-[10px] hover:bg-[{theme.hover}]",
-                span {
-                    class: "text-sm",
-                    "{tr.more}"
+            PoliticianStatusMoreRow { text: tr.more }
+        }
+    }
+}
+
+#[component]
+pub fn PoliticianStatusHeader(lang: Language) -> Element {
+    let tr = translate::<PoliticianStanceTranslate>(&lang);
+    let mut popup: PopupService = use_context();
+
+    let onclick = move |_: Event<MouseData>| {
+        tracing::debug!("header clicked");
+        popup
+            .open(rsx! {
+                FilterPopup {
+                    class: "w-[452px]",
+                    lang: lang.clone(),
                 }
-                icons::DoubleArrowDown { color: "white" }
+            })
+            .with_id("politician_status_filter_popup")
+            .with_title(tr.search_title);
+    };
+
+    rsx! {
+        div { class: "w-full flex flex-row items-center gap-[90px] px-[15px] py-[10px] border-b-[1px] border-[#323342]",
+            onclick,
+            div { class: "flex items-center w-[280px] gap-[2px]", 
+                span {
+                    class: "text-xs font-semibold",
+                    "{tr.name}"
+                }
+                icons::Search { color: "white" }
+            }
+            div { class: "flex items-center w-[150px] gap-[2px]", 
+                span {
+                    class: "text-xs font-semibold",
+                    "{tr.party}"
+                }
+                icons::Sort { color: "white", filled: false }
+            }
+            div { class: "flex items-center w-[200px] gap-[2px]", 
+                span {
+                    class: "text-xs font-semibold",
+                    "{tr.district}"
+                }
+                icons::Sort { color: "white", filled: true }
+            }
+            div { class: "flex items-center w-[210px] gap-[2px]", 
+                span {
+                    class: "text-xs font-semibold",
+                    "{tr.stance_on_crypto}"
+                }
+                icons::Sort { color: "white", filled: false }
+            }
+            div { class: "flex items-start w-[210px] gap-[1px]", 
+                span {
+                    class: "text-xs font-semibold",
+                    "{tr.proclaim}"
+                }
+                Tooltip {
+                    inner_class: "text-xs text-white font-bold bg-[#2C2E42] px-[15px] py-[10px] rounded-[8px] shadow-2xl w-[230px] h-[80px]".to_string(),
+                    text: "{tr.tooltip}",
+                    bg_color: "#2C2E42".to_string(),
+                    icons::Tooltip { color: "#ADBCD7" }
+                }
             }
         }
     }
@@ -138,4 +160,21 @@ pub fn PoliticianStatusRow(
             }
         }
     }
+}
+
+#[component]
+pub fn PoliticianStatusMoreRow(text: String) -> Element {
+    let theme_service: Theme = use_context();
+    let theme = theme_service.get_data();
+
+    rsx!(
+        button {
+            class: "w-full h-[36px] flex flex-row items-center justify-center gap-[10px] hover:bg-[{theme.hover}] transition-colors",
+            span {
+                class: "text-sm",
+                "{text}"
+            }
+            icons::DoubleArrowDown { color: "white" }
+        }
+    )
 }

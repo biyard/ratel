@@ -65,7 +65,7 @@ pub fn HeaderTails(lang: Language) -> Element {
                 }
             })
             .with_id("signup")
-            .with_title("회원가입");
+            .with_title(i18n_header.signup);
     };
 
     rsx! {
