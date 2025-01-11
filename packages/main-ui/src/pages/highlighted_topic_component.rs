@@ -1,6 +1,5 @@
 #![allow(non_snake_case)]
 use dioxus::prelude::*;
-use dioxus_elements::tr;
 use dto::Topic;
 use num_format::{Locale, ToFormattedString};
 use dioxus_translate::*;
