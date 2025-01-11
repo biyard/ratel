@@ -107,4 +107,14 @@ translate! {
         ko: "초기화",
         en: "CLEAR",
     }
+
+    email: {
+        ko: "이메일",
+        en: "EMAIL",
+    }
+
+    email_placeholder: {
+        ko: "이메일을 입력해주세요.",
+        en: "Enter the email.",
+    }
 }
