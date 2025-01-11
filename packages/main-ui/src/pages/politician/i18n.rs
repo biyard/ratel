@@ -127,4 +127,29 @@ translate! {
         ko: "이메일 인증",
         en: "VERIFY EMAIL",
     }
+
+    confirm_email: {
+        ko: "이메일 확인",
+        en: "CONFIRM EMAIL",
+    }
+
+    explanation_confirm_email1: {
+        ko: "‘{email}’로 이메일을 확인하거나 스팸함을 확인하고 확인 링크를 클릭하여 인증을 완료해주세요. 이메일을 받지 못하거나 링크를 클릭할 수 없는 경우, ",
+        en: "Check inbox or spam of ‘{email}’ and please click an attached link to complete verification. If you couldn’t receive an email or click the link, please click ",
+    }
+
+    here: {
+        ko: "여기",
+        en: "here",
+    }
+
+    explanation_confirm_email2: {
+        ko: "를 클릭하여 문의해주세요.",
+        en: " to contact us.",
+    }
+
+    confirm_verification: {
+        ko: "인증 확인",
+        en: "CONFIRM VERIFICATION",
+    }
 }

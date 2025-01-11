@@ -16,6 +16,7 @@ pub struct ThemeData {
     pub primary100: String,
     pub grey00: String,
     pub hover: String,
+    pub highlight: String,
     pub font_theme: FontTheme,
 }
 
@@ -53,6 +54,7 @@ impl Default for ThemeData {
             primary100: "#B5AB65".to_string(), // bg-[#B5AB65] text-[#B5AB65] border-[#B5AB65]
             grey00: "#FFFFFF".to_string(), // bg-[#FFFFFF] text-[#FFFFFF] border-[#FFFFFF]
             hover: "#323342".to_string(), // bg-[#323342] text-[#323342] border-[#323342]
+            highlight: "#C0B086".to_string(), // bg-[#C0B086] text-[#C0B086] border-[#C0B086]
             font_theme: FontTheme::default(),
         }
     }

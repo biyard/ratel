@@ -2,12 +2,18 @@
 use dioxus::prelude::*;
 use dioxus_translate::*;
 use dioxus_popup::PopupService;
-use crate::{theme::Theme, components::checkbox::Checkbox,};
-use super::i18n::PoliticianStanceTranslate;
+use crate::{
+    theme::Theme, 
+    components::checkbox::Checkbox,
+};
+use super::{
+    i18n::PoliticianStanceTranslate,
+    email_confirmation_popup::EmailConfirmationPopup,
+};
 
 #[component]
 pub fn EmailVerificationPopup(
-    #[props(default = "politician_email_verification".to_string())] id: String,
+    #[props(default = "email_verification_popup".to_string())] id: String,
     #[props(default = "".to_string())] class: String,
     name: String,
     party: String,
@@ -17,7 +23,7 @@ pub fn EmailVerificationPopup(
     let theme_service: Theme = use_context();
     let theme = theme_service.get_data();
     let tr = translate::<PoliticianStanceTranslate>(&lang);
-
+    let mut popup: PopupService = use_context();
     let mut agreed = use_signal(|| false);
 
     rsx! {
@@ -56,7 +62,7 @@ pub fn EmailVerificationPopup(
                         }
                         input {
                             class: "w-full h-[59px] px-[24px] py-[17.5px] bg-[{theme.background}] text-[18px] font-bold leading-[24px] placeholder-[{theme.primary07}] rounded-[8px]",
-                            placeholder: email,
+                            placeholder: email.clone(),
                             readonly: true,
                         }
                     }
@@ -76,9 +82,27 @@ pub fn EmailVerificationPopup(
                     button {
                         class: "w-full h-[57px] text-[{theme.primary05}] bg-[{theme.primary03}] text-[18px] font-extrabold leading-[24px] rounded-[12px]",
                         style: if agreed() {
-                            "opacity: 1; cursor: pointer;"
+                            "opacity: 0.5; cursor: pointer;"
                         } else {
-                            "opacity: 0.5;"
+                            "opacity: 0.2;"
+                        },
+                        onclick: move |_| {
+                            tracing::debug!("email verification clicked");
+                            if !agreed() {
+                                return;
+                            }
+                            // TODO: send email verification
+                            popup
+                                .open(rsx! {
+                                    EmailConfirmationPopup {
+                                        class: "w-[450px]",
+                                        email: email.clone(),
+                                        lang: lang.clone(),
+                                    }
+                                })
+                                .with_id("email_confirmation_popup")
+                                .with_title(tr.confirm_email);
+                                
                         },
                         disabled: !agreed(),
                         "{tr.verify_email}"
