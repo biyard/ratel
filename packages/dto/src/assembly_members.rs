@@ -69,6 +69,8 @@ pub struct AssemblyMember {
     pub district: Option<String>,
     // stance: CryptoStance, // consider update logic
     pub image_url: Option<String>,
+    pub email: Option<String>,
+    // pub email_verified: bool, // check email verified logic
 
     // Indexes, if deleted_at is set, all values of indexes must be empty.
     pub gsi1: String, // language

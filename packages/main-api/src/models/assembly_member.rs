@@ -29,6 +29,7 @@ impl<T: MemberTrait> TryFrom<(String, String, &str, &T)> for Member {
             party: Some(member.party().to_string()),
             district: Some(member.district().to_string()),
             image_url: Some(image_url),
+            email: Some(member.email().to_string()),
             gsi1: lang.to_string(),
             // gsi2: "".to_string(),
         }))
