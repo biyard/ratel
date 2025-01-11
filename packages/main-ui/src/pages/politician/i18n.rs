@@ -84,8 +84,8 @@ translate! {
     }
 
     party_placeholder: {
-        ko: "정당을 입력해주세요.",
-        en: "Party",
+        ko: "정당을 선택해주세요.",
+        en: "Select the party.",
     }
 
     city_placeholder: {
@@ -116,5 +116,15 @@ translate! {
     email_placeholder: {
         ko: "이메일을 입력해주세요.",
         en: "Enter the email.",
+    }
+    
+    agree_email_verification: {
+        ko: "해당 의원의 소속원임을 확인하고 이메일 인증에 동의합니다.",
+        en: "I confirm that I am a member of the relevant representative's office and agree to email verification.",
+    }
+
+    verify_email: {
+        ko: "이메일 인증",
+        en: "VERIFY EMAIL",
     }
 }

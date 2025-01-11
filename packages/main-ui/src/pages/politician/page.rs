@@ -161,7 +161,7 @@ pub fn PoliticianStatusRow(
                 button { class: "text-sm font-semibold",
                     onclick: move |_| {
                         tracing::debug!("proclaim clicked");
-                        // TODO: pass if email is verified 
+                        // TODO: check if email is null
                         // TODO: replace dummy data
                         popup
                             .open(rsx! {

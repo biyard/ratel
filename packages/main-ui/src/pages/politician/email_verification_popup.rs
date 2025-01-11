@@ -2,7 +2,7 @@
 use dioxus::prelude::*;
 use dioxus_translate::*;
 use dioxus_popup::PopupService;
-use crate::theme::Theme;
+use crate::{theme::Theme, components::checkbox::Checkbox,};
 use super::i18n::PoliticianStanceTranslate;
 
 #[component]
@@ -17,6 +17,8 @@ pub fn EmailVerificationPopup(
     let theme_service: Theme = use_context();
     let theme = theme_service.get_data();
     let tr = translate::<PoliticianStanceTranslate>(&lang);
+
+    let mut agreed = use_signal(|| false);
 
     rsx! {
         div { id, class,
@@ -57,6 +59,29 @@ pub fn EmailVerificationPopup(
                             placeholder: email,
                             readonly: true,
                         }
+                    }
+
+                    div { class: "flex flex-row gap-[6px] items-center",
+                        Checkbox {
+                            class: "cursor-pointer",
+                            title: "{tr.agree_email_verification}",
+                            onchange: move |check| {
+                                agreed.set(check);
+                            },
+                        }
+                    }
+                }
+
+                div { class: "flex w-full",
+                    button {
+                        class: "w-full h-[57px] text-[{theme.primary05}] bg-[{theme.primary03}] text-[18px] font-extrabold leading-[24px] rounded-[12px]",
+                        style: if agreed() {
+                            "opacity: 1; cursor: pointer;"
+                        } else {
+                            "opacity: 0.5;"
+                        },
+                        disabled: !agreed(),
+                        "{tr.verify_email}"
                     }
                 }
             }
