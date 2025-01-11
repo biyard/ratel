@@ -66,7 +66,7 @@ pub struct AssemblyMember {
 
     pub name: Option<String>,
     pub party: Option<String>,
-    pub district: Option<String>,
+    pub district: Option<District>,
     // stance: CryptoStance, // consider update logic
     pub image_url: Option<String>,
     pub email: Option<String>,
@@ -75,4 +75,63 @@ pub struct AssemblyMember {
     // Indexes, if deleted_at is set, all values of indexes must be empty.
     pub gsi1: String, // language
     // gsi2: String,
+}
+
+#[derive(Debug, Clone, serde::Deserialize, serde::Serialize, Default, PartialEq)]
+pub struct District {
+    pub province: Option<String>, // None if it's a proportional representation
+    pub district: String, 
+}
+
+impl District {
+    pub fn from_str_by_lang(s: &str, lang: &str) -> Result<Self, String> {
+        if lang == "ko" {
+            let parts: Vec<&str> = s.splitn(2, " ").collect();
+            if parts.len() == 2 {
+                Ok(District {
+                    province: Some(parts[0].to_string()),
+                    district: parts[1].to_string(),
+                })
+            } else {
+                Ok(District {
+                    province: None,
+                    district: parts[0].to_string(),
+                })
+            }
+        } else {
+            let parts: Vec<&str> = if s.contains("((") {
+                s.splitn(2, "((").collect()
+            } else {
+                s.splitn(2, "(").collect()
+            };
+            if parts.len() == 2 {
+                let district = parts[1].trim_end_matches(')').to_string();
+                if district.is_empty() {
+                    Ok(District {
+                        province: None,
+                        district: parts[0].trim().to_string(),
+                    })
+                } else {
+                    Ok(District {
+                        province: Some(parts[0].trim().to_string()),
+                        district,
+                    })
+                }
+            } else {
+                Ok(District {
+                    province: None,
+                    district: parts[0].trim().to_string(),
+                })
+            }
+        }       
+    }
+}
+
+impl std::fmt::Display for District {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match &self.province {
+            Some(province) => write!(f, "{} {}", province, self.district),
+            None => write!(f, "{}", self.district),
+        }
+    }
 }

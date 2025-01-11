@@ -9,7 +9,7 @@ use crate::{
         tooltip::Tooltip,
     },
 };
-use dto::CryptoStance;
+use dto::{CryptoStance, District};
 use super::{
     filter_popup::FilterPopup,
     i18n::PoliticianStanceTranslate,
@@ -128,7 +128,7 @@ pub fn PoliticianStatusRow(
     lang: Language,
     #[props(default = "-".to_string())] name: String,
     #[props(default = "-".to_string())] party: String,
-    #[props(default = "-".to_string())] district: String,
+    #[props(default = District::default())] district: District,
     #[props(default = "https://s3-alpha-sig.figma.com/img/1656/3e71/c59ce479012efb94f2c8e2de7e8edb01?Expires=1737331200&Key-Pair-Id=APKAQ4GOSFWCVNEHN3O4&Signature=eAYKpzVwViWK-SS69oVrWA7uXV19jcw1kNTCYqwyVTH8ZSb6X5MiPGEdtzMMIcsSibtPZn4HcMI8~GkegFgoxMMTL46Q3yhlyNWcYBhB6JAeOYP48igQbIhqJQDPhF3VLpobYfwkMlhFbwIHVaT5m0~HWSB7-pUUZduDGDkKFZ0UZeoxJPbHFopGJB1AZplTRwm4xV9veeHFKyaWxjMY~JidYJeyCz5Rloq1nXOJ2ma3RSU-BKRjuZgpEybj0dRXEyC2wz1oh9V1sQmciKNVAKUGk9X~Fm2xiA9qjx81KLlPvvM0QmwS5q3t9N21CcneNyBKe4y2MnAE-HIdksIC5A__".to_string())] image: String,
     #[props(default = CryptoStance::NoStance )] stance: CryptoStance,
 ) -> Element {
