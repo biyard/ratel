@@ -11,7 +11,7 @@ pub enum Route {
             #[route("/")]
             HomePage { lang: Language },
 
-            #[route("/politician")]
+            #[route("/politicians")]
             PoliticianStatusPage { lang: Language },
 
         #[end_layout]

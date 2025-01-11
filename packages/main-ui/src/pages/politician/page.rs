@@ -107,7 +107,7 @@ pub fn PoliticianStatusHeader(lang: Language) -> Element {
                 }
                 Tooltip {
                     inner_class: "text-xs text-white font-bold bg-[#2C2E42] px-[15px] py-[10px] rounded-[8px] shadow-2xl w-[230px] h-[80px]".to_string(),
-                    text: "Proclaim 은 해당 의원의 암호화폐에 대한 정책적 긍정 및 부정에 대한 의사를 표현하는 것입니다. 해당 의원실 소속원만 변경할 수 있습니다.",
+                    text: "{tr.tooltip}",
                     bg_color: "#2C2E42".to_string(),
                     icons::Tooltip { color: "#ADBCD7" }
                 }
@@ -164,12 +164,12 @@ pub fn PoliticianStatusRow(
 
 #[component]
 pub fn PoliticianStatusMoreRow(text: String) -> Element {
-    let theme: Theme = use_context();
-    let theme_data = theme.get_data();
+    let theme_service: Theme = use_context();
+    let theme = theme_service.get_data();
 
     rsx!(
-        div {
-            class: "w-full h-[36px] flex flex-row items-center justify-center gap-[10px] hover:bg-[{theme_data.hover}] transition-colors",
+        button {
+            class: "w-full h-[36px] flex flex-row items-center justify-center gap-[10px] hover:bg-[{theme.hover}] transition-colors",
             span {
                 class: "text-sm",
                 "{text}"
