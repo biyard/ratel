@@ -97,4 +97,14 @@ translate! {
         ko: "지역구",
         en: "District",
     }
+    
+    search: {
+        ko: "검색",
+        en: "SEARCH",
+    }
+
+    clear: {
+        ko: "초기화",
+        en: "CLEAR",
+    }
 }
