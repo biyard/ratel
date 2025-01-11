@@ -2,11 +2,13 @@
 use dioxus::prelude::*;
 use dioxus_popup::PopupService;
 use dto::ServiceError;
+use dioxus_translate::*;
 
 use crate::{
     components::checkbox::Checkbox, layouts::congraturation_popup::CongraturationPopup,
     services::user_service::UserService, theme::Theme,
 };
+use super::i18n::HeaderTranslate;
 
 #[component]
 pub fn UserSetupPopup(
@@ -16,6 +18,7 @@ pub fn UserSetupPopup(
     profile_url: String,
     email: String,
     principal: String,
+    lang: Language,
 ) -> Element {
     let mut popup: PopupService = use_context();
     let mut valid = use_signal(|| true);
@@ -31,6 +34,7 @@ pub fn UserSetupPopup(
             theme.primary03.clone()
         }
     });
+    let tr = translate::<HeaderTranslate>(&lang);
 
     rsx! {
         div { id, class,
@@ -69,7 +73,7 @@ pub fn UserSetupPopup(
                     div { class: "flex flex-col items-start w-full mt-[10px] gap-[8px]",
                         input {
                             class: "w-[400px] max-[400px]:w-[300px] h-[59px] px-[24px] py-[17.5px] bg-[{theme.background}] text-[18px] font-bold leading-[24px] rounded-[4px] placeholder-[{theme.primary07}] rounded-[8px]",
-                            placeholder: "닉네임을 입력해주세요.",
+                            placeholder: "{tr.enter_nickname}",
                             value: nickname(),
                             oninput: move |e| {
                                 let value = e.value();
@@ -79,7 +83,7 @@ pub fn UserSetupPopup(
                         }
                         if !valid() {
                             span { class: "text-[14px] font-bold leading-[24px] text-[{theme.primary04}]",
-                                "특수문자는 입력할 수 없습니다."
+                                "{tr.special_characters}"
                             }
                         }
                     }
@@ -87,7 +91,7 @@ pub fn UserSetupPopup(
 
                 div { class: "flex flex-row gap-[10px] items-center",
                     Checkbox {
-                        title: "[필수] 이메일 및 계정주소 수집에 동의합니다.",
+                        title: "{tr.agree_email}",
                         onchange: move |check| {
                             agreed.set(check);
                         },
@@ -125,16 +129,18 @@ pub fn UserSetupPopup(
                                     tracing::debug!("UserSetupPopup::signup: success");
                                     popup
                                         .open(rsx! {
-                                            CongraturationPopup {}
+                                            CongraturationPopup {
+                                                lang: lang.clone(),
+                                            }
                                         })
                                         .with_id("congraturation_popup")
-                                        .with_title("환영합니다!")
+                                        .with_title(tr.welcome)
                                         .without_close();
                                 }
                             });
                         }
                     },
-                    "다음"
+                    "{tr.next}"
                 }
             }
         }

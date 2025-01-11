@@ -50,6 +50,7 @@ pub fn HeaderTails(lang: Language) -> Element {
                                         profile_url,
                                         email,
                                         principal,
+                                        lang: lang.clone(),
                                     }
                                 });
                             }
@@ -62,10 +63,11 @@ pub fn HeaderTails(lang: Language) -> Element {
                             }
                         };
                     },
+                    lang: lang.clone(),
                 }
             })
             .with_id("signup")
-            .with_title("회원가입");
+            .with_title(i18n_header.signup);
     };
 
     rsx! {
