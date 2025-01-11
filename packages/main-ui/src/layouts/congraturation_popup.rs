@@ -1,17 +1,21 @@
 #![allow(non_snake_case)]
 use dioxus::prelude::*;
 use dioxus_popup::PopupService;
+use dioxus_translate::*;
 
 use crate::{components::icons::Logo, theme::Theme};
+use super::i18n::HeaderTranslate;
 
 #[component]
 pub fn CongraturationPopup(
     #[props(default ="congraturation_popup".to_string())] id: String,
     #[props(default ="".to_string())] class: String,
+    lang: Language,
 ) -> Element {
     let theme: Theme = use_context();
     let theme = theme.get_data();
     let mut popup: PopupService = use_context();
+    let tr = translate::<HeaderTranslate>(&lang);
 
     rsx! {
         div { id, class,
@@ -22,7 +26,7 @@ pub fn CongraturationPopup(
 
                 div { class: "leading-[24px] text-[16px] font-regular text-white flex flex-row items-center justify-center text-center tracking-[0.005em]",
                     pre {
-                        "‘서비스명’에 오신 것을 환영합니다!\n익명성과 신뢰를 바탕으로 안전한 투표 환경을 제공합니다."
+                        "{tr.congraturation}"
                     }
                 }
 
@@ -31,7 +35,7 @@ pub fn CongraturationPopup(
                     onclick: move |_| {
                         popup.close();
                     },
-                    "투표 시작하기"
+                    "{tr.start_poll}"
                 }
             }
         }

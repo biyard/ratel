@@ -1,19 +1,22 @@
 #![allow(non_snake_case)]
 use dioxus::prelude::*;
 use dto::Topic;
-
+use dioxus_translate::*;
 use crate::theme::Theme;
+use super::i18n::PagesTranslate;
 
 #[component]
 pub fn UpcomingTopics(
     #[props(default ="upcoming_topics".to_string())] id: String,
     #[props(default ="".to_string())] class: String,
     _topics: Vec<Topic>,
+    lang: Language,
 ) -> Element {
+    let tr = translate::<PagesTranslate>(&lang);
     rsx! {
         div { id, class,
             div { class: "flex flex-col gap-[16px] items-start justify-start w-full",
-                span { class: "text-[18px] font-semibold", "다가올 투표" }
+                span { class: "text-[18px] font-semibold", "{tr.soon_voting}" }
                 UpcomingTopic {}
                 UpcomingTopic {}
             }
