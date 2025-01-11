@@ -173,7 +173,7 @@ pub fn PoliticianStatusRow(
                                     lang: lang.clone(),
                                 }
                             })
-                            .with_id("politician_email_verification")
+                            .with_id("email_verification_popup")
                             .with_title(tr.stance_on_crypto);
                     },
                     "# {tr.change_stance}" 
