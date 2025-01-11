@@ -12,6 +12,7 @@ mod controllers {
     }
     pub mod assembly_members {
         pub mod m1;
+        pub mod v1;
     }
 }
 
@@ -49,8 +50,12 @@ async fn main() -> Result<(), ServiceError> {
             controllers::users::v1::UserControllerV1::route()?,
         )
         .nest(
+            "/v1/assembly_members",
+            controllers::assembly_members::v1::AssemblyMemberControllerV1::route()?,
+        )
+        .nest(
             "/m1/assembly_members",
-            controllers::assembly_members::m1::AssemblyMemberControllerV1::route()?,
+            controllers::assembly_members::m1::AssemblyMemberControllerM1::route()?,
         );
 
     let port = option_env!("PORT").unwrap_or("3000");

@@ -3782,6 +3782,7 @@ version = "0.5.0"
 dependencies = [
  "by-axum",
  "chrono",
+ "dioxus-translate",
  "dto",
  "easy-dynamodb",
  "reqwest",
