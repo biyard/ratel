@@ -53,3 +53,24 @@ impl std::str::FromStr for CryptoStance {
         }
     }
 }
+
+#[derive(Debug, Clone, serde::Deserialize, serde::Serialize, Default)]
+pub struct AssemblyMember {
+    pub id: String,
+    pub r#type: String,
+    pub code: String, // code could be duplicated by language
+
+    pub created_at: u64,
+    pub updated_at: u64,
+    pub deleted_at: Option<u64>,
+
+    pub name: Option<String>,
+    pub party: Option<String>,
+    pub district: Option<String>,
+    // stance: CryptoStance, // consider update logic
+    pub image_url: Option<String>,
+
+    // Indexes, if deleted_at is set, all values of indexes must be empty.
+    pub gsi1: String, // language
+    // gsi2: String,
+}

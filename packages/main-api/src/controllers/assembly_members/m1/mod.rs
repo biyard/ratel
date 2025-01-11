@@ -9,7 +9,7 @@ use by_axum::{
 use dto::*;
 use slog::o;
 use crate::{
-    models::assembly_member::AssemblyMember,
+    models::assembly_member::Member,
     utils::openapi::*
 };
 
@@ -74,7 +74,7 @@ impl AssemblyMemberControllerV1 {
 
         for member in members {
             let image_url = get_member_profile_image(member.code.clone()).await?;
-            let doc: AssemblyMember = AssemblyMember::try_from((member.code.clone(), image_url.clone(), "ko", &member))?;
+            let doc: Member = Member::try_from((member.code.clone(), image_url.clone(), "ko", &member))?;
             cli.upsert(&doc).await.map_err(|e| {
                 slog::error!(log, "Failed to upsert doc: {}", e);
                 ServiceError::from(e)
@@ -82,7 +82,7 @@ impl AssemblyMemberControllerV1 {
             
             // TODO: handle missing value for district field
             let en_member = get_active_member_en(member.code.clone()).await?;
-            let en_doc: AssemblyMember = AssemblyMember::try_from((member.code.clone(), image_url.clone(), "en", &en_member))?;
+            let en_doc: Member = Member::try_from((member.code.clone(), image_url.clone(), "en", &en_member))?;
             cli.upsert(&en_doc).await.map_err(|e| {
                 slog::error!(log, "Failed to upsert en_doc: {}", e);
                 ServiceError::from(e)
