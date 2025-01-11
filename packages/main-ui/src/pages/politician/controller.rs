@@ -32,9 +32,15 @@ impl Controller {
         Ok(ctrl)
     }
 
+    pub fn _load_more(&mut self, _lang: Language, _bookmark: Option<String>) {
+        let _politician_api: PoliticianService = use_context();
+
+        // TODO: how can i update the Resource<>?
+    }
+
     pub fn politicians(&self) -> Vec<AssemblyMember> {
         self.politicians.with(|f| {
-            tracing::debug!("politicians: {:?}", f);
+            // tracing::debug!("politicians: {:?}", f);
             if let Some(value) = f {
                 value.items.clone()
             } else {
