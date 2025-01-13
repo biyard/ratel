@@ -170,6 +170,7 @@ pub fn PoliticianStatusRow(
                                     name: "gildong hong".to_string(),
                                     party: "people power party".to_string(),
                                     email: "test@test.com".to_string(),
+                                    stance: CryptoStance::default(),
                                     lang: lang.clone(),
                                 }
                             })
