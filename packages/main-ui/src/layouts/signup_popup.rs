@@ -1,14 +1,17 @@
 #![allow(non_snake_case)]
 use dioxus::prelude::*;
-
+use dioxus_translate::*;
 use crate::components::icons;
+use super::i18n::SignupPopupTranslate;
 
 #[component]
 pub fn SignupPopup(
     #[props(default ="signup_popup".to_string())] id: String,
     #[props(default ="".to_string())] class: String,
     onclick: EventHandler<Event<MouseData>>,
+    lang: Language,
 ) -> Element {
+    let tr = translate::<SignupPopupTranslate>(&lang);
     rsx! {
         div { id, class,
             div {
@@ -19,10 +22,10 @@ pub fn SignupPopup(
                 }
                 div { class: "flex flex-col gap-[3px]",
                     span { class: "text-white text-[16px] leading-[16px] font-extrabold",
-                        "Google로 계속하기"
+                        "{tr.continue_with_google}"
                     }
                     span { class: "text-white text-[14px] leading-[13px] fond-regular",
-                        "Quick Sign-in"
+                        "{tr.quick_sign_in}"
                     }
                 }
             }

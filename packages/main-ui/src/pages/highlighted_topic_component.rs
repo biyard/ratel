@@ -2,7 +2,7 @@
 use dioxus::prelude::*;
 use dto::Topic;
 use num_format::{Locale, ToFormattedString};
-
+use dioxus_translate::*;
 use crate::{
     components::{
         button::{Button, CloseButton, RoundedNoButton, RoundedYesButton},
@@ -11,6 +11,7 @@ use crate::{
     },
     theme::Theme,
 };
+use super::i18n::*;
 
 #[component]
 pub fn HighlightedTopics(
@@ -19,6 +20,7 @@ pub fn HighlightedTopics(
 
     topics: Vec<Topic>,
     onselect: EventHandler<usize>,
+    lang: Language,
 ) -> Element {
     let mut selected = Signal::new(0);
     let theme: Theme = use_context();
@@ -39,6 +41,7 @@ pub fn HighlightedTopics(
                             replies: topic.replies,
                             yes: topic.number_of_yes(),
                             no: topic.number_of_no(),
+                            lang: lang.clone(),
                         }
                     }
                 }
@@ -83,11 +86,11 @@ pub fn HighlightedTopic(
     #[props(default = 200)] replies: u64,
     #[props(default = 64)] yes: u64,
     #[props(default = 36)] no: u64,
+    lang: Language,
 ) -> Element {
     let theme: Theme = use_context();
     let theme_data = theme.get_data();
     let mut draft_choice = use_signal(|| None);
-
     rsx! {
         div {
             id,
@@ -119,7 +122,7 @@ pub fn HighlightedTopic(
                             draft_choice.set(None);
                         },
                     }
-                    DescriptionWrapper { title }
+                    DescriptionWrapper { title, lang }
                     VoteResultHorizontalBars { class: "w-full", yes, no }
                     DonationSelector {
                         class: "w-full h-[54px]",
@@ -134,6 +137,7 @@ pub fn HighlightedTopic(
                         period,
                         donations,
                         replies,
+                        lang,
                     }
                     div { class: "flex flex-row w-full justify-start items-center gap-[17px]",
                         VoteResultBars { class: "grow", yes, no }
@@ -252,10 +256,13 @@ pub fn DonationSelector(
 }
 
 #[component]
-pub fn DescriptionWrapper(title: String) -> Element {
+pub fn DescriptionWrapper(
+    title: String,
+    lang: Language,
+) -> Element {
     let theme: Theme = use_context();
     let theme_data = theme.get_data();
-
+    let tr = translate::<DescriptionWrapperTranslate>(&lang);
     rsx! {
         div { class: "flex flex-col gap-[22px] items-start justify-start",
             h1 { class: "text-[28px] font-extrabold tracking-normal line-clamp-1",
@@ -264,7 +271,7 @@ pub fn DescriptionWrapper(title: String) -> Element {
             p {
                 class: "text-[16px] max-w-[674px] font-regular leading-[24px] tracking-[0.5px] line-clamp-4",
                 style: "color: {theme_data.primary00};",
-                dangerous_inner_html: "이 국민투표는 찬반 선택과 함께 최대 <b>1,000원 이하의 기부금</b>으로 열정과 의지를 표현하는 방식입니다. </br> <b>기부금은 실제 기부가 아니며</b>, 투표 참여의 상징적 의미를 더하기 위해 사용됩니다.</br><div class=\"mt-[10px]\"><span style=\"color:red\">*</span>기부금 금액은 선택 사항이며, 투표 결과에 영향을 미치지 않습니다.</div>",
+                dangerous_inner_html: tr.inner_dangerous,
             }
         }
     }
@@ -277,10 +284,11 @@ pub fn ContentWrapper(
     period: String,
     donations: u64,
     replies: u64,
+    lang: Language,
 ) -> Element {
     let theme: Theme = use_context();
     let theme_data = theme.get_data();
-
+    let tr = translate::<ContentWrapperTranslate>(&lang);
     rsx! {
         div { class: "flex flex-col gap-[22px] items-start justify-start h-[209px]",
             h1 { class: "text-[42px] font-extrabold tracking-normal line-clamp-1",
@@ -293,7 +301,7 @@ pub fn ContentWrapper(
             }
             div { class: "flex flex-row gap-[8px] justify-start items-center",
                 IconText { text: "{period}", background: "{theme_data.primary06}", icons::Clock {} }
-                IconText { text: format!("누적기부금 {}₩", donations.to_formatted_string(&Locale::en)),
+                IconText { text: format!("{} {}₩", tr.cumulative_donations, donations.to_formatted_string(&Locale::en)),
                     icons::Money {}
                 }
                 IconText { class: "", text: "{replies}", icons::ChatBubble {} }
