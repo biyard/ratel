@@ -3,7 +3,7 @@ use dioxus::prelude::*;
 use dto::Topic;
 use dioxus_translate::*;
 use crate::theme::Theme;
-use super::i18n::PagesTranslate;
+use super::i18n::UpcomingTopicsTranslate;
 
 #[component]
 pub fn UpcomingTopics(
@@ -12,7 +12,7 @@ pub fn UpcomingTopics(
     _topics: Vec<Topic>,
     lang: Language,
 ) -> Element {
-    let tr = translate::<PagesTranslate>(&lang);
+    let tr = translate::<UpcomingTopicsTranslate>(&lang);
     rsx! {
         div { id, class,
             div { class: "flex flex-col gap-[16px] items-start justify-start w-full",

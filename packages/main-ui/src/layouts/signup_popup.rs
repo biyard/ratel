@@ -2,7 +2,7 @@
 use dioxus::prelude::*;
 use dioxus_translate::*;
 use crate::components::icons;
-use super::i18n::HeaderTranslate;
+use super::i18n::SignupPopupTranslate;
 
 #[component]
 pub fn SignupPopup(
@@ -11,7 +11,7 @@ pub fn SignupPopup(
     onclick: EventHandler<Event<MouseData>>,
     lang: Language,
 ) -> Element {
-    let tr = translate::<HeaderTranslate>(&lang);
+    let tr = translate::<SignupPopupTranslate>(&lang);
     rsx! {
         div { id, class,
             div {

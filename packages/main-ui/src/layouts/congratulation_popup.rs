@@ -4,18 +4,18 @@ use dioxus_popup::PopupService;
 use dioxus_translate::*;
 
 use crate::{components::icons::Logo, theme::Theme};
-use super::i18n::HeaderTranslate;
+use super::i18n::CongratuationPopupTranslate;
 
 #[component]
-pub fn CongraturationPopup(
-    #[props(default ="congraturation_popup".to_string())] id: String,
+pub fn CongratulationPopup(
+    #[props(default ="congratulation_popup".to_string())] id: String,
     #[props(default ="".to_string())] class: String,
     lang: Language,
 ) -> Element {
     let theme: Theme = use_context();
     let theme = theme.get_data();
     let mut popup: PopupService = use_context();
-    let tr = translate::<HeaderTranslate>(&lang);
+    let tr = translate::<CongratuationPopupTranslate>(&lang);
 
     rsx! {
         div { id, class,
@@ -26,7 +26,7 @@ pub fn CongraturationPopup(
 
                 div { class: "leading-[24px] text-[16px] font-regular text-white flex flex-row items-center justify-center text-center tracking-[0.005em]",
                     pre {
-                        "{tr.congraturation}"
+                        "{tr.congratulation}"
                     }
                 }
 
