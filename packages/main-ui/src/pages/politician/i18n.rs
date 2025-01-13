@@ -152,4 +152,36 @@ translate! {
         ko: "인증 확인",
         en: "CONFIRM VERIFICATION",
     }
+
+    verify_contact_email: {
+        ko: "이메일 인증",
+        en: "VERIFY CONTACT EMAIL",
+    }
+
+    contact_us: {
+        ko: "문의하기",
+        en: "CONTACT US",
+    }
+
+    agree_contact_us: {
+        ko: "소속 의원실 관계자가 맞는지 확인하고 입장을 변경하는 데 동의합니다.",
+        en: "I agree to update the STANCE after verifying the person in charge.",
+    }
+
+    hompage: {
+        ko: "홈페이지",
+        en: "HOMEPAGE",
+    }
+
+    contact_email: {
+        ko: "연락처 이메일",
+        en: "CONTACT EMAIL",
+    }
+
+    agree_proclaim: {
+        ko: "응답 내용에 거짓이 없음을 확인합니다.",
+        en: "I agree that there is no falsehood",
+    }
+
+    
 }

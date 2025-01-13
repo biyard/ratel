@@ -51,6 +51,7 @@ pub fn FilterPopup(
                         span { class: "text-[14px] font-bold leading-[24px]", "{tr.stance_on_crypto}" }
                     }
                     Dropdown {
+                        // TODO: replace this data to CryptoStance
                         items: vec![
                             tr.supportive.to_string(),
                             tr.against.to_string(),
