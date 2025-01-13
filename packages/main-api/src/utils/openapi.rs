@@ -1,7 +1,7 @@
 use reqwest::Error;
 use std::collections::HashMap;
 use serde_json::Value;
-use crate::models::openapi::member::{Member, EnMember};
+use crate::models::openapi::national_assembly::{Member, EnMember};
 use dto::ServiceError;
 
 const DEFAULT_PAGE_INDEX: u32 = 1; // page num; start from 1 not 0
