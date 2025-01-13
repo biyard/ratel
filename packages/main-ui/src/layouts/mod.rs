@@ -1,4 +1,4 @@
-mod congraturation_popup;
+mod congratulation_popup;
 pub mod header;
 pub mod i18n;
 pub mod root_layout;
