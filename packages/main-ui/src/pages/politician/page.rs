@@ -43,11 +43,11 @@ pub fn PoliticianStatusTable(lang: Language) -> Element {
                 for politician in ctrl.politicians() {
                     PoliticianStatusRow {
                         lang: lang.clone(),
-                        name: politician.name.unwrap_or_default(),
-                        party: politician.party.unwrap_or_default(),
-                        district: politician.district.unwrap_or_default(),
-                        image: politician.image_url.unwrap_or_default(),
-                        // replace with real data
+                        name: politician.name,
+                        party: politician.party,
+                        district: politician.district,
+                        image: politician.image_url,
+                        // TODO: replace with real data
                         stance: CryptoStance::NoStance,
                     }
                 }

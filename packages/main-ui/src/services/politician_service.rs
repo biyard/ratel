@@ -3,6 +3,7 @@ pub type Result<T> = std::result::Result<T, ServiceError>;
 use dioxus::prelude::*;
 use dioxus_translate::*;
 use dto::{common_query_response::CommonQueryResponse, error::ServiceError, AssemblyMember};
+use crate::utils::rest_api;
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct PoliticianService {
@@ -23,9 +24,7 @@ impl PoliticianService {
         size: usize,
         bookmark: Option<&str>,
         lang: Option<Language>,
-    ) -> Result<CommonQueryResponse<AssemblyMember>> {
-        let client = reqwest::Client::builder().build()?;
-
+    ) -> Result<Vec<AssemblyMember>> {
         let mut url = format!("{}/v1/assembly_members?size={size}", (self.endpoint)(),);
 
         if let Some(bookmark) = bookmark {
@@ -37,12 +36,18 @@ impl PoliticianService {
         }
 
         tracing::debug!("url: {}", url);
-        let res = client.request(reqwest::Method::GET, url).send().await?;
+        let res: Vec<AssemblyMember> = match rest_api::get(&url).await {
+            Ok(v) => v,
+            Err(e) => match e {
+                ServiceError::NotFound => {
+                    return Ok(vec![]);
+                }
+                e => {
+                    return Err(e);
+                }
+            },
+        };
 
-        if res.status().is_success() {
-            Ok(res.json().await?)
-        } else {
-            Err(res.json().await?)
-        }
+        Ok(res)
     }
 }
