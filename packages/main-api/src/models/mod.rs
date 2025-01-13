@@ -1,6 +1,6 @@
 pub mod user;
 pub mod openapi {
-    pub mod member;
+    pub mod national_assembly;
 }
 pub mod assembly_member;
 
