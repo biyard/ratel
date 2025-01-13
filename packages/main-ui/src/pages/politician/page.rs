@@ -9,7 +9,7 @@ use crate::{
         tooltip::Tooltip,
     },
 };
-use dto::CryptoStance;
+use dto::{CryptoStance, District};
 use super::{
     filter_popup::FilterPopup,
     i18n::PoliticianStanceTranslate,
@@ -34,16 +34,23 @@ pub fn PoliticianStatusTable(lang: Language) -> Element {
     let theme_service: Theme = use_context();
     let theme = theme_service.get_data();
     let tr: PoliticianStanceTranslate = translate(&lang);
+    let ctrl = super::controller::Controller::new(lang)?;
     // TODO: mobile view
     rsx! {
         div { class: "w-full h-full flex flex-col bg-[{theme.primary06}] rounded-[8px] text-white",
             PoliticianStatusHeader { lang }
             div { class: "w-full h-full flex flex-col gap-[10px]",
-                // TODO: replace dummy data
-                PoliticianStatusRow { lang, stance: CryptoStance::Supportive }
-                PoliticianStatusRow { lang, stance: CryptoStance::Against }
-                PoliticianStatusRow { lang, stance: CryptoStance::Neutral }
-                PoliticianStatusRow { lang, stance: CryptoStance::NoStance }
+                for politician in ctrl.politicians() {
+                    PoliticianStatusRow {
+                        lang: lang.clone(),
+                        name: politician.name,
+                        party: politician.party,
+                        district: politician.district,
+                        image: politician.image_url,
+                        // TODO: replace with real data
+                        stance: CryptoStance::NoStance,
+                    }
+                }
             }
             // TODO: 다음 10개 미리 떙겨놓고 값 없으면 hide
             PoliticianStatusMoreRow { text: tr.more }
@@ -121,7 +128,8 @@ pub fn PoliticianStatusRow(
     lang: Language,
     #[props(default = "-".to_string())] name: String,
     #[props(default = "-".to_string())] party: String,
-    #[props(default = "-".to_string())] district: String,
+    #[props(default = District::default())] district: District,
+    // FIXME: replace with default image url
     #[props(default = "https://s3-alpha-sig.figma.com/img/1656/3e71/c59ce479012efb94f2c8e2de7e8edb01?Expires=1737331200&Key-Pair-Id=APKAQ4GOSFWCVNEHN3O4&Signature=eAYKpzVwViWK-SS69oVrWA7uXV19jcw1kNTCYqwyVTH8ZSb6X5MiPGEdtzMMIcsSibtPZn4HcMI8~GkegFgoxMMTL46Q3yhlyNWcYBhB6JAeOYP48igQbIhqJQDPhF3VLpobYfwkMlhFbwIHVaT5m0~HWSB7-pUUZduDGDkKFZ0UZeoxJPbHFopGJB1AZplTRwm4xV9veeHFKyaWxjMY~JidYJeyCz5Rloq1nXOJ2ma3RSU-BKRjuZgpEybj0dRXEyC2wz1oh9V1sQmciKNVAKUGk9X~Fm2xiA9qjx81KLlPvvM0QmwS5q3t9N21CcneNyBKe4y2MnAE-HIdksIC5A__".to_string())] image: String,
     #[props(default = CryptoStance::NoStance )] stance: CryptoStance,
 ) -> Element {

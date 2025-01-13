@@ -9,12 +9,12 @@ use by_axum::{
 use dto::*;
 use slog::o;
 use crate::{
-    models::assembly_member::AssemblyMember,
+    models::assembly_member::Member,
     utils::openapi::*
 };
 
 #[derive(Clone, Debug)]
-pub struct AssemblyMemberControllerV1 {
+pub struct AssemblyMemberControllerM1 {
     log: slog::Logger,
 }
 
@@ -24,10 +24,10 @@ pub struct AssemblyMemberResponse {
 }
 
 // TODO: add authorization (service key or signiture)
-impl AssemblyMemberControllerV1 {
+impl AssemblyMemberControllerM1 {
     pub fn route() -> Result<by_axum::axum::Router> {
-        let log = root().new(o!("api-controller" => "AssemblyMemberControllerV1"));
-        let ctrl = AssemblyMemberControllerV1 { log };
+        let log = root().new(o!("api-controller" => "AssemblyMemberControllerM1"));
+        let ctrl = AssemblyMemberControllerM1 { log };
 
         Ok(by_axum::axum::Router::new()
             .route("/:id", post(Self::act_assembly_member_by_id))
@@ -37,7 +37,7 @@ impl AssemblyMemberControllerV1 {
     }
 
     pub async fn act_assembly_member(
-        State(ctrl): State<AssemblyMemberControllerV1>,
+        State(ctrl): State<AssemblyMemberControllerM1>,
         Json(body): Json<ActionAssemblyMemberRequest>,
     ) -> Result<Json<AssemblyMemberResponse>> {
         let log = ctrl.log.new(o!("api" => "create_assembly_member"));
@@ -55,7 +55,7 @@ impl AssemblyMemberControllerV1 {
     }
 
     pub async fn act_assembly_member_by_id(
-        State(ctrl): State<AssemblyMemberControllerV1>,
+        State(ctrl): State<AssemblyMemberControllerM1>,
         Path(id): Path<String>,
         Json(body): Json<ActionAssemblyMemberByIdRequest>,
     ) -> Result<()> {
@@ -74,7 +74,7 @@ impl AssemblyMemberControllerV1 {
 
         for member in members {
             let image_url = get_member_profile_image(member.code.clone()).await?;
-            let doc: AssemblyMember = AssemblyMember::try_from((member.code.clone(), image_url.clone(), "ko", &member))?;
+            let doc: Member = Member::try_from((member.code.clone(), image_url.clone(), "ko", &member))?;
             cli.upsert(&doc).await.map_err(|e| {
                 slog::error!(log, "Failed to upsert doc: {}", e);
                 ServiceError::from(e)
@@ -82,7 +82,7 @@ impl AssemblyMemberControllerV1 {
             
             // TODO: handle missing value for district field
             let en_member = get_active_member_en(member.code.clone()).await?;
-            let en_doc: AssemblyMember = AssemblyMember::try_from((member.code.clone(), image_url.clone(), "en", &en_member))?;
+            let en_doc: Member = Member::try_from((member.code.clone(), image_url.clone(), "en", &en_member))?;
             cli.upsert(&en_doc).await.map_err(|e| {
                 slog::error!(log, "Failed to upsert en_doc: {}", e);
                 ServiceError::from(e)
