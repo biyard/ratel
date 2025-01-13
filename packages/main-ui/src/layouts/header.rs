@@ -50,6 +50,7 @@ pub fn HeaderTails(lang: Language) -> Element {
                                         profile_url,
                                         email,
                                         principal,
+                                        lang: lang.clone(),
                                     }
                                 });
                             }
@@ -62,6 +63,7 @@ pub fn HeaderTails(lang: Language) -> Element {
                             }
                         };
                     },
+                    lang: lang.clone(),
                 }
             })
             .with_id("signup")
