@@ -15,7 +15,7 @@ translate! {
 }
 
 translate! {
-    CongratuationPopupTranslate;
+    CongratulationPopupTranslate;
 
     welcome: {
         ko: "환영합니다!",
