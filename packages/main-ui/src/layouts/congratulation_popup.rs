@@ -4,7 +4,7 @@ use dioxus_popup::PopupService;
 use dioxus_translate::*;
 
 use crate::{components::icons::Logo, theme::Theme};
-use super::i18n::CongratuationPopupTranslate;
+use super::i18n::CongratulationPopupTranslate;
 
 #[component]
 pub fn CongratulationPopup(
@@ -15,7 +15,7 @@ pub fn CongratulationPopup(
     let theme: Theme = use_context();
     let theme = theme.get_data();
     let mut popup: PopupService = use_context();
-    let tr = translate::<CongratuationPopupTranslate>(&lang);
+    let tr = translate::<CongratulationPopupTranslate>(&lang);
 
     rsx! {
         div { id, class,
