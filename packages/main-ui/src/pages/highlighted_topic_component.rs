@@ -11,7 +11,7 @@ use crate::{
     },
     theme::Theme,
 };
-use super::i18n::PagesTranslate;
+use super::i18n::*;
 
 #[component]
 pub fn HighlightedTopics(
@@ -25,7 +25,7 @@ pub fn HighlightedTopics(
     let mut selected = Signal::new(0);
     let theme: Theme = use_context();
     let theme_data = theme.get_data();
-    let tr = translate::<PagesTranslate>(&lang);
+
     rsx! {
         div { id, class,
             div { class: "flex flex-col w-full max-w-[1440px]",
@@ -262,7 +262,7 @@ pub fn DescriptionWrapper(
 ) -> Element {
     let theme: Theme = use_context();
     let theme_data = theme.get_data();
-    let tr = translate::<PagesTranslate>(&lang);
+    let tr = translate::<DescriptionWrapperTranslate>(&lang);
     rsx! {
         div { class: "flex flex-col gap-[22px] items-start justify-start",
             h1 { class: "text-[28px] font-extrabold tracking-normal line-clamp-1",
@@ -271,11 +271,7 @@ pub fn DescriptionWrapper(
             p {
                 class: "text-[16px] max-w-[674px] font-regular leading-[24px] tracking-[0.5px] line-clamp-4",
                 style: "color: {theme_data.primary00};",
-                dangerous_inner_html: format!("{} </br> {} </br> \
-                    <div class=\"mt-[10px]\"> \
-                        <span style=\"color:red\">*</span>{} \
-                    </div>", 
-                    tr.inner_dangerous_1, tr.inner_dangerous_2, tr.inner_dangerous_3),
+                dangerous_inner_html: tr.inner_dangerous,
             }
         }
     }
@@ -292,7 +288,7 @@ pub fn ContentWrapper(
 ) -> Element {
     let theme: Theme = use_context();
     let theme_data = theme.get_data();
-    let tr = translate::<PagesTranslate>(&lang);
+    let tr = translate::<ContentWrapperTranslate>(&lang);
     rsx! {
         div { class: "flex flex-col gap-[22px] items-start justify-start h-[209px]",
             h1 { class: "text-[42px] font-extrabold tracking-normal line-clamp-1",

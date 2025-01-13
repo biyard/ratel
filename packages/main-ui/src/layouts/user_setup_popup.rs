@@ -5,10 +5,10 @@ use dto::ServiceError;
 use dioxus_translate::*;
 
 use crate::{
-    components::checkbox::Checkbox, layouts::congraturation_popup::CongraturationPopup,
+    components::checkbox::Checkbox, layouts::congratulation_popup::CongratulationPopup,
     services::user_service::UserService, theme::Theme,
 };
-use super::i18n::HeaderTranslate;
+use super::i18n::UserSetupPopupTranslate;
 
 #[component]
 pub fn UserSetupPopup(
@@ -34,7 +34,7 @@ pub fn UserSetupPopup(
             theme.primary03.clone()
         }
     });
-    let tr = translate::<HeaderTranslate>(&lang);
+    let tr = translate::<UserSetupPopupTranslate>(&lang);
 
     rsx! {
         div { id, class,
@@ -129,11 +129,11 @@ pub fn UserSetupPopup(
                                     tracing::debug!("UserSetupPopup::signup: success");
                                     popup
                                         .open(rsx! {
-                                            CongraturationPopup {
+                                            CongratulationPopup {
                                                 lang: lang.clone(),
                                             }
                                         })
-                                        .with_id("congraturation_popup")
+                                        .with_id("congratulation_popup")
                                         .with_title(tr.welcome)
                                         .without_close();
                                 }

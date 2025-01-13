@@ -11,7 +11,7 @@ use crate::{
     },
     theme::Theme,
 };
-use super::i18n::PagesTranslate;
+use super::i18n::FinishedTopicTranslate;
 
 #[component]
 pub fn FinishedTopics(
@@ -21,7 +21,7 @@ pub fn FinishedTopics(
     lang: Language,
 ) -> Element {
     let len = if topics.len() > 2 { 2 } else { topics.len() };
-    let tr = translate::<PagesTranslate>(&lang);
+    let tr = translate::<FinishedTopicTranslate>(&lang);
     rsx! {
         div { id, class,
             div { class: "flex flex-col w-full justify-start items-start gap-[18px]",
@@ -62,7 +62,7 @@ pub fn FinishedTopic(
 ) -> Element {
     let theme: Theme = use_context();
     let theme_data = theme.get_data();
-    let tr = translate::<PagesTranslate>(&lang);
+    let tr = translate::<FinishedTopicTranslate>(&lang);
     rsx! {
         div { id, class,
             div { class: "border-[{theme_data.primary11}] rounded-[8px] w-full cursor-pointer",
