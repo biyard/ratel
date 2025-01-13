@@ -1,7 +1,8 @@
-use serde::Serialize;
+use serde::{Serialize, Deserialize};
 use crate::ServiceError;
+use dioxus_translate::Language;
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ActionAssemblyMemberRequest {
     /// Fetches assembly members by Assembly Open API.
@@ -9,7 +10,7 @@ pub enum ActionAssemblyMemberRequest {
     FetchMembers,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ActionAssemblyMemberByIdRequest {
     /// Manually, update crypto stance.
@@ -17,7 +18,7 @@ pub enum ActionAssemblyMemberByIdRequest {
     UpdateCryptoStance(CryptoStance),
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Default, Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Default, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum CryptoStance {
     #[serde(rename = "supportive")]
@@ -55,7 +56,7 @@ impl std::str::FromStr for CryptoStance {
     }
 }
 
-#[derive(Debug, Clone, serde::Deserialize, serde::Serialize, Default)]
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct AssemblyMember {
     pub id: String,
     pub r#type: String,
@@ -68,7 +69,8 @@ pub struct AssemblyMember {
     pub name: String,
     pub party: String,
     pub district: District,
-    // stance: CryptoStance, // consider update logic
+    // FIXME: consider update logic
+    pub stance: Option<CryptoStance>,
     pub image_url: String,
     pub email: Option<String>,
     // pub email_verified: bool, // check email verified logic
@@ -78,7 +80,7 @@ pub struct AssemblyMember {
     // gsi2: String,
 }
 
-#[derive(Debug, Clone, serde::Deserialize, serde::Serialize, Default, PartialEq)]
+#[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
 pub struct District {
     pub province: Option<String>, // None if it's a proportional representation
     pub district: String, 
@@ -88,44 +90,40 @@ impl TryFrom<(&str, &str)> for District {
     type Error = ServiceError;
     
     fn try_from((s, lang): (&str, &str)) -> Result<Self, Self::Error> {
+        if s.trim().is_empty() {
+            return Err(ServiceError::BadRequest);
+        }
+
+        fn create_district(province: Option<String>, district: String) -> District {
+            District {
+                province,
+                district: district.trim().to_string(),
+            }
+        }
+
         if lang == "ko" {
             let parts: Vec<&str> = s.splitn(2, " ").collect();
-            if parts.len() == 2 {
-                Ok(District {
-                    province: Some(parts[0].to_string()),
-                    district: parts[1].to_string(),
-                })
+            Ok(if parts.len() == 2 {
+                create_district(Some(parts[0].to_string()), parts[1].to_string())
             } else {
-                Ok(District {
-                    province: None,
-                    district: parts[0].to_string(),
-                })
-            }
+                create_district(None, parts[0].to_string())
+            })
         } else {
             let parts: Vec<&str> = if s.contains("((") {
                 s.splitn(2, "((").collect()
             } else {
                 s.splitn(2, "(").collect()
             };
-            if parts.len() == 2 {
+            Ok(if parts.len() == 2 {
                 let district = parts[1].trim_end_matches(')').to_string();
                 if district.is_empty() {
-                    Ok(District {
-                        province: None,
-                        district: parts[0].trim().to_string(),
-                    })
+                    create_district(None, parts[0].to_string())
                 } else {
-                    Ok(District {
-                        province: Some(parts[0].trim().to_string()),
-                        district,
-                    })
+                    create_district(Some(parts[0].trim().to_string()), district)
                 }
             } else {
-                Ok(District {
-                    province: None,
-                    district: parts[0].trim().to_string(),
-                })
-            }
+                create_district(None, parts[0].to_string())
+            })
         }
     }
 }
@@ -136,5 +134,20 @@ impl std::fmt::Display for District {
             Some(province) => write!(f, "{} {}", province, self.district),
             None => write!(f, "{}", self.district),
         }
+    }
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+pub struct ListAssemblyMembersRequest {
+    pub size: Option<usize>,
+    pub bookmark: Option<String>,
+    pub lang: Option<Language>,
+}
+
+impl std::fmt::Display for ListAssemblyMembersRequest {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let query = serde_urlencoded::to_string(&self).unwrap();
+
+        write!(f, "{query}")
     }
 }

@@ -1,5 +1,3 @@
-use std::str::FromStr;
-
 use easy_dynamodb::Document;
 use dto::{ServiceError, AssemblyMember, District};
 use super::openapi::national_assembly::MemberTrait;
@@ -31,6 +29,9 @@ impl<T: MemberTrait> TryFrom<(String, String, &str, &T)> for Member {
             name: member.name().to_string(),
             party: member.party().to_string(),
             district,
+            // FIXME: later, stance data should be fetched from stance update record 
+            // - that matched member unique code because data could be duplicated (en, ko ... )
+            stance: None,
             image_url: image_url,
             email: Some(member.email().to_string()),
             gsi1: format!("{}#{}", Member::document_type(), lang),
