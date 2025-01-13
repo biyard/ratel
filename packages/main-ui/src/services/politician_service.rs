@@ -2,7 +2,12 @@ pub type Result<T> = std::result::Result<T, ServiceError>;
 
 use dioxus::prelude::*;
 use dioxus_translate::*;
-use dto::{common_query_response::CommonQueryResponse, error::ServiceError, AssemblyMember};
+use dto::{
+    common_query_response::CommonQueryResponse, 
+    error::ServiceError, 
+    AssemblyMember,
+    ListAssemblyMembersRequest,
+};
 use crate::utils::rest_api;
 
 #[derive(Debug, Clone, Copy, Default)]
@@ -24,23 +29,21 @@ impl PoliticianService {
         size: usize,
         bookmark: Option<&str>,
         lang: Option<Language>,
-    ) -> Result<Vec<AssemblyMember>> {
-        let mut url = format!("{}/v1/assembly_members?size={size}", (self.endpoint)(),);
+    ) -> Result<CommonQueryResponse<AssemblyMember>> {
+        let req = ListAssemblyMembersRequest {
+            size: Some(size),
+            bookmark: bookmark.map(|s| s.to_string()),
+            lang,
+        };
 
-        if let Some(bookmark) = bookmark {
-            url.push_str(&format!("&bookmark={}", bookmark));
-        }
-
-        if let Some(lang) = lang {
-            url.push_str(&format!("&lang={}", lang));
-        }
+        let url = format!("{}/v1/assembly_members?{}", (self.endpoint)(), req);
 
         tracing::debug!("url: {}", url);
-        let res: Vec<AssemblyMember> = match rest_api::get(&url).await {
+        let res: CommonQueryResponse<AssemblyMember> = match rest_api::get(&url).await {
             Ok(v) => v,
             Err(e) => match e {
                 ServiceError::NotFound => {
-                    return Ok(vec![]);
+                    return Ok(CommonQueryResponse::default());
                 }
                 e => {
                     return Err(e);
