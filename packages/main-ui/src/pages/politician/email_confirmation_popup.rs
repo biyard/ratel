@@ -65,7 +65,7 @@ pub fn EmailConfirmationPopup(
                 }
                 div { class: "flex w-full",
                     button {
-                        class: "w-full h-[57px] text-[{theme.primary05}] bg-[{theme.primary03}] text-[18px] font-extrabold leading-[24px] rounded-[12px] opacity-50",
+                        class: "w-full h-[57px] text-[{theme.primary05}] bg-[{theme.primary03}] text-[18px] font-extrabold leading-[24px] rounded-[12px] disabled:opacity-50",
                         onclick: move |_| { 
                             tracing::debug!("confirm button clicked");
                             // TODO: check email verification

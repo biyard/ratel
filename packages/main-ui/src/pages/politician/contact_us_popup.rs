@@ -9,6 +9,7 @@ use crate::{
     },
 };
 use super::i18n::PoliticianStanceTranslate;
+use dto::CryptoStance;
 
 #[component]
 pub fn ContactUsPopup(
@@ -83,12 +84,7 @@ pub fn ContactUsPopup(
                         }
                         Dropdown {
                             // TODO: replace this data to CryptoStance
-                            items: vec![
-                                tr.supportive.to_string(),
-                                tr.against.to_string(),
-                                tr.neutral.to_string(),
-                                tr.no_stance.to_string(),
-                            ],
+                            items: CryptoStance::iter().map(|s| tr.translate_stance(s)).collect(),
                             value: stance_signal(),
                             placeholder: "{tr.stance_placeholder}",
                             onselect: move |value| {
