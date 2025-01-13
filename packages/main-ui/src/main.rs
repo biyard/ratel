@@ -10,7 +10,11 @@ pub mod utils;
 use dioxus::prelude::*;
 use dioxus_popup::PopupService;
 use route::Route;
-use services::{topic_service::TopicService, user_service::UserService};
+use services::{
+    politician_service::PoliticianService, 
+    topic_service::TopicService, 
+    user_service::UserService
+};
 use theme::Theme;
 
 fn main() {
@@ -26,6 +30,7 @@ fn app() -> Element {
     UserService::init();
     TopicService::init();
     PopupService::init();
+    PoliticianService::init();
 
     rsx! {
         document::Title { "DemocraSee" }

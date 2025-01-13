@@ -1,6 +1,6 @@
 [package]
 name = "main-api"
-version = "0.5.0"
+version = "0.5.2"
 authors.workspace = true
 description.workspace = true
 edition.workspace = true
@@ -13,6 +13,7 @@ serde_json.workspace = true
 slog.workspace = true
 by-axum.workspace = true
 easy-dynamodb.workspace = true
+dioxus-translate = { path = "../dioxus-translate", features = ["ko"] }
 
 tokio = { version = "1.40.0", features = ["full"] }
 tower = "0.5.1"
