@@ -75,3 +75,24 @@ translate! {
         en: "Quick Sign-in",
     },
 }
+
+translate! {
+    MenusTranslate;
+
+    home: {
+        ko: "HOME",
+        en: "HOME",
+    },
+    topics: {
+        ko: "TOPICS",
+        en: "TOPICS",
+    },
+    politicians: {
+        ko: "POLITICIAN STATUS",
+        en: "POLITICIAN STATUS",
+    },
+    patrons: {
+        ko: "PATRONS",
+        en: "PATRONS",
+    },
+}
