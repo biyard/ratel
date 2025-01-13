@@ -1,4 +1,5 @@
 use serde::Serialize;
+use crate::ServiceError;
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, serde::Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -64,11 +65,11 @@ pub struct AssemblyMember {
     pub updated_at: u64,
     pub deleted_at: Option<u64>,
 
-    pub name: Option<String>,
-    pub party: Option<String>,
-    pub district: Option<District>,
+    pub name: String,
+    pub party: String,
+    pub district: District,
     // stance: CryptoStance, // consider update logic
-    pub image_url: Option<String>,
+    pub image_url: String,
     pub email: Option<String>,
     // pub email_verified: bool, // check email verified logic
 
@@ -83,8 +84,10 @@ pub struct District {
     pub district: String, 
 }
 
-impl District {
-    pub fn from_str_by_lang(s: &str, lang: &str) -> Result<Self, String> {
+impl TryFrom<(&str, &str)> for District {
+    type Error = ServiceError;
+    
+    fn try_from((s, lang): (&str, &str)) -> Result<Self, Self::Error> {
         if lang == "ko" {
             let parts: Vec<&str> = s.splitn(2, " ").collect();
             if parts.len() == 2 {
@@ -123,7 +126,7 @@ impl District {
                     district: parts[0].trim().to_string(),
                 })
             }
-        }       
+        }
     }
 }
 
