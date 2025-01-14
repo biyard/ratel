@@ -2,7 +2,7 @@
 use dioxus::prelude::*;
 use dto::*;
 
-use crate::{config, utils::rest_api};
+use crate::config;
 
 pub enum UserEvent {
     Signup(String, String, String, String),
@@ -77,7 +77,7 @@ impl UserService {
 
         tracing::debug!("UserService::get_user_info_from_server: url={}", url);
 
-        let user: User = match rest_api::get(&url).await {
+        let user: User = match rest_api::get::<User, ServiceError>(&url).await {
             Ok(v) => v,
             Err(e) => match e {
                 ServiceError::NotFound => {
@@ -175,7 +175,7 @@ impl UserService {
 
                     tracing::debug!("UserService::login: url={}", url);
 
-                    let user: User = match rest_api::get(&url).await {
+                    let user: User = match rest_api::get::<User, ServiceError>(&url).await {
                         Ok(v) => v,
                         Err(e) => {
                             rest_api::remove_signer();
@@ -238,7 +238,11 @@ impl UserService {
 
         tracing::debug!("UserService::signup: url={}", url);
 
-        let res: User = match rest_api::post(&url, &body).await {
+        let res: User = match rest_api::post::<&dto::UserActionRequest, User, ServiceError>(
+            &url, &body,
+        )
+        .await
+        {
             Ok(v) => v,
             Err(e) => {
                 tracing::error!("UserService::signup: error={:?}", e);
@@ -253,28 +257,35 @@ impl UserService {
 }
 
 #[cfg(feature = "web-only")]
-impl Signer for UserService {
+impl rest_api::Signer for UserService {
     fn signer(&self) -> String {
         (self.firebase)().get_principal()
     }
 
-    fn sign(&self, msg: &str) -> dto::Result<Signature> {
+    fn sign(
+        &self,
+        msg: &str,
+    ) -> std::result::Result<rest_api::Signature, Box<dyn std::error::Error>> {
         tracing::debug!("UserService::sign: msg={}", msg);
         let firebase = (self.firebase)();
 
         if !firebase.get_login() {
             tracing::debug!("UserService::sign: not login {firebase:?}");
-            return Err(ServiceError::Unauthorized);
+            return Err(Box::<ServiceException>::new(
+                ServiceError::Unauthorized.into(),
+            ));
         }
 
         let sig = firebase.sign(msg);
         if sig.is_none() {
-            return Err(ServiceError::SignException);
+            return Err(Box::<ServiceException>::new(
+                ServiceError::Unauthorized.into(),
+            ));
         }
-        let sig = Signature {
+        let sig = rest_api::Signature {
             signature: sig.unwrap().as_ref().to_vec(),
             public_key: firebase.public_key().unwrap_or_default(),
-            algorithm: SignatureAlgorithm::EdDSA,
+            algorithm: rest_api::signature::SignatureAlgorithm::EdDSA,
         };
 
         Ok(sig)
