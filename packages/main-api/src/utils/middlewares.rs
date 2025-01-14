@@ -9,7 +9,6 @@ use by_axum::{
     },
     log::root,
 };
-use dto::Signature;
 
 fn now() -> i64 {
     chrono::Utc::now().timestamp()
@@ -36,7 +35,7 @@ pub async fn authorization_middleware(
                     }
 
                     let msg = format!("{}-{}", conf.domain, timestamp);
-                    let sig = Signature::from_str(signature).map_err(|e| {
+                    let sig = rest_api::Signature::from_str(signature).map_err(|e| {
                         slog::error!(log, "Failed to parse signature: {}", e);
                         StatusCode::UNAUTHORIZED
                     })?;

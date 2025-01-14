@@ -39,10 +39,10 @@ impl TopicControllerV1 {
         State(ctrl): State<TopicControllerV1>,
 
         Path(id): Path<String>,
-    ) -> Result<Json<Topic>> {
+    ) -> Result<Json<TopicDetail>> {
         let log = ctrl.log.new(o!("api" => "get_topic"));
         slog::debug!(log, "get topic {:?}", id);
-        Ok(Json(Topic::default()))
+        Ok(Json(TopicDetail::default()))
     }
 
     pub async fn list_topics(
@@ -74,7 +74,7 @@ impl TopicControllerV1 {
                     title: "윤대통령 2차 탄핵안 절차 게시될까?".to_string(),
                     content: "민주당과 조국혁신당, 개혁신당 등 야 6당이 함께 윤석열 대통령에 대한 두 번째 탄핵소추안을 국회에 제출했습니다.  지난 7일, 국민의힘 의원 대부분이 표결에 불참해 1차 탄핵소추안이 의결정족수 미달로...".to_string(),
                     images: vec!["https://dev.democrasee.me/images/sample.png".to_string()],
-                    votes: vec![Vote::Yes(30), Vote::No(20)],
+                    votes: vec![Vote::Supportive(30), Vote::Against(20)],
                     donations: vec![Donation::Yes(30), Donation::No(20)],
                     started_at,
                     ended_at,
@@ -82,6 +82,10 @@ impl TopicControllerV1 {
                     replies: 100,
                     status: status.clone(),
                     result: None,
+                    weekly_replies: 100,
+                    weekly_volume: 100,
+                    weekly_votes: 100,
+                    volume: 1000,
                 },
                 Topic {
                     id: "1".to_string(),
@@ -94,7 +98,7 @@ impl TopicControllerV1 {
                     title: "윤대통령 2차 탄핵안 절차 게시될까?".to_string(),
                     content: "민주당과 조국혁신당, 개혁신당 등 야 6당이 함께 윤석열 대통령에 대한 두 번째 탄핵소추안을 국회에 제출했습니다.  지난 7일, 국민의힘 의원 대부분이 표결에 불참해 1차 탄핵소추안이 의결정족수 미달로...".to_string(),
                     images: vec!["https://dev.democrasee.me/images/sample.png".to_string()],
-                    votes: vec![Vote::Yes(30), Vote::No(20)],
+                    votes: vec![Vote::Supportive(30), Vote::Against(20)],
                     donations: vec![Donation::Yes(30), Donation::No(20)],
                     started_at,
                     ended_at,
@@ -102,6 +106,10 @@ impl TopicControllerV1 {
                     replies: 100,
                     status: status.clone(),
                     result: None,
+                    weekly_replies: 100,
+                    weekly_volume: 100,
+                    weekly_votes: 100,
+                    volume: 1000,
                 },
                 Topic {
                     id: "1".to_string(),
@@ -114,7 +122,7 @@ impl TopicControllerV1 {
                     title: "윤대통령 2차 탄핵안 절차 게시될까?".to_string(),
                     content: "민주당과 조국혁신당, 개혁신당 등 야 6당이 함께 윤석열 대통령에 대한 두 번째 탄핵소추안을 국회에 제출했습니다.  지난 7일, 국민의힘 의원 대부분이 표결에 불참해 1차 탄핵소추안이 의결정족수 미달로...".to_string(),
                     images: vec!["https://dev.democrasee.me/images/sample.png".to_string()],
-                    votes: vec![Vote::Yes(30), Vote::No(20)],
+                    votes: vec![Vote::Supportive(30), Vote::Against(20)],
                     donations: vec![Donation::Yes(30), Donation::No(20)],
                     started_at,
                     ended_at,
@@ -122,6 +130,10 @@ impl TopicControllerV1 {
                     replies: 100,
                     status: status.clone(),
                     result: None,
+                    weekly_replies: 100,
+                    weekly_volume: 100,
+                    weekly_votes: 100,
+                    volume: 1000,
                 }
             ],
             bookmark: None,
