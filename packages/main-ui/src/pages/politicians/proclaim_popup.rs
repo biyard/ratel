@@ -105,6 +105,7 @@ pub fn ProclaimPopup(
                                 return;
                             }
                             // TODO: send proclaim request
+                            popup.close();
                         },
                         disabled: !agreed(),
                         "{tr.proclaim}"
