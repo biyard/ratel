@@ -5,15 +5,12 @@ pub mod pages;
 pub mod route;
 pub mod services;
 pub mod theme;
-pub mod utils;
 
 use dioxus::prelude::*;
 use dioxus_popup::PopupService;
 use route::Route;
 use services::{
-    politician_service::PoliticianService, 
-    topic_service::TopicService, 
-    user_service::UserService
+    politician_service::PoliticianService, topic_service::TopicService, user_service::UserService,
 };
 use theme::Theme;
 
@@ -21,6 +18,7 @@ fn main() {
     let conf = config::get();
     dioxus_logger::init(conf.log_level).expect("failed to init logger");
     tracing::debug!("config: {:?}", conf);
+    rest_api::set_message(conf.domain.to_string());
 
     dioxus_aws::launch(app);
 }

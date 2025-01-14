@@ -32,6 +32,12 @@ pub struct Topic {
     pub status: TopicStatus,
 }
 
+// impl Topic {
+//     pub async fn list() -> Vec<Self> {
+//         re
+//     }
+// }
+
 impl Topic {
     pub fn number_of_yes(&self) -> u64 {
         self.votes

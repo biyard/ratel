@@ -31,10 +31,7 @@ jobs:
           target: wasm32-unknown-unknown
           toolchain: stable
 
-      - name: Install binstall
-        run: |
-          cargo install cargo-binstall
-
+      - uses: cargo-bins/cargo-binstall@main
 
       - name: Install dioxus-cli
         run: |

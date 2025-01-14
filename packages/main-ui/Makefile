@@ -43,7 +43,9 @@ build: public/tailwind.css
 	mv $(ARTIFACT_DIR)/server $(ARTIFACT_DIR)/bootstrap
 
 public/tailwind.css:
-	tailwindcss -i ./public/input.css -o ./public/tailwind.css --minify
+	echo "Skip building tailwind.css due to css reading bug"
+	echo "" > ./public/tailwind.css
+	# tailwindcss -i ./public/input.css -o ./public/tailwind.css
 
 clean:
 	rm -rf public/tailwind.css

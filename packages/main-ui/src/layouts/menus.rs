@@ -17,8 +17,12 @@ pub fn Menus(
             div { class: "flex flex-row rounded-full bg-[#323342]",
                 MenuItem { to: Route::HomePage { lang }, "{tr.home}" }
                 MenuItem { to: Route::TopicsPage { lang }, "{tr.topics}" }
-                // FIXME: after merging PR
-                MenuItem { to: Route::PatronsPage { lang }, "{tr.politicians}" }
+                MenuItem {
+                    to: Route::PoliticianStatusPage {
+                        lang,
+                    },
+                    "{tr.politicians}"
+                }
                 MenuItem { to: Route::PatronsPage { lang }, "{tr.patrons}" }
             }
         }
