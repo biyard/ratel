@@ -7,7 +7,7 @@ use crate::{
     components::icons,
 };
 use super::{
-    i18n::PoliticianStanceTranslate,
+    i18n::EmailConfirmPopupTranslate,
     contact_us_popup::ContactUsPopup,
     proclaim_popup::ProclaimPopup,
 };
@@ -24,7 +24,7 @@ pub fn EmailConfirmationPopup(
 ) -> Element {
     let theme_service: Theme = use_context();
     let theme = theme_service.get_data();
-    let tr = translate::<PoliticianStanceTranslate>(&lang);
+    let tr = translate::<EmailConfirmPopupTranslate>(&lang);
     let mut popup: PopupService = use_context();
     let explain = tr.explanation_confirm_email1.replace("{email}", &email);
 

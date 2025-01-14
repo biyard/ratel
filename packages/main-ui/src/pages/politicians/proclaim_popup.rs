@@ -9,7 +9,7 @@ use crate::{
         dropdown::Dropdown,
     },
 };
-use super::i18n::PoliticianStanceTranslate;
+use super::i18n::ProclaimPopupTranslate;
 
 #[component]
 pub fn ProclaimPopup(
@@ -22,7 +22,7 @@ pub fn ProclaimPopup(
 ) -> Element {
     let theme_service: Theme = use_context();
     let theme = theme_service.get_data();
-    let tr = translate::<PoliticianStanceTranslate>(&lang);
+    let tr = translate::<ProclaimPopupTranslate>(&lang);
     let mut popup: PopupService = use_context();
     let mut agreed = use_signal(|| false);
     let mut stance_signal = use_signal(|| stance);
@@ -32,8 +32,8 @@ pub fn ProclaimPopup(
             div { class: "flex flex-col w-full items-start justify-start gap-[35px] pt-[10px]",
                 div { class: "flex flex-col w-full gap-[10px]",
 
-                    // NAME
-                    div { class: "flex flex-col w-full gap-[2px]",
+                    div { id: "proclaim-popup-name", 
+                        class: "flex flex-col w-full gap-[2px]",
                         div { class: "flex flex-row items-start",
                             span { class: "text-[14px] font-bold leading-[24px]", "{tr.name}" }
                         }
@@ -44,8 +44,8 @@ pub fn ProclaimPopup(
                         }
                     }
 
-                    // PARTY
-                    div { class: "flex flex-col w-full gap-[2px]",
+                    div { id: "proclaim-popup-party",
+                        class: "flex flex-col w-full gap-[2px]",
                         div { class: "flex flex-row items-start",
                             span { class: "text-[14px] font-bold leading-[24px]", "{tr.party}" }
                         }
@@ -56,8 +56,8 @@ pub fn ProclaimPopup(
                         }
                     }
 
-                    // STANCE ON CRYPTO
-                    div { class: "flex flex-col w-full gap-[2px]",
+                    div { id: "proclaim-popup-stance",
+                        class: "flex flex-col w-full gap-[2px]",
                         div { class: "flex flex-row items-start",
                             span { class: "text-[14px] font-bold leading-[24px]", "{tr.stance_on_crypto}" }
                         }
@@ -78,7 +78,8 @@ pub fn ProclaimPopup(
                         }
                     }
 
-                    div { class: "flex flex-row gap-[6px] items-center",
+                    div { id: "proclaim-popup-agree",
+                        class: "flex flex-row gap-[6px] items-center",
                         Checkbox {
                             class: "cursor-pointer",
                             title: "{tr.agree_proclaim}",
@@ -89,7 +90,8 @@ pub fn ProclaimPopup(
                     }
                 }
 
-                div { class: "flex w-full",
+                div { id: "proclaim-popup-button",
+                    class: "flex w-full",
                     button {
                         class: "w-full h-[57px] text-white bg-[{theme.primary100}] text-[18px] font-extrabold leading-[24px] rounded-[12px]",
                         style: if agreed() {

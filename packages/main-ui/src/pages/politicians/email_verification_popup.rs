@@ -7,7 +7,7 @@ use crate::{
     components::checkbox::Checkbox,
 };
 use super::{
-    i18n::PoliticianStanceTranslate,
+    i18n::EmailVerificationPopupTranslate,
     email_confirmation_popup::EmailConfirmationPopup,
 };
 
@@ -23,7 +23,7 @@ pub fn EmailVerificationPopup(
 ) -> Element {
     let theme_service: Theme = use_context();
     let theme = theme_service.get_data();
-    let tr = translate::<PoliticianStanceTranslate>(&lang);
+    let tr = translate::<EmailVerificationPopupTranslate>(&lang);
     let mut popup: PopupService = use_context();
     let mut agreed = use_signal(|| false);
 
@@ -32,8 +32,8 @@ pub fn EmailVerificationPopup(
             div { class: "flex flex-col w-full items-start justify-start gap-[35px] pt-[10px]",
                 div { class: "flex flex-col w-full gap-[10px]",
 
-                    // NAME
-                    div { class: "flex flex-col w-full gap-[2px]",
+                    div { id: "email-verification-popup-name",
+                        class: "flex flex-col w-full gap-[2px]",
                         div { class: "flex flex-row items-start",
                             span { class: "text-[14px] font-bold leading-[24px]", "{tr.name}" }
                         }
@@ -44,8 +44,8 @@ pub fn EmailVerificationPopup(
                         }
                     }
 
-                    // PARTY
-                    div { class: "flex flex-col w-full gap-[2px]",
+                    div { id: "email-verification-popup-party",
+                        class: "flex flex-col w-full gap-[2px]",
                         div { class: "flex flex-row items-start",
                             span { class: "text-[14px] font-bold leading-[24px]", "{tr.party}" }
                         }
@@ -56,8 +56,8 @@ pub fn EmailVerificationPopup(
                         }
                     }
 
-                    // EMAIL
-                    div { class: "flex flex-col w-full gap-[2px]",
+                    div { id: "email-verification-popup-email",
+                        class: "flex flex-col w-full gap-[2px]",
                         div { class: "flex flex-row items-start",
                             span { class: "text-[14px] font-bold leading-[24px]", "{tr.email}" }
                         }
@@ -68,7 +68,8 @@ pub fn EmailVerificationPopup(
                         }
                     }
 
-                    div { class: "flex flex-row gap-[6px] items-center",
+                    div { id: "email-verification-popup-agree", 
+                        class: "flex flex-row gap-[6px] items-center",
                         Checkbox {
                             class: "cursor-pointer",
                             title: "{tr.agree_email_verification}",
@@ -80,7 +81,7 @@ pub fn EmailVerificationPopup(
                 }
 
                 div { class: "flex w-full",
-                    button {
+                    button { id: "email-verification-popup-button",
                         class: "w-full h-[57px] text-[{theme.primary05}] bg-[{theme.primary03}] text-[18px] font-extrabold leading-[24px] rounded-[12px]",
                         style: if agreed() {
                             "opacity: 0.5; cursor: pointer;"

@@ -4,12 +4,13 @@ use dioxus_translate::*;
 use crate::{
     theme::Theme,
     components::{
+        icons,
         dropdown::Dropdown,
         checkbox::Checkbox,
+        tooltip::Tooltip,
     },
 };
-use super::i18n::PoliticianStanceTranslate;
-use dto::CryptoStance;
+use super::i18n::ContactUsPopupTranslate;
 
 #[component]
 pub fn ContactUsPopup(
@@ -21,7 +22,7 @@ pub fn ContactUsPopup(
 ) -> Element {
     let theme_service: Theme = use_context();
     let theme = theme_service.get_data();
-    let tr = translate::<PoliticianStanceTranslate>(&lang);
+    let tr = translate::<ContactUsPopupTranslate>(&lang);
 
     let mut homepage_signal = use_signal(|| "".to_string());
     let mut contact_email_signal = use_signal(|| "".to_string());
@@ -32,8 +33,9 @@ pub fn ContactUsPopup(
         div { id, class,
             div { class: "flex flex-col w-full items-start justify-start gap-[35px] pt-[10px]",
                 div { class: "flex flex-col w-full gap-[10px]",
-                    // NAME
-                    div { class: "flex flex-col w-full gap-[2px]",
+
+                    div { id: "contact-us-popup-name",
+                        class: "flex flex-col w-full gap-[2px]",
                         div { class: "flex flex-row items-start",
                             span { class: "text-[14px] font-bold leading-[24px]", "{tr.name}" }
                         }
@@ -44,10 +46,19 @@ pub fn ContactUsPopup(
                         }
                     }
 
-                    // HOMPAGE
-                    div { class: "flex flex-col w-full gap-[2px]",
+                    div { id: "contact-us-popup-homepage",
+                        class: "flex flex-col w-full gap-[2px]",
                         div { class: "flex flex-row items-start",
-                            span { class: "text-[14px] font-bold leading-[24px]", "{tr.homepage}" }
+                            span { 
+                                class: "text-[14px] font-bold leading-[24px]", 
+                                "{tr.homepage}",
+                            },
+                            Tooltip {
+                                inner_class: "text-xs text-white font-bold bg-[#2C2E42] px-[15px] py-[10px] rounded-[8px] shadow-2xl w-[230px] h-[80px]".to_string(),
+                                text: "{tr.tooltip}",
+                                bg_color: "#2C2E42".to_string(),
+                                icons::Tooltip { color: "#ADBCD7" }
+                            }
                         }
                         input {
                             class: "w-full h-[59px] px-[24px] py-[17.5px] bg-[{theme.background}] text-[18px] font-bold leading-[24px] placeholder-[{theme.primary07}] rounded-[8px]",
@@ -64,8 +75,8 @@ pub fn ContactUsPopup(
                         }
                     }
 
-                    // CONTACT EMAIL
-                    div { class: "flex flex-col w-full items-start gap-[2px]",
+                    div { id: "contact-us-popup-contact-email",
+                        class: "flex flex-col w-full items-start gap-[2px]",
                         span { class: "text-[14px] font-bold leading-[24px]", "{tr.contact_email}" }
                         div { class: "flex flex-row w-full gap-[2px]",
                             input {
@@ -80,8 +91,8 @@ pub fn ContactUsPopup(
                         }
                     }
 
-                    // STANCE ON CRYPTO
-                    div { class: "flex flex-col w-full gap-[2px]",
+                    div { id: "contact-us-popup-stance",
+                        class: "flex flex-col w-full gap-[2px]",
                         div { class: "flex flex-row items-start",
                             span { class: "text-[14px] font-bold leading-[24px]", "{tr.stance_on_crypto}" }
                         }
@@ -103,7 +114,8 @@ pub fn ContactUsPopup(
                         }
                     }
 
-                    div { class: "flex flex-row gap-[6px] items-center",
+                    div { id: "contact-us-popup-agree",
+                        class: "flex flex-row gap-[6px] items-center",
                         Checkbox {
                             class: "cursor-pointer",
                             title: "{tr.agree_contact_us}",
@@ -114,8 +126,8 @@ pub fn ContactUsPopup(
                     }
                 }
 
-                // button
-                div { class: "flex w-full",
+                div { id: "contact-us-popup-button",
+                    class: "flex w-full",
                     button {
                         class: "w-full h-[57px] text-[{theme.primary05}] bg-[{theme.primary03}] text-[18px] font-extrabold leading-[24px] rounded-[12px]",
                         style: if agreed() {
