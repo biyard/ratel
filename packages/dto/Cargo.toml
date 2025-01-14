@@ -20,6 +20,8 @@ candid = "0.10.11"
 untrusted = "0.9.0"
 serde_urlencoded = "0.7.1"
 dioxus-translate = { path = "../dioxus-translate", features = ["ko"] }
+rest-api = "0.1.1"
+num-format = "0.4.4"
 
 [features]
 default = []

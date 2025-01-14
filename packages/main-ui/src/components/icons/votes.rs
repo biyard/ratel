@@ -2,11 +2,11 @@
 use dioxus::prelude::*;
 
 #[component]
-pub fn OutlinedVoteYes() -> Element {
+pub fn OutlinedVoteYes(#[props(default = 17)] size: usize) -> Element {
     rsx! {
         svg {
-            width: "17",
-            height: "17",
+            width: "{size}",
+            height: "{size}",
             view_box: "0 0 17 17",
             fill: "none",
             xmlns: "http://www.w3.org/2000/svg",
@@ -53,11 +53,11 @@ pub fn FilledVoteYes(#[props(default = "#68D36C".to_string())] color: String) ->
 }
 
 #[component]
-pub fn OutlinedVoteNo() -> Element {
+pub fn OutlinedVoteNo(#[props(default = 17)] size: usize) -> Element {
     rsx! {
         svg {
-            width: "17",
-            height: "17",
+            width: "{size}",
+            height: "{size}",
             view_box: "0 0 17 17",
             fill: "none",
             xmlns: "http://www.w3.org/2000/svg",

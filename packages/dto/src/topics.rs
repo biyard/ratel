@@ -1,7 +1,10 @@
 use std::{fmt::Display, str::FromStr};
 
 use chrono::Datelike;
+use num_format::{Locale, ToFormattedString};
 use serde::{Deserialize, Serialize};
+
+use crate::CommonQueryResponse;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, Eq, PartialEq)]
 pub struct Topic {
@@ -13,6 +16,7 @@ pub struct Topic {
     pub author: String,
 
     pub title: String,
+    // Legislation summary
     pub content: String,
 
     // The image URLs of the voting topic
@@ -29,7 +33,119 @@ pub struct Topic {
     pub voters: u64,
     // The number of replies
     pub replies: u64,
+    pub volume: u64,
     pub status: TopicStatus,
+    pub weekly_volume: u64,
+    pub weekly_replies: u64,
+    pub weekly_votes: u64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
+pub enum TrendTag {
+    Hot,
+    Warm,
+    Cold,
+}
+
+impl Display for TrendTag {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            TrendTag::Hot => write!(f, "HOT"),
+            TrendTag::Warm => write!(f, "WARM"),
+            TrendTag::Cold => write!(f, "COLD"),
+        }
+    }
+}
+
+impl Topic {
+    pub fn trend_tag(&self) -> TrendTag {
+        if self.weekly_volume > 100 {
+            TrendTag::Hot
+        } else if self.weekly_volume > 50 {
+            TrendTag::Warm
+        } else {
+            TrendTag::Cold
+        }
+    }
+
+    pub fn day(&self) -> String {
+        let start = chrono::DateTime::from_timestamp(self.started_at, 0)
+            .unwrap_or_default()
+            .naive_local();
+
+        format!("{:02}", start.day())
+    }
+
+    pub fn month(&self) -> String {
+        let start = chrono::DateTime::from_timestamp(self.started_at, 0)
+            .unwrap_or_default()
+            .naive_local();
+
+        match start.month() {
+            1 => "Jan",
+            2 => "Feb",
+            3 => "Mar",
+            4 => "Apr",
+            5 => "May",
+            6 => "Jun",
+            7 => "Jul",
+            8 => "Aug",
+            9 => "Sep",
+            10 => "Oct",
+            11 => "Nov",
+            12 => "Dec",
+            _ => "Unknown",
+        }
+        .to_string()
+    }
+
+    pub fn date(&self) -> String {
+        format!("{}/{}", self.month(), self.day())
+    }
+
+    pub fn volume_with_commas(&self) -> String {
+        self.volume.to_formatted_string(&Locale::en)
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default, Eq, PartialEq)]
+pub struct TopicQuery {
+    pub size: usize,
+    pub bookmark: Option<String>,
+    pub status: Option<TopicStatus>,
+}
+
+impl Display for TopicQuery {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let query = serde_urlencoded::to_string(&self).unwrap();
+
+        write!(f, "{query}")
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default, Eq, PartialEq)]
+pub struct TopicClient {
+    pub endpoint: String,
+}
+
+impl Topic {
+    pub fn get_client(endpoint: String) -> TopicClient {
+        TopicClient { endpoint }
+    }
+}
+
+impl TopicClient {
+    pub async fn query(&self, params: TopicQuery) -> crate::Result<CommonQueryResponse<Topic>> {
+        let endpoint = format!("{}/v1/topics?{params}", self.endpoint);
+
+        rest_api::get(&endpoint).await
+    }
+
+    pub async fn get(&self, id: &str) -> crate::Result<Topic> {
+        let endpoint = format!("{}/v1/topics/{id}", self.endpoint);
+
+        rest_api::get(&endpoint).await
+    }
 }
 
 impl Topic {
@@ -37,7 +153,7 @@ impl Topic {
         self.votes
             .iter()
             .filter_map(|r| match r {
-                Vote::Yes(y) => Some(*y),
+                Vote::Supportive(y) => Some(*y),
                 _ => None,
             })
             .sum()
@@ -47,7 +163,7 @@ impl Topic {
         self.votes
             .iter()
             .filter_map(|r| match r {
-                Vote::No(n) => Some(*n),
+                Vote::Against(n) => Some(*n),
                 _ => None,
             })
             .sum()
@@ -163,8 +279,9 @@ impl FromStr for TopicStatus {
 #[serde(rename_all = "snake_case")]
 #[serde(untagged)]
 pub enum Vote {
-    Yes(u64),
-    No(u64),
+    Supportive(u64),
+    Against(u64),
+    Neutral(u64),
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
@@ -173,4 +290,54 @@ pub enum Vote {
 pub enum Donation {
     Yes(u64),
     No(u64),
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
+pub struct VoteData {
+    pub voted_at: i64,
+    pub vote: Vote,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
+pub enum FileType {
+    Image,
+    Video,
+    Audio,
+    Pdf,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
+pub struct AdditionalResource {
+    pub filename: String,
+    pub extension: FileType,
+    pub link: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default, Eq, PartialEq)]
+pub struct TopicDetail {
+    pub topic: Topic,
+    pub voting_trends: Vec<VoteData>,
+    pub legislation_link: String,
+    pub solutions: String,
+    pub discussions: Vec<String>,
+    pub additional_resources: Vec<AdditionalResource>,
+    pub my_info: MyInfo,
+    pub comments: Vec<Commment>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default, Eq, PartialEq)]
+pub struct MyInfo {
+    // If my_commitment is 1, it shows 0.01 ETH in the UI
+    pub my_commitment: u64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
+pub struct Commment {
+    pub profile_url: String,
+    pub choice: Vote,
+    pub nickname: String,
+    pub content: String,
+    pub created_at: u64,
+    pub likes: u64,
+    pub is_liked: bool,
 }

@@ -16,13 +16,6 @@ pub struct TopicControllerV1 {
     log: slog::Logger,
 }
 
-#[derive(Debug, serde::Deserialize)]
-pub struct ListTopicsRequest {
-    _size: Option<usize>,
-    _bookmark: Option<String>,
-    status: Option<String>,
-}
-
 impl TopicControllerV1 {
     pub fn route() -> Result<by_axum::axum::Router> {
         let log = root().new(o!("api-controller" => "TopicControllerV1"));
@@ -39,16 +32,16 @@ impl TopicControllerV1 {
         State(ctrl): State<TopicControllerV1>,
 
         Path(id): Path<String>,
-    ) -> Result<Json<Topic>> {
+    ) -> Result<Json<TopicDetail>> {
         let log = ctrl.log.new(o!("api" => "get_topic"));
         slog::debug!(log, "get topic {:?}", id);
-        Ok(Json(Topic::default()))
+        Ok(Json(TopicDetail::default()))
     }
 
     pub async fn list_topics(
         State(ctrl): State<TopicControllerV1>,
 
-        Query(req): Query<ListTopicsRequest>,
+        Query(req): Query<TopicQuery>,
     ) -> Result<Json<CommonQueryResponse<Topic>>> {
         let log = ctrl.log.new(o!("api" => "list_topics"));
         slog::debug!(log, "list topics {:?}", req);
@@ -58,8 +51,7 @@ impl TopicControllerV1 {
             .as_secs() as i64;
         let day = 60 * 60 * 24;
         let ended_at = started_at + day * 7;
-        let status = TopicStatus::from_str(&req.status.unwrap_or("ongoing".to_string()))
-            .unwrap_or(TopicStatus::Draft);
+        let status = req.status.unwrap_or(TopicStatus::Draft);
 
         let ret = CommonQueryResponse {
             items: vec![
@@ -71,10 +63,11 @@ impl TopicControllerV1 {
                     deleted_at: None,
                     author: "author".to_string(),
 
-                    title: "윤대통령 2차 탄핵안 절차 게시될까?".to_string(),
-                    content: "민주당과 조국혁신당, 개혁신당 등 야 6당이 함께 윤석열 대통령에 대한 두 번째 탄핵소추안을 국회에 제출했습니다.  지난 7일, 국민의힘 의원 대부분이 표결에 불참해 1차 탄핵소추안이 의결정족수 미달로...".to_string(),
+                    // name of legislation
+                    title: "Digital Heritage Preservation and Utilization Act".to_string(),
+                    content: "This Act aims to preserve cultural heritage and promote its sustainable utilization through digital innovation and advanced technologies, ensuring the protection of valuable resources while fostering public access and engagement.".to_string(),
                     images: vec!["https://dev.democrasee.me/images/sample.png".to_string()],
-                    votes: vec![Vote::Yes(30), Vote::No(20)],
+                    votes: vec![Vote::Supportive(30), Vote::Against(20)],
                     donations: vec![Donation::Yes(30), Donation::No(20)],
                     started_at,
                     ended_at,
@@ -82,6 +75,10 @@ impl TopicControllerV1 {
                     replies: 100,
                     status: status.clone(),
                     result: None,
+                    weekly_replies: 100,
+                    weekly_volume: 100,
+                    weekly_votes: 100,
+                    volume: 1000,
                 },
                 Topic {
                     id: "1".to_string(),
@@ -91,10 +88,10 @@ impl TopicControllerV1 {
                     deleted_at: None,
                     author: "author".to_string(),
 
-                    title: "윤대통령 2차 탄핵안 절차 게시될까?".to_string(),
-                    content: "민주당과 조국혁신당, 개혁신당 등 야 6당이 함께 윤석열 대통령에 대한 두 번째 탄핵소추안을 국회에 제출했습니다.  지난 7일, 국민의힘 의원 대부분이 표결에 불참해 1차 탄핵소추안이 의결정족수 미달로...".to_string(),
+                    title: "Digital Heritage Preservation and Utilization Act".to_string(),
+                    content: "This Act aims to preserve cultural heritage and promote its sustainable utilization through digital innovation and advanced technologies, ensuring the protection of valuable resources while fostering public access and engagement.".to_string(),
                     images: vec!["https://dev.democrasee.me/images/sample.png".to_string()],
-                    votes: vec![Vote::Yes(30), Vote::No(20)],
+                    votes: vec![Vote::Supportive(30), Vote::Against(20)],
                     donations: vec![Donation::Yes(30), Donation::No(20)],
                     started_at,
                     ended_at,
@@ -102,6 +99,10 @@ impl TopicControllerV1 {
                     replies: 100,
                     status: status.clone(),
                     result: None,
+                    weekly_replies: 100,
+                    weekly_volume: 100,
+                    weekly_votes: 100,
+                    volume: 1000,
                 },
                 Topic {
                     id: "1".to_string(),
@@ -111,10 +112,10 @@ impl TopicControllerV1 {
                     deleted_at: None,
                     author: "author".to_string(),
 
-                    title: "윤대통령 2차 탄핵안 절차 게시될까?".to_string(),
-                    content: "민주당과 조국혁신당, 개혁신당 등 야 6당이 함께 윤석열 대통령에 대한 두 번째 탄핵소추안을 국회에 제출했습니다.  지난 7일, 국민의힘 의원 대부분이 표결에 불참해 1차 탄핵소추안이 의결정족수 미달로...".to_string(),
+                    title: "Digital Heritage Preservation and Utilization Act".to_string(),
+                    content: "This Act aims to preserve cultural heritage and promote its sustainable utilization through digital innovation and advanced technologies, ensuring the protection of valuable resources while fostering public access and engagement.".to_string(),
                     images: vec!["https://dev.democrasee.me/images/sample.png".to_string()],
-                    votes: vec![Vote::Yes(30), Vote::No(20)],
+                    votes: vec![Vote::Supportive(30), Vote::Against(20)],
                     donations: vec![Donation::Yes(30), Donation::No(20)],
                     started_at,
                     ended_at,
@@ -122,6 +123,10 @@ impl TopicControllerV1 {
                     replies: 100,
                     status: status.clone(),
                     result: None,
+                    weekly_replies: 100,
+                    weekly_volume: 100,
+                    weekly_votes: 100,
+                    volume: 1000,
                 }
             ],
             bookmark: None,
