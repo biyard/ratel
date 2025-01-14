@@ -32,7 +32,14 @@ fn app() -> Element {
 
     rsx! {
         document::Title { "DemocraSee" }
-        document::Meta { name: "description", content: "" }
+        document::Meta {
+            name: "title",
+            content: "Driving Better Crypto Policies for South Korea's Ecosystem",
+        }
+        document::Meta {
+            name: "description",
+            content: "A platform empowering South Korea's crypto ecosystem by encouraging politicians to create supportive policies. Track their crypto stances, vote on legislation, propose DAO-driven improvements, and shape a thriving future for the industry and democracy.",
+        }
         document::Meta {
             name: "viewport",
             content: "width=device-width, initial-scale=1.0",

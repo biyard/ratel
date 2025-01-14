@@ -2082,6 +2082,8 @@ dependencies = [
  "chrono",
  "dioxus-translate",
  "easy-dynamodb",
+ "num-format",
+ "rest-api",
  "ring",
  "serde",
  "serde_json",
@@ -3779,7 +3781,11 @@ checksum = "c41e0c4fef86961ac6d6f8a82609f55f31b05e4fce149ac5710e439df7619ba4"
 
 [[package]]
 name = "main-api"
+<<<<<<< HEAD
 version = "0.5.3"
+=======
+version = "0.6.0"
+>>>>>>> 9ecf476 (feat(topic): add trend tags and volume formatting to topics)
 dependencies = [
  "by-axum",
  "chrono",
@@ -3787,6 +3793,7 @@ dependencies = [
  "dto",
  "easy-dynamodb",
  "reqwest",
+ "rest-api",
  "serde",
  "serde_json",
  "slog",

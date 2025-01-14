@@ -8,6 +8,7 @@ use by_axum::{
     log::root,
 };
 use dto::*;
+use rest_api::Signature;
 use slog::o;
 
 use crate::{models, utils::middlewares::authorization_middleware};
@@ -38,7 +39,10 @@ impl UserControllerV1 {
 
         match body {
             UserActionRequest::Signup(req) => {
-                let principal = sig.principal()?;
+                let principal = sig.principal().map_err(|s| {
+                    slog::error!(log, "failed to get principal: {:?}", s);
+                    ServiceError::Unauthorized
+                })?;
 
                 if let Some(user) = models::User::get(&log, &principal).await? {
                     if &user.email == &req.email {
@@ -48,7 +52,7 @@ impl UserControllerV1 {
                     }
                 }
 
-                let user = ctrl.signup(&sig.principal()?, req).await?;
+                let user = ctrl.signup(&principal, req).await?;
 
                 Ok(Json(user))
             }
@@ -64,7 +68,10 @@ impl UserControllerV1 {
         let log = ctrl.log.new(o!("api" => "read_user"));
         slog::debug!(log, "read_user: sig={:?}", sig);
 
-        let principal = sig.principal()?;
+        let principal = sig.principal().map_err(|s| {
+            slog::error!(log, "failed to get principal: {:?}", s);
+            ServiceError::Unauthorized
+        })?;
 
         let user = models::User::get(&log, &principal).await?;
 
