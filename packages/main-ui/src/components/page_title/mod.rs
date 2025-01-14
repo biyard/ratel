@@ -4,6 +4,9 @@ use dioxus::prelude::*;
 #[component]
 pub fn PageTitle(title: String, children: Element) -> Element {
     rsx! {
-        div { class: "flex flex-row justify-between text-xl font-semibold", "{title}" }
+        div { class: "flex flex-row justify-between text-xl font-semibold",
+            "{title}"
+            {children}
+        }
     }
 }
