@@ -22,8 +22,16 @@ pub fn HomePage(lang: Language) -> Element {
                 lang: lang.clone(),
             }
             div { class: "col-span-1 w-full flex flex-row items-start justify-center gap-x-[20px] gap-y-[60px] grid grid-cols-2 max-[1000px]:grid-cols-1",
-                FinishedTopics { class: "col-span-1", topics: ctrl.finished_topics(), lang: lang.clone() }
-                UpcomingTopics { class: "col-span-1", _topics: ctrl.upcoming_topics(), lang: lang.clone() }
+                FinishedTopics {
+                    class: "col-span-1",
+                    topics: ctrl.finished_topics(),
+                    lang: lang.clone(),
+                }
+                UpcomingTopics {
+                    class: "col-span-1",
+                    topics: ctrl.upcoming_topics(),
+                    lang: lang.clone(),
+                }
             }
         }
     }

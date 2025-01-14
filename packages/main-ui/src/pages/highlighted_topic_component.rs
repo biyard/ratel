@@ -1,8 +1,5 @@
 #![allow(non_snake_case)]
-use dioxus::prelude::*;
-use dto::Topic;
-use num_format::{Locale, ToFormattedString};
-use dioxus_translate::*;
+use super::i18n::*;
 use crate::{
     components::{
         button::{Button, CloseButton, RoundedNoButton, RoundedYesButton},
@@ -11,7 +8,10 @@ use crate::{
     },
     theme::Theme,
 };
-use super::i18n::*;
+use dioxus::prelude::*;
+use dioxus_translate::*;
+use dto::Topic;
+use num_format::{Locale, ToFormattedString};
 
 #[component]
 pub fn HighlightedTopics(
@@ -63,7 +63,6 @@ pub fn HighlightedTopics(
                     }
                 }
             }
-        
         }
     }
 }
@@ -76,16 +75,16 @@ enum DraftChoice {
 
 #[component]
 pub fn HighlightedTopic(
-    #[props(default = "highlighed-topic".to_string())] id: String,
-    #[props(default = "https://dev.democrasee.me/images/sample.png".to_string())] image: String,
-    #[props(default = "윤대통령 2차 탄핵안 절차 게시될까?".to_string())] title: String,
-    #[props(default = "민주당과 조국혁신당, 개혁신당 등 야 6당이 함께 윤석열 대통령에 대한 두 번째 탄핵소추안을 국회에 제출했습니다.  지난 7일, 국민의힘 의원 대부분이 표결에 불참해 1차 탄핵소추안이 의결정족수 미달로...".to_string())]
+    id: String,
+    image: String,
+    title: String,
+
     description: String,
-    #[props(default = "12/15 - 1/22".to_string())] period: String,
-    #[props(default = 25991291)] donations: u64,
-    #[props(default = 200)] replies: u64,
-    #[props(default = 64)] yes: u64,
-    #[props(default = 36)] no: u64,
+    period: String,
+    donations: u64,
+    replies: u64,
+    yes: u64,
+    no: u64,
     lang: Language,
 ) -> Element {
     let theme: Theme = use_context();
@@ -256,10 +255,7 @@ pub fn DonationSelector(
 }
 
 #[component]
-pub fn DescriptionWrapper(
-    title: String,
-    lang: Language,
-) -> Element {
+pub fn DescriptionWrapper(title: String, lang: Language) -> Element {
     let theme: Theme = use_context();
     let theme_data = theme.get_data();
     let tr = translate::<DescriptionWrapperTranslate>(&lang);
@@ -301,7 +297,12 @@ pub fn ContentWrapper(
             }
             div { class: "flex flex-row gap-[8px] justify-start items-center",
                 IconText { text: "{period}", background: "{theme_data.primary06}", icons::Clock {} }
-                IconText { text: format!("{} {}₩", tr.cumulative_donations, donations.to_formatted_string(&Locale::en)),
+                IconText {
+                    text: format!(
+                        "{} {}₩",
+                        tr.cumulative_donations,
+                        donations.to_formatted_string(&Locale::en),
+                    ),
                     icons::Money {}
                 }
                 IconText { class: "", text: "{replies}", icons::ChatBubble {} }
@@ -340,7 +341,6 @@ pub fn VoteResultBars(
                     div { class: "absolute z-[20] h-[22px] w-[22px] left-[2.46px] top-[3px] rounded-[6px] bg-[{theme.active01}] opacity-50" }
                     span { class: "z-[30]", "{no}%" }
                 }
-            
             }
         }
     }

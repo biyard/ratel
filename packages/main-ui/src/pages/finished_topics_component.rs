@@ -1,8 +1,5 @@
 #![allow(non_snake_case)]
-use dioxus::prelude::*;
-use dto::*;
-use num_format::{Locale, ToFormattedString};
-use dioxus_translate::*;
+use super::i18n::FinishedTopicTranslate;
 use crate::{
     components::{
         button::{RoundedNoButton, RoundedYesButton},
@@ -11,7 +8,10 @@ use crate::{
     },
     theme::Theme,
 };
-use super::i18n::FinishedTopicTranslate;
+use dioxus::prelude::*;
+use dioxus_translate::*;
+use dto::*;
+use num_format::{Locale, ToFormattedString};
 
 #[component]
 pub fn FinishedTopics(
@@ -52,12 +52,12 @@ pub fn FinishedTopics(
 #[component]
 pub fn FinishedTopic(
     #[props(default ="finished_topic".to_string())] id: String,
-    #[props(default ="".to_string())] class: String,
-    #[props(default = "https://dev.democrasee.me/images/sample.png".to_string())] image: String,
-    #[props(default = "윤대통령 2차 탄핵안 절차 개시될까?".to_string())] title: String,
-    #[props(default = true)] accepted: bool,
-    #[props(default = 25991291)] donations: u64,
-    #[props(default = 200)] replies: u64,
+    class: String,
+    image: String,
+    title: String,
+    accepted: bool,
+    donations: u64,
+    replies: u64,
     lang: Language,
 ) -> Element {
     let theme: Theme = use_context();

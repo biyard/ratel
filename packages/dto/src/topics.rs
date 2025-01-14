@@ -81,7 +81,26 @@ impl Topic {
             .unwrap_or_default()
             .naive_local();
 
-        format!("{:02}", start.month())
+        match start.month() {
+            1 => "Jan",
+            2 => "Feb",
+            3 => "Mar",
+            4 => "Apr",
+            5 => "May",
+            6 => "Jun",
+            7 => "Jul",
+            8 => "Aug",
+            9 => "Sep",
+            10 => "Oct",
+            11 => "Nov",
+            12 => "Dec",
+            _ => "Unknown",
+        }
+        .to_string()
+    }
+
+    pub fn date(&self) -> String {
+        format!("{}/{}", self.month(), self.day())
     }
 
     pub fn volume_with_commas(&self) -> String {
