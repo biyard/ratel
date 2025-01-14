@@ -39,8 +39,8 @@ pub fn ProclaimPopup(
                         }
                         input {
                             class: "w-full h-[59px] px-[24px] py-[17.5px] bg-[{theme.background}] text-[18px] font-bold leading-[24px] placeholder-[{theme.primary07}] rounded-[8px]",
-                            placeholder: "name",
                             readonly: true,
+                            value: name,
                         }
                     }
 
@@ -51,8 +51,8 @@ pub fn ProclaimPopup(
                         }
                         input {
                             class: "w-full h-[59px] px-[24px] py-[17.5px] bg-[{theme.background}] text-[18px] font-bold leading-[24px] placeholder-[{theme.primary07}] rounded-[8px]",
-                            placeholder: party,
                             readonly: true,
+                            value: party,
                         }
                     }
 

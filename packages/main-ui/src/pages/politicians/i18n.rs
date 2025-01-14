@@ -168,7 +168,7 @@ translate! {
         en: "I agree to update the STANCE after verifying the person in charge.",
     }
 
-    hompage: {
+    homepage: {
         ko: "홈페이지",
         en: "HOMEPAGE",
     }

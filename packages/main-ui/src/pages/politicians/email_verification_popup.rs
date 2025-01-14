@@ -1,37 +1,37 @@
 #![allow(non_snake_case)]
 use dioxus::prelude::*;
 use dioxus_translate::*;
+use dioxus_popup::PopupService;
 use crate::{
-    theme::Theme,
-    components::{
-        dropdown::Dropdown,
-        checkbox::Checkbox,
-    },
+    theme::Theme, 
+    components::checkbox::Checkbox,
 };
-use super::i18n::PoliticianStanceTranslate;
-use dto::CryptoStance;
+use super::{
+    i18n::PoliticianStanceTranslate,
+    email_confirmation_popup::EmailConfirmationPopup,
+};
 
 #[component]
-pub fn ContactUsPopup(
-    #[props(default = "contact_us_popup".to_string())] id: String,
+pub fn EmailVerificationPopup(
+    #[props(default = "email_verification_popup".to_string())] id: String,
     #[props(default = "".to_string())] class: String,
     name: String,
+    party: String,
+    email: String,
     stance: String,
     lang: Language,
 ) -> Element {
     let theme_service: Theme = use_context();
     let theme = theme_service.get_data();
     let tr = translate::<PoliticianStanceTranslate>(&lang);
-
-    let mut hompage_signal = use_signal(|| "".to_string());
-    let mut contact_email_signal = use_signal(|| "".to_string());
-    let mut stance_signal = use_signal(|| stance);
+    let mut popup: PopupService = use_context();
     let mut agreed = use_signal(|| false);
 
     rsx! {
         div { id, class,
             div { class: "flex flex-col w-full items-start justify-start gap-[35px] pt-[10px]",
                 div { class: "flex flex-col w-full gap-[10px]",
+
                     // NAME
                     div { class: "flex flex-col w-full gap-[2px]",
                         div { class: "flex flex-row items-start",
@@ -39,65 +39,39 @@ pub fn ContactUsPopup(
                         }
                         input {
                             class: "w-full h-[59px] px-[24px] py-[17.5px] bg-[{theme.background}] text-[18px] font-bold leading-[24px] placeholder-[{theme.primary07}] rounded-[8px]",
-                            placeholder: "{tr.name_placeholder}",
                             readonly: true,
-                            value: name,
+                            value: name.clone(),
                         }
                     }
 
-                    // HOMPAGE
+                    // PARTY
                     div { class: "flex flex-col w-full gap-[2px]",
                         div { class: "flex flex-row items-start",
-                            span { class: "text-[14px] font-bold leading-[24px]", "{tr.hompage}" }
+                            span { class: "text-[14px] font-bold leading-[24px]", "{tr.party}" }
                         }
                         input {
                             class: "w-full h-[59px] px-[24px] py-[17.5px] bg-[{theme.background}] text-[18px] font-bold leading-[24px] placeholder-[{theme.primary07}] rounded-[8px]",
-                            placeholder: "https://",
-                            value: hompage_signal(),
-                            oninput: move |e| {
-                                let value = e.value();
-                                hompage_signal.set(value);
-                            },
+                            readonly: true,
+                            value: party.clone(),
                         }
                     }
 
-                    // CONTACT EMAIL
-                    div { class: "flex flex-col w-full items-start gap-[2px]",
-                        span { class: "text-[14px] font-bold leading-[24px]", "{tr.contact_email}" }
-                        div { class: "flex flex-row w-full gap-[2px]",
-                            input {
-                                class: "w-full h-[59px] px-[24px] py-[17.5px] bg-[{theme.background}] text-[18px] font-bold leading-[24px] placeholder-[{theme.primary07}] rounded-[8px]",
-                                placeholder: "{tr.district_placeholder}",
-                                value: contact_email_signal(),
-                                oninput: move |e| {
-                                    let value = e.value();
-                                    contact_email_signal.set(value);
-                                },
-                            }
-                        }
-                    }
-
-                    // STANCE ON CRYPTO
+                    // EMAIL
                     div { class: "flex flex-col w-full gap-[2px]",
                         div { class: "flex flex-row items-start",
-                            span { class: "text-[14px] font-bold leading-[24px]", "{tr.stance_on_crypto}" }
+                            span { class: "text-[14px] font-bold leading-[24px]", "{tr.email}" }
                         }
-                        Dropdown {
-                            // TODO: replace this data to CryptoStance
-                            items: CryptoStance::iter().map(|s| tr.translate_stance(s)).collect(),
-                            value: stance_signal(),
-                            placeholder: "{tr.stance_placeholder}",
-                            onselect: move |value| {
-                                stance_signal.set(value);
-                            },
-                            bg_color: theme.background.clone(),
+                        input {
+                            class: "w-full h-[59px] px-[24px] py-[17.5px] bg-[{theme.background}] text-[18px] font-bold leading-[24px] placeholder-[{theme.primary07}] rounded-[8px]",
+                            readonly: true,
+                            value: email.clone(),
                         }
                     }
 
                     div { class: "flex flex-row gap-[6px] items-center",
                         Checkbox {
                             class: "cursor-pointer",
-                            title: "{tr.agree_contact_us}",
+                            title: "{tr.agree_email_verification}",
                             onchange: move |check| {
                                 agreed.set(check);
                             },
@@ -105,7 +79,6 @@ pub fn ContactUsPopup(
                     }
                 }
 
-                // button
                 div { class: "flex w-full",
                     button {
                         class: "w-full h-[57px] text-[{theme.primary05}] bg-[{theme.primary03}] text-[18px] font-extrabold leading-[24px] rounded-[12px]",
@@ -119,10 +92,24 @@ pub fn ContactUsPopup(
                             if !agreed() {
                                 return;
                             }
-                            // TODO: verify contact email
+                            // TODO: send email verification
+                            popup
+                                .open(rsx! {
+                                    EmailConfirmationPopup {
+                                        class: "w-[450px]",
+                                        email: email.clone(),
+                                        name: name.clone(),
+                                        party: party.clone(),
+                                        stance: stance.clone(),
+                                        lang: lang.clone(),
+                                    }
+                                })
+                                .with_id("email_confirmation_popup")
+                                .with_title(tr.confirm_email);
+                                
                         },
                         disabled: !agreed(),
-                        "{tr.verify_contact_email}"
+                        "{tr.verify_email}"
                     }
                 }
             }
