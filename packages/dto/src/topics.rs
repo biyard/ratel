@@ -307,7 +307,7 @@ pub enum FileType {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
-pub struct AddtionalResource {
+pub struct AdditionalResource {
     pub filename: String,
     pub extension: FileType,
     pub link: String,
@@ -320,7 +320,7 @@ pub struct TopicDetail {
     pub legislation_link: String,
     pub solutions: String,
     pub discussions: Vec<String>,
-    pub additional_resources: Vec<AddtionalResource>,
+    pub additional_resources: Vec<AdditionalResource>,
     pub my_info: MyInfo,
     pub comments: Vec<Commment>,
 }
