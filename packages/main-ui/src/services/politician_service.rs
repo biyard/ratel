@@ -3,12 +3,9 @@ pub type Result<T> = std::result::Result<T, ServiceError>;
 use dioxus::prelude::*;
 use dioxus_translate::*;
 use dto::{
-    common_query_response::CommonQueryResponse, 
-    error::ServiceError, 
-    AssemblyMember,
+    common_query_response::CommonQueryResponse, error::ServiceError, AssemblyMember,
     ListAssemblyMembersRequest,
 };
-use crate::utils::rest_api;
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct PoliticianService {

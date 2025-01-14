@@ -5,7 +5,10 @@ use dioxus_translate::*;
 
 use crate::{
     components::{button::Button, logo::LogoWrapper},
-    layouts::{i18n::HeaderTranslate, signup_popup::SignupPopup, user_setup_popup::UserSetupPopup},
+    layouts::{
+        i18n::HeaderTranslate, menus::Menus, signup_popup::SignupPopup,
+        user_setup_popup::UserSetupPopup,
+    },
     // route::{translate},
     services::user_service::{UserEvent, UserService},
     theme::Theme,
@@ -16,6 +19,7 @@ pub fn Header(lang: Language) -> Element {
     rsx! {
         div { class: "flex flex-row items-center justify-between w-full pt-[47px] pb-[39px]",
             LogoWrapper {}
+            Menus { class: "grow flex flex-row justify-end", lang }
             HeaderTails { lang }
         }
     }

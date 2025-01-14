@@ -1,15 +1,15 @@
 #![allow(non_snake_case)]
-use dioxus::prelude::*;
-use dto::Topic;
-use dioxus_translate::*;
-use crate::theme::Theme;
 use super::i18n::UpcomingTopicsTranslate;
+use crate::theme::Theme;
+use dioxus::prelude::*;
+use dioxus_translate::*;
+use dto::Topic;
 
 #[component]
 pub fn UpcomingTopics(
     #[props(default ="upcoming_topics".to_string())] id: String,
     #[props(default ="".to_string())] class: String,
-    _topics: Vec<Topic>,
+    topics: Vec<Topic>,
     lang: Language,
 ) -> Element {
     let tr = translate::<UpcomingTopicsTranslate>(&lang);
@@ -17,8 +17,16 @@ pub fn UpcomingTopics(
         div { id, class,
             div { class: "flex flex-col gap-[16px] items-start justify-start w-full",
                 span { class: "text-[18px] font-semibold", "{tr.soon_voting}" }
-                UpcomingTopic {}
-                UpcomingTopic {}
+                for topic in topics.iter().take(2) {
+                    UpcomingTopic {
+                        day: topic.day(),
+                        month: topic.month(),
+                        // FIXME: provide default image
+                        image: "{topic.images[0]}",
+                        title: "{topic.title}",
+                        date: topic.date(),
+                    }
+                }
             }
         }
     }
@@ -26,16 +34,14 @@ pub fn UpcomingTopics(
 
 #[component]
 pub fn UpcomingTopic(
-    #[props(default ="".to_string())] class: String,
-    #[props(default = 19)] day: u8,
-    #[props(default = 12)] month: u8,
-    #[props(default = "https://dev.democrasee.me/images/sample.png".to_string())] image: String,
-    #[props(default = "조국, 입시비리/감찰무마 징역 몇년으로 선고될까?".to_string())] title: String,
+    day: String,
+    month: String,
+    image: String,
+    title: String,
     #[props(default = "1월 19일".to_string())] date: String,
 ) -> Element {
     let theme: Theme = use_context();
     let theme_data = theme.get_data();
-    let month = month_name(month);
 
     rsx! {
         div { class: "w-full flex flex-row gap-[19px] items-center justify-start px-[24px] py-[20px] rounded-[8px] bg-[{theme_data.primary07}]",
@@ -57,23 +63,5 @@ pub fn UpcomingTopic(
                 }
             }
         }
-    }
-}
-
-fn month_name(month: u8) -> &'static str {
-    match month {
-        1 => "Jan",
-        2 => "Feb",
-        3 => "Mar",
-        4 => "Apr",
-        5 => "May",
-        6 => "Jun",
-        7 => "Jul",
-        8 => "Aug",
-        9 => "Sep",
-        10 => "Oct",
-        11 => "Nov",
-        12 => "Dec",
-        _ => "Invalid month",
     }
 }

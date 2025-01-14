@@ -5,15 +5,12 @@ pub mod pages;
 pub mod route;
 pub mod services;
 pub mod theme;
-pub mod utils;
 
 use dioxus::prelude::*;
 use dioxus_popup::PopupService;
 use route::Route;
 use services::{
-    politician_service::PoliticianService, 
-    topic_service::TopicService, 
-    user_service::UserService
+    politician_service::PoliticianService, topic_service::TopicService, user_service::UserService,
 };
 use theme::Theme;
 
@@ -21,6 +18,7 @@ fn main() {
     let conf = config::get();
     dioxus_logger::init(conf.log_level).expect("failed to init logger");
     tracing::debug!("config: {:?}", conf);
+    rest_api::set_message(conf.domain.to_string());
 
     dioxus_aws::launch(app);
 }
@@ -34,7 +32,14 @@ fn app() -> Element {
 
     rsx! {
         document::Title { "DemocraSee" }
-        document::Meta { name: "description", content: "" }
+        document::Meta {
+            name: "title",
+            content: "Driving Better Crypto Policies for South Korea's Ecosystem",
+        }
+        document::Meta {
+            name: "description",
+            content: "A platform empowering South Korea's crypto ecosystem by encouraging politicians to create supportive policies. Track their crypto stances, vote on legislation, propose DAO-driven improvements, and shape a thriving future for the industry and democracy.",
+        }
         document::Meta {
             name: "viewport",
             content: "width=device-width, initial-scale=1.0",
