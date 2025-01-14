@@ -1,13 +1,13 @@
 use dioxus_aws::prelude::*;
-use dto::{common_query_response::CommonQueryResponse, Topic, TopicStatus};
+use dto::{common_query_response::CommonQueryResponse, TopicStatus, TopicSummery};
 
 use crate::services::topic_service::TopicService;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Controller {
-    pub topics: Resource<CommonQueryResponse<Topic>>,
-    pub finished_topics: Resource<CommonQueryResponse<Topic>>,
-    pub upcoming_topics: Resource<CommonQueryResponse<Topic>>,
+    pub topics: Resource<CommonQueryResponse<TopicSummery>>,
+    pub finished_topics: Resource<CommonQueryResponse<TopicSummery>>,
+    pub upcoming_topics: Resource<CommonQueryResponse<TopicSummery>>,
 }
 
 impl Controller {
@@ -22,7 +22,7 @@ impl Controller {
                 Ok(res) => res,
                 Err(e) => {
                     tracing::error!("list topics error: {:?}", e);
-                    CommonQueryResponse::<Topic>::default()
+                    CommonQueryResponse::<TopicSummery>::default()
                 }
             }
         })?;
@@ -35,7 +35,7 @@ impl Controller {
                 Ok(res) => res,
                 Err(e) => {
                     tracing::error!("list topics error: {:?}", e);
-                    CommonQueryResponse::<Topic>::default()
+                    CommonQueryResponse::<TopicSummery>::default()
                 }
             }
         })?;
@@ -48,7 +48,7 @@ impl Controller {
                 Ok(res) => res,
                 Err(e) => {
                     tracing::error!("list topics error: {:?}", e);
-                    CommonQueryResponse::<Topic>::default()
+                    CommonQueryResponse::<TopicSummery>::default()
                 }
             }
         })?;
@@ -63,7 +63,7 @@ impl Controller {
         Ok(ctrl)
     }
 
-    pub fn ongoing_topics(&self) -> Vec<Topic> {
+    pub fn ongoing_topics(&self) -> Vec<TopicSummery> {
         self.topics.with(|f| {
             tracing::debug!("main topic: {:?}", f);
             if let Some(value) = f {
@@ -74,7 +74,7 @@ impl Controller {
         })
     }
 
-    pub fn finished_topics(&self) -> Vec<Topic> {
+    pub fn finished_topics(&self) -> Vec<TopicSummery> {
         self.finished_topics.with(|f| {
             tracing::debug!("finished topic: {:?}", f);
             if let Some(value) = f {
@@ -85,7 +85,7 @@ impl Controller {
         })
     }
 
-    pub fn upcoming_topics(&self) -> Vec<Topic> {
+    pub fn upcoming_topics(&self) -> Vec<TopicSummery> {
         self.upcoming_topics.with(|f| {
             tracing::debug!("upcoming topic: {:?}", f);
             if let Some(value) = f {

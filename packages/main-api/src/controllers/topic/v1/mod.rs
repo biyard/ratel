@@ -30,17 +30,17 @@ impl TopicControllerV1 {
         State(ctrl): State<TopicControllerV1>,
 
         Path(id): Path<String>,
-    ) -> Result<Json<TopicDetail>> {
+    ) -> Result<Json<Topic>> {
         let log = ctrl.log.new(o!("api" => "get_topic"));
         slog::debug!(log, "get topic {:?}", id);
-        Ok(Json(TopicDetail::default()))
+        Ok(Json(Topic::default()))
     }
 
     pub async fn list_topics(
         State(ctrl): State<TopicControllerV1>,
 
         Query(req): Query<TopicQuery>,
-    ) -> Result<Json<CommonQueryResponse<Topic>>> {
+    ) -> Result<Json<CommonQueryResponse<TopicSummery>>> {
         let log = ctrl.log.new(o!("api" => "list_topics"));
         slog::debug!(log, "list topics {:?}", req);
         let started_at = std::time::SystemTime::now()
@@ -53,7 +53,7 @@ impl TopicControllerV1 {
 
         let ret = CommonQueryResponse {
             items: vec![
-                Topic {
+                TopicSummery {
                     id: "1".to_string(),
                     r#type: "type".to_string(),
                     created_at: 0,
@@ -78,7 +78,7 @@ impl TopicControllerV1 {
                     weekly_votes: 100,
                     volume: 1000,
                 },
-                Topic {
+                TopicSummery {
                     id: "1".to_string(),
                     r#type: "type".to_string(),
                     created_at: 0,
@@ -102,7 +102,7 @@ impl TopicControllerV1 {
                     weekly_votes: 100,
                     volume: 1000,
                 },
-                Topic {
+                TopicSummery {
                     id: "1".to_string(),
                     r#type: "type".to_string(),
                     created_at: 0,
