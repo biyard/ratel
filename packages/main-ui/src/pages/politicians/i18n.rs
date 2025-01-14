@@ -50,7 +50,7 @@ translate! {
 
     stance_on_crypto: {
         ko: "암호화폐에 대한 입장",
-        en: "STANCE ON CRTPTO",
+        en: "STANCE ON CRYPTO",
     }
 
     proclaim: {
@@ -119,7 +119,7 @@ translate! {
 
     stance_on_crypto: {
         ko: "암호화폐에 대한 입장",
-        en: "STANCE ON CRTPTO",
+        en: "STANCE ON CRYPTO",
     }
 
     search: {
@@ -188,7 +188,7 @@ translate! {
 
     stance_on_crypto: {
         ko: "암호화폐에 대한 입장",
-        en: "STANCE ON CRTPTO",
+        en: "STANCE ON CRYPTO",
     }
 
     name: {
@@ -305,7 +305,7 @@ translate! {
 
     stance_on_crypto: {
         ko: "암호화폐에 대한 입장",
-        en: "STANCE ON CRTPTO",
+        en: "STANCE ON CRYPTO",
     }
 
     stance_placeholder: {
