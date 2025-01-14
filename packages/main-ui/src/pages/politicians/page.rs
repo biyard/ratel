@@ -11,7 +11,8 @@ use crate::{
 };
 use dto::{CryptoStance, District};
 use super::{
-    filter_popup::FilterPopup,
+    filter_popup::FilterPopup, 
+    email_verification_popup::EmailVerificationPopup,
     i18n::PoliticianStanceTranslate,
 };
 
@@ -136,6 +137,7 @@ pub fn PoliticianStatusRow(
     let theme_service: Theme = use_context();
     let theme: crate::theme::ThemeData = theme_service.get_data();
     let tr: PoliticianStanceTranslate = translate(&lang);
+    let mut popup: PopupService = use_context();
 
     // TODO: feat oppacity on hover
     rsx! {
@@ -164,7 +166,27 @@ pub fn PoliticianStatusRow(
                 } 
             }
             div { class: "px-[10px] py-[5px] bg-[{theme.hover}] rounded-[5px]", 
-                span { class: "text-sm font-semibold", "# {tr.change_stance}" }
+                button { class: "text-sm font-semibold",
+                    onclick: move |_| {
+                        tracing::debug!("proclaim clicked");
+                        // TODO: check if email is null
+                        // TODO: replace dummy data
+                        popup
+                            .open(rsx! {
+                                EmailVerificationPopup {
+                                    class: "w-[450px]",
+                                    name: "gildong hong".to_string(),
+                                    party: "people power party".to_string(),
+                                    email: "test@test.com".to_string(),
+                                    stance: CryptoStance::default(),
+                                    lang: lang.clone(),
+                                }
+                            })
+                            .with_id("email_verification_popup")
+                            .with_title(tr.stance_on_crypto);
+                    },
+                    "# {tr.change_stance}" 
+                }
             }
         }
     }

@@ -4,6 +4,7 @@ pub mod error;
 pub mod signature;
 pub mod topics;
 pub mod users;
+pub mod macros;
 
 pub use assembly_members::*;
 pub use common_query_response::*;
