@@ -6,7 +6,7 @@ use crate::{
     theme::Theme,
     components::dropdown::Dropdown,
 };
-use super::i18n::PoliticianStanceTranslate;
+use super::i18n::FilterPopupTranslate;
 
 #[component]
 pub fn FilterPopup(
@@ -16,7 +16,7 @@ pub fn FilterPopup(
 ) -> Element {
     let theme_service: Theme = use_context();
     let theme = theme_service.get_data();
-    let tr = translate::<PoliticianStanceTranslate>(&lang);
+    let tr = translate::<FilterPopupTranslate>(&lang);
     let mut popup: PopupService = use_context();
 
     let mut name_signal: Signal<String> = use_signal(|| "".to_string());
@@ -29,8 +29,7 @@ pub fn FilterPopup(
         div { id, class,
             div { class: "flex flex-col w-full items-start justify-start gap-[10px] pt-[10px]",
 
-                // NAME
-                div { class: "flex flex-col w-full gap-[2px]",
+                div { id: "filter-popup-name", class: "flex flex-col w-full gap-[2px]",
                     div { class: "flex flex-row items-start",
                         span { class: "text-[14px] font-bold leading-[24px]", "{tr.name}" }
                     }
@@ -45,8 +44,7 @@ pub fn FilterPopup(
                     }
                 }
 
-                // STANCE ON CRYPTO
-                div { class: "flex flex-col w-full gap-[2px]",
+                div { id: "filter-popup-stance", class: "flex flex-col w-full gap-[2px]",
                     div { class: "flex flex-row items-start",
                         span { class: "text-[14px] font-bold leading-[24px]", "{tr.stance_on_crypto}" }
                     }
@@ -67,8 +65,7 @@ pub fn FilterPopup(
                     }
                 }
 
-                // PARTY
-                div { class: "flex flex-col w-full gap-[2px]",
+                div { id: "filter-popup-party", class: "flex flex-col w-full gap-[2px]",
                     div { class: "flex flex-row items-start",
                         span { class: "text-[14px] font-bold leading-[24px]", "{tr.party}" }
                     }
@@ -85,7 +82,7 @@ pub fn FilterPopup(
                 }
 
                 // DISTRICT
-                div { class: "flex flex-col w-full items-start gap-[2px]",
+                div { id: "filter-popup-district", class: "flex flex-col w-full items-start gap-[2px]",
                     span { class: "text-[14px] font-bold leading-[24px]", "{tr.district}" }
                     div { class: "flex flex-row w-full gap-[2px]",
                         Dropdown {
@@ -116,8 +113,7 @@ pub fn FilterPopup(
                     }
                 }
 
-                // buttons
-                div { class: "flex flex-row w-full gap-[30px] pt-[25px]",
+                div { id: "filter-popup-buttons", class: "flex flex-row w-full gap-[30px] pt-[25px]",
                     button {
                         class: "w-full h-[57px] rounded-[12px] bg-[{theme.primary03}] text-[{theme.primary05}] font-extrabold text-[18px] leading-[24px] tracking-[0.005em]",
                         onclick: move |_| {

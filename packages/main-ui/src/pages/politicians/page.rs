@@ -35,7 +35,7 @@ pub fn PoliticianStatusTable(lang: Language) -> Element {
     let theme_service: Theme = use_context();
     let theme = theme_service.get_data();
     let tr: PoliticianStanceTranslate = translate(&lang);
-    let ctrl = politicians::controller::Controller::new(lang)?;
+    let ctrl = super::controller::Controller::new(lang)?;
     // TODO: mobile view
     rsx! {
         div { class: "w-full h-full flex flex-col bg-[{theme.primary06}] rounded-[8px] text-white",

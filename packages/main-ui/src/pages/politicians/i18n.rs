@@ -72,6 +72,15 @@ translate! {
         ko: "검색하기",
         en: "SEARCH",
     }
+}
+
+translate! {
+    FilterPopupTranslate;
+
+    name: {
+        ko: "이름",
+        en: "NAME",
+    }
 
     name_placeholder: {
         ko: "이름을 입력해주세요.",
@@ -97,7 +106,22 @@ translate! {
         ko: "지역구",
         en: "District",
     }
-    
+
+    party: {
+        ko: "정당",
+        en: "PARTY",
+    }
+
+    district: {
+        ko: "지역구",
+        en: "DISTRICT",
+    }
+
+    stance_on_crypto: {
+        ko: "암호화폐에 대한 입장",
+        en: "STANCE ON CRTPTO",
+    }
+
     search: {
         ko: "검색",
         en: "SEARCH",
@@ -108,30 +132,98 @@ translate! {
         en: "CLEAR",
     }
 
-    email: {
-        ko: "이메일",
-        en: "EMAIL",
+    supportive: {
+        ko: "찬성",
+        en: "Supportive",
+    },
+
+    against: {
+        ko: "반대",
+        en: "Against",
+    },
+
+    neutral: {
+        ko: "중립",
+        en: "Neutral",
     }
 
-    email_placeholder: {
-        ko: "이메일을 입력해주세요.",
-        en: "Enter the email.",
-    }
-    
-    agree_email_verification: {
-        ko: "해당 의원의 소속원임을 확인하고 이메일 인증에 동의합니다.",
-        en: "I confirm that I am a member of the relevant representative's office and agree to email verification.",
+    no_stance: {
+        ko: "의견 없음",
+        en: "No stance",
+    },
+}
+
+translate! {
+    ContactUsPopupTranslate;
+
+    stance_placeholder: {
+        ko: "암호화폐에 대한 입장",
+        en: "Stance",
     }
 
-    verify_email: {
+    district_placeholder: {
+        ko: "지역구",
+        en: "District",
+    }
+
+    verify_contact_email: {
         ko: "이메일 인증",
-        en: "VERIFY EMAIL",
+        en: "VERIFY CONTACT EMAIL",
     }
 
-    confirm_email: {
-        ko: "이메일 확인",
-        en: "CONFIRM EMAIL",
+    agree_contact_us: {
+        ko: "소속 의원실 관계자가 맞는지 확인하고 입장을 변경하는 데 동의합니다.",
+        en: "I agree to update the STANCE after verifying the person in charge.",
     }
+
+    homepage: {
+        ko: "홈페이지",
+        en: "HOMEPAGE",
+    }
+
+    contact_email: {
+        ko: "연락처 이메일",
+        en: "CONTACT EMAIL",
+    }
+
+    stance_on_crypto: {
+        ko: "암호화폐에 대한 입장",
+        en: "STANCE ON CRTPTO",
+    }
+
+    name: {
+        ko: "이름",
+        en: "NAME",
+    }
+
+    supportive: {
+        ko: "찬성",
+        en: "Supportive",
+    },
+
+    against: {
+        ko: "반대",
+        en: "Against",
+    },
+
+    neutral: {
+        ko: "중립",
+        en: "Neutral",
+    }
+
+    no_stance: {
+        ko: "의견 없음",
+        en: "No stance",
+    },
+
+    tooltip: {
+        ko: "담당자 소속을 확인할 수 있는 대표 의원실 홈페이지를 제공해주세요.",
+        en: "Please provide the website of the representative's office where the affiliation of the person in charge can be verified.",
+    }
+}
+
+translate! {
+    EmailConfirmPopupTranslate;
 
     explanation_confirm_email1: {
         ko: "‘{email}’로 이메일을 확인하거나 스팸함을 확인하고 확인 링크를 클릭하여 인증을 완료해주세요. 이메일을 받지 못하거나 링크를 클릭할 수 없는 경우, ",
@@ -153,29 +245,77 @@ translate! {
         en: "CONFIRM VERIFICATION",
     }
 
-    verify_contact_email: {
-        ko: "이메일 인증",
-        en: "VERIFY CONTACT EMAIL",
-    }
-
     contact_us: {
         ko: "문의하기",
         en: "CONTACT US",
     }
 
-    agree_contact_us: {
-        ko: "소속 의원실 관계자가 맞는지 확인하고 입장을 변경하는 데 동의합니다.",
-        en: "I agree to update the STANCE after verifying the person in charge.",
+    proclaim: {
+        ko: "PROCLAIM",
+        en: "PROCLAIM",
+    }
+}
+
+translate! {
+    EmailVerificationPopupTranslate;
+
+    name: {
+        ko: "이름",
+        en: "NAME",
     }
 
-    homepage: {
-        ko: "홈페이지",
-        en: "HOMEPAGE",
+    party: {
+        ko: "정당",
+        en: "PARTY",
     }
 
-    contact_email: {
-        ko: "연락처 이메일",
-        en: "CONTACT EMAIL",
+    email: {
+        ko: "이메일",
+        en: "EMAIL",
+    }
+
+    agree_email_verification: {
+        ko: "해당 의원의 소속원임을 확인하고 이메일 인증에 동의합니다.",
+        en: "I confirm that I am a member of the relevant representative's office and agree to email verification.",
+    }
+
+    verify_email: {
+        ko: "이메일 인증",
+        en: "VERIFY EMAIL",
+    }
+
+    confirm_email: {
+        ko: "이메일 확인",
+        en: "CONFIRM EMAIL",
+    }
+}
+
+translate! {
+    ProclaimPopupTranslate;
+
+    name: {
+        ko: "이름",
+        en: "NAME",
+    }
+
+    party: {
+        ko: "정당",
+        en: "PARTY",
+    }
+
+    stance_on_crypto: {
+        ko: "암호화폐에 대한 입장",
+        en: "STANCE ON CRTPTO",
+    }
+
+    stance_placeholder: {
+        ko: "암호화폐에 대한 입장",
+        en: "Stance",
+    }
+
+    proclaim: {
+        ko: "PROCLAIM",
+        en: "PROCLAIM",
     }
 
     agree_proclaim: {
@@ -183,5 +323,23 @@ translate! {
         en: "I agree that there is no falsehood",
     }
 
-    
+    supportive: {
+        ko: "찬성",
+        en: "Supportive",
+    },
+
+    against: {
+        ko: "반대",
+        en: "Against",
+    },
+
+    neutral: {
+        ko: "중립",
+        en: "Neutral",
+    }
+
+    no_stance: {
+        ko: "의견 없음",
+        en: "No stance",
+    },
 }
