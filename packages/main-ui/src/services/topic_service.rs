@@ -1,7 +1,9 @@
 pub type Result<T> = std::result::Result<T, ServiceError>;
 
 use dioxus::prelude::*;
-use dto::{common_query_response::CommonQueryResponse, error::ServiceError, Topic, TopicStatus};
+use dto::{
+    common_query_response::CommonQueryResponse, error::ServiceError, TopicStatus, TopicSummery,
+};
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct TopicService {
@@ -22,7 +24,7 @@ impl TopicService {
         size: usize,
         bookmark: Option<&str>,
         status: Option<TopicStatus>,
-    ) -> Result<CommonQueryResponse<Topic>> {
+    ) -> Result<CommonQueryResponse<TopicSummery>> {
         let client = reqwest::Client::builder().build()?;
 
         let mut url = format!("{}/v1/topics?size={size}", (self.endpoint)(),);

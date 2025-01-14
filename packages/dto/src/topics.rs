@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use crate::CommonQueryResponse;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, Eq, PartialEq)]
-pub struct Topic {
+pub struct TopicSummery {
     pub id: String,
     pub r#type: String,
     pub created_at: u64,
@@ -57,7 +57,7 @@ impl Display for TrendTag {
     }
 }
 
-impl Topic {
+impl TopicSummery {
     pub fn trend_tag(&self) -> TrendTag {
         if self.weekly_volume > 100 {
             TrendTag::Hot
@@ -128,14 +128,17 @@ pub struct TopicClient {
     pub endpoint: String,
 }
 
-impl Topic {
+impl TopicSummery {
     pub fn get_client(endpoint: String) -> TopicClient {
         TopicClient { endpoint }
     }
 }
 
 impl TopicClient {
-    pub async fn query(&self, params: TopicQuery) -> crate::Result<CommonQueryResponse<Topic>> {
+    pub async fn query(
+        &self,
+        params: TopicQuery,
+    ) -> crate::Result<CommonQueryResponse<TopicSummery>> {
         let endpoint = format!("{}/v1/topics?{params}", self.endpoint);
 
         rest_api::get(&endpoint).await
@@ -148,7 +151,7 @@ impl TopicClient {
     }
 }
 
-impl Topic {
+impl TopicSummery {
     pub fn number_of_yes(&self) -> u64 {
         self.votes
             .iter()
@@ -314,14 +317,19 @@ pub struct AdditionalResource {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, Eq, PartialEq)]
-pub struct TopicDetail {
-    pub topic: Topic,
+pub struct TopicDetails {
     pub voting_trends: Vec<VoteData>,
     pub legislation_link: String,
     pub solutions: String,
     pub discussions: Vec<String>,
     pub additional_resources: Vec<AdditionalResource>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default, Eq, PartialEq)]
+pub struct Topic {
+    pub topic: TopicSummery,
     pub my_info: MyInfo,
+    pub details: TopicDetails,
     pub comments: Vec<Commment>,
 }
 

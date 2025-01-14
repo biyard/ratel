@@ -3,13 +3,13 @@ use super::i18n::UpcomingTopicsTranslate;
 use crate::theme::Theme;
 use dioxus::prelude::*;
 use dioxus_translate::*;
-use dto::Topic;
+use dto::TopicSummery;
 
 #[component]
 pub fn UpcomingTopics(
     #[props(default ="upcoming_topics".to_string())] id: String,
     #[props(default ="".to_string())] class: String,
-    topics: Vec<Topic>,
+    topics: Vec<TopicSummery>,
     lang: Language,
 ) -> Element {
     let tr = translate::<UpcomingTopicsTranslate>(&lang);
