@@ -27,10 +27,12 @@ impl PoliticianService {
         bookmark: Option<&str>,
         lang: Option<Language>,
     ) -> Result<CommonQueryResponse<AssemblyMember>> {
+        // FIXME: provide full spec query
         let req = AssemblyMembersQuery {
             size: Some(size),
             bookmark: bookmark.map(|s| s.to_string()),
             lang,
+            ..AssemblyMembersQuery::default()
         };
 
         let url = format!("{}/v1/assembly_members?{}", (self.endpoint)(), req);

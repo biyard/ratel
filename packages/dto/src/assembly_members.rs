@@ -162,7 +162,7 @@ impl std::fmt::Display for District {
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Default, Deserialize)]
 pub struct AssemblyMembersQuery {
     pub size: Option<usize>,
     pub bookmark: Option<String>,
