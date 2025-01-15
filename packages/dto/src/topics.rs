@@ -70,14 +70,7 @@ pub struct TopicQuery {
     pub bookmark: Option<String>,
     pub status: Option<TopicStatus>,
 }
-
-impl Display for TopicQuery {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let query = serde_urlencoded::to_string(&self).unwrap();
-
-        write!(f, "{query}")
-    }
-}
+impl_display!(TopicQuery);
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, Eq, PartialEq)]
 pub struct TopicClient {
