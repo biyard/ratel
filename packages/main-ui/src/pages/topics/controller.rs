@@ -19,7 +19,8 @@ impl Controller {
             use_signal(|| TopicSummary::get_client(crate::config::get().main_api_endpoint.clone()));
 
         let list_topics = use_server_future(move || async move {
-            match topic_repository()
+            let repo = TopicSummary::get_client(crate::config::get().main_api_endpoint.clone());
+            match repo
                 .query(TopicQuery {
                     size,
                     bookmark: None,
@@ -31,6 +32,7 @@ impl Controller {
                 Err(_) => CommonQueryResponse::default(),
             }
         })?;
+
         let CommonQueryResponse::<TopicSummary> { items, bookmark } =
             (list_topics.value())().unwrap_or_default();
 

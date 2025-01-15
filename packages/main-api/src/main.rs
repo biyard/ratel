@@ -1,7 +1,8 @@
-use by_axum::logger::root;
-use controllers::topic::v1::TopicControllerV1;
+use by_axum::{axum::middleware, logger::root};
+use controllers::{assets::v1::AssetControllerV1, topic::v1::TopicControllerV1};
 use dto::error::ServiceError;
 use tokio::net::TcpListener;
+use utils::middlewares::authorization_middleware;
 
 mod controllers {
     pub mod topic {
@@ -12,6 +13,9 @@ mod controllers {
     }
     pub mod assembly_members {
         pub mod m1;
+        pub mod v1;
+    }
+    pub mod assets {
         pub mod v1;
     }
 }
@@ -44,6 +48,7 @@ async fn main() -> Result<(), ServiceError> {
     );
 
     let app = by_axum::new()
+        .nest("/assets/v1", AssetControllerV1::route()?)
         .nest("/topics/v1", TopicControllerV1::route()?)
         .nest(
             "/users/v1",
@@ -56,7 +61,8 @@ async fn main() -> Result<(), ServiceError> {
         .nest(
             "/assembly_members/m1",
             controllers::assembly_members::m1::AssemblyMemberControllerM1::route()?,
-        );
+        )
+        .layer(middleware::from_fn(authorization_middleware));
 
     let port = option_env!("PORT").unwrap_or("3000");
     let listener = TcpListener::bind(format!("0.0.0.0:{}", port))
