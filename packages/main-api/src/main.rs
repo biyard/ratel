@@ -5,6 +5,10 @@ use tokio::net::TcpListener;
 use utils::middlewares::authorization_middleware;
 
 mod controllers {
+    pub mod patrons {
+        pub mod v1;
+    }
+
     pub mod topic {
         pub mod v1;
     }
@@ -48,6 +52,10 @@ async fn main() -> Result<(), ServiceError> {
     );
 
     let app = by_axum::new()
+        .nest(
+            "/patrons/v1",
+            controllers::patrons::v1::PatronControllerV1::route()?,
+        )
         .nest("/assets/v1", AssetControllerV1::route()?)
         .nest("/topics/v1", TopicControllerV1::route()?)
         .nest(
