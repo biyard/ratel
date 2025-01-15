@@ -23,10 +23,12 @@ jobs:
           target: wasm32-unknown-unknown
           toolchain: stable
 
+      - uses: cargo-bins/cargo-binstall@main
+
       - name: Install dioxus-cli
         run: |
-          cargo install dioxus-cli --version 0.6.1
-          cargo install toml-cli
+          cargo binstall dioxus-cli --version 0.6.1
+          cargo binstall toml-cli
 
       - name: Checking violate
         env:
@@ -37,7 +39,7 @@ jobs:
         run: |
           dx check -p $SERVICE
 
-      - name: Deploy APIs
+      - name: Build UI
         env:
           REGION: ap-northeast-2
           ACCESS_KEY_ID: ""
@@ -47,4 +49,35 @@ jobs:
           API_PREFIX: /api
         run: |
           npm i -g tailwindcss
+          make build
+
+  main-api:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          ssh-key: ${{ secrets.PULL_KEY_REPO }}
+
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          components: clippy, rustfmt
+          target: wasm32-unknown-unknown
+          toolchain: stable
+
+      - uses: cargo-bins/cargo-binstall@main
+      - name: Install toml-cli
+        run: |
+          cargo binstall toml-cli
+
+      - name: Build APIs
+        env:
+          REGION: ap-northeast-2
+          ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          ENV: dev
+          SERVICE: main-api
+          DOMAIN: api.dev.democrasee.me
+        run: |
           make build
