@@ -2,6 +2,7 @@ import * as cdk from "aws-cdk-lib";
 import { Construct } from "constructs";
 
 import "dotenv/config";
+import * as rds from 'aws-cdk-lib/aws-rds';
 import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
 import * as s3 from "aws-cdk-lib/aws-s3";
@@ -27,11 +28,13 @@ import {
   TaskDefinition,
 } from "aws-cdk-lib/aws-ecs";
 import { Repository } from "aws-cdk-lib/aws-ecr";
+import { Duration } from "aws-cdk-lib";
 
 export class CdkStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
+    let project = process.env.PROJECT || "";
     let env = process.env.ENV || "";
     let domain = process.env.DOMAIN || "";
     let tableName = process.env.TABLE_NAME || "";
@@ -58,6 +61,7 @@ export class CdkStack extends cdk.Stack {
     let enableLambda = process.env.ENABLE_LAMBDA === "true";
     let enableFargate = process.env.ENABLE_FARGATE === "true";
     let enableOpensearch = process.env.ENABLE_OPENSEARCH === "true";
+    let enableRds = process.env.ENABLE_RDS === "true";
     let opensearchCollections = [
       {
         name: `dagit-${env}`,
@@ -343,6 +347,60 @@ export class CdkStack extends cdk.Stack {
           }),
         );
       }
+    }
+
+    if (enableRds) {
+      const adminPassword = process.env.RDS_ADMIN_PASSWORD || "";
+      if (adminPassword ==="") {
+        console.error("RDS_ADMIN_PASSWORD is required");
+        process.exit(1);
+      }
+
+      const vpc = ec2.Vpc.fromLookup(this, "Vpc", {
+        vpcId,
+      });
+      const securityGroup = new ec2.SecurityGroup(this, 'AuroraSecurityGroup', {
+        vpc,
+        allowAllOutbound: true,
+      });
+      securityGroup.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(5432), 'Allow PostgreSQL access from anywhere');
+
+      const cluster = new rds.DatabaseCluster(this, 'Database', {
+        engine: rds.DatabaseClusterEngine.auroraPostgres({
+          version: rds.AuroraPostgresEngineVersion.VER_16_4,
+        }),
+        writer: rds.ClusterInstance.provisioned('writer'),
+        readers: [
+          rds.ClusterInstance.serverlessV2('reader'),
+        ],
+        serverlessV2MinCapacity: 0.5,
+        serverlessV2MaxCapacity: 256,
+        vpc,
+        vpcSubnets: { subnetType: ec2.SubnetType.PUBLIC },
+        removalPolicy: cdk.RemovalPolicy.RETAIN,
+        securityGroups: [securityGroup],
+        defaultDatabaseName: `${project}${env}`,
+        credentials: rds.Credentials.fromPassword(project, cdk.SecretValue.unsafePlainText(adminPassword)),
+        deletionProtection:true,
+      });
+
+      cluster.metricServerlessDatabaseCapacity({
+        period: Duration.minutes(10),
+      }).createAlarm(this, 'capacity', {
+        threshold: 1.5,
+        evaluationPeriods: 3,
+      });
+      cluster.metricACUUtilization({
+        period: Duration.minutes(10),
+      }).createAlarm(this, 'alarm', {
+        evaluationPeriods: 3,
+        threshold: 90,
+      });
+
+      new cdk.CfnOutput(this, 'AuroraEndpoint', {
+        value: cluster.clusterEndpoint.hostname,
+        description: 'The endpoint of the Aurora PostgreSQL cluster',
+      });
     }
 
     const cf = new cloudfront.Distribution(
