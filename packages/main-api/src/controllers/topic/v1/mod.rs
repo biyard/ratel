@@ -1,13 +1,17 @@
 use by_axum::{
     axum::{
         extract::{Path, Query, State},
+        middleware,
         routing::get,
-        Json,
+        Extension, Json,
     },
     log::root,
 };
 use dto::*;
+use rest_api::Signature;
 use slog::o;
+
+use crate::utils::middlewares::authorization_middleware;
 
 #[derive(Clone, Debug)]
 pub struct TopicControllerV1 {
@@ -20,14 +24,36 @@ impl TopicControllerV1 {
         let ctrl = TopicControllerV1 { log };
 
         Ok(by_axum::axum::Router::new()
-            .route("/:id", get(Self::get_topic))
+            .route("/:id", get(Self::get_topic).post(Self::act_topic_by_id))
             .with_state(ctrl.clone())
-            .route("/", get(Self::list_topics))
-            .with_state(ctrl))
+            .route("/", get(Self::list_topics).post(Self::act_topic))
+            .with_state(ctrl)
+            .layer(middleware::from_fn(authorization_middleware)))
+    }
+
+    pub async fn act_topic_by_id(
+        State(ctrl): State<TopicControllerV1>,
+        Extension(_sig): Extension<Option<Signature>>,
+        Json(body): Json<TopicByIdActionRequest>,
+    ) -> Result<Json<Topic>> {
+        let log = ctrl.log.new(o!("api" => "act_topic_by_id"));
+        slog::debug!(log, "act_topic_by_id: {:?}", body);
+        Ok(Json(Topic::default()))
+    }
+
+    pub async fn act_topic(
+        State(ctrl): State<TopicControllerV1>,
+        Extension(_sig): Extension<Option<Signature>>,
+        Json(body): Json<TopicActionRequest>,
+    ) -> Result<Json<Topic>> {
+        let log = ctrl.log.new(o!("api" => "act_topic"));
+        slog::debug!(log, "act_topic: {:?}", body);
+        Ok(Json(Topic::default()))
     }
 
     pub async fn get_topic(
         State(ctrl): State<TopicControllerV1>,
+        Extension(_sig): Extension<Option<Signature>>,
 
         Path(id): Path<String>,
     ) -> Result<Json<Topic>> {
@@ -38,6 +64,7 @@ impl TopicControllerV1 {
 
     pub async fn list_topics(
         State(ctrl): State<TopicControllerV1>,
+        Extension(_sig): Extension<Option<Signature>>,
 
         Query(req): Query<TopicQuery>,
     ) -> Result<Json<CommonQueryResponse<TopicSummary>>> {
