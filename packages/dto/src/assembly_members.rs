@@ -1,10 +1,10 @@
-use serde::{Serialize, Deserialize};
 use crate::ServiceError;
 use dioxus_translate::Language;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum ActionAssemblyMemberRequest {
+pub enum AssemblyMemberAdminActionRequest {
     /// Fetches assembly members by Assembly Open API.
     /// And update the information of the assembly members.
     FetchMembers,
@@ -12,7 +12,32 @@ pub enum ActionAssemblyMemberRequest {
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum ActionAssemblyMemberByIdRequest {
+pub enum AssemblyMemberByIdActionRequest {
+    SendVerificationEmail {
+        agree: bool,
+    },
+    UpdateCryptoStance {
+        code: String,
+        stance: CryptoStance,
+        agree: bool,
+    },
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Default, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum AssemblyMemberByIdActionResponse {
+    SendVerificationEmail {
+        email: String,
+        request_code: String,
+    },
+
+    #[default]
+    Ok,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum AssemblyMemberByIdAdminActionRequest {
     /// Manually, update crypto stance.
     /// It will be utilized to update crypto stance by contact.
     UpdateCryptoStance(CryptoStance),
@@ -77,18 +102,18 @@ pub struct AssemblyMember {
 
     // Indexes, if deleted_at is set, all values of indexes must be empty.
     pub gsi1: String, // language
-    // gsi2: String,
+                      // gsi2: String,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
 pub struct District {
     pub province: Option<String>, // None if it's a proportional representation
-    pub district: String, 
+    pub district: String,
 }
 
 impl TryFrom<(&str, &str)> for District {
     type Error = ServiceError;
-    
+
     fn try_from((s, lang): (&str, &str)) -> Result<Self, Self::Error> {
         if s.trim().is_empty() {
             return Err(ServiceError::BadRequest);
@@ -137,17 +162,57 @@ impl std::fmt::Display for District {
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
-pub struct ListAssemblyMembersRequest {
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Default, Deserialize)]
+pub struct AssemblyMembersQuery {
     pub size: Option<usize>,
     pub bookmark: Option<String>,
     pub lang: Option<Language>,
+    pub name: Option<String>,
+    pub stance: Option<CryptoStance>,
+    pub party: Option<String>,
+    pub city: Option<String>,
 }
 
-impl std::fmt::Display for ListAssemblyMembersRequest {
+impl std::fmt::Display for AssemblyMembersQuery {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let query = serde_urlencoded::to_string(&self).unwrap();
 
         write!(f, "{query}")
     }
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+pub struct PartiesQuery {
+    pub lang: Option<Language>,
+}
+
+impl std::fmt::Display for PartiesQuery {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let query = serde_urlencoded::to_string(&self).unwrap();
+
+        write!(f, "{query}")
+    }
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+pub struct LegislationsQuery {
+    pub size: Option<usize>,
+    pub bookmark: Option<String>,
+    pub lang: Option<Language>,
+}
+
+impl std::fmt::Display for LegislationsQuery {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let query = serde_urlencoded::to_string(&self).unwrap();
+
+        write!(f, "{query}")
+    }
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+pub struct Legislation {
+    pub id: String,
+    pub title: String,
+    pub proposers: String,
+    pub date: i64,
 }
