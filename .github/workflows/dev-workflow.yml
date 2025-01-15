@@ -172,7 +172,8 @@ jobs:
 
   create-release-pr:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/dev'
+    # FIXME: later, should change this to dev
+    if: github.ref == 'refs/heads/main'
     needs:
       [
         main-ui, main-api, publish-crates
