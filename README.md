@@ -32,3 +32,18 @@ make run
 ```
 
 
+## Deployment
+### Main API
+
+``` bash
+export SERVICE=main-api
+export ENABLE_S3=false
+export ENABLE_FARGATE=false
+export ENABLE_DYNAMO=false
+export ENABLE_RDS=true
+export ENABLE_LAMBDA=true
+export DOMAIN=api.dev.democrasee.me
+export RDS_ADMIN_PASSWORD=""
+
+ENV=dev make deploy
+```
