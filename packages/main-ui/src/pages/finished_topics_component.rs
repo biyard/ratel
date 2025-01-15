@@ -17,7 +17,7 @@ use num_format::{Locale, ToFormattedString};
 pub fn FinishedTopics(
     #[props(default ="finished_topics".to_string())] id: String,
     #[props(default ="".to_string())] class: String,
-    topics: Vec<TopicSummery>,
+    topics: Vec<TopicSummary>,
     lang: Language,
 ) -> Element {
     let len = if topics.len() > 2 { 2 } else { topics.len() };

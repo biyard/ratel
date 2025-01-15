@@ -36,7 +36,7 @@ pub fn TopicTag(tag: TrendTag) -> Element {
 }
 
 #[component]
-pub fn TopicCard(topic: TopicSummery, lang: Language) -> Element {
+pub fn TopicCard(topic: TopicSummary, lang: Language) -> Element {
     let tr: TopicsCardTranslate = translate(&lang);
 
     rsx! {
