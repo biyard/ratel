@@ -1,6 +1,10 @@
+<<<<<<< HEAD
 use crate::ServiceError;
 #[cfg(feature = "server")]
 use by_axum::aide;
+=======
+use crate::{ServiceError, impl_display};
+>>>>>>> 9cab576 (replace to display macro)
 use dioxus_translate::Language;
 #[cfg(feature = "server")]
 use schemars::JsonSchema;
@@ -190,28 +194,14 @@ pub struct AssemblyMembersQuery {
     pub party: Option<String>,
     pub city: Option<String>,
 }
-
-impl std::fmt::Display for AssemblyMembersQuery {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let query = serde_urlencoded::to_string(&self).unwrap();
-
-        write!(f, "{query}")
-    }
-}
+impl_display!(AssemblyMembersQuery);
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct PartiesQuery {
     pub lang: Option<Language>,
 }
-
-impl std::fmt::Display for PartiesQuery {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let query = serde_urlencoded::to_string(&self).unwrap();
-
-        write!(f, "{query}")
-    }
-}
+impl_display!(PartiesQuery);
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
@@ -220,14 +210,7 @@ pub struct LegislationsQuery {
     pub bookmark: Option<String>,
     pub lang: Option<Language>,
 }
-
-impl std::fmt::Display for LegislationsQuery {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let query = serde_urlencoded::to_string(&self).unwrap();
-
-        write!(f, "{query}")
-    }
-}
+impl_display!(LegislationsQuery);
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]

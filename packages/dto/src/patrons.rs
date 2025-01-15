@@ -3,6 +3,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::AdditionalResource;
+use crate::AdditionalResource;
 #[cfg(feature = "server")]
 use by_axum::aide;
 
@@ -12,14 +13,7 @@ pub struct PatronQuery {
     pub size: Option<usize>,
     pub bookmark: Option<String>,
 }
-
-impl std::fmt::Display for PatronQuery {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let query = serde_urlencoded::to_string(&self).unwrap();
-
-        write!(f, "{query}")
-    }
-}
+impl_display!(PatronQuery);
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]

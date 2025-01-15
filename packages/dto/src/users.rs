@@ -6,6 +6,8 @@ use by_axum::aide;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+use crate::impl_display;
+
 #[derive(Debug, Serialize, PartialEq, Eq, Clone, Deserialize)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct SignupRequest {
@@ -46,11 +48,4 @@ pub struct UserReadActionRequest {
     pub action: ReadActionType,
     pub email: Option<String>,
 }
-
-impl Display for UserReadActionRequest {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let query = serde_urlencoded::to_string(&self).unwrap();
-
-        write!(f, "{query}")
-    }
-}
+impl_display!(UserReadActionRequest);
