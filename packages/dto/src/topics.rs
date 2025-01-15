@@ -229,7 +229,6 @@ impl FromStr for TopicStatus {
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-#[serde(untagged)]
 pub enum Vote {
     Supportive(u64),
     Against(u64),
@@ -251,6 +250,7 @@ pub struct VoteData {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
+#[serde(rename_all = "snake_case")]
 pub enum FileType {
     Image,
     Video,
@@ -322,7 +322,7 @@ pub type CommentId = String;
 pub enum TopicByIdActionRequest {
     Vote(Vote),
     Comment(String),
-    Like(CommentId, bool),
+    Like { comment_id: String, like: bool },
 }
 
 impl TopicSummary {
