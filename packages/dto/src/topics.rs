@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use crate::CommonQueryResponse;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, Eq, PartialEq)]
-pub struct TopicSummery {
+pub struct TopicSummary {
     pub id: String,
     pub r#type: String,
     pub created_at: u64,
@@ -57,57 +57,6 @@ impl Display for TrendTag {
     }
 }
 
-impl TopicSummery {
-    pub fn trend_tag(&self) -> TrendTag {
-        if self.weekly_volume > 100 {
-            TrendTag::Hot
-        } else if self.weekly_volume > 50 {
-            TrendTag::Warm
-        } else {
-            TrendTag::Cold
-        }
-    }
-
-    pub fn day(&self) -> String {
-        let start = chrono::DateTime::from_timestamp(self.started_at, 0)
-            .unwrap_or_default()
-            .naive_local();
-
-        format!("{:02}", start.day())
-    }
-
-    pub fn month(&self) -> String {
-        let start = chrono::DateTime::from_timestamp(self.started_at, 0)
-            .unwrap_or_default()
-            .naive_local();
-
-        match start.month() {
-            1 => "Jan",
-            2 => "Feb",
-            3 => "Mar",
-            4 => "Apr",
-            5 => "May",
-            6 => "Jun",
-            7 => "Jul",
-            8 => "Aug",
-            9 => "Sep",
-            10 => "Oct",
-            11 => "Nov",
-            12 => "Dec",
-            _ => "Unknown",
-        }
-        .to_string()
-    }
-
-    pub fn date(&self) -> String {
-        format!("{}/{}", self.month(), self.day())
-    }
-
-    pub fn volume_with_commas(&self) -> String {
-        self.volume.to_formatted_string(&Locale::en)
-    }
-}
-
 #[derive(Debug, Clone, Serialize, Deserialize, Default, Eq, PartialEq)]
 pub struct TopicQuery {
     pub size: usize,
@@ -128,7 +77,7 @@ pub struct TopicClient {
     pub endpoint: String,
 }
 
-impl TopicSummery {
+impl TopicSummary {
     pub fn get_client(endpoint: String) -> TopicClient {
         TopicClient { endpoint }
     }
@@ -138,7 +87,7 @@ impl TopicClient {
     pub async fn query(
         &self,
         params: TopicQuery,
-    ) -> crate::Result<CommonQueryResponse<TopicSummery>> {
+    ) -> crate::Result<CommonQueryResponse<TopicSummary>> {
         let endpoint = format!("{}/v1/topics?{params}", self.endpoint);
 
         rest_api::get(&endpoint).await
@@ -151,7 +100,7 @@ impl TopicClient {
     }
 }
 
-impl TopicSummery {
+impl TopicSummary {
     pub fn number_of_yes(&self) -> u64 {
         self.votes
             .iter()
@@ -327,7 +276,7 @@ pub struct TopicDetails {
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, Eq, PartialEq)]
 pub struct Topic {
-    pub topic: TopicSummery,
+    pub topic: TopicSummary,
     pub my_info: MyInfo,
     pub details: TopicDetails,
     pub comments: Vec<Commment>,
@@ -348,4 +297,81 @@ pub struct Commment {
     pub created_at: u64,
     pub likes: u64,
     pub is_liked: bool,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+pub struct TopicCreateRequest {
+    pub title: String,
+    pub content: String,
+    pub legislation_link: String,
+    pub solutions: String,
+    pub discussions: Vec<String>,
+    pub additional_resources: Vec<AdditionalResource>,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum TopicActionRequest {
+    Create(TopicCreateRequest),
+}
+
+pub type CommentId = String;
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum TopicByIdActionRequest {
+    Vote(Vote),
+    Comment(String),
+    Like(CommentId, bool),
+}
+
+impl TopicSummary {
+    pub fn trend_tag(&self) -> TrendTag {
+        if self.weekly_volume > 100 {
+            TrendTag::Hot
+        } else if self.weekly_volume > 50 {
+            TrendTag::Warm
+        } else {
+            TrendTag::Cold
+        }
+    }
+
+    pub fn day(&self) -> String {
+        let start = chrono::DateTime::from_timestamp(self.started_at, 0)
+            .unwrap_or_default()
+            .naive_local();
+
+        format!("{:02}", start.day())
+    }
+
+    pub fn month(&self) -> String {
+        let start = chrono::DateTime::from_timestamp(self.started_at, 0)
+            .unwrap_or_default()
+            .naive_local();
+
+        match start.month() {
+            1 => "Jan",
+            2 => "Feb",
+            3 => "Mar",
+            4 => "Apr",
+            5 => "May",
+            6 => "Jun",
+            7 => "Jul",
+            8 => "Aug",
+            9 => "Sep",
+            10 => "Oct",
+            11 => "Nov",
+            12 => "Dec",
+            _ => "Unknown",
+        }
+        .to_string()
+    }
+
+    pub fn date(&self) -> String {
+        format!("{}/{}", self.month(), self.day())
+    }
+
+    pub fn volume_with_commas(&self) -> String {
+        self.volume.to_formatted_string(&Locale::en)
+    }
 }

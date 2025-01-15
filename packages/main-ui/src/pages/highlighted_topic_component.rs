@@ -10,7 +10,7 @@ use crate::{
 };
 use dioxus::prelude::*;
 use dioxus_translate::*;
-use dto::TopicSummery;
+use dto::TopicSummary;
 use num_format::{Locale, ToFormattedString};
 
 #[component]
@@ -18,7 +18,7 @@ pub fn HighlightedTopics(
     #[props(default ="highlighted_topics".to_string())] id: String,
     #[props(default ="".to_string())] class: String,
 
-    topics: Vec<TopicSummery>,
+    topics: Vec<TopicSummary>,
     onselect: EventHandler<usize>,
     lang: Language,
 ) -> Element {

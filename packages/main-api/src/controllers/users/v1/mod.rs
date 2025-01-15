@@ -31,11 +31,12 @@ impl UserControllerV1 {
 
     pub async fn act_user(
         State(ctrl): State<UserControllerV1>,
-        Extension(sig): Extension<Signature>,
+        Extension(sig): Extension<Option<Signature>>,
         Json(body): Json<UserActionRequest>,
     ) -> Result<Json<User>> {
         let log = ctrl.log.new(o!("api" => "act_user"));
         slog::debug!(log, "act_user: sig={:?} {:?}", sig, body);
+        let sig = sig.ok_or(ServiceError::Unauthorized)?;
 
         match body {
             UserActionRequest::Signup(req) => {
@@ -61,12 +62,13 @@ impl UserControllerV1 {
 
     pub async fn read_user(
         State(ctrl): State<UserControllerV1>,
-        Extension(sig): Extension<Signature>,
+        Extension(sig): Extension<Option<Signature>>,
 
         Query(req): Query<UserReadActionRequest>,
     ) -> Result<Json<User>> {
         let log = ctrl.log.new(o!("api" => "read_user"));
         slog::debug!(log, "read_user: sig={:?}", sig);
+        let sig = sig.ok_or(ServiceError::Unauthorized)?;
 
         let principal = sig.principal().map_err(|s| {
             slog::error!(log, "failed to get principal: {:?}", s);
