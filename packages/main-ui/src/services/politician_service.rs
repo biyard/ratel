@@ -4,7 +4,7 @@ use dioxus::prelude::*;
 use dioxus_translate::*;
 use dto::{
     common_query_response::CommonQueryResponse, error::ServiceError, AssemblyMember,
-    ListAssemblyMembersRequest,
+    AssemblyMembersQuery,
 };
 
 #[derive(Debug, Clone, Copy, Default)]
@@ -27,7 +27,7 @@ impl PoliticianService {
         bookmark: Option<&str>,
         lang: Option<Language>,
     ) -> Result<CommonQueryResponse<AssemblyMember>> {
-        let req = ListAssemblyMembersRequest {
+        let req = AssemblyMembersQuery {
             size: Some(size),
             bookmark: bookmark.map(|s| s.to_string()),
             lang,
