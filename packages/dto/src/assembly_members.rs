@@ -100,6 +100,12 @@ impl std::str::FromStr for CryptoStance {
     }
 }
 
+impl CryptoStance {
+    pub fn iter() -> impl Iterator<Item = CryptoStance> {
+        [CryptoStance::Supportive, CryptoStance::Neutral, CryptoStance::Against, CryptoStance::NoStance].iter().cloned()
+    }
+}
+
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct AssemblyMember {
