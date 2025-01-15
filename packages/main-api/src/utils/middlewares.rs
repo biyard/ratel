@@ -42,7 +42,7 @@ pub async fn authorization_middleware(
 }
 
 pub fn verify_usersig(log: &slog::Logger, value: Option<&str>) -> Result<Signature, StatusCode> {
-    let log = log.new(slog::o!("auth_type" => "UserSig"));
+    let log = log.new(slog::o!("auth_handler" => "verify_usersig"));
 
     if let Some((timestamp, signature)) = value.unwrap_or_default().split_once(":") {
         let conf = crate::config::get();

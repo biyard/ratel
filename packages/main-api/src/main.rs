@@ -44,17 +44,17 @@ async fn main() -> Result<(), ServiceError> {
     );
 
     let app = by_axum::new()
-        .nest("/v1/topics", TopicControllerV1::route()?)
+        .nest("/topics/v1", TopicControllerV1::route()?)
         .nest(
-            "/v1/users",
+            "/users/v1",
             controllers::users::v1::UserControllerV1::route()?,
         )
         .nest(
-            "/v1/assembly_members",
+            "/assembly_members/v1",
             controllers::assembly_members::v1::AssemblyMemberControllerV1::route()?,
         )
         .nest(
-            "/m1/assembly_members",
+            "/assembly_members/m1",
             controllers::assembly_members::m1::AssemblyMemberControllerM1::route()?,
         );
 
