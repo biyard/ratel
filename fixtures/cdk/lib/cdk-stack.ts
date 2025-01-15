@@ -370,9 +370,9 @@ export class CdkStack extends cdk.Stack {
           version: rds.AuroraPostgresEngineVersion.VER_16_4,
         }),
         writer: rds.ClusterInstance.serverlessV2('writer'),
-        readers: [
-          rds.ClusterInstance.serverlessV2('reader'),
-        ],
+        // readers: [
+        //   rds.ClusterInstance.serverlessV2('reader'),
+        // ],
         serverlessV2MinCapacity: 0.5,
         serverlessV2MaxCapacity: 256,
         vpc,
