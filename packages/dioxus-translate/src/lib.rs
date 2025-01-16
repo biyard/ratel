@@ -1,6 +1,7 @@
 pub use dioxus_translate_macro::translate;
 pub use dioxus_translate_types::Translator;
 
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 pub fn translate<T: Translator>(lang: &Language) -> T {
@@ -11,7 +12,7 @@ pub fn translate<T: Translator>(lang: &Language) -> T {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Copy)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Copy, JsonSchema)]
 pub enum Language {
     #[cfg(feature = "ko")]
     #[serde(rename = "ko")]

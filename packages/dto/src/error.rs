@@ -1,5 +1,7 @@
 use std::error::Error;
 
+#[cfg(feature = "server")]
+use by_axum::aide;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize)]
@@ -17,6 +19,7 @@ impl Error for ServiceException {}
 
 #[derive(Debug, Serialize, PartialEq, Eq, Deserialize)]
 #[repr(u64)]
+#[cfg_attr(feature = "server", derive(aide::OperationIo))]
 pub enum ServiceError {
     Unknown(String),
 
@@ -66,3 +69,14 @@ impl ServiceError {
 
 unsafe impl Send for ServiceError {}
 unsafe impl Sync for ServiceError {}
+
+#[cfg(feature = "server")]
+impl by_axum::axum::response::IntoResponse for ServiceError {
+    fn into_response(self) -> by_axum::axum::response::Response {
+        (
+            by_axum::axum::http::StatusCode::BAD_REQUEST,
+            by_axum::axum::Json(self),
+        )
+            .into_response()
+    }
+}

@@ -21,10 +21,10 @@ serde_urlencoded = "0.7.1"
 dioxus-translate = { path = "../dioxus-translate", features = ["ko"] }
 rest-api = "0.1.1"
 num-format = "0.4.4"
-by-types = "0.1.2"
+by-axum = { workspace = true, optional = true }
 reqwest.workspace = true
 schemars = "0.8.21"
 
 [features]
 default = []
-server = ["serde_json", "slog", "easy-dynamodb", "by-types/server"]
+server = ["serde_json", "slog", "easy-dynamodb", "by-axum"]

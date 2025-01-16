@@ -1,14 +1,17 @@
 use std::{fmt::Display, str::FromStr};
 
+#[cfg(feature = "server")]
+use by_axum::aide;
 use chrono::Datelike;
 use num_format::{Locale, ToFormattedString};
+#[cfg(feature = "server")]
 use schemars::JsonSchema;
+
+use crate::CommonQueryResponse;
 use serde::{Deserialize, Serialize};
 
-#[cfg(not(feature = "server"))]
-use crate::CommonQueryResponse;
-
 #[derive(Debug, Clone, Serialize, Deserialize, Default, Eq, PartialEq)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct TopicSummary {
     pub id: String,
     pub r#type: String,
@@ -43,6 +46,7 @@ pub struct TopicSummary {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum TrendTag {
     Hot,
     Warm,
@@ -60,6 +64,7 @@ impl Display for TrendTag {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, Eq, PartialEq)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct TopicQuery {
     pub size: usize,
     pub bookmark: Option<String>,
@@ -85,7 +90,6 @@ impl TopicSummary {
     }
 }
 
-#[cfg(not(feature = "server"))]
 impl TopicClient {
     pub async fn query(
         &self,
@@ -155,6 +159,7 @@ impl TopicSummary {
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum TopicResult {
     Accepted,
     Rejected,
@@ -189,6 +194,7 @@ impl FromStr for TopicResult {
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum TopicStatus {
     Finished,
     Ongoing,
@@ -232,6 +238,7 @@ impl FromStr for TopicStatus {
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum Vote {
     Supportive(u64),
     Against(u64),
@@ -241,19 +248,22 @@ pub enum Vote {
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[serde(untagged)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum Donation {
     Yes(u64),
     No(u64),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct VoteData {
     pub voted_at: i64,
     pub vote: Vote,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq, JsonSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
 #[serde(rename_all = "snake_case")]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum FileType {
     Image,
     Video,
@@ -261,7 +271,8 @@ pub enum FileType {
     Pdf,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq, JsonSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct AdditionalResource {
     pub filename: String,
     pub extension: FileType,
@@ -269,6 +280,7 @@ pub struct AdditionalResource {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, Eq, PartialEq)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct TopicDetails {
     pub voting_trends: Vec<VoteData>,
     pub legislation_link: String,
@@ -278,6 +290,7 @@ pub struct TopicDetails {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, Eq, PartialEq)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct Topic {
     pub topic: TopicSummary,
     pub my_info: MyInfo,
@@ -286,12 +299,14 @@ pub struct Topic {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, Eq, PartialEq)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct MyInfo {
     // If my_commitment is 1, it shows 0.01 ETH in the UI
     pub my_commitment: u64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct Commment {
     pub profile_url: String,
     pub choice: Vote,
@@ -303,6 +318,7 @@ pub struct Commment {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct TopicCreateRequest {
     pub title: String,
     pub content: String,
@@ -314,6 +330,7 @@ pub struct TopicCreateRequest {
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum TopicActionRequest {
     Create(TopicCreateRequest),
 }
@@ -322,6 +339,7 @@ pub type CommentId = String;
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum TopicByIdActionRequest {
     Vote(Vote),
     Comment(String),
