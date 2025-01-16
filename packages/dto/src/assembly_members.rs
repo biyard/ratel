@@ -195,10 +195,10 @@ pub struct AssemblyMembersQuery {
     pub size: Option<usize>,
     pub bookmark: Option<String>,
     pub lang: Option<Language>,
-    pub name: Option<String>,
+    pub name: Option<String>, // check search logic (contain or equal)
     pub stance: Option<CryptoStance>,
     pub party: Option<String>,
-    pub city: Option<String>,
+    pub city: Option<String>, // check search logic (contain or equal)
 }
 impl_display!(AssemblyMembersQuery);
 
@@ -226,3 +226,11 @@ pub struct Legislation {
     pub proposers: String,
     pub date: i64,
 }
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Default, Deserialize)]
+pub struct DistrictQuery {
+    pub lang: Option<Language>,
+    pub province: Option<String>,
+    pub district: Option<String>,
+}
+impl_display!(DistrictQuery);
