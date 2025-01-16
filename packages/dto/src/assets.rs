@@ -6,6 +6,7 @@ use by_axum::aide;
 use schemars::JsonSchema;
 
 #[derive(Debug, Clone, Eq, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct GetSignedUrlResponse {
     pub url: String,
 }

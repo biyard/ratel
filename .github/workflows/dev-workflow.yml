@@ -139,11 +139,12 @@ jobs:
           ENV: dev
           SERVICE: main-api
           DOMAIN: api.dev.democrasee.me
-          RDS_ADMIN_PASSWORD: ${{ secrets.RDS_ADMIN_PASSWORD }}
+          RDS_ADMIN_PASSWORD: ${{ secrets.RDS_DEV_ADMIN_PASSWORD }}
           ENABLE_S3: false
           ENABLE_FARGATE: false
           ENABLE_DYNAMO: false
           ENABLE_LAMBDA: true
+          ENABLE_RDS: true
         run: |
           npm i -g aws-cdk
           make deploy-if-needed
