@@ -13,7 +13,7 @@ license = "MIT"
 serde = { version = "1.0.197", features = ["derive"] }
 serde_json = "1.0.133"
 slog = "2.7.0"
-by-axum = { version = "0.1.7" }
+by-axum = { version = "0.2.5" }
 easy-dynamodb = { version = "0.1.7" }
 dto = { path = "./packages/dto" }
 reqwest = { version = "0.12.5", features = ["blocking", "json", "multipart"] }

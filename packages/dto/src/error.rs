@@ -2,6 +2,11 @@ use std::error::Error;
 
 use serde::{Deserialize, Serialize};
 
+#[cfg(feature = "server")]
+use by_axum::aide;
+#[cfg(feature = "server")]
+use schemars::JsonSchema;
+
 #[derive(Debug, Serialize)]
 pub struct ServiceException {
     pub inner: ServiceError,
@@ -17,6 +22,7 @@ impl Error for ServiceException {}
 
 #[derive(Debug, Serialize, PartialEq, Eq, Deserialize)]
 #[repr(u64)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum ServiceError {
     Unknown(String),
 
@@ -70,11 +76,9 @@ unsafe impl Sync for ServiceError {}
 #[cfg(feature = "server")]
 impl by_axum::axum::response::IntoResponse for ServiceError {
     fn into_response(self) -> by_axum::axum::response::Response {
-        let default_status_code = by_axum::axum::http::StatusCode::BAD_REQUEST;
-
         (
-            default_status_code,
-            serde_json::to_value(self).unwrap().to_string(),
+            by_axum::axum::http::StatusCode::BAD_REQUEST,
+            by_axum::axum::Json(self),
         )
             .into_response()
     }

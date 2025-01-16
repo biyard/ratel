@@ -15,11 +15,6 @@ pub struct AssemblyMemberControllerM1 {
     log: slog::Logger,
 }
 
-#[derive(Debug, serde::Deserialize, serde::Serialize)]
-pub struct AssemblyMemberResponse {
-    pub request_id: String,
-}
-
 // TODO: add authorization (service key or signiture)
 impl AssemblyMemberControllerM1 {
     pub fn route() -> Result<by_axum::axum::Router> {
