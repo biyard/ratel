@@ -9,7 +9,6 @@ repository.workspace = true
 [dependencies]
 serde.workspace = true
 serde_json = { workspace = true, optional = true }
-by-axum = { workspace = true, optional = true }
 slog = { workspace = true, optional = true }
 easy-dynamodb = { workspace = true, optional = true }
 chrono = "0.4.39"
@@ -22,7 +21,9 @@ serde_urlencoded = "0.7.1"
 dioxus-translate = { path = "../dioxus-translate", features = ["ko"] }
 rest-api = "0.1.1"
 num-format = "0.4.4"
+by-types = "0.1.1"
+reqwest.workspace = true
 
 [features]
 default = []
-server = ["by-axum", "serde_json", "slog", "easy-dynamodb"]
+server = ["serde_json", "slog", "easy-dynamodb", "by-types/server"]

@@ -4,7 +4,7 @@ use chrono::Datelike;
 use num_format::{Locale, ToFormattedString};
 use serde::{Deserialize, Serialize};
 
-use crate::CommonQueryResponse;
+use crate::{CommonQueryResponse, ServiceError};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, Eq, PartialEq)]
 pub struct TopicSummary {
@@ -90,13 +90,17 @@ impl TopicClient {
     ) -> crate::Result<CommonQueryResponse<TopicSummary>> {
         let endpoint = format!("{}/v1/topics?{params}", self.endpoint);
 
-        rest_api::get(&endpoint).await
+        rest_api::get(&endpoint)
+            .await
+            .map_err(|e: ServiceError| e.into())
     }
 
     pub async fn get(&self, id: &str) -> crate::Result<Topic> {
         let endpoint = format!("{}/v1/topics/{id}", self.endpoint);
 
-        rest_api::get(&endpoint).await
+        rest_api::get(&endpoint)
+            .await
+            .map_err(|e: ServiceError| e.into())
     }
 }
 
