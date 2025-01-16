@@ -32,40 +32,10 @@ impl Controller {
         Ok(ctrl)
     }
 
-    pub fn list(&mut self, lang: Language, bookmark: Option<String>) -> Result<(), RenderError> {
-        let politician_api: PoliticianService = use_context();
+    pub fn _load_more(&mut self, _lang: Language, _bookmark: Option<String>) -> Result<(), RenderError> {
+        let _politician_api: PoliticianService = use_context();
 
-        let current_politicians = self.politicians.clone();
-
-        // self.politicians = use_server_future(move || async move {
-        // // Fetch the next page of politicians using the provided bookmark
-        //     match politician_api.list_politicians(
-        //         20,  // Page size remains constant
-        //         bookmark,  // Pass the bookmark for pagination
-        //         Some(lang),  // Language preference
-        //     ).await {
-        //         Ok(new_politicians) => {
-        //             // Get the current data
-        //             let mut current_data = current_politicians.read().data.clone();
-
-        //             // Append new politicians to the existing list
-        //             current_data.extend(new_politicians.data.clone());
-
-        //             // Create updated response with combined data and new bookmark
-        //             CommonQueryResponse {
-        //                 data: current_data,
-        //                 bookmark: new_politicians.bookmark,
-        //                 // Maintain other fields from the new response
-        //                 ..new_politicians
-        //             }
-        //         },
-        //         Err(e) => {
-        //             // Log error and return current state on failure
-        //             tracing::error!("load more politicians error: {:?}", e);
-        //             current_politicians.read().clone()
-        //         }
-        //     }
-        // })?;
+        // TODO: how can i update the Resource<>?
     
         Ok(())
     }
