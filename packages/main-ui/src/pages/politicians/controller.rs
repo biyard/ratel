@@ -14,7 +14,7 @@ impl Controller {
 
         let politicians = use_server_future(move || async move {
             match politician_api.list_politicians(
-                10,
+                20,
                 None,
                 Some(lang),
             ).await {
@@ -32,10 +32,12 @@ impl Controller {
         Ok(ctrl)
     }
 
-    pub fn _load_more(&mut self, _lang: Language, _bookmark: Option<String>) {
+    pub fn _load_more(&mut self, _lang: Language, _bookmark: Option<String>) -> Result<(), RenderError> {
         let _politician_api: PoliticianService = use_context();
 
         // TODO: how can i update the Resource<>?
+    
+        Ok(())
     }
 
     pub fn politicians(&self) -> Vec<AssemblyMember> {

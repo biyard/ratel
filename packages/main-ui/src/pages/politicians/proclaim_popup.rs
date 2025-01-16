@@ -10,6 +10,7 @@ use crate::{
     },
 };
 use super::i18n::ProclaimPopupTranslate;
+use dto::CryptoStance;
 
 #[component]
 pub fn ProclaimPopup(
@@ -32,7 +33,8 @@ pub fn ProclaimPopup(
             div { class: "flex flex-col w-full items-start justify-start gap-[35px] pt-[10px]",
                 div { class: "flex flex-col w-full gap-[10px]",
 
-                    div { id: "proclaim-popup-name", 
+                    div {
+                        id: "proclaim-popup-name",
                         class: "flex flex-col w-full gap-[2px]",
                         div { class: "flex flex-row items-start",
                             span { class: "text-[14px] font-bold leading-[24px]", "{tr.name}" }
@@ -44,7 +46,8 @@ pub fn ProclaimPopup(
                         }
                     }
 
-                    div { id: "proclaim-popup-party",
+                    div {
+                        id: "proclaim-popup-party",
                         class: "flex flex-col w-full gap-[2px]",
                         div { class: "flex flex-row items-start",
                             span { class: "text-[14px] font-bold leading-[24px]", "{tr.party}" }
@@ -56,19 +59,23 @@ pub fn ProclaimPopup(
                         }
                     }
 
-                    div { id: "proclaim-popup-stance",
+                    div {
+                        id: "proclaim-popup-stance",
                         class: "flex flex-col w-full gap-[2px]",
                         div { class: "flex flex-row items-start",
-                            span { class: "text-[14px] font-bold leading-[24px]", "{tr.stance_on_crypto}" }
+                            span { class: "text-[14px] font-bold leading-[24px]",
+                                "{tr.stance_on_crypto}"
+                            }
                         }
                         Dropdown {
-                            // TODO: replace this data to CryptoStance
-                            items: vec![
-                                tr.supportive.to_string(),
-                                tr.against.to_string(),
-                                tr.neutral.to_string(),
-                                tr.no_stance.to_string(),
-                            ],
+                            items: CryptoStance::iter()
+                                .map(|stance| match stance {
+                                    CryptoStance::Supportive => tr.supportive.to_string(),
+                                    CryptoStance::Against => tr.against.to_string(),
+                                    CryptoStance::Neutral => tr.neutral.to_string(),
+                                    CryptoStance::NoStance => tr.no_stance.to_string(),
+                                })
+                                .collect(),
                             value: stance_signal(),
                             placeholder: "{tr.stance_placeholder}",
                             onselect: move |value| {
@@ -78,7 +85,8 @@ pub fn ProclaimPopup(
                         }
                     }
 
-                    div { id: "proclaim-popup-agree",
+                    div {
+                        id: "proclaim-popup-agree",
                         class: "flex flex-row gap-[6px] items-center",
                         Checkbox {
                             class: "cursor-pointer",
@@ -90,21 +98,15 @@ pub fn ProclaimPopup(
                     }
                 }
 
-                div { id: "proclaim-popup-button",
-                    class: "flex w-full",
+                div { id: "proclaim-popup-button", class: "flex w-full",
                     button {
                         class: "w-full h-[57px] text-white bg-[{theme.primary100}] text-[18px] font-extrabold leading-[24px] rounded-[12px]",
-                        style: if agreed() {
-                            "opacity: 0.5; cursor: pointer;"
-                        } else {
-                            "opacity: 0.2;"
-                        },
+                        style: if agreed() { "opacity: 0.5; cursor: pointer;" } else { "opacity: 0.2;" },
                         onclick: move |_| {
                             tracing::debug!("proclaim button clicked");
                             if !agreed() {
                                 return;
                             }
-                            // TODO: send proclaim request
                             popup.close();
                         },
                         disabled: !agreed(),

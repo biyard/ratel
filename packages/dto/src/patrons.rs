@@ -1,24 +1,17 @@
-#[cfg(feature = "server")]
-use schemars::JsonSchema;
+use crate::AdditionalResource;
+use by_macros::QueryDisplay;
 use serde::{Deserialize, Serialize};
 
-use crate::AdditionalResource;
 #[cfg(feature = "server")]
 use by_axum::aide;
+#[cfg(feature = "server")]
+use schemars::JsonSchema;
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, QueryDisplay)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct PatronQuery {
     pub size: Option<usize>,
     pub bookmark: Option<String>,
-}
-
-impl std::fmt::Display for PatronQuery {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let query = serde_urlencoded::to_string(&self).unwrap();
-
-        write!(f, "{query}")
-    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

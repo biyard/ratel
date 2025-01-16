@@ -7,6 +7,7 @@ use crate::{
     components::dropdown::Dropdown,
 };
 use super::i18n::FilterPopupTranslate;
+use dto::CryptoStance;
 
 #[component]
 pub fn FilterPopup(
@@ -29,7 +30,9 @@ pub fn FilterPopup(
         div { id, class,
             div { class: "flex flex-col w-full items-start justify-start gap-[10px] pt-[10px]",
 
-                div { id: "filter-popup-name", class: "flex flex-col w-full gap-[2px]",
+                div {
+                    id: "filter-popup-name",
+                    class: "flex flex-col w-full gap-[2px]",
                     div { class: "flex flex-row items-start",
                         span { class: "text-[14px] font-bold leading-[24px]", "{tr.name}" }
                     }
@@ -44,18 +47,22 @@ pub fn FilterPopup(
                     }
                 }
 
-                div { id: "filter-popup-stance", class: "flex flex-col w-full gap-[2px]",
+                div {
+                    id: "filter-popup-stance",
+                    class: "flex flex-col w-full gap-[2px]",
                     div { class: "flex flex-row items-start",
                         span { class: "text-[14px] font-bold leading-[24px]", "{tr.stance_on_crypto}" }
                     }
                     Dropdown {
                         // TODO: replace this data to CryptoStance
-                        items: vec![
-                            tr.supportive.to_string(),
-                            tr.against.to_string(),
-                            tr.neutral.to_string(),
-                            tr.no_stance.to_string(),
-                        ],
+                        items: CryptoStance::iter()
+                            .map(|stance| match stance {
+                                CryptoStance::Supportive => tr.supportive.to_string(),
+                                CryptoStance::Against => tr.against.to_string(),
+                                CryptoStance::Neutral => tr.neutral.to_string(),
+                                CryptoStance::NoStance => tr.no_stance.to_string(),
+                            })
+                            .collect(),
                         value: stance_signal(),
                         placeholder: "{tr.stance_placeholder}",
                         onselect: move |value| {
@@ -65,7 +72,9 @@ pub fn FilterPopup(
                     }
                 }
 
-                div { id: "filter-popup-party", class: "flex flex-col w-full gap-[2px]",
+                div {
+                    id: "filter-popup-party",
+                    class: "flex flex-col w-full gap-[2px]",
                     div { class: "flex flex-row items-start",
                         span { class: "text-[14px] font-bold leading-[24px]", "{tr.party}" }
                     }
@@ -82,7 +91,9 @@ pub fn FilterPopup(
                 }
 
                 // DISTRICT
-                div { id: "filter-popup-district", class: "flex flex-col w-full items-start gap-[2px]",
+                div {
+                    id: "filter-popup-district",
+                    class: "flex flex-col w-full items-start gap-[2px]",
                     span { class: "text-[14px] font-bold leading-[24px]", "{tr.district}" }
                     div { class: "flex flex-row w-full gap-[2px]",
                         Dropdown {
@@ -113,7 +124,9 @@ pub fn FilterPopup(
                     }
                 }
 
-                div { id: "filter-popup-buttons", class: "flex flex-row w-full gap-[30px] pt-[25px]",
+                div {
+                    id: "filter-popup-buttons",
+                    class: "flex flex-row w-full gap-[30px] pt-[25px]",
                     button {
                         class: "w-full h-[57px] rounded-[12px] bg-[{theme.primary03}] text-[{theme.primary05}] font-extrabold text-[18px] leading-[24px] tracking-[0.005em]",
                         onclick: move |_| {
@@ -128,7 +141,6 @@ pub fn FilterPopup(
                     button {
                         class: "w-full h-[57px] rounded-[12px] bg-[{theme.primary100}] text-white font-extrabold text-[18px] leading-[24px] tracking-[0.005em]",
                         onclick: move |_| {
-                            // TODO: implement api calling
                             popup.close();
                         },
                         "{tr.search}"
