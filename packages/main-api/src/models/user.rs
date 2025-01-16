@@ -60,13 +60,15 @@ impl Into<dto::User> for User {
 impl User {
     pub async fn create(&self, log: &slog::Logger) -> Result<()> {
         let cli = easy_dynamodb::get_client(log);
-        cli.create(self).await.map_err(|e| ServiceError::from(e))
+        cli.create(self)
+            .await
+            .map_err(|e| ServiceError::from(e).into())
     }
 
     pub async fn get(log: &slog::Logger, id: &str) -> Result<Option<User>> {
         let cli = easy_dynamodb::get_client(log);
         cli.get::<User>(id)
             .await
-            .map_err(|e| ServiceError::DatabaseException(format!("{e}")))
+            .map_err(|e| ServiceError::DatabaseException(format!("{e}")).into())
     }
 }

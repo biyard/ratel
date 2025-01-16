@@ -25,8 +25,9 @@ impl PatronControllerV1 {
         Ok(
             by_axum::axum::Router::new()
                 .route("/", get(Self::get_patron))
-                .with_state(ctrl.clone()), // .route("/", post(Self::act_patron).get(Self::list_patron))
-                                           // .with_state(ctrl.clone())
+                .with_state(ctrl.clone()),
+            // .route("/", post(Self::act_patron).get(Self::list_patron))
+            // .with_state(ctrl.clone())
         )
     }
 
@@ -41,10 +42,10 @@ impl PatronControllerV1 {
 
     pub async fn get_patron(// State(ctrl): State<PatronControllerV1>,
         // Path(id): Path<String>,
-    ) -> Json<Patron> {
+    ) -> Result<Json<Patron>> {
         // let log = ctrl.log.new(o!("api" => "get_patron"));
         // slog::debug!(log, "get_patron {:?}", id);
-        Json(Patron::default())
+        Ok(Json(Patron::default()))
     }
 
     pub async fn list_patron(

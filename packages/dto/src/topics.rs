@@ -2,9 +2,11 @@ use std::{fmt::Display, str::FromStr};
 
 use chrono::Datelike;
 use num_format::{Locale, ToFormattedString};
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::{CommonQueryResponse, ServiceError};
+#[cfg(not(feature = "server"))]
+use crate::CommonQueryResponse;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, Eq, PartialEq)]
 pub struct TopicSummary {
@@ -83,6 +85,7 @@ impl TopicSummary {
     }
 }
 
+#[cfg(not(feature = "server"))]
 impl TopicClient {
     pub async fn query(
         &self,
@@ -249,7 +252,7 @@ pub struct VoteData {
     pub vote: Vote,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum FileType {
     Image,
@@ -258,7 +261,7 @@ pub enum FileType {
     Pdf,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq, JsonSchema)]
 pub struct AdditionalResource {
     pub filename: String,
     pub extension: FileType,

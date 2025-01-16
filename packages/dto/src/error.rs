@@ -1,6 +1,5 @@
 use std::error::Error;
 
-use by_types::ApiError;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize)]

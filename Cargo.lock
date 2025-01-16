@@ -919,11 +919,13 @@ checksum = "79296716171880943b8470b5f8d03aa55eb2e645a4874bdbb28adb49162e012c"
 
 [[package]]
 name = "by-axum"
-version = "0.2.0"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9b5b39419511463da3c2aa6a80624cb769b3452a0840737e180f80d43497db68"
 dependencies = [
  "aide",
  "axum 0.8.1",
- "by-types 0.1.1",
+ "by-types",
  "dioxus-aws",
  "http 1.2.0",
  "lambda_http 0.13.0",
@@ -942,23 +944,13 @@ dependencies = [
 
 [[package]]
 name = "by-types"
-version = "0.1.1"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1b9bdcd86f758857f695125bed16238643dcfb828c21009f31dfd46549abfe81"
 dependencies = [
  "aide",
  "axum 0.8.1",
  "reqwest",
- "schemars",
- "serde",
-]
-
-[[package]]
-name = "by-types"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "060598e17b7f0a174566d1935235b407a6a5fe0c00807cf7732a3218591f908c"
-dependencies = [
- "aide",
- "axum 0.8.1",
  "schemars",
  "serde",
 ]
@@ -2207,7 +2199,7 @@ name = "dto"
 version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
- "by-types 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "by-types",
  "candid",
  "chrono",
  "dioxus-translate",
@@ -2216,6 +2208,7 @@ dependencies = [
  "reqwest",
  "rest-api",
  "ring",
+ "schemars",
  "serde",
  "serde_json",
  "serde_urlencoded",

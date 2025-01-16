@@ -21,8 +21,9 @@ serde_urlencoded = "0.7.1"
 dioxus-translate = { path = "../dioxus-translate", features = ["ko"] }
 rest-api = "0.1.1"
 num-format = "0.4.4"
-by-types = "0.1.1"
+by-types = "0.1.2"
 reqwest.workspace = true
+schemars = "0.8.21"
 
 [features]
 default = []
