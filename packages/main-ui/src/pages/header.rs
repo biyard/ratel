@@ -3,13 +3,13 @@ use dioxus::prelude::*;
 use dioxus_popup::PopupService;
 use dioxus_translate::*;
 
+use super::{
+    i18n::HeaderTranslate, menus::Menus, signup_popup::SignupPopup,
+    user_setup_popup::UserSetupPopup,
+};
+
 use crate::{
     components::{button::Button, logo::LogoWrapper},
-    layouts::{
-        i18n::HeaderTranslate, menus::Menus, signup_popup::SignupPopup,
-        user_setup_popup::UserSetupPopup,
-    },
-    // route::{translate},
     services::user_service::{UserEvent, UserService},
     theme::Theme,
 };

@@ -1,6 +1,5 @@
 pub mod components;
 pub mod config;
-pub mod layouts;
 pub mod pages;
 pub mod route;
 pub mod services;

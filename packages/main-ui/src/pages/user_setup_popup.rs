@@ -1,14 +1,11 @@
 #![allow(non_snake_case)]
 use dioxus::prelude::*;
 use dioxus_popup::PopupService;
-use dto::ServiceError;
 use dioxus_translate::*;
+use dto::ServiceError;
 
-use crate::{
-    components::checkbox::Checkbox, layouts::congratulation_popup::CongratulationPopup,
-    services::user_service::UserService, theme::Theme,
-};
-use super::i18n::UserSetupPopupTranslate;
+use super::{congratulation_popup::CongratulationPopup, i18n::UserSetupPopupTranslate};
+use crate::{components::checkbox::Checkbox, services::user_service::UserService, theme::Theme};
 
 #[component]
 pub fn UserSetupPopup(
@@ -129,9 +126,7 @@ pub fn UserSetupPopup(
                                     tracing::debug!("UserSetupPopup::signup: success");
                                     popup
                                         .open(rsx! {
-                                            CongratulationPopup {
-                                                lang: lang.clone(),
-                                            }
+                                            CongratulationPopup { lang: lang.clone() }
                                         })
                                         .with_id("congratulation_popup")
                                         .with_title(tr.welcome)

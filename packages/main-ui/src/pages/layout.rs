@@ -3,7 +3,8 @@ use dioxus::prelude::*;
 use dioxus_popup::PopupZone;
 use dioxus_translate::*;
 
-use crate::{layouts::header::Header, route::Route, theme::Theme};
+use super::header::Header;
+use crate::{route::Route, theme::Theme};
 
 #[component]
 pub fn RootLayout(lang: Language) -> Element {
