@@ -1,17 +1,29 @@
 use crate::ServiceError;
+#[cfg(feature = "server")]
+use by_axum::aide;
 use dioxus_translate::Language;
+#[cfg(feature = "server")]
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum AssemblyMemberAdminActionRequest {
     /// Fetches assembly members by Assembly Open API.
     /// And update the information of the assembly members.
     FetchMembers,
 }
 
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
+pub struct AssemblyMemberResponse {
+    pub request_id: String,
+}
+
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum AssemblyMemberByIdActionRequest {
     SendVerificationEmail {
         agree: bool,
@@ -25,6 +37,7 @@ pub enum AssemblyMemberByIdActionRequest {
 
 #[derive(Debug, Clone, Eq, PartialEq, Default, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum AssemblyMemberByIdActionResponse {
     SendVerificationEmail {
         email: String,
@@ -37,6 +50,7 @@ pub enum AssemblyMemberByIdActionResponse {
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum AssemblyMemberByIdAdminActionRequest {
     /// Manually, update crypto stance.
     /// It will be utilized to update crypto stance by contact.
@@ -45,6 +59,7 @@ pub enum AssemblyMemberByIdAdminActionRequest {
 
 #[derive(Debug, Clone, Eq, PartialEq, Default, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum CryptoStance {
     #[serde(rename = "supportive")]
     Supportive,
@@ -82,6 +97,7 @@ impl std::str::FromStr for CryptoStance {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct AssemblyMember {
     pub id: String,
     pub r#type: String,
@@ -106,6 +122,7 @@ pub struct AssemblyMember {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct District {
     pub province: Option<String>, // None if it's a proportional representation
     pub district: String,
@@ -163,6 +180,7 @@ impl std::fmt::Display for District {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Default, Deserialize)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct AssemblyMembersQuery {
     pub size: Option<usize>,
     pub bookmark: Option<String>,
@@ -182,6 +200,7 @@ impl std::fmt::Display for AssemblyMembersQuery {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct PartiesQuery {
     pub lang: Option<Language>,
 }
@@ -195,6 +214,7 @@ impl std::fmt::Display for PartiesQuery {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct LegislationsQuery {
     pub size: Option<usize>,
     pub bookmark: Option<String>,
@@ -210,6 +230,7 @@ impl std::fmt::Display for LegislationsQuery {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct Legislation {
     pub id: String,
     pub title: String,

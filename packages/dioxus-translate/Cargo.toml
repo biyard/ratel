@@ -1,6 +1,6 @@
 [package]
 name = "dioxus-translate"
-version = "0.1.0"
+version = "0.1.1"
 authors.workspace = true
 edition.workspace = true
 description = "Libraries for internalization on Dioxus"
@@ -13,6 +13,7 @@ dioxus-translate-macro = { path = "../dioxus-translate-macro", version = "0.1.0"
 dioxus-translate-types = { path = "../dioxus-translate-types", version = "0.1.0" }
 serde.workspace = true
 web-sys = { version = "0.3.76", optional = true }
+schemars = "0.8.21"
 
 [features]
 web = ["web-sys"]
