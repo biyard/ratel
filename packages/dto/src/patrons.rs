@@ -1,3 +1,4 @@
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::AdditionalResource;
@@ -16,7 +17,7 @@ impl std::fmt::Display for PatronQuery {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum FeatureStatus {
     Todo,
@@ -66,7 +67,7 @@ pub struct FeatureRequest {
     pub attaches: Vec<AdditionalResource>,
 }
 
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, JsonSchema)]
 pub struct Patron {
     pub id: String,
 
@@ -77,7 +78,7 @@ pub struct Patron {
     pub features: Vec<Feature>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct Feature {
     pub title: String,
     pub description: String,

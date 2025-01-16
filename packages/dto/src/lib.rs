@@ -12,7 +12,6 @@ pub use assets::*;
 pub use common_query_response::*;
 pub use error::*;
 pub use patrons::*;
-use std::str::FromStr;
 pub use topics::*;
 pub use users::*;
 
