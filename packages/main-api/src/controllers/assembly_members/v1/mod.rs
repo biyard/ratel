@@ -9,6 +9,7 @@ use by_axum::{
 use dto::*;
 use rest_api::Signature;
 use slog::o;
+use std::collections::{HashSet, HashMap};
 
 #[derive(Clone, Debug)]
 pub struct AssemblyMemberControllerV1 {
@@ -23,6 +24,7 @@ impl AssemblyMemberControllerV1 {
         Ok(by_axum::axum::Router::new()
             .route("/", get(Self::list_assembly_members))
             .route("/parties", get(Self::list_parties))
+            .route("/districts", get(Self::list_districts))
             .route("/:id", post(Self::act_assembly_member_by_id))
             .with_state(ctrl.clone()))
     }
@@ -47,14 +49,12 @@ impl AssemblyMemberControllerV1 {
         slog::debug!(log, "list assembly members {:?}", req);
 
         let lang = req.lang.unwrap_or_default();
-        let filter = vec![("gsi1", format!("assembly_member#{}", lang))];
-
         let res: CommonQueryResponse<AssemblyMember> = CommonQueryResponse::query(
             &log,
             "gsi1-index",
             req.bookmark,
             req.size.map(|s| s as i32),
-            filter,
+            vec![("gsi1", format!("assembly_member#{}", lang))],
         )
         .await?;
 
@@ -68,10 +68,54 @@ impl AssemblyMemberControllerV1 {
     ) -> Result<Json<Vec<String>>> {
         let log = ctrl.log.new(o!("api" => "list_parties"));
         slog::debug!(log, "list parties: {req}");
-        Ok(Json(vec![
-            "test".to_string(),
-            "test2".to_string(),
-            "test3".to_string(),
-        ]))
+        
+        let lang = req.lang.unwrap_or_default();
+        let res: CommonQueryResponse<AssemblyMember> = CommonQueryResponse::query(
+            &log,
+            "gsi1-index",
+            None,
+            Some(300),
+            vec![("gsi1", format!("assembly_member#{}", lang))],
+        )
+        .await?;
+
+        let mut party_counts: HashMap<String, usize> = HashMap::new();
+        for member in res.items.iter() {
+            *party_counts.entry(member.party.to_string()).or_insert(0) += 1;
+        }
+
+        let mut parties: Vec<(String, usize)> = party_counts.into_iter().collect();
+        parties.sort_by(|a, b| b.1.cmp(&a.1).then_with(|| a.0.cmp(&b.0)));
+
+        let sorted_parties: Vec<String> = parties.into_iter().map(|(party, _)| party).collect();
+
+        Ok(Json(sorted_parties))
+    }
+
+    pub async fn list_districts(
+        State(ctrl): State<AssemblyMemberControllerV1>,
+        Extension(_sig): Extension<Option<Signature>>,
+        Query(req): Query<DistrictQuery>,
+    ) -> Result<Json<Vec<String>>> {
+        let log = ctrl.log.new(o!("api" => "list_district"));
+        slog::debug!(log, "list district: {req}");
+
+        let lang = req.lang.unwrap_or_default();
+        let res: CommonQueryResponse<AssemblyMember> = CommonQueryResponse::query(
+            &log,
+            "gsi1-index",
+            None,
+            Some(10),
+            vec![("gsi1", format!("assembly_member#{}", lang))],
+        )
+        .await?;
+
+        let district: HashSet<String> = res
+            .items
+            .iter()
+            .map(|member| member.party.to_string())
+            .collect();
+
+        Ok(Json(district.into_iter().collect()))
     }
 }
