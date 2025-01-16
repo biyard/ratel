@@ -15,8 +15,4 @@ pub use patrons::*;
 pub use topics::*;
 pub use users::*;
 
-#[cfg(feature = "server")]
-pub type Result<T> = std::result::Result<T, by_types::ApiError<error::ServiceError>>;
-
-#[cfg(not(feature = "server"))]
 pub type Result<T> = std::result::Result<T, error::ServiceError>;

@@ -1,9 +1,13 @@
+#[cfg(feature = "server")]
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::AdditionalResource;
+#[cfg(feature = "server")]
+use by_axum::aide;
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct PatronQuery {
     pub size: Option<usize>,
     pub bookmark: Option<String>,
@@ -17,8 +21,9 @@ impl std::fmt::Display for PatronQuery {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum FeatureStatus {
     Todo,
     Done,
@@ -26,6 +31,7 @@ pub enum FeatureStatus {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct PatronSummary {
     pub id: String,
 
@@ -38,12 +44,14 @@ pub struct PatronSummary {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 #[serde(rename_all = "snake_case")]
 pub enum Network {
     Ethereum,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum PatronActionRequest {
     Support {
         agree: bool,
@@ -54,12 +62,14 @@ pub enum PatronActionRequest {
 }
 
 #[derive(Debug, Clone, Serialize, Default, Deserialize)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum PatronActionResponse {
     #[default]
     Ok,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct FeatureRequest {
     pub title: String,
     pub description: String,
@@ -67,7 +77,8 @@ pub struct FeatureRequest {
     pub attaches: Vec<AdditionalResource>,
 }
 
-#[derive(Debug, Clone, Default, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct Patron {
     pub id: String,
 
@@ -78,7 +89,8 @@ pub struct Patron {
     pub features: Vec<Feature>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct Feature {
     pub title: String,
     pub description: String,

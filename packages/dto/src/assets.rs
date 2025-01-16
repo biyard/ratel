@@ -1,3 +1,4 @@
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Eq, Default, PartialEq, Serialize, Deserialize)]
@@ -5,7 +6,7 @@ pub struct GetSignedUrlResponse {
     pub url: String,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum AssetActionRequest {
     GetSignedUrl {
@@ -14,7 +15,7 @@ pub enum AssetActionRequest {
     },
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum AssetActionResponse {
     GetSignedUrl(String),

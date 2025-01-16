@@ -1,6 +1,11 @@
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg(feature = "server")]
+use by_axum::aide;
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[cfg_attr(feature = "server", derive(aide::OperationIo))]
 pub struct CommonQueryResponse<T> {
     pub items: Vec<T>,
     pub bookmark: Option<String>,
