@@ -1,5 +1,6 @@
 use std::error::Error;
 
+use by_types::ApiError;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize)]
@@ -66,16 +67,3 @@ impl ServiceError {
 
 unsafe impl Send for ServiceError {}
 unsafe impl Sync for ServiceError {}
-
-#[cfg(feature = "server")]
-impl by_axum::axum::response::IntoResponse for ServiceError {
-    fn into_response(self) -> by_axum::axum::response::Response {
-        let default_status_code = by_axum::axum::http::StatusCode::BAD_REQUEST;
-
-        (
-            default_status_code,
-            serde_json::to_value(self).unwrap().to_string(),
-        )
-            .into_response()
-    }
-}
