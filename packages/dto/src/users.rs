@@ -1,15 +1,11 @@
-<<<<<<< HEAD
+use by_macros::QueryDisplay;
+use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 
 #[cfg(feature = "server")]
 use by_axum::aide;
 #[cfg(feature = "server")]
 use schemars::JsonSchema;
-=======
->>>>>>> a52a2ff (fix err)
-use serde::{Deserialize, Serialize};
-
-use crate::impl_display;
 
 #[derive(Debug, Serialize, PartialEq, Eq, Clone, Deserialize)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
@@ -51,4 +47,3 @@ pub struct UserReadActionRequest {
     pub action: ReadActionType,
     pub email: Option<String>,
 }
-impl_display!(UserReadActionRequest);

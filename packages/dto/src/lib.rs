@@ -2,7 +2,6 @@ pub mod assembly_members;
 pub mod assets;
 pub mod common_query_response;
 pub mod error;
-pub mod macros;
 pub mod patrons;
 pub mod topics;
 pub mod users;

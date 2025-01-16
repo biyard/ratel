@@ -1,19 +1,18 @@
-#[cfg(feature = "server")]
-use schemars::JsonSchema;
+use crate::AdditionalResource;
+use by_macros::QueryDisplay;
 use serde::{Deserialize, Serialize};
 
-use crate::AdditionalResource;
-use crate::AdditionalResource;
 #[cfg(feature = "server")]
 use by_axum::aide;
+#[cfg(feature = "server")]
+use schemars::JsonSchema;
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, QueryDisplay)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct PatronQuery {
     pub size: Option<usize>,
     pub bookmark: Option<String>,
 }
-impl_display!(PatronQuery);
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
