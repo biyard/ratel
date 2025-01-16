@@ -1,8 +1,11 @@
 use std::error::Error;
 
+use serde::{Deserialize, Serialize};
+
 #[cfg(feature = "server")]
 use by_axum::aide;
-use serde::{Deserialize, Serialize};
+#[cfg(feature = "server")]
+use schemars::JsonSchema;
 
 #[derive(Debug, Serialize)]
 pub struct ServiceException {
@@ -19,7 +22,7 @@ impl Error for ServiceException {}
 
 #[derive(Debug, Serialize, PartialEq, Eq, Deserialize)]
 #[repr(u64)]
-#[cfg_attr(feature = "server", derive(aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum ServiceError {
     Unknown(String),
 
