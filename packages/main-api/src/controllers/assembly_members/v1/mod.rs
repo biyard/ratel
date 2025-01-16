@@ -45,16 +45,16 @@ impl AssemblyMemberControllerV1 {
     ) -> Result<Json<CommonQueryResponse<AssemblyMember>>> {
         let log = ctrl.log.new(o!("api" => "list_assembly_members"));
         slog::debug!(log, "list assembly members {:?}", req);
-        let filter = req
-            .lang
-            .map(|lang| vec![("gsi1", format!("assembly_member#{}", lang))]);
+
+        let lang = req.lang.unwrap_or_default();
+        let filter = vec![("gsi1", format!("assembly_member#{}", lang))];
 
         let res: CommonQueryResponse<AssemblyMember> = CommonQueryResponse::query(
             &log,
             "gsi1-index",
             req.bookmark,
             req.size.map(|s| s as i32),
-            filter.unwrap_or_default(),
+            filter,
         )
         .await?;
 
