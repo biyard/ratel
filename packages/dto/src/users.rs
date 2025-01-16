@@ -1,6 +1,5 @@
 use by_macros::QueryDisplay;
 use serde::{Deserialize, Serialize};
-use std::fmt::Display;
 
 #[cfg(feature = "server")]
 use by_axum::aide;
@@ -41,7 +40,7 @@ pub enum ReadActionType {
     UserInfo,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, QueryDisplay)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct UserReadActionRequest {
     pub action: ReadActionType,

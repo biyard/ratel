@@ -229,6 +229,7 @@ pub struct Legislation {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Default, Deserialize, QueryDisplay)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct DistrictQuery {
     pub lang: Option<Language>,
     pub province: Option<String>,
