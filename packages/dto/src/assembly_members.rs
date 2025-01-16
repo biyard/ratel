@@ -1,10 +1,7 @@
-<<<<<<< HEAD
 use crate::ServiceError;
 #[cfg(feature = "server")]
 use by_axum::aide;
-=======
-use crate::{ServiceError, impl_display};
->>>>>>> 9cab576 (replace to display macro)
+use by_macros::QueryDisplay;
 use dioxus_translate::Language;
 #[cfg(feature = "server")]
 use schemars::JsonSchema;
@@ -102,7 +99,14 @@ impl std::str::FromStr for CryptoStance {
 
 impl CryptoStance {
     pub fn iter() -> impl Iterator<Item = CryptoStance> {
-        [CryptoStance::Supportive, CryptoStance::Neutral, CryptoStance::Against, CryptoStance::NoStance].iter().cloned()
+        [
+            CryptoStance::Supportive,
+            CryptoStance::Neutral,
+            CryptoStance::Against,
+            CryptoStance::NoStance,
+        ]
+        .iter()
+        .cloned()
     }
 }
 
@@ -189,7 +193,7 @@ impl std::fmt::Display for District {
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Default, Deserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Default, Deserialize, QueryDisplay)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct AssemblyMembersQuery {
     pub size: Option<usize>,
@@ -200,23 +204,20 @@ pub struct AssemblyMembersQuery {
     pub party: Option<String>,
     pub city: Option<String>, // check search logic (contain or equal)
 }
-impl_display!(AssemblyMembersQuery);
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, QueryDisplay)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct PartiesQuery {
     pub lang: Option<Language>,
 }
-impl_display!(PartiesQuery);
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, QueryDisplay)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct LegislationsQuery {
     pub size: Option<usize>,
     pub bookmark: Option<String>,
     pub lang: Option<Language>,
 }
-impl_display!(LegislationsQuery);
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
@@ -227,10 +228,9 @@ pub struct Legislation {
     pub date: i64,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Default, Deserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Default, Deserialize, QueryDisplay)]
 pub struct DistrictQuery {
     pub lang: Option<Language>,
     pub province: Option<String>,
     pub district: Option<String>,
 }
-impl_display!(DistrictQuery);

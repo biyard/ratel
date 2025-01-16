@@ -2,6 +2,7 @@ use std::{fmt::Display, str::FromStr};
 
 #[cfg(feature = "server")]
 use by_axum::aide;
+use by_macros::QueryDisplay;
 use chrono::Datelike;
 use num_format::{Locale, ToFormattedString};
 #[cfg(feature = "server")]
@@ -9,6 +10,8 @@ use schemars::JsonSchema;
 
 use crate::CommonQueryResponse;
 use serde::{Deserialize, Serialize};
+
+use crate::CommonQueryResponse;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, Eq, PartialEq)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
@@ -63,14 +66,13 @@ impl Display for TrendTag {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default, Eq, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, Eq, PartialEq, QueryDisplay)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct TopicQuery {
     pub size: usize,
     pub bookmark: Option<String>,
     pub status: Option<TopicStatus>,
 }
-impl_display!(TopicQuery);
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, Eq, PartialEq)]
 pub struct TopicClient {
