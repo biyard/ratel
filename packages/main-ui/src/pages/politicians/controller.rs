@@ -32,7 +32,7 @@ impl Controller {
         Ok(ctrl)
     }
 
-    pub fn list(&mut self, lang: Language, bookmark: Option<String>, filter: ) -> Result<(), RenderError> {
+    pub fn list(&mut self, lang: Language, bookmark: Option<String>) -> Result<(), RenderError> {
         let politician_api: PoliticianService = use_context();
 
         let current_politicians = self.politicians.clone();
