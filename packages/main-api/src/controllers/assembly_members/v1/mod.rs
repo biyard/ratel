@@ -9,7 +9,7 @@ use by_axum::{
 use dto::*;
 use rest_api::Signature;
 use slog::o;
-use std::collections::{HashSet, HashMap};
+use std::collections::{HashMap, HashSet};
 
 #[derive(Clone, Debug)]
 pub struct AssemblyMemberControllerV1 {
@@ -68,7 +68,7 @@ impl AssemblyMemberControllerV1 {
     ) -> Result<Json<Vec<String>>> {
         let log = ctrl.log.new(o!("api" => "list_parties"));
         slog::debug!(log, "list parties: {req}");
-        
+
         let lang = req.lang.unwrap_or_default();
         let res: CommonQueryResponse<AssemblyMember> = CommonQueryResponse::query(
             &log,
