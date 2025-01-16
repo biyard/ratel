@@ -10,7 +10,15 @@ mod topics;
 mod upcoming_topics_component;
 
 pub use _routes::*;
+pub use layout::*;
 pub use page::*;
 pub use patrons::*;
 pub use politicians::*;
 pub use topics::*;
+
+mod congratulation_popup;
+pub mod header;
+pub mod layout;
+mod menus;
+pub mod signup_popup;
+pub mod user_setup_popup;

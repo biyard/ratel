@@ -1,4 +1,3 @@
-use crate::layouts::root_layout::*;
 use crate::pages::*;
 use dioxus::prelude::*;
 use dioxus_translate::Language;
