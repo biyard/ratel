@@ -1,14 +1,14 @@
+use crate::CommonQueryResponse;
+use by_macros::QueryDisplay;
+use chrono::Datelike;
+use num_format::{Locale, ToFormattedString};
+use serde::{Deserialize, Serialize};
 use std::{fmt::Display, str::FromStr};
 
 #[cfg(feature = "server")]
 use by_axum::aide;
-use chrono::Datelike;
-use num_format::{Locale, ToFormattedString};
 #[cfg(feature = "server")]
 use schemars::JsonSchema;
-
-use crate::CommonQueryResponse;
-use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, Eq, PartialEq)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
@@ -63,20 +63,12 @@ impl Display for TrendTag {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default, Eq, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, Eq, PartialEq, QueryDisplay)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct TopicQuery {
     pub size: usize,
     pub bookmark: Option<String>,
     pub status: Option<TopicStatus>,
-}
-
-impl Display for TopicQuery {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let query = serde_urlencoded::to_string(&self).unwrap();
-
-        write!(f, "{query}")
-    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, Eq, PartialEq)]

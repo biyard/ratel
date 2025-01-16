@@ -1,6 +1,7 @@
 use crate::ServiceError;
 #[cfg(feature = "server")]
 use by_axum::aide;
+use by_macros::QueryDisplay;
 use dioxus_translate::Language;
 #[cfg(feature = "server")]
 use schemars::JsonSchema;
@@ -96,6 +97,19 @@ impl std::str::FromStr for CryptoStance {
     }
 }
 
+impl CryptoStance {
+    pub fn iter() -> impl Iterator<Item = CryptoStance> {
+        [
+            CryptoStance::Supportive,
+            CryptoStance::Neutral,
+            CryptoStance::Against,
+            CryptoStance::NoStance,
+        ]
+        .iter()
+        .cloned()
+    }
+}
+
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct AssemblyMember {
@@ -179,54 +193,30 @@ impl std::fmt::Display for District {
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Default, Deserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Default, Deserialize, QueryDisplay)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct AssemblyMembersQuery {
     pub size: Option<usize>,
     pub bookmark: Option<String>,
     pub lang: Option<Language>,
-    pub name: Option<String>,
+    pub name: Option<String>, // check search logic (contain or equal)
     pub stance: Option<CryptoStance>,
     pub party: Option<String>,
-    pub city: Option<String>,
+    pub city: Option<String>, // check search logic (contain or equal)
 }
 
-impl std::fmt::Display for AssemblyMembersQuery {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let query = serde_urlencoded::to_string(&self).unwrap();
-
-        write!(f, "{query}")
-    }
-}
-
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, QueryDisplay)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct PartiesQuery {
     pub lang: Option<Language>,
 }
 
-impl std::fmt::Display for PartiesQuery {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let query = serde_urlencoded::to_string(&self).unwrap();
-
-        write!(f, "{query}")
-    }
-}
-
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, QueryDisplay)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct LegislationsQuery {
     pub size: Option<usize>,
     pub bookmark: Option<String>,
     pub lang: Option<Language>,
-}
-
-impl std::fmt::Display for LegislationsQuery {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let query = serde_urlencoded::to_string(&self).unwrap();
-
-        write!(f, "{query}")
-    }
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
@@ -236,4 +226,12 @@ pub struct Legislation {
     pub title: String,
     pub proposers: String,
     pub date: i64,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Default, Deserialize, QueryDisplay)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
+pub struct DistrictQuery {
+    pub lang: Option<Language>,
+    pub province: Option<String>,
+    pub district: Option<String>,
 }

@@ -1,10 +1,10 @@
-use std::fmt::Display;
+use by_macros::QueryDisplay;
+use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "server")]
 use by_axum::aide;
 #[cfg(feature = "server")]
 use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, PartialEq, Eq, Clone, Deserialize)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
@@ -40,17 +40,9 @@ pub enum ReadActionType {
     UserInfo,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, QueryDisplay)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct UserReadActionRequest {
     pub action: ReadActionType,
     pub email: Option<String>,
-}
-
-impl Display for UserReadActionRequest {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let query = serde_urlencoded::to_string(&self).unwrap();
-
-        write!(f, "{query}")
-    }
 }
