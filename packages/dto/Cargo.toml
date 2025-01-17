@@ -19,12 +19,12 @@ candid = "0.10.11"
 untrusted = "0.9.0"
 serde_urlencoded = "0.7.1"
 dioxus-translate = { path = "../dioxus-translate", features = ["ko"] }
-rest-api = "0.1.1"
+rest-api.workspace = true
 num-format = "0.4.4"
 by-axum = { workspace = true, optional = true }
 reqwest.workspace = true
 schemars = "0.8.21"
-by-macros = "0.2.2"
+by-macros.workspace = true
 
 [features]
 default = []
