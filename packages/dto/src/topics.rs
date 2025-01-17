@@ -69,7 +69,7 @@ pub struct Topic {
     pub topic: TopicSummary,
     pub my_info: MyInfo,
     pub details: TopicDetails,
-    pub comments: Vec<Commment>,
+    pub comments: Vec<Comment>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
@@ -281,7 +281,7 @@ pub struct MyInfo {
 
 #[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
-pub struct Commment {
+pub struct Comment {
     pub profile_url: String,
     pub choice: Vote,
     pub nickname: String,
