@@ -12,7 +12,7 @@ use schemars::JsonSchema;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, Eq, PartialEq)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
-#[api_model(get = "/topics/v1/:id", list = "/topics/v1", iter_type=CommonQueryResponse)]
+#[api_model(base = "/topics/v1", iter_type=CommonQueryResponse)]
 pub struct Topic {
     #[api_model(summary)]
     pub id: String,
@@ -66,7 +66,6 @@ pub struct Topic {
     #[api_model(summary)]
     pub weekly_votes: u64,
 
-    pub topic: TopicSummary,
     pub my_info: MyInfo,
     pub details: TopicDetails,
     pub comments: Vec<Comment>,
