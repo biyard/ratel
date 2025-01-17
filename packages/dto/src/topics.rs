@@ -1,5 +1,5 @@
 use crate::CommonQueryResponse;
-use by_macros::QueryDisplay;
+use by_macros::api_model;
 use chrono::Datelike;
 use num_format::{Locale, ToFormattedString};
 use serde::{Deserialize, Serialize};
@@ -12,38 +12,100 @@ use schemars::JsonSchema;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, Eq, PartialEq)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
-pub struct TopicSummary {
+#[api_model(get = "/topics/v1/:id", list = "/topics/v1", iter_type=CommonQueryResponse)]
+pub struct Topic {
+    #[api_model(summary)]
     pub id: String,
+    #[api_model(summary)]
     pub r#type: String,
+    #[api_model(summary)]
     pub created_at: u64,
+    #[api_model(summary)]
     pub updated_at: u64,
+    #[api_model(summary)]
     pub deleted_at: Option<u64>,
+    #[api_model(summary)]
     pub author: String,
 
+    #[api_model(summary)]
     pub title: String,
     // Legislation summary
+    #[api_model(summary)]
     pub content: String,
 
     // The image URLs of the voting topic
+    #[api_model(summary)]
     pub images: Vec<String>,
     #[serde(default)]
+    #[api_model(summary)]
     pub result: Option<TopicResult>,
+    #[api_model(summary)]
     pub votes: Vec<Vote>,
+    #[api_model(summary)]
     pub donations: Vec<Donation>,
     // The start time of the vote
+    #[api_model(summary)]
     pub started_at: i64,
     // The end time of the vote
+    #[api_model(summary)]
     pub ended_at: i64,
     // The number of voters
+    #[api_model(summary)]
     pub voters: u64,
     // The number of replies
+    #[api_model(summary)]
     pub replies: u64,
+    #[api_model(summary)]
     pub volume: u64,
+    #[api_model(summary, queryable)]
     pub status: TopicStatus,
+    #[api_model(summary)]
     pub weekly_volume: u64,
+    #[api_model(summary)]
     pub weekly_replies: u64,
+    #[api_model(summary)]
     pub weekly_votes: u64,
+
+    pub topic: TopicSummary,
+    pub my_info: MyInfo,
+    pub details: TopicDetails,
+    pub comments: Vec<Commment>,
 }
+
+// #[derive(Debug, Clone, Serialize, Deserialize, Default, Eq, PartialEq)]
+// #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
+// pub struct TopicSummary {
+//     pub id: String,
+//     pub r#type: String,
+//     pub created_at: u64,
+//     pub updated_at: u64,
+//     pub deleted_at: Option<u64>,
+//     pub author: String,
+
+//     pub title: String,
+//     // Legislation summary
+//     pub content: String,
+
+//     // The image URLs of the voting topic
+//     pub images: Vec<String>,
+//     #[serde(default)]
+//     pub result: Option<TopicResult>,
+//     pub votes: Vec<Vote>,
+//     pub donations: Vec<Donation>,
+//     // The start time of the vote
+//     pub started_at: i64,
+//     // The end time of the vote
+//     pub ended_at: i64,
+//     // The number of voters
+//     pub voters: u64,
+//     // The number of replies
+//     pub replies: u64,
+//     pub volume: u64,
+//     pub status: TopicStatus,
+//     pub weekly_volume: u64,
+//     pub weekly_replies: u64,
+//     pub weekly_votes: u64,
+// }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
@@ -63,41 +125,41 @@ impl Display for TrendTag {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default, Eq, PartialEq, QueryDisplay)]
-#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
-pub struct TopicQuery {
-    pub size: usize,
-    pub bookmark: Option<String>,
-    pub status: Option<TopicStatus>,
-}
+// #[derive(Debug, Clone, Serialize, Deserialize, Default, Eq, PartialEq, QueryDisplay)]
+// #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
+// pub struct TopicQuery {
+//     pub size: usize,
+//     pub bookmark: Option<String>,
+//     pub status: Option<TopicStatus>,
+// }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default, Eq, PartialEq)]
-pub struct TopicClient {
-    pub endpoint: String,
-}
+// #[derive(Debug, Clone, Serialize, Deserialize, Default, Eq, PartialEq)]
+// pub struct TopicClient {
+//     pub endpoint: String,
+// }
 
-impl TopicSummary {
-    pub fn get_client(endpoint: String) -> TopicClient {
-        TopicClient { endpoint }
-    }
-}
+// impl TopicSummary {
+//     pub fn get_client(endpoint: String) -> TopicClient {
+//         TopicClient { endpoint }
+//     }
+// }
 
-impl TopicClient {
-    pub async fn query(
-        &self,
-        params: TopicQuery,
-    ) -> crate::Result<CommonQueryResponse<TopicSummary>> {
-        let endpoint = format!("{}/v1/topics?{params}", self.endpoint);
+// impl TopicClient {
+//     pub async fn query(
+//         &self,
+//         params: TopicQuery,
+//     ) -> crate::Result<CommonQueryResponse<TopicSummary>> {
+//         let endpoint = format!("{}/v1/topics?{params}", self.endpoint);
 
-        rest_api::get(&endpoint).await
-    }
+//         rest_api::get(&endpoint).await
+//     }
 
-    pub async fn get(&self, id: &str) -> crate::Result<Topic> {
-        let endpoint = format!("{}/v1/topics/{id}", self.endpoint);
+//     pub async fn get(&self, id: &str) -> crate::Result<Topic> {
+//         let endpoint = format!("{}/v1/topics/{id}", self.endpoint);
 
-        rest_api::get(&endpoint).await
-    }
-}
+//         rest_api::get(&endpoint).await
+//     }
+// }
 
 impl TopicSummary {
     pub fn number_of_yes(&self) -> u64 {
@@ -279,15 +341,6 @@ pub struct TopicDetails {
     pub solutions: String,
     pub discussions: Vec<String>,
     pub additional_resources: Vec<AdditionalResource>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, Default, Eq, PartialEq)]
-#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
-pub struct Topic {
-    pub topic: TopicSummary,
-    pub my_info: MyInfo,
-    pub details: TopicDetails,
-    pub comments: Vec<Commment>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, Eq, PartialEq)]

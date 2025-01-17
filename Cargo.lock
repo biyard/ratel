@@ -944,9 +944,9 @@ dependencies = [
 
 [[package]]
 name = "by-macros"
-version = "0.1.0"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "22235132c54741ba321f9562ea533fa78a7e4425d33f703699e18833220c42e7"
+checksum = "beed0ff297d874eafbb8b807de9cd08d67df446bbd33d862ef2bd3e39f936214"
 dependencies = [
  "proc-macro2",
  "quote",
