@@ -1,6 +1,7 @@
 [workspace]
 members = ["packages/main-ui", "packages/dto", "packages/main-api", "packages/dioxus-popup", "packages/google-wallet", "packages/dioxus-oauth", "examples/oauth", "packages/dioxus-translate-macro", "packages/dioxus-translate", "packages/dioxus-translate-types"]
 resolver = "2"
+exclude = ["deps"]
 
 [workspace.package]
 authors = ["Biyard"]
@@ -14,6 +15,8 @@ serde = { version = "1.0.197", features = ["derive"] }
 serde_json = "1.0.133"
 slog = "2.7.0"
 by-axum = { version = "0.2.5" }
+by-macros = { path = "./deps/rust-sdk/packages/by-macros" }
+rest-api = { path = "./deps/rust-sdk/packages/rest-api" }
 easy-dynamodb = { version = "0.1.7" }
 dto = { path = "./packages/dto" }
 reqwest = { version = "0.12.5", features = ["blocking", "json", "multipart"] }

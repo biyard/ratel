@@ -27,10 +27,10 @@ pub struct Topic {
     #[api_model(summary)]
     pub author: String,
 
-    #[api_model(summary)]
+    #[api_model(summary, action = create)]
     pub title: String,
     // Legislation summary
-    #[api_model(summary)]
+    #[api_model(summary, action = create)]
     pub content: String,
 
     // The image URLs of the voting topic
@@ -67,7 +67,17 @@ pub struct Topic {
     pub weekly_votes: u64,
 
     pub my_info: MyInfo,
-    pub details: TopicDetails,
+
+    pub voting_trends: Vec<VoteData>,
+    #[api_model(action = create)]
+    pub legislation_link: String,
+    #[api_model(action = create)]
+    pub solutions: String,
+    #[api_model(action = create)]
+    pub discussions: Vec<String>,
+    #[api_model(action = create)]
+    pub additional_resources: Vec<AdditionalResource>,
+
     pub comments: Vec<Comment>,
 }
 
@@ -263,16 +273,6 @@ pub struct AdditionalResource {
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, Eq, PartialEq)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
-pub struct TopicDetails {
-    pub voting_trends: Vec<VoteData>,
-    pub legislation_link: String,
-    pub solutions: String,
-    pub discussions: Vec<String>,
-    pub additional_resources: Vec<AdditionalResource>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, Default, Eq, PartialEq)]
-#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct MyInfo {
     // If my_commitment is 1, it shows 0.01 ETH in the UI
     pub my_commitment: u64,
@@ -290,34 +290,34 @@ pub struct Comment {
     pub is_liked: bool,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
-pub struct TopicCreateRequest {
-    pub title: String,
-    pub content: String,
-    pub legislation_link: String,
-    pub solutions: String,
-    pub discussions: Vec<String>,
-    pub additional_resources: Vec<AdditionalResource>,
-}
+// #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+// #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
+// pub struct TopicCreateRequest {
+//     pub title: String,
+//     pub content: String,
+//     pub legislation_link: String,
+//     pub solutions: String,
+//     pub discussions: Vec<String>,
+//     pub additional_resources: Vec<AdditionalResource>,
+// }
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
-pub enum TopicActionRequest {
-    Create(TopicCreateRequest),
-}
+// #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+// #[serde(rename_all = "snake_case")]
+// #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
+// pub enum TopicActionRequest {
+//     Create(TopicCreateRequest),
+// }
 
-pub type CommentId = String;
+// pub type CommentId = String;
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
-pub enum TopicByIdActionRequest {
-    Vote(Vote),
-    Comment(String),
-    Like { comment_id: String, like: bool },
-}
+// #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+// #[serde(rename_all = "snake_case")]
+// #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
+// pub enum TopicByIdActionRequest {
+//     Vote(Vote),
+//     Comment(String),
+//     Like { comment_id: String, like: bool },
+// }
 
 impl TopicSummary {
     pub fn trend_tag(&self) -> TrendTag {

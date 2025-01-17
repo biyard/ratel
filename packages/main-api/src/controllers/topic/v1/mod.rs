@@ -54,7 +54,7 @@ impl TopicControllerV1 {
     pub async fn act_topic_by_id(
         State(ctrl): State<TopicControllerV1>,
         Extension(_sig): Extension<Option<Signature>>,
-        Json(body): Json<TopicByIdActionRequest>,
+        Json(body): Json<TopicByIdAction>,
     ) -> Result<Json<Topic>> {
         let log = ctrl.log.new(o!("api" => "act_topic_by_id"));
         slog::debug!(log, "act_topic_by_id: {:?}", body);
@@ -64,7 +64,7 @@ impl TopicControllerV1 {
     pub async fn act_topic(
         State(ctrl): State<TopicControllerV1>,
         Extension(_sig): Extension<Option<Signature>>,
-        Json(body): Json<TopicActionRequest>,
+        Json(body): Json<TopicAction>,
     ) -> Result<Json<Topic>> {
         let log = ctrl.log.new(o!("api" => "act_topic"));
         slog::debug!(log, "act_topic: {:?}", body);
