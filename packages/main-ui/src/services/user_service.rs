@@ -228,20 +228,13 @@ impl UserService {
 
         let endpoint = (self.endpoint)();
 
-        // Signup
-        let url = format!("{}/v1/users", endpoint);
-        let body = dto::UserActionRequest::Signup(SignupRequest {
-            email: email.to_string(),
-            nickname: nickname.to_string(),
-            profile_url: profile_url.to_string(),
-        });
-
-        tracing::debug!("UserService::signup: url={}", url);
-
-        let res: User = match rest_api::post::<&dto::UserActionRequest, User, ServiceError>(
-            &url, &body,
-        )
-        .await
+        let res: User = match User::get_client(&endpoint)
+            .act(UserAction::Signup(UserSignupRequest {
+                email: email.to_string(),
+                nickname: nickname.to_string(),
+                profile_url: profile_url.to_string(),
+            }))
+            .await
         {
             Ok(v) => v,
             Err(e) => {
