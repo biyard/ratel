@@ -1,4 +1,5 @@
-use by_macros::QueryDisplay;
+use crate::*;
+use by_macros::{api_model, QueryDisplay};
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "server")]
@@ -23,12 +24,16 @@ pub enum UserActionRequest {
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize, Default)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
+#[api_model(base = "/users/v1", read_actions = [check_email, user_info])]
 pub struct User {
     pub created_at: u64,
     pub updated_at: u64,
 
+    #[api_model(action = signup)]
     pub nickname: String,
+    #[api_model(action = signup)]
     pub email: String,
+    #[api_model(action = signup)]
     pub profile_url: String,
 }
 
