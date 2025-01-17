@@ -8,7 +8,6 @@ pub struct Controller {
     pub topics: Signal<Vec<TopicSummary>>,
     pub bookmark: Signal<Option<String>>,
     pub status: Signal<Option<TopicStatus>>,
-    pub topic_repository: Signal<TopicClient>,
 }
 
 impl Controller {
@@ -16,10 +15,10 @@ impl Controller {
         let size = 10;
         let status = use_signal(|| None);
         let topic_repository =
-            use_signal(|| TopicSummary::get_client(crate::config::get().main_api_endpoint.clone()));
+            use_signal(|| Topic::get_client(&crate::config::get().main_api_endpoint));
 
         let list_topics = use_server_future(move || async move {
-            let repo = TopicSummary::get_client(crate::config::get().main_api_endpoint.clone());
+            let repo = Topic::get_client(&crate::config::get().main_api_endpoint);
             match repo
                 .query(TopicQuery {
                     size,
@@ -44,7 +43,6 @@ impl Controller {
             bookmark,
             size,
             status,
-            topic_repository,
         };
         use_context_provider(|| ctrl);
 
