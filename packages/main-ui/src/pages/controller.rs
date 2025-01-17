@@ -1,7 +1,9 @@
-use dioxus_aws::prelude::*;
-use dto::{common_query_response::CommonQueryResponse, TopicStatus, TopicSummary};
+use std::sync::Arc;
 
-use crate::services::topic_service::TopicService;
+use dioxus_aws::prelude::*;
+use dto::{CommonQueryResponse, Topic, TopicClient, TopicQuery, TopicStatus, TopicSummary};
+
+use crate::config;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Controller {
@@ -12,11 +14,16 @@ pub struct Controller {
 
 impl Controller {
     pub fn new() -> Result<Self, RenderError> {
-        let topic_api: TopicService = use_context();
+        let conf = config::get();
 
         let topics = use_server_future(move || async move {
+            let topic_api = Topic::get_client(&conf.main_api_endpoint);
             match topic_api
-                .list_topics_by_status(10, None, Some(TopicStatus::Ongoing))
+                .query(TopicQuery {
+                    size: 10,
+                    bookmark: None,
+                    status: Some(TopicStatus::Ongoing),
+                })
                 .await
             {
                 Ok(res) => res,
@@ -28,8 +35,13 @@ impl Controller {
         })?;
 
         let finished_topics = use_server_future(move || async move {
+            let topic_api = Topic::get_client(&conf.main_api_endpoint);
             match topic_api
-                .list_topics_by_status(10, None, Some(TopicStatus::Finished))
+                .query(TopicQuery {
+                    size: 10,
+                    bookmark: None,
+                    status: Some(TopicStatus::Finished),
+                })
                 .await
             {
                 Ok(res) => res,
@@ -41,8 +53,13 @@ impl Controller {
         })?;
 
         let upcoming_topics = use_server_future(move || async move {
+            let topic_api = Topic::get_client(&conf.main_api_endpoint);
             match topic_api
-                .list_topics_by_status(10, None, Some(TopicStatus::Scheduled))
+                .query(TopicQuery {
+                    size: 10,
+                    bookmark: None,
+                    status: Some(TopicStatus::Scheduled),
+                })
                 .await
             {
                 Ok(res) => res,
