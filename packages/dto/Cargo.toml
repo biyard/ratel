@@ -24,7 +24,7 @@ num-format = "0.4.4"
 by-axum = { workspace = true, optional = true }
 reqwest.workspace = true
 schemars = "0.8.21"
-by-macros = "0.2.0"
+by-macros = "0.2.2"
 
 [features]
 default = []
