@@ -72,41 +72,6 @@ pub struct Topic {
     pub comments: Vec<Commment>,
 }
 
-// #[derive(Debug, Clone, Serialize, Deserialize, Default, Eq, PartialEq)]
-// #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
-// pub struct TopicSummary {
-//     pub id: String,
-//     pub r#type: String,
-//     pub created_at: u64,
-//     pub updated_at: u64,
-//     pub deleted_at: Option<u64>,
-//     pub author: String,
-
-//     pub title: String,
-//     // Legislation summary
-//     pub content: String,
-
-//     // The image URLs of the voting topic
-//     pub images: Vec<String>,
-//     #[serde(default)]
-//     pub result: Option<TopicResult>,
-//     pub votes: Vec<Vote>,
-//     pub donations: Vec<Donation>,
-//     // The start time of the vote
-//     pub started_at: i64,
-//     // The end time of the vote
-//     pub ended_at: i64,
-//     // The number of voters
-//     pub voters: u64,
-//     // The number of replies
-//     pub replies: u64,
-//     pub volume: u64,
-//     pub status: TopicStatus,
-//     pub weekly_volume: u64,
-//     pub weekly_replies: u64,
-//     pub weekly_votes: u64,
-// }
-
 #[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum TrendTag {
@@ -124,42 +89,6 @@ impl Display for TrendTag {
         }
     }
 }
-
-// #[derive(Debug, Clone, Serialize, Deserialize, Default, Eq, PartialEq, QueryDisplay)]
-// #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
-// pub struct TopicQuery {
-//     pub size: usize,
-//     pub bookmark: Option<String>,
-//     pub status: Option<TopicStatus>,
-// }
-
-// #[derive(Debug, Clone, Serialize, Deserialize, Default, Eq, PartialEq)]
-// pub struct TopicClient {
-//     pub endpoint: String,
-// }
-
-// impl TopicSummary {
-//     pub fn get_client(endpoint: String) -> TopicClient {
-//         TopicClient { endpoint }
-//     }
-// }
-
-// impl TopicClient {
-//     pub async fn query(
-//         &self,
-//         params: TopicQuery,
-//     ) -> crate::Result<CommonQueryResponse<TopicSummary>> {
-//         let endpoint = format!("{}/v1/topics?{params}", self.endpoint);
-
-//         rest_api::get(&endpoint).await
-//     }
-
-//     pub async fn get(&self, id: &str) -> crate::Result<Topic> {
-//         let endpoint = format!("{}/v1/topics/{id}", self.endpoint);
-
-//         rest_api::get(&endpoint).await
-//     }
-// }
 
 impl TopicSummary {
     pub fn number_of_yes(&self) -> u64 {
