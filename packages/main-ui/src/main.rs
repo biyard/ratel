@@ -8,9 +8,7 @@ pub mod theme;
 use dioxus::prelude::*;
 use dioxus_popup::PopupService;
 use route::Route;
-use services::{
-    politician_service::PoliticianService, topic_service::TopicService, user_service::UserService,
-};
+use services::{politician_service::PoliticianService, user_service::UserService};
 use theme::Theme;
 
 fn main() {
@@ -25,7 +23,6 @@ fn main() {
 fn app() -> Element {
     Theme::init();
     UserService::init();
-    TopicService::init();
     PopupService::init();
     PoliticianService::init();
 
