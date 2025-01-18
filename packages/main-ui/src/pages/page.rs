@@ -19,18 +19,18 @@ pub fn HomePage(lang: Language) -> Element {
                 class: "col-span-1",
                 topics: ctrl.ongoing_topics(),
                 onselect: |_| {},
-                lang: lang.clone(),
+                lang,
             }
             div { class: "col-span-1 w-full flex flex-row items-start justify-center gap-x-[20px] gap-y-[60px] grid grid-cols-2 max-[1000px]:grid-cols-1",
                 FinishedTopics {
                     class: "col-span-1",
                     topics: ctrl.finished_topics(),
-                    lang: lang.clone(),
+                    lang,
                 }
                 UpcomingTopics {
                     class: "col-span-1",
                     topics: ctrl.upcoming_topics(),
-                    lang: lang.clone(),
+                    lang,
                 }
             }
         }
