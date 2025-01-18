@@ -15,7 +15,7 @@ pub struct UserService {
     #[cfg(feature = "web-only")]
     pub firebase: Signal<google_wallet::FirebaseWallet>,
 
-    pub endpoint: Signal<String>,
+    pub cli: Signal<UserClient>,
     pub email: Signal<String>,
     pub nickname: Signal<String>,
     pub profile_url: Signal<String>,
@@ -39,11 +39,12 @@ impl UserService {
 
         #[cfg(feature = "web-only")]
         let _ = firebase.try_setup_from_storage();
+        let cli = User::get_client(&conf.main_api_endpoint);
 
         use_context_provider(|| Self {
             #[cfg(feature = "web-only")]
             firebase: Signal::new(firebase),
-            endpoint: Signal::new(conf.main_api_endpoint.clone()),
+            cli: Signal::new(cli),
             email: Signal::new("".to_string()),
             nickname: Signal::new("".to_string()),
             profile_url: Signal::new("".to_string()),
@@ -65,19 +66,10 @@ impl UserService {
 
     #[cfg(feature = "web-only")]
     pub async fn get_user_info_from_server(&mut self) {
-        let endpoint = (self.endpoint)();
+        let cli = (self.cli)();
         rest_api::set_signer(Box::new(*self));
 
-        let req = UserReadActionRequest {
-            action: ReadActionType::UserInfo,
-            email: None,
-        };
-
-        let url = format!("{}/v1/users?{}", endpoint, req);
-
-        tracing::debug!("UserService::get_user_info_from_server: url={}", url);
-
-        let user: User = match rest_api::get::<User, ServiceError>(&url).await {
+        let user: User = match cli.user_info().await {
             Ok(v) => v,
             Err(e) => match e {
                 ServiceError::NotFound => {
@@ -164,18 +156,9 @@ impl UserService {
                         profile_url
                     );
                     rest_api::set_signer(Box::new(*self));
-                    let endpoint = (self.endpoint)();
+                    let cli = (self.cli)();
 
-                    let req = UserReadActionRequest {
-                        action: ReadActionType::CheckEmail,
-                        email: Some(email.clone()),
-                    };
-
-                    let url = format!("{}/v1/users?{}", endpoint, req);
-
-                    tracing::debug!("UserService::login: url={}", url);
-
-                    let user: User = match rest_api::get::<User, ServiceError>(&url).await {
+                    let user: User = match cli.check_email(email.clone()).await {
                         Ok(v) => v,
                         Err(e) => {
                             rest_api::remove_signer();
@@ -226,14 +209,14 @@ impl UserService {
             profile_url
         );
 
-        let endpoint = (self.endpoint)();
+        let cli = (self.cli)();
 
-        let res: User = match User::get_client(&endpoint)
-            .act(UserAction::Signup(UserSignupRequest {
-                email: email.to_string(),
-                nickname: nickname.to_string(),
-                profile_url: profile_url.to_string(),
-            }))
+        let res: User = match cli
+            .signup(
+                email.to_string(),
+                nickname.to_string(),
+                profile_url.to_string(),
+            )
             .await
         {
             Ok(v) => v,
