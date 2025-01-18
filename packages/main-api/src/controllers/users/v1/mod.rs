@@ -32,14 +32,14 @@ impl UserControllerV1 {
     pub async fn act_user(
         State(ctrl): State<UserControllerV1>,
         Extension(sig): Extension<Option<Signature>>,
-        Json(body): Json<UserActionRequest>,
+        Json(body): Json<UserAction>,
     ) -> Result<Json<User>> {
         let log = ctrl.log.new(o!("api" => "act_user"));
         slog::debug!(log, "act_user: sig={:?} {:?}", sig, body);
         let sig = sig.ok_or(ServiceError::Unauthorized)?;
 
         match body {
-            UserActionRequest::Signup(req) => {
+            UserAction::Signup(req) => {
                 let principal = sig.principal().map_err(|s| {
                     slog::error!(log, "failed to get principal: {:?}", s);
                     ServiceError::Unauthorized
@@ -64,7 +64,7 @@ impl UserControllerV1 {
         State(ctrl): State<UserControllerV1>,
         Extension(sig): Extension<Option<Signature>>,
 
-        Query(req): Query<UserReadActionRequest>,
+        Query(req): Query<UserReadAction>,
     ) -> Result<Json<User>> {
         let log = ctrl.log.new(o!("api" => "read_user"));
         slog::debug!(log, "read_user: sig={:?}", sig);
@@ -84,20 +84,21 @@ impl UserControllerV1 {
         let user = user.unwrap();
 
         match req.action {
-            ReadActionType::CheckEmail => {
+            Some(UserReadActionType::CheckEmail) => {
                 if user.email == req.email.unwrap_or_default() {
                     Ok(Json(user.into()))
                 } else {
                     Err(ServiceError::Unauthorized)
                 }
             }
-            ReadActionType::UserInfo => Ok(Json(user.into())),
+            Some(UserReadActionType::UserInfo) => Ok(Json(user.into())),
+            None => Err(ServiceError::BadRequest),
         }
     }
 }
 
 impl UserControllerV1 {
-    pub async fn signup(&self, wallet_address: &str, req: SignupRequest) -> Result<User> {
+    pub async fn signup(&self, wallet_address: &str, req: UserSignupRequest) -> Result<User> {
         let log = self.log.new(o!("api" => "signup"));
 
         let user = crate::models::user::User::new(
