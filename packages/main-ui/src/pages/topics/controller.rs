@@ -19,14 +19,7 @@ impl Controller {
 
         let list_topics = use_server_future(move || async move {
             let repo = Topic::get_client(&crate::config::get().main_api_endpoint);
-            match repo
-                .query(TopicQuery {
-                    size,
-                    bookmark: None,
-                    status: None,
-                })
-                .await
-            {
+            match repo.query(TopicQuery::new(size)).await {
                 Ok(v) => v,
                 Err(_) => CommonQueryResponse::default(),
             }
