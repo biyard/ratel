@@ -308,35 +308,6 @@ pub struct Comment {
     pub is_liked: bool,
 }
 
-// #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
-// #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
-// pub struct TopicCreateRequest {
-//     pub title: String,
-//     pub content: String,
-//     pub legislation_link: String,
-//     pub solutions: String,
-//     pub discussions: Vec<String>,
-//     pub additional_resources: Vec<AdditionalResource>,
-// }
-
-// #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
-// #[serde(rename_all = "snake_case")]
-// #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
-// pub enum TopicActionRequest {
-//     Create(TopicCreateRequest),
-// }
-
-// pub type CommentId = String;
-
-// #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
-// #[serde(rename_all = "snake_case")]
-// #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
-// pub enum TopicByIdActionRequest {
-//     Vote(Vote),
-//     Comment(String),
-//     Like { comment_id: String, like: bool },
-// }
-
 impl TopicSummary {
     pub fn trend_tag(&self) -> TrendTag {
         if self.weekly_volume > 100 {
