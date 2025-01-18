@@ -78,7 +78,15 @@ pub struct Topic {
     #[api_model(action = create)]
     pub additional_resources: Vec<AdditionalResource>,
 
+    #[api_model(action_by_id = comment, related = String)]
     pub comments: Vec<Comment>,
+
+    // It shows the voting opinion of the signer.
+    #[api_model(action_by_id = vote)]
+    pub vote: Option<Vote>,
+    // If signer liked this topic, it will be true. Otherwise, it will be false.
+    #[api_model(action_by_id = like)]
+    pub like: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
@@ -280,13 +288,23 @@ pub struct MyInfo {
 
 #[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
+#[api_model(base = "/topics/v1/:topic-id/comments", iter_type=CommonQueryResponse)]
 pub struct Comment {
+    #[api_model(summary)]
+    pub id: String,
+    #[api_model(summary)]
     pub profile_url: String,
-    pub choice: Vote,
+    #[api_model(summary)]
+    pub choice: Option<Vote>,
+    #[api_model(summary)]
     pub nickname: String,
+    #[api_model(summary)]
     pub content: String,
+    #[api_model(summary)]
     pub created_at: u64,
+    #[api_model(summary)]
     pub likes: u64,
+    #[api_model(action_by_id = like)]
     pub is_liked: bool,
 }
 
