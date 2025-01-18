@@ -1,5 +1,5 @@
 use dioxus_aws::prelude::*;
-use dto::{CommonQueryResponse, Topic, TopicClient, TopicQuery, TopicStatus, TopicSummary};
+use dto::{CommonQueryResponse, Topic, TopicQuery, TopicStatus, TopicSummary};
 
 use crate::config;
 
