@@ -1,4 +1,6 @@
 use dioxus::prelude::*;
+use dioxus_translate::Language;
+use dto::TopicCreateRequest;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Controller {}
@@ -10,4 +12,8 @@ impl Controller {
 
         Ok(ctrl)
     }
+
+    pub async fn handle_create_topic(&self, req: TopicCreateRequest) {}
+
+    pub fn navigate_to_write_topic(&self, lang: &Language, legisltation: Option<String>) {}
 }

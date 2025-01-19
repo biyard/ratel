@@ -7,7 +7,7 @@ use dioxus::prelude::*;
 use dioxus_translate::*;
 
 #[component]
-pub fn LegislationSelector(lang: Language) -> Element {
+pub fn LegislationSelector(lang: Language, onclick: EventHandler<Option<String>>) -> Element {
     let mut _ctrl = Controller::new()?;
     let tr: LegislationSelectorTranslate = translate(&lang);
 

@@ -1,9 +1,12 @@
 #![allow(unused)]
+use by_types::QueryParam;
 use dioxus::prelude::*;
 use dioxus_translate::Language;
 use dto::*;
 
 use crate::route::Route;
+
+use super::NewTopicStep;
 
 #[derive(Clone, Copy)]
 pub struct Controller {
@@ -48,6 +51,10 @@ impl Controller {
     }
 
     pub fn navigate_to_create_topic(&self, lang: &Language) {
-        self.nav.push(Route::NewTopicPage { lang: lang.clone() });
+        self.nav.push(Route::NewTopicPage {
+            lang: lang.clone(),
+            step: NewTopicStep::SelectLegislation,
+            legislation_id: QueryParam::None,
+        });
     }
 }

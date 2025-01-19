@@ -1,7 +1,7 @@
 use dioxus_translate::*;
 
 translate! {
-    NewTopicTranslate;
+    WriteTopicTranslate;
 
     title: {
         ko: "CREATION",

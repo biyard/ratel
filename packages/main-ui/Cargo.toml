@@ -31,6 +31,8 @@ chrono = "0.4.39"
 base64 = "0.22.1"
 url = "2.5.4"
 rest-api = "0.1.1"
+by-macros.workspace = true
+by-types.workspace = true
 
 [features]
 default = []
