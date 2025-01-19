@@ -5,6 +5,8 @@ use num_format::{Locale, ToFormattedString};
 use serde::{Deserialize, Serialize};
 use std::{fmt::Display, str::FromStr};
 
+use super::comment::*;
+
 #[cfg(feature = "server")]
 use by_axum::aide;
 #[cfg(feature = "server")]
@@ -284,28 +286,6 @@ pub struct AdditionalResource {
 pub struct MyInfo {
     // If my_commitment is 1, it shows 0.01 ETH in the UI
     pub my_commitment: u64,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
-#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
-#[api_model(base = "/topics/v1/:topic-id/comments", iter_type=CommonQueryResponse)]
-pub struct Comment {
-    #[api_model(summary)]
-    pub id: String,
-    #[api_model(summary)]
-    pub profile_url: String,
-    #[api_model(summary)]
-    pub choice: Option<Vote>,
-    #[api_model(summary)]
-    pub nickname: String,
-    #[api_model(summary)]
-    pub content: String,
-    #[api_model(summary)]
-    pub created_at: u64,
-    #[api_model(summary)]
-    pub likes: u64,
-    #[api_model(action_by_id = like)]
-    pub is_liked: bool,
 }
 
 impl TopicSummary {

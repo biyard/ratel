@@ -944,7 +944,7 @@ dependencies = [
 
 [[package]]
 name = "by-macros"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "convert_case 0.7.1",
  "proc-macro2",
