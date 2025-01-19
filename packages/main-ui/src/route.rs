@@ -18,6 +18,8 @@ pub enum Route {
                 TopicsPage { lang: Language },
                 #[route("/:id")]
                 TopicsByIdPage { id: String, lang: Language },
+                #[route("/new")]
+                NewTopicPage { lang: Language },
             #[end_nest]
 
             #[nest("/patrons")]

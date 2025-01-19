@@ -1,13 +1,17 @@
 #![allow(unused)]
 use dioxus::prelude::*;
+use dioxus_translate::Language;
 use dto::*;
 
-#[derive(Debug, Clone, Copy)]
+use crate::route::Route;
+
+#[derive(Clone, Copy)]
 pub struct Controller {
     pub size: usize,
     pub topics: Signal<Vec<TopicSummary>>,
     pub bookmark: Signal<Option<String>>,
     pub status: Signal<Option<TopicStatus>>,
+    pub nav: Navigator,
 }
 
 impl Controller {
@@ -36,9 +40,14 @@ impl Controller {
             bookmark,
             size,
             status,
+            nav: use_navigator(),
         };
         use_context_provider(|| ctrl);
 
         Ok(ctrl)
+    }
+
+    pub fn navigate_to_create_topic(&self, lang: &Language) {
+        self.nav.push(Route::NewTopicPage { lang: lang.clone() });
     }
 }
