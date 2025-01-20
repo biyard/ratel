@@ -1,7 +1,7 @@
-pub mod _id;
+mod _id;
 mod controller;
 mod i18n;
-pub mod new;
+mod new;
 pub mod page;
 
 pub use _id::*;
