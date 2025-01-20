@@ -9,6 +9,7 @@ use by_axum::{
 use dto::*;
 use rest_api::Signature;
 use slog::o;
+use crate::utils::email::{send_email, build_content};
 
 #[derive(Clone, Debug)]
 pub struct VerificationControllerV1 {
@@ -39,9 +40,29 @@ impl VerificationControllerV1 {
             VerificationActionRequest::CryptoStance(req) => {
                 let id = uuid::Uuid::new_v4().to_string(); // FIXME: use time-based uuid
                 let expire_time = 60 * 60 * 24; // 24 hours
-                let doc: VerificationCryptoStance = VerificationCryptoStance::new(id, req.code, expire_time);
+                let doc: VerificationCryptoStance = VerificationCryptoStance::new(id.clone(), req.code, expire_time);
+
                 match cli.create(&doc).await {
-                    Ok(_) => Ok(Json(VerificationActionResponse::default())),
+                    Ok(_) => {
+                        // FIXME: title / content of the email
+                        match send_email(
+                                req.email,
+                            build_content("Verification".to_string()),
+                             build_content(format!("click here to verify: {}/verification/v1/{}", 
+                                    option_env!("BASE_DOMAIN").unwrap_or("http://localhost:3000"), // FIXME: use front-end url
+                                    id
+                                ))
+                            ).await {
+                            Ok(_) => {
+                                slog::info!(log, "Email sent");
+                                Ok(Json(VerificationActionResponse::default()))
+                            }
+                            Err(e) => {
+                                slog::error!(log, "Failed to send email: {:?}", e);
+                                Err(ServiceError::from(e))
+                            }
+                        }
+                    }
                     Err(e) => {
                         slog::error!(log, "Failed to create document: {:?}", e);
                         Err(ServiceError::from(e))
@@ -72,7 +93,6 @@ impl VerificationControllerV1 {
                     )
                     .await
                     .map_err(|e| ServiceError::from(e))?;
-
                 Ok(Json(VerificationActionResponse::default()))
             },
             Ok(None) => Err(ServiceError::NotFound),

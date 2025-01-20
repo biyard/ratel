@@ -55,3 +55,10 @@ pub async fn send_email(
         Err(e) => Err(e),
     }
 }
+
+pub fn build_content(data: String) -> Content {
+    Content::builder()
+        .data(data)
+        .build()
+        .expect("Failed to build Content")
+}
