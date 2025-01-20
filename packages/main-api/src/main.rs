@@ -1,4 +1,5 @@
 use by_axum::{axum::middleware, logger::root};
+use by_types::DatabaseConfig;
 use controllers::{assets::v1::AssetControllerV1, topic::v1::TopicControllerV1};
 use dto::error::ServiceError;
 use tokio::net::TcpListener;
@@ -31,25 +32,35 @@ pub mod utils;
 #[tokio::main]
 async fn main() -> Result<(), ServiceError> {
     let log = root();
+    let conf = config::get();
 
-    easy_dynamodb::init(
-        log.clone(),
-        option_env!("AWS_ACCESS_KEY_ID")
-            .expect("AWS_ACCESS_KEY_ID is required")
-            .to_string(),
-        option_env!("AWS_SECRET_ACCESS_KEY")
-            .expect("AWS_SECRET_ACCESS_KEY is required")
-            .to_string(),
-        option_env!("AWS_REGION")
-            .unwrap_or("ap-northeast-2")
-            .to_string(),
-        option_env!("TABLE_NAME")
-            .expect("TABLE_NAME is required")
-            .to_string(),
-        "id".to_string(),
-        None,
-        None,
-    );
+    let pool = match conf.database {
+        // DatabaseConfig::Postgres { url } => {
+        //     sqlx::postgres::PgPoolOptions::new()
+        //         .max_connections(5)
+        //         .connect(url)
+        //         .await?;
+        // }
+        DatabaseConfig::Sqlite { url } => {
+            sqlx::sqlite::SqlitePoolOptions::new()
+                .max_connections(5)
+                .connect(url)
+                .await?
+        }
+        _ => panic!("not supported dynamodb"),
+    };
+
+    sqlx::query(
+        r#"CREATE TABLE IF NOT EXISTS ? (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            email TEXT NOT NULL UNIQUE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );"#,
+    )
+    .bind("testing")
+    .execute(&pool)
+    .await?;
 
     let app = by_axum::new()
         .nest(
