@@ -1,6 +1,5 @@
 use crate::*;
 use by_macros::api_model;
-use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "server")]
 use by_axum::aide;

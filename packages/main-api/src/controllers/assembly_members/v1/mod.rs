@@ -105,7 +105,7 @@ impl AssemblyMemberControllerV1 {
             &log,
             "gsi1-index",
             None,
-            Some(10),
+            Some(300),
             vec![("gsi1", format!("assembly_member#{}", lang))],
         )
         .await?;

@@ -21,7 +21,7 @@ impl<T: MemberTrait> TryFrom<(String, String, &str, &T)> for Member {
 
         Ok(Member(AssemblyMember {
             id: format!("{}-{}", lang, code),
-            code,
+            code: code.clone(),
             r#type: Member::document_type(),
             created_at: now,
             updated_at: now,
@@ -35,7 +35,7 @@ impl<T: MemberTrait> TryFrom<(String, String, &str, &T)> for Member {
             image_url: image_url,
             email: Some(member.email().to_string()),
             gsi1: format!("{}#{}", Member::document_type(), lang),
-            // gsi2: "".to_string(),
+            gsi2: format!("{}#{}", Member::document_type(), code),
         }))
     }
 }

@@ -22,6 +22,10 @@ mod controllers {
     pub mod assets {
         pub mod v1;
     }
+
+    pub mod verification {
+        pub mod v1;
+    }
 }
 
 pub mod config;
@@ -65,6 +69,10 @@ async fn main() -> Result<(), ServiceError> {
         .nest(
             "/assembly_members/v1",
             controllers::assembly_members::v1::AssemblyMemberControllerV1::route()?,
+        )
+        .nest(
+            "/verification/v1",
+            controllers::verification::v1::VerificationControllerV1::route()?,
         )
         .nest(
             "/assembly_members/m1",

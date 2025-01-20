@@ -110,7 +110,7 @@ impl CryptoStance {
     }
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+#[derive(Debug, Clone, Deserialize, Serialize, Default, Eq, PartialEq)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct AssemblyMember {
     pub id: String,
@@ -131,11 +131,20 @@ pub struct AssemblyMember {
     // pub email_verified: bool, // check email verified logic
 
     // Indexes, if deleted_at is set, all values of indexes must be empty.
-    pub gsi1: String, // language
-                      // gsi2: String,
+    pub gsi1: String, // type#language
+    pub gsi2: String, // type#code
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
+impl AssemblyMember {
+    pub fn gsi1(&self) -> String {
+        format!("{}#{}", self.r#type, self.id)
+    }
+    pub fn gsi2(&self) -> String {
+        format!("{}#{}", self.r#type, self.code)
+    }
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq, Eq)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct District {
     pub province: Option<String>, // None if it's a proportional representation

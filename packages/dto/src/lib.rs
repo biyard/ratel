@@ -5,6 +5,7 @@ pub mod error;
 pub mod patrons;
 pub mod topics;
 pub mod users;
+pub mod verification;
 
 pub use assembly_members::*;
 pub use assets::*;
@@ -13,5 +14,6 @@ pub use error::*;
 pub use patrons::*;
 pub use topics::*;
 pub use users::*;
+pub use verification::*;
 
 pub type Result<T> = std::result::Result<T, error::ServiceError>;
