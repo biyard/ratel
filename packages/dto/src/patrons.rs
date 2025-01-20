@@ -1,4 +1,3 @@
-use crate::AdditionalResource;
 use by_macros::QueryDisplay;
 use serde::{Deserialize, Serialize};
 
@@ -6,6 +5,8 @@ use serde::{Deserialize, Serialize};
 use by_axum::aide;
 #[cfg(feature = "server")]
 use schemars::JsonSchema;
+
+use crate::AdditionalResource;
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, QueryDisplay)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]

@@ -1,9 +1,8 @@
-mod _id;
 mod controller;
+mod feature_section;
 mod i18n;
-mod new;
+mod new_feature;
 pub mod page;
+mod patron_section;
 
-pub use _id::*;
-pub use new::*;
 pub use page::*;
