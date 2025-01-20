@@ -72,6 +72,7 @@ impl VerificationControllerV1 {
         }
     }
 
+    // FIXME: use front-end verification page
     pub async fn get_verification(
         State(ctrl): State<VerificationControllerV1>,
         Path(id): Path<String>,
@@ -102,4 +103,15 @@ impl VerificationControllerV1 {
             }
         }
     }
+
+    pub async fn check_verification(
+        State(ctrl): State<VerificationControllerV1>,
+        Extension(sig): Extension<Option<Signature>>,
+    ) -> Result<Json<VerificationActionResponse>> {
+        let log = ctrl.log.new(o!("api" => "check_verification"));
+        slog::debug!(log, "check_verification: sig={:?}", sig);
+        // TODO: check the request is verified
+
+        Ok(Json(VerificationActionResponse::default()))
+    } 
 }
