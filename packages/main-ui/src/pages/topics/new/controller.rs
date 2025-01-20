@@ -13,7 +13,15 @@ impl Controller {
         Ok(ctrl)
     }
 
-    pub async fn handle_create_topic(&self, req: TopicCreateRequest) {}
+    pub async fn handle_create_topic(&self, req: TopicCreateRequest) {
+        tracing::debug!("Creating topic: {:?}", req);
+    }
 
-    pub fn navigate_to_write_topic(&self, lang: &Language, legisltation: Option<String>) {}
+    pub fn navigate_to_write_topic(&self, lang: &Language, legisltation: Option<String>) {
+        tracing::debug!(
+            "Navigating to write topic page with legislation: {:?} {:?}",
+            lang,
+            legisltation
+        );
+    }
 }
