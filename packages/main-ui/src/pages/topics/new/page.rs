@@ -1,8 +1,7 @@
 #![allow(non_snake_case)]
-use super::wirte_topic::WriteTopic;
+use super::write_topic::WriteTopic;
 
 use super::controller::*;
-use super::i18n::*;
 use super::legislation_selector::*;
 use by_macros::EnumProp;
 use by_types::QueryParam;
@@ -22,7 +21,7 @@ pub fn NewTopicPage(
     step: NewTopicStep,
     legislation_id: QueryParam<String>,
 ) -> Element {
-    let mut ctrl = Controller::new()?;
+    let ctrl = Controller::new()?;
 
     let step = match step {
         NewTopicStep::WriteTopic => rsx! {
