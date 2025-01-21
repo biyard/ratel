@@ -17,6 +17,7 @@ slog = "2.7.0"
 by-axum = { version = "0.2.5" }
 by-macros = { path = "./deps/rust-sdk/packages/by-macros" }
 by-types = { path = "./deps/rust-sdk/packages/by-types" }
+by-db = { path = "./deps/rust-sdk/packages/by-db" }
 rest-api = { path = "./deps/rust-sdk/packages/rest-api" }
 easy-dynamodb = { version = "0.1.7" }
 dto = { path = "./packages/dto" }
