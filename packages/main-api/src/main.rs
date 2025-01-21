@@ -1,7 +1,10 @@
+use std::sync::Arc;
+
 use by_axum::{axum::middleware, logger::root};
 use by_types::DatabaseConfig;
 use controllers::{assets::v1::AssetControllerV1, topic::v1::TopicControllerV1};
 use dto::error::ServiceError;
+use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
 use tokio::net::TcpListener;
 use utils::middlewares::authorization_middleware;
 
@@ -34,21 +37,15 @@ async fn main() -> Result<(), ServiceError> {
     let log = root();
     let conf = config::get();
 
-    let pool = match conf.database {
-        // DatabaseConfig::Postgres { url } => {
-        //     sqlx::postgres::PgPoolOptions::new()
-        //         .max_connections(5)
-        //         .connect(url)
-        //         .await?;
-        // }
-        DatabaseConfig::Sqlite { url } => {
-            sqlx::sqlite::SqlitePoolOptions::new()
-                .max_connections(5)
-                .connect(url)
-                .await?
-        }
-        _ => panic!("not supported dynamodb"),
+    let pool = if let DatabaseConfig::Postgres { url, pool_size } = conf.database {
+        PgPoolOptions::new()
+            .max_connections(pool_size)
+            .connect(url)
+            .await?
+    } else {
+        panic!("Database is not initialized. Call init() first.");
     };
+    let pool = Arc::new(pool);
 
     sqlx::query(
         r#"CREATE TABLE IF NOT EXISTS ? (
