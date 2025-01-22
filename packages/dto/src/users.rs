@@ -6,7 +6,7 @@ use by_axum::aide;
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize, Default)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
-#[api_model(base = "/users/v1", read_action = user_info, table = users, rename = upcase)]
+#[api_model(base = "/users/v1", read_action = user_info, table = users)]
 pub struct User {
     #[api_model(primary_key)]
     pub id: String,

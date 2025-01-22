@@ -10,18 +10,25 @@ use by_axum::{
 use dto::*;
 use rest_api::Signature;
 use slog::o;
+use sqlx::{Pool, Postgres};
 
 use crate::{models, utils::middlewares::authorization_middleware};
 
 #[derive(Clone, Debug)]
 pub struct UserControllerV1 {
     log: slog::Logger,
+    #[allow(dead_code)]
+    users: UserRepository,
 }
 
 impl UserControllerV1 {
-    pub fn route() -> Result<by_axum::axum::Router> {
+    pub async fn route(pool: Pool<Postgres>) -> Result<by_axum::axum::Router> {
         let log = root().new(o!("api-controller" => "UserControllerV1"));
-        let ctrl = UserControllerV1 { log };
+        let users = User::get_repository(pool);
+
+        users.create_table().await?;
+
+        let ctrl = UserControllerV1 { log, users };
 
         Ok(by_axum::axum::Router::new()
             .route("/", get(Self::read_user).post(Self::act_user))

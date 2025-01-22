@@ -22,8 +22,7 @@ reqwest.workspace = true
 uuid = { version = "1.10.1", features = ["v4"] }
 rest-api = "0.1.1"
 by-types.workspace = true
-sqlx = { version = "0.8.3", features = ["sqlite", "postgres", "runtime-tokio"] }
-by-db.workspace = true
+sqlx.workspace = true
 
 [features]
 default = []
