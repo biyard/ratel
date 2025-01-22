@@ -47,18 +47,6 @@ async fn main() -> Result<(), ServiceError> {
     };
     let pool = Arc::new(pool);
 
-    sqlx::query(
-        r#"CREATE TABLE IF NOT EXISTS ? (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            email TEXT NOT NULL UNIQUE,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );"#,
-    )
-    .bind("testing")
-    .execute(&pool)
-    .await?;
-
     let app = by_axum::new()
         .nest(
             "/patrons/v1",
