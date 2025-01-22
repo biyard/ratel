@@ -25,7 +25,8 @@ by-axum = { workspace = true, optional = true }
 reqwest.workspace = true
 schemars = "0.8.21"
 by-macros.workspace = true
+sqlx = { workspace = true, optional = true }
 
 [features]
 default = []
-server = ["serde_json", "slog", "easy-dynamodb", "by-axum", "by-macros/server"]
+server = ["serde_json", "slog", "easy-dynamodb", "by-axum", "by-macros/server", "sqlx"]

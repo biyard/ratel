@@ -47,6 +47,7 @@ impl User {
 impl Into<dto::User> for User {
     fn into(self) -> dto::User {
         dto::User {
+            id: self.id,
             created_at: self.created_at,
             updated_at: self.updated_at,
 

@@ -958,17 +958,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "by-db"
-version = "0.1.0"
-dependencies = [
- "by-types 0.3.0",
- "easy-dynamodb",
- "slog",
- "sqlx",
- "thiserror 2.0.11",
-]
-
-[[package]]
 name = "by-macros"
 version = "0.6.0"
 dependencies = [
@@ -2321,6 +2310,7 @@ dependencies = [
  "serde_urlencoded",
  "simple_asn1",
  "slog",
+ "sqlx",
  "untrusted",
 ]
 
@@ -4123,7 +4113,6 @@ name = "main-api"
 version = "0.7.3"
 dependencies = [
  "by-axum",
- "by-db",
  "by-types 0.3.0",
  "chrono",
  "dioxus-translate",

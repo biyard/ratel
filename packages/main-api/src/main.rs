@@ -1,10 +1,8 @@
-use std::sync::Arc;
-
 use by_axum::{axum::middleware, logger::root};
 use by_types::DatabaseConfig;
 use controllers::{assets::v1::AssetControllerV1, topic::v1::TopicControllerV1};
 use dto::error::ServiceError;
-use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
+use sqlx::postgres::PgPoolOptions;
 use tokio::net::TcpListener;
 use utils::middlewares::authorization_middleware;
 
@@ -45,7 +43,6 @@ async fn main() -> Result<(), ServiceError> {
     } else {
         panic!("Database is not initialized. Call init() first.");
     };
-    let pool = Arc::new(pool);
 
     let app = by_axum::new()
         .nest(
@@ -56,7 +53,7 @@ async fn main() -> Result<(), ServiceError> {
         .nest("/topics/v1", TopicControllerV1::route()?)
         .nest(
             "/users/v1",
-            controllers::users::v1::UserControllerV1::route()?,
+            controllers::users::v1::UserControllerV1::route(pool.clone()).await?,
         )
         .nest(
             "/assembly_members/v1",
