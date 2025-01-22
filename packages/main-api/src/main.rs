@@ -1,6 +1,8 @@
 use by_axum::{axum::middleware, logger::root};
+use by_types::DatabaseConfig;
 use controllers::{assets::v1::AssetControllerV1, topic::v1::TopicControllerV1};
 use dto::error::ServiceError;
+use sqlx::postgres::PgPoolOptions;
 use tokio::net::TcpListener;
 use utils::middlewares::authorization_middleware;
 
@@ -31,25 +33,16 @@ pub mod utils;
 #[tokio::main]
 async fn main() -> Result<(), ServiceError> {
     let log = root();
+    let conf = config::get();
 
-    easy_dynamodb::init(
-        log.clone(),
-        option_env!("AWS_ACCESS_KEY_ID")
-            .expect("AWS_ACCESS_KEY_ID is required")
-            .to_string(),
-        option_env!("AWS_SECRET_ACCESS_KEY")
-            .expect("AWS_SECRET_ACCESS_KEY is required")
-            .to_string(),
-        option_env!("AWS_REGION")
-            .unwrap_or("ap-northeast-2")
-            .to_string(),
-        option_env!("TABLE_NAME")
-            .expect("TABLE_NAME is required")
-            .to_string(),
-        "id".to_string(),
-        None,
-        None,
-    );
+    let pool = if let DatabaseConfig::Postgres { url, pool_size } = conf.database {
+        PgPoolOptions::new()
+            .max_connections(pool_size)
+            .connect(url)
+            .await?
+    } else {
+        panic!("Database is not initialized. Call init() first.");
+    };
 
     let app = by_axum::new()
         .nest(
@@ -60,7 +53,7 @@ async fn main() -> Result<(), ServiceError> {
         .nest("/topics/v1", TopicControllerV1::route()?)
         .nest(
             "/users/v1",
-            controllers::users::v1::UserControllerV1::route()?,
+            controllers::users::v1::UserControllerV1::route(pool.clone()).await?,
         )
         .nest(
             "/assembly_members/v1",
