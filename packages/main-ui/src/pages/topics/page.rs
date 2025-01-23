@@ -1,5 +1,6 @@
 #![allow(non_snake_case)]
 use crate::components::icons;
+use crate::components::icons::DownArrow;
 use crate::components::icons::RightArrow;
 use crate::components::page_title::PageHeader;
 use crate::components::page_title::PageHeaderTail;
@@ -31,6 +32,10 @@ pub fn TopicsPage(lang: Language) -> Element {
                 for topic in (ctrl.topics)() {
                     TopicCard { topic, lang }
                 }
+            }
+
+            div { class: "w-full",
+                MoreButton { lang }
             }
         }
     }
@@ -125,6 +130,26 @@ pub fn TopicCard(topic: TopicSummary, lang: Language) -> Element {
                             "{topic.replies}"
                         }
                     }
+                }
+            }
+        }
+    }
+}
+
+#[component]
+pub fn MoreButton(lang: Language) -> Element {
+    let tr: ButtonTextTranslate = translate(&lang);
+
+    rsx! {
+        div { class: "mt-4 flex justify-center items-center w-full",
+            button {
+                onclick: move |_| {
+                    println!("More button clicked!");
+                },
+                class: "h-5 flex justify-center items-center w-full text-white text-sm",
+                div { class: "flex items-center gap-3",
+                    "{tr.more}"
+                    DownArrow {}
                 }
             }
         }

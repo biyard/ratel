@@ -36,3 +36,12 @@ translate! {
         en: "ETH",
     }
 }
+
+translate! {
+    ButtonTextTranslate;
+
+    more: {
+        ko: "더보기",
+        en: "More",
+    }
+}
