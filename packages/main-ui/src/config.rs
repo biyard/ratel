@@ -25,7 +25,7 @@ impl Default for Config {
         Config {
             env: option_env!("ENV").expect("You must set ENV"),
             domain: option_env!("DOMAIN").expect("You must set DOMAIN"),
-            log_level: match option_env!("LOG_LEVEL") {
+            log_level: match option_env!("RUST_LOG") {
                 Some("trace") => Level::TRACE,
                 Some("debug") => Level::DEBUG,
                 Some("info") => Level::INFO,

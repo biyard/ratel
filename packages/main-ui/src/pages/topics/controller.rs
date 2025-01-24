@@ -12,7 +12,6 @@ use super::NewTopicStep;
 pub struct Controller {
     pub size: usize,
     pub topics: Signal<Vec<TopicSummary>>,
-    pub bookmark: Signal<Option<String>>,
     pub status: Signal<Option<TopicStatus>>,
     pub nav: Navigator,
 }
@@ -28,19 +27,16 @@ impl Controller {
             let repo = Topic::get_client(&crate::config::get().main_api_endpoint);
             match repo.query(TopicQuery::new(size)).await {
                 Ok(v) => v,
-                Err(_) => CommonQueryResponse::default(),
+                Err(_) => vec![],
             }
         })?;
 
-        let CommonQueryResponse::<TopicSummary> { items, bookmark } =
-            (list_topics.value())().unwrap_or_default();
+        let items = (list_topics.value())().unwrap_or_default();
 
         let topics = use_signal(|| items);
-        let bookmark = use_signal(|| bookmark);
 
         let ctrl = Self {
             topics,
-            bookmark,
             size,
             status,
             nav: use_navigator(),

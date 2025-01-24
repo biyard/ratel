@@ -1,24 +1,43 @@
+#![allow(unused)]
 use crate::*;
 use by_macros::api_model;
 
 #[cfg(feature = "server")]
 use by_axum::aide;
+use lazy_static::lazy_static;
+use validator::ValidationError;
 
-#[derive(Debug, Clone, serde::Deserialize, serde::Serialize, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[derive(validator::Validate)]
 #[api_model(base = "/users/v1", read_action = user_info, table = users)]
 pub struct User {
     #[api_model(primary_key)]
     pub id: String,
-    #[api_model(type = TIMESTAMP)]
+    #[api_model(type = TIMESTAMP, auto = insert)]
     pub created_at: u64,
-    #[api_model(type = TIMESTAMP)]
+    #[api_model(type = TIMESTAMP, auto = [insert, update])]
     pub updated_at: u64,
 
     #[api_model(action = signup)]
+    #[validate(custom(function = "validate_nickname"))]
     pub nickname: String,
-    #[api_model(action = signup, read_action = check_email)]
+    #[api_model(unique)]
+    pub principal: String,
+    #[api_model(action = signup, read_action = check_email, unique)]
+    #[validate(email)]
     pub email: String,
     #[api_model(action = signup)]
     pub profile_url: String,
+}
+
+fn validate_nickname(nickname: &str) -> std::result::Result<(), ValidationError> {
+    lazy_static! {
+        static ref NICKNAME_REGEX: regex::Regex =
+            regex::Regex::new(r"^[a-zA-Z0-9][a-zA-Z0-9-_]{1,20}$").unwrap();
+    }
+
+    if !NICKNAME_REGEX.is_match(nickname) {
+        return Err(ValidationError::new("Nickname must be started with alphabet or number and only allow alphabet, number, hyphen and underscore, maximum 20 characters"));
+    }
+
+    Ok(())
 }

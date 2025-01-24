@@ -102,7 +102,6 @@ impl TopicControllerV1 {
             items: vec![
                 TopicSummary {
                     id: "1".to_string(),
-                    r#type: "type".to_string(),
                     created_at: 0,
                     updated_at: 0,
                     deleted_at: None,
@@ -127,7 +126,6 @@ impl TopicControllerV1 {
                 },
                 TopicSummary {
                     id: "1".to_string(),
-                    r#type: "type".to_string(),
                     created_at: 0,
                     updated_at: 0,
                     deleted_at: None,
@@ -151,7 +149,6 @@ impl TopicControllerV1 {
                 },
                 TopicSummary {
                     id: "1".to_string(),
-                    r#type: "type".to_string(),
                     created_at: 0,
                     updated_at: 0,
                     deleted_at: None,

@@ -1,13 +1,11 @@
-use crate::CommonQueryResponse;
 #[cfg(feature = "server")]
 use by_axum::aide;
 use by_macros::api_model;
 
 use super::Vote;
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Eq, PartialEq)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
-#[api_model(base = "/topics/v1/:topic-id/comments", iter_type=CommonQueryResponse)]
+#[derive(Eq, PartialEq)]
+#[api_model(base = "/topics/v1/:topic-id/comments", database = skip)]
 pub struct Comment {
     #[api_model(summary)]
     pub id: String,
