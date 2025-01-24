@@ -1,3 +1,4 @@
+use crate::QueryResponse;
 use by_macros::api_model;
 use chrono::Datelike;
 use num_format::{Locale, ToFormattedString};
@@ -11,7 +12,7 @@ use by_axum::aide;
 #[cfg(feature = "server")]
 use schemars::JsonSchema;
 
-#[api_model(base = "/topics/v1", database = skip)]
+#[api_model(base = "/topics/v1", database = skip, iter_type=QueryResponse)]
 pub struct Topic {
     #[api_model(summary)]
     pub id: String,

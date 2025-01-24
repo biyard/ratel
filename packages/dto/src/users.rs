@@ -1,4 +1,5 @@
 #![allow(unused)]
+use crate::QueryResponse;
 use crate::*;
 use by_macros::api_model;
 
@@ -8,7 +9,7 @@ use lazy_static::lazy_static;
 use validator::ValidationError;
 
 #[derive(validator::Validate)]
-#[api_model(base = "/users/v1", read_action = user_info, table = users)]
+#[api_model(base = "/users/v1", read_action = user_info, table = users, iter_type=Vec)]
 pub struct User {
     #[api_model(primary_key)]
     pub id: String,

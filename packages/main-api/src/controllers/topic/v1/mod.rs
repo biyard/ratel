@@ -87,7 +87,7 @@ impl TopicControllerV1 {
         Extension(_sig): Extension<Option<Signature>>,
 
         Query(req): Query<TopicQuery>,
-    ) -> Result<Json<CommonQueryResponse<TopicSummary>>> {
+    ) -> Result<Json<QueryResponse<TopicSummary>>> {
         let log = ctrl.log.new(o!("api" => "list_topics"));
         slog::debug!(log, "list topics {:?}", req);
         let started_at = std::time::SystemTime::now()
@@ -98,7 +98,8 @@ impl TopicControllerV1 {
         let ended_at = started_at + day * 7;
         let status = req.status.unwrap_or(TopicStatus::Draft);
 
-        let ret = CommonQueryResponse {
+        let ret = QueryResponse {
+            total_count: 3,
             items: vec![
                 TopicSummary {
                     id: "1".to_string(),
@@ -171,7 +172,6 @@ impl TopicControllerV1 {
                     volume: 1000,
                 }
             ],
-            bookmark: None,
         };
         Ok(Json(ret))
     }
