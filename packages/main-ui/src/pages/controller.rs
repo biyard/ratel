@@ -1,13 +1,13 @@
 use dioxus_aws::prelude::*;
-use dto::{CommonQueryResponse, Topic, TopicQuery, TopicStatus, TopicSummary};
+use dto::{Topic, TopicQuery, TopicStatus, TopicSummary};
 
 use crate::config;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Controller {
-    pub topics: Resource<CommonQueryResponse<TopicSummary>>,
-    pub finished_topics: Resource<CommonQueryResponse<TopicSummary>>,
-    pub upcoming_topics: Resource<CommonQueryResponse<TopicSummary>>,
+    pub topics: Resource<Vec<TopicSummary>>,
+    pub finished_topics: Resource<Vec<TopicSummary>>,
+    pub upcoming_topics: Resource<Vec<TopicSummary>>,
 }
 
 impl Controller {
@@ -27,7 +27,7 @@ impl Controller {
                 Ok(res) => res,
                 Err(e) => {
                     tracing::error!("list topics error: {:?}", e);
-                    CommonQueryResponse::<TopicSummary>::default()
+                    vec![]
                 }
             }
         })?;
@@ -45,7 +45,7 @@ impl Controller {
                 Ok(res) => res,
                 Err(e) => {
                     tracing::error!("list topics error: {:?}", e);
-                    CommonQueryResponse::<TopicSummary>::default()
+                    vec![]
                 }
             }
         })?;
@@ -63,7 +63,7 @@ impl Controller {
                 Ok(res) => res,
                 Err(e) => {
                     tracing::error!("list topics error: {:?}", e);
-                    CommonQueryResponse::<TopicSummary>::default()
+                    vec![]
                 }
             }
         })?;
@@ -82,7 +82,7 @@ impl Controller {
         self.topics.with(|f| {
             tracing::debug!("main topic: {:?}", f);
             if let Some(value) = f {
-                value.items.clone()
+                value.clone()
             } else {
                 vec![]
             }
@@ -93,7 +93,7 @@ impl Controller {
         self.finished_topics.with(|f| {
             tracing::debug!("finished topic: {:?}", f);
             if let Some(value) = f {
-                value.items.clone()
+                value.clone()
             } else {
                 vec![]
             }
@@ -104,7 +104,7 @@ impl Controller {
         self.upcoming_topics.with(|f| {
             tracing::debug!("upcoming topic: {:?}", f);
             if let Some(value) = f {
-                value.items.clone()
+                value.clone()
             } else {
                 vec![]
             }

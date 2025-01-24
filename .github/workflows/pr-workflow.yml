@@ -33,8 +33,6 @@ jobs:
       - name: Checking violate
         env:
           REGION: ap-northeast-2
-          ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           SERVICE: main-ui
         run: |
           dx check -p $SERVICE

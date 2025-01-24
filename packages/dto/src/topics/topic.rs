@@ -1,4 +1,3 @@
-use crate::CommonQueryResponse;
 use by_macros::api_model;
 use chrono::Datelike;
 use num_format::{Locale, ToFormattedString};
@@ -12,14 +11,10 @@ use by_axum::aide;
 #[cfg(feature = "server")]
 use schemars::JsonSchema;
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default, Eq, PartialEq)]
-#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
-#[api_model(base = "/topics/v1", iter_type=CommonQueryResponse)]
+#[api_model(base = "/topics/v1", database = skip)]
 pub struct Topic {
     #[api_model(summary)]
     pub id: String,
-    #[api_model(summary)]
-    pub r#type: String,
     #[api_model(summary)]
     pub created_at: u64,
     #[api_model(summary)]

@@ -1,4 +1,4 @@
-use by_axum::{axum::middleware, logger::root};
+use by_axum::axum::middleware;
 use by_types::DatabaseConfig;
 use controllers::{assets::v1::AssetControllerV1, topic::v1::TopicControllerV1};
 use dto::error::ServiceError;
@@ -32,8 +32,11 @@ pub mod utils;
 
 #[tokio::main]
 async fn main() -> Result<(), ServiceError> {
-    let log = root();
     let conf = config::get();
+    let _ = tracing_subscriber::fmt()
+        .with_file(true)
+        .with_line_number(true)
+        .try_init();
 
     let pool = if let DatabaseConfig::Postgres { url, pool_size } = conf.database {
         PgPoolOptions::new()
@@ -69,7 +72,7 @@ async fn main() -> Result<(), ServiceError> {
     let listener = TcpListener::bind(format!("0.0.0.0:{}", port))
         .await
         .unwrap();
-    slog::info!(log, "listening on {}", listener.local_addr().unwrap());
+    tracing::info!("listening on {}", listener.local_addr().unwrap());
     by_axum::serve(listener, app).await.unwrap();
 
     Ok(())

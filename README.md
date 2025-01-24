@@ -1,5 +1,11 @@
 # DemocraSee
 
+## Common Environments
+| Name     | Description                                                  |
+|----------|--------------------------------------------------------------|
+| RUST_LOG | Logging libraries based on tracing(`debug`, `info`, `error`) |
+
+
 ## Development
 ### Running API Server
 - It runs =SERVICE= crate.
