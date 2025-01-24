@@ -36,6 +36,8 @@ async fn main() -> Result<(), ServiceError> {
     let _ = tracing_subscriber::fmt()
         .with_file(true)
         .with_line_number(true)
+        .with_thread_ids(true)
+        .with_target(false)
         .try_init();
 
     let pool = if let DatabaseConfig::Postgres { url, pool_size } = conf.database {
