@@ -11,6 +11,6 @@ pub fn TopicsByIdPage(id: String, lang: Language) -> Element {
     let tr: TopicsByIdTranslate = translate(&lang);
 
     rsx! {
-        div { id: "new", "{tr.title} PAGE" }
+        div { id: "topics-by-id", "{tr.title} PAGE" }
     }
 }
