@@ -47,19 +47,41 @@ impl UserControllerV1 {
         State(ctrl): State<UserControllerV1>,
         Extension(sig): Extension<Option<Signature>>,
 
-        Query(req): Query<UserReadAction>,
+        Query(mut req): Query<UserReadAction>,
     ) -> Result<Json<User>> {
         tracing::debug!("read_user: sig={:?}", sig);
-        sig.ok_or(ServiceError::Unauthorized)?;
+        let principal = sig
+            .ok_or(ServiceError::Unauthorized)?
+            .principal()
+            .map_err(|s| {
+                tracing::error!("failed to get principal: {:?}", s);
+                ServiceError::Unknown(s.to_string())
+            })?;
         req.validate()?;
 
-        let user = ctrl.users.find_one(&req).await?;
-
-        Ok(Json(user))
+        match req.action {
+            Some(UserReadActionType::CheckEmail) => ctrl.check_email(req).await,
+            Some(UserReadActionType::UserInfo) => {
+                req.principal = Some(principal);
+                ctrl.user_info(req).await
+            }
+            Some(UserReadActionType::Login) => {
+                req.principal = Some(principal);
+                ctrl.login(req).await
+            }
+            None | Some(UserReadActionType::ByPrincipal) => Err(ServiceError::BadRequest)?,
+        }
     }
 }
 
 impl UserControllerV1 {
+    #[instrument]
+    pub async fn login(&self, req: UserReadAction) -> Result<Json<User>> {
+        let user = self.users.find_one(&req).await?;
+
+        Ok(Json(user))
+    }
+
     #[instrument]
     pub async fn signup(&self, req: UserSignupRequest, sig: Signature) -> Result<Json<User>> {
         let principal = sig.principal().map_err(|s| {
@@ -71,6 +93,24 @@ impl UserControllerV1 {
             .users
             .insert(req.nickname, principal, req.email, req.profile_url)
             .await?;
+
+        Ok(Json(user))
+    }
+
+    #[instrument]
+    pub async fn check_email(&self, req: UserReadAction) -> Result<Json<User>> {
+        let user = self
+            .users
+            .find_one(&req)
+            .await
+            .map_err(|_| ServiceError::NotFound)?;
+
+        Ok(Json(user))
+    }
+
+    #[instrument]
+    pub async fn user_info(&self, req: UserReadAction) -> Result<Json<User>> {
+        let user = self.users.find_one(&req).await?;
 
         Ok(Json(user))
     }
