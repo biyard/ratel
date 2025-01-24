@@ -19,7 +19,7 @@ pub fn Header(lang: Language) -> Element {
     rsx! {
         div { class: "flex flex-row items-center justify-between w-full pt-[47px] pb-[39px]",
             LogoWrapper {}
-            Menus { class: "grow flex flex-row justify-end", lang }
+            Menus { class: "grow flex flex-row justify-end px-[30px]", lang }
             HeaderTails { lang }
         }
     }
@@ -74,9 +74,15 @@ pub fn HeaderTails(lang: Language) -> Element {
             .with_title(i18n_header.signup);
     };
 
+    let logout = move |_| {
+        tracing::debug!("logout button clicked");
+        user_service.logout();
+    };
+
     rsx! {
         div { class: "flex flex-row gap-[30px] justify-start items-center",
             if let Some((nickname, profile_url)) = user_service.get_user_info() {
+                Button { color: "{theme.primary00}", onclick: logout, "{i18n_header.logout}" }
                 div { class: "flex flex-row gap-[8px] items-center justify-center",
                     img {
                         class: "w-[24px] h-[24px] object-contain rounded-full",

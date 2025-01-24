@@ -64,6 +64,18 @@ impl UserService {
         }
     }
 
+    pub fn logout(&mut self) {
+        #[cfg(feature = "web-only")]
+        {
+            self.firebase.write().logout();
+        }
+
+        self.email.set("".to_string());
+        self.nickname.set("".to_string());
+        self.profile_url.set("".to_string());
+        self.principal.set("".to_string());
+    }
+
     #[cfg(feature = "web-only")]
     pub async fn get_user_info_from_server(&mut self) {
         let cli = (self.cli)();
@@ -159,8 +171,10 @@ impl UserService {
                     let cli = (self.cli)();
 
                     let user: User = match cli.check_email(email.clone()).await {
+                        // Login
                         Ok(v) => v,
                         Err(e) => {
+                            // Signup
                             rest_api::remove_signer();
 
                             match e {
@@ -213,8 +227,8 @@ impl UserService {
 
         let res: User = match cli
             .signup(
-                email.to_string(),
                 nickname.to_string(),
+                email.to_string(),
                 profile_url.to_string(),
             )
             .await

@@ -1,13 +1,13 @@
 use dioxus_aws::prelude::*;
-use dto::{CommonQueryResponse, Topic, TopicQuery, TopicStatus, TopicSummary};
+use dto::{QueryResponse, Topic, TopicQuery, TopicStatus, TopicSummary};
 
 use crate::config;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Controller {
-    pub topics: Resource<CommonQueryResponse<TopicSummary>>,
-    pub finished_topics: Resource<CommonQueryResponse<TopicSummary>>,
-    pub upcoming_topics: Resource<CommonQueryResponse<TopicSummary>>,
+    pub topics: Resource<QueryResponse<TopicSummary>>,
+    pub finished_topics: Resource<QueryResponse<TopicSummary>>,
+    pub upcoming_topics: Resource<QueryResponse<TopicSummary>>,
 }
 
 impl Controller {
@@ -27,7 +27,7 @@ impl Controller {
                 Ok(res) => res,
                 Err(e) => {
                     tracing::error!("list topics error: {:?}", e);
-                    CommonQueryResponse::<TopicSummary>::default()
+                    QueryResponse::default()
                 }
             }
         })?;
@@ -45,7 +45,7 @@ impl Controller {
                 Ok(res) => res,
                 Err(e) => {
                     tracing::error!("list topics error: {:?}", e);
-                    CommonQueryResponse::<TopicSummary>::default()
+                    QueryResponse::default()
                 }
             }
         })?;
@@ -63,7 +63,7 @@ impl Controller {
                 Ok(res) => res,
                 Err(e) => {
                     tracing::error!("list topics error: {:?}", e);
-                    CommonQueryResponse::<TopicSummary>::default()
+                    QueryResponse::default()
                 }
             }
         })?;
@@ -81,33 +81,22 @@ impl Controller {
     pub fn ongoing_topics(&self) -> Vec<TopicSummary> {
         self.topics.with(|f| {
             tracing::debug!("main topic: {:?}", f);
-            if let Some(value) = f {
-                value.items.clone()
-            } else {
-                vec![]
-            }
+
+            f.clone().unwrap_or_default().items
         })
     }
 
     pub fn finished_topics(&self) -> Vec<TopicSummary> {
         self.finished_topics.with(|f| {
             tracing::debug!("finished topic: {:?}", f);
-            if let Some(value) = f {
-                value.items.clone()
-            } else {
-                vec![]
-            }
+            f.clone().unwrap_or_default().items
         })
     }
 
     pub fn upcoming_topics(&self) -> Vec<TopicSummary> {
         self.upcoming_topics.with(|f| {
             tracing::debug!("upcoming topic: {:?}", f);
-            if let Some(value) = f {
-                value.items.clone()
-            } else {
-                vec![]
-            }
+            f.clone().unwrap_or_default().items
         })
     }
 }

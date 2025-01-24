@@ -103,6 +103,17 @@ impl FirebaseWallet {
         }
     }
 
+    pub fn logout(&mut self) {
+        self.private_key = None;
+        self.public_key = None;
+        self.principal = None;
+        self.email = None;
+        self.name = None;
+        self.photo_url = None;
+
+        let _ = LocalStorage::delete(IDENTITY_KEY);
+    }
+
     pub async fn request_wallet_with_google(&mut self) -> Result<WalletEvent, String> {
         use crate::drive_api::DriveApi;
 

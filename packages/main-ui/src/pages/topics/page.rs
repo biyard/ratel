@@ -28,7 +28,7 @@ pub fn TopicsPage(lang: Language) -> Element {
 
             }
             div { class: "w-full flex flex-col justify-start items-start",
-                for topic in (ctrl.topics)() {
+                for topic in ctrl.get_topics() {
                     TopicCard { topic, lang }
                 }
             }

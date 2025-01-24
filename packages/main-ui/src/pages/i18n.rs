@@ -77,6 +77,11 @@ translate! {
         ko: "로그인",
         en: "Login",
     },
+
+    logout: {
+        ko: "로그아웃",
+        en: "Logout",
+    },
 }
 
 translate! {
