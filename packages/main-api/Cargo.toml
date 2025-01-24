@@ -1,6 +1,6 @@
 [package]
 name = "main-api"
-version = "0.7.3"
+version = "0.7.4"
 authors.workspace = true
 description.workspace = true
 edition.workspace = true
@@ -23,6 +23,9 @@ uuid = { version = "1.10.1", features = ["v4"] }
 rest-api = "0.1.1"
 by-types.workspace = true
 sqlx.workspace = true
+tracing = "0.1.41"
+tracing-subscriber = "0.3.19"
+validator = "0.20.0"
 
 [features]
 default = []

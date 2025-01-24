@@ -11,8 +11,7 @@ use super::NewTopicStep;
 #[derive(Clone, Copy)]
 pub struct Controller {
     pub size: usize,
-    pub topics: Signal<Vec<TopicSummary>>,
-    pub bookmark: Signal<Option<String>>,
+    pub topics: Resource<QueryResponse<TopicSummary>>,
     pub status: Signal<Option<TopicStatus>>,
     pub nav: Navigator,
 }
@@ -24,23 +23,20 @@ impl Controller {
         let topic_repository =
             use_signal(|| Topic::get_client(&crate::config::get().main_api_endpoint));
 
-        let list_topics = use_server_future(move || async move {
+        let topics = use_server_future(move || async move {
             let repo = Topic::get_client(&crate::config::get().main_api_endpoint);
             match repo.query(TopicQuery::new(size)).await {
                 Ok(v) => v,
-                Err(_) => CommonQueryResponse::default(),
+                Err(_) => QueryResponse::default(),
             }
         })?;
 
-        let CommonQueryResponse::<TopicSummary> { items, bookmark } =
-            (list_topics.value())().unwrap_or_default();
+        // let items = (list_topics.value())().unwrap_or_default();
 
-        let topics = use_signal(|| items);
-        let bookmark = use_signal(|| bookmark);
+        // let topics = use_signal(|| items);
 
         let ctrl = Self {
             topics,
-            bookmark,
             size,
             status,
             nav: use_navigator(),
@@ -48,6 +44,10 @@ impl Controller {
         use_context_provider(|| ctrl);
 
         Ok(ctrl)
+    }
+
+    pub fn get_topics(&self) -> Vec<TopicSummary> {
+        self.topics.value()().unwrap_or_default().items
     }
 
     pub fn navigate_to_create_topic(&self, lang: &Language) {
