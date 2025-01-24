@@ -26,8 +26,16 @@ pub fn Footer() -> Element {
                 div { style: "color: #8588AB;", "© 2025  Biyard Corp. All rights reserved." }
 
                 div { class: " flex gap-5", style: "color: #8588AB;",
-                    div { "Privacy Policy" }
-                    div { "Terms of Service" }
+                    a {
+                        href: "https://",
+                        class: "hover:pointer",
+                        target: "_blank",
+                        "Privacy Policy" }
+                    a
+                        {href: "https://",
+                        class: "hover:pointer",
+                        target: "_blank",
+                        "Terms of Service" }
                 }
             }
         }

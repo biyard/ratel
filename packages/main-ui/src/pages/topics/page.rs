@@ -138,7 +138,7 @@ pub fn TopicCard(topic: TopicSummary, lang: Language) -> Element {
 
 #[component]
 pub fn MoreButton(lang: Language) -> Element {
-    let tr: ButtonTextTranslate = translate(&lang);
+    let tr: TopicsTranslate = translate(&lang);
 
     rsx! {
         div { class: "mt-4 flex justify-center items-center w-full",
