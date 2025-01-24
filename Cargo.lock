@@ -4109,7 +4109,7 @@ checksum = "c41e0c4fef86961ac6d6f8a82609f55f31b05e4fce149ac5710e439df7619ba4"
 
 [[package]]
 name = "main-api"
-version = "0.7.3"
+version = "0.7.4"
 dependencies = [
  "by-axum",
  "by-types",
@@ -4133,7 +4133,7 @@ dependencies = [
 
 [[package]]
 name = "main-ui"
-version = "0.7.3"
+version = "0.7.4"
 dependencies = [
  "base64 0.22.1",
  "by-macros",
@@ -4151,7 +4151,7 @@ dependencies = [
  "google-wallet",
  "num-format",
  "reqwest",
- "rest-api 0.1.1",
+ "rest-api 0.1.3",
  "serde",
  "tracing",
  "url",
@@ -5425,6 +5425,7 @@ dependencies = [
  "ring",
  "serde",
  "simple_asn1",
+ "tracing",
 ]
 
 [[package]]
