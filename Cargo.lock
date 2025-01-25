@@ -1615,11 +1615,9 @@ dependencies = [
  "dioxus-history",
  "dioxus-hooks",
  "dioxus-html",
- "dioxus-liveview",
  "dioxus-logger 0.6.1",
  "dioxus-router",
  "dioxus-signals",
- "dioxus-ssr",
  "dioxus-web",
  "manganis",
  "serde",
@@ -1960,34 +1958,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "dioxus-liveview"
-version = "0.6.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2dd06f611b0ba282d1777e92178d36d73e5a5334d59cbb51e0e258ace3449c37"
-dependencies = [
- "axum 0.7.9",
- "dioxus-cli-config",
- "dioxus-core",
- "dioxus-devtools",
- "dioxus-document",
- "dioxus-history",
- "dioxus-html",
- "dioxus-interpreter-js",
- "futures-channel",
- "futures-util",
- "generational-box",
- "rustc-hash",
- "serde",
- "serde_json",
- "slab",
- "thiserror 1.0.69",
- "tokio",
- "tokio-stream",
- "tokio-util",
- "tracing",
-]
-
-[[package]]
 name = "dioxus-logger"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2014,7 +1984,7 @@ dependencies = [
 
 [[package]]
 name = "dioxus-oauth"
-version = "0.6.3"
+version = "0.6.4"
 dependencies = [
  "dioxus",
  "reqwest",
@@ -2029,7 +1999,7 @@ dependencies = [
 
 [[package]]
 name = "dioxus-popup"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "dioxus",
 ]
@@ -2123,7 +2093,7 @@ dependencies = [
 
 [[package]]
 name = "dioxus-translate"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "dioxus-translate-macro",
  "dioxus-translate-types",
@@ -2144,7 +2114,7 @@ dependencies = [
 
 [[package]]
 name = "dioxus-translate-types"
-version = "0.1.0"
+version = "0.1.1"
 
 [[package]]
 name = "dioxus-web"
@@ -2477,16 +2447,6 @@ checksum = "3c3e4e0dd3673c1139bf041f3008816d9cf2946bbfac2945c09e523b8d7b05b2"
 dependencies = [
  "event-listener",
  "pin-project-lite",
-]
-
-[[package]]
-name = "example"
-version = "0.1.1"
-dependencies = [
- "dioxus",
- "dioxus-logger 0.5.1",
- "dioxus-oauth",
- "serde",
 ]
 
 [[package]]
@@ -3049,7 +3009,7 @@ dependencies = [
 
 [[package]]
 name = "google-wallet"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "base64 0.22.1",
  "candid",
@@ -4114,7 +4074,6 @@ dependencies = [
  "by-axum",
  "by-types",
  "chrono",
- "dioxus-translate",
  "dto",
  "easy-dynamodb",
  "reqwest",
