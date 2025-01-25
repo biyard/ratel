@@ -22,11 +22,13 @@ web-sys = { version = "0.3.72", features=["Navigator"], optional = true}
 serde = "1.0.216"
 num-format = "0.4.4"
 
-dioxus-popup = { path = "../dioxus-popup" }
 dioxus-sdk = { version = "0.6.0", features = ["window_size"], optional = true }
-dioxus-oauth = { path = "../dioxus-oauth", features = ["web"], optional = true }
-dioxus-translate = { path = "../dioxus-translate", features = ["ko"] }
-google-wallet = { path = "../google-wallet", optional = true }
+
+dioxus-popup.workspace = true
+dioxus-translate.workspace = true
+dioxus-oauth = { workspace = true, optional = true }
+google-wallet = { workspace = true, optional = true }
+
 chrono = "0.4.39"
 base64 = "0.22.1"
 url = "2.5.4"
