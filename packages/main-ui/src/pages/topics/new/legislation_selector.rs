@@ -1,7 +1,12 @@
 #![allow(non_snake_case)]
 use super::controller::*;
 use super::i18n::*;
+use crate::components::icons::CloseBlank;
+use crate::components::icons::CloseBlankSmall;
+use crate::components::icons::FileUpload;
 use crate::components::icons::LeftArrow;
+use crate::components::icons::PPTXFile;
+
 use dioxus::prelude::*;
 use dioxus_translate::*;
 
@@ -19,6 +24,10 @@ pub fn LegislationSelector(lang: Language, onclick: EventHandler<Option<String>>
             LegislationInputBox { lang }
             ProposedSolutionInputBox { lang }
             DiscussionPointInputBox { lang }
+            DiscussionPointBox { lang }
+            AdditionalResourcesBox { lang }
+            UploadedFileBox { lang }
+            CreateAndCancelButton { lang }
         }
     }
 }
@@ -165,6 +174,162 @@ pub fn DiscussionPointInputBox(lang: Language) -> Element {
                         println!("More button clicked!");
                     },
                     "+"
+                }
+            }
+        }
+    }
+}
+
+#[component]
+pub fn DiscussionPointBox(lang: Language) -> Element {
+    let tr: DiscussionPointBoxText = translate(&lang);
+
+    rsx! {
+        div {
+            class: "w-full flex justify-between items-center px-[20px] py-[10px] text-s font-bold p-[10px] rounded-md  h-[64px] mt-[5px]",
+            style: "background-color: #404761",
+            div { class: "flex", "{tr.box1_text}" }
+            button {
+                class: "rounded-full flex items-center",
+                style: "background-color: #212231 h-[30px] w-[30px]",
+                CloseBlank {}
+            }
+        }
+        div {
+            class: "w-full flex justify-between items-center px-[20px] py-[10px] text-s font-bold p-3 rounded-md  h-[64px] mt-[5px]",
+            style: "background-color: #404761",
+            div { class: "flex", "{tr.box2_text}" }
+            button {
+                class: "rounded-full flex items-center",
+                style: "background-color: #212231 h-[30px] w-[30px]",
+                CloseBlank {}
+            }
+        }
+    }
+}
+
+#[component]
+pub fn AdditionalResourcesBox(lang: Language) -> Element {
+    let tr: AdditionalResourcesBoxText = translate(&lang);
+
+    rsx! {
+        div { class: "h-[136px] rounded-[12px] w-full mt-[10px]",
+            // Label
+            label { class: "w-full font-bold text-white mb-1 flex items-center gap-1 text-[16px]",
+                "{tr.title_text}"
+            }
+            div {
+                class: "w-full flex flex-col justify-between items-center rounded-md  h-[136px] mt-[5px]",
+                style: "padding: 8px; border: 1px dotted #424563;",
+
+                //Icon
+                FileUpload {}
+                div { class: "font-[14px]", style: "color: #424563", "{tr.box_text}" }
+                //Line
+                div {
+                    class: "text-[12px] w-full flex flex-row justify-center items-center gap-[10px]",
+                    style: "color: #6D6D6D",
+                    hr {
+                        class: "w-[80px] mb-1",
+                        style: "border-color: ##E7E7E7;",
+                    }
+                    div { "OR" }
+                    hr {
+                        class: "w-[80px] mb-1",
+                        style: "border-color: ##E7E7E7;",
+                    }
+                }
+
+                //button
+                div {
+                    class: "flex justify-center items-center w-[173px] h-[30px] rounded-[4px] align-middle",
+                    style: "background-color: #74789E",
+                    button { onclick: move |_event| { print!("button clicked") },
+                        div { class: " text-[12px]", style: "color: #212231", "{tr.button_text}" }
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[component]
+pub fn UploadedFileBox(lang: Language) -> Element {
+    rsx! {
+        div { class: "h-[146px] rounded-[12px] w-full mt-[40px] flex justify-start items-center",
+            div { class: "flex flex-col justify-start items-center gap-[10px]",
+                div { class: "w-full flex flex- center justify-start items-center gap-[5px]",
+                    UploadedFile {}
+                    UploadedFile {}
+                    UploadedFile {}
+                    UploadedFile {}
+                    UploadedFile {}
+                    UploadedFile {}
+                    UploadedFile {}
+                }
+                div { class: "w-full flex justify-start items-center gap-[5px]",
+                    UploadedFile {}
+                    UploadedFile {}
+                    UploadedFile {}
+                }
+            }
+        }
+    }
+}
+
+#[component]
+pub fn UploadedFile() -> Element {
+    rsx! {
+        div {
+            class: "flex justify-center items-center w-[170px] h-[68px] rounded-[4px] p-4",
+            style: "background-color: #404761",
+            PPTXFile {}
+            div { class: "w-full flex flex-col justify-center items-center text-[12px]",
+                div { "assets.pdf" }
+                div { style: "color: #6D6D6D", "5.3MB" }
+            }
+            button {
+                class: "flex justify-center items-center",
+                onclick: move |_event| { print!("button clicked") },
+                CloseBlankSmall {}
+            }
+        }
+    }
+}
+
+#[component]
+pub fn CreateAndCancelButton(lang: Language) -> Element {
+    let tr: CreateAndCancelButtonTextTranslate = translate(&lang);
+    let mut list = use_signal(Vec::new);
+
+    rsx! {
+        div { class: "flex justify-center gap-[30px] mt-[50px]",
+            div {
+                class: "flex justify-center items-center w-[400px] h-[57px] rounded-[12px] align-middle",
+                style: "background-color: #74789E",
+                button {
+                    onclick: move |_event| {
+                        let list_len = list.len();
+                        list.push(list_len);
+                        list.push(list_len);
+                    },
+                    div {
+                        class: "font-bold text-[18px]",
+                        style: "color: #212231",
+                        "{tr.cancel_button_text}"
+                    }
+                }
+            }
+            div {
+                class: "flex justify-center items-center w-[400px] h-[57px] rounded-[12px] align-middle",
+                style: "background-color: #B5AB65",
+                button {
+                    onclick: move |_event| {
+                        let list_len = list.len();
+                        list.push(list_len);
+                        list.push(list_len);
+                    },
+                    div { class: "font-bold text-[18px]", "{tr.create_button_text}" }
                 }
             }
         }

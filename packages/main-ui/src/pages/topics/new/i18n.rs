@@ -87,7 +87,7 @@ translate! {
         en: "PROPOSED SOLUTION(S)",
     }
     proposedsolution_text: {
-        ko: "제안된 변경 사항이나 수정 사항을 개략적으로 설명합니다. 실행 단계나 조치를 자세히 설명하면서 가능한 한 구체적이고 실행 가능하도록 작성해 주세요.\n ex) \n 1. 거래소 등록에 대한 명확한 기준을 정의합니다.\n 2. 연간 수익이 100만 달러 미만인 스타트업을 위한 간소화된 신청 절차를 소개합니다.",
+        ko: "제안된 변경사항이나 수정사항을 개략적으로 설명합니다. 실행 단계나 조치를 자세히 설명하면서 가능한 한 구체적이고 실행 가능하도록 작성해 주세요.\n ex) \n 1. 거래소 등록에 대한 명확한 기준을 정의합니다.\n 2. 연간 수익이 100만 달러 미만인 스타트업을 위한 간소화된 신청 절차를 소개합니다.",
         en: "Outline your suggested changes or amendments. Be as specific and actionable as possible, detailing steps or measures for implementation.\n Example: \n 1.Define clear criteria for exchange registration.\n 2.Introduce a streamlined application process for startups with less than $1M in annual revenue.",
     },
 }
@@ -102,4 +102,68 @@ translate! {
         ko: "협력을 촉진하고 참가자들의 다양한 의견을 수렴하기 위해 논의할 특정 분야나 질문을 식별하여 작성해 주십시오.",
         en: "Identify specific areas or questions for discussion to foster collaboration and diverse input from participants.",
     },
+}
+
+translate! {
+    CreationLoadingPopupText;
+    creation_loading_popup_title: {
+        ko: "논점",
+        en: "DISCUSSION POINTS",
+    }
+    creation_loading_popup_text: {
+        ko: "협력을 촉진하고 참가자들의 다양한 의견을 수렴하기 위해 논의할 특정 분야나 질문을 식별하여 작성해 주십시오.",
+        en: "Identify specific areas or questions for discussion to foster collaboration and diverse input from participants.",
+    },
+}
+
+translate! {
+    CreateAndCancelButtonTextTranslate;
+
+    create_button_text: {
+        ko: "생성",
+        en: "CREATE",
+    },
+    cancel_button_text: {
+    ko: "취소",
+    en: "CANCEL",
+},
+}
+
+translate! {
+    CreatePopupTextTranslate;
+
+    popup_text: {
+        ko: "귀하의 거래가 현재 처리 중입니다. 잠시만 기다려주세요. 이 창을 닫아도 거래는 취소되지 않습니다. 저희 프로젝트에 기여해 주셔서 감사합니다!",
+        en: "Your transaction is currently being processed. Please wait a moment. Even if you close this window, the transaction will not be canceled.Thank you for contributing to our project!",
+},
+}
+
+translate! {
+    DiscussionPointBoxText;
+
+    box1_text: {
+        ko: "&quot;간소화된 프로세스&quot;의 기준은 무엇입니까?",
+        en: "What should be the criteria for a \"streamlined process\"?",
+},
+    box2_text: {
+        ko: "이 법안은 혁신과 소비자 보호 사이의 균형을 어떻게 맞출 수 있습니까?",
+        en: "How can the legislation balance innovation with consumer protection?",
+},
+}
+
+translate! {
+    AdditionalResourcesBoxText;
+
+    title_text: {
+        ko: "추가 리소스",
+        en: "ADDITIONAL RESOURCES",
+},
+    box_text: {
+        ko: "파일을 첨부하려면 드래그 앤 드롭하세요.",
+        en: "Please drag and drop to attach a file",
+},
+    button_text: {
+        ko: "PC에서 파일 선택"
+        en: "SELECT FILE FROM PC" ,
+    }
 }
