@@ -124,18 +124,37 @@ translate! {
         en: "CREATE",
     },
     cancel_button_text: {
-    ko: "취소",
-    en: "CANCEL",
-},
-}
-
-translate! {
-    CreatePopupTextTranslate;
-
-    popup_text: {
-        ko: "귀하의 거래가 현재 처리 중입니다. 잠시만 기다려주세요. 이 창을 닫아도 거래는 취소되지 않습니다. 저희 프로젝트에 기여해 주셔서 감사합니다!",
-        en: "Your transaction is currently being processed. Please wait a moment. Even if you close this window, the transaction will not be canceled.Thank you for contributing to our project!",
-},
+        ko: "취소",
+        en: "CANCEL",
+    },
+    popup_title: {
+        ko: "귀하의 기부를 처리중입니다"
+        en: "PROCESSING YOUR CONTRIBUTION"
+    },
+    popup_text_part1: {
+        ko: "귀하의 거래가 현재 처리 중입니다. 잠시만 기다려주세요.",
+        en: "Your transaction is currently being processed. Please wait a moment.",
+    },
+    popup_text_highlight: {
+        ko: "이 창을 닫아도 거래는 취소되지 않습니다.",
+        en: "Even if you close this window, the transaction will not be canceled.",
+    },
+    popup_text_part2: {
+        ko: "우리 프로젝트에 기여해 주셔서 감사합니다!",
+        en: "Thank you for contributing to our project!",
+    },
+    created_popup_title: {
+        ko: "주제가 생성되었습니다.",
+        en: "TOPIC CREATED",
+    },
+    created_popup_text: {
+        ko: "기여해 주셔서 감사합니다!",
+        en: "Thank you for your contribution!",
+    },
+    created_button_text: {
+        ko: "확인",
+        en: "CONFIRM",
+    },
 }
 
 translate! {
