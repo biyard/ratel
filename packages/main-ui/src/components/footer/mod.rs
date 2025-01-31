@@ -8,9 +8,9 @@ pub fn Footer() -> Element {
     rsx! {
         footer { class: "w-full items-start",
             div { class: "flex flex-col justify-start items-start pb-[50px] pt-[50px] text-[15px] font-semibold align-middle gap-3",
-                // 로고
+                // logo
                 LogoWrapper {}
-                // 텍스트
+                // text
                 div {
                     class: "text-base flex flex-col",
                     style: "color: #8588AB;",
@@ -30,12 +30,14 @@ pub fn Footer() -> Element {
                         href: "https://",
                         class: "hover:pointer",
                         target: "_blank",
-                        "Privacy Policy" }
-                    a
-                        {href: "https://",
+                        "Privacy Policy"
+                    }
+                    a {
+                        href: "https://",
                         class: "hover:pointer",
                         target: "_blank",
-                        "Terms of Service" }
+                        "Terms of Service"
+                    }
                 }
             }
         }
