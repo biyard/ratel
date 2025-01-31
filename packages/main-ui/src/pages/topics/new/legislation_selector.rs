@@ -8,6 +8,7 @@ use crate::components::icons::LeftArrow;
 use crate::components::icons::PPTXFile;
 
 use dioxus::prelude::*;
+use dioxus_popup::PopupService;
 use dioxus_translate::*;
 
 #[component]
@@ -23,8 +24,7 @@ pub fn LegislationSelector(lang: Language, onclick: EventHandler<Option<String>>
             SummaryInputBox { lang }
             LegislationInputBox { lang }
             ProposedSolutionInputBox { lang }
-            DiscussionPointInputBox { lang }
-            DiscussionPointBox { lang }
+            DiscussionPoint { lang }
             AdditionalResourcesBox { lang }
             UploadedFileBox { lang }
             CreateAndCancelButton { lang }
@@ -150,8 +150,9 @@ pub fn ProposedSolutionInputBox(lang: Language) -> Element {
 }
 
 #[component]
-pub fn DiscussionPointInputBox(lang: Language) -> Element {
+pub fn DiscussionPointInputBox(lang: Language, onadd: EventHandler<String>) -> Element {
     let tr: DiscussionPointTextInputBox = translate(&lang);
+    let mut contents = use_signal(|| "".to_string());
 
     rsx! {
         div { class: "w-full min-w-md pt-[10px] text-[16px]",
@@ -163,6 +164,10 @@ pub fn DiscussionPointInputBox(lang: Language) -> Element {
             div { class: "flex justify-between w-full gap-3",
                 input {
                     class: "w-full px-[20px] py-[10px] rounded-lg focus:outline-none focus:ring-2 gap-[10px] placeholder-[#404761]",
+                    value: contents(),
+                    onchange: move |e| {
+                        contents.set(e.value());
+                    },
                     r#type: "text",
                     style: " background-color: #212231; color: white",
                     placeholder: "{tr.discussion_point_text}",
@@ -172,6 +177,7 @@ pub fn DiscussionPointInputBox(lang: Language) -> Element {
                     class: "h-10 w-[60px] text-2xl font-bold flex flex-col justify-center items-center rounded-lg bg-[#B5AB65] text-white",
                     onclick: move |_| {
                         println!("More button clicked!");
+                        onadd.call(contents());
                     },
                     "+"
                 }
@@ -181,28 +187,54 @@ pub fn DiscussionPointInputBox(lang: Language) -> Element {
 }
 
 #[component]
-pub fn DiscussionPointBox(lang: Language) -> Element {
+pub fn DiscussionPointBox(
+    lang: Language,
+    contents: Vec<String>,
+    onremove: EventHandler<usize>,
+) -> Element {
     let tr: DiscussionPointBoxText = translate(&lang);
 
     rsx! {
-        div {
-            class: "w-full flex justify-between items-center px-[20px] py-[10px] text-s font-bold p-[10px] rounded-md  h-[64px] mt-[5px]",
-            style: "background-color: #404761",
-            div { class: "flex", "{tr.box1_text}" }
-            button {
-                class: "rounded-full flex items-center",
-                style: "background-color: #212231 h-[30px] w-[30px]",
-                CloseBlank {}
+        for (index , content) in contents.iter().enumerate() {
+            div {
+                class: "w-full flex justify-between items-center px-[20px] py-[10px] text-s font-bold p-[10px] rounded-md h-[64px] mt-[5px]",
+                style: "background-color: #404761",
+                div { class: "flex", "{content}" }
+                button {
+                    class: "rounded-full flex items-center",
+                    style: "background-color: #212231 h-[30px] w-[30px]",
+                    onclick: move |_| {
+                        onremove.call(index);
+                    },
+                    CloseBlank {}
+                }
             }
         }
+    }
+}
+
+#[component]
+pub fn DiscussionPoint(lang: Language) -> Element {
+    let mut contents = use_signal(|| vec![]);
+
+    rsx! {
         div {
-            class: "w-full flex justify-between items-center px-[20px] py-[10px] text-s font-bold p-3 rounded-md  h-[64px] mt-[5px]",
-            style: "background-color: #404761",
-            div { class: "flex", "{tr.box2_text}" }
-            button {
-                class: "rounded-full flex items-center",
-                style: "background-color: #212231 h-[30px] w-[30px]",
-                CloseBlank {}
+            DiscussionPointInputBox {
+                lang,
+                onadd: move |value: String| {
+                    let mut c = contents();
+                    c.push(value);
+                    contents.set(c);
+                    tracing::debug!("contents: {:?}", contents);
+                },
+            }
+
+            DiscussionPointBox {
+                lang,
+                contents: contents(),
+                onremove: move |index: usize| {
+                    contents.remove(index);
+                },
             }
         }
     }
@@ -301,6 +333,25 @@ pub fn UploadedFile() -> Element {
 pub fn CreateAndCancelButton(lang: Language) -> Element {
     let tr: CreateAndCancelButtonTextTranslate = translate(&lang);
     let mut list = use_signal(Vec::new);
+    let mut is_open = use_signal(|| false);
+    let mut is_loading = use_signal(|| false);
+    let mut popup: PopupService = use_context();
+
+    if is_open() && is_loading() {
+        popup //loading popup
+            .open(rsx! {
+                div { "dd" }
+            })
+            .with_id("loading_popup")
+            .with_title("PROCESSING YOUR CONTRIBUTION");
+    } else if is_open() && !is_loading() {
+        popup //open popup
+            .open(rsx! {
+                div { class: "dd" }
+            })
+            .with_id("created_popup")
+            .with_title("TOPIC CREATED");
+    }
 
     rsx! {
         div { class: "flex justify-center gap-[30px] mt-[50px]",
@@ -324,14 +375,14 @@ pub fn CreateAndCancelButton(lang: Language) -> Element {
                 class: "flex justify-center items-center w-[400px] h-[57px] rounded-[12px] align-middle",
                 style: "background-color: #B5AB65",
                 button {
-                    onclick: move |_event| {
-                        let list_len = list.len();
-                        list.push(list_len);
-                        list.push(list_len);
+                    onclick: move |_| {
+                        is_open.set(true);
+                        is_loading.set(true);
                     },
-                    div { class: "font-bold text-[18px]", "{tr.create_button_text}" }
                 }
             }
+
+            div { class: "font-bold text-[18px]", "{tr.create_button_text}" }
         }
     }
 }
