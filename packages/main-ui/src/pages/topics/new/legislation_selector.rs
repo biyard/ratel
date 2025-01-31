@@ -5,6 +5,7 @@ use crate::components::icons::CloseBlank;
 use crate::components::icons::CloseBlankSmall;
 use crate::components::icons::FileUpload;
 use crate::components::icons::LeftArrow;
+use crate::components::icons::LogoWithBackground;
 use crate::components::icons::PPTXFile;
 
 use dioxus::prelude::*;
@@ -38,10 +39,7 @@ pub fn MoveBackButton(lang: Language) -> Element {
 
     rsx! {
         div { class: "flex justify-start items-center w-full align-middle pb-[50px]",
-            button {
-                onclick: move |_| {
-                    println!("button clicked");
-                },
+            button { onclick: move |_| {},
                 div { class: "h-5 flex items-center w-full" }
                 div {
                     class: "flex items-center w-full gap-2",
@@ -192,8 +190,6 @@ pub fn DiscussionPointBox(
     contents: Vec<String>,
     onremove: EventHandler<usize>,
 ) -> Element {
-    let tr: DiscussionPointBoxText = translate(&lang);
-
     rsx! {
         for (index , content) in contents.iter().enumerate() {
             div {
@@ -333,24 +329,46 @@ pub fn UploadedFile() -> Element {
 pub fn CreateAndCancelButton(lang: Language) -> Element {
     let tr: CreateAndCancelButtonTextTranslate = translate(&lang);
     let mut list = use_signal(Vec::new);
-    let mut is_open = use_signal(|| false);
-    let mut is_loading = use_signal(|| false);
+    let mut is_open = use_signal(|| true);
+    let mut is_loading = use_signal(|| true);
     let mut popup: PopupService = use_context();
 
     if is_open() && is_loading() {
         popup //loading popup
             .open(rsx! {
-                div { "dd" }
+                div { class: "mb-[10px] flex flex-col justify-between items-center",
+                    LogoWithBackground {}
+                    div { class: "mt-[35px] w-[400px] text-center text-[16px] tracking-wide",
+                        span { "{tr.popup_text_part1}" }
+                        span { class: "text-[#B5AB65] font-bold tracking-wide",
+                            "{tr.popup_text_highlight}\n"
+                        }
+                        span { "{tr.popup_text_part2}" }
+                    }
+                }
             })
             .with_id("loading_popup")
-            .with_title("PROCESSING YOUR CONTRIBUTION");
+            .with_title(tr.popup_title)
+            .without_close();
     } else if is_open() && !is_loading() {
         popup //open popup
             .open(rsx! {
-                div { class: "dd" }
+                div { class: "flex flex-col justify-between items-center",
+                    LogoWithBackground {}
+                    div { class: "mt-[35px] mb-[35px] w-[400px] text-center text-[16px] tracking-wide",
+                        span { "{tr.created_popup_text}" }
+                    }
+                    button { onclick: move |_event| { print!("button clicked") },
+                        div {
+                            class: "flex justify-center items-center rounded-[12px] w-[400px] h-[57px] font-extrabold text-[18px]",
+                            style: "background-color: #74789E; color: #212231; ",
+                            "{tr.created_button_text}"
+                        }
+                    }
+                }
             })
             .with_id("created_popup")
-            .with_title("TOPIC CREATED");
+            .with_title(tr.created_popup_title);
     }
 
     rsx! {
@@ -366,7 +384,7 @@ pub fn CreateAndCancelButton(lang: Language) -> Element {
                     },
                     div {
                         class: "font-bold text-[18px]",
-                        style: "color: #212231",
+                        style: "color: #212231;",
                         "{tr.cancel_button_text}"
                     }
                 }
@@ -375,15 +393,16 @@ pub fn CreateAndCancelButton(lang: Language) -> Element {
                 class: "flex justify-center items-center w-[400px] h-[57px] rounded-[12px] align-middle",
                 style: "background-color: #B5AB65",
                 button {
-                    onclick: move |_| {
-                        is_open.set(true);
-                        is_loading.set(true);
-                    },
+                    div {
+                        class: "font-bold text-[18px]",
+                        onclick: move |_| {
+                            is_open.set(true);
+                            is_loading.set(true);
+                        },
+                        "{tr.create_button_text}"
+                    }
                 }
             }
-
-            div { class: "font-bold text-[18px]", "{tr.create_button_text}" }
         }
     }
 }
-//111

@@ -53,3 +53,14 @@ pub fn Logo(#[props(default = 22)] width: u32, #[props(default = 26)] height: u3
         }
     }
 }
+
+#[component]
+pub fn LogoWithBackground() -> Element {
+    rsx! {
+        div {
+            class: "flex flex-center items-center justify-center rounded-full w-[85px] h-[85px]",
+            style: "background-color: #2C2E42 ",
+            Logo { width: 36, height: 42 }
+        }
+    }
+}
