@@ -6,3 +6,4 @@ pub mod icons;
 pub mod logo;
 pub mod page_title;
 pub mod tooltip;
+pub mod footer;

@@ -17,19 +17,19 @@ pub enum Route {
             #[nest("/topics")]
                 #[route("/")]
                 TopicsPage { lang: Language },
-                #[route("/:id")]
-                TopicsByIdPage { id: String, lang: Language },
                 #[route("/new?:step&:legislation_id")]
                 NewTopicPage { lang: Language, step: NewTopicStep, legislation_id: QueryParam<String> },
+                #[route("/:id")]
+                TopicsByIdPage { id: String, lang: Language },
             #[end_nest]
 
             #[nest("/patrons")]
                 #[route("/")]
                 PatronsPage { lang: Language },
-                #[route("/:id")]
-                PatronsByIdPage { id: String, lang: Language },
                 #[route("/new")]
                 NewPatronPage { lang: Language },
+                #[route("/:id")]
+                PatronsByIdPage { id: String, lang: Language },
             #[end_nest]
         #[end_layout]
     #[end_nest]
