@@ -10,15 +10,6 @@ translate! {
 }
 
 translate! {
-    LegislationSelectorTranslate;
-
-    title: {
-        ko: "",
-        en: "",
-    },
-}
-
-translate! {
     ButtonTextTranslate;
 
     button_text: {
