@@ -23,6 +23,7 @@ pub fn LegislationSelector(lang: Language, onclick: EventHandler<Option<String>>
             Title { lang }
             NameInputBox { lang }
             SummaryInputBox { lang }
+            DueDateInputBox { lang }
             LegislationInputBox { lang }
             ProposedSolutionInputBox { lang }
             DiscussionPoint { lang }
@@ -101,6 +102,28 @@ pub fn SummaryInputBox(lang: Language) -> Element {
                 class: "w-full px-[20px] py-[10px] text-s font-bold p-3 rounded-md focus:outline-none focus:ring-2 h-[325px] placeholder-[#404761]",
                 style: " background-color: #212231; border-color: #404761; color:white",
                 placeholder: "{tr.summary_text}",
+            }
+        }
+    }
+}
+
+#[component]
+pub fn DueDateInputBox(lang: Language) -> Element {
+    let tr: DueDateBox = translate(&lang);
+
+    rsx! {
+        div { class: "w-full min-w-md pt-[10px] text-[16px]",
+            // Label
+            label { class: "w-full text-lg font-bold text-white mb-1 flex items-center gap-1",
+                "{tr.title_text}"
+                div { class: "text-red-600", "*" }
+            }
+            // Input Box
+            input {
+                class: "w-full px-[20px] py-[10px] rounded-lg focus:outline-none focus:ring-2 gap-[10px] placeholder-[#404761]",
+                r#type: "text",
+                style: " background-color: #212231; color: white",
+                placeholder: "2025.01.01",
             }
         }
     }
@@ -329,8 +352,8 @@ pub fn UploadedFile() -> Element {
 pub fn CreateAndCancelButton(lang: Language) -> Element {
     let tr: CreateAndCancelButtonTextTranslate = translate(&lang);
     let mut list = use_signal(Vec::new);
-    let mut is_open = use_signal(|| true);
-    let mut is_loading = use_signal(|| true);
+    let mut is_open = use_signal(|| false);
+    let mut is_loading = use_signal(|| false);
     let mut popup: PopupService = use_context();
 
     if is_open() && is_loading() {
