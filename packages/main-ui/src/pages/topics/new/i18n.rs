@@ -68,6 +68,15 @@ translate! {
 }
 
 translate! {
+DueDateBox;
+
+title_text: {
+    ko: "기한",
+    en: "DUE DATE",
+},
+}
+
+translate! {
     LegislationTextInputBox;
 
     legislation_title: {
@@ -161,7 +170,7 @@ translate! {
     DiscussionPointBoxText;
 
     box1_text: {
-        ko: "&quot;간소화된 프로세스&quot;의 기준은 무엇입니까?",
+        ko: "\"간소화된 프로세스\"의 기준은 무엇입니까?",
         en: "What should be the criteria for a \"streamlined process\"?",
 },
     box2_text: {

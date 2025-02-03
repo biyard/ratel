@@ -1,10 +1,16 @@
 #![allow(non_snake_case)]
+pub mod i18n;
+
 use dioxus::prelude::*;
+use dioxus_translate::*;
+use i18n::FooterTranslate;
 
 use crate::components::logo::LogoWrapper;
 
 #[component]
-pub fn Footer() -> Element {
+pub fn Footer(lang: Language) -> Element {
+    let tr: FooterTranslate = translate(&lang);
+
     rsx! {
         footer { class: "w-full items-start",
             div { class: "flex flex-col justify-start items-start pb-[50px] pt-[50px] text-[15px] font-semibold align-middle gap-3",
@@ -14,9 +20,7 @@ pub fn Footer() -> Element {
                 div {
                     class: "text-base flex flex-col",
                     style: "color: #8588AB;",
-                    "Mine the Future, Cast Your"
-                    br {}
-                    "Predictions."
+                    "{tr.title_text}"
                 }
             }
             hr { class: "w-full", style: "border-color: #424563;" }
@@ -30,13 +34,13 @@ pub fn Footer() -> Element {
                         href: "https://",
                         class: "hover:pointer",
                         target: "_blank",
-                        "Privacy Policy"
+                        "{tr.privacy_policy_button_text}"
                     }
                     a {
                         href: "https://",
                         class: "hover:pointer",
                         target: "_blank",
-                        "Terms of Service"
+                        "{tr.terms_of_service_button_text}"
                     }
                 }
             }

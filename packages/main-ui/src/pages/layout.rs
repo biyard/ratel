@@ -19,7 +19,9 @@ pub fn RootLayout(lang: Language) -> Element {
                 Header { lang }
             }
             div { class: "w-full max-w-[1440px] flex-1", Outlet::<Route> {} }
-            div { class: "max-w-[1440px] w-full", Footer {} }
+            div { class: "max-w-[1440px] w-full",
+                Footer { lang }
+            }
         }
         PopupZone {}
     }
