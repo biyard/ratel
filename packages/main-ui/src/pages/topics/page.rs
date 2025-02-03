@@ -1,5 +1,6 @@
 #![allow(non_snake_case)]
 use crate::components::icons;
+use crate::components::icons::DownArrow;
 use crate::components::icons::RightArrow;
 use crate::components::page_title::PageHeader;
 use crate::components::page_title::PageHeaderTail;
@@ -25,12 +26,16 @@ pub fn TopicsPage(lang: Language) -> Element {
                     "{tr.create_topic}"
                     RightArrow {}
                 }
-
+            
             }
             div { class: "w-full flex flex-col justify-start items-start",
                 for topic in ctrl.get_topics() {
                     TopicCard { topic, lang }
                 }
+            }
+
+            div { class: "w-full",
+                MoreButton { lang }
             }
         }
     }
@@ -125,6 +130,27 @@ pub fn TopicCard(topic: TopicSummary, lang: Language) -> Element {
                             "{topic.replies}"
                         }
                     }
+                }
+            }
+        }
+    }
+}
+
+#[component]
+pub fn MoreButton(lang: Language) -> Element {
+    let tr: TopicsTranslate = translate(&lang);
+
+    rsx! {
+        div { class: "mt-4 flex justify-center items-center w-full",
+            button {
+                onclick: move |_| {
+                    tracing::debug!("More button");
+                },
+                // TODO: Implement loading more items
+                class: "h-5 flex justify-center items-center w-full text-white text-sm",
+                div { class: "flex items-center gap-3",
+                    "{tr.more}"
+                    DownArrow {}
                 }
             }
         }

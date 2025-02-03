@@ -11,6 +11,10 @@ translate! {
         ko: "토픽 생성",
         en: "Create a topic",
     },
+    more: {
+        ko: "더보기",
+        en: "More",
+    }
 }
 
 translate! {
