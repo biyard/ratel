@@ -15,7 +15,6 @@ use dioxus_translate::*;
 #[component]
 pub fn LegislationSelector(lang: Language, onclick: EventHandler<Option<String>>) -> Element {
     let mut _ctrl = Controller::new()?;
-    let _tr: LegislationSelectorTranslate = translate(&lang);
 
     rsx! {
         div {
@@ -40,7 +39,11 @@ pub fn MoveBackButton(lang: Language) -> Element {
 
     rsx! {
         div { class: "flex justify-start items-center w-full align-middle pb-[50px]",
-            button { onclick: move |_| {},
+            button {
+                onclick: move |_| {
+                    tracing::debug!("Move Back button");
+                },
+                // TODO: If button clicked, move back function need
                 div { class: "h-5 flex items-center w-full" }
                 div {
                     class: "flex items-center w-full gap-2",
@@ -197,7 +200,7 @@ pub fn DiscussionPointInputBox(lang: Language, onadd: EventHandler<String>) -> E
                 button {
                     class: "h-10 w-[60px] text-2xl font-bold flex flex-col justify-center items-center rounded-lg bg-[#B5AB65] text-white",
                     onclick: move |_| {
-                        println!("More button clicked!");
+                        tracing::debug!("Add Discussion button");
                         onadd.call(contents());
                     },
                     "+"
@@ -351,7 +354,6 @@ pub fn UploadedFile() -> Element {
 #[component]
 pub fn CreateAndCancelButton(lang: Language) -> Element {
     let tr: CreateAndCancelButtonTextTranslate = translate(&lang);
-    let mut list = use_signal(Vec::new);
     let mut is_open = use_signal(|| false);
     let mut is_loading = use_signal(|| false);
     let mut popup: PopupService = use_context();
@@ -401,10 +403,9 @@ pub fn CreateAndCancelButton(lang: Language) -> Element {
                 style: "background-color: #74789E",
                 button {
                     onclick: move |_event| {
-                        let list_len = list.len();
-                        list.push(list_len);
-                        list.push(list_len);
+                        tracing::debug!("Cancel button");
                     },
+                    // TODO: If Cancel button clicked, move to Topic page function need.
                     div {
                         class: "font-bold text-[18px]",
                         style: "color: #212231;",

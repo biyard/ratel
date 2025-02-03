@@ -22,7 +22,7 @@ pub fn NewTopicPage(
     legislation_id: QueryParam<String>,
 ) -> Element {
     let ctrl = Controller::new()?;
-
+    tracing::debug!("new_topic_page");
     let step = match step {
         NewTopicStep::WriteTopic => rsx! {
             WriteTopic {

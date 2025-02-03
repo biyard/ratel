@@ -26,7 +26,7 @@ pub fn TopicsPage(lang: Language) -> Element {
                     "{tr.create_topic}"
                     RightArrow {}
                 }
-
+            
             }
             div { class: "w-full flex flex-col justify-start items-start",
                 for topic in (ctrl.topics)() {
@@ -144,8 +144,9 @@ pub fn MoreButton(lang: Language) -> Element {
         div { class: "mt-4 flex justify-center items-center w-full",
             button {
                 onclick: move |_| {
-                    println!("More button clicked!");
+                    tracing::debug!("More button");
                 },
+                // TODO: Implement loading more items
                 class: "h-5 flex justify-center items-center w-full text-white text-sm",
                 div { class: "flex items-center gap-3",
                     "{tr.more}"
