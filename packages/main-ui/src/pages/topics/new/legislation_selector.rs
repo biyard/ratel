@@ -344,7 +344,10 @@ pub fn UploadedFile() -> Element {
             }
             button {
                 class: "flex justify-center items-center",
-                onclick: move |_event| { print!("button clicked") },
+                onclick: move |_event| {
+                    tracing::debug!("Cancel button");
+                },
+                // TODO: If button clicked, file upload browser open function need.
                 CloseBlankSmall {}
             }
         }
@@ -383,7 +386,11 @@ pub fn CreateAndCancelButton(lang: Language) -> Element {
                     div { class: "mt-[35px] mb-[35px] w-[400px] text-center text-[16px] tracking-wide",
                         span { "{tr.created_popup_text}" }
                     }
-                    button { onclick: move |_event| { print!("button clicked") },
+                    button {
+                        onclick: move |_event| {
+                            tracing::debug!("Cancel button");
+                        },
+                        // TODO: If button clicked, send to after Confirm page function need.
                         div {
                             class: "flex justify-center items-center rounded-[12px] w-[400px] h-[57px] font-extrabold text-[18px]",
                             style: "background-color: #74789E; color: #212231; ",
