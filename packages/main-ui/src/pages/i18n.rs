@@ -166,3 +166,12 @@ translate! {
         en: "PATRONS",
     },
 }
+
+translate! {
+    PatronageButtonTranslate;
+
+    button: {
+        ko: "후원하기",
+        en: "Patronage",
+    },
+}

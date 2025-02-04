@@ -1,6 +1,6 @@
 #![allow(non_snake_case)]
 use crate::components::icons;
-use crate::components::icons::DownArrow;
+use crate::components::icons::DoubleArrowDown;
 use crate::components::icons::RightArrow;
 use crate::components::page_title::PageHeader;
 use crate::components::page_title::PageHeaderTail;
@@ -150,7 +150,7 @@ pub fn MoreButton(lang: Language) -> Element {
                 class: "h-5 flex justify-center items-center w-full text-white text-sm",
                 div { class: "flex items-center gap-3",
                     "{tr.more}"
-                    DownArrow {}
+                    DoubleArrowDown {}
                 }
             }
         }
