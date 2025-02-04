@@ -1,4 +1,5 @@
 #![allow(non_snake_case)]
+use crate::route::*;
 use dioxus::prelude::*;
 use dioxus_popup::PopupService;
 use dioxus_translate::*;
@@ -10,6 +11,7 @@ use super::{
 
 use crate::{
     components::{button::Button, logo::LogoWrapper},
+    pages::i18n::PatronageButtonTranslate,
     services::user_service::{UserEvent, UserService},
     theme::Theme,
 };
@@ -20,7 +22,29 @@ pub fn Header(lang: Language) -> Element {
         div { class: "flex flex-row items-center justify-between w-full pt-[47px] pb-[39px]",
             LogoWrapper {}
             Menus { class: "grow flex flex-row justify-end px-[30px]", lang }
+            PatronageBox { lang }
             HeaderTails { lang }
+        }
+    }
+}
+
+#[component]
+pub fn PatronageBox(lang: Language) -> Element {
+    let tr: PatronageButtonTranslate = translate(&lang);
+    let navigator = use_navigator();
+
+    rsx! {
+        div {
+            button {
+                class: "h-11 px-4 py-2.5 bg-[#414462] rounded-lg justify-center items-center gap-2.5 inline-flex",
+                onclick: move |_| async move {
+                    navigator.push(Route::NewPatronPage { lang });
+                },
+                // TODO: If button clicked, go to DFR-Main page.
+                div { class: "text-white text-base font-bold font-['Inter'] uppercase leading-snug",
+                    "{tr.button}"
+                }
+            }
         }
     }
 }

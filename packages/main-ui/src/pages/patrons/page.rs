@@ -1,5 +1,5 @@
 #![allow(non_snake_case)]
-use crate::components::icons::DownArrow;
+use crate::components::icons::DoubleArrowDown;
 
 use super::controller::*;
 use super::i18n::*;
@@ -49,7 +49,7 @@ pub fn TableMenu(lang: Language) -> Element {
                 "{tr.nickname}"
             }
             div {
-                class: "w-[100px] justify-end items-end gap-0.5 text-[12px] font-semibold font-['Inter']",
+                class: "w-[100px] flex justify-end items-end gap-0.5 text-[12px] font-semibold font-['Inter']",
                 style: "text-white",
                 "{tr.amount}"
             }
@@ -61,7 +61,6 @@ pub fn TableMenu(lang: Language) -> Element {
             div {
                 class: "w-[150px] justify-start items-center gap-0.5 text-[12px] font-semibold font-['Inter']",
                 style: "text-white",
-                "STATUS"
                 "{tr.status}"
             }
         }
@@ -75,12 +74,14 @@ pub fn Card(lang: Language) -> Element {
             div { class: "w-[150px] flex flex-center justify-start items-center gap-2.5",
                 img {
                     class: "w-[40px] h-[40px rounded",
-                    src: "public/icon/profile.png",
+                    src: asset!("public/images/profile.png"),
                 }
                 div { class: "text-white text-[14px] font-['Inter']", "Gildong Hong" }
             }
             div { class: "w-[100px] justify-end items-end gap-2.5",
-                div { class: "text-white text-[14px] font-normal font-['Inter']", "1 ETH" }
+                div { class: "flex justify-end items-end text-white text-[14px] font-normal font-['Inter']",
+                    "1 ETH"
+                }
             }
             div { class: "w-[210px] justify-start items-center gap-2.5 flex",
                 div { class: "px-2.5 py-1 bg-[#323342] rounded justify-start items-center gap-0.5 flex",
@@ -100,13 +101,15 @@ pub fn Card(lang: Language) -> Element {
         div { class: "w-full h-[60px] self-stretch px-3.5 py-2.5 justify-between items-center inline-flex",
             div { class: "w-[150px] justify-start items-center gap-2.5 flex",
                 img {
-                    class: "w-10 h-10 rounded",
-                    src: "https://via.placeholder.com/40x40",
+                    class: "w-[40px] h-[40px rounded",
+                    src: asset!("public/images/profile.png"),
                 }
                 div { class: "text-white text-[14px] font-['Inter']", "Gildong Hong" }
             }
             div { class: "w-[100px] justify-end items-end gap-2.5",
-                div { class: "text-white text-[14px] font-normal font-['Inter']", "1 ETH" }
+                div { class: "flex justify-end items-end text-white text-[14px] font-normal font-['Inter']",
+                    "1 ETH"
+                }
             }
             div { class: "w-[210px] justify-start items-center gap-2.5 flex",
                 div { class: "px-2.5 py-1 bg-[#323342] rounded justify-start items-center gap-0.5 flex",
@@ -126,13 +129,15 @@ pub fn Card(lang: Language) -> Element {
         div { class: "w-full h-[60px] self-stretch px-3.5 py-2.5 justify-between items-center inline-flex",
             div { class: "w-[150px] justify-start items-center gap-2.5 flex",
                 img {
-                    class: "w-10 h-10 rounded",
-                    src: "https://via.placeholder.com/40x40",
+                    class: "w-[40px] h-[40px rounded",
+                    src: asset!("public/images/profile.png"),
                 }
                 div { class: "text-white text-[14px] font-['Inter']", "Gildong Hong" }
             }
             div { class: "w-[100px] justify-end items-end gap-2.5",
-                div { class: "text-white text-[14px] font-normal font-['Inter']", "1 ETH" }
+                div { class: "flex justify-end items-end text-white text-[14px] font-normal font-['Inter']",
+                    "1 ETH"
+                }
             }
             div { class: "w-[210px] justify-start items-center gap-2.5 flex",
                 div { class: "px-2.5 py-1 bg-[#323342] rounded justify-start items-center gap-0.5 flex",
@@ -152,13 +157,15 @@ pub fn Card(lang: Language) -> Element {
         div { class: "w-full h-[60px] self-stretch px-3.5 py-2.5 justify-between items-center inline-flex",
             div { class: "w-[150px] justify-start items-center gap-2.5 flex",
                 img {
-                    class: "w-10 h-10 rounded",
-                    src: "https://via.placeholder.com/40x40",
+                    class: "w-[40px] h-[40px rounded",
+                    src: asset!("public/images/profile.png"),
                 }
                 div { class: "text-white text-[14px] font-['Inter']", "Gildong Hong" }
             }
             div { class: "w-[100px] justify-end items-end gap-2.5",
-                div { class: "text-white text-[14px] font-normal font-['Inter']", "1 ETH" }
+                div { class: "flex justify-end items-end text-white text-[14px] font-normal font-['Inter']",
+                    "1 ETH"
+                }
             }
             div { class: "w-[210px] justify-start items-center gap-2.5 flex",
                 div { class: "px-2.5 py-1 bg-[#323342] rounded justify-start items-center gap-0.5 flex",
@@ -178,13 +185,15 @@ pub fn Card(lang: Language) -> Element {
         div { class: "w-full h-[60px] self-stretch px-3.5 py-2.5 justify-between items-center inline-flex",
             div { class: "w-[150px] justify-start items-center gap-2.5 flex",
                 img {
-                    class: "w-10 h-10 rounded",
-                    src: "https://via.placeholder.com/40x40",
+                    class: "w-[40px] h-[40px rounded",
+                    src: asset!("public/images/profile.png"),
                 }
                 div { class: "text-white text-[14px] font-['Inter']", "Gildong Hong" }
             }
             div { class: "w-[100px] justify-end items-end gap-2.5",
-                div { class: "text-white text-[14px] font-normal font-['Inter']", "1 ETH" }
+                div { class: "flex justify-end items-end text-white text-[14px] font-normal font-['Inter']",
+                    "1 ETH"
+                }
             }
             div { class: "w-[210px] justify-start items-center gap-2.5 flex",
                 div { class: "px-2.5 py-1 bg-[#323342] rounded justify-start items-center gap-0.5 flex",
@@ -204,13 +213,15 @@ pub fn Card(lang: Language) -> Element {
         div { class: "w-full h-[60px] self-stretch px-3.5 py-2.5 justify-between items-center inline-flex",
             div { class: "w-[150px] justify-start items-center gap-2.5 flex",
                 img {
-                    class: "w-10 h-10 rounded",
-                    src: "https://via.placeholder.com/40x40",
+                    class: "w-[40px] h-[40px rounded",
+                    src: asset!("public/images/profile.png"),
                 }
                 div { class: "text-white text-[14px] font-['Inter']", "Gildong Hong" }
             }
             div { class: "w-[100px] justify-end items-end gap-2.5",
-                div { class: "text-white text-[14px] font-normal font-['Inter']", "1 ETH" }
+                div { class: "flex justify-end items-end text-white text-[14px] font-normal font-['Inter']",
+                    "1 ETH"
+                }
             }
             div { class: "w-[210px] justify-start items-center gap-2.5 flex",
                 div { class: "px-2.5 py-1 bg-[#323342] rounded justify-start items-center gap-0.5 flex",
@@ -230,13 +241,15 @@ pub fn Card(lang: Language) -> Element {
         div { class: "w-full h-[60px] self-stretch px-3.5 py-2.5 justify-between items-center inline-flex",
             div { class: "w-[150px] justify-start items-center gap-2.5 flex",
                 img {
-                    class: "w-10 h-10 rounded",
-                    src: "https://via.placeholder.com/40x40",
+                    class: "w-[40px] h-[40px rounded",
+                    src: asset!("public/images/profile.png"),
                 }
                 div { class: "text-white text-[14px] font-['Inter']", "Gildong Hong" }
             }
             div { class: "w-[100px] justify-end items-end gap-2.5",
-                div { class: "text-white text-[14px] font-normal font-['Inter']", "1 ETH" }
+                div { class: "flex justify-end items-end text-white text-[14px] font-normal font-['Inter']",
+                    "1 ETH"
+                }
             }
             div { class: "w-[210px] justify-start items-center gap-2.5 flex",
                 div { class: "px-2.5 py-1 bg-[#323342] rounded justify-start items-center gap-0.5 flex",
@@ -256,13 +269,15 @@ pub fn Card(lang: Language) -> Element {
         div { class: "w-full h-[60px] self-stretch px-3.5 py-2.5 justify-between items-center inline-flex",
             div { class: "w-[150px] justify-start items-center gap-2.5 flex",
                 img {
-                    class: "w-10 h-10 rounded",
-                    src: "https://via.placeholder.com/40x40",
+                    class: "w-[40px] h-[40px rounded",
+                    src: asset!("public/images/profile.png"),
                 }
                 div { class: "text-white text-[14px] font-['Inter']", "Gildong Hong" }
             }
             div { class: "w-[100px] justify-end items-end gap-2.5",
-                div { class: "text-white text-[14px] font-normal font-['Inter']", "1 ETH" }
+                div { class: "flex justify-end items-end text-white text-[14px] font-normal font-['Inter']",
+                    "1 ETH"
+                }
             }
             div { class: "w-[210px] justify-start items-center gap-2.5 flex",
                 div { class: "px-2.5 py-1 bg-[#323342] rounded justify-start items-center gap-0.5 flex",
@@ -296,7 +311,7 @@ pub fn MoreButton(lang: Language) -> Element {
                 class: "h-5 flex justify-center items-center w-full text-white text-sm",
                 div { class: "flex items-center gap-3 text-[14px] font-['Inter']",
                     "{tr.more_button}"
-                    DownArrow {}
+                    DoubleArrowDown {}
                 }
             }
         }
