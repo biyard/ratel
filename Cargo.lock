@@ -852,6 +852,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8c3c1a368f70d6cf7302d78f8f7093da241fb8e8807c05cc9e51a125895a6d5b"
 
 [[package]]
+name = "bigdecimal"
+version = "0.4.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7f31f3af01c5c65a07985c804d3366560e6fa7883d640a122819b14ec327482c"
+dependencies = [
+ "autocfg",
+ "libm",
+ "num-bigint",
+ "num-integer",
+ "num-traits",
+]
+
+[[package]]
 name = "binread"
 version = "2.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -934,15 +947,17 @@ checksum = "79296716171880943b8470b5f8d03aa55eb2e645a4874bdbb28adb49162e012c"
 
 [[package]]
 name = "by-axum"
-version = "0.2.7"
+version = "0.2.12"
 dependencies = [
  "aide",
  "axum 0.8.1",
  "by-types",
- "dioxus-aws",
+ "dioxus-aws 0.6.16",
  "http 1.2.0",
+ "jsonwebtoken",
  "lambda_http 0.13.0",
  "lambda_runtime 0.13.0",
+ "rest-api 0.1.7",
  "schemars",
  "serde",
  "serde_json",
@@ -959,14 +974,24 @@ dependencies = [
 ]
 
 [[package]]
-name = "by-macros"
-version = "0.6.2"
+name = "by-components"
+version = "0.1.1"
 dependencies = [
+ "dioxus",
+ "tracing",
+]
+
+[[package]]
+name = "by-macros"
+version = "0.6.7"
+dependencies = [
+ "bigdecimal",
  "convert_case 0.7.1",
  "indexmap 2.7.1",
  "proc-macro2",
  "quote",
  "serde",
+ "serde_json",
  "serde_urlencoded",
  "syn 2.0.96",
  "tracing",
@@ -976,7 +1001,7 @@ dependencies = [
 
 [[package]]
 name = "by-types"
-version = "0.3.2"
+version = "0.3.7"
 dependencies = [
  "aide",
  "axum 0.8.1",
@@ -984,6 +1009,7 @@ dependencies = [
  "schemars",
  "serde",
  "sqlx",
+ "tracing",
  "validator",
 ]
 
@@ -1645,6 +1671,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "dioxus-aws"
+version = "0.6.16"
+dependencies = [
+ "dioxus",
+ "dioxus-fullstack",
+ "tracing",
+]
+
+[[package]]
 name = "dioxus-cli-config"
 version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2001,6 +2036,7 @@ dependencies = [
 name = "dioxus-popup"
 version = "0.1.1"
 dependencies = [
+ "by-components",
  "dioxus",
 ]
 
@@ -2093,7 +2129,7 @@ dependencies = [
 
 [[package]]
 name = "dioxus-translate"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "dioxus-translate-macro",
  "dioxus-translate-types",
@@ -2104,12 +2140,13 @@ dependencies = [
 
 [[package]]
 name = "dioxus-translate-macro"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "dioxus-translate-types",
  "proc-macro2",
  "quote",
  "syn 2.0.96",
+ "tracing",
 ]
 
 [[package]]
@@ -2269,7 +2306,7 @@ dependencies = [
  "num-format",
  "regex",
  "reqwest",
- "rest-api 0.1.3",
+ "rest-api 0.1.7",
  "ring",
  "schemars",
  "serde",
@@ -3757,6 +3794,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "jsonwebtoken"
+version = "9.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b9ae10193d25051e74945f1ea2d0b42e03cc3b890f7e4cc5faa44997d808193f"
+dependencies = [
+ "base64 0.21.7",
+ "js-sys",
+ "pem",
+ "ring",
+ "serde",
+ "serde_json",
+ "simple_asn1",
+]
+
+[[package]]
 name = "keyboard-types"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4099,7 +4151,7 @@ dependencies = [
  "by-types",
  "chrono",
  "dioxus",
- "dioxus-aws",
+ "dioxus-aws 0.6.15",
  "dioxus-logger 0.5.1",
  "dioxus-oauth",
  "dioxus-popup",
@@ -4110,7 +4162,7 @@ dependencies = [
  "google-wallet",
  "num-format",
  "reqwest",
- "rest-api 0.1.3",
+ "rest-api 0.1.7",
  "serde",
  "tracing",
  "url",
@@ -4783,6 +4835,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "57c0d7b74b563b49d38dae00a0c37d4d6de9b432382b2892f0574ddcae73fd0a"
 
 [[package]]
+name = "pem"
+version = "3.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8e459365e590736a54c3fa561947c84837534b8e9af6fc5bf781307e82658fae"
+dependencies = [
+ "base64 0.22.1",
+ "serde",
+]
+
+[[package]]
 name = "pem-rfc7468"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5375,7 +5437,7 @@ dependencies = [
 
 [[package]]
 name = "rest-api"
-version = "0.1.3"
+version = "0.1.7"
 dependencies = [
  "base64 0.22.1",
  "candid",
@@ -6152,6 +6214,7 @@ version = "0.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6a007b6936676aa9ab40207cde35daab0a04b823be8ae004368c0793b96a61e0"
 dependencies = [
+ "bigdecimal",
  "bytes",
  "crc",
  "crossbeam-queue",
@@ -6227,6 +6290,7 @@ checksum = "4560278f0e00ce64938540546f59f590d60beee33fffbd3b9cd47851e5fff233"
 dependencies = [
  "atoi",
  "base64 0.22.1",
+ "bigdecimal",
  "bitflags 2.8.0",
  "byteorder",
  "bytes",
@@ -6270,6 +6334,7 @@ checksum = "c5b98a57f363ed6764d5b3a12bfedf62f07aa16e1856a7ddc2a0bb190a959613"
 dependencies = [
  "atoi",
  "base64 0.22.1",
+ "bigdecimal",
  "bitflags 2.8.0",
  "byteorder",
  "crc",
@@ -6286,6 +6351,7 @@ dependencies = [
  "log",
  "md-5",
  "memchr",
+ "num-bigint",
  "once_cell",
  "rand 0.8.5",
  "serde",
