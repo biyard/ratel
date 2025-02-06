@@ -96,9 +96,6 @@ pub struct AssemblyMember {
     #[api_model(summary, auto = [insert, update])]
     pub updated_at: i64,
 
-    #[api_model(summary)]
-    pub lang: Lang,
-
     #[api_model(summary, unique)]
     pub code: String,
     #[api_model(summary)]
@@ -115,7 +112,7 @@ pub struct AssemblyMember {
     #[api_model(summary)]
     pub en_district: Option<String>,
 
-    #[api_model(summary)]
+    #[api_model(summary, type = INTEGER)]
     pub stance: CryptoStance,
     #[api_model(summary)]
     pub image_url: String,

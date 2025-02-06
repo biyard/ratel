@@ -35,7 +35,7 @@ impl AssemblyMemberControllerM1 {
             let en_member = get_active_member_en(member.code.clone()).await?;
             tracing::debug!("en_member: {:?}", en_member);
 
-            let _ = self
+            match self
                 .repo
                 .insert(
                     member.code,
@@ -45,10 +45,17 @@ impl AssemblyMemberControllerM1 {
                     en_member.name,
                     en_member.party,
                     en_member.district,
+                    CryptoStance::NoStance,
                     image_url,
                     member.email,
                 )
-                .await;
+                .await
+            {
+                Ok(_) => {}
+                Err(e) => {
+                    tracing::error!("error: {:?}", e);
+                }
+            }
         }
 
         Ok(())
