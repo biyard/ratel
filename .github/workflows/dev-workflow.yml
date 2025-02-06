@@ -167,6 +167,7 @@ jobs:
           FIREBASE_APP_ID: "${{ secrets.FIREBASE_APP_ID }}"
           FIREBASE_MEASUREMENT_ID: "${{ secrets.FIREBASE_MEASUREMENT_ID }}"
           MAIN_API_ENDPOINT: https://api.dev.democrasee.me
+          AUTH_SECRET_KEY: ${{ secrets.DEV_AUTH_SECRET_KEY }}
           ENV: dev
           SERVICE: main-ui
           DOMAIN: dev.democrasee.me
