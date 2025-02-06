@@ -15,10 +15,8 @@ pub struct UserControllerV1 {
 }
 
 impl UserControllerV1 {
-    pub async fn route(pool: Pool<Postgres>) -> Result<by_axum::axum::Router> {
+    pub fn route(pool: Pool<Postgres>) -> Result<by_axum::axum::Router> {
         let users = User::get_repository(pool);
-
-        users.create_table().await?;
 
         let ctrl = UserControllerV1 { users };
 

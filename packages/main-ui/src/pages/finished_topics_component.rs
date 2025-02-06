@@ -35,7 +35,7 @@ pub fn FinishedTopics(
                             image: topic.images.get(0).unwrap_or(&"".to_string()),
                             title: topic.title.to_string(),
                             accepted: match topic.result {
-                                Some(TopicResult::Accepted) => true,
+                                TopicResult::Accepted => true,
                                 _ => false,
                             },
                             donations: topic.donations(),
@@ -57,7 +57,7 @@ pub fn FinishedTopic(
     title: String,
     accepted: bool,
     donations: u64,
-    replies: u64,
+    replies: i64,
     lang: Language,
 ) -> Element {
     let theme: Theme = use_context();

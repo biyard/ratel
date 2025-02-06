@@ -1,5 +1,5 @@
 #![allow(unused)]
-use by_types::QueryParam;
+use by_types::{QueryParam, QueryResponse};
 use dioxus::prelude::*;
 use dioxus_translate::Language;
 use dto::*;
@@ -25,10 +25,7 @@ impl Controller {
 
         let topics = use_server_future(move || async move {
             let repo = Topic::get_client(&crate::config::get().main_api_endpoint);
-            match repo.query(TopicQuery::new(size)).await {
-                Ok(v) => v,
-                Err(_) => QueryResponse::default(),
-            }
+            repo.query(TopicQuery::new(size)).await.unwrap_or_default()
         })?;
 
         // let items = (list_topics.value())().unwrap_or_default();
