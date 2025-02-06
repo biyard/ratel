@@ -35,11 +35,11 @@ pub struct Topic {
     pub content: String,
 
     // The image URLs of the voting topic
-    #[api_model(summary)]
-    pub images: Vec<String>,
+    // #[api_model(summary, nullable)]
+    // pub images: Vec<String>,
     #[serde(default)]
-    #[api_model(summary)]
-    pub result: TopicResult,
+    #[api_model(summar, nullable)]
+    pub result: Option<TopicResult>,
     // The end time of the vote
     #[api_model(summary, queryable)]
     pub status: TopicStatus,
@@ -58,11 +58,10 @@ pub struct Topic {
     // #[api_model(summary, one_to_many = comments, foreign_key = topic_id, aggregator = count)]
     // pub replies: i64,
 
-    // // User-specific information
-    // #[api_model(many_to_many = votes, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = topic_id, unique)]
-    // #[serde(default)]
-    // pub vote: Vec<Vote>,
-
+    // User-specific information
+    #[api_model(many_to_many = votes, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = topic_id, unique)]
+    #[serde(default)]
+    pub vote: Vec<Vote>,
     // #[api_model(many_to_many = topic_likes, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = topic_id, aggregator = exist)]
     // pub like: bool,
 }
@@ -224,6 +223,7 @@ impl TopicSummary {
     }
 
     pub fn volume_with_commas(&self) -> String {
-        self.volume.to_formatted_string(&Locale::en)
+        // self.volume.to_formatted_string(&Locale::en)
+        "".to_string()
     }
 }

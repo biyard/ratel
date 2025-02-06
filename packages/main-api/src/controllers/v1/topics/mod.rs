@@ -10,7 +10,7 @@ use by_axum::{
         Extension, Json,
     },
 };
-use by_types::QueryResponse;
+// use by_types::QueryResponse;
 use dto::*;
 
 #[derive(Clone, Debug)]
@@ -61,31 +61,34 @@ impl TopicControllerV1 {
     // }
 
     pub async fn get_topic(
-        State(_ctrl): State<TopicControllerV1>,
+        State(ctrl): State<TopicControllerV1>,
         Extension(_auth): Extension<Option<Authorization>>,
         Path(id): Path<String>,
     ) -> Result<Json<Topic>> {
         tracing::debug!("get_topic {:?}", id);
 
-        // let topic = ctrl
-        //     .repo
-        //     .find_one(
-        //         &TopicReadAction::new().find_by_id(id)
-        //     )
-        //     .await?;
-        // Ok(Json(topic))
-        Ok(Json(Topic::default()))
+        let topic = ctrl
+            .repo
+            .find_one(&TopicReadAction::new().find_by_id(id))
+            .await?;
+        Ok(Json(topic))
     }
 
     pub async fn list_topic(
         State(ctrl): State<TopicControllerV1>,
         Extension(_auth): Extension<Option<Authorization>>,
-        Query(q): Query<TopicParam>,
-    ) -> Result<Json<QueryResponse<TopicSummary>>> {
-        tracing::debug!("list_topic {:?}", q);
-
-        let items = ctrl.repo.find(&TopicQuery::new(4).with_page(1)).await?;
-        Ok(Json(items))
+        Query(params): Query<TopicParam>,
+    ) -> Result<Json<TopicGetResponse>> {
+        tracing::debug!("list_topic {:?}", params);
+        // FIXME: why can't i use this method?
+        match params {
+            TopicParam::Query(req) => {
+                Ok(Json(TopicGetResponse::Query(ctrl.repo.find(&req).await?)))
+            }
+            TopicParam::Read(req) => Ok(Json(TopicGetResponse::Read(
+                ctrl.repo.find_one(&req).await?,
+            ))),
+        }
     }
 }
 

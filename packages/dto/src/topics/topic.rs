@@ -160,8 +160,8 @@ impl TopicSummary {
 #[serde(rename_all = "snake_case")]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum TopicResult {
-    Accepted,
-    Rejected,
+    Accepted = 0,
+    Rejected = 1,
 }
 
 impl Default for TopicResult {
