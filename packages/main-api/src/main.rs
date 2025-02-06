@@ -27,11 +27,11 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
     v.create_this_table().await?;
     a.create_this_table().await?;
 
-    u.create_table().await?;
-    t.create_table().await?;
-    c.create_table().await?;
-    v.create_table().await?;
-    a.create_table().await?;
+    u.create_related_tables().await?;
+    t.create_related_tables().await?;
+    c.create_related_tables().await?;
+    v.create_related_tables().await?;
+    a.create_related_tables().await?;
 
     tracing::info!("Migration done");
     Ok(())

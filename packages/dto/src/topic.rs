@@ -16,17 +16,18 @@ use super::comment::*;
 #[cfg(feature = "server")]
 use schemars::JsonSchema;
 
-#[api_model(base = "/v1/topics", table = topics, iter_type=QueryResponse)]
+#[api_model(base = "/v1/topics", table = topics, iter_type=QueryResponse)] // action = [create(user_id = String)],
 pub struct Topic {
     #[api_model(summary, primary_key)]
     pub id: String,
     #[api_model(summary, auto = [insert])]
-    pub created_at: u64,
+    pub created_at: i64,
     #[api_model(summary, auto = [insert, update])]
-    pub updated_at: u64,
-    #[api_model(summary)]
-    pub author: String,
-
+    pub updated_at: i64,
+    #[api_model(summary, action = create)]
+    pub ended_at: i64,
+    // #[api_model(summary, many_to_one = users, queryable)]
+    // pub author_id: String,
     #[api_model(summary, action = create)]
     pub title: String,
     // Legislation summary
@@ -39,12 +40,7 @@ pub struct Topic {
     #[serde(default)]
     #[api_model(summary)]
     pub result: TopicResult,
-    // The start time of the vote
-    #[api_model(summary)]
-    pub started_at: i64,
     // The end time of the vote
-    #[api_model(summary)]
-    pub ended_at: i64,
     #[api_model(summary, queryable)]
     pub status: TopicStatus,
     // pub voting_trends: Vec<VoteData>,
@@ -65,6 +61,7 @@ pub struct Topic {
 
     // User-specific information
     #[api_model(many_to_many = votes, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = topic_id, unique)]
+    #[serde(default)]
     pub vote: Vec<Vote>,
 
     #[api_model(many_to_many = topic_likes, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = topic_id, aggregator = exist)]
@@ -114,21 +111,22 @@ impl TopicSummary {
     }
 
     pub fn period(&self) -> String {
-        // to "12/15 - 1/22"
-        let start = chrono::DateTime::from_timestamp(self.started_at, 0)
-            .unwrap_or_default()
-            .naive_local();
-        let end = chrono::DateTime::from_timestamp(self.ended_at, 0)
-            .unwrap_or_default()
-            .naive_local();
+        "".to_string()
+        // // to "12/15 - 1/22"
+        // let start = chrono::DateTime::from_timestamp(self.started_at, 0)
+        //     .unwrap_or_default()
+        //     .naive_local();
+        // let end = chrono::DateTime::from_timestamp(self.ended_at, 0)
+        //     .unwrap_or_default()
+        //     .naive_local();
 
-        format!(
-            "{:02}/{:02} - {:02}/{:02}",
-            start.month(),
-            start.day(),
-            end.month(),
-            end.day()
-        )
+        // format!(
+        //     "{:02}/{:02} - {:02}/{:02}",
+        //     start.month(),
+        //     start.day(),
+        //     end.month(),
+        //     end.day()
+        // )
     }
 }
 
@@ -192,7 +190,7 @@ impl TopicSummary {
     }
 
     pub fn day(&self) -> String {
-        let start = chrono::DateTime::from_timestamp(self.started_at, 0)
+        let start = chrono::DateTime::from_timestamp(self.created_at, 0)
             .unwrap_or_default()
             .naive_local();
 
@@ -200,7 +198,7 @@ impl TopicSummary {
     }
 
     pub fn month(&self) -> String {
-        let start = chrono::DateTime::from_timestamp(self.started_at, 0)
+        let start = chrono::DateTime::from_timestamp(self.created_at, 0)
             .unwrap_or_default()
             .naive_local();
 
