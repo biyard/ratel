@@ -27,10 +27,13 @@ impl AssemblyMemberControllerM1 {
 impl AssemblyMemberControllerM1 {
     async fn fetch_members(&self) -> Result<()> {
         let members = get_active_members().await?;
+        tracing::debug!("members: {:?}", members);
 
         for member in members {
             let image_url = get_member_profile_image(member.code.clone()).await?;
+            tracing::debug!("image_url: {:?}", image_url);
             let en_member = get_active_member_en(member.code.clone()).await?;
+            tracing::debug!("en_member: {:?}", en_member);
 
             let _ = self
                 .repo
