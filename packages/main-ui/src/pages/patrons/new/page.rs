@@ -4,7 +4,9 @@ use crate::components::icons::BigRightArrow;
 
 use super::controller::*;
 use super::i18n::*;
+// use super::wallet_popup::WalletPopup;
 use dioxus::prelude::*;
+use dioxus_popup::PopupService;
 use dioxus_translate::*;
 
 #[component]
@@ -25,6 +27,7 @@ pub fn NewPatronPage(lang: Language) -> Element {
 #[component]
 pub fn SupportUs(lang: Language) -> Element {
     let tr: SupportUsTranslate = translate(&lang);
+    let mut popup: PopupService = use_context();
 
     rsx! {
         div { class: "w-full min-h-[30px] flex flex-col justify-start items-start",
@@ -35,7 +38,8 @@ pub fn SupportUs(lang: Language) -> Element {
             div { class: "h-[15px] self-stretch text-[#414462] text-xs font-normal font-['Inter']",
                 "{tr.sub_text}"
             }
-            div { class: "w-full h-[100px] mt-[10px] rounded-xl border border-dotted border-[#414462] flex flex-col justify-center items-center overflow-hidden",
+            button {
+                div { class: "w-full h-[100px] mt-[10px] rounded-xl border border-dotted border-[#414462] flex flex-col justify-center items-center overflow-hidden" }
                 div { class: "text-[#414462] text-sm font-normal font-['Inter']", "{tr.input_box_text}" }
             }
         }

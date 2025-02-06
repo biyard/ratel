@@ -26,7 +26,6 @@ pub fn TopicsPage(lang: Language) -> Element {
                     "{tr.create_topic}"
                     RightArrow {}
                 }
-            
             }
             div { class: "w-full flex flex-col justify-start items-start",
                 for topic in ctrl.get_topics() {
@@ -35,7 +34,7 @@ pub fn TopicsPage(lang: Language) -> Element {
             }
 
             div { class: "w-full",
-                MoreButton { lang }
+                TopicsPageMoreButton { lang }
             }
         }
     }
@@ -137,7 +136,7 @@ pub fn TopicCard(topic: TopicSummary, lang: Language) -> Element {
 }
 
 #[component]
-pub fn MoreButton(lang: Language) -> Element {
+pub fn TopicsPageMoreButton(lang: Language) -> Element {
     let tr: TopicsTranslate = translate(&lang);
 
     rsx! {

@@ -72,7 +72,7 @@ pub fn EmailConfirmationPopup(
                                         name: name.clone(),
                                         party: party.clone(),
                                         stance: stance.clone(),
-                                        lang: lang.clone(),
+                                        lang,
                                     }
                                 })
                                 .with_id("proclaim_popup")
