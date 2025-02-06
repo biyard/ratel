@@ -40,12 +40,14 @@ impl TopicControllerV1 {
     }
 
     pub async fn act_topic(
-        State(_ctrl): State<TopicControllerV1>,
+        State(ctrl): State<TopicControllerV1>,
         Extension(_auth): Extension<Option<Authorization>>,
         Json(body): Json<TopicAction>,
     ) -> Result<Json<Topic>> {
         tracing::debug!("act_topic {:?}", body);
-        Ok(Json(Topic::default()))
+        match body {
+            TopicAction::Create(req) => ctrl.create_topic(req).await,
+        }
     }
 
     // pub async fn act_topic_by_id(
@@ -59,21 +61,48 @@ impl TopicControllerV1 {
     // }
 
     pub async fn get_topic(
-        State(_ctrl): State<TopicControllerV1>,
+        State(ctrl): State<TopicControllerV1>,
         Extension(_auth): Extension<Option<Authorization>>,
         Path(id): Path<String>,
     ) -> Result<Json<Topic>> {
         tracing::debug!("get_topic {:?}", id);
-        Ok(Json(Topic::default()))
+
+        let topic = ctrl
+            .repo
+            .find_one(&TopicReadAction::new().find_by_id(id))
+            .await?;
     }
 
     pub async fn list_topic(
-        State(_ctrl): State<TopicControllerV1>,
+        State(ctrl): State<TopicControllerV1>,
         Extension(_auth): Extension<Option<Authorization>>,
         Query(q): Query<TopicParam>,
-    ) -> Result<Json<TopicGetResponse>> {
+    ) -> Result<Json<QueryResponse<TopicSummary>>> {
         tracing::debug!("list_topic {:?}", q);
 
-        Ok(Json(TopicGetResponse::Query(QueryResponse::default())))
+        let items = ctrl.repo.find(&TopicQuery::new(4).with_page(1)).await?;
+        Ok(Json(items))
+    }
+}
+
+impl TopicControllerV1 {
+    pub async fn create_topic(&self, body: TopicCreateRequest) -> Result<Json<Topic>> {
+        tracing::debug!("create_topic {:?}", body);
+
+        let topic = self
+            .repo
+            .insert(
+                body.ended_at,
+                // body.user_id,
+                body.title,
+                body.content,
+                body.legislation_link,
+                body.solutions,
+                body.discussions,
+                body.additional_resources,
+            )
+            .await?;
+
+        Ok(Json(topic))
     }
 }
