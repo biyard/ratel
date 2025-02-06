@@ -82,7 +82,7 @@ pub fn HighlightedTopic(
     description: String,
     period: String,
     donations: u64,
-    replies: u64,
+    replies: i64,
     yes: u64,
     no: u64,
     lang: Language,
@@ -279,7 +279,7 @@ pub fn ContentWrapper(
     description: String,
     period: String,
     donations: u64,
-    replies: u64,
+    replies: i64,
     lang: Language,
 ) -> Element {
     let theme: Theme = use_context();
