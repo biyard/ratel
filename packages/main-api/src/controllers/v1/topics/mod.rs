@@ -61,16 +61,20 @@ impl TopicControllerV1 {
     // }
 
     pub async fn get_topic(
-        State(ctrl): State<TopicControllerV1>,
+        State(_ctrl): State<TopicControllerV1>,
         Extension(_auth): Extension<Option<Authorization>>,
         Path(id): Path<String>,
     ) -> Result<Json<Topic>> {
         tracing::debug!("get_topic {:?}", id);
 
-        let topic = ctrl
-            .repo
-            .find_one(&TopicReadAction::new().find_by_id(id))
-            .await?;
+        // let topic = ctrl
+        //     .repo
+        //     .find_one(
+        //         &TopicReadAction::new().find_by_id(id)
+        //     )
+        //     .await?;
+        // Ok(Json(topic))
+        Ok(Json(Topic::default()))
     }
 
     pub async fn list_topic(
