@@ -19,16 +19,19 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
     let t = Topic::get_repository(pool.clone());
     let c = Comment::get_repository(pool.clone());
     let v = Vote::get_repository(pool.clone());
+    let a = AssemblyMember::get_repository(pool.clone());
 
     u.create_this_table().await?;
     t.create_this_table().await?;
     c.create_this_table().await?;
     v.create_this_table().await?;
+    a.create_this_table().await?;
 
     u.create_table().await?;
     t.create_table().await?;
     c.create_table().await?;
     v.create_table().await?;
+    a.create_table().await?;
 
     tracing::info!("Migration done");
     Ok(())
