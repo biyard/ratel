@@ -16,7 +16,7 @@ pub struct Config {
     pub env: &'static str,
     pub domain: &'static str,
     pub log_level: Level,
-    pub main_api_endpoint: String,
+    pub main_api_endpoint: &'static str,
     pub firebase: FirebaseConfig,
 }
 
@@ -33,13 +33,8 @@ impl Default for Config {
                 Some("error") => Level::ERROR,
                 _ => Level::INFO,
             },
-            main_api_endpoint: match option_env!("MAIN_API_ENDPOINT") {
-                Some(endpoint) => endpoint.to_string(),
-                None => format!(
-                    "https://api.{}",
-                    option_env!("DOMAIN").unwrap_or("dev.democrasee.me")
-                ),
-            },
+            main_api_endpoint: option_env!("MAIN_API_ENDPOINT")
+                .unwrap_or("https://api.dev.democrasee.me"),
             firebase: FirebaseConfig {
                 api_key: option_env!("FIREBASE_API_KEY")
                     .expect("You must set FIREBASE_API_KEY")
