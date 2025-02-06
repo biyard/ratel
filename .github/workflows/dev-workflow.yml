@@ -10,8 +10,99 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  test:
+    runs-on: ubuntu-22.04
+
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          ssh-key: ${{ secrets.PULL_KEY_REPO }}
+
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          components: clippy, rustfmt
+          target: wasm32-unknown-unknown
+          toolchain: stable
+      - name: Install PostgreSQL Client
+        run: sudo apt-get install -y postgresql-client
+
+      - name: Initialize Database SQL
+        run: |
+          psql postgresql://postgres:postgres@localhost:5432/test -f ./deps/rust-sdk/fixtures/sql/init.sql
+
+      - name: test
+        env:
+          RUSTFLAGS: "-A warnings"
+          DATABASE_TYPE: postgres
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
+        run: |
+          echo "" > packages/main-ui/public/tailwind.css
+          cargo test --tests --features web
+
+  test-with-server:
+    runs-on: ubuntu-22.04
+
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          ssh-key: ${{ secrets.PULL_KEY_REPO }}
+
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          components: clippy, rustfmt
+          target: wasm32-unknown-unknown
+          toolchain: stable
+      - name: Install PostgreSQL Client
+        run: sudo apt-get install -y postgresql-client
+
+      - name: Initialize Database SQL
+        run: |
+          psql postgresql://postgres:postgres@localhost:5432/test -f ./deps/rust-sdk/fixtures/sql/init.sql
+
+      - name: test
+        env:
+          RUSTFLAGS: "-A warnings"
+          DATABASE_TYPE: postgres
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
+        run: |
+          echo "" > packages/main-ui/public/tailwind.css
+          cargo test --tests --features server
+
   main-ui:
     runs-on: ubuntu-22.04
+    needs: [test,test-with-server]
 
     steps:
       - uses: actions/checkout@v3
@@ -54,7 +145,6 @@ jobs:
           path: |
             .build/main-ui
 
-
       - name: Checking violate
         env:
           REGION: ap-northeast-2
@@ -91,6 +181,7 @@ jobs:
 
   main-api:
     runs-on: ubuntu-22.04
+    needs: [test,test-with-server]
 
     steps:
       - uses: actions/checkout@v3
@@ -139,7 +230,8 @@ jobs:
           ENV: dev
           SERVICE: main-api
           DOMAIN: api.dev.democrasee.me
-          RDS_ADMIN_PASSWORD: ${{ secrets.RDS_DEV_ADMIN_PASSWORD }}
+          DATABASE_TYPE: postgres
+          DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
           ENABLE_S3: false
           ENABLE_FARGATE: false
           ENABLE_DYNAMO: false
@@ -149,34 +241,10 @@ jobs:
           npm i -g aws-cdk
           make deploy-if-needed
 
-  publish-crates:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: recursive
-          ssh-key: ${{ secrets.PULL_KEY_REPO }}
-
-      - uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          components: clippy, rustfmt
-          target: wasm32-unknown-unknown
-          toolchain: stable
-
-      - name: Publish
-        env:
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-        run: |
-          make publish
-
   create-release-pr:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/dev'
-    needs:
-      [
-        main-ui, main-api, publish-crates
-      ]
+    needs: [main-ui, main-api]
     steps:
       - uses: actions/checkout@v3
         with:

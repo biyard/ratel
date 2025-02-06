@@ -1,5 +1,6 @@
+use by_types::QueryResponse;
 use dioxus_aws::prelude::*;
-use dto::{QueryResponse, Topic, TopicQuery, TopicStatus, TopicSummary};
+use dto::{Topic, TopicQuery, TopicStatus, TopicSummary};
 
 use crate::config;
 

@@ -1,29 +1,13 @@
 use by_axum::axum::middleware;
 use by_types::DatabaseConfig;
-use controllers::{assets::v1::AssetControllerV1, topic::v1::TopicControllerV1};
-use dto::error::ServiceError;
+use dto::*;
 use sqlx::postgres::PgPoolOptions;
 use tokio::net::TcpListener;
 use utils::middlewares::authorization_middleware;
 
 mod controllers {
-    pub mod patrons {
-        pub mod v1;
-    }
-
-    pub mod topic {
-        pub mod v1;
-    }
-    pub mod users {
-        pub mod v1;
-    }
-    pub mod assembly_members {
-        pub mod m1;
-        pub mod v1;
-    }
-    pub mod assets {
-        pub mod v1;
-    }
+    pub mod m1;
+    pub mod v1;
 }
 
 pub mod config;
@@ -31,14 +15,10 @@ pub mod models;
 pub mod utils;
 
 #[tokio::main]
-async fn main() -> Result<(), ServiceError> {
+async fn main() -> Result<()> {
+    let app = by_axum::new();
     let conf = config::get();
-    let _ = tracing_subscriber::fmt()
-        .with_file(true)
-        .with_line_number(true)
-        .with_thread_ids(true)
-        .with_target(false)
-        .try_init();
+    tracing::debug!("config: {:?}", conf);
 
     let pool = if let DatabaseConfig::Postgres { url, pool_size } = conf.database {
         PgPoolOptions::new()
@@ -49,24 +29,26 @@ async fn main() -> Result<(), ServiceError> {
         panic!("Database is not initialized. Call init() first.");
     };
 
-    let app = by_axum::new()
+    let app = app
+        // .nest(
+        //     "/v1/patrons",
+        //     controllers::patrons::v1::PatronControllerV1::route()?,
+        // )
         .nest(
-            "/patrons/v1",
-            controllers::patrons::v1::PatronControllerV1::route()?,
-        )
-        .nest("/assets/v1", AssetControllerV1::route()?)
-        .nest("/topics/v1", TopicControllerV1::route()?)
-        .nest(
-            "/users/v1",
-            controllers::users::v1::UserControllerV1::route(pool.clone()).await?,
+            "/v1/topics",
+            controllers::v1::topics::TopicControllerV1::route(pool.clone())?,
         )
         .nest(
-            "/assembly_members/v1",
-            controllers::assembly_members::v1::AssemblyMemberControllerV1::route()?,
+            "/v1/users",
+            controllers::v1::users::UserControllerV1::route(pool.clone())?,
         )
         .nest(
-            "/assembly_members/m1",
-            controllers::assembly_members::m1::AssemblyMemberControllerM1::route()?,
+            "/v1/assembly_members",
+            controllers::v1::assembly_members::AssemblyMemberControllerV1::route(pool.clone())?,
+        )
+        .nest(
+            "/m1/assembly_members",
+            controllers::m1::assembly_members::AssemblyMemberControllerM1::route(pool)?,
         )
         .layer(middleware::from_fn(authorization_middleware));
 

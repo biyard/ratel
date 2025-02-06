@@ -1,7 +1,7 @@
 #![allow(unused)]
-use crate::QueryResponse;
 use crate::*;
 use by_macros::api_model;
+use by_types::QueryResponse;
 
 #[cfg(feature = "server")]
 use by_axum::aide;
@@ -9,14 +9,14 @@ use lazy_static::lazy_static;
 use validator::ValidationError;
 
 #[derive(validator::Validate)]
-#[api_model(base = "/users/v1", read_action = user_info, table = users, iter_type=Vec)]
+#[api_model(base = "/v1/users", read_action = user_info, table = users, iter_type=QueryResponse)]
 pub struct User {
     #[api_model(primary_key)]
-    pub id: String,
-    #[api_model(type = TIMESTAMP, auto = insert)]
-    pub created_at: u64,
-    #[api_model(type = TIMESTAMP, auto = [insert, update])]
-    pub updated_at: u64,
+    pub id: i64,
+    #[api_model(auto = insert)]
+    pub created_at: i64,
+    #[api_model(auto = [insert, update])]
+    pub updated_at: i64,
 
     #[api_model(action = signup)]
     #[validate(custom(function = "validate_nickname"))]
