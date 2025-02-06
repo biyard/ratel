@@ -2,11 +2,10 @@ use by_axum::{
     auth::Authorization,
     axum::{
         extract::{Path, Query, State},
-        routing::{get, post},
+        routing::get,
         Extension, Json,
     },
 };
-use by_types::QueryResponse;
 use dto::*;
 
 #[derive(Clone, Debug)]

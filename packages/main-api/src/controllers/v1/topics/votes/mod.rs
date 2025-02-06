@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use by_axum::{
     auth::Authorization,
     axum::{
