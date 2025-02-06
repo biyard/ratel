@@ -6,7 +6,6 @@ use by_axum::{
     },
     log::root,
 };
-use common_query_response::CommonQueryResponse;
 use dto::*;
 use slog::o;
 
@@ -39,7 +38,7 @@ impl PatronControllerV1 {
     pub async fn get_patron(
         State(ctrl): State<PatronControllerV1>,
         Path(id): Path<String>,
-    ) -> Result<Json<Patron>> {
+    ) -> Result<Json<PatronGe>> {
         let log = ctrl.log.new(o!("api" => "get_patron"));
         slog::debug!(log, "get_patron {:?}", id);
         Ok(Json(Patron::default()))

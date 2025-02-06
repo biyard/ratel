@@ -1,28 +1,25 @@
+use by_types::QueryResponse;
 use dioxus_aws::prelude::*;
 use dioxus_translate::Language;
-use dto::{common_query_response::CommonQueryResponse, AssemblyMember};
-use crate::services::politician_service::PoliticianService;
+use dto::*;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Controller {
-    pub politicians: Resource<CommonQueryResponse<AssemblyMember>>,
+    pub politicians: Resource<QueryResponse<AssemblyMemberSummary>>,
 }
 
 impl Controller {
-    pub fn new(lang: Language) -> Result<Self, RenderError> {
-        let politician_api: PoliticianService = use_context();
+    pub fn new(_lang: Language) -> std::result::Result<Self, RenderError> {
+        let size = 20;
+        let page = use_signal(|| 1);
 
-        let politicians = use_server_future(move || async move {
-            match politician_api.list_politicians(
-                20,
-                None,
-                Some(lang),
-            ).await {
-                Ok(res) => res,
-                Err(e) => {
-                    tracing::error!("list politicians error: {:?}", e);
-                    CommonQueryResponse::<AssemblyMember>::default()
-                }
+        let politicians = use_server_future(move || {
+            let cli = AssemblyMember::get_client(&crate::config::get().main_api_endpoint);
+            let page = page();
+            async move {
+                cli.query(AssemblyMemberQuery::new(size).with_page(page))
+                    .await
+                    .unwrap_or_default()
             }
         })?;
 
@@ -32,15 +29,7 @@ impl Controller {
         Ok(ctrl)
     }
 
-    pub fn _load_more(&mut self, _lang: Language, _bookmark: Option<String>) -> Result<(), RenderError> {
-        let _politician_api: PoliticianService = use_context();
-
-        // TODO: how can i update the Resource<>?
-    
-        Ok(())
-    }
-
-    pub fn politicians(&self) -> Vec<AssemblyMember> {
+    pub fn politicians(&self) -> Vec<AssemblyMemberSummary> {
         self.politicians.with(|f| {
             // tracing::debug!("politicians: {:?}", f);
             if let Some(value) = f {
