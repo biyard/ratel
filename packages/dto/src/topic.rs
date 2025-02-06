@@ -35,11 +35,11 @@ pub struct Topic {
     pub content: String,
 
     // The image URLs of the voting topic
-    // #[api_model(summary, nullable)]
-    // pub images: Vec<String>,
+    #[api_model(summary, nullable)]
+    pub image: Option<String>,
     #[serde(default)]
-    #[api_model(summar, nullable)]
-    pub result: Option<TopicResult>,
+    #[api_model(summary, nullable)]
+    pub result: TopicResult,
     // The end time of the vote
     #[api_model(summary, queryable)]
     pub status: TopicStatus,
@@ -53,10 +53,12 @@ pub struct Topic {
     #[api_model(action = create, type = JSONB)]
     pub additional_resources: Vec<AdditionalResource>,
     // #[api_model(summary, one_to_many = votes, foreign_key = topic_id, aggregator = sum(amount))]
-    // pub volume: i64,
+    #[api_model(summary)]
+    pub volume: i64,
 
     // #[api_model(summary, one_to_many = comments, foreign_key = topic_id, aggregator = count)]
-    // pub replies: i64,
+    #[api_model(summary)]
+    pub replies: i64,
 
     // User-specific information
     #[api_model(many_to_many = votes, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = topic_id, unique)]

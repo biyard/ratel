@@ -33,7 +33,7 @@ pub fn HighlightedTopics(
                     if i == selected() {
                         HighlightedTopic {
                             id: "highlighted-topic-{topic.id.clone()}",
-                            image: topic.images[0].clone(),
+                            image: topic.image.clone().unwrap_or("".to_string()),
                             title: topic.title.clone(),
                             description: topic.content.clone(),
                             period: topic.period(),
