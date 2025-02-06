@@ -18,7 +18,7 @@ use schemars::JsonSchema;
 
 #[api_model(base = "/v1/topics", table = topics, iter_type=QueryResponse)]
 pub struct Topic {
-    #[api_model(summary)]
+    #[api_model(summary, primary_key)]
     pub id: String,
     #[api_model(summary, auto = [insert])]
     pub created_at: u64,
