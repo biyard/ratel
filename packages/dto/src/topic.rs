@@ -16,7 +16,7 @@ use super::comment::*;
 #[cfg(feature = "server")]
 use schemars::JsonSchema;
 
-#[api_model(base = "/topics/v1", database = skip, iter_type=QueryResponse)]
+#[api_model(base = "/v1/topics", table = topics, iter_type=QueryResponse)]
 pub struct Topic {
     #[api_model(summary)]
     pub id: String,
@@ -56,39 +56,22 @@ pub struct Topic {
     pub discussions: Vec<String>,
     #[api_model(action = create, type = JSONB)]
     pub additional_resources: Vec<AdditionalResource>,
-    // #[api_model(summary)]
-    // pub votes: Vec<Vote>,
-    // #[api_model(summary)]
-    // pub donations: Vec<Donation>,
 
-    // #[api_model(summary)]
-    // pub weekly_volume: u64,
-    // #[api_model(summary)]
-    // pub weekly_replies: u64,
-    // #[api_model(summary)]
-    // pub weekly_votes: u64,
+    #[api_model(summary, one_to_many = votes, foreign_key = topic_id, aggregator = sum(amount))]
+    pub volume: i64,
 
-    // The number of voters
-    // #[api_model(summary)]
-    // pub voters: u64,
-    // // The number of replies
-    // #[api_model(summary)]
-    // pub replies: u64,
-    // #[api_model(summary)]
-    // pub volume: u64,
-    // pub my_info: MyInfo,
-    // #[api_model(action_by_id = comment, related = String)]
-    // pub comments: Vec<Comment>,
+    #[api_model(summary, one_to_many = comments, foreign_key = topic_id, aggregator = count)]
+    pub replies: i64,
 
-    // It shows the voting opinion of the signer.
-    // #[api_model(action_by_id = vote)]
-    // pub vote: Option<Vote>,
-    // If signer liked this topic, it will be true. Otherwise, it will be false.
-    // #[api_model(action_by_id = like)]
-    // pub like: bool,
+    // User-specific information
+    #[api_model(many_to_many = votes, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = topic_id, unique)]
+    pub vote: Vec<Vote>,
+
+    #[api_model(many_to_many = topic_likes, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = topic_id, aggregator = exist)]
+    pub like: bool,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq, Translate)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum TrendTag {
     Hot,
@@ -96,45 +79,38 @@ pub enum TrendTag {
     Cold,
 }
 
-impl Display for TrendTag {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            TrendTag::Hot => write!(f, "HOT"),
-            TrendTag::Warm => write!(f, "WARM"),
-            TrendTag::Cold => write!(f, "COLD"),
-        }
-    }
-}
-
 impl TopicSummary {
     pub fn number_of_yes(&self) -> u64 {
-        self.votes
-            .iter()
-            .filter_map(|r| match r {
-                Vote::Supportive(y) => Some(*y),
-                _ => None,
-            })
-            .sum()
+        10
+        // self.votes
+        //     .iter()
+        //     .filter_map(|r| match r {
+        //         VoteResult::Supportive(y) => Some(*y),
+        //         _ => None,
+        //     })
+        //     .sum()
     }
 
     pub fn number_of_no(&self) -> u64 {
-        self.votes
-            .iter()
-            .filter_map(|r| match r {
-                Vote::Against(n) => Some(*n),
-                _ => None,
-            })
-            .sum()
+        20
+        // self.votes
+        //     .iter()
+        //     .filter_map(|r| match r {
+        //         VoteResult::Against(n) => Some(*n),
+        //         _ => None,
+        //     })
+        //     .sum()
     }
 
     pub fn donations(&self) -> u64 {
-        self.donations
-            .iter()
-            .map(|r| match r {
-                Donation::Yes(y) => y,
-                Donation::No(n) => n,
-            })
-            .sum::<u64>()
+        0
+        // self.donations
+        //     .iter()
+        //     .map(|r| match r {
+        //         Donation::Yes(y) => y,
+        //         Donation::No(n) => n,
+        //     })
+        //     .sum::<u64>()
     }
 
     pub fn period(&self) -> String {
@@ -156,43 +132,23 @@ impl TopicSummary {
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(
+    Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default, Copy, ApiModel, Translate,
+)]
 #[serde(rename_all = "snake_case")]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum TopicResult {
-    Accepted,
-    Rejected,
-}
-
-impl Default for TopicResult {
-    fn default() -> Self {
-        TopicResult::Rejected
-    }
-}
-
-impl Display for TopicResult {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            TopicResult::Accepted => write!(f, "accepted"),
-            TopicResult::Rejected => write!(f, "rejected"),
-        }
-    }
-}
-
-impl FromStr for TopicResult {
-    type Err = String;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "accepted" => Ok(TopicResult::Accepted),
-            "rejected" => Ok(TopicResult::Rejected),
-            _ => Err(format!("unknown topic result: {}", s)),
-        }
-    }
+    #[default]
+    #[translate(en = "", ko = "")]
+    None = 0,
+    #[translate(en = "Accepted", ko = "통과")]
+    Accepted = 1,
+    #[translate(en = "Rejected", ko = "거절")]
+    Rejected = 2,
 }
 
 #[derive(
-    Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default, ApiModel, Copy, Translate,
+    Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default, Copy, ApiModel, Translate,
 )]
 #[serde(rename_all = "snake_case")]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
@@ -203,31 +159,6 @@ pub enum TopicStatus {
     Ongoing = 2,
     Finished = 3,
     Cancelled = 4,
-}
-
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
-pub enum Vote {
-    Supportive(u64),
-    Against(u64),
-    Neutral(u64),
-}
-
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-#[serde(untagged)]
-#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
-pub enum Donation {
-    Yes(u64),
-    No(u64),
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
-#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
-pub struct VoteData {
-    pub voted_at: i64,
-    pub vote: Vote,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
@@ -248,22 +179,16 @@ pub struct AdditionalResource {
     pub link: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default, Eq, PartialEq)]
-#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
-pub struct MyInfo {
-    // If my_commitment is 1, it shows 0.01 ETH in the UI
-    pub my_commitment: u64,
-}
-
 impl TopicSummary {
     pub fn trend_tag(&self) -> TrendTag {
-        if self.weekly_volume > 100 {
-            TrendTag::Hot
-        } else if self.weekly_volume > 50 {
-            TrendTag::Warm
-        } else {
-            TrendTag::Cold
-        }
+        TrendTag::Hot
+        //     if self.weekly_volume > 100 {
+        //     TrendTag::Hot
+        // } else if self.weekly_volume > 50 {
+        //     TrendTag::Warm
+        // } else {
+        //     TrendTag::Cold
+        // }
     }
 
     pub fn day(&self) -> String {

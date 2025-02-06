@@ -1,10 +1,3 @@
-pub trait MemberTrait {
-    fn name(&self) -> &str;
-    fn party(&self) -> &str;
-    fn district(&self) -> &str;
-    fn email(&self) -> &str;
-}
-
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct Member {
     #[serde(rename(deserialize = "HG_NM"))]
@@ -29,34 +22,4 @@ pub struct EnMember {
     pub district: Option<String>, // English District Name
     #[serde(rename(deserialize = "NAAS_EMAIL_ADDR"))]
     pub email: Option<String>, // Email
-}
-
-impl MemberTrait for Member {
-    fn name(&self) -> &str {
-        &self.name
-    }
-    fn party(&self) -> &str {
-        &self.party
-    }
-    fn district(&self) -> &str {
-        &self.district
-    }
-    fn email(&self) -> &str {
-        &self.email.as_deref().unwrap_or("")
-    }
-}
-
-impl MemberTrait for EnMember {
-    fn name(&self) -> &str {
-        &self.name
-    }
-    fn party(&self) -> &str {
-        &self.party
-    }
-    fn district(&self) -> &str {
-        &self.district.as_deref().unwrap_or("")
-    }
-    fn email(&self) -> &str {
-        &self.email.as_deref().unwrap_or("")
-    }
 }
