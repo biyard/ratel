@@ -9,7 +9,7 @@ pub struct Controller {
 }
 
 impl Controller {
-    pub fn new(lang: Language) -> std::result::Result<Self, RenderError> {
+    pub fn new(_lang: Language) -> std::result::Result<Self, RenderError> {
         let size = 20;
         let page = use_signal(|| 1);
 
