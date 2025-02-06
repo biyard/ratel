@@ -37,10 +37,9 @@ pub fn PatronageBox(lang: Language) -> Element {
         div {
             button {
                 class: "h-11 px-4 py-2.5 bg-[#414462] rounded-lg justify-center items-center gap-2.5 inline-flex",
-                onclick: move |_| async move {
+                onclick: move |_| {
                     navigator.push(Route::NewPatronPage { lang });
                 },
-                // TODO: If button clicked, go to DFR-Main page.
                 div { class: "text-white text-base font-bold font-['Inter'] uppercase leading-snug",
                     "{tr.button}"
                 }

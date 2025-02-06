@@ -147,6 +147,20 @@ translate! {
 }
 
 translate! {
+    WalletPopupTranslate;
+
+    title: {
+        ko: "Metamask",
+        en: "Metamask",
+    },
+
+    sub_text: {
+        ko: "ETH",
+        en: "ETH",
+    },
+}
+
+translate! {
     MenusTranslate;
 
     home: {
