@@ -18,7 +18,7 @@ pub struct UserControllerV1 {
 
 impl UserControllerV1 {
     pub fn route(pool: Pool<Postgres>) -> Result<by_axum::axum::Router> {
-        let users = User::get_repository(pool);
+        let users = User::get_repository(pool.clone());
 
         let ctrl = UserControllerV1 { users };
 

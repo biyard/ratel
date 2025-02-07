@@ -16,10 +16,10 @@ pub struct Vote {
     #[api_model(summary, auto = [insert, update])]
     pub updated_at: i64,
 
-    #[api_model(summary, action = vote)]
+    #[api_model(summary, Type = INTEGER, action = voting)]
     pub vote: VoteResult,
 
-    #[api_model(summary, action = vote)]
+    #[api_model(summary, action = voting)]
     pub amount: i64,
 
     #[api_model(many_to_one = users, query_action = list_by_user_id)]

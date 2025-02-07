@@ -45,6 +45,7 @@ impl AssemblyMemberControllerM1 {
                     en_member.name,
                     en_member.party,
                     en_member.district,
+                    CryptoStance::default(),
                     image_url,
                     member.email,
                 )

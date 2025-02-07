@@ -32,13 +32,16 @@ impl VoteControllerV1 {
     }
 
     pub async fn act_vote(
-        State(_ctrl): State<VoteControllerV1>,
+        State(ctrl): State<VoteControllerV1>,
         Path(parent_id): Path<String>,
         Extension(_auth): Extension<Option<Authorization>>,
         Json(body): Json<VoteAction>,
     ) -> Result<Json<Vote>> {
         tracing::debug!("act_vote {} {:?}", parent_id, body);
-        Ok(Json(Vote::default()))
+
+        match body {
+            VoteAction::Voting(req) => ctrl.vote(parent_id, req).await,
+        }
     }
 
     // pub async fn act_vote_by_id(
@@ -69,5 +72,13 @@ impl VoteControllerV1 {
         tracing::debug!("list_vote {} {:?}", parent_id, q);
 
         Ok(Json(VoteGetResponse::Query(QueryResponse::default())))
+    }
+}
+
+impl VoteControllerV1 {
+    async fn vote(&self, _parent_id: String, _body: VoteVotingRequest) -> Result<Json<Vote>> {
+        // self.repo.insert(body.amount, ).await?;
+
+        Ok(Json(Vote::default()))
     }
 }
