@@ -115,7 +115,7 @@ pub struct AssemblyMember {
     #[api_model(summary)]
     pub en_district: Option<String>,
 
-    #[api_model(summary)]
+    #[api_model(summary, type = INTEGER)]
     pub stance: CryptoStance,
     #[api_model(summary)]
     pub image_url: String,

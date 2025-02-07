@@ -72,20 +72,15 @@ impl TopicControllerV1 {
     ) -> Result<Json<Topic>> {
         tracing::debug!("get_topic {:?}", id);
 
+        // FIXME: find_one, base_sql func is requesting unnecessary user_id parameter @hackartist
+
         // let topic = ctrl
         //     .repo
         //     .find_one(&TopicReadAction::new().find_by_id(id))
         //     .await?;
 
-        // let query = r#"
-        //     SELECT * FROM topics WHERE id = $1
-        // "#;
-
-        // let topic = sqlx::query_as::<_, Topic>("SELECT * FROM topics WHERE id = $1")
-        //     .bind(id)
-        //     .fetch_one(&ctrl.pool)
-        //     .await?;
         let topic = Topic::default();
+
         Ok(Json(topic))
     }
 
@@ -96,6 +91,8 @@ impl TopicControllerV1 {
     ) -> Result<Json<TopicGetResponse>> {
         tracing::debug!("list_topic {:?}", params);
 
+        // FIXME: find_one, base_sql func is requesting unnecessary user_id parameter @hackartist
+
         // match params {
         //     TopicParam::Query(req) => {
         //         Ok(Json(TopicGetResponse::Query(ctrl.repo.find(&req).await?)))
@@ -105,14 +102,6 @@ impl TopicControllerV1 {
         //     ))),
         // }
 
-        // let resp: Vec<TopicSummary> = sqlx::query_as::<_, TopicSummary>("SELECT * FROM topics")
-        //     .fetch_all(&ctrl.pool)
-        //     .await?;
-
-        // let topics = QueryResponse {
-        //     items: resp.clone(),
-        //     total_count: resp.len() as i64,
-        // };
         let topics: QueryResponse<TopicSummary> = QueryResponse {
             items: vec![],
             total_count: 0,
@@ -125,44 +114,30 @@ impl TopicControllerV1 {
     pub async fn create_topic(&self, body: TopicCreateRequest) -> Result<Json<Topic>> {
         tracing::debug!("create_topic {:?}", body);
 
-        // let topic = self
-        //     .repo
-        //     .insert(
-        //         body.ended_at,
-        //         // body.user_id,
-        //         body.title,
-        //         body.content,
-        //         body.legislation_link,
-        //         body.solutions,
-        //         body.discussions,
-        //         body.additional_resources,
-        //     )
-        //     .await?;
+        match body.status {
+            TopicStatus::Ongoing | TopicStatus::Finished | TopicStatus::Cancelled => {
+                return Err(ServiceError::BadRequest);
+            }
+            _ => {}
+        }
 
-        // let query = r#"
-        //     INSERT INTO topics (ended_at, title, content, legislation_link, solutions, discussions, additional_resources)
-        //     VALUES ($1, $2, $3, $4, $5, $6, $7)
-        //     RETURNING *
-        // "#;
+        let topic = self
+            .repo
+            .insert(
+                body.ended_at,
+                // body.user_id,
+                body.title,
+                body.content,
+                None,
+                TopicResult::default(),
+                body.status,
+                body.legislation_link,
+                body.solutions,
+                body.discussions,
+                body.additional_resources,
+            )
+            .await?;
 
-        // let resp = sqlx::query_as(
-        //     r#"
-        //     INSERT INTO topics (ended_at, title, content, legislation_link, solutions, discussions, additional_resources)
-        //     VALUES ($1, $2, $3, $4, $5, $6, $7)
-        //     RETURNING *
-        // "#,
-        // )
-        // .bind(body.ended_at)
-        // .bind(body.title)
-        // .bind(body.content)
-        // .bind(body.legislation_link)
-        // .bind(body.solutions)
-        // .bind(body.discussions)
-        // .bind(body.additional_resources)
-        // .fetch_one(&self.pool)
-        // .await?;
-
-        let topic = Topic::default();
         Ok(Json(topic))
     }
 }

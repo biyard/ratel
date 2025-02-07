@@ -24,6 +24,7 @@ pub struct Topic {
     pub created_at: i64,
     #[api_model(summary, auto = [insert, update])]
     pub updated_at: i64,
+    // The end time of the vote
     #[api_model(summary, action = create)]
     pub ended_at: i64,
     // #[api_model(summary, many_to_one = users, queryable)]
@@ -38,10 +39,10 @@ pub struct Topic {
     #[api_model(summary, nullable)]
     pub image: Option<String>,
     #[serde(default)]
-    #[api_model(summary, nullable)]
+    #[api_model(summary, type = INTEGER, nullable)]
     pub result: TopicResult,
-    // The end time of the vote
-    #[api_model(summary, queryable)]
+    // FIXME: need to be default (annotation does not add parameter in insert method) @hackartist
+    #[api_model(summary, type = INTEGER, action = create, queryable, nullable)]
     pub status: TopicStatus,
     // pub voting_trends: Vec<VoteData>,
     #[api_model(action = create)]
