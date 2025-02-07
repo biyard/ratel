@@ -19,7 +19,7 @@ use schemars::JsonSchema;
 #[api_model(base = "/v1/topics", table = topics, iter_type=QueryResponse)] // action = [create(user_id = String)],
 pub struct Topic {
     #[api_model(summary, primary_key, read_action = find_by_id)]
-    pub id: String,
+    pub id: i64,
     #[api_model(summary, auto = [insert])]
     pub created_at: i64,
     #[api_model(summary, auto = [insert, update])]
@@ -52,20 +52,19 @@ pub struct Topic {
     pub discussions: Vec<String>,
     #[api_model(action = create, type = JSONB)]
     pub additional_resources: Vec<AdditionalResource>,
-    // #[api_model(summary, one_to_many = votes, foreign_key = topic_id, aggregator = sum(amount))]
-    #[api_model(summary)]
+    #[api_model(summary, one_to_many = votes, foreign_key = topic_id, aggregator = sum(amount))]
     pub volume: i64,
 
-    // #[api_model(summary, one_to_many = comments, foreign_key = topic_id, aggregator = count)]
-    #[api_model(summary)]
+    #[api_model(summary, one_to_many = comments, foreign_key = topic_id, aggregator = count)]
     pub replies: i64,
 
     // User-specific information
     #[api_model(many_to_many = votes, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = topic_id, unique)]
     #[serde(default)]
     pub vote: Vec<Vote>,
-    // #[api_model(many_to_many = topic_likes, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = topic_id, aggregator = exist)]
-    // pub like: bool,
+    #[api_model(many_to_many = topic_likes, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = topic_id, aggregator = exist)]
+    #[serde(default)]
+    pub like: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq, Translate)]

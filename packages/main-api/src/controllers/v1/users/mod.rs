@@ -1,5 +1,7 @@
+use crate::utils::middlewares::authorization_middleware;
 use by_axum::axum::{
     extract::{Query, State},
+    middleware,
     routing::get,
     Extension, Json,
 };
@@ -22,7 +24,8 @@ impl UserControllerV1 {
 
         Ok(by_axum::axum::Router::new()
             .route("/", get(Self::read_user).post(Self::act_user))
-            .with_state(ctrl.clone()))
+            .with_state(ctrl.clone())
+            .layer(middleware::from_fn(authorization_middleware)))
     }
 
     #[instrument]

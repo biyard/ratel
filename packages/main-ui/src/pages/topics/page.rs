@@ -57,7 +57,7 @@ pub fn TopicCard(topic: TopicSummary, lang: Language) -> Element {
         Link {
             class: "w-full bg-[#404760] rounded-lg flex-col justify-start items-start inline-flex overflow-hidden opacity-80 hover:opacity-100 cursor-pointer",
             to: Route::TopicsByIdPage {
-                id: topic.id.clone(),
+                id: topic.id.to_string(),
                 lang,
             },
             div { class: "self-stretch px-5 py-2.5 bg-[#404760] rounded-tl-lg rounded-tr-lg border-l border-r border-t border-[#282a3b] justify-start items-start gap-2.5 inline-flex",
