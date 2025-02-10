@@ -98,8 +98,6 @@ impl CommentControllerV1 {
     ) -> Result<Json<CommentGetResponse>> {
         tracing::debug!("list_comment {} {:?}", parent_id, param);
 
-        let topic_id = parent_id.parse::<i64>()?;
-
         // FIXME: find_one method need using user_id parameter (like field)
         // let user = ctrl
         //     .user
@@ -107,35 +105,7 @@ impl CommentControllerV1 {
         //     .await?;
 
         match param {
-            CommentParam::Query(q) => {
-                let query = CommentSummary::base_sql_with("where topic_id = $1 limit $2 offset $3");
-                tracing::debug!("list_comment query: {}", query);
-
-                let mut total_count: i64 = 0;
-                let items: Vec<CommentSummary> = sqlx::query(&query)
-                    .bind(topic_id)
-                    .bind(q.size as i64)
-                    .bind(
-                        q.size as i64
-                            * (q.bookmark
-                                .unwrap_or("1".to_string())
-                                .parse::<i64>()
-                                .unwrap()
-                                - 1),
-                    )
-                    .map(|r: sqlx::postgres::PgRow| {
-                        use sqlx::Row;
-                        total_count = r.get("total_count");
-                        r.into()
-                    })
-                    .fetch_all(&ctrl.pool)
-                    .await?;
-
-                Ok(Json(CommentGetResponse::Query(QueryResponse {
-                    items,
-                    total_count,
-                })))
-            }
+            CommentParam::Query(q) => ctrl.list_by_topic_id(parent_id, q).await,
             _ => Err(ServiceError::BadRequest)?,
         }
     }
@@ -154,5 +124,41 @@ impl CommentControllerV1 {
             .await?;
 
         Ok(Json(comment))
+    }
+
+    async fn list_by_topic_id(
+        &self,
+        parent_id: String,
+        q: CommentQuery,
+    ) -> Result<Json<CommentGetResponse>> {
+        let topic_id = parent_id.parse::<i64>()?;
+
+        let query = CommentSummary::base_sql_with("where topic_id = $1 limit $2 offset $3");
+        tracing::debug!("list_by_topic_id query: {}", query);
+
+        let mut total_count: i64 = 0;
+        let items: Vec<CommentSummary> = sqlx::query(&query)
+            .bind(topic_id)
+            .bind(q.size as i64)
+            .bind(
+                q.size as i64
+                    * (q.bookmark
+                        .unwrap_or("1".to_string())
+                        .parse::<i64>()
+                        .unwrap()
+                        - 1),
+            )
+            .map(|r: sqlx::postgres::PgRow| {
+                use sqlx::Row;
+                total_count = r.get("total_count");
+                r.into()
+            })
+            .fetch_all(&self.pool)
+            .await?;
+
+        Ok(Json(CommentGetResponse::Query(QueryResponse {
+            items,
+            total_count,
+        })))
     }
 }

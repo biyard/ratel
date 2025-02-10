@@ -7,27 +7,28 @@ use by_axum::{
         Extension, Json,
     },
 };
-use by_types::QueryResponse;
+// use by_types::QueryResponse;
 use dto::*;
 
 #[derive(Clone, Debug)]
 pub struct VoteControllerV1 {
     repo: VoteRepository,
+    user: UserRepository,
 }
 
 impl VoteControllerV1 {
     pub fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Router> {
-        let repo = Vote::get_repository(pool);
-
-        let ctrl = VoteControllerV1 { repo };
+        let repo = Vote::get_repository(pool.clone());
+        let user = User::get_repository(pool.clone());
+        let ctrl = VoteControllerV1 { repo, user };
 
         Ok(by_axum::axum::Router::new()
             .route(
                 "/:id",
-                get(Self::get_vote), // .post(Self::act_vote_by_id)
+                post(Self::act_vote).get(Self::get_vote), // .post(Self::act_vote_by_id)
             )
             .with_state(ctrl.clone())
-            .route("/", post(Self::act_vote).get(Self::list_vote))
+            .route("/", get(Self::list_vote))
             .with_state(ctrl.clone()))
     }
 
@@ -67,18 +68,86 @@ impl VoteControllerV1 {
         State(_ctrl): State<VoteControllerV1>,
         Path(parent_id): Path<String>,
         Extension(_auth): Extension<Option<Authorization>>,
-        Query(q): Query<VoteParam>,
+        Query(param): Query<VoteParam>,
     ) -> Result<Json<VoteGetResponse>> {
-        tracing::debug!("list_vote {} {:?}", parent_id, q);
+        tracing::debug!("list_vote {} {:?}", parent_id, param);
 
-        Ok(Json(VoteGetResponse::Query(QueryResponse::default())))
+        match param {
+            // VoteParam::Query(q) => ctrl.repo.list_by_user_id(q).await,
+            // VoteParam::Read(r) => ctrl.vote_result_summary(r, parent_id).await,
+            _ => Err(ServiceError::BadRequest), // TODO: Unimplemented
+        }
     }
 }
 
 impl VoteControllerV1 {
-    async fn vote(&self, _parent_id: String, _body: VoteVotingRequest) -> Result<Json<Vote>> {
-        // self.repo.insert(body.amount, ).await?;
+    async fn vote(&self, parent_id: String, body: VoteVotingRequest) -> Result<Json<Vote>> {
+        let topic_id = parent_id.parse::<i64>()?;
+        let user = self
+            .user
+            .find_one(&UserReadAction::new().user_info())
+            .await?;
 
-        Ok(Json(Vote::default()))
+        // TODO: feat upsert vote
+        let vote = self
+            .repo
+            .insert(body.vote, body.amount, user.id, topic_id)
+            .await?;
+
+        Ok(Json(vote))
+    }
+
+    // async fn list_by_user_id(&self, q: VoteQuery) -> Result<Json<VoteGetResponse>> {
+    //     let user = self
+    //         .user
+    //         .find_one(&UserReadAction::new().user_info())
+    //         .await?;
+
+    //     let items = self.repo.list_by_user_id(user.id).await?;
+
+    //     Ok(Json(VoteGetResponse::Query(items)))
+    // }
+
+    async fn vote_result_summary(
+        &self,
+        _q: VoteReadAction,
+        _parent_id: String,
+    ) -> Result<Json<VoteResultSummary>> {
+        //     let topic_id = parent_id.parse::<i64>()?;
+
+        //     let query = VoteSummary::base_sql_with("where topic_id = $1 limit $2 offset $3");
+        //     tracing::debug!("vote_result_summary query: {}", query);
+
+        //     // TODO: Using vote_result_summary
+        //     let items: Vec<VoteSummary> = sqlx::query(&query)
+        //         .bind(topic_id)
+        //         .bind(q.size as i64)
+        //         .bind(
+        //             q.size as i64
+        //                 * (q.bookmark
+        //                     .unwrap_or("1".to_string())
+        //                     .parse::<i64>()
+        //                     .unwrap()
+        //                     - 1),
+        //         )
+        //         .map(|r: sqlx::postgres::PgRow| {
+        //             use sqlx::Row;
+        //             total_count = r.get("total_count");
+        //             r.into()
+        //         })
+        //         .fetch_all(&ctrl.pool)
+        //         .await?;
+
+        //     Ok(Json(VoteResultSummary {
+        //         pros: items
+        //             .iter()
+        //             .filter(|r| r.vote == VoteResult::Supportive)
+        //             .count() as i64,
+        //         cons: items
+        //             .iter()
+        //             .filter(|r| r.vote == VoteResult::Against)
+        //             .count() as i64,
+        //     }))
+        Ok(Json(VoteResultSummary { pros: 0, cons: 0 }))
     }
 }
