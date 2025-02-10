@@ -65,7 +65,7 @@ pub struct Topic {
     pub vote: Vec<Vote>,
     #[api_model(many_to_many = topic_likes, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = topic_id, aggregator = exist)]
     #[serde(default)]
-    pub like: bool,
+    pub post_like: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq, Translate)]

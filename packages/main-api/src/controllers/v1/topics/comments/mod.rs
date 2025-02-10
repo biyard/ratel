@@ -9,7 +9,6 @@ use by_axum::{
 };
 use by_types::QueryResponse;
 use dto::*;
-use sqlx::postgres::PgRow;
 
 #[derive(Clone, Debug)]
 pub struct CommentControllerV1 {
@@ -124,7 +123,7 @@ impl CommentControllerV1 {
                                 .unwrap()
                                 - 1),
                     )
-                    .map(|r: PgRow| {
+                    .map(|r: sqlx::postgres::PgRow| {
                         use sqlx::Row;
                         total_count = r.get("total_count");
                         r.into()
