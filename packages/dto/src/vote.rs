@@ -16,7 +16,7 @@ pub struct Vote {
     #[api_model(summary, auto = [insert, update])]
     pub updated_at: i64,
 
-    #[api_model(summary, Type = INTEGER, action = voting)]
+    #[api_model(summary, type = INTEGER, action = voting)]
     pub vote: VoteResult,
 
     #[api_model(summary, action = voting)]
@@ -25,7 +25,7 @@ pub struct Vote {
     #[api_model(many_to_one = users, query_action = list_by_user_id)]
     pub user_id: i64,
 
-    #[api_model(many_to_one = topics)]
+    #[api_model(many_to_one = topics)] //, read_action = vote_result_summary)]
     pub topic_id: i64,
 }
 
@@ -37,4 +37,10 @@ pub enum VoteResult {
     Neutral = 0,
     Supportive = 1,
     Against = 2,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, Default)]
+pub struct VoteResultSummary {
+    pub pros: i64,
+    pub cons: i64,
 }
