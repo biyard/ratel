@@ -40,7 +40,7 @@ jobs:
           target: wasm32-unknown-unknown
           toolchain: stable
       - name: Install PostgreSQL Client
-        run: sudo apt-get install -y postgresql-client
+        run: sudo apt-get install -y postgresql-client libgtk-3-dev
 
       - name: Initialize Database SQL
         run: |
@@ -102,7 +102,7 @@ jobs:
 
   main-ui:
     runs-on: ubuntu-22.04
-    needs: [test,test-with-server]
+    needs: [test, test-with-server]
 
     steps:
       - uses: actions/checkout@v3
@@ -182,7 +182,7 @@ jobs:
 
   main-api:
     runs-on: ubuntu-22.04
-    needs: [test,test-with-server]
+    needs: [test, test-with-server]
 
     steps:
       - uses: actions/checkout@v3
