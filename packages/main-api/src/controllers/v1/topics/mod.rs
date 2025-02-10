@@ -10,8 +10,6 @@ use by_axum::{
         Extension, Json,
     },
 };
-use by_types::QueryResponse;
-// use by_types::QueryResponse;
 use dto::*;
 
 #[derive(Clone, Debug)]
@@ -81,37 +79,38 @@ impl TopicControllerV1 {
             .find_one(&UserReadAction::new().user_info())
             .await?;
 
+        // FIXME: error returned from database: column \"volume.value\" must appear in the GROUP BY clause or be used in an aggregate function
         let topic = ctrl
             .repo
             .find_one(user.id, &TopicReadAction::new().find_by_id(id))
             .await?;
 
+        // let query = TopicSummary::base_sql_with("where p.id = $1");
+        // tracing::debug!("get_topic query {:?}", query);
+
+        // let topic = Topic = sqlx::query(&query)
+        //     .map(|r: sqlx::postgres::PgRow| {
+        //         tracing::debug!("get_topic row {:?}", r);
+        //         Topic::default()
+        //     })
+        //     .fetch_one(&ctrl.pool)
+        //     .await?;
+
+        // let topic = Topic::default();
         Ok(Json(topic))
     }
 
     pub async fn list_topic(
-        State(_ctrl): State<TopicControllerV1>,
+        State(ctrl): State<TopicControllerV1>,
         Extension(_auth): Extension<Option<Authorization>>,
         Query(params): Query<TopicParam>,
     ) -> Result<Json<TopicGetResponse>> {
         tracing::debug!("list_topic {:?}", params);
 
-        // FIXME: find_one, base_sql func is requesting unnecessary user_id parameter @hackartist
-
-        // match params {
-        //     TopicParam::Query(req) => {
-        //         Ok(Json(TopicGetResponse::Query(ctrl.repo.find(&req).await?)))
-        //     }
-        //     TopicParam::Read(req) => Ok(Json(TopicGetResponse::Read(
-        //         ctrl.repo.find_one(&req).await?,
-        //     ))),
-        // }
-
-        let topics: QueryResponse<TopicSummary> = QueryResponse {
-            items: vec![],
-            total_count: 0,
-        };
-        Ok(Json(TopicGetResponse::Query(topics)))
+        match params {
+            TopicParam::Query(q) => Ok(Json(TopicGetResponse::Query(ctrl.repo.find(&q).await?))),
+            _ => Err(ServiceError::BadRequest),
+        }
     }
 }
 
