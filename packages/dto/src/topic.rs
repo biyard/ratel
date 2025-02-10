@@ -111,22 +111,21 @@ impl TopicSummary {
     }
 
     pub fn period(&self) -> String {
-        "".to_string()
-        // // to "12/15 - 1/22"
-        // let start = chrono::DateTime::from_timestamp(self.started_at, 0)
-        //     .unwrap_or_default()
-        //     .naive_local();
-        // let end = chrono::DateTime::from_timestamp(self.ended_at, 0)
-        //     .unwrap_or_default()
-        //     .naive_local();
+        // to "12/15 - 1/22"
+        let start = chrono::DateTime::from_timestamp(self.created_at, 0)
+            .unwrap_or_default()
+            .naive_local();
+        let end = chrono::DateTime::from_timestamp(self.ended_at, 0)
+            .unwrap_or_default()
+            .naive_local();
 
-        // format!(
-        //     "{:02}/{:02} - {:02}/{:02}",
-        //     start.month(),
-        //     start.day(),
-        //     end.month(),
-        //     end.day()
-        // )
+        format!(
+            "{:02}/{:02} - {:02}/{:02}",
+            start.month(),
+            start.day(),
+            end.month(),
+            end.day()
+        )
     }
 }
 
@@ -225,7 +224,6 @@ impl TopicSummary {
     }
 
     pub fn volume_with_commas(&self) -> String {
-        // self.volume.to_formatted_string(&Locale::en)
-        "".to_string()
+        self.volume.to_formatted_string(&Locale::en)
     }
 }
