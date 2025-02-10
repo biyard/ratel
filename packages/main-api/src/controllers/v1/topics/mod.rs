@@ -17,15 +17,17 @@ use dto::*;
 #[derive(Clone, Debug)]
 pub struct TopicControllerV1 {
     repo: TopicRepository,
+    user: UserRepository,
     pool: sqlx::Pool<sqlx::Postgres>,
 }
 
 impl TopicControllerV1 {
     pub fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Router> {
         let repo = Topic::get_repository(pool.clone());
-
+        let user = User::get_repository(pool.clone());
         let ctrl = TopicControllerV1 {
             repo,
+            user,
             pool: pool.clone(),
         };
 
@@ -66,20 +68,23 @@ impl TopicControllerV1 {
     // }
 
     pub async fn get_topic(
-        State(_ctrl): State<TopicControllerV1>,
+        State(ctrl): State<TopicControllerV1>,
         Extension(_auth): Extension<Option<Authorization>>,
         Path(id): Path<String>,
     ) -> Result<Json<Topic>> {
         tracing::debug!("get_topic {:?}", id);
 
-        // FIXME: find_one, base_sql func is requesting unnecessary user_id parameter @hackartist
+        let id = id.parse::<i64>()?;
 
-        // let topic = ctrl
-        //     .repo
-        //     .find_one(&TopicReadAction::new().find_by_id(id))
-        //     .await?;
+        let user = ctrl
+            .user
+            .find_one(&UserReadAction::new().user_info())
+            .await?;
 
-        let topic = Topic::default();
+        let topic = ctrl
+            .repo
+            .find_one(user.id, &TopicReadAction::new().find_by_id(id))
+            .await?;
 
         Ok(Json(topic))
     }
