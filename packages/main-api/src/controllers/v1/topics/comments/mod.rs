@@ -7,11 +7,13 @@ use by_axum::{
         Extension, Json,
     },
 };
-// use by_types::QueryResponse;
+use by_types::QueryResponse;
 use dto::*;
+use sqlx::postgres::PgRow;
 
 #[derive(Clone, Debug)]
 pub struct CommentControllerV1 {
+    pool: sqlx::Pool<sqlx::Postgres>,
     repo: CommentRepository,
     user: UserRepository,
 }
@@ -20,7 +22,7 @@ impl CommentControllerV1 {
     pub fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Router> {
         let repo = Comment::get_repository(pool.clone());
         let user = User::get_repository(pool.clone());
-        let ctrl = CommentControllerV1 { repo, user };
+        let ctrl = CommentControllerV1 { pool, repo, user };
 
         Ok(by_axum::axum::Router::new()
             .route(
@@ -61,20 +63,32 @@ impl CommentControllerV1 {
     // }
 
     pub async fn get_comment(
-        State(_ctrl): State<CommentControllerV1>,
+        State(ctrl): State<CommentControllerV1>,
         Extension(_auth): Extension<Option<Authorization>>,
         Path((parent_id, id)): Path<(String, String)>,
     ) -> Result<Json<Comment>> {
         tracing::debug!("get_comment {} {:?}", parent_id, id);
 
-        let _topic_id = parent_id.parse::<i64>()?;
-        let _id = id.parse::<i64>()?;
+        let topic_id = parent_id.parse::<i64>()?;
+        let id = id.parse::<i64>()?;
 
         // FIXME: find_one method need unnecessary user_id parameter @hackartist
 
-        // let comment = ctrl.repo.find_one(id).await?;
+        let user = ctrl
+            .user
+            .find_one(&UserReadAction::new().user_info())
+            .await?;
 
-        Ok(Json(Comment::default()))
+        let comment = ctrl
+            .repo
+            .find_one(user.id, &CommentReadAction::new().find_by_id(id))
+            .await?;
+
+        if comment.topic_id != topic_id {
+            return Err(ServiceError::BadRequest);
+        }
+
+        Ok(Json(comment))
     }
 
     pub async fn list_comment(
@@ -85,12 +99,45 @@ impl CommentControllerV1 {
     ) -> Result<Json<CommentGetResponse>> {
         tracing::debug!("list_comment {} {:?}", parent_id, param);
 
-        let _topic_id = parent_id.parse::<i64>()?;
+        let topic_id = parent_id.parse::<i64>()?;
+
+        // FIXME: find_one method need using user_id parameter (like field)
+        // let user = ctrl
+        //     .user
+        //     .find_one(&UserReadAction::new().user_info())
+        //     .await?;
 
         match param {
             CommentParam::Query(q) => {
-                Ok(Json(CommentGetResponse::Query(ctrl.repo.find(&q).await?)))
+                let query = CommentSummary::base_sql_with("where topic_id = $1 limit $2 offset $3");
+                tracing::debug!("list_comment query: {}", query);
+
+                let mut total_count: i64 = 0;
+                let items: Vec<CommentSummary> = sqlx::query(&query)
+                    .bind(topic_id)
+                    .bind(q.size as i64)
+                    .bind(
+                        q.size as i64
+                            * (q.bookmark
+                                .unwrap_or("1".to_string())
+                                .parse::<i64>()
+                                .unwrap()
+                                - 1),
+                    )
+                    .map(|r: PgRow| {
+                        use sqlx::Row;
+                        total_count = r.get("total_count");
+                        r.into()
+                    })
+                    .fetch_all(&ctrl.pool)
+                    .await?;
+
+                Ok(Json(CommentGetResponse::Query(QueryResponse {
+                    items,
+                    total_count,
+                })))
             }
+            _ => Err(ServiceError::BadRequest)?,
         }
     }
 }

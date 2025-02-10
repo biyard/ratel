@@ -8,7 +8,7 @@ use validator::ValidationError;
 
 #[api_model(base = "/v1/topics/:topic-id/comments", table = comments(user_id = i64), iter_type = QueryResponse)]
 pub struct Comment {
-    #[api_model(summary, primary_key)]
+    #[api_model(summary, primary_key, read_action = [get_comment, find_by_id])]
     pub id: i64,
     #[api_model(summary, auto = insert)]
     pub created_at: u64,
