@@ -6,7 +6,7 @@ use by_macros::api_model;
 use by_types::QueryResponse;
 use validator::ValidationError;
 
-#[api_model(base = "/v1/topics/:topic-id/comments", table = comments(user_id = String), iter_type = QueryResponse)]
+#[api_model(base = "/v1/topics/:topic-id/comments", table = comments(user_id = i64), iter_type = QueryResponse)]
 pub struct Comment {
     #[api_model(summary, primary_key)]
     pub id: i64,
