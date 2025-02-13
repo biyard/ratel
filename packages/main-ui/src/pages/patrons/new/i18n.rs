@@ -24,6 +24,10 @@ translate! {
         ko: "지갑을 선택하려면 여기를 클릭하세요.",
         en: "Please click here to select a wallet",
     },
+    popup_title: {
+        ko: "지갑",
+        en: "WALLETS",
+    },
 }
 
 translate! {

@@ -65,7 +65,7 @@ pub fn Card(lang: Language) -> Element {
         div { class: "w-full h-[60px] self-stretch px-3.5 py-2.5 justify-between items-center inline-flex",
             div { class: "w-[150px] flex flex-center justify-start items-center gap-2.5",
                 img {
-                    class: "w-[40px] h-[40px rounded",
+                    class: "w-[40px] h-[40px] rounded",
                     src: asset!("public/images/profile.png"),
                 }
                 div { class: "text-white text-[14px] ", "Gildong Hong" }

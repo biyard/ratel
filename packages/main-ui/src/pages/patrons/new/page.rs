@@ -1,10 +1,10 @@
 #![allow(non_snake_case)]
 
 use crate::components::icons::BigRightArrow;
+use crate::pages::wallet_popup::WalletPopup;
 
 use super::controller::*;
 use super::i18n::*;
-// use super::wallet_popup::WalletPopup;
 use dioxus::prelude::*;
 use dioxus_popup::PopupService;
 use dioxus_translate::*;
@@ -38,9 +38,24 @@ pub fn SupportUs(lang: Language) -> Element {
             div { class: "h-[15px] self-stretch text-[#414462] text-xs font-normal font-['Inter']",
                 "{tr.sub_text}"
             }
-            button {
-                div { class: "w-full h-[100px] mt-[10px] rounded-xl border border-dotted border-[#414462] flex flex-col justify-center items-center overflow-hidden" }
-                div { class: "text-[#414462] text-sm font-normal font-['Inter']", "{tr.input_box_text}" }
+            div { class: "w-full h-[100px] mt-[10px] rounded-xl border border-dotted border-[#414462] flex flex-col justify-center items-center overflow-hidden",
+                button {
+                    onclick: move |_| {
+                        popup.open(rsx! {
+                            WalletPopup {
+                                class: "w-[400px] h-[82px] flex flex-row my-[10px] p-[8px] bg-[#5B5E80] rounded-[8px] justify-start items-center gap-[17px] cursor-pointer hover:bg-[#5C6BFF]",
+                                id: "wallet_popup".to_string(),
+                                onclick: move |_| {},
+                                lang,
+                            }
+                        }).with_title(tr.popup_title);
+                    },
+                    // TODO: If wallet login success, send to Donate Details page.
+                    div { class: "text-[#414462] text-sm font-normal font-['Inter']",
+                        "{tr.input_box_text}"
+                    }
+                
+                }
             }
         }
     }
@@ -59,7 +74,12 @@ pub fn ProposeANewFeature(lang: Language) -> Element {
             div { class: "min-h-[30px] self-stretch text-[#414462] text-xs font-normal font-['Inter']",
                 "{tr.sub_text}"
             }
-            div { class: "w-full h-[100px] mt-[10px] rounded-xl border border-dotted border-[#414462] flex flex-col justify-center items-center overflow-hidden",
+            button {
+                class: "w-full h-[100px] mt-[10px] rounded-xl border border-dotted border-[#414462] flex flex-col justify-center items-center overflow-hidden",
+                onclick: move |_| {
+                    tracing::debug!("Propose a New Feature button clicked");
+                },
+                // TODO: If Propose a New Feature button clicked, send to new feature page.
                 div { class: "text-[#414462] text-sm font-normal font-['Inter']", "{tr.input_box_text}" }
             }
         }
