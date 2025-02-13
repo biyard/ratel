@@ -22,7 +22,7 @@ pub fn UpcomingTopics(
                         day: topic.day(),
                         month: topic.month(),
                         // FIXME: provide default image
-                        image: "{topic.images[0]}",
+                        image: format!("{}", topic.image.clone().unwrap_or("".to_string())),
                         title: "{topic.title}",
                         date: topic.date(),
                     }
