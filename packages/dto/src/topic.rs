@@ -16,17 +16,19 @@ use super::comment::*;
 #[cfg(feature = "server")]
 use schemars::JsonSchema;
 
-#[api_model(base = "/v1/topics", table = topics, iter_type=QueryResponse)]
+#[api_model(base = "/v1/topics", table = topics, iter_type=QueryResponse)] // action = [create(user_id = String)],
 pub struct Topic {
-    #[api_model(summary, primary_key)]
-    pub id: String,
+    #[api_model(summary, primary_key, read_action = find_by_id)]
+    pub id: i64,
     #[api_model(summary, auto = [insert])]
-    pub created_at: u64,
+    pub created_at: i64,
     #[api_model(summary, auto = [insert, update])]
-    pub updated_at: u64,
-    #[api_model(summary)]
-    pub author: String,
-
+    pub updated_at: i64,
+    // The end time of the vote
+    #[api_model(summary, action = create)]
+    pub ended_at: i64,
+    // #[api_model(summary, many_to_one = users, queryable)]
+    // pub author_id: String,
     #[api_model(summary, action = create)]
     pub title: String,
     // Legislation summary
@@ -34,18 +36,13 @@ pub struct Topic {
     pub content: String,
 
     // The image URLs of the voting topic
-    #[api_model(summary)]
-    pub images: Vec<String>,
+    #[api_model(summary, nullable)]
+    pub image: Option<String>,
     #[serde(default)]
-    #[api_model(summary)]
+    #[api_model(summary, type = INTEGER, nullable)]
     pub result: TopicResult,
-    // The start time of the vote
-    #[api_model(summary)]
-    pub started_at: i64,
-    // The end time of the vote
-    #[api_model(summary)]
-    pub ended_at: i64,
-    #[api_model(summary, queryable)]
+    // FIXME: need to be default (annotation does not add parameter in insert method) @hackartist
+    #[api_model(summary, type = INTEGER, action = create, queryable, nullable)]
     pub status: TopicStatus,
     // pub voting_trends: Vec<VoteData>,
     #[api_model(action = create)]
@@ -56,7 +53,6 @@ pub struct Topic {
     pub discussions: Vec<String>,
     #[api_model(action = create, type = JSONB)]
     pub additional_resources: Vec<AdditionalResource>,
-
     #[api_model(summary, one_to_many = votes, foreign_key = topic_id, aggregator = sum(amount))]
     pub volume: i64,
 
@@ -65,10 +61,11 @@ pub struct Topic {
 
     // User-specific information
     #[api_model(many_to_many = votes, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = topic_id, unique)]
+    #[serde(default)]
     pub vote: Vec<Vote>,
-
     #[api_model(many_to_many = topic_likes, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = topic_id, aggregator = exist)]
-    pub like: bool,
+    #[serde(default)]
+    pub post_like: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq, Translate)]
@@ -115,7 +112,7 @@ impl TopicSummary {
 
     pub fn period(&self) -> String {
         // to "12/15 - 1/22"
-        let start = chrono::DateTime::from_timestamp(self.started_at, 0)
+        let start = chrono::DateTime::from_timestamp(self.created_at, 0)
             .unwrap_or_default()
             .naive_local();
         let end = chrono::DateTime::from_timestamp(self.ended_at, 0)
@@ -192,7 +189,7 @@ impl TopicSummary {
     }
 
     pub fn day(&self) -> String {
-        let start = chrono::DateTime::from_timestamp(self.started_at, 0)
+        let start = chrono::DateTime::from_timestamp(self.created_at, 0)
             .unwrap_or_default()
             .naive_local();
 
@@ -200,7 +197,7 @@ impl TopicSummary {
     }
 
     pub fn month(&self) -> String {
-        let start = chrono::DateTime::from_timestamp(self.started_at, 0)
+        let start = chrono::DateTime::from_timestamp(self.created_at, 0)
             .unwrap_or_default()
             .naive_local();
 

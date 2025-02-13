@@ -26,7 +26,6 @@ pub fn TopicsPage(lang: Language) -> Element {
                     "{tr.create_topic}"
                     RightArrow {}
                 }
-            
             }
             div { class: "w-full flex flex-col justify-start items-start",
                 for topic in ctrl.get_topics() {
@@ -58,7 +57,7 @@ pub fn TopicCard(topic: TopicSummary, lang: Language) -> Element {
         Link {
             class: "w-full bg-[#404760] rounded-lg flex-col justify-start items-start inline-flex overflow-hidden opacity-80 hover:opacity-100 cursor-pointer",
             to: Route::TopicsByIdPage {
-                id: topic.id.clone(),
+                id: topic.id.to_string(),
                 lang,
             },
             div { class: "self-stretch px-5 py-2.5 bg-[#404760] rounded-tl-lg rounded-tr-lg border-l border-r border-t border-[#282a3b] justify-start items-start gap-2.5 inline-flex",
@@ -78,9 +77,9 @@ pub fn TopicCard(topic: TopicSummary, lang: Language) -> Element {
                     }
                     div { class: "grow shrink basis-0 self-stretch justify-start items-start gap-2.5 flex",
                         div { class: "grow shrink basis-0 self-stretch justify-start items-center gap-2 flex",
-                            if topic.images.len() >= 1 {
+                            if topic.image.is_some() {
                                 img {
-                                    src: "{topic.images[0]}",
+                                    src: format!("{}", topic.image.clone().unwrap_or("".to_string())),
                                     class: "w-[70px] h-[70px] rounded-md",
                                 }
                             }
