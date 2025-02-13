@@ -30,6 +30,8 @@ pub enum Route {
                 NewPatronPage { lang: Language },
                 #[route("/:id")]
                 PatronsByIdPage { id: String, lang: Language },
+                #[route("/new_login")]
+                PatronsLoginPage { id: String, lang: Language },
             #[end_nest]
         #[end_layout]
     #[end_nest]
