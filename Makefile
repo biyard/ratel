@@ -2,6 +2,7 @@ ENV ?= dev
 BASE_DOMAIN ?= ratel.foundation
 DOMAIN ?= $(ENV).$(BASE_DOMAIN)
 
+HOSTED_ZONE_ID ?= $(shell aws route53 list-hosted-zones-by-name --dns-name ratel.foundation --query "HostedZones[0].Id" --output text | cut -d'/' -f3)
 PROJECT ?= $(shell basename `git rev-parse --show-toplevel`)
 SERVICE ?= main-ui
 COMMIT ?= $(shell git rev-parse --short HEAD)
@@ -27,7 +28,7 @@ ifeq ($(ENABLE_DOCKER),true)
 	DOCKER_COMMAND_SUFFUIX = -docker
 endif
 
-BUILD_CDK_ENV ?= AWS_ACCESS_KEY_ID=$(ACCESS_KEY_ID) AWS_SECRET_ACCESS_KEY=$(SECRET_ACCESS_KEY) AWS_REGION=$(REGION) DOMAIN=$(DOMAIN) TABLE_NAME=$(TABLE_NAME) WORKSPACE_ROOT=$(WORKSPACE_ROOT) SERVICE=$(SERVICE) VPC_ID=$(VPC_ID) AWS_ACCOUNT_ID=$(AWS_ACCOUNT_ID) COMMIT=$(COMMIT) ENV=$(ENV) ENABLE_S3=$(ENABLE_S3) ENABLE_DYNAMO=$(ENABLE_DYNAMO) ENABLE_FARGATE=$(ENABLE_FARGATE) ENABLE_LAMBDA=$(ENABLE_LAMBDA) ENABLE_OPENSEARCH=$(ENABLE_OPENSEARCH) BASE_DOMAIN=$(BASE_DOMAIN) PROJECT=$(PROJECT) STACK=$(STACK)
+BUILD_CDK_ENV ?= AWS_ACCESS_KEY_ID=$(ACCESS_KEY_ID) AWS_SECRET_ACCESS_KEY=$(SECRET_ACCESS_KEY) AWS_REGION=$(REGION) DOMAIN=$(DOMAIN) TABLE_NAME=$(TABLE_NAME) WORKSPACE_ROOT=$(WORKSPACE_ROOT) SERVICE=$(SERVICE) VPC_ID=$(VPC_ID) AWS_ACCOUNT_ID=$(AWS_ACCOUNT_ID) COMMIT=$(COMMIT) ENV=$(ENV) ENABLE_S3=$(ENABLE_S3) ENABLE_DYNAMO=$(ENABLE_DYNAMO) ENABLE_FARGATE=$(ENABLE_FARGATE) ENABLE_LAMBDA=$(ENABLE_LAMBDA) ENABLE_OPENSEARCH=$(ENABLE_OPENSEARCH) BASE_DOMAIN=$(BASE_DOMAIN) PROJECT=$(PROJECT) STACK=$(STACK) HOSTED_ZONE_ID=$(HOSTED_ZONE_ID)
 
 run:
 	cd packages/$(SERVICE) && make run
@@ -61,13 +62,13 @@ build: clean
 	mkdir -p .build
 	cd packages/$(SERVICE) && ENV=$(ENV) ARTIFACT_DIR=$(PWD)/.build/$(SERVICE) make build$(DOCKER_COMMAND_SUFFUIX)
 
-fixtures/cdk/node_modules:
-	cd deps/rust-sdk/fixtures/cdk && npm install
+deps/rust-sdk/cdk/node_modules:
+	cd deps/rust-sdk/cdk && npm install
 
-cdk-deploy: fixtures/cdk/node_modules
-	cd deps/rust-sdk/fixtures/cdk && $(BUILD_CDK_ENV) CODE_PATH=$(PWD)/.build/$(SERVICE) npm run build
-	cd deps/rust-sdk/fixtures/cdk && $(BUILD_CDK_ENV) CODE_PATH=$(PWD)/.build/$(SERVICE) cdk synth
-	cd deps/rust-sdk/fixtures/cdk && $(BUILD_CDK_ENV) CODE_PATH=$(PWD)/.build/$(SERVICE) cdk deploy --require-approval never $(AWS_FLAG) --all
+cdk-deploy: deps/rust-sdk/cdk/node_modules
+	cd deps/rust-sdk/cdk && $(BUILD_CDK_ENV) CODE_PATH=$(PWD)/.build/$(SERVICE) npm run build
+	cd deps/rust-sdk/cdk && $(BUILD_CDK_ENV) CODE_PATH=$(PWD)/.build/$(SERVICE) cdk synth
+	cd deps/rust-sdk/cdk && $(BUILD_CDK_ENV) CODE_PATH=$(PWD)/.build/$(SERVICE) cdk deploy --require-approval never $(AWS_FLAG) --all
 
 s3-deploy:
 	cp -r packages/$(SERVICE)/public/* .build/$(SERVICE)/public

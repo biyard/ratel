@@ -129,10 +129,7 @@ impl TopicSummary {
     }
 }
 
-#[derive(
-    Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default, Copy, ApiModel, Translate,
-)]
-#[serde(rename_all = "snake_case")]
+#[derive(Debug, Clone, Eq, PartialEq, Default, Copy, ApiModel, Translate)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum TopicResult {
     #[default]
@@ -144,10 +141,7 @@ pub enum TopicResult {
     Rejected = 2,
 }
 
-#[derive(
-    Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default, Copy, ApiModel, Translate,
-)]
-#[serde(rename_all = "snake_case")]
+#[derive(Debug, Clone, Eq, PartialEq, Default, Copy, ApiModel, Translate)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum TopicStatus {
     #[default]

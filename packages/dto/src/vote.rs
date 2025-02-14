@@ -29,8 +29,7 @@ pub struct Vote {
     pub topic_id: i64,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, Default, ApiModel)]
-#[serde(rename_all = "snake_case")]
+#[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub enum VoteResult {
     #[default]

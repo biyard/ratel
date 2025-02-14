@@ -26,7 +26,7 @@ fn app() -> Element {
     PopupService::init();
 
     rsx! {
-        document::Title { "DemocraSee" }
+        document::Title { "Ratel" }
         document::Meta {
             name: "title",
             content: "Driving Better Crypto Policies for South Korea's Ecosystem",
