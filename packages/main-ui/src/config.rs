@@ -34,7 +34,7 @@ impl Default for Config {
                 _ => Level::INFO,
             },
             main_api_endpoint: option_env!("MAIN_API_ENDPOINT")
-                .unwrap_or("https://api.dev.democrasee.me"),
+                .unwrap_or("https://api.dev.ratel.foundation"),
             firebase: FirebaseConfig {
                 api_key: option_env!("FIREBASE_API_KEY")
                     .expect("You must set FIREBASE_API_KEY")

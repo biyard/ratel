@@ -5,9 +5,9 @@ exclude = ["deps"]
 
 [workspace.package]
 authors = ["Biyard"]
-description = "DemocraSee"
+description = "Ratel"
 edition = "2021"
-repository = "https://github.com/biyard/democrasee"
+repository = "https://github.com/biyard/ratel"
 license = "MIT"
 
 [workspace.dependencies]

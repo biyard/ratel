@@ -11,7 +11,7 @@ env:
 
 jobs:
   test:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     services:
       postgres:
@@ -60,7 +60,7 @@ jobs:
           cd packages/main-ui && cargo test --tests --features web
 
   test-with-server:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     services:
       postgres:
@@ -101,8 +101,7 @@ jobs:
           DATABASE_TYPE: postgres
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
         run: |
-          echo "" > packages/main-ui/public/tailwind.css
-          cd packages/main-api  && cargo test  --features web
+          cd packages/main-api  && cargo test --tests
 
   main-ui:
     runs-on: ubuntu-22.04
@@ -138,7 +137,7 @@ jobs:
         with:
           key: main-ui-build-cache
           path: |
-            target
+            packages/main-ui/target
 
       - name: Checking violate
         env:
@@ -168,9 +167,9 @@ jobs:
           DOMAIN: dev.ratel.foundation
           API_PREFIX: /api
           ENABLE_S3: true
-          ENABLE_FARGATE: false
-          ENABLE_DYNAMO: true
           ENABLE_LAMBDA: true
+          VERSIONS: v1
+          V1_ENDPOINT: api.dev.ratel.foundation
         run: |
           npm i -g aws-cdk tailwindcss
           make deploy-web-if-needed
@@ -207,7 +206,7 @@ jobs:
         with:
           key: main-api-build-cache
           path: |
-            target
+            packages/main-api/target
 
       - name: Deploy APIs
         env:
@@ -220,10 +219,7 @@ jobs:
           DATABASE_TYPE: postgres
           DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
           ENABLE_S3: false
-          ENABLE_FARGATE: false
-          ENABLE_DYNAMO: false
           ENABLE_LAMBDA: true
-          ENABLE_RDS: true
         run: |
           npm i -g aws-cdk
           make deploy-if-needed

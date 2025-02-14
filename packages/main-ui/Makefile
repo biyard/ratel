@@ -7,25 +7,15 @@ ACCESS_KEY_ID ?= $(shell aws configure get aws_access_key_id $(AWS_FLAG))
 SECRET_ACCESS_KEY ?= $(shell aws configure get aws_secret_access_key $(AWS_FLAG))
 REGION ?= $(shell aws configure get region)
 
-ifeq ("$(ENV)","prod")
-	RUST_LOG ?= info
-	DOMAIN ?= democrasee.me
-	REDIRECT_URI = https://democrasee.me
-	MAIN_API_ENDPOINT ?= https://api.democrasee.me
-endif
-
-ifeq ("$(ENV)","dev")
-	REDIRECT_URI = https://dev.democrasee.me
-endif
-
-DOMAIN ?= dev.democrasee.me
+DOMAIN ?= dev.ratel.foundation
 RUST_LOG ?= debug
 REDIRECT_URI ?= http://localhost:3000
 WORKSPACE_ROOT ?= ../..
-MAIN_API_ENDPOINT ?= https://api.dev.democrasee.me
+MAIN_API_ENDPOINT ?= https://api.dev.ratel.foundation
 RUSTFLAGS = -D warnings
+CARGO_TARGET_DIR ?= $(PWD)/target
 
-BUILD_ENV ?= ENV=$(ENV) VERSION=$(VERSION) COMMIT=$(COMMIT) RUST_LOG=$(RUST_LOG) ENV=$(ENV) DOMAIN=${DOMAIN} AWS_REGION=${REGION} AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY} SERVICE=$(SERVICE) WORKSPACE_ROOT=$(WORKSPACE_ROOT) BASE_URL=$(BASE_URL) MAIN_API_ENDPOINT=$(MAIN_API_ENDPOINT) REDIRECT_URI=$(REDIRECT_URI) RUSTFLAGS="$(RUSTFLAGS)"
+BUILD_ENV ?= ENV=$(ENV) VERSION=$(VERSION) COMMIT=$(COMMIT) RUST_LOG=$(RUST_LOG) ENV=$(ENV) DOMAIN=${DOMAIN} AWS_REGION=${REGION} AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY} SERVICE=$(SERVICE) WORKSPACE_ROOT=$(WORKSPACE_ROOT) BASE_URL=$(BASE_URL) MAIN_API_ENDPOINT=$(MAIN_API_ENDPOINT) REDIRECT_URI=$(REDIRECT_URI) RUSTFLAGS="$(RUSTFLAGS)" CARGO_TARGET_DIR=$(CARGO_TARGET_DIR)
 
 setup.tool:
 	cargo install dioxus-cli --version 0.6.1
@@ -40,7 +30,7 @@ run: clean public/tailwind.css
 
 build: public/tailwind.css
 	$(BUILD_ENV) dx build --release --fullstack --server-features lambda
-	cp -r $(WORKSPACE_ROOT)/target/dx/$(SERVICE)/release/web $(ARTIFACT_DIR)
+	cp -r $(CARGO_TARGET_DIR)/dx/$(SERVICE)/release/web $(ARTIFACT_DIR)
 	mv $(ARTIFACT_DIR)/server $(ARTIFACT_DIR)/bootstrap
 
 public/tailwind.css:

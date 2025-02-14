@@ -63,8 +63,7 @@ pub enum AssemblyMemberByIdAdminActionRequest {
     UpdateCryptoStance(CryptoStance),
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Default, Serialize, Deserialize, Translate, ApiModel)]
-#[serde(rename_all = "snake_case")]
+#[derive(Debug, Clone, Eq, PartialEq, Default, Translate, ApiModel)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum CryptoStance {
     #[default]
@@ -120,8 +119,7 @@ pub struct AssemblyMember {
     // pub email_verified: bool, // check email verified logic
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, ApiModel, Default)]
-#[serde(rename_all = "snake_case")]
+#[derive(Debug, Clone, Eq, PartialEq, ApiModel, Default)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum Lang {
     #[default]

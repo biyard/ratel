@@ -4,7 +4,7 @@ use dioxus::prelude::*;
 use crate::components::icons;
 
 #[component]
-pub fn LogoWrapper(#[props(default = "DemocraSee".to_string())] service_name: String) -> Element {
+pub fn LogoWrapper(#[props(default = "Ratel".to_string())] service_name: String) -> Element {
     rsx! {
         div { class: "flex flex-row items-center gap-[9px]",
             icons::Logo {}
