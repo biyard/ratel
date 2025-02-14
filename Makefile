@@ -1,5 +1,5 @@
 ENV ?= dev
-BASE_DOMAIN ?= democrasee.me
+BASE_DOMAIN ?= ratel.foundation
 DOMAIN ?= $(ENV).$(BASE_DOMAIN)
 
 PROJECT ?= $(shell basename `git rev-parse --show-toplevel`)
