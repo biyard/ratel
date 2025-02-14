@@ -619,7 +619,7 @@ dependencies = [
  "aide",
  "axum 0.8.1",
  "by-types",
- "dioxus-aws 0.6.16",
+ "dioxus-aws",
  "http",
  "hyper",
  "jsonwebtoken",
@@ -1320,9 +1320,7 @@ dependencies = [
 
 [[package]]
 name = "dioxus-aws"
-version = "0.6.15"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f12e9247901d92db78a4e007b91e979bc45b6b09c30804115012ac6a3b6fa358"
+version = "0.6.16"
 dependencies = [
  "axum 0.7.9",
  "axum-core 0.4.5",
@@ -1340,19 +1338,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "dioxus-aws"
-version = "0.6.16"
-dependencies = [
- "dioxus",
- "dioxus-fullstack",
- "tracing",
-]
-
-[[package]]
 name = "dioxus-cli-config"
-version = "0.6.2"
+version = "0.6.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d20764ae5fbe886e4602fdd6f2420ed03697eccba51605926f54693bd65879f3"
+checksum = "cdd16948f1ffdb068dd9a64812158073a4250e2af4e98ea31fdac0312e6bce86"
 dependencies = [
  "wasm-bindgen",
 ]
@@ -1825,9 +1814,9 @@ version = "0.1.1"
 
 [[package]]
 name = "dioxus-web"
-version = "0.6.2"
+version = "0.6.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "45d8e94a78633382687f2555d7c3e0da934aff3d4937d8c63b351a632befdd0c"
+checksum = "7e7c12475c3d360058b8afe1b68eb6dfc9cbb7dcd760aed37c5f85c561c83ed1"
 dependencies = [
  "async-trait",
  "ciborium",
@@ -3695,7 +3684,7 @@ checksum = "c41e0c4fef86961ac6d6f8a82609f55f31b05e4fce149ac5710e439df7619ba4"
 
 [[package]]
 name = "main-api"
-version = "0.7.5"
+version = "0.7.6"
 dependencies = [
  "by-axum",
  "by-types",
@@ -3717,14 +3706,14 @@ dependencies = [
 
 [[package]]
 name = "main-ui"
-version = "0.7.5"
+version = "0.7.6"
 dependencies = [
  "base64 0.22.1",
  "by-macros",
  "by-types",
  "chrono",
  "dioxus",
- "dioxus-aws 0.6.15",
+ "dioxus-aws",
  "dioxus-logger 0.5.1",
  "dioxus-oauth",
  "dioxus-popup",

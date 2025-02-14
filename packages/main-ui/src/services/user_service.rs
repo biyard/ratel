@@ -12,7 +12,7 @@ pub enum UserEvent {
 
 #[derive(Debug, Clone, Copy)]
 pub struct UserService {
-    #[cfg(feature = "web-only")]
+    #[cfg(feature = "web")]
     pub firebase: Signal<google_wallet::FirebaseWallet>,
 
     pub cli: Signal<UserClient>,
@@ -26,7 +26,7 @@ impl UserService {
     pub fn init() {
         let conf = config::get();
 
-        #[cfg(feature = "web-only")]
+        #[cfg(feature = "web")]
         let mut firebase = google_wallet::FirebaseWallet::new(
             conf.firebase.api_key.clone(),
             conf.firebase.auth_domain.clone(),
@@ -37,12 +37,12 @@ impl UserService {
             conf.firebase.measurement_id.clone(),
         );
 
-        #[cfg(feature = "web-only")]
+        #[cfg(feature = "web")]
         let _ = firebase.try_setup_from_storage();
         let cli = User::get_client(&conf.main_api_endpoint);
 
         use_context_provider(|| Self {
-            #[cfg(feature = "web-only")]
+            #[cfg(feature = "web")]
             firebase: Signal::new(firebase),
             cli: Signal::new(cli),
             email: Signal::new("".to_string()),
@@ -51,7 +51,7 @@ impl UserService {
             principal: Signal::new("".to_string()),
         });
 
-        #[cfg(feature = "web-only")]
+        #[cfg(feature = "web")]
         {
             let mut user = use_context::<UserService>();
             let firebase = (user.firebase)();
@@ -65,7 +65,7 @@ impl UserService {
     }
 
     pub fn logout(&mut self) {
-        #[cfg(feature = "web-only")]
+        #[cfg(feature = "web")]
         {
             self.firebase.write().logout();
         }
@@ -76,7 +76,7 @@ impl UserService {
         self.principal.set("".to_string());
     }
 
-    #[cfg(feature = "web-only")]
+    #[cfg(feature = "web")]
     pub async fn get_user_info_from_server(&mut self) {
         let cli = (self.cli)();
         rest_api::set_signer(Box::new(*self));
@@ -109,7 +109,7 @@ impl UserService {
         Some((nickname, profile_url))
     }
 
-    #[cfg(feature = "web-only")]
+    #[cfg(feature = "web")]
     async fn request_to_firebase(
         &mut self,
     ) -> Result<(google_wallet::WalletEvent, String, String, String, String)> {
@@ -145,7 +145,7 @@ impl UserService {
 
     pub async fn login(&mut self) -> UserEvent {
         tracing::debug!("UserService::login");
-        #[cfg(feature = "web-only")]
+        #[cfg(feature = "web")]
         {
             let (evt, principal, email, name, profile_url) =
                 self.request_to_firebase().await.unwrap();
@@ -212,7 +212,7 @@ impl UserService {
         nickname: &str,
         profile_url: &str,
     ) -> Result<()> {
-        #[cfg(feature = "web-only")]
+        #[cfg(feature = "web")]
         rest_api::set_signer(Box::new(*self));
 
         tracing::debug!(
@@ -246,7 +246,7 @@ impl UserService {
     }
 }
 
-#[cfg(feature = "web-only")]
+#[cfg(feature = "web")]
 impl rest_api::Signer for UserService {
     fn signer(&self) -> String {
         (self.firebase)().get_principal()
