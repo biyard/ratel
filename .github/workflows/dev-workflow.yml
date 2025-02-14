@@ -57,7 +57,7 @@ jobs:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
         run: |
           echo "" > packages/main-ui/public/tailwind.css
-          cd packages/main-ui && cargo test --tests --features web
+          cd packages/main-ui && cargo test --tests
 
   test-with-server:
     runs-on: ubuntu-latest

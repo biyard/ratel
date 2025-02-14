@@ -22,7 +22,6 @@ web-sys = { version = "0.3.72", features=["Navigator"]}
 serde = "1.0.216"
 num-format = "0.4.4"
 
-dioxus-sdk = { version = "0.6.0", features = ["window_size"], optional = true }
 
 dioxus-popup.workspace = true
 dioxus-translate.workspace = true
@@ -38,6 +37,6 @@ by-types.workspace = true
 
 [features]
 default = []
-web = ["dioxus-aws/web", "dioxus-sdk", "dioxus-oauth", "google-wallet","dioxus-translate/web"]
+web = ["dioxus-aws/web", "dioxus-oauth", "google-wallet","dioxus-translate/web"]
 server = ["dioxus-aws/server"]
 lambda = ["server", "dioxus-aws/lambda"]
