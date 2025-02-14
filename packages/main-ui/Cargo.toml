@@ -9,7 +9,7 @@ repository.workspace = true
 [dependencies]
 reqwest.workspace = true
 dto.workspace = true
-dioxus = { workspace = true, features = ["router","web", "fullstack"] }
+dioxus = { workspace = true, features = ["router", "fullstack"] }
 dioxus-web = { workspace = true, features = [] }
 
 dioxus-aws = { workspace = true }
@@ -37,6 +37,6 @@ by-types.workspace = true
 
 [features]
 default = []
-web = ["dioxus-aws/web", "dioxus-oauth", "google-wallet","dioxus-translate/web"]
-server = ["dioxus-aws/server"]
+web = ["dioxus-aws/web", "dioxus-oauth", "dioxus/web", "google-wallet","dioxus-translate/web"]
+server = ["dioxus-aws/server", "dioxus/server"]
 lambda = ["server", "dioxus-aws/lambda"]
