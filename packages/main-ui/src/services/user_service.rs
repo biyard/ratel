@@ -12,7 +12,6 @@ pub enum UserEvent {
 
 #[derive(Debug, Clone, Copy)]
 pub struct UserService {
-    #[cfg(feature = "web")]
     pub firebase: Signal<google_wallet::FirebaseWallet>,
 
     pub cli: Signal<UserClient>,
@@ -37,12 +36,14 @@ impl UserService {
             conf.firebase.measurement_id.clone(),
         );
 
+        #[cfg(not(feature = "web"))]
+        let firebase = google_wallet::FirebaseWallet::default();
+
         #[cfg(feature = "web")]
         let _ = firebase.try_setup_from_storage();
         let cli = User::get_client(&conf.main_api_endpoint);
 
         use_context_provider(|| Self {
-            #[cfg(feature = "web")]
             firebase: Signal::new(firebase),
             cli: Signal::new(cli),
             email: Signal::new("".to_string()),
@@ -51,24 +52,18 @@ impl UserService {
             principal: Signal::new("".to_string()),
         });
 
-        #[cfg(feature = "web")]
-        {
-            let mut user = use_context::<UserService>();
-            let firebase = (user.firebase)();
-            if firebase.get_login() {
-                tracing::debug!("UserService::init: wallet={:?}", firebase);
-                spawn(async move {
-                    user.get_user_info_from_server().await;
-                });
-            }
+        let mut user = use_context::<UserService>();
+        let firebase = (user.firebase)();
+        if firebase.get_login() {
+            tracing::debug!("UserService::init: wallet={:?}", firebase);
+            spawn(async move {
+                user.get_user_info_from_server().await;
+            });
         }
     }
 
     pub fn logout(&mut self) {
-        #[cfg(feature = "web")]
-        {
-            self.firebase.write().logout();
-        }
+        self.firebase.write().logout();
 
         self.email.set("".to_string());
         self.nickname.set("".to_string());
@@ -76,7 +71,6 @@ impl UserService {
         self.principal.set("".to_string());
     }
 
-    #[cfg(feature = "web")]
     pub async fn get_user_info_from_server(&mut self) {
         let cli = (self.cli)();
         rest_api::set_signer(Box::new(*self));
@@ -109,7 +103,6 @@ impl UserService {
         Some((nickname, profile_url))
     }
 
-    #[cfg(feature = "web")]
     async fn request_to_firebase(
         &mut self,
     ) -> Result<(google_wallet::WalletEvent, String, String, String, String)> {
@@ -145,60 +138,56 @@ impl UserService {
 
     pub async fn login(&mut self) -> UserEvent {
         tracing::debug!("UserService::login");
-        #[cfg(feature = "web")]
-        {
-            let (evt, principal, email, name, profile_url) =
-                self.request_to_firebase().await.unwrap();
-            match evt {
-                google_wallet::WalletEvent::Signup => {
-                    tracing::debug!(
-                        "UserService::Signup: email={} name={} profile_url={}",
-                        email,
-                        name,
-                        profile_url
-                    );
+        let (evt, principal, email, name, profile_url) = self.request_to_firebase().await.unwrap();
+        match evt {
+            google_wallet::WalletEvent::Signup => {
+                tracing::debug!(
+                    "UserService::Signup: email={} name={} profile_url={}",
+                    email,
+                    name,
+                    profile_url
+                );
 
-                    return UserEvent::Signup(principal, email, name, profile_url);
-                }
-                google_wallet::WalletEvent::Login => {
-                    tracing::debug!(
-                        "UserService::Signup: email={} name={} profile_url={}",
-                        email,
-                        name,
-                        profile_url
-                    );
-                    rest_api::set_signer(Box::new(*self));
-                    let cli = (self.cli)();
+                return UserEvent::Signup(principal, email, name, profile_url);
+            }
+            google_wallet::WalletEvent::Login => {
+                tracing::debug!(
+                    "UserService::Signup: email={} name={} profile_url={}",
+                    email,
+                    name,
+                    profile_url
+                );
+                rest_api::set_signer(Box::new(*self));
+                let cli = (self.cli)();
 
-                    let user: User = match cli.check_email(email.clone()).await {
-                        // Login
-                        Ok(v) => v,
-                        Err(e) => {
-                            // Signup
-                            rest_api::remove_signer();
+                let user: User = match cli.check_email(email.clone()).await {
+                    // Login
+                    Ok(v) => v,
+                    Err(e) => {
+                        // Signup
+                        rest_api::remove_signer();
 
-                            match e {
-                                ServiceError::NotFound => {
-                                    return UserEvent::Signup(principal, email, name, profile_url);
-                                }
-                                e => {
-                                    tracing::error!("UserService::login: error={:?}", e);
-                                    return UserEvent::Logout;
-                                }
+                        match e {
+                            ServiceError::NotFound => {
+                                return UserEvent::Signup(principal, email, name, profile_url);
+                            }
+                            e => {
+                                tracing::error!("UserService::login: error={:?}", e);
+                                return UserEvent::Logout;
                             }
                         }
-                    };
+                    }
+                };
 
-                    self.email.set(email);
-                    self.nickname.set(user.nickname);
-                    self.profile_url.set(user.profile_url);
-                    self.principal.set(principal);
+                self.email.set(email);
+                self.nickname.set(user.nickname);
+                self.profile_url.set(user.profile_url);
+                self.principal.set(principal);
 
-                    return UserEvent::Login;
-                }
-                google_wallet::WalletEvent::Logout => {
-                    tracing::debug!("UserService::login: SignOut");
-                }
+                return UserEvent::Login;
+            }
+            google_wallet::WalletEvent::Logout => {
+                tracing::debug!("UserService::login: SignOut");
             }
         }
 
@@ -212,7 +201,6 @@ impl UserService {
         nickname: &str,
         profile_url: &str,
     ) -> Result<()> {
-        #[cfg(feature = "web")]
         rest_api::set_signer(Box::new(*self));
 
         tracing::debug!(
@@ -246,7 +234,6 @@ impl UserService {
     }
 }
 
-#[cfg(feature = "web")]
 impl rest_api::Signer for UserService {
     fn signer(&self) -> String {
         (self.firebase)().get_principal()

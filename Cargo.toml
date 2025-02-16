@@ -12,14 +12,13 @@ license = "MIT"
 
 [workspace.dependencies]
 by-axum = { path = "deps/rust-sdk/packages/by-axum" }
-easy-dynamodb = { path = "deps/rust-sdk/packages/easy-dynamodb" }
 by-components = { path = "deps/rust-sdk/packages/by-components" }
 by-macros = { path = "deps/rust-sdk/packages/by-macros" }
 by-types = { path = "deps/rust-sdk/packages/by-types" }
 dioxus-translate = { path = "deps/rust-sdk/packages/dioxus-translate", features = ["ko"] }
 dioxus-aws = { path = "deps/rust-sdk/packages/dioxus-aws" }
 rest-api = { path = "deps/rust-sdk/packages/rest-api" }
-dioxus-oauth = { path = "./deps/rust-sdk/packages/dioxus-oauth", features = ["web"] }
+dioxus-oauth = { path = "./deps/rust-sdk/packages/dioxus-oauth" }
 google-wallet = { path = "./deps/rust-sdk/packages/google-wallet" }
 dioxus-popup = { path = "./deps/rust-sdk/packages/dioxus-popup" }
 
@@ -38,6 +37,8 @@ sqlx = { version = "0.8.3", features = [
 
 dioxus = { version = "0.6.3" }
 dioxus-web = { version = "0.6.3" }
+
+[profile]
 
 [profile.wasm-dev]
 inherits = "dev"
