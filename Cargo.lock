@@ -1244,6 +1244,7 @@ dependencies = [
  "dioxus",
  "reqwest",
  "serde",
+ "serde-wasm-bindgen 0.6.5",
  "serde_json",
  "tracing",
  "url",
@@ -2594,7 +2595,7 @@ dependencies = [
 
 [[package]]
 name = "main-api"
-version = "0.7.6"
+version = "0.7.7"
 dependencies = [
  "by-axum",
  "by-types",
@@ -2616,7 +2617,7 @@ dependencies = [
 
 [[package]]
 name = "main-ui"
-version = "0.7.6"
+version = "0.7.7"
 dependencies = [
  "base64 0.22.1",
  "by-macros",

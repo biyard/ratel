@@ -1,6 +1,6 @@
 [package]
 name = "main-ui"
-version = "0.7.6"
+version = "0.7.7"
 authors.workspace = true
 description.workspace = true
 edition.workspace = true
@@ -25,8 +25,8 @@ num-format = "0.4.4"
 
 dioxus-popup.workspace = true
 dioxus-translate.workspace = true
-dioxus-oauth = { workspace = true, optional = true }
-google-wallet = { workspace = true, optional = true }
+dioxus-oauth.workspace = true
+google-wallet = { workspace = true }
 
 chrono = "0.4.39"
 base64 = "0.22.1"
@@ -37,6 +37,6 @@ by-types.workspace = true
 
 [features]
 default = []
-web = ["dioxus-aws/web", "dioxus-oauth", "dioxus/web", "google-wallet","dioxus-translate/web"]
+web = ["dioxus-aws/web", "dioxus/web", "dioxus-translate/web"]
 server = ["dioxus-aws/server", "dioxus/server"]
 lambda = ["server", "dioxus-aws/lambda"]
