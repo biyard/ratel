@@ -51,6 +51,7 @@ async fn main() -> Result<()> {
     } else {
         panic!("Database is not initialized. Call init() first.");
     };
+    rest_api::set_message(conf.signing_domain.to_string());
 
     migration(&pool).await?;
 
