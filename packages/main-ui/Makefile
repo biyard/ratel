@@ -25,15 +25,12 @@ setup.tool:
 	npm i -g webpack-cli
 
 run: clean public/tailwind.css public/dep.js
-	mkdir -p ../../target/dx/main-ui/debug/web/public/assets/
-	cp public/firebase.js ../../target/dx/main-ui/debug/web/public/assets/
 	echo "Run below command after buiding"
 	$(BUILD_ENV) dx serve --fullstack $(DXFLAGS)
 
 build: public/tailwind.css public/dep.js
 	$(BUILD_ENV) dx build --release --fullstack --server-features lambda
 	cp -r $(WORKSPACE_ROOT)/target/dx/$(SERVICE)/release/web $(ARTIFACT_DIR)
-	cp public/firebase.js $(ARTIFACT_DIR)/public/assets/
 
 	mv $(ARTIFACT_DIR)/server $(ARTIFACT_DIR)/bootstrap
 
