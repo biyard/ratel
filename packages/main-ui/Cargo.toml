@@ -1,6 +1,6 @@
 [package]
 name = "main-ui"
-version = "0.7.7"
+version = "0.7.8"
 authors.workspace = true
 description.workspace = true
 edition.workspace = true
@@ -34,6 +34,7 @@ url = "2.5.4"
 rest-api.workspace = true
 by-macros.workspace = true
 by-types.workspace = true
+by-components.workspace = true
 
 [features]
 default = []

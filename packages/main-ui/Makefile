@@ -25,7 +25,6 @@ setup.tool:
 	npm i -g webpack-cli
 
 run: clean public/tailwind.css public/dep.js
-	echo "Run below command after buiding"
 	$(BUILD_ENV) dx serve --fullstack $(DXFLAGS)
 
 build: public/tailwind.css public/dep.js
