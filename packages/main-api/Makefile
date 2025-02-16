@@ -1,7 +1,7 @@
 PROJECT ?= ratel
 SERVICE ?= main-api
 ENV ?= dev
-BASE_DOMAIN ?= dev.ratel.foundation
+AUTH_DOMAIN ?= dev.ratel.foundation
 DOMAIN ?= $(ENV).$(BASE_DOMAIN)
 
 WORKSPACE_ROOT ?= $(PWD)/../..
