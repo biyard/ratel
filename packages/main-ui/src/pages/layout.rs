@@ -18,7 +18,14 @@ pub fn RootLayout(lang: Language) -> Element {
             div { class: "max-w-[1440px] w-full",
                 Header { lang }
             }
-            div { class: "w-full max-w-[1440px] flex-1", Outlet::<Route> {} }
+            div { class: "w-full max-w-[1440px] flex-1",
+                SuspenseBoundary {
+                    fallback: |_| rsx! {
+                        div { class: "w-full h-full flex items-center justify-center text-white", "Loading..." }
+                    },
+                    Outlet::<Route> {}
+                }
+            }
             div { class: "max-w-[1440px] w-full",
                 Footer { lang }
             }
