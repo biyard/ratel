@@ -5,6 +5,7 @@ use dioxus_translate::*;
 
 use super::header::Header;
 use crate::{components::footer::Footer, route::Route, theme::Theme};
+use by_components::loaders::cube_loader::CubeLoader;
 
 #[component]
 pub fn RootLayout(lang: Language) -> Element {
@@ -21,7 +22,9 @@ pub fn RootLayout(lang: Language) -> Element {
             div { class: "w-full max-w-[1440px] flex-1",
                 SuspenseBoundary {
                     fallback: |_| rsx! {
-                        div { class: "w-full h-full flex items-center justify-center text-white", "Loading..." }
+                        div { class: "absolute w-screen h-screen top-0 left-0 flex items-center justify-center text-white",
+                            CubeLoader {}
+                        }
                     },
                     Outlet::<Route> {}
                 }

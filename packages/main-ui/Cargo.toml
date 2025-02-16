@@ -34,6 +34,7 @@ url = "2.5.4"
 rest-api.workspace = true
 by-macros.workspace = true
 by-types.workspace = true
+by-components.workspace = true
 
 [features]
 default = []
