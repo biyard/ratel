@@ -8,6 +8,7 @@ pub struct Config {
     pub openapi_url: &'static str,
     pub aws: AwsConfig,
     pub database: DatabaseConfig,
+    pub signing_domain: &'static str,
 }
 
 impl Default for Config {
@@ -17,6 +18,7 @@ impl Default for Config {
             domain: option_env!("DOMAIN").expect("You must set DOMAIN"),
             openapi_key: option_env!("OPENAPI_KEY").expect("OPENAPI_KEY is required"),
             openapi_url: "https://open.assembly.go.kr/portal/openapi/",
+            signing_domain: option_env!("BASE_DOMAIN").expect("BASE_DOMAIN is required"),
             aws: AwsConfig::default(),
             database: DatabaseConfig::default(),
         }
