@@ -39,7 +39,7 @@ jobs:
           toolchain: stable
 
       - name: Install dependencies
-        run: sudo apt-get install -y libgtk-3-dev libsoup-3.0-dev libsoup-3.0-0 libwebkit2gtk-4.1-dev
+        run: sudo apt-get install -y libgtk-3-dev
 
       - name: Install PostgreSQL Client
         run: sudo apt-get install -y postgresql-client
@@ -55,7 +55,8 @@ jobs:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
         run: |
           echo "" > packages/main-ui/public/tailwind.css
-          cargo test --tests --features web
+          echo "" > packages/main-ui/public/dep.js
+          cd packages/main-ui && cargo test --tests
 
   test-with-server:
     runs-on: ubuntu-latest
@@ -99,8 +100,7 @@ jobs:
           DATABASE_TYPE: postgres
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
         run: |
-          echo "" > packages/main-ui/public/tailwind.css
-          cargo test --tests --features server
+          cd packages/main-api  && cargo test --tests
 
   main-ui:
     runs-on: ubuntu-22.04
