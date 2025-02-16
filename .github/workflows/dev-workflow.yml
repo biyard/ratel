@@ -215,6 +215,7 @@ jobs:
           ENV: dev
           SERVICE: main-api
           DOMAIN: api.dev.ratel.foundation
+          BASE_DOMAIN: dev.ratel.foundation
           DATABASE_TYPE: postgres
           DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
           OPENAPI_KEY: ${{ secrets.OPENAPI_KEY }}

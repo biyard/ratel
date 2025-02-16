@@ -3,3 +3,7 @@
 .DS_Store
 /packages/main-api/.build/
 target/
+/packages/main-ui/public/dep.js
+dist/
+node_modules/
+.build/
