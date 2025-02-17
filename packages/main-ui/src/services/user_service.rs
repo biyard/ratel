@@ -1,6 +1,8 @@
 #![allow(non_snake_case)]
 use dioxus::prelude::*;
 use dto::*;
+use hex::encode;
+use wallet_adapter::WalletAdapter;
 
 use crate::config;
 
@@ -136,7 +138,7 @@ impl UserService {
         Ok((evt, principal, email, name, profile_url))
     }
 
-    pub async fn login(&mut self) -> UserEvent {
+    pub async fn google_login(&mut self) -> UserEvent {
         tracing::debug!("UserService::login");
         let (evt, principal, email, name, profile_url) = self.request_to_firebase().await.unwrap();
         match evt {
@@ -231,6 +233,69 @@ impl UserService {
 
         tracing::debug!("UserService::signup: user={:?}", res);
         Ok(())
+    }
+
+    pub async fn phantom_login(&mut self) -> UserEvent {
+        tracing::debug!("UserService::phantom_wallet login");
+
+        let cli = (self.cli)();
+
+        let mut adapter = match WalletAdapter::init() {
+            Ok(v) => v,
+            Err(e) => {
+                tracing::error!("UserService::phantom_wallet: error={:?}", e);
+                return UserEvent::Logout;
+            }
+        };
+
+        let wallet = match adapter.get_wallet("Phantom") {
+            Ok(v) => v,
+            Err(e) => {
+                tracing::error!("UserService::phantom_wallet: error={:?}", e);
+                return UserEvent::Logout;
+            }
+        };
+
+        match adapter.connect(wallet).await {
+            Ok(_) => {}
+            Err(e) => {
+                tracing::error!("UserService::phantom_wallet: error={:?}", e);
+                return UserEvent::Logout;
+            }
+        }
+
+        let public_key = match adapter.connected_account() {
+            Ok(v) => v.public_key,
+            Err(e) => {
+                tracing::error!("UserService::phantom_wallet: error={:?}", e);
+                return UserEvent::Logout;
+            }
+        };
+
+        tracing::debug!(
+            "UserService::phantom_wallet: public_key={:?}",
+            encode(public_key)
+        );
+
+        match cli.by_principal(encode(public_key)).await {
+            Ok(v) => {
+                tracing::debug!("UserService::phantom_wallet: login");
+                self.email.set(v.email);
+                self.nickname.set(v.nickname);
+                self.profile_url.set(v.profile_url);
+                self.principal.set(v.principal);
+                UserEvent::Login
+            }
+            Err(_) => {
+                tracing::debug!("UserService::phantom_wallet: signup");
+                UserEvent::Signup(
+                    encode(public_key),
+                    "".to_string(),
+                    "".to_string(),
+                    "".to_string(),
+                )
+            }
+        }
     }
 }
 
