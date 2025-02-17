@@ -4,13 +4,18 @@ use dioxus_popup::PopupService;
 use dioxus_translate::*;
 
 use super::{
-    i18n::HeaderTranslate, menus::Menus, signup_popup::SignupPopup,
-    user_setup_popup::UserSetupPopup,
+    i18n::HeaderTranslate,
+    menus::Menus,
+    signup_popup::SignupPopup,
+    // user_setup_popup::UserSetupPopup,
 };
 
 use crate::{
     components::{button::Button, logo::LogoWrapper},
-    services::user_service::{UserEvent, UserService},
+    services::user_service::{
+        // UserEvent,
+        UserService,
+    },
     theme::Theme,
 };
 
@@ -43,30 +48,30 @@ pub fn HeaderTails(lang: Language) -> Element {
             .open(rsx! {
                 SignupPopup {
                     class: "w-[400px]",
-                    onclick: move |_| async move {
-                        tracing::debug!("Signup with Google clicked");
-                        match user_service.login().await {
-                            UserEvent::Signup(principal, email, nickname, profile_url) => {
-                                popup.open(rsx! {
-                                    UserSetupPopup {
-                                        class: "w-[400px]",
-                                        nickname,
-                                        profile_url,
-                                        email,
-                                        principal,
-                                        lang: lang.clone(),
-                                    }
-                                });
-                            }
-                            UserEvent::Login => {
-                                popup.close();
-                            }
-                            _ => {
-                                tracing::error!("Failed to signup with Google");
-                                popup.close();
-                            }
-                        };
-                    },
+                    // onclick: move |_| async move {
+                    //     tracing::debug!("Signup with Google clicked");
+                    //     match user_service.login().await {
+                    //         UserEvent::Signup(principal, email, nickname, profile_url) => {
+                    //             popup.open(rsx! {
+                    //                 UserSetupPopup {
+                    //                     class: "w-[400px]",
+                    //                     nickname,
+                    //                     profile_url,
+                    //                     email,
+                    //                     principal,
+                    //                     lang: lang.clone(),
+                    //                 }
+                    //             });
+                    //         }
+                    //         UserEvent::Login => {
+                    //             popup.close();
+                    //         }
+                    //         _ => {
+                    //             tracing::error!("Failed to signup with Google");
+                    //             popup.close();
+                    //         }
+                    //     };
+                    // },
                     lang: lang.clone(),
                 }
             })
