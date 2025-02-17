@@ -35,6 +35,9 @@ rest-api.workspace = true
 by-macros.workspace = true
 by-types.workspace = true
 by-components.workspace = true
+gloo-storage = "0.3.0"
+js-sys = "0.3.77"
+serde-wasm-bindgen = "0.6.5"
 
 [features]
 default = []
