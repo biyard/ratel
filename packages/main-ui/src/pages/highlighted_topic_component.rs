@@ -336,7 +336,7 @@ pub fn VoteResultBars(
 
             div { class: "relative w-[calc(50%-6px)]",
                 div {
-                    class: "absolute right-[0px] relative animate-grow-to-left flex flex-row justify-start items-center px-[20px] text-[15px] font-bold w-[calc(50%-6px)] h-[28px] rounded-[6px]",
+                    class: "absolute right-[0px] animate-grow-to-left flex flex-row justify-start items-center px-[20px] text-[15px] font-bold w-[calc(50%-6px)] h-[28px] rounded-[6px]",
                     style: "background: linear-gradient(90deg, rgba(255, 90, 93, 0.5) 0%, {theme.primary05} 100%);",
                     div { class: "absolute z-[20] h-[22px] w-[22px] left-[2.46px] top-[3px] rounded-[6px] bg-[{theme.active01}] opacity-50" }
                     span { class: "z-[30]", "{no}%" }
