@@ -98,11 +98,7 @@ impl CommentControllerV1 {
     ) -> Result<Json<CommentGetResponse>> {
         tracing::debug!("list_comment {} {:?}", parent_id, param);
 
-        // FIXME: find_one method need using user_id parameter (like field)
-        // let user = ctrl
-        //     .user
-        //     .find_one(&UserReadAction::new().user_info())
-        //     .await?;
+        // FIXME: find method need using user_id parameter (like field)
 
         match param {
             CommentParam::Query(q) => ctrl.list_by_topic_id(parent_id, q).await,

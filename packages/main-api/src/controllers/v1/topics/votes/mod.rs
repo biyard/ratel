@@ -46,16 +46,6 @@ impl VoteControllerV1 {
         }
     }
 
-    // pub async fn act_vote_by_id(
-    //     State(_ctrl): State<VoteControllerV1>,
-    //     Extension(_auth): Extension<Option<Authorization>>,
-    //     Path((parent_id, id)): Path<(String, String)>,
-    //     Json(body): Json<VoteByIdAction>,
-    // ) -> Result<Json<Vote>> {
-    //     tracing::debug!("act_vote_by_id {} {:?} {:?}", parent_id, id, body);
-    //     Ok(Json(Vote::default()))
-    // }
-
     pub async fn get_vote(
         State(ctrl): State<VoteControllerV1>,
         Extension(_auth): Extension<Option<Authorization>>,
@@ -112,34 +102,12 @@ impl VoteControllerV1 {
             .find_one(&UserReadAction::new().user_info())
             .await?;
 
-        match self
+        let vote = self
             .repo
-            .find_one(&VoteReadAction::new().find_by_id(user.id, topic_id))
-            .await
-        {
-            Ok(vote) => {
-                let vote = self
-                    .repo
-                    .update(
-                        vote.id,
-                        VoteRepositoryUpdateRequest {
-                            vote: Some(body.vote),
-                            amount: Some(body.amount),
-                            user_id: Some(user.id),
-                            topic_id: Some(topic_id),
-                        },
-                    )
-                    .await?;
-                return Ok(Json(vote));
-            }
-            Err(_) => {
-                let vote = self
-                    .repo
-                    .insert(body.vote, body.amount, user.id, topic_id)
-                    .await?;
-                return Ok(Json(vote));
-            }
-        }
+            .insert(body.vote, body.amount, user.id, topic_id)
+            .await?;
+
+        Ok(Json(vote))
     }
 
     async fn vote_result_summary(&self, parent_id: String) -> Result<Json<VoteResultSummary>> {
@@ -150,13 +118,11 @@ impl VoteControllerV1 {
 
         let items: Vec<VoteSummary> = sqlx::query(&query)
             .bind(topic_id)
-            .map(|r: sqlx::postgres::PgRow| {
-                // use sqlx::Row;
-                r.into()
-            })
+            .map(|r: sqlx::postgres::PgRow| r.into())
             .fetch_all(&self.pool)
             .await?;
 
+        // FIXME: need conditional sum
         Ok(Json(VoteResultSummary {
             pros: items
                 .iter()
