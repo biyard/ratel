@@ -245,7 +245,7 @@ impl UserService {
         match phantom.detect_platform() {
             Platform::Desktop => {
                 tracing::debug!("UserService::phantom_wallet: desktop");
-                match phantom.connect_wallet().await {
+                match phantom.connect_desktop().await {
                     Ok(account) => {
                         let public_key_str = phantom.get_public_key(account);
 

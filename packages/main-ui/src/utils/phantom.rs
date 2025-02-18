@@ -1,10 +1,10 @@
+use dto::ServiceError;
 use hex::encode;
-use wallet_adapter::{Wallet, WalletAccount, WalletAdapter, WalletError, WalletResult};
+use wallet_adapter::{Wallet, WalletAccount, WalletAdapter, WalletResult};
 use web_sys::window;
-
 pub struct PhantomAuth {
     adapter: WalletAdapter,
-    wallet: Wallet,
+    wallet: WalletResult<Wallet>,
 }
 
 pub enum Platform {
@@ -15,7 +15,7 @@ pub enum Platform {
 impl PhantomAuth {
     pub fn new() -> Self {
         let adapter = WalletAdapter::init().unwrap();
-        let wallet = adapter.get_wallet("Phantom").unwrap();
+        let wallet = adapter.get_wallet("Phantom");
 
         Self { adapter, wallet }
     }
@@ -35,8 +35,16 @@ impl PhantomAuth {
         }
     }
 
-    pub async fn connect_wallet(&mut self) -> Result<WalletAccount, WalletError> {
-        self.adapter.connect(self.wallet.clone()).await
+    pub async fn connect_desktop(&mut self) -> Result<WalletAccount, ServiceError> {
+        if let Ok(wallet) = self.wallet.clone() {
+            return match self.adapter.connect(wallet).await {
+                Ok(account) => Ok(account),
+                Err(e) => Err(ServiceError::WalletError(
+                    format!("Failed to connect wallet: {:?}", e).to_string(),
+                )),
+            };
+        }
+        Err(ServiceError::WalletNotFound)
     }
 
     pub fn get_account(&self) -> WalletResult<&WalletAccount> {
@@ -45,5 +53,13 @@ impl PhantomAuth {
 
     pub fn get_public_key(&self, account: WalletAccount) -> String {
         encode(account.public_key)
+    }
+
+    pub fn get_deeplink(&self, redirect_url: &str) -> String {
+        format!("https://phantom.app/ul/browse/{}", redirect_url)
+    }
+
+    pub async fn connect_mobile(&self) -> Result<WalletAccount, ServiceError> {
+        
     }
 }
