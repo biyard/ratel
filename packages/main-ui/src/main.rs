@@ -26,7 +26,7 @@ fn app() -> Element {
     PopupService::init();
 
     rsx! {
-        document::Title { "DemocraSee" }
+        document::Title { "Ratel" }
         document::Meta {
             name: "title",
             content: "Driving Better Crypto Policies for South Korea's Ecosystem",
@@ -47,6 +47,7 @@ fn app() -> Element {
             href: "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.1/css/all.min.css",
         }
         document::Script { src: "https://cdn.tailwindcss.com/3.4.16" }
+        document::Script { r#type: "module", src: asset!("/public/dep.js") }
 
         Router::<Route> {}
     }

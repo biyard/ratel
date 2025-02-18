@@ -11,7 +11,7 @@ env:
 
 jobs:
   test:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     services:
       postgres:
@@ -39,6 +39,10 @@ jobs:
           components: clippy, rustfmt
           target: wasm32-unknown-unknown
           toolchain: stable
+
+      - name: Install dependencies
+        run: sudo apt-get install -y libgtk-3-dev
+
       - name: Install PostgreSQL Client
         run: sudo apt-get install -y postgresql-client
 
@@ -53,10 +57,11 @@ jobs:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
         run: |
           echo "" > packages/main-ui/public/tailwind.css
-          cargo test --tests --features web
+          echo "" > packages/main-ui/public/dep.js
+          cd packages/main-ui && cargo test --tests
 
   test-with-server:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     services:
       postgres:
@@ -97,12 +102,10 @@ jobs:
           DATABASE_TYPE: postgres
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
         run: |
-          echo "" > packages/main-ui/public/tailwind.css
-          cargo test --tests --features server
+          cd packages/main-api  && cargo test --tests
 
   main-ui:
     runs-on: ubuntu-22.04
-    needs: [test,test-with-server]
 
     steps:
       - uses: actions/checkout@v3
@@ -126,8 +129,8 @@ jobs:
 
       - name: Install dioxus-cli
         run: |
-          cargo binstall dioxus-cli --version 0.6.1
-          cargo binstall toml-cli
+          cargo binstall dioxus-cli --force
+          cargo binstall toml-cli --force
 
       - name: Cache builder
         id: main-ui-build-cache
@@ -135,15 +138,7 @@ jobs:
         with:
           key: main-ui-build-cache
           path: |
-            target
-
-      - name: Cache builder
-        id: main-ui-artifacts
-        uses: actions/cache@v3
-        with:
-          key: main-ui-artifacts
-          path: |
-            .build/main-ui
+            packages/main-ui/target
 
       - name: Checking violate
         env:
@@ -154,7 +149,7 @@ jobs:
         run: |
           dx check -p $SERVICE
 
-      - name: Deploy APIs
+      - name: Deploy UI
         env:
           REGION: ap-northeast-2
           ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -166,22 +161,21 @@ jobs:
           FIREBASE_MESSAGING_SENDER_ID: "${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}"
           FIREBASE_APP_ID: "${{ secrets.FIREBASE_APP_ID }}"
           FIREBASE_MEASUREMENT_ID: "${{ secrets.FIREBASE_MEASUREMENT_ID }}"
-          MAIN_API_ENDPOINT: https://api.dev.democrasee.me
+          MAIN_API_ENDPOINT: https://api.dev.ratel.foundation
           ENV: dev
           SERVICE: main-ui
-          DOMAIN: dev.democrasee.me
+          DOMAIN: dev.ratel.foundation
           API_PREFIX: /api
           ENABLE_S3: true
-          ENABLE_FARGATE: false
-          ENABLE_DYNAMO: true
           ENABLE_LAMBDA: true
+          VERSIONS: v1
+          V1_ENDPOINT: api.dev.ratel.foundation
         run: |
           npm i -g aws-cdk tailwindcss
           make deploy-web-if-needed
 
   main-api:
     runs-on: ubuntu-22.04
-    needs: [test,test-with-server]
 
     steps:
       - uses: actions/checkout@v3
@@ -204,23 +198,15 @@ jobs:
       - uses: cargo-bins/cargo-binstall@main
       - name: Install toml-cli
         run: |
-          cargo binstall toml-cli
+          cargo binstall toml-cli --force
 
       - name: Cache builder
-        id: topic-api-build-cache
+        id: main-api-build-cache
         uses: actions/cache@v3
         with:
-          key: topic-api-build-cache
+          key: main-api-build-cache
           path: |
-            target
-
-      - name: Cache builder
-        id: topic-api-artifacts
-        uses: actions/cache@v3
-        with:
-          key: main-api-artifacts
-          path: |
-            .build/main-api
+            packages/main-api/target
 
       - name: Deploy APIs
         env:
@@ -229,14 +215,14 @@ jobs:
           SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           ENV: dev
           SERVICE: main-api
-          DOMAIN: api.dev.democrasee.me
+          DOMAIN: api.dev.ratel.foundation
+          AUTH_DOMAIN: dev.ratel.foundation
           DATABASE_TYPE: postgres
           DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
+          OPENAPI_KEY: ${{ secrets.OPENAPI_KEY }}
+          AUTH_SECRET_KEY: ${{ secrets.DEV_AUTH_SECRET_KEY }}
           ENABLE_S3: false
-          ENABLE_FARGATE: false
-          ENABLE_DYNAMO: false
           ENABLE_LAMBDA: true
-          ENABLE_RDS: true
         run: |
           npm i -g aws-cdk
           make deploy-if-needed

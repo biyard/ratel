@@ -5,10 +5,7 @@ mod close;
 mod cons;
 mod double_arrow;
 mod file_upload;
-mod google;
 mod hand_palm;
-mod logo;
-mod metamask;
 mod money;
 mod pptx_file;
 mod pros;
@@ -17,6 +14,12 @@ mod slide_ball;
 mod sort;
 mod tooltip;
 mod votes;
+mod logos {
+    pub mod google;
+    pub mod logo;
+    pub mod metamask;
+    pub mod phantom;
+}
 
 pub use arrows::*;
 pub use chat::*;
@@ -25,10 +28,8 @@ pub use close::*;
 pub use cons::*;
 pub use double_arrow::*;
 pub use file_upload::*;
-pub use google::*;
 pub use hand_palm::*;
-pub use logo::*;
-pub use metamask::*;
+pub use logos::{google::*, logo::*, metamask::*, phantom::*};
 pub use money::*;
 pub use pptx_file::*;
 pub use pros::*;

@@ -1,5 +1,7 @@
+use crate::utils::middlewares::authorization_middleware;
 use by_axum::axum::{
     extract::{Query, State},
+    middleware,
     routing::get,
     Extension, Json,
 };
@@ -16,13 +18,14 @@ pub struct UserControllerV1 {
 
 impl UserControllerV1 {
     pub fn route(pool: Pool<Postgres>) -> Result<by_axum::axum::Router> {
-        let users = User::get_repository(pool);
+        let users = User::get_repository(pool.clone());
 
         let ctrl = UserControllerV1 { users };
 
         Ok(by_axum::axum::Router::new()
             .route("/", get(Self::read_user).post(Self::act_user))
-            .with_state(ctrl.clone()))
+            .with_state(ctrl.clone())
+            .layer(middleware::from_fn(authorization_middleware)))
     }
 
     #[instrument]

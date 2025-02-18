@@ -63,8 +63,7 @@ pub enum AssemblyMemberByIdAdminActionRequest {
     UpdateCryptoStance(CryptoStance),
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Default, Serialize, Deserialize, Translate, ApiModel)]
-#[serde(rename_all = "snake_case")]
+#[derive(Debug, Clone, Eq, PartialEq, Default, Translate, ApiModel)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum CryptoStance {
     #[default]
@@ -96,9 +95,6 @@ pub struct AssemblyMember {
     #[api_model(summary, auto = [insert, update])]
     pub updated_at: i64,
 
-    #[api_model(summary)]
-    pub lang: Lang,
-
     #[api_model(summary, unique)]
     pub code: String,
     #[api_model(summary)]
@@ -115,7 +111,7 @@ pub struct AssemblyMember {
     #[api_model(summary)]
     pub en_district: Option<String>,
 
-    #[api_model(summary)]
+    #[api_model(summary, type = INTEGER)]
     pub stance: CryptoStance,
     #[api_model(summary)]
     pub image_url: String,
@@ -123,8 +119,7 @@ pub struct AssemblyMember {
     // pub email_verified: bool, // check email verified logic
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, ApiModel, Default)]
-#[serde(rename_all = "snake_case")]
+#[derive(Debug, Clone, Eq, PartialEq, ApiModel, Default)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum Lang {
     #[default]

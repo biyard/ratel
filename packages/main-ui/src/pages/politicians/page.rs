@@ -16,7 +16,7 @@ use dto::CryptoStance;
 pub fn PoliticianStatusPage(lang: Language) -> Element {
     let tr = translate::<PoliticianStanceTranslate>(&lang);
     rsx! {
-        div { class: "flex flex-col justify-start w-full min-h-[100vh] text-white max-[1440px]:px-[10px] gap-[10px]",
+        div { class: "flex flex-col justify-start w-full text-white gap-[10px]",
             div { class: "text-xl font-semibold text-white", "{tr.title}" }
             PoliticianStatusTable { lang }
         }
