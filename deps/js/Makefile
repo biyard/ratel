@@ -10,6 +10,7 @@ endif
 
 node_modules:
 	@npm install
+	@npm install --save-dev webpack webpack-cli
 
 .PHONY: build
 build: node_modules clean

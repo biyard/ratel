@@ -60,3 +60,23 @@ pub fn LeftArrow() -> Element {
         }
     }
 }
+
+pub fn BigRightArrow() -> Element {
+    rsx! {
+        svg {
+            width: "12",
+            height: "24",
+            view_box: "0 0 11 11",
+            fill: "none",
+            xmlns: "http://www.w3.org/2000/svg",
+
+            path {
+                d: "M6 12L10 8L6 4",
+                stroke: "#ffffff",
+                stroke_width: "2",
+                stroke_linecap: "round",
+                stroke_linejoin: "round",
+            }
+        }
+    }
+}
