@@ -1,10 +1,10 @@
 #![allow(non_snake_case)]
+use crate::{
+    config,
+    utils::phantom::{PhantomAuth, Platform},
+};
 use dioxus::prelude::*;
 use dto::*;
-use hex::encode;
-use wallet_adapter::WalletAdapter;
-
-use crate::config;
 
 pub enum UserEvent {
     Signup(String, String, String, String),
@@ -240,62 +240,45 @@ impl UserService {
 
         let cli = (self.cli)();
 
-        let mut adapter = match WalletAdapter::init() {
-            Ok(v) => v,
-            Err(e) => {
-                tracing::error!("UserService::phantom_wallet: error={:?}", e);
-                return UserEvent::Logout;
+        let mut phantom = PhantomAuth::new();
+
+        match phantom.detect_platform() {
+            Platform::Desktop => {
+                tracing::debug!("UserService::phantom_wallet: desktop");
+                match phantom.connect_wallet().await {
+                    Ok(account) => {
+                        let public_key_str = phantom.get_public_key(account);
+
+                        match cli.by_principal(public_key_str.clone()).await {
+                            Ok(v) => {
+                                tracing::debug!("UserService::phantom_wallet: login");
+                                self.email.set(v.email);
+                                self.nickname.set(v.nickname);
+                                self.profile_url.set(v.profile_url);
+                                self.principal.set(v.principal);
+                                return UserEvent::Login;
+                            }
+                            Err(_) => {
+                                tracing::debug!("UserService::phantom_wallet: signup");
+                                return UserEvent::Signup(
+                                    public_key_str,
+                                    "".to_string(),
+                                    "".to_string(),
+                                    "".to_string(),
+                                );
+                            }
+                        }
+                    }
+                    Err(e) => {
+                        tracing::error!("UserService::phantom_wallet: error={:?}", e);
+                    }
+                };
+            }
+            Platform::Mobile => {
+                tracing::debug!("UserService::phantom_wallet: mobile");
             }
         };
-
-        let wallet = match adapter.get_wallet("Phantom") {
-            Ok(v) => v,
-            Err(e) => {
-                tracing::error!("UserService::phantom_wallet: error={:?}", e);
-                return UserEvent::Logout;
-            }
-        };
-
-        match adapter.connect(wallet).await {
-            Ok(_) => {}
-            Err(e) => {
-                tracing::error!("UserService::phantom_wallet: error={:?}", e);
-                return UserEvent::Logout;
-            }
-        }
-
-        let public_key = match adapter.connected_account() {
-            Ok(v) => v.public_key,
-            Err(e) => {
-                tracing::error!("UserService::phantom_wallet: error={:?}", e);
-                return UserEvent::Logout;
-            }
-        };
-
-        tracing::debug!(
-            "UserService::phantom_wallet: public_key={:?}",
-            encode(public_key)
-        );
-
-        match cli.by_principal(encode(public_key)).await {
-            Ok(v) => {
-                tracing::debug!("UserService::phantom_wallet: login");
-                self.email.set(v.email);
-                self.nickname.set(v.nickname);
-                self.profile_url.set(v.profile_url);
-                self.principal.set(v.principal);
-                UserEvent::Login
-            }
-            Err(_) => {
-                tracing::debug!("UserService::phantom_wallet: signup");
-                UserEvent::Signup(
-                    encode(public_key),
-                    "".to_string(),
-                    "".to_string(),
-                    "".to_string(),
-                )
-            }
-        }
+        UserEvent::Logout
     }
 }
 
