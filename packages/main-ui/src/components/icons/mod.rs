@@ -17,6 +17,7 @@ mod votes;
 mod logos {
     pub mod google;
     pub mod logo;
+    pub mod metamask;
     pub mod phantom;
 }
 
@@ -28,7 +29,7 @@ pub use cons::*;
 pub use double_arrow::*;
 pub use file_upload::*;
 pub use hand_palm::*;
-pub use logos::{google::*, logo::*, phantom::*};
+pub use logos::{google::*, logo::*, metamask::*, phantom::*};
 pub use money::*;
 pub use pptx_file::*;
 pub use pros::*;

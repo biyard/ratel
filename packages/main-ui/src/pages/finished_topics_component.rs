@@ -27,7 +27,7 @@ pub fn FinishedTopics(
             div { class: "flex flex-col w-full justify-start items-start gap-[18px]",
                 div { class: "text-[18px] font-semibold", "{tr.finished_topic}" }
 
-                div { class: "w-full grid grid-cols-2 max-[635px]:grid-cols-1 gap-[20px] rounded-[8px] flex items-center justify-center",
+                div { class: "w-full grid grid-cols-2 max-[635px]:grid-cols-1 gap-[20px] rounded-[8px] items-center justify-center",
                     for topic in topics.iter().take(len) {
                         FinishedTopic {
                             id: "finished-topic-{topic.id}",
