@@ -36,6 +36,7 @@ pub enum ServiceError {
     OpenApiResponseError(String),
     BadRequest,
     JsonDeserializeError(String),
+    WalletError(String),
 }
 
 impl std::fmt::Display for ServiceError {

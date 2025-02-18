@@ -18,7 +18,7 @@ tracing = { version = "0.1.40" }
 
 wasm-bindgen = { version = "0.2.100" }
 wasm-bindgen-futures = { version = "0.4.50" }
-web-sys = { version = "0.3.72", features=["Navigator"]}
+web-sys = { version = "0.3.72", features = ["Navigator"] }
 serde = "1.0.216"
 num-format = "0.4.4"
 
@@ -35,6 +35,8 @@ rest-api.workspace = true
 by-macros.workspace = true
 by-types.workspace = true
 by-components.workspace = true
+wallet-adapter = "1.0.4-beta"
+hex = "0.4.3"
 
 [features]
 default = []
