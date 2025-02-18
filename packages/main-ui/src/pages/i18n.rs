@@ -140,9 +140,19 @@ translate! {
         en: "Continue with Google",
     },
 
+    continue_with_phantom_wallet: {
+        ko: "팬텀 지갑으로 계속하기",
+        en: "Continue with Phantom Wallet",
+    },
+
     quick_sign_in: {
         ko: "간편 로그인",
         en: "Quick Sign-in",
+    },
+
+    connect_wallet: {
+        ko: "지갑 연결하기",
+        en: "Connect Wallet",
     },
 }
 

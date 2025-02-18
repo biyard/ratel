@@ -1,9 +1,8 @@
-use by_axum::axum::middleware;
+use by_axum::{auth::authorization_middleware, axum::middleware};
 use by_types::DatabaseConfig;
 use dto::*;
 use sqlx::postgres::PgPoolOptions;
 use tokio::net::TcpListener;
-use utils::middlewares::authorization_middleware;
 
 mod controllers {
     pub mod m1;
@@ -13,6 +12,30 @@ mod controllers {
 pub mod config;
 pub mod models;
 pub mod utils;
+
+async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
+    tracing::info!("Running migration");
+    let u = User::get_repository(pool.clone());
+    let t = Topic::get_repository(pool.clone());
+    let c = Comment::get_repository(pool.clone());
+    let v = Vote::get_repository(pool.clone());
+    let a = AssemblyMember::get_repository(pool.clone());
+
+    u.create_this_table().await?;
+    t.create_this_table().await?;
+    c.create_this_table().await?;
+    v.create_this_table().await?;
+    a.create_this_table().await?;
+
+    u.create_related_tables().await?;
+    t.create_related_tables().await?;
+    c.create_related_tables().await?;
+    v.create_related_tables().await?;
+    a.create_related_tables().await?;
+
+    tracing::info!("Migration done");
+    Ok(())
+}
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -28,6 +51,9 @@ async fn main() -> Result<()> {
     } else {
         panic!("Database is not initialized. Call init() first.");
     };
+    rest_api::set_message(conf.signing_domain.to_string());
+
+    migration(&pool).await?;
 
     let app = app
         // .nest(
@@ -43,12 +69,12 @@ async fn main() -> Result<()> {
             controllers::v1::users::UserControllerV1::route(pool.clone())?,
         )
         .nest(
-            "/v1/assembly_members",
+            "/v1/assembly-members",
             controllers::v1::assembly_members::AssemblyMemberControllerV1::route(pool.clone())?,
         )
         .nest(
-            "/m1/assembly_members",
-            controllers::m1::assembly_members::AssemblyMemberControllerM1::route(pool)?,
+            "/m1",
+            controllers::m1::MenaceController::route(pool.clone())?,
         )
         .layer(middleware::from_fn(authorization_middleware));
 

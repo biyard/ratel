@@ -2,7 +2,7 @@ name: PR Testing
 
 on:
   pull_request:
-      types: [opened, synchronize, reopened]
+    types: [opened, synchronize, reopened]
 
 env:
   CARGO_TERM_COLOR: always
@@ -37,6 +37,10 @@ jobs:
           components: clippy, rustfmt
           target: wasm32-unknown-unknown
           toolchain: stable
+
+      - name: Install dependencies
+        run: sudo apt-get install -y libgtk-3-dev
+
       - name: Install PostgreSQL Client
         run: sudo apt-get install -y postgresql-client
 
@@ -51,7 +55,8 @@ jobs:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
         run: |
           echo "" > packages/main-ui/public/tailwind.css
-          cargo test --tests --features web
+          echo "" > packages/main-ui/public/dep.js
+          cd packages/main-ui && cargo test --tests
 
   test-with-server:
     runs-on: ubuntu-latest
@@ -95,8 +100,7 @@ jobs:
           DATABASE_TYPE: postgres
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
         run: |
-          echo "" > packages/main-ui/public/tailwind.css
-          cargo test --tests --features server
+          cd packages/main-api  && cargo test --tests
 
   main-ui:
     runs-on: ubuntu-22.04
@@ -166,6 +170,6 @@ jobs:
           SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           ENV: dev
           SERVICE: main-api
-          DOMAIN: api.dev.democrasee.me
+          DOMAIN: api.dev.ratel.foundation
         run: |
           make build

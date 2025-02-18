@@ -32,7 +32,7 @@ pub fn FinishedTopics(
                         FinishedTopic {
                             id: "finished-topic-{topic.id}",
                             class: "col-span-1 h-[209px]",
-                            image: topic.images.get(0).unwrap_or(&"".to_string()),
+                            image: topic.image.clone().unwrap_or("".to_string()),
                             title: topic.title.to_string(),
                             accepted: match topic.result {
                                 TopicResult::Accepted => true,

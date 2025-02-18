@@ -1,4 +1,4 @@
-# DemocraSee
+# Ratel
 
 ## Common Environments
 | Name     | Description                                                  |
@@ -48,7 +48,7 @@ export ENABLE_FARGATE=false
 export ENABLE_DYNAMO=false
 export ENABLE_RDS=true
 export ENABLE_LAMBDA=true
-export DOMAIN=api.dev.democrasee.me
+export DOMAIN=api.dev.ratel.foundation
 export RDS_ADMIN_PASSWORD=""
 
 ENV=dev make deploy
