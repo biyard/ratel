@@ -30,17 +30,19 @@ pub enum Network {
 
 #[api_model(base = "/v1/patron", table = patron, iter_type=QueryResponse)]
 pub struct Patron {
-    #[api_model(summary, primary_key)]
+    #[api_model(summary, primary_key, read_action = find_by_id)]
     pub id: i64,
     #[api_model(summary, auto = [insert])]
     pub created_at: i64,
-    #[api_model(summary)]
+    #[api_model(summary, many_to_one = users, action = create)]
+    pub user_id: i64,
+    #[api_model(summary, action = create)]
     pub wallet_address: String,
-    #[api_model(summary)]
+    #[api_model(summary, action = create)]
     pub amount: i64,
-    #[api_model(summary)]
+    #[api_model(summary, action = create)]
     pub network: Network,
-    #[api_model(summary, one_to_many = patron_feature)]
+    #[api_model(summary, one_to_many = patron_feature, action = create)]
     pub features: Vec<Feature>,
 }
 
