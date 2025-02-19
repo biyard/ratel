@@ -15,7 +15,6 @@ pub enum UserEvent {
 #[derive(Debug, Clone, Copy)]
 pub struct UserService {
     pub firebase: Signal<google_wallet::FirebaseWallet>,
-    // pub phantom: Signal<
     pub cli: Signal<UserClient>,
     pub email: Signal<String>,
     pub nickname: Signal<String>,
@@ -239,7 +238,6 @@ impl UserService {
         tracing::debug!("UserService::phantom_wallet login");
 
         let cli = (self.cli)();
-
         let mut phantom = PhantomAuth::new();
 
         match phantom.detect_platform() {

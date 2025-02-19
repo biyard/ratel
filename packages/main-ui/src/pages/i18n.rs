@@ -160,13 +160,13 @@ translate! {
     WalletPopupTranslate;
 
     title: {
-        ko: "Metamask",
-        en: "Metamask",
+        ko: "Phantom",
+        en: "Phantom",
     },
 
     sub_text: {
-        ko: "ETH",
-        en: "ETH",
+        ko: "SOL",
+        en: "SOL",
     },
 }
 
