@@ -8,5 +8,6 @@ pub fn NewFeature(
 ) -> Element {
     rsx! {
         div { id, class, "NewFeature" }
+        div { "new" }
     }
 }

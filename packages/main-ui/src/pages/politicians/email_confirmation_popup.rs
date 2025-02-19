@@ -1,16 +1,12 @@
 #![allow(non_snake_case)]
-use dioxus::prelude::*;
-use dioxus_translate::*;
-use dioxus_popup::PopupService;
-use crate::{
-    theme::Theme,
-    components::icons,
-};
 use super::{
-    i18n::EmailConfirmPopupTranslate,
-    contact_us_popup::ContactUsPopup,
+    contact_us_popup::ContactUsPopup, i18n::EmailConfirmPopupTranslate,
     proclaim_popup::ProclaimPopup,
 };
+use crate::{components::icons, theme::Theme};
+use dioxus::prelude::*;
+use dioxus_popup::PopupService;
+use dioxus_translate::*;
 
 #[component]
 pub fn EmailConfirmationPopup(
@@ -34,15 +30,16 @@ pub fn EmailConfirmationPopup(
 
     rsx! {
         div { id, class,
-            div { class: "flex flex flex-col w-full items-start justify-start gap-[35px] pt-[10px]",
+            div { class: "flex flex-col w-full items-start justify-start gap-[35px] pt-[10px]",
                 div { class: "flex flex-col items-center justify-center w-full gap-[30px]",
                     div { class: "flex items-center justify-center rounded-full w-[85px] h-[85px] bg-[{theme.background}]",
-                        icons::Logo { width: 36, height: 42}
-                    },
+                        icons::Logo { width: 36, height: 42 }
+                    }
                     p { class: "text-center text-[16px] leading-[24px]",
-                        span { class: "font-normal", "{explain}" },
-                        span { 
-                            u { class: "font-bold text-[{theme.highlight}] cursor-pointer",
+                        span { class: "font-normal", "{explain}" }
+                        span {
+                            u {
+                                class: "font-bold text-[{theme.highlight}] cursor-pointer",
                                 onclick: move |_| {
                                     tracing::debug!("Contact us clicked");
                                     popup
@@ -56,34 +53,31 @@ pub fn EmailConfirmationPopup(
                                         })
                                         .with_id("contact_us_popup")
                                         .with_title(tr.contact_us);
-                                    },
-                                " {tr.here}" 
+                                },
+                                " {tr.here}"
                             }
-                        },
-                        span { class: "font-normal", "{tr.explanation_confirm_email2}" },
+                        }
+                        span { class: "font-normal", "{tr.explanation_confirm_email2}" }
                     }
                 }
                 div { class: "flex w-full",
                     button {
                         class: "w-full h-[57px] text-[{theme.primary05}] bg-[{theme.primary03}] text-[18px] font-extrabold leading-[24px] rounded-[12px] disabled:opacity-50",
-                        onclick: move |_| { 
+                        onclick: move |_| {
                             tracing::debug!("confirm button clicked");
-                            // TODO: check email verification
-                            popup.
-                                open(
-                                    rsx! {
-                                        ProclaimPopup {
-                                            class: "w-[450px]",
-                                            name: name.clone(),
-                                            party: party.clone(),
-                                            stance: stance.clone(),
-                                            lang: lang.clone(),
-                                        }
-                                    })
-                                    .with_id("proclaim_popup")
-                                    .with_title(tr.proclaim);
-
-                         },
+                            popup
+                                .open(rsx! {
+                                    ProclaimPopup {
+                                        class: "w-[450px]",
+                                        name: name.clone(),
+                                        party: party.clone(),
+                                        stance: stance.clone(),
+                                        lang,
+                                    }
+                                })
+                                .with_id("proclaim_popup")
+                                .with_title(tr.proclaim);
+                        },
                         "{tr.confirm_verification}"
                     }
                 }
