@@ -12,6 +12,13 @@ pub enum Platform {
     Mobile,
 }
 
+pub enum PhantomDeeplink {
+    Connect,
+    Disconnect,
+    SignMessage,
+    SignTransaction,
+}
+
 impl PhantomAuth {
     pub fn new() -> Self {
         let adapter = WalletAdapter::init().unwrap();
@@ -55,11 +62,27 @@ impl PhantomAuth {
         encode(account.public_key)
     }
 
-    pub fn get_deeplink(&self, redirect_url: &str) -> String {
-        format!("https://phantom.app/ul/browse/{}", redirect_url)
+    pub fn get_address(&self, account: WalletAccount) -> String {
+        account.address
     }
 
-    pub async fn connect_mobile(&self) -> Result<WalletAccount, ServiceError> {
-        
-    }
+    // pub fn get_deeplink(&self, method: &PhantomDeeplink) -> String {
+    //     let base_url = "https://phantom.app/ul/v1";
+
+    //     match method {
+    //         PhantomDeeplink::Connect => {
+    //             let current_url = window().unwrap()
+    //                 .location()
+    //                 .href()
+    //                 .unwrap();
+    //             format!("{}/connect?app={}", base_url, current_url)
+    //     }
+    // }
+
+    // pub fn get_sol_balance(&self, account: WalletAccount) -> WalletResult<u64> {
+    //     self.adapter.get_sol_balance(account)
+    // }
+
+    // pub async fn connect_mobile(&self) -> Result<WalletAccount, ServiceError> {
+    // }
 }
