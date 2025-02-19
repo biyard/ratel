@@ -157,6 +157,20 @@ translate! {
 }
 
 translate! {
+    WalletPopupTranslate;
+
+    title: {
+        ko: "Metamask",
+        en: "Metamask",
+    },
+
+    sub_text: {
+        ko: "ETH",
+        en: "ETH",
+    },
+}
+
+translate! {
     MenusTranslate;
 
     home: {
@@ -174,5 +188,14 @@ translate! {
     patrons: {
         ko: "PATRONS",
         en: "PATRONS",
+    },
+}
+
+translate! {
+    PatronageButtonTranslate;
+
+    button: {
+        ko: "후원하기",
+        en: "Patronage",
     },
 }

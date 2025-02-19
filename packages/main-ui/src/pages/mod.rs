@@ -22,3 +22,4 @@ pub mod layout;
 mod menus;
 pub mod signup_popup;
 pub mod user_setup_popup;
+pub mod wallet_popup;
