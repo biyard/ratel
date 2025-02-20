@@ -30,18 +30,18 @@ impl TopicControllerV1 {
         };
 
         Ok(by_axum::axum::Router::new()
+            .route("/", post(Self::act_topic).get(Self::list_topic))
+            .with_state(ctrl.clone())
             .route(
                 "/:id",
                 get(Self::get_topic), // .post(Self::act_topic_by_id)
             )
             .with_state(ctrl.clone())
-            .route("/", post(Self::act_topic).get(Self::list_topic))
-            .with_state(ctrl.clone())
             .nest(
-                "/comments",
+                "/:id/comments",
                 comments::CommentControllerV1::route(pool.clone())?,
             )
-            .nest("/votes", votes::VoteControllerV1::route(pool)?))
+            .nest("/:id/votes", votes::VoteControllerV1::route(pool)?))
     }
 
     pub async fn act_topic(

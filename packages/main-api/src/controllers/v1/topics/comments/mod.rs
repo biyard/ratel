@@ -25,26 +25,21 @@ impl CommentControllerV1 {
 
         Ok(by_axum::axum::Router::new()
             .route(
-                "/:parent_id/:id",
+                "/:id",
                 get(Self::get_comment), // .post(Self::act_comment_by_id)
             )
             .with_state(ctrl.clone())
-            .route(
-                "/:parent_id",
-                post(Self::act_comment).get(Self::list_comment),
-            )
+            .route("/", post(Self::act_comment).get(Self::list_comment))
             .with_state(ctrl.clone()))
     }
 
     pub async fn act_comment(
         State(ctrl): State<CommentControllerV1>,
-        Path(parent_id): Path<String>,
+        Path(topic_id): Path<i64>,
         Extension(_auth): Extension<Option<Authorization>>,
         Json(body): Json<CommentAction>,
     ) -> Result<Json<Comment>> {
-        tracing::debug!("act_comment {} {:?}", parent_id, body);
-
-        let topic_id = parent_id.parse::<i64>()?;
+        tracing::debug!("act_comment {} {:?}", topic_id, body);
 
         match body {
             CommentAction::Comment(req) => ctrl.comment(topic_id, req).await,
@@ -64,14 +59,9 @@ impl CommentControllerV1 {
     pub async fn get_comment(
         State(ctrl): State<CommentControllerV1>,
         Extension(_auth): Extension<Option<Authorization>>,
-        Path((parent_id, id)): Path<(String, String)>,
+        Path((topic_id, id)): Path<(i64, i64)>,
     ) -> Result<Json<Comment>> {
-        tracing::debug!("get_comment {} {:?}", parent_id, id);
-
-        let topic_id = parent_id.parse::<i64>()?;
-        let id = id.parse::<i64>()?;
-
-        // FIXME: find_one method need unnecessary user_id parameter @hackartist
+        tracing::debug!("get_comment {} {:?}", topic_id, id);
 
         let user = ctrl
             .user
@@ -98,8 +88,6 @@ impl CommentControllerV1 {
     ) -> Result<Json<CommentGetResponse>> {
         tracing::debug!("list_comment {} {:?}", parent_id, param);
 
-        // FIXME: find method need using user_id parameter (like field)
-
         match param {
             CommentParam::Query(q) => ctrl.list_by_topic_id(parent_id, q).await,
             _ => Err(ServiceError::BadRequest)?,
@@ -114,10 +102,7 @@ impl CommentControllerV1 {
             .find_one(&UserReadAction::new().user_info())
             .await?;
 
-        let comment = self
-            .repo
-            .insert(user.profile_url, user.nickname, content, parent_id)
-            .await?;
+        let comment = self.repo.insert(parent_id, user.id, content).await?;
 
         Ok(Json(comment))
     }
