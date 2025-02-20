@@ -7,7 +7,7 @@ use by_types::QueryResponse;
 use validator::ValidationError;
 
 // If you want to know how to use Y macro, refer to https://github.com/biyard/rust-sdk/tree/main/packages/by-macros
-#[api_model(base = "/v1/topics/:parent-id/votes", table = votes, iter_type=QueryResponse)]
+#[api_model(base = "/v1/topics/:topic-id/votes", table = votes, iter_type=QueryResponse)]
 pub struct Vote {
     #[api_model(summary, primary_key, read_action = get_vote)]
     pub id: i64,
@@ -22,10 +22,10 @@ pub struct Vote {
     #[api_model(summary, action = voting, action_by_id = update)]
     pub amount: i64,
 
-    #[api_model(many_to_one = users, query_action = list_by_user_id, read_action = find_by_id)]
+    #[api_model(many_to_one = users)]
     pub user_id: i64,
 
-    #[api_model(many_to_one = topics, query_action = list_by_topic_id, read_action = find_by_id)]
+    #[api_model(many_to_one = topics)]
     pub topic_id: i64,
 }
 
