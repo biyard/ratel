@@ -28,7 +28,7 @@ pub enum Network {
     Ethereum = 0,
 }
 
-#[api_model(base = "/v1/patron", table = patron, iter_type=QueryResponse)]
+#[api_model(base = "/v1/patron", table = patrons, iter_type=QueryResponse)]
 pub struct Patron {
     #[api_model(summary, primary_key, read_action = find_by_id)]
     pub id: i64,
@@ -46,7 +46,7 @@ pub struct Patron {
     pub features: Vec<Feature>,
 }
 
-#[api_model(base = "/v1/patron/:patron-id/feature", table = patron_feature, iter_type=QueryResponse)]
+#[api_model(base = "/v1/patron/:patron-id/feature", table = patron_features, iter_type=QueryResponse)]
 pub struct Feature {
     #[api_model(summary, primary_key)]
     pub id: i64,

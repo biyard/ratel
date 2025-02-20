@@ -118,11 +118,3 @@ pub struct AssemblyMember {
     pub email: Option<String>,
     // pub email_verified: bool, // check email verified logic
 }
-
-#[derive(Debug, Clone, Eq, PartialEq, ApiModel, Default)]
-#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
-pub enum Lang {
-    #[default]
-    En = 1,
-    Ko = 2,
-}
