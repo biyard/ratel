@@ -29,7 +29,7 @@ pub struct Comment {
     pub content: String,
 
     #[api_model(summary, one_to_many = comments_likes, foreign_key = comment_id, aggregator = count)]
-    pub comment_likes: u64,
+    pub likes: u64,
     #[api_model(many_to_many = comments_likes, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = comment_id, aggregator = exist, exist)]
     pub is_liked: bool,
 }
