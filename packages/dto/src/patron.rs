@@ -52,7 +52,7 @@ pub struct Feature {
     pub id: i64,
     #[api_model(summary, auto = [insert])]
     pub created_at: i64,
-    #[api_model(summary, many_to_one = patron)]
+    #[api_model(summary, many_to_one = patrons)]
     pub patron_id: i64,
     #[api_model(summary, action = create)]
     pub title: String,
