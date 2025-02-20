@@ -10,6 +10,7 @@ use dto::*;
 
 #[derive(Clone, Debug)]
 pub struct PatronControllerV1 {
+    pool: sqlx::Pool<sqlx::Postgres>,
     repo: PatronRepository,
     feature: FeatureRepository,
     user: UserRepository,
@@ -21,6 +22,7 @@ impl PatronControllerV1 {
         let feature = Feature::get_repository(pool.clone());
         let user = User::get_repository(pool.clone());
         let ctrl = PatronControllerV1 {
+            pool,
             repo,
             feature,
             user,
@@ -79,13 +81,25 @@ impl PatronControllerV1 {
             .find_one(&UserReadAction::new().user_info())
             .await?;
 
-        let mut patron = self
+        let mut tx = self.pool.begin().await?;
+
+        let mut patron = match self
             .repo
-            .insert(user.id, req.wallet_address, req.amount)
-            .await?;
+            .insert_with_tx(&mut *tx, user.id, req.wallet_address, req.amount)
+            .await
+        {
+            Ok(patron) => patron.unwrap(),
+            Err(e) => {
+                tx.rollback().await?;
+                return Err(e);
+            }
+        };
+
         for feature in req.features.iter() {
-            self.feature
-                .insert(
+            match self
+                .feature
+                .insert_with_tx(
+                    &mut *tx,
                     patron.id,
                     feature.title.clone(),
                     feature.reference.clone(),
@@ -93,9 +107,19 @@ impl PatronControllerV1 {
                     feature.attaches.clone(),
                     feature.status,
                 )
-                .await?;
+                .await
+            {
+                Ok(_) => {}
+                Err(e) => {
+                    tx.rollback().await?;
+                    return Err(e);
+                }
+            }
             patron.features.push(feature.clone());
         }
+
+        tx.commit().await?;
+
         Ok(patron)
     }
 }
