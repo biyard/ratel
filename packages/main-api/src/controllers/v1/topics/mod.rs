@@ -14,28 +14,28 @@ use dto::*;
 
 #[derive(Clone, Debug)]
 pub struct TopicControllerV1 {
+    pool: sqlx::Pool<sqlx::Postgres>,
     repo: TopicRepository,
     user: UserRepository,
-    pool: sqlx::Pool<sqlx::Postgres>,
+    like: TopicLikeRepository,
 }
 
 impl TopicControllerV1 {
     pub fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Router> {
         let repo = Topic::get_repository(pool.clone());
         let user = User::get_repository(pool.clone());
+        let like = TopicLike::get_repository(pool.clone());
         let ctrl = TopicControllerV1 {
+            pool: pool.clone(),
             repo,
             user,
-            pool: pool.clone(),
+            like,
         };
 
         Ok(by_axum::axum::Router::new()
             .route("/", post(Self::act_topic).get(Self::list_topic))
             .with_state(ctrl.clone())
-            .route(
-                "/:id",
-                get(Self::get_topic), // .post(Self::act_topic_by_id)
-            )
+            .route("/:id", get(Self::get_topic).post(Self::act_topic_by_id))
             .with_state(ctrl.clone())
             .nest(
                 "/:id/comments",
@@ -55,15 +55,16 @@ impl TopicControllerV1 {
         }
     }
 
-    // pub async fn act_topic_by_id(
-    //     State(_ctrl): State<TopicControllerV1>,
-    //     Extension(_auth): Extension<Option<Authorization>>,
-    //     Path(id): Path<String>,
-    //     Json(body): Json<TopicByIdAction>,
-    // ) -> Result<Json<Topic>> {
-    //     tracing::debug!("act_topic_by_id {:?} {:?}", id, body);
-    //     Ok(Json(Topic::default()))
-    // }
+    pub async fn act_topic_by_id(
+        State(ctrl): State<TopicControllerV1>,
+        Extension(_auth): Extension<Option<Authorization>>,
+        Path(id): Path<i64>,
+        // Json(body): Json<TopicByIdAction>,
+    ) -> Result<Json<Topic>> {
+        tracing::debug!("act_topic_by_id {:?}", id);
+
+        ctrl.like_topic(id).await
+    }
 
     pub async fn get_topic(
         State(ctrl): State<TopicControllerV1>,
@@ -129,6 +130,38 @@ impl TopicControllerV1 {
                 body.additional_resources,
             )
             .await?;
+
+        Ok(Json(topic))
+    }
+
+    async fn like_topic(&self, id: i64) -> Result<Json<Topic>> {
+        let user = self
+            .user
+            .find_one(&UserReadAction::new().user_info())
+            .await?;
+
+        let topic: Topic = Topic::query_builder(user.id)
+            .id_equals(id)
+            .query()
+            .map(|r: sqlx::postgres::PgRow| r.into())
+            .fetch_one(&self.pool)
+            .await?;
+
+        match TopicLike::query_builder()
+            .user_id_equals(user.id)
+            .topic_id_equals(topic.id)
+            .query()
+            .map(|r: sqlx::postgres::PgRow| -> TopicLike { r.into() })
+            .fetch_one(&self.pool)
+            .await
+        {
+            Ok(like) => {
+                self.like.delete(like.id).await?;
+            }
+            Err(_) => {
+                self.like.insert(user.id, topic.id).await?;
+            }
+        }
 
         Ok(Json(topic))
     }

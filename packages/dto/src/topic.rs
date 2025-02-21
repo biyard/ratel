@@ -81,6 +81,19 @@ pub struct Topic {
     pub neutral: i64,
 }
 
+#[api_model(base = "/v1/topics/:topic-id", table = topic_likes, iter_type = QueryResponse)]
+
+pub struct TopicLike {
+    #[api_model(summary, primary_key)]
+    pub id: i64,
+    #[api_model(summary, auto = insert)]
+    pub created_at: i64,
+    #[api_model(many_to_one = users)]
+    pub user_id: i64,
+    #[api_model(many_to_one = topics)]
+    pub topic_id: i64,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq, Translate)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum TrendTag {
