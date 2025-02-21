@@ -9,7 +9,7 @@ use validator::ValidationError;
 // If you want to know how to use Y macro, refer to https://github.com/biyard/rust-sdk/tree/main/packages/by-macros
 #[api_model(base = "/v1/topics/:topic-id/votes", table = votes, iter_type=QueryResponse)]
 pub struct Vote {
-    #[api_model(summary, primary_key, read_action = find_by_id)]
+    #[api_model(summary, primary_key)]
     pub id: i64,
     #[api_model(summary, auto = [insert])]
     pub created_at: i64,
