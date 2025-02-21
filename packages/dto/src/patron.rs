@@ -24,13 +24,12 @@ pub enum FeatureStatus {
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum Network {
     #[default]
-    #[serde(rename = "ETH")]
     Ethereum = 0,
 }
 
 #[api_model(base = "/v1/patron", table = patrons, iter_type=QueryResponse)]
 pub struct Patron {
-    #[api_model(summary, primary_key, read_action = find_by_id)]
+    #[api_model(summary, primary_key)]
     pub id: i64,
     #[api_model(summary, auto = [insert])]
     pub created_at: i64,

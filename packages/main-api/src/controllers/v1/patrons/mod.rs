@@ -54,10 +54,13 @@ impl PatronControllerV1 {
     ) -> Result<Json<Patron>> {
         tracing::debug!("get_patron {:?}", id);
 
-        let patron = ctrl
-            .repo
-            .find_one(&PatronReadAction::new().find_by_id(id))
+        let patron: Patron = Patron::query_builder()
+            .id_equals(id)
+            .query()
+            .map(|r: sqlx::postgres::PgRow| r.into())
+            .fetch_one(&ctrl.pool)
             .await?;
+
         Ok(Json(patron))
     }
 
@@ -69,7 +72,6 @@ impl PatronControllerV1 {
         tracing::debug!("list_patron {:?}", param);
         match param {
             PatronParam::Query(q) => Ok(Json(PatronGetResponse::Query(ctrl.repo.find(&q).await?))),
-            _ => Err(ServiceError::BadRequest),
         }
     }
 }

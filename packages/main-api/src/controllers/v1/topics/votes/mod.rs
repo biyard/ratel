@@ -31,7 +31,7 @@ impl VoteControllerV1 {
             .with_state(ctrl.clone())
             .route("/all", get(Self::list_vote))
             .with_state(ctrl.clone())
-            .route("/result", get(Self::get_result))
+            .route("/result", get(Self::get_final_result))
             .with_state(ctrl.clone()))
     }
 
@@ -57,9 +57,11 @@ impl VoteControllerV1 {
 
         let id = parent_id.parse::<i64>()?;
 
-        let vote = ctrl
-            .repo
-            .find_one(&VoteReadAction::new().find_by_id(id))
+        let vote: Vote = Vote::query_builder()
+            .id_equals(id)
+            .query()
+            .map(|r: sqlx::postgres::PgRow| r.into())
+            .fetch_one(&ctrl.pool)
             .await?;
 
         Ok(Json(vote))
@@ -74,17 +76,17 @@ impl VoteControllerV1 {
         tracing::debug!("list_vote {} {:?}", parent_id, param);
 
         match param {
-            VoteParam::Query(q) => Ok(Json(VoteGetResponse::Query(ctrl.repo.find(&q).await?))),
-            _ => ctrl.list_votes(parent_id).await,
+            // VoteParam::Query(q) => Ok(Json(VoteGetResponse::Query(ctrl.repo.find(&q).await?))),
+            VoteParam::Query(_) => ctrl.list_votes(parent_id).await,
         }
     }
 
-    pub async fn get_result(
+    pub async fn get_final_result(
         State(ctrl): State<VoteControllerV1>,
         Path(parent_id): Path<String>,
         Extension(_auth): Extension<Option<Authorization>>,
     ) -> Result<Json<VoteResultSummary>> {
-        tracing::debug!("get_result {}", parent_id);
+        tracing::debug!("get_final_result {}", parent_id);
 
         ctrl.vote_result_summary(parent_id).await
     }
@@ -113,11 +115,9 @@ impl VoteControllerV1 {
     async fn vote_result_summary(&self, parent_id: String) -> Result<Json<VoteResultSummary>> {
         let topic_id = parent_id.parse::<i64>()?;
 
-        let query = VoteSummary::base_sql_with("where topic_id = $1");
-        tracing::debug!("vote_result_summary query: {}", query);
-
-        let items: Vec<VoteSummary> = sqlx::query(&query)
-            .bind(topic_id)
+        let items: Vec<VoteSummary> = Vote::query_builder()
+            .topic_id_equals(topic_id)
+            .query()
             .map(|r: sqlx::postgres::PgRow| r.into())
             .fetch_all(&self.pool)
             .await?;
@@ -145,12 +145,12 @@ impl VoteControllerV1 {
     async fn list_votes(&self, parent_id: String) -> Result<Json<VoteGetResponse>> {
         let topic_id = parent_id.parse::<i64>()?;
 
-        let query = VoteSummary::base_sql_with("where topic_id = $1");
-        tracing::debug!("list_votes query: {}", query);
-
+        // FIXME: topic_id_equals not working @hackartist
         let mut total_count: i64 = 0;
-        let items = sqlx::query(&query)
-            .bind(topic_id)
+        let votes: Vec<VoteSummary> = Vote::query_builder()
+            .topic_id_equals(topic_id)
+            .with_count()
+            .query()
             .map(|r: sqlx::postgres::PgRow| {
                 use sqlx::Row;
                 total_count = r.get("total_count");
@@ -160,7 +160,7 @@ impl VoteControllerV1 {
             .await?;
 
         Ok(Json(VoteGetResponse::Query(QueryResponse {
-            items,
+            items: votes,
             total_count,
         })))
     }

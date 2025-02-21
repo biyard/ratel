@@ -79,24 +79,13 @@ impl TopicControllerV1 {
             .find_one(&UserReadAction::new().user_info())
             .await?;
 
-        // FIXME: error returned from database: column \"volume.value\" must appear in the GROUP BY clause or be used in an aggregate function
-        let topic = ctrl
-            .repo
-            .find_one(user.id, &TopicReadAction::new().find_by_id(id))
+        let topic: Topic = Topic::query_builder(user.id)
+            .id_equals(id)
+            .query()
+            .map(|r: sqlx::postgres::PgRow| r.into())
+            .fetch_one(&ctrl.pool)
             .await?;
 
-        // let query = TopicSummary::base_sql_with("where p.id = $1");
-        // tracing::debug!("get_topic query {:?}", query);
-
-        // let topic = Topic = sqlx::query(&query)
-        //     .map(|r: sqlx::postgres::PgRow| {
-        //         tracing::debug!("get_topic row {:?}", r);
-        //         Topic::default()
-        //     })
-        //     .fetch_one(&ctrl.pool)
-        //     .await?;
-
-        // let topic = Topic::default();
         Ok(Json(topic))
     }
 
@@ -109,7 +98,6 @@ impl TopicControllerV1 {
 
         match params {
             TopicParam::Query(q) => Ok(Json(TopicGetResponse::Query(ctrl.repo.find(&q).await?))),
-            _ => Err(ServiceError::BadRequest),
         }
     }
 }
