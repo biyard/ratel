@@ -60,14 +60,52 @@ impl PhantomAuth {
         self.adapter.connected_account()
     }
 
-    pub fn get_public_key(&self, account: WalletAccount) -> String {
-        encode(account.public_key)
+    pub fn get_public_key(&self) -> Vec<u8> {
+        match self.adapter.connected_account() {
+            Ok(account) => account.public_key.to_vec(),
+            Err(_) => vec![],
+        }
     }
 
-    pub fn get_address(&self, account: WalletAccount) -> String {
-        account.address
+    pub fn get_public_key_string(&self) -> String {
+        match self.adapter.connected_account() {
+            Ok(account) => encode(account.public_key),
+            Err(_) => "".to_string(),
+        }
     }
 
+    pub fn get_address(&self) -> String {
+        match self.adapter.connected_account() {
+            Ok(account) => account.address.to_string(),
+            Err(_) => "".to_string(),
+        }
+    }
+
+    pub async fn disconnect(&mut self) -> Result<(), ServiceError> {
+        match self.adapter.disconnect().await {
+            Ok(_) => Ok(()),
+            Err(e) => Err(ServiceError::WalletError(
+                format!("Failed to disconnect wallet: {:?}", e).to_string(),
+            )),
+        }
+    }
+
+    pub fn is_connected(&self) -> bool {
+        self.adapter.is_connected()
+    }
+
+    pub async fn sign(&self, message: &str) {
+        // TODO: Implement this
+
+        // let message_bytes = message.as_bytes();
+        // match self.adapter.sign_message(message_bytes).await {
+        //     Ok(_signed_message) => {
+        //
+        //         None
+        //     }
+        //     Err(_) => None,
+        // }
+    }
     // pub fn get_deeplink(&self, method: &PhantomDeeplink) -> String {
     //     let base_url = "https://phantom.app/ul/v1";
 
