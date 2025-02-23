@@ -24,7 +24,8 @@ pub enum FeatureStatus {
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum Network {
     #[default]
-    Ethereum = 0,
+    Solana = 0,
+    Ethereum = 1,
 }
 
 #[api_model(base = "/v1/patron", table = patrons, iter_type=QueryResponse)]
