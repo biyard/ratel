@@ -24,7 +24,8 @@ pub fn SignupPopup(
                 class: "w-full flex flex-row my-[10px] p-[8px] bg-[#6D7AFF] rounded-[8px] justify-start items-center gap-[17px] cursor-pointer hover:bg-[#5C6BFF]",
                 onclick: move |_| async move {
                     tracing::debug!("Signup with Google clicked");
-                    match user_service.google_login().await {
+                    user_service.set_signer_type("google");
+                    match user_service.login().await {
                         UserEvent::Signup(principal, email, nickname, profile_url) => {
                             popup.open(rsx! {
                                 UserSetupPopup {
@@ -62,7 +63,8 @@ pub fn SignupPopup(
                 class: "w-full flex flex-row my-[10px] p-[8px] bg-[#AB9FF1] rounded-[8px] justify-start items-center gap-[17px] cursor-pointer hover:bg-[#9A8EFF]",
                 onclick: move |_| async move {
                     tracing::debug!("Signup with Phantom clicked");
-                    match user_service.phantom_login().await {
+                    user_service.set_signer_type("phantom");
+                    match user_service.login().await {
                         UserEvent::Signup(principal, email, nickname, profile_url) => {
                             popup.open(rsx! {
                                 UserSetupPopup {

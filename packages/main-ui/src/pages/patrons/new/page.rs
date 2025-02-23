@@ -1,6 +1,7 @@
 #![allow(non_snake_case)]
 
 use crate::components::icons::BigRightArrow;
+#[allow(unused_imports)]
 use crate::pages::wallet_popup::WalletPopup;
 
 use super::controller::*;
@@ -28,6 +29,7 @@ pub fn NewPatronPage(lang: Language) -> Element {
 pub fn SupportUs(lang: Language) -> Element {
     let tr: SupportUsTranslate = translate(&lang);
     let mut popup: PopupService = use_context();
+    let phantom = crate::utils::phantom::PhantomAuth::new();
 
     rsx! {
         div { class: "w-full min-h-[30px] flex flex-col justify-start items-start",
@@ -39,22 +41,24 @@ pub fn SupportUs(lang: Language) -> Element {
                 "{tr.sub_text}"
             }
             div { class: "w-full h-[100px] mt-[10px] rounded-xl border border-dotted border-[#414462] flex flex-col justify-center items-center overflow-hidden",
-                button {
-                    onclick: move |_| {
-                        popup.open(rsx! {
-                            WalletPopup {
-                                class: "w-[400px] h-[82px] flex flex-row my-[10px] p-[8px] bg-[#5B5E80] rounded-[8px] justify-start items-center gap-[17px] cursor-pointer hover:bg-[#5C6BFF]",
-                                id: "wallet_popup".to_string(),
-                                onclick: move |_| {},
-                                lang,
-                            }
-                        }).with_title(tr.popup_title);
-                    },
-                    // TODO: If wallet login success, send to Donate Details page.
-                    div { class: "text-[#414462] text-sm font-normal font-['Inter']",
-                        "{tr.input_box_text}"
+                if let Ok(_account) = phantom.get_account() {
+                    div { class: "text-[#414462] text-sm font-normal font-['Inter']" }
+                } else {
+                    button {
+                        onclick: move |_| {
+                            popup.open(rsx! {
+                                WalletPopup {
+                                    class: "w-[400px] h-[82px] flex flex-row my-[10px] p-[8px] bg-[#5B5E80] rounded-[8px] justify-start items-center gap-[17px] cursor-pointer hover:bg-[#5C6BFF]",
+                                    id: "wallet_popup".to_string(),
+                                    lang,
+                                }
+                            }).with_title(tr.popup_title);
+                        },
+                        // TODO: If wallet login success, send to Donate Details page.
+                        div { class: "text-[#414462] text-sm font-normal font-['Inter']",
+                            "{tr.input_box_text}"
+                        }
                     }
-                
                 }
             }
         }
