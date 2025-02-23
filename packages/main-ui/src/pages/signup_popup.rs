@@ -24,7 +24,8 @@ pub fn SignupPopup(
                 class: "w-full flex flex-row my-[10px] p-[8px] bg-[#6D7AFF] rounded-[8px] justify-start items-center gap-[17px] cursor-pointer hover:bg-[#5C6BFF]",
                 onclick: move |_| async move {
                     tracing::debug!("Signup with Google clicked");
-                    match user_service.google_login().await {
+                    user_service.set_signer_type("google");
+                    match user_service.login().await {
                         UserEvent::Signup(principal, email, nickname, profile_url) => {
                             popup.open(rsx! {
                                 UserSetupPopup {

@@ -2,6 +2,8 @@ use dto::ServiceError;
 use hex::encode;
 use wallet_adapter::{Wallet, WalletAccount, WalletAdapter, WalletResult};
 use web_sys::window;
+
+#[derive(Debug, Clone)]
 pub struct PhantomAuth {
     adapter: WalletAdapter,
     wallet: WalletResult<Wallet>,
