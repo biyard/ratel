@@ -16,9 +16,9 @@ use super::comment::*;
 #[cfg(feature = "server")]
 use schemars::JsonSchema;
 
-#[api_model(base = "/v1/topics", table = topics, iter_type=QueryResponse)] // action = [create(user_id = String)],
+#[api_model(base = "/v1/topics", table = topics, iter_type=QueryResponse)]
 pub struct Topic {
-    #[api_model(summary, primary_key, read_action = find_by_id)]
+    #[api_model(summary, primary_key)]
     pub id: i64,
     #[api_model(summary, auto = [insert])]
     pub created_at: i64,
@@ -63,9 +63,35 @@ pub struct Topic {
     #[api_model(many_to_many = votes, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = topic_id, unique)]
     #[serde(default)]
     pub vote: Vec<Vote>,
+    #[api_model(many_to_many = comments, foreign_table_name = users, foreign_primary_key = author_id, foreign_reference_key = topic_id)]
+    #[serde(default)]
+    pub comments: Vec<Comment>,
     #[api_model(many_to_many = topic_likes, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = topic_id, aggregator = exist)]
     #[serde(default)]
     pub post_like: bool,
+
+    // FIXME: need conditional sum
+    #[api_model(one_to_many = votes, foreign_key = topic_id, aggregator = sum(amount))]
+    pub pros: i64,
+    // FIXME: need conditional sum
+    #[api_model(one_to_many = votes, foreign_key = topic_id, aggregator = sum(amount))]
+    pub cons: i64,
+    // FIXME: need conditional sum
+    #[api_model(one_to_many = votes, foreign_key = topic_id, aggregator = sum(amount))]
+    pub neutral: i64,
+}
+
+#[api_model(base = "/v1/topics/:topic-id", table = topic_likes, iter_type = QueryResponse)]
+
+pub struct TopicLike {
+    #[api_model(summary, primary_key)]
+    pub id: i64,
+    #[api_model(summary, auto = insert)]
+    pub created_at: i64,
+    #[api_model(many_to_one = users)]
+    pub user_id: i64,
+    #[api_model(many_to_one = topics)]
+    pub topic_id: i64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq, Translate)]
