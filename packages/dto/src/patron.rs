@@ -41,11 +41,11 @@ pub struct Patron {
     pub amount: i64,
     #[api_model(summary, action = create)]
     pub network: Network,
-    #[api_model(summary, one_to_many = patron_feature, action = create)]
+    #[api_model(summary, one_to_many = feature, action = create)]
     pub features: Vec<Feature>,
 }
 
-#[api_model(base = "/v1/patron/:patron-id/feature", table = patron_features, iter_type=QueryResponse)]
+#[api_model(base = "/v1/feature", table = features, iter_type=QueryResponse)]
 pub struct Feature {
     #[api_model(summary, primary_key)]
     pub id: i64,
