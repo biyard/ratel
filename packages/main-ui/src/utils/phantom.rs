@@ -1,8 +1,8 @@
 use dto::ServiceError;
+// use ed25519_dalek::Signature as Ed25519Signature;
 use hex::encode;
 use wallet_adapter::{Wallet, WalletAccount, WalletAdapter, WalletResult};
 use web_sys::window;
-
 #[derive(Debug, Clone)]
 pub struct PhantomAuth {
     adapter: WalletAdapter,
@@ -94,17 +94,19 @@ impl PhantomAuth {
         self.adapter.is_connected()
     }
 
-    pub async fn sign(&self, message: &str) {
-        // TODO: Implement this
-
-        // let message_bytes = message.as_bytes();
-        // match self.adapter.sign_message(message_bytes).await {
-        //     Ok(_signed_message) => {
-        //
-        //         None
-        //     }
-        //     Err(_) => None,
-        // }
+    pub async fn sign(&self, message: &str) -> Option<rest_api::Signature> {
+        let message_bytes = message.as_bytes();
+        match self.adapter.sign_message(message_bytes).await {
+            Ok(signed_message) => {
+                let sig = signed_message.signature();
+                Some(rest_api::Signature {
+                    signature: sig.to_bytes().to_vec(),
+                    algorithm: rest_api::signature::SignatureAlgorithm::EdDSA,
+                    public_key: self.get_public_key(),
+                })
+            }
+            Err(_) => None,
+        }
     }
     // pub fn get_deeplink(&self, method: &PhantomDeeplink) -> String {
     //     let base_url = "https://phantom.app/ul/v1";

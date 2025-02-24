@@ -88,7 +88,7 @@ impl Default for UserInfo {
 pub struct UserService {
     pub signer: Signal<WalletSigner>,
     pub firebase: Signal<google_wallet::FirebaseWallet>,
-    pub phantom: Signal<PhantomAuth>,
+    pub phantom: Signal<Option<PhantomAuth>>,
     pub cli: Signal<UserClient>,
     pub user_info: Signal<UserInfo>,
 }
@@ -98,13 +98,19 @@ impl UserService {
         let conf: &config::Config = config::get();
 
         let firebase = get_firebase_wallet();
+        #[cfg(feature = "web")]
+        let phantom = Some(PhantomAuth::new());
+        #[cfg(not(feature = "web"))]
+        let phantom = None;
 
+        tracing::debug!("UserService::init: firebase={:?}", firebase);
+        tracing::debug!("UserService::init: phantom={:?}", phantom);
         let cli = User::get_client(&conf.main_api_endpoint);
 
         use_context_provider(|| Self {
             signer: Signal::new(WalletSigner::None),
             firebase: Signal::new(firebase.clone()),
-            phantom: Signal::new(PhantomAuth::new()),
+            phantom: Signal::new(phantom),
             cli: Signal::new(cli),
             user_info: Signal::new(UserInfo::default()),
         });
@@ -142,11 +148,18 @@ impl UserService {
         };
     }
 
-    pub fn logout(&mut self) {
+    pub async fn logout(&mut self) {
         match &mut *self.signer.write() {
             WalletSigner::Firebase => self.firebase.write().logout(),
             WalletSigner::Phantom => {
-                self.phantom.write().disconnect();
+                if let Some(phantom) = self.phantom.write().as_mut() {
+                    match phantom.disconnect().await {
+                        Ok(_) => {}
+                        Err(e) => {
+                            tracing::error!("UserService::logout: error={:?}", e);
+                        }
+                    };
+                };
             }
             WalletSigner::None => {
                 return;
@@ -295,11 +308,19 @@ impl UserService {
                 tracing::debug!("UserService::phantom_wallet login");
 
                 let cli = (self.cli)();
-                let mut phantom = self.phantom.write();
+
+                if self.phantom.read().is_none() {
+                    tracing::error!("UserService::phantom_wallet: phantom is none");
+                    return UserEvent::Logout;
+                }
+
+                let mut signal = self.phantom.write();
+                let phantom = signal.as_mut().unwrap();
 
                 match phantom.detect_platform() {
                     Platform::Desktop => {
                         tracing::debug!("UserService::phantom_wallet: desktop");
+
                         match phantom.connect_desktop().await {
                             Ok(_) => {
                                 let public_key_str = phantom.get_public_key_string();
@@ -387,7 +408,10 @@ impl rest_api::Signer for UserService {
     fn signer(&self) -> String {
         match (self.signer)() {
             WalletSigner::Firebase => (self.firebase)().get_principal(),
-            WalletSigner::Phantom => (self.phantom)().get_public_key_string(),
+            WalletSigner::Phantom => match (self.phantom)() {
+                Some(phantom) => phantom.get_public_key_string(),
+                None => "".to_string(),
+            },
             WalletSigner::None => "".to_string(),
         }
     }
@@ -425,7 +449,16 @@ impl rest_api::Signer for UserService {
                 return Ok(sig);
             }
             WalletSigner::Phantom => {
-                let phantom = (self.phantom)();
+                let signal = self.phantom.read();
+
+                if signal.is_none() {
+                    tracing::debug!("UserService::sign: not login {signal:?}");
+                    return Err(Box::<ServiceException>::new(
+                        ServiceError::Unauthorized.into(),
+                    ));
+                }
+
+                let phantom = signal.as_ref().unwrap();
 
                 if !phantom.is_connected() {
                     tracing::debug!("UserService::sign: not login {phantom:?}");
@@ -435,15 +468,15 @@ impl rest_api::Signer for UserService {
                 }
 
                 // TODO: feat sign
-                let _sig = phantom.sign(msg);
-                // if sig.is_none() {
-                //     return Err(Box::<ServiceException>::new(
-                //         ServiceError::Unauthorized.into(),
-                //     ));
-                // }
+                let handle = tokio::runtime::Handle::current();
+                let sig = handle.block_on(phantom.sign(msg));
+                if sig.is_none() {
+                    return Err(Box::<ServiceException>::new(
+                        ServiceError::Unauthorized.into(),
+                    ));
+                }
                 let sig = rest_api::Signature {
-                    // signature: sig.unwrap().as_ref().to_vec(),
-                    signature: vec![],
+                    signature: sig.unwrap().signature().to_bytes().to_vec(),
                     public_key: phantom.get_public_key(),
                     algorithm: rest_api::signature::SignatureAlgorithm::EdDSA,
                 };
