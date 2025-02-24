@@ -82,7 +82,6 @@ pub struct Topic {
 }
 
 #[api_model(base = "/v1/topics/:topic-id", table = topic_likes, iter_type = QueryResponse)]
-
 pub struct TopicLike {
     #[api_model(summary, primary_key)]
     pub id: i64,

@@ -3,6 +3,7 @@ pub mod comments;
 pub mod votes;
 
 use by_axum::{
+    aide,
     auth::Authorization,
     axum::{
         extract::{Path, Query, State},
@@ -12,6 +13,9 @@ use by_axum::{
 };
 use dto::*;
 
+#[derive(
+    Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
+)]
 pub struct TopicPath {
     pub id: i64,
 }
@@ -79,9 +83,6 @@ impl TopicControllerV1 {
         Path(TopicPath { id }): Path<TopicPath>,
     ) -> Result<Json<Topic>> {
         tracing::debug!("get_topic {:?}", id);
-
-        let id = id.parse::<i64>()?;
-
         let user = ctrl
             .user
             .find_one(&UserReadAction::new().user_info())
