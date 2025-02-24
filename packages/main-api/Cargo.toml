@@ -24,6 +24,7 @@ sqlx.workspace = true
 tracing = "0.1.41"
 tracing-subscriber = "0.3.19"
 validator = "0.20.0"
+schemars = "0.8.21"
 
 [features]
 default = []
