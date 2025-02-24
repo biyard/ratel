@@ -4,11 +4,7 @@ use dioxus::prelude::*;
 use dioxus_popup::PopupService;
 use dioxus_translate::*;
 
-use super::{
-    i18n::HeaderTranslate,
-    menus::Menus,
-    signup_popup::SignupPopup,
-};
+use super::{i18n::HeaderTranslate, menus::Menus, signup_popup::SignupPopup};
 
 use crate::{
     components::{button::Button, logo::LogoWrapper},
@@ -73,7 +69,9 @@ pub fn HeaderTails(lang: Language) -> Element {
 
     let logout = move |_| {
         tracing::debug!("logout button clicked");
-        user_service.logout();
+        spawn(async move {
+            user_service.logout().await;
+        });
     };
 
     rsx! {
