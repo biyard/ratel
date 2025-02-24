@@ -16,7 +16,7 @@ use super::comment::*;
 #[cfg(feature = "server")]
 use schemars::JsonSchema;
 
-#[api_model(base = "/v1/topics", table = topics, iter_type=QueryResponse)]
+#[api_model(base = "/v1/topics", table = topics, action_by_id = [like, unlike], iter_type=QueryResponse)]
 pub struct Topic {
     #[api_model(summary, primary_key)]
     pub id: i64,
