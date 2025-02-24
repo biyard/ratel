@@ -54,15 +54,14 @@ impl CommentControllerV1 {
         State(ctrl): State<CommentControllerV1>,
         Extension(_auth): Extension<Option<Authorization>>,
         Path((topic_id, id)): Path<(i64, i64)>,
-        // Json(body): Json<CommentByIdAction>,
+        Json(body): Json<CommentByIdAction>,
     ) -> Result<Json<Comment>> {
         tracing::debug!("act_comment_by_id {} {:?}", topic_id, id);
 
-        ctrl.like(id, topic_id).await
-
-        // match body {
-        //     CommentByIdAction::Like(_) => ctrl.like(id).await,
-        // }
+        match body {
+            CommentByIdAction::Like(_) => ctrl.like(id, topic_id).await,
+            CommentByIdAction::Unlike(_) => ctrl.unlike(id, topic_id).await,
+        }
     }
 
     pub async fn get_comment(
@@ -174,21 +173,43 @@ impl CommentControllerV1 {
             return Err(ServiceError::BadRequest);
         }
 
-        match CommentLike::query_builder()
-            .user_id_equals(user.id)
-            .comment_id_equals(comment.id)
+        self.like.insert(id, user.id).await?;
+
+        let comment: Comment = Comment::query_builder(user.id)
+            .id_equals(id)
             .query()
-            .map(|r: sqlx::postgres::PgRow| -> CommentLike { r.into() })
+            .map(|r: sqlx::postgres::PgRow| r.into())
             .fetch_one(&self.pool)
-            .await
-        {
-            Ok(like) => {
-                self.like.delete(like.id).await?;
-            }
-            Err(_) => {
-                self.like.insert(id, user.id).await?;
-            }
+            .await?;
+
+        Ok(Json(comment))
+    }
+
+    async fn unlike(&self, id: i64, topic_id: i64) -> Result<Json<Comment>> {
+        let user = self
+            .user
+            .find_one(&UserReadAction::new().user_info())
+            .await?;
+
+        let comment: Comment = Comment::query_builder(user.id)
+            .id_equals(id)
+            .query()
+            .map(|r: sqlx::postgres::PgRow| r.into())
+            .fetch_one(&self.pool)
+            .await?;
+
+        if comment.topic_id != topic_id {
+            return Err(ServiceError::BadRequest);
         }
+
+        self.like.delete(id).await?;
+
+        let comment: Comment = Comment::query_builder(user.id)
+            .id_equals(id)
+            .query()
+            .map(|r: sqlx::postgres::PgRow| r.into())
+            .fetch_one(&self.pool)
+            .await?;
 
         Ok(Json(comment))
     }
