@@ -107,6 +107,14 @@ impl TopicControllerV1 {
     pub async fn create_topic(&self, body: TopicCreateRequest) -> Result<Json<Topic>> {
         tracing::debug!("create_topic {:?}", body);
 
+        if body.title.is_empty() || body.content.is_empty() {
+            return Err(ServiceError::BadRequest);
+        }
+
+        if body.ended_at < chrono::Utc::now().timestamp() {
+            return Err(ServiceError::BadRequest);
+        }
+
         match body.status {
             TopicStatus::Ongoing | TopicStatus::Finished | TopicStatus::Cancelled => {
                 return Err(ServiceError::BadRequest);
