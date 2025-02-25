@@ -105,6 +105,7 @@ jobs:
           DOMAIN: "dev.ratel.foundation"
           OPENAPI_KEY: ${{ secrets.OPENAPI_KEY }}
           AUTH_SECRET_KEY: ${{ secrets.DEV_AUTH_SECRET_KEY }}
+          BASE_DOMAIN: 'BASE_DOMAIN= RUSTFLAGS="-D warnings"'
         run: |
           cd packages/main-api  && cargo test --tests
 
