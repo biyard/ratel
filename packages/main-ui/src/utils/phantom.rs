@@ -29,6 +29,10 @@ impl PhantomAuth {
         Self { adapter, wallet }
     }
 
+    pub fn is_installed(&self) -> bool {
+        self.wallet.is_ok()
+    }
+
     pub fn detect_platform(&self) -> Platform {
         let window = window().expect("no window");
         let navigator = window.navigator();
@@ -94,9 +98,12 @@ impl PhantomAuth {
         self.adapter.is_connected()
     }
 
-    pub async fn sign(&self, message: &str) -> Option<rest_api::Signature> {
+    pub fn sign(&self, message: &str) -> Option<rest_api::Signature> {
         let message_bytes = message.as_bytes();
-        match self.adapter.sign_message(message_bytes).await {
+
+        let result = futures::executor::block_on(self.adapter.sign_message(message_bytes));
+
+        match result {
             Ok(signed_message) => {
                 let sig = signed_message.signature();
                 Some(rest_api::Signature {

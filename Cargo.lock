@@ -2743,6 +2743,7 @@ dependencies = [
  "dioxus-web",
  "dto",
  "ed25519-dalek",
+ "futures",
  "google-wallet",
  "hex",
  "num-format",
