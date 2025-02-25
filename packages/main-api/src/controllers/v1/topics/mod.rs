@@ -13,6 +13,9 @@ use by_axum::{
 };
 use dto::*;
 
+#[cfg(test)]
+mod tests;
+
 #[derive(
     Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
 )]
