@@ -472,7 +472,7 @@ dependencies = [
  "lambda_http 0.13.0",
  "lambda_runtime 0.13.0",
  "reqwest",
- "rest-api 0.1.8",
+ "rest-api",
  "schemars",
  "serde",
  "serde_json",
@@ -1514,7 +1514,7 @@ dependencies = [
  "num-format",
  "regex",
  "reqwest",
- "rest-api 0.1.8",
+ "rest-api",
  "ring",
  "schemars",
  "serde",
@@ -2696,7 +2696,7 @@ dependencies = [
  "chrono",
  "dto",
  "reqwest",
- "rest-api 0.1.1",
+ "rest-api",
  "schemars",
  "serde",
  "serde_json",
@@ -2731,7 +2731,7 @@ dependencies = [
  "hex",
  "num-format",
  "reqwest",
- "rest-api 0.1.8",
+ "rest-api",
  "serde",
  "tracing",
  "url",
@@ -3390,21 +3390,6 @@ dependencies = [
  "wasm-streams",
  "web-sys",
  "windows-registry",
-]
-
-[[package]]
-name = "rest-api"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "70531b06fda19717ae7a7352d8bcd7430951f8419fe053e74d54b613e70c1c9c"
-dependencies = [
- "base64 0.22.1",
- "candid",
- "chrono",
- "reqwest",
- "ring",
- "serde",
- "simple_asn1",
 ]
 
 [[package]]
