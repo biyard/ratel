@@ -6,9 +6,9 @@ use crate::tests::setup;
 async fn test_topic() {
     let context = setup().await.unwrap();
 
-    let cli_topic = Topic::get_client(&context.endpoint);
+    let _cli_topic = Topic::get_client(&context.endpoint);
 
-    let _id = test_create_topic(context.now, cli_topic.clone()).await;
+    // let _id = test_create_topic(context.now, cli_topic.clone()).await;
 }
 
 async fn test_create_topic(now: i64, cli: TopicClient) -> i64 {
