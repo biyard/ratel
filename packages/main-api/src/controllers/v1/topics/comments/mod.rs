@@ -123,11 +123,12 @@ impl CommentControllerV1 {
 
 impl CommentControllerV1 {
     async fn comment(&self, parent_id: i64, content: String) -> Result<Json<Comment>> {
-        let user = self
+        let user: User = self
             .user
             .find_one(&UserReadAction::new().user_info())
             .await?;
 
+        // FIXME: called `Result::unwrap()` on an `Err` value: ColumnNotFound("likes")
         let comment = self.repo.insert(parent_id, user.id, content).await?;
 
         Ok(Json(comment))
@@ -228,3 +229,9 @@ impl CommentControllerV1 {
         Ok(Json(comment))
     }
 }
+
+// #[cfg(test)]
+// pub mod tests {
+//     use super::*;
+//     use crate::tests::*;
+// }

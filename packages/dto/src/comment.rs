@@ -25,8 +25,10 @@ pub struct Comment {
     pub content: String,
 
     #[api_model(summary, one_to_many = user_comments, foreign_key = comment_id, aggregator = count)]
+    #[serde(default)]
     pub likes: u64,
     #[api_model(many_to_many = user_comments, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = comment_id, aggregator = exist, exist, unique)]
+    #[serde(default)]
     pub is_liked: bool,
 }
 
