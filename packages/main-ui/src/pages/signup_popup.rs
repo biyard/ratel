@@ -59,9 +59,15 @@ pub fn SignupPopup(
                     }
                 }
             }
+
             div {
                 class: "w-full flex flex-row my-[10px] p-[8px] bg-[#AB9FF1] rounded-[8px] justify-start items-center gap-[17px] cursor-pointer hover:bg-[#9A8EFF]",
+                style: if user_service.is_phantom_installed() { "background: #AB9FF1; cursor: pointer;" } else { "background: #9F9F9F; cursor: not-allowed;" },
                 onclick: move |_| async move {
+                    if !user_service.is_phantom_installed() {
+                        tracing::error!("Phantom wallet not installed");
+                        return;
+                    }
                     tracing::debug!("Signup with Phantom clicked");
                     user_service.set_signer_type("phantom");
                     match user_service.login().await {
@@ -94,7 +100,11 @@ pub fn SignupPopup(
                         "{tr.continue_with_phantom_wallet}"
                     }
                     span { class: "text-white text-[14px] leading-[13px] fond-regular",
-                        "{tr.connect_wallet}"
+                        if user_service.is_phantom_installed() {
+                            "{tr.connect_wallet}"
+                        } else {
+                            "{tr.need_wallet}"
+                        }
                     }
                 }
             }

@@ -154,6 +154,11 @@ translate! {
         ko: "지갑 연결하기",
         en: "Connect Wallet",
     },
+
+    need_wallet: {
+        ko: "지갑 설치가 필요합니다",
+        en: "Need Wallet",
+    },
 }
 
 translate! {

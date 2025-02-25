@@ -402,6 +402,14 @@ impl UserService {
         tracing::debug!("UserService::signup: user={:?}", res);
         Ok(())
     }
+
+    pub fn is_phantom_installed(&self) -> bool {
+        self.phantom
+            .read()
+            .as_ref()
+            .map(|v| v.is_installed())
+            .unwrap_or(false)
+    }
 }
 
 impl rest_api::Signer for UserService {
@@ -468,20 +476,14 @@ impl rest_api::Signer for UserService {
                 }
 
                 // TODO: feat sign
-                let handle = tokio::runtime::Handle::current();
-                let sig = handle.block_on(phantom.sign(msg));
+                let sig = phantom.sign(msg);
                 if sig.is_none() {
                     return Err(Box::<ServiceException>::new(
                         ServiceError::Unauthorized.into(),
                     ));
                 }
-                let sig = rest_api::Signature {
-                    signature: sig.unwrap().signature().to_bytes().to_vec(),
-                    public_key: phantom.get_public_key(),
-                    algorithm: rest_api::signature::SignatureAlgorithm::EdDSA,
-                };
 
-                return Ok(sig);
+                return Ok(sig.unwrap());
             }
             WalletSigner::None => {
                 return Err(Box::<ServiceException>::new(
