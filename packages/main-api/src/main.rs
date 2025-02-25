@@ -1,3 +1,5 @@
+#[cfg(test)]
+use by_axum::auth::set_auth_config;
 use by_axum::{auth::authorization_middleware, axum::middleware};
 use by_types::DatabaseConfig;
 use dto::*;
@@ -156,12 +158,15 @@ pub mod tests {
 
     pub async fn setup() -> Result<TestContext> {
         let app = by_axum::new();
-        let conf = config::get();
         let id = uuid::Uuid::new_v4().to_string();
         let now = SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
             .unwrap()
             .as_nanos() as u64;
+
+        let conf = config::get();
+        tracing::debug!("config: {:?}", conf);
+        set_auth_config(conf.auth.clone());
 
         let pool = if let DatabaseConfig::Postgres { url, pool_size } = conf.database {
             PgPoolOptions::new()
@@ -215,6 +220,7 @@ pub mod tests {
 
         let app = by_axum::into_api_adapter(app);
         let app = Box::new(app);
+        rest_api::set_message(conf.signing_domain.to_string());
         rest_api::set_api_service(app.clone());
         rest_api::add_authorization(&format!("Bearer {}", admin_token));
 
