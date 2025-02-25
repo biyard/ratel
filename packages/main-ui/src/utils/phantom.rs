@@ -78,6 +78,13 @@ impl PhantomAuth {
         }
     }
 
+    pub fn get_account_name(&self) -> String {
+        match self.adapter.connected_account() {
+            Ok(account) => account.label.clone().unwrap_or_else(|| "".to_string()),
+            Err(_) => "".to_string(),
+        }
+    }
+
     pub fn get_address(&self) -> String {
         match self.adapter.connected_account() {
             Ok(account) => account.address.to_string(),
@@ -98,12 +105,10 @@ impl PhantomAuth {
         self.adapter.is_connected()
     }
 
-    pub fn sign(&self, message: &str) -> Option<rest_api::Signature> {
+    pub async fn sign(&self, message: &str) -> Option<rest_api::Signature> {
         let message_bytes = message.as_bytes();
 
-        let result = futures::executor::block_on(self.adapter.sign_message(message_bytes));
-
-        match result {
+        match self.adapter.sign_message(message_bytes).await {
             Ok(signed_message) => {
                 let sig = signed_message.signature();
                 Some(rest_api::Signature {

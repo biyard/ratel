@@ -6,7 +6,6 @@ use crate::{
 use dioxus::prelude::*;
 use dto::*;
 use google_wallet::WalletEvent;
-
 pub enum UserEvent {
     Signup(String, String, String, String),
     Login,
@@ -58,16 +57,16 @@ pub fn get_firebase_wallet() -> google_wallet::FirebaseWallet {
 pub struct UserInfo {
     pub principal: String,
     pub email: Option<String>,
-    pub name: Option<String>,
+    pub nickname: Option<String>,
     pub profile_url: Option<String>,
 }
 
 impl UserInfo {
-    pub fn new(principal: String, email: String, name: String, profile_url: String) -> Self {
+    pub fn new(principal: String, email: String, nickname: String, profile_url: String) -> Self {
         Self {
             principal,
             email: Some(email),
-            name: Some(name),
+            nickname: Some(nickname),
             profile_url: Some(profile_url),
         }
     }
@@ -78,7 +77,7 @@ impl Default for UserInfo {
         Self {
             principal: "".to_string(),
             email: None,
-            name: None,
+            nickname: None,
             profile_url: None,
         }
     }
@@ -189,7 +188,7 @@ impl UserService {
         self.user_info.set(UserInfo {
             principal: user.principal,
             email: Some(user.email),
-            name: Some(user.nickname),
+            nickname: Some(user.nickname),
             profile_url: Some(user.profile_url),
         });
     }
@@ -197,11 +196,15 @@ impl UserService {
     pub fn get_user_info(&self) -> Option<(String, String)> {
         let info = (self.user_info)();
 
-        if info.email.is_none() || info.name.is_none() {
+        if info.email.is_none() || info.nickname.is_none() {
             return None;
         }
 
-        Some((info.email.clone().unwrap(), info.name.clone().unwrap()))
+        Some((
+            info.nickname.clone().unwrap(),
+            // TODO: default image
+            info.profile_url.clone().unwrap_or_default(),
+        ))
     }
 
     async fn request_to_firebase(
@@ -323,6 +326,7 @@ impl UserService {
 
                         match phantom.connect_desktop().await {
                             Ok(_) => {
+                                tracing::debug!("UserService::phantom_wallet: connected");
                                 let public_key_str = phantom.get_public_key_string();
 
                                 match cli.by_principal(public_key_str.clone()).await {
@@ -424,7 +428,7 @@ impl rest_api::Signer for UserService {
         }
     }
 
-    fn sign(
+    async fn sign(
         &self,
         msg: &str,
     ) -> std::result::Result<rest_api::Signature, Box<dyn std::error::Error>> {
@@ -475,8 +479,7 @@ impl rest_api::Signer for UserService {
                     ));
                 }
 
-                // TODO: feat sign
-                let sig = phantom.sign(msg);
+                let sig = phantom.sign(msg).await;
                 if sig.is_none() {
                     return Err(Box::<ServiceException>::new(
                         ServiceError::Unauthorized.into(),
