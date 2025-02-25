@@ -99,6 +99,10 @@ jobs:
           RUSTFLAGS: "-A warnings"
           DATABASE_TYPE: postgres
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
+          ENV: "dev"
+          DOMAIN: "dev.ratel.foundation"
+          OPENAPI_KEY: ${{ secrets.OPENAPI_KEY }}
+          AUTH_SECRET_KEY: ${{ secrets.DEV_AUTH_SECRET_KEY }}
         run: |
           cd packages/main-api  && cargo test --tests
 
