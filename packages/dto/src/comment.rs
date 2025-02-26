@@ -6,7 +6,7 @@ use by_macros::api_model;
 use by_types::QueryResponse;
 use validator::ValidationError;
 
-#[api_model(base = "/v1/topics/:topic-id/comments", table = comments, iter_type = QueryResponse)]
+#[api_model(base = "/v1/topics/:topic-id/comments", table = comments, action_by_id = [like, unlike], iter_type = QueryResponse)]
 pub struct Comment {
     #[api_model(summary, primary_key, read_action = [get_comment])]
     pub id: i64,
@@ -25,8 +25,10 @@ pub struct Comment {
     pub content: String,
 
     #[api_model(summary, one_to_many = user_comments, foreign_key = comment_id, aggregator = count)]
+    #[serde(default)]
     pub likes: u64,
     #[api_model(many_to_many = user_comments, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = comment_id, aggregator = exist, exist, unique)]
+    #[serde(default)]
     pub is_liked: bool,
 }
 
