@@ -3,6 +3,7 @@ pub mod comments;
 pub mod votes;
 
 use by_axum::{
+    aide,
     auth::Authorization,
     axum::{
         extract::{Path, Query, State},
@@ -11,6 +12,16 @@ use by_axum::{
     },
 };
 use dto::*;
+
+#[cfg(test)]
+mod tests;
+
+#[derive(
+    Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
+)]
+pub struct TopicPath {
+    pub id: i64,
+}
 
 #[derive(Clone, Debug)]
 pub struct TopicControllerV1 {
@@ -35,13 +46,16 @@ impl TopicControllerV1 {
         Ok(by_axum::axum::Router::new()
             .route("/", post(Self::act_topic).get(Self::list_topic))
             .with_state(ctrl.clone())
-            .route("/:id", get(Self::get_topic).post(Self::act_topic_by_id))
+            .route(
+                "/:topic_id",
+                get(Self::get_topic).post(Self::act_topic_by_id),
+            )
             .with_state(ctrl.clone())
             .nest(
-                "/:id/comments",
+                "/:topic_id/comments",
                 comments::CommentControllerV1::route(pool.clone())?,
             )
-            .nest("/:id/votes", votes::VoteControllerV1::route(pool)?))
+            .nest("/:topic_id/votes", votes::VoteControllerV1::route(pool)?))
     }
 
     pub async fn act_topic(
@@ -58,23 +72,23 @@ impl TopicControllerV1 {
     pub async fn act_topic_by_id(
         State(ctrl): State<TopicControllerV1>,
         Extension(_auth): Extension<Option<Authorization>>,
-        Path(id): Path<i64>,
-        // Json(body): Json<TopicByIdAction>,
+        Path(TopicPath { id }): Path<TopicPath>,
+        Json(body): Json<TopicByIdAction>,
     ) -> Result<Json<Topic>> {
         tracing::debug!("act_topic_by_id {:?}", id);
 
-        ctrl.like_topic(id).await
+        match body {
+            TopicByIdAction::Like(_) => ctrl.like(id).await,
+            TopicByIdAction::Unlike(_) => ctrl.unlike(id).await,
+        }
     }
 
     pub async fn get_topic(
         State(ctrl): State<TopicControllerV1>,
         Extension(_auth): Extension<Option<Authorization>>,
-        Path(id): Path<String>,
+        Path(TopicPath { id }): Path<TopicPath>,
     ) -> Result<Json<Topic>> {
         tracing::debug!("get_topic {:?}", id);
-
-        let id = id.parse::<i64>()?;
-
         let user = ctrl
             .user
             .find_one(&UserReadAction::new().user_info())
@@ -107,6 +121,14 @@ impl TopicControllerV1 {
     pub async fn create_topic(&self, body: TopicCreateRequest) -> Result<Json<Topic>> {
         tracing::debug!("create_topic {:?}", body);
 
+        if body.title.is_empty() || body.content.is_empty() {
+            return Err(ServiceError::BadRequest);
+        }
+
+        if body.ended_at < chrono::Utc::now().timestamp() {
+            return Err(ServiceError::BadRequest);
+        }
+
         match body.status {
             TopicStatus::Ongoing | TopicStatus::Finished | TopicStatus::Cancelled => {
                 return Err(ServiceError::BadRequest);
@@ -134,7 +156,7 @@ impl TopicControllerV1 {
         Ok(Json(topic))
     }
 
-    async fn like_topic(&self, id: i64) -> Result<Json<Topic>> {
+    async fn like(&self, id: i64) -> Result<Json<Topic>> {
         let user = self
             .user
             .find_one(&UserReadAction::new().user_info())
@@ -147,21 +169,32 @@ impl TopicControllerV1 {
             .fetch_one(&self.pool)
             .await?;
 
-        match TopicLike::query_builder()
-            .user_id_equals(user.id)
-            .topic_id_equals(topic.id)
+        self.like.insert(user.id, topic.id).await?;
+
+        let topic = Topic::query_builder(user.id)
+            .id_equals(id)
             .query()
-            .map(|r: sqlx::postgres::PgRow| -> TopicLike { r.into() })
+            .map(|r: sqlx::postgres::PgRow| r.into())
             .fetch_one(&self.pool)
-            .await
-        {
-            Ok(like) => {
-                self.like.delete(like.id).await?;
-            }
-            Err(_) => {
-                self.like.insert(user.id, topic.id).await?;
-            }
-        }
+            .await?;
+
+        Ok(Json(topic))
+    }
+
+    async fn unlike(&self, id: i64) -> Result<Json<Topic>> {
+        self.like.delete(id).await?;
+
+        let user = self
+            .user
+            .find_one(&UserReadAction::new().user_info())
+            .await?;
+
+        let topic = Topic::query_builder(user.id)
+            .id_equals(id)
+            .query()
+            .map(|r: sqlx::postgres::PgRow| r.into())
+            .fetch_one(&self.pool)
+            .await?;
 
         Ok(Json(topic))
     }

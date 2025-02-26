@@ -16,7 +16,7 @@ use super::comment::*;
 #[cfg(feature = "server")]
 use schemars::JsonSchema;
 
-#[api_model(base = "/v1/topics", table = topics, iter_type=QueryResponse)]
+#[api_model(base = "/v1/topics", table = topics, action_by_id = [like, unlike], iter_type=QueryResponse)]
 pub struct Topic {
     #[api_model(summary, primary_key)]
     pub id: i64,
@@ -60,13 +60,13 @@ pub struct Topic {
     pub replies: i64,
 
     // User-specific information
-    #[api_model(many_to_many = votes, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = topic_id, unique)]
+    #[api_model(one_to_many = votes, foreign_reference_key = topic_id)]
     #[serde(default)]
     pub vote: Vec<Vote>,
-    #[api_model(many_to_many = comments, foreign_table_name = users, foreign_primary_key = author_id, foreign_reference_key = topic_id)]
+    #[api_model(one_to_many = comments, foreign_reference_key = author_id)]
     #[serde(default)]
     pub comments: Vec<Comment>,
-    #[api_model(many_to_many = topic_likes, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = topic_id, aggregator = exist)]
+    #[api_model(many_to_many = topic_likes, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = topic_id, aggregator = exist, unique)]
     #[serde(default)]
     pub post_like: bool,
 
@@ -82,7 +82,6 @@ pub struct Topic {
 }
 
 #[api_model(base = "/v1/topics/:topic-id", table = topic_likes, iter_type = QueryResponse)]
-
 pub struct TopicLike {
     #[api_model(summary, primary_key)]
     pub id: i64,
