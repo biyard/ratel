@@ -2689,7 +2689,7 @@ dependencies = [
 
 [[package]]
 name = "main-api"
-version = "0.7.9"
+version = "0.7.10"
 dependencies = [
  "by-axum",
  "by-types",
