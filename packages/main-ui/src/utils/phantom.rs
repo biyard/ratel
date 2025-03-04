@@ -7,6 +7,7 @@ use web_sys::window;
 pub struct PhantomAuth {
     adapter: WalletAdapter,
     wallet: WalletResult<Wallet>,
+    cached_signiture: Option<rest_api::Signature>,
 }
 
 pub enum Platform {
@@ -26,7 +27,13 @@ impl PhantomAuth {
         let adapter = WalletAdapter::init().unwrap();
         let wallet = adapter.get_wallet("Phantom");
 
-        Self { adapter, wallet }
+        // TODO: Phantom auto login
+
+        Self {
+            adapter,
+            wallet,
+            cached_signiture: None,
+        }
     }
 
     pub fn is_installed(&self) -> bool {
@@ -51,7 +58,10 @@ impl PhantomAuth {
     pub async fn connect_desktop(&mut self) -> Result<WalletAccount, ServiceError> {
         if let Ok(wallet) = self.wallet.clone() {
             return match self.adapter.connect(wallet).await {
-                Ok(account) => Ok(account),
+                Ok(account) => {
+                    self.cached_signiture = self.sign(&account.address).await;
+                    Ok(account)
+                }
                 Err(e) => Err(ServiceError::WalletError(
                     format!("Failed to connect wallet: {:?}", e).to_string(),
                 )),
@@ -107,7 +117,9 @@ impl PhantomAuth {
 
     pub async fn sign(&self, message: &str) -> Option<rest_api::Signature> {
         let message_bytes = message.as_bytes();
-
+        if self.adapter.solana_sign_message().is_err() {
+            return None;
+        }
         match self.adapter.sign_message(message_bytes).await {
             Ok(signed_message) => {
                 let sig = signed_message.signature();
@@ -120,6 +132,15 @@ impl PhantomAuth {
             Err(_) => None,
         }
     }
+
+    pub fn remove_signer(&mut self) {
+        self.cached_signiture = None;
+    }
+
+    pub fn get_signer(&self) -> Option<&rest_api::Signature> {
+        self.cached_signiture.as_ref()
+    }
+
     // pub fn get_deeplink(&self, method: &PhantomDeeplink) -> String {
     //     let base_url = "https://phantom.app/ul/v1";
 
