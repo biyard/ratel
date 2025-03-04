@@ -1,4 +1,5 @@
 use by_axum::{
+    aide,
     auth::Authorization,
     axum::{
         extract::{Path, Query, State},
@@ -7,6 +8,13 @@ use by_axum::{
     },
 };
 use dto::*;
+
+#[derive(
+    Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
+)]
+pub struct AssemblyMemberPath {
+    id: i64,
+}
 
 #[derive(Clone, Debug)]
 pub struct AssemblyMemberControllerV1 {
@@ -32,7 +40,7 @@ impl AssemblyMemberControllerV1 {
     pub async fn act_assembly_member_by_id(
         State(_ctrl): State<AssemblyMemberControllerV1>,
         Extension(_auth): Extension<Option<Authorization>>,
-        Path(id): Path<String>,
+        Path(AssemblyMemberPath { id }): Path<AssemblyMemberPath>,
         Json(body): Json<AssemblyMemberByIdAction>,
     ) -> Result<Json<AssemblyMember>> {
         tracing::debug!("act_assembly_member_by_id {:?} {:?}", id, body);
@@ -50,7 +58,7 @@ impl AssemblyMemberControllerV1 {
     pub async fn get_assembly_member(
         State(_ctrl): State<AssemblyMemberControllerV1>,
         Extension(_auth): Extension<Option<Authorization>>,
-        Path(id): Path<String>,
+        Path(AssemblyMemberPath { id }): Path<AssemblyMemberPath>,
     ) -> Result<Json<AssemblyMember>> {
         tracing::debug!("get_assembly_member {:?}", id);
         Ok(Json(AssemblyMember::default()))
