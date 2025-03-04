@@ -6,6 +6,7 @@ use crate::{
 use dioxus::prelude::*;
 use dto::*;
 use google_wallet::WalletEvent;
+
 pub enum UserEvent {
     Signup(String, String, String, String),
     Login,
@@ -102,8 +103,6 @@ impl UserService {
         #[cfg(not(feature = "web"))]
         let phantom = None;
 
-        tracing::debug!("UserService::init: firebase={:?}", firebase);
-        tracing::debug!("UserService::init: phantom={:?}", phantom);
         let cli = User::get_client(&conf.main_api_endpoint);
 
         use_context_provider(|| Self {
@@ -369,12 +368,27 @@ impl UserService {
     }
 
     pub async fn login_or_signup(
-        &self,
+        &mut self,
         principal: &str,
         email: &str,
         nickname: &str,
         profile_url: &str,
     ) -> Result<()> {
+        // match (self.signer)() {
+        //     WalletSigner::Phantom => {
+        //         let signal = self.phantom.read();
+        //         if signal.is_none() {
+        //             return Err(ServiceError::Unauthorized.into());
+        //         }
+        //         let phantom = signal.as_ref().unwrap();
+
+        //         if !phantom.is_connected() {
+        //             return Err(ServiceError::Unauthorized.into());
+        //         }
+        //     }
+        //     _ => rest_api::set_signer(Box::new(*self)),
+        // }
+
         rest_api::set_signer(Box::new(*self));
 
         tracing::debug!(
@@ -398,7 +412,17 @@ impl UserService {
             Ok(v) => v,
             Err(e) => {
                 tracing::error!("UserService::signup: error={:?}", e);
-                rest_api::remove_signer();
+                match (self.signer)() {
+                    WalletSigner::Phantom => {
+                        let mut signal = self.phantom.write();
+                        let phantom = signal.as_mut().unwrap();
+                        phantom.remove_signer();
+                        rest_api::remove_signer();
+                    }
+                    _ => {
+                        rest_api::remove_signer();
+                    }
+                };
                 return Err(e);
             }
         };
@@ -428,7 +452,7 @@ impl rest_api::Signer for UserService {
         }
     }
 
-    async fn sign(
+    fn sign(
         &self,
         msg: &str,
     ) -> std::result::Result<rest_api::Signature, Box<dyn std::error::Error>> {
@@ -479,14 +503,16 @@ impl rest_api::Signer for UserService {
                     ));
                 }
 
-                let sig = phantom.sign(msg).await;
-                if sig.is_none() {
-                    return Err(Box::<ServiceException>::new(
-                        ServiceError::Unauthorized.into(),
-                    ));
-                }
+                let sig = match phantom.get_signer() {
+                    Some(v) => v,
+                    None => {
+                        return Err(Box::<ServiceException>::new(
+                            ServiceError::Unauthorized.into(),
+                        ));
+                    }
+                };
 
-                return Ok(sig.unwrap());
+                return Ok(sig.clone());
             }
             WalletSigner::None => {
                 return Err(Box::<ServiceException>::new(
