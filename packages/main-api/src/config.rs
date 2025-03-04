@@ -9,6 +9,7 @@ pub struct Config {
     pub aws: AwsConfig,
     pub database: DatabaseConfig,
     pub signing_domain: &'static str,
+    pub auth: AuthConfig,
 }
 
 impl Default for Config {
@@ -21,6 +22,7 @@ impl Default for Config {
             signing_domain: option_env!("BASE_DOMAIN").expect("BASE_DOMAIN is required"),
             aws: AwsConfig::default(),
             database: DatabaseConfig::default(),
+            auth: AuthConfig::default(),
         }
     }
 }

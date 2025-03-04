@@ -1,4 +1,5 @@
 use by_axum::{
+    aide,
     auth::Authorization,
     axum::{
         extract::{Path, Query, State},
@@ -7,6 +8,13 @@ use by_axum::{
     },
 };
 use dto::*;
+
+#[derive(
+    Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
+)]
+pub struct PatronPath {
+    id: i64,
+}
 
 #[derive(Clone, Debug)]
 pub struct PatronControllerV1 {
@@ -50,7 +58,7 @@ impl PatronControllerV1 {
     pub async fn get_patron(
         State(ctrl): State<PatronControllerV1>,
         Extension(_auth): Extension<Option<Authorization>>,
-        Path(id): Path<i64>,
+        Path(PatronPath { id }): Path<PatronPath>,
     ) -> Result<Json<Patron>> {
         tracing::debug!("get_patron {:?}", id);
 

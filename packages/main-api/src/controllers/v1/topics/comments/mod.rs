@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 use by_axum::{
+    aide,
     auth::Authorization,
     axum::{
         extract::{Path, Query, State},
@@ -9,6 +10,21 @@ use by_axum::{
 };
 use by_types::QueryResponse;
 use dto::*;
+
+#[derive(
+    Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
+)]
+pub struct CommentPath {
+    topic_id: i64,
+}
+
+#[derive(
+    Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
+)]
+pub struct CommentByIdPath {
+    topic_id: i64,
+    id: i64,
+}
 
 #[derive(Clone, Debug)]
 pub struct CommentControllerV1 {
@@ -39,7 +55,7 @@ impl CommentControllerV1 {
 
     pub async fn act_comment(
         State(ctrl): State<CommentControllerV1>,
-        Path(topic_id): Path<i64>,
+        Path(CommentPath { topic_id }): Path<CommentPath>,
         Extension(_auth): Extension<Option<Authorization>>,
         Json(body): Json<CommentAction>,
     ) -> Result<Json<Comment>> {
@@ -53,22 +69,21 @@ impl CommentControllerV1 {
     pub async fn act_comment_by_id(
         State(ctrl): State<CommentControllerV1>,
         Extension(_auth): Extension<Option<Authorization>>,
-        Path((topic_id, id)): Path<(i64, i64)>,
-        // Json(body): Json<CommentByIdAction>,
+        Path(CommentByIdPath { topic_id, id }): Path<CommentByIdPath>,
+        Json(body): Json<CommentByIdAction>,
     ) -> Result<Json<Comment>> {
         tracing::debug!("act_comment_by_id {} {:?}", topic_id, id);
 
-        ctrl.like(id, topic_id).await
-
-        // match body {
-        //     CommentByIdAction::Like(_) => ctrl.like(id).await,
-        // }
+        match body {
+            CommentByIdAction::Like(_) => ctrl.like(id, topic_id).await,
+            CommentByIdAction::Unlike(_) => ctrl.unlike(id, topic_id).await,
+        }
     }
 
     pub async fn get_comment(
         State(ctrl): State<CommentControllerV1>,
         Extension(_auth): Extension<Option<Authorization>>,
-        Path((topic_id, id)): Path<(i64, i64)>,
+        Path(CommentByIdPath { topic_id, id }): Path<CommentByIdPath>,
     ) -> Result<Json<Comment>> {
         tracing::debug!("get_comment {} {:?}", topic_id, id);
 
@@ -93,14 +108,14 @@ impl CommentControllerV1 {
 
     pub async fn list_comment(
         State(ctrl): State<CommentControllerV1>,
-        Path(parent_id): Path<String>,
+        Path(CommentPath { topic_id }): Path<CommentPath>,
         Extension(_auth): Extension<Option<Authorization>>,
         Query(param): Query<CommentParam>,
     ) -> Result<Json<CommentGetResponse>> {
-        tracing::debug!("list_comment {} {:?}", parent_id, param);
+        tracing::debug!("list_comment {} {:?}", topic_id, param);
 
         match param {
-            CommentParam::Query(q) => ctrl.list_by_topic_id(parent_id, q).await,
+            CommentParam::Query(q) => ctrl.list_by_topic_id(topic_id, q).await,
             _ => Err(ServiceError::BadRequest)?,
         }
     }
@@ -108,11 +123,12 @@ impl CommentControllerV1 {
 
 impl CommentControllerV1 {
     async fn comment(&self, parent_id: i64, content: String) -> Result<Json<Comment>> {
-        let user = self
+        let user: User = self
             .user
             .find_one(&UserReadAction::new().user_info())
             .await?;
 
+        // FIXME: called `Result::unwrap()` on an `Err` value: ColumnNotFound("likes")
         let comment = self.repo.insert(parent_id, user.id, content).await?;
 
         Ok(Json(comment))
@@ -120,11 +136,9 @@ impl CommentControllerV1 {
 
     async fn list_by_topic_id(
         &self,
-        parent_id: String,
+        topic_id: i64,
         q: CommentQuery,
     ) -> Result<Json<CommentGetResponse>> {
-        let topic_id = parent_id.parse::<i64>()?;
-
         // FIXME: unnecessary but Comment::query_builder needs user_id
         let user = self
             .user
@@ -174,22 +188,50 @@ impl CommentControllerV1 {
             return Err(ServiceError::BadRequest);
         }
 
-        match CommentLike::query_builder()
-            .user_id_equals(user.id)
-            .comment_id_equals(comment.id)
+        self.like.insert(id, user.id).await?;
+
+        let comment: Comment = Comment::query_builder(user.id)
+            .id_equals(id)
             .query()
-            .map(|r: sqlx::postgres::PgRow| -> CommentLike { r.into() })
+            .map(|r: sqlx::postgres::PgRow| r.into())
             .fetch_one(&self.pool)
-            .await
-        {
-            Ok(like) => {
-                self.like.delete(like.id).await?;
-            }
-            Err(_) => {
-                self.like.insert(id, user.id).await?;
-            }
+            .await?;
+
+        Ok(Json(comment))
+    }
+
+    async fn unlike(&self, id: i64, topic_id: i64) -> Result<Json<Comment>> {
+        let user = self
+            .user
+            .find_one(&UserReadAction::new().user_info())
+            .await?;
+
+        let comment: Comment = Comment::query_builder(user.id)
+            .id_equals(id)
+            .query()
+            .map(|r: sqlx::postgres::PgRow| r.into())
+            .fetch_one(&self.pool)
+            .await?;
+
+        if comment.topic_id != topic_id {
+            return Err(ServiceError::BadRequest);
         }
+
+        self.like.delete(id).await?;
+
+        let comment: Comment = Comment::query_builder(user.id)
+            .id_equals(id)
+            .query()
+            .map(|r: sqlx::postgres::PgRow| r.into())
+            .fetch_one(&self.pool)
+            .await?;
 
         Ok(Json(comment))
     }
 }
+
+// #[cfg(test)]
+// pub mod tests {
+//     use super::*;
+//     use crate::tests::*;
+// }
