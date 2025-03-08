@@ -4,7 +4,7 @@ use dioxus::prelude::*;
 use dioxus_translate::*;
 
 use super::components::*;
-use crate::{components::footer::Footer, route::Route};
+use crate::route::Route;
 use by_components::{loaders::cube_loader::CubeLoader, meta::MetaSeoTemplate};
 
 #[component]
@@ -35,7 +35,7 @@ pub fn RootLayout(lang: Language) -> Element {
                 2
             } else if y < height * 3.7 {
                 3
-            } else if y <= height * 4.1 {
+            } else if y <= height * 4.0 {
                 4
             } else {
                 5
