@@ -6,10 +6,10 @@ pub mod services;
 pub mod theme;
 
 use dioxus::prelude::*;
-use dioxus_popup::PopupService;
+// use dioxus_popup::PopupService;
 use route::Route;
-use services::user_service::UserService;
-use theme::Theme;
+// use services::user_service::UserService;
+// use theme::Theme;
 
 fn main() {
     let conf = config::get();
@@ -21,9 +21,11 @@ fn main() {
 }
 
 fn app() -> Element {
-    Theme::init();
-    UserService::init();
-    PopupService::init();
+    // Theme::init();
+    // UserService::init();
+    // PopupService::init();
+
+    let css = include_str!("../public/input.css");
 
     rsx! {
         document::Title { "Ratel" }
@@ -39,14 +41,35 @@ fn app() -> Element {
             name: "viewport",
             content: "width=device-width, initial-scale=1.0",
         }
-        document::Link { id: "favicon", rel: "icon", href: asset!("/public/favicon.ico") }
+
+        document::Link {
+            href: asset!("/public/logos/favicon-96x96.png"),
+            r#type: "image/png",
+            rel: "icon",
+            sizes: "96x96",
+        }
+        document::Link {
+            href: asset!("/public/logos/favicon.svg"),
+            r#type: "image/svg+xml",
+            rel: "icon",
+        }
+        document::Link { href: asset!("/public/logos/favicon.ico"), rel: "shortcut icon" }
+        document::Link {
+            href: asset!("/public/logos/apple-touch-icon.png"),
+            rel: "apple-touch-icon",
+            sizes: "180x180",
+        }
+
         document::Link { rel: "stylesheet", href: asset!("/public/main.css") }
         document::Link { rel: "stylesheet", href: asset!("/public/tailwind.css") }
+
         document::Link {
             rel: "stylesheet",
             href: "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.1/css/all.min.css",
         }
-        document::Script { src: "https://cdn.tailwindcss.com/3.4.16" }
+        document::Script { src: "https://unpkg.com/@tailwindcss/browser@4.0.12/dist/index.global.js" }
+        document::Style { r#type: "text/tailwindcss", {css} }
+
         document::Script { r#type: "module", src: asset!("/public/dep.js") }
 
         Router::<Route> {}

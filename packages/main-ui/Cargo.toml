@@ -35,7 +35,7 @@ rest-api.workspace = true
 by-macros.workspace = true
 by-types.workspace = true
 by-components.workspace = true
-wallet-adapter = "1.0.4-beta"
+wallet-adapter = "=1.0.4-beta"
 hex = "0.4.3"
 
 [features]

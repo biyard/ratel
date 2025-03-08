@@ -5,8 +5,6 @@ use dioxus::prelude::*;
 use dioxus_translate::*;
 use i18n::FooterTranslate;
 
-use crate::components::logo::LogoWrapper;
-
 #[component]
 pub fn Footer(lang: Language) -> Element {
     let tr: FooterTranslate = translate(&lang);
@@ -15,7 +13,6 @@ pub fn Footer(lang: Language) -> Element {
         footer { class: "w-full items-start",
             div { class: "flex flex-col justify-start items-start pb-[50px] pt-[50px] text-[15px] font-semibold align-middle gap-3",
                 // logo
-                LogoWrapper {}
                 // text
                 div {
                     class: "text-base flex flex-col",
