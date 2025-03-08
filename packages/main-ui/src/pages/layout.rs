@@ -5,7 +5,7 @@ use dioxus_translate::*;
 
 use super::components::*;
 use crate::{components::footer::Footer, route::Route};
-use by_components::loaders::cube_loader::CubeLoader;
+use by_components::{loaders::cube_loader::CubeLoader, meta::MetaSeoTemplate};
 
 #[component]
 pub fn RootLayout(lang: Language) -> Element {
@@ -68,6 +68,15 @@ pub fn RootLayout(lang: Language) -> Element {
     });
 
     rsx! {
+        MetaSeoTemplate {
+            lang,
+            title: "Ratel",
+            keywords: "ratel, crypto, policy, south korea, ecosystem, politicians, supportive policies, track, crypto stances, vote, legislation, propose, DAO-driven improvements, shape, thriving future, industry, democracy",
+            author: "Ratel Foundation",
+            url: "https://ratel.foundation",
+            canonical: "https://ratel.foundation",
+            logo_url: asset!("/public/logos/favicon-96x96.png"),
+        }
         div { class: "w-full h-full bg-background text-white",
             Header { lang, selected: selected() }
             SuspenseBoundary {
@@ -77,7 +86,9 @@ pub fn RootLayout(lang: Language) -> Element {
                     }
                 },
             }
-            div { class: "w-full overflow-x-hidden scroll-smooth", Outlet::<Route> {} }
+            div { class: "w-full overflow-x-hidden scroll-smooth flex flex-col items-center justify-center",
+                Outlet::<Route> {}
+            }
 
             div { class: "max-w-[1440px] w-full",
                 Footer { lang }

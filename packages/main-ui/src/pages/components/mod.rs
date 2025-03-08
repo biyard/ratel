@@ -2,6 +2,7 @@ mod about;
 mod bottom_sheet;
 mod community;
 mod header;
+mod mission_card;
 mod politician_stance;
 mod support;
 mod top;
