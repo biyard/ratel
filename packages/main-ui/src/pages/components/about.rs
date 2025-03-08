@@ -2,7 +2,7 @@
 use dioxus::prelude::*;
 use dioxus_translate::*;
 
-use crate::{components::indicators::Indicator, pages::components::mission_card::MissionCard};
+use super::*;
 
 #[component]
 pub fn About(lang: Language) -> Element {
@@ -12,19 +12,10 @@ pub fn About(lang: Language) -> Element {
         div {
             id: "about",
             class: "w-full max-w-1177 h-screen flex flex-col items-start justify-center gap-50 max-[1177px]:mx-10",
-            div { class: "w-full flex flex-col justify-start items-start gap-20",
-                Indicator { {tr.title} }
-                div { class: "w-full grid grid-cols-2 gap-24",
-                    h1 { class: "w-full col-span-1 text-[32px] font-bold text-white",
-                        {tr.mission}
-                    }
-                    div { class: "col-span-1 w-full h-full flex flex-col items-center justify-center",
-                        div { class: "w-full h-1 bg-[#464646]" }
-                    }
-                    p { class: "col-span-1 w-full text-white font-normal text-[15px]/22 text-[#AEAEAE] whitespace-pre-line",
-                        {tr.description}
-                    }
-                }
+            SectionHeader {
+                section_name: tr.title,
+                title: tr.mission,
+                description: tr.description,
             }
 
             div { class: "w-full grid grid-cols-4 gap-24",
