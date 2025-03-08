@@ -4,64 +4,8 @@ use dioxus::prelude::*;
 use dioxus_translate::*;
 
 #[component]
-pub fn Header(lang: Language) -> Element {
+pub fn Header(lang: Language, selected: i32) -> Element {
     let tr: HeaderTranslate = translate(&lang);
-    #[cfg(feature = "web")]
-    let mut scroll_position = use_signal(|| 0.0);
-    let selected = use_memo(move || {
-        #[cfg(feature = "web")]
-        {
-            let y = scroll_position();
-            tracing::debug!("y = {y}");
-            let height = match web_sys::window() {
-                Some(window) => window
-                    .inner_height()
-                    .unwrap_or_default()
-                    .as_f64()
-                    .unwrap_or_default(),
-                None => 0.0,
-            };
-
-            #[cfg(not(feature = "web"))]
-            let height = 0.0;
-
-            let i = if y < height * 0.7 {
-                0
-            } else if y < height * 1.7 {
-                1
-            } else if y < height * 2.7 {
-                2
-            } else if y < height * 3.7 {
-                3
-            } else {
-                4
-            };
-
-            return i;
-        }
-        #[cfg(not(feature = "web"))]
-        0
-    });
-
-    #[cfg(feature = "web")]
-    let _ = use_coroutine(move |_: UnboundedReceiver<()>| async move {
-        let script = r#"
-            window.addEventListener('scroll', () => {
-                dioxus.send(`${window.scrollY}`);
-            });
-        "#;
-        let mut eval = document::eval(script);
-
-        loop {
-            let y = eval
-                .recv::<String>()
-                .await
-                .unwrap_or_default()
-                .parse::<f64>()
-                .unwrap_or_default();
-            scroll_position.set(y);
-        }
-    });
 
     rsx! {
         div { class: "fixed top-0 left-0 w-screen h-80 overflow-hidden flex items-center justify-center z-100",
@@ -72,25 +16,25 @@ pub fn Header(lang: Language) -> Element {
                     a {
                         class: "p-10 hover:text-white",
                         href: "#about",
-                        color: if selected() == 1 { "var(--color-primary)" },
+                        color: if selected == 1 { "var(--color-primary)" },
                         {tr.menu_about}
                     }
                     a {
                         class: "p-10 hover:text-white",
                         href: "#politician-stance",
-                        color: if selected() == 2 { "var(--color-primary)" },
+                        color: if selected == 2 { "var(--color-primary)" },
                         {tr.menu_stance}
                     }
                     a {
                         class: "p-10 hover:text-white",
                         href: "#community",
-                        color: if selected() == 3 { "var(--color-primary)" },
+                        color: if selected == 3 { "var(--color-primary)" },
                         {tr.menu_community}
                     }
                     a {
                         class: "p-10 hover:text-white",
                         href: "#support",
-                        color: if selected() == 4 { "var(--color-primary)" },
+                        color: if selected == 4 { "var(--color-primary)" },
                         {tr.menu_support}
                     }
                 }
