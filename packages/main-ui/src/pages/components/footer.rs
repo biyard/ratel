@@ -1,4 +1,16 @@
-use dioxus_translate::translate;
+#![allow(non_snake_case)]
+use super::EmailInput;
+use dioxus::prelude::*;
+use dioxus_translate::*;
+
+#[component]
+pub fn Footer(lang: Language) -> Element {
+    let _tr: FooterTranslate = translate(&lang);
+
+    rsx! {
+        footer { class: "w-full items-start", EmailInput {} }
+    }
+}
 
 translate! {
     FooterTranslate;

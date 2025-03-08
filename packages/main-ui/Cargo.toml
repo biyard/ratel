@@ -37,6 +37,7 @@ by-types.workspace = true
 by-components.workspace = true
 wallet-adapter = "=1.0.4-beta"
 hex = "0.4.3"
+btracing.workspace = true
 
 [features]
 default = []
