@@ -1,3 +1,39 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@theme static {
+  /* Tailwindcss variables */
+  --spacing: 1px;
+  --color-black: #000203;
+  --color-primary: #FCB300;
+  --color-secondary: #777677;
+
+  /* Background colors */
+  --color-background: #1E1E1E;
+
+  /* Primary button colors */
+  --color-btn-p: #FCB300;
+  --color-btn-p-hover: #CA8F00;
+  --color-btn-p-text: black;
+  --color-btn-p-hover-text: black;
+  --color-btn-p-disabled: #777677;
+  --color-btn-p-disabled-text: #AEAEAE;
+
+  /* Secondary button colors */
+  --color-btn-s: white;
+  --color-btn-s-hover: #CCCCCC;
+  --color-btn-s-text: black;
+  --color-btn-s-hover-text: black;
+  --color-btn-s-disabled: #777677;
+  --color-btn-s-disabled-text: #AEAEAE;
+
+  /* App-specific colors */
+  --color-hover: #CA8F00;
+  --color-c-wg-30: #AEAEAE;
+  --color-c-wg-50: #777677;
+  --color-c-wg-70: #464646;
+  --color-c-cg-30: #AEB8B8;
+  --color-footer: #191919;
+  --color-copyright: #9095A1;
+}

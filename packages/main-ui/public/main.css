@@ -1,9 +1,16 @@
 @import url(https://cdn.jsdelivr.net/gh/moonspam/NanumSquare@2.0/nanumsquare.css);
 
 html, body {
-  background: #2C2E42;
-  font-family: NanumSquareAc, sans-serif !important;
+  font-family: Railway, sans-serif !important;
+  background-color: var(--color-background);
   color: white;
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+  scroll-behavior: smooth;
+}
+
+::-webkit-scrollbar {
+  display: none;
 }
 
 @keyframes growWidth {

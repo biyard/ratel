@@ -27,7 +27,7 @@ setup.tool:
 run: clean public/tailwind.css public/dep.js
 	$(BUILD_ENV) dx serve --fullstack $(DXFLAGS)
 
-build: public/tailwind.css public/dep.js
+build: clean public/tailwind.css public/dep.js
 	$(BUILD_ENV) dx build --release --fullstack --server-features lambda
 	cp -r $(WORKSPACE_ROOT)/target/dx/$(SERVICE)/release/web $(ARTIFACT_DIR)
 
@@ -37,9 +37,7 @@ public/dep.js:
 	cd $(WORKSPACE_ROOT)/deps/js && make build && cp ./dist/main.js $(PWD)/public/dep.js
 
 public/tailwind.css:
-	echo "Skip building tailwind.css due to css reading bug"
-	echo "" > ./public/tailwind.css
-	# tailwindcss -i ./public/input.css -o ./public/tailwind.css
+	tailwindcss -i ./public/input.css -o ./public/tailwind.css
 
 clean:
 	rm -rf public/tailwind.css public/dep.js
