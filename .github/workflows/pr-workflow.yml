@@ -130,7 +130,7 @@ jobs:
 
       - name: Install dioxus-cli
         run: |
-          cargo binstall dioxus-cli --version 0.6.1 --force
+          cargo binstall dioxus-cli --force
           cargo binstall toml-cli
 
       - name: Checking violate
