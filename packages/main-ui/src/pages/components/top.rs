@@ -3,7 +3,10 @@ use super::Socials;
 use dioxus::prelude::*;
 use dioxus_translate::*;
 
-use crate::components::icons::CharacterSymbol;
+use crate::components::{
+    button::{primary_button::PrimaryButton, secondary_botton::SecondaryButton},
+    icons::CharacterSymbol,
+};
 
 #[component]
 pub fn Top(
@@ -31,16 +34,10 @@ pub fn Top(
 
             div { class: "flex flex-row gap-20",
                 // TODO: implement downloading whitepaper
-                button { class: "bg-primary hover:bg-hover px-40 py-20 gap-10 flex items-center justify-center text-black font-bold text-base rounded-[10px]",
-                    {tr.btn_learn}
-                }
+                PrimaryButton { onclick: |_| {}, {tr.btn_learn} }
 
                 // TODO: implement Sign in
-                button {
-                    class: "bg-white hover:bg-secondary px-40 py-20 gap-10 flex items-center justify-center text-black font-bold text-base rounded-[10px]",
-                    onclick: |_| {},
-                    {tr.btn_learn}
-                }
+                SecondaryButton { onclick: |_| {}, {tr.btn_learn} }
             }
         }
     }
