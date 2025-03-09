@@ -1,8 +1,9 @@
 #![allow(non_snake_case)]
+use super::Socials;
 use dioxus::prelude::*;
 use dioxus_translate::*;
 
-use crate::components::icons::{Bsky, CharacterSymbol, Telegram, X};
+use crate::components::icons::CharacterSymbol;
 
 #[component]
 pub fn Top(
@@ -24,11 +25,8 @@ pub fn Top(
                 p { class: "text-[18px] text-center text-white font-normal text-[#AEAEAE] whitespace-pre-line",
                     {tr.description}
                 }
-                div { class: "flex flex-row gap-50",
-                    X {}
-                    Bsky {}
-                    Telegram {}
-                }
+
+                Socials { class: "flex flex-row gap-50" }
             }
 
             div { class: "flex flex-row gap-20",
