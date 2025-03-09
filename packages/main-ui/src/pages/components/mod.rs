@@ -1,23 +1,25 @@
 mod about;
 mod bottom_sheet;
 mod community;
-mod email_input;
 mod footer;
 mod header;
+mod input_with_button;
 mod mission_card;
 mod politician_stance;
 mod section_header;
+mod socials;
 mod support;
 mod top;
 
 pub use about::*;
 pub use bottom_sheet::*;
 pub use community::*;
-pub use email_input::*;
 pub use footer::*;
 pub use header::*;
+pub use input_with_button::*;
 pub use mission_card::*;
 pub use politician_stance::*;
 pub use section_header::*;
+pub use socials::*;
 pub use support::*;
 pub use top::*;

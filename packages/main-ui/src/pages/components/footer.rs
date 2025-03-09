@@ -1,31 +1,78 @@
 #![allow(non_snake_case)]
-use super::EmailInput;
+use super::InputWithButton;
+use super::Socials;
 use dioxus::prelude::*;
 use dioxus_translate::*;
 
 #[component]
 pub fn Footer(lang: Language) -> Element {
-    let _tr: FooterTranslate = translate(&lang);
+    let tr: FooterTranslate = translate(&lang);
 
     rsx! {
-        footer { class: "w-full items-start", EmailInput {} }
+        footer { class: "w-full flex flex-col items-center justify-center h-367 pt-80 pb-24 bg-footer gap-80",
+            div { class: "w-full flex max-w-604 flex-col items-center gap-80",
+
+                div { class: "w-full flex flex-col gap-50 items-center",
+                    div { class: "w-full flex flex-col items-start gap-5",
+                        p { class: "text-c-cg-30 font-bold text-base/28", {tr.email} }
+                        InputWithButton {
+                            placeholder: tr.email_placeholder,
+                            btn_name: tr.btn_subscribe,
+                            r#type: "email",
+                            onsubmit: |email| {
+                                btracing::info!("Subscribed by {}", email);
+                            },
+                        }
+                    }
+
+                    Socials { class: "flex flex-row gap-50" }
+                }
+
+                div { class: "flex flex-row gap-10 items-center text-copyright font-normal text-sm/22",
+                    span { {tr.copyright} }
+                    a { class: "hover:text-white", href: "/privacy", {tr.privacy} }
+                    a { class: "hover:text-white", href: "/terms", {tr.terms} }
+                    a { class: "hover:text-white", href: "/sitemap", {tr.sitemap} }
+                }
+            }
+        }
     }
 }
 
 translate! {
     FooterTranslate;
-
-    title_text: {
-        ko: "Mine the Future, Cast Your Predictions.",
-        en: "Mine the Future, Cast Your Predictions.",
+    email: {
+        ko: "이메일",
+        en: "Email",
     },
 
-    privacy_policy_button_text: {
-        ko: "개인 정보 보호 정책",
-        en: "Privacy Policy",
+    email_placeholder: {
+        ko: "🖂 이메일을 입력하세요",
+        en: "🖂 Input your mail",
     },
-    terms_of_service_button_text: {
-        ko: "서비스 약관",
-        en: "Terms of Service",
+
+    btn_subscribe: {
+        ko: "구독하기",
+        en: "Subscribe",
+    },
+
+    copyright: {
+        ko: "© 2025 Ratel Foundation.",
+        en: "© 2025 Ratel Foundation.",
+    }
+
+    privacy: {
+        ko: "• 개인 정보 보호 정책",
+        en: "• Privacy",
+    },
+
+    terms: {
+        ko: "• 서비스 약관",
+        en: "• Terms",
+    },
+
+    sitemap: {
+        ko: "• 사이트맵",
+        en: "• Sitemap",
     },
 }

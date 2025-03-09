@@ -88,12 +88,9 @@ pub fn RootLayout(lang: Language) -> Element {
             }
             div { class: "w-full overflow-x-hidden scroll-smooth flex flex-col items-center justify-center",
                 Outlet::<Route> {}
-            }
 
-            div { class: "max-w-[1440px] w-full",
                 Footer { lang }
             }
-
         }
         if selected() != 5 {
             BottomSheet {
