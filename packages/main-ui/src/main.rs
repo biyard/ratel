@@ -26,17 +26,9 @@ fn app() -> Element {
     // PopupService::init();
 
     let css = include_str!("../public/input.css");
+    let env = config::get().env;
 
     rsx! {
-        document::Title { "Ratel" }
-        document::Meta {
-            name: "title",
-            content: "Driving Better Crypto Policies for South Korea's Ecosystem",
-        }
-        document::Meta {
-            name: "description",
-            content: "A platform empowering South Korea's crypto ecosystem by encouraging politicians to create supportive policies. Track their crypto stances, vote on legislation, propose DAO-driven improvements, and shape a thriving future for the industry and democracy.",
-        }
         document::Meta {
             name: "viewport",
             content: "width=device-width, initial-scale=1.0",
@@ -60,17 +52,19 @@ fn app() -> Element {
             sizes: "180x180",
         }
 
-        document::Link { rel: "stylesheet", href: asset!("/public/main.css") }
-        document::Link { rel: "stylesheet", href: asset!("/public/tailwind.css") }
+        document::Link { rel: "preload", href: asset!("/public/main.css") }
+        document::Link { rel: "preload", href: asset!("/public/tailwind.css") }
 
         document::Link {
-            rel: "stylesheet",
+            rel: "preload",
             href: "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.1/css/all.min.css",
         }
-        document::Script { src: "https://unpkg.com/@tailwindcss/browser@4.0.12/dist/index.global.js" }
-        document::Style { r#type: "text/tailwindcss", {css} }
+        if env == "local" {
+            document::Script { src: "https://unpkg.com/@tailwindcss/browser@4.0.12/dist/index.global.js" }
+            document::Style { r#type: "text/tailwindcss", {css} }
+        }
 
-        document::Script { r#type: "module", src: asset!("/public/dep.js") }
+        document::Script { r#type: "module", src: asset!("/public/dep.js"), defer: true }
 
         Router::<Route> {}
     }
