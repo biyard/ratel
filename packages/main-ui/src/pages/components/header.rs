@@ -8,7 +8,7 @@ pub fn Header(lang: Language, selected: i32) -> Element {
     let tr: HeaderTranslate = translate(&lang);
 
     rsx! {
-        div { class: "fixed top-0 left-0 w-screen h-80 overflow-hidden flex items-center justify-center z-100",
+        div { class: "fixed top-0 left-0 backdrop-blur-[20px] w-screen h-80 overflow-hidden flex items-center justify-center z-100",
             div { class: "w-full flex flex-row items-center justify-between gap-59 max-w-[1176px] mx-10",
                 a { href: "#top", Logo {} }
 
