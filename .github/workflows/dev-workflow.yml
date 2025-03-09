@@ -180,7 +180,7 @@ jobs:
           VERSIONS: v1
           V1_ENDPOINT: api.dev.ratel.foundation
         run: |
-          npm i -g aws-cdk tailwindcss
+          npm i -g aws-cdk @tailwindcss/cli
           make deploy-web-if-needed
 
   main-api:
