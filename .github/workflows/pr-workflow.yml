@@ -149,7 +149,7 @@ jobs:
           SERVICE: main-ui
           API_PREFIX: /api
         run: |
-          npm i -g tailwindcss
+          npm i -g @tailwindcss/cli
           make build
 
   main-api:
