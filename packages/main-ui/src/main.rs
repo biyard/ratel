@@ -7,10 +7,10 @@ pub mod theme;
 pub mod utils;
 
 use dioxus::prelude::*;
-use dioxus_popup::PopupService;
+// use dioxus_popup::PopupService;
 use route::Route;
-use services::user_service::UserService;
-use theme::Theme;
+// use services::user_service::UserService;
+// use theme::Theme;
 
 fn main() {
     let conf = config::get();
@@ -22,33 +22,50 @@ fn main() {
 }
 
 fn app() -> Element {
-    Theme::init();
-    UserService::init();
-    PopupService::init();
+    // Theme::init();
+    // UserService::init();
+    // PopupService::init();
+
+    let css = include_str!("../public/input.css");
+    let env = config::get().env;
 
     rsx! {
-        document::Title { "Ratel" }
-        document::Meta {
-            name: "title",
-            content: "Driving Better Crypto Policies for South Korea's Ecosystem",
-        }
-        document::Meta {
-            name: "description",
-            content: "A platform empowering South Korea's crypto ecosystem by encouraging politicians to create supportive policies. Track their crypto stances, vote on legislation, propose DAO-driven improvements, and shape a thriving future for the industry and democracy.",
-        }
         document::Meta {
             name: "viewport",
             content: "width=device-width, initial-scale=1.0",
         }
-        document::Link { id: "favicon", rel: "icon", href: asset!("/public/favicon.ico") }
-        document::Link { rel: "stylesheet", href: asset!("/public/main.css") }
-        document::Link { rel: "stylesheet", href: asset!("/public/tailwind.css") }
+
         document::Link {
-            rel: "stylesheet",
+            href: asset!("/public/logos/favicon-96x96.png"),
+            r#type: "image/png",
+            rel: "icon",
+            sizes: "96x96",
+        }
+        document::Link {
+            href: asset!("/public/logos/favicon.svg"),
+            r#type: "image/svg+xml",
+            rel: "icon",
+        }
+        document::Link { href: asset!("/public/logos/favicon.ico"), rel: "shortcut icon" }
+        document::Link {
+            href: asset!("/public/logos/apple-touch-icon.png"),
+            rel: "apple-touch-icon",
+            sizes: "180x180",
+        }
+
+        document::Link { rel: "preload", href: asset!("/public/main.css") }
+        document::Link { rel: "preload", href: asset!("/public/tailwind.css") }
+
+        document::Link {
+            rel: "preload",
             href: "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.1/css/all.min.css",
         }
-        document::Script { src: "https://cdn.tailwindcss.com/3.4.16" }
-        document::Script { r#type: "module", src: asset!("/public/dep.js") }
+        if env == "local" {
+            document::Script { src: "https://unpkg.com/@tailwindcss/browser@4.0.12/dist/index.global.js" }
+            document::Style { r#type: "text/tailwindcss", {css} }
+        }
+
+        document::Script { r#type: "module", src: asset!("/public/dep.js"), defer: true }
 
         Router::<Route> {}
     }
