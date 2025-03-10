@@ -29,11 +29,6 @@ fn app() -> Element {
     let env = config::get().env;
 
     rsx! {
-        document::Meta {
-            name: "viewport",
-            content: "width=device-width, initial-scale=1.0",
-        }
-
         document::Link {
             href: asset!("/public/logos/favicon-96x96.png"),
             r#type: "image/png",
@@ -52,17 +47,12 @@ fn app() -> Element {
             sizes: "180x180",
         }
 
-        document::Link { rel: "preload", href: asset!("/public/main.css") }
-        document::Link { rel: "preload", href: asset!("/public/tailwind.css") }
+        document::Link { href: asset!("/public/main.css") }
+        document::Link { href: asset!("/public/tailwind.css") }
 
-        document::Link {
-            rel: "preload",
-            href: "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.1/css/all.min.css",
-        }
-        if env == "local" {
-            document::Script { src: "https://unpkg.com/@tailwindcss/browser@4.0.12/dist/index.global.js" }
-            document::Style { r#type: "text/tailwindcss", {css} }
-        }
+        document::Link { href: "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.1/css/all.min.css" }
+        document::Script { src: "https://unpkg.com/@tailwindcss/browser@4.0.12/dist/index.global.js" }
+        document::Style { r#type: "text/tailwindcss", {css} }
 
         document::Script { r#type: "module", src: asset!("/public/dep.js"), defer: true }
 
