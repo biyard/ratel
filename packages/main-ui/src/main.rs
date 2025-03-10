@@ -28,7 +28,6 @@ fn app() -> Element {
     PopupService::init();
 
     let css = include_str!("../public/input.css");
-    let env = config::get().env;
 
     rsx! {
         document::Link {
@@ -53,6 +52,7 @@ fn app() -> Element {
         document::Link { href: asset!("/public/tailwind.css") }
 
         document::Link { href: "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.1/css/all.min.css" }
+
         document::Script { src: "https://unpkg.com/@tailwindcss/browser@4.0.12/dist/index.global.js" }
         document::Style { r#type: "text/tailwindcss", {css} }
 
