@@ -297,12 +297,10 @@ impl UserService {
                         if let Some(phantom) = self.phantom.write().as_mut() {
                             phantom.remove_signer();
                         }
-                        rest_api::remove_signer();
                     }
-                    _ => {
-                        rest_api::remove_signer();
-                    }
+                    _ => {}
                 };
+                rest_api::remove_signer();
                 return Err(e);
             }
         };
