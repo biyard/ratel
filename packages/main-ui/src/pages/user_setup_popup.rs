@@ -21,7 +21,7 @@ pub fn UserSetupPopup(
     let mut valid = use_signal(|| true);
     let mut nickname = use_signal(|| nickname.to_string());
     let mut agreed = use_signal(|| false);
-    let user_service: UserService = use_context();
+    let mut user_service: UserService = use_context();
     let theme: Theme = use_context();
     let theme = theme.get_data();
     let btn_color = use_memo(move || {

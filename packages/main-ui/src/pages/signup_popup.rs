@@ -24,7 +24,8 @@ pub fn SignupPopup(
                 class: "w-full flex flex-row my-[10px] p-[8px] bg-[#6D7AFF] rounded-[8px] justify-start items-center gap-[17px] cursor-pointer hover:bg-[#5C6BFF]",
                 onclick: move |_| async move {
                     tracing::debug!("Signup with Google clicked");
-                    match user_service.google_login().await {
+                    user_service.set_signer_type("google");
+                    match user_service.login().await {
                         UserEvent::Signup(principal, email, nickname, profile_url) => {
                             popup.open(rsx! {
                                 UserSetupPopup {
@@ -58,11 +59,18 @@ pub fn SignupPopup(
                     }
                 }
             }
+
             div {
                 class: "w-full flex flex-row my-[10px] p-[8px] bg-[#AB9FF1] rounded-[8px] justify-start items-center gap-[17px] cursor-pointer hover:bg-[#9A8EFF]",
+                style: if user_service.is_phantom_installed() { "background: #AB9FF1; cursor: pointer;" } else { "background: #9F9F9F; cursor: not-allowed;" },
                 onclick: move |_| async move {
+                    if !user_service.is_phantom_installed() {
+                        tracing::error!("Phantom wallet not installed");
+                        return;
+                    }
                     tracing::debug!("Signup with Phantom clicked");
-                    match user_service.phantom_login().await {
+                    user_service.set_signer_type("phantom");
+                    match user_service.login().await {
                         UserEvent::Signup(principal, email, nickname, profile_url) => {
                             popup.open(rsx! {
                                 UserSetupPopup {
@@ -92,7 +100,11 @@ pub fn SignupPopup(
                         "{tr.continue_with_phantom_wallet}"
                     }
                     span { class: "text-white text-[14px] leading-[13px] fond-regular",
-                        "{tr.connect_wallet}"
+                        if user_service.is_phantom_installed() {
+                            "{tr.connect_wallet}"
+                        } else {
+                            "{tr.need_wallet}"
+                        }
                     }
                 }
             }

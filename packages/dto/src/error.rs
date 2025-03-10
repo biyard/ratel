@@ -36,6 +36,7 @@ pub enum ServiceError {
     OpenApiResponseError(String),
     BadRequest,
     JsonDeserializeError(String),
+    WalletNotFound,
     WalletError(String),
 }
 
