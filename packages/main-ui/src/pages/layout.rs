@@ -1,6 +1,6 @@
 #![allow(non_snake_case)]
 use dioxus::prelude::*;
-// use dioxus_popup::PopupZone;
+use dioxus_popup::PopupZone;
 use dioxus_translate::*;
 
 use super::components::*;
@@ -68,6 +68,10 @@ pub fn RootLayout(lang: Language) -> Element {
     });
 
     rsx! {
+        PopupZone {
+            background_color: "rgba(26, 26, 26, 1)",
+            border_class: "shadow-[#FFCE4740] shadow-2xl", // FIXME: need shadow size to 100px
+        }
         MetaSeoTemplate {
             lang,
             title: "Ratel",

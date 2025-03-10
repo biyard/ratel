@@ -1,12 +1,12 @@
 #![allow(non_snake_case)]
-use super::Socials;
-use dioxus::prelude::*;
-use dioxus_translate::*;
-
+use super::{SignupPopup, Socials};
 use crate::components::{
     button::{primary_button::PrimaryButton, secondary_botton::SecondaryButton},
     icons::CharacterSymbol,
 };
+use dioxus::prelude::*;
+use dioxus_popup::PopupService;
+use dioxus_translate::*;
 
 #[component]
 pub fn Top(
@@ -14,7 +14,7 @@ pub fn Top(
     #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
 ) -> Element {
     let tr: TopTranslate = translate(&lang);
-
+    let mut popup: PopupService = use_context();
     rsx! {
         div {
             id: "top",
@@ -25,7 +25,7 @@ pub fn Top(
                 h1 { class: "text-[48px] text-center font-bold leading-[56px] text-white whitespace-pre-line",
                     {tr.slogan}
                 }
-                p { class: "text-[18px] text-center text-white font-normal text-[#AEAEAE] whitespace-pre-line",
+                p { class: "text-[18px] text-center font-normal text-[#AEAEAE] whitespace-pre-line",
                     {tr.description}
                 }
 
@@ -37,7 +37,15 @@ pub fn Top(
                 PrimaryButton { onclick: |_| {}, {tr.btn_learn} }
 
                 // TODO: implement Sign in
-                SecondaryButton { onclick: |_| {}, {tr.btn_learn} }
+                SecondaryButton {
+                    onclick: move |_| {
+                        tracing::debug!("Learn more clicked");
+                        popup.open(rsx! {
+                            SignupPopup { class: "w-[460px]", lang: lang.clone() }
+                        });
+                    },
+                    {tr.btn_learn}
+                }
             }
         }
     }
@@ -63,5 +71,4 @@ translate! {
         ko: "지금 참여하기",
         en: "JOIN THE MOVEMENT",
     },
-
 }

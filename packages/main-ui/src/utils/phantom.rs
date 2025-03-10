@@ -141,6 +141,10 @@ impl PhantomAuth {
         self.cached_signiture.as_ref()
     }
 
+    pub fn is_signed(&self) -> bool {
+        self.cached_signiture.is_some()
+    }
+
     // pub fn get_deeplink(&self, method: &PhantomDeeplink) -> String {
     //     let base_url = "https://phantom.app/ul/v1";
 
