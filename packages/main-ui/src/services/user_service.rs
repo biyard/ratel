@@ -405,6 +405,11 @@ impl UserService {
                         tracing::debug!("UserService::phantom_wallet: connected");
                         let public_key_str = phantom.get_public_key_string();
 
+                        if !phantom.is_signed() {
+                            tracing::error!("UserService::phantom_wallet: not signed");
+                            return UserEvent::Logout;
+                        }
+
                         match cli.by_principal(public_key_str.clone()).await {
                             Ok(v) => {
                                 tracing::debug!("UserService::phantom_wallet: login");
@@ -429,6 +434,7 @@ impl UserService {
                     }
                     Err(e) => {
                         tracing::error!("UserService::phantom_wallet: error={:?}", e);
+                        return UserEvent::Logout;
                     }
                 };
             }

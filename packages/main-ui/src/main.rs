@@ -8,10 +8,10 @@ pub mod theme;
 pub mod utils;
 
 use dioxus::prelude::*;
-// use dioxus_popup::PopupService;
+use dioxus_popup::PopupService;
 use route::Route;
-// use services::user_service::UserService;
-// use theme::Theme;
+use services::user_service::UserService;
+use theme::Theme;
 
 fn main() {
     let conf = config::get();
@@ -23,9 +23,9 @@ fn main() {
 }
 
 fn app() -> Element {
-    // Theme::init();
-    // UserService::init();
-    // PopupService::init();
+    Theme::init();
+    UserService::init();
+    PopupService::init();
 
     let css = include_str!("../public/input.css");
     let env = config::get().env;
