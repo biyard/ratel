@@ -20,8 +20,12 @@ mod logos {
     pub mod metamask;
     pub mod phantom;
 }
+mod bsky;
+mod telegram;
+mod x;
 
 pub use arrows::*;
+pub use bsky::*;
 pub use chat::*;
 pub use clock::*;
 pub use close::*;
@@ -36,5 +40,7 @@ pub use pros::*;
 pub use search::*;
 pub use slide_ball::*;
 pub use sort::*;
+pub use telegram::*;
 pub use tooltip::*;
 pub use votes::*;
+pub use x::*;
