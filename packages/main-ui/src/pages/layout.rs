@@ -74,8 +74,6 @@ pub fn RootLayout(lang: Language) -> Element {
             keywords: "ratel, crypto, policy, south korea, ecosystem, politicians, supportive policies, track, crypto stances, vote, legislation, propose, DAO-driven improvements, shape, thriving future, industry, democracy",
             author: "Ratel Foundation",
             url: "https://ratel.foundation",
-            canonical: "https://ratel.foundation",
-            logo_url: asset!("/public/logos/favicon-96x96.png"),
         }
         div { class: "w-full h-full bg-background text-white",
             Header { lang, selected: selected() }
