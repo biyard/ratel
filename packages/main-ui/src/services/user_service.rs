@@ -241,129 +241,9 @@ impl UserService {
 
     pub async fn login(&mut self) -> UserEvent {
         match (self.signer)() {
-            WalletSigner::Firebase => {
-                tracing::debug!("UserService::login: Firebase");
-                let (evt, principal, email, name, profile_url) =
-                    self.request_to_firebase().await.unwrap();
-                match evt {
-                    google_wallet::WalletEvent::Signup => {
-                        tracing::debug!(
-                            "UserService::Signup: email={} name={} profile_url={}",
-                            email,
-                            name,
-                            profile_url
-                        );
-
-                        return UserEvent::Signup(principal, email, name, profile_url);
-                    }
-                    google_wallet::WalletEvent::Login => {
-                        tracing::debug!(
-                            "UserService::Signup: email={} name={} profile_url={}",
-                            email,
-                            name,
-                            profile_url
-                        );
-                        rest_api::set_signer(Box::new(*self));
-                        let cli = (self.cli)();
-
-                        let user: User = match cli.check_email(email.clone()).await {
-                            // Login
-                            Ok(v) => v,
-                            Err(e) => {
-                                // Signup
-                                rest_api::remove_signer();
-
-                                match e {
-                                    ServiceError::NotFound => {
-                                        return UserEvent::Signup(
-                                            principal,
-                                            email,
-                                            name,
-                                            profile_url,
-                                        );
-                                    }
-                                    e => {
-                                        tracing::error!("UserService::login: error={:?}", e);
-                                        return UserEvent::Logout;
-                                    }
-                                }
-                            }
-                        };
-
-                        self.user_info.set(UserInfo::new(
-                            user.principal,
-                            user.email,
-                            user.nickname,
-                            user.profile_url,
-                        ));
-
-                        return UserEvent::Login;
-                    }
-                    google_wallet::WalletEvent::Logout => {
-                        tracing::debug!("UserService::login: SignOut");
-                    }
-                }
-
-                return UserEvent::Logout;
-            }
-            WalletSigner::Phantom => {
-                tracing::debug!("UserService::phantom_wallet login");
-
-                let cli = (self.cli)();
-
-                if self.phantom.read().is_none() {
-                    tracing::error!("UserService::phantom_wallet: phantom is none");
-                    return UserEvent::Logout;
-                }
-
-                let mut signal = self.phantom.write();
-                let phantom = signal.as_mut().unwrap();
-
-                match phantom.detect_platform() {
-                    Platform::Desktop => {
-                        tracing::debug!("UserService::phantom_wallet: desktop");
-
-                        match phantom.connect_desktop().await {
-                            Ok(_) => {
-                                tracing::debug!("UserService::phantom_wallet: connected");
-                                let public_key_str = phantom.get_public_key_string();
-
-                                match cli.by_principal(public_key_str.clone()).await {
-                                    Ok(v) => {
-                                        tracing::debug!("UserService::phantom_wallet: login");
-                                        self.user_info.set(UserInfo::new(
-                                            v.principal,
-                                            v.email,
-                                            v.nickname,
-                                            v.profile_url,
-                                        ));
-                                        return UserEvent::Login;
-                                    }
-                                    Err(_) => {
-                                        tracing::debug!("UserService::phantom_wallet: signup");
-                                        return UserEvent::Signup(
-                                            public_key_str,
-                                            "".to_string(),
-                                            "".to_string(),
-                                            "".to_string(),
-                                        );
-                                    }
-                                }
-                            }
-                            Err(e) => {
-                                tracing::error!("UserService::phantom_wallet: error={:?}", e);
-                            }
-                        };
-                    }
-                    Platform::Mobile => {
-                        tracing::debug!("UserService::phantom_wallet: mobile");
-                    }
-                };
-                UserEvent::Logout
-            }
-            WalletSigner::None => {
-                return UserEvent::Logout;
-            }
+            WalletSigner::Firebase => self.login_with_firebase().await,
+            WalletSigner::Phantom => self.login_with_phantom().await,
+            WalletSigner::None => UserEvent::Logout,
         }
     }
 
@@ -437,6 +317,128 @@ impl UserService {
             .as_ref()
             .map(|v| v.is_installed())
             .unwrap_or(false)
+    }
+
+    pub async fn login_with_firebase(&mut self) -> UserEvent {
+        tracing::debug!("UserService::login: Firebase");
+        let (evt, principal, email, name, profile_url) = match self.request_to_firebase().await {
+            Ok(v) => v,
+            Err(e) => {
+                tracing::error!("UserService::login: error={:?}", e);
+                return UserEvent::Logout;
+            }
+        };
+        match evt {
+            google_wallet::WalletEvent::Signup => {
+                tracing::debug!(
+                    "UserService::Signup: email={} name={} profile_url={}",
+                    email,
+                    name,
+                    profile_url
+                );
+
+                return UserEvent::Signup(principal, email, name, profile_url);
+            }
+            google_wallet::WalletEvent::Login => {
+                tracing::debug!(
+                    "UserService::Signup: email={} name={} profile_url={}",
+                    email,
+                    name,
+                    profile_url
+                );
+                rest_api::set_signer(Box::new(*self));
+                let cli = (self.cli)();
+
+                let user: User = match cli.check_email(email.clone()).await {
+                    // Login
+                    Ok(v) => v,
+                    Err(e) => {
+                        // Signup
+                        rest_api::remove_signer();
+
+                        match e {
+                            ServiceError::NotFound => {
+                                return UserEvent::Signup(principal, email, name, profile_url);
+                            }
+                            e => {
+                                tracing::error!("UserService::login: error={:?}", e);
+                                return UserEvent::Logout;
+                            }
+                        }
+                    }
+                };
+
+                self.user_info.set(UserInfo::new(
+                    user.principal,
+                    user.email,
+                    user.nickname,
+                    user.profile_url,
+                ));
+
+                return UserEvent::Login;
+            }
+            google_wallet::WalletEvent::Logout => {
+                tracing::debug!("UserService::login: SignOut");
+            }
+        }
+
+        return UserEvent::Logout;
+    }
+
+    pub async fn login_with_phantom(&mut self) -> UserEvent {
+        tracing::debug!("UserService::phantom_wallet login");
+
+        let cli = (self.cli)();
+
+        if self.phantom.read().is_none() {
+            tracing::error!("UserService::phantom_wallet: phantom is none");
+            return UserEvent::Logout;
+        }
+
+        let mut signal = self.phantom.write();
+        let phantom = signal.as_mut().unwrap();
+
+        match phantom.detect_platform() {
+            Platform::Desktop => {
+                tracing::debug!("UserService::phantom_wallet: desktop");
+
+                match phantom.connect_desktop().await {
+                    Ok(_) => {
+                        tracing::debug!("UserService::phantom_wallet: connected");
+                        let public_key_str = phantom.get_public_key_string();
+
+                        match cli.by_principal(public_key_str.clone()).await {
+                            Ok(v) => {
+                                tracing::debug!("UserService::phantom_wallet: login");
+                                self.user_info.set(UserInfo::new(
+                                    v.principal,
+                                    v.email,
+                                    v.nickname,
+                                    v.profile_url,
+                                ));
+                                return UserEvent::Login;
+                            }
+                            Err(_) => {
+                                tracing::debug!("UserService::phantom_wallet: signup");
+                                return UserEvent::Signup(
+                                    public_key_str,
+                                    "".to_string(),
+                                    "".to_string(),
+                                    "".to_string(),
+                                );
+                            }
+                        }
+                    }
+                    Err(e) => {
+                        tracing::error!("UserService::phantom_wallet: error={:?}", e);
+                    }
+                };
+            }
+            Platform::Mobile => {
+                tracing::debug!("UserService::phantom_wallet: mobile");
+            }
+        };
+        UserEvent::Logout
     }
 }
 
