@@ -294,9 +294,9 @@ impl UserService {
                 tracing::error!("UserService::signup: error={:?}", e);
                 match (self.signer)() {
                     WalletSigner::Phantom => {
-                        let mut signal = self.phantom.write();
-                        let phantom = signal.as_mut().unwrap();
-                        phantom.remove_signer();
+                        if let Some(phantom) = self.phantom.write().as_mut() {
+                            phantom.remove_signer();
+                        }
                         rest_api::remove_signer();
                     }
                     _ => {
