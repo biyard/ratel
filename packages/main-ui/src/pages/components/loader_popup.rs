@@ -12,7 +12,6 @@ pub fn LoaderPopup(
     lang: Language,
     logo: Element,
     logo_origin: Element,
-    name: String,
     msg: String,
 ) -> Element {
     let tr = translate::<LoaderPopupTranslate>(&lang);
@@ -21,7 +20,6 @@ pub fn LoaderPopup(
 
     use_effect(move || {
         let logo = logo_origin.clone();
-        let name = name.clone();
         let msg = msg.clone();
         spawn(async move {
             match user_service.login().await {
@@ -46,7 +44,6 @@ pub fn LoaderPopup(
                         .open(rsx! {
                             LoginFailurePopup {
                                 class: "w-[400px] mx-[5px]",
-                                name,
                                 logo,
                                 msg,
                                 lang,
