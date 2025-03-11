@@ -24,7 +24,7 @@ pub fn CongratulationPopup(
                 }
 
                 div { class: "leading-[24px] text-[16px] font-regular text-white flex flex-row items-center justify-center text-center tracking-[0.005em]",
-                    pre { "{tr.congratulation}" }
+                    p { class: "white-space-pre-line", "{tr.congratulation}" }
                 }
 
                 button {

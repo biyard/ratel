@@ -23,12 +23,10 @@ pub fn LoginFailurePopup(
     let message = format!("{} {}", tr.failure_message, name);
     rsx! {
         div { id, class,
-            div { class: "justify-start text-white font-bold text-[20px] leading-[24px]",
-                "{tr.title}"
-            }
-            div { class: "flex flex-col gap-[10px] mt-[35px]",
+            div { class: "justify-start text-white font-bold text-xl/24", "{tr.title}" }
+            div { class: "flex flex-col gap-10 mt-35",
                 div {
-                    class: "w-full flex flex-row pl-[20px] py-[22px] bg-[#000203] border-[1px] rounded-[10px] justify-start items-center gap-[17px] cursor-pointer border-[#DB2780]",
+                    class: "w-full flex flex-row pl-20 py-22 bg-color-black border-[1px] rounded-[10px] justify-start items-center gap-[17px] cursor-pointer border-c-p-50",
                     onclick: move |_| async move {
                         match user_service.login().await {
                             UserEvent::Signup(principal, email, nickname, profile_url) => {
@@ -52,43 +50,38 @@ pub fn LoginFailurePopup(
                         };
                     },
                     {logo}
-                    div { class: "flex flex-col gap-[3px]",
-                        span { class: "text-white text-[16px] leading-[19px] font-semibold",
-                            "{msg}"
-                        }
+                    div { class: "flex flex-col gap-3",
+                        span { class: "text-white text-base/19 font-semibold", "{msg}" }
                     }
                 }
 
-                div { class: "w-full flex flex-row pl-[20px] py-[10px] bg-[#DB27801A] rounded-[10px] justify-start items-center gap-[10px]",
+                div { class: "w-full flex flex-row pl-[20px] py-[10px] bg-c-p-50-10 rounded-[10px] justify-start items-center gap-[10px]",
                     icons::AlertCircle { color: "#DB2780" }
-                    div { class: "flex flex-col gap-[3px]",
-                        span { class: "text-[#DB2780] text-[15px] leading-[24px] font-semibold tracking-wider",
+                    div { class: "flex flex-col gap-3",
+                        span { class: "text-c-p-50 text-[15px]/24 font-semibold tracking-wider",
                             "{message}"
                         }
-                        span { class: "text-[#DB2780] text-[15px] leading-[24px] font-semibold tracking-wider",
+                        span { class: "text-c-p-50 text-[15px]/24 font-semibold tracking-wider",
                             "{tr.try_again}"
                         }
                     }
                 }
             }
-            div { class: "flex flex-row gap-[10px] mt-[35px] justify-center",
+            // TODO: applying policy and terms.
+            div { class: "flex flex-row gap-10 mt-35 justify-center",
                 button {
                     class: "cursor-pointer",
                     onclick: move |_| {
                         tracing::debug!("Privacy policy clicked");
                     },
-                    span { class: "text-[#C7C7C7] text-[12px] leading-[14px] font-medium",
-                        "{tr.privacy_policy}"
-                    }
+                    span { class: "text-neutral-400 text-xs/14 font-medium", "{tr.privacy_policy}" }
                 }
                 button {
                     class: "cursor-pointer",
                     onclick: move |_| {
                         tracing::debug!("Privacy policy clicked");
                     },
-                    span { class: "text-[#C7C7C7] text-[12px] leading-[14px] font-medium",
-                        "{tr.term_of_service}"
-                    }
+                    span { class: "text-neutral-400 text-xs/14 font-medium", "{tr.term_of_service}" }
                 }
             }
         }
