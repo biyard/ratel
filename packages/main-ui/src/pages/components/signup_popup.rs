@@ -16,12 +16,10 @@ pub fn SignupPopup(
     let mut popup: PopupService = use_context();
     rsx! {
         div { id, class,
-            div { class: "justify-start text-white font-bold text-[20px] leading-[24px]",
-                "{tr.title}"
-            }
-            div { class: "flex flex-col gap-[10px] mt-[35px]",
+            div { class: "justify-start text-white font-bold text-xl/24", "{tr.title}" }
+            div { class: "flex flex-col gap-10 mt-35",
                 div {
-                    class: "w-full flex flex-row pl-[20px] py-[22px] bg-[#000203] border-[1px] rounded-[10px] justify-start items-center gap-[17px] cursor-pointer hover:border-white",
+                    class: "w-full flex flex-row pl-20 py-22 bg-color-black border-[1px] rounded-[10px] justify-start items-center gap-[17px] cursor-pointer hover:border-white",
                     onclick: move |_| async move {
                         tracing::debug!("Signup with Google clicked");
                         user_service.set_signer_type("google");
@@ -41,15 +39,15 @@ pub fn SignupPopup(
                         });
                     },
                     icons::Google {}
-                    div { class: "flex flex-col gap-[3px]",
-                        span { class: "text-white text-[16px] leading-[19px] font-semibold",
+                    div { class: "flex flex-col gap-3",
+                        span { class: "text-white text-base/19 font-semibold",
                             "{tr.continue_with_google}"
                         }
                     }
                 }
 
                 div {
-                    class: "w-full flex flex-row pl-[20px] py-[22px] bg-[#000203] border-[1px] rounded-[10px] justify-start items-center gap-[17px] cursor-pointer hover:border-white",
+                    class: "w-full flex flex-row pl-20 py-22 bg-color-black border-[1px] rounded-[10px] justify-start items-center gap-[17px] cursor-pointer hover:border-white",
                     onclick: move |_| {
                         tracing::debug!("signup with wallet clicked");
                         popup.open(rsx! {
@@ -57,31 +55,26 @@ pub fn SignupPopup(
                         }).with_id("wallet_popup");
                     },
                     icons::Wallet {}
-                    div { class: "flex flex-col gap-[3px]",
-                        span { class: "text-white text-[16px] leading-[19px] font-semibold",
-                            "{tr.connect_wallet}"
-                        }
+                    div { class: "flex flex-col gap-3",
+                        span { class: "text-white text-base/19 font-semibold", "{tr.connect_wallet}" }
                     }
                 }
             }
-            div { class: "flex flex-row gap-[10px] mt-[35px] justify-center",
+            // TODO: applying policy and terms.
+            div { class: "flex flex-row gap-10 mt-35 justify-center",
                 button {
                     class: "cursor-pointer",
                     onclick: move |_| {
                         tracing::debug!("Privacy policy clicked");
                     },
-                    span { class: "text-[#C7C7C7] text-[12px] leading-[14px] font-medium",
-                        "{tr.privacy_policy}"
-                    }
+                    span { class: "text-neutral-400 text-xs/14 font-medium", "{tr.privacy_policy}" }
                 }
                 button {
                     class: "cursor-pointer",
                     onclick: move |_| {
                         tracing::debug!("Privacy policy clicked");
                     },
-                    span { class: "text-[#C7C7C7] text-[12px] leading-[14px] font-medium",
-                        "{tr.term_of_service}"
-                    }
+                    span { class: "text-neutral-400 text-xs/14 font-medium", "{tr.term_of_service}" }
                 }
             }
         }

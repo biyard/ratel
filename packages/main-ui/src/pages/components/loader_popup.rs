@@ -60,36 +60,32 @@ pub fn LoaderPopup(
 
     rsx! {
         div { id, class,
-            div { class: "justify-start text-white font-bold text-[20px] leading-[24px]",
-                "{tr.title}"
-            }
+            div { class: "justify-start text-white font-bold text-xl/24", "{tr.title}" }
             div { class: "w-full flex  justify-center items-center mt-[35px]",
-                // TODO: Feat loading circle
-                div { class: "flex w-[64px] h-[64px] bg-white rounded-full justify-center items-center",
+                // TODO: border-t rounded
+                div { class: "border-6 border-t-6 w-[82px] h-[82px] border-primary border-t-background rounded-full animate-spin" }
+                div { class: "absolute w-[64px] h-[64px] bg-white rounded-full justify-center items-center",
                     {logo}
                 }
             }
             div { class: "justify-center text-center text-white font-bold text-[16px] leading-[24px] mt-[35px]",
                 "{tr.message}"
             }
-            div { class: "flex flex-row gap-[10px] mt-[35px] justify-center",
+            // TODO: applying policy and terms.
+            div { class: "flex flex-row gap-10 mt-35 justify-center",
                 button {
                     class: "cursor-pointer",
                     onclick: move |_| {
                         tracing::debug!("Privacy policy clicked");
                     },
-                    span { class: "text-[#C7C7C7] text-[12px] leading-[14px] font-medium",
-                        "{tr.privacy_policy}"
-                    }
+                    span { class: "text-neutral-400 text-xs/14 font-medium", "{tr.privacy_policy}" }
                 }
                 button {
                     class: "cursor-pointer",
                     onclick: move |_| {
                         tracing::debug!("Privacy policy clicked");
                     },
-                    span { class: "text-[#C7C7C7] text-[12px] leading-[14px] font-medium",
-                        "{tr.term_of_service}"
-                    }
+                    span { class: "text-neutral-400 text-xs/14 font-medium", "{tr.term_of_service}" }
                 }
             }
         }
