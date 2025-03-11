@@ -4,7 +4,7 @@ use dioxus_popup::PopupService;
 use dioxus_translate::*;
 use dto::ServiceError;
 
-use super::{congratulation_popup::CongratulationPopup, i18n::UserSetupPopupTranslate};
+use super::congratulation_popup::CongratulationPopup;
 use crate::{components::checkbox::Checkbox, services::user_service::UserService, theme::Theme};
 
 #[component]
@@ -140,4 +140,33 @@ pub fn UserSetupPopup(
             }
         }
     }
+}
+
+translate! {
+    UserSetupPopupTranslate;
+
+    welcome: {
+        ko: "환영합니다!",
+        en: "Welcome!",
+    },
+
+    enter_nickname: {
+        ko: "닉네임을 입력해주세요",
+        en: "Please enter your nickname",
+    },
+
+    special_characters: {
+        ko: "특수문자는 입력할 수 없습니다.",
+        en: "Special characters are not allowed.",
+    },
+
+    agree_email: {
+        ko: "[필수]이메일 및 계정주소 수집에 동의합니다.",
+        en: "[Required]I agree to collect email and account address.",
+    },
+
+    next: {
+        ko: "다음",
+        en: "Next",
+    },
 }

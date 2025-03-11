@@ -146,6 +146,14 @@ impl UserService {
         };
     }
 
+    pub fn get_signer_type(&self) -> String {
+        match (self.signer)() {
+            WalletSigner::Firebase => "google".to_string(),
+            WalletSigner::Phantom => "phantom wallet".to_string(),
+            WalletSigner::None => "none".to_string(),
+        }
+    }
+
     pub async fn logout(&mut self) {
         match &mut *self.signer.write() {
             WalletSigner::Firebase => self.firebase.write().logout(),
@@ -405,6 +413,11 @@ impl UserService {
                         tracing::debug!("UserService::phantom_wallet: connected");
                         let public_key_str = phantom.get_public_key_string();
 
+                        if !phantom.is_signed() {
+                            tracing::error!("UserService::phantom_wallet: not signed");
+                            return UserEvent::Logout;
+                        }
+
                         match cli.by_principal(public_key_str.clone()).await {
                             Ok(v) => {
                                 tracing::debug!("UserService::phantom_wallet: login");
@@ -429,6 +442,7 @@ impl UserService {
                     }
                     Err(e) => {
                         tracing::error!("UserService::phantom_wallet: error={:?}", e);
+                        return UserEvent::Logout;
                     }
                 };
             }

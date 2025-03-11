@@ -4,7 +4,6 @@ use dioxus_popup::PopupService;
 use dioxus_translate::*;
 
 use crate::{components::icons::Logo, theme::Theme};
-use super::i18n::CongratulationPopupTranslate;
 
 #[component]
 pub fn CongratulationPopup(
@@ -25,9 +24,7 @@ pub fn CongratulationPopup(
                 }
 
                 div { class: "leading-[24px] text-[16px] font-regular text-white flex flex-row items-center justify-center text-center tracking-[0.005em]",
-                    pre {
-                        "{tr.congratulation}"
-                    }
+                    p { class: "white-space-pre-line", "{tr.congratulation}" }
                 }
 
                 button {
@@ -40,4 +37,23 @@ pub fn CongratulationPopup(
             }
         }
     }
+}
+
+translate! {
+    CongratulationPopupTranslate;
+
+    welcome: {
+        ko: "환영합니다!",
+        en: "Welcome!",
+    },
+
+    congratulation: {
+        ko: "‘서비스명’에 오신 것을 환영합니다!\n익명성과 신뢰를 바탕으로 안전한 투표 환경을 제공합니다.",
+        en: "Welcome to 'Service Name'!\nWe provide a safe voting environment based on anonymity and trust.",
+    },
+
+    start_poll: {
+        ko: "투표 시작하기",
+        en: "Start voting",
+    },
 }
