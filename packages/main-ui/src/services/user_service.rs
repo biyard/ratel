@@ -146,6 +146,14 @@ impl UserService {
         };
     }
 
+    pub fn get_signer_type(&self) -> String {
+        match (self.signer)() {
+            WalletSigner::Firebase => "google".to_string(),
+            WalletSigner::Phantom => "phantom wallet".to_string(),
+            WalletSigner::None => "none".to_string(),
+        }
+    }
+
     pub async fn logout(&mut self) {
         match &mut *self.signer.write() {
             WalletSigner::Firebase => self.firebase.write().logout(),

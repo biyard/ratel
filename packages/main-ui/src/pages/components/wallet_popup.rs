@@ -20,7 +20,7 @@ pub fn WalletPopup(
             div { class: "justify-start text-white font-bold text-xl/24", "{tr.title}" }
             div { class: "flex flex-col gap-10 mt-35",
                 div {
-                    class: "w-full flex flex-row pl-20 py-22 bg-color-black border-[1px] rounded-[10px] justify-start items-center gap-[17px] cursor-pointer hover:border-white",
+                    class: "w-full flex flex-row pl-20 py-22 bg-black border-[1px] rounded-[10px] justify-start items-center gap-[17px] cursor-pointer hover:border-white",
                     style: if user_service.is_phantom_installed() { "cursor: pointer;" } else { "border: none; cursor: not-allowed;" },
                     onclick: move |_| async move {
                         if !user_service.is_phantom_installed() {
@@ -39,7 +39,6 @@ pub fn WalletPopup(
                                 logo_origin: rsx! {
                                     icons::Phantom {}
                                 },
-                                name: "phantom wallet",
                                 msg: tr.phantom,
                             }
                         });

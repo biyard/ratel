@@ -14,19 +14,19 @@ pub fn LoginFailurePopup(
     #[props(default ="".to_string())] class: String,
     lang: Language,
     logo: Element,
-    name: String,
     msg: String,
 ) -> Element {
     let tr = translate::<LoginFailurePopupTranslate>(&lang);
     let mut user_service: UserService = use_context();
     let mut popup: PopupService = use_context();
-    let message = format!("{} {}", tr.failure_message, name);
+    let service_name = user_service.get_signer_type();
+    let message = format!("{} {}", tr.failure_message, service_name);
     rsx! {
         div { id, class,
             div { class: "justify-start text-white font-bold text-xl/24", "{tr.title}" }
             div { class: "flex flex-col gap-10 mt-35",
                 div {
-                    class: "w-full flex flex-row pl-20 py-22 bg-color-black border-[1px] rounded-[10px] justify-start items-center gap-[17px] cursor-pointer border-c-p-50",
+                    class: "w-full flex flex-row pl-20 py-22 bg-black border-[1px] rounded-[10px] justify-start items-center gap-[17px] cursor-pointer border-c-p-50",
                     onclick: move |_| async move {
                         match user_service.login().await {
                             UserEvent::Signup(principal, email, nickname, profile_url) => {
@@ -45,7 +45,9 @@ pub fn LoginFailurePopup(
                                 popup.close();
                             }
                             _ => {
-                                tracing::error!("Failed to signup with Google");
+                                tracing::error!(
+                                    "Failed to signup with {}", user_service.get_signer_type()
+                                );
                             }
                         };
                     },
