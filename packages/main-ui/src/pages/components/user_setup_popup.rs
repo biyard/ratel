@@ -4,7 +4,7 @@ use dioxus_popup::PopupService;
 use dioxus_translate::*;
 use dto::ServiceError;
 
-use super::congratulation_popup::CongratulationPopup;
+use super::{congratulation_popup::CongratulationPopup, signin_popup_footer::SigninPopupFooter};
 use crate::{components::checkbox::Checkbox, services::user_service::UserService, theme::Theme};
 
 #[component]
@@ -88,7 +88,7 @@ pub fn UserSetupPopup(
 
                 div { class: "flex flex-row gap-[10px] items-center",
                     Checkbox {
-                        title: "{tr.agree_email}",
+                        title: "{tr.agree}",
                         onchange: move |check| {
                             agreed.set(check);
                         },
@@ -129,15 +129,16 @@ pub fn UserSetupPopup(
                                             CongratulationPopup { lang: lang.clone() }
                                         })
                                         .with_id("congratulation_popup")
-                                        .with_title(tr.welcome)
+                                        .with_title(tr.title)
                                         .without_close();
                                 }
                             });
                         }
                     },
-                    "{tr.next}"
+                    "{tr.button}"
                 }
             }
+            SigninPopupFooter { lang }
         }
     }
 }
@@ -145,9 +146,29 @@ pub fn UserSetupPopup(
 translate! {
     UserSetupPopupTranslate;
 
-    welcome: {
-        ko: "환영합니다!",
-        en: "Welcome!",
+    title: {
+        ko: "프로필 설정",
+        en: "Finish your Profile!",
+    },
+
+    message: {
+        ko: "프로필을 완성하면 활동할 수 있습니다.",
+        en: "Completing your profile makes it easier for you to take action."
+    }
+
+    email: {
+        ko: "이메일",
+        en: "Email",
+    }
+
+    first_name: {
+        ko: "이름",
+        en: "First Name",
+    },
+
+    last_name: {
+        ko: "성",
+        en: "Last Name",
     },
 
     enter_nickname: {
@@ -160,13 +181,23 @@ translate! {
         en: "Special characters are not allowed.",
     },
 
-    agree_email: {
-        ko: "[필수]이메일 및 계정주소 수집에 동의합니다.",
-        en: "[Required]I agree to collect email and account address.",
+    agree: {
+        ko: "을 읽어보았으며 동의합니다",
+        en: "I have read and accept the",
     },
 
-    next: {
-        ko: "다음",
-        en: "Next",
+    term_of_service: {
+        ko: "서비스 이용약관",
+        en: "Terms of Service",
+    },
+
+    receive_announcement: {
+        ko: "Ratel의 공지사항 및 소식을 이메일로 받고 싶습니다.",
+        en: "I want to receive announcements and news from Ratel.",
+    },
+
+    button: {
+        ko: "가입 완료",
+        en: "Finished Sign-up",
     },
 }
