@@ -33,6 +33,8 @@ pub fn WalletPopup(
                             LoaderPopup {
                                 class: "w-[400px] mx-auto",
                                 lang,
+                                title: tr.phantom,
+                                description: tr.loader_message,
                                 logo: rsx! {
                                     icons::Phantom { width: "50", height: "50" }
                                 },
@@ -85,6 +87,11 @@ translate! {
     phantom: {
         ko: "Phantom Wallet",
         en: "Phantom Wallet",
+    },
+
+    loader_message: {
+        ko: "지갑 연결 중",
+        en: "Awaiting Confirmation",
     },
 
     privacy_policy: {
