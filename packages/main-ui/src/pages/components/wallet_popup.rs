@@ -43,7 +43,7 @@ pub fn WalletPopup(
                                 },
                                 msg: tr.phantom,
                             }
-                        });
+                        }).with_id("loader_popup");
                     },
                     icons::Phantom {}
                     div { class: "flex flex-col gap-3",
@@ -90,7 +90,7 @@ translate! {
     },
 
     loader_message: {
-        ko: "지갑 연결 중",
+        ko: "승인 대기 중",
         en: "Awaiting Confirmation",
     },
 
