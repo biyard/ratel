@@ -28,7 +28,7 @@ pub fn WalletSigninPopup(
                 "{tr.description}"
             }
             button {
-                class: "w-full h-[60px] bg-primary rounded-[10px] mt-35 justify-center items-center",
+                class: "w-full h-[60px] bg-primary rounded-[10px] mt-35 justify-center items-center cursor-pointer",
                 onclick: move |_| {
                     let logo = logo.clone();
                     let logo_origin = logo_origin.clone();

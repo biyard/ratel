@@ -1,7 +1,6 @@
 mod about;
 mod bottom_sheet;
 mod community;
-mod congratulation_popup;
 mod footer;
 mod header;
 mod input_with_button;
@@ -20,11 +19,11 @@ mod user_setup_popup;
 mod wallet_popup;
 mod wallet_signin_popup;
 mod welcome_header;
+mod welcome_popup;
 
 pub use about::*;
 pub use bottom_sheet::*;
 pub use community::*;
-pub use congratulation_popup::*;
 pub use footer::*;
 pub use header::*;
 pub use input_with_button::*;
@@ -43,3 +42,4 @@ pub use user_setup_popup::*;
 pub use wallet_popup::*;
 pub use wallet_signin_popup::*;
 pub use welcome_header::*;
+pub use welcome_popup::*;
