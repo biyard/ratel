@@ -1,7 +1,6 @@
 #![allow(non_snake_case)]
-use crate::{
-    components::icons, pages::components::LoaderPopup, services::user_service::UserService,
-};
+use super::{loader_popup::LoaderPopup, signin_popup_footer::SigninPopupFooter};
+use crate::{components::icons, services::user_service::UserService};
 use dioxus::prelude::*;
 use dioxus_popup::PopupService;
 use dioxus_translate::*;
@@ -63,23 +62,7 @@ pub fn LoginFailurePopup(
                     }
                 }
             }
-            // TODO: applying policy and terms.
-            div { class: "flex flex-row gap-10 mt-35 justify-center",
-                button {
-                    class: "cursor-pointer",
-                    onclick: move |_| {
-                        tracing::debug!("Privacy policy clicked");
-                    },
-                    span { class: "text-neutral-400 text-xs/14 font-medium", "{tr.privacy_policy}" }
-                }
-                button {
-                    class: "cursor-pointer",
-                    onclick: move |_| {
-                        tracing::debug!("Privacy policy clicked");
-                    },
-                    span { class: "text-neutral-400 text-xs/14 font-medium", "{tr.term_of_service}" }
-                }
-            }
+            SigninPopupFooter { lang }
         }
     }
 }
@@ -101,14 +84,4 @@ translate! {
         ko: "다시 시도하시겠습니까?",
         en: "Would you like to try again?",
     }
-
-    privacy_policy: {
-        ko: "개인정보 처리방침",
-        en: "Privacy Policy",
-    },
-
-    term_of_service: {
-        ko: "이용약관",
-        en: "Term of Service",
-    },
 }

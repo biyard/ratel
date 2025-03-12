@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 use super::{
-    login_failure_popup::LoginFailurePopup, user_setup_popup::UserSetupPopup,
-    wallet_signin_popup::WalletSigninPopup,
+    login_failure_popup::LoginFailurePopup, signin_popup_footer::SigninPopupFooter,
+    user_setup_popup::UserSetupPopup, wallet_signin_popup::WalletSigninPopup,
 };
 use crate::services::user_service::{UserEvent, UserService};
 use dioxus::prelude::*;
@@ -19,7 +19,6 @@ pub fn LoaderPopup(
     logo_origin: Element,
     msg: String,
 ) -> Element {
-    let tr = translate::<LoaderPopupTranslate>(&lang);
     let mut user_service: UserService = use_context();
     let mut popup: PopupService = use_context();
     let display_logo = logo.clone();
@@ -35,7 +34,7 @@ pub fn LoaderPopup(
                     popup
                         .open(rsx! {
                             UserSetupPopup {
-                                class: "w-[400px] mx-[5px]",
+                                class: "w-[390px]",
                                 nickname,
                                 profile_url,
                                 email,
@@ -93,37 +92,7 @@ pub fn LoaderPopup(
             div { class: "justify-center text-center text-white font-bold text-[16px] leading-[24px] mt-[35px]",
                 "{load_message}"
             }
-            // TODO: applying policy and terms.
-            div { class: "flex flex-row gap-10 mt-35 justify-center",
-                button {
-                    class: "cursor-pointer",
-                    onclick: move |_| {
-                        tracing::debug!("Privacy policy clicked");
-                    },
-                    span { class: "text-neutral-400 text-xs/14 font-medium", "{tr.privacy_policy}" }
-                }
-                button {
-                    class: "cursor-pointer",
-                    onclick: move |_| {
-                        tracing::debug!("Privacy policy clicked");
-                    },
-                    span { class: "text-neutral-400 text-xs/14 font-medium", "{tr.term_of_service}" }
-                }
-            }
+            SigninPopupFooter { lang }
         }
     }
-}
-
-translate! {
-    LoaderPopupTranslate;
-
-    privacy_policy: {
-        ko: "개인정보 처리방침",
-        en: "Privacy Policy",
-    },
-
-    term_of_service: {
-        ko: "이용약관",
-        en: "Term of Service",
-    },
 }
