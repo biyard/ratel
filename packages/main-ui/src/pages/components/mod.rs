@@ -19,6 +19,7 @@ mod top;
 mod user_setup_popup;
 mod wallet_popup;
 mod wallet_signin_popup;
+mod welcome_header;
 
 pub use about::*;
 pub use bottom_sheet::*;
@@ -41,3 +42,4 @@ pub use top::*;
 pub use user_setup_popup::*;
 pub use wallet_popup::*;
 pub use wallet_signin_popup::*;
+pub use welcome_header::*;
