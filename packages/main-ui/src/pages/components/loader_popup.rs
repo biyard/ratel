@@ -10,6 +10,8 @@ pub fn LoaderPopup(
     #[props(default ="loader_popup".to_string())] id: String,
     #[props(default ="".to_string())] class: String,
     lang: Language,
+    title: String,
+    description: String,
     logo: Element,
     logo_origin: Element,
     msg: String,
@@ -57,16 +59,16 @@ pub fn LoaderPopup(
 
     rsx! {
         div { id, class,
-            div { class: "justify-start text-white font-bold text-xl/24", "{tr.title}" }
+            div { class: "justify-start text-white font-bold text-xl/24", "{title}" }
             div { class: "w-full flex  justify-center items-center mt-[35px]",
                 // TODO: border-t rounded
                 div { class: "border-6 border-t-6 w-[82px] h-[82px] border-primary border-t-background rounded-full animate-spin" }
-                div { class: "absolute w-[64px] h-[64px] bg-white rounded-full justify-center items-center",
-                    {logo}
+                div { class: "absolute w-[64px] h-[64px] bg-white rounded-full justify-center items-center flex",
+                    div { class: "flex justify-center items-center", {logo} }
                 }
             }
             div { class: "justify-center text-center text-white font-bold text-[16px] leading-[24px] mt-[35px]",
-                "{tr.message}"
+                "{description}"
             }
             // TODO: applying policy and terms.
             div { class: "flex flex-row gap-10 mt-35 justify-center",
@@ -91,16 +93,6 @@ pub fn LoaderPopup(
 
 translate! {
     LoaderPopupTranslate;
-
-    title: {
-        ko: "로그인",
-        en: "Log in",
-    },
-
-    message: {
-        ko: "팝업에서 계정에 로그인하세요",
-        en: "Sign into your account in the pop-up",
-    },
 
     privacy_policy: {
         ko: "개인정보 처리방침",

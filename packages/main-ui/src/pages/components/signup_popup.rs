@@ -27,6 +27,8 @@ pub fn SignupPopup(
                             LoaderPopup {
                                 class: "w-[400px] mx-auto",
                                 lang,
+                                title: tr.loader_title,
+                                description: tr.loader_message,
                                 logo: rsx! {
                                     icons::Google { width: "50", height: "50" }
                                 },
@@ -86,6 +88,16 @@ translate! {
     title: {
         ko: "라텔에 참여하기",
         en: "Join the Movement",
+    }
+
+    loader_title: {
+        ko: "로그인",
+        en: "Log in",
+    }
+
+    loader_message: {
+        ko: "팝업에서 계정에 로그인하세요",
+        en: "Sign into your account in the pop-up",
     }
 
     continue_with_google: {
