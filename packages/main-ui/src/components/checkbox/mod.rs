@@ -1,6 +1,6 @@
 #![allow(non_snake_case)]
-use dioxus::prelude::*;
 use crate::theme::Theme;
+use dioxus::prelude::*;
 
 #[component]
 pub fn Checkbox(
@@ -19,7 +19,10 @@ pub fn Checkbox(
             },
             div { class: "flex flex-row items-start justify-start gap-[6px] cursor-pointer",
                 CheckboxIcon { checked: checked() }
-                span { class: "w-full text-[16px] font-normal leading-[24px] text-white", "{title}" }
+                // TODO: need customizing
+                span { class: "w-full text-[16px] font-normal leading-[24px] text-white",
+                    "{title}"
+                }
             }
         }
     }
