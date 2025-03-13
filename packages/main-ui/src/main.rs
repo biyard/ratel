@@ -48,8 +48,8 @@ fn app() -> Element {
             sizes: "180x180",
         }
 
-        document::Link { href: asset!("/public/main.css") }
-        document::Link { href: asset!("/public/tailwind.css") }
+        document::Style { href: asset!("/public/main.css") }
+        document::Style { href: asset!("/public/tailwind.css") }
 
         document::Link { href: "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.1/css/all.min.css" }
 
