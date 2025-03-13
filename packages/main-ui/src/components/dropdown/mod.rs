@@ -1,4 +1,4 @@
-use dioxus::prelude::*;
+use bdk::prelude::*;
 
 #[component]
 pub fn Dropdown(
@@ -19,8 +19,7 @@ pub fn Dropdown(
         div {
             role: "combobox",
             "aria-expanded": "{is_open()}",
-            class: if let Some(class) = inner_class { class } 
-                else { "relative w-full h-[59px] bg-[{bg_color}] rounded-[8px]" },
+            class: if let Some(class) = inner_class { class } else { "relative w-full h-[59px] bg-[{bg_color}] rounded-[8px]" },
             input {
                 class: "w-full px-[24px] py-[17.5px]  bg-[{bg_color}] rounded-[8px] cursor-pointer \
                         text-[18px] font-bold placeholder-[{placeholder_color}] leading-[24px] text-[{text_color}]",
@@ -28,7 +27,7 @@ pub fn Dropdown(
                 value: value.unwrap_or_default(),
                 readonly: true,
                 onfocus: move |_| is_open.set(true),
-                onblur : move |_| is_open.set(false),
+                onblur: move |_| is_open.set(false),
                 // TODO: Implement keyboard navigation
                 // onkeydown: move |e: KeyboardEvent| {
                 //     match e.key() {
@@ -62,15 +61,10 @@ pub fn Dropdown(
                 class: "absolute w-full mt-[10px] bg-[{bg_color}] \
                         rounded-[8px] shadow-lg overflow-hidden \
                         transition-all duration-200 z-10 text-[{text_color}]",
-                style: if (is_open)() {
-                    "max-height: 200px; opacity: 1;"
-                } else {
-                    "max-height: 0; opacity: 0;"
-                },
+                style: if (is_open)() { "max-height: 200px; opacity: 1;" } else { "max-height: 0; opacity: 0;" },
                 // Options list
-                div {
-                    class: "bg-[{bg_color}] overflow-y-auto max-h-[200px]",
-                    // for (index, item) in items.iter().enumerate() {  
+                div { class: "bg-[{bg_color}] overflow-y-auto max-h-[200px]",
+                    // for (index, item) in items.iter().enumerate() {
                     for item in items {
                         div {
                             class: "w-full h-[43px] px-[24px] py-[12px] text-left font-bold text-[15px] \

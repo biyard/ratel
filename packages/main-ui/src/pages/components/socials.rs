@@ -1,6 +1,6 @@
 #![allow(non_snake_case)]
 use crate::components::icons;
-use dioxus::prelude::*;
+use bdk::prelude::*;
 
 #[component]
 pub fn Socials(#[props(extends = GlobalAttributes)] attributes: Vec<Attribute>) -> Element {

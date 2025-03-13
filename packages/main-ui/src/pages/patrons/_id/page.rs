@@ -5,7 +5,7 @@ use crate::components::icons::PPTXFile;
 
 use super::controller::*;
 use super::i18n::*;
-use dioxus::prelude::*;
+use bdk::prelude::*;
 use dioxus_translate::*;
 
 // TODO: Check this page is new_feature page.

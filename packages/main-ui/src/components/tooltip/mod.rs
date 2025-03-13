@@ -1,4 +1,4 @@
-use dioxus::prelude::*;
+use bdk::prelude::*;
 
 #[component]
 pub fn Tooltip(
@@ -11,22 +11,20 @@ pub fn Tooltip(
     let mut show_tooltip = use_signal(|| false);
 
     rsx! {
-        div {
-            class: "relative inline-block",
-            
+        div { class: "relative inline-block",
             div {
                 class: "relative",
                 onmouseenter: move |_| show_tooltip.set(true),
                 onmouseleave: move |_| show_tooltip.set(false),
 
-                {children.clone()},
+                {children.clone()}
 
                 div {
                     class: "absolute z-50 left-1/2 -translate-x-1/2 bottom-full mb-2",
                     style: if (show_tooltip)() { "display: block" } else { "display: none" },
                     div {
-                        class: if let Some(class) = inner_class { class } 
-                            else { "bg-[{bg_color}] text-white px-[16px] py-[12px] rounded-lg text-sm max-w-[500px] leading-[1.5]".into() },
+                        class: if let Some(class) = inner_class { class } else { "bg-[{bg_color}] text-white px-[16px] py-[12px] rounded-lg text-sm max-w-[500px] leading-[1.5]"
+                            .into() },
                         p {
                             class: "whitespace-pre-wrap break-words",
                             style: "word-break: keep-all",
@@ -34,9 +32,7 @@ pub fn Tooltip(
                         }
                     }
                     if arrow {
-                        div {
-                            class: "absolute left-1/2 transform -translate-x-1/2 top-full w-0 h-0 border-l-8 border-l-transparent border-r-8 border-r-transparent border-t-8 border-t-[{bg_color}]",
-                        }
+                        div { class: "absolute left-1/2 transform -translate-x-1/2 top-full w-0 h-0 border-l-8 border-l-transparent border-r-8 border-r-transparent border-t-8 border-t-[{bg_color}]" }
                     }
                 }
             }

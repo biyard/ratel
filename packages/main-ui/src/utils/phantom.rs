@@ -1,3 +1,4 @@
+use bdk::prelude::*;
 use dto::ServiceError;
 // use ed25519_dalek::Signature as Ed25519Signature;
 use hex::encode;

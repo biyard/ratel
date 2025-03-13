@@ -1,5 +1,5 @@
 #![allow(non_snake_case)]
-use dioxus::prelude::*;
+use bdk::prelude::*;
 
 #[component]
 pub fn PoliticianCard(name: String, party: String, image_url: String) -> Element {

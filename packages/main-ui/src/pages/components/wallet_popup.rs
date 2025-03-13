@@ -1,9 +1,8 @@
 #![allow(non_snake_case)]
 use super::loader_popup::LoaderPopup;
 use crate::{components::icons, services::user_service::UserService};
-use dioxus::prelude::*;
+use bdk::prelude::*;
 use dioxus_popup::PopupService;
-use dioxus_translate::*;
 
 #[component]
 pub fn WalletPopup(

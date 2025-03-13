@@ -7,7 +7,7 @@ use crate::{
     components::{icons, tooltip::Tooltip},
     theme::Theme,
 };
-use dioxus::prelude::*;
+use bdk::prelude::*;
 use dioxus_popup::PopupService;
 use dioxus_translate::*;
 use dto::CryptoStance;

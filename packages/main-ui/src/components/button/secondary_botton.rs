@@ -1,6 +1,6 @@
 #![allow(non_snake_case)]
 use super::ButtonSize;
-use dioxus::prelude::*;
+use bdk::prelude::*;
 
 #[component]
 pub fn SecondaryButton(
@@ -17,6 +17,7 @@ pub fn SecondaryButton(
     };
     let padding = match size {
         ButtonSize::Normal => "px-40 py-20",
+        ButtonSize::Small => "px-20 py-10",
     };
 
     rsx! {

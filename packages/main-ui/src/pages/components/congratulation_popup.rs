@@ -1,7 +1,6 @@
 #![allow(non_snake_case)]
-use dioxus::prelude::*;
+use bdk::prelude::*;
 use dioxus_popup::PopupService;
-use dioxus_translate::*;
 
 use crate::{components::icons::Logo, theme::Theme};
 

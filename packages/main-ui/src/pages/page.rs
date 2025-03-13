@@ -1,10 +1,8 @@
 #![allow(non_snake_case)]
+use bdk::prelude::*;
 use by_components::meta::MetaPage;
-use dioxus::prelude::*;
 
 use super::components::*;
-
-use dioxus_translate::*;
 
 #[component]
 pub fn HomePage(lang: Language) -> Element {

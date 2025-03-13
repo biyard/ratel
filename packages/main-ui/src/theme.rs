@@ -60,7 +60,7 @@ impl Default for ThemeData {
     }
 }
 
-use dioxus::prelude::*;
+use bdk::prelude::*;
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Theme {

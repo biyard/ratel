@@ -1,5 +1,5 @@
 #![allow(non_snake_case)]
-use dioxus::prelude::*;
+use bdk::prelude::*;
 
 #[component]
 pub fn Bsky(#[props(extends = GlobalAttributes)] attributes: Vec<Attribute>) -> Element {

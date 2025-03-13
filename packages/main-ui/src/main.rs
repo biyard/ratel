@@ -7,7 +7,7 @@ pub mod services;
 pub mod theme;
 pub mod utils;
 
-use dioxus::prelude::*;
+use bdk::prelude::*;
 use dioxus_popup::PopupService;
 use route::Route;
 use services::user_service::UserService;
@@ -48,10 +48,18 @@ fn app() -> Element {
             sizes: "180x180",
         }
 
+        document::Link { href: "https://fonts.googleapis.com", rel: "preconnect" }
+        document::Link {
+            crossorigin: "false",
+            href: "https://fonts.gstatic.com",
+            rel: "preconnect",
+        }
+        document::Link {
+            href: "https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&family=Raleway:ital,wght@0,100..900;1,100..900&display=swap",
+            rel: "stylesheet",
+        }
         document::Style { href: asset!("/public/main.css") }
         document::Style { href: asset!("/public/tailwind.css") }
-
-        document::Style { href: "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.1/css/all.min.css" }
 
         document::Script { src: "https://unpkg.com/@tailwindcss/browser@4.0.12/dist/index.global.js" }
         document::Style { r#type: "text/tailwindcss", {css} }
@@ -64,7 +72,7 @@ fn app() -> Element {
 
 #[cfg(feature = "server")]
 mod api {
-    use dioxus::fullstack::prelude::*;
+    use bdk::prelude::*;
     use server_fn::codec::{GetUrl, Json};
 
     #[server(endpoint = "/version", input=GetUrl, output=Json)]

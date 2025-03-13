@@ -1,5 +1,5 @@
 #![allow(non_snake_case, dead_code, unused_variables)]
-use dioxus::prelude::*;
+use bdk::prelude::*;
 
 #[component]
 pub fn ExpandableContainer(
@@ -34,7 +34,7 @@ pub fn ExpandableContainer(
 
     rsx! {
         div {
-            class: "transition-all duration-300 flex flex-col items-center justify-start gap-20 h-full bg-bg rounded-[20px] cursor-pointer px-30 py-40 flex flex-col {text_color} {outer}",
+            class: "transition-[width] duration-300 flex flex-col items-center justify-start gap-20 h-full bg-bg rounded-[20px] cursor-pointer px-30 py-40 flex flex-col {text_color} {outer} gap-40",
             onclick: move |_| onclick(()),
             div { class: "transition-all w-full flex {header_style} items-center justify-between gap-10",
                 if expanded {
