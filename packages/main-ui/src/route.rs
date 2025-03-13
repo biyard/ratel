@@ -1,5 +1,5 @@
 use crate::pages::*;
-use dioxus::prelude::*;
+use bdk::prelude::*;
 use dioxus_translate::Language;
 
 #[derive(Clone, Routable, Debug, PartialEq)]

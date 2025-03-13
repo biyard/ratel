@@ -1,9 +1,8 @@
 #![allow(non_snake_case)]
 use super::SignupPopup;
 use crate::components::icons::Logo;
-use dioxus::prelude::*;
+use bdk::prelude::*;
 use dioxus_popup::PopupService;
-use dioxus_translate::*;
 
 #[component]
 pub fn Header(lang: Language, selected: i32) -> Element {

@@ -1,11 +1,8 @@
 #![allow(unused)]
 use crate::*;
-use by_macros::*;
+use bdk::prelude::*;
 use by_types::QueryResponse;
 
-#[cfg(feature = "server")]
-use by_axum::aide;
-use dioxus_translate::*;
 use validator::ValidationError;
 
 #[cfg(feature = "server")]
@@ -86,6 +83,7 @@ impl CryptoStance {
     }
 }
 
+// TODO(api): implement list_by_stance
 #[api_model(base = "/v1/assembly-members", table = assembly_members, iter_type = QueryResponse, action_by_id = [change_stance(code = String, stance = CryptoStance), send_verify_email])]
 pub struct AssemblyMember {
     #[api_model(summary, primary_key)]
@@ -111,7 +109,7 @@ pub struct AssemblyMember {
     #[api_model(summary)]
     pub en_district: Option<String>,
 
-    #[api_model(summary, type = INTEGER)]
+    #[api_model(summary, type = INTEGER, query_action = list_by_stance)]
     pub stance: CryptoStance,
     #[api_model(summary)]
     pub image_url: String,

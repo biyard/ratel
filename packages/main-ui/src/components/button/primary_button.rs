@@ -1,6 +1,6 @@
 #![allow(non_snake_case)]
 use super::ButtonSize;
-use dioxus::prelude::*;
+use bdk::prelude::*;
 
 #[component]
 pub fn PrimaryButton(
@@ -16,12 +16,13 @@ pub fn PrimaryButton(
         "bg-btn-p-disabled text-btn-p-disabled cursor-not-allowed"
     };
     let padding = match size {
-        ButtonSize::Normal => "px-40 py-20",
+        ButtonSize::Normal => "px-40 py-20 rounded-[10px]",
+        ButtonSize::Small => "px-20 py-10 rounded-[10px]",
     };
 
     rsx! {
         button {
-            class: "font-bold gap-10 flex items-center justify-center text-base rounded-[10px] {bg} {padding}",
+            class: "font-bold gap-10 flex items-center justify-center text-base {bg} {padding}",
             disabled,
             onclick: move |evt| {
                 if let Some(onclick) = onclick {

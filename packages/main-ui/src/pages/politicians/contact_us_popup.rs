@@ -1,5 +1,5 @@
 #![allow(non_snake_case)]
-use dioxus::prelude::*;
+use bdk::prelude::*;
 use dioxus_translate::*;
 use crate::{
     theme::Theme,

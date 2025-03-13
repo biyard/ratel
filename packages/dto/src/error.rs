@@ -3,9 +3,7 @@ use std::error::Error;
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "server")]
-use by_axum::aide;
-#[cfg(feature = "server")]
-use schemars::JsonSchema;
+use bdk::prelude::*;
 
 #[derive(Debug, Serialize)]
 pub struct ServiceException {

@@ -1,5 +1,5 @@
 #![allow(non_snake_case)]
-use dioxus::prelude::*;
+use bdk::prelude::*;
 
 #[component]
 pub fn Close(#[props(default = "white".to_string())] color: String) -> Element {

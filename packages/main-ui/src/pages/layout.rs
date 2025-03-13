@@ -1,7 +1,6 @@
 #![allow(non_snake_case)]
-use dioxus::prelude::*;
+use bdk::prelude::*;
 use dioxus_popup::PopupZone;
-use dioxus_translate::*;
 
 use super::components::*;
 use crate::route::Route;
