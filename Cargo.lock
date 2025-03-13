@@ -383,6 +383,31 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8c3c1a368f70d6cf7302d78f8f7093da241fb8e8807c05cc9e51a125895a6d5b"
 
 [[package]]
+name = "bdk"
+version = "0.1.0"
+dependencies = [
+ "aide",
+ "bigdecimal",
+ "btracing",
+ "by-axum",
+ "by-components",
+ "by-macros",
+ "by-types",
+ "dioxus",
+ "dioxus-aws",
+ "dioxus-fullstack",
+ "dioxus-logger 0.5.1",
+ "dioxus-popup",
+ "dioxus-translate",
+ "reqwest",
+ "rest-api",
+ "schemars",
+ "sqlx",
+ "tracing",
+ "validator",
+]
+
+[[package]]
 name = "bigdecimal"
 version = "0.4.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1502,26 +1527,18 @@ name = "dto"
 version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
- "bigdecimal",
- "by-axum",
- "by-macros",
- "by-types",
+ "bdk",
  "candid",
  "chrono",
- "dioxus-translate",
  "lazy_static",
  "num-format",
  "regex",
- "reqwest",
- "rest-api",
  "ring",
- "schemars",
  "serde",
  "serde_json",
  "serde_urlencoded",
  "simple_asn1",
  "sqlx",
- "tracing",
  "untrusted",
  "validator",
 ]
@@ -2723,17 +2740,12 @@ dependencies = [
 name = "main-api"
 version = "0.7.10"
 dependencies = [
- "by-axum",
- "by-types",
+ "bdk",
  "chrono",
  "dto",
- "reqwest",
- "rest-api",
- "schemars",
  "serde",
  "serde_json",
  "slog",
- "sqlx",
  "tokio",
  "tower 0.5.2",
  "tracing",
@@ -2747,26 +2759,14 @@ name = "main-ui"
 version = "0.7.9"
 dependencies = [
  "base64 0.22.1",
- "btracing",
- "by-components",
- "by-macros",
- "by-types",
+ "bdk",
  "chrono",
- "dioxus",
- "dioxus-aws",
- "dioxus-logger 0.5.1",
  "dioxus-oauth",
- "dioxus-popup",
- "dioxus-translate",
- "dioxus-web",
  "dto",
  "google-wallet",
  "hex",
  "num-format",
- "reqwest",
- "rest-api",
  "serde",
- "tracing",
  "url",
  "wallet-adapter",
  "wasm-bindgen",

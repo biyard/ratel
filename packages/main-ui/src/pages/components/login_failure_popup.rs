@@ -4,9 +4,8 @@ use crate::{
     components::icons,
     services::user_service::{UserEvent, UserService},
 };
-use dioxus::prelude::*;
+use bdk::prelude::*;
 use dioxus_popup::PopupService;
-use dioxus_translate::*;
 
 #[component]
 pub fn LoginFailurePopup(

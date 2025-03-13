@@ -1,4 +1,5 @@
 pub mod assembly_members;
+use bdk::prelude::*;
 
 use by_axum::{
     auth::Authorization,

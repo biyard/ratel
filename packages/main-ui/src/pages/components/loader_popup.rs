@@ -1,9 +1,8 @@
 #![allow(non_snake_case)]
 use super::{login_failure_popup::LoginFailurePopup, user_setup_popup::UserSetupPopup};
 use crate::services::user_service::{UserEvent, UserService};
-use dioxus::prelude::*;
+use bdk::prelude::*;
 use dioxus_popup::PopupService;
-use dioxus_translate::*;
 
 #[component]
 pub fn LoaderPopup(

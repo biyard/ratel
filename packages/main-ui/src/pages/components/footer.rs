@@ -1,8 +1,7 @@
 #![allow(non_snake_case)]
 use super::InputWithButton;
 use super::Socials;
-use dioxus::prelude::*;
-use dioxus_translate::*;
+use bdk::prelude::*;
 
 #[component]
 pub fn Footer(lang: Language) -> Element {

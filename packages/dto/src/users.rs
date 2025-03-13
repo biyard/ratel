@@ -1,10 +1,8 @@
 #![allow(unused)]
 use crate::*;
-use by_macros::api_model;
 use by_types::QueryResponse;
 
-#[cfg(feature = "server")]
-use by_axum::aide;
+use bdk::prelude::*;
 use lazy_static::lazy_static;
 use validator::ValidationError;
 
@@ -38,7 +36,9 @@ fn validate_nickname(nickname: &str) -> std::result::Result<(), ValidationError>
     }
 
     if !NICKNAME_REGEX.is_match(nickname) {
-        return Err(ValidationError::new("Nickname must be started with alphabet or number and only allow alphabet, number, hyphen and underscore, maximum 20 characters"));
+        return Err(ValidationError::new(
+            "Nickname must be started with alphabet or number and only allow alphabet, number, hyphen and underscore, maximum 20 characters",
+        ));
     }
 
     Ok(())

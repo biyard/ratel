@@ -1,4 +1,4 @@
-use dioxus::prelude::*;
+use bdk::prelude::*;
 use dioxus_translate::Language;
 use dto::TopicCreateRequest;
 

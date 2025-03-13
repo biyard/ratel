@@ -1,3 +1,4 @@
+use bdk::prelude::*;
 use tracing::Level;
 
 #[derive(Debug)]
