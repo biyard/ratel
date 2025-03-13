@@ -3,31 +3,56 @@ use dioxus::prelude::*;
 
 #[component]
 pub fn ExpandableContainer(
-    #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
     tag: String,
     total_count: i64,
     icon: Element,
     expanded: bool,
+    onclick: EventHandler<()>,
     children: Element,
+    #[props(default ="text-c-c-20".to_string())] text_color: String,
 ) -> Element {
     let rotate = if expanded { "rotate-0" } else { "rotate-270" };
     let grow = if expanded { "grow w-full" } else { "" };
-    let direction = if expanded { "flex-row" } else { "flex-col" };
+
+    let outer = if expanded { "w-full" } else { "w-fit" };
+    let tag_style = if expanded {
+        "justify-start"
+    } else {
+        "justify-center rotate-270"
+    };
+    let icon_style = if expanded { "rotate-0" } else { "rotate-270" };
+    let children_style = if expanded {
+        "w-full"
+    } else {
+        "overflow-hidden w-0 h-0"
+    };
+    let header_style = if expanded {
+        "flex-row"
+    } else {
+        "h-full flex-col"
+    };
 
     rsx! {
-        div {..attributes,
-            div { class: "transition-all duration-300 ease-in-out flex flex-col items-center justify-start gap-20 w-full bg-bg rounded-[20px] cursor-pointer px-30 py-40",
-                div { class: "flex {direction} items-center justify-start gap-10",
+        div {
+            class: "transition-all duration-300 flex flex-col items-center justify-start gap-20 h-full bg-bg rounded-[20px] cursor-pointer px-30 py-40 flex flex-col {text_color} {outer}",
+            onclick: move |_| onclick(()),
+            div { class: "transition-all w-full flex {header_style} items-center justify-between gap-10",
+                if expanded {
                     span { class: "font-bold text-[32px]/22", "{total_count}" }
-                    div { class: "{grow} text-white text-xl/22 font-bold flex flex-row items-center justify-start",
+                    p { class: "grow text-white text-xl/22 font-bold flex flex-row items-center whitespace-nowrap {tag_style}",
                         {tag}
                     }
-                    div { class: "rotate-270", {icon} }
+                    {icon}
+                } else {
+                    {icon}
+                    p { class: "grow text-white text-xl/22 font-bold flex flex-row items-center whitespace-nowrap {tag_style}",
+                        {tag}
+                    }
+                    span { class: "font-bold text-[32px]/22", "{total_count}" }
                 }
-
-                div { class: "overflow-hidden", width: if expanded { "100%" } else { "0" }, {children} }
             }
 
+            div { class: children_style, {children} }
         }
     }
 }
