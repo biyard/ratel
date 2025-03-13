@@ -5,7 +5,7 @@ use super::controller::*;
 use super::legislation_selector::*;
 use by_macros::EnumProp;
 use by_types::QueryParam;
-use dioxus::prelude::*;
+use bdk::prelude::*;
 use dioxus_translate::*;
 
 #[derive(Debug, Clone, Default, PartialEq, serde::Serialize, serde::Deserialize, EnumProp)]

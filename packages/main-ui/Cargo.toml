@@ -7,40 +7,28 @@ edition.workspace = true
 repository.workspace = true
 
 [dependencies]
-reqwest.workspace = true
 dto.workspace = true
-dioxus = { workspace = true, features = ["router", "fullstack"] }
-dioxus-web = { workspace = true, features = [] }
-
-dioxus-aws = { workspace = true }
-dioxus-logger = { version = "0.5.0" }
-tracing = { version = "0.1.40" }
 
 wasm-bindgen = { version = "0.2.100" }
 wasm-bindgen-futures = { version = "0.4.50" }
 web-sys = { version = "0.3.77" }
 serde = "1.0.216"
+
+bdk = { workspace = true, features = ["fe"] }
+
 num-format = "0.4.4"
 
-
-dioxus-popup.workspace = true
-dioxus-translate.workspace = true
 dioxus-oauth.workspace = true
 google-wallet = { workspace = true }
 
 chrono = "0.4.39"
 base64 = "0.22.1"
 url = "2.5.4"
-rest-api.workspace = true
-by-macros.workspace = true
-by-types.workspace = true
-by-components.workspace = true
 wallet-adapter = "=1.0.4-beta"
 hex = "0.4.3"
-btracing.workspace = true
 
 [features]
 default = []
-web = ["dioxus-aws/web", "dioxus/web", "dioxus-translate/web"]
-server = ["dioxus-aws/server", "dioxus/server"]
-lambda = ["server", "dioxus-aws/lambda"]
+web = ["bdk/web"]
+server = ["bdk/server"]
+lambda = ["server", "bdk/lambda"]

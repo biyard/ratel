@@ -1,8 +1,9 @@
-use reqwest::Error;
-use std::collections::HashMap;
-use serde_json::Value;
-use crate::models::openapi::national_assembly::{Member, EnMember};
+use crate::models::openapi::national_assembly::{EnMember, Member};
+use bdk::prelude::*;
 use dto::ServiceError;
+use reqwest::Error;
+use serde_json::Value;
+use std::collections::HashMap;
 
 const DEFAULT_PAGE_INDEX: u32 = 1; // page num; start from 1 not 0
 const DEFAULT_PAGE_SIZE: u32 = 300; // request per page
@@ -12,8 +13,8 @@ pub async fn get_active_members() -> Result<Vec<Member>, ServiceError> {
     let mut params = HashMap::new();
     params.insert("KEY", config.openapi_key.to_string());
     params.insert("type", "json".to_string());
-    params.insert("pIndex", DEFAULT_PAGE_INDEX.to_string()); 
-    params.insert("pSize", DEFAULT_PAGE_SIZE.to_string()); 
+    params.insert("pIndex", DEFAULT_PAGE_INDEX.to_string());
+    params.insert("pSize", DEFAULT_PAGE_SIZE.to_string());
 
     let client = reqwest::Client::new();
     let response = client
@@ -30,10 +31,13 @@ pub async fn get_active_members() -> Result<Vec<Member>, ServiceError> {
         let rows = match response[1]["row"].as_array() {
             Some(rows) => rows,
             None => {
-                return Err(ServiceError::OpenApiResponseError("Failed to parse response".to_string()));
+                return Err(ServiceError::OpenApiResponseError(
+                    "Failed to parse response".to_string(),
+                ));
             }
         };
-        let rst: Vec<Member> = match serde_json::from_value(serde_json::Value::Array(rows.clone())) {
+        let rst: Vec<Member> = match serde_json::from_value(serde_json::Value::Array(rows.clone()))
+        {
             Ok(rst) => rst,
             Err(e) => {
                 return Err(ServiceError::JsonDeserializeError(e.to_string()));
@@ -41,7 +45,10 @@ pub async fn get_active_members() -> Result<Vec<Member>, ServiceError> {
         };
         return Ok(rst);
     } else {
-        return Err(ServiceError::OpenApiResponseError("Failed to parse response".to_string()));    }
+        return Err(ServiceError::OpenApiResponseError(
+            "Failed to parse response".to_string(),
+        ));
+    }
 }
 
 pub async fn get_active_member_en(
@@ -68,7 +75,9 @@ pub async fn get_active_member_en(
         let rows = match response[1]["row"].as_array() {
             Some(rows) => rows,
             None => {
-                return Err(ServiceError::OpenApiResponseError("Failed to parse response".to_string()));
+                return Err(ServiceError::OpenApiResponseError(
+                    "Failed to parse response".to_string(),
+                ));
             }
         };
         let rst: EnMember = match serde_json::from_value(rows[0].clone()) {
@@ -77,9 +86,11 @@ pub async fn get_active_member_en(
                 return Err(ServiceError::JsonDeserializeError(e.to_string()));
             }
         };
-        return Ok(rst)
+        return Ok(rst);
     } else {
-        return Err(ServiceError::OpenApiResponseError("Failed to parse response".to_string()));
+        return Err(ServiceError::OpenApiResponseError(
+            "Failed to parse response".to_string(),
+        ));
     }
 }
 

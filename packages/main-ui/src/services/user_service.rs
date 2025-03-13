@@ -3,7 +3,7 @@ use crate::{
     config,
     utils::phantom::{PhantomAuth, Platform},
 };
-use dioxus::prelude::*;
+use bdk::prelude::*;
 use dto::*;
 use google_wallet::WalletEvent;
 

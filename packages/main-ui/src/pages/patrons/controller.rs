@@ -1,4 +1,4 @@
-use dioxus::prelude::*;
+use bdk::prelude::*;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Controller {}

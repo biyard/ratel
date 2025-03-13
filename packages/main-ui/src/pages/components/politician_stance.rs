@@ -1,11 +1,17 @@
 #![allow(non_snake_case)]
-use by_components::icons::emoji::{ThumbsDown, ThumbsUp};
-use dioxus::prelude::*;
-use dioxus_translate::*;
+use bdk::prelude::*;
+use by_components::icons::{
+    arrows::ArrowRight,
+    emoji::{ThumbsDown, ThumbsUp},
+    help_support::Help,
+};
 use dto::{AssemblyMember, AssemblyMemberSummary};
 use politician_card::PoliticianCard;
 
-use crate::config;
+use crate::{
+    components::button::{ButtonSize, secondary_botton::SecondaryButton},
+    config,
+};
 
 use super::*;
 
@@ -73,46 +79,72 @@ pub fn PoliticianStance(
                 description: tr.description,
             }
 
-            div { class: "w-full flex flex-row gap-10 items-start justify-start",
-                ExpandableContainer {
-                    tag: tr.pro_crypto,
-                    total_count: 10,
-                    icon: rsx! {
-                        ThumbsUp { class: "[&>path]:stroke-c-c-20", width: "40", height: "40" }
-                    },
-                    expanded: selected() == 0,
-                    onclick: move |_| selected.set(0),
+            div { class: "w-full flex flex-col gap-30 items-center",
+                div { class: "w-full flex flex-col gap-10 items-start",
+                    div { class: "w-full flex flex-row gap-10 items-start justify-start",
+                        ExpandableContainer {
+                            tag: tr.pro_crypto,
+                            total_count: 10,
+                            icon: rsx! {
+                                ThumbsUp { class: "[&>path]:stroke-c-c-20", width: "40", height: "40" }
+                            },
+                            expanded: selected() == 0,
+                            onclick: move |_| selected.set(0),
 
-                    div { class: "w-full h-260 grid grid-cols-4 gap-10",
-                        for m in pro_cryptos.suspend()?.iter() {
-                            PoliticianCard {
-                                name: "{m.name}",
-                                party: "{m.party}",
-                                image_url: "{m.image_url}",
+                            div { class: "w-full h-260 grid grid-cols-4 gap-10",
+                                for m in pro_cryptos.suspend()?.iter() {
+                                    PoliticianCard {
+                                        name: "{m.name}",
+                                        party: "{m.party}",
+                                        image_url: "{m.image_url}",
+                                    }
+                                }
                             }
+                        }
+
+                        ExpandableContainer {
+                            tag: tr.anti_crypto,
+                            total_count: 10,
+                            text_color: "text-c-p-20",
+                            icon: rsx! {
+                                ThumbsDown { class: "[&>path]:stroke-c-p-20", width: "40", height: "40" }
+                            },
+                            expanded: selected() == 1,
+                            onclick: move |_| selected.set(1),
+                            div { class: "w-full h-260 grid grid-cols-4 gap-10",
+                                for m in anti_cryptos.suspend()?.iter() {
+                                    PoliticianCard {
+                                        name: "{m.name}",
+                                        party: "{m.party}",
+                                        image_url: "{m.image_url}",
+                                    }
+                                }
+                            }
+                        }
+                    } // end of flex-row
+
+                    div { class: "flex flex-row gap-10 items-center justify-start text-neutral-400 font-medium text-[13px]/18",
+                        Help {
+                            class: "[&>path]:stroke-neutral-400 [&>circle]:fill-neutral-400",
+                            width: "18",
+                            height: "18",
+                        }
+                        span { {tr.legal_notice} }
+
+                    }
+                } // end of flex-col
+
+                SecondaryButton { size: ButtonSize::Small,
+                    div { class: "flex flex-row gap-10 items-center justify-center font-bold text-sm text-black",
+                        {tr.view_all}
+                        ArrowRight {
+                            class: "[&>path]:stroke-3",
+                            width: "15",
+                            height: "15",
                         }
                     }
                 }
 
-                ExpandableContainer {
-                    tag: tr.anti_crypto,
-                    total_count: 10,
-                    text_color: "text-c-p-20",
-                    icon: rsx! {
-                        ThumbsDown { class: "[&>path]:stroke-c-p-20", width: "40", height: "40" }
-                    },
-                    expanded: selected() == 1,
-                    onclick: move |_| selected.set(1),
-                    div { class: "w-full h-260 grid grid-cols-4 gap-10",
-                        for m in anti_cryptos.suspend()?.iter() {
-                            PoliticianCard {
-                                name: "{m.name}",
-                                party: "{m.party}",
-                                image_url: "{m.image_url}",
-                            }
-                        }
-                    }
-                }
             }
         }
     }
@@ -145,4 +177,14 @@ translate! {
         ko: "암호화폐 반대",
         en: "Anti-Crypto",
     },
+
+    legal_notice: {
+        ko: "초상권 및 법적 고지",
+        en: "Portrait Rights & Legal Notice",
+    },
+
+    view_all: {
+        ko: "전체 보기",
+        en: "View All",
+    }
 }

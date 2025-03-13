@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 use super::i18n::*;
 use crate::route::*;
-use dioxus::prelude::*;
+use bdk::prelude::*;
 use dioxus_translate::*;
 
 #[component]

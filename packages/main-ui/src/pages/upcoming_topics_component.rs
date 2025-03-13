@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 use super::i18n::UpcomingTopicsTranslate;
 use crate::theme::Theme;
-use dioxus::prelude::*;
+use bdk::prelude::*;
 use dioxus_translate::*;
 use dto::TopicSummary;
 

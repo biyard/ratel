@@ -8,7 +8,7 @@ use crate::{
     },
     theme::Theme,
 };
-use dioxus::prelude::*;
+use bdk::prelude::*;
 use dioxus_translate::*;
 use dto::*;
 use num_format::{Locale, ToFormattedString};

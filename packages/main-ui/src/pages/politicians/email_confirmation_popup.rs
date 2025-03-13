@@ -4,7 +4,7 @@ use super::{
     proclaim_popup::ProclaimPopup,
 };
 use crate::{components::icons, theme::Theme};
-use dioxus::prelude::*;
+use bdk::prelude::*;
 use dioxus_popup::PopupService;
 use dioxus_translate::*;
 

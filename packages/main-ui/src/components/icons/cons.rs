@@ -1,5 +1,5 @@
 #![allow(non_snake_case)]
-use dioxus::prelude::*;
+use bdk::prelude::*;
 
 #[component]
 pub fn Cons(#[props(default = "#DA4447".to_string())] color: String) -> Element {
