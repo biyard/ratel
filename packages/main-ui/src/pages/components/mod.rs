@@ -10,6 +10,7 @@ mod labeled_input;
 mod loader_popup;
 mod login_failure_popup;
 mod mission_card;
+mod politician_card;
 mod politician_stance;
 mod section_header;
 mod signup_popup;
