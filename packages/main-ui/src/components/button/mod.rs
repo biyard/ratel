@@ -1,4 +1,5 @@
 #![allow(non_snake_case)]
+use bdk::prelude::*;
 pub mod primary_button;
 pub mod secondary_botton;
 
@@ -16,6 +17,7 @@ pub mod secondary_botton;
 pub enum ButtonSize {
     #[default]
     Normal,
+    Small,
 }
 
 // #[component]

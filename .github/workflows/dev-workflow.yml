@@ -58,7 +58,7 @@ jobs:
         run: |
           echo "" > packages/main-ui/public/tailwind.css
           echo "" > packages/main-ui/public/dep.js
-          cd packages/main-ui && cargo test --tests
+          cd packages/main-ui && cargo test --tests --features web
 
   test-with-server:
     runs-on: ubuntu-latest
@@ -230,6 +230,7 @@ jobs:
           DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
           OPENAPI_KEY: ${{ secrets.OPENAPI_KEY }}
           AUTH_SECRET_KEY: ${{ secrets.DEV_AUTH_SECRET_KEY }}
+          JWT_SECRET_KEY: ${{ secrets.DEV_JWT_SECRET_KEY }}
           ENABLE_S3: false
           ENABLE_LAMBDA: true
         run: |

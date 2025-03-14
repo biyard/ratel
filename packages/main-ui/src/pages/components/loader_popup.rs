@@ -4,9 +4,8 @@ use super::{
     user_setup_popup::UserSetupPopup, wallet_signin_popup::WalletSigninPopup,
 };
 use crate::services::user_service::{UserEvent, UserService};
-use dioxus::prelude::*;
+use bdk::prelude::*;
 use dioxus_popup::PopupService;
-use dioxus_translate::*;
 
 #[component]
 pub fn LoaderPopup(

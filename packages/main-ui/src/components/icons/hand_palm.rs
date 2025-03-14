@@ -1,5 +1,5 @@
 #![allow(non_snake_case)]
-use dioxus::prelude::*;
+use bdk::prelude::*;
 
 #[component]
 pub fn HandPalm(#[props(default = "#E7D8C6".to_string())] color: String) -> Element {

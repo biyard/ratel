@@ -1,9 +1,8 @@
 #![allow(non_snake_case)]
 use super::{loader_popup::LoaderPopup, signin_popup_footer::SigninPopupFooter};
 use crate::{components::icons, services::user_service::UserService};
-use dioxus::prelude::*;
+use bdk::prelude::*;
 use dioxus_popup::PopupService;
-use dioxus_translate::*;
 
 #[component]
 pub fn WalletPopup(
@@ -20,7 +19,7 @@ pub fn WalletPopup(
             div { class: "justify-start text-white font-bold text-xl/24", {tr.title} }
             div { class: "flex flex-col gap-10 mt-35",
                 div {
-                    class: "w-full flex flex-row pl-20 py-22 bg-black border-[1px] rounded-[10px] justify-start items-center gap-17 cursor-pointer hover:border-white",
+                    class: "w-full flex flex-row pl-20 py-22 bg-black border-[1px] rounded-[10px] justify-start items-center gap-17 cursor-pointer border-black hover:border-white",
                     style: if user_service.is_phantom_installed() { "cursor: pointer;" } else { "border: none; cursor: not-allowed;" },
                     onclick: move |_| async move {
                         if !user_service.is_phantom_installed() {

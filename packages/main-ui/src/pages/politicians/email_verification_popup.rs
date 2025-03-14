@@ -1,5 +1,5 @@
 #![allow(non_snake_case)]
-use dioxus::prelude::*;
+use bdk::prelude::*;
 use dioxus_translate::*;
 use dioxus_popup::PopupService;
 use crate::{
@@ -32,7 +32,8 @@ pub fn EmailVerificationPopup(
             div { class: "flex flex-col w-full items-start justify-start gap-[35px] pt-[10px]",
                 div { class: "flex flex-col w-full gap-[10px]",
 
-                    div { id: "email-verification-popup-name",
+                    div {
+                        id: "email-verification-popup-name",
                         class: "flex flex-col w-full gap-[2px]",
                         div { class: "flex flex-row items-start",
                             span { class: "text-[14px] font-bold leading-[24px]", "{tr.name}" }
@@ -44,7 +45,8 @@ pub fn EmailVerificationPopup(
                         }
                     }
 
-                    div { id: "email-verification-popup-party",
+                    div {
+                        id: "email-verification-popup-party",
                         class: "flex flex-col w-full gap-[2px]",
                         div { class: "flex flex-row items-start",
                             span { class: "text-[14px] font-bold leading-[24px]", "{tr.party}" }
@@ -56,7 +58,8 @@ pub fn EmailVerificationPopup(
                         }
                     }
 
-                    div { id: "email-verification-popup-email",
+                    div {
+                        id: "email-verification-popup-email",
                         class: "flex flex-col w-full gap-[2px]",
                         div { class: "flex flex-row items-start",
                             span { class: "text-[14px] font-bold leading-[24px]", "{tr.email}" }
@@ -68,7 +71,8 @@ pub fn EmailVerificationPopup(
                         }
                     }
 
-                    div { id: "email-verification-popup-agree", 
+                    div {
+                        id: "email-verification-popup-agree",
                         class: "flex flex-row gap-[6px] items-center",
                         Checkbox {
                             class: "cursor-pointer",
@@ -81,19 +85,15 @@ pub fn EmailVerificationPopup(
                 }
 
                 div { class: "flex w-full",
-                    button { id: "email-verification-popup-button",
+                    button {
+                        id: "email-verification-popup-button",
                         class: "w-full h-[57px] text-[{theme.primary05}] bg-[{theme.primary03}] text-[18px] font-extrabold leading-[24px] rounded-[12px]",
-                        style: if agreed() {
-                            "opacity: 0.5; cursor: pointer;"
-                        } else {
-                            "opacity: 0.2;"
-                        },
+                        style: if agreed() { "opacity: 0.5; cursor: pointer;" } else { "opacity: 0.2;" },
                         onclick: move |_| {
                             tracing::debug!("email verification clicked");
                             if !agreed() {
                                 return;
                             }
-                            // TODO: send email verification
                             popup
                                 .open(rsx! {
                                     EmailConfirmationPopup {
@@ -107,7 +107,6 @@ pub fn EmailVerificationPopup(
                                 })
                                 .with_id("email_confirmation_popup")
                                 .with_title(tr.confirm_email);
-                                
                         },
                         disabled: !agreed(),
                         "{tr.verify_email}"

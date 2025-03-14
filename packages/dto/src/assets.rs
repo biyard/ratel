@@ -1,9 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "server")]
-use by_axum::aide;
-#[cfg(feature = "server")]
-use schemars::JsonSchema;
+use bdk::prelude::*;
 
 #[derive(Debug, Clone, Eq, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]

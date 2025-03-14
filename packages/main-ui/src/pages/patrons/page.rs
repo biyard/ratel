@@ -3,7 +3,7 @@ use crate::components::icons::DoubleArrowDown;
 
 use super::controller::*;
 use super::i18n::*;
-use dioxus::prelude::*;
+use bdk::prelude::*;
 use dioxus_translate::*;
 
 #[component]

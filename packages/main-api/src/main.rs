@@ -1,3 +1,4 @@
+use bdk::prelude::*;
 #[cfg(test)]
 use by_axum::auth::set_auth_config;
 use by_axum::{auth::authorization_middleware, axum::middleware};

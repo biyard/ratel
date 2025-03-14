@@ -1,7 +1,6 @@
 #![allow(non_snake_case)]
 use crate::components::icons::Logo;
-use dioxus::prelude::*;
-use dioxus_translate::*;
+use bdk::prelude::*;
 
 #[component]
 pub fn WelcomeHeader(lang: Language, title: String, description: String) -> Element {

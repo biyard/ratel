@@ -1,7 +1,5 @@
-@import url(https://cdn.jsdelivr.net/gh/moonspam/NanumSquare@2.0/nanumsquare.css);
-
 html, body {
-  font-family: Railway, sans-serif !important;
+  font-family: Raleway, sans-serif !important;
   background-color: var(--color-background);
   color: white;
   -ms-overflow-style: none; /* IE and Edge */

@@ -1,8 +1,7 @@
 #![allow(non_snake_case)]
 use super::{signin_popup_footer::SigninPopupFooter, welcome_header::WelcomeHeader};
-use dioxus::prelude::*;
+use bdk::prelude::*;
 use dioxus_popup::PopupService;
-use dioxus_translate::*;
 
 #[component]
 pub fn WelcomePopup(
@@ -11,7 +10,7 @@ pub fn WelcomePopup(
     lang: Language,
 ) -> Element {
     let mut popup: PopupService = use_context();
-    let tr = translate::<CongratulationPopupTranslate>(&lang);
+    let tr = translate::<WelcomePopupTranslate>(&lang);
 
     rsx! {
         div { id, class,
@@ -29,7 +28,7 @@ pub fn WelcomePopup(
 }
 
 translate! {
-    CongratulationPopupTranslate;
+    WelcomePopupTranslate;
 
     title: {
         ko: "라텔에 오신 것을 환영합니다!",
