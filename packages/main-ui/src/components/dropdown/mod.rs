@@ -58,7 +58,7 @@ pub fn Dropdown(
                 "aria-label": "Dropdown",
             }
             div {
-                class: "absolute w-full mt-[10px] bg-[{bg_color}] \
+                class: "absolute w-full mt-10 bg-[{bg_color}] \
                         rounded-[8px] shadow-lg overflow-hidden \
                         transition-all duration-200 z-10 text-[{text_color}]",
                 style: if (is_open)() { "max-height: 200px; opacity: 1;" } else { "max-height: 0; opacity: 0;" },

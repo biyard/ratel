@@ -105,7 +105,7 @@ pub fn LoginProposeANewFeature(lang: Language) -> Element {
                 "{tr.sub_text}"
             }
             button {
-                class: "w-full h-[100px] mt-[10px] rounded-xl border border-dotted border-[#414462] flex flex-col justify-center items-center overflow-hidden",
+                class: "w-full h-[100px] mt-10 rounded-xl border border-dotted border-[#414462] flex flex-col justify-center items-center overflow-hidden",
                 onclick: move |_| {
                     tracing::debug!("Propose a New Feature button clicked");
                 },

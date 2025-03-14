@@ -17,7 +17,6 @@ pub use page::*;
 pub use politicians::*;
 // pub use topics::*;
 
-// mod congratulation_popup;
 mod layout;
 // mod menus;
 // pub mod signup_popup;

@@ -1,5 +1,7 @@
 #![allow(non_snake_case)]
-use super::{loader_popup::LoaderPopup, wallet_popup::WalletPopup};
+use super::{
+    loader_popup::LoaderPopup, signin_popup_footer::SigninPopupFooter, wallet_popup::WalletPopup,
+};
 use crate::{components::icons, services::user_service::UserService};
 use bdk::prelude::*;
 use dioxus_popup::PopupService;
@@ -18,7 +20,7 @@ pub fn SignupPopup(
             div { class: "justify-start text-white font-bold text-xl/24", "{tr.title}" }
             div { class: "flex flex-col gap-10 mt-35",
                 div {
-                    class: "w-full flex flex-row pl-20 py-22 bg-black border-[1px] rounded-[10px] justify-start items-center gap-[17px] cursor-pointer hover:border-white",
+                    class: "w-full flex flex-row pl-20 py-22 bg-black border-[1px] rounded-[10px] justify-start items-center gap-17 cursor-pointer border-black hover:border-white",
                     onclick: move |_| async move {
                         tracing::debug!("Signup with Google clicked");
                         user_service.set_signer_type("google");
@@ -26,6 +28,8 @@ pub fn SignupPopup(
                             LoaderPopup {
                                 class: "w-[400px] mx-auto",
                                 lang,
+                                title: tr.loader_title,
+                                description: tr.loader_message,
                                 logo: rsx! {
                                     icons::Google { width: "50", height: "50" }
                                 },
@@ -45,7 +49,7 @@ pub fn SignupPopup(
                 }
 
                 div {
-                    class: "w-full flex flex-row pl-20 py-22 bg-black border-[1px] rounded-[10px] justify-start items-center gap-[17px] cursor-pointer hover:border-white",
+                    class: "w-full flex flex-row pl-20 py-22 bg-black border-[1px] rounded-[10px] justify-start items-center gap-17 cursor-pointer border-black hover:border-white",
                     onclick: move |_| {
                         tracing::debug!("signup with wallet clicked");
                         popup.open(rsx! {
@@ -58,23 +62,7 @@ pub fn SignupPopup(
                     }
                 }
             }
-            // TODO: applying policy and terms.
-            div { class: "flex flex-row gap-10 mt-35 justify-center",
-                button {
-                    class: "cursor-pointer",
-                    onclick: move |_| {
-                        tracing::debug!("Privacy policy clicked");
-                    },
-                    span { class: "text-neutral-400 text-xs/14 font-medium", "{tr.privacy_policy}" }
-                }
-                button {
-                    class: "cursor-pointer",
-                    onclick: move |_| {
-                        tracing::debug!("Privacy policy clicked");
-                    },
-                    span { class: "text-neutral-400 text-xs/14 font-medium", "{tr.term_of_service}" }
-                }
-            }
+            SigninPopupFooter { lang }
         }
     }
 }
@@ -85,6 +73,16 @@ translate! {
     title: {
         ko: "라텔에 참여하기",
         en: "Join the Movement",
+    }
+
+    loader_title: {
+        ko: "로그인",
+        en: "Log in",
+    }
+
+    loader_message: {
+        ko: "팝업에서 계정에 로그인하세요",
+        en: "Sign into your account in the pop-up",
     }
 
     continue_with_google: {
@@ -105,15 +103,5 @@ translate! {
     need_wallet: {
         ko: "지갑 설치가 필요합니다",
         en: "Need Wallet",
-    },
-
-    privacy_policy: {
-        ko: "개인정보 처리방침",
-        en: "Privacy Policy",
-    },
-
-    term_of_service: {
-        ko: "이용약관",
-        en: "Term of Service",
     },
 }

@@ -19,7 +19,7 @@ pub fn Header(lang: Language, selected: i32) -> Element {
             div { class: "w-full flex flex-row items-center justify-between gap-59 max-w-[1176px] mx-10",
                 a { href: "/#top", Logo {} }
 
-                nav { class: "grow flex flex-row gap-[10px] text-secondary font-bold text-[15px]",
+                nav { class: "grow flex flex-row gap-10 text-secondary font-bold text-[15px]",
                     a {
                         class: "p-10 hover:text-white",
                         href: "/#about",
@@ -57,11 +57,11 @@ pub fn Header(lang: Language, selected: i32) -> Element {
                         },
                         {tr.login}
                     }
-                    button { class: "px-20 py-10 bg-primary hover:bg-hover text-black text-[14px] cursor-pointer rounded-full font-bold",
+                    button { class: "px-20 py-10 bg-primary hover:bg-hover text-black text-sm cursor-pointer rounded-full font-bold",
                         {tr.get_ratel}
                     }
                 }
-
+            
             }
         }
     }

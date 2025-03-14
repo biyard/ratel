@@ -40,7 +40,7 @@ pub fn SupportUs(lang: Language) -> Element {
             div { class: "h-[15px] self-stretch text-[#414462] text-xs font-normal font-['Inter']",
                 "{tr.sub_text}"
             }
-            div { class: "w-full h-[100px] mt-[10px] rounded-xl border border-dotted border-[#414462] flex flex-col justify-center items-center overflow-hidden",
+            div { class: "w-full h-[100px] mt-10 rounded-xl border border-dotted border-[#414462] flex flex-col justify-center items-center overflow-hidden",
                 if let Ok(_account) = phantom.get_account() {
                     div { class: "text-[#414462] text-sm font-normal font-['Inter']" }
                 } else {
@@ -79,7 +79,7 @@ pub fn ProposeANewFeature(lang: Language) -> Element {
                 "{tr.sub_text}"
             }
             button {
-                class: "w-full h-[100px] mt-[10px] rounded-xl border border-dotted border-[#414462] flex flex-col justify-center items-center overflow-hidden",
+                class: "w-full h-[100px] mt-10 rounded-xl border border-dotted border-[#414462] flex flex-col justify-center items-center overflow-hidden",
                 onclick: move |_| {
                     tracing::debug!("Propose a New Feature button clicked");
                 },

@@ -2,12 +2,13 @@ use bdk::prelude::*;
 use dto::ServiceError;
 // use ed25519_dalek::Signature as Ed25519Signature;
 use hex::encode;
-use wallet_adapter::{Wallet, WalletAccount, WalletAdapter, WalletResult};
+use wallet_adapter::{SigninInput, Wallet, WalletAccount, WalletAdapter, WalletResult};
 use web_sys::window;
 #[derive(Debug, Clone)]
 pub struct PhantomAuth {
     adapter: WalletAdapter,
     wallet: WalletResult<Wallet>,
+    active_account: Option<WalletAccount>,
     cached_signiture: Option<rest_api::Signature>,
 }
 
@@ -33,6 +34,7 @@ impl PhantomAuth {
         Self {
             adapter,
             wallet,
+            active_account: None,
             cached_signiture: None,
         }
     }
@@ -56,12 +58,27 @@ impl PhantomAuth {
         }
     }
 
-    pub async fn connect_desktop(&mut self) -> Result<WalletAccount, ServiceError> {
+    pub async fn connect_desktop(&mut self) -> Result<(), ServiceError> {
         if let Ok(wallet) = self.wallet.clone() {
+            // background connect
             return match self.adapter.connect(wallet).await {
                 Ok(account) => {
-                    self.cached_signiture = self.sign(&account.address).await;
-                    Ok(account)
+                    let public_key = self.get_public_key_array();
+                    let mut signin_input = SigninInput::new();
+                    signin_input
+                        .set_domain(&self.adapter.window())?
+                        .set_statement("Login To Dev Website")
+                        .set_chain_id(wallet_adapter::Cluster::DevNet) // TODO: manage this value in env
+                        .set_address(&self.get_address())?;
+                    match self.adapter.sign_in(&signin_input, public_key).await {
+                        Ok(output) => {
+                            self.active_account = Some(output.account);
+                            Ok(())
+                        }
+                        Err(e) => Err(ServiceError::WalletError(
+                            format!("Failed to connect wallet: {:?}", e).to_string(),
+                        )),
+                    }
                 }
                 Err(e) => Err(ServiceError::WalletError(
                     format!("Failed to connect wallet: {:?}", e).to_string(),
@@ -79,6 +96,13 @@ impl PhantomAuth {
         match self.adapter.connected_account() {
             Ok(account) => account.public_key.to_vec(),
             Err(_) => vec![],
+        }
+    }
+
+    pub fn get_public_key_array(&self) -> [u8; 32] {
+        match self.adapter.connected_account() {
+            Ok(account) => account.public_key,
+            Err(_) => [0; 32],
         }
     }
 
@@ -144,6 +168,29 @@ impl PhantomAuth {
 
     pub fn is_signed(&self) -> bool {
         self.cached_signiture.is_some()
+    }
+
+    pub async fn signin_message(&mut self) -> Result<(), ServiceError> {
+        match self.adapter.connected_account() {
+            Ok(account) => {
+                match self.sign(&account.address).await {
+                    Some(signature) => {
+                        self.cached_signiture = Some(signature);
+                    }
+                    None => {
+                        return Err(ServiceError::WalletError(
+                            "Failed to sign message".to_string(),
+                        ));
+                    }
+                }
+                Ok(())
+            }
+            Err(_) => return Err(ServiceError::WalletNotFound),
+        }
+    }
+
+    pub fn is_logined(&self) -> bool {
+        self.active_account.is_some()
     }
 
     // pub fn get_deeplink(&self, method: &PhantomDeeplink) -> String {
