@@ -172,7 +172,16 @@ impl PhantomAuth {
     pub async fn signin_message(&mut self) -> Result<(), ServiceError> {
         match self.adapter.connected_account() {
             Ok(account) => {
-                self.cached_signiture = self.sign(&account.address).await;
+                match self.sign(&account.address).await {
+                    Some(signature) => {
+                        self.cached_signiture = Some(signature);
+                    }
+                    None => {
+                        return Err(ServiceError::WalletError(
+                            "Failed to sign message".to_string(),
+                        ));
+                    }
+                }
                 Ok(())
             }
             Err(_) => return Err(ServiceError::WalletNotFound),

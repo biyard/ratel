@@ -57,6 +57,7 @@ pub fn LoaderPopup(
                                 logo,
                                 logo_origin,
                                 lang,
+                                msg,
                             }
                         })
                         .with_id("wallet_signin_popup");

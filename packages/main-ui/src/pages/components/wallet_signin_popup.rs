@@ -11,6 +11,7 @@ pub fn WalletSigninPopup(
     lang: Language,
     logo: Element,
     logo_origin: Element,
+    msg: String,
 ) -> Element {
     let tr = translate::<WalletSigninPopupTranslate>(&lang);
     let mut popup: PopupService = use_context();
@@ -32,6 +33,7 @@ pub fn WalletSigninPopup(
                 onclick: move |_| {
                     let logo = logo.clone();
                     let logo_origin = logo_origin.clone();
+                    let msg = msg.clone();
                     popup.open(rsx! {
                         LoaderPopup {
                             class: "w-[400px] mx-[5px]",
@@ -40,7 +42,7 @@ pub fn WalletSigninPopup(
                             description: tr.description,
                             logo,
                             logo_origin,
-                            msg: tr.loader_message,
+                            msg,
                         }
                     });
                 },
