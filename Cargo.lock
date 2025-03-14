@@ -2767,6 +2767,7 @@ dependencies = [
  "hex",
  "num-format",
  "serde",
+ "tracing",
  "url",
  "wallet-adapter",
  "wasm-bindgen",

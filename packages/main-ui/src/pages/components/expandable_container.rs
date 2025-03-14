@@ -35,7 +35,10 @@ pub fn ExpandableContainer(
     rsx! {
         div {
             class: "transition-[width] duration-300 flex flex-col items-center justify-start gap-20 h-full bg-bg rounded-[20px] cursor-pointer px-30 py-40 flex flex-col {text_color} {outer} gap-40",
-            onclick: move |_| onclick(()),
+            onclick: move |_| {
+                tracing::debug!("clicked");
+                onclick(());
+            },
             div { class: "transition-all w-full flex {header_style} items-center justify-between gap-10",
                 if expanded {
                     span { class: "font-bold text-[32px]/22", "{total_count}" }
