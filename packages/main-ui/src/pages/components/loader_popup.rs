@@ -31,10 +31,11 @@ pub fn LoaderPopup(
         spawn(async move {
             match user_service.login().await {
                 UserEvent::Signup(principal, email, nickname, profile_url) => {
+                    tracing::debug!("Email: {}, Principal: {}", email, principal);
                     popup
                         .open(rsx! {
                             UserSetupPopup {
-                                class: "w-[390px]",
+                                class: "w-390",
                                 nickname,
                                 profile_url,
                                 email,
@@ -48,11 +49,11 @@ pub fn LoaderPopup(
                     popup.close();
                 }
                 UserEvent::Confirmed => {
-                    tracing::info!("User confirmed");
+                    tracing::debug!("User confirmed");
                     popup
                         .open(rsx! {
                             WalletSigninPopup {
-                                class: "w-[400px] mx-[5px]",
+                                class: "w-400 mx-5",
                                 logo,
                                 logo_origin,
                                 lang,
@@ -65,7 +66,7 @@ pub fn LoaderPopup(
                     popup
                         .open(rsx! {
                             LoginFailurePopup {
-                                class: "w-[400px] mx-[5px]",
+                                class: "w-400 mx-5",
                                 description,
                                 logo,
                                 logo_origin,
@@ -82,14 +83,14 @@ pub fn LoaderPopup(
     rsx! {
         div { id, class,
             div { class: "justify-start text-white font-bold text-xl/24", "{title}" }
-            div { class: "w-full flex  justify-center items-center mt-[35px]",
+            div { class: "w-full flex  justify-center items-center mt-35",
                 // TODO: border-t rounded
-                div { class: "border-6 border-t-6 w-[82px] h-[82px] border-primary border-t-background rounded-full animate-spin" }
-                div { class: "absolute w-[64px] h-[64px] bg-white rounded-full justify-center items-center flex",
+                div { class: "border-6 border-t-6 w-82 h-82 border-primary border-t-background rounded-full animate-spin" }
+                div { class: "absolute w-64 h-64 bg-white rounded-full justify-center items-center flex",
                     div { class: "flex justify-center items-center", {display_logo} }
                 }
             }
-            div { class: "justify-center text-center text-white font-bold text-[16px] leading-[24px] mt-[35px]",
+            div { class: "justify-center text-center text-white font-bold text-base/24 mt-35",
                 "{load_message}"
             }
             SigninPopupFooter { lang }

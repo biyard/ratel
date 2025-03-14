@@ -15,7 +15,7 @@ pub fn InputWithButton(
     rsx! {
         div { class: "w-full max-w-604 h-50 flex flex-row items-center rounded-lg overflow-hidden",
             input {
-                class: "outline-none h-full grow px-20 text-white text-base placeholder-c-wg-30 border border-c-wg-70 border rounded-l-lg flex flex-row items-center justify-start",
+                class: "outline-none h-full grow px-20 text-white text-base placeholder-c-wg-30 border border-c-wg-70 rounded-l-lg flex flex-row items-center justify-start",
                 r#type,
                 value: value(),
                 placeholder,

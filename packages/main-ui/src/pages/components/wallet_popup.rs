@@ -17,10 +17,10 @@ pub fn WalletPopup(
 
     rsx! {
         div { id, class,
-            div { class: "justify-start text-white font-bold text-xl/24", "{tr.title}" }
+            div { class: "justify-start text-white font-bold text-xl/24", {tr.title} }
             div { class: "flex flex-col gap-10 mt-35",
                 div {
-                    class: "w-full flex flex-row pl-20 py-22 bg-black border-[1px] rounded-[10px] justify-start items-center gap-[17px] cursor-pointer hover:border-white",
+                    class: "w-full flex flex-row pl-20 py-22 bg-black border-[1px] rounded-[10px] justify-start items-center gap-17 cursor-pointer hover:border-white",
                     style: if user_service.is_phantom_installed() { "cursor: pointer;" } else { "border: none; cursor: not-allowed;" },
                     onclick: move |_| async move {
                         if !user_service.is_phantom_installed() {
@@ -31,7 +31,7 @@ pub fn WalletPopup(
                         user_service.set_signer_type("phantom");
                         popup.open(rsx! {
                             LoaderPopup {
-                                class: "w-[400px] mx-auto",
+                                class: "w-400 mx-auto",
                                 lang,
                                 title: tr.phantom,
                                 description: tr.loader_message,
@@ -48,7 +48,7 @@ pub fn WalletPopup(
                     icons::Phantom {}
                     div { class: "flex flex-col gap-3",
                         span {
-                            class: "text-[16px] leading-[19px] font-semibold",
+                            class: "text-base/19 font-semibold",
                             style: if user_service.is_phantom_installed() { "color: white;" } else { "color: #9F9F9F;" },
                             "{tr.phantom}"
                         }

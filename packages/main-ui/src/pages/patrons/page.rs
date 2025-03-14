@@ -30,7 +30,7 @@ pub fn Title(lang: Language) -> Element {
 #[component]
 pub fn Table(lang: Language) -> Element {
     rsx! {
-        div { class: "h-96 bg-[#414462] rounded-lg flex-col justify-start items-center inline-flex w-full min-h-min mt-[10px]",
+        div { class: "h-96 bg-[#414462] rounded-lg flex-col justify-start items-center inline-flex w-full min-h-min mt-10",
             TableMenu { lang }
             Card { lang }
             PatronTableMoreButton { lang }

@@ -21,7 +21,7 @@ pub fn SignupPopup(
             div { class: "justify-start text-white font-bold text-xl/24", "{tr.title}" }
             div { class: "flex flex-col gap-10 mt-35",
                 div {
-                    class: "w-full flex flex-row pl-20 py-22 bg-black border-[1px] rounded-[10px] justify-start items-center gap-[17px] cursor-pointer hover:border-white",
+                    class: "w-full flex flex-row pl-20 py-22 bg-black border-[1px] rounded-[10px] justify-start items-center gap-17 cursor-pointer hover:border-white",
                     onclick: move |_| async move {
                         tracing::debug!("Signup with Google clicked");
                         user_service.set_signer_type("google");
@@ -50,7 +50,7 @@ pub fn SignupPopup(
                 }
 
                 div {
-                    class: "w-full flex flex-row pl-20 py-22 bg-black border-[1px] rounded-[10px] justify-start items-center gap-[17px] cursor-pointer hover:border-white",
+                    class: "w-full flex flex-row pl-20 py-22 bg-black border-[1px] rounded-[10px] justify-start items-center gap-17 cursor-pointer hover:border-white",
                     onclick: move |_| {
                         tracing::debug!("signup with wallet clicked");
                         popup.open(rsx! {

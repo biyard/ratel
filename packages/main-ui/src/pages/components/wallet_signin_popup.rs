@@ -18,7 +18,7 @@ pub fn WalletSigninPopup(
     rsx! {
         div { id, class,
             div { class: "justify-start text-white font-bold text-xl/24", "{tr.title}" }
-            div { class: "w-full flex  justify-center items-center mt-35",
+            div { class: "w-full flex justify-center items-center mt-35",
                 // TODO: border-t rounded
                 div { class: "w-[84px] h-[84px] bg-white rounded-full justify-center items-center flex",
                     div { class: "flex justify-center items-center", {display_logo} }
@@ -28,7 +28,7 @@ pub fn WalletSigninPopup(
                 "{tr.description}"
             }
             button {
-                class: "w-full h-[60px] bg-primary rounded-[10px] mt-35 justify-center items-center cursor-pointer",
+                class: "w-full h-60 bg-primary rounded-[10px] mt-35 justify-center items-center cursor-pointer",
                 onclick: move |_| {
                     let logo = logo.clone();
                     let logo_origin = logo_origin.clone();
