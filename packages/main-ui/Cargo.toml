@@ -12,6 +12,8 @@ dto.workspace = true
 wasm-bindgen = { version = "0.2.100" }
 wasm-bindgen-futures = { version = "0.4.50" }
 web-sys = { version = "0.3.77" }
+
+tracing = { version = "0.1.40" }
 serde = "1.0.216"
 
 bdk = { workspace = true, features = ["fe"] }

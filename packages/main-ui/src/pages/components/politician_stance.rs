@@ -89,7 +89,10 @@ pub fn PoliticianStance(
                                 ThumbsUp { class: "[&>path]:stroke-c-c-20", width: "40", height: "40" }
                             },
                             expanded: selected() == 0,
-                            onclick: move |_| selected.set(0),
+                            onclick: move |_| {
+                                tracing::debug!("selected: 0");
+                                selected.set(0);
+                            },
 
                             div { class: "w-full h-260 grid grid-cols-4 gap-10",
                                 for m in pro_cryptos.suspend()?.iter() {
@@ -110,7 +113,10 @@ pub fn PoliticianStance(
                                 ThumbsDown { class: "[&>path]:stroke-c-p-20", width: "40", height: "40" }
                             },
                             expanded: selected() == 1,
-                            onclick: move |_| selected.set(1),
+                            onclick: move |_| {
+                                tracing::debug!("selected: 1");
+                                selected.set(1);
+                            },
                             div { class: "w-full h-260 grid grid-cols-4 gap-10",
                                 for m in anti_cryptos.suspend()?.iter() {
                                     PoliticianCard {
@@ -123,7 +129,9 @@ pub fn PoliticianStance(
                         }
                     } // end of flex-row
 
-                    div { class: "flex flex-row gap-10 items-center justify-start text-neutral-400 font-medium text-[13px]/18",
+                    div {
+                        class: "flex flex-row gap-10 items-center justify-start text-neutral-400 font-medium text-[13px]/18 tooltip",
+                        "data-tip": "test",
                         Help {
                             class: "[&>path]:stroke-neutral-400 [&>circle]:fill-neutral-400",
                             width: "18",
