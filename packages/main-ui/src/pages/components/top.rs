@@ -22,10 +22,10 @@ pub fn Top(
             ..attributes,
             div { class: "flex flex-col items-center justify-center gap-32",
                 CharacterSymbol {}
-                h1 { class: "text-[48px] text-center font-bold leading-[56px] text-white whitespace-pre-line",
+                h1 { class: "text-5xl/56 text-center font-bold text-white whitespace-pre-line",
                     {tr.slogan}
                 }
-                p { class: "text-[18px] text-center font-normal text-[#AEAEAE] whitespace-pre-line",
+                p { class: "text-lg text-center font-normal text-c-wg-30 whitespace-pre-line",
                     {tr.description}
                 }
 
@@ -41,7 +41,7 @@ pub fn Top(
                     onclick: move |_| {
                         tracing::debug!("Learn more clicked");
                         popup.open(rsx! {
-                            SignupPopup { class: "w-[460px]", lang: lang.clone() }
+                            SignupPopup { class: "w-460", lang: lang.clone() }
                         });
                     },
                     {tr.btn_learn}

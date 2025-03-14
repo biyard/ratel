@@ -13,14 +13,14 @@ pub fn SigninPopupFooter(lang: Language) -> Element {
                 onclick: move |_| {
                     tracing::debug!("Privacy policy clicked");
                 },
-                span { class: "text-neutral-400 text-xs/14 font-medium", "{tr.privacy_policy}" }
+                span { class: "text-neutral-400 text-xs/14 font-medium", {tr.privacy_policy} }
             }
             button {
                 class: "cursor-pointer",
                 onclick: move |_| {
-                    tracing::debug!("Privacy policy clicked");
+                    tracing::debug!("Term of service clicked");
                 },
-                span { class: "text-neutral-400 text-xs/14 font-medium", "{tr.term_of_service}" }
+                span { class: "text-neutral-400 text-xs/14 font-medium", {tr.term_of_service} }
             }
         }
     }

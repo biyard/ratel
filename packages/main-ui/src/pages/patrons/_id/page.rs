@@ -111,13 +111,13 @@ pub fn AdditionalReferenceMaterialsBox(lang: Language) -> Element {
     let tr: AdditionalReferenceMaterialsTranslate = translate(&lang);
 
     rsx! {
-        div { class: "h-[136px] rounded-[12px] w-full mt-[10px]",
+        div { class: "h-[136px] rounded-[12px] w-full mt-10",
             // Label
             label { class: "w-full font-bold text-white mb-1 flex items-center gap-1 text-[16px]",
                 "{tr.title}"
             }
             div {
-                class: "w-full flex flex-col justify-between items-center rounded-md  h-[136px] mt-[5px]",
+                class: "w-full flex flex-col justify-between items-center rounded-md  h-[136px] mt-5",
                 style: "padding: 8px; border: 1px dotted #424563;",
 
                 //Icon
@@ -154,7 +154,7 @@ pub fn AdditionalReferenceMaterialsBox(lang: Language) -> Element {
 #[component]
 pub fn UploadedFileBox(lang: Language) -> Element {
     rsx! {
-        div { class: "h-[146px] rounded-[12px] w-full mt-[40px] flex justify-start items-center",
+        div { class: "h-[146px] rounded-[12px] w-full mt-40 flex justify-start items-center",
             div { class: "flex flex-col justify-start items-center gap-[10px]",
                 div { class: "w-full flex flex- center justify-start items-center gap-[5px]",
                     UploadedFile {}
@@ -203,7 +203,7 @@ pub fn SubmitAndCancelButton(lang: Language) -> Element {
     let tr: SubmitAndCancelButtonTextTranslate = translate(&lang);
 
     rsx! {
-        div { class: "flex justify-center gap-[30px] mt-[50px]",
+        div { class: "flex justify-center gap-[30px] mt-50",
             div {
                 class: "flex justify-center items-center w-[400px] h-[57px] rounded-[12px] align-middle",
                 style: "background-color: #74789E",

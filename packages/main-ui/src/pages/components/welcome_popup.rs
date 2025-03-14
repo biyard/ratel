@@ -17,7 +17,7 @@ pub fn WelcomePopup(
         div { id, class,
             WelcomeHeader { lang, title: tr.title, description: tr.message }
             button {
-                class: "w-full rounded-[10px] bg-primary text-base font-bold text-black h-[59px] flex items-center justify-center mt-35",
+                class: "w-full rounded-[10px] bg-primary text-base font-bold text-black h-59 flex items-center justify-center mt-35",
                 onclick: move |_| {
                     popup.close();
                 },

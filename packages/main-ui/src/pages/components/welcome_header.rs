@@ -10,7 +10,7 @@ pub fn WelcomeHeader(lang: Language, title: String, description: String) -> Elem
             "{title}"
         }
         div { class: "w-full flex justify-center items-center my-24",
-            div { class: "w-[100px] h-[100px] justify-center items-center flex",
+            div { class: "w-100 h-100 justify-center items-center flex",
                 // FIXME: Only logo image is supported
                 div { class: "flex justify-center items-center", Logo {} }
             }

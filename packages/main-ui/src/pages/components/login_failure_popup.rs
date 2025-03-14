@@ -26,7 +26,7 @@ pub fn LoginFailurePopup(
             div { class: "justify-start text-white font-bold text-xl/24", "{tr.title}" }
             div { class: "flex flex-col gap-10 mt-35",
                 div {
-                    class: "w-full flex flex-row pl-20 py-22 bg-black border-[1px] rounded-[10px] justify-start items-center gap-[17px] cursor-pointer border-c-p-50",
+                    class: "w-full flex flex-row pl-20 py-22 bg-black border-[1px] rounded-[10px] justify-start items-center gap-17 cursor-pointer border-c-p-50",
                     onclick: move |_| {
                         let logo = logo.clone();
                         let logo_origin = logo_origin.clone();
@@ -50,7 +50,7 @@ pub fn LoginFailurePopup(
                     }
                 }
 
-                div { class: "w-full flex flex-row pl-[20px] py-[10px] bg-c-p-50-10 rounded-[10px] justify-start items-center gap-[10px]",
+                div { class: "w-full flex flex-row pl-20 py-10 bg-c-p-50-10 rounded-[10px] justify-start items-center gap-10",
                     icons::AlertCircle { color: "#DB2780" }
                     div { class: "flex flex-col gap-3",
                         span { class: "text-c-p-50 text-[15px]/24 font-semibold tracking-wider",

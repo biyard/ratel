@@ -45,29 +45,26 @@ pub fn UserSetupPopup(
     rsx! {
         div { id, class,
             WelcomeHeader { lang, title: tr.title, description: tr.message }
-            div { class: "flex flex-col items-start justify-start w-full pt-[10px] gap-[20px] mt-35",
+            div { class: "flex flex-col items-start justify-start w-full pt-10 gap-20 mt-35",
                 // Email
-                if !email.is_empty() {
-                    div { class: "flex flex-col gap-5",
-                        div { class: "flex flex-row items-start",
-                            span { class: "text-[15px]/28 font-bold", {"tr.email"} }
-                        }
-                        div { class: "flex items-start w-full mt-[10px] gap-[8px]",
-                            input {
-                                class: "w-[400px] max-[400px]:w-[300px] h-[59px] px-[24px] py-[17.5px] bg-[{theme.background}] text-[18px] font-bold leading-[24px] placeholder-[{theme.primary07}] rounded-[8px] text-[{theme.primary04}]",
-                                value: "{email}",
-                                disabled: true,
-                            }
+                div { class: "flex flex-col gap-5",
+                    div { class: "flex flex-row items-start",
+                        span { class: "text-[15px]/28 font-bold text-neutral-400", {tr.email} }
+                    }
+                    div { class: "flex items-start w-full mt-10 gap-8",
+                        input {
+                            class: "w-full max-[400px]:w-300 h-59 px-24 py-[17.5px] bg-background text-lg/24 font-medium placeholder-neutral-600 rounded-lg text-white",
+                            value: "{email}",
+                            disabled: !email.is_empty(),
                         }
                     }
                 }
 
-                // Nickname
                 div { class: "grid gap-8 w-full grid-cols-2",
                     div { class: "flex flex-col items-start gap-5",
-                        span { class: "text-neutral-400 text-[15px]/28 font-bold", "{tr.first_name}" }
+                        span { class: "text-neutral-400 text-[15px]/28 font-bold", {tr.first_name} }
                         input {
-                            class: "max-[400px]:w-[300px] h-[59px] px-[24px] py-[17.5px] bg-[{theme.background}] text-[18px] font-bold leading-[24px] placeholder-[{theme.primary07}] rounded-[8px]",
+                            class: "w-full max-[400px]:w-190 h-59 px-24 py-[17.5px] bg-background text-lg/24 font-medium placeholder-neutral-600 rounded-lg text-white",
                             placeholder: "{tr.enter_nickname}",
                             value: firstname(),
                             oninput: move |e| {
@@ -76,16 +73,16 @@ pub fn UserSetupPopup(
                                 firstname.set(value);
                             },
                             if !fname_valid() {
-                                span { class: "text-[14px] font-bold leading-[24px] text-[{theme.primary04}]",
-                                    "{tr.special_characters}"
+                                span { class: "text-sm/24 font-bold text-c-p-50",
+                                    {tr.special_characters}
                                 }
                             }
                         }
                     }
                     div { class: "flex flex-col items-start gap-5",
-                        span { class: "text-neutral-400 text-[15px]/28 font-bold", "{tr.last_name}" }
+                        span { class: "text-neutral-400 text-[15px]/28 font-bold", {tr.last_name} }
                         input {
-                            class: "max-[400px]:w-[300px] h-[59px] px-[24px] py-[17.5px] bg-[{theme.background}] text-[18px] font-bold leading-[24px] placeholder-[{theme.primary07}] rounded-[8px]",
+                            class: "w-full max-[390px]:w-190 h-59 px-24 py-[17.5px] bg-background text-lg/24 font-medium placeholder-neutral-600 rounded-lg text-white",
                             placeholder: "{tr.enter_nickname}",
                             value: lastname(),
                             oninput: move |e| {
@@ -94,25 +91,25 @@ pub fn UserSetupPopup(
                                 lastname.set(value);
                             },
                             if !lname_valid() {
-                                span { class: "text-[14px] font-bold leading-[24px] text-[{theme.primary04}]",
-                                    "{tr.special_characters}"
+                                span { class: "text-sm/24 font-bold text-c-p-50",
+                                    {tr.special_characters}
                                 }
                             }
                         }
                     }
                 }
 
-                div { class: "flex flex-col gap-10px items-start",
+                div { class: "flex flex-col gap-10 items-start",
                     Checkbox {
                         title: "{agree_msg}",
-                        class: "text-[#AEAAAB] text-sm/16 font-normal",
+                        class: "text-white text-sm/16 font-normal",
                         onchange: move |check| {
                             agreed.set(check);
                         },
                     }
                     Checkbox {
                         title: "{tr.receive_announcement}",
-                        class: "text-[#AEAAAB] text-sm/16 font-normal",
+                        class: "text-white text-sm/16 font-normal",
                         onchange: move |check| {
                             announcement_agree.set(check);
                         },
@@ -120,7 +117,7 @@ pub fn UserSetupPopup(
                 }
 
                 button {
-                    class: "w-full rounded-[10px] bg-[{btn_color}] text-base/19 font-bold text-black h-[59px] flex items-center justify-center",
+                    class: "w-full rounded-[10px] bg-[{btn_color}] text-base/19 font-bold text-black h-59 flex items-center justify-center",
                     onclick: move |_| {
                         if agreed() {
                             let nickname = format!("{} {}", firstname(), lastname());
@@ -154,7 +151,7 @@ pub fn UserSetupPopup(
                             });
                         }
                     },
-                    "{tr.button}"
+                    {tr.button}
                 }
             }
             SigninPopupFooter { lang }
