@@ -5,6 +5,8 @@ use bdk::prelude::*;
 #[component]
 pub fn PrimaryButton(
     #[props(default = Default::default())] size: ButtonSize,
+    #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
+
     #[props(default = false)] disabled: bool,
     children: Element,
 
@@ -29,6 +31,7 @@ pub fn PrimaryButton(
                     onclick(evt);
                 }
             },
+            ..attributes,
             {children}
         }
     }

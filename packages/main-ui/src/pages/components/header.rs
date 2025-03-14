@@ -1,6 +1,6 @@
 #![allow(non_snake_case)]
 use super::SignupPopup;
-use crate::components::icons::Logo;
+use crate::{components::icons::Logo, route::Route};
 use bdk::prelude::*;
 use dioxus_popup::PopupService;
 
@@ -8,33 +8,39 @@ use dioxus_popup::PopupService;
 pub fn Header(lang: Language, selected: i32) -> Element {
     let tr: HeaderTranslate = translate(&lang);
     let mut popup: PopupService = use_context();
+    let current_path: Route = use_route();
+    let selected_menu = use_memo(move || match current_path {
+        Route::PoliticiansPage { .. } => 2,
+        _ => 0,
+    });
+
     rsx! {
         div { class: "fixed top-0 left-0 backdrop-blur-[20px] w-screen h-80 overflow-hidden flex items-center justify-center z-100",
             div { class: "w-full flex flex-row items-center justify-between gap-59 max-w-[1176px] mx-10",
-                a { href: "#top", Logo {} }
+                a { href: "/#top", Logo {} }
 
                 nav { class: "grow flex flex-row gap-[10px] text-secondary font-bold text-[15px]",
                     a {
                         class: "p-10 hover:text-white",
-                        href: "#about",
+                        href: "/#about",
                         color: if selected == 1 { "var(--color-primary)" },
                         {tr.menu_about}
                     }
                     a {
                         class: "p-10 hover:text-white",
-                        href: "#politician-stance",
-                        color: if selected == 2 { "var(--color-primary)" },
+                        href: "/#politician-stance",
+                        color: if selected == 2 || selected_menu == 2 { "var(--color-primary)" },
                         {tr.menu_stance}
                     }
                     a {
                         class: "p-10 hover:text-white",
-                        href: "#community",
+                        href: "/#community",
                         color: if selected == 3 { "var(--color-primary)" },
                         {tr.menu_community}
                     }
                     a {
                         class: "p-10 hover:text-white",
-                        href: "#support",
+                        href: "/#support",
                         color: if selected == 4 { "var(--color-primary)" },
                         {tr.menu_support}
                     }

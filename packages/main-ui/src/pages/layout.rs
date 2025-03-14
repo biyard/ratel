@@ -45,6 +45,8 @@ pub fn RootLayout(lang: Language) -> Element {
         #[cfg(not(feature = "web"))]
         0
     });
+    let current_path: Route = use_route();
+    let is_home = matches!(current_path, Route::HomePage {..});
 
     #[cfg(feature = "web")]
     let _ = use_coroutine(move |_: UnboundedReceiver<()>| async move {
@@ -86,14 +88,14 @@ pub fn RootLayout(lang: Language) -> Element {
                         CubeLoader {}
                     }
                 },
-            }
-            div { class: "w-full overflow-x-hidden scroll-smooth flex flex-col items-center justify-center",
-                Outlet::<Route> {}
+                div { class: "w-full overflow-x-hidden scroll-smooth flex flex-col items-center justify-center mt-80",
+                    Outlet::<Route> {}
 
-                Footer { lang }
+                    Footer { lang }
+                }
             }
         }
-        if selected() != 5 {
+        if selected() != 5 && is_home {
             BottomSheet {
                 onclick: move |_| {
                     let height = match web_sys::window() {

@@ -27,10 +27,14 @@ pub fn SectionHeader(
                         div { class: "w-full h-1 bg-[#464646]" }
                     }
                 }
+            }
+            div { class: "w-full grid {cols} gap-24",
                 p { class: "col-span-1 w-full text-white font-normal text-[15px]/22 text-[#AEAEAE] whitespace-pre-line",
                     {description}
                 }
+                div { class: "col-span-1 w-full", {children} }
             }
+        
         }
     }
 }

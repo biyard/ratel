@@ -5,4 +5,5 @@ pub mod icon_text;
 pub mod icons;
 pub mod indicators;
 pub mod page_title;
+pub mod section_header;
 pub mod tooltip;
