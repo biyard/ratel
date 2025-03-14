@@ -1,5 +1,5 @@
 #![allow(non_snake_case)]
-use dioxus::prelude::*;
+use bdk::prelude::*;
 
 use crate::components::indicators::Indicator;
 
@@ -27,10 +27,14 @@ pub fn SectionHeader(
                         div { class: "w-full h-1 bg-c-wg-70" }
                     }
                 }
+            }
+            div { class: "w-full grid {cols} gap-24",
                 p { class: "col-span-1 w-full font-normal text-[15px]/22 text-c-wg-30 whitespace-pre-line",
                     {description}
                 }
+                div { class: "col-span-1 w-full", {children} }
             }
+        
         }
     }
 }

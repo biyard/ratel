@@ -1,5 +1,5 @@
 #![allow(non_snake_case)]
-use dioxus::prelude::*;
+use bdk::prelude::*;
 
 #[component]
 pub fn Pros(#[props(default = "#68D36C".to_string())] color: String) -> Element {

@@ -1,12 +1,9 @@
 #![allow(unused, dead_code)]
 use crate::*;
-#[cfg(feature = "server")]
-use by_axum::aide;
-use by_macros::{api_model, ApiModel};
+use bdk::prelude::*;
 use by_types::QueryResponse;
 
 use chrono::Datelike;
-use dioxus_translate::Translate;
 use num_format::{Locale, ToFormattedString};
 use serde::{Deserialize, Serialize};
 use std::{fmt::Display, str::FromStr};

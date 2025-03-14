@@ -1,8 +1,7 @@
 #![allow(non_snake_case)]
 use super::{loader_popup::LoaderPopup, signin_popup_footer::SigninPopupFooter};
-use dioxus::prelude::*;
+use bdk::prelude::*;
 use dioxus_popup::PopupService;
-use dioxus_translate::*;
 
 #[component]
 pub fn WalletSigninPopup(

@@ -4,9 +4,8 @@ use crate::components::{
     button::{primary_button::PrimaryButton, secondary_botton::SecondaryButton},
     icons::CharacterSymbol,
 };
-use dioxus::prelude::*;
+use bdk::prelude::*;
 use dioxus_popup::PopupService;
-use dioxus_translate::*;
 
 #[component]
 pub fn Top(

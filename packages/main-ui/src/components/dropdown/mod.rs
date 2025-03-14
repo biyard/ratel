@@ -1,4 +1,4 @@
-use dioxus::prelude::*;
+use bdk::prelude::*;
 
 #[component]
 pub fn Dropdown(

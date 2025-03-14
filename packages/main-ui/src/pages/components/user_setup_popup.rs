@@ -1,7 +1,6 @@
 #![allow(non_snake_case)]
-use dioxus::prelude::*;
+use bdk::prelude::*;
 use dioxus_popup::PopupService;
-use dioxus_translate::*;
 use dto::ServiceError;
 
 use super::{
@@ -144,7 +143,7 @@ pub fn UserSetupPopup(
                                         .open(rsx! {
                                             WelcomePopup { lang: lang.clone() }
                                         })
-                                        .with_id("congratulation_popup")
+                                        .with_id("welcome_popup")
                                         .with_title(tr.title)
                                         .without_close();
                                 }

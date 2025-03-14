@@ -11,21 +11,17 @@ dto = { workspace = true, features = ["server"] }
 serde.workspace = true
 serde_json.workspace = true
 slog.workspace = true
-by-axum.workspace = true
-rest-api.workspace = true
+
+bdk = { workspace = true, features = ["be"] }
 
 tokio = { version = "1.40.0", features = ["full"] }
 tower = "0.5.1"
 chrono = "0.4.39"
-reqwest.workspace = true
 uuid = { version = "1.10.1", features = ["v4"] }
-by-types.workspace = true
-sqlx.workspace = true
 tracing = "0.1.41"
 tracing-subscriber = "0.3.19"
 validator = "0.20.0"
-schemars = "0.8.21"
 
 [features]
 default = []
-lambda = ["by-axum/lambda"]
+lambda = ["bdk/lambda"]

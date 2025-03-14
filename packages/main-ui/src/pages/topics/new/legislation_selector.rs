@@ -8,7 +8,7 @@ use crate::components::icons::LeftArrow;
 use crate::components::icons::LogoWithBackground;
 use crate::components::icons::PPTXFile;
 
-use dioxus::prelude::*;
+use bdk::prelude::*;
 use dioxus_popup::PopupService;
 use dioxus_translate::*;
 

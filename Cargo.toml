@@ -11,6 +11,8 @@ repository = "https://github.com/biyard/ratel"
 license = "MIT"
 
 [workspace.dependencies]
+bdk = { path = "deps/rust-sdk/packages/bdk" }
+
 by-axum = { path = "deps/rust-sdk/packages/by-axum" }
 by-components = { path = "deps/rust-sdk/packages/by-components" }
 by-macros = { path = "deps/rust-sdk/packages/by-macros" }
