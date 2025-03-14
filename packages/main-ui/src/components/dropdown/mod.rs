@@ -9,19 +9,18 @@ pub fn Dropdown(
     onselect: EventHandler<String>,
 ) -> Element {
     let mut selected_item = use_signal(|| 0);
+    let mut opened = use_signal(|| false);
 
     rsx! {
-        div {
-            class: "relative inline-block text-left",
-            "x-data": "{{ open: false }}",
+        div { class: "relative inline-block text-left",
             div {
                 button {
-                    "@click": "open = !open",
                     aria_expanded: "false",
                     aria_haspopup: "true",
                     class: "inline-flex w-full justify-center gap-x-1.5 rounded-md px-20 py-12 text-sm font-semibold text-white ring-1 shadow-xs ring-c-wg-70 ring-inset items-center cursor-pointer",
                     id: "menu-button",
                     r#type: "button",
+                    onclick: move |_| opened.set(!opened()),
                     span { class: "w-100 text-left", {items[selected_item()].clone()} }
                     ChevronDown {
                         class: "[&>path]:stroke-white",
@@ -31,11 +30,10 @@ pub fn Dropdown(
                 }
             }
             div {
-                "x-show": "open",
-                "@click.away": "open = false",
                 aria_labelledby: "menu-button",
                 aria_orientation: "vertical",
-                class: "absolute right-0 z-10 w-full mt-2 w-56 origin-top-right rounded-[10px] ring-1 ring-primary focus:outline-hidden bg-black overflow-hidden",
+                visibility: if !opened() { "hidden" },
+                class: "absolute right-0 z-10 w-full mt-10 w-56 origin-top-right rounded-[10px] ring-1 ring-primary focus:outline-hidden bg-black overflow-hidden",
                 role: "menu",
                 tabindex: "-1",
                 div { class: "py-1", role: "none",
@@ -44,8 +42,8 @@ pub fn Dropdown(
                             class: "px-4 py-2 text-sm text-gray-700 text-c-wg-50 font-semibold py-15 px-20  flex flex-row w-full justify-between hover:text-white items-center",
                             color: if i == selected_item() { "white" },
                             href: "#",
-                            "@click": "open = false",
                             onclick: move |_| {
+                                opened.set(false);
                                 selected_item.set(i);
                                 onselect(item.clone());
                             },
