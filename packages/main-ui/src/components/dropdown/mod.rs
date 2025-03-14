@@ -1,5 +1,5 @@
 use bdk::prelude::*;
-use by_components::icons::arrows::ChevronDown;
+use by_components::icons::{arrows::ChevronDown, validations::Check};
 
 #[component]
 pub fn Dropdown(
@@ -8,6 +8,8 @@ pub fn Dropdown(
     #[props(default = 0)] selected: usize,
     onselect: EventHandler<String>,
 ) -> Element {
+    let mut selected_item = use_signal(|| 0);
+
     rsx! {
         div {
             class: "relative inline-block text-left",
@@ -33,22 +35,31 @@ pub fn Dropdown(
                 "@click.away": "open = false",
                 aria_labelledby: "menu-button",
                 aria_orientation: "vertical",
-                class: "absolute right-0 z-10 w-full mt-2 w-56 origin-top-right rounded-md bg-white ring-1 shadow-lg ring-black/5 focus:outline-hidden",
+                class: "absolute right-0 z-10 w-full mt-2 w-56 origin-top-right rounded-[10px] ring-1 ring-primary focus:outline-hidden bg-black overflow-hidden",
                 role: "menu",
                 tabindex: "-1",
                 div { class: "py-1", role: "none",
                     for (i , item) in items.into_iter().enumerate() {
                         a {
-                            class: "block px-4 py-2 text-sm text-gray-700",
-                            "@click": "open = false",
+                            class: "px-4 py-2 text-sm text-gray-700 text-c-wg-50 font-semibold py-15 px-20  flex flex-row w-full justify-between hover:text-white",
+                            color: if i == selected_item() { "white" },
                             href: "#",
+                            "@click": "open = false",
                             onclick: move |_| {
+                                selected_item.set(i);
                                 onselect(item.clone());
                             },
                             id: "menu-item-{i}",
                             role: "menuitem",
                             tabindex: "-1",
                             {item.clone()}
+                            if i == selected_item() {
+                                Check {
+                                    class: "[&>path]:stroke-white",
+                                    width: "5",
+                                    height: "5",
+                                }
+                            }
                         }
                     }
                 }
