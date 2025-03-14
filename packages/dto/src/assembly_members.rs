@@ -64,23 +64,36 @@ pub enum AssemblyMemberByIdAdminActionRequest {
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum CryptoStance {
     #[default]
+    #[translate(en = "No Stance")]
     NoStance = 0,
+    #[translate(en = "Pro-Crypto")]
     Supportive = 1,
+    #[translate(en = "Neutral")]
     Neutral = 2,
+    #[translate(en = "Anti-Crypto")]
     Against = 3,
 }
 
-impl CryptoStance {
-    pub fn iter() -> impl Iterator<Item = CryptoStance> {
-        [
-            CryptoStance::Supportive,
-            CryptoStance::Neutral,
-            CryptoStance::Against,
-            CryptoStance::NoStance,
-        ]
-        .iter()
-        .cloned()
-    }
+#[derive(Debug, Clone, Eq, PartialEq, Default, Translate, ApiModel)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
+pub enum Party {
+    #[default]
+    #[translate(en = "Party")]
+    None = 0,
+    #[translate(en = "DP", ko = "더불어민주당")]
+    DemocraticParty = 1,
+    #[translate(en = "PPP", ko = "국민의힘")]
+    PeoplePowerParty = 2,
+    #[translate(en = "RKP", ko = "조국혁신당")]
+    RebuildingKoreaParty = 3,
+    #[translate(en = "Jinbo")]
+    JinboParty = 4,
+    #[translate(en = "Reform")]
+    ReformParty = 5,
+    #[translate(en = "Basic Income")]
+    BasicIncomeParty = 6,
+    #[translate(en = "SDP")]
+    SocialDemocraticParty = 7,
 }
 
 // TODO(api): implement list_by_stance
