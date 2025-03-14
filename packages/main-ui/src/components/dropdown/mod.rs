@@ -22,7 +22,7 @@ pub fn Dropdown(
                     class: "inline-flex w-full justify-center gap-x-1.5 rounded-md px-20 py-12 text-sm font-semibold text-white ring-1 shadow-xs ring-c-wg-70 ring-inset items-center cursor-pointer",
                     id: "menu-button",
                     r#type: "button",
-                    span { class: "w-100 text-left", {items[selected].clone()} }
+                    span { class: "w-100 text-left", {items[selected_item()].clone()} }
                     ChevronDown {
                         class: "[&>path]:stroke-white",
                         width: "15",
@@ -41,7 +41,7 @@ pub fn Dropdown(
                 div { class: "py-1", role: "none",
                     for (i , item) in items.into_iter().enumerate() {
                         a {
-                            class: "px-4 py-2 text-sm text-gray-700 text-c-wg-50 font-semibold py-15 px-20  flex flex-row w-full justify-between hover:text-white",
+                            class: "px-4 py-2 text-sm text-gray-700 text-c-wg-50 font-semibold py-15 px-20  flex flex-row w-full justify-between hover:text-white items-center",
                             color: if i == selected_item() { "white" },
                             href: "#",
                             "@click": "open = false",
@@ -54,11 +54,7 @@ pub fn Dropdown(
                             tabindex: "-1",
                             {item.clone()}
                             if i == selected_item() {
-                                Check {
-                                    class: "[&>path]:stroke-white",
-                                    width: "5",
-                                    height: "5",
-                                }
+                                Check { class: "[&>path]:stroke-white" }
                             }
                         }
                     }
