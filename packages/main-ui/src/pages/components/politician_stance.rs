@@ -30,7 +30,7 @@ pub fn PoliticianStance(
     let mut selected = use_signal(|| 0);
     let pro_cryptos = use_server_future(move || async move {
         match AssemblyMember::get_client(config::get().main_api_endpoint)
-            .list_by_stance(4, None, dto::CryptoStance::Supportive)
+            .list_by_stance(4, None, dto::CryptoStance::ProCrypto)
             .await
         {
             Ok(members) => members.items,
@@ -42,7 +42,7 @@ pub fn PoliticianStance(
                         name: "John Doe".to_string(),
                         party: "Democratic Party".to_string(),
                         district: "Seoul".to_string(),
-                        stance: dto::CryptoStance::Supportive,
+                        stance: dto::CryptoStance::ProCrypto,
                         image_url: "https://www.assembly.go.kr/static/portal/img/openassm/new/e9f57c2b700c44c0845665b068385524.jpg".to_string(),
                         ..Default::default()
                     };4
@@ -53,7 +53,7 @@ pub fn PoliticianStance(
 
     let anti_cryptos = use_server_future(move || async move {
         match AssemblyMember::get_client(config::get().main_api_endpoint)
-            .list_by_stance(4, None, dto::CryptoStance::Supportive)
+            .list_by_stance(4, None, dto::CryptoStance::ProCrypto)
             .await
         {
             Ok(members) => members.items,
@@ -65,7 +65,7 @@ pub fn PoliticianStance(
                         name: "John Doe".to_string(),
                         party: "Democratic Party".to_string(),
                         district: "Seoul".to_string(),
-                        stance: dto::CryptoStance::Against,
+                        stance: dto::CryptoStance::AntiCrypto,
                         image_url: "https://www.assembly.go.kr/static/portal/img/openassm/new/e9f57c2b700c44c0845665b068385524.jpg".to_string(),
                         ..Default::default()
                     };4

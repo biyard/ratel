@@ -1,4 +1,6 @@
 #![allow(unused)]
+use std::str::FromStr;
+
 use crate::*;
 use bdk::prelude::*;
 use by_types::QueryResponse;
@@ -67,11 +69,11 @@ pub enum CryptoStance {
     #[translate(en = "No Stance")]
     NoStance = 0,
     #[translate(en = "Pro-Crypto")]
-    Supportive = 1,
+    ProCrypto = 1,
     #[translate(en = "Neutral")]
     Neutral = 2,
     #[translate(en = "Anti-Crypto")]
-    Against = 3,
+    AntiCrypto = 3,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Default, Translate, ApiModel)]
@@ -128,4 +130,28 @@ pub struct AssemblyMember {
     pub image_url: String,
     pub email: Option<String>,
     // pub email_verified: bool, // check email verified logic
+}
+
+impl AssemblyMemberSummary {
+    pub fn stance_color(&self) -> &'static str {
+        match self.stance {
+            CryptoStance::ProCrypto => "bg-c-c-20",
+            CryptoStance::Neutral => "bg-c-pp-20",
+            CryptoStance::AntiCrypto => "bg-c-p-20",
+            _ => "bg-c-wg-50",
+        }
+    }
+
+    pub fn name(&self, lang: &Language) -> &str {
+        match lang {
+            Language::En => &self.en_name,
+            _ => &self.name,
+        }
+    }
+
+    pub fn party(&self, lang: &Language) -> &str {
+        Party::from_str(&self.party)
+            .unwrap_or_default()
+            .translate(lang)
+    }
 }
