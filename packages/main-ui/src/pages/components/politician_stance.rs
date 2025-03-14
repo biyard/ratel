@@ -5,12 +5,15 @@ use by_components::icons::{
     emoji::{ThumbsDown, ThumbsUp},
     help_support::Help,
 };
+use dioxus_popup::PopupService;
 use dto::{AssemblyMember, AssemblyMemberSummary};
+use legal_notice_popup::LegalNoticePopup;
 use politician_card::PoliticianCard;
 
 use crate::{
-    components::button::{ButtonSize, secondary_botton::SecondaryButton},
+    components::button::{ButtonSize, secondary_botton::SecondaryLink},
     config,
+    route::Route,
 };
 
 use super::*;
@@ -22,6 +25,8 @@ pub fn PoliticianStance(
     children: Element,
 ) -> Element {
     let tr: PoliticianStanceTranslate = translate(&lang);
+    let mut p: PopupService = use_context();
+
     let mut selected = use_signal(|| 0);
     let pro_cryptos = use_server_future(move || async move {
         match AssemblyMember::get_client(config::get().main_api_endpoint)
@@ -130,8 +135,13 @@ pub fn PoliticianStance(
                     } // end of flex-row
 
                     div {
-                        class: "flex flex-row gap-10 items-center justify-start text-neutral-400 font-medium text-[13px]/18 tooltip",
-                        "data-tip": "test",
+                        class: "flex flex-row gap-10 items-center justify-start text-neutral-400 font-medium text-[13px]/18 tooltip cursor-pointer",
+                        "data-tip": tr.legal,
+                        onclick: move |_| {
+                            p.open(rsx! {
+                                LegalNoticePopup { lang }
+                            });
+                        },
                         Help {
                             class: "[&>path]:stroke-neutral-400 [&>circle]:fill-neutral-400",
                             width: "18",
@@ -142,7 +152,9 @@ pub fn PoliticianStance(
                     }
                 } // end of flex-col
 
-                SecondaryButton { size: ButtonSize::Small,
+                SecondaryLink {
+                    size: ButtonSize::Small,
+                    to: Route::PoliticiansPage { lang },
                     div { class: "flex flex-row gap-10 items-center justify-center font-bold text-sm text-black",
                         {tr.view_all}
                         ArrowRight {
@@ -194,5 +206,10 @@ translate! {
     view_all: {
         ko: "전체 보기",
         en: "View All",
+    }
+
+    legal: {
+        ko: "이 사이트에서 제공하는 의원 정보는 국회의원 공개 데이터를 기반으로 합니다. 정보를 최신 상태로 유지하기 위해 노력하고 있습니다. 오류나 변경 사항을 발견하면 연락 주시면 즉시 수정하겠습니다.",
+        en: "The information on legislators provided on this site is based on publicly available data from the National Assembly. We strive to keep the information up to date. If you notice any errors or changes, please contact us, and we will correct them promptly.",
     }
 }

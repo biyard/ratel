@@ -6,7 +6,7 @@ mod components;
 // mod i18n;
 mod page;
 // mod patrons;
-// pub mod politicians;
+mod politicians;
 // mod topics;
 // mod upcoming_topics_component;
 
@@ -14,7 +14,7 @@ pub use _routes::*;
 pub use layout::*;
 pub use page::*;
 // pub use patrons::*;
-// pub use politicians::*;
+pub use politicians::*;
 // pub use topics::*;
 
 // mod congratulation_popup;

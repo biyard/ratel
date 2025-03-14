@@ -1,9 +1,8 @@
+use bdk::prelude::*;
 use by_types::QueryResponse;
-use dioxus_aws::prelude::*;
-use dioxus_translate::Language;
 use dto::*;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, DioxusController)]
 pub struct Controller {
     pub politicians: Resource<QueryResponse<AssemblyMemberSummary>>,
 }
@@ -27,16 +26,5 @@ impl Controller {
         use_context_provider(|| ctrl);
 
         Ok(ctrl)
-    }
-
-    pub fn politicians(&self) -> Vec<AssemblyMemberSummary> {
-        self.politicians.with(|f| {
-            // tracing::debug!("politicians: {:?}", f);
-            if let Some(value) = f {
-                value.items.clone()
-            } else {
-                Vec::new()
-            }
-        })
     }
 }
