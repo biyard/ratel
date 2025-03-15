@@ -1,4 +1,6 @@
 #![allow(unused)]
+use std::str::FromStr;
+
 use crate::*;
 use bdk::prelude::*;
 use by_types::QueryResponse;
@@ -67,11 +69,11 @@ pub enum CryptoStance {
     #[translate(en = "No Stance")]
     NoStance = 0,
     #[translate(en = "Pro-Crypto")]
-    Supportive = 1,
+    ProCrypto = 1,
     #[translate(en = "Neutral")]
     Neutral = 2,
     #[translate(en = "Anti-Crypto")]
-    Against = 3,
+    AntiCrypto = 3,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Default, Translate, ApiModel)]
@@ -86,14 +88,16 @@ pub enum Party {
     PeoplePowerParty = 2,
     #[translate(en = "RKP", ko = "조국혁신당")]
     RebuildingKoreaParty = 3,
-    #[translate(en = "Jinbo")]
+    #[translate(en = "Jinbo", ko = "진보당")]
     JinboParty = 4,
-    #[translate(en = "Reform")]
+    #[translate(en = "Reform", ko = "개혁신당")]
     ReformParty = 5,
-    #[translate(en = "Basic Income")]
+    #[translate(en = "Basic Income", ko = "기본소득당")]
     BasicIncomeParty = 6,
-    #[translate(en = "SDP")]
+    #[translate(en = "SDP", ko = "사회민주당")]
     SocialDemocraticParty = 7,
+    #[translate(en = "", ko = "무소속")]
+    Independent = 8,
 }
 
 // TODO(api): implement list_by_stance
@@ -128,4 +132,32 @@ pub struct AssemblyMember {
     pub image_url: String,
     pub email: Option<String>,
     // pub email_verified: bool, // check email verified logic
+}
+
+impl AssemblyMemberSummary {
+    pub fn stance_color(&self) -> &'static str {
+        match self.stance {
+            CryptoStance::ProCrypto => "bg-c-c-20",
+            CryptoStance::Neutral => "bg-c-pp-20",
+            CryptoStance::AntiCrypto => "bg-c-p-20",
+            _ => "bg-c-wg-50",
+        }
+    }
+
+    pub fn name(&self, lang: &Language) -> &str {
+        match lang {
+            Language::En => &self.en_name,
+            _ => &self.name,
+        }
+    }
+
+    pub fn party_enum(&self) -> Party {
+        Party::from_str(&self.party).unwrap_or_default()
+    }
+
+    pub fn party(&self, lang: &Language) -> &str {
+        Party::from_str(&self.party)
+            .unwrap_or_default()
+            .translate(lang)
+    }
 }

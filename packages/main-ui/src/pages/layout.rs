@@ -8,6 +8,15 @@ use by_components::{loaders::cube_loader::CubeLoader, meta::MetaSeoTemplate};
 
 #[component]
 pub fn RootLayout(lang: Language) -> Element {
+    rsx! {
+        RootBase { lang,
+            Footer { lang }
+        }
+    }
+}
+
+#[component]
+pub fn RootBase(lang: Language, children: Element) -> Element {
     #[cfg(feature = "web")]
     let mut scroll_position = use_signal(|| 0.0);
     let selected = use_memo(move || {
@@ -46,7 +55,7 @@ pub fn RootLayout(lang: Language) -> Element {
         0
     });
     let current_path: Route = use_route();
-    let is_home = matches!(current_path, Route::HomePage {..});
+    let is_home = matches!(current_path, Route::HomePage { .. });
 
     #[cfg(feature = "web")]
     let _ = use_coroutine(move |_: UnboundedReceiver<()>| async move {
@@ -88,10 +97,10 @@ pub fn RootLayout(lang: Language) -> Element {
                         CubeLoader {}
                     }
                 },
-                div { class: "w-full overflow-x-hidden scroll-smooth flex flex-col items-center justify-center mt-80",
+                div { class: "w-full overflow-x-hidden scroll-smooth flex flex-col items-center justify-center",
                     Outlet::<Route> {}
 
-                    Footer { lang }
+                    {children}
                 }
             }
         }
