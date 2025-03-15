@@ -2,9 +2,9 @@
 use crate::components::dropdown::Dropdown;
 use crate::pages::components::SectionHeader;
 
-use super::controller::*;
-use super::i18n::*;
+use super::{controller::*, i18n::*, *};
 use bdk::prelude::*;
+use components::party::PartyIcon;
 use dto::CryptoStance;
 use dto::Party;
 
@@ -66,8 +66,11 @@ pub fn PoliticiansPage(lang: Language) -> Element {
                                 {politician.stance.translate(&lang)}
                             }
                             td { class: "px-20 py-14 ",
-                                span { class: "bg-blue-600 text-white px-2 py-1 rounded-full",
-                                    "{politician.party}"
+                                div { class: "flex flex-row items-center gap-4",
+                                    PartyIcon { party: politician.party_enum() }
+                                    span { class: "text-white font-medium text-[15px]",
+                                        {politician.party(&lang)}
+                                    }
                                 }
                             }
                             td { class: "px-20 py-14", "" }
