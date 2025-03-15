@@ -1,6 +1,7 @@
 #![allow(non_snake_case)]
 use bdk::prelude::*;
 use by_components::meta::MetaPage;
+use subscription::Subscription;
 
 use super::components::*;
 
@@ -17,6 +18,7 @@ pub fn HomePage(lang: Language) -> Element {
             PoliticianStance { lang }
             Community { lang }
             Support { lang }
+            Subscription { lang }
         }
     }
 }

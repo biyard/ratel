@@ -18,4 +18,24 @@ translate! {
         en: "Simply search any name to see where they stand on crypto and how their policies impact its future. ",
     },
 
+    th_name: {
+        ko: "이름",
+        en: "Name",
+    },
+
+    th_stance: {
+        ko: "암호화폐 입장",
+        en: "Stance on Crypto",
+    },
+
+    th_party: {
+        ko: "정당",
+        en: "Party",
+    },
+
+    th_key_actions: {
+        ko: "주요 활동",
+        en: "Key Actions",
+    },
+
 }
