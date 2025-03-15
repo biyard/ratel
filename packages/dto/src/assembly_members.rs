@@ -88,14 +88,16 @@ pub enum Party {
     PeoplePowerParty = 2,
     #[translate(en = "RKP", ko = "조국혁신당")]
     RebuildingKoreaParty = 3,
-    #[translate(en = "Jinbo")]
+    #[translate(en = "Jinbo", ko = "진보당")]
     JinboParty = 4,
-    #[translate(en = "Reform")]
+    #[translate(en = "Reform", ko = "개혁신당")]
     ReformParty = 5,
-    #[translate(en = "Basic Income")]
+    #[translate(en = "Basic Income", ko = "기본소득당")]
     BasicIncomeParty = 6,
-    #[translate(en = "SDP")]
+    #[translate(en = "SDP", ko = "사회민주당")]
     SocialDemocraticParty = 7,
+    #[translate(en = "", ko = "무소속")]
+    Independent = 8,
 }
 
 // TODO(api): implement list_by_stance
@@ -147,6 +149,10 @@ impl AssemblyMemberSummary {
             Language::En => &self.en_name,
             _ => &self.name,
         }
+    }
+
+    pub fn party_enum(&self) -> Party {
+        Party::from_str(&self.party).unwrap_or_default()
     }
 
     pub fn party(&self, lang: &Language) -> &str {
