@@ -15,6 +15,7 @@ mod politician_stance;
 mod signin_popup_footer;
 mod signup_popup;
 mod socials;
+pub mod subscription;
 mod support;
 mod top;
 mod user_setup_popup;
