@@ -11,57 +11,6 @@ use validator::ValidationError;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
-pub enum AssemblyMemberAdminActionRequest {
-    /// Fetches assembly members by Assembly Open API.
-    /// And update the information of the assembly members.
-    FetchMembers,
-}
-
-#[derive(Debug, serde::Deserialize, serde::Serialize)]
-#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
-pub struct AssemblyMemberResponse {
-    pub request_id: String,
-}
-
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
-pub enum AssemblyMemberByIdActionRequest {
-    SendVerificationEmail {
-        agree: bool,
-    },
-    UpdateCryptoStance {
-        code: String,
-        stance: CryptoStance,
-        agree: bool,
-    },
-}
-
-#[derive(Debug, Clone, Eq, PartialEq, Default, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
-pub enum AssemblyMemberByIdActionResponse {
-    SendVerificationEmail {
-        email: String,
-        request_code: String,
-    },
-
-    #[default]
-    Ok,
-}
-
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
-pub enum AssemblyMemberByIdAdminActionRequest {
-    /// Manually, update crypto stance.
-    /// It will be utilized to update crypto stance by contact.
-    UpdateCryptoStance(CryptoStance),
-}
-
 #[derive(Debug, Clone, Eq, PartialEq, Default, Translate, ApiModel)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum CryptoStance {
