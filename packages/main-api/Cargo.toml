@@ -21,9 +21,6 @@ uuid = { version = "1.10.1", features = ["v4"] }
 tracing = "0.1.41"
 tracing-subscriber = "0.3.19"
 validator = "0.20.0"
-select = "0.6.0"
-sxd-xpath = "0.4.2"
-sxd-document = "0.3.2"
 scraper = "0.23.1"
 
 [features]
