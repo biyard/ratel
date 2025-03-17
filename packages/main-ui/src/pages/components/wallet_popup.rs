@@ -1,5 +1,5 @@
 #![allow(non_snake_case)]
-use super::loader_popup::LoaderPopup;
+use super::{loader_popup::LoaderPopup, signin_popup_footer::SigninPopupFooter};
 use crate::{components::icons, services::user_service::UserService};
 use bdk::prelude::*;
 use dioxus_popup::PopupService;
@@ -16,10 +16,10 @@ pub fn WalletPopup(
 
     rsx! {
         div { id, class,
-            div { class: "justify-start text-white font-bold text-xl/24", "{tr.title}" }
+            div { class: "justify-start text-white font-bold text-xl/24", {tr.title} }
             div { class: "flex flex-col gap-10 mt-35",
                 div {
-                    class: "w-full flex flex-row pl-20 py-22 bg-black border-[1px] rounded-[10px] justify-start items-center gap-[17px] cursor-pointer hover:border-white",
+                    class: "w-full flex flex-row pl-20 py-22 bg-black border-[1px] rounded-[10px] justify-start items-center gap-17 cursor-pointer border-black hover:border-white",
                     style: if user_service.is_phantom_installed() { "cursor: pointer;" } else { "border: none; cursor: not-allowed;" },
                     onclick: move |_| async move {
                         if !user_service.is_phantom_installed() {
@@ -30,8 +30,10 @@ pub fn WalletPopup(
                         user_service.set_signer_type("phantom");
                         popup.open(rsx! {
                             LoaderPopup {
-                                class: "w-[400px] mx-auto",
+                                class: "w-400 mx-auto",
                                 lang,
+                                title: tr.phantom,
+                                description: tr.loader_message,
                                 logo: rsx! {
                                     icons::Phantom { width: "50", height: "50" }
                                 },
@@ -40,35 +42,19 @@ pub fn WalletPopup(
                                 },
                                 msg: tr.phantom,
                             }
-                        });
+                        }).with_id("loader_popup");
                     },
                     icons::Phantom {}
                     div { class: "flex flex-col gap-3",
                         span {
-                            class: "text-[16px] leading-[19px] font-semibold",
+                            class: "text-base/19 font-semibold",
                             style: if user_service.is_phantom_installed() { "color: white;" } else { "color: #9F9F9F;" },
                             "{tr.phantom}"
                         }
                     }
                 }
             }
-            // TODO: applying policy and terms.
-            div { class: "flex flex-row gap-10 mt-35 justify-center",
-                button {
-                    class: "cursor-pointer",
-                    onclick: move |_| {
-                        tracing::debug!("Privacy policy clicked");
-                    },
-                    span { class: "text-neutral-400 text-xs/14 font-medium", "{tr.privacy_policy}" }
-                }
-                button {
-                    class: "cursor-pointer",
-                    onclick: move |_| {
-                        tracing::debug!("Privacy policy clicked");
-                    },
-                    span { class: "text-neutral-400 text-xs/14 font-medium", "{tr.term_of_service}" }
-                }
-            }
+            SigninPopupFooter { lang }
         }
     }
 }
@@ -86,13 +72,8 @@ translate! {
         en: "Phantom Wallet",
     },
 
-    privacy_policy: {
-        ko: "개인정보 처리방침",
-        en: "Privacy Policy",
-    },
-
-    term_of_service: {
-        ko: "이용약관",
-        en: "Term of Service",
+    loader_message: {
+        ko: "승인 대기 중",
+        en: "Awaiting Confirmation",
     },
 }

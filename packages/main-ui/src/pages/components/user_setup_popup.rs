@@ -3,7 +3,10 @@ use bdk::prelude::*;
 use dioxus_popup::PopupService;
 use dto::ServiceError;
 
-use super::congratulation_popup::CongratulationPopup;
+use super::{
+    signin_popup_footer::SigninPopupFooter, welcome_header::WelcomeHeader,
+    welcome_popup::WelcomePopup,
+};
 use crate::{components::checkbox::Checkbox, services::user_service::UserService, theme::Theme};
 
 #[component]
@@ -17,93 +20,106 @@ pub fn UserSetupPopup(
     lang: Language,
 ) -> Element {
     let mut popup: PopupService = use_context();
-    let mut valid = use_signal(|| true);
-    let mut nickname = use_signal(|| nickname.to_string());
+    let mut firstname = use_signal(|| "".to_string());
+    let mut fname_valid = use_signal(|| true);
+    let mut lastname = use_signal(|| "".to_string());
+    let mut lname_valid = use_signal(|| true);
     let mut agreed = use_signal(|| false);
+    let mut announcement_agree = use_signal(|| false);
     let mut user_service: UserService = use_context();
     let theme: Theme = use_context();
     let theme = theme.get_data();
     let btn_color = use_memo(move || {
         if agreed() {
-            theme.primary100.clone()
+            "#FCB300".to_string()
         } else {
-            theme.primary03.clone()
+            "#A1A1A1".to_string()
         }
     });
     let tr = translate::<UserSetupPopupTranslate>(&lang);
-
+    let agree_msg = match lang {
+        Language::Ko => format!("{}{}", tr.term_of_service, tr.agree),
+        Language::En => format!("{} {}", tr.agree, tr.term_of_service),
+    };
     rsx! {
         div { id, class,
-            div { class: "flex flex-col items-start justify-start w-full pt-[10px] gap-[25px]",
-
-                // Profile
-                div { class: "w-full flex items-center justify-center",
-                    img {
-                        class: "w-[100px] h-[100px] rounded-[50%] object-contain",
-                        src: "{profile_url}",
-                    }
-                }
-
+            WelcomeHeader { lang, title: tr.title, description: tr.message }
+            div { class: "flex flex-col items-start justify-start w-full pt-10 gap-20 mt-35",
                 // Email
-                if !email.is_empty() {
-                    div { class: "flex flex-col gap-[8px]",
-                        div { class: "flex flex-row items-start",
-                            span { class: "text-[14px] font-bold leading-[24px]", "이메일" }
-                        }
-                        div { class: "flex flex-col items-start w-full mt-[10px] gap-[8px]",
-                            input {
-                                class: "w-[400px] max-[400px]:w-[300px] h-[59px] px-[24px] py-[17.5px] bg-[{theme.background}] text-[18px] font-bold leading-[24px] rounded-[4px] placeholder-[{theme.primary07}] rounded-[8px] text-[{theme.primary04}]",
-                                value: "{email}",
-                                disabled: true,
-                            }
+                div { class: "flex flex-col gap-5",
+                    div { class: "flex flex-row items-start",
+                        span { class: "text-[15px]/28 font-bold text-neutral-400", {tr.email} }
+                    }
+                    div { class: "flex items-start w-full mt-10 gap-8",
+                        input {
+                            class: "w-full max-[400px]:w-300 h-59 px-24 py-[17.5px] bg-background text-lg/24 font-medium placeholder-neutral-600 rounded-lg text-white",
+                            value: "{email}",
+                            disabled: !email.is_empty(),
                         }
                     }
                 }
 
-                // Nickname
-                div { class: "flex flex-col gap-[8px]",
-                    div { class: "flex flex-row items-start",
-                        span { class: "text-[14px] font-bold leading-[24px]", "닉네임" }
-                        span { class: "text-[14px] text-[#ff0000]", "*" }
-                    }
-                    div { class: "flex flex-col items-start w-full mt-[10px] gap-[8px]",
+                div { class: "grid gap-8 w-full grid-cols-2",
+                    div { class: "flex flex-col items-start gap-5",
+                        span { class: "text-neutral-400 text-[15px]/28 font-bold", {tr.first_name} }
                         input {
-                            class: "w-[400px] max-[400px]:w-[300px] h-[59px] px-[24px] py-[17.5px] bg-[{theme.background}] text-[18px] font-bold leading-[24px] rounded-[4px] placeholder-[{theme.primary07}] rounded-[8px]",
+                            class: "w-full max-[400px]:w-190 h-59 px-24 py-[17.5px] bg-background text-lg/24 font-medium placeholder-neutral-600 rounded-lg text-white",
                             placeholder: "{tr.enter_nickname}",
-                            value: nickname(),
+                            value: firstname(),
                             oninput: move |e| {
                                 let value = e.value();
-                                valid.set(value.chars().all(|c| c.is_alphanumeric()));
-                                nickname.set(value);
+                                fname_valid.set(value.chars().all(|c| c.is_alphanumeric()));
+                                firstname.set(value);
                             },
+                            if !fname_valid() {
+                                span { class: "text-sm/24 font-bold text-c-p-50",
+                                    {tr.special_characters}
+                                }
+                            }
                         }
-                        if !valid() {
-                            span { class: "text-[14px] font-bold leading-[24px] text-[{theme.primary04}]",
-                                "{tr.special_characters}"
+                    }
+                    div { class: "flex flex-col items-start gap-5",
+                        span { class: "text-neutral-400 text-[15px]/28 font-bold", {tr.last_name} }
+                        input {
+                            class: "w-full max-[390px]:w-190 h-59 px-24 py-[17.5px] bg-background text-lg/24 font-medium placeholder-neutral-600 rounded-lg text-white",
+                            placeholder: "{tr.enter_nickname}",
+                            value: lastname(),
+                            oninput: move |e| {
+                                let value = e.value();
+                                lname_valid.set(value.chars().all(|c| c.is_alphanumeric()));
+                                lastname.set(value);
+                            },
+                            if !lname_valid() {
+                                span { class: "text-sm/24 font-bold text-c-p-50",
+                                    {tr.special_characters}
+                                }
                             }
                         }
                     }
                 }
 
-                div { class: "flex flex-row gap-[10px] items-center",
+                div { class: "flex flex-col gap-10 items-start",
                     Checkbox {
-                        title: "{tr.agree_email}",
+                        title: "{agree_msg}",
+                        class: "text-white text-sm/16 font-normal",
                         onchange: move |check| {
                             agreed.set(check);
                         },
                     }
-                                // button { class: "px-[10px] py-[2px] rounded-[4px] bg-[{theme.primary11}] hover:bg-[{theme.primary05}]",
-                //     div { class: "text-[14px] font-bold h-[24px] text-center text-white align-middle flex items-center justify-center",
-                //         "자세히보기"
-                //     }
-                // }
+                    Checkbox {
+                        title: "{tr.receive_announcement}",
+                        class: "text-white text-sm/16 font-normal",
+                        onchange: move |check| {
+                            announcement_agree.set(check);
+                        },
+                    }
                 }
 
                 button {
-                    class: "w-full mt-[10px] rounded-[12px] bg-[{btn_color}] opacity-50 hover:opacity-100 text-[18px] font-extrabold leading-[24px] text-[{theme.primary05}] h-[59px] flex items-center justify-center",
+                    class: "w-full rounded-[10px] bg-[{btn_color}] text-base/19 font-bold text-black h-59 flex items-center justify-center",
                     onclick: move |_| {
                         if agreed() {
-                            let nickname = nickname();
+                            let nickname = format!("{} {}", firstname(), lastname());
                             let principal = principal.clone();
                             let email = email.clone();
                             let profile_url = profile_url.clone();
@@ -125,18 +141,19 @@ pub fn UserSetupPopup(
                                     tracing::debug!("UserSetupPopup::signup: success");
                                     popup
                                         .open(rsx! {
-                                            CongratulationPopup { lang: lang.clone() }
+                                            WelcomePopup { lang: lang.clone() }
                                         })
-                                        .with_id("congratulation_popup")
-                                        .with_title(tr.welcome)
+                                        .with_id("welcome_popup")
+                                        .with_title(tr.title)
                                         .without_close();
                                 }
                             });
                         }
                     },
-                    "{tr.next}"
+                    {tr.button}
                 }
             }
+            SigninPopupFooter { lang }
         }
     }
 }
@@ -144,9 +161,29 @@ pub fn UserSetupPopup(
 translate! {
     UserSetupPopupTranslate;
 
-    welcome: {
-        ko: "환영합니다!",
-        en: "Welcome!",
+    title: {
+        ko: "프로필 설정",
+        en: "Finish your Profile!",
+    },
+
+    message: {
+        ko: "프로필을 완성하면 활동할 수 있습니다.",
+        en: "Completing your profile makes it easier for you to take action."
+    }
+
+    email: {
+        ko: "이메일",
+        en: "Email",
+    }
+
+    first_name: {
+        ko: "이름",
+        en: "First Name",
+    },
+
+    last_name: {
+        ko: "성",
+        en: "Last Name",
     },
 
     enter_nickname: {
@@ -159,13 +196,24 @@ translate! {
         en: "Special characters are not allowed.",
     },
 
-    agree_email: {
-        ko: "[필수]이메일 및 계정주소 수집에 동의합니다.",
-        en: "[Required]I agree to collect email and account address.",
+    agree: {
+        ko: "을 읽어보았으며 동의합니다",
+        en: "I have read and accept the",
     },
 
-    next: {
-        ko: "다음",
-        en: "Next",
+    // TODO: need bold text
+    term_of_service: {
+        ko: "서비스 이용약관",
+        en: "Terms of Service",
+    },
+
+    receive_announcement: {
+        ko: "Ratel의 공지사항 및 소식을 이메일로 받고 싶습니다.",
+        en: "I want to receive announcements and news from Ratel.",
+    },
+
+    button: {
+        ko: "가입 완료",
+        en: "Finished Sign-up",
     },
 }

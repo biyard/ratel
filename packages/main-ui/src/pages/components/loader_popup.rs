@@ -1,5 +1,8 @@
 #![allow(non_snake_case)]
-use super::{login_failure_popup::LoginFailurePopup, user_setup_popup::UserSetupPopup};
+use super::{
+    login_failure_popup::LoginFailurePopup, signin_popup_footer::SigninPopupFooter,
+    user_setup_popup::UserSetupPopup, wallet_signin_popup::WalletSigninPopup,
+};
 use crate::services::user_service::{UserEvent, UserService};
 use bdk::prelude::*;
 use dioxus_popup::PopupService;
@@ -9,41 +12,64 @@ pub fn LoaderPopup(
     #[props(default ="loader_popup".to_string())] id: String,
     #[props(default ="".to_string())] class: String,
     lang: Language,
+    title: String,
+    description: String,
     logo: Element,
     logo_origin: Element,
     msg: String,
 ) -> Element {
-    let tr = translate::<LoaderPopupTranslate>(&lang);
     let mut user_service: UserService = use_context();
     let mut popup: PopupService = use_context();
-
+    let display_logo = logo.clone();
+    let load_message = description.clone();
     use_effect(move || {
-        let logo = logo_origin.clone();
+        let logo_origin = logo_origin.clone();
+        let logo = logo.clone();
         let msg = msg.clone();
+        let description = description.clone();
         spawn(async move {
             match user_service.login().await {
                 UserEvent::Signup(principal, email, nickname, profile_url) => {
-                    popup.open(rsx! {
-                        UserSetupPopup {
-                            class: "w-[400px] mx-[5px]",
-                            nickname,
-                            profile_url,
-                            email,
-                            principal,
-                            lang,
-                        }
-                    });
+                    tracing::debug!("Email: {}, Principal: {}", email, principal);
+                    popup
+                        .open(rsx! {
+                            UserSetupPopup {
+                                class: "w-390",
+                                nickname,
+                                profile_url,
+                                email,
+                                principal,
+                                lang,
+                            }
+                        })
+                        .with_id("user_setup_popup");
                 }
                 UserEvent::Login => {
                     popup.close();
+                }
+                UserEvent::Confirmed => {
+                    tracing::debug!("User confirmed");
+                    popup
+                        .open(rsx! {
+                            WalletSigninPopup {
+                                class: "w-400 mx-5",
+                                logo,
+                                logo_origin,
+                                lang,
+                                msg,
+                            }
+                        })
+                        .with_id("wallet_signin_popup");
                 }
                 _ => {
                     tracing::error!("Failed to signup with Phantom");
                     popup
                         .open(rsx! {
                             LoginFailurePopup {
-                                class: "w-[400px] mx-[5px]",
+                                class: "w-400 mx-5",
+                                description,
                                 logo,
+                                logo_origin,
                                 msg,
                                 lang,
                             }
@@ -56,58 +82,18 @@ pub fn LoaderPopup(
 
     rsx! {
         div { id, class,
-            div { class: "justify-start text-white font-bold text-xl/24", "{tr.title}" }
-            div { class: "w-full flex  justify-center items-center mt-[35px]",
+            div { class: "justify-start text-white font-bold text-xl/24", "{title}" }
+            div { class: "w-full flex  justify-center items-center mt-35",
                 // TODO: border-t rounded
-                div { class: "border-6 border-t-6 w-[82px] h-[82px] border-primary border-t-background rounded-full animate-spin" }
-                div { class: "absolute w-[64px] h-[64px] bg-white rounded-full justify-center items-center",
-                    {logo}
+                div { class: "border-6 border-t-6 w-82 h-82 border-primary border-t-background rounded-full animate-spin" }
+                div { class: "absolute w-64 h-64 bg-white rounded-full justify-center items-center flex",
+                    div { class: "flex justify-center items-center", {display_logo} }
                 }
             }
-            div { class: "justify-center text-center text-white font-bold text-[16px] leading-[24px] mt-[35px]",
-                "{tr.message}"
+            div { class: "justify-center text-center text-white font-bold text-base/24 mt-35",
+                "{load_message}"
             }
-            // TODO: applying policy and terms.
-            div { class: "flex flex-row gap-10 mt-35 justify-center",
-                button {
-                    class: "cursor-pointer",
-                    onclick: move |_| {
-                        tracing::debug!("Privacy policy clicked");
-                    },
-                    span { class: "text-neutral-400 text-xs/14 font-medium", "{tr.privacy_policy}" }
-                }
-                button {
-                    class: "cursor-pointer",
-                    onclick: move |_| {
-                        tracing::debug!("Privacy policy clicked");
-                    },
-                    span { class: "text-neutral-400 text-xs/14 font-medium", "{tr.term_of_service}" }
-                }
-            }
+            SigninPopupFooter { lang }
         }
     }
-}
-
-translate! {
-    LoaderPopupTranslate;
-
-    title: {
-        ko: "로그인",
-        en: "Log in",
-    },
-
-    message: {
-        ko: "팝업에서 계정에 로그인하세요",
-        en: "Sign into your account in the pop-up",
-    },
-
-    privacy_policy: {
-        ko: "개인정보 처리방침",
-        en: "Privacy Policy",
-    },
-
-    term_of_service: {
-        ko: "이용약관",
-        en: "Term of Service",
-    },
 }

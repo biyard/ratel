@@ -24,12 +24,12 @@ pub fn SectionHeader(
                 h1 { class: "w-full col-span-1 text-[32px] font-bold text-white", {title} }
                 if with_line {
                     div { class: "col-span-1 w-full h-full flex flex-col items-center justify-center",
-                        div { class: "w-full h-1 bg-[#464646]" }
+                        div { class: "w-full h-1 bg-c-wg-70" }
                     }
                 }
             }
             div { class: "w-full grid {cols} gap-24",
-                p { class: "col-span-1 w-full text-white font-normal text-[15px]/22 text-[#AEAEAE] whitespace-pre-line",
+                p { class: "col-span-1 w-full font-normal text-[15px]/22 text-c-wg-30 whitespace-pre-line",
                     {description}
                 }
                 div { class: "col-span-1 w-full", {children} }

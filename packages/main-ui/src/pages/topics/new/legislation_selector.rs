@@ -219,7 +219,7 @@ pub fn DiscussionPointBox(
     rsx! {
         for (index , content) in contents.iter().enumerate() {
             div {
-                class: "w-full flex justify-between items-center px-[20px] py-[10px] text-s font-bold p-[10px] rounded-md h-[64px] mt-[5px]",
+                class: "w-full flex justify-between items-center px-[20px] py-[10px] text-s font-bold p-[10px] rounded-md h-[64px] mt-5",
                 style: "background-color: #404761",
                 div { class: "flex", "{content}" }
                 button {
@@ -267,13 +267,13 @@ pub fn AdditionalResourcesBox(lang: Language) -> Element {
     let tr: AdditionalResourcesBoxText = translate(&lang);
 
     rsx! {
-        div { class: "h-[136px] rounded-[12px] w-full mt-[10px]",
+        div { class: "h-[136px] rounded-[12px] w-full mt-10",
             // Label
             label { class: "w-full font-bold text-white mb-1 flex items-center gap-1 text-[16px]",
                 "{tr.title_text}"
             }
             div {
-                class: "w-full flex flex-col justify-between items-center rounded-md  h-[136px] mt-[5px]",
+                class: "w-full flex flex-col justify-between items-center rounded-md  h-[136px] mt-5",
                 style: "padding: 8px; border: 1px dotted #424563;",
 
                 //Icon
@@ -310,8 +310,8 @@ pub fn AdditionalResourcesBox(lang: Language) -> Element {
 #[component]
 pub fn UploadedFileBox(lang: Language) -> Element {
     rsx! {
-        div { class: "h-[146px] rounded-[12px] w-full mt-[40px] flex justify-start items-center",
-            div { class: "flex flex-col justify-start items-center gap-[10px]",
+        div { class: "h-[146px] rounded-[12px] w-full mt-40 flex justify-start items-center",
+            div { class: "flex flex-col justify-start items-center gap-10",
                 div { class: "w-full flex flex- center justify-start items-center gap-[5px]",
                     UploadedFile {}
                     UploadedFile {}
@@ -366,7 +366,7 @@ pub fn CreateAndCancelButton(lang: Language) -> Element {
             .open(rsx! {
                 div { class: "mb-[10px] flex flex-col justify-between items-center",
                     LogoWithBackground {}
-                    div { class: "mt-[35px] w-[400px] text-center text-[16px] tracking-wide",
+                    div { class: "mt-35 w-[400px] text-center text-[16px] tracking-wide",
                         span { "{tr.popup_text_part1}" }
                         span { class: "text-[#B5AB65] font-bold tracking-wide",
                             "{tr.popup_text_highlight}\n"
@@ -383,7 +383,7 @@ pub fn CreateAndCancelButton(lang: Language) -> Element {
             .open(rsx! {
                 div { class: "flex flex-col justify-between items-center",
                     LogoWithBackground {}
-                    div { class: "mt-[35px] mb-[35px] w-[400px] text-center text-[16px] tracking-wide",
+                    div { class: "mt-35 mb-35 w-[400px] text-center text-base tracking-wide",
                         span { "{tr.created_popup_text}" }
                     }
                     button {
@@ -404,7 +404,7 @@ pub fn CreateAndCancelButton(lang: Language) -> Element {
     }
 
     rsx! {
-        div { class: "flex justify-center gap-[30px] mt-[50px]",
+        div { class: "flex justify-center gap-30 mt-50",
             div {
                 class: "flex justify-center items-center w-[400px] h-[57px] rounded-[12px] align-middle",
                 style: "background-color: #74789E",

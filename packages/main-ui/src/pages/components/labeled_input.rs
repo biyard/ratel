@@ -16,7 +16,7 @@ pub fn LabeledInput(
             div { class: "w-full flex flex-col items-start gap-5",
                 p { class: "text-c-cg-30 font-bold text-base/28", {label_name} }
                 input {
-                    class: "w-full outline-none h-full grow px-20 text-white text-base placeholder-c-wg-30 border border-c-wg-70 border rounded-lg flex flex-row items-center justify-start",
+                    class: "w-full outline-none h-full grow px-20 text-white text-base placeholder-c-wg-30 border border-c-wg-70 rounded-lg flex flex-row items-center justify-start",
                     style: "height: {height};",
                     r#type,
                     placeholder,
