@@ -1,5 +1,8 @@
 #![allow(non_snake_case)]
-use bdk::prelude::*;
+use bdk::prelude::{
+    by_components::responsive::{Responsive, ResponsiveService},
+    *,
+};
 use dioxus_popup::PopupZone;
 
 use super::components::*;
@@ -46,7 +49,8 @@ pub fn RootLayout(lang: Language) -> Element {
         0
     });
     let current_path: Route = use_route();
-    let is_home = matches!(current_path, Route::HomePage {..});
+    let is_home = matches!(current_path, Route::HomePage { .. });
+    let responsive_service: ResponsiveService = use_context();
 
     #[cfg(feature = "web")]
     let _ = use_coroutine(move |_: UnboundedReceiver<()>| async move {
@@ -81,17 +85,25 @@ pub fn RootLayout(lang: Language) -> Element {
             url: "https://ratel.foundation",
         }
         div { class: "w-full h-full bg-background text-white",
-            Header { lang, selected: selected() }
+            ResponsiveHeader { lang, selected: selected() }
             SuspenseBoundary {
                 fallback: |_| rsx! {
                     div { class: "absolute w-screen h-screen top-0 left-0 flex items-center justify-center text-white",
                         CubeLoader {}
                     }
                 },
-                div { class: "w-full overflow-x-hidden scroll-smooth flex flex-col items-center justify-center mt-80",
-                    Outlet::<Route> {}
-
-                    Footer { lang }
+                Responsive {
+                    if responsive_service.width() > 1200.0 {
+                        div { class: "w-full overflow-x-hidden scroll-smooth flex flex-col items-center justify-center mt-80",
+                            Outlet::<Route> {}
+                            Footer { lang }
+                        }
+                    } else {
+                        div { class: "w-full overflow-x-hidden scroll-smooth flex flex-col items-center justify-center mt-[130px]",
+                            Outlet::<Route> {}
+                            Footer { lang }
+                        }
+                    }
                 }
             }
         }

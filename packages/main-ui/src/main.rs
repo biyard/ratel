@@ -7,7 +7,7 @@ pub mod services;
 pub mod theme;
 pub mod utils;
 
-use bdk::prelude::*;
+use bdk::prelude::{by_components::responsive::Responsive, *};
 use dioxus_popup::PopupService;
 use route::Route;
 use services::user_service::UserService;
@@ -67,7 +67,7 @@ fn app() -> Element {
 
         document::Script { r#type: "module", src: asset!("/public/dep.js"), defer: true }
 
-        Router::<Route> {}
+        Responsive { mobile_first: false, desktop: 1200.1, Router::<Route> {} }
     }
 }
 

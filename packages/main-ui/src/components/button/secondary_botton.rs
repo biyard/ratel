@@ -5,6 +5,7 @@ use bdk::prelude::*;
 #[component]
 pub fn SecondaryButton(
     #[props(default = Default::default())] size: ButtonSize,
+    #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
     #[props(default = false)] disabled: bool,
     children: Element,
 

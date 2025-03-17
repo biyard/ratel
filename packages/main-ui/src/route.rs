@@ -8,14 +8,14 @@ pub enum Route {
     #[nest("/:lang")]
     #[layout(RootLayout)]
     #[route("/")]
-    HomePage { lang: Language },
+    HomePage { lang: Language, class:String },
 
     #[route("/politicians")]
     PoliticiansPage { lang: Language },
     #[end_layout]
     #[end_nest]
 
-    #[redirect("/", || Route::HomePage { lang: Language::default() })]
+    #[redirect("/", || Route::HomePage { lang: Language::default(), class: String::new() })]
     #[route("/:..route")]
     NotFoundPage { route: Vec<String> },
 }
