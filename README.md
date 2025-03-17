@@ -12,7 +12,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/biyard/ratel">
-    <img src="images/logo.png" alt="Logo" width="80" height="80">
+    <img src="images/logo.png" alt="Logo" width="60%">
   </a>
 
   <h3 align="center">Ratel</h3>
