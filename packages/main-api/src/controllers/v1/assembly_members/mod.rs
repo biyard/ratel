@@ -85,6 +85,7 @@ impl AssemblyMemberControllerV1 {
                 let items = AssemblyMemberSummary::query_builder()
                     .limit(q.size())
                     .stance_equals(stance)
+                    .order_by_random()
                     .query()
                     .map(|row: PgRow| {
                         use sqlx::Row;
