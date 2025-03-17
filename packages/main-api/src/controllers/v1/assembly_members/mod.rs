@@ -8,7 +8,9 @@ use by_axum::{
         routing::get,
     },
 };
+use by_types::QueryResponse;
 use dto::*;
+use sqlx::postgres::PgRow;
 
 #[derive(
     Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
@@ -20,13 +22,14 @@ pub struct AssemblyMemberPath {
 #[derive(Clone, Debug)]
 pub struct AssemblyMemberControllerV1 {
     repo: AssemblyMemberRepository,
+    pool: sqlx::Pool<sqlx::Postgres>,
 }
 
 impl AssemblyMemberControllerV1 {
     pub fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Router> {
-        let repo = AssemblyMember::get_repository(pool);
+        let repo = AssemblyMember::get_repository(pool.clone());
 
-        let ctrl = AssemblyMemberControllerV1 { repo };
+        let ctrl = AssemblyMemberControllerV1 { repo, pool };
 
         Ok(by_axum::axum::Router::new()
             .route(
@@ -73,6 +76,32 @@ impl AssemblyMemberControllerV1 {
         tracing::debug!("list_assembly_member {:?}", q);
 
         match q {
+            AssemblyMemberParam::Query(q)
+                if q.action == Some(AssemblyMemberQueryActionType::ListByStance) =>
+            {
+                let mut total_count = 0;
+                let stance = q.stance.clone().unwrap_or_default();
+                tracing::debug!("list_by_stance {:?}", stance);
+                let items = AssemblyMemberSummary::query_builder()
+                    .limit(q.size())
+                    .stance_equals(stance)
+                    .order_by_random()
+                    .query()
+                    .map(|row: PgRow| {
+                        use sqlx::Row;
+                        tracing::debug!("row: {:?}", row);
+                        total_count = row.get("total_count");
+                        row.into()
+                    })
+                    .fetch_all(&ctrl.pool)
+                    .await?;
+
+                Ok(Json(AssemblyMemberGetResponse::Query(QueryResponse {
+                    total_count,
+                    items,
+                })))
+            }
+
             AssemblyMemberParam::Query(q) => {
                 let docs = ctrl.repo.find(&q).await?;
                 Ok(Json(AssemblyMemberGetResponse::Query(docs)))

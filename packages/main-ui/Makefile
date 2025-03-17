@@ -24,10 +24,10 @@ setup.tool:
 	npm i -g @tailwindcss/cli
 	npm i -g webpack-cli
 
-run: clean public/tailwind.css public/dep.js
+run: clean public/tailwind.css
 	$(BUILD_ENV) dx serve --fullstack $(DXFLAGS)
 
-build: clean public/tailwind.css public/dep.js
+build: clean public/tailwind.css
 	$(BUILD_ENV) dx build --release --fullstack --server-features lambda
 	cp -r $(WORKSPACE_ROOT)/target/dx/$(SERVICE)/release/web $(ARTIFACT_DIR)
 
