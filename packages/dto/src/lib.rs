@@ -1,4 +1,3 @@
-mod assembly_members;
 mod assets;
 mod comment;
 mod error;
