@@ -59,7 +59,7 @@ impl BillControllerV1 {
         };
 
         Ok(format!(
-            "{}?bookId={}?type={}",
+            "{}?bookId={}&type={}",
             conf.assembly_system_url,
             bill.book_id,
             "0" // 0: hwp 1: pdf
