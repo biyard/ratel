@@ -49,8 +49,21 @@ pub enum Party {
     Independent = 8,
 }
 
-// TODO(api): implement list_by_stance
-#[api_model(base = "/v1/assembly-members", table = assembly_members, iter_type = QueryResponse, action_by_id = [change_stance(code = String, stance = CryptoStance), send_verify_email])]
+#[derive(
+    Debug, Clone, Eq, PartialEq, Default, by_macros::ApiModel, dioxus_translate::Translate, Copy,
+)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub enum AssemblyMemberSorter {
+    #[default]
+    #[translate(ko = "이름순", en = "Sort by name")]
+    Name = 1,
+    #[translate(ko = "입장순", en = "Sort by stance")]
+    Stance = 2,
+    #[translate(ko = "정당순", en = "Sort by party")]
+    Party = 3,
+}
+
+#[api_model(base = "/v1/assembly-members", table = assembly_members, iter_type = QueryResponse, queryable = [(sort = AssemblyMemberSorter)], action_by_id = [change_stance(code = String, stance = CryptoStance), send_verify_email])]
 pub struct AssemblyMember {
     #[api_model(summary, primary_key)]
     pub id: i64,
@@ -75,7 +88,7 @@ pub struct AssemblyMember {
     #[api_model(summary)]
     pub en_district: Option<String>,
 
-    #[api_model(summary, type = INTEGER, query_action = list_by_stance)]
+    #[api_model(summary, queryable, type = INTEGER, query_action = list_by_stance)]
     pub stance: CryptoStance,
     #[api_model(summary)]
     pub image_url: String,
