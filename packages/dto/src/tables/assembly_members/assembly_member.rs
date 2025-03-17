@@ -132,6 +132,9 @@ pub struct AssemblyMember {
     pub image_url: String,
     pub email: Option<String>,
     // pub email_verified: bool, // check email verified logic
+    #[api_model(many_to_many = proposers, foreign_table_name = bills, foreign_primary_key = bill_id, foreign_reference_key = member_id, unique)]
+    #[serde(default)]
+    pub bills: Vec<Bill>,
 }
 
 impl AssemblyMemberSummary {
