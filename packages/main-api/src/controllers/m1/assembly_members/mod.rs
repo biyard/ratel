@@ -9,13 +9,15 @@ pub struct AssemblyMemberControllerM1 {
 }
 
 impl AssemblyMemberControllerM1 {
-    pub fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Router> {
-        let repo = AssemblyMember::get_repository(pool);
-        let ctrl = AssemblyMemberControllerM1 { repo };
+    pub fn new(pool: sqlx::Pool<sqlx::Postgres>) -> Self {
+        let repo = AssemblyMember::get_repository(pool.clone());
+        Self { repo }
+    }
 
-        Ok(by_axum::axum::Router::new()
+    pub fn route(&self) -> by_axum::axum::Router {
+        by_axum::axum::Router::new()
             .route("/", post(Self::act_assembly_member))
-            .with_state(ctrl.clone()))
+            .with_state(self.clone())
     }
 
     pub async fn act_assembly_member(State(ctrl): State<AssemblyMemberControllerM1>) -> Result<()> {
@@ -27,7 +29,7 @@ impl AssemblyMemberControllerM1 {
 
 impl AssemblyMemberControllerM1 {
     async fn fetch_members(&self) -> Result<()> {
-        let members = get_active_members().await?;
+        let members = fetch_active_members().await?;
         tracing::debug!("members: {:?}", members);
 
         for member in members {

@@ -36,6 +36,7 @@ pub enum ServiceError {
     JsonDeserializeError(String),
     WalletNotFound,
     WalletError(String),
+    HtmlParseError(String),
 }
 
 impl std::fmt::Display for ServiceError {

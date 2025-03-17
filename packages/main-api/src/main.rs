@@ -25,6 +25,8 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
     let a = AssemblyMember::get_repository(pool.clone());
     let p = Patron::get_repository(pool.clone());
     let f = Feature::get_repository(pool.clone());
+    let b = Bill::get_repository(pool.clone());
+    let pr = Proposer::get_repository(pool.clone());
 
     u.create_this_table().await?;
     t.create_this_table().await?;
@@ -33,6 +35,8 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
     a.create_this_table().await?;
     p.create_this_table().await?;
     f.create_this_table().await?;
+    b.create_this_table().await?;
+    pr.create_this_table().await?;
 
     u.create_related_tables().await?;
     t.create_related_tables().await?;
@@ -41,6 +45,8 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
     a.create_related_tables().await?;
     p.create_related_tables().await?;
     f.create_related_tables().await?;
+    b.create_related_tables().await?;
+    pr.create_related_tables().await?;
 
     tracing::info!("Migration done");
     Ok(())
@@ -84,6 +90,10 @@ async fn main() -> Result<()> {
         .nest(
             "/v1/patrons",
             controllers::v1::patrons::PatronControllerV1::route(pool.clone())?,
+        )
+        .nest(
+            "/v1/bills",
+            controllers::v1::bills::BillControllerV1::new(pool.clone()).route(),
         )
         .nest(
             "/m1",
