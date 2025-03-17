@@ -85,9 +85,9 @@ Use the `BLANK_README.md` to get started.
 
 This section should list any major frameworks/libraries used to bootstrap your project. Leave any add-ons/plugins for the acknowledgements section. Here are a few examples.
 
-* [![Dioxus][https://img.shields.io/badge/dioxus-0.6.3-blue]][https://dioxuslabs.com/]
-* [![Axum][https://img.shields.io/badge/axum-0.8.2-blue]][https://github.com/tokio-rs/axum]
-* [![Tailwindcss][https://img.shields.io/badge/tailwindcss-v4.0-blue]][https://tailwindcss.com/]
+* ![Dioxus](https://img.shields.io/badge/dioxus-0.6.3-blue)
+* ![Axum](https://img.shields.io/badge/axum-0.8.2-blue)
+* ![Tailwindcss](https://img.shields.io/badge/tailwindcss-v4.0-blue)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
