@@ -3,15 +3,16 @@ mod assets;
 mod comment;
 mod error;
 mod patron;
+mod tables;
 mod topic;
 mod users;
 mod vote;
 
-pub use assembly_members::*;
 pub use assets::*;
 pub use comment::*;
 pub use error::*;
 pub use patron::*;
+pub use tables::*;
 pub use topic::*;
 pub use users::*;
 pub use vote::*;
