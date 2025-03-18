@@ -1,33 +1,21 @@
 #![allow(non_snake_case)]
-use crate::components::button::primary_button::PrimaryButton;
+use crate::components::confirm_popup::ConfirmPopup;
 
-use super::{signin_popup_footer::SigninPopupFooter, welcome_header::WelcomeHeader};
 use bdk::prelude::*;
-use dioxus_popup::PopupService;
 
 #[component]
 pub fn WelcomePopup(
     #[props(default ="welcome_popup".to_string())] id: String,
     lang: Language,
 ) -> Element {
-    let mut popup: PopupService = use_context();
     let tr = translate::<WelcomePopupTranslate>(&lang);
 
     rsx! {
-        div { id, class: "max-w-390 w-full",
-            div { class: "w-full flex flex-col gap-35",
-                WelcomeHeader { lang, title: tr.title, description: tr.message }
-
-                PrimaryButton {
-                    width: "100%",
-                    onclick: move |_| {
-                        popup.close();
-                    },
-                    {tr.start}
-                }
-            }
-
-            SigninPopupFooter { lang }
+        ConfirmPopup {
+            lang,
+            title: tr.title,
+            description: tr.message,
+            btn_label: tr.start,
         }
     }
 }

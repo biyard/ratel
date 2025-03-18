@@ -1,9 +1,12 @@
 #![allow(non_snake_case)]
 use bdk::prelude::*;
+use dioxus_popup::PopupService;
 use dto::{Need, SupportSubmitRequest};
 
 use crate::{
-    components::{button::secondary_botton::SecondaryButton, dropdown::Dropdown},
+    components::{
+        button::secondary_botton::SecondaryButton, confirm_popup::ConfirmPopup, dropdown::Dropdown,
+    },
     config,
 };
 
@@ -11,6 +14,7 @@ use super::*;
 
 #[component]
 pub fn Support(lang: Language) -> Element {
+    let mut popup: PopupService = use_context();
     let tr: SupportTranslate = translate(&lang);
     let mut req = use_signal(|| SupportSubmitRequest::default());
 
@@ -103,6 +107,15 @@ pub fn Support(lang: Language) -> Element {
                             {
                                 Ok(_) => {
                                     btracing::info!("Thank you for your submission!");
+                                    let tr: InquiryTranslate = translate(&lang);
+                                    popup.open(rsx! {
+                                        ConfirmPopup {
+                                            lang,
+                                            title: tr.title,
+                                            description: tr.description,
+                                            btn_label: tr.btn_label,
+                                        }
+                                    });
                                 }
                                 Err(e) => {
                                     btracing::error!("{}", e.translate(& lang));
@@ -193,5 +206,24 @@ translate! {
     btn_submit: {
         ko: "제출하기",
         en: "SUBMIT",
+    }
+}
+
+translate! {
+    InquiryTranslate;
+
+    title: {
+        ko: "문의가 접수되었습니다.",
+        en: "Inquiry Received",
+    },
+
+    description: {
+        ko: "문의해 주셔서 감사합니다. 귀하의 문의를 접수하였으며, 곧 회신드리겠습니다.",
+        en: "Thank you for your inquiry. We have received your question and will respond to you shortly.",
+    }
+
+    btn_label: {
+        ko: "확인",
+        en: "Confirm",
     }
 }

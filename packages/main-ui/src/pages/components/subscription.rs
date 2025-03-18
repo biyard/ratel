@@ -1,11 +1,17 @@
 #![allow(non_snake_case)]
 use bdk::prelude::*;
+use dioxus_popup::PopupService;
 
-use crate::pages::components::{InputWithButton, Socials};
+use crate::{
+    components::confirm_popup::ConfirmPopup,
+    config,
+    pages::components::{InputWithButton, Socials},
+};
 
 #[component]
 pub fn Subscription(lang: Language) -> Element {
     let tr: SubscriptionTranslate = translate(&lang);
+    let mut popup: PopupService = use_context();
 
     rsx! {
         div { class: "w-full flex flex-col",
@@ -31,8 +37,24 @@ pub fn Subscription(lang: Language) -> Element {
                                 placeholder: tr.email_placeholder,
                                 btn_name: tr.btn_subscribe,
                                 r#type: "email",
-                                onsubmit: |email| {
-                                    btracing::info!("Subscribed by {}", email);
+                                onsubmit: move |email| async move {
+                                    let endpoint = config::get().main_api_endpoint;
+                                    match dto::Subscription::get_client(endpoint).subscribe(email).await {
+                                        Ok(_) => {
+                                            let tr: SubscribedPopupTranslate = translate(&lang);
+                                            popup.open(rsx! {
+                                                ConfirmPopup {
+                                                    lang,
+                                                    title: tr.title,
+                                                    description: tr.description,
+                                                    btn_label: tr.btn_label,
+                                                }
+                                            });
+                                        }
+                                        Err(e) => {
+                                            btracing::error!("{}", e.translate(& lang));
+                                        }
+                                    }
                                 },
                             }
                         }
@@ -45,19 +67,24 @@ pub fn Subscription(lang: Language) -> Element {
     }
 }
 
-// #[derive(Debug, Clone, Copy, DioxusController)]
-// pub struct Controller {
-//     #[allow(dead_code)]
-//     lang: Language,
-// }
+translate! {
+    SubscribedPopupTranslate;
 
-// impl Controller {
-//     pub fn new(lang: Language) -> std::result::Result<Self, RenderError> {
-//         let ctrl = Self { lang };
+    title: {
+        ko: "구독 완료",
+        en: "Subscription Confirmed",
+    },
 
-//         Ok(ctrl)
-//     }
-// }
+    description: {
+        ko: "Ratel 구독을 환영합니다. 구독이 성공적으로 확인되었으며 이제 업데이트를 받게 됩니다.",
+        en: "Thank you for subscribing to Ratel. Your subscription has been successfully confirmed, and you will now receive updates.",
+    }
+
+    btn_label: {
+        ko: "확인",
+        en: "Confirm",
+    },
+}
 
 translate! {
     SubscriptionTranslate;
