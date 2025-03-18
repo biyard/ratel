@@ -2,7 +2,6 @@ use std::error::Error;
 
 use serde::{Deserialize, Serialize};
 
-#[cfg(feature = "server")]
 use bdk::prelude::*;
 
 #[derive(Debug, Serialize)]
@@ -18,7 +17,7 @@ impl std::fmt::Display for ServiceException {
 
 impl Error for ServiceException {}
 
-#[derive(Debug, Serialize, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Serialize, PartialEq, Eq, Deserialize, Translate)]
 #[repr(u64)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum ServiceError {
@@ -37,20 +36,6 @@ pub enum ServiceError {
     WalletNotFound,
     WalletError(String),
     HtmlParseError(String),
-}
-
-impl std::fmt::Display for ServiceError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
-    }
-}
-
-impl std::str::FromStr for ServiceError {
-    type Err = String;
-
-    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
-        Ok(ServiceError::Unknown(s.to_string()))
-    }
 }
 
 impl<E: Error + 'static> From<E> for ServiceError {

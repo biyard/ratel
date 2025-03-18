@@ -1,85 +1,117 @@
 #![allow(non_snake_case)]
 use bdk::prelude::*;
+use dto::{Need, SupportSubmitRequest};
 
-use crate::components::button::secondary_botton::SecondaryButton;
+use crate::{
+    components::{button::secondary_botton::SecondaryButton, dropdown::Dropdown},
+    config,
+};
 
 use super::*;
 
 #[component]
 pub fn Support(lang: Language) -> Element {
     let tr: SupportTranslate = translate(&lang);
+    let mut req = use_signal(|| SupportSubmitRequest::default());
 
     rsx! {
         div {
             id: "support",
-            class: "w-full max-w-1177 h-screen grid grid-cols-2 gap-50 max-[1177px]:mx-10",
-            div { class: "col-span-1 w-full",
-                SectionHeader {
-                    section_name: tr.title,
-                    title: tr.mission,
-                    description: tr.description,
-                    with_line: false,
+            class: "w-full h-screen flex flex-col items-center justify-center",
+            div { class: "max-w-1177 grid grid-cols-2 gap-50 max-[1177px]:mx-10",
+                div { class: "col-span-1 w-full",
+                    SectionHeader {
+                        section_name: tr.title,
+                        title: tr.mission,
+                        description: tr.description,
+                        with_line: false,
+                    }
                 }
-            }
 
-            div { class: "col-span-1 w-full flex flex-col items-start gap-50",
-                div { class: "col-span-1 w-full flex flex-col items-start gap-30",
-                    div { class: "w-full grid grid-cols-2 gap-24 max-600:grid-cols-1",
+                div { class: "col-span-1 w-full flex flex-col items-start gap-50",
+                    div { class: "col-span-1 w-full flex flex-col items-start gap-30",
+                        div { class: "w-full grid grid-cols-2 gap-24 max-600:grid-cols-1",
+                            LabeledInput {
+                                label_name: tr.label_first_name,
+                                placeholder: tr.placeholder_first_name,
+                                oninput: move |e| {
+                                    req.with_mut(move |r| r.first_name = e);
+                                },
+                            }
+                            LabeledInput {
+                                label_name: tr.label_last_name,
+                                placeholder: tr.placeholder_last_name,
+                                oninput: move |e| {
+                                    req.with_mut(move |r| r.last_name = e);
+                                },
+                            }
+                        }
+
                         LabeledInput {
-                            label_name: tr.label_first_name,
-                            placeholder: tr.placeholder_first_name,
-                            oninput: |e| {
-                                btracing::debug!("First name: {}", e);
+                            class: "w-full",
+                            label_name: tr.label_email,
+                            placeholder: tr.placeholder_email,
+                            oninput: move |e| {
+                                req.with_mut(move |r| r.email = e);
                             },
                         }
+
                         LabeledInput {
-                            label_name: tr.label_last_name,
-                            placeholder: tr.placeholder_last_name,
-                            oninput: |e| {
-                                btracing::debug!("First name: {}", e);
+                            class: "w-full",
+                            label_name: tr.label_company,
+                            placeholder: tr.placeholder_company,
+                            oninput: move |e| {
+                                req.with_mut(move |r| r.company_name = e);
                             },
                         }
-                    }
 
-                    LabeledInput {
-                        class: "w-full",
-                        label_name: tr.label_email,
-                        placeholder: tr.placeholder_email,
-                        oninput: |e| {
-                            btracing::debug!("Email: {}", e);
+                        Labeled { class: "w-full", label_name: tr.label_needs,
+                            Dropdown {
+                                class: "w-full h-50",
+                                items: Need::variants(&lang),
+                                onselect: move |value: String| {
+                                    req.with_mut(move |r| r.needs = value.parse().unwrap_or_default());
+                                },
+                            }
+                        }
+
+
+                        LabeledInput {
+                            class: "w-full",
+                            label_name: tr.label_help,
+                            placeholder: tr.placeholder_help,
+                            oninput: move |e| {
+                                req.with_mut(move |r| r.help = e);
+                            },
+                        }
+                    } // end of form
+
+                    SecondaryButton {
+                        onclick: move |_| async move {
+                            let endpoint = config::get().main_api_endpoint;
+                            let SupportSubmitRequest {
+                                first_name,
+                                last_name,
+                                email,
+                                company_name,
+                                needs,
+                                help,
+                            } = req();
+                            match dto::Support::get_client(endpoint)
+                                .submit(first_name, last_name, email, company_name, needs, help)
+                                .await
+                            {
+                                Ok(_) => {
+                                    btracing::info!("Thank you for your submission!");
+                                }
+                                Err(e) => {
+                                    btracing::error!("{}", e.translate(& lang));
+                                }
+                            }
                         },
+                        {tr.btn_submit}
                     }
-
-                    LabeledInput {
-                        class: "w-full",
-                        label_name: tr.label_company,
-                        placeholder: tr.placeholder_company,
-                        oninput: |e| {
-                            btracing::debug!("Company: {}", e);
-                        },
-                    }
-
-                    // FIXME: dropdown box
-                    LabeledInput {
-                        class: "w-full",
-                        label_name: tr.label_needs,
-                        placeholder: tr.label_needs,
-                        oninput: |e| {
-                            btracing::debug!("Needs: {}", e);
-                        },
-                    }
-
-                    LabeledInput {
-                        class: "w-full",
-                        label_name: tr.label_help,
-                        placeholder: tr.placeholder_help,
-                        oninput: |e| {
-                            btracing::debug!("Help: {}", e);
-                        },
-                    }
-                } // end of form
-
-                SecondaryButton { onclick: |_| {}, {tr.btn_submit} }
+                }
             }
         }
     }
