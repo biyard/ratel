@@ -1,6 +1,6 @@
 pub mod assembly_members;
+pub mod bills;
 use bdk::prelude::*;
-
 use by_axum::{
     auth::Authorization,
     axum::{
@@ -21,8 +21,9 @@ impl MenaceController {
         Ok(by_axum::axum::Router::new()
             .nest(
                 "/assembly-members",
-                assembly_members::AssemblyMemberControllerM1::route(pool)?,
+                assembly_members::AssemblyMemberControllerM1::new(pool.clone()).route(),
             )
+            .nest("/bills", bills::BillsController::new(pool.clone()).route())
             .layer(middleware::from_fn(authorize_organization)))
     }
 }
