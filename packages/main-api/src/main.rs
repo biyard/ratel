@@ -26,6 +26,7 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
     let p = Patron::get_repository(pool.clone());
     let f = Feature::get_repository(pool.clone());
     let b = Bill::get_repository(pool.clone());
+    let bb = BillVote::get_repository(pool.clone());
     let pr = Proposer::get_repository(pool.clone());
 
     u.create_this_table().await?;
@@ -36,6 +37,7 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
     p.create_this_table().await?;
     f.create_this_table().await?;
     b.create_this_table().await?;
+    bb.create_this_table().await?;
     pr.create_this_table().await?;
 
     u.create_related_tables().await?;
@@ -46,6 +48,7 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
     p.create_related_tables().await?;
     f.create_related_tables().await?;
     b.create_related_tables().await?;
+    bb.create_related_tables().await?;
     pr.create_related_tables().await?;
 
     tracing::info!("Migration done");

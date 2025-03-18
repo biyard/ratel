@@ -41,13 +41,12 @@ pub struct Bill {
     #[api_model(one_to_many = proposers, foreign_key = bill_id)]
     #[serde(default)]
     pub proponents: Vec<Proposer>,
-
-    // FIXME: need conditional sum
-    #[api_model(one_to_many = bill_votes, foreign_key = bill_id, aggregator = sum(amount))]
-    pub pros: i64,
-    // FIXME: need conditional sum
-    #[api_model(one_to_many = bill_votes, foreign_key = bill_id, aggregator = sum(amount))]
-    pub cons: i64,
+    // // FIXME: need conditional sum
+    // #[api_model(one_to_many = bill_votes, foreign_key = bill_id, aggregator = sum(amount))]
+    // pub pros: i64,
+    // // FIXME: need conditional sum
+    // #[api_model(one_to_many = bill_votes, foreign_key = bill_id, aggregator = sum(amount))]
+    // pub cons: i64,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Default, Copy, ApiModel, Translate)]

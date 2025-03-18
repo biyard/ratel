@@ -5,7 +5,7 @@ use by_axum::axum::{extract::State, routing::post};
 use dto::*;
 
 const BATCH_SIZE: u32 = 10;
-const MAX_BILL_SUM: u32 = 1500; // 2025.03.19:
+const MAX_BILL_SUM: u32 = 1500; // 2025.03.19: 1392
 #[derive(Clone, Debug)]
 pub struct BillsController {
     pub _pool: sqlx::Pool<sqlx::Postgres>,
