@@ -3,8 +3,8 @@ use bdk::prelude::*;
 translate! {
     PoliticiansByIdTranslate;
 
-    title: {
-        ko: "POLITICIANS_BY_ID",
-        en: "POLITICIANS_BY_ID",
+    description: {
+        ko: "제22대 국회위원",
+        en: "The 22nd National Assembly, Seoul, South Korea",
     },
 }

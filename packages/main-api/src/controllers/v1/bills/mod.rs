@@ -18,13 +18,11 @@ pub struct BillPath {
 #[derive(Clone, Debug)]
 pub struct BillController {
     pool: sqlx::Pool<sqlx::Postgres>,
-    _repo: BillRepository,
 }
 
 impl BillController {
     pub fn new(pool: sqlx::Pool<sqlx::Postgres>) -> Self {
-        let _repo = Bill::get_repository(pool.clone());
-        Self { pool, _repo }
+        Self { pool }
     }
 
     pub fn route(&self) -> by_axum::axum::Router {

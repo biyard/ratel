@@ -1,6 +1,8 @@
 #![allow(non_snake_case)]
 use bdk::prelude::*;
-use dto::BillSummary;
+use dto::{BillSorter, BillSummary};
+
+use crate::components::dropdown::Dropdown;
 
 #[component]
 pub fn PoliticianActivities(
@@ -19,7 +21,42 @@ pub fn PoliticianActivities(
     };
 
     rsx! {
-        div { class: "w-full flex flex-col" }
+        div { class: "w-full flex flex-col items-center py-100 gap-35",
+            div { class: "flex flex-col gap-8 items-center",
+                h2 { class: "text-xl/22 font-bold text-text-primary", {tr.title} }
+                p { class: "text-[15px]/22 font-normal text-text-secondary", {description} }
+            }
+
+            div { class: "w-full flex items-start justify-start gap-10",
+                Dropdown {
+                    items: BillSorter::variants(&lang),
+                    onselect: |item: String| {
+                        let sort: BillSorter = item.parse().unwrap_or_default();
+                        tracing::debug!("Selected item: {:?}", item);
+                    },
+                }
+
+                div {
+                    id: "politician-bills",
+                    class: "w-full flex flex-col gap-24",
+                    for bill in bills {
+                        BillCard { lang, bill }
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[component]
+pub fn BillCard(
+    lang: Language,
+    bill: BillSummary,
+    #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
+    children: Element,
+) -> Element {
+    rsx! {
+        div { ..attributes,{children} }
     }
 }
 
