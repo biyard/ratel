@@ -9,11 +9,21 @@
   --color-primary: #fcb300;
   --color-secondary: #777677;
 
+  /* Text colors */
   --color-text-primary: white;
   --color-text-secondary: #a1a1a1; /* neutral-400 */
 
+  /* Popup colors */
+  --color-popup-background: rgba(34, 34, 34, 0.58);
+
   /* Background colors */
   --color-background: #1e1e1e;
+
+  /* Checkbox colors */
+  --color-cb-text: #AEAAAB;
+
+  /* Border colors */
+  --color-border-primary: #464646;
 
   /* Primary button colors */
   --color-btn-p: #fcb300;
@@ -40,6 +50,7 @@
   --color-c-cg-30: #aeb8b8;
   --color-footer: #191919;
   --color-copyright: #9095a1;
+  --color-neutral-80: #6B6B6B;
   --color-neutral-400: #a1a1a1;
   --color-neutral-600: #525252;
   --color-c-p-50: #db2780;

@@ -4,7 +4,6 @@ mod error;
 mod patron;
 mod tables;
 mod topic;
-mod users;
 mod vote;
 
 pub use assets::*;
@@ -13,7 +12,6 @@ pub use error::*;
 pub use patron::*;
 pub use tables::*;
 pub use topic::*;
-pub use users::*;
 pub use vote::*;
 
 pub type Result<T> = std::result::Result<T, error::ServiceError>;
