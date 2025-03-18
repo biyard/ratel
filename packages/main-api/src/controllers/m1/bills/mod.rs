@@ -7,11 +7,11 @@ use dto::*;
 const BATCH_SIZE: u32 = 10;
 
 #[derive(Clone, Debug)]
-pub struct BillsControllerM1 {
+pub struct BillsController {
     pub repo: BillRepository,
 }
 
-impl BillsControllerM1 {
+impl BillsController {
     pub fn new(pool: sqlx::Pool<sqlx::Postgres>) -> Self {
         let repo = Bill::get_repository(pool.clone());
         Self { repo }
@@ -23,14 +23,14 @@ impl BillsControllerM1 {
             .with_state(self.clone())
     }
 
-    pub async fn act_bills(State(ctrl): State<BillsControllerM1>) -> Result<()> {
+    pub async fn act_bills(State(ctrl): State<BillsController>) -> Result<()> {
         ctrl.fetch_bills().await?;
 
         Ok(())
     }
 }
 
-impl BillsControllerM1 {
+impl BillsController {
     pub async fn fetch_bills(&self) -> Result<()> {
         for i in 1..=1500 / BATCH_SIZE {
             let bills = fetch_bills(i, BATCH_SIZE).await?;

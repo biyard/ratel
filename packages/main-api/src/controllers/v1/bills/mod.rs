@@ -2,10 +2,9 @@ use bdk::prelude::{by_axum::axum::extract::Path, *};
 use by_axum::axum::{
     Json,
     extract::{Query, State},
-    routing::get,
+    routing::{get, post},
 };
 use by_types::QueryResponse;
-use chrono::format;
 use dto::*;
 use sqlx::postgres::PgRow;
 
@@ -19,20 +18,20 @@ pub struct BillPath {
 #[derive(Clone, Debug)]
 pub struct BillControllerV1 {
     pool: sqlx::Pool<sqlx::Postgres>,
-    repo: BillRepository,
+    _repo: BillRepository,
 }
 
 impl BillControllerV1 {
     pub fn new(pool: sqlx::Pool<sqlx::Postgres>) -> Self {
         let _repo = Bill::get_repository(pool.clone());
-        Self { pool, repo }
+        Self { pool, _repo }
     }
 
     pub fn route(&self) -> by_axum::axum::Router {
         by_axum::axum::Router::new()
             .route("/", get(Self::list_bills))
             .with_state(self.clone())
-            .route("/:id", post(Self::get_file_link))
+            .route("/:id", post(Self::get_file_link).with_state(self.clone()))
     }
 
     pub async fn list_bills(
@@ -51,12 +50,9 @@ impl BillControllerV1 {
         Path(BillPath { id }): Path<BillPath>,
         // Json(body): Json<>, // TODO: decide file type
     ) -> Result<String> {
-        tracing::debug!("get_file_link: {:?}", p);
-        let conf: crate::config::get();
-        let bill = match self.get(id).await? {
-            Ok(bill) => bill,
-            Err(e) => return Err(e),
-        };
+        tracing::debug!("get_file_link: Bill ID: {:?}", id);
+        let conf = crate::config::get();
+        let bill = ctrl.get(id).await?;
 
         Ok(format!(
             "{}?bookId={}&type={}",
