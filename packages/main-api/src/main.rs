@@ -96,6 +96,10 @@ async fn main() -> Result<()> {
             controllers::v1::bills::BillController::new(pool.clone()).route(),
         )
         .nest(
+            "/v1/supports",
+            controllers::v1::supports::SupportControllerV1::route(pool.clone())?,
+        )
+        .nest(
             "/m1",
             controllers::m1::MenaceController::route(pool.clone())?,
         )
