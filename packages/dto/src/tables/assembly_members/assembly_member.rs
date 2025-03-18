@@ -15,6 +15,8 @@ use serde::{Deserialize, Serialize};
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum CryptoStance {
     #[default]
+    #[translate(en = "All Stance")]
+    None = 99,
     #[translate(en = "No Stance")]
     NoStance = 0,
     #[translate(en = "Pro-Crypto")]
@@ -61,9 +63,23 @@ pub enum AssemblyMemberSorter {
     Stance = 2,
     #[translate(ko = "정당순", en = "Sort by party")]
     Party = 3,
+    #[translate(ko = "법안갯수순", en = "Sort by party")]
+    Bills = 4,
 }
 
-#[api_model(base = "/v1/assembly-members", table = assembly_members, iter_type = QueryResponse, queryable = [(sort = AssemblyMemberSorter)], action_by_id = [change_stance(code = String, stance = CryptoStance), send_verify_email])]
+#[derive(
+    Debug, Clone, Eq, PartialEq, Default, by_macros::ApiModel, dioxus_translate::Translate, Copy,
+)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub enum SortOrder {
+    #[default]
+    #[translate(ko = "오름차순", en = "ascending")]
+    Ascending = 1,
+    #[translate(ko = "내림차순", en = "descending")]
+    Descending = 2,
+}
+
+#[api_model(base = "/v1/assembly-members", table = assembly_members, iter_type = QueryResponse, queryable = [(sort = AssemblyMemberSorter, order = SortOrder)], action_by_id = [change_stance(code = String, stance = CryptoStance), send_verify_email])]
 pub struct AssemblyMember {
     #[api_model(summary, primary_key)]
     pub id: i64,
@@ -76,7 +92,7 @@ pub struct AssemblyMember {
     pub code: String,
     #[api_model(summary)]
     pub name: String,
-    #[api_model(summary)]
+    #[api_model(summary, queryable)]
     pub party: String,
     #[api_model(summary)]
     pub district: String,
