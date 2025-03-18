@@ -11,7 +11,7 @@ use dto::Party;
 
 #[component]
 pub fn PoliticiansPage(lang: Language) -> Element {
-    let ctrl = Controller::new(lang)?;
+    let mut ctrl = Controller::new(lang)?;
     let tr: PoliticiansTranslate = translate(&lang);
     use_scroll(move |_, y| {
         tracing::debug!("scrolling: {}", y);
@@ -30,16 +30,12 @@ pub fn PoliticiansPage(lang: Language) -> Element {
             div { class: "flex flex-row gap-10",
                 Dropdown {
                     items: CryptoStance::variants(&lang),
-                    onselect: move |value| {
-                        tracing::debug!("selected: {}", value);
-                    },
+                    onselect: move |value| ctrl.set_stance(value),
                 }
 
                 Dropdown {
                     items: Party::variants(&lang),
-                    onselect: move |value| {
-                        tracing::debug!("selected: {}", value);
-                    },
+                    onselect: move |value| ctrl.set_party(value),
                 }
             }
 
@@ -47,10 +43,26 @@ pub fn PoliticiansPage(lang: Language) -> Element {
                 table { class: "rounded-[8px] w-full min-w-1000 max-h-[calc(100vh-100px)]",
                     thead {
                         tr { class: "bg-bg rounded-t-[8px] w-full overflow-hidden",
-                            th { class: "px-20 py-14 text-left w-250", {tr.th_name} }
-                            th { class: "px-20 py-14 text-left w-250", {tr.th_stance} }
-                            th { class: "px-20 py-14 text-left w-250", {tr.th_party} }
-                            th { class: "px-20 py-14 text-left w-427", {tr.th_key_actions} }
+                            th {
+                                class: "px-20 py-14 text-left w-250",
+                                onclick: move |_| ctrl.set_sort(dto::AssemblyMemberSorter::Name),
+                                {tr.th_name}
+                            }
+                            th {
+                                class: "px-20 py-14 text-left w-250",
+                                onclick: move |_| ctrl.set_sort(dto::AssemblyMemberSorter::Stance),
+                                {tr.th_stance}
+                            }
+                            th {
+                                class: "px-20 py-14 text-left w-250",
+                                onclick: move |_| ctrl.set_sort(dto::AssemblyMemberSorter::Party),
+                                {tr.th_party}
+                            }
+                            th {
+                                class: "px-20 py-14 text-left w-427",
+                                onclick: move |_| ctrl.set_sort(dto::AssemblyMemberSorter::Bills),
+                                {tr.th_key_actions}
+                            }
                         }
                     }
 
