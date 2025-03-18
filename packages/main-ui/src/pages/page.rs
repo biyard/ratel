@@ -1,8 +1,5 @@
 #![allow(non_snake_case)]
-use bdk::prelude::{
-    by_components::responsive::{Responsive, ResponsiveService},
-    *,
-};
+use bdk::prelude::{by_components::responsive::ResponsiveService, *};
 use by_components::meta::MetaPage;
 
 use super::components::*;
@@ -14,36 +11,18 @@ pub fn HomePage(lang: Language, class: String) -> Element {
     let responsive_service: ResponsiveService = use_context();
 
     rsx! {
-        Responsive {
-            if responsive_service.width() > 1200.0 {
-                //Desktop page
-                div { class: "desktop-layout",
-                    MetaPage {
-                        title: "Ratel",
-                        description: tr.description,
-                        image: "{image}",
-                    }
-                    div { class: "flex flex-col w-full justify-start items-center",
-                        Top { lang }
-                        About { lang }
-                        PoliticianStance { lang }
-                        Community { lang }
-                        Support { lang }
-                    }
-                }
-            } else {
-                //mobile page
-                div { class: "mobile-layout",
-                    MetaPage {
-                        title: "Ratel",
-                        description: tr.description,
-                        image: "{image}",
-                    }
-                    div { class: "flex flex-col w-full justify-start items-center",
-                        MobileTop { lang, class }
-                    }
-                }
+        MetaPage { title: "Ratel", description: tr.description, image: "{image}" }
+        div { class: "hidden md:!block",
+            Top { lang }
+            div { class: "flex flex-col w-full justify-start items-center",
+                About { lang }
+                PoliticianStance { lang }
+                Community { lang }
+                Support { lang }
             }
+        }
+        div { class: "block md:!hidden",
+            MobileTop { lang, class }
         }
     }
 }

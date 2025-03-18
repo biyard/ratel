@@ -6,7 +6,7 @@ use by_components::icons::{
     help_support::Help,
 };
 use dioxus_popup::PopupService;
-use dto::{AssemblyMember, AssemblyMemberSummary};
+use dto::AssemblyMember;
 use legal_notice_popup::LegalNoticePopup;
 use politician_card::PoliticianCard;
 
@@ -28,48 +28,33 @@ pub fn PoliticianStance(
     let mut p: PopupService = use_context();
 
     let mut selected = use_signal(|| 0);
-    let pro_cryptos = use_server_future(move || async move {
-        match AssemblyMember::get_client(config::get().main_api_endpoint)
-            .list_by_stance(4, None, dto::CryptoStance::Supportive)
-            .await
-        {
-            Ok(members) => members.items,
-            _ => {
-                // FIXME: change to default after implementing API
-                vec![
-                    AssemblyMemberSummary {
-                        id: 1,
-                        name: "John Doe".to_string(),
-                        party: "Democratic Party".to_string(),
-                        district: "Seoul".to_string(),
-                        stance: dto::CryptoStance::Supportive,
-                        image_url: "https://www.assembly.go.kr/static/portal/img/openassm/new/e9f57c2b700c44c0845665b068385524.jpg".to_string(),
-                        ..Default::default()
-                    };4
-                ]
+    let pro_cryptos = use_server_future(move || {
+        let _ = selected();
+        async move {
+            match AssemblyMember::get_client(config::get().main_api_endpoint)
+                .list_by_stance(4, None, dto::CryptoStance::ProCrypto)
+                .await
+            {
+                Ok(members) => members.items,
+                _ => {
+                    vec![]
+                }
             }
         }
     })?;
 
-    let anti_cryptos = use_server_future(move || async move {
-        match AssemblyMember::get_client(config::get().main_api_endpoint)
-            .list_by_stance(4, None, dto::CryptoStance::Supportive)
-            .await
-        {
-            Ok(members) => members.items,
-            _ => {
-                // FIXME: change to default after implementing API
-                vec![
-                    AssemblyMemberSummary {
-                        id: 1,
-                        name: "John Doe".to_string(),
-                        party: "Democratic Party".to_string(),
-                        district: "Seoul".to_string(),
-                        stance: dto::CryptoStance::Against,
-                        image_url: "https://www.assembly.go.kr/static/portal/img/openassm/new/e9f57c2b700c44c0845665b068385524.jpg".to_string(),
-                        ..Default::default()
-                    };4
-                ]
+    let anti_cryptos = use_server_future(move || {
+        let _ = selected();
+
+        async move {
+            match AssemblyMember::get_client(config::get().main_api_endpoint)
+                .list_by_stance(4, None, dto::CryptoStance::AntiCrypto)
+                .await
+            {
+                Ok(members) => members.items,
+                _ => {
+                    vec![]
+                }
             }
         }
     })?;

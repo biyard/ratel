@@ -11,6 +11,15 @@ use by_components::{loaders::cube_loader::CubeLoader, meta::MetaSeoTemplate};
 
 #[component]
 pub fn RootLayout(lang: Language) -> Element {
+    rsx! {
+        RootBase { lang,
+            Footer { lang }
+        }
+    }
+}
+
+#[component]
+pub fn RootBase(lang: Language, children: Element) -> Element {
     #[cfg(feature = "web")]
     let mut scroll_position = use_signal(|| 0.0);
     let selected = use_memo(move || {

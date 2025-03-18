@@ -2,10 +2,7 @@
 use super::SignupPopup;
 use crate::{components::icons::Logo, pages::components::Socials, route::Route};
 use bdk::prelude::{
-    by_components::{
-        icons::{alignments::AlignJustify, arrows::ArrowRight},
-        responsive::{Responsive, ResponsiveService},
-    },
+    by_components::icons::{alignments::AlignJustify, arrows::ArrowRight},
     *,
 };
 use dioxus_popup::PopupService;
@@ -16,19 +13,15 @@ pub fn ResponsiveHeader(
     lang: Language,
     selected: i32,
 ) -> Element {
-    let responsive_service: ResponsiveService = use_context();
-
     rsx! {
-        Responsive {
-            if responsive_service.width() > 1200.0 {
-                Header { class, lang, selected }
-            } else {
-                MobileHeader { class, lang, selected }
-            }
+        div { class: "hidden md:!block",
+            Header { class, lang, selected }
+        }
+        div { class: "block md:!hidden",
+            MobileHeader { lang, selected }
         }
     }
 }
-// Header { lang: lang.clone(), selected }
 
 #[component]
 pub fn Header(
@@ -49,7 +42,7 @@ pub fn Header(
             div { class: "w-full flex flex-row items-center justify-between gap-59 max-w-[1176px] mx-10",
                 a { href: "/#top", Logo {} }
 
-                nav { class: "grow flex flex-row gap-[10px] text-secondary font-bold text-[15px]",
+                nav { class: "grow flex flex-row gap-10 text-secondary font-bold text-[15px]",
                     a {
                         class: "p-10 hover:text-white",
                         href: "/#about",
@@ -103,7 +96,7 @@ pub fn MobileHeader(
     selected: i32,
 ) -> Element {
     let tr: HeaderTranslate = translate(&lang);
-    // let mut popup: PopupService = use_context();
+    let mut popup: PopupService = use_context();
     let current_path: Route = use_route();
     let mut expanded = use_signal(|| false);
     let toggle_menu = move |_| {
@@ -141,12 +134,6 @@ pub fn MobileHeader(
         }
     };
 
-    //structure
-    // 'menu / logo / login button' or 'menu / logo'
-
-    //mene structure
-    // 'About / Politician stance / Community / Support / Sign in / Get $Ratel'
-
     rsx! {
         div { class: "fixed top-0 left-0 w-full h-full grow flex flex-col justify-start items-center z-[100]",
             div { class: "w-full h-[48px] bg-[#1E1E1E] flex items-center",
@@ -164,8 +151,8 @@ pub fn MobileHeader(
             if expanded() {
                 div {
                     id: "menus",
-                    class: "w-full h-full flex flex-col justify-center items-center bg-[#1E1E1E]",
-                    div { class: "mb-[140px] flex flex-col justify-center items-center gap-[20px]",
+                    class: "w-full h-full flex flex-col justify-end items-center bg-[#1E1E1E]",
+                    div { class: "mb-[163px] flex flex-col justify-center items-center gap-[20px]",
                         a { href: "/#about", onclick: move |_| close_menu(),
                             p {
                                 class: "p-[10px] font-bold text-[20px] text-[#737373] hover:text-[#FCB300]",
@@ -201,15 +188,31 @@ pub fn MobileHeader(
                     }
 
                     div { class: "flex flex-col gap-[48px]",
-                        //get ratel button
-                        button {
-                            div { class: "w-[176px] h-[48px] px-[20px] py-[10px] flex justify-center items-center bg-[#FCB300] text-black text-[15px] rounded-[50px] font-bold",
-                                {tr.get_ratel}
+                        div { class: "flex flex-col items-center gap-[10px]",
+                            //get ratel button
+                            button {
+                                div { class: "w-[176px] h-[48px] px-[20px] py-[10px] flex justify-center items-center bg-[#FCB300] text-black text-[15px] rounded-[50px] font-bold",
+                                    {tr.get_ratel}
+                                }
+                            }
+                            //sign in button
+                            button {
+                                div { class: "w-[85px] h-[43px] p-[10px] flex justify-center items-center text-[#737373] text-[20px] font-bold",
+                                    button {
+                                        onclick: move |_| {
+                                            tracing::debug!("Sign in clicked");
+                                            popup.open(rsx! {
+                                                SignupPopup { class: "w-[320px] mx-[5px]", lang }
+                                            }).with_id("signup_popup");
+                                        },
+                                        {tr.sign_in}
+                                    }
+                                }
                             }
                         }
 
                         //social icon
-                        div { class: "w-full h-full flex flex-row justify-center items-center",
+                        div { class: "w-full h-full flex flex-row justify-center items-center mb-[58px]",
                             Socials { class: "flex flex-row gap-[40px] [&>a>svg]:w-19 [&>a>svg]:h-19" }
                         }
                     }
@@ -255,5 +258,10 @@ translate! {
     get_ratel: {
         ko: "$RATEL 받기",
         en: "GET $RATEL",
+    }
+
+    sign_in: {
+        ko: "로그인하기",
+        en: "Sign in",
     }
 }
