@@ -3,6 +3,7 @@ use bdk::prelude::*;
 use by_axum::axum::{extract::State, routing::post};
 use dto::*;
 
+const BATCH_SIZE: u32 = 10;
 const MAX_PROPOSER_SUM: u32 = 9000; // 2025.03.19: 8270
 
 #[derive(Clone, Debug)]
@@ -78,55 +79,66 @@ impl AssemblyMemberControllerM1 {
     }
 
     async fn fetch_proposers(&self) -> Result<()> {
-        for i in 1..=MAX_PROPOSER_SUM {
-            let proposer = &fetch_proposers(i, 1).await?[0];
-            tracing::debug!("proposer: {:?}", proposer);
+        for i in 1..=MAX_PROPOSER_SUM / BATCH_SIZE {
+            let proposers = fetch_proposers(i, BATCH_SIZE).await?;
 
-            let bill: Bill = match Bill::query_builder()
-                .bill_no_equals(proposer.bill_no.clone())
-                .query()
-                .map(|r: sqlx::postgres::PgRow| r.into())
-                .fetch_one(&self.pool)
-                .await
-            {
-                Ok(bill) => bill,
-                Err(e) => {
-                    tracing::error!("error: {:?}", e);
-                    continue;
-                }
-            };
+            for proposer in proposers {
+                tracing::debug!("proposer: {:?}", proposer);
 
-            // their are no same name in proposers in 22nd assembly members (if it's what I know)
-            let rep_member: AssemblyMember = AssemblyMember::query_builder()
-                .name_equals(proposer.representative_name.clone())
-                .query()
-                .map(|r: sqlx::postgres::PgRow| r.into())
-                .fetch_one(&self.pool)
-                .await?;
-
-            match self.prop.insert(rep_member.id, bill.id, true).await {
-                Ok(_) => {}
-                Err(e) => {
-                    tracing::error!("error: {:?}", e);
-                    break;
-                }
-            }
-
-            let proposers = proposer.proposer_names.split(",").collect::<Vec<&str>>();
-
-            for name in proposers {
-                let pub_member: AssemblyMember = AssemblyMember::query_builder()
-                    .name_equals(name.to_string())
+                let bill: Bill = match Bill::query_builder()
+                    .bill_no_equals(proposer.bill_no.clone())
                     .query()
                     .map(|r: sqlx::postgres::PgRow| r.into())
                     .fetch_one(&self.pool)
-                    .await?;
-
-                match self.prop.insert(pub_member.id, bill.id, false).await {
-                    Ok(_) => {}
+                    .await
+                {
+                    Ok(bill) => bill,
                     Err(e) => {
                         tracing::error!("error: {:?}", e);
-                        break;
+                        continue;
+                    }
+                };
+
+                let rst_proposers = proposer
+                    .representative_name
+                    .split(",")
+                    .collect::<Vec<&str>>();
+
+                for name in rst_proposers {
+                    // their are no same name in proposers in 22nd assembly members (if it's what I know)
+
+                    let rep_member: AssemblyMember = AssemblyMember::query_builder()
+                        .name_equals(name.to_string())
+                        .query()
+                        .map(|r: sqlx::postgres::PgRow| r.into())
+                        .fetch_one(&self.pool)
+                        .await?;
+
+                    match self.prop.insert(rep_member.id, bill.id, true).await {
+                        Ok(_) => {}
+                        Err(e) => {
+                            tracing::error!("error: {:?}", e);
+                            break;
+                        }
+                    }
+                }
+
+                let pub_proposers = proposer.proposer_names.split(",").collect::<Vec<&str>>();
+
+                for name in pub_proposers {
+                    let pub_member: AssemblyMember = AssemblyMember::query_builder()
+                        .name_equals(name.to_string())
+                        .query()
+                        .map(|r: sqlx::postgres::PgRow| r.into())
+                        .fetch_one(&self.pool)
+                        .await?;
+
+                    match self.prop.insert(pub_member.id, bill.id, false).await {
+                        Ok(_) => {}
+                        Err(e) => {
+                            tracing::error!("error: {:?}", e);
+                            break;
+                        }
                     }
                 }
             }
