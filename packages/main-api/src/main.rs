@@ -16,25 +16,34 @@ pub mod config;
 pub mod models;
 pub mod utils;
 
+macro_rules! migrate {
+    ($pool:ident, $($table:ident),* $(,)?) => {
+        {
+            $(
+                let t = $table::get_repository($pool.clone());
+                t.create_this_table().await?;
+            )*
+            $(
+                let t = $table::get_repository($pool.clone());
+                t.create_related_tables().await?;
+            )*
+        }
+    };
+}
+
 async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
     tracing::info!("Running migration");
-    let u = User::get_repository(pool.clone());
-    let v = Vote::get_repository(pool.clone());
-    let a = AssemblyMember::get_repository(pool.clone());
-    let b = Bill::get_repository(pool.clone());
-    let pr = Proposer::get_repository(pool.clone());
 
-    u.create_this_table().await?;
-    v.create_this_table().await?;
-    a.create_this_table().await?;
-    b.create_this_table().await?;
-    pr.create_this_table().await?;
-
-    u.create_related_tables().await?;
-    v.create_related_tables().await?;
-    a.create_related_tables().await?;
-    b.create_related_tables().await?;
-    pr.create_related_tables().await?;
+    migrate!(
+        pool,
+        User,
+        Vote,
+        AssemblyMember,
+        Bill,
+        Proposer,
+        Support,
+        Subscription,
+    );
 
     tracing::info!("Migration done");
     Ok(())
