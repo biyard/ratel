@@ -27,7 +27,7 @@ pub fn PoliticianActivities(
                 p { class: "text-[15px]/22 font-normal text-text-secondary", {description} }
             }
 
-            div { class: "w-full flex items-start justify-start gap-10",
+            div { class: "w-full flex flex-col items-start justify-start gap-10",
                 Dropdown {
                     items: BillSorter::variants(&lang),
                     onselect: |item: String| {
@@ -60,12 +60,12 @@ pub fn BillCard(
 
     rsx! {
         div {
-            class: "w-full p-30 flex flex-col gap-20",
+            class: "w-full p-30 flex flex-col gap-20 bg-bg rounded-[20px]",
             id: "bill-card-{bill.id}",
             div {
                 id: "bill-card-header-{bill.id}",
                 class: "w-full flex flex-col gap-10 items-start justify-start",
-                h2 { class: "text-text-primary text-xl/25 font-medium" }
+                h2 { class: "text-text-primary text-[20px]/25 font-medium", {bill.title(lang)} }
             }
 
             div {
@@ -106,7 +106,7 @@ pub fn BillCard(
 
                 div { class: "w-full h-16 rounded-full overflow-hidden gap-5 flex flex-row",
                     div { class: "h-full", width: "{yes}%",
-                        div { class: "animate-grow-to-right" }
+                        div { class: "animate-grow" }
                     }
                     div { class: "h-full", width: "{no}%",
                         div { class: "animate-grow-to-left" }
