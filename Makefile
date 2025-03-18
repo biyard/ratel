@@ -1,8 +1,8 @@
 ENV ?= dev
-BASE_DOMAIN ?= ratel.foundation
+BASE_DOMAIN ?=
 DOMAIN ?= $(ENV).$(BASE_DOMAIN)
 
-HOSTED_ZONE_ID ?= $(shell aws route53 list-hosted-zones-by-name --dns-name ratel.foundation --query "HostedZones[0].Id" --output text | cut -d'/' -f3)
+HOSTED_ZONE_ID ?= $(shell aws route53 list-hosted-zones-by-name --dns-name $(BASE_DOMAIN) --query "HostedZones[0].Id" --output text | cut -d'/' -f3)
 PROJECT ?= $(shell basename `git rev-parse --show-toplevel`)
 SERVICE ?= main-ui
 COMMIT ?= $(shell git rev-parse --short HEAD)
@@ -14,14 +14,8 @@ CDN_ID ?= $(shell aws cloudfront list-distributions --query "DistributionList.It
 WORKSPACE_ROOT ?= $(PWD)
 AWS_ACCOUNT_ID ?= $(shell aws sts get-caller-identity --query "Account" --output text)
 VPC_ID ?= $(shell aws ec2 describe-vpcs --query "Vpcs[0].VpcId" --output json | tr -d \")
-TABLE_NAME ?= $(PROJECT)-$(ENV)
 API_PREFIX ?=
 
-ENABLE_S3 ?= false
-ENABLE_DYNAMO ?= false
-ENABLE_FARGATE ?= false
-ENABLE_LAMBDA ?= true
-ENABLE_OPENSEARCH ?= false
 STACK ?= $(PROJECT)-$(SERVICE)-$(ENV)-stack
 
 ifeq ($(ENABLE_DOCKER),true)
