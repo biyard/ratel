@@ -19,6 +19,7 @@ pub fn HomePage(lang: Language) -> Element {
             Community { lang }
             Support { lang }
             Subscription { lang }
+            Footer { lang }
         }
     }
 }

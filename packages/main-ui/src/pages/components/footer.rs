@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 use bdk::prelude::*;
 
-use crate::pages::components::Socials;
+use crate::{pages::components::Socials, route::Route};
 
 #[component]
 pub fn Footer(lang: Language) -> Element {
@@ -10,9 +10,17 @@ pub fn Footer(lang: Language) -> Element {
     rsx! {
         footer { class: "w-full bg-footer flex flex-row gap-10 items-center justify-center text-copyright font-normal text-sm/22 py-24",
             span { {tr.copyright} }
-            a { class: "hover:text-white", href: "/privacy", {tr.privacy} }
-            a { class: "hover:text-white", href: "/terms", {tr.terms} }
-            a { class: "hover:text-white", href: "/sitemap", {tr.sitemap} }
+            Link {
+                class: "hover:text-white",
+                to: Route::PrivacyPolicyPage { lang },
+                {tr.privacy}
+            }
+            Link {
+                class: "hover:text-white",
+                to: Route::PrivacyPolicyPage { lang },
+
+                {tr.terms}
+            }
         }
     }
 }
@@ -25,9 +33,17 @@ pub fn FooterWithSocial(lang: Language) -> Element {
         footer { class: "w-full bg-bg flex flex-row gap-10 items-center justify-between text-copyright font-normal text-xs/22 py-24 h-50",
             div { class: "flex flex-row gap-10 items-center",
                 span { {tr.copyright} }
-                a { class: "hover:text-white", href: "/privacy", {tr.privacy} }
-                a { class: "hover:text-white", href: "/terms", {tr.terms} }
-                a { class: "hover:text-white", href: "/sitemap", {tr.sitemap} }
+                Link {
+                    class: "hover:text-white",
+                    to: Route::PrivacyPolicyPage { lang },
+                    {tr.privacy}
+                }
+                Link {
+                    class: "hover:text-white",
+                    to: Route::PrivacyPolicyPage { lang },
+
+                    {tr.terms}
+                }
             }
 
             Socials {
