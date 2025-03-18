@@ -6,15 +6,14 @@ use by_axum::{
 use dto::*;
 
 #[derive(Clone, Debug)]
-pub struct SupportControllerV1 {
-    pool: sqlx::Pool<sqlx::Postgres>,
+pub struct SupportController {
     repo: SupportRepository,
 }
 
-impl SupportControllerV1 {
+impl SupportController {
     pub fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Router> {
         let repo = Support::get_repository(pool.clone());
-        let ctrl = SupportControllerV1 { pool, repo };
+        let ctrl = SupportController { repo };
 
         Ok(by_axum::axum::Router::new()
             .route("/", post(Self::act_support))
@@ -22,7 +21,7 @@ impl SupportControllerV1 {
     }
 
     pub async fn act_support(
-        State(ctrl): State<SupportControllerV1>,
+        State(ctrl): State<SupportController>,
         Extension(_auth): Extension<Option<Authorization>>,
         Json(body): Json<SupportAction>,
     ) -> Result<Json<Support>> {
@@ -34,7 +33,7 @@ impl SupportControllerV1 {
     }
 }
 
-impl SupportControllerV1 {
+impl SupportController {
     async fn create_support(&self, req: SupportSubmitRequest) -> Result<Support> {
         let support = self
             .repo

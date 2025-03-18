@@ -17,6 +17,7 @@ pub fn PoliticianHeader(
     party: Party,
     stance: CryptoStance,
     email: String,
+    description: String,
 
     children: Element,
 ) -> Element {

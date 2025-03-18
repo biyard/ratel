@@ -2,6 +2,16 @@ use super::super::proposers::Proposer;
 use bdk::prelude::*;
 use by_types::QueryResponse;
 
+#[derive(
+    Debug, Clone, Eq, PartialEq, Default, by_macros::ApiModel, dioxus_translate::Translate, Copy,
+)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub enum BillSorter {
+    #[default]
+    #[translate(ko = "최신순", en = "Newest")]
+    Newest = 1,
+}
+
 #[api_model(base = "/v1/bills", table = bills, iter_type = QueryResponse)]
 pub struct Bill {
     #[api_model(summary, primary_key)]
@@ -16,6 +26,9 @@ pub struct Bill {
     #[api_model(summary)]
     pub book_id: String, // for file download, type = 0 (hwp), 1 (pdf)
 
+    #[api_model(summary, version = v0.1)]
+    pub site_url: String,
+
     #[api_model(summary)]
     pub en_title: Option<String>,
     #[api_model(summary, action_by_id = set_summary)]
@@ -26,4 +39,20 @@ pub struct Bill {
     #[api_model(one_to_many = proposers, foreign_key = bill_id)]
     #[serde(default)]
     pub proponents: Vec<Proposer>,
+}
+
+impl BillSummary {
+    pub fn summary(&self, lang: Language) -> String {
+        match lang {
+            Language::En => self.en_summary.clone().unwrap_or_default(),
+            _ => self.summary.clone().unwrap_or_default(),
+        }
+    }
+
+    pub fn title(&self, lang: Language) -> String {
+        match lang {
+            Language::En => self.en_title.clone().unwrap_or(self.title.clone()),
+            _ => self.title.clone(),
+        }
+    }
 }

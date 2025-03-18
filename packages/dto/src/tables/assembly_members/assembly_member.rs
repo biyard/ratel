@@ -113,7 +113,7 @@ pub struct AssemblyMember {
     pub no_of_bills: i64,
     #[api_model(many_to_many = proposers, foreign_table_name = bills, foreign_primary_key = bill_id, foreign_reference_key = member_id)]
     #[serde(default)]
-    pub bills: Vec<Bill>,
+    pub bills: Vec<BillSummary>,
 }
 
 impl AssemblyMemberSummary {

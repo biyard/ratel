@@ -12,7 +12,11 @@ pub fn PoliticiansByIdPage(id: ReadOnlySignal<i64>, lang: Language) -> Element {
     let p = ctrl.politician()?;
 
     rsx! {
-        by_components::meta::MetaPage { title: tr.title }
+        by_components::meta::MetaPage {
+            title: p.name(&lang),
+            description: tr.description,
+            image: p.image_url.clone(),
+        }
 
         div {
             id: "politicians-by-id",
@@ -24,9 +28,9 @@ pub fn PoliticiansByIdPage(id: ReadOnlySignal<i64>, lang: Language) -> Element {
                 party: p.party_enum(),
                 stance: p.stance,
                 email: p.email.clone().unwrap_or_default(),
+                description: tr.description,
             }
-            PoliticianActivities { lang, name: p.name(&lang) }
-            "{p:?}"
+            PoliticianActivities { lang, name: p.name(&lang), bills: p.bills }
         } // end of this page
     }
 }

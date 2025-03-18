@@ -97,7 +97,7 @@ async fn main() -> Result<()> {
         )
         .nest(
             "/v1/supports",
-            controllers::v1::supports::SupportControllerV1::route(pool.clone())?,
+            controllers::v1::supports::SupportController::route(pool.clone())?,
         )
         .nest(
             "/m1",

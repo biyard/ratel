@@ -42,7 +42,15 @@ impl BillsController {
 
                 match self
                     .repo
-                    .insert(bill.bill_no, bill.title, file_book_id, None, None, None)
+                    .insert(
+                        bill.bill_no,
+                        bill.title,
+                        file_book_id,
+                        bill.site_link,
+                        None,
+                        None,
+                        None,
+                    )
                     .await
                 {
                     Ok(_) => {}
