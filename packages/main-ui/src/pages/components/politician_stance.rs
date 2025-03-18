@@ -35,13 +35,12 @@ pub fn PoliticianStance(
                 .list_by_stance(4, None, dto::CryptoStance::ProCrypto)
                 .await
             {
-                Ok(members) => members.items,
-                _ => {
-                    vec![]
-                }
+                Ok(members) => members,
+                _ => Default::default(),
             }
         }
-    })?;
+    })?
+    .suspend()?;
 
     let anti_cryptos = use_server_future(move || {
         let _ = selected();
@@ -51,13 +50,12 @@ pub fn PoliticianStance(
                 .list_by_stance(4, None, dto::CryptoStance::AntiCrypto)
                 .await
             {
-                Ok(members) => members.items,
-                _ => {
-                    vec![]
-                }
+                Ok(members) => members,
+                _ => Default::default(),
             }
         }
-    })?;
+    })?
+    .suspend()?;
 
     rsx! {
         div {
@@ -74,7 +72,7 @@ pub fn PoliticianStance(
                     div { class: "w-full flex flex-row gap-10 items-start justify-start",
                         ExpandableContainer {
                             tag: tr.pro_crypto,
-                            total_count: 10,
+                            total_count: pro_cryptos().total_count,
                             icon: rsx! {
                                 ThumbsUp { class: "[&>path]:stroke-c-c-20", width: "40", height: "40" }
                             },
@@ -85,8 +83,10 @@ pub fn PoliticianStance(
                             },
 
                             div { class: "w-full h-260 grid grid-cols-4 gap-10",
-                                for m in pro_cryptos.suspend()?.iter() {
+                                for m in pro_cryptos().items {
                                     PoliticianCard {
+                                        lang,
+                                        id: m.id,
                                         name: "{m.name}",
                                         party: "{m.party}",
                                         image_url: "{m.image_url}",
@@ -97,7 +97,7 @@ pub fn PoliticianStance(
 
                         ExpandableContainer {
                             tag: tr.anti_crypto,
-                            total_count: 10,
+                            total_count: anti_cryptos().total_count,
                             text_color: "text-c-p-20",
                             icon: rsx! {
                                 ThumbsDown { class: "[&>path]:stroke-c-p-20", width: "40", height: "40" }
@@ -108,8 +108,10 @@ pub fn PoliticianStance(
                                 selected.set(1);
                             },
                             div { class: "w-full h-260 grid grid-cols-4 gap-10",
-                                for m in anti_cryptos.suspend()?.iter() {
+                                for m in anti_cryptos().items {
                                     PoliticianCard {
+                                        lang,
+                                        id: m.id,
                                         name: "{m.name}",
                                         party: "{m.party}",
                                         image_url: "{m.image_url}",

@@ -25,7 +25,7 @@ pub fn PoliticiansByIdPage(id: ReadOnlySignal<i64>, lang: Language) -> Element {
                 stance: p.stance,
                 email: p.email.clone().unwrap_or_default(),
             }
-            PoliticianActivities {}
+            PoliticianActivities { lang, name: p.name(&lang) }
             "{p:?}"
         } // end of this page
     }

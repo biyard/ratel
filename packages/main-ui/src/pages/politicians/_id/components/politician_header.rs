@@ -1,6 +1,9 @@
 #![allow(non_snake_case)]
 use bdk::prelude::*;
-use by_components::icons::email::Email;
+use by_components::icons::{
+    email::Email,
+    emoji::{ThumbsDown, ThumbsUp},
+};
 use dto::{CryptoStance, Party};
 
 use crate::pages::politicians::components::party::PartyIcon;
@@ -19,7 +22,7 @@ pub fn PoliticianHeader(
 ) -> Element {
     rsx! {
         div { class: "w-full flex flex-row gap-24",
-            img { class: "w-233 h-260 rounded-[10px]", src: image }
+            img { class: "w-233 h-260 rounded-[10px] object-cover", src: image }
 
             div { class: "grow flex flex-col justify-between",
 
@@ -48,11 +51,25 @@ pub fn PoliticianHeader(
 
                 div {
                     id: "politician-header-crypto-stance",
-                    class: "w-full rounded-[20px] bg-bg py-24 px-24 flex flex-col gap-4 text-lg/22 font-bold text-text-primary",
-                    {stance.translate(&lang)}
+                    class: "w-full rounded-[20px] bg-bg py-24 px-24 flex flex-col gap-5 text-lg/22 font-bold text-text-primary",
+                    div { class: "flex flex-row gap-10 items-center",
+                        CryptoStanceIcon { stance }
+                        {stance.translate(&lang)}
+                    }
                 }
             }
 
+        }
+    }
+}
+
+#[component]
+pub fn CryptoStanceIcon(stance: CryptoStance) -> Element {
+    rsx! {
+        if stance == CryptoStance::ProCrypto {
+            ThumbsUp { class: "[&>path]:stroke-c-c-20", width: "24", height: "24" }
+        } else if stance == CryptoStance::AntiCrypto {
+            ThumbsDown { class: "[&>path]:stroke-c-p-20", width: "24", height: "24" }
         }
     }
 }
