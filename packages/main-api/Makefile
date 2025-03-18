@@ -2,7 +2,7 @@ PROJECT ?= ratel
 SERVICE ?= main-api
 ENV ?= dev
 AUTH_DOMAIN ?= dev.ratel.foundation
-DOMAIN ?= $(ENV).$(BASE_DOMAIN)
+DOMAIN ?= dev.ratel.foundation
 
 WORKSPACE_ROOT ?= $(PWD)/../..
 AWS_ACCOUNT_ID ?= $(shell aws sts get-caller-identity --query "Account" --output text)
