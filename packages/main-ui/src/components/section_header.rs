@@ -28,13 +28,12 @@ pub fn SectionHeader(
                     }
                 }
             }
-            div { class: "w-full grid {cols} gap-24",
-                p { class: "col-span-1 w-full font-normal text-[15px]/22 text-c-wg-30 whitespace-pre-line",
+            div { class: "w-full flex flex-row gap-24",
+                p { class: "w-full font-normal text-[15px]/22 text-c-wg-30 whitespace-pre-line",
                     {description}
                 }
-                div { class: "col-span-1 w-full", {children} }
+                div { class: "w-full", {children} }
             }
-        
         }
     }
 }
