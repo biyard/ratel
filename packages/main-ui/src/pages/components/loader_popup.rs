@@ -34,7 +34,6 @@ pub fn LoaderPopup(
                     popup
                         .open(rsx! {
                             UserSetupPopup {
-                                class: "w-390",
                                 nickname,
                                 profile_url,
                                 email,

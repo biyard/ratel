@@ -1,9 +1,8 @@
 #![allow(non_snake_case)]
 use bdk::prelude::*;
-use dioxus_popup::PopupZone;
 
 use super::components::*;
-use crate::route::Route;
+use crate::{components::popup_zone::PopupZone, route::Route};
 use by_components::{loaders::cube_loader::CubeLoader, meta::MetaSeoTemplate};
 
 #[component]
@@ -78,10 +77,7 @@ pub fn RootBase(lang: Language, children: Element) -> Element {
     });
 
     rsx! {
-        PopupZone {
-            background_color: "rgba(26, 26, 26, 1)",
-            border_class: "shadow-[#FFCE4740] shadow-2xl", // FIXME: need shadow size to 100px
-        }
+        PopupZone {}
         MetaSeoTemplate {
             lang,
             title: "Ratel",
