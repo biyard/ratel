@@ -8,6 +8,7 @@ pub mod theme;
 pub mod utils;
 
 use bdk::prelude::*;
+use by_components::effects::HoverEffects;
 use dioxus_oauth::prelude::FirebaseProvider;
 use dioxus_popup::PopupService;
 use route::Route;
@@ -32,6 +33,8 @@ fn app() -> Element {
     let css = include_str!("../public/input.css");
 
     rsx! {
+        btracing::ToastTracing {}
+        HoverEffects {}
         FirebaseProvider {
             api_key: conf.firebase.api_key.clone(),
             auth_domain: conf.firebase.auth_domain.clone(),
@@ -65,10 +68,7 @@ fn app() -> Element {
             href: "https://fonts.gstatic.com",
             rel: "preconnect",
         }
-        document::Link {
-            href: "https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&family=Raleway:ital,wght@0,100..900;1,100..900&display=swap",
-            rel: "stylesheet",
-        }
+        document::Style { href: "https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&family=Raleway:ital,wght@0,100..900;1,100..900&display=swap" }
         document::Style { href: asset!("/public/main.css") }
         document::Style { href: asset!("/public/tailwind.css") }
 

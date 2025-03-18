@@ -26,3 +26,21 @@ pub fn LabeledInput(
         }
     }
 }
+
+#[component]
+pub fn Labeled(
+    #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
+    label_name: String,
+    #[props(default = "50px".to_string())] height: String,
+
+    children: Element,
+) -> Element {
+    rsx! {
+        div {..attributes,
+            div { class: "w-full flex flex-col items-start gap-5",
+                p { class: "text-c-cg-30 font-bold text-base/28", {label_name} }
+                {children}
+            }
+        }
+    }
+}
