@@ -2,6 +2,38 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  @keyframes growWidth {
+    0% {
+      width: 0;
+      opacity: 1;
+    }
+    100% {
+      width: 100%;
+      opacity: 1;
+    }
+  }
+
+  @keyframes growToLeft {
+    0% {
+      width: 0px;
+      left: 100%;
+    }
+    100% {
+      width: 100%;
+      left: 0px;
+    }
+  }
+
+  .animate-grow-to-right {
+    animation: growWidth 2s ease-in-out forwards;
+  }
+
+  .animate-grow-to-left {
+    animation: growToLeft 2s ease-in-out forwards;
+  }
+}
+
 @theme static {
   /* Tailwindcss variables */
   --spacing: 1px;

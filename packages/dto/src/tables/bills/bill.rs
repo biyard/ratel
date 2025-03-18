@@ -1,4 +1,4 @@
-use crate::tables::Vote;
+use crate::{VoteOption, tables::Vote};
 
 use super::super::proposers::Proposer;
 use bdk::prelude::*;
@@ -60,5 +60,42 @@ impl BillSummary {
             Language::En => self.en_title.clone().unwrap_or(self.title.clone()),
             _ => self.title.clone(),
         }
+    }
+
+    pub fn votes(&self) -> (i64, i64) {
+        let mut yes = 0;
+        let mut no = 0;
+
+        for v in self.votes.iter() {
+            match v.selected {
+                VoteOption::Supportive => {
+                    yes += 1;
+                }
+                VoteOption::Against => {
+                    no += 1;
+                }
+            }
+        }
+
+        (yes, no)
+    }
+
+    pub fn votes_percent(&self) -> (f64, f64) {
+        let (yes, no) = self.votes();
+        let total = yes + no;
+
+        let yes_percent = if total > 0 {
+            yes as f64 / total as f64
+        } else {
+            0.0
+        };
+
+        let no_percent = if total > 0 {
+            no as f64 / total as f64
+        } else {
+            0.0
+        };
+
+        (yes_percent * 100, no_percent * 100)
     }
 }
