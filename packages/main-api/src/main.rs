@@ -93,7 +93,7 @@ async fn main() -> Result<()> {
         )
         .nest(
             "/v1/bills",
-            controllers::v1::bills::BillControllerV1::new(pool.clone()).route(),
+            controllers::v1::bills::BillController::new(pool.clone()).route(),
         )
         .nest(
             "/m1",
