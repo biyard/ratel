@@ -84,8 +84,6 @@ Our ultimate goal is to create a **fair, transparent, and innovation-friendly cr
 
 ### Built With
 
-This section should list any major frameworks/libraries used to bootstrap your project. Leave any add-ons/plugins for the acknowledgements section. Here are a few examples.
-
 * ![Dioxus](https://img.shields.io/badge/dioxus-0.6.3-blue)
 * ![Axum](https://img.shields.io/badge/axum-0.8.2-blue)
 * ![Tailwindcss](https://img.shields.io/badge/tailwindcss-v4.0-blue)
