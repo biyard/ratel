@@ -36,7 +36,11 @@ pub fn PoliticianHeader(
                         }
 
                         div { class: "flex flex-row gap-8",
-                            Email { class: "[&>path]:stroke-white" }
+                            Email {
+                                class: "[&>path]:stroke-white [&>rect]:stroke-white",
+                                width: "18",
+                                height: "18",
+                            }
                             span { {email} }
                         }
                     } // politician-badges
