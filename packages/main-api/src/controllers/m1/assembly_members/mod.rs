@@ -3,7 +3,7 @@ use bdk::prelude::*;
 use by_axum::axum::{extract::State, routing::post};
 use dto::*;
 
-const BATCH_SIZE: u32 = 10;
+const BATCH_SIZE: u32 = 100;
 const MAX_PROPOSER_SUM: u32 = 9000; // 2025.03.19: 8270
 
 #[derive(Clone, Debug)]
@@ -118,7 +118,7 @@ impl AssemblyMemberControllerM1 {
                         Ok(_) => {}
                         Err(e) => {
                             tracing::error!("error: {:?}", e);
-                            break;
+                            continue;
                         }
                     }
                 }
@@ -137,7 +137,7 @@ impl AssemblyMemberControllerM1 {
                         Ok(_) => {}
                         Err(e) => {
                             tracing::error!("error: {:?}", e);
-                            break;
+                            continue;
                         }
                     }
                 }
