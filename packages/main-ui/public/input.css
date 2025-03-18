@@ -2,7 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-
 @theme static {
   /* Tailwindcss variables */
   --spacing: 1px;
