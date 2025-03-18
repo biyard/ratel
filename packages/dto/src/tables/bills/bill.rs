@@ -96,6 +96,6 @@ impl BillSummary {
             0.0
         };
 
-        (yes_percent * 100, no_percent * 100)
+        (yes_percent * 100.0, no_percent * 100.0)
     }
 }

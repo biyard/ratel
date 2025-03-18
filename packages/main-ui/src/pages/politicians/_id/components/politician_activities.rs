@@ -1,7 +1,6 @@
 #![allow(non_snake_case)]
 use bdk::prelude::*;
-use by_components::charts::horizontal_bar::HorizontalBar;
-use dto::{BillSorter, BillSummary, VoteOption};
+use dto::{BillSorter, BillSummary};
 
 use crate::components::dropdown::Dropdown;
 
@@ -57,7 +56,7 @@ pub fn BillCard(
     children: Element,
 ) -> Element {
     let tr: BillCardTranslate = translate(&lang);
-    let (_yes, _no) = bill.votes_percent();
+    let (yes, no) = bill.votes_percent();
 
     rsx! {
         div {
@@ -106,7 +105,13 @@ pub fn BillCard(
                 }
 
                 div { class: "w-full h-16 rounded-full overflow-hidden gap-5 flex flex-row",
-                    div { width: "" }
+                    div { class: "h-full", width: "{yes}%",
+                        div { class: "animate-grow-to-right" }
+                    }
+                    div { class: "h-full", width: "{no}%",
+                        div { class: "animate-grow-to-left" }
+
+                    }
                 }
             }
 
