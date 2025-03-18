@@ -6,7 +6,6 @@ use std::collections::HashMap;
 
 const DEFAULT_PAGE_INDEX: u32 = 1; // page num; start from 1 not 0
 const DEFAULT_PAGE_SIZE: u32 = 300; // request per page
-
 pub async fn fetch_active_members() -> Result<Vec<Member>, ServiceError> {
     let config = crate::config::get();
     let mut params = HashMap::new();

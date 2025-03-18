@@ -21,6 +21,8 @@ pub struct Bill {
 
     #[api_model(summary, unique)]
     pub bill_no: String, // actual bills number in the assembly
+    #[api_model(summary, unique)]
+    pub bill_id: String, // ex. PRC_E0O9Q0W6A3S0T1U3M0H0O5H7Q6C6H2
     #[api_model(summary)]
     pub title: String,
     #[api_model(summary)]
@@ -39,6 +41,35 @@ pub struct Bill {
     #[api_model(one_to_many = proposers, foreign_key = bill_id)]
     #[serde(default)]
     pub proponents: Vec<Proposer>,
+
+    // FIXME: need conditional sum
+    #[api_model(one_to_many = bill_votes, foreign_key = bill_id, aggregator = sum(amount))]
+    pub pros: i64,
+    // FIXME: need conditional sum
+    #[api_model(one_to_many = bill_votes, foreign_key = bill_id, aggregator = sum(amount))]
+    pub cons: i64,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Default, Copy, ApiModel, Translate)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
+pub enum BillVoteResult {
+    #[default]
+    AntiCrypto = 0,
+    ProCrypto = 1,
+}
+
+#[api_model(base = "/v1/bill-votes", table = bill_votes)]
+pub struct BillVote {
+    #[api_model(summary, primary_key)]
+    pub id: i64,
+    #[api_model(summary, auto = insert)]
+    pub created_at: i64,
+    #[api_model(many_to_one = bills)]
+    pub bill_id: i64,
+    #[api_model(many_to_one = users)]
+    pub user_id: i64,
+    #[api_model(summary)]
+    pub vote: BillVoteResult,
 }
 
 impl BillSummary {
