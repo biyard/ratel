@@ -23,10 +23,7 @@ impl MenaceController {
                 "/assembly-members",
                 assembly_members::AssemblyMemberControllerM1::new(pool.clone()).route(),
             )
-            .nest(
-                "/bills",
-                bills::BillsControllerM1::new(pool.clone()).route(),
-            )
+            .nest("/bills", bills::BillsController::new(pool.clone()).route())
             .layer(middleware::from_fn(authorize_organization)))
     }
 }
