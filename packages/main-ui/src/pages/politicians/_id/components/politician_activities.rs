@@ -71,7 +71,9 @@ pub fn BillCard(
             div {
                 id: "bill-card-body-{bill.id}",
                 class: "w-full flex flex-col items-start justify-start whitespace-pre-line",
-                p { class: "text-[15px]/24 font-normal", {bill.summary.unwrap_or_default()} }
+                p { class: "text-[15px]/24 font-normal text-text-secondary",
+                    {bill.summary.unwrap_or_default()}
+                }
                 div { class: "w-full flex flex-row justify-end",
                     a {
                         target: "_blank",
