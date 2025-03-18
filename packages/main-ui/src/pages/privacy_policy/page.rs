@@ -10,7 +10,7 @@ pub fn PrivacyPolicyPage(lang: Language) -> Element {
     let tr: PrivacyPolicyTranslate = translate(&lang);
 
     rsx! {
-        by_components::meta::MetaPage { title: tr.title }
+        by_components::meta::MetaPage { title: tr.title, description: tr.description }
 
         div { class: "w-full min-h-screen flex flex-col items-center justify-between gap-50",
             div {
