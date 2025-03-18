@@ -26,6 +26,17 @@ pub fn Community(
     }
 }
 
+// #[component]
+// pub fn Tabs(
+//     #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
+//     tabs: Vec<String>,
+//     children: Element,
+// ) -> Element {
+//     rsx! {
+//         div { ..attributes,{children} }
+//     }
+// }
+
 translate! {
     CommunityTranslate;
 
