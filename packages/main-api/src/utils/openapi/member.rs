@@ -1,14 +1,13 @@
 use crate::models::openapi::national_assembly::{EnMember, Member};
 use bdk::prelude::*;
 use dto::ServiceError;
-use reqwest::Error;
 use serde_json::Value;
 use std::collections::HashMap;
 
 const DEFAULT_PAGE_INDEX: u32 = 1; // page num; start from 1 not 0
 const DEFAULT_PAGE_SIZE: u32 = 300; // request per page
 
-pub async fn get_active_members() -> Result<Vec<Member>, ServiceError> {
+pub async fn fetch_active_members() -> Result<Vec<Member>, ServiceError> {
     let config = crate::config::get();
     let mut params = HashMap::new();
     params.insert("KEY", config.openapi_key.to_string());
@@ -96,7 +95,7 @@ pub async fn get_active_member_en(
 
 pub async fn get_member_profile_image(
     code: String, // assembly member code
-) -> Result<String, Error> {
+) -> Result<String, ServiceError> {
     let config = crate::config::get();
     let mut params = HashMap::new();
     params.insert("KEY", config.openapi_key.to_string());
