@@ -10,12 +10,12 @@ pub fn PrimaryButton(
     #[props(default = false)] disabled: bool,
     children: Element,
 
-    onclick: Option<EventHandler<MouseEvent>>,
+    onclick: EventHandler<MouseEvent>,
 ) -> Element {
     let bg = if !disabled {
         "bg-btn-p hover:bg-btn-p-hover text-btn-p-text hover:text-btn-p-hover-text cursor-pointer"
     } else {
-        "bg-btn-p-disabled text-btn-p-disabled cursor-not-allowed"
+        "bg-btn-p-disabled text-btn-p-disabled-text cursor-not-allowed"
     };
     let padding = match size {
         ButtonSize::Normal => "px-40 py-20 rounded-[10px]",
@@ -26,11 +26,7 @@ pub fn PrimaryButton(
         button {
             class: "font-bold gap-10 flex items-center justify-center text-base {bg} {padding}",
             disabled,
-            onclick: move |evt| {
-                if let Some(onclick) = onclick {
-                    onclick(evt);
-                }
-            },
+            onclick,
             ..attributes,
             {children}
         }
