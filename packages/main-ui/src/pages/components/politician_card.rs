@@ -1,11 +1,24 @@
 #![allow(non_snake_case)]
 use bdk::prelude::*;
 
+use crate::route::Route;
+
 #[component]
-pub fn PoliticianCard(name: String, party: String, image_url: String) -> Element {
+pub fn PoliticianCard(
+    lang: Language,
+    id: i64,
+    name: String,
+    party: String,
+    image_url: String,
+) -> Element {
     rsx! {
-        div {
+        Link {
+            to: Route::PoliticiansByIdPage {
+                lang,
+                id,
+            },
             class: "relative col-span-1 w-full h-full rounded-[10px] overflow-hidden",
+
             background_image: format!("url({})", image_url),
             background_size: "cover",
             background_position: "center",
