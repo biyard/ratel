@@ -1,3 +1,5 @@
+use crate::tables::Vote;
+
 use super::super::proposers::Proposer;
 use bdk::prelude::*;
 use by_types::QueryResponse;
@@ -39,6 +41,10 @@ pub struct Bill {
     #[api_model(one_to_many = proposers, foreign_key = bill_id)]
     #[serde(default)]
     pub proponents: Vec<Proposer>,
+
+    #[api_model(summary, one_to_many = votes, foreign_key = bill_id)]
+    #[serde(default)]
+    pub votes: Vec<Vote>,
 }
 
 impl BillSummary {
