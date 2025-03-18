@@ -71,8 +71,12 @@ pub fn PoliticiansPage(lang: Language) -> Element {
 
                 div { class: "w-full h-full overflow-hidden flex flex-col",
                     div { class: "grow flex flex-col overflow-y-scroll w-full",
-                        for politician in ctrl.politicians()?.items.iter() {
-                            div { class: "flex flex-row items-center border-b border-b-c-wg-80",
+                        for politician in ctrl.politicians()?.items {
+                            div {
+                                class: "flex flex-row items-center border-b border-b-c-wg-80",
+                                onclick: move |_| {
+                                    ctrl.go_to_politician_by_id(politician.id);
+                                },
                                 div { class: "px-20 py-14 w-250",
                                     div { class: "flex flex-row items-center gap-4",
                                         img {
