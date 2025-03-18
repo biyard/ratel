@@ -16,12 +16,12 @@ pub struct BillPath {
 }
 
 #[derive(Clone, Debug)]
-pub struct BillControllerV1 {
+pub struct BillController {
     pool: sqlx::Pool<sqlx::Postgres>,
     _repo: BillRepository,
 }
 
-impl BillControllerV1 {
+impl BillController {
     pub fn new(pool: sqlx::Pool<sqlx::Postgres>) -> Self {
         let _repo = Bill::get_repository(pool.clone());
         Self { pool, _repo }
@@ -35,7 +35,7 @@ impl BillControllerV1 {
     }
 
     pub async fn list_bills(
-        State(ctrl): State<BillControllerV1>,
+        State(ctrl): State<BillController>,
         Query(p): Query<BillParam>,
     ) -> Result<Json<BillGetResponse>> {
         tracing::debug!("list_bills: {:?}", p);
@@ -46,7 +46,7 @@ impl BillControllerV1 {
     }
 
     pub async fn get_file_link(
-        State(ctrl): State<BillControllerV1>,
+        State(ctrl): State<BillController>,
         Path(BillPath { id }): Path<BillPath>,
         // Json(body): Json<>, // TODO: decide file type
     ) -> Result<String> {
@@ -63,7 +63,7 @@ impl BillControllerV1 {
     }
 }
 
-impl BillControllerV1 {
+impl BillController {
     async fn query(&self, query: BillQuery) -> Result<QueryResponse<BillSummary>> {
         let mut total_count = 0;
         let items: Vec<BillSummary> = BillSummary::query_builder()
