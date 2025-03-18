@@ -90,7 +90,7 @@ pub fn PoliticiansPage(lang: Language) -> Element {
                                         }
                                     }
                                 }
-                                td { class: "px-20 py-14", "" }
+                                td { class: "px-20 py-14", {politician.no_of_bills.to_string()} }
                             }
                         }
                     }

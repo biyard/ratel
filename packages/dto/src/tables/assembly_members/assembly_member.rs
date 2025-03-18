@@ -109,7 +109,7 @@ pub struct AssemblyMember {
     #[api_model(summary)]
     pub image_url: String,
     pub email: Option<String>,
-    #[api_model(many_to_many = proposers, foreign_table_name = bills, foreign_primary_key = bill_id, foreign_reference_key = member_id, aggregator = count)]
+    #[api_model(summary, many_to_many = proposers, foreign_table_name = bills, foreign_primary_key = bill_id, foreign_reference_key = member_id, aggregator = count)]
     pub no_of_bills: i64,
     #[api_model(many_to_many = proposers, foreign_table_name = bills, foreign_primary_key = bill_id, foreign_reference_key = member_id)]
     #[serde(default)]
