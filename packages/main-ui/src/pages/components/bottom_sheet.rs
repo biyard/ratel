@@ -37,7 +37,6 @@ pub fn BottomSheet(
                     stroke_linejoin: "round",
                     stroke_width: "1.5",
                 }
-            
             }
         }
         div { id: "bottom-sheet", class: "w-full fixed bottom-0 left-0 z-10",
