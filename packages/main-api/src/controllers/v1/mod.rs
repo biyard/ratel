@@ -3,3 +3,4 @@ pub mod bills;
 pub mod patrons;
 pub mod topics;
 pub mod users;
+pub mod supports;
