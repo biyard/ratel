@@ -5,6 +5,11 @@ html, body {
   -ms-overflow-style: none; /* IE and Edge */
   scrollbar-width: none; /* Firefox */
   scroll-behavior: smooth;
+  margin: 0px;
+}
+
+#main {
+  min-height: 100vh;
 }
 
 ::-webkit-scrollbar {

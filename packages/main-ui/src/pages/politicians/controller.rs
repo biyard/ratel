@@ -11,6 +11,7 @@ pub struct Controller {
     pub order: Signal<SortOrder>,
     pub stance: Signal<Option<CryptoStance>>,
     pub party: Signal<Option<String>>,
+    pub is_end: Signal<bool>,
 }
 
 impl Controller {
@@ -53,8 +54,8 @@ impl Controller {
             stance,
             order,
             party,
+            is_end: use_signal(|| false),
         };
-        use_context_provider(|| ctrl);
 
         Ok(ctrl)
     }
