@@ -1,3 +1,5 @@
+use crate::tables::Vote;
+
 use super::super::proposers::Proposer;
 use bdk::prelude::*;
 use by_types::QueryResponse;
@@ -41,34 +43,16 @@ pub struct Bill {
     #[api_model(one_to_many = proposers, foreign_key = bill_id)]
     #[serde(default)]
     pub proponents: Vec<Proposer>,
+
+    #[api_model(summary, one_to_many = votes, foreign_key = bill_id)]
+    #[serde(default)]
+    pub votes: Vec<Vote>,
     // // FIXME: need conditional sum
     // #[api_model(one_to_many = bill_votes, foreign_key = bill_id, aggregator = sum(amount))]
     // pub pros: i64,
     // // FIXME: need conditional sum
     // #[api_model(one_to_many = bill_votes, foreign_key = bill_id, aggregator = sum(amount))]
     // pub cons: i64,
-}
-
-#[derive(Debug, Clone, Eq, PartialEq, Default, Copy, ApiModel, Translate)]
-#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
-pub enum BillVoteResult {
-    #[default]
-    AntiCrypto = 0,
-    ProCrypto = 1,
-}
-
-#[api_model(base = "/v1/bill-votes", table = bill_votes)]
-pub struct BillVote {
-    #[api_model(summary, primary_key)]
-    pub id: i64,
-    #[api_model(summary, auto = insert)]
-    pub created_at: i64,
-    #[api_model(many_to_one = bills)]
-    pub bill_id: i64,
-    #[api_model(many_to_one = users)]
-    pub user_id: i64,
-    #[api_model(summary)]
-    pub vote: BillVoteResult,
 }
 
 impl BillSummary {

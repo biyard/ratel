@@ -16,40 +16,34 @@ pub mod config;
 pub mod models;
 pub mod utils;
 
+macro_rules! migrate {
+    ($pool:ident, $($table:ident),* $(,)?) => {
+        {
+            $(
+                let t = $table::get_repository($pool.clone());
+                t.create_this_table().await?;
+            )*
+            $(
+                let t = $table::get_repository($pool.clone());
+                t.create_related_tables().await?;
+            )*
+        }
+    };
+}
+
 async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
     tracing::info!("Running migration");
-    let u = User::get_repository(pool.clone());
-    let t = Topic::get_repository(pool.clone());
-    let c = Comment::get_repository(pool.clone());
-    let v = Vote::get_repository(pool.clone());
-    let a = AssemblyMember::get_repository(pool.clone());
-    let p = Patron::get_repository(pool.clone());
-    let f = Feature::get_repository(pool.clone());
-    let b = Bill::get_repository(pool.clone());
-    let bb = BillVote::get_repository(pool.clone());
-    let pr = Proposer::get_repository(pool.clone());
 
-    u.create_this_table().await?;
-    t.create_this_table().await?;
-    c.create_this_table().await?;
-    v.create_this_table().await?;
-    a.create_this_table().await?;
-    p.create_this_table().await?;
-    f.create_this_table().await?;
-    b.create_this_table().await?;
-    bb.create_this_table().await?;
-    pr.create_this_table().await?;
-
-    u.create_related_tables().await?;
-    t.create_related_tables().await?;
-    c.create_related_tables().await?;
-    v.create_related_tables().await?;
-    a.create_related_tables().await?;
-    p.create_related_tables().await?;
-    f.create_related_tables().await?;
-    b.create_related_tables().await?;
-    bb.create_related_tables().await?;
-    pr.create_related_tables().await?;
+    migrate!(
+        pool,
+        User,
+        Vote,
+        AssemblyMember,
+        Bill,
+        Proposer,
+        Support,
+        Subscription,
+    );
 
     tracing::info!("Migration done");
     Ok(())
@@ -78,10 +72,10 @@ async fn main() -> Result<()> {
         //     "/v1/patrons",
         //     controllers::patrons::v1::PatronControllerV1::route()?,
         // )
-        .nest(
-            "/v1/topics",
-            controllers::v1::topics::TopicControllerV1::route(pool.clone())?,
-        )
+        // .nest(
+        //     "/v1/topics",
+        //     controllers::v1::topics::TopicControllerV1::route(pool.clone())?,
+        // )
         .nest(
             "/v1/users",
             controllers::v1::users::UserControllerV1::route(pool.clone())?,
@@ -90,10 +84,10 @@ async fn main() -> Result<()> {
             "/v1/assembly-members",
             controllers::v1::assembly_members::AssemblyMemberControllerV1::route(pool.clone())?,
         )
-        .nest(
-            "/v1/patrons",
-            controllers::v1::patrons::PatronControllerV1::route(pool.clone())?,
-        )
+        // .nest(
+        //     "/v1/patrons",
+        //     controllers::v1::patrons::PatronControllerV1::route(pool.clone())?,
+        // )
         .nest(
             "/v1/bills",
             controllers::v1::bills::BillController::new(pool.clone()).route(),
