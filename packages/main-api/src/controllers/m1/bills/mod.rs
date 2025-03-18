@@ -10,37 +10,23 @@ const MAX_BILL_SUM: u32 = 1500; // 2025.03.19: 1392
 pub struct BillsController {
     pub _pool: sqlx::Pool<sqlx::Postgres>,
     pub repo: BillRepository,
-    pub _vote: BillVoteRepository,
 }
 
 impl BillsController {
     pub fn new(pool: sqlx::Pool<sqlx::Postgres>) -> Self {
         let repo = Bill::get_repository(pool.clone());
-        let vote = BillVote::get_repository(pool.clone());
-        Self {
-            _pool: pool,
-            repo,
-            _vote: vote,
-        }
+        Self { _pool: pool, repo }
     }
 
     pub fn route(&self) -> by_axum::axum::Router {
         by_axum::axum::Router::new()
             .route("/", post(Self::act_bills))
             .with_state(self.clone())
-            .route("/votes", post(Self::act_votes))
-            .with_state(self.clone())
     }
 
     pub async fn act_bills(State(ctrl): State<BillsController>) -> Result<()> {
         ctrl.fetch_bills().await?;
 
-        Ok(())
-    }
-
-    pub async fn act_votes(State(_ctrl): State<BillsController>) -> Result<()> {
-        // ctrl.fetch_votes().await?;
-        // TODO
         Ok(())
     }
 }
@@ -79,24 +65,4 @@ impl BillsController {
         }
         Ok(())
     }
-
-    // pub async fn fetch_votes(&self) -> Result<()> {
-    //     let bills = Bill::query_builder().query().fetch_all(&self.pool).await?;
-
-    //     for bill in bills {
-    //         let votes = fetch_assembly_vote_result(bill.bill_id.clone()).await?;
-    //         tracing::debug!("votes: {:?}", votes);
-
-    //         for vote in votes {
-    //             match self.vote.insert(bill.id, vote.user_id, vote.result).await {
-    //                 Ok(_) => {}
-    //                 Err(e) => {
-    //                     tracing::error!("error: {:?}", e);
-    //                     break;
-    //                 }
-    //             }
-    //         }
-    //     }
-    //     Ok(())
-    // }
 }
