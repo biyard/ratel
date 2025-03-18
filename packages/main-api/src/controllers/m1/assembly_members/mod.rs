@@ -82,12 +82,19 @@ impl AssemblyMemberControllerM1 {
             let proposer = &fetch_proposers(i, 1).await?[0];
             tracing::debug!("proposer: {:?}", proposer);
 
-            let bill: Bill = Bill::query_builder()
+            let bill: Bill = match Bill::query_builder()
                 .bill_no_equals(proposer.bill_no.clone())
                 .query()
                 .map(|r: sqlx::postgres::PgRow| r.into())
                 .fetch_one(&self.pool)
-                .await?;
+                .await
+            {
+                Ok(bill) => bill,
+                Err(e) => {
+                    tracing::error!("error: {:?}", e);
+                    continue;
+                }
+            };
 
             // their are no same name in proposers in 22nd assembly members (if it's what I know)
             let rep_member: AssemblyMember = AssemblyMember::query_builder()
