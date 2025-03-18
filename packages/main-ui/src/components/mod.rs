@@ -1,5 +1,6 @@
 pub mod button;
 pub mod checkbox;
+pub mod confirm_popup;
 pub mod dropdown;
 pub mod icon_text;
 pub mod icons;
