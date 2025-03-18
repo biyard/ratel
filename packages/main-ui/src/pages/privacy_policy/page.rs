@@ -1,5 +1,5 @@
 #![allow(non_snake_case)]
-use crate::pages::components::Footer;
+use crate::pages::components::FooterWithSocial;
 
 use super::*;
 use bdk::prelude::*;
@@ -119,7 +119,7 @@ pub fn PrivacyPolicyPage(lang: Language) -> Element {
 
             } // end of this page
 
-            Footer { lang }
+            FooterWithSocial { lang }
         }
     }
 }
