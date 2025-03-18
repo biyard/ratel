@@ -2,13 +2,16 @@
 use bdk::prelude::*;
 
 #[component]
-pub fn Telegram(#[props(extends = GlobalAttributes)] attributes: Vec<Attribute>) -> Element {
+pub fn Telegram(
+    #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
+    #[props(default = 29)] size: i32,
+) -> Element {
     rsx! {
         svg {
             fill: "none",
-            height: "29",
+            height: "{size}",
             view_box: "0 0 29 29",
-            width: "29",
+            width: "{size}",
             xmlns: "http://www.w3.org/2000/svg",
             ..attributes,
             g { clip_path: "url(#clip0_218_854)",

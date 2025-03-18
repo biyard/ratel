@@ -11,6 +11,7 @@ pub fn Header(lang: Language, selected: i32) -> Element {
     let current_path: Route = use_route();
     let selected_menu = use_memo(move || match current_path {
         Route::PoliticiansPage { .. } => 2,
+        Route::PoliticiansByIdPage { .. } => 2,
         _ => 0,
     });
 

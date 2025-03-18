@@ -1,6 +1,8 @@
 #![allow(non_snake_case)]
 use bdk::prelude::*;
 
+use crate::pages::components::Socials;
+
 #[component]
 pub fn Footer(lang: Language) -> Element {
     let tr: FooterTranslate = translate(&lang);
@@ -11,6 +13,27 @@ pub fn Footer(lang: Language) -> Element {
             a { class: "hover:text-white", href: "/privacy", {tr.privacy} }
             a { class: "hover:text-white", href: "/terms", {tr.terms} }
             a { class: "hover:text-white", href: "/sitemap", {tr.sitemap} }
+        }
+    }
+}
+
+#[component]
+pub fn FooterWithSocial(lang: Language) -> Element {
+    let tr: FooterTranslate = translate(&lang);
+
+    rsx! {
+        footer { class: "w-full bg-bg flex flex-row gap-10 items-center justify-between text-copyright font-normal text-xs/22 py-24 h-50",
+            div { class: "flex flex-row gap-10 items-center",
+                span { {tr.copyright} }
+                a { class: "hover:text-white", href: "/privacy", {tr.privacy} }
+                a { class: "hover:text-white", href: "/terms", {tr.terms} }
+                a { class: "hover:text-white", href: "/sitemap", {tr.sitemap} }
+            }
+
+            Socials {
+                class: "flex flex-row items-center justify-center gap-30",
+                size: 15,
+            }
         }
     }
 }

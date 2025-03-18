@@ -11,7 +11,7 @@ use validator::ValidationError;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Eq, PartialEq, Default, Translate, ApiModel)]
+#[derive(Debug, Clone, Eq, PartialEq, Default, Translate, ApiModel, Copy)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum CryptoStance {
     #[default]
@@ -27,7 +27,7 @@ pub enum CryptoStance {
     AntiCrypto = 3,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Default, Translate, ApiModel)]
+#[derive(Debug, Clone, Eq, PartialEq, Default, Translate, ApiModel, Copy)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum Party {
     #[default]
@@ -117,6 +117,34 @@ pub struct AssemblyMember {
 }
 
 impl AssemblyMemberSummary {
+    pub fn stance_color(&self) -> &'static str {
+        match self.stance {
+            CryptoStance::ProCrypto => "bg-c-c-20",
+            CryptoStance::Neutral => "bg-c-pp-20",
+            CryptoStance::AntiCrypto => "bg-c-p-20",
+            _ => "bg-c-wg-50",
+        }
+    }
+
+    pub fn name(&self, lang: &Language) -> &str {
+        match lang {
+            Language::En => &self.en_name,
+            _ => &self.name,
+        }
+    }
+
+    pub fn party_enum(&self) -> Party {
+        Party::from_str(&self.party).unwrap_or_default()
+    }
+
+    pub fn party(&self, lang: &Language) -> &str {
+        Party::from_str(&self.party)
+            .unwrap_or_default()
+            .translate(lang)
+    }
+}
+
+impl AssemblyMember {
     pub fn stance_color(&self) -> &'static str {
         match self.stance {
             CryptoStance::ProCrypto => "bg-c-c-20",

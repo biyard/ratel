@@ -60,12 +60,19 @@ impl AssemblyMemberControllerV1 {
     }
 
     pub async fn get_assembly_member(
-        State(_ctrl): State<AssemblyMemberControllerV1>,
+        State(ctrl): State<AssemblyMemberControllerV1>,
         Extension(_auth): Extension<Option<Authorization>>,
         Path(AssemblyMemberPath { id }): Path<AssemblyMemberPath>,
     ) -> Result<Json<AssemblyMember>> {
         tracing::debug!("get_assembly_member {:?}", id);
-        Ok(Json(AssemblyMember::default()))
+        let doc = AssemblyMember::query_builder()
+            .id_equals(id)
+            .query()
+            .map(AssemblyMember::from)
+            .fetch_one(&ctrl.pool)
+            .await?;
+
+        Ok(Json(doc))
     }
 
     pub async fn list_assembly_member(

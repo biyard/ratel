@@ -4,17 +4,22 @@ use bdk::prelude::*;
 use by_types::QueryResponse;
 use dto::*;
 
-#[derive(Debug, Clone, Copy, DioxusController)]
+use crate::route::Route;
+
+#[derive(Clone, Copy, DioxusController)]
 pub struct Controller {
+    pub lang: Language,
     pub politicians: Resource<QueryResponse<AssemblyMemberSummary>>,
     pub sort: Signal<Option<AssemblyMemberSorter>>,
     pub order: Signal<SortOrder>,
     pub stance: Signal<Option<CryptoStance>>,
     pub party: Signal<Option<String>>,
+    pub is_end: Signal<bool>,
+    pub nav: Navigator,
 }
 
 impl Controller {
-    pub fn new(_lang: Language) -> std::result::Result<Self, RenderError> {
+    pub fn new(lang: Language) -> std::result::Result<Self, RenderError> {
         let size = 1000;
         let sort = use_signal(|| None);
         let order = use_signal(|| SortOrder::Ascending);
@@ -48,15 +53,24 @@ impl Controller {
         })?;
 
         let ctrl = Self {
+            lang,
             politicians,
             sort,
             stance,
             order,
             party,
+            nav: use_navigator(),
+            is_end: use_signal(|| false),
         };
-        use_context_provider(|| ctrl);
 
         Ok(ctrl)
+    }
+
+    pub fn go_to_politician_by_id(&self, id: i64) {
+        self.nav.push(Route::PoliticiansByIdPage {
+            lang: self.lang,
+            id,
+        });
     }
 
     pub fn set_sort(&mut self, sort: AssemblyMemberSorter) {
