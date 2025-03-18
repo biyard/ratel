@@ -14,7 +14,9 @@ pub fn PoliticiansByIdPage(id: ReadOnlySignal<i64>, lang: Language) -> Element {
     rsx! {
         by_components::meta::MetaPage { title: tr.title }
 
-        div { id: "politicians-by-id", class: "w-full max-w-1177",
+        div {
+            id: "politicians-by-id",
+            class: "w-full grow max-w-1177 mt-160 flex flex-col justify-start",
             PoliticianHeader {
                 lang,
                 image: p.image_url.clone(),

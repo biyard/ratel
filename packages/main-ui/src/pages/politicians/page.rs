@@ -73,7 +73,7 @@ pub fn PoliticiansPage(lang: Language) -> Element {
                     div { class: "grow flex flex-col overflow-y-scroll w-full",
                         for politician in ctrl.politicians()?.items {
                             div {
-                                class: "flex flex-row items-center border-b border-b-c-wg-80",
+                                class: "flex flex-row items-center border-b border-b-c-wg-80 cursor-pointer",
                                 onclick: move |_| {
                                     ctrl.go_to_politician_by_id(politician.id);
                                 },

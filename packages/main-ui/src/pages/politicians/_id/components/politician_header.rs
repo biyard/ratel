@@ -1,5 +1,6 @@
 #![allow(non_snake_case)]
 use bdk::prelude::*;
+use by_components::icons::email::Email;
 use dto::{CryptoStance, Party};
 
 use crate::pages::politicians::components::party::PartyIcon;
@@ -23,19 +24,19 @@ pub fn PoliticianHeader(
             div { class: "grow flex flex-col justify-between",
 
                 div { id: "politician-info", class: "flex flex-col gap-24",
-                    h1 { class: "text-[32px]/40 font-bold text-primary", {name} }
+                    h1 { class: "text-[32px]/40 font-bold text-text-primary", {name} }
 
                     div {
                         id: "politician-badges",
                         class: "flex flex-col gap-13 text-text-primary font-medium text-[15px]",
 
-                        div { class: "flex flex-row gap-1",
+                        div { class: "flex flex-row gap-8",
                             PartyIcon { party }
                             {party.translate(&lang)}
                         }
 
-                        div { class: "flex flex-row gap-1",
-                            span { "M" }
+                        div { class: "flex flex-row gap-8",
+                            Email { class: "[&>path]:stroke-white" }
                             span { {email} }
                         }
                     } // politician-badges
@@ -43,7 +44,7 @@ pub fn PoliticianHeader(
 
                 div {
                     id: "politician-header-crypto-stance",
-                    class: "w-full rounded-[20px] bg-bg py-14 px-24 flex flex-col gap-4 text-lg/22 font-bold text-text-primary",
+                    class: "w-full rounded-[20px] bg-bg py-24 px-24 flex flex-col gap-4 text-lg/22 font-bold text-text-primary",
                     {stance.translate(&lang)}
                 }
             }
