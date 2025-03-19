@@ -5,10 +5,20 @@ use crate::{pages::components::Socials, route::Route};
 
 #[component]
 pub fn Footer(lang: Language) -> Element {
+    rsx! {
+        div { class: "hidden md:!block",
+            DesktopFooter { lang }
+        }
+        div { class: "block md:!hidden", "" }
+    }
+}
+
+#[component]
+pub fn DesktopFooter(lang: Language) -> Element {
     let tr: FooterTranslate = translate(&lang);
 
     rsx! {
-        footer { class: "w-full bg-footer flex flex-row gap-10 items-center justify-center text-copyright font-normal text-sm/22 py-24",
+        footer { class: "w-screen bg-footer flex flex-row gap-10 items-center justify-center text-copyright font-normal text-sm/22 py-24",
             span { {tr.copyright} }
             Link {
                 class: "hover:text-white",
@@ -18,7 +28,6 @@ pub fn Footer(lang: Language) -> Element {
             Link {
                 class: "hover:text-white",
                 to: Route::PrivacyPolicyPage { lang },
-
                 {tr.terms}
             }
         }
