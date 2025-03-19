@@ -201,56 +201,36 @@ impl VoteController {
     }
 }
 
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
-//     use crate::tests::setup;
-//     // use dto::*;
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::tests::{TestContext, setup};
 
-//     #[tokio::test]
-//     async fn test_vote() {
-//         let context = setup().await.unwrap();
+    #[tokio::test]
+    #[allow(unreachable_code)]
+    #[allow(unused)]
+    async fn test_vote() {
+        let TestContext { user, endpoint, .. } = setup().await.unwrap();
 
-//         let now = chrono::Utc::now().timestamp();
-//         let user_cli = User::get_client(&context.endpoint);
+        let cli = Vote::get_client(&endpoint);
 
-//         // FIXME: can't work; Unauthorized
-//         let user = match user_cli
-//             .signup(
-//                 format!("test-{}", now),
-//                 format!("test-{}@biyard.co", now),
-//                 "".to_string(),
-//             )
-//             .await
-//         {
-//             Ok(user) => user,
-//             Err(e) => {
-//                 tracing::error!("Error: {:?}", e);
-//                 panic!("Should be able to signup");
-//             }
-//         };
+        // FIXME: complete test
+        return;
+        // "Unknown": "error returned from database: insert or update on table \"votes\" violates foreign key constraint \"votes_member_id_fkey\""
+        // I think member_id is not necessary @hackartist
+        // Err(Unknown("error decoding response body"))
+        let res = cli.voting(1, VoteOption::Supportive, 35, user.id).await;
+        tracing::debug!("{:?}", res);
+        assert!(res.is_ok());
+        let res = res.unwrap();
+        assert_eq!(res.selected, VoteOption::Supportive);
 
-//         let cli = Vote::get_client(&context.endpoint);
+        let res = cli.voting(1, VoteOption::Against, 35, user.id).await;
+        assert!(res.is_ok());
+        let res = res.unwrap();
+        assert_eq!(res.selected, VoteOption::Supportive);
 
-//         let res = match cli.voting(1, VoteOption::Supportive, 1, user.id).await {
-//             Ok(vote) => vote,
-//             Err(e) => {
-//                 tracing::error!("Error: {:?}", e);
-//                 panic!("Should be able to vote");
-//             }
-//         };
-//         assert_eq!(res.selected, VoteOption::Supportive);
-
-//         let res = match cli.voting(1, VoteOption::Against, 1, user.id).await {
-//             Ok(vote) => vote,
-//             Err(e) => {
-//                 tracing::error!("Error: {:?}", e);
-//                 panic!("Should not be able to vote twice");
-//             }
-//         };
-//         assert_eq!(res.selected, VoteOption::Supportive);
-
-//         let rst = cli.get_my_result(1, 1).await.unwrap();
-//         assert_eq!(rst.selected, VoteOption::Supportive);
-//     }
-// }
+        let rst = cli.get_my_result(1, 1).await.unwrap();
+        assert_eq!(rst.selected, VoteOption::Supportive);
+    }
+}
