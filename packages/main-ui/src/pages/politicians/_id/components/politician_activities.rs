@@ -140,24 +140,24 @@ pub fn BillCard(
             // Refer to Figma(https://www.figma.com/design/YaLSz7dzRingD7CipyaC47/Ratel?node-id=183-9407&t=ntliyRgUTCrimYsj-1)
             div { id: "bill-card-vote-{bill.id}", class: "flex flex-row gap-10",
                 button {
-                    class: "w-full group border border-supportive/25 hover:border-supportive hover:bg-supportive/25 rounded-[10px] flex items-center justify-center cursor-pointer",
+                    class: "w-full border border-supportive/25 hover:border-supportive hover:bg-supportive/25 rounded-[10px] flex items-center justify-center cursor-pointer px-16 py-8 text-sm font-bold",
                     onclick: move |_| {
                         tracing::debug!("Vote supportive clicked");
                         popup.open(rsx! {
                             VoteConfirm { vote: dto::VoteOption::Supportive, lang }
                         });
                     },
-                    {tr.btn_supportive}
+                    span { {tr.btn_supportive} }
                 }
                 button {
-                    class: "w-full group border border-against/25 hover:border-against hover:bg-against/25 rounded-[10px] flex items-center justify-center cursor-pointer",
+                    class: "w-full border border-against/25 hover:border-against hover:bg-against/25 rounded-[10px] flex items-center justify-center cursor-pointer px-16 py-8 text-sm font-bold",
                     onclick: move |_| {
                         tracing::debug!("Vote against clicked");
                         popup.open(rsx! {
                             VoteConfirm { vote: dto::VoteOption::Against, lang }
                         });
                     },
-                    {tr.btn_against}
+                    span { {tr.btn_against} }
                 }
             }
         }
