@@ -101,18 +101,10 @@ pub fn RootBase(lang: Language, children: Element) -> Element {
                         CubeLoader {}
                     }
                 },
-                Responsive {
-                    if responsive_service.width() > 1200.0 {
-                        div { class: "w-full overflow-x-hidden scroll-smooth flex flex-col items-center justify-center mt-80",
-                            Outlet::<Route> {}
-                            Footer { lang }
-                        }
-                    } else {
-                        div { class: "w-full overflow-x-hidden scroll-smooth flex flex-col items-center justify-center mt-[130px]",
-                            Outlet::<Route> {}
-                            Footer { lang }
-                        }
-                    }
+                div { class: "w-full min-h-[100vh] overflow-x-hidden scroll-smooth flex flex-col items-center justify-center",
+                    Outlet::<Route> {}
+
+                    {children}
                 }
             }
         }
