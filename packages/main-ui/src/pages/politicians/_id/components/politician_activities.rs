@@ -1,7 +1,9 @@
 #![allow(non_snake_case)]
 use bdk::prelude::*;
+use dioxus_popup::PopupService;
 use dto::{BillSorter, BillSummary};
 
+use super::*;
 use crate::components::dropdown::Dropdown;
 
 #[component]
@@ -55,6 +57,7 @@ pub fn BillCard(
     #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
     children: Element,
 ) -> Element {
+    let mut popup: PopupService = use_context();
     let tr: BillCardTranslate = translate(&lang);
     let (yes, no) = bill.votes_percent();
 
@@ -108,16 +111,55 @@ pub fn BillCard(
 
                 div { class: "w-full h-16 rounded-full overflow-hidden gap-5 flex flex-row",
                     div { class: "h-full", width: "{yes}%",
-                        div { class: "animate-grow" }
+                        div { class: "animate-grow h-full bg-supportive/50" }
                     }
-                    div { class: "h-full", width: "{no}%",
-                        div { class: "animate-grow-to-left" }
+                    div { class: "relative h-full", width: "{no}%",
+                        div { class: "absolute right-0 animate-grow h-full bg-against/50" }
 
+                    }
+                }
+
+                div { class: "flex flex-row gap-20 py-5 items-center",
+                    div { class: "flex flex-row gap-4 items-center",
+                        div { class: "w-10 h-10 bg-supportive rounded-full" }
+                        span { class: "text-text-secondary font-semibold text-sm/20",
+                            "{yes as i32}%"
+                        }
+                    }
+
+                    div { class: "flex flex-row gap-4 items-center",
+                        div { class: "w-10 h-10 bg-against rounded-full" }
+                        span { class: "text-text-secondary font-semibold text-sm/20",
+                            "{no as i32}%"
+                        }
                     }
                 }
             }
 
-            div { id: "bill-card-vote-{bill.id}", class: "" }
+            // FIXME: reflect my voted and finalized result
+            // Refer to Figma(https://www.figma.com/design/YaLSz7dzRingD7CipyaC47/Ratel?node-id=183-9407&t=ntliyRgUTCrimYsj-1)
+            div { id: "bill-card-vote-{bill.id}", class: "flex flex-row gap-10",
+                button {
+                    class: "w-full group border border-supportive/25 hover:border-supportive hover:bg-supportive/25 rounded-[10px] flex items-center justify-center cursor-pointer",
+                    onclick: move |_| {
+                        tracing::debug!("Vote supportive clicked");
+                        popup.open(rsx! {
+                            VoteConfirm { vote: dto::VoteOption::Supportive, lang }
+                        });
+                    },
+                    {tr.btn_supportive}
+                }
+                button {
+                    class: "w-full group border border-against/25 hover:border-against hover:bg-against/25 rounded-[10px] flex items-center justify-center cursor-pointer",
+                    onclick: move |_| {
+                        tracing::debug!("Vote against clicked");
+                        popup.open(rsx! {
+                            VoteConfirm { vote: dto::VoteOption::Against, lang }
+                        });
+                    },
+                    {tr.btn_against}
+                }
+            }
         }
     }
 }
@@ -223,6 +265,16 @@ translate! {
     votes: {
         ko: "투표",
         en: "Votes",
+    },
+
+    btn_supportive: {
+        ko: "찬성",
+        en: "Supportive",
+    },
+
+    btn_against: {
+        ko: "반대",
+        en: "Against",
     },
 }
 
