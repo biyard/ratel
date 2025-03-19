@@ -1,4 +1,6 @@
 #![allow(non_snake_case)]
+use crate::pages::components::FooterWithSocial;
+
 use super::*;
 use bdk::prelude::*;
 use components::*;
@@ -31,6 +33,7 @@ pub fn PoliticiansByIdPage(id: ReadOnlySignal<i64>, lang: Language) -> Element {
                 description: tr.description,
             }
             PoliticianActivities { lang, name: p.name(&lang), bills: p.bills }
+            FooterWithSocial { lang }
         } // end of this page
     }
 }

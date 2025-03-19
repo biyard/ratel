@@ -41,6 +41,13 @@
   --color-btn-s-disabled: #777677;
   --color-btn-s-disabled-text: #aeaeae;
 
+  /* Outlined button colors */
+  --color-btn-o: #464646; /* border color */
+  --color-btn-o-hover: white; /* border color while hovering */
+  --color-btn-o-hover-bg: #1A1A1A; /* bg color while hovering */
+  --color-btn-o-text: white;
+  --color-btn-o-hover-text: white;
+
   /* App-specific colors */
   --color-hover: #ca8f00;
   --color-c-wg-30: #aeaeae;
@@ -60,4 +67,7 @@
   --color-bg: #1A1A1A;
   --color-neutral-400: #A1A1A1;
   --color-tab-hover: #282828;
+
+  --color-supportive: #6EEDD8;
+  --color-against: #FF9EEE;
 }
