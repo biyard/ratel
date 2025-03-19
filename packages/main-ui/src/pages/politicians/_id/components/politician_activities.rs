@@ -10,7 +10,7 @@ use crate::components::dropdown::Dropdown;
 pub fn PoliticianActivities(
     lang: Language,
     #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
-    #[props(default = vec![])] bills: Vec<BillSummary>,
+    #[props(default = vec![])] bills: Vec<Bill>,
     name: String,
     children: Element,
 ) -> Element {
