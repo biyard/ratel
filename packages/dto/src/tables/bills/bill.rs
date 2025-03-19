@@ -51,7 +51,7 @@ pub struct Bill {
     pub user_vote: Vote,
 }
 
-impl BillSummary {
+impl Bill {
     pub fn summary(&self, lang: Language) -> String {
         match lang {
             Language::En => self.en_summary.clone().unwrap_or_default(),

@@ -1,5 +1,5 @@
 use bdk::prelude::*;
-use dto::{AssemblyMember, BillSummary, Vote};
+use dto::{AssemblyMember, Bill, Vote};
 
 #[derive(Clone, Copy, DioxusController)]
 pub struct Controller {
@@ -22,7 +22,7 @@ impl Controller {
                     .unwrap_or_default();
 
                 if res.bills.is_empty() {
-                    res.bills = vec![BillSummary {
+                    res.bills = vec![Bill {
                         id: 1,
                         created_at: 100000000,
                         title: "DAO Treasury Transparency Act & Crypto Investor Protection Act"
@@ -56,6 +56,7 @@ impl Controller {
                             }
 
                         ],
+                        ..Default::default()
                     }];
                 }
 
