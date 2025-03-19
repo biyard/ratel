@@ -28,6 +28,7 @@ impl Controller {
                         title: "DAO Treasury Transparency Act & Crypto Investor Protection Act"
                             .to_string(),
                         bill_no: "1".to_string(),
+                        bill_id: "PRC_000".to_string(),
                         en_title: Some(
                             "DAO Treasury Transparency Act & Crypto Investor Protection Act"
                                 .to_string(),

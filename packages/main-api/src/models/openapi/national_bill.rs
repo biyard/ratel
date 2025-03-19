@@ -1,5 +1,6 @@
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct AssemblyBill {
+    // https://open.assembly.go.kr/portal/data/service/selectAPIServicePage.do/OOWY4R001216HX11462
     #[serde(rename(deserialize = "BILL_NO"))]
     pub bill_no: String,
     #[serde(rename(deserialize = "BILL_NM"))]
