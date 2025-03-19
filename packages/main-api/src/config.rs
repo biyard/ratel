@@ -22,7 +22,7 @@ impl Default for Config {
             openapi_key: option_env!("OPENAPI_KEY").expect("OPENAPI_KEY is required"),
             openapi_url: "https://open.assembly.go.kr/portal/openapi/",
             assembly_system_url: "https://likms.assembly.go.kr/filegate/servlet/FileGate",
-            signing_domain: option_env!("BASE_DOMAIN").expect("BASE_DOMAIN is required"),
+            signing_domain: option_env!("AUTH_DOMAIN").expect("BASE_DOMAIN is required"),
             aws: AwsConfig::default(),
             database: DatabaseConfig::default(),
             auth: AuthConfig::default(),

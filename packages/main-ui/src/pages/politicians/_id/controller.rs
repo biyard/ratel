@@ -1,5 +1,5 @@
 use bdk::prelude::*;
-use dto::{AssemblyMember, BillSummary};
+use dto::{AssemblyMember, BillSummary, Vote};
 
 #[derive(Clone, Copy, DioxusController)]
 pub struct Controller {
@@ -41,7 +41,21 @@ impl Controller {
                         en_summary: Some(
                             "This bill aims to provide transparency to DAO treasuries and protect crypto investors.".to_string(),
                         ),
-                        votes: vec![],
+                        votes: vec![
+                            Vote{
+                                selected: dto::VoteOption::Supportive,
+                                ..Default::default()
+                            },
+                            Vote{
+                                selected: dto::VoteOption::Supportive,
+                                ..Default::default()
+                            },
+                            Vote{
+                                selected: dto::VoteOption::Against,
+                                ..Default::default()
+                            }
+
+                        ],
                     }];
                 }
 

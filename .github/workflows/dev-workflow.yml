@@ -175,6 +175,7 @@ jobs:
           SERVICE: main-ui
           DOMAIN: dev.ratel.foundation
           API_PREFIX: /api
+          BASE_DOMAIN: ratel.foundation
           ENABLE_S3: true
           ENABLE_LAMBDA: true
           VERSIONS: v1
@@ -223,6 +224,7 @@ jobs:
           ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           ENV: dev
+          RUST_LOG: debug
           SERVICE: main-api
           DOMAIN: api.dev.ratel.foundation
           AUTH_DOMAIN: dev.ratel.foundation
@@ -231,6 +233,7 @@ jobs:
           OPENAPI_KEY: ${{ secrets.OPENAPI_KEY }}
           AUTH_SECRET_KEY: ${{ secrets.DEV_AUTH_SECRET_KEY }}
           JWT_SECRET_KEY: ${{ secrets.DEV_JWT_SECRET_KEY }}
+          BASE_DOMAIN: ratel.foundation
           ENABLE_S3: false
           ENABLE_LAMBDA: true
         run: |
