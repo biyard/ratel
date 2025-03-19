@@ -11,7 +11,7 @@ pub fn OutlinedButton(
 
     onclick: EventHandler<MouseEvent>,
 ) -> Element {
-    let bg = "hover:bg-btn-o-hover-bg text-btn-o-text hover:text-btn-o-hover-text cursor-pointer border-btn-o";
+    let bg = "hover:bg-btn-o-hover-bg text-btn-o-text hover:text-btn-o-hover-text cursor-pointer border border-btn-o hover:border-btn-o-hover";
 
     let padding = match size {
         ButtonSize::Normal => "px-40 py-20 rounded-[10px]",
