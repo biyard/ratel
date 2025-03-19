@@ -44,7 +44,16 @@ impl Controller {
                             Vote{
                                 selected: dto::VoteOption::Supportive,
                                 ..Default::default()
+                            },
+                            Vote{
+                                selected: dto::VoteOption::Supportive,
+                                ..Default::default()
+                            },
+                            Vote{
+                                selected: dto::VoteOption::Against,
+                                ..Default::default()
                             }
+
                         ],
                     }];
                 }

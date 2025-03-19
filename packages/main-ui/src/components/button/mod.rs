@@ -1,5 +1,6 @@
 #![allow(non_snake_case)]
 use bdk::prelude::*;
+pub mod outlined_button;
 pub mod primary_button;
 pub mod secondary_botton;
 
