@@ -1,8 +1,10 @@
+#![allow(unused)]
 use bdk::prelude::*;
+use by_types::QueryResponse;
 use validator::Validate;
 
 #[derive(Validate)]
-#[api_model(base = "/", table = votes)]
+#[api_model(base = "/v1/bills/:bill_id/votes", table = votes, iter_type = QueryResponse)]
 pub struct Vote {
     #[api_model(summary, primary_key)]
     pub id: i64,
@@ -11,16 +13,16 @@ pub struct Vote {
     #[api_model(summary, auto = [insert, update])]
     pub updated_at: i64,
 
-    #[api_model(summary, type = INTEGER)]
+    #[api_model(summary, type = INTEGER, action = voting)]
     pub selected: VoteOption,
 
     #[api_model(summary, many_to_one = bills)]
     pub bill_id: i64,
 
-    #[api_model(summary, many_to_one = assembly_members)]
+    #[api_model(summary, many_to_one = assembly_members, action = voting, query_action = list_votes_by_member)]
     pub member_id: i64,
 
-    #[api_model(summary, many_to_one = users)]
+    #[api_model(summary, many_to_one = users, action = voting, read_action = get_my_result)]
     pub user_id: i64,
 }
 
