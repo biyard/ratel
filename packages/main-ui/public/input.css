@@ -42,7 +42,7 @@
   --color-btn-s-disabled-text: #aeaeae;
 
   /* Outlined button colors */
-  --color-btn-o: #464646; /* border color */;
+  --color-btn-o: #464646; /* border color */
   --color-btn-o-hover: white; /* border color while hovering */
   --color-btn-o-hover-bg: #1A1A1A; /* bg color while hovering */
   --color-btn-o-text: white;
