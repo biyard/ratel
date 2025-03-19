@@ -29,6 +29,8 @@ pub struct Bill {
     pub title: String,
     #[api_model(summary)]
     pub book_id: String, // for file download, type = 0 (hwp), 1 (pdf)
+    #[api_model(summary)]
+    pub date: String,
 
     #[api_model(summary, version = v0.1)]
     pub site_url: String,
