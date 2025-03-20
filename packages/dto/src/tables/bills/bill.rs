@@ -1,6 +1,5 @@
-use crate::{VoteOption, tables::Vote};
+use crate::{AssemblyMember, VoteOption, tables::Vote};
 
-use super::super::proposers::Proposer;
 use bdk::prelude::*;
 use by_types::QueryResponse;
 
@@ -29,10 +28,11 @@ pub struct Bill {
     pub title: String,
     #[api_model(summary)]
     pub book_id: String, // for file download, type = 0 (hwp), 1 (pdf)
+    #[api_model(summary)]
+    pub date: String,
 
-    #[api_model(summary, version = v0.1)]
-    pub site_url: String,
-
+    // #[api_model(summary, version = v0.1)]
+    // pub site_url: String, // ex. https://likms.assembly.go.kr/bill/billDetail.do?billId=PRC_E2F4E1M0N1J5I1G7F1N2M0L8M1K8T3
     #[api_model(summary)]
     pub en_title: Option<String>,
     #[api_model(summary, action_by_id = set_summary)]
@@ -40,9 +40,9 @@ pub struct Bill {
     #[api_model(summary, action_by_id = set_en_summary)]
     pub en_summary: Option<String>,
 
-    #[api_model(one_to_many = proposers, foreign_key = bill_id)]
+    #[api_model(summary, many_to_many = proposers, foreign_table_name = assembly_members, foreign_primary_key = member_id, foreign_reference_key = bill_id, target_table = join, unique)]
     #[serde(default)]
-    pub proponents: Vec<Proposer>,
+    pub proponents: Vec<AssemblyMember>,
 
     #[api_model(summary, one_to_many = votes, foreign_key = bill_id)]
     #[serde(default)]
@@ -101,5 +101,21 @@ impl Bill {
         };
 
         (yes_percent * 100.0, no_percent * 100.0)
+    }
+
+    pub fn file_link(&self) -> String {
+        format!(
+            "{}?bookId={}&type={}",
+            "https://likms.assembly.go.kr/filegate/servlet/FileGate",
+            self.book_id,
+            "0" // 0: hwp 1: pdf
+        )
+    }
+
+    pub fn detail_link(&self) -> String {
+        format!(
+            "{}?billId={}",
+            "https://likms.assembly.go.kr/bill/billDetail.do", self.bill_id,
+        )
     }
 }

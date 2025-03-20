@@ -75,12 +75,12 @@ pub fn BillCard(
                 id: "bill-card-body-{bill.id}",
                 class: "w-full flex flex-col items-start justify-start whitespace-pre-line",
                 p { class: "text-[15px]/24 font-normal text-text-secondary",
-                    {bill.summary.unwrap_or_default()}
+                    {bill.summary.clone().unwrap_or_default()}
                 }
                 div { class: "w-full flex flex-row justify-end",
                     a {
                         target: "_blank",
-                        href: bill.site_url,
+                        href: bill.detail_link(),
                         class: "text-[15px]/24 font-normal text-primary text-text-primary underline",
                         {tr.see_more}
                     }
@@ -98,8 +98,7 @@ pub fn BillCard(
                             span { class: "text-text-secondary", {tr.votes} }
                         }
                     }
-
-                // FIXME: No information yet: https://www.figma.com/design/YaLSz7dzRingD7CipyaC47/Ratel?node-id=183-9407&t=nGj9h0tjcpZm2O54-1
+                                // FIXME: No information yet: https://www.figma.com/design/YaLSz7dzRingD7CipyaC47/Ratel?node-id=183-9407&t=nGj9h0tjcpZm2O54-1
                 // div { class: "flex flex-row gap-4",
                 //     RewardCoin {}
                 //     p { class: "text-text-primary font-semibold text-xl/25 whitespace-pre-line",
@@ -115,7 +114,6 @@ pub fn BillCard(
                     }
                     div { class: "relative h-full", width: "{no}%",
                         div { class: "absolute right-0 animate-grow h-full bg-against/50" }
-
                     }
                 }
 

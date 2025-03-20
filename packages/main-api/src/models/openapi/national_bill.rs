@@ -9,4 +9,6 @@ pub struct AssemblyBill {
     pub site_link: String, // Link to bill summary site (include hwp, pdf link)
     #[serde(rename(deserialize = "BILL_ID"))]
     pub bill_id: String, // need get vote result
+    #[serde(rename(deserialize = "PPSL_DT"))]
+    pub date: String, // ex. 2009-06-30
 }

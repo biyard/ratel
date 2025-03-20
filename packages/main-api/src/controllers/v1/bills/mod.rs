@@ -7,12 +7,13 @@ use by_axum::axum::{
 use by_types::QueryResponse;
 use dto::*;
 use sqlx::postgres::PgRow;
+pub mod votes;
 
 #[derive(
     Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
 )]
 pub struct BillPath {
-    id: i64,
+    bill_id: i64,
 }
 
 #[derive(Clone, Debug)]
@@ -29,7 +30,12 @@ impl BillController {
         by_axum::axum::Router::new()
             .route("/", get(Self::list_bills))
             .with_state(self.clone())
-            .route("/:id", post(Self::get_file_link).with_state(self.clone()))
+            .route("/:bill_id", post(Self::get_file_link))
+            .with_state(self.clone())
+            .nest(
+                "/:bill_id/votes",
+                votes::VoteController::new(self.pool.clone()).route(),
+            )
     }
 
     pub async fn list_bills(
@@ -45,12 +51,12 @@ impl BillController {
 
     pub async fn get_file_link(
         State(ctrl): State<BillController>,
-        Path(BillPath { id }): Path<BillPath>,
+        Path(BillPath { bill_id }): Path<BillPath>,
         // Json(body): Json<>, // TODO: decide file type
     ) -> Result<String> {
-        tracing::debug!("get_file_link: Bill ID: {:?}", id);
+        tracing::debug!("get_file_link: Bill ID: {:?}", bill_id);
         let conf = crate::config::get();
-        let bill = ctrl.get(id).await?;
+        let bill = ctrl.get(bill_id).await?;
 
         Ok(format!(
             "{}?bookId={}&type={}",
