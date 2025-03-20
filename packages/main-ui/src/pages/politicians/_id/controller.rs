@@ -29,12 +29,13 @@ impl Controller {
                             .to_string(),
                         bill_no: "1".to_string(),
                         bill_id: "PRC_000".to_string(),
+                        date: "2020-01-01".to_string(),
                         en_title: Some(
                             "DAO Treasury Transparency Act & Crypto Investor Protection Act"
                                 .to_string(),
                         ),
                         book_id: "1".to_string(),
-                        site_url: "https://example.com".to_string(),
+                        // site_url: "https://example.com".to_string(),
                         summary: Some(
                             "This bill aims to provide transparency to DAO treasuries and protect crypto investors.".to_string(),
                         ),

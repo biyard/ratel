@@ -36,6 +36,7 @@ pub enum ServiceError {
     WalletNotFound,
     WalletError(String),
     HtmlParseError(String),
+    UniqueViolation(String),
 }
 
 impl<E: Error + 'static> From<E> for ServiceError {

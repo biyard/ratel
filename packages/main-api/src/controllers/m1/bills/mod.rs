@@ -4,7 +4,7 @@ use bdk::prelude::*;
 use by_axum::axum::{extract::State, routing::post};
 use dto::*;
 
-const BATCH_SIZE: u32 = 10;
+const BATCH_SIZE: u32 = 100;
 const MAX_BILL_SUM: u32 = 1500; // 2025.03.19: 1392
 #[derive(Clone, Debug)]
 pub struct BillsController {
@@ -48,7 +48,7 @@ impl BillsController {
                         bill.bill_id,
                         bill.title,
                         file_book_id,
-                        bill.site_link,
+                        bill.date,
                         None,
                         None,
                         None,
