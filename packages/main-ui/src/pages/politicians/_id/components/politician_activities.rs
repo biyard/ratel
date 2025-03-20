@@ -80,7 +80,7 @@ pub fn BillCard(
                 div { class: "w-full flex flex-row justify-end",
                     a {
                         target: "_blank",
-                        href: bill.site_url,
+                        href: bill.detail_link(),
                         class: "text-[15px]/24 font-normal text-primary text-text-primary underline",
                         {tr.see_more}
                     }

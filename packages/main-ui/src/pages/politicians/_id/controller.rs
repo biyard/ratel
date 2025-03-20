@@ -35,7 +35,7 @@ impl Controller {
                                 .to_string(),
                         ),
                         book_id: "1".to_string(),
-                        site_url: "https://example.com".to_string(),
+                        // site_url: "https://example.com".to_string(),
                         summary: Some(
                             "This bill aims to provide transparency to DAO treasuries and protect crypto investors.".to_string(),
                         ),

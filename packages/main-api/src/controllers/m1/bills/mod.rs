@@ -49,7 +49,6 @@ impl BillsController {
                         bill.title,
                         file_book_id,
                         bill.date,
-                        bill.site_link,
                         None,
                         None,
                         None,
