@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 use bdk::prelude::*;
 use dioxus_popup::PopupService;
-use dto::{BillSorter, BillSummary};
+use dto::{Bill, BillSorter};
 
 use super::*;
 use crate::components::dropdown::Dropdown;
@@ -10,7 +10,7 @@ use crate::components::dropdown::Dropdown;
 pub fn PoliticianActivities(
     lang: Language,
     #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
-    #[props(default = vec![])] bills: Vec<BillSummary>,
+    #[props(default = vec![])] bills: Vec<Bill>,
     name: String,
     children: Element,
 ) -> Element {
@@ -53,7 +53,7 @@ pub fn PoliticianActivities(
 #[component]
 pub fn BillCard(
     lang: Language,
-    bill: BillSummary,
+    bill: Bill,
     #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
     children: Element,
 ) -> Element {
