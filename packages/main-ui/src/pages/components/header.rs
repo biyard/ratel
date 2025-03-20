@@ -1,6 +1,6 @@
 #![allow(non_snake_case)]
 use super::SignupPopup;
-use crate::{components::icons::Logo, pages::components::Socials, route::Route};
+use crate::{components::icons::Logo, route::Route};
 use bdk::prelude::{
     by_components::icons::{alignments::AlignJustify, arrows::ArrowRight},
     *,
@@ -15,7 +15,7 @@ pub fn Header(
 ) -> Element {
     rsx! {
         div { class: "hidden md:!block",
-            DesktopHeader { class, lang, selected }
+            DesktopHeader { lang, selected }
         }
         div { class: "block md:!hidden",
             MobileHeader { lang, selected }
@@ -24,16 +24,13 @@ pub fn Header(
 }
 
 #[component]
-pub fn DesktopHeader(
-    #[props(default ="".to_string())] class: String,
-    lang: Language,
-    selected: i32,
-) -> Element {
+pub fn DesktopHeader(lang: Language, selected: i32) -> Element {
     let tr: HeaderTranslate = translate(&lang);
     let mut popup: PopupService = use_context();
     let current_path: Route = use_route();
     let selected_menu = use_memo(move || match current_path {
         Route::PoliticiansPage { .. } => 2,
+        Route::PoliticiansByIdPage { .. } => 2,
         _ => 0,
     });
 
@@ -43,28 +40,23 @@ pub fn DesktopHeader(
                 a { href: "/#top", Logo {} }
 
                 nav { class: "grow flex flex-row gap-10 text-secondary font-bold text-[15px]",
-                    a {
-                        class: "p-10 hover:text-white",
-                        href: "/#about",
-                        color: if selected == 1 { "var(--color-primary)" },
-                        {tr.menu_about}
-                    }
-                    a {
-                        class: "p-10 hover:text-white",
+                    A { lang, selected: selected == 1, href: "/#about", {tr.menu_about} }
+                    A {
+                        lang,
+                        selected: selected == 2,
                         href: "/#politician-stance",
-                        color: if selected == 2 || selected_menu == 2 { "var(--color-primary)" },
                         {tr.menu_stance}
                     }
-                    a {
-                        class: "p-10 hover:text-white",
+                    A {
+                        lang,
+                        selected: selected == 3,
                         href: "/#community",
-                        color: if selected == 3 { "var(--color-primary)" },
                         {tr.menu_community}
                     }
-                    a {
-                        class: "p-10 hover:text-white",
+                    A {
+                        lang,
+                        selected: selected == 4,
                         href: "/#support",
-                        color: if selected == 4 { "var(--color-primary)" },
                         {tr.menu_support}
                     }
                 }
@@ -80,7 +72,7 @@ pub fn DesktopHeader(
                         },
                         {tr.login}
                     }
-                    button { class: "px-20 py-10 bg-primary hover:bg-hover text-black text-[14px] cursor-pointer rounded-full font-bold",
+                    button { class: "px-20 py-10 bg-primary hover:bg-hover text-black text-sm cursor-pointer rounded-full font-bold",
                         {tr.get_ratel}
                     }
                 }
@@ -107,6 +99,7 @@ pub fn MobileHeader(
     };
     let selected_menu = use_memo(move || match current_path {
         Route::PoliticiansPage { .. } => 2,
+        Route::PoliticiansByIdPage { .. } => 2,
         _ => 0,
     });
 
@@ -148,75 +141,110 @@ pub fn MobileHeader(
                     button { onclick: toggle_menu, {toggle_icon} }
                 }
             }
-            if expanded() {
-                div {
-                    id: "menus",
-                    class: "w-full h-full flex flex-col justify-end items-center bg-[#1E1E1E]",
-                    div { class: "mb-[163px] flex flex-col justify-center items-center gap-[20px]",
-                        a { href: "/#about", onclick: move |_| close_menu(),
-                            p {
-                                class: "p-[10px] font-bold text-[20px] text-[#737373] hover:text-[#FCB300]",
-                                color: if selected == 1 { "var(--color-primary)" },
+            div {
+                id: "menus",
+                class: "w-full h-full flex flex-col justify-center items-center bg-[#1E1E1E]",
+                style: match expanded() {
+                    true => "display: block;",
+                    false => "display: none;",
+                },
+                div { class: "mt-[100px] mb-[160px] flex flex-col justify-center items-center gap-[20px]",
+
+                    A {
+                        href: "/#mobile_about",
+                        selected: selected == 1,
+                        lang,
+                        button { onclick: move |_| close_menu(),
+                            p { class: "p-[10px] font-bold text-[20px] text-[#737373] hover:text-[#FCB300]",
                                 {tr.menu_about}
                             }
                         }
-                        a {
-                            href: "/#politician-stance",
-                            onclick: move |_| close_menu(),
-                            p {
-                                class: "p-[10px] font-bold text-[20px] text-[#737373] hover:text-[#FCB300]",
-                                color: if selected == 2 { "var(--color-primary)" },
+                    }
+
+                    A {
+                        href: "/#politician-stance",
+                        lang,
+                        selected: selected == 2,
+                        button { onclick: move |_| close_menu(),
+                            p { class: "p-[10px] font-bold text-[20px] text-[#737373] hover:text-[#FCB300]",
                                 {tr.menu_stance}
                             }
                         }
-                        a {
-                            href: "/#community",
-                            onclick: move |_| close_menu(),
-                            p {
-                                class: "p-[10px] font-bold text-[20px] text-[#737373] hover:text-[#FCB300]",
-                                color: if selected == 3 { "var(--color-primary)" },
+                    }
+
+                    A {
+                        href: "/#community",
+                        lang,
+                        selected: selected == 3,
+                        button { onclick: move |_| close_menu(),
+                            p { class: "p-[10px] font-bold text-[20px] text-[#737373] hover:text-[#FCB300]",
                                 {tr.menu_community}
                             }
                         }
-                        a { href: "/#support", onclick: move |_| close_menu(),
-                            p {
-                                class: "p-[10px] font-bold text-[20px] text-[#737373] hover:text-[#FCB300]",
-                                color: if selected == 4 { "var(--color-primary)" },
+                    }
+
+                    A {
+                        href: "/#support",
+                        lang,
+                        selected: selected == 4,
+                        button { onclick: move |_| close_menu(),
+                            p { class: "p-[10px] font-bold text-[20px] text-[#737373] hover:text-[#FCB300]",
                                 {tr.menu_support}
                             }
                         }
                     }
+                }
 
-                    div { class: "flex flex-col gap-[48px]",
-                        div { class: "flex flex-col items-center gap-[10px]",
-                            //get ratel button
-                            button {
-                                div { class: "w-[176px] h-[48px] px-[20px] py-[10px] flex justify-center items-center bg-[#FCB300] text-black text-[15px] rounded-[50px] font-bold",
-                                    {tr.get_ratel}
-                                }
-                            }
-                            //sign in button
-                            button {
-                                div { class: "w-[85px] h-[43px] p-[10px] flex justify-center items-center text-[#737373] text-[20px] font-bold",
-                                    button {
-                                        onclick: move |_| {
-                                            tracing::debug!("Sign in clicked");
-                                            popup.open(rsx! {
-                                                SignupPopup { class: "w-[320px] mx-[5px]", lang }
-                                            }).with_id("signup_popup");
-                                        },
-                                        {tr.sign_in}
-                                    }
-                                }
+                div { class: "flex flex-col gap-[48px]",
+                    div { class: "flex flex-col items-center gap-[10px]",
+                        //get ratel button
+                        button {
+                            div { class: "w-[176px] h-[48px] px-[20px] py-[10px] flex justify-center items-center bg-[#FCB300] text-black text-[15px] rounded-[50px] font-bold",
+                                {tr.get_ratel}
                             }
                         }
-
-                        //social icon
-                        div { class: "w-full h-full flex flex-row justify-center items-center mb-[58px]",
-                            Socials { class: "flex flex-row gap-[40px] [&>a>svg]:w-19 [&>a>svg]:h-19" }
+                        //sign in button
+                        button {
+                            class: "w-[85px] h-[43px] p-[10px] flex justify-center items-center text-[#737373] text-[20px] font-bold",
+                            onclick: move |_| {
+                                popup.open(rsx! {
+                                    SignupPopup { class: "w-[320px] mx-[5px]", lang }
+                                }).with_id("signup_popup");
+                            },
+                            {tr.sign_in}
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+#[component]
+pub fn A(
+    children: Element,
+    lang: Language,
+    href: String,
+    selected: bool,
+    onclick: Option<EventHandler<Event<MouseData>>>,
+) -> Element {
+    let current_path: Route = use_route();
+    let is_home = matches!(current_path, Route::HomePage { .. });
+
+    rsx! {
+        if is_home {
+            a {
+                class: " hover:text-white",
+                href,
+                color: if selected { "var(--color-primary)" },
+                {children}
+            }
+        } else {
+            Link {
+                class: "p-[10px] hover:text-white",
+                to: Route::HomePage { lang },
+                color: if selected { "var(--color-primary)" },
+                {children}
             }
         }
     }

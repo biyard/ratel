@@ -72,7 +72,7 @@ pub fn MobileTop(
     rsx! {
         div {
             id: "top",
-            class: "w-screen h-full flex flex-col items-center justify-start",
+            class: "w-full h-full flex flex-col items-center justify-start mt-[80px]",
             ..attributes,
             div { class: "flex flex-col items-center justify-center gap-[32px]",
                 div { class: "w-[156px] h-[128px] flex items-center justify-center ",

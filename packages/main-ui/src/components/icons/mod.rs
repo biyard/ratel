@@ -1,4 +1,5 @@
 mod arrows;
+mod background_triange;
 mod chat;
 mod clock;
 mod close;
@@ -29,6 +30,7 @@ mod x;
 
 pub use alert::*;
 pub use arrows::*;
+pub use background_triange::*;
 pub use bsky::*;
 pub use chat::*;
 pub use clock::*;

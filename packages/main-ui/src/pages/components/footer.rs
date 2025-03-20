@@ -1,7 +1,10 @@
 #![allow(non_snake_case)]
 use bdk::prelude::*;
 
-use crate::{pages::components::Socials, route::Route};
+use crate::{
+    pages::components::{Socials, subscription::MobileSubscription},
+    route::Route,
+};
 
 #[component]
 pub fn Footer(lang: Language) -> Element {
@@ -9,7 +12,9 @@ pub fn Footer(lang: Language) -> Element {
         div { class: "hidden md:!block",
             DesktopFooter { lang }
         }
-        div { class: "block md:!hidden", "" }
+        div { class: "block md:!hidden",
+            MobileFooter { lang }
+        }
     }
 }
 
@@ -29,6 +34,37 @@ pub fn DesktopFooter(lang: Language) -> Element {
                 class: "hover:text-white",
                 to: Route::PrivacyPolicyPage { lang },
                 {tr.terms}
+            }
+        }
+    }
+}
+
+#[component]
+pub fn MobileFooter(lang: Language) -> Element {
+    let tr: FooterTranslate = translate(&lang);
+
+    rsx! {
+        footer { class: "w-screen bg-footer flex flex-col items-center justify-center mt-[56px] text-copyright font-normal text-[14px] gap-[40px] px-[30px] pt-[20px] pb-[40px]",
+            MobileSubscription { lang }
+            Socials {
+                class: "flex flex-row items-center justify-center gap-[50px]",
+                size: 28,
+            }
+            div { class: "flex flex-col justify-center items-center",
+                span { {tr.copyright} }
+                div { class: "flex flex-row gap-[10px]",
+                    Link {
+                        class: "hover:text-white",
+                        to: Route::PrivacyPolicyPage { lang },
+                        {tr.mobile_privacy}
+                    }
+                    "•"
+                    Link {
+                        class: "hover:text-white",
+                        to: Route::PrivacyPolicyPage { lang },
+                        {tr.mobile_terms}
+                    }
+                }
             }
         }
     }
@@ -79,6 +115,16 @@ translate! {
     terms: {
         ko: "• 서비스 약관",
         en: "• Terms",
+    },
+
+    mobile_privacy: {
+        ko: "개인 정보 보호 정책",
+        en: "Privacy Policy",
+    },
+
+    mobile_terms: {
+        ko: "서비스 약관",
+        en: "Terms of Service",
     },
 
     sitemap: {

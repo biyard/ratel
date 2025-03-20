@@ -1,10 +1,24 @@
 #![allow(non_snake_case)]
 use bdk::prelude::*;
 
+use crate::components::icons::BackgroundTriangle;
+
 use super::*;
 
 #[component]
 pub fn About(lang: Language) -> Element {
+    rsx! {
+        div { class: "hidden md:!block",
+            DesktopAbout { lang }
+        }
+        div { class: "block md:!hidden",
+            MobileAbout { lang }
+        }
+    }
+}
+
+#[component]
+pub fn DesktopAbout(lang: Language) -> Element {
     let tr: AboutTranslate = translate(&lang);
 
     rsx! {
@@ -41,6 +55,51 @@ pub fn About(lang: Language) -> Element {
                     no: "04.",
                     title: tr.mission4,
                     description: tr.mission4_description,
+                }
+            }
+        }
+    }
+}
+
+#[component]
+pub fn MobileAbout(lang: Language) -> Element {
+    let tr: AboutTranslate = translate(&lang);
+
+    rsx! {
+        div { id: "mobile_about", class: "w-full h-full flex flex-col",
+            BackgroundTriangle {}
+            div { class: "w-full h-full px-[30px] bg-[#1A1A1A] flex flex-col items-center justify-center gap-[40px]",
+                SectionHeader {
+                    section_name: tr.title,
+                    title: tr.mission,
+                    description: tr.description,
+                }
+
+                div { class: "w-full flex flex-col justify-center items-center gap-[10px]",
+                    MobileMissionCard {
+                        class: "w-[333px] h-auto row-span-1",
+                        no: "01.",
+                        title: tr.mission1,
+                        description: tr.mission1_description,
+                    }
+                    MobileMissionCard {
+                        class: "w-[333px] h-auto row-span-2",
+                        no: "02.",
+                        title: tr.mission2,
+                        description: tr.mission2_description,
+                    }
+                    MobileMissionCard {
+                        class: "w-[333px] h-auto row-span-3",
+                        no: "03.",
+                        title: tr.mission3,
+                        description: tr.mission3_description,
+                    }
+                    MobileMissionCard {
+                        class: "w-[333px] h-auto row-span-4",
+                        no: "04.",
+                        title: tr.mission4,
+                        description: tr.mission4_description,
+                    }
                 }
             }
         }
