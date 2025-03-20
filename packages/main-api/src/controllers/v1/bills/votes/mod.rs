@@ -5,7 +5,7 @@ use by_axum::{
     axum::{
         Extension, Json,
         extract::{Path, Query, State},
-        routing::{get, post},
+        routing::get,
     },
 };
 use by_types::QueryResponse;
@@ -16,14 +16,6 @@ use dto::*;
 )]
 pub struct VotePath {
     bill_id: i64,
-}
-
-#[derive(
-    Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
-)]
-pub struct VoteMemberPath {
-    bill_id: i64,
-    member_id: i64,
 }
 
 #[derive(Clone, Debug)]
@@ -41,37 +33,32 @@ impl VoteController {
     }
     pub fn route(&self) -> by_axum::axum::Router {
         by_axum::axum::Router::new()
-            .route("/", get(Self::list_vote).post(Self::my_vote))
-            .with_state(self.clone())
-            .route(
-                "/:member_id",
-                post(Self::act_vote).get(Self::list_vote_by_member),
-            )
+            .route("/", get(Self::list_vote).post(Self::act_vote))
             .with_state(self.clone())
     }
 
     pub async fn act_vote(
         State(ctrl): State<VoteController>,
-        Path(VoteMemberPath { bill_id, member_id }): Path<VoteMemberPath>,
+        Path(VotePath { bill_id }): Path<VotePath>,
         Extension(_auth): Extension<Option<Authorization>>,
         Json(body): Json<VoteAction>,
     ) -> Result<Json<Vote>> {
-        tracing::debug!("act_vote {} {} {:?}", bill_id, member_id, body);
+        tracing::debug!("act_vote {} {:?}", bill_id, body);
 
         match body {
-            VoteAction::Voting(req) => ctrl.vote(req, bill_id, member_id).await,
+            VoteAction::Voting(req) => ctrl.vote(req, bill_id).await,
         }
     }
 
-    pub async fn my_vote(
-        State(ctrl): State<VoteController>,
-        Extension(_auth): Extension<Option<Authorization>>,
-        Path(VotePath { bill_id }): Path<VotePath>,
-    ) -> Result<Json<Vote>> {
-        tracing::debug!("my_vote {}", bill_id);
+    // pub async fn my_vote(
+    //     State(ctrl): State<VoteController>,
+    //     Extension(_auth): Extension<Option<Authorization>>,
+    //     Path(VotePath { bill_id }): Path<VotePath>,
+    // ) -> Result<Json<Vote>> {
+    //     tracing::debug!("my_vote {}", bill_id);
 
-        Ok(ctrl.get_my_result(bill_id).await?)
-    }
+    //     Ok(ctrl.get_my_result(bill_id).await?)
+    // }
 
     pub async fn list_vote(
         State(ctrl): State<VoteController>,
@@ -86,29 +73,10 @@ impl VoteController {
             VoteParam::Read(_) => todo!(),
         }
     }
-
-    pub async fn list_vote_by_member(
-        State(ctrl): State<VoteController>,
-        Path(VoteMemberPath { bill_id, member_id }): Path<VoteMemberPath>,
-        Extension(_auth): Extension<Option<Authorization>>,
-        Query(param): Query<VoteParam>,
-    ) -> Result<Json<VoteGetResponse>> {
-        tracing::debug!("list_vote_by_member {} {} {:?}", bill_id, member_id, param);
-
-        match param {
-            VoteParam::Query(q) => ctrl.list_votes_by_member(q, bill_id, member_id).await,
-            VoteParam::Read(_) => todo!(),
-        }
-    }
 }
 
 impl VoteController {
-    async fn vote(
-        &self,
-        body: VoteVotingRequest,
-        bill_id: i64,
-        member_id: i64,
-    ) -> Result<Json<Vote>> {
+    async fn vote(&self, body: VoteVotingRequest, bill_id: i64) -> Result<Json<Vote>> {
         let user = self
             .user
             .find_one(&UserReadAction::new().user_info())
@@ -124,10 +92,7 @@ impl VoteController {
         {
             Ok(_) => Err(ServiceError::UniqueViolation("Already voted".to_string())),
             Err(_) => {
-                let vote = self
-                    .repo
-                    .insert(body.selected, bill_id, member_id, user.id)
-                    .await?;
+                let vote = self.repo.insert(body.selected, bill_id, user.id).await?;
                 Ok(Json(vote))
             }
         }
@@ -155,50 +120,22 @@ impl VoteController {
         })))
     }
 
-    async fn get_my_result(&self, bill_id: i64) -> Result<Json<Vote>> {
-        let user = self
-            .user
-            .find_one(&UserReadAction::new().user_info())
-            .await?;
+    // async fn get_my_result(&self, bill_id: i64) -> Result<Json<Vote>> {
+    //     let user = self
+    //         .user
+    //         .find_one(&UserReadAction::new().user_info())
+    //         .await?;
 
-        let vote: Vote = Vote::query_builder()
-            .user_id_equals(user.id)
-            .id_equals(bill_id)
-            .query()
-            .map(|r: sqlx::postgres::PgRow| r.into())
-            .fetch_one(&self.pool)
-            .await?;
+    //     let vote: Vote = Vote::query_builder()
+    //         .user_id_equals(user.id)
+    //         .id_equals(bill_id)
+    //         .query()
+    //         .map(|r: sqlx::postgres::PgRow| r.into())
+    //         .fetch_one(&self.pool)
+    //         .await?;
 
-        Ok(Json(vote))
-    }
-
-    async fn list_votes_by_member(
-        &self,
-        query: VoteQuery,
-        bill_id: i64,
-        member_id: i64,
-    ) -> Result<Json<VoteGetResponse>> {
-        let mut total_count: i64 = 0;
-        let votes: Vec<VoteSummary> = Vote::query_builder()
-            .limit(query.size())
-            .page(query.page())
-            .bill_id_equals(bill_id)
-            .member_id_equals(member_id)
-            .with_count()
-            .query()
-            .map(|r: sqlx::postgres::PgRow| {
-                use sqlx::Row;
-                total_count = r.get("total_count");
-                r.into()
-            })
-            .fetch_all(&self.pool)
-            .await?;
-
-        Ok(Json(VoteGetResponse::Query(QueryResponse {
-            items: votes,
-            total_count,
-        })))
-    }
+    //     Ok(Json(vote))
+    // }
 }
 
 // #[cfg(test)]

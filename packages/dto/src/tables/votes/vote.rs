@@ -19,9 +19,8 @@ pub struct Vote {
     #[api_model(summary, many_to_one = bills)]
     pub bill_id: i64,
 
-    #[api_model(summary, many_to_one = assembly_members, action = voting, query_action = list_votes_by_member)]
-    pub member_id: i64,
-
+    // #[api_model(summary, many_to_one = assembly_members, action = voting, query_action = list_votes_by_member)]
+    // pub member_id: i64,
     #[api_model(summary, many_to_one = users, action = voting, read_action = get_my_result)]
     pub user_id: i64,
 }
