@@ -9,6 +9,7 @@ use crate::components::dropdown::Dropdown;
 #[component]
 pub fn PoliticianActivities(
     lang: Language,
+    id: i64,
     #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
     #[props(default = vec![])] bills: Vec<Bill>,
     name: String,
@@ -42,7 +43,7 @@ pub fn PoliticianActivities(
                     id: "politician-bills",
                     class: "w-full flex flex-col gap-24",
                     for bill in bills {
-                        BillCard { lang, bill }
+                        BillCard { lang, id, bill }
                     }
                 }
             }
@@ -53,6 +54,7 @@ pub fn PoliticianActivities(
 #[component]
 pub fn BillCard(
     lang: Language,
+    id: i64,
     bill: Bill,
     #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
     children: Element,
@@ -142,7 +144,7 @@ pub fn BillCard(
                     onclick: move |_| {
                         tracing::debug!("Vote supportive clicked");
                         popup.open(rsx! {
-                            VoteConfirm { vote: dto::VoteOption::Supportive, lang }
+                            VoteConfirm { vote: dto::VoteOption::Supportive, lang, id }
                         });
                     },
                     span { {tr.btn_supportive} }
@@ -152,7 +154,7 @@ pub fn BillCard(
                     onclick: move |_| {
                         tracing::debug!("Vote against clicked");
                         popup.open(rsx! {
-                            VoteConfirm { vote: dto::VoteOption::Against, lang }
+                            VoteConfirm { vote: dto::VoteOption::Against, lang, id }
                         });
                     },
                     span { {tr.btn_against} }

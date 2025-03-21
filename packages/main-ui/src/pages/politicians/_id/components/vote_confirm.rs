@@ -3,15 +3,20 @@ use bdk::prelude::*;
 use dioxus_popup::PopupService;
 use dto::VoteOption;
 
-use crate::components::{
-    button::{outlined_button::OutlinedButton, primary_button::PrimaryButton},
-    confirm_popup::{SigninPopupFooter, WelcomeHeader},
+use crate::{
+    components::{
+        button::{outlined_button::OutlinedButton, primary_button::PrimaryButton},
+        confirm_popup::{SigninPopupFooter, WelcomeHeader},
+    },
+    services::{user_service::UserService, vote_service::VoteService},
 };
 
 #[component]
-pub fn VoteConfirm(vote: VoteOption, lang: Language) -> Element {
+pub fn VoteConfirm(vote: VoteOption, lang: Language, id: i64) -> Element {
     let tr: VoteConfirmTranslate = translate(&lang);
     let mut popup: PopupService = use_context();
+    let vote_service: VoteService = use_context();
+    let user_service: UserService = use_context();
 
     rsx! {
         div { id: "vote_confirm_popup", class: "max-w-390 w-full",
@@ -24,12 +29,23 @@ pub fn VoteConfirm(vote: VoteOption, lang: Language) -> Element {
                         onclick: move |_| {
                             popup.close();
                         },
-                        {tr.btn_confirm}
+                        {tr.btn_cancel}
                     }
                     PrimaryButton {
                         width: "100%",
                         onclick: move |_| {
-                            popup.close();
+                            tracing::debug!("voting button confirmed");
+                            spawn(async move {
+                                match vote_service.vote(id, vote).await {
+                                    Ok(ret) => {
+                                        tracing::debug!("Voted successfully: {:?}", ret);
+                                        popup.close();
+                                    }
+                                    Err(_) => {
+                                        tracing::error!("Failed to vote");
+                                    }
+                                }
+                            });
                         },
                         {tr.btn_confirm}
                     }
