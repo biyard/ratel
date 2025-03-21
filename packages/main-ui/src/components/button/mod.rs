@@ -19,6 +19,7 @@ pub enum ButtonSize {
     #[default]
     Normal,
     Small,
+    Mobile,
 }
 
 // #[component]

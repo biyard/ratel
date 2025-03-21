@@ -18,6 +18,7 @@ pub fn SecondaryButton(
     let padding = match size {
         ButtonSize::Normal => "px-40 py-20",
         ButtonSize::Small => "px-20 py-10",
+        ButtonSize::Mobile => "px-[10px] py-[20px]",
     };
 
     rsx! {
@@ -47,6 +48,7 @@ pub fn SecondaryLink(
     let padding = match size {
         ButtonSize::Normal => "px-40 py-20",
         ButtonSize::Small => "px-20 py-10",
+        ButtonSize::Mobile => "w-[119px] h-[44px] px-[10px] py-[20px]",
     };
 
     rsx! {

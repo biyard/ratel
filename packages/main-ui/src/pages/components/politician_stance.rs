@@ -11,15 +11,31 @@ use legal_notice_popup::LegalNoticePopup;
 use politician_card::PoliticianCard;
 
 use crate::{
-    components::button::{ButtonSize, secondary_botton::SecondaryLink},
+    components::{
+        button::{ButtonSize, secondary_botton::SecondaryLink},
+        icons::BackgroundTriangle,
+    },
     config,
+    pages::components::politician_card::MobilePoliticianCard,
     route::Route,
 };
 
 use super::*;
 
 #[component]
-pub fn PoliticianStance(
+pub fn PoliticianStance(lang: Language) -> Element {
+    rsx! {
+        div { class: "hidden md:!block",
+            DesktopPoliticianStance { lang }
+        }
+        div { class: "block md:!hidden",
+            MobilePoliticianStance { lang }
+        }
+    }
+}
+
+#[component]
+pub fn DesktopPoliticianStance(
     lang: Language,
     #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
     children: Element,
@@ -119,6 +135,7 @@ pub fn PoliticianStance(
                                 }
                             }
                         }
+                    
                     } // end of flex-row
 
                     div {
@@ -135,7 +152,7 @@ pub fn PoliticianStance(
                             height: "18",
                         }
                         span { {tr.legal_notice} }
-
+                    
                     }
                 } // end of flex-col
 
@@ -151,7 +168,166 @@ pub fn PoliticianStance(
                         }
                     }
                 }
+            }
+        }
+    }
+}
 
+#[component]
+pub fn MobilePoliticianStance(
+    lang: Language,
+    #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
+    children: Element,
+) -> Element {
+    let tr: PoliticianStanceTranslate = translate(&lang);
+    let mut p: PopupService = use_context();
+
+    let mut selected = use_signal(|| 0);
+    let pro_cryptos = use_server_future(move || {
+        let _ = selected();
+        async move {
+            match AssemblyMember::get_client(config::get().main_api_endpoint)
+                .list_by_stance(4, None, dto::CryptoStance::ProCrypto)
+                .await
+            {
+                Ok(members) => members,
+                _ => Default::default(),
+            }
+        }
+    })?
+    .suspend()?;
+
+    let anti_cryptos = use_server_future(move || {
+        let _ = selected();
+
+        async move {
+            match AssemblyMember::get_client(config::get().main_api_endpoint)
+                .list_by_stance(4, None, dto::CryptoStance::AntiCrypto)
+                .await
+            {
+                Ok(members) => members,
+                _ => Default::default(),
+            }
+        }
+    })?
+    .suspend()?;
+
+    rsx! {
+        div {
+            div { id: "mobile_about", class: "w-screen h-full flex flex-col",
+                BackgroundTriangle { color: "#1E1E1E" }
+                div { class: "w-full h-full px-[30px] bg-[#1E1E1E] flex flex-col items-center justify-center gap-[20px]",
+                    div { class: "w-full h-full flex flex-col gap-[20px]",
+                        MobileSectionHeader {
+                            section_name: tr.title,
+                            title: tr.mission,
+                            description: tr.description,
+                        }
+
+                        div { class: "w-full flex justify-start",
+                            SecondaryLink {
+                                size: ButtonSize::Mobile,
+                                to: Route::PoliticiansPage { lang },
+                                div { class: "flex flex-row gap-[10px] items-center justify-center text-[14px] text-black",
+                                    {tr.view_all}
+                                    ArrowRight {
+                                        class: "[&>path]:stroke-3",
+                                        width: "15",
+                                        height: "15",
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    div { class: "w-full flex flex-col gap-[40px] mt-[60px] items-center",
+                        div { class: "w-full flex flex-col items-start",
+                            div { class: "w-full flex flex-col items-start justify-start",
+                                MobileExpandableContainer {
+                                    tag: tr.pro_crypto,
+                                    text_color: "text-c-c-20",
+                                    total_count: pro_cryptos().total_count,
+                                    icon: rsx! {
+                                        ThumbsUp { class: "[&>path]:stroke-c-c-20", width: "24", height: "24" }
+                                    },
+                                    onclick: move |_| {
+                                        tracing::debug!("selected: 1");
+                                        selected.set(0);
+                                    },
+
+                                    // TODO(web): have to build Scroll function
+                                    div { class: "w-screen h-[260px] flex flex-row overflow-x-auto scroll-smooth gap-[12px]",
+                                        for m in pro_cryptos().items {
+                                            MobilePoliticianCard {
+                                                lang,
+                                                id: m.id,
+                                                name: "{m.name}",
+                                                party: "{m.party}",
+                                                image_url: "{m.image_url}",
+                                                class: "min-w-[210px] max-w-[260px] h-full",
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+
+                        div { class: "w-full flex flex-col gap-[20px] items-center",
+                            div { class: "w-full flex flex-col items-start",
+                                div { class: "w-full flex flex-col items-start justify-start",
+                                    MobileExpandableContainer {
+                                        tag: tr.anti_crypto,
+                                        total_count: anti_cryptos().total_count,
+                                        text_color: "text-c-p-20",
+                                        icon: rsx! {
+                                            ThumbsDown { class: "[&>path]:stroke-c-p-20", width: "24", height: "24" }
+                                        },
+                                        onclick: move |_| {
+                                            tracing::debug!("selected: 1");
+                                            selected.set(1);
+                                        },
+
+                                        // TODO(web): have to build Scroll function
+                                        div { class: "w-screen h-[260px] flex flex-row overflow-x-auto scroll-smooth gap-[12px]",
+                                            for m in anti_cryptos().items {
+                                                MobilePoliticianCard {
+                                                    lang,
+                                                    id: m.id,
+                                                    name: "{m.name}",
+                                                    party: "{m.party}",
+                                                    image_url: "{m.image_url}",
+                                                    class: "min-w-[210px] max-w-[260px] h-full",
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            
+
+                            }
+                        }
+                    }
+                    // end of flex-row
+
+                    div {
+                        class: "w-screen flex flex-row gap-[10px] px-[30px] items-center justify-start text-neutral-400 text-[13px]",
+                        "data-tip": tr.legal,
+                        onclick: move |_| {
+                            p.open(rsx! {
+                                LegalNoticePopup { lang }
+                            });
+                        },
+                        Help {
+                            class: "[&>path]:stroke-neutral-400 [&>circle]:fill-neutral-400",
+                            width: "18",
+                            height: "18",
+                        }
+                        span { {tr.legal_notice} }
+                    
+                    }
+                
+                } // end of flex-col
             }
         }
     }

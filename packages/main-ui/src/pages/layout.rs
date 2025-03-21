@@ -99,21 +99,24 @@ pub fn RootBase(lang: Language, children: Element) -> Element {
             }
         }
         if selected() != 5 && is_home {
-            BottomSheet {
-                onclick: move |_| {
-                    let height = match web_sys::window() {
-                        Some(window) => {
-                            window.inner_height().unwrap_or_default().as_f64().unwrap_or_default()
-                        }
-                        None => 0.0,
-                    };
-                    let next_position = height * (selected() + 1) as f64;
-                    let script = format!(
-                        "window.scrollTo({{ top: {next_position}, behavior: 'smooth' }});",
-                    );
-                    let _ = document::eval(&script);
-                },
+            div { class: "hidden md:!block",
+                BottomSheet {
+                    onclick: move |_| {
+                        let height = match web_sys::window() {
+                            Some(window) => {
+                                window.inner_height().unwrap_or_default().as_f64().unwrap_or_default()
+                            }
+                            None => 0.0,
+                        };
+                        let next_position = height * (selected() + 1) as f64;
+                        let script = format!(
+                            "window.scrollTo({{ top: {next_position}, behavior: 'smooth' }});",
+                        );
+                        let _ = document::eval(&script);
+                    },
+                }
             }
+            div { class: "block md:!hidden", "" }
         }
     }
 }

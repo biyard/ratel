@@ -17,7 +17,29 @@ pub fn MissionCard(
                     h2 { {title} }
                 }
                 p { class: "text-[15px]/22", {description} }
+            
+            }
+        }
+    }
+}
 
+#[component]
+pub fn MobileMissionCard(
+    no: String,
+    title: String,
+    description: String,
+
+    #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
+) -> Element {
+    rsx! {
+        div {..attributes,
+            div { class: "px-[20px] py-[30px] bg-[#191919] w-full h-auto flex flex-col items-start justify-between text-[#DEE1E6] rounded-[20px] gap-[40px]",
+                div { class: "flex flex-col gap-[10px] text-[20px] font-bold",
+                    p { {no} }
+                    h2 { {title} }
+                }
+                p { class: "text-[15px]", {description} }
+            
             }
         }
     }

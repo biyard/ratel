@@ -31,3 +31,38 @@ pub fn InputWithButton(
         }
     }
 }
+
+#[component]
+pub fn MobileInputWithButton(
+    #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
+    placeholder: String,
+    btn_name: String,
+    #[props(default = "text".to_string())] r#type: String,
+
+    onsubmit: EventHandler<String>,
+) -> Element {
+    let mut value = use_signal(|| "".to_string());
+
+    rsx! {
+        div { class: "flex flex-col gap-[20px]",
+            div { class: "w-[333px] h-[50px] px-[20px] border-[1px] flex items-center rounded-[10px]",
+                input {
+                    class: "w-full flex items-center justify-start text-[#525252] text-[15px]",
+                    r#type,
+                    value: value(),
+                    placeholder,
+                    oninput: move |e| value.set(e.value()),
+                }
+            }
+            div { class: "w-[333px] h-[48px] px-[40px] py-[20px] bg-[#ffffff] rounded-[10px] cursor-pointer",
+                button {
+                    class: "w-full h-full text-black text-[15px] font-bold flex items-center justify-center",
+                    onclick: move |_| {
+                        onsubmit(value());
+                    },
+                    {btn_name}
+                }
+            }
+        }
+    }
+}
