@@ -1,12 +1,30 @@
 #![allow(non_snake_case)]
-use bdk::prelude::*;
+use bdk::prelude::{by_components::icons::arrows::ArrowRight, *};
 
-use crate::components::icons;
+use crate::{
+    components::{
+        button::{ButtonSize, secondary_botton::SecondaryLink},
+        icons::{self, BackgroundTriangle},
+    },
+    route::Route,
+};
 
 use super::*;
 
 #[component]
-pub fn Community(
+pub fn Community(lang: Language) -> Element {
+    rsx! {
+        div { class: "hidden md:!block",
+            DesktopCommunity { lang }
+        }
+        div { class: "block md:!hidden",
+            MobileCommunity { lang }
+        }
+    }
+}
+
+#[component]
+pub fn DesktopCommunity(
     lang: Language,
     #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
     children: Element,
@@ -36,6 +54,54 @@ pub fn Community(
 }
 
 #[component]
+pub fn MobileCommunity(
+    lang: Language,
+    #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
+    children: Element,
+) -> Element {
+    let tr: CommunityTranslate = translate(&lang);
+
+    rsx! {
+        div { id: "community",
+            BackgroundTriangle { color: "#1E1E1E" }
+            div { class: "w-screen h-full px-[30px] bg-[#1e1e1e] flex flex-col items-center justify-center gap-[60px]",
+                div { class: "flex flex-col justify-center gap-[20px]",
+                    SectionHeader {
+                        section_name: tr.title,
+                        title: tr.mission,
+                        description: tr.description,
+                    }
+                    div { class: "w-full flex justify-start",
+                        SecondaryLink {
+                            size: ButtonSize::Mobile,
+                            // TODO(web): make 'CommunityPage' route
+                            to: Route::PoliticiansPage { lang },
+                            div { class: "flex flex-row gap-[10px] items-center justify-center text-[14px] text-black",
+                                {tr.view_all}
+                                ArrowRight {
+                                    class: "[&>path]:stroke-3",
+                                    width: "15",
+                                    height: "15",
+                                }
+                            }
+                        }
+                    }
+                }
+
+                MobileTabs {
+                    tabs: vec![tr.tab_legislation.to_string(), tr.tab_discussion.to_string()],
+                    ontab: |i| {
+                        tracing::debug!("Tab selected: {}", i);
+                    },
+                }
+
+                MobileComingSoon { class: "w-full h-full max-h-430" }
+            }
+        }
+    }
+}
+
+#[component]
 pub fn ComingSoon(
     #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
     children: Element,
@@ -51,17 +117,57 @@ pub fn ComingSoon(
 }
 
 #[component]
+pub fn MobileComingSoon(
+    #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
+    children: Element,
+) -> Element {
+    rsx! {
+        div {..attributes,
+            div { class: "w-[333px] h-[250px] bg-bg flex flex-col items-center justify-center rounded-[20px] gap-[30px]",
+                icons::ComingSoon { width: 98, height: 100 }
+                p { class: "text-[24px] font-bold text-text-primary", "Coming soon" }
+            }
+        }
+    }
+}
+
+#[component]
 pub fn Tabs(tabs: Vec<String>, ontab: EventHandler<usize>) -> Element {
     let mut selected = use_signal(|| 0);
 
     rsx! {
         div { class: "w-full flex flex-row items-center justify-center",
-            div { class: "flex flex-row items-center jsutify-center gap-20 rounded-full overflow-hidden bg-bg",
+            div { class: "flex flex-row items-center justify-center gap-20 rounded-full bg-bg",
                 for (i , name) in tabs.iter().enumerate() {
                     button {
-                        class: "px-30 py-18 text-[15px]/16 font-bold text-secondary hover:text-hover cursor-pointer rounded-full",
+                        class: "px-30 py-18 text-[15px]/16 font-bold text-secondary hover:text-hover cursor-pointer overflow-hidden rounded-full",
                         color: if selected() == i { "var(--color-text-primary)" },
                         background: if selected() == i { "var(--color-tab-hover)" },
+                        onclick: move |_| {
+                            ontab(i);
+                            selected.set(i);
+                        },
+                        "{name}"
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[component]
+pub fn MobileTabs(tabs: Vec<String>, ontab: EventHandler<usize>) -> Element {
+    let mut selected = use_signal(|| 0);
+
+    rsx! {
+        div { class: "w-full flex flex-row items-center justify-center",
+            div { class: "px-[30px] flex flex-row items-center justify-center rounded-[50px]",
+                for (i , name) in tabs.iter().enumerate() {
+                    button {
+                        class: "w-full h-[50px] px-[30px] py-[18px] bg-bg flex justify-center items-center text-[15px] font-bold text-primary rounded-[100px]",
+                        color: if selected() == i { "var(--color-text-primary)" } else { "#A1A1A1" },
+                        background: if selected() == i { "var(--color-tab-hover)" },
+                        style: "white-space: nowrap;",
                         onclick: move |_| {
                             ontab(i);
                             selected.set(i);
@@ -100,5 +206,10 @@ translate! {
     tab_discussion: {
         ko: "토론",
         en: "Discussion",
+    }
+
+    view_all: {
+        ko: "전체 보기",
+        en: "View All",
     }
 }

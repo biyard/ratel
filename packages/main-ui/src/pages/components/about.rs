@@ -66,9 +66,9 @@ pub fn MobileAbout(lang: Language) -> Element {
     let tr: AboutTranslate = translate(&lang);
 
     rsx! {
-        div { id: "mobile_about", class: "w-full h-full flex flex-col",
-            BackgroundTriangle {}
-            div { class: "w-full h-full px-[30px] bg-[#1A1A1A] flex flex-col items-center justify-center gap-[40px]",
+        div { id: "mobile_about", class: "w-screen h-full flex flex-col",
+            BackgroundTriangle { color: "#1E1E1E" }
+            div { class: "w-screen h-full px-[30px] bg-[#1e1e1e] flex flex-col items-center justify-center gap-[40px]",
                 SectionHeader {
                     section_name: tr.title,
                     title: tr.mission,

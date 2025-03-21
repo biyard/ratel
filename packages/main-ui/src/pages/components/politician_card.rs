@@ -41,6 +41,44 @@ pub fn PoliticianCard(
 }
 
 #[component]
+pub fn MobilePoliticianCard(
+    lang: Language,
+    id: i64,
+    name: String,
+    party: String,
+    image_url: String,
+    #[props(default ="".to_string())] class: String,
+) -> Element {
+    rsx! {
+        Link {
+            to: Route::PoliticiansByIdPage {
+                lang,
+                id,
+            },
+            class: "w-full h-full relative col-span-1 rounded-[10px] overflow-hidden {class}",
+
+            background_image: format!("url({})", image_url),
+            background_size: "cover",
+            background_position: "center",
+            background_repeat: "no-repeat",
+
+            div {
+                class: "absolute bottom-0 left-0 w-full h-100",
+                background: "linear-gradient(180deg, rgba(0, 2, 3, 0) 0%, rgba(0, 2, 3, 0.5) 40%, rgba(0, 2, 3, 0.8) 100%, rgba(0, 2, 3, 0.9) 100%)",
+            }
+
+            div { class: "absolute bottom-0 left-0 w-full flex flex-col justify-start gap-[4px] px-[15px] py-[10px]",
+                p { class: "text-white text-[18px] font-bold", "{name}" }
+                div { class: "flex flex-row items-center gap-[4px]",
+                    PPP { size: "18" }
+                    p { class: "text-white text-[15px] font-medium", "{party}" }
+                }
+            }
+        }
+    }
+}
+
+#[component]
 pub fn PPP(#[props(default = "181".to_string())] size: String) -> Element {
     rsx! {
 

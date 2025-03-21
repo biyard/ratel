@@ -2,16 +2,19 @@
 use bdk::prelude::*;
 
 #[component]
-pub fn BackgroundTriangle(#[props(default = "#1A1A1A".to_string())] color: String) -> Element {
+pub fn BackgroundTriangle(#[props(default = "#1e1e1e".to_string())] color: String) -> Element {
     rsx! {
         svg {
             xmlns: "http://www.w3.org/2000/svg",
             width: "393",
-            height: "114",
-            view_box: "0 0 393 114",
+            height: "146",
+            view_box: "0 0 393 146",
             fill: "none",
 
-            path { d: "M-0.5 73.7684L392.5 0V146H-0.5V73.7684Z", fill: "{color}" }
+            path {
+                d: "M-0.5 73.7684L392.5 0V146H-0.5V73.7684Z",
+                fill: "url(#paint0_linear_663_15455)",
+            }
 
             defs {
                 linearGradient {

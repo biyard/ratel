@@ -27,6 +27,8 @@ pub fn HomePage(lang: Language) -> Element {
             div { class: "flex flex-col w-full justify-start items-center gap-[58px]",
                 Top { lang }
                 About { lang }
+                PoliticianStance { lang }
+                Community { lang }
                 Footer { lang }
             }
         }
