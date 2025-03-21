@@ -1,4 +1,4 @@
-use crate::{AssemblyMember, VoteOption, tables::Vote};
+use crate::{VoteOption, tables::Vote};
 
 use bdk::prelude::*;
 use by_types::QueryResponse;
@@ -40,15 +40,14 @@ pub struct Bill {
     #[api_model(summary, action_by_id = set_en_summary)]
     pub en_summary: Option<String>,
 
-    #[api_model(summary, many_to_many = proposers, foreign_table_name = assembly_members, foreign_primary_key = member_id, foreign_reference_key = bill_id, target_table = join, unique)]
-    #[serde(default)]
-    pub proponents: Vec<AssemblyMember>,
-
+    // #[api_model(summary, many_to_many = proposers, foreign_table_name = assembly_members, foreign_primary_key = member_id, foreign_reference_key = bill_id, target_table = join, unique)]
+    // #[serde(default)]
+    // pub proponents: Vec<AssemblyMember>,
     #[api_model(summary, one_to_many = votes, foreign_key = bill_id)]
     #[serde(default)]
     pub votes: Vec<Vote>,
-    #[api_model(summary, many_to_many = votes, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = bill_id, target_table = join, type = JSONB, unique)]
-    pub user_vote: Vote,
+    // #[api_model(summary, many_to_many = votes, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = bill_id, target_table = join, type = JSONB, unique)]
+    // pub user_vote: Vote,
 }
 
 impl Bill {

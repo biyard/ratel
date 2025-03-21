@@ -12,7 +12,7 @@ use by_components::effects::HoverEffects;
 use dioxus_oauth::prelude::FirebaseProvider;
 use dioxus_popup::PopupService;
 use route::Route;
-use services::user_service::UserService;
+use services::{user_service::UserService, vote_service::VoteService};
 use theme::Theme;
 
 fn main() {
@@ -28,6 +28,7 @@ fn app() -> Element {
     Theme::init();
     UserService::init();
     PopupService::init();
+    VoteService::init();
     let conf = config::get();
 
     let css = include_str!("../public/input.css");
