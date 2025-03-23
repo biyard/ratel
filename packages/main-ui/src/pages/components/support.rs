@@ -5,7 +5,10 @@ use dto::{Need, SupportSubmitRequest};
 
 use crate::{
     components::{
-        button::secondary_botton::SecondaryButton, confirm_popup::ConfirmPopup, dropdown::Dropdown,
+        button::secondary_botton::SecondaryButton,
+        confirm_popup::ConfirmPopup,
+        dropdown::{Dropdown, MobileDropdown},
+        icons::BackgroundTriangle,
     },
     config,
 };
@@ -14,6 +17,18 @@ use super::*;
 
 #[component]
 pub fn Support(lang: Language) -> Element {
+    rsx! {
+        div { class: "hidden md:!block",
+            DesktopSupport { lang }
+        }
+        div { class: "block md:!hidden",
+            MobileSupport { lang }
+        }
+    }
+}
+
+#[component]
+pub fn DesktopSupport(lang: Language) -> Element {
     let mut popup: PopupService = use_context();
     let tr: SupportTranslate = translate(&lang);
     let mut req = use_signal(|| SupportSubmitRequest::default());
@@ -123,6 +138,125 @@ pub fn Support(lang: Language) -> Element {
                             }
                         },
                         {tr.btn_submit}
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[component]
+pub fn MobileSupport(lang: Language) -> Element {
+    let mut popup: PopupService = use_context();
+    let tr: SupportTranslate = translate(&lang);
+    let mut req = use_signal(|| SupportSubmitRequest::default());
+
+    rsx! {
+        div { id: "support",
+            BackgroundTriangle { color: "#1E1E1E" }
+            div { class: "w-screen h-full px-[30px] flex flex-col items-center justify-center",
+                div { class: "w-full h-full flex flex-col gap-[40px]",
+                    MobileSectionHeader {
+                        section_name: tr.title,
+                        title: tr.mission,
+                        description: tr.description,
+                        with_line: false,
+                    }
+
+                    div { class: "col-span-1 w-full flex flex-col items-center",
+                        div { class: "col-span-1 w-full flex flex-col items-center gap-[30px]",
+                            MobileLabeledInput {
+                                class: "w-full",
+                                label_name: tr.label_first_name,
+                                placeholder: tr.placeholder_first_name,
+                                oninput: move |e| {
+                                    req.with_mut(move |r| r.first_name = e);
+                                },
+                            }
+                            MobileLabeledInput {
+                                class: "w-full",
+                                label_name: tr.label_last_name,
+                                placeholder: tr.placeholder_last_name,
+                                oninput: move |e| {
+                                    req.with_mut(move |r| r.last_name = e);
+                                },
+                            }
+
+                            MobileLabeledInput {
+                                class: "w-full",
+                                label_name: tr.label_email,
+                                placeholder: tr.placeholder_email,
+                                oninput: move |e| {
+                                    req.with_mut(move |r| r.email = e);
+                                },
+                            }
+
+                            MobileLabeledInput {
+                                class: "w-full",
+                                label_name: tr.label_company,
+                                placeholder: tr.placeholder_company,
+                                oninput: move |e| {
+                                    req.with_mut(move |r| r.company_name = e);
+                                },
+                            }
+
+                            MobileLabeled { class: "w-full", label_name: tr.label_needs,
+                                MobileDropdown {
+                                    class: "w-full min-w-[333px] h-full min-h-[44px]",
+                                    color: "ring-[#ffffff]",
+                                    items: Need::variants(&lang),
+                                    onselect: move |value: String| {
+                                        req.with_mut(move |r| r.needs = value.parse().unwrap_or_default());
+                                    },
+                                }
+                            }
+
+                            MobileLabeledInput {
+                                class: "w-full",
+                                label_name: tr.label_help,
+                                placeholder: tr.placeholder_help,
+                                oninput: move |e| {
+                                    req.with_mut(move |r| r.help = e);
+                                },
+                            }
+                        } // end of form
+
+                        SecondaryButton {
+                            onclick: move |_| async move {
+                                let endpoint = config::get().main_api_endpoint;
+                                let SupportSubmitRequest {
+                                    first_name,
+                                    last_name,
+                                    email,
+                                    company_name,
+                                    needs,
+                                    help,
+                                } = req();
+                                match dto::Support::get_client(endpoint)
+                                    .submit(first_name, last_name, email, company_name, needs, help)
+                                    .await
+                                {
+                                    Ok(_) => {
+                                        btracing::info!("Thank you for your submission!");
+                                        let tr: InquiryTranslate = translate(&lang);
+                                        popup.open(rsx! {
+                                            ConfirmPopup {
+                                                lang,
+                                                title: tr.title,
+                                                description: tr.description,
+                                                btn_label: tr.btn_label,
+                                            }
+                                        });
+                                    }
+                                    Err(e) => {
+                                        btracing::error!("{}", e.translate(& lang));
+                                    }
+                                }
+                            },
+                            div { class: "w-full min-w-[333px] h-[48px] flex justify-center items-center rounded-[10px] whitespace-nowrap bg-[#ffffff] p-[20px] font-bold text-[15px] text-black",
+                                {tr.btn_submit}
+                            }
+                        }
                     }
                 }
             }

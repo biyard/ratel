@@ -97,6 +97,7 @@ pub fn RootBase(lang: Language, children: Element) -> Element {
                     {children}
                 }
             }
+            Footer { lang }
         }
         if selected() != 5 && is_home {
             div { class: "hidden md:!block",

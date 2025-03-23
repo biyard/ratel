@@ -10,6 +10,16 @@ use crate::{
 
 #[component]
 pub fn Subscription(lang: Language) -> Element {
+    rsx! {
+        div { class: "hidden md:!block",
+            DesktopSubscription { lang }
+        }
+        div { class: "block md:!hidden", "" }
+    }
+}
+
+#[component]
+pub fn DesktopSubscription(lang: Language) -> Element {
     let tr: SubscriptionTranslate = translate(&lang);
     let mut popup: PopupService = use_context();
 

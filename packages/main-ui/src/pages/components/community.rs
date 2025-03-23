@@ -123,7 +123,7 @@ pub fn MobileComingSoon(
 ) -> Element {
     rsx! {
         div {..attributes,
-            div { class: "w-[333px] h-[250px] bg-bg flex flex-col items-center justify-center rounded-[20px] gap-[30px]",
+            div { class: "w-full min-w-[333px] h-[250px] bg-bg flex flex-col items-center justify-center rounded-[20px] gap-[30px]",
                 icons::ComingSoon { width: 98, height: 100 }
                 p { class: "text-[24px] font-bold text-text-primary", "Coming soon" }
             }
