@@ -14,8 +14,7 @@ pub fn Header(lang: Language, selected: i32) -> Element {
         Route::PoliticiansByIdPage { .. } => 2,
         _ => 0,
     });
-    let mut user_service: UserService = use_context();
-
+    let user_service: UserService = use_context();
     rsx! {
         div { class: "fixed top-0 left-0 backdrop-blur-[20px] w-screen h-80 overflow-hidden flex items-center justify-center z-100",
             div { class: "w-full flex flex-row items-center justify-between gap-59 max-w-[1176px] mx-10",
@@ -44,12 +43,12 @@ pub fn Header(lang: Language, selected: i32) -> Element {
                 }
 
                 div { class: "flex flex-row gap-10",
+                    // TODO: need logout button
                     if let Some((_, _)) = user_service.get_user_info() {
                         button {
                             class: "text-neutral-500 text-[15px] font-bold p-10 hover:text-hover cursor-pointer",
                             onclick: move |_| async move {
-                                tracing::debug!("logout button clicked");
-                                user_service.logout().await;
+                                tracing::debug!("my reward clicked");
                             },
                             {tr.my_rewards}
                         }
