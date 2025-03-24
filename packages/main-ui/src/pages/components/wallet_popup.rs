@@ -1,5 +1,7 @@
 #![allow(non_snake_case)]
-use super::{loader_popup::LoaderPopup, signin_popup_footer::SigninPopupFooter};
+use super::{
+    loader_popup::LoaderPopup, signin_popup_footer::SigninPopupFooter, signup_popup::SignupPopup,
+};
 use crate::{components::icons, services::user_service::UserService};
 use bdk::prelude::*;
 use dioxus_popup::PopupService;
@@ -16,7 +18,21 @@ pub fn WalletPopup(
 
     rsx! {
         div { id, class,
-            div { class: "justify-start text-white font-bold text-xl/24", {tr.title} }
+            div { class: "flex flex-row justify-start gap-12",
+                button {
+                    class: "cursor-pointer",
+                    onclick: move |_| {
+                        tracing::debug!("backward button clicked");
+                        popup.open(rsx! {
+                            SignupPopup { class: "w-[400px] mx-[5px]", lang }
+                        }).with_id("signup_popup");
+                    },
+                    span { class: "text-neutral-400 text-xs/14 font-medium",
+                        icons::LeftArrow { color: "white", width: "24", height: "24" }
+                    }
+                }
+                div { class: "justify-start text-white font-bold text-xl/24", {tr.title} }
+            }
             div { class: "flex flex-col gap-10 mt-35",
                 div {
                     class: "w-full flex flex-row pl-20 py-22 bg-black border-[1px] rounded-[10px] justify-start items-center gap-17 cursor-pointer border-black hover:border-white",

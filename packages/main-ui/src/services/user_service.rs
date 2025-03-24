@@ -344,11 +344,18 @@ impl UserService {
                     profile_url
                 );
 
+                self.user_info.set(UserInfo::new(
+                    principal.clone(),
+                    email.clone(),
+                    name.clone(),
+                    profile_url.clone(),
+                ));
+
                 return UserEvent::Signup(principal, email, name, profile_url);
             }
             google_wallet::WalletEvent::Login => {
                 tracing::debug!(
-                    "UserService::Signup: email={} name={} profile_url={}",
+                    "UserService::Login: email={} name={} profile_url={}",
                     email,
                     name,
                     profile_url
