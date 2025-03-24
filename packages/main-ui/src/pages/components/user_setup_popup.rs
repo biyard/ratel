@@ -141,7 +141,7 @@ pub fn UserSetupPopup(
                                     tracing::debug!("UserSetupPopup::signup: success");
                                     popup
                                         .open(rsx! {
-                                            WelcomePopup { lang: lang.clone() }
+                                            WelcomePopup { lang }
                                         })
                                         .with_id("welcome_popup")
                                         .with_title(tr.title)

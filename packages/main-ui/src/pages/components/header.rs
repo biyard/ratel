@@ -1,6 +1,6 @@
 #![allow(non_snake_case)]
 use super::SignupPopup;
-use crate::{components::icons::Logo, route::Route};
+use crate::{components::icons::Logo, route::Route, services::user_service::UserService};
 use bdk::prelude::*;
 use dioxus_popup::PopupService;
 
@@ -13,6 +13,7 @@ pub fn Header(lang: Language, selected: i32) -> Element {
         Route::PoliticiansPage { .. } => 2,
         _ => 0,
     });
+    let mut user_service: UserService = use_context();
 
     rsx! {
         div { class: "fixed top-0 left-0 backdrop-blur-[20px] w-screen h-80 overflow-hidden flex items-center justify-center z-100",
@@ -47,21 +48,31 @@ pub fn Header(lang: Language, selected: i32) -> Element {
                 }
 
                 div { class: "flex flex-row gap-10",
-                    button {
-                        class: "p-10 text-[15px] font-bold text-secondary hover:text-hover cursor-pointer",
-                        onclick: move |_| {
-                            tracing::debug!("Sign in clicked");
-                            popup.open(rsx! {
-                                SignupPopup { class: "w-[400px] mx-[5px]", lang }
-                            }).with_id("signup_popup");
-                        },
-                        {tr.login}
+                    if let Some((_, _)) = user_service.get_user_info() {
+                        button {
+                            class: "text-neutral-500 text-[15px] font-bold p-10 hover:text-hover cursor-pointer",
+                            onclick: move |_| async move {
+                                tracing::debug!("logout button clicked");
+                                user_service.logout().await;
+                            },
+                            {tr.my_rewards}
+                        }
+                    } else {
+                        button {
+                            class: "p-10 text-[15px] font-bold text-secondary hover:text-hover cursor-pointer",
+                            onclick: move |_| {
+                                tracing::debug!("Sign in clicked");
+                                popup.open(rsx! {
+                                    SignupPopup { class: "w-[400px] mx-[5px]", lang }
+                                }).with_id("signup_popup");
+                            },
+                            {tr.login}
+                        }
                     }
                     button { class: "px-20 py-10 bg-primary hover:bg-hover text-black text-sm cursor-pointer rounded-full font-bold",
                         {tr.get_ratel}
                     }
                 }
-            
             }
         }
     }
@@ -98,6 +109,11 @@ translate! {
     login: {
         ko: "로그인",
         en: "Sign in",
+    }
+
+    my_rewards: {
+        ko: "내 리워드",
+        en: "My Rewards",
     }
 
     get_ratel: {

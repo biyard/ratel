@@ -41,8 +41,9 @@
   --color-neutral-600: #525252;
   --color-c-p-50: #db2780;
   --color-c-p-50-10: #db27801a;
-  --color-c-c-20: #6EEDD8;
-  --color-c-p-20: #FF9EEE;
-  --color-bg: #1A1A1A;
-  --color-neutral-400: #A1A1A1;
+  --color-c-c-20: #6eedd8;
+  --color-c-p-20: #ff9eee;
+  --color-bg: #1a1a1a;
+  --color-neutral-400: #a1a1a1;
+  --color-neutral-500: #737373;
 }

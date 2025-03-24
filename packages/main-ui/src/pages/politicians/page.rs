@@ -4,7 +4,7 @@ use crate::pages::components::SectionHeader;
 
 use super::{controller::*, i18n::*, *};
 use bdk::prelude::*;
-use by_components::hooks::use_scroll::use_scroll;
+// use by_components::hooks::use_scroll::use_scroll;
 use components::party::PartyIcon;
 use dto::CryptoStance;
 use dto::Party;
@@ -13,14 +13,15 @@ use dto::Party;
 pub fn PoliticiansPage(lang: Language) -> Element {
     let ctrl = Controller::new(lang)?;
     let tr: PoliticiansTranslate = translate(&lang);
-    use_scroll(move |_, y| {
-        tracing::debug!("scrolling: {}", y);
-    });
+    // FIXME: compile error
+    // use_scroll(move |_, y| {
+    //     tracing::debug!("scrolling: {}", y);
+    // });
 
     rsx! {
         by_components::meta::MetaPage { title: tr.title, description: tr.description }
 
-        div { class: "relative w-full max-w-1177 flex flex-col gap-50 w-full mt-150",
+        div { class: "relative w-full max-w-1177 flex flex-col gap-50 mt-150",
             SectionHeader {
                 section_name: tr.title,
                 title: tr.mission,
