@@ -6,7 +6,7 @@ use by_components::icons::{
     help_support::Help,
 };
 use dioxus_popup::PopupService;
-use dto::{AssemblyMember, AssemblyMemberSummary};
+use dto::AssemblyMember;
 use legal_notice_popup::LegalNoticePopup;
 use politician_card::PoliticianCard;
 
@@ -28,51 +28,34 @@ pub fn PoliticianStance(
     let mut p: PopupService = use_context();
 
     let mut selected = use_signal(|| 0);
-    let pro_cryptos = use_server_future(move || async move {
-        match AssemblyMember::get_client(config::get().main_api_endpoint)
-            .list_by_stance(4, None, dto::CryptoStance::ProCrypto)
-            .await
-        {
-            Ok(members) => members.items,
-            _ => {
-                // FIXME: change to default after implementing API
-                vec![
-                    AssemblyMemberSummary {
-                        id: 1,
-                        name: "John Doe".to_string(),
-                        party: "Democratic Party".to_string(),
-                        district: "Seoul".to_string(),
-                        stance: dto::CryptoStance::ProCrypto,
-                        image_url: "https://www.assembly.go.kr/static/portal/img/openassm/new/e9f57c2b700c44c0845665b068385524.jpg".to_string(),
-                        ..Default::default()
-                    };4
-                ]
+    let pro_cryptos = use_server_future(move || {
+        let _ = selected();
+        async move {
+            match AssemblyMember::get_client(config::get().main_api_endpoint)
+                .list_by_stance(4, None, dto::CryptoStance::ProCrypto)
+                .await
+            {
+                Ok(members) => members,
+                _ => Default::default(),
             }
         }
-    })?;
+    })?
+    .suspend()?;
 
-    let anti_cryptos = use_server_future(move || async move {
-        match AssemblyMember::get_client(config::get().main_api_endpoint)
-            .list_by_stance(4, None, dto::CryptoStance::ProCrypto)
-            .await
-        {
-            Ok(members) => members.items,
-            _ => {
-                // FIXME: change to default after implementing API
-                vec![
-                    AssemblyMemberSummary {
-                        id: 1,
-                        name: "John Doe".to_string(),
-                        party: "Democratic Party".to_string(),
-                        district: "Seoul".to_string(),
-                        stance: dto::CryptoStance::AntiCrypto,
-                        image_url: "https://www.assembly.go.kr/static/portal/img/openassm/new/e9f57c2b700c44c0845665b068385524.jpg".to_string(),
-                        ..Default::default()
-                    };4
-                ]
+    let anti_cryptos = use_server_future(move || {
+        let _ = selected();
+
+        async move {
+            match AssemblyMember::get_client(config::get().main_api_endpoint)
+                .list_by_stance(4, None, dto::CryptoStance::AntiCrypto)
+                .await
+            {
+                Ok(members) => members,
+                _ => Default::default(),
             }
         }
-    })?;
+    })?
+    .suspend()?;
 
     rsx! {
         div {
@@ -89,7 +72,7 @@ pub fn PoliticianStance(
                     div { class: "w-full flex flex-row gap-10 items-start justify-start",
                         ExpandableContainer {
                             tag: tr.pro_crypto,
-                            total_count: 10,
+                            total_count: pro_cryptos().total_count,
                             icon: rsx! {
                                 ThumbsUp { class: "[&>path]:stroke-c-c-20", width: "40", height: "40" }
                             },
@@ -100,8 +83,10 @@ pub fn PoliticianStance(
                             },
 
                             div { class: "w-full h-260 grid grid-cols-4 gap-10",
-                                for m in pro_cryptos.suspend()?.iter() {
+                                for m in pro_cryptos().items {
                                     PoliticianCard {
+                                        lang,
+                                        id: m.id,
                                         name: "{m.name}",
                                         party: "{m.party}",
                                         image_url: "{m.image_url}",
@@ -112,7 +97,7 @@ pub fn PoliticianStance(
 
                         ExpandableContainer {
                             tag: tr.anti_crypto,
-                            total_count: 10,
+                            total_count: anti_cryptos().total_count,
                             text_color: "text-c-p-20",
                             icon: rsx! {
                                 ThumbsDown { class: "[&>path]:stroke-c-p-20", width: "40", height: "40" }
@@ -123,8 +108,10 @@ pub fn PoliticianStance(
                                 selected.set(1);
                             },
                             div { class: "w-full h-260 grid grid-cols-4 gap-10",
-                                for m in anti_cryptos.suspend()?.iter() {
+                                for m in anti_cryptos().items {
                                     PoliticianCard {
+                                        lang,
+                                        id: m.id,
                                         name: "{m.name}",
                                         party: "{m.party}",
                                         image_url: "{m.image_url}",

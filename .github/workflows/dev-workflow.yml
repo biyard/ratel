@@ -141,14 +141,6 @@ jobs:
           cargo binstall dioxus-cli --force
           cargo binstall toml-cli --force
 
-      - name: Cache builder
-        id: main-ui-build-cache
-        uses: actions/cache@v3
-        with:
-          key: main-ui-build-cache
-          path: |
-            packages/main-ui/target
-
       - name: Checking violate
         env:
           REGION: ap-northeast-2
@@ -175,6 +167,7 @@ jobs:
           SERVICE: main-ui
           DOMAIN: dev.ratel.foundation
           API_PREFIX: /api
+          BASE_DOMAIN: ratel.foundation
           ENABLE_S3: true
           ENABLE_LAMBDA: true
           VERSIONS: v1
@@ -209,20 +202,13 @@ jobs:
         run: |
           cargo binstall toml-cli --force
 
-      - name: Cache builder
-        id: main-api-build-cache
-        uses: actions/cache@v3
-        with:
-          key: main-api-build-cache
-          path: |
-            packages/main-api/target
-
       - name: Deploy APIs
         env:
           REGION: ap-northeast-2
           ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           ENV: dev
+          RUST_LOG: debug
           SERVICE: main-api
           DOMAIN: api.dev.ratel.foundation
           AUTH_DOMAIN: dev.ratel.foundation
@@ -231,6 +217,7 @@ jobs:
           OPENAPI_KEY: ${{ secrets.OPENAPI_KEY }}
           AUTH_SECRET_KEY: ${{ secrets.DEV_AUTH_SECRET_KEY }}
           JWT_SECRET_KEY: ${{ secrets.DEV_JWT_SECRET_KEY }}
+          BASE_DOMAIN: ratel.foundation
           ENABLE_S3: false
           ENABLE_LAMBDA: true
         run: |

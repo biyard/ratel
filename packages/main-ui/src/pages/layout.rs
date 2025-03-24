@@ -1,17 +1,14 @@
 #![allow(non_snake_case)]
 use bdk::prelude::*;
-use dioxus_popup::PopupZone;
 
 use super::components::*;
-use crate::route::Route;
+use crate::{components::popup_zone::PopupZone, route::Route};
 use by_components::{loaders::cube_loader::CubeLoader, meta::MetaSeoTemplate};
 
 #[component]
 pub fn RootLayout(lang: Language) -> Element {
     rsx! {
-        RootBase { lang,
-            Footer { lang }
-        }
+        RootBase { lang }
     }
 }
 
@@ -78,10 +75,7 @@ pub fn RootBase(lang: Language, children: Element) -> Element {
     });
 
     rsx! {
-        PopupZone {
-            background_color: "rgba(26, 26, 26, 1)",
-            border_class: "shadow-[#FFCE4740] shadow-2xl", // FIXME: need shadow size to 100px
-        }
+        PopupZone {}
         MetaSeoTemplate {
             lang,
             title: "Ratel",
@@ -97,7 +91,7 @@ pub fn RootBase(lang: Language, children: Element) -> Element {
                         CubeLoader {}
                     }
                 },
-                div { class: "w-full overflow-x-hidden scroll-smooth flex flex-col items-center justify-center",
+                div { class: "w-full min-h-[100vh] overflow-x-hidden scroll-smooth flex flex-col items-center justify-center",
                     Outlet::<Route> {}
 
                     {children}

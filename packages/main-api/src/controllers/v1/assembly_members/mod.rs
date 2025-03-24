@@ -8,7 +8,9 @@ use by_axum::{
         routing::get,
     },
 };
+use by_types::QueryResponse;
 use dto::*;
+use sqlx::postgres::PgRow;
 
 #[derive(
     Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
@@ -19,14 +21,15 @@ pub struct AssemblyMemberPath {
 
 #[derive(Clone, Debug)]
 pub struct AssemblyMemberControllerV1 {
-    repo: AssemblyMemberRepository,
+    _repo: AssemblyMemberRepository,
+    pool: sqlx::Pool<sqlx::Postgres>,
 }
 
 impl AssemblyMemberControllerV1 {
     pub fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Router> {
-        let repo = AssemblyMember::get_repository(pool);
+        let _repo = AssemblyMember::get_repository(pool.clone());
 
-        let ctrl = AssemblyMemberControllerV1 { repo };
+        let ctrl = AssemblyMemberControllerV1 { _repo, pool };
 
         Ok(by_axum::axum::Router::new()
             .route(
@@ -57,12 +60,20 @@ impl AssemblyMemberControllerV1 {
     }
 
     pub async fn get_assembly_member(
-        State(_ctrl): State<AssemblyMemberControllerV1>,
+        State(ctrl): State<AssemblyMemberControllerV1>,
         Extension(_auth): Extension<Option<Authorization>>,
         Path(AssemblyMemberPath { id }): Path<AssemblyMemberPath>,
     ) -> Result<Json<AssemblyMember>> {
         tracing::debug!("get_assembly_member {:?}", id);
-        Ok(Json(AssemblyMember::default()))
+        let doc = AssemblyMember::query_builder()
+            .bills_builder(Bill::query_builder())
+            .id_equals(id)
+            .query()
+            .map(AssemblyMember::from)
+            .fetch_one(&ctrl.pool)
+            .await?;
+
+        Ok(Json(doc))
     }
 
     pub async fn list_assembly_member(
@@ -73,9 +84,51 @@ impl AssemblyMemberControllerV1 {
         tracing::debug!("list_assembly_member {:?}", q);
 
         match q {
+            AssemblyMemberParam::Query(q)
+                if q.action == Some(AssemblyMemberQueryActionType::ListByStance) =>
+            {
+                let mut total_count = 0;
+                let stance = q.stance.clone().unwrap_or_default();
+                tracing::debug!("list_by_stance {:?}", stance);
+                let items: Vec<AssemblyMemberSummary> = AssemblyMemberSummary::query_builder()
+                    .limit(q.size())
+                    .stance_equals(stance)
+                    .order_by_random()
+                    .query()
+                    .map(|row: PgRow| {
+                        use sqlx::Row;
+                        tracing::debug!("row: {:?}", row);
+                        total_count = row.get("total_count");
+                        row.into()
+                    })
+                    .fetch_all(&ctrl.pool)
+                    .await?;
+
+                Ok(Json(AssemblyMemberGetResponse::Query(QueryResponse {
+                    total_count,
+                    items,
+                })))
+            }
+
             AssemblyMemberParam::Query(q) => {
-                let docs = ctrl.repo.find(&q).await?;
-                Ok(Json(AssemblyMemberGetResponse::Query(docs)))
+                let mut total_count = 0;
+                let items: Vec<AssemblyMemberSummary> = AssemblyMemberSummary::query_builder()
+                    .limit(q.size())
+                    .order_by_random()
+                    .query()
+                    .map(|row: PgRow| {
+                        use sqlx::Row;
+                        tracing::debug!("row: {:?}", row);
+                        total_count = row.get("total_count");
+                        row.into()
+                    })
+                    .fetch_all(&ctrl.pool)
+                    .await?;
+
+                Ok(Json(AssemblyMemberGetResponse::Query(QueryResponse {
+                    total_count,
+                    items,
+                })))
             }
         }
     }

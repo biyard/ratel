@@ -7,7 +7,12 @@ use super::{
     signin_popup_footer::SigninPopupFooter, welcome_header::WelcomeHeader,
     welcome_popup::WelcomePopup,
 };
-use crate::{components::checkbox::Checkbox, services::user_service::UserService, theme::Theme};
+use crate::{
+    components::{button::primary_button::PrimaryButton, checkbox::Checkbox},
+    pages::components::LabeledInput,
+    services::user_service::UserService,
+    theme::Theme,
+};
 
 #[component]
 pub fn UserSetupPopup(
@@ -37,86 +42,72 @@ pub fn UserSetupPopup(
         }
     });
     let tr = translate::<UserSetupPopupTranslate>(&lang);
-    let agree_msg = match lang {
-        Language::Ko => format!("{}{}", tr.term_of_service, tr.agree),
-        Language::En => format!("{} {}", tr.agree, tr.term_of_service),
-    };
+    let value = email.clone();
     rsx! {
-        div { id, class,
+        div { id, class: "w-390 max-[450px]:w-350",
             WelcomeHeader { lang, title: tr.title, description: tr.message }
             div { class: "flex flex-col items-start justify-start w-full pt-10 gap-20 mt-35",
                 // Email
-                div { class: "flex flex-col gap-5",
+                div { class: "w-full flex flex-col gap-5",
                     div { class: "flex flex-row items-start",
                         span { class: "text-[15px]/28 font-bold text-neutral-400", {tr.email} }
                     }
-                    div { class: "flex items-start w-full mt-10 gap-8",
-                        input {
-                            class: "w-full max-[400px]:w-300 h-59 px-24 py-[17.5px] bg-background text-lg/24 font-medium placeholder-neutral-600 rounded-lg text-white",
-                            value: "{email}",
-                            disabled: !email.is_empty(),
-                        }
+                    input {
+                        class: "border border-c-wg-70 bg-bg text-secondary w-full max-[400px]:w-300 h-59 px-24 py-[17.5px] text-lg/24 font-medium placeholder-neutral-600 rounded-lg",
+                        disabled: !value.clone().is_empty(),
+                        value,
                     }
                 }
 
                 div { class: "grid gap-8 w-full grid-cols-2",
-                    div { class: "flex flex-col items-start gap-5",
-                        span { class: "text-neutral-400 text-[15px]/28 font-bold", {tr.first_name} }
-                        input {
-                            class: "w-full max-[400px]:w-190 h-59 px-24 py-[17.5px] bg-background text-lg/24 font-medium placeholder-neutral-600 rounded-lg text-white",
-                            placeholder: "{tr.enter_nickname}",
-                            value: firstname(),
-                            oninput: move |e| {
-                                let value = e.value();
-                                fname_valid.set(value.chars().all(|c| c.is_alphanumeric()));
-                                firstname.set(value);
-                            },
-                            if !fname_valid() {
-                                span { class: "text-sm/24 font-bold text-c-p-50",
-                                    {tr.special_characters}
-                                }
-                            }
+                    LabeledInput {
+                        label_name: tr.first_name,
+                        placeholder: tr.enter_nickname,
+                        oninput: move |value: String| {
+                            fname_valid.set(value.chars().all(|c| c.is_alphanumeric()));
+                            firstname.set(value);
+                        },
+                        if !fname_valid() {
+                            span { class: "text-sm/24 font-bold text-c-p-50", {tr.special_characters} }
                         }
                     }
-                    div { class: "flex flex-col items-start gap-5",
-                        span { class: "text-neutral-400 text-[15px]/28 font-bold", {tr.last_name} }
-                        input {
-                            class: "w-full max-[390px]:w-190 h-59 px-24 py-[17.5px] bg-background text-lg/24 font-medium placeholder-neutral-600 rounded-lg text-white",
-                            placeholder: "{tr.enter_nickname}",
-                            value: lastname(),
-                            oninput: move |e| {
-                                let value = e.value();
-                                lname_valid.set(value.chars().all(|c| c.is_alphanumeric()));
-                                lastname.set(value);
-                            },
-                            if !lname_valid() {
-                                span { class: "text-sm/24 font-bold text-c-p-50",
-                                    {tr.special_characters}
-                                }
-                            }
+
+                    LabeledInput {
+                        label_name: tr.last_name,
+                        placeholder: tr.enter_nickname,
+                        oninput: move |value: String| {
+                            lname_valid.set(value.chars().all(|c| c.is_alphanumeric()));
+                            lastname.set(value);
+                        },
+                        if !lname_valid() {
+                            span { class: "text-sm/24 font-bold text-c-p-50", {tr.special_characters} }
                         }
                     }
                 }
 
                 div { class: "flex flex-col gap-10 items-start",
                     Checkbox {
-                        title: "{agree_msg}",
-                        class: "text-white text-sm/16 font-normal",
+                        id: "agree_checkbox",
                         onchange: move |check| {
                             agreed.set(check);
                         },
+                        span { class: "text-sm text-cb-text",
+                            {tr.agree}
+                            span { class: "font-bold", {tr.term_of_service} }
+                        }
                     }
                     Checkbox {
-                        title: "{tr.receive_announcement}",
-                        class: "text-white text-sm/16 font-normal",
+                        id: "announcement_checkbox",
                         onchange: move |check| {
                             announcement_agree.set(check);
                         },
+                        span { class: "text-sm text-cb-text", {tr.receive_announcement} }
                     }
                 }
 
-                button {
-                    class: "w-full rounded-[10px] bg-[{btn_color}] text-base/19 font-bold text-black h-59 flex items-center justify-center",
+                PrimaryButton {
+                    width: "100%",
+                    disabled: !agreed() || !announcement_agree(),
                     onclick: move |_| {
                         if agreed() {
                             let nickname = format!("{} {}", firstname(), lastname());
@@ -144,12 +135,12 @@ pub fn UserSetupPopup(
                                             WelcomePopup { lang }
                                         })
                                         .with_id("welcome_popup")
-                                        .with_title(tr.title)
                                         .without_close();
                                 }
                             });
                         }
                     },
+
                     {tr.button}
                 }
             }
@@ -188,7 +179,7 @@ translate! {
 
     enter_nickname: {
         ko: "닉네임을 입력해주세요",
-        en: "Please enter your nickname",
+        en: "Name",
     },
 
     special_characters: {

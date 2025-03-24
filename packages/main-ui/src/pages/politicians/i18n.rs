@@ -34,8 +34,8 @@ translate! {
     },
 
     th_key_actions: {
-        ko: "주요 활동",
-        en: "Key Actions",
+        ko: "법안 수",
+        en: "Number of Bills",
     },
 
 }

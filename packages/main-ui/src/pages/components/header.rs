@@ -11,6 +11,7 @@ pub fn Header(lang: Language, selected: i32) -> Element {
     let current_path: Route = use_route();
     let selected_menu = use_memo(move || match current_path {
         Route::PoliticiansPage { .. } => 2,
+        Route::PoliticiansByIdPage { .. } => 2,
         _ => 0,
     });
     let mut user_service: UserService = use_context();
@@ -21,28 +22,23 @@ pub fn Header(lang: Language, selected: i32) -> Element {
                 a { href: "/#top", Logo {} }
 
                 nav { class: "grow flex flex-row gap-10 text-secondary font-bold text-[15px]",
-                    a {
-                        class: "p-10 hover:text-white",
-                        href: "/#about",
-                        color: if selected == 1 { "var(--color-primary)" },
-                        {tr.menu_about}
-                    }
-                    a {
-                        class: "p-10 hover:text-white",
+                    A { lang, selected: selected == 1, href: "/#about", {tr.menu_about} }
+                    A {
+                        lang,
+                        selected: selected == 2 || selected_menu == 2,
                         href: "/#politician-stance",
-                        color: if selected == 2 || selected_menu == 2 { "var(--color-primary)" },
                         {tr.menu_stance}
                     }
-                    a {
-                        class: "p-10 hover:text-white",
+                    A {
+                        lang,
+                        selected: selected == 3,
                         href: "/#community",
-                        color: if selected == 3 { "var(--color-primary)" },
                         {tr.menu_community}
                     }
-                    a {
-                        class: "p-10 hover:text-white",
+                    A {
+                        lang,
+                        selected: selected == 4,
                         href: "/#support",
-                        color: if selected == 4 { "var(--color-primary)" },
                         {tr.menu_support}
                     }
                 }
@@ -73,6 +69,30 @@ pub fn Header(lang: Language, selected: i32) -> Element {
                         {tr.get_ratel}
                     }
                 }
+            }
+        }
+    }
+}
+
+#[component]
+pub fn A(children: Element, lang: Language, href: String, selected: bool) -> Element {
+    let current_path: Route = use_route();
+    let is_home = matches!(current_path, Route::HomePage { .. });
+
+    rsx! {
+        if is_home {
+            a {
+                class: "p-10 hover:text-white",
+                href,
+                color: if selected { "var(--color-primary)" },
+                {children}
+            }
+        } else {
+            Link {
+                class: "p-10 hover:text-white",
+                to: Route::HomePage { lang },
+                color: if selected { "var(--color-primary)" },
+                {children}
             }
         }
     }

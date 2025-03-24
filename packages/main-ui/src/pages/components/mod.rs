@@ -47,5 +47,4 @@ pub use top::*;
 pub use user_setup_popup::*;
 pub use wallet_popup::*;
 pub use wallet_signin_popup::*;
-pub use welcome_header::*;
 pub use welcome_popup::*;

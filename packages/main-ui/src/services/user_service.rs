@@ -369,16 +369,9 @@ impl UserService {
                     Err(e) => {
                         // Signup
                         rest_api::remove_signer();
+                        tracing::debug!("UserService::login: error={:?}", e);
 
-                        match e {
-                            ServiceError::NotFound => {
-                                return UserEvent::Signup(principal, email, name, profile_url);
-                            }
-                            e => {
-                                tracing::error!("UserService::login: error={:?}", e);
-                                return UserEvent::Logout;
-                            }
-                        }
+                        return UserEvent::Signup(principal, email, name, profile_url);
                     }
                 };
 

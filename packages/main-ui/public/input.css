@@ -9,8 +9,21 @@
   --color-primary: #fcb300;
   --color-secondary: #777677;
 
+  /* Text colors */
+  --color-text-primary: white;
+  --color-text-secondary: #a1a1a1; /* neutral-400 */
+
+  /* Popup colors */
+  --color-popup-background: rgba(34, 34, 34, 0.58);
+
   /* Background colors */
   --color-background: #1e1e1e;
+
+  /* Checkbox colors */
+  --color-cb-text: #AEAAAB;
+
+  /* Border colors */
+  --color-border-primary: #464646;
 
   /* Primary button colors */
   --color-btn-p: #fcb300;
@@ -28,6 +41,13 @@
   --color-btn-s-disabled: #777677;
   --color-btn-s-disabled-text: #aeaeae;
 
+  /* Outlined button colors */
+  --color-btn-o: #464646; /* border color */
+  --color-btn-o-hover: white; /* border color while hovering */
+  --color-btn-o-hover-bg: #1A1A1A; /* bg color while hovering */
+  --color-btn-o-text: white;
+  --color-btn-o-hover-text: white;
+
   /* App-specific colors */
   --color-hover: #ca8f00;
   --color-c-wg-30: #aeaeae;
@@ -37,10 +57,19 @@
   --color-c-cg-30: #aeb8b8;
   --color-footer: #191919;
   --color-copyright: #9095a1;
+  --color-neutral-80: #6B6B6B;
   --color-neutral-400: #a1a1a1;
   --color-neutral-600: #525252;
   --color-c-p-50: #db2780;
   --color-c-p-50-10: #db27801a;
+  --color-c-c-20: #6EEDD8;
+  --color-c-p-20: #FF9EEE;
+  --color-bg: #1A1A1A;
+  --color-neutral-400: #A1A1A1;
+  --color-tab-hover: #282828;
+
+  --color-supportive: #6EEDD8;
+  --color-against: #FF9EEE;
   --color-c-c-20: #6eedd8;
   --color-c-p-20: #ff9eee;
   --color-bg: #1a1a1a;
