@@ -141,14 +141,6 @@ jobs:
           cargo binstall dioxus-cli --force
           cargo binstall toml-cli --force
 
-      - name: Cache builder
-        id: main-ui-build-cache
-        uses: actions/cache@v3
-        with:
-          key: main-ui-build-cache
-          path: |
-            packages/main-ui/target
-
       - name: Checking violate
         env:
           REGION: ap-northeast-2
@@ -209,14 +201,6 @@ jobs:
       - name: Install toml-cli
         run: |
           cargo binstall toml-cli --force
-
-      - name: Cache builder
-        id: main-api-build-cache
-        uses: actions/cache@v3
-        with:
-          key: main-api-build-cache
-          path: |
-            packages/main-api/target
 
       - name: Deploy APIs
         env:
