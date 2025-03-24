@@ -53,7 +53,7 @@ pub fn verify_usersig(log: &slog::Logger, value: Option<&str>) -> Result<Signatu
             return Err(StatusCode::UNAUTHORIZED);
         }
 
-        let msg = format!("{}-{}", conf.domain, timestamp);
+        let msg = format!("{}-{}", conf.signing_domain, timestamp);
         let sig = rest_api::Signature::from_str(signature).map_err(|e| {
             slog::error!(log, "Failed to parse signature: {}", e);
             StatusCode::UNAUTHORIZED
