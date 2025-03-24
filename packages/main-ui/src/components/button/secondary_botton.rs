@@ -13,7 +13,7 @@ pub fn SecondaryButton(
     let bg = if !disabled {
         "bg-btn-s hover:bg-btn-s-hover text-btn-s-text hover:text-btn-s-hover-text cursor-pointer"
     } else {
-        "bg-btn-s-disabled text-btn-s-disabled cursor-not-allowed"
+        "bg-btn-s-disabled text-btn-s-disabled-text cursor-not-allowed"
     };
     let padding = match size {
         ButtonSize::Normal => "px-40 py-20",

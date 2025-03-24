@@ -43,7 +43,7 @@ pub fn Top(
                             SignupPopup { class: "w-460", lang: lang.clone() }
                         });
                     },
-                    {tr.btn_learn}
+                    {tr.btn_join}
                 }
             }
         }

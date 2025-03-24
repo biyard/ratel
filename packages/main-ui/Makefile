@@ -1,7 +1,7 @@
 SERVICE ?= main-ui
 VERSION ?= $(shell toml get Cargo.toml package.version | tr -d \")
 COMMIT ?= $(shell git rev-parse --short HEAD)
-ENV ?= local
+ENV ?= dev
 
 ACCESS_KEY_ID ?= $(shell aws configure get aws_access_key_id $(AWS_FLAG))
 SECRET_ACCESS_KEY ?= $(shell aws configure get aws_secret_access_key $(AWS_FLAG))
@@ -24,10 +24,10 @@ setup.tool:
 	npm i -g @tailwindcss/cli
 	npm i -g webpack-cli
 
-run: clean public/tailwind.css public/dep.js
+run: clean public/tailwind.css
 	$(BUILD_ENV) dx serve --fullstack $(DXFLAGS)
 
-build: clean public/tailwind.css public/dep.js
+build: clean public/tailwind.css
 	$(BUILD_ENV) dx build --release --fullstack --server-features lambda
 	cp -r $(WORKSPACE_ROOT)/target/dx/$(SERVICE)/release/web $(ARTIFACT_DIR)
 

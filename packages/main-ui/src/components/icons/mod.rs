@@ -2,6 +2,7 @@ mod arrows;
 mod chat;
 mod clock;
 mod close;
+pub mod coming_soon;
 mod cons;
 mod double_arrow;
 mod file_upload;
@@ -48,3 +49,5 @@ pub use tooltip::*;
 pub use votes::*;
 pub use wallet::*;
 pub use x::*;
+
+pub use coming_soon::*;

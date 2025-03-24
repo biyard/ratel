@@ -122,7 +122,7 @@ impl VoteControllerV1 {
             .topic_id_equals(topic_id)
             .query()
             .map(|r: sqlx::postgres::PgRow| r.into())
-            .fetch_all(&self.pool)
+            .fetch_one(&self.pool)
             .await?;
 
         // FIXME: need conditional sum

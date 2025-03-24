@@ -5,6 +5,11 @@ html, body {
   -ms-overflow-style: none; /* IE and Edge */
   scrollbar-width: none; /* Firefox */
   scroll-behavior: smooth;
+  margin: 0px;
+}
+
+#main {
+  min-height: 100vh;
 }
 
 ::-webkit-scrollbar {
@@ -14,27 +19,10 @@ html, body {
 @keyframes growWidth {
   0% {
     width: 0;
-    opacity: 1;
   }
   100% {
     width: 100%;
-    opacity: 1;
   }
-}
-
-@keyframes growToLeft {
-  0% {
-    width: 0px;
-    left: 100%;
-  }
-  100% {
-    width: 100%;
-    left: 0px;
-  }
-}
-
-.animate-grow-to-left {
-  animation: growToLeft 2s ease-in-out forwards;
 }
 
 .animate-grow {
