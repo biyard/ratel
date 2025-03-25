@@ -21,18 +21,26 @@ pub fn SectionHeader(
         div { class: "w-full flex flex-col justify-start items-start gap-20",
             Indicator { {section_name} }
             div { class: "w-full grid {cols} gap-24",
-                h1 { class: "w-full col-span-1 text-[32px] font-bold text-white", {title} }
-                if with_line {
-                    div { class: "col-span-1 w-full h-full flex flex-col items-center justify-center",
-                        div { class: "w-full h-1 bg-c-wg-70" }
+
+                h1 { class: "w-full col-span-1 text-[32px] font-bold text-white max-[900px]:!text-[24px] max-[900px]:!w-screen pr-[30px]",
+                    {title}
+                }
+
+
+                div { class: "block max-[900px]:!hidden",
+                    if with_line {
+                        div { class: "col-span-1 w-full h-full flex flex-col items-center justify-center",
+                            div { class: "w-full h-1 bg-c-wg-70" }
+                        }
                     }
                 }
             }
+
             div { class: "w-full flex flex-row gap-24",
-                p { class: "w-full font-normal text-[15px]/22 text-c-wg-30 whitespace-pre-line",
+                p { class: "w-full font-normal text-[15px]/22 text-c-wg-30 whitespace-pre-line max-[900px]: text-[15px]",
                     {description}
                 }
-                div { class: "w-full", {children} }
+                div { class: "w-full max-[900px]:hidden", {children} }
             }
         }
     }

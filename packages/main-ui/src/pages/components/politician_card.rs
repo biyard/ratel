@@ -17,7 +17,7 @@ pub fn PoliticianCard(
                 lang,
                 id,
             },
-            class: "relative col-span-1 w-full h-full rounded-[10px] overflow-hidden",
+            class: "relative col-span-1 w-full h-full rounded-[10px] overflow-hidden max-[900px]:!w-[210px]",
 
             background_image: format!("url({})", image_url),
             background_size: "cover",

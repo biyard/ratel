@@ -8,18 +8,19 @@ pub fn Footer(lang: Language) -> Element {
     let tr: FooterTranslate = translate(&lang);
 
     rsx! {
-        footer { class: "w-full bg-footer flex flex-row gap-10 items-center justify-center text-copyright font-normal text-sm/22 py-24",
+        footer { class: "w-full bg-footer flex flex-row gap-10 items-center justify-center text-copyright font-normal text-sm/22 py-24 max-[900px]:!flex-col",
             span { {tr.copyright} }
-            Link {
-                class: "hover:text-white",
-                to: Route::PrivacyPolicyPage { lang },
-                {tr.privacy}
-            }
-            Link {
-                class: "hover:text-white",
-                to: Route::PrivacyPolicyPage { lang },
-
-                {tr.terms}
+            div { class: "max-[900px]:!flex-row gap-10",
+                Link {
+                    class: "hover:text-white",
+                    to: Route::PrivacyPolicyPage { lang },
+                    {tr.privacy}
+                }
+                Link {
+                    class: "hover:text-white",
+                    to: Route::PrivacyPolicyPage { lang },
+                    {tr.terms}
+                }
             }
         }
     }
