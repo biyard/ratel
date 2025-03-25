@@ -20,7 +20,7 @@ pub fn PrimaryButton(
     let padding = match size {
         ButtonSize::Normal => "px-40 py-20 rounded-[10px]",
         ButtonSize::Small => "px-20 py-10 rounded-[10px]",
-        ButtonSize::Mobile => "px-[10px] py-[20px] rounded-[10px]",
+        ButtonSize::Mobile => "px-20 py-10 rounded-[10px]",
     };
 
     rsx! {

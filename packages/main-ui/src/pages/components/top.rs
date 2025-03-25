@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 use super::{SignupPopup, Socials};
 use crate::components::{
-    button::{primary_button::PrimaryButton, secondary_botton::SecondaryButton},
+    button::{ButtonSize, primary_button::PrimaryButton, secondary_botton::SecondaryButton},
     icons::CharacterSymbol,
 };
 use bdk::prelude::*;
@@ -74,7 +74,7 @@ pub fn MobileTop(
             id: "top",
             class: "w-full h-full flex flex-col items-center justify-start mt-[80px]",
             ..attributes,
-            div { class: "flex flex-col items-center justify-center gap-[32px]",
+            div { class: "px-[30px] flex flex-col items-center justify-center gap-[32px]",
                 div { class: "w-[156px] h-[128px] flex items-center justify-center ",
                     CharacterSymbol {}
                 }
@@ -90,20 +90,21 @@ pub fn MobileTop(
 
             div { class: "w-full flex flex-col justify-center items-center gap-[16px] ",
                 // TODO: implement downloading whitepaper
-                div { class: "w-[291px] h-[48px] flex justify-center items-center rounded-[10px] whitespace-nowrap bg-[#FCB300] p-[20px]",
+                div { class: "w-[300px] h-[48px] flex justify-center items-center rounded-[10px] whitespace-nowrap bg-[#FCB300]",
                     PrimaryButton {
+                        size: ButtonSize::Mobile,
                         onclick: |_| {},
                         class: "w-full font-bold text-[15px] text-black",
                         {tr.btn_learn}
                     }
                 }
-                // TODO: implement Sign in
-                div { class: "w-[291px] h-[48px] flex justify-center items-center rounded-[10px] whitespace-nowrap bg-[#ffffff] p-[20px] font-bold text-[15px] text-black",
+                div { class: "w-[300px] h-[48px] flex justify-center items-center rounded-[10px] whitespace-nowrap bg-[#ffffff] p-[20px] font-bold text-[15px] text-black",
                     SecondaryButton {
+                        size: ButtonSize::Mobile,
                         onclick: move |_| {
                             tracing::debug!("Learn more clicked");
                             popup.open(rsx! {
-                                SignupPopup { class: "w-[460px]", lang: lang.clone() }
+                                SignupPopup { class: "", lang: lang.clone() }
                             });
                         },
                         {tr.btn_join}

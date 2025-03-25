@@ -5,7 +5,7 @@ use dto::{Need, SupportSubmitRequest};
 
 use crate::{
     components::{
-        button::secondary_botton::SecondaryButton,
+        button::{ButtonSize, secondary_botton::SecondaryButton},
         confirm_popup::ConfirmPopup,
         dropdown::{Dropdown, MobileDropdown},
         icons::BackgroundTriangle,
@@ -152,10 +152,10 @@ pub fn MobileSupport(lang: Language) -> Element {
     let mut req = use_signal(|| SupportSubmitRequest::default());
 
     rsx! {
-        div { id: "support",
+        div { id: "mobile_support",
             BackgroundTriangle { color: "#1E1E1E" }
-            div { class: "w-screen h-full px-[30px] flex flex-col items-center justify-center",
-                div { class: "w-full h-full flex flex-col gap-[40px]",
+            div { class: "w-screen h-full flex flex-col items-center justify-center",
+                div { class: "w-full h-full px-[30px] flex flex-col gap-[40px]",
                     MobileSectionHeader {
                         section_name: tr.title,
                         title: tr.mission,
@@ -163,8 +163,8 @@ pub fn MobileSupport(lang: Language) -> Element {
                         with_line: false,
                     }
 
-                    div { class: "col-span-1 w-full flex flex-col items-center",
-                        div { class: "col-span-1 w-full flex flex-col items-center gap-[30px]",
+                    div { class: "w-full col-span-1 flex flex-col justify-center items-",
+                        div { class: "w-full col-span-1 flex flex-col items-center gap-[30px]",
                             MobileLabeledInput {
                                 class: "w-full",
                                 label_name: tr.label_first_name,
@@ -202,7 +202,7 @@ pub fn MobileSupport(lang: Language) -> Element {
 
                             MobileLabeled { class: "w-full", label_name: tr.label_needs,
                                 MobileDropdown {
-                                    class: "w-full min-w-[333px] h-full min-h-[44px]",
+                                    class: "w-full min-w-[300px] h-full min-h-[44px]",
                                     color: "ring-[#ffffff]",
                                     items: Need::variants(&lang),
                                     onselect: move |value: String| {
@@ -219,42 +219,44 @@ pub fn MobileSupport(lang: Language) -> Element {
                                     req.with_mut(move |r| r.help = e);
                                 },
                             }
-                        } // end of form
+                            // end of form
 
-                        SecondaryButton {
-                            onclick: move |_| async move {
-                                let endpoint = config::get().main_api_endpoint;
-                                let SupportSubmitRequest {
-                                    first_name,
-                                    last_name,
-                                    email,
-                                    company_name,
-                                    needs,
-                                    help,
-                                } = req();
-                                match dto::Support::get_client(endpoint)
-                                    .submit(first_name, last_name, email, company_name, needs, help)
-                                    .await
-                                {
-                                    Ok(_) => {
-                                        btracing::info!("Thank you for your submission!");
-                                        let tr: InquiryTranslate = translate(&lang);
-                                        popup.open(rsx! {
-                                            ConfirmPopup {
-                                                lang,
-                                                title: tr.title,
-                                                description: tr.description,
-                                                btn_label: tr.btn_label,
-                                            }
-                                        });
+                            SecondaryButton {
+                                size: ButtonSize::Mobile,
+                                onclick: move |_| async move {
+                                    let endpoint = config::get().main_api_endpoint;
+                                    let SupportSubmitRequest {
+                                        first_name,
+                                        last_name,
+                                        email,
+                                        company_name,
+                                        needs,
+                                        help,
+                                    } = req();
+                                    match dto::Support::get_client(endpoint)
+                                        .submit(first_name, last_name, email, company_name, needs, help)
+                                        .await
+                                    {
+                                        Ok(_) => {
+                                            btracing::info!("Thank you for your submission!");
+                                            let tr: InquiryTranslate = translate(&lang);
+                                            popup.open(rsx! {
+                                                ConfirmPopup {
+                                                    lang,
+                                                    title: tr.title,
+                                                    description: tr.description,
+                                                    btn_label: tr.btn_label,
+                                                }
+                                            });
+                                        }
+                                        Err(e) => {
+                                            btracing::error!("{}", e.translate(& lang));
+                                        }
                                     }
-                                    Err(e) => {
-                                        btracing::error!("{}", e.translate(& lang));
-                                    }
+                                },
+                                div { class: "w-[300px] h-[44px] flex justify-center items-center",
+                                    {tr.btn_submit}
                                 }
-                            },
-                            div { class: "w-full min-w-[333px] h-[48px] flex justify-center items-center rounded-[10px] whitespace-nowrap bg-[#ffffff] p-[20px] font-bold text-[15px] text-black",
-                                {tr.btn_submit}
                             }
                         }
                     }

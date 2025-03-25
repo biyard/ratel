@@ -1,6 +1,6 @@
 #![allow(non_snake_case)]
 use super::SignupPopup;
-use crate::{components::icons::Logo, route::Route};
+use crate::{components::icons::Logo, pages::components::Socials, route::Route};
 use bdk::prelude::{
     by_components::icons::{alignments::AlignJustify, arrows::ArrowRight},
     *,
@@ -128,8 +128,8 @@ pub fn MobileHeader(
     };
 
     rsx! {
-        div { class: "fixed top-0 left-0 w-full h-full grow flex flex-col justify-start items-center z-[100]",
-            div { class: "w-full h-[48px] bg-[#1E1E1E] flex items-center",
+        div { class: "w-full h-full grow flex flex-col justify-start items-center",
+            div { class: "fixed top-0 w-full h-[48px] bg-[#1E1E1E] flex items-center z-[100]",
                 a {
                     href: "/#top",
                     class: "w-full px-[16px] py-[6px] flex flex-row justify-between items-center",
@@ -143,7 +143,7 @@ pub fn MobileHeader(
             }
             div {
                 id: "menus",
-                class: "w-full h-full flex flex-col justify-center items-center bg-[#1E1E1E]",
+                class: "fixed top-[48px] left-0 w-full h-full flex flex-col justify-center items-center bg-[#1E1E1E]",
                 style: match expanded() {
                     true => "display: block;",
                     false => "display: none;",
@@ -162,7 +162,7 @@ pub fn MobileHeader(
                     }
 
                     A {
-                        href: "/#politician-stance",
+                        href: "/#mobile_politician-stance",
                         lang,
                         selected: selected == 2,
                         button { onclick: move |_| close_menu(),
@@ -173,7 +173,7 @@ pub fn MobileHeader(
                     }
 
                     A {
-                        href: "/#community",
+                        href: "/#mobile_community",
                         lang,
                         selected: selected == 3,
                         button { onclick: move |_| close_menu(),
@@ -184,7 +184,7 @@ pub fn MobileHeader(
                     }
 
                     A {
-                        href: "/#support",
+                        href: "/#mobile_support",
                         lang,
                         selected: selected == 4,
                         button { onclick: move |_| close_menu(),
@@ -213,6 +213,10 @@ pub fn MobileHeader(
                             },
                             {tr.sign_in}
                         }
+                    }
+                    Socials {
+                        class: "flex flex-row items-center justify-center gap-[50px]",
+                        size: 28,
                     }
                 }
             }

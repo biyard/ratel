@@ -45,7 +45,7 @@ pub fn MobileLabeledInput(
             div { class: "w-full flex flex-col items-start gap-[5px]",
                 p { class: "text-c-cg-30 font-bold text-[14px]", {label_name} }
                 input {
-                    class: "w-full min-w-[333px] outline-none h-full grow px-[20px] py-[10px] text-white text-base placeholder-c-neutral-600 text-[15px] font-medium border border-border-primary rounded-[8px] flex flex-row items-center justify-start",
+                    class: "w-full min-w-[300px] outline-none h-full grow px-[10px] py-[10px] text-white text-base placeholder-c-neutral-600 text-[15px] font-medium border border-border-primary rounded-[8px] flex flex-row items-center justify-start",
                     style: "height: {height};",
                     r#type,
                     placeholder,

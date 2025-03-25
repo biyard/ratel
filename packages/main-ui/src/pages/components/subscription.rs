@@ -24,7 +24,7 @@ pub fn DesktopSubscription(lang: Language) -> Element {
     let mut popup: PopupService = use_context();
 
     rsx! {
-        div { class: "w-full flex flex-col",
+        div { class: "w-screen flex flex-col",
             div { class: "w-full",
                 svg {
                     fill: "none",
@@ -152,6 +152,6 @@ translate! {
 
     btn_subscribe: {
         ko: "구독하기",
-        en: "Subscribe",
+        en: "SUBSCRIBE",
     },
 }

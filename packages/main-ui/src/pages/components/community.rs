@@ -34,7 +34,7 @@ pub fn DesktopCommunity(
     rsx! {
         div {
             id: "community",
-            class: "w-full max-w-1177 h-screen flex flex-col items-start justify-center gap-50 max-[1177px]:mx-10",
+            class: "w-full max-w-[900px] h-screen flex flex-col items-start justify-center gap-50 max-[1177px]:mx-10",
             SectionHeader {
                 section_name: tr.title,
                 title: tr.mission,
@@ -62,7 +62,7 @@ pub fn MobileCommunity(
     let tr: CommunityTranslate = translate(&lang);
 
     rsx! {
-        div { id: "community",
+        div { id: "mobile_community",
             BackgroundTriangle { color: "#1E1E1E" }
             div { class: "w-screen h-full px-[30px] bg-[#1e1e1e] flex flex-col items-center justify-center gap-[60px]",
                 div { class: "flex flex-col justify-center gap-[20px]",
@@ -74,7 +74,6 @@ pub fn MobileCommunity(
                     div { class: "w-full flex justify-start",
                         SecondaryLink {
                             size: ButtonSize::Mobile,
-                            // TODO(web): make 'CommunityPage' route
                             to: Route::PoliticiansPage { lang },
                             div { class: "flex flex-row gap-[10px] items-center justify-center text-[14px] text-black",
                                 {tr.view_all}
@@ -95,7 +94,7 @@ pub fn MobileCommunity(
                     },
                 }
 
-                MobileComingSoon { class: "w-full h-full max-h-430" }
+                MobileComingSoon { class: "w-full min-w-[300px] h-full max-h-430" }
             }
         }
     }
@@ -123,7 +122,7 @@ pub fn MobileComingSoon(
 ) -> Element {
     rsx! {
         div {..attributes,
-            div { class: "w-full min-w-[333px] h-[250px] bg-bg flex flex-col items-center justify-center rounded-[20px] gap-[30px]",
+            div { class: "w-full min-w-[300px] h-[250px] bg-bg flex flex-col items-center justify-center rounded-[20px] gap-[30px]",
                 icons::ComingSoon { width: 98, height: 100 }
                 p { class: "text-[24px] font-bold text-text-primary", "Coming soon" }
             }
@@ -164,8 +163,8 @@ pub fn MobileTabs(tabs: Vec<String>, ontab: EventHandler<usize>) -> Element {
             div { class: "px-[30px] flex flex-row items-center justify-center rounded-[50px]",
                 for (i , name) in tabs.iter().enumerate() {
                     button {
-                        class: "w-full h-[50px] px-[30px] py-[18px] bg-bg flex justify-center items-center text-[15px] font-bold text-primary rounded-[100px]",
-                        color: if selected() == i { "var(--color-text-primary)" } else { "#A1A1A1" },
+                        class: "w-full max-w-[180px] h-[50px] px-[20px] py-[18px] flex justify-center items-center text-[15px] font-bold text-c-cg-30 rounded-[100px]",
+                        color: if selected() == i { "var(--color-text-primary)" } else { "bg-background" },
                         background: if selected() == i { "var(--color-tab-hover)" },
                         style: "white-space: nowrap;",
                         onclick: move |_| {

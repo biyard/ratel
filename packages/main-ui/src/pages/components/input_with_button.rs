@@ -45,16 +45,16 @@ pub fn MobileInputWithButton(
 
     rsx! {
         div { class: "flex flex-col gap-[20px]",
-            div { class: "w-[333px] h-[50px] px-[20px] border-[1px] flex items-center rounded-[10px]",
+            div { class: "w-full min-w-[300px] h-[50px] px-[20px] border-[1px] flex items-center rounded-[10px]",
                 input {
-                    class: "w-full flex items-center justify-start text-[#525252] text-[15px]",
+                    class: "w-full flex items-center justify-start text-white text-[15px] outline-none",
                     r#type,
                     value: value(),
                     placeholder,
                     oninput: move |e| value.set(e.value()),
                 }
             }
-            div { class: "w-[333px] h-[48px] px-[40px] py-[20px] bg-[#ffffff] rounded-[10px] cursor-pointer",
+            div { class: "w-[300px] h-[48px] px-[40px] py-[20px] bg-[#ffffff] rounded-[10px] cursor-pointer",
                 button {
                     class: "w-full h-full text-black text-[15px] font-bold flex items-center justify-center",
                     onclick: move |_| {

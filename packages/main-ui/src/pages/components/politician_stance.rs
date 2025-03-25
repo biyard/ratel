@@ -214,8 +214,12 @@ pub fn MobilePoliticianStance(
 
     rsx! {
         div {
-            div { id: "mobile_about", class: "w-screen h-full flex flex-col",
-                BackgroundTriangle { color: "#1E1E1E" }
+            div {
+                id: "mobile_politician-stance",
+                class: "w-screen h-full flex flex-col",
+                div {
+                    BackgroundTriangle { color: "#1E1E1E" }
+                }
                 div { class: "w-full h-full px-[30px] bg-[#1E1E1E] flex flex-col items-center justify-center gap-[20px]",
                     div { class: "w-full h-full flex flex-col gap-[20px]",
                         MobileSectionHeader {

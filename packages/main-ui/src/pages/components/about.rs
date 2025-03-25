@@ -66,8 +66,12 @@ pub fn MobileAbout(lang: Language) -> Element {
     let tr: AboutTranslate = translate(&lang);
 
     rsx! {
-        div { id: "mobile_about", class: "w-screen h-full flex flex-col",
-            BackgroundTriangle { color: "#1E1E1E" }
+        div {
+            id: "mobile_about",
+            class: "w-screen h-full flex flex-col justify-center items-center",
+            div {
+                BackgroundTriangle { color: "#1E1E1E" }
+            }
             div { class: "w-screen h-full px-[30px] bg-[#1e1e1e] flex flex-col items-center justify-center gap-[40px]",
                 MobileSectionHeader {
                     section_name: tr.title,
@@ -77,25 +81,25 @@ pub fn MobileAbout(lang: Language) -> Element {
 
                 div { class: "w-full flex flex-col justify-center items-center gap-[10px]",
                     MobileMissionCard {
-                        class: "w-full min-w-[333px] h-auto row-span-1",
+                        class: "w-full min-w-[300px] h-auto row-span-1",
                         no: "01.",
                         title: tr.mission1,
                         description: tr.mission1_description,
                     }
                     MobileMissionCard {
-                        class: "w-full min-w-[333px] h-auto row-span-2",
+                        class: "w-full min-w-[300px] h-auto row-span-2",
                         no: "02.",
                         title: tr.mission2,
                         description: tr.mission2_description,
                     }
                     MobileMissionCard {
-                        class: "w-full min-w-[333px] h-auto row-span-3",
+                        class: "w-full min-w-[300px] h-auto row-span-3",
                         no: "03.",
                         title: tr.mission3,
                         description: tr.mission3_description,
                     }
                     MobileMissionCard {
-                        class: "w-full min-w-[333px] h-auto row-span-4",
+                        class: "w-full min-w-[300px] h-auto row-span-4",
                         no: "04.",
                         title: tr.mission4,
                         description: tr.mission4_description,
