@@ -58,7 +58,7 @@ pub fn Header(lang: Language, selected: i32) -> Element {
                             onclick: move |_| {
                                 tracing::debug!("Sign in clicked");
                                 popup.open(rsx! {
-                                    SignupPopup { class: "w-[400px] mx-[5px]", lang }
+                                    SignupPopup { class: "w-full max-w-400 mx-5", lang }
                                 }).with_id("signup_popup");
                             },
                             {tr.login}
