@@ -1,0 +1,122 @@
+name: Production deploy
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  main-ui:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          ssh-key: ${{ secrets.PULL_KEY_REPO }}
+
+      - uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          components: clippy, rustfmt
+          target: wasm32-unknown-unknown
+          toolchain: stable
+
+      - uses: cargo-bins/cargo-binstall@main
+
+      - name: Install dioxus-cli
+        run: |
+          cargo binstall dioxus-cli --force
+          cargo binstall toml-cli --force
+
+      - name: Checking violate
+        env:
+          REGION: ap-northeast-2
+          ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          SERVICE: main-ui
+        run: |
+          dx check -p $SERVICE
+
+      - name: Deploy UI
+        env:
+          REGION: ap-northeast-2
+          ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          FIREBASE_API_KEY: "${{ secrets.FIREBASE_API_KEY }}"
+          FIREBASE_AUTH_DOMAIN: "${{ secrets.FIREBASE_AUTH_DOMAIN }}"
+          FIREBASE_PROJECT_ID: "${{ secrets.FIREBASE_PROJECT_ID }}"
+          FIREBASE_STORAGE_BUCKET: "${{ secrets.FIREBASE_STORAGE_BUCKET }}"
+          FIREBASE_MESSAGING_SENDER_ID: "${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}"
+          FIREBASE_APP_ID: "${{ secrets.FIREBASE_APP_ID }}"
+          FIREBASE_MEASUREMENT_ID: "${{ secrets.FIREBASE_MEASUREMENT_ID }}"
+          MAIN_API_ENDPOINT: https://api.ratel.foundation
+          ENV: prod
+          RUST_LOG: info
+          SERVICE: main-ui
+          DOMAIN: ratel.foundation
+          API_PREFIX: /api
+          BASE_DOMAIN: ratel.foundation
+          ENABLE_S3: true
+          ENABLE_LAMBDA: true
+          VERSIONS: v1
+          V1_ENDPOINT: api.ratel.foundation
+        run: |
+          npm i -g aws-cdk @tailwindcss/cli
+          make deploy-web
+
+  main-api:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          ssh-key: ${{ secrets.PULL_KEY_REPO }}
+
+      - uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          components: clippy, rustfmt
+          target: wasm32-unknown-unknown
+          toolchain: stable
+
+      - uses: cargo-bins/cargo-binstall@main
+      - name: Install toml-cli
+        run: |
+          cargo binstall toml-cli --force
+
+      - name: Deploy APIs
+        env:
+          REGION: ap-northeast-2
+          ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          ENV: prod
+          RUST_LOG: info
+          SERVICE: main-api
+          DOMAIN: api.ratel.foundation
+          AUTH_DOMAIN: ratel.foundation
+          DATABASE_TYPE: postgres
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          OPENAPI_KEY: ${{ secrets.OPENAPI_KEY }}
+          AUTH_SECRET_KEY: ${{ secrets.AUTH_SECRET_KEY }}
+          JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
+          BASE_DOMAIN: ratel.foundation
+          ENABLE_S3: false
+          ENABLE_LAMBDA: true
+        run: |
+          npm i -g aws-cdk
+          make deploy
