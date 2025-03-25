@@ -384,7 +384,7 @@ checksum = "8c3c1a368f70d6cf7302d78f8f7093da241fb8e8807c05cc9e51a125895a6d5b"
 
 [[package]]
 name = "bdk"
-version = "0.1.2"
+version = "0.1.0"
 dependencies = [
  "aide",
  "bigdecimal",
@@ -485,7 +485,7 @@ dependencies = [
 
 [[package]]
 name = "btracing"
-version = "0.1.2"
+version = "0.1.0"
 dependencies = [
  "dioxus",
  "gloo-timers",
@@ -500,7 +500,7 @@ checksum = "1628fb46dfa0b37568d12e5edd512553eccf6a22a78e8bde00bb4aed84d5bdbf"
 
 [[package]]
 name = "by-axum"
-version = "0.2.14"
+version = "0.2.12"
 dependencies = [
  "aide",
  "axum 0.8.1",
@@ -530,7 +530,7 @@ dependencies = [
 
 [[package]]
 name = "by-components"
-version = "0.1.3"
+version = "0.1.1"
 dependencies = [
  "by-macros",
  "dioxus",
@@ -548,7 +548,7 @@ dependencies = [
 
 [[package]]
 name = "by-macros"
-version = "0.6.9"
+version = "0.6.7"
 dependencies = [
  "bigdecimal",
  "convert_case 0.7.1",
@@ -566,7 +566,7 @@ dependencies = [
 
 [[package]]
 name = "by-types"
-version = "0.3.9"
+version = "0.3.7"
 dependencies = [
  "aide",
  "axum 0.8.1",
@@ -1038,7 +1038,7 @@ dependencies = [
 
 [[package]]
 name = "dioxus-aws"
-version = "0.6.18"
+version = "0.6.16"
 dependencies = [
  "axum 0.7.9",
  "axum-core 0.4.5",
@@ -1361,7 +1361,7 @@ dependencies = [
 
 [[package]]
 name = "dioxus-oauth"
-version = "0.6.6"
+version = "0.6.4"
 dependencies = [
  "dioxus",
  "reqwest",
@@ -1377,7 +1377,7 @@ dependencies = [
 
 [[package]]
 name = "dioxus-popup"
-version = "0.1.3"
+version = "0.1.1"
 dependencies = [
  "by-components",
  "dioxus",
@@ -1452,7 +1452,7 @@ dependencies = [
 
 [[package]]
 name = "dioxus-translate"
-version = "0.1.5"
+version = "0.1.3"
 dependencies = [
  "dioxus-translate-macro",
  "dioxus-translate-types",
@@ -1463,7 +1463,7 @@ dependencies = [
 
 [[package]]
 name = "dioxus-translate-macro"
-version = "0.1.3"
+version = "0.1.1"
 dependencies = [
  "dioxus-translate-types",
  "proc-macro2",
@@ -1474,7 +1474,7 @@ dependencies = [
 
 [[package]]
 name = "dioxus-translate-types"
-version = "0.1.3"
+version = "0.1.1"
 
 [[package]]
 name = "dioxus-web"
@@ -2041,7 +2041,7 @@ dependencies = [
 
 [[package]]
 name = "google-wallet"
-version = "0.1.3"
+version = "0.1.1"
 dependencies = [
  "base64 0.22.1",
  "candid",
@@ -3617,7 +3617,7 @@ dependencies = [
 
 [[package]]
 name = "rest-api"
-version = "0.1.10"
+version = "0.1.8"
 dependencies = [
  "base64 0.22.1",
  "candid",
@@ -3631,14 +3631,15 @@ dependencies = [
 
 [[package]]
 name = "ring"
-version = "0.17.14"
+version = "0.17.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a4689e6c2294d81e88dc6261c768b63bc4fcdb852be6d1352498b114f61383b7"
+checksum = "c17fa4cb658e3583423e915b9f3acc01cceaee1860e33d59ebae66adc3a2dc0d"
 dependencies = [
  "cc",
  "cfg-if",
  "getrandom 0.2.15",
  "libc",
+ "spin",
  "untrusted",
  "windows-sys 0.52.0",
 ]

@@ -10,14 +10,14 @@ pub fn About(lang: Language) -> Element {
     rsx! {
         div {
             id: "about",
-            class: "w-full max-w-1177 h-screen flex flex-col items-start justify-center gap-50 max-[1177px]:mx-10",
+            class: "w-full max-w-1177 h-full flex flex-col items-start justify-center gap-50 max-[1177px]:mx-10 max-[900px]: px-30",
             SectionHeader {
                 section_name: tr.title,
                 title: tr.mission,
                 description: tr.description,
             }
 
-            div { class: "w-full grid grid-cols-4 gap-24",
+            div { class: "w-full gap-24 grid grid-cols-4 max-[900px]:!grid-cols-1",
                 MissionCard {
                     class: "col-span-1 w-full h-352",
                     no: "01.",

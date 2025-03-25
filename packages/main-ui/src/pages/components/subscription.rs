@@ -29,7 +29,7 @@ pub fn Subscription(lang: Language) -> Element {
             }
             div { class: "w-full flex flex-col items-center justify-center py-80 bg-footer gap-80",
                 div { class: "w-full flex max-w-604 flex-col items-center gap-80",
-
+                    //TODO(web): Make button separately and fix padding pixel
                     div { class: "w-full flex flex-col gap-50 items-center",
                         div { class: "w-full flex flex-col items-start gap-5",
                             p { class: "text-c-cg-30 font-bold text-base/28", {tr.email} }

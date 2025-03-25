@@ -34,7 +34,7 @@ pub fn ExpandableContainer(
 
     rsx! {
         div {
-            class: "transition-[width] duration-300 flex flex-col items-center justify-start gap-20 h-full bg-bg rounded-[20px] cursor-pointer px-30 py-40 flex flex-col {text_color} {outer} gap-40",
+            class: "transition-[width] duration-300 flex flex-col items-center justify-start gap-20 h-full bg-bg rounded-[20px] cursor-pointer px-30 py-40 flex flex-col {text_color} {outer} gap-40 max-[900px]:!bg-[#1e1e1e] max-[900px]:!px-[0px]",
             onclick: move |_| {
                 tracing::debug!("clicked");
                 onclick(());
@@ -48,7 +48,7 @@ pub fn ExpandableContainer(
                     {icon}
                 } else {
                     {icon}
-                    p { class: "grow text-white text-xl/22 font-bold flex flex-row items-center whitespace-nowrap {tag_style}",
+                    p { class: "h-220 grow text-white text-xl/22 font-bold flex flex-row items-center whitespace-nowrap {tag_style}",
                         {tag}
                     }
                     span { class: "font-bold text-[32px]/22", "{total_count}" }
