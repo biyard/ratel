@@ -2858,7 +2858,7 @@ dependencies = [
 
 [[package]]
 name = "main-ui"
-version = "0.7.11"
+version = "0.7.12"
 dependencies = [
  "base64 0.22.1",
  "bdk",
