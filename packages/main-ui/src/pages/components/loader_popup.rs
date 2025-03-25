@@ -91,7 +91,7 @@ pub fn LoaderPopup(
                     onclick: move |_| {
                         tracing::debug!("backward button clicked");
                         popup.open(rsx! {
-                            SignupPopup { class: "w-[400px] mx-[5px]", lang }
+                            SignupPopup { class: "w-full max-w-400 mx-5", lang }
                         }).with_id("signup_popup");
                     },
                     span { class: "text-neutral-400 text-xs/14 font-medium",
