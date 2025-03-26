@@ -105,12 +105,12 @@ pub fn MobileHeader(
 
     let toggle_icon = if expanded() {
         rsx! {
-            div { class: "w-[32px] h-[32px] flex justify-center items-center rounded-[4px] p-[10px] border-[1px] !border-[#464646]",
+            div { class: "w-32 h-32 flex justify-center items-center rounded-[4px] p-10 border border-[#464646]",
                 div {
                     ArrowRight {
                         width: 20,
                         height: 20,
-                        class: "[&>path]:stroke-[#ffffff]",
+                        class: "[&>path]:stroke-white",
                     }
                 }
             }
@@ -118,11 +118,7 @@ pub fn MobileHeader(
     } else {
         rsx! {
             div {
-                AlignJustify {
-                    width: 32,
-                    height: 32,
-                    class: "[&>path]:stroke-[#ffffff]",
-                }
+                AlignJustify { width: 32, height: 32, class: "[&>path]:stroke-white" }
             }
         }
     };
@@ -130,10 +126,9 @@ pub fn MobileHeader(
     rsx! {
         div { class: "w-full h-full grow flex flex-col justify-start items-center",
             div { class: "fixed top-0 w-full h-[48px] bg-[#1E1E1E] flex items-center z-[100]",
-                a {
-                    href: "/#top",
-                    class: "w-full px-[16px] py-[6px] flex flex-row justify-between items-center",
-                    div {
+                div { class: "w-full px-[16px] py-[6px] flex flex-row justify-between items-center",
+                    a {
+                        href: "/#top",
                         class: "flex justify-start items-center",
                         style: "transform: scale(0.65); margin-left: -26px;",
                         Logo {}
@@ -141,6 +136,7 @@ pub fn MobileHeader(
                     button { onclick: toggle_menu, {toggle_icon} }
                 }
             }
+
             div {
                 id: "menus",
                 class: "fixed top-[48px] left-0 w-full h-full flex flex-col justify-center items-center bg-[#1E1E1E] z-[100]",
@@ -148,7 +144,7 @@ pub fn MobileHeader(
                     true => "display: block;",
                     false => "display: none;",
                 },
-                div { class: "mt-[100px] mb-[160px] flex flex-col justify-center items-center gap-[20px]",
+                div { class: "h-full max-h-400 flex flex-col justify-center items-center gap-[20px]",
 
                     A { href: "/#about", selected: selected == 1, lang,
                         button { onclick: move |_| close_menu(),
@@ -212,7 +208,7 @@ pub fn MobileHeader(
                         }
                     }
                     Socials {
-                        class: "flex flex-row items-center justify-center gap-[50px]",
+                        class: "flex flex-row items-center justify-center gap-50",
                         size: 28,
                     }
                 }

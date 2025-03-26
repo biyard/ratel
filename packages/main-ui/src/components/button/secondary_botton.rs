@@ -22,7 +22,7 @@ pub fn SecondaryButton(
 
     rsx! {
         button {
-            class: "font-bold gap-10 flex items-center justify-center text-base rounded-[10px] {bg} {padding} max-[900px]:w-full",
+            class: "font-bold gap-10 flex items-center justify-center text-base rounded-[10px] {bg} {padding} max-[900px]:min-w-300 max-[900px]:h-50",
             disabled,
             onclick: move |evt| {
                 if let Some(onclick) = onclick {

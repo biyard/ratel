@@ -1,6 +1,8 @@
 #![allow(non_snake_case)]
 use bdk::prelude::*;
 
+use crate::components::icons::BackgroundTriangle;
+
 use super::*;
 
 #[component]
@@ -8,16 +10,19 @@ pub fn About(lang: Language) -> Element {
     let tr: AboutTranslate = translate(&lang);
 
     rsx! {
+        div { class: "hidden max-[900px]:!block w-screen mt-30 max-[380px]:!mt-100",
+            BackgroundTriangle { color: "#1E1E1E" }
+        }
         div {
             id: "about",
-            class: "w-full max-w-1177 h-full flex flex-col items-start justify-center gap-50 max-[1177px]:mx-10 max-[900px]: px-30",
+            class: "w-full max-w-1177 h-full flex flex-col items-start justify-center gap-50 max-[1177px]:mx-10 max-[900px]:px-30",
             SectionHeader {
                 section_name: tr.title,
                 title: tr.mission,
                 description: tr.description,
             }
 
-            div { class: "w-full gap-24 grid grid-cols-4 max-[900px]:!grid-cols-1",
+            div { class: "w-full grid grid-cols-4 gap-24 max-[900px]:!grid-cols-1",
                 MissionCard {
                     class: "col-span-1 w-full h-352",
                     no: "01.",

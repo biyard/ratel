@@ -37,7 +37,7 @@ pub fn SectionHeader(
             }
 
             div { class: "w-full flex flex-row gap-24",
-                p { class: "w-full font-normal text-[15px]/22 text-c-wg-30 whitespace-pre-line max-[900px]: text-[15px]",
+                p { class: "w-full font-normal text-[15px]/22 text-c-wg-30 whitespace-pre-line max-[900px]:text-[15px]",
                     {description}
                 }
                 div { class: "w-full max-[900px]:hidden", {children} }
