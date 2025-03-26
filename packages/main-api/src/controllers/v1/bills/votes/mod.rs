@@ -77,9 +77,11 @@ impl VoteController {
 
 impl VoteController {
     async fn vote(&self, body: VoteVotingRequest, bill_id: i64) -> Result<Json<Vote>> {
-        let user = self
-            .user
-            .find_one(&UserReadAction::new().user_info())
+        let user = User::query_builder()
+            .id_equals(body.user_id)
+            .query()
+            .map(|r: sqlx::postgres::PgRow| Into::<User>::into(r))
+            .fetch_one(&self.pool)
             .await?;
 
         match Vote::query_builder()

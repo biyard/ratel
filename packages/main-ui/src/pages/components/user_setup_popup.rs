@@ -189,12 +189,12 @@ translate! {
 
     agree: {
         ko: "을 읽어보았으며 동의합니다",
-        en: "I have read and accept the",
+        en: "[Required] I have read and accept the",
     },
 
     // TODO: need bold text
     term_of_service: {
-        ko: "서비스 이용약관",
+        ko: "[필수] 서비스 이용약관",
         en: "Terms of Service",
     },
 
