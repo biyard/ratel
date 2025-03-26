@@ -314,6 +314,15 @@ impl UserService {
             }
         };
 
+        let user = res.clone();
+
+        self.user_info.set(UserInfo {
+            principal: user.principal,
+            email: Some(user.email),
+            nickname: Some(user.nickname),
+            profile_url: Some(user.profile_url),
+        });
+
         tracing::debug!("UserService::signup: user={:?}", res);
         Ok(())
     }
