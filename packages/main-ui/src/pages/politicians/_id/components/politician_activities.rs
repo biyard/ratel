@@ -12,7 +12,6 @@ use dto::{Bill, BillSorter};
 #[component]
 pub fn PoliticianActivities(
     lang: Language,
-    id: i64,
     #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
     #[props(default = vec![])] bills: Vec<Bill>,
     name: String,
@@ -46,7 +45,7 @@ pub fn PoliticianActivities(
                     id: "politician-bills",
                     class: "w-full flex flex-col gap-24",
                     for bill in bills {
-                        BillCard { lang, id, bill }
+                        BillCard { lang, bill }
                     }
                 }
             }
@@ -57,7 +56,6 @@ pub fn PoliticianActivities(
 #[component]
 pub fn BillCard(
     lang: Language,
-    id: i64,
     bill: Bill,
     #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
     children: Element,
@@ -71,10 +69,15 @@ pub fn BillCard(
         div {
             class: "w-full p-30 flex flex-col gap-20 bg-bg rounded-[20px]",
             id: "bill-card-{bill.id}",
-            div {
-                id: "bill-card-header-{bill.id}",
-                class: "w-full flex flex-col gap-10 items-start justify-start",
-                h2 { class: "text-text-primary text-[20px]/25 font-medium", {bill.title(lang)} }
+            div { class: "w-full flex flex-col items-start justify-start gap-10",
+                div { class: "flex flex-row w-full gap-10 h-25 items-end",
+                    p { class: "text-sm text-neutral-400 h-20 font-semibold", "{bill.detail_date()}" }
+                }
+                div {
+                    id: "bill-card-header-{bill.id}",
+                    class: "w-full flex flex-col gap-10 items-start justify-start",
+                    h2 { class: "text-text-primary text-[20px]/25 font-medium", {bill.title(lang)} }
+                }
             }
 
             div {
@@ -149,7 +152,7 @@ pub fn BillCard(
                         tracing::debug!("Vote supportive clicked");
                         if user_service.is_logined() {
                             popup.open(rsx! {
-                                VoteConfirm { vote: dto::VoteOption::Supportive, lang, id }
+                                VoteConfirm { vote: dto::VoteOption::Supportive, lang, bill_id: bill.id }
                             });
                         } else {
                             popup.open(rsx! {
@@ -165,7 +168,7 @@ pub fn BillCard(
                         tracing::debug!("Vote against clicked");
                         if user_service.is_logined() {
                             popup.open(rsx! {
-                                VoteConfirm { vote: dto::VoteOption::Against, lang, id }
+                                VoteConfirm { vote: dto::VoteOption::Against, lang, bill_id: bill.id }
                             });
                         } else {
                             popup.open(rsx! {
