@@ -111,6 +111,7 @@ pub struct AssemblyMember {
     pub email: Option<String>,
     #[api_model(summary, many_to_many = proposers, foreign_table_name = bills, foreign_primary_key = bill_id, foreign_reference_key = member_id, aggregator = count)]
     pub no_of_bills: i64,
+    // TODO: need to sort out by newest or the other options
     #[api_model(summary, many_to_many = proposers, foreign_table_name = bills, foreign_primary_key = bill_id, foreign_reference_key = member_id, nested, unique)]
     pub bills: Vec<Bill>,
 }
