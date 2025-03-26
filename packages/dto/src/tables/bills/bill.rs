@@ -40,15 +40,19 @@ pub struct Bill {
     #[api_model(summary, action_by_id = set_en_summary)]
     pub en_summary: Option<String>,
 
-    // #[api_model(summary, many_to_many = proposers, foreign_table_name = assembly_members, foreign_primary_key = member_id, foreign_reference_key = bill_id, target_table = join, unique)]
-    // #[serde(default)]
-    // pub proponents: Vec<AssemblyMember>,
-    #[api_model(summary, one_to_many = votes, foreign_key = bill_id)]
+    // FIXME: Currently, the system doesn't properly support Option<T> types in relationships.
+    // When a row is not exist in the database, deserialization fails for the entire struct
+    // if the field type isn't nullable.
+    //
+    // To work around this limitation, we're using Vec<Vote> instead of Option<Vote>
+    // since an empty vector ([]) is properly handled during deserialization, while null values cause errors.
+    //
+    // This is a temporary solution. In the future, we should modify the by-macros
+    // to properly handle Option<T> types for single-object relationships, allowing
+    // null values to be correctly deserialized as None.
+    #[api_model(summary, one_to_many = votes, foreign_key = bill_id, filter_by = user_id)]
     #[serde(default)]
-    pub votes: Vec<Vote>,
-
-    #[api_model(summary, one_to_many = votes, foreign_key = bill_id, filter_by = user_id, type = JSONB)]
-    pub user_vote: Vote,
+    pub user_vote: Vec<Vote>,
 }
 
 impl Bill {
