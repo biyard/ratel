@@ -6,6 +6,7 @@ use dto::{Need, SupportSubmitRequest};
 use crate::{
     components::{
         button::secondary_botton::SecondaryButton, confirm_popup::ConfirmPopup, dropdown::Dropdown,
+        icons::BackgroundTriangle,
     },
     config,
 };
@@ -19,9 +20,12 @@ pub fn Support(lang: Language) -> Element {
     let mut req = use_signal(|| SupportSubmitRequest::default());
 
     rsx! {
+        div { class: "hidden max-[900px]:!block w-screen",
+            BackgroundTriangle { color: "#1E1E1E" }
+        }
         div {
             id: "support",
-            class: "w-full h-screen flex flex-col items-center justify-center",
+            class: "w-full h-screen flex flex-col items-center justify-center max-[900px]:!h-full",
             div { class: "max-w-1177 grid grid-cols-2 gap-50 max-[1177px]:mx-10 max-[900px]:!grid-cols-1 px-30",
                 div { class: "col-span-1 w-full",
                     SectionHeader {
@@ -71,7 +75,7 @@ pub fn Support(lang: Language) -> Element {
 
                         Labeled { class: "w-full", label_name: tr.label_needs,
                             Dropdown {
-                                class: "w-full h-50",
+                                class: "w-full h-50 border border-border-primary rounded-lg",
                                 items: Need::variants(&lang),
                                 onselect: move |value: String| {
                                     req.with_mut(move |r| r.needs = value.parse().unwrap_or_default());

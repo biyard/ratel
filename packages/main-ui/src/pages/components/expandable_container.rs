@@ -34,7 +34,7 @@ pub fn ExpandableContainer(
 
     rsx! {
         div {
-            class: "transition-[width] duration-300 flex flex-col items-center justify-start gap-20 h-full bg-bg rounded-[20px] cursor-pointer px-30 py-40 flex flex-col {text_color} {outer} gap-40 max-[900px]:!bg-[#1e1e1e] max-[900px]:!px-[0px]",
+            class: "transition-[width] duration-300 flex flex-col items-center justify-start gap-20 h-full bg-bg rounded-[20px] cursor-pointer px-30 py-40 flex flex-col {text_color} {outer} gap-40 max-[900px]:!bg-[#1e1e1e] max-[900px]:!px-0 max-[900px]:!py-20 max-[900px]:!gap-20",
             onclick: move |_| {
                 tracing::debug!("clicked");
                 onclick(());

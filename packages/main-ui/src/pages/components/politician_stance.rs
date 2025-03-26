@@ -11,7 +11,10 @@ use legal_notice_popup::LegalNoticePopup;
 use politician_card::PoliticianCard;
 
 use crate::{
-    components::button::{ButtonSize, secondary_botton::SecondaryLink},
+    components::{
+        button::{ButtonSize, secondary_botton::SecondaryLink},
+        icons::BackgroundTriangle,
+    },
     config,
     route::Route,
 };
@@ -58,9 +61,12 @@ pub fn PoliticianStance(
     .suspend()?;
 
     rsx! {
+        div { class: "hidden max-[900px]:!block w-screen mt-30",
+            BackgroundTriangle { color: "#1E1E1E" }
+        }
         div {
             id: "politician-stance",
-            class: "w-full max-w-1177 h-full flex flex-col items-start justify-center gap-50 max-[1177px]:mx-10 max-[900px]: px-30",
+            class: "w-screen max-w-1177 h-full flex flex-col items-start justify-center mt-150 gap-50 max-[1177px]:mx-10 max-[900px]:px-30 max-[900px]:!mt-0",
             SectionHeader {
                 section_name: tr.title,
                 title: tr.mission,
@@ -149,7 +155,7 @@ pub fn PoliticianStance(
                             onclick: move |_| {
                                 tracing::debug!("selected: pro");
                             },
-                            div { class: "w-screen h-260 grid grid-cols-4 gap-10 overflow-x-auto scroll-smooth",
+                            div { class: "w-full h-260 flex flex-row gap-10 overflow-x-auto scroll-smooth",
                                 for m in pro_cryptos().items {
                                     PoliticianCard {
                                         lang,
@@ -157,6 +163,7 @@ pub fn PoliticianStance(
                                         name: "{m.name}",
                                         party: "{m.party}",
                                         image_url: "{m.image_url}",
+                                    
                                     }
                                 }
                             }
@@ -173,7 +180,7 @@ pub fn PoliticianStance(
                             onclick: move |_| {
                                 tracing::debug!("selected: anti");
                             },
-                            div { class: "w-full h-260 grid grid-cols-4 gap-10",
+                            div { class: "w-full h-260 flex flex-row gap-10 overflow-x-auto scroll-smooth",
                                 for m in anti_cryptos().items {
                                     PoliticianCard {
                                         lang,
@@ -201,7 +208,6 @@ pub fn PoliticianStance(
                             height: "18",
                         }
                         span { {tr.legal_notice} }
-                    
                     }
                 } // end of flex-col
 
@@ -219,7 +225,6 @@ pub fn PoliticianStance(
                         }
                     }
                 }
-            
             }
         }
     }
