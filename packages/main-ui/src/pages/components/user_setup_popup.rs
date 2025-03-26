@@ -107,7 +107,7 @@ pub fn UserSetupPopup(
 
                 PrimaryButton {
                     width: "100%",
-                    disabled: !agreed() || !announcement_agree(),
+                    disabled: !agreed(),
                     onclick: move |_| {
                         if agreed() {
                             let nickname = format!("{} {}", firstname(), lastname());
