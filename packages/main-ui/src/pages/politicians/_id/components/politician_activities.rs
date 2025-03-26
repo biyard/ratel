@@ -1,10 +1,13 @@
 #![allow(non_snake_case)]
+#[allow(unused_imports)]
+use super::*;
+use crate::{
+    components::dropdown::Dropdown, pages::components::SignupPopup,
+    services::user_service::UserService,
+};
 use bdk::prelude::*;
 use dioxus_popup::PopupService;
 use dto::{Bill, BillSorter};
-
-use super::*;
-use crate::components::dropdown::Dropdown;
 
 #[component]
 pub fn PoliticianActivities(
@@ -62,6 +65,7 @@ pub fn BillCard(
     let mut popup: PopupService = use_context();
     let tr: BillCardTranslate = translate(&lang);
     let (yes, no) = bill.votes_percent();
+    let user_service: UserService = use_context();
 
     rsx! {
         div {
@@ -143,9 +147,15 @@ pub fn BillCard(
                     class: "w-full border border-supportive/25 hover:border-supportive hover:bg-supportive/25 rounded-[10px] flex items-center justify-center cursor-pointer px-16 py-8 text-sm font-bold",
                     onclick: move |_| {
                         tracing::debug!("Vote supportive clicked");
-                        popup.open(rsx! {
-                            VoteConfirm { vote: dto::VoteOption::Supportive, lang, id }
-                        });
+                        if user_service.is_logined() {
+                            popup.open(rsx! {
+                                VoteConfirm { vote: dto::VoteOption::Supportive, lang, id }
+                            });
+                        } else {
+                            popup.open(rsx! {
+                                SignupPopup { lang }
+                            });
+                        }
                     },
                     span { {tr.btn_supportive} }
                 }
@@ -153,9 +163,15 @@ pub fn BillCard(
                     class: "w-full border border-against/25 hover:border-against hover:bg-against/25 rounded-[10px] flex items-center justify-center cursor-pointer px-16 py-8 text-sm font-bold",
                     onclick: move |_| {
                         tracing::debug!("Vote against clicked");
-                        popup.open(rsx! {
-                            VoteConfirm { vote: dto::VoteOption::Against, lang, id }
-                        });
+                        if user_service.is_logined() {
+                            popup.open(rsx! {
+                                VoteConfirm { vote: dto::VoteOption::Against, lang, id }
+                            });
+                        } else {
+                            popup.open(rsx! {
+                                SignupPopup { lang }
+                            });
+                        }
                     },
                     span { {tr.btn_against} }
                 }

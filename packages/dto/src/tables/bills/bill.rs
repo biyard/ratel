@@ -46,7 +46,8 @@ pub struct Bill {
     #[api_model(summary, one_to_many = votes, foreign_key = bill_id)]
     #[serde(default)]
     pub votes: Vec<Vote>,
-    // #[api_model(summary, many_to_many = votes, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = bill_id, target_table = join, type = JSONB, unique)]
+    // #[api_model(summary, many_to_many = votes, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = bill_id, type = JSONB, unique)]
+    // #[serde(default)]
     // pub user_vote: Vote,
 }
 
