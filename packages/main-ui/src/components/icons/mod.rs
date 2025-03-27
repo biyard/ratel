@@ -25,7 +25,9 @@ mod logos {
 }
 mod alert;
 mod bsky;
+mod ratel_circle;
 mod telegram;
+mod thumbs;
 mod wallet;
 mod x;
 
@@ -45,10 +47,12 @@ pub use logos::{google::*, logo::*, metamask::*, phantom::*};
 pub use money::*;
 pub use pptx_file::*;
 pub use pros::*;
+pub use ratel_circle::*;
 pub use search::*;
 pub use slide_ball::*;
 pub use sort::*;
 pub use telegram::*;
+pub use thumbs::*;
 pub use tooltip::*;
 pub use votes::*;
 pub use wallet::*;
