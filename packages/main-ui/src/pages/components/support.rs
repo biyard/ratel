@@ -6,6 +6,7 @@ use dto::{Need, SupportSubmitRequest};
 use crate::{
     components::{
         button::secondary_botton::SecondaryButton, confirm_popup::ConfirmPopup, dropdown::Dropdown,
+        icons::BackgroundTriangle,
     },
     config,
 };
@@ -19,10 +20,13 @@ pub fn Support(lang: Language) -> Element {
     let mut req = use_signal(|| SupportSubmitRequest::default());
 
     rsx! {
+        div { class: "hidden max-[900px]:!block w-screen",
+            BackgroundTriangle { color: "#1E1E1E" }
+        }
         div {
             id: "support",
-            class: "w-full h-screen flex flex-col items-center justify-center",
-            div { class: "max-w-1177 grid grid-cols-2 gap-50 max-[1177px]:mx-10",
+            class: "w-full h-screen flex flex-col items-center justify-center max-[900px]:!h-full",
+            div { class: "max-w-1177 grid grid-cols-2 gap-50 max-[1177px]:mx-10 max-[900px]:!grid-cols-1 px-30",
                 div { class: "col-span-1 w-full",
                     SectionHeader {
                         section_name: tr.title,
@@ -34,7 +38,7 @@ pub fn Support(lang: Language) -> Element {
 
                 div { class: "col-span-1 w-full flex flex-col items-start gap-50",
                     div { class: "col-span-1 w-full flex flex-col items-start gap-30",
-                        div { class: "w-full grid grid-cols-2 gap-24 max-600:grid-cols-1",
+                        div { class: "w-full grid grid-cols-2 gap-24 max-[900px]:!grid-cols-1",
                             LabeledInput {
                                 label_name: tr.label_first_name,
                                 placeholder: tr.placeholder_first_name,
@@ -71,7 +75,7 @@ pub fn Support(lang: Language) -> Element {
 
                         Labeled { class: "w-full", label_name: tr.label_needs,
                             Dropdown {
-                                class: "w-full h-50",
+                                class: "w-full h-50 border border-border-primary rounded-lg",
                                 items: Need::variants(&lang),
                                 onselect: move |value: String| {
                                     req.with_mut(move |r| r.needs = value.parse().unwrap_or_default());
@@ -90,39 +94,41 @@ pub fn Support(lang: Language) -> Element {
                         }
                     } // end of form
 
-                    SecondaryButton {
-                        onclick: move |_| async move {
-                            let endpoint = config::get().main_api_endpoint;
-                            let SupportSubmitRequest {
-                                first_name,
-                                last_name,
-                                email,
-                                company_name,
-                                needs,
-                                help,
-                            } = req();
-                            match dto::Support::get_client(endpoint)
-                                .submit(first_name, last_name, email, company_name, needs, help)
-                                .await
-                            {
-                                Ok(_) => {
-                                    btracing::info!("Thank you for your submission!");
-                                    let tr: InquiryTranslate = translate(&lang);
-                                    popup.open(rsx! {
-                                        ConfirmPopup {
-                                            lang,
-                                            title: tr.title,
-                                            description: tr.description,
-                                            btn_label: tr.btn_label,
-                                        }
-                                    });
+                    div { class: "max-[900px]:w-full flex justify-center items-center",
+                        SecondaryButton {
+                            onclick: move |_| async move {
+                                let endpoint = config::get().main_api_endpoint;
+                                let SupportSubmitRequest {
+                                    first_name,
+                                    last_name,
+                                    email,
+                                    company_name,
+                                    needs,
+                                    help,
+                                } = req();
+                                match dto::Support::get_client(endpoint)
+                                    .submit(first_name, last_name, email, company_name, needs, help)
+                                    .await
+                                {
+                                    Ok(_) => {
+                                        btracing::info!("Thank you for your submission!");
+                                        let tr: InquiryTranslate = translate(&lang);
+                                        popup.open(rsx! {
+                                            ConfirmPopup {
+                                                lang,
+                                                title: tr.title,
+                                                description: tr.description,
+                                                btn_label: tr.btn_label,
+                                            }
+                                        });
+                                    }
+                                    Err(e) => {
+                                        btracing::error!("{}", e.translate(& lang));
+                                    }
                                 }
-                                Err(e) => {
-                                    btracing::error!("{}", e.translate(& lang));
-                                }
-                            }
-                        },
-                        {tr.btn_submit}
+                            },
+                            {tr.btn_submit}
+                        }
                     }
                 }
             }
