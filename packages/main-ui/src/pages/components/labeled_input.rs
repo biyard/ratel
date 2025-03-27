@@ -39,7 +39,7 @@ pub fn Labeled(
 ) -> Element {
     rsx! {
         div {..attributes,
-            div { class: "w-full flex flex-col items-start gap-5",
+            div { class: "w-full flex flex-col items-start gap-5 ",
                 p { class: "text-c-cg-30 font-bold text-base/28", {label_name} }
                 {children}
             }
