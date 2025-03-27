@@ -6,6 +6,7 @@ pub mod icon_text;
 pub mod icons;
 pub mod indicators;
 pub mod page_title;
+pub mod party;
 pub mod popup_zone;
 pub mod section_header;
 pub mod tooltip;
