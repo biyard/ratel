@@ -14,22 +14,24 @@ pub fn Subscription(lang: Language) -> Element {
     let mut popup: PopupService = use_context();
 
     rsx! {
-        div { class: "w-full flex flex-col",
-            div { class: "w-full",
-                svg {
-                    fill: "none",
-                    view_box: "0 0 1921 146",
-                    width: "100%",
-                    xmlns: "http://www.w3.org/2000/svg",
-                    path {
-                        d: "M0.25 73.7684L1920.25 0V146H0.25V73.7684Z",
-                        fill: "#191919",
+        div { class: "w-full flex flex-col max-[900px]:mt-40",
+            div { class: "block max-[900px]:!hidden",
+                div { class: "w-full",
+                    svg {
+                        fill: "none",
+                        view_box: "0 0 1921 146",
+                        width: "100%",
+                        xmlns: "http://www.w3.org/2000/svg",
+                        path {
+                            d: "M0.25 73.7684L1920.25 0V146H0.25V73.7684Z",
+                            fill: "#191919",
+                        }
                     }
                 }
             }
-            div { class: "w-full flex flex-col items-center justify-center py-80 bg-footer gap-80",
-                div { class: "w-full flex max-w-604 flex-col items-center gap-80",
-
+            div { class: "w-full flex flex-col items-center justify-center py-80 bg-footer gap-80 max-[900px]:!py-40",
+                div { class: "w-full flex max-w-604 flex-col items-center gap-80 px-30",
+                    //TODO(web): Make button separately and fix padding pixel
                     div { class: "w-full flex flex-col gap-50 items-center",
                         div { class: "w-full flex flex-col items-start gap-5",
                             p { class: "text-c-cg-30 font-bold text-base/28", {tr.email} }
