@@ -66,7 +66,8 @@ impl AssemblyMemberControllerV1 {
     ) -> Result<Json<AssemblyMember>> {
         tracing::debug!("get_assembly_member {:?}", id);
         let doc = AssemblyMember::query_builder()
-            .bills_builder(Bill::query_builder())
+            // FIXME: method not found in `AssemblyMemberRepositoryQueryBuilder`
+            // .bills_builder(Bill::query_builder())
             .id_equals(id)
             .query()
             .map(AssemblyMember::from)

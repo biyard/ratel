@@ -1,5 +1,6 @@
 mod alert;
 mod arrows;
+mod background_triangle;
 mod chat;
 mod circle_down;
 mod clock;
@@ -26,10 +27,12 @@ mod wallet;
 
 pub use alert::*;
 pub use arrows::*;
+pub use background_triangle::*;
 pub use chat::*;
 pub use circle_down::*;
 pub use clock::*;
 pub use close::*;
+pub use coming_soon::*;
 pub use cons::*;
 pub use double_arrow::*;
 pub use file_upload::*;
@@ -48,5 +51,3 @@ pub use thumbs::*;
 pub use tooltip::*;
 pub use votes::*;
 pub use wallet::*;
-
-pub use coming_soon::*;
