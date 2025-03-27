@@ -17,7 +17,9 @@ pub fn SignupPopup(
     let mut popup: PopupService = use_context();
     rsx! {
         div { id, class,
-            div { class: "justify-start text-white font-bold text-xl/24", "{tr.title}" }
+            div { class: "justify-start text-white font-bold text-xl/24 max-[900px]:!text-[18px]",
+                "{tr.title}"
+            }
             div { class: "flex flex-col gap-10 mt-35",
                 div {
                     class: "w-full flex flex-row pl-20 py-22 bg-black border-[1px] rounded-[10px] justify-start items-center gap-17 cursor-pointer border-black hover:border-white",

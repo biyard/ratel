@@ -27,16 +27,31 @@ pub fn PoliticianActivities(
         div { class: "w-full flex flex-col items-center py-100 gap-35",
             div { class: "flex flex-col gap-8 items-center",
                 h2 { class: "text-xl/22 font-bold text-text-primary", {tr.title} }
-                p { class: "text-[15px]/22 font-normal text-text-secondary", {description} }
+                p { class: "text-[15px]/22 font-normal text-text-secondary max-[900px]:!px-30",
+                    {description}
+                }
             }
 
-            div { class: "w-full flex flex-col items-start justify-start gap-10",
-                Dropdown {
-                    items: BillSorter::variants(&lang),
-                    onselect: |item: String| {
-                        let sort: BillSorter = item.parse().unwrap_or_default();
-                        tracing::debug!("Selected item: {:?}", item);
-                    },
+            div { class: "w-full flex flex-col items-start justify-start gap-10 max-[900px]:!px-30",
+                div { class: "w-full flex flex-row gap-10",
+                    Dropdown {
+                        items: BillSorter::variants(&lang),
+                        onselect: |item: String| {
+                            let sort: BillSorter = item.parse().unwrap_or_default();
+                            tracing::debug!("Selected item: {:?}", item);
+                        },
+                    }
+
+                    //TODO(web):check the include dropdown categories
+                    div { class: "hidden max-[900px]:!block",
+                        Dropdown {
+                            items: BillSorter::variants(&lang),
+                            onselect: |item: String| {
+                                let sort: BillSorter = item.parse().unwrap_or_default();
+                                tracing::debug!("Selected item: {:?}", item);
+                            },
+                        }
+                    }
                 }
 
                 div {
@@ -140,7 +155,7 @@ pub fn BillCard(
             // Refer to Figma(https://www.figma.com/design/YaLSz7dzRingD7CipyaC47/Ratel?node-id=183-9407&t=ntliyRgUTCrimYsj-1)
             div { id: "bill-card-vote-{bill.id}", class: "flex flex-row gap-10",
                 button {
-                    class: "w-full border border-supportive/25 hover:border-supportive hover:bg-supportive/25 rounded-[10px] flex items-center justify-center cursor-pointer px-16 py-8 text-sm font-bold",
+                    class: "w-full border border-supportive/25 hover:border-supportive hover:bg-supportive/25 rounded-[10px] flex items-center justify-center cursor-pointer px-16 py-8 text-sm font-bold max-[900px]:!min-h-44",
                     onclick: move |_| {
                         tracing::debug!("Vote supportive clicked");
                         popup.open(rsx! {
@@ -150,7 +165,7 @@ pub fn BillCard(
                     span { {tr.btn_supportive} }
                 }
                 button {
-                    class: "w-full border border-against/25 hover:border-against hover:bg-against/25 rounded-[10px] flex items-center justify-center cursor-pointer px-16 py-8 text-sm font-bold",
+                    class: "w-full border border-against/25 hover:border-against hover:bg-against/25 rounded-[10px] flex items-center justify-center cursor-pointer px-16 py-8 text-sm font-bold max-[900px]:!min-h-44",
                     onclick: move |_| {
                         tracing::debug!("Vote against clicked");
                         popup.open(rsx! {

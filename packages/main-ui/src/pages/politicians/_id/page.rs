@@ -22,7 +22,7 @@ pub fn PoliticiansByIdPage(id: ReadOnlySignal<i64>, lang: Language) -> Element {
 
         div {
             id: "politicians-by-id",
-            class: "w-full grow max-w-1177 mt-160 flex flex-col justify-start",
+            class: "w-full grow max-w-1177 mt-160 flex flex-col justify-start max-[900px]:!mt-70",
             PoliticianHeader {
                 lang,
                 image: p.image_url.clone(),
@@ -31,6 +31,7 @@ pub fn PoliticiansByIdPage(id: ReadOnlySignal<i64>, lang: Language) -> Element {
                 stance: p.stance,
                 email: p.email.clone().unwrap_or_default(),
                 description: tr.description,
+                bills: p.bills.clone(),
             }
             PoliticianActivities {
                 lang,
