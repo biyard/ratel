@@ -1,5 +1,4 @@
 #![allow(non_snake_case)]
-#[allow(unused_imports)]
 use super::*;
 use crate::{
     components::dropdown::Dropdown, pages::components::SignupPopup,

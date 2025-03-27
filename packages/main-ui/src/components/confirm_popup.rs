@@ -55,7 +55,7 @@ pub fn SigninPopupFooter(lang: Language) -> Element {
             to: Route::PrivacyPolicyPage { lang },
             class: "flex flex-row gap-10 mt-35 justify-center w-full",
             onclick: move |_| {
-                tracing::debug!("Privacy policy clicked");
+                tracing::debug!("Privacy policy / term of service link clicked");
                 popup.close();
             },
             div { class: "cursor-pointer",
