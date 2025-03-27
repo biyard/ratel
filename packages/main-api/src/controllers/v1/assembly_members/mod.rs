@@ -97,7 +97,6 @@ impl AssemblyMemberControllerV1 {
                     .query()
                     .map(|row: PgRow| {
                         use sqlx::Row;
-                        tracing::debug!("row: {:?}", row);
                         total_count = row.get("total_count");
                         row.into()
                     })
