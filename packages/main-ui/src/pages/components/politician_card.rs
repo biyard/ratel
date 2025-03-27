@@ -1,14 +1,14 @@
 #![allow(non_snake_case)]
+use crate::{components::party::PartyIcon, route::Route};
 use bdk::prelude::*;
-
-use crate::{components::icons::*, route::Route};
+use dto::Party;
 
 #[component]
 pub fn PoliticianCard(
     lang: Language,
     id: i64,
     name: String,
-    party: String,
+    party: Party,
     image_url: String,
 ) -> Element {
     rsx! {
@@ -32,8 +32,8 @@ pub fn PoliticianCard(
             div { class: "absolute bottom-0 left-0 w-full flex flex-col justify-start gap-4 px-10 py-15",
                 p { class: "text-white text-lg/22 font-bold", "{name}" }
                 div { class: "flex flex-row items-center gap-8",
-                    PPP { size: "18" }
-                    p { class: "text-white text-[15px]/22 font-medium", "{party}" }
+                    PartyIcon { party }
+                    p { class: "text-white text-[15px]/22 font-medium", {party.translate(&lang)} }
                 }
             }
         }
