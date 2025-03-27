@@ -114,23 +114,29 @@ impl UserService {
             user_info: Signal::new(UserInfo::default()),
         });
 
-        // let mut user = use_context::<UserService>();
-        // let signer = (user.signer)();
+        let mut user = use_context::<UserService>();
+        let signer = (user.signer)();
 
-        // TODO: feat auto login from firebase / phantom
+        // TODO: feat auto login from phantom
 
-        // let is_login = match &signer {
-        //     WalletSigner::Firebase => firebase.get_login(),
-        //     // WalletSigner::Phantom(auth) => auth.read().get_login(),
-        //     WalletSigner::None => false,
-        // };
-
-        // if is_login {
-        //     tracing::debug!("UserService::init: wallet={:?}", signer);
-        //     spawn(async move {
-        //         user.get_user_info_from_server().await;
-        //     });
-        // }
+        let is_login = match signer {
+            WalletSigner::Firebase => firebase.get_login(),
+            WalletSigner::Phantom => {
+                if let Some(phantom) = user.phantom.read().as_ref() {
+                    phantom.is_logined()
+                } else {
+                    false
+                }
+            }
+            WalletSigner::None => false,
+        };
+        tracing::debug!("UserService::init: is_login={:?}", is_login);
+        if is_login {
+            tracing::debug!("UserService::init: wallet={:?}", signer);
+            spawn(async move {
+                user.get_user_info_from_server().await;
+            });
+        }
     }
 
     pub fn set_signer_type(&mut self, signer: &str) {
@@ -314,6 +320,15 @@ impl UserService {
             }
         };
 
+        let user = res.clone();
+
+        self.user_info.set(UserInfo {
+            principal: user.principal,
+            email: Some(user.email),
+            nickname: Some(user.nickname),
+            profile_url: Some(user.profile_url),
+        });
+
         tracing::debug!("UserService::signup: user={:?}", res);
         Ok(())
     }
@@ -344,11 +359,18 @@ impl UserService {
                     profile_url
                 );
 
+                self.user_info.set(UserInfo::new(
+                    principal.clone(),
+                    email.clone(),
+                    name.clone(),
+                    profile_url.clone(),
+                ));
+
                 return UserEvent::Signup(principal, email, name, profile_url);
             }
             google_wallet::WalletEvent::Login => {
                 tracing::debug!(
-                    "UserService::Signup: email={} name={} profile_url={}",
+                    "UserService::Login: email={} name={} profile_url={}",
                     email,
                     name,
                     profile_url
@@ -474,6 +496,10 @@ impl UserService {
                 Err(ServiceError::WalletError(e.to_string()))
             }
         }
+    }
+
+    pub fn is_logined(&self) -> bool {
+        !self.user_info.read().principal.is_empty()
     }
 }
 

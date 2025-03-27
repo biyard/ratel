@@ -1,9 +1,13 @@
 #![allow(non_snake_case)]
 use super::{
     login_failure_popup::LoginFailurePopup, signin_popup_footer::SigninPopupFooter,
-    user_setup_popup::UserSetupPopup, wallet_signin_popup::WalletSigninPopup,
+    signup_popup::SignupPopup, user_setup_popup::UserSetupPopup,
+    wallet_signin_popup::WalletSigninPopup,
 };
-use crate::services::user_service::{UserEvent, UserService};
+use crate::{
+    components::icons,
+    services::user_service::{UserEvent, UserService},
+};
 use bdk::prelude::*;
 use dioxus_popup::PopupService;
 
@@ -61,7 +65,7 @@ pub fn LoaderPopup(
                         .with_id("wallet_signin_popup");
                 }
                 _ => {
-                    tracing::error!("Failed to signup with Phantom");
+                    tracing::error!("Failed to signup with {:?}", msg);
                     popup
                         .open(rsx! {
                             LoginFailurePopup {
@@ -81,7 +85,21 @@ pub fn LoaderPopup(
 
     rsx! {
         div { id, class,
-            div { class: "justify-start text-white font-bold text-xl/24", "{title}" }
+            div { class: "flex flex-row justify-start gap-12",
+                button {
+                    class: "cursor-pointer",
+                    onclick: move |_| {
+                        tracing::debug!("backward button clicked");
+                        popup.open(rsx! {
+                            SignupPopup { class: "w-full max-w-400 mx-5", lang }
+                        }).with_id("signup_popup");
+                    },
+                    span { class: "text-neutral-400 text-xs/14 font-medium",
+                        icons::LeftArrow { color: "white", width: "24", height: "24" }
+                    }
+                }
+                div { class: "justify-start text-white font-bold text-xl/24", {title} }
+            }
             div { class: "w-full flex  justify-center items-center mt-35",
                 // TODO: border-t rounded
                 div { class: "border-6 border-t-6 w-82 h-82 border-primary border-t-background rounded-full animate-spin" }

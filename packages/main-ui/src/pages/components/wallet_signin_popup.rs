@@ -1,5 +1,8 @@
 #![allow(non_snake_case)]
-use super::{loader_popup::LoaderPopup, signin_popup_footer::SigninPopupFooter};
+use super::{
+    loader_popup::LoaderPopup, signin_popup_footer::SigninPopupFooter, signup_popup::SignupPopup,
+};
+use crate::components::icons;
 use bdk::prelude::*;
 use dioxus_popup::PopupService;
 
@@ -17,7 +20,21 @@ pub fn WalletSigninPopup(
     let display_logo = logo.clone();
     rsx! {
         div { id, class,
-            div { class: "justify-start text-white font-bold text-xl/24", "{tr.title}" }
+            div { class: "flex flex-row justify-start gap-12",
+                button {
+                    class: "cursor-pointer",
+                    onclick: move |_| {
+                        tracing::debug!("backward button clicked");
+                        popup.open(rsx! {
+                            SignupPopup { class: "w-full max-w-400 mx-5", lang }
+                        }).with_id("signup_popup");
+                    },
+                    span { class: "text-neutral-400 text-xs/14 font-medium",
+                        icons::LeftArrow { color: "white", width: "24", height: "24" }
+                    }
+                }
+                div { class: "justify-start text-white font-bold text-xl/24", {tr.title} }
+            }
             div { class: "w-full flex justify-center items-center mt-35",
                 // TODO: border-t rounded
                 div { class: "w-[84px] h-[84px] bg-white rounded-full justify-center items-center flex",
@@ -35,7 +52,7 @@ pub fn WalletSigninPopup(
                     let msg = msg.clone();
                     popup.open(rsx! {
                         LoaderPopup {
-                            class: "w-[400px] mx-[5px]",
+                            class: "w-full max-w-400 mx-5",
                             lang,
                             title: tr.title,
                             description: tr.description,
