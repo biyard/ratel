@@ -1,7 +1,8 @@
 #![allow(non_snake_case)]
-use crate::components::button::primary_button::PrimaryButton;
-use crate::components::icons::CharacterWithCircle;
-
+use crate::{
+    components::{button::primary_button::PrimaryButton, icons::CharacterWithCircle},
+    route::Route,
+};
 use bdk::prelude::*;
 use dioxus_popup::PopupService;
 
@@ -52,21 +53,19 @@ pub fn WelcomeHeader(lang: Language, title: String, description: String) -> Elem
 #[component]
 pub fn SigninPopupFooter(lang: Language) -> Element {
     let tr = translate::<SigninPopupFooterTranslate>(&lang);
+    let mut popup: PopupService = use_context();
     rsx! {
-        // TODO: applying policy and terms.
-        div { class: "flex flex-row gap-10 mt-35 justify-center",
-            button {
-                class: "cursor-pointer",
-                onclick: move |_| {
-                    tracing::debug!("Privacy policy clicked");
-                },
+        Link {
+            to: Route::PrivacyPolicyPage { lang },
+            class: "flex flex-row gap-10 mt-35 justify-center w-full",
+            onclick: move |_| {
+                tracing::debug!("Privacy policy / term of service link clicked");
+                popup.close();
+            },
+            div { class: "cursor-pointer",
                 span { class: "text-neutral-400 text-xs/14 font-medium", {tr.privacy_policy} }
             }
-            button {
-                class: "cursor-pointer",
-                onclick: move |_| {
-                    tracing::debug!("Term of service clicked");
-                },
+            div { class: "cursor-pointer",
                 span { class: "text-neutral-400 text-xs/14 font-medium", {tr.term_of_service} }
             }
         }

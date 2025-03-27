@@ -40,31 +40,25 @@ pub fn SignupPopup(
                                 },
                                 msg: tr.continue_with_google,
                             }
-                        });
-                    },
-                    icons::Google {}
-                    div { class: "flex flex-col gap-3",
-                        span { class: "text-white text-base/19 font-semibold",
-                            "{tr.continue_with_google}"
+                        }
+                    }
+
+                    div {
+                        class: "w-full flex flex-row pl-20 py-22 bg-black border-[1px] rounded-[10px] justify-start items-center gap-17 cursor-pointer border-black hover:border-white",
+                        onclick: move |_| {
+                            tracing::debug!("signup with wallet clicked");
+                            popup.open(rsx! {
+                                WalletPopup { class: "w-full max-w-400 mx-5", lang }
+                            }).with_id("wallet_popup");
+                        },
+                        icons::Wallet {}
+                        div { class: "flex flex-col gap-3",
+                            span { class: "text-white text-base/19 font-semibold", "{tr.connect_wallet}" }
                         }
                     }
                 }
-
-                div {
-                    class: "w-full flex flex-row pl-20 py-22 bg-black border-[1px] rounded-[10px] justify-start items-center gap-17 cursor-pointer border-black hover:border-white",
-                    onclick: move |_| {
-                        tracing::debug!("signup with wallet clicked");
-                        popup.open(rsx! {
-                            WalletPopup { class: "w-[400px] mx-[5px]", lang }
-                        }).with_id("wallet_popup");
-                    },
-                    icons::Wallet {}
-                    div { class: "flex flex-col gap-3",
-                        span { class: "text-white text-base/19 font-semibold", "{tr.connect_wallet}" }
-                    }
-                }
+                SigninPopupFooter { lang }
             }
-            SigninPopupFooter { lang }
         }
     }
 }

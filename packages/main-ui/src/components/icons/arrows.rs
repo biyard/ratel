@@ -41,18 +41,23 @@ pub fn DownArrow() -> Element {
     }
 }
 
-pub fn LeftArrow() -> Element {
+#[component]
+pub fn LeftArrow(
+    #[props(default = "#404761".to_string())] color: String,
+    #[props(default = "16".to_string())] width: String,
+    #[props(default = "16".to_string())] height: String,
+) -> Element {
     rsx! {
         svg {
-            width: "16",
-            height: "16",
+            width,
+            height,
             view_box: "0 0 16 16",
             fill: "none",
             xmlns: "http://www.w3.org/2000/svg",
 
             path {
                 d: "M10 4L6 8L10 12",
-                stroke: "#404761",
+                stroke: color,
                 stroke_width: "2",
                 stroke_linecap: "round",
                 stroke_linejoin: "round",

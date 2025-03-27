@@ -20,7 +20,7 @@
   --color-background: #1e1e1e;
 
   /* Checkbox colors */
-  --color-cb-text: #AEAAAB;
+  --color-cb-text: #aeaaab;
 
   /* Border colors */
   --color-border-primary: #464646;
@@ -44,7 +44,7 @@
   /* Outlined button colors */
   --color-btn-o: #464646; /* border color */
   --color-btn-o-hover: white; /* border color while hovering */
-  --color-btn-o-hover-bg: #1A1A1A; /* bg color while hovering */
+  --color-btn-o-hover-bg: #1a1a1a; /* bg color while hovering */
   --color-btn-o-text: white;
   --color-btn-o-hover-text: white;
 
@@ -57,17 +57,16 @@
   --color-c-cg-30: #aeb8b8;
   --color-footer: #191919;
   --color-copyright: #9095a1;
-  --color-neutral-80: #6B6B6B;
+  --color-neutral-80: #6b6b6b;
   --color-neutral-400: #a1a1a1;
+  --color-neutral-500: #737373;
   --color-neutral-600: #525252;
+  --color-c-c-20: #6eedd8;
+  --color-c-p-20: #ff9eee;
   --color-c-p-50: #db2780;
   --color-c-p-50-10: #db27801a;
-  --color-c-c-20: #6EEDD8;
-  --color-c-p-20: #FF9EEE;
-  --color-bg: #1A1A1A;
-  --color-neutral-400: #A1A1A1;
+  --color-supportive: #6eedd8;
+  --color-against: #ff9eee;
+  --color-bg: #1a1a1a;
   --color-tab-hover: #282828;
-
-  --color-supportive: #6EEDD8;
-  --color-against: #FF9EEE;
 }

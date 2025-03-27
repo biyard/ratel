@@ -33,12 +33,7 @@ pub fn PoliticiansByIdPage(id: ReadOnlySignal<i64>, lang: Language) -> Element {
                 description: tr.description,
                 bills: p.bills.clone(),
             }
-            PoliticianActivities {
-                lang,
-                id: id(),
-                name: p.name(&lang),
-                bills: p.bills,
-            }
+            PoliticianActivities { lang, name: p.name(&lang), bills: p.bills }
             FooterWithSocial { lang }
         } // end of this page
     }
