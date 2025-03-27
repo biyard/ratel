@@ -40,6 +40,10 @@ pub struct Bill {
     #[api_model(summary, action_by_id = set_en_summary)]
     pub en_summary: Option<String>,
 
+    #[api_model(summary, one_to_many = votes, foreign_key = bill_id)]
+    #[serde(default)]
+    pub votes: Vec<Vote>,
+
     // FIXME: Currently, the system doesn't properly support Option<T> types in relationships.
     // When a row is not exist in the database, deserialization fails for the entire struct
     // if the field type isn't nullable.
