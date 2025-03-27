@@ -126,4 +126,12 @@ impl Bill {
             "https://likms.assembly.go.kr/bill/billDetail.do", self.bill_id,
         )
     }
+
+    pub fn detail_date(&self) -> String {
+        let date = chrono::NaiveDate::parse_from_str(&self.date, "%Y-%m-%d").unwrap_or_default();
+        let start = date.format("%b %d").to_string();
+        let end = date.format(" - %b %d, %Y").to_string();
+
+        format!("{}{}", start, end)
+    }
 }

@@ -40,7 +40,7 @@ pub fn Top(
                     onclick: move |_| {
                         tracing::debug!("Learn more clicked");
                         popup.open(rsx! {
-                            SignupPopup { class: "w-460", lang: lang.clone() }
+                            SignupPopup { class: "w-400", lang }
                         });
                     },
                     {tr.btn_join}
