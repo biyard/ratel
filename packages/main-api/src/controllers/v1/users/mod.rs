@@ -91,6 +91,10 @@ impl UserControllerV1 {
             ServiceError::Unauthorized
         })?;
 
+        if req.term_agreed == false {
+            return Err(ServiceError::BadRequest);
+        }
+
         let user = self
             .users
             .insert(
