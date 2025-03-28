@@ -13,6 +13,6 @@ pub struct Subscription {
     pub updated_at: i64,
 
     #[validate(email)]
-    #[api_model(action = subscribe, unique)]
+    #[api_model(summary, action = subscribe, unique)]
     pub email: String,
 }
