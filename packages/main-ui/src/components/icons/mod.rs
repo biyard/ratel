@@ -1,4 +1,5 @@
 mod arrows;
+mod background_triangle;
 mod chat;
 mod clock;
 mod close;
@@ -15,6 +16,7 @@ mod slide_ball;
 mod sort;
 mod tooltip;
 mod votes;
+
 mod logos {
     pub mod google;
     pub mod logo;
@@ -31,10 +33,12 @@ mod x;
 
 pub use alert::*;
 pub use arrows::*;
+pub use background_triangle::*;
 pub use bsky::*;
 pub use chat::*;
 pub use clock::*;
 pub use close::*;
+pub use coming_soon::*;
 pub use cons::*;
 pub use double_arrow::*;
 pub use file_upload::*;
@@ -53,5 +57,3 @@ pub use tooltip::*;
 pub use votes::*;
 pub use wallet::*;
 pub use x::*;
-
-pub use coming_soon::*;
