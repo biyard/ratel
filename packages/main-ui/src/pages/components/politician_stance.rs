@@ -109,7 +109,7 @@ pub fn PoliticianStance(
                                         lang,
                                         id: m.id,
                                         name: "{m.name}",
-                                        party: "{m.party}",
+                                        party: m.party_enum(),
                                         image_url: "{m.image_url}",
                                     }
                                 }
@@ -134,7 +134,7 @@ pub fn PoliticianStance(
                                         lang,
                                         id: m.id,
                                         name: "{m.name}",
-                                        party: "{m.party}",
+                                        party: m.party_enum(),
                                         image_url: "{m.image_url}",
                                     }
                                 }
@@ -161,7 +161,7 @@ pub fn PoliticianStance(
                                         lang,
                                         id: m.id,
                                         name: "{m.name}",
-                                        party: "{m.party}",
+                                        party: m.party_enum(),
                                         image_url: "{m.image_url}",
                                     
                                     }
@@ -186,7 +186,7 @@ pub fn PoliticianStance(
                                         lang,
                                         id: m.id,
                                         name: "{m.name}",
-                                        party: "{m.party}",
+                                        party: m.party_enum(),
                                         image_url: "{m.image_url}",
                                     }
                                 }
