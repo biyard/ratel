@@ -116,7 +116,14 @@ pub fn UserSetupPopup(
                             let profile_url = profile_url.clone();
                             spawn(async move {
                                 if let Err(e) = user_service
-                                    .login_or_signup(&principal, &email, &nickname, &profile_url)
+                                    .login_or_signup(
+                                        &principal,
+                                        &email,
+                                        &nickname,
+                                        &profile_url,
+                                        agreed(),
+                                        announcement_agree(),
+                                    )
                                     .await
                                 {
                                     match e {

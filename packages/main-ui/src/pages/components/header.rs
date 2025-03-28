@@ -1,6 +1,10 @@
 #![allow(non_snake_case)]
 use super::SignupPopup;
-use crate::{components::icons::Logo, pages::components::Socials, route::Route, services::user_service::UserService};
+use crate::{
+    components::{icons::Logo, socials::Socials},
+    route::Route,
+    services::user_service::UserService,
+};
 use bdk::prelude::{
     by_components::icons::{alignments::AlignJustify, arrows::ArrowRight},
     *,
@@ -84,7 +88,9 @@ pub fn DesktopHeader(lang: Language, selected: i32) -> Element {
                             {tr.login}
                         }
                     }
-                    button { class: "px-20 py-10 bg-primary hover:bg-hover text-black text-sm cursor-pointer rounded-full font-bold",
+                    Link {
+                        class: "px-20 py-10 bg-primary hover:bg-hover text-black text-sm cursor-pointer rounded-full font-bold",
+                        to: Route::PreparingPage { lang },
                         {tr.get_ratel}
                     }
                 }

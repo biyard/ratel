@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 use bdk::prelude::*;
 
-use crate::{pages::components::Socials, route::Route};
+use crate::{components::socials::Socials, route::Route};
 
 #[component]
 pub fn Footer(lang: Language) -> Element {
@@ -10,7 +10,7 @@ pub fn Footer(lang: Language) -> Element {
     rsx! {
         footer { class: "w-full bg-footer flex flex-row gap-10 items-center justify-center text-copyright font-normal text-sm/22 py-24 max-[900px]:!flex-col",
             span { {tr.copyright} }
-            div { class: "max-[900px]:!flex-row gap-10",
+            div { class: "flex gap-10",
                 Link {
                     class: "hover:text-white",
                     to: Route::PrivacyPolicyPage { lang },
@@ -31,7 +31,7 @@ pub fn FooterWithSocial(lang: Language) -> Element {
     let tr: FooterTranslate = translate(&lang);
 
     rsx! {
-        footer { class: "w-full bg-bg flex flex-row gap-10 items-center justify-between text-copyright font-normal text-xs/22 py-24 h-50 max-[900px]:!flex-col max-[900px]:!py-20 min-h-200 max-[900px]:!gap-20",
+        footer { class: "w-full bg-bg flex flex-row gap-10 items-center justify-between text-copyright font-normal text-xs/22 py-24 h-50 max-[900px]:!flex-col max-[900px]:!py-20 max-w-1177 max-[900px]:!gap-20",
             div { class: "hidden max-[900px]:!block",
                 Socials {
                     class: "flex flex-row items-center justify-center gap-30",
@@ -41,22 +41,31 @@ pub fn FooterWithSocial(lang: Language) -> Element {
             div { class: "h-full flex flex-row gap-10 items-center max-[900px]:!flex-col max-[900px]:!gap-0",
                 span { {tr.copyright} }
                 //desktop
-                div { class: "block max-[900px]:!hidden",
-                    Link {
+                div { class: "flex max-[900px]:!hidden gap-10",
+                    // FIXME: Link does not work with new_tab
+                    // Link {
+                    a {
                         class: "hover:text-white",
-                        to: Route::PrivacyPolicyPage { lang },
+                        // to: Route::PrivacyPolicyPage { lang },
+                        // new_tab: true,
+                        href: "/{lang}/privacy-policy",
+                        target: "_blank",
                         {tr.privacy}
                     }
-                    Link {
+                    // Link {
+                    a {
                         class: "hover:text-white",
-                        to: Route::PrivacyPolicyPage { lang },
+                        // to: Route::PrivacyPolicyPage { lang },
+                        // new_tab: true,
+                        href: "/{lang}/privacy-policy",
+                        target: "_blank",
                         {tr.terms}
                     }
                 }
 
 
                 //mobile
-                div { class: "hidden max-[900px]:!block max-[900px]:!flex flex-row justify-center gap-10",
+                div { class: "hidden max-[900px]:!flex flex-row justify-center gap-10",
                     Link {
                         class: "hover:text-white",
                         to: Route::PrivacyPolicyPage { lang },
