@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 use crate::{
     components::{button::primary_button::PrimaryButton, icons::CharacterWithCircle},
-    route::Route,
+    // route::Route,
 };
 use bdk::prelude::*;
 use dioxus_popup::PopupService;
@@ -51,8 +51,12 @@ pub fn SigninPopupFooter(lang: Language) -> Element {
     let tr = translate::<SigninPopupFooterTranslate>(&lang);
     let mut popup: PopupService = use_context();
     rsx! {
-        Link {
-            to: Route::PrivacyPolicyPage { lang },
+        // FIXME: Link does not work with new_tab
+        // Link {
+        //     to: Route::PrivacyPolicyPage { lang },
+        a {
+            href: "/{lang}/privacy-policy",
+            target: "_blank",
             class: "flex flex-row gap-10 mt-35 justify-center w-full",
             onclick: move |_| {
                 tracing::debug!("Privacy policy / term of service link clicked");

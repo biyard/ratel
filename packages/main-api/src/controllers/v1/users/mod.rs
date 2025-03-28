@@ -93,7 +93,14 @@ impl UserControllerV1 {
 
         let user = self
             .users
-            .insert(req.nickname, principal, req.email, req.profile_url)
+            .insert(
+                req.nickname,
+                principal,
+                req.email,
+                req.profile_url,
+                req.term_agreed,
+                req.informed_agreed,
+            )
             .await?;
 
         Ok(Json(user))

@@ -143,6 +143,8 @@ pub mod tests {
                 principal.clone(),
                 email.clone(),
                 profile_url.clone(),
+                true,
+                true,
             )
             .await?;
         tracing::debug!("{:?}", u);
