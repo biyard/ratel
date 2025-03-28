@@ -24,16 +24,9 @@ pub fn Bsky(
                 clipPath { id: "clip0_218_852",
                     rect {
                         fill: "white",
-                    }
-                }
-                defs {
-                    clipPath { id: "clip0_218_852",
-                        rect {
-                            fill: "white",
-                            height: "28",
-                            transform: "translate(0.25 0.0183105)",
-                            width: "28",
-                        }
+                        height: "28",
+                        transform: "translate(0.25 0.0183105)",
+                        width: "28",
                     }
                 }
             }

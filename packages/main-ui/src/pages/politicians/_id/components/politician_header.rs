@@ -6,7 +6,7 @@ use by_components::icons::{
 };
 use dto::{CryptoStance, Party};
 
-use crate::pages::politicians::components::party::PartyIcon;
+use crate::components::party::PartyIcon;
 
 #[component]
 pub fn PoliticianHeader(
@@ -59,7 +59,7 @@ pub fn PoliticianHeader(
                     }
                 }
             }
-
+        
         }
     }
 }

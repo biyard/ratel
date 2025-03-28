@@ -1,13 +1,12 @@
 #![allow(non_snake_case)]
-use crate::components::dropdown::Dropdown;
+use crate::components::{dropdown::Dropdown, party::PartyIcon};
 use crate::pages::components::FooterWithSocial;
 use crate::pages::components::SectionHeader;
 
-use super::{controller::*, i18n::*, *};
+use super::{controller::*, i18n::*};
 use bdk::prelude::by_components::icons::edit::Search;
 use bdk::prelude::*;
 use by_components::hooks::use_scroll::use_scroll;
-use components::party::PartyIcon;
 use dto::CryptoStance;
 use dto::Party;
 
