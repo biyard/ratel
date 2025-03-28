@@ -78,20 +78,16 @@ pub fn PoliticiansPage(lang: Language) -> Element {
                         {tr.th_stance}
                     }
 
-                    div { class: "block max-[900px]:!hidden",
-                        div {
-                            class: "px-20 py-14 text-left w-250",
-                            onclick: move |_| ctrl.set_sort(dto::AssemblyMemberSorter::Party),
-                            {tr.th_party}
-                        }
+                    div {
+                        class: "px-20 py-14 text-left w-250 max-[900px]:!text-sm font-bold text-c-wg-30  min-w-250",
+                        onclick: move |_| ctrl.set_sort(dto::AssemblyMemberSorter::Party),
+                        {tr.th_party}
                     }
 
-                    div { class: "block max-[900px]:!hidden",
-                        div {
-                            class: "px-20 py-14 text-left w-427",
-                            onclick: move |_| ctrl.set_sort(dto::AssemblyMemberSorter::Bills),
-                            {tr.th_key_actions}
-                        }
+                    div {
+                        class: "px-20 py-14 text-left w-42 max-[900px]:!text-sm font-bold text-c-wg-30  min-w-2507",
+                        onclick: move |_| ctrl.set_sort(dto::AssemblyMemberSorter::Bills),
+                        {tr.th_key_actions}
                     }
                 }
 
@@ -123,21 +119,18 @@ pub fn PoliticiansPage(lang: Language) -> Element {
                                     }
                                 }
 
-                                div { class: "block max-[900px]:!hidden",
-                                    div { class: "px-20 py-14 w-250",
-                                        div { class: "flex flex-row items-center gap-4",
-                                            PartyIcon { party: politician.party_enum() }
-                                            span { class: "text-white font-medium text-[15px]",
-                                                {politician.party(&lang)}
-                                            }
+                                div { class: "px-20 py-14 w-250 max-[900px]:!min-w-250 max-[900px]:!px-0 max-[900px]:!gap-0",
+                                    div { class: "flex flex-row items-center gap-4 max-[900px]:!justify-start",
+                                        PartyIcon { party: politician.party_enum() }
+                                        span { class: "text-white font-medium text-[15px]",
+                                            {politician.party(&lang)}
                                         }
                                     }
                                 }
 
-                                div { class: "block max-[900px]:!hidden",
-                                    div { class: "px-20 py-14 w-427",
-                                        {politician.no_of_bills.to_string()}
-                                    }
+
+                                div { class: "px-20 py-14 w-427 max-[900px]:!min-w-250 max-[900px]:!px-0 max-[900px]:!gap-0",
+                                    {politician.no_of_bills.to_string()}
                                 }
                             }
                         }

@@ -5,9 +5,9 @@ use dto::VoteOption;
 
 use crate::{
     components::{
-        button::{outlined_button::OutlinedButton, primary_button::PrimaryButton},
-        confirm_popup::SigninPopupFooter,
-        icons,
+        button::{ButtonSize, outlined_button::OutlinedButton, primary_button::PrimaryButton},
+        confirm_popup::{SigninPopupFooter, WelcomeHeader},
+
     },
     services::{user_service::UserService, vote_service::VoteService},
 };
@@ -43,8 +43,9 @@ pub fn VoteConfirm(vote: VoteOption, lang: Language, bill_id: i64) -> Element {
                     }
                 }
 
-                div { class: "w-full flex flex-row gap-15",
+                div { class: "w-full flex flex-row gap-15 max-[900px]:!flex-col",
                     OutlinedButton {
+                        size: ButtonSize::Small,
                         width: "100%",
                         onclick: move |_| {
                             popup.close();
@@ -52,6 +53,7 @@ pub fn VoteConfirm(vote: VoteOption, lang: Language, bill_id: i64) -> Element {
                         {tr.btn_cancel}
                     }
                     PrimaryButton {
+                        size: ButtonSize::Small,
                         width: "100%",
                         onclick: move |_| {
                             tracing::debug!("voting button confirmed");
@@ -90,7 +92,7 @@ translate! {
         en: "You've selected {}. Once submitted, changing your vote may not be possible. Please review your choice before proceeding.",
     },
 
-   btn_confirm:{
+    btn_confirm:{
         ko: "확인",
         en: "Confirm",
     },

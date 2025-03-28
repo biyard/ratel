@@ -26,7 +26,6 @@ pub fn SectionHeader(
                     {title}
                 }
 
-
                 div { class: "block max-[900px]:!hidden",
                     if with_line {
                         div { class: "col-span-1 w-full h-full flex flex-col items-center justify-center",
