@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 use bdk::prelude::*;
 use dioxus_popup::PopupService;
-use dto::ServiceError;
+use dto::{ServiceError, Subscription};
 
 use super::{
     signin_popup_footer::SigninPopupFooter, welcome_header::WelcomeHeader,
@@ -9,6 +9,7 @@ use super::{
 };
 use crate::{
     components::{button::primary_button::PrimaryButton, checkbox::Checkbox},
+    config,
     pages::components::LabeledInput,
     services::user_service::UserService,
     theme::Theme,
@@ -115,6 +116,18 @@ pub fn UserSetupPopup(
                             let email = email.clone();
                             let profile_url = profile_url.clone();
                             spawn(async move {
+                                if announcement_agree() {
+                                    let endpoint = config::get().main_api_endpoint;
+                                    match Subscription::get_client(&endpoint)
+                                        .subscribe(email.clone())
+                                        .await
+                                    {
+                                        Ok(_) => {}
+                                        Err(e) => {
+                                            tracing::error!("UserSetupPopup::subscribe: error={:?}", e);
+                                        }
+                                    }
+                                }
                                 if let Err(e) = user_service
                                     .login_or_signup(&principal, &email, &nickname, &profile_url)
                                     .await
