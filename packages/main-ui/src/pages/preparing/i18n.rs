@@ -4,7 +4,7 @@ translate! {
     PreparingTranslate;
 
     title: {
-        ko: ""
+        ko: "웹페이지가 곧\n오픈됩니다.",
         en: "The webpage is coming\nsoon.",
     },
 
