@@ -15,7 +15,7 @@ pub fn About(lang: Language) -> Element {
         }
         div {
             id: "about",
-            class: "w-full max-w-1177 h-full flex flex-col items-start justify-center gap-50 max-[1177px]:mx-10 max-[900px]:px-30",
+            class: "w-full max-w-1177 h-screen flex flex-col items-start justify-center gap-50 max-[1177px]:mx-10 max-[900px]:px-30",
             SectionHeader {
                 section_name: tr.title,
                 title: tr.mission,

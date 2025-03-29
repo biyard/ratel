@@ -109,8 +109,10 @@ pub fn PoliticiansPage(lang: Language) -> Element {
                                             src: "{politician.image_url}",
                                             class: "w-18 h-18 rounded-[4px] object-cover",
                                         }
-                                        div { class: "max-[900px]:!text-[15px] font-md max-[900px]:!flex justify-start items-center min-w-183 min-h-50",
-                                            {politician.name(&lang)}
+                                        div { class: "flex max-[900px]:!text-[15px] max-[900px]:!flex justify-start items-center min-w-183 min-h-50",
+                                            p { class: "font-md text-[15px] max-[900px]:!text-[15px] max-[900px]:!font-md",
+                                                {politician.name(&lang)}
+                                            }
                                         }
                                     }
                                 }

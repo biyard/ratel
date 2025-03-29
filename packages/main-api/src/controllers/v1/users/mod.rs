@@ -91,9 +91,20 @@ impl UserControllerV1 {
             ServiceError::Unauthorized
         })?;
 
+        if req.term_agreed == false {
+            return Err(ServiceError::BadRequest);
+        }
+
         let user = self
             .users
-            .insert(req.nickname, principal, req.email, req.profile_url)
+            .insert(
+                req.nickname,
+                principal,
+                req.email,
+                req.profile_url,
+                req.term_agreed,
+                req.informed_agreed,
+            )
             .await?;
 
         Ok(Json(user))

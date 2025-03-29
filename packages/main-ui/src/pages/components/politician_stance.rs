@@ -163,7 +163,6 @@ pub fn PoliticianStance(
                                         name: "{m.name}",
                                         party: m.party_enum(),
                                         image_url: "{m.image_url}",
-                                    
                                     }
                                 }
                             }

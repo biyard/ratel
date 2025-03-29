@@ -268,6 +268,8 @@ impl UserService {
         email: &str,
         nickname: &str,
         profile_url: &str,
+        term_agreed: bool,
+        informed_agreed: bool,
     ) -> Result<()> {
         // match (self.signer)() {
         //     WalletSigner::Phantom => {
@@ -301,6 +303,8 @@ impl UserService {
                 nickname.to_string(),
                 email.to_string(),
                 profile_url.to_string(),
+                term_agreed,
+                informed_agreed,
             )
             .await
         {
