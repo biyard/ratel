@@ -96,6 +96,10 @@ async fn main() -> Result<()> {
             controllers::v1::supports::SupportController::route(pool.clone())?,
         )
         .nest(
+            "/v1/subscriptions",
+            controllers::v1::subscriptions::SubscriptionController::new(pool.clone()).route(),
+        )
+        .nest(
             "/m1",
             controllers::m1::MenaceController::route(pool.clone())?,
         )
@@ -143,6 +147,8 @@ pub mod tests {
                 principal.clone(),
                 email.clone(),
                 profile_url.clone(),
+                true,
+                true,
             )
             .await?;
         tracing::debug!("{:?}", u);

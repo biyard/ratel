@@ -79,7 +79,8 @@ impl AssemblyMemberControllerM1 {
     }
 
     async fn fetch_proposers(&self) -> Result<()> {
-        let bills: Vec<Bill> = Bill::query_builder()
+        //FIXME: if neeeded, use user.id not '0'
+        let bills: Vec<Bill> = Bill::query_builder(0)
             .query()
             .map(|r: sqlx::postgres::PgRow| r.into())
             .fetch_all(&self.pool)

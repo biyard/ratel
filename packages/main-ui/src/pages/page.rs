@@ -12,7 +12,7 @@ pub fn HomePage(lang: Language) -> Element {
 
     rsx! {
         MetaPage { title: "Ratel", description: tr.description, image: "{image}" }
-        div { class: "flex flex-col w-full justify-start items-center",
+        div { class: "w-full flex flex-col justify-start items-center",
             Top { lang }
             About { lang }
             PoliticianStance { lang }

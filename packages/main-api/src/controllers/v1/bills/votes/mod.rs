@@ -77,13 +77,8 @@ impl VoteController {
 
 impl VoteController {
     async fn vote(&self, body: VoteVotingRequest, bill_id: i64) -> Result<Json<Vote>> {
-        let user = self
-            .user
-            .find_one(&UserReadAction::new().user_info())
-            .await?;
-
         match Vote::query_builder()
-            .user_id_equals(user.id)
+            .user_id_equals(body.user_id)
             .bill_id_equals(bill_id)
             .query()
             .map(|r: sqlx::postgres::PgRow| Into::<Vote>::into(r))
@@ -92,7 +87,10 @@ impl VoteController {
         {
             Ok(_) => Err(ServiceError::UniqueViolation("Already voted".to_string())),
             Err(_) => {
-                let vote = self.repo.insert(body.selected, bill_id, user.id).await?;
+                let vote = self
+                    .repo
+                    .insert(body.selected, bill_id, body.user_id)
+                    .await?;
                 Ok(Json(vote))
             }
         }

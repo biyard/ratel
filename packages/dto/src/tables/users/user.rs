@@ -26,4 +26,9 @@ pub struct User {
     #[api_model(action = signup, nullable)]
     #[validate(url)]
     pub profile_url: String,
+
+    #[api_model(action = signup)]
+    pub term_agreed: bool, // TODO: make it required (prod table schema)
+    #[api_model(action = signup)]
+    pub informed_agreed: bool, // TODO: add it prod table schema
 }

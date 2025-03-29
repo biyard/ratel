@@ -70,7 +70,8 @@ impl BillController {
 impl BillController {
     async fn query(&self, query: BillQuery) -> Result<QueryResponse<BillSummary>> {
         let mut total_count = 0;
-        let items: Vec<BillSummary> = BillSummary::query_builder()
+        //FIXME: if neeeded, use user.id not '0'
+        let items: Vec<BillSummary> = BillSummary::query_builder(0)
             .limit(query.size())
             .page(query.page())
             .order_by_bill_no_desc()
@@ -87,7 +88,9 @@ impl BillController {
     }
 
     async fn get(&self, id: i64) -> Result<Bill> {
-        let bill: Bill = Bill::query_builder()
+        //FIXME: if neeeded, use user.id not '0'
+
+        let bill: Bill = Bill::query_builder(0)
             .id_equals(id)
             .query()
             .map(|r: PgRow| r.into())
