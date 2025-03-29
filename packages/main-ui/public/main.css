@@ -1,4 +1,5 @@
-html, body {
+html,
+body {
   font-family: Raleway, sans-serif !important;
   background-color: var(--color-background);
   color: white;

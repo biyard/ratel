@@ -1,8 +1,9 @@
 #![allow(non_snake_case)]
-use super::{SignupPopup, Socials};
+use super::SignupPopup;
 use crate::components::{
     button::{primary_button::PrimaryButton, secondary_botton::SecondaryButton},
     icons::CharacterSymbol,
+    socials::Socials,
 };
 use bdk::prelude::*;
 use dioxus_popup::PopupService;
@@ -14,6 +15,8 @@ pub fn Top(
 ) -> Element {
     let tr: TopTranslate = translate(&lang);
     let mut popup: PopupService = use_context();
+    let white_paper = asset!("/public/documents/Ratel-Token-White-Paper.pdf");
+
     rsx! {
         div {
             id: "top",

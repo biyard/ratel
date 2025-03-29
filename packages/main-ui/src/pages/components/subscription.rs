@@ -3,9 +3,9 @@ use bdk::prelude::*;
 use dioxus_popup::PopupService;
 
 use crate::{
-    components::confirm_popup::ConfirmPopup,
+    components::{confirm_popup::ConfirmPopup, socials::Socials},
     config,
-    pages::components::{InputWithButton, Socials},
+    pages::components::InputWithButton,
 };
 
 #[component]
@@ -97,8 +97,12 @@ translate! {
     },
 
     email_placeholder: {
-        ko: "🖂 이메일을 입력하세요",
-        en: "🖂 Input your mail",
+        // FIXME: change emoji cause U+1F582 is not supported in most fonts
+        // https://www.fileformat.info/info/unicode/char/1f582/fontsupport.htm
+        // ko: "🖂 이메일을 입력하세요",
+        // en: "🖂 Please enter your email address",
+        ko: "이메일을 입력하세요",
+        en: "Please enter your email address",
     },
 
     btn_subscribe: {
