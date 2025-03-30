@@ -10,6 +10,7 @@ use bdk::prelude::{
     *,
 };
 
+use by_components::responsive::ResponsiveService;
 use dioxus_popup::PopupService;
 
 #[component]
@@ -45,12 +46,19 @@ pub fn DesktopHeader(lang: Language, selected: i32) -> Element {
             "max-tablet:-right-full"
         }
     });
+    let responsive: ResponsiveService = use_context();
+    let less_than_tablet = use_memo(move || responsive.width() < 900.0);
 
     rsx! {
         div { class: "fixed top-0 left-0 backdrop-blur-[20px] w-screen h-80 flex items-center justify-center z-100 max-tablet:!h-48",
             div { class: "w-full flex flex-row items-center justify-between gap-59 max-w-[1176px] mx-10",
                 div { class: "flex flex-row items-center justify-between max-tablet:w-full",
-                    a { href: "/#top", Logo {} }
+                    a { href: "/#top",
+                        Logo {
+                            width: if less_than_tablet() { 96 } else { 136 },
+                            height: if less_than_tablet() { 36 } else { 52 },
+                        }
+                    }
                     button {
                         class: "hidden max-tablet:!block cursor-pointer",
                         visibility: if expanded() { "hidden" },
