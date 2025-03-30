@@ -10,7 +10,7 @@ pub fn About(lang: Language) -> Element {
     rsx! {
         div {
             id: "about",
-            class: "w-full max-w-1177 h-screen flex flex-col items-start justify-center gap-50 max-table:h-fit",
+            class: "w-full max-w-1177 h-screen flex flex-col items-start justify-center gap-50 max-table:h-fit overflow-hidden",
             SectionHeader {
                 section_name: tr.title,
                 title: tr.mission,
