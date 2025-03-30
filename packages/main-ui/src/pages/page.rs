@@ -13,12 +13,14 @@ pub fn HomePage(lang: Language) -> Element {
     rsx! {
         MetaPage { title: "Ratel", description: tr.description, image: "{image}" }
         div { class: "w-full flex flex-col justify-start items-center",
-            Top { lang }
-            About { lang }
-            PoliticianStance { lang }
-            Community { lang }
-            Support { lang }
-            Subscription { lang }
+            div { class: "w-full flex flex-col justify-start items-center max-[1177px]:px-30",
+                Top { lang }
+                About { lang }
+                PoliticianStance { lang }
+                Community { lang }
+                Support { lang }
+                Subscription { lang }
+            }
             Footer { lang }
         }
     }
