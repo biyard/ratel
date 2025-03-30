@@ -34,7 +34,7 @@ pub fn Top(
                 Socials { class: "flex flex-row gap-50" }
             }
 
-            div { class: "flex flex-row gap-10 max-[900px]:!flex-col",
+            div { class: "w-full flex flex-row gap-10 max-[900px]:!flex-col",
                 PrimaryA { href: "/public/documents/Ratel-Token-White-Paper.pdf", {tr.btn_learn} }
 
                 SecondaryButton {

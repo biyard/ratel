@@ -79,7 +79,7 @@ pub fn PrimaryA(
         a {
             href,
             target: "_blank",
-            class: "font-bold gap-10 flex items-center justify-center text-base rounded-[10px] {bg} {padding}",
+            class: "font-bold gap-10 flex items-center justify-center text-base rounded-[10px] {bg} {padding} max-tablet:!w-full max-tablet:!px-0 max-tablet:!py-15",
             {children}
         }
     }
