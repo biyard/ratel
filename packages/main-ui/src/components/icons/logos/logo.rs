@@ -353,14 +353,14 @@ pub fn CharacterSymbol() -> Element {
     }
 }
 #[component]
-pub fn Logo(#[props(default = 22)] width: u32, #[props(default = 26)] height: u32) -> Element {
+pub fn Logo(#[props(default = 136)] width: u32, #[props(default = 52)] height: u32) -> Element {
     rsx! {
 
         svg {
             fill: "none",
-            height: "52",
+            height: "{height}",
             view_box: "0 0 136 52",
-            width: "136",
+            width: "{width}",
             xmlns: "http://www.w3.org/2000/svg",
             g { clip_path: "url(#clip0_11_4331)",
                 path {

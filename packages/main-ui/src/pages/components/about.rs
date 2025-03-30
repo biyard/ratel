@@ -10,39 +10,40 @@ pub fn About(lang: Language) -> Element {
     let tr: AboutTranslate = translate(&lang);
 
     rsx! {
-        div { class: "hidden max-[900px]:!block w-screen mt-30 max-[380px]:!mt-100",
+        div { class: "hidden max-[900px]:!block w-screen",
             BackgroundTriangle { color: "#1E1E1E" }
         }
+
         div {
             id: "about",
-            class: "w-full max-w-1177 h-screen flex flex-col items-start justify-center gap-50 max-[1177px]:mx-10 max-[900px]:px-30",
+            class: "w-full max-w-1177 h-screen flex flex-col items-start justify-center gap-50 max-tablet:!h-auto overflow-hidden max-tablet:pt-68",
             SectionHeader {
                 section_name: tr.title,
                 title: tr.mission,
                 description: tr.description,
             }
 
-            div { class: "w-full grid grid-cols-4 gap-24 max-[900px]:!grid-cols-1",
+            div { class: "w-full grid grid-cols-4 gap-24 max-tablet:!grid-cols-1",
                 MissionCard {
-                    class: "col-span-1 w-full h-352",
+                    class: "col-span-1 w-full h-352 max-tablet:!h-auto",
                     no: "01.",
                     title: tr.mission1,
                     description: tr.mission1_description,
                 }
                 MissionCard {
-                    class: "col-span-1 w-full h-352",
+                    class: "col-span-1 w-full h-352 max-tablet:!h-auto",
                     no: "02.",
                     title: tr.mission2,
                     description: tr.mission2_description,
                 }
                 MissionCard {
-                    class: "col-span-1 w-full h-352",
+                    class: "col-span-1 w-full h-352 max-tablet:!h-auto",
                     no: "03.",
                     title: tr.mission3,
                     description: tr.mission3_description,
                 }
                 MissionCard {
-                    class: "col-span-1 w-full h-352",
+                    class: "col-span-1 w-full h-352 max-tablet:!h-auto",
                     no: "04.",
                     title: tr.mission4,
                     description: tr.mission4_description,
