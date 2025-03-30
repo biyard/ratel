@@ -19,10 +19,10 @@ pub fn Header(
     selected: i32,
 ) -> Element {
     rsx! {
-        div { class: "block max-[900px]:!hidden",
+        div { class: "block max-tablet:!hidden",
             DesktopHeader { lang, selected }
         }
-        div { class: "hidden max-[900px]:!block",
+        div { class: "hidden max-tablet:!block",
             MobileHeader { lang, selected }
         }
     }

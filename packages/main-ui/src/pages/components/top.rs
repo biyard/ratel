@@ -20,14 +20,14 @@ pub fn Top(
     rsx! {
         div {
             id: "top",
-            class: "w-full h-screen flex flex-col items-center justify-center gap-100 max-tablet:!h-auto max-tablet:!gap-123 max-tablet:!pt-123 max-tablet:!pb-58",
+            class: "w-full h-screen flex flex-col items-center justify-center gap-100 max-tablet:!gap-0 max-tablet:py-20",
             ..attributes,
-            div { class: "flex flex-col items-center justify-center gap-32",
+            div { class: "flex flex-col items-center justify-center gap-32 max-tablet:my-auto",
                 div { class: "max-[900px]:!scale-70", CharacterSymbol {} }
-                h1 { class: "text-5xl/56 text-center font-bold text-white whitespace-pre-line max-[900px]:text-[28px]",
+                h1 { class: "text-5xl/56 text-center font-bold text-white whitespace-pre-line max-tablet:text-[28px]/38 max",
                     {tr.slogan}
                 }
-                p { class: "text-lg text-center font-normal text-c-wg-30 whitespace-pre-line max-[900px]: text-[15px]",
+                p { class: "text-lg text-center font-normal text-c-wg-30 whitespace-pre-line max-tablet:text-[15px]",
                     {tr.description}
                 }
 
