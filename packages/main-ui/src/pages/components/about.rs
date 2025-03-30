@@ -1,6 +1,8 @@
 #![allow(non_snake_case)]
 use bdk::prelude::*;
 
+use crate::components::icons::BackgroundTriangle;
+
 use super::*;
 
 #[component]
@@ -8,6 +10,10 @@ pub fn About(lang: Language) -> Element {
     let tr: AboutTranslate = translate(&lang);
 
     rsx! {
+        div { class: "hidden max-[900px]:!block w-screen",
+            BackgroundTriangle { color: "#1E1E1E" }
+        }
+
         div {
             id: "about",
             class: "w-full max-w-1177 h-screen flex flex-col items-start justify-center gap-50 max-tablet:!h-auto overflow-hidden max-tablet:pt-68",
