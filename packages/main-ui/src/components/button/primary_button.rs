@@ -61,3 +61,26 @@ pub fn PrimaryLink(
         }
     }
 }
+
+#[component]
+pub fn PrimaryA(
+    href: String,
+    #[props(default = Default::default())] size: ButtonSize,
+    children: Element,
+) -> Element {
+    let bg =
+        "bg-btn-p hover:bg-btn-p-hover text-btn-p-text hover:text-btn-p-hover-text cursor-pointer";
+    let padding = match size {
+        ButtonSize::Normal => "px-40 py-20",
+        ButtonSize::Small => "px-20 py-10",
+    };
+
+    rsx! {
+        a {
+            href,
+            target: "_blank",
+            class: "font-bold gap-10 flex items-center justify-center text-base rounded-[10px] {bg} {padding}",
+            {children}
+        }
+    }
+}
