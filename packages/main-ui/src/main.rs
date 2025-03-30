@@ -8,7 +8,7 @@ pub mod theme;
 pub mod utils;
 
 use bdk::prelude::*;
-use by_components::effects::HoverEffects;
+use by_components::{effects::HoverEffects, responsive::Responsive};
 use dioxus_oauth::prelude::FirebaseProvider;
 use dioxus_popup::PopupService;
 use route::Route;
@@ -79,7 +79,7 @@ fn app() -> Element {
 
         // document::Script { r#type: "module", src: asset!("/public/dep.js"), defer: true }
 
-        Router::<Route> {}
+        Responsive { tablet: 900, Router::<Route> {} }
     }
 }
 
