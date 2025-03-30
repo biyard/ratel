@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 use super::SignupPopup;
 use crate::components::{
-    button::{primary_button::PrimaryButton, secondary_botton::SecondaryButton},
+    button::{primary_button::PrimaryA, secondary_botton::SecondaryButton},
     icons::CharacterSymbol,
     socials::Socials,
 };
@@ -20,30 +20,28 @@ pub fn Top(
     rsx! {
         div {
             id: "top",
-            class: "w-screen h-screen flex flex-col items-center justify-center gap-100 max-[900px]:!px-30 max-[380px]:!mt-100",
+            class: "w-full h-screen flex flex-col items-center justify-center gap-100 max-tablet:!gap-0 max-tablet:py-20",
             ..attributes,
-            div { class: "flex flex-col items-center justify-center gap-32",
+            div { class: "flex flex-col items-center justify-center gap-32 max-tablet:my-auto",
                 div { class: "max-[900px]:!scale-70", CharacterSymbol {} }
-                h1 { class: "text-5xl/56 text-center font-bold text-white whitespace-pre-line max-[900px]:text-[28px]",
+                h1 { class: "text-5xl/56 text-center font-bold text-white whitespace-pre-line max-tablet:text-[28px]/38 max",
                     {tr.slogan}
                 }
-                p { class: "text-lg text-center font-normal text-c-wg-30 whitespace-pre-line max-[900px]: text-[15px]",
+                p { class: "text-lg text-center font-normal text-c-wg-30 whitespace-pre-line max-tablet:text-[15px]",
                     {tr.description}
                 }
 
                 Socials { class: "flex flex-row gap-50" }
             }
 
-            div { class: "flex flex-row gap-10 max-[900px]:!flex-col",
-                // TODO: implement downloading whitepaper
-                PrimaryButton { onclick: |_| {}, {tr.btn_learn} }
+            div { class: "w-full flex flex-row gap-20 items-center justify-center max-tablet:!flex-col max-tablet:!gap-16",
+                PrimaryA { href: "/public/documents/Ratel-Token-White-Paper.pdf", {tr.btn_learn} }
 
-                // TODO: implement Sign in
                 SecondaryButton {
                     onclick: move |_| {
                         tracing::debug!("Learn more clicked");
                         popup.open(rsx! {
-                            SignupPopup { class: "w-400", lang }
+                            SignupPopup { class: "w-400 max-[400px]:!w-full max-[400px]:mx-10", lang }
                         });
                     },
                     {tr.btn_join}

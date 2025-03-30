@@ -19,7 +19,7 @@ pub fn Community(
         }
         div {
             id: "community",
-            class: "w-full max-w-1177 h-screen flex flex-col items-start justify-center gap-50 max-[1177px]:mx-10 max-[900px]:px-30 max-[900px]:!h-full",
+            class: "w-full max-w-1177 h-screen flex flex-col items-start justify-center gap-50 max-tablet:!h-full max-tablet:py-68",
             SectionHeader {
                 section_name: tr.title,
                 title: tr.mission,
@@ -33,7 +33,7 @@ pub fn Community(
                 },
             }
 
-            ComingSoon { class: "w-full h-full max-h-430 max-[900px]:!max-h-250" }
+            ComingSoon { class: "w-full h-full max-h-430" }
         }
     }
 }
@@ -45,9 +45,9 @@ pub fn ComingSoon(
 ) -> Element {
     rsx! {
         div {..attributes,
-            div { class: "w-full h-full bg-bg flex flex-col items-center justify-center rounded-[20px] gap-30",
+            div { class: "w-full h-full bg-bg flex flex-col items-center justify-center rounded-[20px] gap-30 max-tablet:py-50",
                 icons::ComingSoon {}
-                p { class: "text-5xl font-bold text-text-primary max-[900px]:text-2xl",
+                p { class: "text-5xl font-bold text-text-primary max-tablet:text-2xl",
                     "Coming soon"
                 }
             }
