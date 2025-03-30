@@ -14,8 +14,8 @@ pub fn Subscription(lang: Language) -> Element {
     let mut popup: PopupService = use_context();
 
     rsx! {
-        div { class: "w-full flex flex-col max-[900px]:mt-40",
-            div { class: "block max-[900px]:!hidden",
+        div { class: "w-full flex flex-col max-tablet:mt-40",
+            div { class: "block max-tablet:!hidden",
                 div { class: "w-full",
                     svg {
                         fill: "none",
@@ -29,7 +29,7 @@ pub fn Subscription(lang: Language) -> Element {
                     }
                 }
             }
-            div { class: "w-full flex flex-col items-center justify-center py-80 bg-footer gap-80 max-[900px]:!py-40",
+            div { class: "w-full flex flex-col items-center justify-center py-80 bg-footer gap-80 max-tablet:!py-40",
                 div { class: "w-full flex max-w-604 flex-col items-center gap-80 px-30",
                     //TODO(web): Make button separately and fix padding pixel
                     div { class: "w-full flex flex-col gap-50 items-center",
