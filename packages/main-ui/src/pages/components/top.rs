@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 use super::SignupPopup;
 use crate::components::{
-    button::{primary_button::PrimaryButton, secondary_botton::SecondaryButton},
+    button::{primary_button::PrimaryA, secondary_botton::SecondaryButton},
     icons::CharacterSymbol,
     socials::Socials,
 };
@@ -20,7 +20,7 @@ pub fn Top(
     rsx! {
         div {
             id: "top",
-            class: "w-screen h-screen flex flex-col items-center justify-center gap-100 max-tablet:!h-auto max-tablet:!gap-123 max-tablet:!pt-123 max-tablet:!pb-58",
+            class: "w-full h-screen flex flex-col items-center justify-center gap-100 max-tablet:!h-auto max-tablet:!gap-123 max-tablet:!pt-123 max-tablet:!pb-58",
             ..attributes,
             div { class: "flex flex-col items-center justify-center gap-32",
                 div { class: "max-[900px]:!scale-70", CharacterSymbol {} }
@@ -35,10 +35,8 @@ pub fn Top(
             }
 
             div { class: "flex flex-row gap-10 max-[900px]:!flex-col",
-                // TODO: implement downloading whitepaper
-                PrimaryButton { onclick: |_| {}, {tr.btn_learn} }
+                PrimaryA { href: "/public/documents/Ratel-Token-White-Paper.pdf", {tr.btn_learn} }
 
-                // TODO: implement Sign in
                 SecondaryButton {
                     onclick: move |_| {
                         tracing::debug!("Learn more clicked");
