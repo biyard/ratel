@@ -89,7 +89,7 @@ pub fn DesktopHeader(lang: Language, selected: i32) -> Element {
                         }
                     }
                     Link {
-                        class: "px-20 py-10 bg-primary hover:bg-hover text-black text-sm cursor-pointer rounded-full font-bold",
+                        class: "px-20 py-10 bg-primary hover:bg-hover text-black text-sm cursor-pointer rounded-full font-bold flex items-center justify-center",
                         to: Route::PreparingPage { lang },
                         {tr.get_ratel}
                     }

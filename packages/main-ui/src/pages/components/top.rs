@@ -20,7 +20,7 @@ pub fn Top(
     rsx! {
         div {
             id: "top",
-            class: "w-screen h-screen flex flex-col items-center justify-center gap-100 max-[900px]:!px-30 max-[380px]:!mt-100",
+            class: "w-screen h-screen flex flex-col items-center justify-center gap-100 max-tablet:!h-auto max-tablet:!gap-123 max-tablet:!pt-123 max-tablet:!pb-58",
             ..attributes,
             div { class: "flex flex-col items-center justify-center gap-32",
                 div { class: "max-[900px]:!scale-70", CharacterSymbol {} }

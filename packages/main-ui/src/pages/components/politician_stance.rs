@@ -66,7 +66,7 @@ pub fn PoliticianStance(
         }
         div {
             id: "politician-stance",
-            class: "w-screen max-w-1177 h-full flex flex-col items-start justify-center mt-150 gap-50 max-[1177px]:mx-10 max-[900px]:px-30 max-[900px]:!mt-0",
+            class: "w-full max-w-1177 h-screen flex flex-col items-start justify-center gap-50 max-[900px]:px-30",
             SectionHeader {
                 section_name: tr.title,
                 title: tr.mission,
