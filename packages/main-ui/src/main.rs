@@ -79,7 +79,7 @@ fn app() -> Element {
 
         // document::Script { r#type: "module", src: asset!("/public/dep.js"), defer: true }
 
-        Responsive { tablet: 900, Router::<Route> {} }
+        Responsive { tablet: 900.0, Router::<Route> {} }
     }
 }
 
