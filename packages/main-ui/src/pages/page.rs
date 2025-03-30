@@ -19,8 +19,8 @@ pub fn HomePage(lang: Language) -> Element {
                 PoliticianStance { lang }
                 Community { lang }
                 Support { lang }
-                Subscription { lang }
             }
+            Subscription { lang }
             Footer { lang }
         }
     }

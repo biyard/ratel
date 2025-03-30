@@ -25,7 +25,7 @@ pub fn Support(lang: Language) -> Element {
         }
         div {
             id: "support",
-            class: "w-full max-w-1177 h-screen flex flex-col items-center justify-center max-[900px]:!h-full",
+            class: "w-full max-w-1177 h-screen flex flex-col items-center justify-center max-[900px]:!h-full max-tablet:py-68",
             div { class: "w-full grid grid-cols-2 gap-50 max-[900px]:!grid-cols-1",
                 div { class: "col-span-1 w-full",
                     SectionHeader {

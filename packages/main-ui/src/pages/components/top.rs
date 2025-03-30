@@ -34,14 +34,14 @@ pub fn Top(
                 Socials { class: "flex flex-row gap-50" }
             }
 
-            div { class: "w-full flex flex-row gap-10 max-[900px]:!flex-col",
+            div { class: "w-full flex flex-row gap-20 items-center justify-center max-tablet:!flex-col max-tablet:!gap-16",
                 PrimaryA { href: "/public/documents/Ratel-Token-White-Paper.pdf", {tr.btn_learn} }
 
                 SecondaryButton {
                     onclick: move |_| {
                         tracing::debug!("Learn more clicked");
                         popup.open(rsx! {
-                            SignupPopup { class: "w-400", lang }
+                            SignupPopup { class: "w-400 max-[400px]:!w-full max-[400px]:mx-10", lang }
                         });
                     },
                     {tr.btn_join}
