@@ -24,7 +24,7 @@ pub fn PrimaryButton(
 
     rsx! {
         button {
-            class: "font-bold gap-10 flex items-center justify-center text-base {bg} {padding} max-[900px]:!h-50",
+            class: "font-bold gap-10 flex items-center justify-center text-base {bg} {padding} max-tablet:!h-50",
             disabled,
             onclick,
             ..attributes,

@@ -12,7 +12,6 @@ use crate::{
     config,
     pages::components::LabeledInput,
     services::user_service::UserService,
-    theme::Theme,
 };
 
 #[component]
@@ -33,19 +32,11 @@ pub fn UserSetupPopup(
     let mut agreed = use_signal(|| false);
     let mut announcement_agree = use_signal(|| false);
     let mut user_service: UserService = use_context();
-    let theme: Theme = use_context();
-    let theme = theme.get_data();
-    let btn_color = use_memo(move || {
-        if agreed() {
-            "#FCB300".to_string()
-        } else {
-            "#A1A1A1".to_string()
-        }
-    });
+
     let tr = translate::<UserSetupPopupTranslate>(&lang);
     let value = email.clone();
     rsx! {
-        div { id, class: "w-390 max-[450px]:w-350",
+        div { id, class: "w-full max-w-450 mx-10 max-mobile:!max-w-full",
             WelcomeHeader { lang, title: tr.title, description: tr.message }
             div { class: "flex flex-col items-start justify-start w-full pt-10 gap-20 mt-35",
                 // Email
@@ -54,7 +45,7 @@ pub fn UserSetupPopup(
                         span { class: "text-[15px]/28 font-bold text-neutral-400", {tr.email} }
                     }
                     input {
-                        class: "border border-c-wg-70 bg-bg text-secondary w-full max-[400px]:w-300 h-59 px-24 py-[17.5px] text-lg/24 font-medium placeholder-neutral-600 rounded-lg",
+                        class: "border border-c-wg-70 bg-bg text-secondary w-full h-59 px-24 py-[17.5px] text-lg/24 font-medium placeholder-neutral-600 rounded-lg",
                         disabled: !value.clone().is_empty(),
                         value,
                     }
