@@ -20,7 +20,7 @@ pub struct Controller {
 
 impl Controller {
     pub fn new(lang: Language) -> std::result::Result<Self, RenderError> {
-        let size = 1000;
+        let size = 300;
         let sort = use_signal(|| None);
         let order = use_signal(|| SortOrder::Ascending);
         let stance = use_signal(|| None);

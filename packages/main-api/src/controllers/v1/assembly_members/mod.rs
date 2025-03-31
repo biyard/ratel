@@ -80,45 +80,54 @@ impl AssemblyMemberControllerV1 {
     pub async fn list_assembly_member(
         State(ctrl): State<AssemblyMemberControllerV1>,
         Extension(_auth): Extension<Option<Authorization>>,
-        Query(q): Query<AssemblyMemberParam>,
+        Query(param): Query<AssemblyMemberParam>,
     ) -> Result<Json<AssemblyMemberGetResponse>> {
-        tracing::debug!("list_assembly_member {:?}", q);
+        tracing::debug!("list_assembly_member {:?}", param);
 
-        match q {
-            AssemblyMemberParam::Query(q)
-                if q.action == Some(AssemblyMemberQueryActionType::ListByStance) =>
-            {
-                let mut total_count = 0;
-                let stance = q.stance.clone().unwrap_or_default();
-                tracing::debug!("list_by_stance {:?}", stance);
-                let items: Vec<AssemblyMemberSummary> = AssemblyMemberSummary::query_builder()
-                    .limit(q.size())
-                    .stance_equals(stance)
-                    .order_by_random()
-                    .query()
-                    .map(|row: PgRow| {
-                        use sqlx::Row;
-                        total_count = row.get("total_count");
-                        row.into()
-                    })
-                    .fetch_all(&ctrl.pool)
-                    .await?;
-
-                Ok(Json(AssemblyMemberGetResponse::Query(QueryResponse {
-                    total_count,
-                    items,
-                })))
-            }
-
+        match param {
             AssemblyMemberParam::Query(q) => {
+                let mut query_builder = AssemblyMemberSummary::query_builder().limit(q.size());
                 let mut total_count = 0;
-                let items: Vec<AssemblyMemberSummary> = AssemblyMemberSummary::query_builder()
-                    .limit(q.size())
-                    .order_by_random()
+                if let Some(party) = q.party {
+                    query_builder = query_builder.party_equals(party);
+                }
+
+                if let Some(stance) = q.stance {
+                    query_builder = query_builder.stance_equals(stance);
+                }
+
+                query_builder = match (q.sort, q.order) {
+                    (Some(AssemblyMemberSorter::Name), Some(SortOrder::Ascending)) => {
+                        query_builder.order_by_name_asc()
+                    }
+                    (Some(AssemblyMemberSorter::Name), Some(SortOrder::Descending)) => {
+                        query_builder.order_by_name_desc()
+                    }
+                    (Some(AssemblyMemberSorter::Stance), Some(SortOrder::Ascending)) => {
+                        query_builder.order_by_district_asc()
+                    }
+                    (Some(AssemblyMemberSorter::Stance), Some(SortOrder::Descending)) => {
+                        query_builder.order_by_district_desc()
+                    }
+                    (Some(AssemblyMemberSorter::Party), Some(SortOrder::Ascending)) => {
+                        query_builder.order_by_party_asc()
+                    }
+                    (Some(AssemblyMemberSorter::Party), Some(SortOrder::Descending)) => {
+                        query_builder.order_by_party_desc()
+                    }
+                    (Some(AssemblyMemberSorter::Bills), Some(SortOrder::Ascending)) => {
+                        query_builder.order_by_no_of_bills_asc()
+                    }
+                    (Some(AssemblyMemberSorter::Bills), Some(SortOrder::Descending)) => {
+                        query_builder.order_by_no_of_bills_desc()
+                    }
+                    _ => query_builder.order_by_random(),
+                };
+
+                let items: Vec<AssemblyMemberSummary> = query_builder
                     .query()
                     .map(|row: PgRow| {
                         use sqlx::Row;
-                        tracing::debug!("row: {:?}", row);
                         total_count = row.get("total_count");
                         row.into()
                     })
