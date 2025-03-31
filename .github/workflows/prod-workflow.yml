@@ -71,7 +71,7 @@ jobs:
           V1_ENDPOINT: api.ratel.foundation
         run: |
           npm i -g aws-cdk @tailwindcss/cli
-          make deploy-web-if-needed
+          make deploy-web
 
   main-api:
     runs-on: ubuntu-22.04
@@ -119,4 +119,4 @@ jobs:
           ENABLE_LAMBDA: true
         run: |
           npm i -g aws-cdk
-          make deploy-if-needed
+          make deploy
