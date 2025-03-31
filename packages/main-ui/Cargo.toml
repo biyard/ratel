@@ -28,6 +28,8 @@ base64 = "0.22.1"
 url = "2.5.4"
 wallet-adapter = "=1.0.4-beta"
 hex = "0.4.3"
+serde_json.workspace = true
+js-sys = "0.3.77"
 
 [features]
 default = []
