@@ -81,7 +81,7 @@ pub enum SortOrder {
     Descending = 2,
 }
 
-#[api_model(base = "/v1/assembly-members", table = assembly_members, iter_type = QueryResponse, queryable = [(sort = AssemblyMemberSorter, order = SortOrder)], action_by_id = [change_stance(code = String, stance = CryptoStance), send_verify_email])]
+#[api_model(base = "/v1/assembly-members", table = assembly_members, iter_type = QueryResponse, queryable = [(sort = AssemblyMemberSorter, order = SortOrder, keyword = String)], action_by_id = [change_stance(code = String, stance = CryptoStance), send_verify_email])]
 pub struct AssemblyMember {
     #[api_model(summary, primary_key)]
     pub id: i64,
