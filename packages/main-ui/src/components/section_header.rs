@@ -22,16 +22,13 @@ pub fn SectionHeader(
             Indicator { {section_name} }
             div { class: "w-full grid {cols} gap-24",
 
-                h1 { class: "w-full col-span-1 text-[32px] font-bold text-white max-[900px]:!text-[24px] max-[900px]:!w-screen pr-[30px]",
+                h1 { class: "w-full col-span-1 text-[32px] font-bold text-white max-tablet:!text-2xl pr-30 max-tablet:!col-span-full",
                     {title}
                 }
 
-
-                div { class: "block max-[900px]:!hidden",
-                    if with_line {
-                        div { class: "col-span-1 w-full h-full flex flex-col items-center justify-center",
-                            div { class: "w-full h-1 bg-c-wg-70" }
-                        }
+                if with_line {
+                    div { class: "col-span-1 w-full h-full flex flex-col items-center justify-center max-tablet:!hidden",
+                        div { class: "w-full h-1 bg-c-wg-70" }
                     }
                 }
             }
