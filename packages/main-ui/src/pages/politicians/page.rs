@@ -40,7 +40,9 @@ pub fn PoliticiansPage(lang: Language) -> Element {
                         SearchBox {
                             placeholder: "Search for a  Politcian",
                             value: "",
-                            onsearch: move |e| {},
+                            onsearch: move |e| {
+                                ctrl.set_keyword(e);
+                            },
                         }
                     }
 

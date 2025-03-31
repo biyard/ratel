@@ -124,6 +124,10 @@ impl AssemblyMemberControllerV1 {
                     _ => query_builder.order_by_random(),
                 };
 
+                if let Some(keyword) = q.keyword {
+                    query_builder = query_builder.name_contains(keyword);
+                }
+
                 let items: Vec<AssemblyMemberSummary> = query_builder
                     .query()
                     .map(|row: PgRow| {

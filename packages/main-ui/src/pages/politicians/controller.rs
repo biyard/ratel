@@ -14,6 +14,7 @@ pub struct Controller {
     pub order: Signal<SortOrder>,
     pub stance: Signal<Option<CryptoStance>>,
     pub party: Signal<Option<String>>,
+    pub keyword: Signal<Option<String>>,
     pub is_end: Signal<bool>,
     pub nav: Navigator,
 }
@@ -25,6 +26,7 @@ impl Controller {
         let order = use_signal(|| SortOrder::Ascending);
         let stance = use_signal(|| None);
         let party = use_signal(|| None);
+        let keyword = use_signal(|| None);
 
         let politicians = use_server_future(move || {
             let cli = AssemblyMember::get_client(&crate::config::get().main_api_endpoint);
@@ -32,6 +34,7 @@ impl Controller {
             let stance = stance();
             let order = order();
             let party = party();
+            let keyword = keyword();
 
             async move {
                 let mut q = AssemblyMemberQuery::new(size).with_order(order);
@@ -48,6 +51,10 @@ impl Controller {
                     q = q.with_stance(stance);
                 }
 
+                if let Some(keyword) = keyword {
+                    q = q.with_keyword(keyword);
+                }
+
                 cli.query(q).await.unwrap_or_default()
             }
         })?;
@@ -59,6 +66,7 @@ impl Controller {
             stance,
             order,
             party,
+            keyword,
             nav: use_navigator(),
             is_end: use_signal(|| false),
         };
@@ -99,5 +107,13 @@ impl Controller {
             Party::None => None,
             p => Some(p.translate(&Language::Ko).to_string()),
         });
+    }
+
+    pub fn set_keyword(&mut self, keyword: String) {
+        if keyword.is_empty() {
+            self.keyword.set(None);
+        } else {
+            self.keyword.set(Some(keyword));
+        }
     }
 }
