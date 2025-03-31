@@ -23,7 +23,6 @@ pub fn PoliticiansPage(lang: Language) -> Element {
         }
     });
 
-    //TODO(web): have to change header style
     rsx! {
         by_components::meta::MetaPage { title: tr.title, description: tr.description }
 
@@ -51,7 +50,7 @@ pub fn PoliticiansPage(lang: Language) -> Element {
                     }
                 }
 
-                div { class: "w-full min-w-300 max-w-500 max-tablet:!max-w-full order-1 max-tablet:!order-1",
+                div { class: "w-full min-w-200 max-w-500 max-tablet:!max-w-full order-1 max-tablet:!order-1",
                     SearchBox {
                         placeholder: "Search for a  Politcian",
                         value: "",
@@ -62,7 +61,6 @@ pub fn PoliticiansPage(lang: Language) -> Element {
                 }
             }
 
-            //TODO(web): have to make scroll w-full and check chart range
             div { class: "w-full grow overflow-x-scroll mb-52 flex flex-col",
                 div { class: "min-w-1100 flex flex-col",
                     div { class: "grid grid-cols-5 items-center bg-bg rounded-t-[8px] w-full",

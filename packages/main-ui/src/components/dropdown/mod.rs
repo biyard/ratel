@@ -14,7 +14,7 @@ pub fn Dropdown(
     rsx! {
         div {..attributes,
             div { class: "relative w-full h-full inline-block text-left",
-                div { class: "w-full h-full max-[900px]:!w-full min-w-150",
+                div { class: "w-full h-full min-w-150 max-mobile:!min-w-100",
                     button {
                         aria_expanded: "false",
                         aria_haspopup: "true",
