@@ -66,6 +66,7 @@ impl Controller {
         })?;
 
         let ctrl = Self { lang, politician };
+        use_context_provider(move || ctrl);
 
         Ok(ctrl)
     }

@@ -13,7 +13,12 @@ use crate::{
 };
 
 #[component]
-pub fn VoteConfirm(vote: VoteOption, lang: Language, bill_id: i64) -> Element {
+pub fn VoteConfirm(
+    vote: VoteOption,
+    lang: Language,
+    bill_id: i64,
+    oncomplete: Option<EventHandler<()>>,
+) -> Element {
     let tr: VoteConfirmTranslate = translate(&lang);
     let mut popup: PopupService = use_context();
     let vote_service: VoteService = use_context();
@@ -59,6 +64,9 @@ pub fn VoteConfirm(vote: VoteOption, lang: Language, bill_id: i64) -> Element {
                                 match vote_service.vote(bill_id, vote).await {
                                     Ok(ret) => {
                                         tracing::debug!("Voted successfully: {:?}", ret);
+                                        if let Some(oncomplete) = oncomplete {
+                                            oncomplete(());
+                                        }
                                         popup.close();
                                     }
                                     Err(e) => {

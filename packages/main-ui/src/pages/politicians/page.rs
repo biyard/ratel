@@ -53,7 +53,7 @@ pub fn PoliticiansPage(lang: Language) -> Element {
                 div { class: "w-full min-w-200 max-w-500 max-tablet:!max-w-full order-1 max-tablet:!order-1",
                     SearchBox {
                         placeholder: "Search for a  Politcian",
-                        value: "",
+                        value: ctrl.keyword().unwrap_or_default(),
                         onsearch: move |e| {
                             ctrl.set_keyword(e);
                         },
