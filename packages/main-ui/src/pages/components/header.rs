@@ -136,7 +136,7 @@ pub fn Header(
                                     tracing::debug!("Sign in clicked");
                                     expanded.set(false);
                                     popup.open(rsx! {
-                                        SignupPopup { class: "w-full max-w-400 mx-5", lang }
+                                        SignupPopup { lang }
                                     }).with_id("signup_popup");
                                 },
                                 {tr.login}

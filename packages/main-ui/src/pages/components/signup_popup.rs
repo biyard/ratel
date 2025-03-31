@@ -9,15 +9,14 @@ use dioxus_popup::PopupService;
 #[component]
 pub fn SignupPopup(
     #[props(default ="signup_popup".to_string())] id: String,
-    #[props(default ="".to_string())] class: String,
     lang: Language,
 ) -> Element {
     let tr = translate::<SignupPopupTranslate>(&lang);
     let mut user_service: UserService = use_context();
     let mut popup: PopupService = use_context();
     rsx! {
-        div { id, class,
-            div { class: "w-400",
+        div { id, class: "w-full max-w-400 mx-5 max-mobile:!max-w-full",
+            div { class: "w-400 max-mobile:!w-full",
                 div { class: "justify-start text-white font-bold text-xl/24", "{tr.title}" }
                 div { class: "flex flex-col gap-10 mt-35",
                     div {
@@ -54,8 +53,8 @@ pub fn SignupPopup(
                         onclick: move |_| {
                             tracing::debug!("signup with wallet clicked");
                             popup.open(rsx! {
-                                WalletPopup { class: "w-full max-w-400 mx-5", lang }
-                            }).with_id("wallet_popup");
+                                WalletPopup { lang }
+                            });
                         },
                         icons::Wallet {}
                         div { class: "flex flex-col gap-3",
