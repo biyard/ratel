@@ -17,14 +17,16 @@ pub enum CryptoStance {
     #[default]
     #[translate(en = "All Stance")]
     None = 99,
-    #[translate(en = "No Stance")]
-    NoStance = 0,
-    #[translate(en = "Pro-Crypto")]
-    ProCrypto = 1,
+    #[translate(en = "Strongly Against")]
+    StronglyAgainst = 0,
+    #[translate(en = "Against")]
+    Against = 1,
     #[translate(en = "Neutral")]
     Neutral = 2,
-    #[translate(en = "Anti-Crypto")]
-    AntiCrypto = 3,
+    #[translate(en = "Supportive")]
+    Supportive = 3,
+    #[translate(en = "Strongly Supportive")]
+    StronglySupportive = 4,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Default, Translate, ApiModel, Copy)]
@@ -119,9 +121,11 @@ pub struct AssemblyMember {
 impl AssemblyMemberSummary {
     pub fn stance_color(&self) -> &'static str {
         match self.stance {
-            CryptoStance::ProCrypto => "bg-c-c-20",
+            CryptoStance::Supportive => "bg-c-c-20",
+            CryptoStance::StronglySupportive => "bg-c-c-20",
             CryptoStance::Neutral => "bg-c-pp-20",
-            CryptoStance::AntiCrypto => "bg-c-p-20",
+            CryptoStance::Against => "bg-c-p-20",
+            CryptoStance::StronglyAgainst => "bg-c-p-20",
             _ => "bg-c-wg-50",
         }
     }
@@ -147,9 +151,11 @@ impl AssemblyMemberSummary {
 impl AssemblyMember {
     pub fn stance_color(&self) -> &'static str {
         match self.stance {
-            CryptoStance::ProCrypto => "bg-c-c-20",
+            CryptoStance::Supportive => "bg-c-c-20",
+            CryptoStance::StronglySupportive => "bg-c-c-20",
             CryptoStance::Neutral => "bg-c-pp-20",
-            CryptoStance::AntiCrypto => "bg-c-p-20",
+            CryptoStance::Against => "bg-c-p-20",
+            CryptoStance::StronglyAgainst => "bg-c-p-20",
             _ => "bg-c-wg-50",
         }
     }
