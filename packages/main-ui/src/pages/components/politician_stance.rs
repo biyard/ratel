@@ -92,7 +92,7 @@ pub fn PoliticianStance(
             div { class: "w-full flex flex-col gap-30 items-center",
                 div { class: "w-full flex flex-col gap-10 items-start",
                     //desktop_pro
-                    div { class: "block max-[900px]:!hidden w-full flex flex-row gap-10",
+                    div { class: "w-full flex flex-row gap-10 max-tablet:!h-full max-tablet:!block",
                         ExpandableContainer {
                             tag: tr.pro_crypto,
                             total_count: pro_cryptos().total_count,
@@ -104,7 +104,7 @@ pub fn PoliticianStance(
                                 tracing::debug!("selected: 0");
                                 selected.set(0);
                             },
-                            div { class: "w-full h-260 grid grid-cols-4 gap-10",
+                            div { class: "w-full h-260 grid grid-cols-4 gap-10 max-tablet:flex max-tablet:flex-row max-tablet:overflow-x-auto max-tablet:scroll-smooth",
                                 for m in pro_cryptos().items {
                                     PoliticianCard {
                                         lang,
@@ -129,7 +129,7 @@ pub fn PoliticianStance(
                                 tracing::debug!("selected: 1");
                                 selected.set(1);
                             },
-                            div { class: "w-full h-260 grid grid-cols-4 gap-10",
+                            div { class: "w-full h-260 grid grid-cols-4 gap-10 max-tablet:flex max-tablet:flex-row max-tablet:overflow-x-auto max-tablet:scroll-smooth",
                                 for m in anti_cryptos().items {
                                     PoliticianCard {
                                         lang,
@@ -142,57 +142,6 @@ pub fn PoliticianStance(
                             }
                         }
                     }
-
-                    //TODO(web): make scroll works and build UI
-                    //mobile_pro
-                    div { class: "hidden max-[900px]:!block w-full h-full",
-                        ExpandableContainer {
-                            tag: tr.pro_crypto,
-                            total_count: pro_cryptos().total_count,
-                            icon: rsx! {
-                                ThumbsUp { class: "[&>path]:stroke-c-c-20", width: "40", height: "40" }
-                            },
-                            expanded: selected() == 0,
-                            onclick: move |_| {
-                                tracing::debug!("selected: pro");
-                            },
-                            div { class: "w-full h-260 flex flex-row gap-10 overflow-x-auto scroll-smooth",
-                                for m in pro_cryptos().items {
-                                    PoliticianCard {
-                                        lang,
-                                        id: m.id,
-                                        name: "{m.name}",
-                                        party: m.party_enum(),
-                                        image_url: "{m.image_url}",
-                                    }
-                                }
-                            }
-                        }
-                        //mobile_anti
-                        ExpandableContainer {
-                            tag: tr.anti_crypto,
-                            total_count: anti_cryptos().total_count,
-                            text_color: "text-c-p-20",
-                            icon: rsx! {
-                                ThumbsDown { class: "[&>path]:stroke-c-p-20", width: "40", height: "40" }
-                            },
-                            expanded: selected() == 0,
-                            onclick: move |_| {
-                                tracing::debug!("selected: anti");
-                            },
-                            div { class: "w-full h-260 flex flex-row gap-10 overflow-x-auto scroll-smooth",
-                                for m in anti_cryptos().items {
-                                    PoliticianCard {
-                                        lang,
-                                        id: m.id,
-                                        name: "{m.name}",
-                                        party: m.party_enum(),
-                                        image_url: "{m.image_url}",
-                                    }
-                                }
-                            }
-                        }
-                    } // end of flex-row
 
                     div {
                         class: "flex flex-row gap-10 items-center justify-start text-neutral-400 font-medium text-[13px]/18 tooltip cursor-pointer",
@@ -250,12 +199,12 @@ translate! {
 
     pro_crypto: {
         ko: "암호화폐 지지",
-        en: "Pro-Crypto",
+        en: "Supportive",
     },
 
     anti_crypto: {
         ko: "암호화폐 반대",
-        en: "Anti-Crypto",
+        en: "Against",
     },
 
     legal_notice: {
