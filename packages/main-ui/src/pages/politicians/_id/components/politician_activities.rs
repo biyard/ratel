@@ -144,7 +144,9 @@ pub fn BillCard(
 
             // FIXME: reflect my voted and finalized result
             // Refer to Figma(https://www.figma.com/design/YaLSz7dzRingD7CipyaC47/Ratel?node-id=183-9407&t=ntliyRgUTCrimYsj-1)
-            div { id: "bill-card-vote-{bill.id}", class: "flex flex-row gap-10",
+            div {
+                id: "bill-card-vote-{bill.id}",
+                class: "flex flex-row gap-10 max-mobile:!flex-col",
                 button {
                     class: "w-full border border-supportive/25 hover:border-supportive hover:bg-supportive/25 rounded-[10px] flex items-center justify-center cursor-pointer px-16 py-8 text-sm font-bold",
                     onclick: move |_| {
