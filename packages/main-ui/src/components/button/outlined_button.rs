@@ -20,7 +20,7 @@ pub fn OutlinedButton(
 
     rsx! {
         button {
-            class: "font-bold gap-10 flex items-center justify-center text-base {bg} {padding}",
+            class: "font-bold gap-10 flex items-center justify-center text-base {bg} {padding} max-tablet:!h-50",
             onclick,
             ..attributes,
             {children}

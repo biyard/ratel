@@ -1,7 +1,8 @@
 #![allow(non_snake_case)]
 use super::*;
 use crate::{
-    components::dropdown::Dropdown, pages::components::SignupPopup,
+    components::dropdown::Dropdown,
+    pages::{components::SignupPopup, politicians::_id::controller::Controller},
     services::user_service::UserService,
 };
 use bdk::prelude::*;
@@ -63,6 +64,12 @@ pub fn BillCard(
     let tr: BillCardTranslate = translate(&lang);
     let (yes, no) = bill.votes_percent();
     let user_service: UserService = use_context();
+    let mut ctrl: Controller = use_context();
+    let gap = if yes == 100.0 || yes == 0.0 {
+        "gap-0"
+    } else {
+        "gap-5"
+    };
 
     rsx! {
         div {
@@ -116,7 +123,7 @@ pub fn BillCard(
                 // }
                 }
 
-                div { class: "w-full h-16 rounded-full overflow-hidden gap-5 flex flex-row",
+                div { class: "w-full h-16 rounded-full overflow-hidden {gap} flex flex-row",
                     div { class: "h-full", width: "{yes}%",
                         div { class: "animate-grow h-full bg-supportive/50" }
                     }
@@ -153,7 +160,14 @@ pub fn BillCard(
                         tracing::debug!("Vote supportive clicked");
                         if user_service.is_logined() {
                             popup.open(rsx! {
-                                VoteConfirm { vote: dto::VoteOption::Supportive, lang, bill_id: bill.id }
+                                VoteConfirm {
+                                    vote: dto::VoteOption::Supportive,
+                                    lang,
+                                    bill_id: bill.id,
+                                    oncomplete: move |_| {
+                                        ctrl.politician.restart();
+                                    },
+                                }
                             });
                         } else {
                             popup.open(rsx! {
@@ -169,7 +183,15 @@ pub fn BillCard(
                         tracing::debug!("Vote against clicked");
                         if user_service.is_logined() {
                             popup.open(rsx! {
-                                VoteConfirm { vote: dto::VoteOption::Against, lang, bill_id: bill.id }
+                                VoteConfirm {
+                                    vote: dto::VoteOption::Against,
+                                    lang,
+                                    bill_id: bill.id,
+                                    oncomplete: move |_| {
+                                        ctrl.politician.restart();
+                                    },
+
+                                }
                             });
                         } else {
                             popup.open(rsx! {
