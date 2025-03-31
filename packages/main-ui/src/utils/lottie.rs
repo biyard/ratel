@@ -65,13 +65,13 @@ pub struct AnimatableValue {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Shape {
     pub ty: String,                  // type (gr: group, sh: pass, fl: fill, st: stroke)
-    pub nm: Option<String>,          // 이름
-    pub it: Option<Vec<Shape>>,      // 그룹 내 아이템
-    pub d: Option<u8>,               // 방향
-    pub pt: Option<Vec<ShapePoint>>, // 패스 포인트
-    pub c: Option<AnimatableValue>,  // 색상
-    pub o: Option<AnimatableValue>,  // 불투명도
-    pub w: Option<AnimatableValue>,  // 너비
+    pub nm: Option<String>,          // name
+    pub it: Option<Vec<Shape>>,      // items (sub-shapes)
+    pub d: Option<u8>,               // direction (0: ccw, 1: cw)
+    pub pt: Option<Vec<ShapePoint>>, // points (for path shapes)
+    pub c: Option<AnimatableValue>,  // color (for fill shapes)
+    pub o: Option<AnimatableValue>,  // opacity (for fill shapes)
+    pub w: Option<AnimatableValue>,  // width (for stroke shapes)
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -121,7 +121,7 @@ impl LottieRenderer {
             width, height, width, height
         );
 
-        // 각 레이어를 역순으로 렌더링 (Lottie는 마지막 레이어가 가장 아래에 그려짐)
+        // Render layers in reverse order (Lottie draws the last layer at the bottom)
         for layer in self.animation.layers.iter().rev() {
             if let Some(rendered_layer) = self.render_layer(layer) {
                 svg.push_str(&rendered_layer);
