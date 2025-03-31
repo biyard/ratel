@@ -35,7 +35,7 @@ pub fn PoliticianStance(
         let _ = selected();
         async move {
             match AssemblyMember::get_client(config::get().main_api_endpoint)
-                .list_by_stance(4, None, dto::CryptoStance::ProCrypto)
+                .list_by_stance(4, None, dto::CryptoStance::Supportive)
                 .await
             {
                 Ok(members) => members,
@@ -50,7 +50,7 @@ pub fn PoliticianStance(
 
         async move {
             match AssemblyMember::get_client(config::get().main_api_endpoint)
-                .list_by_stance(4, None, dto::CryptoStance::AntiCrypto)
+                .list_by_stance(4, None, dto::CryptoStance::Against)
                 .await
             {
                 Ok(members) => members,
