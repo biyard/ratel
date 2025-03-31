@@ -59,7 +59,6 @@ pub fn PoliticianHeader(
                     }
                 }
             }
-        
         }
     }
 }
@@ -67,9 +66,9 @@ pub fn PoliticianHeader(
 #[component]
 pub fn CryptoStanceIcon(stance: CryptoStance) -> Element {
     rsx! {
-        if stance == CryptoStance::ProCrypto {
+        if stance == CryptoStance::Supportive {
             ThumbsUp { class: "[&>path]:stroke-c-c-20", width: "24", height: "24" }
-        } else if stance == CryptoStance::AntiCrypto {
+        } else if stance == CryptoStance::Against {
             ThumbsDown { class: "[&>path]:stroke-c-p-20", width: "24", height: "24" }
         }
     }
