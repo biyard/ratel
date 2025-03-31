@@ -46,7 +46,6 @@ pub fn WalletPopup(
                             user_service.set_signer_type("phantom");
                             popup.open(rsx! {
                                 LoaderPopup {
-                                    class: "w-400 mx-auto",
                                     lang,
                                     title: tr.phantom,
                                     description: tr.loader_message,
