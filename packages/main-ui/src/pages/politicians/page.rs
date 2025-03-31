@@ -27,105 +27,99 @@ pub fn PoliticiansPage(lang: Language) -> Element {
     rsx! {
         by_components::meta::MetaPage { title: tr.title, description: tr.description }
 
-        div { class: "w-full h-[calc(100vh-52px)] max-w-1177 flex flex-col gap-50 pt-150 overflow-y-hidden max-[900px]:!px-30 max-[900px]:!overflow-y-scroll max-[900px]:!pt-40",
+        div { class: "w-full h-[calc(100vh-52px)] max-w-1177 flex flex-col gap-50 pt-150 overflow-y-hidden max-tablet:!px-30 max-tablet:!overflow-y-scroll max-tablet:!pt-40 px-10",
             SectionHeader {
                 section_name: tr.title,
                 title: tr.mission,
                 description: tr.description,
             }
 
-            div { class: "hidden max-[900px]:!block",
-                div { class: "flex flex-col justify-center items-start gap-10",
-                    div { class: "w-full min-w-300 max-w-500",
-                        SearchBox {
-                            placeholder: "Search for a  Politcian",
-                            value: "",
-                            onsearch: move |e| {},
+            div { class: "w-full flex flex-row justify-between items-start gap-10 max-tablet:!flex-col",
+                div { class: "flex flex-row gap-10 max-tablet:!w-full order-1 max-tablet:!order-2",
+                    div { class: "max-tablet:!w-full",
+                        Dropdown {
+                            items: CryptoStance::variants(&lang),
+                            onselect: move |value| ctrl.set_stance(value),
                         }
                     }
 
-                    div { class: "w-full flex flex-row gap-10 max-[900px]:!w-full max-w-500",
-                        div { class: "max-[900px]:!w-full",
-                            Dropdown {
-                                items: CryptoStance::variants(&lang),
-                                onselect: move |value| ctrl.set_stance(value),
-                            }
+                    div { class: "max-tablet:!w-full",
+                        Dropdown {
+                            items: Party::variants(&lang),
+                            onselect: move |value| ctrl.set_party(value),
                         }
+                    }
+                }
 
-                        div { class: "max-[900px]:!w-full",
-                            Dropdown {
-                                items: Party::variants(&lang),
-                                onselect: move |value| ctrl.set_party(value),
-                            }
-                        }
+                div { class: "w-full min-w-300 max-w-500 max-tablet:!max-w-full order-1 max-tablet:!order-1",
+                    SearchBox {
+                        placeholder: "Search for a  Politcian",
+                        value: "",
+                        onsearch: move |e| {},
                     }
                 }
             }
 
             //TODO(web): have to make scroll w-full and check chart range
-            div { class: "w-full grow overflow-x-scroll mb-52 flex flex-col max-[900px]:!mb-0",
-                div { class: "flex flex-row items-center bg-bg rounded-t-[8px] w-screen",
-                    div {
-                        class: "px-20 py-14 text-left w-250 max-[900px]:!text-sm font-bold text-c-wg-30 min-w-183",
-                        onclick: move |_| ctrl.set_sort(dto::AssemblyMemberSorter::Name),
-                        {tr.th_name}
-                    }
-
-                    div {
-                        class: "px-20 py-14 text-left w-250 max-[900px]:!text-sm font-bold text-c-wg-30  min-w-250 ",
-                        onclick: move |_| ctrl.set_sort(dto::AssemblyMemberSorter::Stance),
-                        {tr.th_stance}
-                    }
-
-                    div { class: "block max-[900px]:!hidden",
+            div { class: "w-full grow overflow-x-scroll mb-52 flex flex-col",
+                div { class: "min-w-1100 flex flex-col",
+                    div { class: "grid grid-cols-5 items-center bg-bg rounded-t-[8px] w-full",
                         div {
-                            class: "px-20 py-14 text-left w-250",
+                            class: "px-20 py-14 text-left col-span-1 font-bold text-c-wg-30",
+                            onclick: move |_| ctrl.set_sort(dto::AssemblyMemberSorter::Name),
+                            {tr.th_name}
+                        }
+
+                        div {
+                            class: "px-20 py-14 text-left col-span-2 font-bold text-c-wg-30",
+                            onclick: move |_| ctrl.set_sort(dto::AssemblyMemberSorter::Stance),
+                            {tr.th_stance}
+                        }
+
+                        div {
+                            class: "px-20 py-14 text-left col-span-1",
                             onclick: move |_| ctrl.set_sort(dto::AssemblyMemberSorter::Party),
                             {tr.th_party}
                         }
-                    }
 
-                    div { class: "block max-[900px]:!hidden",
                         div {
-                            class: "px-20 py-14 text-left w-427",
+                            class: "px-20 py-14 text-left col-span-1",
                             onclick: move |_| ctrl.set_sort(dto::AssemblyMemberSorter::Bills),
                             {tr.th_key_actions}
                         }
                     }
-                }
 
-                div { class: "w-full h-full overflow-hidden flex flex-col max-[900px]:!overflow-visible",
-                    div { class: "grow flex flex-col overflow-y-scroll w-full max-[900px]:!overflow-y-visible h-screen",
-                        for politician in ctrl.politicians()?.items {
-                            div {
-                                class: "flex flex-row items-center border-b border-b-c-wg-80 cursor-pointer",
-                                onclick: move |_| {
-                                    ctrl.go_to_politician_by_id(politician.id);
-                                },
+                    div { class: "w-full h-full overflow-hidden flex flex-col",
+                        div { class: "grow flex flex-col overflow-y-scroll w-full h-screen",
+                            for politician in ctrl.politicians()?.items {
+                                div {
+                                    class: "grid grid-cols-5 items-center border-b border-b-c-wg-80 cursor-pointer min-w-1100 w-full",
+                                    onclick: move |_| {
+                                        ctrl.go_to_politician_by_id(politician.id);
+                                    },
 
-                                div { class: "px-20 py-14 w-250",
-                                    div { class: "flex flex-row items-center gap-4",
-                                        img {
-                                            src: "{politician.image_url}",
-                                            class: "w-18 h-18 rounded-[4px] object-cover",
-                                        }
-                                        div { class: "flex max-[900px]:!text-[15px] max-[900px]:!flex justify-start items-center min-w-183 min-h-50",
-                                            p { class: "font-md text-[15px] max-[900px]:!text-[15px] max-[900px]:!font-md",
-                                                {politician.name(&lang)}
+                                    div { class: "px-20 py-14 col-span-1",
+                                        div { class: "flex flex-row items-center gap-4",
+                                            img {
+                                                src: "{politician.image_url}",
+                                                class: "w-18 h-18 rounded-[4px] object-cover",
+                                            }
+                                            div { class: "flex max-tablet:!text-[15px] max-tablet:!flex justify-start items-center min-h-50",
+                                                p { class: "font-md text-[15px] max-tablet:!text-[15px] max-tablet:!font-md",
+                                                    {politician.name(&lang)}
+                                                }
                                             }
                                         }
                                     }
-                                }
 
-                                div { class: "px-20 py-14 w-250 inline-flex flex-row items-center gap-10 max-[900px]:!px-0 max-[900px]:!gap-0",
-                                    div { class: "w-8 h-8 rounded-full {politician.stance_color()}" }
-                                    div { class: "max-[900px]:w-full text-[15px] font-md min-w-250 flex justify-start",
-                                        {politician.stance.translate(&lang)}
+                                    div { class: "px-20 py-14 col-span-2 inline-flex flex-row items-center gap-10",
+                                        div { class: "w-8 h-8 rounded-full {politician.stance_color()}" }
+                                        div { class: "text-[15px] font-md flex justify-start",
+                                            {politician.stance.translate(&lang)}
+                                        }
                                     }
-                                }
 
-                                div { class: "block max-[900px]:!hidden",
-                                    div { class: "px-20 py-14 w-250",
+                                    div { class: "px-20 py-14 col-span-1",
                                         div { class: "flex flex-row items-center gap-4",
                                             PartyIcon { party: politician.party_enum() }
                                             span { class: "text-white font-medium text-[15px]",
@@ -133,17 +127,15 @@ pub fn PoliticiansPage(lang: Language) -> Element {
                                             }
                                         }
                                     }
-                                }
 
-                                div { class: "block max-[900px]:!hidden",
-                                    div { class: "px-20 py-14 w-427",
+                                    div { class: "px-20 py-14 col-span-1",
                                         {politician.no_of_bills.to_string()}
                                     }
                                 }
                             }
                         }
-                    }
-                } // tbody
+                    } // tbody
+                }
             } // table
         } // div
 
@@ -154,8 +146,8 @@ pub fn PoliticiansPage(lang: Language) -> Element {
             }
         }
 
-        div { class: "fixed bottom-0 left-0 w-full h-52 flex items-center justify-center bg-bg z-10",
-            div { class: "max-w-1177 w-full flex items-center justify-center",
+        div { class: "fixed bottom-0 left-0 w-full flex items-center justify-center bg-bg z-10",
+            div { class: "max-w-1177 w-full flex items-center justify-center mx-10",
                 FooterWithSocial { lang }
             }
         }
@@ -173,7 +165,7 @@ pub fn SearchBox(
     onsearch: EventHandler<String>,
 ) -> Element {
     rsx! {
-        div { class: "flex flex-row w-full h-44 justify-start items-center border border-c-wg-70 rounded-[8px] px-20",
+        div { class: "flex flex-row w-full h-44 justify-start items-center border border-c-wg-70 rounded-full max-tablet:rounded-[8px] px-20",
             input {
                 class,
                 width,
