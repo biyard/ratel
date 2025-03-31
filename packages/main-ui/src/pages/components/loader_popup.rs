@@ -14,7 +14,6 @@ use dioxus_popup::PopupService;
 #[component]
 pub fn LoaderPopup(
     #[props(default ="loader_popup".to_string())] id: String,
-    #[props(default ="".to_string())] class: String,
     lang: Language,
     title: String,
     description: String,
@@ -55,7 +54,6 @@ pub fn LoaderPopup(
                     popup
                         .open(rsx! {
                             WalletSigninPopup {
-                                class: "w-400 mx-5",
                                 logo,
                                 logo_origin,
                                 lang,
@@ -84,7 +82,7 @@ pub fn LoaderPopup(
     });
 
     rsx! {
-        div { id, class,
+        div { id, class: "w-full max-w-400 mx-5 max-mobile:!max-w-full",
             div { class: "flex flex-row justify-start gap-12",
                 button {
                     class: "cursor-pointer",

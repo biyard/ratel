@@ -26,7 +26,6 @@ pub fn SignupPopup(
                             user_service.set_signer_type("google");
                             popup.open(rsx! {
                                 LoaderPopup {
-                                    class: "w-[400px] mx-auto",
                                     lang,
                                     title: tr.loader_title,
                                     description: tr.loader_message,

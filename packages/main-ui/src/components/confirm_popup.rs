@@ -17,7 +17,7 @@ pub fn ConfirmPopup(
     let mut popup: PopupService = use_context();
 
     rsx! {
-        div { id, class: "max-w-390 w-full",
+        div { id, class: "max-w-400 w-full mx-5 max-mobile:!max-w-full",
             div { class: "w-full flex flex-col gap-35",
                 WelcomeHeader { lang, title, description }
 

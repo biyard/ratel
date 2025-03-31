@@ -23,7 +23,7 @@ pub fn LoginFailurePopup(
     let message = format!("{} {}", tr.failure_message, service_name);
     let display_logo = logo_origin.clone();
     rsx! {
-        div { id, class,
+        div { id, class: "w-400 max-mobile:!w-full mx-10",
             div { class: "flex flex-row justify-start gap-12",
                 button {
                     class: "cursor-pointer",
@@ -49,7 +49,6 @@ pub fn LoginFailurePopup(
                         let msg = msg.clone();
                         popup.open(rsx! {
                             LoaderPopup {
-                                class: "w-full max-w-400 mx-5",
                                 lang,
                                 title: tr.title,
                                 description,
