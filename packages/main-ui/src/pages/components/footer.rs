@@ -31,60 +31,62 @@ pub fn FooterWithSocial(lang: Language) -> Element {
     let tr: FooterTranslate = translate(&lang);
 
     rsx! {
-        footer { class: "w-full bg-bg flex flex-row gap-10 items-center justify-between text-copyright font-normal text-xs/22 py-24 h-50 max-[900px]:!flex-col max-[900px]:!py-20 max-w-1177 max-[900px]:!gap-20",
-            div { class: "hidden max-[900px]:!block",
-                Socials {
-                    class: "flex flex-row items-center justify-center gap-30",
-                    size: 28,
-                }
-            }
-            div { class: "h-full flex flex-row gap-10 items-center max-[900px]:!flex-col max-[900px]:!gap-0",
-                span { {tr.copyright} }
-                //desktop
-                div { class: "flex max-[900px]:!hidden gap-10",
-                    // FIXME: Link does not work with new_tab
-                    // Link {
-                    a {
-                        class: "hover:text-white",
-                        // to: Route::PrivacyPolicyPage { lang },
-                        // new_tab: true,
-                        href: "/{lang}/privacy-policy",
-                        target: "_blank",
-                        {tr.privacy}
-                    }
-                    // Link {
-                    a {
-                        class: "hover:text-white",
-                        // to: Route::PrivacyPolicyPage { lang },
-                        // new_tab: true,
-                        href: "/{lang}/privacy-policy",
-                        target: "_blank",
-                        {tr.terms}
+        footer { class: "w-full bg-bg flex items-center justify-center",
+            div { class: "w-full max-w-1177 flex flex-row gap-10 items-center justify-between text-copyright font-normal text-xs/22 py-24 max-tablet:!flex-col max-tablet:!py-20 max-tablet:!gap-20",
+                div { class: "hidden max-tablet:!block",
+                    Socials {
+                        class: "flex flex-row items-center justify-center gap-30",
+                        size: 28,
                     }
                 }
-
-
-                //mobile
-                div { class: "hidden max-[900px]:!flex flex-row justify-center gap-10",
-                    Link {
-                        class: "hover:text-white",
-                        to: Route::PrivacyPolicyPage { lang },
-                        {tr.mobile_privacy}
+                div { class: "h-full flex flex-row gap-10 items-center max-tablet:!flex-col max-tablet:!gap-0",
+                    span { {tr.copyright} }
+                    //desktop
+                    div { class: "flex max-tablet:!hidden gap-10",
+                        // FIXME: Link does not work with new_tab
+                        // Link {
+                        a {
+                            class: "hover:text-white",
+                            // to: Route::PrivacyPolicyPage { lang },
+                            // new_tab: true,
+                            href: "/{lang}/privacy-policy",
+                            target: "_blank",
+                            {tr.privacy}
+                        }
+                        // Link {
+                        a {
+                            class: "hover:text-white",
+                            // to: Route::PrivacyPolicyPage { lang },
+                            // new_tab: true,
+                            href: "/{lang}/privacy-policy",
+                            target: "_blank",
+                            {tr.terms}
+                        }
                     }
-                    p { "•" }
-                    Link {
-                        class: "hover:text-white",
-                        to: Route::PrivacyPolicyPage { lang },
-                        {tr.mobile_terms}
+
+
+                    //mobile
+                    div { class: "hidden max-tablet:!flex flex-row justify-center gap-10",
+                        Link {
+                            class: "hover:text-white",
+                            to: Route::PrivacyPolicyPage { lang },
+                            {tr.mobile_privacy}
+                        }
+                        p { "•" }
+                        Link {
+                            class: "hover:text-white",
+                            to: Route::PrivacyPolicyPage { lang },
+                            {tr.mobile_terms}
+                        }
                     }
                 }
-            }
 
 
-            div { class: "block max-[900px]:!hidden",
-                Socials {
-                    class: "flex flex-row items-center justify-center gap-30",
-                    size: 15,
+                div { class: "block max-tablet:!hidden",
+                    Socials {
+                        class: "flex flex-row items-center justify-center gap-30",
+                        size: 15,
+                    }
                 }
             }
         }

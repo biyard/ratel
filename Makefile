@@ -65,6 +65,6 @@ cdk-deploy: deps/rust-sdk/cdk/node_modules
 	cd deps/rust-sdk/cdk && $(BUILD_CDK_ENV) CODE_PATH=$(PWD)/.build/$(SERVICE) cdk deploy --require-approval never $(AWS_FLAG) --all
 
 s3-deploy:
-	cp -r packages/$(SERVICE)/public/* .build/$(SERVICE)/public
+	cp -r packages/$(SERVICE)/public .build/$(SERVICE)/public/public
 	aws s3 sync .build/$(SERVICE)/public s3://$(DOMAIN) $(AWS_FLAG)
 	aws cloudfront create-invalidation --distribution-id $(CDN_ID) --paths "/*" $(AWS_FLAG) > /dev/null
