@@ -1,8 +1,9 @@
 #![allow(non_snake_case)]
-use super::{SignupPopup, Socials};
+use super::SignupPopup;
 use crate::components::{
-    button::{primary_button::PrimaryButton, secondary_botton::SecondaryButton},
+    button::{primary_button::PrimaryA, secondary_botton::SecondaryButton},
     icons::CharacterSymbol,
+    socials::Socials,
 };
 use bdk::prelude::*;
 use dioxus_popup::PopupService;
@@ -14,33 +15,33 @@ pub fn Top(
 ) -> Element {
     let tr: TopTranslate = translate(&lang);
     let mut popup: PopupService = use_context();
+    let white_paper = asset!("/public/documents/Ratel-Token-White-Paper.pdf");
+
     rsx! {
         div {
             id: "top",
-            class: "w-screen h-screen flex flex-col items-center justify-center gap-100",
+            class: "w-full h-screen flex flex-col items-center justify-center gap-100 max-tablet:!gap-0 max-tablet:py-20",
             ..attributes,
-            div { class: "flex flex-col items-center justify-center gap-32",
-                CharacterSymbol {}
-                h1 { class: "text-5xl/56 text-center font-bold text-white whitespace-pre-line",
+            div { class: "flex flex-col items-center justify-center gap-32 max-tablet:my-auto",
+                div { class: "max-[900px]:!scale-70", CharacterSymbol {} }
+                h1 { class: "text-5xl/56 text-center font-bold text-white whitespace-pre-line max-tablet:text-[28px]/38 max",
                     {tr.slogan}
                 }
-                p { class: "text-lg text-center font-normal text-c-wg-30 whitespace-pre-line",
+                p { class: "text-lg text-center font-normal text-c-wg-30 whitespace-pre-line max-tablet:text-[15px]",
                     {tr.description}
                 }
 
                 Socials { class: "flex flex-row gap-50" }
             }
 
-            div { class: "flex flex-row gap-20",
-                // TODO: implement downloading whitepaper
-                PrimaryButton { onclick: |_| {}, {tr.btn_learn} }
+            div { class: "w-full flex flex-row gap-20 items-center justify-center max-tablet:!flex-col max-tablet:!gap-16",
+                PrimaryA { href: "/public/documents/Ratel-Token-White-Paper.pdf", {tr.btn_learn} }
 
-                // TODO: implement Sign in
                 SecondaryButton {
                     onclick: move |_| {
                         tracing::debug!("Learn more clicked");
                         popup.open(rsx! {
-                            SignupPopup { class: "w-460", lang: lang.clone() }
+                            SignupPopup { class: "w-400 max-[400px]:!w-full max-[400px]:mx-10", lang }
                         });
                     },
                     {tr.btn_join}
@@ -60,6 +61,11 @@ translate! {
     description: {
         ko: "한국 시민과 의원을 연결하는 첫 번째 플랫폼으로\n암호화폐 산업을 위한 제도 개혁을 추진합니다. 함께 하실래요?",
         en: "The first platform connecting South Korea’s citizens with lawmakers to drive\ninstitutional reform for the crypto industry. Are you with us?",
+    },
+
+    mobile_description: {
+        ko: "한국 시민과 의원을 연결하는 첫 번째 플랫폼으로 암호화폐 산업을 위한 제도 개혁을 추진합니다. 함께 하실래요?",
+        en: "The first platform connecting South Korea’s citizens with lawmakers to drive institutional reform for the crypto industry. Are you with us?",
     },
 
     btn_learn: {

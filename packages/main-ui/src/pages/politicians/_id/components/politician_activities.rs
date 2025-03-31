@@ -1,15 +1,16 @@
 #![allow(non_snake_case)]
+use super::*;
+use crate::{
+    components::dropdown::Dropdown, pages::components::SignupPopup,
+    services::user_service::UserService,
+};
 use bdk::prelude::*;
 use dioxus_popup::PopupService;
 use dto::{Bill, BillSorter};
 
-use super::*;
-use crate::components::dropdown::Dropdown;
-
 #[component]
 pub fn PoliticianActivities(
     lang: Language,
-    id: i64,
     #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
     #[props(default = vec![])] bills: Vec<Bill>,
     name: String,
@@ -43,7 +44,7 @@ pub fn PoliticianActivities(
                     id: "politician-bills",
                     class: "w-full flex flex-col gap-24",
                     for bill in bills {
-                        BillCard { lang, id, bill }
+                        BillCard { lang, bill }
                     }
                 }
             }
@@ -54,7 +55,6 @@ pub fn PoliticianActivities(
 #[component]
 pub fn BillCard(
     lang: Language,
-    id: i64,
     bill: Bill,
     #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
     children: Element,
@@ -62,15 +62,21 @@ pub fn BillCard(
     let mut popup: PopupService = use_context();
     let tr: BillCardTranslate = translate(&lang);
     let (yes, no) = bill.votes_percent();
+    let user_service: UserService = use_context();
 
     rsx! {
         div {
             class: "w-full p-30 flex flex-col gap-20 bg-bg rounded-[20px]",
             id: "bill-card-{bill.id}",
-            div {
-                id: "bill-card-header-{bill.id}",
-                class: "w-full flex flex-col gap-10 items-start justify-start",
-                h2 { class: "text-text-primary text-[20px]/25 font-medium", {bill.title(lang)} }
+            div { class: "w-full flex flex-col items-start justify-start gap-10",
+                div { class: "flex flex-row w-full gap-10 h-25 items-end",
+                    p { class: "text-sm text-neutral-400 h-20 font-semibold", "{bill.detail_date()}" }
+                }
+                div {
+                    id: "bill-card-header-{bill.id}",
+                    class: "w-full flex flex-col gap-10 items-start justify-start",
+                    h2 { class: "text-text-primary text-[20px]/25 font-medium", {bill.title(lang)} }
+                }
             }
 
             div {
@@ -138,14 +144,22 @@ pub fn BillCard(
 
             // FIXME: reflect my voted and finalized result
             // Refer to Figma(https://www.figma.com/design/YaLSz7dzRingD7CipyaC47/Ratel?node-id=183-9407&t=ntliyRgUTCrimYsj-1)
-            div { id: "bill-card-vote-{bill.id}", class: "flex flex-row gap-10",
+            div {
+                id: "bill-card-vote-{bill.id}",
+                class: "flex flex-row gap-10 max-mobile:!flex-col",
                 button {
                     class: "w-full border border-supportive/25 hover:border-supportive hover:bg-supportive/25 rounded-[10px] flex items-center justify-center cursor-pointer px-16 py-8 text-sm font-bold",
                     onclick: move |_| {
                         tracing::debug!("Vote supportive clicked");
-                        popup.open(rsx! {
-                            VoteConfirm { vote: dto::VoteOption::Supportive, lang, id }
-                        });
+                        if user_service.is_logined() {
+                            popup.open(rsx! {
+                                VoteConfirm { vote: dto::VoteOption::Supportive, lang, bill_id: bill.id }
+                            });
+                        } else {
+                            popup.open(rsx! {
+                                SignupPopup { lang }
+                            });
+                        }
                     },
                     span { {tr.btn_supportive} }
                 }
@@ -153,9 +167,15 @@ pub fn BillCard(
                     class: "w-full border border-against/25 hover:border-against hover:bg-against/25 rounded-[10px] flex items-center justify-center cursor-pointer px-16 py-8 text-sm font-bold",
                     onclick: move |_| {
                         tracing::debug!("Vote against clicked");
-                        popup.open(rsx! {
-                            VoteConfirm { vote: dto::VoteOption::Against, lang, id }
-                        });
+                        if user_service.is_logined() {
+                            popup.open(rsx! {
+                                VoteConfirm { vote: dto::VoteOption::Against, lang, bill_id: bill.id }
+                            });
+                        } else {
+                            popup.open(rsx! {
+                                SignupPopup { lang }
+                            });
+                        }
                     },
                     span { {tr.btn_against} }
                 }

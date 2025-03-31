@@ -18,6 +18,9 @@ pub enum Route {
     #[route("/privacy-policy")]
     PrivacyPolicyPage { lang: Language },
 
+    #[route("/preparing")]
+    PreparingPage { lang: Language },
+
     #[end_layout]
     #[end_nest]
 

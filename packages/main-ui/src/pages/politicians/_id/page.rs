@@ -20,25 +20,22 @@ pub fn PoliticiansByIdPage(id: ReadOnlySignal<i64>, lang: Language) -> Element {
             image: p.image_url.clone(),
         }
 
-        div {
-            id: "politicians-by-id",
-            class: "w-full grow max-w-1177 mt-160 flex flex-col justify-start",
-            PoliticianHeader {
-                lang,
-                image: p.image_url.clone(),
-                name: p.name(&lang),
-                party: p.party_enum(),
-                stance: p.stance,
-                email: p.email.clone().unwrap_or_default(),
-                description: tr.description,
-            }
-            PoliticianActivities {
-                lang,
-                id: id(),
-                name: p.name(&lang),
-                bills: p.bills,
-            }
+        div { class: "w-full grow flex flex-col items-center",
+            div {
+                id: "politicians-by-id",
+                class: "w-full grow max-w-1177 mt-160 flex flex-col justify-start px-10",
+                PoliticianHeader {
+                    lang,
+                    image: p.image_url.clone(),
+                    name: p.name(&lang),
+                    party: p.party_enum(),
+                    stance: p.stance,
+                    email: p.email.clone().unwrap_or_default(),
+                    description: tr.description,
+                }
+                PoliticianActivities { lang, name: p.name(&lang), bills: p.bills }
+            } // end of this page
             FooterWithSocial { lang }
-        } // end of this page
+        }
     }
 }

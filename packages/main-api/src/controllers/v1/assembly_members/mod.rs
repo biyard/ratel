@@ -65,8 +65,9 @@ impl AssemblyMemberControllerV1 {
         Path(AssemblyMemberPath { id }): Path<AssemblyMemberPath>,
     ) -> Result<Json<AssemblyMember>> {
         tracing::debug!("get_assembly_member {:?}", id);
+        //FIXME: if neeeded, use user.id not '0'
         let doc = AssemblyMember::query_builder()
-            .bills_builder(Bill::query_builder())
+            .bills_builder(Bill::query_builder(0))
             .id_equals(id)
             .query()
             .map(AssemblyMember::from)
@@ -97,7 +98,6 @@ impl AssemblyMemberControllerV1 {
                     .query()
                     .map(|row: PgRow| {
                         use sqlx::Row;
-                        tracing::debug!("row: {:?}", row);
                         total_count = row.get("total_count");
                         row.into()
                     })

@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@theme static {
+@theme {
   /* Tailwindcss variables */
   --spacing: 1px;
   --color-black: #000203;
@@ -69,4 +69,10 @@
   --color-against: #ff9eee;
   --color-bg: #1a1a1a;
   --color-tab-hover: #282828;
+  --color-mission-title: #DEE1E6;
+
+  --breakpoint-desktop:1177px;
+  --breakpoint-tablet:900px;
+  --breakpoint-mobile:500px;
+  --breakpoint-sm-mobile:380px;
 }
