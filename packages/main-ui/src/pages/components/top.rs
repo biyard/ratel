@@ -41,7 +41,7 @@ pub fn Top(
                     onclick: move |_| {
                         tracing::debug!("Learn more clicked");
                         popup.open(rsx! {
-                            SignupPopup { class: "w-400 max-[400px]:!w-full max-[400px]:mx-10", lang }
+                            SignupPopup { lang }
                         });
                     },
                     {tr.btn_join}
