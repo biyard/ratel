@@ -26,8 +26,8 @@ pub fn WalletSigninPopup(
                     onclick: move |_| {
                         tracing::debug!("backward button clicked");
                         popup.open(rsx! {
-                            SignupPopup { class: "w-full max-w-400 mx-5", lang }
-                        }).with_id("signup_popup");
+                            SignupPopup { lang }
+                        });
                     },
                     span { class: "text-neutral-400 text-xs/14 font-medium",
                         icons::LeftArrow { color: "white", width: "24", height: "24" }

@@ -17,7 +17,9 @@ pub fn PrivacyPolicyPage(lang: Language) -> Element {
                 id: "privacy-policy",
                 class: "w-full max-w-1177 mt-160 flex flex-col items-start justify-start gap-30 px-10",
                 div { class: "flex flex-col gap-8 items-start",
-                    h1 { class: "text-[32px]/22.5 font-bold text-text-primary", {tr.title} }
+                    h1 { class: "text-[32px]/22.5 font-bold text-text-primary max-tablet:text-[32px]/35",
+                        {tr.title}
+                    }
                     p { class: "text-[15px]/22.5 font-normal text-text-secondary",
                         {tr.date}
                     }

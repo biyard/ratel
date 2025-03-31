@@ -22,7 +22,7 @@ pub fn PopupZone() -> Element {
             },
             if popup.is_opened() {
                 div {
-                    class: "relative rounded-[20px] p-25 min-w-350 max-[500px]:w-full max-[500px]:mx-20 bg-bg",
+                    class: "relative rounded-[20px] p-25 min-w-300 max-mobile:!w-full max-mobile:!mx-20 bg-bg overflow-hidden",
                     style: "box-shadow: 0px 0px 100px rgba(255, 206, 71, 0.25);",
                     box_shadow: "0px 0px 100px rgba(255, 206, 71, 0.25);",
                     onclick: move |e| {
