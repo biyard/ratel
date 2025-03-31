@@ -29,9 +29,11 @@ pub fn PoliticianHeader(
                 div {
                     id: "politician-info",
                     class: "grow flex flex-col gap-24 max-mobile:!grow",
-                    h1 { class: "text-[32px]/40 font-bold text-text-primary", {name} }
+                    h1 { class: "text-[32px]/40 font-bold text-text-primary max-mobile:flex max-mobile:items-center max-mobile:justify-center",
+                        {name}
+                    }
 
-                    div { class: "grow flex flex-col justify-between max-tablet:gap-13",
+                    div { class: "grow flex flex-col justify-between max-mobile:gap-13",
                         div {
                             id: "politician-badges",
                             class: "flex flex-col gap-13 text-text-primary font-medium text-[15px]",
@@ -53,12 +55,12 @@ pub fn PoliticianHeader(
 
                         div {
                             id: "politician-header-crypto-stance",
-                            class: "w-full rounded-[20px] bg-bg py-24 px-24 flex flex-col gap-5 text-lg/22 font-bold text-text-primary max-tablet:!p-0 max-tablet:!bg-transparent max-tablet:text-[15px]",
+                            class: "w-full rounded-[20px] bg-bg py-24 px-24 flex flex-col gap-5 text-lg/22 font-bold text-text-primary max-mobile:!p-0 max-mobile:!bg-transparent max-mobile:text-[15px]",
                             div { class: "flex flex-row gap-10 items-center",
-                                div { class: "max-tablet:hidden",
+                                div { class: "max-mobile:hidden",
                                     CryptoStanceIcon { stance }
                                 }
-                                div { class: "hidden max-tablet:!block",
+                                div { class: "hidden max-mobile:!block",
                                     CryptoStanceIcon { size: 18, stance }
                                 }
 
