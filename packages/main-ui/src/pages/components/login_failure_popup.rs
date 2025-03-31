@@ -23,15 +23,15 @@ pub fn LoginFailurePopup(
     let message = format!("{} {}", tr.failure_message, service_name);
     let display_logo = logo_origin.clone();
     rsx! {
-        div { id, class,
+        div { id, class: "w-400 max-mobile:!w-full mx-10",
             div { class: "flex flex-row justify-start gap-12",
                 button {
                     class: "cursor-pointer",
                     onclick: move |_| {
                         tracing::debug!("backward button clicked");
                         popup.open(rsx! {
-                            SignupPopup { class: "w-full max-w-400 mx-5", lang }
-                        }).with_id("signup_popup");
+                            SignupPopup { lang }
+                        });
                     },
                     span { class: "text-neutral-400 text-xs/14 font-medium",
                         icons::LeftArrow { color: "white", width: "24", height: "24" }
@@ -49,7 +49,6 @@ pub fn LoginFailurePopup(
                         let msg = msg.clone();
                         popup.open(rsx! {
                             LoaderPopup {
-                                class: "w-full max-w-400 mx-5",
                                 lang,
                                 title: tr.title,
                                 description,

@@ -73,8 +73,7 @@ fn app() -> Element {
         document::Style { href: asset!("/public/main.css") }
         document::Style { href: asset!("/public/tailwind.css") }
 
-        document::Script { defer: true, src: "https://unpkg.com/alpinejs" }
-        document::Script { src: "https://unpkg.com/@tailwindcss/browser@4.0.12/dist/index.global.js" }
+        document::Script { src: "https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4" }
         document::Style { r#type: "text/tailwindcss", {css} }
 
         // document::Script { r#type: "module", src: asset!("/public/dep.js"), defer: true }
