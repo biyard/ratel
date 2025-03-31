@@ -22,7 +22,7 @@ pub fn SecondaryButton(
 
     rsx! {
         button {
-            class: "font-bold gap-10 flex items-center justify-center text-base rounded-[10px] {bg} {padding}",
+            class: "font-bold gap-10 flex items-center justify-center text-base rounded-[10px] {bg} {padding} max-tablet:!w-full max-tablet:!py-15",
             disabled,
             onclick: move |evt| {
                 if let Some(onclick) = onclick {

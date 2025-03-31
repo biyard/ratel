@@ -12,7 +12,7 @@ pub fn PartyIcon(party: Party) -> Element {
         } else if Party::RebuildingKoreaParty == party {
             RKP { height: 18 }
         } else if Party::JinboParty == party {
-            JP { height: 18 }
+            JP { height: 18, width: 18 }
         } else if Party::ReformParty == party {
             RP { height: 18 }
         } else if Party::BasicIncomeParty == party {

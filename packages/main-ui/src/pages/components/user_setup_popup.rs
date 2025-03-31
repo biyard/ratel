@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 use bdk::prelude::*;
 use dioxus_popup::PopupService;
-use dto::ServiceError;
+use dto::{ServiceError, Subscription};
 
 use super::{
     signin_popup_footer::SigninPopupFooter, welcome_header::WelcomeHeader,
@@ -9,6 +9,7 @@ use super::{
 };
 use crate::{
     components::{button::primary_button::PrimaryButton, checkbox::Checkbox},
+    config,
     pages::components::LabeledInput,
     services::user_service::UserService,
     theme::Theme,
@@ -107,7 +108,7 @@ pub fn UserSetupPopup(
 
                 PrimaryButton {
                     width: "100%",
-                    disabled: !agreed() || !announcement_agree(),
+                    disabled: !agreed(),
                     onclick: move |_| {
                         if agreed() {
                             let nickname = format!("{} {}", firstname(), lastname());
@@ -115,8 +116,27 @@ pub fn UserSetupPopup(
                             let email = email.clone();
                             let profile_url = profile_url.clone();
                             spawn(async move {
+                                if announcement_agree() {
+                                    let endpoint = config::get().main_api_endpoint;
+                                    match Subscription::get_client(&endpoint)
+                                        .subscribe(email.clone())
+                                        .await
+                                    {
+                                        Ok(_) => {}
+                                        Err(e) => {
+                                            tracing::error!("UserSetupPopup::subscribe: error={:?}", e);
+                                        }
+                                    }
+                                }
                                 if let Err(e) = user_service
-                                    .login_or_signup(&principal, &email, &nickname, &profile_url)
+                                    .login_or_signup(
+                                        &principal,
+                                        &email,
+                                        &nickname,
+                                        &profile_url,
+                                        agreed(),
+                                        announcement_agree(),
+                                    )
                                     .await
                                 {
                                     match e {
@@ -189,12 +209,12 @@ translate! {
 
     agree: {
         ko: "을 읽어보았으며 동의합니다",
-        en: "I have read and accept the",
+        en: "[Required] I have read and accept the",
     },
 
     // TODO: need bold text
     term_of_service: {
-        ko: "서비스 이용약관",
+        ko: "[필수] 서비스 이용약관",
         en: "Terms of Service",
     },
 

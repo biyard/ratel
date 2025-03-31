@@ -11,7 +11,10 @@ use legal_notice_popup::LegalNoticePopup;
 use politician_card::PoliticianCard;
 
 use crate::{
-    components::button::{ButtonSize, secondary_botton::SecondaryLink},
+    components::{
+        button::{ButtonSize, secondary_botton::SecondaryLink},
+        icons::BackgroundTriangle,
+    },
     config,
     route::Route,
 };
@@ -32,7 +35,7 @@ pub fn PoliticianStance(
         let _ = selected();
         async move {
             match AssemblyMember::get_client(config::get().main_api_endpoint)
-                .list_by_stance(4, None, dto::CryptoStance::ProCrypto)
+                .list_by_stance(4, None, dto::CryptoStance::Supportive)
                 .await
             {
                 Ok(members) => members,
@@ -47,7 +50,7 @@ pub fn PoliticianStance(
 
         async move {
             match AssemblyMember::get_client(config::get().main_api_endpoint)
-                .list_by_stance(4, None, dto::CryptoStance::AntiCrypto)
+                .list_by_stance(4, None, dto::CryptoStance::Against)
                 .await
             {
                 Ok(members) => members,
@@ -58,18 +61,38 @@ pub fn PoliticianStance(
     .suspend()?;
 
     rsx! {
+        div { class: "hidden max-[900px]:!block w-screen",
+            BackgroundTriangle { color: "#1E1E1E" }
+        }
+
         div {
             id: "politician-stance",
-            class: "w-full max-w-1177 h-screen flex flex-col items-start justify-center gap-50 max-[1177px]:mx-10",
+            class: "w-full max-w-1177 h-screen flex flex-col items-start justify-center gap-50 max-tablet:pt-68 max-tablet:!h-auto overflow-hidden",
             SectionHeader {
                 section_name: tr.title,
                 title: tr.mission,
                 description: tr.description,
             }
+            div { class: "hidden max-[900px]:!block",
+                SecondaryLink {
+                    size: ButtonSize::Small,
+                    to: Route::PoliticiansPage { lang },
+                    div { class: "flex flex-row gap-10 items-center justify-center font-bold text-sm text-black",
+                        {tr.view_all}
+                        ArrowRight {
+                            class: "[&>path]:stroke-3",
+                            width: "15",
+                            height: "15",
+                        }
+                    }
+                }
+            }
+
 
             div { class: "w-full flex flex-col gap-30 items-center",
                 div { class: "w-full flex flex-col gap-10 items-start",
-                    div { class: "w-full flex flex-row gap-10 items-start justify-start",
+                    //desktop_pro
+                    div { class: "block max-[900px]:!hidden w-full flex flex-row gap-10",
                         ExpandableContainer {
                             tag: tr.pro_crypto,
                             total_count: pro_cryptos().total_count,
@@ -81,20 +104,19 @@ pub fn PoliticianStance(
                                 tracing::debug!("selected: 0");
                                 selected.set(0);
                             },
-
                             div { class: "w-full h-260 grid grid-cols-4 gap-10",
                                 for m in pro_cryptos().items {
                                     PoliticianCard {
                                         lang,
                                         id: m.id,
                                         name: "{m.name}",
-                                        party: "{m.party}",
+                                        party: m.party_enum(),
                                         image_url: "{m.image_url}",
                                     }
                                 }
                             }
                         }
-
+                        //desktop_anti
                         ExpandableContainer {
                             tag: tr.anti_crypto,
                             total_count: anti_cryptos().total_count,
@@ -113,7 +135,58 @@ pub fn PoliticianStance(
                                         lang,
                                         id: m.id,
                                         name: "{m.name}",
-                                        party: "{m.party}",
+                                        party: m.party_enum(),
+                                        image_url: "{m.image_url}",
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    //TODO(web): make scroll works and build UI
+                    //mobile_pro
+                    div { class: "hidden max-[900px]:!block w-full h-full",
+                        ExpandableContainer {
+                            tag: tr.pro_crypto,
+                            total_count: pro_cryptos().total_count,
+                            icon: rsx! {
+                                ThumbsUp { class: "[&>path]:stroke-c-c-20", width: "40", height: "40" }
+                            },
+                            expanded: selected() == 0,
+                            onclick: move |_| {
+                                tracing::debug!("selected: pro");
+                            },
+                            div { class: "w-full h-260 flex flex-row gap-10 overflow-x-auto scroll-smooth",
+                                for m in pro_cryptos().items {
+                                    PoliticianCard {
+                                        lang,
+                                        id: m.id,
+                                        name: "{m.name}",
+                                        party: m.party_enum(),
+                                        image_url: "{m.image_url}",
+                                    }
+                                }
+                            }
+                        }
+                        //mobile_anti
+                        ExpandableContainer {
+                            tag: tr.anti_crypto,
+                            total_count: anti_cryptos().total_count,
+                            text_color: "text-c-p-20",
+                            icon: rsx! {
+                                ThumbsDown { class: "[&>path]:stroke-c-p-20", width: "40", height: "40" }
+                            },
+                            expanded: selected() == 0,
+                            onclick: move |_| {
+                                tracing::debug!("selected: anti");
+                            },
+                            div { class: "w-full h-260 flex flex-row gap-10 overflow-x-auto scroll-smooth",
+                                for m in anti_cryptos().items {
+                                    PoliticianCard {
+                                        lang,
+                                        id: m.id,
+                                        name: "{m.name}",
+                                        party: m.party_enum(),
                                         image_url: "{m.image_url}",
                                     }
                                 }
@@ -135,23 +208,23 @@ pub fn PoliticianStance(
                             height: "18",
                         }
                         span { {tr.legal_notice} }
-
                     }
                 } // end of flex-col
 
-                SecondaryLink {
-                    size: ButtonSize::Small,
-                    to: Route::PoliticiansPage { lang },
-                    div { class: "flex flex-row gap-10 items-center justify-center font-bold text-sm text-black",
-                        {tr.view_all}
-                        ArrowRight {
-                            class: "[&>path]:stroke-3",
-                            width: "15",
-                            height: "15",
+                div { class: "block max-[900px]:!hidden",
+                    SecondaryLink {
+                        size: ButtonSize::Small,
+                        to: Route::PoliticiansPage { lang },
+                        div { class: "flex flex-row gap-10 items-center justify-center font-bold text-sm text-black",
+                            {tr.view_all}
+                            ArrowRight {
+                                class: "[&>path]:stroke-3",
+                                width: "15",
+                                height: "15",
+                            }
                         }
                     }
                 }
-
             }
         }
     }

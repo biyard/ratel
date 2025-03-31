@@ -3,9 +3,9 @@ use bdk::prelude::*;
 use dioxus_popup::PopupService;
 
 use crate::{
-    components::confirm_popup::ConfirmPopup,
+    components::{confirm_popup::ConfirmPopup, socials::Socials},
     config,
-    pages::components::{InputWithButton, Socials},
+    pages::components::InputWithButton,
 };
 
 #[component]
@@ -14,22 +14,24 @@ pub fn Subscription(lang: Language) -> Element {
     let mut popup: PopupService = use_context();
 
     rsx! {
-        div { class: "w-full flex flex-col",
-            div { class: "w-full",
-                svg {
-                    fill: "none",
-                    view_box: "0 0 1921 146",
-                    width: "100%",
-                    xmlns: "http://www.w3.org/2000/svg",
-                    path {
-                        d: "M0.25 73.7684L1920.25 0V146H0.25V73.7684Z",
-                        fill: "#191919",
+        div { class: "w-full flex flex-col max-tablet:mt-40",
+            div { class: "block max-tablet:!hidden",
+                div { class: "w-full",
+                    svg {
+                        fill: "none",
+                        view_box: "0 0 1921 146",
+                        width: "100%",
+                        xmlns: "http://www.w3.org/2000/svg",
+                        path {
+                            d: "M0.25 73.7684L1920.25 0V146H0.25V73.7684Z",
+                            fill: "#191919",
+                        }
                     }
                 }
             }
-            div { class: "w-full flex flex-col items-center justify-center py-80 bg-footer gap-80",
-                div { class: "w-full flex max-w-604 flex-col items-center gap-80",
-
+            div { class: "w-full flex flex-col items-center justify-center py-80 bg-footer gap-80 max-tablet:!py-40",
+                div { class: "w-full flex max-w-604 flex-col items-center gap-80 px-30",
+                    //TODO(web): Make button separately and fix padding pixel
                     div { class: "w-full flex flex-col gap-50 items-center",
                         div { class: "w-full flex flex-col items-start gap-5",
                             p { class: "text-c-cg-30 font-bold text-base/28", {tr.email} }
@@ -95,8 +97,12 @@ translate! {
     },
 
     email_placeholder: {
-        ko: "🖂 이메일을 입력하세요",
-        en: "🖂 Input your mail",
+        // FIXME: change emoji cause U+1F582 is not supported in most fonts
+        // https://www.fileformat.info/info/unicode/char/1f582/fontsupport.htm
+        // ko: "🖂 이메일을 입력하세요",
+        // en: "🖂 Please enter your email address",
+        ko: "이메일을 입력하세요",
+        en: "Please enter your email address",
     },
 
     btn_subscribe: {
