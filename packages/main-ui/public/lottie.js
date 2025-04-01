@@ -1,5 +1,3 @@
-// import lottie from "https://cdn.jsdelivr.net/npm/lottie-web@5.12.2/build/player/lottie_light.min.js";
-
 // Map to track animation instances
 const lottieInstances = new Map();
 
@@ -36,6 +34,10 @@ export async function loadAnimation(containerId, animationPath, options = {}) {
     console.log("CONTAINER", container);
     if (!container) {
       throw new Error(`Container element with ID '${containerId}' not found`);
+    }
+
+    if (typeof lottie === "undefined") {
+      throw new Error("Lottie library not loaded");
     }
 
     // generate animation instance
