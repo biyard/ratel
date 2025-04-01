@@ -2,8 +2,11 @@
 use bdk::prelude::*;
 
 use super::components::*;
-use crate::{components::popup_zone::PopupZone, route::Route};
-use by_components::{loaders::cube_loader::CubeLoader, meta::MetaSeoTemplate};
+use crate::{
+    components::{animations::loader::LoaderAnimation, popup_zone::PopupZone},
+    route::Route,
+};
+use by_components::meta::MetaSeoTemplate;
 
 #[component]
 pub fn RootLayout(lang: Language) -> Element {
@@ -87,8 +90,8 @@ pub fn RootBase(lang: Language, children: Element) -> Element {
             Header { lang, selected: selected() }
             SuspenseBoundary {
                 fallback: |_| rsx! {
-                    div { class: "absolute w-screen h-screen top-0 left-0 flex items-center justify-center text-white",
-                        CubeLoader {}
+                    div { class: "absolute w-screen h-screen top-0 left-0 flex items-center justify-center bg-background text-white",
+                        LoaderAnimation { id: "lottie-loader", autoplay: true, loop_animation: true }
                     }
                 },
                 div { class: "w-full min-h-[100vh] overflow-x-hidden scroll-smooth flex flex-col items-center justify-center",

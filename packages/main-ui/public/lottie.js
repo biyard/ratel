@@ -17,7 +17,7 @@ export async function loadAnimation(containerId, animationPath, options = {}) {
     lottieInstances.get(containerId).destroy();
     lottieInstances.delete(containerId);
   }
-  
+
   const defaultOptions = {
     loop: true,
     autoplay: true,
@@ -42,10 +42,10 @@ export async function loadAnimation(containerId, animationPath, options = {}) {
     const animInstance = lottie.loadAnimation({
       container,
       animationData,
-      ...defaultOptions
+      ...defaultOptions,
     });
     console.log("ANIMATION INSTANCE", animInstance);
-    // lottieInstances.set(containerId, animInstance);
+    lottieInstances.set(containerId, animInstance);
     return Promise.resolve(true);
   } catch (error) {
     console.error("Error loading Lottie animation:", error, animationPath);

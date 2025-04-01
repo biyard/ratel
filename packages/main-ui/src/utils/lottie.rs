@@ -62,32 +62,32 @@ impl LottieController {
     }
 
     pub fn stop(&self) {
-        stop_animation(&self.container_id);
+        stop_animation(&self.container_id)
     }
 
     pub fn play(&self) {
-        play_animation(&self.container_id);
+        play_animation(&self.container_id)
     }
 
     pub fn pause(&self) {
-        pause_animation(&self.container_id);
+        pause_animation(&self.container_id)
     }
 
     pub fn go_to_frame(&self, frame: f64) {
-        go_to_frame(&self.container_id, frame);
+        go_to_frame(&self.container_id, frame)
     }
 
     pub fn set_speed(&self, speed: f64) {
-        set_speed(&self.container_id, speed);
+        set_speed(&self.container_id, speed)
     }
 }
 
 impl Drop for LottieController {
     fn drop(&mut self) {
-        destroy_animation(&self.container_id);
+        destroy_animation(&self.container_id)
     }
 }
 
 pub fn cleanup_all_animations() {
-    destroy_all_animations();
+    destroy_all_animations()
 }

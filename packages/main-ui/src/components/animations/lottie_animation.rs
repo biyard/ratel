@@ -40,13 +40,6 @@ pub fn LottieAnimation(
                         }
                     });
                 },
-                        // if (loading)() {
-            //     div { class: "text-white", "Loading animation..." }
-            // } else if let Some(error_msg) = (error)() {
-            //     div { class: "text-red-500", "Error: {error_msg}" }
-            // } else {
-
-            // }
             }
         }
     }
