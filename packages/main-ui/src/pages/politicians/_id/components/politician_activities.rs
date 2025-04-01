@@ -7,7 +7,7 @@ use crate::{
 };
 use bdk::prelude::*;
 use dioxus_popup::PopupService;
-use dto::{Bill, BillSorter};
+use dto::{Bill, BillSorter, ServiceError};
 
 #[component]
 pub fn PoliticianActivities(
@@ -69,6 +69,30 @@ pub fn BillCard(
         "gap-0"
     } else {
         "gap-5"
+    };
+    let already_voted = !bill.user_vote.is_empty();
+    let voted_on_supportive = bill
+        .user_vote
+        .iter()
+        .any(|v| v.selected == dto::VoteOption::Supportive);
+
+    let supportive_class = if already_voted {
+        if voted_on_supportive {
+            "w-full border border-supportive/25 rounded-[10px] flex items-center justify-center cursor-pointer px-16 py-8 text-sm font-bold bg-supportive/15"
+        } else {
+            "w-full rounded-[10px] flex items-center justify-center cursor-pointer px-16 py-8 text-sm font-bold bg-c-wg-80 text-neutral-700"
+        }
+    } else {
+        "w-full border border-supportive/25 hover:border-supportive hover:bg-supportive/25 rounded-[10px] flex items-center justify-center cursor-pointer px-16 py-8 text-sm font-bold"
+    };
+    let against_class = if already_voted {
+        if voted_on_supportive {
+            "w-full rounded-[10px] flex items-center justify-center cursor-pointer px-16 py-8 text-sm font-bold bg-c-wg-80 text-neutral-700"
+        } else {
+            "w-full border border-against/25 rounded-[10px] flex items-center justify-center cursor-pointer px-16 py-8 text-sm font-bold bg-against/15"
+        }
+    } else {
+        "w-full border border-against/25 hover:border-against hover:bg-against/25 rounded-[10px] flex items-center justify-center cursor-pointer px-16 py-8 text-sm font-bold"
     };
 
     rsx! {
@@ -149,14 +173,16 @@ pub fn BillCard(
                 }
             }
 
-            // FIXME: reflect my voted and finalized result
-            // Refer to Figma(https://www.figma.com/design/YaLSz7dzRingD7CipyaC47/Ratel?node-id=183-9407&t=ntliyRgUTCrimYsj-1)
             div {
                 id: "bill-card-vote-{bill.id}",
                 class: "flex flex-row gap-10 max-mobile:!flex-col",
                 button {
-                    class: "w-full border border-supportive/25 hover:border-supportive hover:bg-supportive/25 rounded-[10px] flex items-center justify-center cursor-pointer px-16 py-8 text-sm font-bold",
+                    class: "{supportive_class}",
                     onclick: move |_| {
+                        if already_voted {
+                            btracing::e!(lang, ServiceError::AlreadyVoted);
+                            return;
+                        }
                         tracing::debug!("Vote supportive clicked");
                         if user_service.is_logined() {
                             popup.open(rsx! {
@@ -178,8 +204,12 @@ pub fn BillCard(
                     span { {tr.btn_supportive} }
                 }
                 button {
-                    class: "w-full border border-against/25 hover:border-against hover:bg-against/25 rounded-[10px] flex items-center justify-center cursor-pointer px-16 py-8 text-sm font-bold",
+                    class: "{against_class}",
                     onclick: move |_| {
+                        if already_voted {
+                            btracing::e!(lang, ServiceError::AlreadyVoted);
+                            return;
+                        }
                         tracing::debug!("Vote against clicked");
                         if user_service.is_logined() {
                             popup.open(rsx! {

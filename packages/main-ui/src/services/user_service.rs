@@ -85,13 +85,14 @@ impl Default for UserInfo {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, DioxusController)]
 pub struct UserService {
     pub signer: Signal<WalletSigner>,
     pub firebase: Signal<google_wallet::FirebaseWallet>,
     pub phantom: Signal<Option<PhantomAuth>>,
     pub cli: Signal<UserClient>,
     pub user_info: Signal<UserInfo>,
+    pub loggedin: Signal<bool>,
 }
 
 impl UserService {
@@ -99,44 +100,35 @@ impl UserService {
         let conf: &config::Config = config::get();
 
         let firebase = get_firebase_wallet();
+        let signer = if firebase.get_login() {
+            WalletSigner::Firebase
+        } else {
+            WalletSigner::None
+        };
+
+        let loggedin = if firebase.get_login() { true } else { false };
+
         #[cfg(feature = "web")]
         let phantom = Some(PhantomAuth::new());
         #[cfg(not(feature = "web"))]
         let phantom = None;
 
-        let cli = User::get_client(&conf.main_api_endpoint);
+        let mut user = Self {
+            signer: use_signal(move || signer),
+            firebase: use_signal(move || firebase.clone()),
+            phantom: use_signal(move || phantom),
+            cli: use_signal(move || User::get_client(&conf.main_api_endpoint)),
+            user_info: use_signal(|| UserInfo::default()),
+            loggedin: use_signal(|| loggedin),
+        };
 
-        use_context_provider(|| Self {
-            signer: Signal::new(WalletSigner::None),
-            firebase: Signal::new(firebase.clone()),
-            phantom: Signal::new(phantom),
-            cli: Signal::new(cli),
-            user_info: Signal::new(UserInfo::default()),
+        use_future(move || async move {
+            if loggedin {
+                user.get_user_info_from_server().await;
+            }
         });
 
-        let mut user = use_context::<UserService>();
-        let signer = (user.signer)();
-
-        // TODO: feat auto login from phantom
-
-        let is_login = match signer {
-            WalletSigner::Firebase => firebase.get_login(),
-            WalletSigner::Phantom => {
-                if let Some(phantom) = user.phantom.read().as_ref() {
-                    phantom.is_logined()
-                } else {
-                    false
-                }
-            }
-            WalletSigner::None => false,
-        };
-        tracing::debug!("UserService::init: is_login={:?}", is_login);
-        if is_login {
-            tracing::debug!("UserService::init: wallet={:?}", signer);
-            spawn(async move {
-                user.get_user_info_from_server().await;
-            });
-        }
+        use_context_provider(move || user);
     }
 
     pub fn set_signer_type(&mut self, signer: &str) {
@@ -180,6 +172,7 @@ impl UserService {
         };
         self.signer.set(WalletSigner::None);
         self.user_info.set(UserInfo::default());
+        self.loggedin.set(false);
     }
 
     pub async fn get_user_info_from_server(&mut self) {
@@ -205,6 +198,7 @@ impl UserService {
             nickname: Some(user.nickname),
             profile_url: Some(user.profile_url),
         });
+        self.loggedin.set(true);
     }
 
     pub fn get_user_info(&self) -> Option<(String, String)> {
@@ -332,6 +326,7 @@ impl UserService {
             nickname: Some(user.nickname),
             profile_url: Some(user.profile_url),
         });
+        self.loggedin.set(true);
 
         tracing::debug!("UserService::signup: user={:?}", res);
         Ok(())
@@ -369,6 +364,7 @@ impl UserService {
                     name.clone(),
                     profile_url.clone(),
                 ));
+                self.loggedin.set(true);
 
                 return UserEvent::Signup(principal, email, name, profile_url);
             }
@@ -400,6 +396,7 @@ impl UserService {
                     user.nickname,
                     user.profile_url,
                 ));
+                self.loggedin.set(true);
 
                 return UserEvent::Login;
             }
@@ -452,6 +449,8 @@ impl UserService {
                                 v.nickname,
                                 v.profile_url,
                             ));
+                            self.loggedin.set(true);
+
                             return UserEvent::Login;
                         }
                         Err(_) => {
