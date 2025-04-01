@@ -1,5 +1,7 @@
 use bdk::prelude::*;
-use dto::{AssemblyMember, Bill, Vote};
+use dto::AssemblyMember;
+
+use crate::services::user_service::UserService;
 
 #[derive(Clone, Copy, DioxusController)]
 pub struct Controller {
@@ -10,58 +12,20 @@ pub struct Controller {
 
 impl Controller {
     pub fn new(lang: Language, id: ReadOnlySignal<i64>) -> std::result::Result<Self, RenderError> {
+        let user: UserService = use_context();
+        tracing::debug!("user: {:?}", user);
+
         let politician = use_server_future(move || {
             let id = id();
+            let _ = user.loggedin();
 
             async move {
                 let endpoint = crate::config::get().main_api_endpoint;
 
-                let mut res = AssemblyMember::get_client(endpoint)
+                AssemblyMember::get_client(endpoint)
                     .get(id)
                     .await
-                    .unwrap_or_default();
-
-                if res.bills.is_empty() {
-                    res.bills = vec![Bill {
-                        id: 1,
-                        created_at: 100000000,
-                        title: "DAO Treasury Transparency Act & Crypto Investor Protection Act"
-                            .to_string(),
-                        bill_no: "1".to_string(),
-                        bill_id: "PRC_000".to_string(),
-                        date: "2020-01-01".to_string(),
-                        en_title: Some(
-                            "DAO Treasury Transparency Act & Crypto Investor Protection Act"
-                                .to_string(),
-                        ),
-                        book_id: "1".to_string(),
-                        // site_url: "https://example.com".to_string(),
-                        summary: Some(
-                            "This bill aims to provide transparency to DAO treasuries and protect crypto investors.".to_string(),
-                        ),
-                        en_summary: Some(
-                            "This bill aims to provide transparency to DAO treasuries and protect crypto investors.".to_string(),
-                        ),
-                        votes: vec![
-                            Vote{
-                                selected: dto::VoteOption::Supportive,
-                                ..Default::default()
-                            },
-                            Vote{
-                                selected: dto::VoteOption::Supportive,
-                                ..Default::default()
-                            },
-                            Vote{
-                                selected: dto::VoteOption::Against,
-                                ..Default::default()
-                            }
-
-                        ],
-                        ..Default::default()
-                    }];
-                }
-
-                res
+                    .unwrap_or_default()
             }
         })?;
 
