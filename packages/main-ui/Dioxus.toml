@@ -7,7 +7,7 @@ title = ""
 
 [web.watcher]
 reload_html = true
-watch_path = ["src", "../../packages"]
+watch_path = ["src", "public", "../../packages"]
 
 [web.resource.dev]
 script = []

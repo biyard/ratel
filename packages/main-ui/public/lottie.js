@@ -1,4 +1,4 @@
-import lottie from "https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js";
+// import lottie from "https://cdn.jsdelivr.net/npm/lottie-web@5.12.2/build/player/lottie_light.min.js";
 
 // Map to track animation instances
 const lottieInstances = new Map();
@@ -11,12 +11,13 @@ const lottieInstances = new Map();
  * @returns {Promise} - Resolves when animation is loaded and ready
  */
 export async function loadAnimation(containerId, animationPath, options = {}) {
+  console.log("loadAnimation", containerId, animationPath, options);
   // Clean up existing animation
   if (lottieInstances.has(containerId)) {
     lottieInstances.get(containerId).destroy();
     lottieInstances.delete(containerId);
   }
-
+  
   const defaultOptions = {
     loop: true,
     autoplay: true,
@@ -27,28 +28,27 @@ export async function loadAnimation(containerId, animationPath, options = {}) {
     // get animation data from the path
     const response = await fetch(animationPath);
     if (!response.ok) {
-      throw new Error(`Failed to load animation: ${response.status}`);
+      throw new Error(`response: ${response}`);
     }
 
     const animationData = await response.json();
     const container = document.getElementById(containerId);
-
+    console.log("CONTAINER", container);
     if (!container) {
       throw new Error(`Container element with ID '${containerId}' not found`);
     }
 
     // generate animation instance
     const animInstance = lottie.loadAnimation({
-      container: container,
-      ...defaultOptions,
-      ...options,
+      container,
       animationData,
+      ...defaultOptions
     });
-
-    lottieInstances.set(containerId, animInstance);
+    console.log("ANIMATION INSTANCE", animInstance);
+    // lottieInstances.set(containerId, animInstance);
     return Promise.resolve(true);
   } catch (error) {
-    console.error("Error loading Lottie animation:", error);
+    console.error("Error loading Lottie animation:", error, animationPath);
     return Promise.reject(error);
   }
 }
@@ -118,7 +118,7 @@ export function destroyAnimation(containerId) {
   const anim = lottieInstances.get(containerId);
   if (anim) {
     anim.destroy();
-    lottieInstances.delete(containe / rId);
+    lottieInstances.delete(containerId);
   }
 }
 

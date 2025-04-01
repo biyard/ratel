@@ -1,3 +1,4 @@
+pub mod animations;
 pub mod button;
 pub mod checkbox;
 pub mod confirm_popup;
@@ -5,7 +6,6 @@ pub mod dropdown;
 pub mod icon_text;
 pub mod icons;
 pub mod indicators;
-pub mod lottie_animation;
 pub mod page_title;
 pub mod party;
 pub mod popup_zone;

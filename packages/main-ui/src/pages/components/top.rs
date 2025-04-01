@@ -1,9 +1,9 @@
 #![allow(non_snake_case)]
 use super::SignupPopup;
 use crate::components::{
-    button::{primary_button::PrimaryA, secondary_botton::SecondaryButton},
     // icons::CharacterSymbol,
-    lottie_animation::LottieAnimation,
+    animations::top::TopAnimation,
+    button::{primary_button::PrimaryA, secondary_botton::SecondaryButton},
     socials::Socials,
 };
 use bdk::prelude::*;
@@ -25,13 +25,10 @@ pub fn Top(
             ..attributes,
             div { class: "flex flex-col items-center justify-center gap-32 max-tablet:my-auto",
                 div { class: "max-[900px]:!scale-70",
-                    LottieAnimation {
+                    TopAnimation {
                         id: "lottie-top",
-                        src: "/public/animations/ani_logo.json",
                         autoplay: true,
                         loop_animation: true,
-                        width: "100%",
-                        height: "100%",
                     }
                 }
                 h1 { class: "text-5xl/56 text-center font-bold text-white whitespace-pre-line max-tablet:text-[28px]/38 max",

@@ -1,33 +1,36 @@
-use js_sys::Promise;
+use wasm_bindgen::JsValue;
 use wasm_bindgen::prelude::*;
 
-#[wasm_bindgen(module = "/deps/js/lottie.js")]
+#[wasm_bindgen(module = "/public/lottie.js")]
 extern "C" {
     #[wasm_bindgen(catch, js_name = "loadAnimation")]
-    fn load_animation(container_id: &str, animation_path: &str, options: JsValue) -> Promise;
+    pub async fn load_animation(
+        container_id: &str,
+        animation_path: &str,
+        options: JsValue,
+    ) -> Result<JsValue, JsValue>;
 
-    #[wasm_bindgen(catch, js_name = "stopAnimation")]
-    fn stop_animation(container_id: &str);
+    #[wasm_bindgen(js_name = "stopAnimation")]
+    pub fn stop_animation(container_id: &str);
 
-    #[wasm_bindgen(catch, js_name = "playAnimation")]
-    fn play_animation(container_id: &str);
+    #[wasm_bindgen(js_name = "playAnimation")]
+    pub fn play_animation(container_id: &str);
 
-    #[wasm_bindgen(catch, js_name = "pauseAnimation")]
-    fn pause_animation(container_id: &str);
+    #[wasm_bindgen(js_name = "pauseAnimation")]
+    pub fn pause_animation(container_id: &str);
 
-    #[wasm_bindgen(catch, js_name = "goToFrame")]
-    fn go_to_frame(container_id: &str, frame: f64);
+    #[wasm_bindgen(js_name = "goToFrame")]
+    pub fn go_to_frame(container_id: &str, frame: f64);
 
-    #[wasm_bindgen(catch, js_name = "setSpeed")]
-    fn set_speed(container_id: &str, speed: f64);
+    #[wasm_bindgen(js_name = "setSpeed")]
+    pub fn set_speed(container_id: &str, speed: f64);
 
-    #[wasm_bindgen(catch, js_name = "destroyAnimation")]
-    fn destroy_animation(container_id: &str);
+    #[wasm_bindgen(js_name = "destroyAnimation")]
+    pub fn destroy_animation(container_id: &str);
 
-    #[wasm_bindgen(catch, js_name = "destroyAllAnimations")]
-    fn destroy_all_animations();
+    #[wasm_bindgen(js_name = "destroyAllAnimations")]
+    pub fn destroy_all_animations();
 }
-
 #[derive(Clone, Debug)]
 pub struct LottieController {
     container_id: String,
@@ -45,8 +48,8 @@ impl LottieController {
         let _ = js_sys::Reflect::set(&options, &"autoplay".into(), &autoplay.into());
 
         match load_animation(container_id, animation_path, options).await {
-            Ok(_) => {
-                tracing::debug!("Animation loaded successfully");
+            Ok(v) => {
+                tracing::debug!("Animation loaded {:?}", v);
                 Ok(Self {
                     container_id: container_id.to_string(),
                 })

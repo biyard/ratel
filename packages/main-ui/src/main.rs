@@ -72,12 +72,11 @@ fn app() -> Element {
         document::Style { href: "https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&family=Raleway:ital,wght@0,100..900;1,100..900&display=swap" }
         document::Style { href: asset!("/public/main.css") }
         document::Style { href: asset!("/public/tailwind.css") }
-
         document::Script { src: "https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4" }
         document::Style { r#type: "text/tailwindcss", {css} }
-
+        document::Script { src: "https://cdn.jsdelivr.net/npm/lottie-web@5.12.2/build/player/lottie_light.min.js" }
         // document::Script { r#type: "module", src: asset!("/public/dep.js"), defer: true }
-
+        document::Script { r#type: "module", defer: true, src: asset!("/public/lottie.js") }
         Responsive { tablet: 900.0, Router::<Route> {} }
     }
 }
