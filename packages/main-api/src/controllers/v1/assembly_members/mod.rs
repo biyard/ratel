@@ -61,18 +61,38 @@ impl AssemblyMemberControllerV1 {
 
     pub async fn get_assembly_member(
         State(ctrl): State<AssemblyMemberControllerV1>,
-        Extension(_auth): Extension<Option<Authorization>>,
+        Extension(auth): Extension<Option<Authorization>>,
         Path(AssemblyMemberPath { id }): Path<AssemblyMemberPath>,
     ) -> Result<Json<AssemblyMember>> {
         tracing::debug!("get_assembly_member {:?}", id);
-        //FIXME: if neeeded, use user.id not '0'
+        let mut tx = ctrl.pool.begin().await?;
+
+        let user_id = match auth {
+            Some(Authorization::UserSig(sig)) => {
+                User::query_builder()
+                    .principal_equals(
+                        sig.principal()
+                            .map_err(|_| dto::ServiceError::Unauthorized)?,
+                    )
+                    .query()
+                    .map(User::from)
+                    .fetch_optional(&mut *tx)
+                    .await?
+                    .unwrap_or_default()
+                    .id
+            }
+            _ => 0,
+        };
+
         let doc = AssemblyMember::query_builder()
-            .bills_builder(Bill::query_builder(0))
+            .bills_builder(Bill::query_builder(user_id))
             .id_equals(id)
             .query()
             .map(AssemblyMember::from)
-            .fetch_one(&ctrl.pool)
+            .fetch_one(&mut *tx)
             .await?;
+
+        tx.commit().await?;
 
         Ok(Json(doc))
     }
@@ -85,6 +105,13 @@ impl AssemblyMemberControllerV1 {
         tracing::debug!("list_assembly_member {:?}", param);
 
         match param {
+            AssemblyMemberParam::Query(q)
+                if q.action == Some(AssemblyMemberQueryActionType::ListByStance) =>
+            {
+                Ok(Json(AssemblyMemberGetResponse::Query(
+                    ctrl.list_stance(q).await?,
+                )))
+            }
             AssemblyMemberParam::Query(q) => {
                 let mut query_builder = AssemblyMemberSummary::query_builder().limit(q.size());
                 let mut total_count = 0;
@@ -144,5 +171,61 @@ impl AssemblyMemberControllerV1 {
                 })))
             }
         }
+    }
+}
+
+impl AssemblyMemberControllerV1 {
+    async fn list_stance(
+        &self,
+        AssemblyMemberQuery { size, stance, .. }: AssemblyMemberQuery,
+    ) -> Result<QueryResponse<AssemblyMemberSummary>> {
+        use sqlx::Row;
+        let mut total_count = 0;
+        let size = size as i32;
+
+        let items = match stance {
+            Some(CryptoStance::Supportive) => {
+                AssemblyMemberSummary::query_builder()
+                    .stance_greater_than_equals(CryptoStance::Supportive)
+                    .limit(size)
+                    .order_by_random()
+                    .query()
+                    .map(|r: PgRow| {
+                        total_count = r.get("total_count");
+                        r.into()
+                    })
+                    .fetch_all(&self.pool)
+                    .await?
+            }
+            Some(CryptoStance::Against) => {
+                AssemblyMemberSummary::query_builder()
+                    .stance_less_than_equals(CryptoStance::Against)
+                    .limit(size)
+                    .order_by_random()
+                    .query()
+                    .map(|r: PgRow| {
+                        total_count = r.get("total_count");
+                        r.into()
+                    })
+                    .fetch_all(&self.pool)
+                    .await?
+            }
+            Some(stance) => {
+                AssemblyMemberSummary::query_builder()
+                    .stance_equals(stance)
+                    .limit(size)
+                    .order_by_random()
+                    .query()
+                    .map(|r: PgRow| {
+                        total_count = r.get("total_count");
+                        r.into()
+                    })
+                    .fetch_all(&self.pool)
+                    .await?
+            }
+            _ => vec![],
+        };
+
+        Ok(QueryResponse { total_count, items })
     }
 }
