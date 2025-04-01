@@ -1,0 +1,14 @@
+{
+  "name": "main-ui",
+  "version": "1.0.0",
+  "description": "This repository provides a template of dioxus. It serves fullstack web server, but we recommend you not to add any server implementation to reduce building time.",
+  "main": "tailwind.config.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@tailwindcss/cli": "^4.0.17"
+  }
+}

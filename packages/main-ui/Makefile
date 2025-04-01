@@ -37,7 +37,7 @@ public/dep.js:
 	cd $(WORKSPACE_ROOT)/deps/js && make build && cp ./dist/main.js $(PWD)/public/dep.js
 
 public/tailwind.css:
-	tailwindcss -i ./public/input.css -o ./public/tailwind.css
+	npx tailwindcss -i ./public/input.css -o ./public/tailwind.css
 
 clean:
 	rm -rf public/tailwind.css public/dep.js
