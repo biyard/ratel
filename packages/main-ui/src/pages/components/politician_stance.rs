@@ -1,9 +1,12 @@
 #![allow(non_snake_case)]
 use bdk::prelude::*;
-use by_components::icons::{
-    arrows::ArrowRight,
-    emoji::{ThumbsDown, ThumbsUp},
-    help_support::Help,
+use by_components::{
+    icons::{
+        arrows::ArrowRight,
+        emoji::{ThumbsDown, ThumbsUp},
+        help_support::Help,
+    },
+    responsive::ResponsiveService,
 };
 use dioxus_popup::PopupService;
 use dto::AssemblyMember;
@@ -59,6 +62,8 @@ pub fn PoliticianStance(
         }
     })?
     .suspend()?;
+    let responsive: ResponsiveService = use_context();
+    let is_mobile = use_memo(move || responsive.width() <= 900.0);
 
     rsx! {
         div { class: "hidden max-[900px]:!block w-screen",
@@ -99,7 +104,7 @@ pub fn PoliticianStance(
                             icon: rsx! {
                                 ThumbsUp { class: "[&>path]:stroke-c-c-20", width: "40", height: "40" }
                             },
-                            expanded: selected() == 0,
+                            expanded: is_mobile() || selected() == 0,
                             onclick: move |_| {
                                 tracing::debug!("selected: 0");
                                 selected.set(0);
@@ -117,26 +122,28 @@ pub fn PoliticianStance(
                             }
                         }
                         //desktop_anti
-                        ExpandableContainer {
-                            tag: tr.anti_crypto,
-                            total_count: anti_cryptos().total_count,
-                            text_color: "text-c-p-20",
-                            icon: rsx! {
-                                ThumbsDown { class: "[&>path]:stroke-c-p-20", width: "40", height: "40" }
-                            },
-                            expanded: selected() == 1,
-                            onclick: move |_| {
-                                tracing::debug!("selected: 1");
-                                selected.set(1);
-                            },
-                            div { class: "w-full h-260 grid grid-cols-4 gap-10 max-tablet:flex max-tablet:flex-row max-tablet:overflow-x-auto max-tablet:scroll-smooth",
-                                for m in anti_cryptos().items {
-                                    PoliticianCard {
-                                        lang,
-                                        id: m.id,
-                                        name: "{m.name}",
-                                        party: m.party_enum(),
-                                        image_url: "{m.image_url}",
+                        if !is_mobile() || anti_cryptos().total_count > 0 {
+                            ExpandableContainer {
+                                tag: tr.anti_crypto,
+                                total_count: anti_cryptos().total_count,
+                                text_color: "text-c-p-20",
+                                icon: rsx! {
+                                    ThumbsDown { class: "[&>path]:stroke-c-p-20", width: "40", height: "40" }
+                                },
+                                expanded: is_mobile() || (selected() == 1 && anti_cryptos().total_count > 0),
+                                onclick: move |_| {
+                                    tracing::debug!("selected: 1");
+                                    selected.set(1);
+                                },
+                                div { class: "w-full h-260 grid grid-cols-4 gap-10 max-tablet:flex max-tablet:flex-row max-tablet:overflow-x-auto max-tablet:scroll-smooth",
+                                    for m in anti_cryptos().items {
+                                        PoliticianCard {
+                                            lang,
+                                            id: m.id,
+                                            name: "{m.name}",
+                                            party: m.party_enum(),
+                                            image_url: "{m.image_url}",
+                                        }
                                     }
                                 }
                             }
