@@ -74,6 +74,7 @@ fn app() -> Element {
         document::Style { href: asset!("/public/tailwind.css") }
 
         document::Script { src: "https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4" }
+        document::Script { src: "https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js" }
         document::Style { r#type: "text/tailwindcss", {css} }
 
         // document::Script { r#type: "module", src: asset!("/public/dep.js"), defer: true }

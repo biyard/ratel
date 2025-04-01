@@ -2,8 +2,11 @@
 use bdk::prelude::*;
 
 use super::components::*;
-use crate::{components::popup_zone::PopupZone, route::Route};
-use by_components::{loaders::cube_loader::CubeLoader, meta::MetaSeoTemplate};
+use crate::{
+    components::{loader::Loader, popup_zone::PopupZone},
+    route::Route,
+};
+use by_components::meta::MetaSeoTemplate;
 
 #[component]
 pub fn RootLayout(lang: Language) -> Element {
@@ -88,7 +91,7 @@ pub fn RootBase(lang: Language, children: Element) -> Element {
             SuspenseBoundary {
                 fallback: |_| rsx! {
                     div { class: "absolute w-screen h-screen top-0 left-0 flex items-center justify-center text-white",
-                        CubeLoader {}
+                        Loader { class: "w-200" }
                     }
                 },
                 div { class: "w-full min-h-[100vh] overflow-x-hidden scroll-smooth flex flex-col items-center justify-center",
