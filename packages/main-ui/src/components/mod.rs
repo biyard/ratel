@@ -5,6 +5,7 @@ pub mod dropdown;
 pub mod icon_text;
 pub mod icons;
 pub mod indicators;
+pub mod loader;
 pub mod page_title;
 pub mod party;
 pub mod popup_zone;
