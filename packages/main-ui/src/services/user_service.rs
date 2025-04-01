@@ -100,19 +100,33 @@ impl UserService {
         let conf: &config::Config = config::get();
 
         let firebase = get_firebase_wallet();
+        let signer = if firebase.get_login() {
+            WalletSigner::Firebase
+        } else {
+            WalletSigner::None
+        };
+
+        let loggedin = if firebase.get_login() { true } else { false };
+
         #[cfg(feature = "web")]
         let phantom = Some(PhantomAuth::new());
         #[cfg(not(feature = "web"))]
         let phantom = None;
 
-        let user = Self {
-            signer: use_signal(|| WalletSigner::None),
+        let mut user = Self {
+            signer: use_signal(move || signer),
             firebase: use_signal(move || firebase.clone()),
             phantom: use_signal(move || phantom),
             cli: use_signal(move || User::get_client(&conf.main_api_endpoint)),
             user_info: use_signal(|| UserInfo::default()),
-            loggedin: use_signal(|| false),
+            loggedin: use_signal(|| loggedin),
         };
+
+        use_future(move || async move {
+            if loggedin {
+                user.get_user_info_from_server().await;
+            }
+        });
 
         use_context_provider(move || user);
     }
