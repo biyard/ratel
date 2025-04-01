@@ -37,6 +37,10 @@ pub enum ServiceError {
     WalletError(String),
     HtmlParseError(String),
     UniqueViolation(String),
+
+    // Votes
+    #[translate(en = "You've already voted", ko = "이미 투표했습니다.")]
+    AlreadyVoted,
 }
 
 impl<E: Error + 'static> From<E> for ServiceError {
