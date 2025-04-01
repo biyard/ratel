@@ -1,0 +1,75 @@
+@theme {
+  /* Tailwindcss variables */
+  --spacing: 1px;
+  --color-black: #000203;
+  --color-primary: #fcb300;
+  --color-secondary: #777677;
+
+  /* Text colors */
+  --color-text-primary: white;
+  --color-text-secondary: #a1a1a1; /* neutral-400 */
+
+  /* Popup colors */
+  --color-popup-background: rgba(34, 34, 34, 0.58);
+
+  /* Background colors */
+  --color-background: #1e1e1e;
+
+  /* Checkbox colors */
+  --color-cb-text: #aeaaab;
+
+  /* Border colors */
+  --color-border-primary: #464646;
+
+  /* Primary button colors */
+  --color-btn-p: #fcb300;
+  --color-btn-p-hover: #ca8f00;
+  --color-btn-p-text: black;
+  --color-btn-p-hover-text: black;
+  --color-btn-p-disabled: #777677;
+  --color-btn-p-disabled-text: #aeaeae;
+
+  /* Secondary button colors */
+  --color-btn-s: white;
+  --color-btn-s-hover: #cccccc;
+  --color-btn-s-text: black;
+  --color-btn-s-hover-text: black;
+  --color-btn-s-disabled: #777677;
+  --color-btn-s-disabled-text: #aeaeae;
+
+  /* Outlined button colors */
+  --color-btn-o: #464646; /* border color */
+  --color-btn-o-hover: white; /* border color while hovering */
+  --color-btn-o-hover-bg: #1a1a1a; /* bg color while hovering */
+  --color-btn-o-text: white;
+  --color-btn-o-hover-text: white;
+
+  /* App-specific colors */
+  --color-hover: #ca8f00;
+  --color-c-wg-30: #aeaeae;
+  --color-c-wg-50: #777677;
+  --color-c-wg-70: #464646;
+  --color-c-wg-80: #323232;
+  --color-c-cg-30: #aeb8b8;
+  --color-footer: #191919;
+  --color-copyright: #9095a1;
+  --color-neutral-80: #6b6b6b;
+  --color-neutral-400: #a1a1a1;
+  --color-neutral-500: #737373;
+  --color-neutral-600: #525252;
+  --color-neutral-700: #404040;
+  --color-c-c-20: #6eedd8;
+  --color-c-p-20: #ff9eee;
+  --color-c-p-50: #db2780;
+  --color-c-p-50-10: #db27801a;
+  --color-supportive: #6eedd8;
+  --color-against: #ff9eee;
+  --color-bg: #1a1a1a;
+  --color-tab-hover: #282828;
+  --color-mission-title: #DEE1E6;
+
+  --breakpoint-desktop:1177px;
+  --breakpoint-tablet:900px;
+  --breakpoint-mobile:500px;
+  --breakpoint-sm-mobile:380px;
+}
