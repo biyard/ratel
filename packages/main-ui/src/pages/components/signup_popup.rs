@@ -1,7 +1,5 @@
 #![allow(non_snake_case)]
-use super::{
-    loader_popup::LoaderPopup, signin_popup_footer::SigninPopupFooter, wallet_popup::WalletPopup,
-};
+use super::{loader_popup::LoaderPopup, signin_popup_footer::SigninPopupFooter};
 use crate::{components::icons, services::user_service::UserService};
 use bdk::prelude::*;
 use dioxus_popup::PopupService;
