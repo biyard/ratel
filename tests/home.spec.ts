@@ -1,8 +1,10 @@
 import { test, expect } from "@playwright/test";
 import { wrap } from "./utils";
 
-test("[Home-001] Looking over website w/o signing up", async ({ page }) => {
-  const p = wrap(page, "home/001-look-over");
+test("[Home-001] Looking over website w/o signing up", async ({
+  page,
+}, testInfo) => {
+  const p = wrap(page, testInfo.project.name, "home/001-look-over");
   await p.goto("/", { waitUntil: "load" });
   await p.fullCapture("full");
   await p.capture("top");
