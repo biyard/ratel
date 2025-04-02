@@ -23,7 +23,7 @@ pub fn Top(
             class: "w-full h-screen flex flex-col items-center justify-center gap-100 max-tablet:!gap-0 max-tablet:py-20",
             ..attributes,
             div { class: "flex flex-col items-center justify-center gap-32 max-tablet:my-auto",
-                lottie-player {
+                dotlottie-player {
                     src: asset!("/public/animations/ani_logo.json"),
                     class: "w-193",
                     "autoplay": true,
