@@ -41,6 +41,21 @@ test("[Home-001] Looking over website w/o signing up", async ({
   }
   await p.clickXpathAndCapture("//nav/a[4]", "Support");
 
+  if (viewport && viewport.width < 768) {
+    await p.clickXpathAndCapture(
+      "/html/body/div/div[3]/div[2]/div[1]/div/div[1]/button[1]",
+      "Mobile menu",
+    );
+  }
+  await p.clickXpathAndCapture(
+    "/html/body/div/div[3]/div[2]/div[1]/div/div[2]/div/button",
+    "Sign in",
+  );
+  await p.clickXpathAndCapture(
+    "/html/body/div/div[3]/div[1]/div/button",
+    "Close",
+  );
+
   const to_politicians = p.getByRole("link", { name: "View all" });
   await expect(to_politicians).toBeVisible();
 
