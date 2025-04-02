@@ -1050,6 +1050,7 @@ dependencies = [
  "lambda_runtime 0.12.0",
  "tokio",
  "tower 0.4.13",
+ "tower-http 0.6.2",
  "tower-layer",
  "tower-service",
  "tracing",
