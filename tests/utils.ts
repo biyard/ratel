@@ -1,4 +1,4 @@
-import { expect, Page } from "@playwright/test";
+import { expect, Page, TestInfo } from "@playwright/test";
 // Screenshot util class
 export type BiyardPage = Page & {
   order: number;
@@ -8,26 +8,26 @@ export type BiyardPage = Page & {
   clickXpathAndCapture: (xpath: string, name: string) => Promise<void>;
 };
 
-export function wrap(page: Page, baseDir: string): BiyardPage {
+export function wrap(page: Page, project: string, baseDir: string): BiyardPage {
   const pageWithCapture = page as BiyardPage;
   pageWithCapture.order = 1;
 
   pageWithCapture.fullCapture = async (name: string) => {
     const paddedOrder = String(pageWithCapture.order).padStart(3, "0");
-    const filename = `screenshots/${baseDir}/${paddedOrder}-${name}.png`;
+    const filename = `screenshots/${project}/${baseDir}/${paddedOrder}-${name}.png`;
     pageWithCapture.order += 1;
     await page.screenshot({ path: filename, fullPage: true });
   };
 
   pageWithCapture.capture = async (name: string) => {
     const paddedOrder = String(pageWithCapture.order).padStart(3, "0");
-    const filename = `screenshots/${baseDir}/${paddedOrder}-${name}.png`;
+    const filename = `screenshots/${project}/${baseDir}/${paddedOrder}-${name}.png`;
     pageWithCapture.order += 1;
     await page.screenshot({ path: filename });
   };
 
   pageWithCapture.clickAndCapture = async (name: string) => {
-    await page.locator("xpath=//nav/a[1]").click();
+    await page.locator(`text=${name}`).click();
     await page.waitForTimeout(500);
     await pageWithCapture.capture(name);
   };
