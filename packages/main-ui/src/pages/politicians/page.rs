@@ -2,6 +2,7 @@
 use crate::components::{dropdown::Dropdown, party::PartyIcon};
 use crate::pages::components::FooterWithSocial;
 use crate::pages::components::SectionHeader;
+use crate::route::Route;
 
 use super::{controller::*, i18n::*};
 use bdk::prelude::by_components::icons::edit::Search;
@@ -90,14 +91,16 @@ pub fn PoliticiansPage(lang: Language) -> Element {
                     }
 
                     div { class: "w-full h-full overflow-hidden flex flex-col",
-                        div { class: "grow flex flex-col overflow-y-scroll w-full h-screen",
+                        div {
+                            id: "politician-list",
+                            class: "grow flex flex-col overflow-y-scroll w-full h-screen",
                             for politician in ctrl.politicians()?.items {
-                                div {
+                                Link {
                                     class: "grid grid-cols-5 items-center border-b border-b-c-wg-80 cursor-pointer min-w-1100 w-full",
-                                    onclick: move |_| {
-                                        ctrl.go_to_politician_by_id(politician.id);
+                                    to: Route::PoliticiansByIdPage {
+                                        lang,
+                                        id: politician.id,
                                     },
-
                                     div { class: "px-20 py-14 col-span-1",
                                         div { class: "flex flex-row items-center gap-4",
                                             img {

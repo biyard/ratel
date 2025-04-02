@@ -2,7 +2,7 @@
 use super::SignupPopup;
 use crate::components::{
     button::{primary_button::PrimaryA, secondary_botton::SecondaryButton},
-    icons::CharacterSymbol,
+    // icons::CharacterSymbol,
     socials::Socials,
 };
 use bdk::prelude::*;
@@ -23,7 +23,11 @@ pub fn Top(
             class: "w-full h-screen flex flex-col items-center justify-center gap-100 max-tablet:!gap-0 max-tablet:py-20",
             ..attributes,
             div { class: "flex flex-col items-center justify-center gap-32 max-tablet:my-auto",
-                div { class: "max-[900px]:!scale-70", CharacterSymbol {} }
+                dotlottie-player {
+                    src: asset!("/public/animations/ani_logo.json"),
+                    class: "w-193",
+                    "autoplay": true,
+                }
                 h1 { class: "text-5xl/56 text-center font-bold text-white whitespace-pre-line max-tablet:text-[28px]/38 max",
                     {tr.slogan}
                 }

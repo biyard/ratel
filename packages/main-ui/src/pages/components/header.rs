@@ -113,16 +113,9 @@ pub fn Header(
                     }
 
                     div { class: "flex flex-row gap-10 max-tablet:!flex-col max-tablet:!items-center max-tablet:!justify-center",
-                        Link {
-                            class: "px-20 py-10 bg-primary hover:bg-hover text-black text-sm cursor-pointer rounded-full font-bold max-tablet:flex items-center justify-center hidden",
-                            to: Route::PreparingPage { lang },
-                            onclick: move |_| expanded.set(false),
-                            {tr.get_ratel}
-                        }
-
                         if let Some((_, _)) = user_service.get_user_info() {
                             button {
-                                class: "text-neutral-500 text-[15px] font-bold p-10 hover:text-hover cursor-pointer",
+                                class: "text-neutral-500 text-[15px] font-bold p-10 hover:text-hover cursor-pointer order-1 max-tablet:!order-2",
                                 onclick: move |_| async move {
                                     tracing::debug!("my reward clicked");
                                     expanded.set(false);
@@ -131,7 +124,7 @@ pub fn Header(
                             }
                         } else {
                             button {
-                                class: "p-10 text-[15px] font-bold text-secondary hover:text-hover cursor-pointer max-tablet:!px-44 max-tablet:!py-15",
+                                class: "p-10 text-[15px] font-bold text-secondary hover:text-hover cursor-pointer max-tablet:!px-44 max-tablet:!py-15 order-1  max-tablet:!order-2",
                                 onclick: move |_| {
                                     tracing::debug!("Sign in clicked");
                                     expanded.set(false);
@@ -143,14 +136,14 @@ pub fn Header(
                             }
                         }
                         Link {
-                            class: "px-20 py-10 bg-primary hover:bg-hover text-black text-sm cursor-pointer rounded-full font-bold flex items-center justify-center max-tablet:hidden",
+                            class: "px-20 py-10 bg-primary hover:bg-hover text-black text-sm cursor-pointer rounded-full font-bold flex items-center justify-center order-2 max-tablet:!order-1",
                             to: Route::PreparingPage { lang },
                             onclick: move |_| expanded.set(false),
                             {tr.get_ratel}
                         }
 
                         Socials {
-                            class: "flex-row items-center justify-center gap-50 hidden mt-34 max-tablet:!flex",
+                            class: "flex-row items-center justify-center gap-50 hidden mt-34 max-tablet:!flex order-3",
                             size: 28,
                             onclick: move |_| expanded.set(false),
                         }
