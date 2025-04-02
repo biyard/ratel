@@ -66,7 +66,7 @@ test("[Home-001] Looking over website w/o signing up", async ({
   await p.capture("politician-stance");
 
   await p.clickXpathAndCapture(
-    '//*[@id="politician - list"]/a[1]',
+    '//*[@id="politician-list"]/a[1]',
     "Select a member",
   );
   await p.fullCapture("politician detail full");
@@ -76,8 +76,14 @@ test("[Home-001] Looking over website w/o signing up", async ({
     "Go to home",
   );
 
+  if (viewport && viewport.width < 768) {
+    await p.clickXpathAndCapture(
+      "/html/body/div/div[3]/div[2]/div[1]/div/div[1]/button[1]",
+      "Mobile menu",
+    );
+  }
   await p.clickXpathAndCapture(
-    '//*[@id="main"]/div[3]/div[2]/div[1]/div/div[2]/div/a[2]',
+    '//*[@id="main"]/div[3]/div[2]/div[1]/div/div[2]/div/a',
     "Get ratel",
   );
 
