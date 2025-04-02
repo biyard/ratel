@@ -69,7 +69,7 @@ test("[Home-001] Looking over website w/o signing up", async ({
     '//*[@id="politician-list"]/a[1]',
     "Select a member",
   );
-  await p.fullCapture("politician detail full");
+  // await p.fullCapture("politician detail full");
 
   await p.clickXpathAndCapture(
     '//*[@id="main"]/div[3]/div[2]/div[1]/div/div[1]/a',
@@ -83,7 +83,7 @@ test("[Home-001] Looking over website w/o signing up", async ({
     );
   }
   await p.clickXpathAndCapture(
-    '//*[@id="main"]/div[3]/div[2]/div[1]/div/div[2]/div/a',
+    "/html/body/div/div[3]/div[2]/div[1]/div/div[2]/div/a",
     "Get ratel",
   );
 
