@@ -14,7 +14,6 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Eq, PartialEq, Default, Translate, ApiModel, Copy)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum CryptoStance {
-    #[default]
     #[translate(en = "All Stance")]
     None = 99,
     #[translate(en = "Strongly Against")]
@@ -22,6 +21,7 @@ pub enum CryptoStance {
     #[translate(en = "Against")]
     Against = 1,
     #[translate(en = "Neutral")]
+    #[default]
     Neutral = 2,
     #[translate(en = "Supportive")]
     Supportive = 3,
@@ -114,7 +114,7 @@ pub struct AssemblyMember {
     #[api_model(summary, many_to_many = proposers, foreign_table_name = bills, foreign_primary_key = bill_id, foreign_reference_key = member_id, aggregator = count)]
     pub no_of_bills: i64,
     // TODO: need to sort out by newest or the other options
-    #[api_model(summary, many_to_many = proposers, foreign_table_name = bills, foreign_primary_key = bill_id, foreign_reference_key = member_id, nested, unique)]
+    #[api_model(many_to_many = proposers, foreign_table_name = bills, foreign_primary_key = bill_id, foreign_reference_key = member_id, nested, unique)]
     pub bills: Vec<Bill>,
 }
 
