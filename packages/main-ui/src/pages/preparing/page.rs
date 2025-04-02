@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 use crate::{
     components::{
-        button::{ButtonSize, primary_button::PrimaryLink, secondary_botton::SecondaryButton},
+        button::{ButtonSize, primary_button::PrimaryLink, secondary_botton::SecondaryA},
         icons::ComingSoon,
         socials::Socials,
     },
@@ -48,8 +48,7 @@ pub fn PreparingPage(
                     {tr.go_back}
                 }
 
-                // TODO: implement downloading whitepaper
-                SecondaryButton { onclick: move |_| {}, {tr.learn_more} }
+                SecondaryA { href: "/public/documents/Ratel-Token-White-Paper.pdf", {tr.learn_more} }
             }
         }
     }
