@@ -4,10 +4,9 @@ use bdk::prelude::*;
 use by_types::QueryResponse;
 use dto::*;
 
-use crate::route::Route;
-
 #[derive(Clone, Copy, DioxusController)]
 pub struct Controller {
+    #[allow(dead_code)]
     pub lang: Language,
     pub politicians: Resource<QueryResponse<AssemblyMemberSummary>>,
     pub sort: Signal<Option<AssemblyMemberSorter>>,
@@ -16,7 +15,6 @@ pub struct Controller {
     pub party: Signal<Option<String>>,
     pub keyword: Signal<Option<String>>,
     pub is_end: Signal<bool>,
-    pub nav: Navigator,
 }
 
 impl Controller {
@@ -67,18 +65,10 @@ impl Controller {
             order,
             party,
             keyword,
-            nav: use_navigator(),
             is_end: use_signal(|| false),
         };
 
         Ok(ctrl)
-    }
-
-    pub fn go_to_politician_by_id(&self, id: i64) {
-        self.nav.push(Route::PoliticiansByIdPage {
-            lang: self.lang,
-            id,
-        });
     }
 
     pub fn set_sort(&mut self, sort: AssemblyMemberSorter) {
