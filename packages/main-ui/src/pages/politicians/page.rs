@@ -91,7 +91,9 @@ pub fn PoliticiansPage(lang: Language) -> Element {
                     }
 
                     div { class: "w-full h-full overflow-hidden flex flex-col",
-                        div { class: "grow flex flex-col overflow-y-scroll w-full h-screen",
+                        div {
+                            id: "politician-list",
+                            class: "grow flex flex-col overflow-y-scroll w-full h-screen",
                             for politician in ctrl.politicians()?.items {
                                 Link {
                                     class: "grid grid-cols-5 items-center border-b border-b-c-wg-80 cursor-pointer min-w-1100 w-full",
