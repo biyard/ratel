@@ -55,6 +55,7 @@ test("[Home-001] Looking over website w/o signing up", async ({
     "/html/body/div/div[3]/div[1]/div/button",
     "Close",
   );
+  //
 
   const to_politicians = p.getByRole("link", { name: "View all" });
   await expect(to_politicians).toBeVisible();
@@ -63,4 +64,22 @@ test("[Home-001] Looking over website w/o signing up", async ({
   await p.waitForURL("/en/politicians");
   await p.waitForSelector('div:text("Politician Stance")');
   await p.capture("politician-stance");
+
+  await p.clickXpathAndCapture(
+    '//*[@id="politician - list"]/a[1]',
+    "Select a member",
+  );
+  await p.fullCapture("politician detail full");
+
+  await p.clickXpathAndCapture(
+    '//*[@id="main"]/div[3]/div[2]/div[1]/div/div[1]/a',
+    "Go to home",
+  );
+
+  await p.clickXpathAndCapture(
+    '//*[@id="main"]/div[3]/div[2]/div[1]/div/div[2]/div/a[2]',
+    "Get ratel",
+  );
+
+  await p.clickAndCapture("GO BACK");
 });
