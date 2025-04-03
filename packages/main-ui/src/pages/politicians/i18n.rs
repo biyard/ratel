@@ -38,4 +38,8 @@ translate! {
         en: "Number of Bills",
     },
 
+    search_placeholder: {
+        ko: "이름으로 검색",
+        en: "Search for a Politician",
+    },
 }

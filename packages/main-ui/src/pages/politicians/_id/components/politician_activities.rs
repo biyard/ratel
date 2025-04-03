@@ -22,7 +22,7 @@ pub fn PoliticianActivities(
         Language::En => format!(
             "Here are some key legislative proposals related to cryptocurrency that {name} has been involved with."
         ),
-        Language::Ko => format!("{name}이(가) 관련된 암호화폐와 관련된 주요 입법 제안 목록입니다."),
+        Language::Ko => format!("다음은 {name}이(가) 발의한 암호화폐 관련 주요 법안 목록입니다."),
     };
 
     rsx! {
@@ -220,7 +220,7 @@ pub fn BillCard(
                                     oncomplete: move |_| {
                                         ctrl.politician.restart();
                                     },
-
+                                
                                 }
                             });
                         } else {

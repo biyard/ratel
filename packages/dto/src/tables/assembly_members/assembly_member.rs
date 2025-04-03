@@ -33,7 +33,7 @@ pub enum CryptoStance {
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum Party {
     #[default]
-    #[translate(en = "Party")]
+    #[translate(en = "Party", ko = "정당")]
     None = 0,
     #[translate(en = "DP", ko = "더불어민주당")]
     DemocraticParty = 1,
