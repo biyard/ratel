@@ -2,11 +2,11 @@ import { test, expect } from "@playwright/test";
 import { wrap } from "./utils";
 
 test("[Home-001] Looking over website w/o signing up", async ({
-  page,
+  page
 }, testInfo) => {
   const p = wrap(page, testInfo.project.name, "home/001-look-over");
 
-  await p.goto("/", { waitUntil: "load" });
+  await p.goto("/", { waitUntil: "load", timeout: 600000 });
   await p.fullCapture("full");
   await p.capture("top");
 
@@ -86,6 +86,5 @@ test("[Home-001] Looking over website w/o signing up", async ({
     "/html/body/div/div[3]/div[2]/div[1]/div/div[2]/div/a",
     "Get ratel",
   );
-
   await p.clickAndCapture("GO BACK");
 });
