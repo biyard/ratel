@@ -1042,6 +1042,7 @@ version = "0.6.18"
 dependencies = [
  "axum 0.7.9",
  "axum-core 0.4.5",
+ "base64 0.22.1",
  "dioxus",
  "dioxus-cli-config",
  "dioxus-fullstack",
