@@ -1,12 +1,17 @@
 #![allow(non_snake_case)]
-use bdk::prelude::*;
-use dioxus_popup::PopupService;
-
 use crate::{
     components::{confirm_popup::ConfirmPopup, socials::Socials},
     config,
     pages::components::InputWithButton,
 };
+use bdk::prelude::*;
+use dioxus_popup::PopupService;
+use regex::Regex;
+
+fn is_valid_email(email: &str) -> bool {
+    let email_regex = Regex::new(r"^[^\s@]+@[^\s@]+\.[^\s@]+$").unwrap();
+    email_regex.is_match(email)
+}
 
 #[component]
 pub fn Subscription(lang: Language) -> Element {
@@ -39,7 +44,15 @@ pub fn Subscription(lang: Language) -> Element {
                                 placeholder: tr.email_placeholder,
                                 btn_name: tr.btn_subscribe,
                                 r#type: "email",
-                                onsubmit: move |email| async move {
+                                onsubmit: move |email: String| async move {
+                                    if email.is_empty() {
+                                        btracing::error!("Email is empty");
+                                        return;
+                                    }
+                                    if !is_valid_email(&email) {
+                                        btracing::error!("Email is invalid");
+                                        return;
+                                    }
                                     let endpoint = config::get().main_api_endpoint;
                                     match dto::Subscription::get_client(endpoint).subscribe(email).await {
                                         Ok(_) => {
