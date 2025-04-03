@@ -90,7 +90,7 @@ pub fn RootBase(lang: Language, children: Element) -> Element {
             Header { lang, selected: selected() }
             SuspenseBoundary {
                 fallback: |_| rsx! {
-                    div { class: "absolute w-screen h-screen top-0 left-0 flex items-center justify-center text-white",
+                    div { class: "absolute bg-background w-screen h-screen top-0 left-0 flex items-center justify-center text-white",
                         Loader { class: "w-200" }
                     }
                 },
