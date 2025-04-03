@@ -26,6 +26,7 @@ pub fn BottomSheet(
                 fill: "none",
                 view_box: "0 0 1921 146",
                 width: "100%",
+                height: "100",
                 xmlns: "http://www.w3.org/2000/svg",
                 path {
                     d: "M0.25 73.7684L1920.25 0V146H0.25V73.7684Z",
