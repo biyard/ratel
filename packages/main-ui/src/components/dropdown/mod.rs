@@ -34,13 +34,13 @@ pub fn Dropdown(
                     aria_labelledby: "menu-button",
                     aria_orientation: "vertical",
                     visibility: if !opened() { "hidden" },
-                    class: "absolute right-0 z-10 w-full mt-10 w-56 origin-top-right rounded-[10px] ring-1 ring-primary focus:outline-hidden bg-black overflow-hidden",
+                    class: "absolute right-0 z-10 w-full mt-10 origin-top-right rounded-[10px] ring-1 ring-primary focus:outline-hidden bg-black overflow-hidden",
                     role: "menu",
                     tabindex: "-1",
                     div { class: "py-1", role: "none",
                         for (i , item) in items.into_iter().enumerate() {
                             div {
-                                class: "px-4 py-2 text-sm text-gray-700 text-c-wg-50 font-semibold py-15 px-20  flex flex-row w-full justify-between hover:text-white items-center cursor-pointer",
+                                class: "text-sm text-gray-700 text-c-wg-50 font-semibold py-15 px-20 flex flex-row w-full justify-between hover:text-white items-center cursor-pointer",
                                 color: if i == selected_item() { "white" },
                                 onclick: move |_| {
                                     opened.set(false);
