@@ -38,6 +38,13 @@ pub enum ServiceError {
     HtmlParseError(String),
     UniqueViolation(String),
 
+    #[translate(en = "Required input value is missing", ko = "필수 입력값이 없습니다.")]
+    EmptyInputValue,
+    #[translate(en = "Email is already subscribed", ko = "이미 구독된 이메일입니다.")]
+    EmailAlreadySubscribed,
+    #[translate(en = "Invalid input value", ko = "유효하지 않은 입력값입니다.")]
+    InvalidInputValue,
+
     // Votes
     #[translate(en = "You've already voted", ko = "이미 투표했습니다.")]
     AlreadyVoted,
