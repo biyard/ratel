@@ -6,6 +6,7 @@ use crate::{
 };
 use bdk::prelude::*;
 use dioxus_popup::PopupService;
+use dto::ServiceError;
 use regex::Regex;
 
 fn is_valid_email(email: &str) -> bool {
@@ -46,11 +47,11 @@ pub fn Subscription(lang: Language) -> Element {
                                 r#type: "email",
                                 onsubmit: move |email: String| async move {
                                     if email.is_empty() {
-                                        btracing::error!("Email is empty");
+                                        btracing::e!(lang, ServiceError::EmptyInputValue);
                                         return;
                                     }
                                     if !is_valid_email(&email) {
-                                        btracing::error!("Email is invalid");
+                                        btracing::e!(lang, ServiceError::InvalidInputValue);
                                         return;
                                     }
                                     let endpoint = config::get().main_api_endpoint;
@@ -67,7 +68,7 @@ pub fn Subscription(lang: Language) -> Element {
                                             });
                                         }
                                         Err(e) => {
-                                            btracing::error!("{}", e.translate(& lang));
+                                            btracing::e!(lang, ServiceError::EmailAlreadySubscribed);
                                         }
                                     }
                                 },
