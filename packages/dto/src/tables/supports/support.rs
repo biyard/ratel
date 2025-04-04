@@ -20,6 +20,7 @@ pub enum Need {
     FeedbackSuggestions = 6,
 }
 
+#[derive(validator::Validate)]
 // TODO(api): POST /v1/supports (submit)
 #[api_model(base = "/v1/supports", table = supports)]
 pub struct Support {
@@ -34,6 +35,8 @@ pub struct Support {
     pub first_name: String,
     #[api_model(action = submit)]
     pub last_name: String,
+
+    #[validate(email)]
     #[api_model(action = submit)]
     pub email: String,
     #[api_model(action = submit)]

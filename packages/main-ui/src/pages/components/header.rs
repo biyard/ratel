@@ -85,28 +85,28 @@ pub fn Header(
                         A {
                             lang,
                             selected: selected == 1,
-                            href: "/#about",
+                            href: "#about",
                             onclick: move |_| expanded.set(false),
                             {tr.menu_about}
                         }
                         A {
                             lang,
                             selected: selected == 2,
-                            href: "/#politician-stance",
+                            href: "#politician-stance",
                             onclick: move |_| expanded.set(false),
                             {tr.menu_stance}
                         }
                         A {
                             lang,
                             selected: selected == 3,
-                            href: "/#community",
+                            href: "#community",
                             onclick: move |_| expanded.set(false),
                             {tr.menu_community}
                         }
                         A {
                             lang,
                             selected: selected == 4,
-                            href: "/#support",
+                            href: "#support",
                             onclick: move |_| expanded.set(false),
                             {tr.menu_support}
                         }

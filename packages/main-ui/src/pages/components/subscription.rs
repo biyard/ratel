@@ -1,12 +1,18 @@
 #![allow(non_snake_case)]
-use bdk::prelude::*;
-use dioxus_popup::PopupService;
-
 use crate::{
     components::{confirm_popup::ConfirmPopup, socials::Socials},
     config,
     pages::components::InputWithButton,
 };
+use bdk::prelude::*;
+use dioxus_popup::PopupService;
+use dto::ServiceError;
+use regex::Regex;
+
+fn is_valid_email(email: &str) -> bool {
+    let email_regex = Regex::new(r"^[^\s@]+@[^\s@]+\.[^\s@]+$").unwrap();
+    email_regex.is_match(email)
+}
 
 #[component]
 pub fn Subscription(lang: Language) -> Element {
@@ -39,7 +45,15 @@ pub fn Subscription(lang: Language) -> Element {
                                 placeholder: tr.email_placeholder,
                                 btn_name: tr.btn_subscribe,
                                 r#type: "email",
-                                onsubmit: move |email| async move {
+                                onsubmit: move |email: String| async move {
+                                    if email.is_empty() {
+                                        btracing::e!(lang, ServiceError::EmptyInputValue);
+                                        return;
+                                    }
+                                    if !is_valid_email(&email) {
+                                        btracing::e!(lang, ServiceError::InvalidInputValue);
+                                        return;
+                                    }
                                     let endpoint = config::get().main_api_endpoint;
                                     match dto::Subscription::get_client(endpoint).subscribe(email).await {
                                         Ok(_) => {
@@ -54,7 +68,7 @@ pub fn Subscription(lang: Language) -> Element {
                                             });
                                         }
                                         Err(e) => {
-                                            btracing::error!("{}", e.translate(& lang));
+                                            btracing::e!(lang, ServiceError::EmailAlreadySubscribed);
                                         }
                                     }
                                 },

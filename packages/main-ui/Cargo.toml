@@ -28,6 +28,8 @@ base64 = "0.22.1"
 url = "2.5.4"
 wallet-adapter = "=1.0.4-beta"
 hex = "0.4.3"
+validator = "0.20.0"
+regex = "1.11.1"
 
 [features]
 default = []

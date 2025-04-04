@@ -1,9 +1,8 @@
 #![allow(unused)]
 use bdk::prelude::*;
 use by_types::QueryResponse;
-use validator::Validate;
 
-#[derive(Validate)]
+#[derive(validator::Validate)]
 #[api_model(base = "/v1/bills/:bill_id/votes", table = votes, iter_type = QueryResponse)]
 pub struct Vote {
     #[api_model(summary, primary_key)]
