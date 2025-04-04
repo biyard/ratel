@@ -34,7 +34,7 @@ pub fn Dropdown(
                     aria_labelledby: "menu-button",
                     aria_orientation: "vertical",
                     visibility: if !opened() { "hidden" },
-                    class: "absolute right-0 z-10 w-full mt-10 w-56 origin-top-right rounded-[10px] ring-1 ring-primary focus:outline-hidden bg-black overflow-hidden",
+                    class: "absolute right-0 z-10 w-full mt-10 origin-top-right rounded-[10px] ring-1 ring-primary focus:outline-hidden bg-black overflow-hidden",
                     role: "menu",
                     tabindex: "-1",
                     div { class: "py-1", role: "none",
