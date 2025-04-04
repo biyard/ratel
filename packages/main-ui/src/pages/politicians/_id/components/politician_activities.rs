@@ -374,6 +374,6 @@ translate! {
 
     description: {
         ko: "{politician name}이(가) 관련된 암호화폐와 관련된 주요 입법 제안 목록입니다.",
-        en: "Here are some key legislative proposals related to cryptocurrency that {politician name} has been involved with.",
+        en: "Here are some key legislative proposals that BAE HYUNJIN has been involved with.",
     },
 }
