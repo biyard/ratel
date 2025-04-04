@@ -102,7 +102,7 @@ pub fn RootBase(lang: Language, children: Element) -> Element {
             }
         }
         if selected() != 5 && is_home {
-            div { class: "max-[900px]:!hidden",
+            div { class: "w-full max-[900px]:!hidden",
                 BottomSheet {
                     onclick: move |_| {
                         let height = match web_sys::window() {
