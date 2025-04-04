@@ -220,7 +220,6 @@ pub fn BillCard(
                                     oncomplete: move |_| {
                                         ctrl.politician.restart();
                                     },
-                                
                                 }
                             });
                         } else {
