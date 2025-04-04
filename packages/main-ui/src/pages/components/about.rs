@@ -72,42 +72,42 @@ translate! {
     }
 
     mission1: {
-        ko: "",
+        ko: "탈중앙화 거버넌스(DAO)",
         en:"Decentralized Governance (DAO)",
     }
     mission1_description: {
-        ko: "",
+        ko: "Ratel DAO는 누구나 암호화폐 정책 제안 및 투표를 할 수 있도록 합니다.",
         en:"The Ratel DAO enables anyone to propose and vote on crypto policy initiatives.",
     }
 
 
     mission2: {
-        ko: "",
+        ko: "정치인의 입장 추적",
         en:"Politician Stance Tracking",
     }
 
     mission2_description: {
-        ko: "",
+        ko: "입법자들의 암호화폐에 대한 입장을 분석하고 책임을 보장합니다.",
         en:"We analyze lawmakers' positions on crypto and ensure accountability.",
     }
 
     mission3: {
-        ko: "",
+        ko: "커뮤니티 주도 지지활동",
         en:"Community-Driven Advocacy",
     }
 
     mission3_description: {
-        ko: "",
+        ko: "Ratel은 암호화폐 산업에 우호적인 정책을 지원하는 이니셔티브에 자금을 지원합니다.",
         en:"Ratel funds initiatives that support regulatory clarity and industry-friendly policies.",
     }
 
     mission4: {
-        ko: "",
+        ko: "커뮤니티 참여 기반 토큰 분배",
         en:"Community Participation-Based Token Distribution",
     }
 
     mission4_description: {
-        ko: "",
+        ko: "Ratel은 기여에 대한 보상으로 RATEL 토큰을 분배하여 거버넌스에 참여할 수 있도록 합니다.",
         en:"Supporters receive RATEL tokens in return for their contributions, allowing them to participate in governance.",
     }
 }

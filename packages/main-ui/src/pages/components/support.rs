@@ -1,8 +1,4 @@
 #![allow(non_snake_case)]
-use bdk::prelude::*;
-use dioxus_popup::PopupService;
-use dto::{Need, SupportSubmitRequest};
-
 use crate::{
     components::{
         button::secondary_botton::SecondaryButton, confirm_popup::ConfirmPopup, dropdown::Dropdown,
@@ -10,6 +6,10 @@ use crate::{
     },
     config,
 };
+use bdk::prelude::*;
+use dioxus_popup::PopupService;
+use dto::{Need, SupportSubmitRequest};
+use validator::Validate;
 
 use super::*;
 
@@ -106,6 +106,10 @@ pub fn Support(lang: Language) -> Element {
                                     needs,
                                     help,
                                 } = req();
+                                if let Err(e) = (req)().validate() {
+                                    btracing::error!("{}", e);
+                                    return;
+                                }
                                 match dto::Support::get_client(endpoint)
                                     .submit(first_name, last_name, email, company_name, needs, help)
                                     .await
