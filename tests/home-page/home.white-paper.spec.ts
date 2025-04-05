@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { wrap } from "../utils";
+import { CONFIGS } from "../config";
 
 test("[Home page] Testing the Ratel White paper link in a PDF DOC", async ({
     page,
@@ -7,7 +8,7 @@ test("[Home page] Testing the Ratel White paper link in a PDF DOC", async ({
   }, testInfo) => {
 
     const p = wrap(page, testInfo.project.name, "home/white-paper");
-    await p.goto("/", { waitUntil: "load", timeout: 600000 });
+    await p.goto("/", { waitUntil: "load", timeout: CONFIGS.PAGE_WAIT_TIME });
     await p.fullCapture("full");
     await p.capture("top");
     
