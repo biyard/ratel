@@ -1,39 +1,40 @@
 import { test, expect } from "@playwright/test";
 import { wrap } from "./utils";
+import { CONFIGS } from "./config";
 
 test("[Home-001] Looking over website w/o signing up", async ({
   page
 }, testInfo) => {
   const p = wrap(page, testInfo.project.name, "home/001-look-over");
 
-  await p.goto("/", { waitUntil: "load", timeout: 600000 });
+  await p.goto("/", { waitUntil: "load", timeout: CONFIGS.PAGE_WAIT_TIME });
   await p.fullCapture("full");
   await p.capture("top");
 
   const viewport = page.viewportSize();
 
-  if (viewport && viewport.width < 768) {
+  if (viewport && viewport.width < CONFIGS.DEVICE_SCREEN_SIZES.MOBILE ) {
     await p.clickXpathAndCapture(
       "/html/body/div/div[3]/div[2]/div[1]/div/div[1]/button[1]",
       "Mobile menu",
     );
   }
   await p.clickXpathAndCapture("//nav/a[1]", "About");
-  if (viewport && viewport.width < 768) {
+  if (viewport && viewport.width < CONFIGS.DEVICE_SCREEN_SIZES.MOBILE ) {
     await p.clickXpathAndCapture(
       "/html/body/div/div[3]/div[2]/div[1]/div/div[1]/button[1]",
       "Mobile menu",
     );
   }
   await p.clickXpathAndCapture("//nav/a[2]", "Politician stance");
-  if (viewport && viewport.width < 768) {
+  if (viewport && viewport.width < CONFIGS.DEVICE_SCREEN_SIZES.MOBILE ) {
     await p.clickXpathAndCapture(
       "/html/body/div/div[3]/div[2]/div[1]/div/div[1]/button[1]",
       "Mobile menu",
     );
   }
   await p.clickXpathAndCapture("//nav/a[3]", "Community");
-  if (viewport && viewport.width < 768) {
+  if (viewport && viewport.width < CONFIGS.DEVICE_SCREEN_SIZES.MOBILE ) {
     await p.clickXpathAndCapture(
       "/html/body/div/div[3]/div[2]/div[1]/div/div[1]/button[1]",
       "Mobile menu",
@@ -41,7 +42,7 @@ test("[Home-001] Looking over website w/o signing up", async ({
   }
   await p.clickXpathAndCapture("//nav/a[4]", "Support");
 
-  if (viewport && viewport.width < 768) {
+  if (viewport && viewport.width < CONFIGS.DEVICE_SCREEN_SIZES.MOBILE ) {
     await p.clickXpathAndCapture(
       "/html/body/div/div[3]/div[2]/div[1]/div/div[1]/button[1]",
       "Mobile menu",
@@ -76,7 +77,7 @@ test("[Home-001] Looking over website w/o signing up", async ({
     "Go to home",
   );
 
-  if (viewport && viewport.width < 768) {
+  if (viewport && viewport.width < CONFIGS.DEVICE_SCREEN_SIZES.MOBILE ) {
     await p.clickXpathAndCapture(
       "/html/body/div/div[3]/div[2]/div[1]/div/div[1]/button[1]",
       "Mobile menu",
