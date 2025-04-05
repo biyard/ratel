@@ -1,20 +1,35 @@
 import { test, expect } from "@playwright/test";
 import { wrap } from "../utils";
+import { CONFIGS } from "../config";
 
 test("[Home page] Testing the Join movement modal", async ({
     page
   }, testInfo) => {
 
     const p = wrap(page, testInfo.project.name, "home/join-movement");
-    await p.goto("/", { waitUntil: "load", timeout: 600000 });
+    await p.goto("/", { waitUntil: "domcontentloaded", timeout: CONFIGS.PAGE_WAIT_TIME });
 
     const joinButton = page.locator('button', { hasText: "JOIN THE MOVEMENT" });
     await expect(joinButton).toBeVisible();
     await joinButton.click({ force: true });
     const modal = page.locator('#signup_popup');
-    await page.waitForSelector('#signup_popup', { state: "attached", timeout: 7000 });
-    await expect(modal).toBeVisible({ timeout: 600000 });
+    await page.waitForSelector('#signup_popup', { state: "attached", timeout: CONFIGS.SELECTOR_WAIT_TIME });
+    await expect(modal).toBeVisible({ timeout: CONFIGS.MODAL_WAIT_TIME });
     await p.capture("join-movement-modal");
 
     await expect(modal).toContainText("Join the Movement");
+
+    const googleButton = modal.getByText("Continue with Google", { exact: true }).first();
+    await expect(googleButton).toBeVisible({ timeout: CONFIGS.MODAL_WAIT_TIME });
+    await expect(googleButton).toBeEnabled();
+
+    const [popup] = await Promise.all([
+      page.waitForEvent("popup"),
+      googleButton.click(),
+    ]);
+
+    await popup.waitForURL((url: any) => url.href.includes("accounts.google.com"), { timeout: 10000 });
+    expect(popup.url()).toContain("accounts.google.com");
+    await p.capture("google-auth-popup-modal");
+    await popup.close();
   });
