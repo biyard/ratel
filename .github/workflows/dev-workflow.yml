@@ -39,6 +39,9 @@ jobs:
           target: wasm32-unknown-unknown
           toolchain: stable
 
+      - name: Update packages
+        run: sudo apt-get update
+
       - name: Install dependencies
         run: sudo apt-get install -y libgtk-3-dev
 
