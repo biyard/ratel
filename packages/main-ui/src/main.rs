@@ -21,7 +21,17 @@ fn main() {
     tracing::debug!("config: {:?}", conf);
     rest_api::set_message(conf.domain.to_string());
 
+    #[cfg(feature = "web")]
     dioxus_aws::launch(app);
+
+    #[cfg(feature = "server")]
+    {
+        let app = dioxus_aws::new(app).route(
+            "/sitemap.xml",
+            dioxus_aws::axum::routing::get(api::sitemap_xml),
+        );
+        dioxus_aws::serve(app);
+    }
 }
 
 fn app() -> Element {
@@ -104,5 +114,67 @@ mod api {
             },
         }
         .to_string())
+    }
+
+    pub async fn sitemap_xml() -> dioxus_aws::axum::response::Response {
+        let pool = sqlx::postgres::PgPoolOptions::new()
+            .max_connections(1)
+            .connect(option_env!("DATABASE_URL").unwrap_or("postgres://localhost:5432/ratel"))
+            .await
+            .unwrap();
+
+        let mut xml = String::from(r#"<?xml version="1.0" encoding="UTF-8"?>"#);
+        xml.push_str(r#"<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">"#);
+
+        let changefreq = "daily";
+        let priority = 1.0;
+
+        for lang in ["ko", "en"] {
+            xml.push_str(&format!(
+            "<url><loc>https://ratel.foundation/{lang}</loc><changefreq>{changefreq}</changefreq><priority>{priority}</priority></url>",
+        ));
+        }
+
+        let priority = 0.8;
+
+        let assembly_members = dto::AssemblyMember::query_builder()
+            .query()
+            .map(dto::AssemblyMember::from)
+            .fetch_all(&pool)
+            .await
+            .unwrap();
+        let ids = assembly_members.iter().map(|m| m.id).collect::<Vec<_>>();
+
+        for lang in ["ko", "en"] {
+            for id in ids.iter() {
+                xml.push_str(&format!(
+            "<url><loc>https://ratel.foundation/{lang}/politicians/{id}</loc><changefreq>{changefreq}</changefreq><priority>{priority}</priority></url>",
+        ));
+            }
+        }
+
+        let changefreq = "monthly";
+
+        for lang in ["ko", "en"] {
+            xml.push_str(&format!(
+            "<url><loc>https://ratel.foundation/{lang}/politicians</loc><changefreq>{changefreq}</changefreq><priority>{priority}</priority></url>",
+        ));
+        }
+
+        let priority = 0.3;
+
+        for lang in ["ko", "en"] {
+            xml.push_str(&format!(
+            "<url><loc>https://ratel.foundation/{lang}/privacy-policy</loc><changefreq>{changefreq}</changefreq><priority>{priority}</priority></url>",
+        ));
+        }
+
+        xml.push_str("</urlset>");
+
+        dioxus_aws::axum::response::IntoResponse::into_response((
+            by_axum::axum::http::StatusCode::OK,
+            [("Content-Type", "application/xml")],
+            xml,
+        ))
     }
 }
