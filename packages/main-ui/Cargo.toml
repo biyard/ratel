@@ -34,5 +34,5 @@ regex = "1.11.1"
 [features]
 default = []
 web = ["bdk/web"]
-server = ["bdk/server"]
+server = ["bdk/server", "dto/server"]
 lambda = ["server", "bdk/lambda"]
