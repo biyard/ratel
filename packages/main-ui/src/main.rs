@@ -123,6 +123,8 @@ mod api {
             .await
             .unwrap();
 
+        let today = chrono::Local::now().format("%Y-%m-%d").to_string();
+
         let mut xml = String::from(r#"<?xml version="1.0" encoding="UTF-8"?>"#);
         xml.push_str(r#"<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">"#);
 
@@ -131,7 +133,7 @@ mod api {
 
         for lang in ["ko", "en"] {
             xml.push_str(&format!(
-            "<url><loc>https://ratel.foundation/{lang}</loc><changefreq>{changefreq}</changefreq><priority>{priority}</priority></url>",
+            "<url><loc>https://ratel.foundation/{lang}</loc><lastmod>{today}</lastmod><changefreq>{changefreq}</changefreq><priority>{priority}</priority></url>",
         ));
         }
 
@@ -148,7 +150,7 @@ mod api {
         for lang in ["ko", "en"] {
             for id in ids.iter() {
                 xml.push_str(&format!(
-            "<url><loc>https://ratel.foundation/{lang}/politicians/{id}</loc><changefreq>{changefreq}</changefreq><priority>{priority}</priority></url>",
+                    "<url><loc>https://ratel.foundation/{lang}/politicians/{id}</loc><lastmod>{today}</lastmod><changefreq>{changefreq}</changefreq><priority>{priority}</priority></url>",
         ));
             }
         }
@@ -157,7 +159,7 @@ mod api {
 
         for lang in ["ko", "en"] {
             xml.push_str(&format!(
-            "<url><loc>https://ratel.foundation/{lang}/politicians</loc><changefreq>{changefreq}</changefreq><priority>{priority}</priority></url>",
+                "<url><loc>https://ratel.foundation/{lang}/politicians</loc><lastmod>{today}</lastmod><changefreq>{changefreq}</changefreq><priority>{priority}</priority></url>",
         ));
         }
 
@@ -165,7 +167,7 @@ mod api {
 
         for lang in ["ko", "en"] {
             xml.push_str(&format!(
-            "<url><loc>https://ratel.foundation/{lang}/privacy-policy</loc><changefreq>{changefreq}</changefreq><priority>{priority}</priority></url>",
+                "<url><loc>https://ratel.foundation/{lang}/privacy-policy</loc><lastmod>{today}</lastmod><changefreq>{changefreq}</changefreq><priority>{priority}</priority></url>",
         ));
         }
 
