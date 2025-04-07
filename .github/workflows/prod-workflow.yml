@@ -69,6 +69,7 @@ jobs:
           ENABLE_LAMBDA: true
           VERSIONS: v1
           V1_ENDPOINT: api.ratel.foundation
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
           npm i -g aws-cdk @tailwindcss/cli
           make deploy-web
