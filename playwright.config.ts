@@ -1,4 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
+import { CONFIGS } from "./tests/config";
 
 /**
  * Read environment variables from file.
@@ -23,11 +24,12 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: "html",
+  timeout: CONFIGS.PLAYWRIGHT.TIMEOUT,
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: "https://dev.ratel.foundation",
-
+    baseURL: CONFIGS.PLAYWRIGHT.BASE_URL,
+    navigationTimeout: CONFIGS.PLAYWRIGHT.NAVIGATION_TIME_OUT,
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: "on-first-retry",
   },
