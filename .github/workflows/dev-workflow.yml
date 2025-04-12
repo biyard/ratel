@@ -39,6 +39,9 @@ jobs:
           target: wasm32-unknown-unknown
           toolchain: stable
 
+      - name: Update packages
+        run: sudo apt-get update
+
       - name: Install dependencies
         run: sudo apt-get install -y libgtk-3-dev
 
@@ -171,6 +174,7 @@ jobs:
           ENABLE_LAMBDA: true
           VERSIONS: v1
           V1_ENDPOINT: api.dev.ratel.foundation
+          DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
         run: |
           npm i -g aws-cdk @tailwindcss/cli
           make deploy-web
