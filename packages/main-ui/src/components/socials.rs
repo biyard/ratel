@@ -63,7 +63,7 @@ pub fn Socials(
                         onclick(());
                     }
                 },
-                icons::Youtube { class: "hover:[&>g>path]:fill-primary", size }
+                icons::Youtube { class: "hover:fill-primary", size }
             }
         }
     }
