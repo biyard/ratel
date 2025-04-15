@@ -1,15 +1,19 @@
 mod bsky;
+mod discord;
 mod google;
 mod logo;
 mod metamask;
 mod phantom;
 mod telegram;
 mod x;
+mod youtube;
 
 pub use bsky::*;
+pub use discord::*;
 pub use google::*;
 pub use logo::*;
 pub use metamask::*;
 pub use phantom::*;
 pub use telegram::*;
 pub use x::*;
+pub use youtube::*;
