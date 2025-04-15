@@ -33,7 +33,7 @@ pub fn Socials(
                 icons::Bsky { class: "hover:[&>g>path]:fill-primary", size }
             }
             a {
-                href: "#",
+                href: "https://t.me/AngryRatel",
                 target: "_blank",
                 alt: "Telegram",
                 onclick: move |_| {
@@ -41,10 +41,29 @@ pub fn Socials(
                         onclick(());
                     }
                 },
-                icons::Telegram {
-                    class: "[&>g>path]:fill-btn-p-disabled cursor-not-allowed",
-                    size,
-                }
+                icons::Telegram { class: "hover:[&>g>path]:fill-primary", size }
+            }
+            a {
+                href: "https://discord.gg/MA6tqpHN4T",
+                target: "_blank",
+                alt: "Discord",
+                onclick: move |_| {
+                    if let Some(onclick) = onclick {
+                        onclick(());
+                    }
+                },
+                icons::Discord { class: "hover:[&>g>path]:fill-primary", size }
+            }
+            a {
+                href: "https://www.youtube.com/@Angry_Ratel",
+                target: "_blank",
+                alt: "Youtube",
+                onclick: move |_| {
+                    if let Some(onclick) = onclick {
+                        onclick(());
+                    }
+                },
+                icons::Youtube { class: "hover:fill-primary", size }
             }
         }
     }
