@@ -21,7 +21,9 @@ pub fn BottomSheet(
                 onclick: move |_| onclick(()),
             }
         }
-        div { id: "bottom-sheet", class: "w-full fixed bottom-0 left-0 z-10",
+        div {
+            id: "bottom-sheet",
+            class: "w-full fixed bottom-0 left-0 z-10 hidden",
             svg {
                 fill: "none",
                 view_box: "0 0 1921 146",
