@@ -4,7 +4,7 @@ use validator::Validate;
 use crate::{CryptoStance, Party, *};
 
 #[derive(Validate)]
-#[api_model(base = "/v1/president-candidates", table = president_candidates)]
+#[api_model(base = "/v1/president-candidates", table = presidential_candidates)]
 pub struct PresidentCandidate {
     #[api_model(summary, primary_key)]
     pub id: i64,
