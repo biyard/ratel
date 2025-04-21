@@ -5,7 +5,7 @@ use crate::{CryptoStance, Party, *};
 
 #[derive(Validate)]
 #[api_model(base = "/v1/president-candidates", table = presidential_candidates)]
-pub struct PresidentCandidate {
+pub struct PresidentialCandidate {
     #[api_model(summary, primary_key)]
     pub id: i64,
     #[api_model(summary, auto = [insert])]
