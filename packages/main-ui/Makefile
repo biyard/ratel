@@ -25,7 +25,7 @@ setup.tool:
 	npm i -g webpack-cli
 
 run: clean public/tailwind.css
-	$(BUILD_ENV) dx serve --fullstack $(DXFLAGS)
+	CARGO_TARGET_DIR=$(PWD)/target $(BUILD_ENV) dx serve --fullstack $(DXFLAGS)
 
 build: clean public/tailwind.css
 	$(BUILD_ENV) dx build --release --fullstack --server-features lambda
