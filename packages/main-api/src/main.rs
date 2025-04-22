@@ -44,7 +44,7 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         Support,
         Subscription,
         ElectionPledge,
-        PresidentCandidate,
+        PresidentialCandidate,
     );
 
     tracing::info!("Migration done");
