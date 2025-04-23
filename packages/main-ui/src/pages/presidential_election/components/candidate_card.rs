@@ -10,7 +10,7 @@ pub fn CandidateCard(lang: Language, candidate: PresidentialCandidateSummary) ->
         div {
             id: "presidential-candidate-{candidate.id}",
             class: "w-full flex flex-col gap-24 p-24 rounded-[20px] bg-component-bg",
-            div { class: "w-full flex flex-row gap-24",
+            div { class: "w-full flex flex-row gap-24 max-mobile:flex-col max-mobile:gap-10 ",
                 img {
                     class: "w-121 h-121 object-cover rounded-[10px]",
                     src: candidate.image,
