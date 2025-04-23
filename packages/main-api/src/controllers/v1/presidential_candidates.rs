@@ -12,6 +12,8 @@ use by_types::QueryResponse;
 use dto::*;
 use sqlx::postgres::PgRow;
 
+use crate::utils::users::extract_user_id;
+
 #[derive(
     Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
 )]
@@ -27,13 +29,15 @@ pub struct PresidentialCandidateController {
 impl PresidentialCandidateController {
     async fn query(
         &self,
-        _auth: Option<Authorization>,
+        auth: Option<Authorization>,
         param: PresidentialCandidateQuery,
     ) -> Result<QueryResponse<PresidentialCandidateSummary>> {
+        let user_id = extract_user_id(&self.pool, auth).await.unwrap_or_default();
+
         let mut total_count = 0;
         let items: Vec<PresidentialCandidateSummary> =
             PresidentialCandidateSummary::query_builder()
-                .election_pledges_builder(ElectionPledge::query_builder())
+                .election_pledges_builder(ElectionPledge::query_builder(user_id))
                 .limit(param.size())
                 .page(param.page())
                 .query()
@@ -64,14 +68,15 @@ impl PresidentialCandidateController {
 
     pub async fn get_presidential_candidate_by_id(
         State(ctrl): State<PresidentialCandidateController>,
-        Extension(_auth): Extension<Option<Authorization>>,
+        Extension(auth): Extension<Option<Authorization>>,
         Path(PresidentialCandidatePath { id }): Path<PresidentialCandidatePath>,
     ) -> Result<Json<PresidentialCandidate>> {
         tracing::debug!("get_presidential_candidate {:?}", id);
+        let user_id = extract_user_id(&ctrl.pool, auth).await.unwrap_or_default();
 
         Ok(Json(
             PresidentialCandidate::query_builder()
-                .election_pledges_builder(ElectionPledge::query_builder())
+                .election_pledges_builder(ElectionPledge::query_builder(user_id))
                 .id_equals(id)
                 .query()
                 .map(PresidentialCandidate::from)

@@ -17,7 +17,11 @@ pub struct ElectionPledge {
     #[api_model(summary, action = update)]
     pub promise: String,
 
-    #[api_model(summary, many_to_many = election_pledges_users, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = election_pledge_id, aggregator = count)]
+    #[api_model(summary, many_to_many = election_pledges_users, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = election_pledge_id, aggregator = count, unique)]
     #[serde(default)]
     pub likes: i64,
+
+    #[api_model(summary, many_to_many = election_pledges_users, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = election_pledge_id, aggregator = exist)]
+    #[serde(default)]
+    pub liked: bool,
 }
