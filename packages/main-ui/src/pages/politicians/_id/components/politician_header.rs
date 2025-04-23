@@ -1,12 +1,9 @@
 #![allow(non_snake_case)]
 use bdk::prelude::*;
-use by_components::icons::{
-    email::Email,
-    emoji::{ThumbsDown, ThumbsUp},
-};
+use by_components::icons::email::Email;
 use dto::{CryptoStance, Party};
 
-use crate::components::party::PartyIcon;
+use crate::components::{crypto_stance::CryptoStanceIcon, party::PartyIcon};
 
 #[component]
 pub fn PoliticianHeader(
@@ -72,25 +69,6 @@ pub fn PoliticianHeader(
 
                 } // politician-info
 
-            }
-        }
-    }
-}
-
-#[component]
-pub fn CryptoStanceIcon(#[props(default = 24)] size: i32, stance: CryptoStance) -> Element {
-    rsx! {
-        if stance == CryptoStance::Supportive || stance == CryptoStance::StronglySupportive {
-            ThumbsUp {
-                class: "[&>path]:stroke-c-c-20",
-                width: "{size}",
-                height: "{size}",
-            }
-        } else if stance == CryptoStance::Against || stance == CryptoStance::StronglyAgainst {
-            ThumbsDown {
-                class: "[&>path]:stroke-c-p-20",
-                width: "{size}",
-                height: "{size}",
             }
         }
     }
