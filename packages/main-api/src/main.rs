@@ -1,4 +1,4 @@
-use bdk::prelude::*;
+use bdk::prelude::{by_axum::axum::Router, *};
 #[cfg(test)]
 use by_axum::auth::set_auth_config;
 use by_axum::{auth::authorization_middleware, axum::middleware};
@@ -45,14 +45,14 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         Subscription,
         ElectionPledge,
         PresidentialCandidate,
+        ElectionPledgeLike,
     );
 
     tracing::info!("Migration done");
     Ok(())
 }
 
-#[tokio::main]
-async fn main() -> Result<()> {
+async fn api_main() -> Result<Router> {
     let app = by_axum::new();
     let conf = config::get();
     tracing::debug!("config: {:?}", conf);
@@ -66,47 +66,23 @@ async fn main() -> Result<()> {
         panic!("Database is not initialized. Call init() first.");
     };
 
-    migration(&pool).await?;
+    if conf.migrate {
+        migration(&pool).await?;
+    }
 
     let app = app
-        // .nest(
-        //     "/v1/patrons",
-        //     controllers::patrons::v1::PatronControllerV1::route()?,
-        // )
-        // .nest(
-        //     "/v1/topics",
-        //     controllers::v1::topics::TopicControllerV1::route(pool.clone())?,
-        // )
-        .nest(
-            "/v1/users",
-            controllers::v1::users::UserControllerV1::route(pool.clone())?,
-        )
-        .nest(
-            "/v1/assembly-members",
-            controllers::v1::assembly_members::AssemblyMemberControllerV1::route(pool.clone())?,
-        )
-        // .nest(
-        //     "/v1/patrons",
-        //     controllers::v1::patrons::PatronControllerV1::route(pool.clone())?,
-        // )
-        .nest(
-            "/v1/bills",
-            controllers::v1::bills::BillController::new(pool.clone()).route(),
-        )
-        .nest(
-            "/v1/supports",
-            controllers::v1::supports::SupportController::route(pool.clone())?,
-        )
-        .nest(
-            "/v1/subscriptions",
-            controllers::v1::subscriptions::SubscriptionController::new(pool.clone()).route(),
-        )
+        .nest("/v1", controllers::v1::route(pool.clone())?)
         .nest(
             "/m1",
             controllers::m1::MenaceController::route(pool.clone())?,
         )
         .layer(middleware::from_fn(authorization_middleware));
+    Ok(app)
+}
 
+#[tokio::main]
+async fn main() -> Result<()> {
+    let app = api_main().await?;
     let port = option_env!("PORT").unwrap_or("3000");
     let listener = TcpListener::bind(format!("0.0.0.0:{}", port))
         .await
@@ -176,7 +152,7 @@ pub mod tests {
     }
 
     pub async fn setup() -> Result<TestContext> {
-        let app = by_axum::new();
+        let app = api_main().await?;
         let id = uuid::Uuid::new_v4().to_string();
         let now = SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
@@ -226,13 +202,6 @@ pub mod tests {
         .await;
 
         let _ = migration(&pool).await;
-
-        let app = app
-            .nest(
-                "/v1/users",
-                controllers::v1::users::UserControllerV1::route(pool.clone())?,
-            )
-            .layer(middleware::from_fn(authorization_middleware));
 
         let user = setup_test_user(&id, &pool).await.unwrap();
         let (claims, admin_token) = setup_jwt_token(user.clone());
