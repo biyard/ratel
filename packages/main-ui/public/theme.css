@@ -72,4 +72,6 @@
   --breakpoint-tablet:900px;
   --breakpoint-mobile:500px;
   --breakpoint-sm-mobile:380px;
+
+  --container-desktop: 1177px;
 }
