@@ -1,6 +1,7 @@
 pub mod button;
 pub mod checkbox;
 pub mod confirm_popup;
+pub mod crypto_stance;
 pub mod dropdown;
 pub mod icon_text;
 pub mod icons;
