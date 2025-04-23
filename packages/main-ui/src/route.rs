@@ -15,6 +15,9 @@ pub enum Route {
     #[route("/politicians/:id")]
     PoliticiansByIdPage { lang: Language, id: i64 },
 
+    #[route("/presidential-election")]
+    PresidentialElectionPage { lang: Language },
+
     #[route("/privacy-policy")]
     PrivacyPolicyPage { lang: Language },
 

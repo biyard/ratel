@@ -3,22 +3,22 @@ use bdk::prelude::*;
 use dto::Party;
 
 #[component]
-pub fn PartyIcon(party: Party) -> Element {
+pub fn PartyIcon(party: Party, #[props(default = 18)] size: i32) -> Element {
     rsx! {
         if Party::DemocraticParty == party {
-            DP { size: 18 }
+            DP { size: size as i64 }
         } else if Party::PeoplePowerParty == party {
-            PPP { size: 18 }
+            PPP { size: size as i64 }
         } else if Party::RebuildingKoreaParty == party {
-            RKP { height: 18 }
+            RKP { height: size }
         } else if Party::JinboParty == party {
-            JP { height: 18, width: 18 }
+            JP { height: size, width: size }
         } else if Party::ReformParty == party {
-            RP { height: 18 }
+            RP { height: size }
         } else if Party::BasicIncomeParty == party {
-            BIP { size: 18 }
+            BIP { size: size as i64 }
         } else if Party::SocialDemocraticParty == party {
-            SDP { height: 18 }
+            SDP { height: size }
         } else {
             div {}
         }
