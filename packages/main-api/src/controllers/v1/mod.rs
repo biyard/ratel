@@ -2,6 +2,7 @@ pub mod assembly_members;
 pub mod bills;
 // pub mod patrons;
 // pub mod topics;
+mod election_pledges;
 mod presidential_candidates;
 pub mod subscriptions;
 pub mod supports;
@@ -13,6 +14,10 @@ use dto::*;
 
 pub fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Router> {
     Ok(by_axum::axum::Router::new()
+        .nest(
+            "/election-pledges",
+            election_pledges::ElectionPledgeController::new(pool.clone()).route()?,
+        )
         .nest(
             "/presidential-candidates",
             presidential_candidates::PresidentialCandidateController::new(pool.clone()).route()?,

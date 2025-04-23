@@ -23,9 +23,21 @@ impl Error for ServiceException {}
 pub enum ServiceError {
     Unknown(String),
 
+    #[translate(en = "Could not find any resource", ko = "리소스를 찾을 수 없습니다.")]
     NotFound,
+
+    #[translate(
+        en = "Invalid signature or unsupported authentication",
+        ko = "유효하지 않은 서명입니다."
+    )]
     Unauthorized,
+    #[translate(
+        en = "You might have already registered",
+        ko = "이미 등록된 사용자입니다."
+    )]
     UserAlreadyExists,
+    #[translate(en = "Could not find a valid user", ko = "유효하지 않은 사용자입니다.")]
+    InvalideUser,
 
     VerifyException(String),
     SignException,
@@ -48,6 +60,9 @@ pub enum ServiceError {
     // Votes
     #[translate(en = "You've already voted", ko = "이미 투표했습니다.")]
     AlreadyVoted,
+
+    #[translate(en = "You might have already liked", ko = "이미 좋아요를 눌렀습니다.")]
+    AlreadyLiked,
 }
 
 impl<E: Error + 'static> From<E> for ServiceError {
