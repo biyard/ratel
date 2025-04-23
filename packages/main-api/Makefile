@@ -30,4 +30,4 @@ build:
 	cp $(CARGO_TARGET_DIR)/release/$(SERVICE) $(WORKSPACE_ROOT)/.build/$(SERVICE)/bootstrap
 
 test:
-	$(BUILD_ENV) RUSTFLAGS="-D warnings" cargo test
+	$(BUILD_ENV) RUSTFLAGS="-D warnings" RUST_TEST_THREADS=1 cargo test
