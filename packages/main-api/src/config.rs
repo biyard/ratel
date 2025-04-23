@@ -13,6 +13,7 @@ pub struct Config {
     pub database: DatabaseConfig,
     pub signing_domain: &'static str,
     pub auth: AuthConfig,
+    pub migrate: bool,
 }
 
 impl Default for Config {
@@ -28,6 +29,9 @@ impl Default for Config {
             aws: AwsConfig::default(),
             database: DatabaseConfig::default(),
             auth: AuthConfig::default(),
+            migrate: option_env!("MIGRATE")
+                .map(|s| s.parse::<bool>().unwrap_or(false))
+                .unwrap_or(false),
         }
     }
 }
