@@ -24,7 +24,7 @@ pub fn PresidentialElectionPage(#[props(default = Default::default())] lang: Lan
 
 
             div { class: "flex flex-col gap-24 w-full",
-                div { class: "w-full min-w-200 max-w-500 max-tablet:!max-w-full max-tablet:!order-1",
+                div { class: "w-full min-w-200 max-w-500 max-tablet:!max-w-full",
                     SearchBox {
                         placeholder: tr.search_placeholder,
                         value: ctrl.keyword(),
