@@ -1,4 +1,3 @@
-#![allow(non_snake_case)]
 use super::SignupPopup;
 use crate::{
     components::{icons::Logo, socials::Socials},
@@ -28,7 +27,7 @@ pub fn Header(
         Route::PoliticiansByIdPage { .. } => 3,
         _ => 0,
     });
-    let user_service: UserService = use_context();
+    let mut user_service: UserService = use_context();
     let mut expanded = use_signal(|| false);
     let mobile_menu = use_memo(move || {
         let expanded = expanded();
@@ -41,6 +40,7 @@ pub fn Header(
     });
     let responsive: ResponsiveService = use_context();
     let less_than_tablet = use_memo(move || responsive.width() < 900.0);
+    let mut open_logout = use_signal(|| false);
 
     rsx! {
         div { class: "fixed top-0 left-0 backdrop-blur-[20px] w-screen h-80 flex items-center justify-center z-100 max-tablet:!h-48",
@@ -122,14 +122,43 @@ pub fn Header(
                     }
 
                     div { class: "flex flex-row gap-10 max-tablet:!flex-col max-tablet:!items-center max-tablet:!justify-center",
-                        if let Some((_, _)) = user_service.get_user_info() {
-                            button {
-                                class: "text-neutral-500 text-[15px] font-bold p-10 hover:text-hover cursor-pointer order-1 max-tablet:!order-2",
-                                onclick: move |_| async move {
-                                    tracing::debug!("my reward clicked");
-                                    expanded.set(false);
-                                },
-                                {tr.my_rewards}
+                        if let Some((nickname, email, _)) = user_service.get_user_info() {
+                            div { class: "relative flex flex-col items-end gap-4",
+                                button {
+                                    class: "text-neutral-500 text-[15px] font-bold p-10 hover:text-hover cursor-pointer order-1 max-tablet:!order-2",
+                                    onclick: move |_| async move {
+                                        tracing::debug!("my reward clicked");
+                                        open_logout.set(!open_logout());
+                                        expanded.set(false);
+                                    },
+                                    {nickname}
+                                }
+
+                                div {
+                                    class: "top-50 right-0 absolute border border-primary rounded-[10px] py-15 px-20 bg-footer flex-col w-240 gap-20 hidden aria-expanded:flex",
+                                    "aria-expanded": open_logout(),
+                                    {email}
+                                    div { class: "w-full flex flex-col gap-30",
+                                        button {
+                                            class: "btn secondary sm !rounded-full",
+                                            onclick: move |_| {
+                                                open_logout.set(false);
+                                            },
+                                            "View Profile"
+                                        }
+                                        button {
+                                            class: "btn ",
+
+                                            onclick: move |_| async move {
+                                                open_logout.set(false);
+                                                user_service.logout().await;
+                                            },
+
+                                            "Logout"
+                                        }
+                                    }
+                                }
+
                             }
                         } else {
                             button {
