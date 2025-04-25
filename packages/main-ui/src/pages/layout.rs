@@ -43,10 +43,12 @@ pub fn RootBase(lang: Language, children: Element) -> Element {
                 2
             } else if y < height * 3.7 {
                 3
-            } else if y <= height * 4.0 {
+            } else if y <= height * 4.7 {
                 4
-            } else {
+            } else if y <= height * 5.7 {
                 5
+            } else {
+                6
             };
 
             return i;

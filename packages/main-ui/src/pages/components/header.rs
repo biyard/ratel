@@ -23,8 +23,9 @@ pub fn Header(
     let mut popup: PopupService = use_context();
     let current_path: Route = use_route();
     let selected_menu = use_memo(move || match current_path {
-        Route::PoliticiansPage { .. } => 2,
-        Route::PoliticiansByIdPage { .. } => 2,
+        Route::PresidentialElectionPage { .. } => 2,
+        Route::PoliticiansPage { .. } => 3,
+        Route::PoliticiansByIdPage { .. } => 3,
         _ => 0,
     });
     let user_service: UserService = use_context();
@@ -92,20 +93,28 @@ pub fn Header(
                         A {
                             lang,
                             selected: selected == 2,
+                            href: "#presidential-election",
+                            onclick: move |_| expanded.set(false),
+                            {tr.menu_presidential_election}
+                        }
+
+                        A {
+                            lang,
+                            selected: selected == 3,
                             href: "#politician-stance",
                             onclick: move |_| expanded.set(false),
                             {tr.menu_stance}
                         }
                         A {
                             lang,
-                            selected: selected == 3,
+                            selected: selected == 4,
                             href: "#community",
                             onclick: move |_| expanded.set(false),
                             {tr.menu_community}
                         }
                         A {
                             lang,
-                            selected: selected == 4,
+                            selected: selected == 5,
                             href: "#support",
                             onclick: move |_| expanded.set(false),
                             {tr.menu_support}
@@ -202,6 +211,11 @@ translate! {
     menu_about: {
         ko: "About",
         en: "About",
+    }
+
+    menu_presidential_election: {
+        ko: "Presidential Election",
+        en: "Presidential Election",
     }
 
     menu_stance: {
