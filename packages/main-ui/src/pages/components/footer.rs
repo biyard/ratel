@@ -13,12 +13,12 @@ pub fn Footer(lang: Language) -> Element {
             div { class: "flex gap-10",
                 Link {
                     class: "hover:text-white",
-                    to: Route::PrivacyPolicyPage { lang },
+                    to: Route::PrivacyPolicyPage {},
                     {tr.privacy}
                 }
                 Link {
                     class: "hover:text-white",
-                    to: Route::PrivacyPolicyPage { lang },
+                    to: Route::PrivacyPolicyPage {},
                     {tr.terms}
                 }
             }
@@ -69,13 +69,13 @@ pub fn FooterWithSocial(lang: Language) -> Element {
                     div { class: "hidden max-tablet:!flex flex-row justify-center gap-10",
                         Link {
                             class: "hover:text-white",
-                            to: Route::PrivacyPolicyPage { lang },
+                            to: Route::PrivacyPolicyPage {},
                             {tr.mobile_privacy}
                         }
                         p { "•" }
                         Link {
                             class: "hover:text-white",
-                            to: Route::PrivacyPolicyPage { lang },
+                            to: Route::PrivacyPolicyPage {},
                             {tr.mobile_terms}
                         }
                     }

@@ -1,6 +1,7 @@
 pub mod button;
 pub mod candidate_card;
 pub mod checkbox;
+pub mod coming_soon;
 pub mod confirm_popup;
 pub mod crypto_stance;
 pub mod dropdown;
