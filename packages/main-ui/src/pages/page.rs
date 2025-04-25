@@ -70,6 +70,7 @@ pub fn HomePage(lang: Language) -> Element {
             div { class: "w-full flex flex-col justify-start items-center max-desktop:px-30 max-tablet:gap-58",
                 Top { lang }
                 About { lang }
+                PresidentialElection { lang }
                 PoliticianStance { lang }
                 Community { lang }
                 Support { lang }

@@ -42,6 +42,7 @@ fn app() -> Element {
     let conf = config::get();
 
     let css = include_str!("../public/theme.css");
+    let custom = include_str!("../public/custom.css");
 
     rsx! {
         btracing::ToastTracing {}
@@ -88,7 +89,7 @@ fn app() -> Element {
             src: "https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs",
             r#type: "module",
         }
-        document::Style { r#type: "text/tailwindcss", {css} }
+        document::Style { r#type: "text/tailwindcss", "{css} {custom}" }
 
         // document::Script { r#type: "module", src: asset!("/public/dep.js"), defer: true }
 
