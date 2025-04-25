@@ -28,7 +28,9 @@ pub fn PresidentialElection(
                 description: tr.description,
             }
 
-            p { class: "text-primary text-[32px]/22 font-bold flex flex-row items-center gap-20",
+            p {
+                class: "text-primary text-[32px]/22 font-bold flex flex-row items-center gap-20 aria-hidden: hidden",
+                "aria-hidden": l == 0,
                 "{l}"
                 span { class: "text-white text-xl/22", {tr.total_candidates} }
             }
@@ -56,7 +58,7 @@ pub fn PresidentialElection(
             }
 
             ComingSoon {
-                class: "w-full h-full max-h-430 hidden aria-show:block",
+                class: "w-full h-430 hidden aria-show:block",
                 "aria-show": l == 0,
             }
         }
