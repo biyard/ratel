@@ -1,8 +1,9 @@
-use super::*;
 use bdk::prelude::{by_components::icons::arrows::ShapeArrowDown, *};
 use dto::*;
 
-use crate::components::{crypto_stance::CryptoStanceIcon, party::PartyIcon};
+use crate::components::{
+    crypto_stance::CryptoStanceIcon, election_pledge_card::ElectionPledgeCard, party::PartyIcon,
+};
 
 #[component]
 pub fn CandidateCard(lang: Language, candidate: PresidentialCandidateSummary) -> Element {
