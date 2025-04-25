@@ -45,7 +45,7 @@ pub fn Header(
     rsx! {
         div { class: "fixed top-0 left-0 backdrop-blur-[20px] w-screen h-80 flex items-center justify-center z-100 max-tablet:!h-48",
             div { class: "w-full flex flex-row items-center justify-between gap-59 max-w-[1176px] mx-10",
-                div { class: "flex flex-row items-center justify-between max-tablet:w-full",
+                div { class: "flex flex-row items-center justify-between max-tablet:w-full max-tablet:z-300",
                     a { href: "/#top",
                         Logo {
                             width: if less_than_tablet() { 96 } else { 136 },
@@ -81,7 +81,7 @@ pub fn Header(
                     }
                 }
 
-                div { class: "w-full flex flex-row gap-59 max-tablet:!fixed max-tablet:!w-screen max-tablet:!h-screen max-tablet:top-68 max-tablet:transition-all {mobile_menu} max-tablet:items-center max-tablet:justify-center max-tablet:z-999 max-tablet:bg-background max-tablet:!flex-col max-tablet:!gap-168",
+                div { class: "w-full flex flex-row gap-59 max-tablet:!fixed max-tablet:!w-screen max-tablet:!h-screen max-tablet:top-0 max-tablet:transition-all {mobile_menu} max-tablet:items-center max-tablet:justify-center max-tablet:z-200 max-tablet:bg-background max-tablet:!flex-col max-tablet:!gap-168",
                     nav { class: "grow flex flex-row gap-10 text-secondary font-bold text-[15px] max-tablet:!gap-20 max-tablet:!grow-0 max-tablet:!flex-col max-tablet:!items-center max-tablet:!justify-center max-tablet:z-100 max-tablet:!text-xl",
                         A {
                             lang,
@@ -125,7 +125,7 @@ pub fn Header(
                         if let Some((nickname, email, _)) = user_service.get_user_info() {
                             div { class: "relative flex flex-col items-end gap-4",
                                 button {
-                                    class: "text-neutral-500 text-[15px] font-bold p-10 hover:text-hover cursor-pointer order-1 max-tablet:!order-2",
+                                    class: "btn secondary sm !rounded-full h-full order-1 max-tablet:!hidden",
                                     onclick: move |_| async move {
                                         tracing::debug!("my reward clicked");
                                         open_logout.set(!open_logout());
@@ -135,19 +135,19 @@ pub fn Header(
                                 }
 
                                 div {
-                                    class: "top-50 right-0 absolute border border-primary rounded-[10px] py-15 px-20 bg-footer flex-col w-240 gap-20 hidden aria-expanded:flex",
+                                    class: "top-50 right-0 absolute border border-primary rounded-[10px] py-15 px-20 bg-footer flex-col w-240 gap-20 hidden aria-expanded:flex max-tablet:flex max-tablet:static max-tablet:bg-transparent max-tablet:border-0",
                                     "aria-expanded": open_logout(),
-                                    {email}
+                                    span { class: "max-tablet:hidden", {email} }
                                     div { class: "w-full flex flex-col gap-30",
                                         button {
-                                            class: "btn secondary sm !rounded-full",
+                                            class: "btn secondary sm !rounded-full max-tablet:!bg-transparent max-tablet:!text-c-wg-50 max-tablet:hover:!text-primary max-tablet:!py-0",
                                             onclick: move |_| {
                                                 open_logout.set(false);
                                             },
                                             "View Profile"
                                         }
                                         button {
-                                            class: "btn ",
+                                            class: "btn",
 
                                             onclick: move |_| async move {
                                                 open_logout.set(false);
