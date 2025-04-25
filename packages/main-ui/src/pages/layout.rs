@@ -9,7 +9,7 @@ use crate::{
 use by_components::meta::MetaSeoTemplate;
 
 #[component]
-pub fn RootLayout(lang: Language) -> Element {
+pub fn RootLayout(#[props(default = Language::En)] lang: Language) -> Element {
     rsx! {
         RootBase { lang }
     }
@@ -104,7 +104,7 @@ pub fn RootBase(lang: Language, children: Element) -> Element {
             }
         }
         if selected() != 5 && is_home {
-            div { class: "w-full max-[900px]:!hidden",
+            div { class: "max-[900px]:!hidden",
                 BottomSheet {
                     onclick: move |_| {
                         let height = match web_sys::window() {
