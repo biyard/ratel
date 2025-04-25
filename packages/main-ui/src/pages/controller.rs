@@ -1,6 +1,8 @@
 use bdk::prelude::*;
 use dto::*;
 
+use crate::services::user_service::UserService;
+
 #[derive(Clone, Copy, DioxusController)]
 pub struct Controller {
     #[allow(dead_code)]
@@ -10,13 +12,20 @@ pub struct Controller {
 
 impl Controller {
     pub fn new(lang: Language) -> std::result::Result<Self, RenderError> {
-        let candidates = use_server_future(move || async move {
-            match PresidentialCandidate::get_client(crate::config::get().main_api_endpoint)
-                .query(PresidentialCandidateQuery::new(20))
-                .await
-            {
-                Ok(members) => members.items,
-                _ => Default::default(),
+        let user_service: UserService = use_context();
+
+        let candidates = use_server_future(move || {
+            let user_info = user_service.user_info();
+            tracing::debug!("user info: {:?}", user_info);
+
+            async move {
+                match PresidentialCandidate::get_client(crate::config::get().main_api_endpoint)
+                    .query(PresidentialCandidateQuery::new(20))
+                    .await
+                {
+                    Ok(members) => members.items,
+                    _ => Default::default(),
+                }
             }
         })?;
 
