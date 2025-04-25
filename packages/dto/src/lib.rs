@@ -1,8 +1,10 @@
 mod error;
+pub mod info;
 mod joined_tables;
 mod tables;
 
 pub use error::*;
+pub use info::*;
 pub use joined_tables::*;
 pub use tables::*;
 
