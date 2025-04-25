@@ -1,5 +1,6 @@
 mod _routes;
 mod components;
+mod controller;
 mod page;
 mod politicians;
 mod preparing;

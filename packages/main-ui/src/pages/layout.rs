@@ -9,7 +9,7 @@ use crate::{
 use by_components::meta::MetaSeoTemplate;
 
 #[component]
-pub fn RootLayout(lang: Language) -> Element {
+pub fn RootLayout(#[props(default = Language::En)] lang: Language) -> Element {
     rsx! {
         RootBase { lang }
     }
