@@ -36,16 +36,16 @@ pub fn PresidentialElection(
             }
 
             div {
-                class: "w-full flex flex-col gap-30 items-center aria-hidden:hidden",
+                class: "w-full flex flex-col gap-30 items-center aria-hidden:hidden overflow-x-scroll items-start",
                 "aria-hidden": l == 0,
-                div { class: "w-full grid grid-cols-2 gap-24",
+                div { class: "w-full grid grid-cols-2 gap-24 max-tablet:min-w-624 order-1 max-tablet:!order-2",
                     for candidate in candidates.into_iter().take(2) {
                         CandidateCard { lang, candidate }
                     }
                 }
 
                 Link {
-                    class: "btn secondary sm",
+                    class: "btn secondary sm order-2 max-tablet:!order-1",
                     to: Route::PresidentialElectionPage {},
                     "View All"
                     ArrowRight {
