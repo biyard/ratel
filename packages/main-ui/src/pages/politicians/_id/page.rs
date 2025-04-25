@@ -8,7 +8,10 @@ use controller::*;
 use i18n::*;
 
 #[component]
-pub fn PoliticiansByIdPage(id: ReadOnlySignal<i64>, lang: Language) -> Element {
+pub fn PoliticiansByIdPage(
+    id: ReadOnlySignal<i64>,
+    #[props(default = Language::En)] lang: Language,
+) -> Element {
     let ctrl = Controller::new(lang, id)?;
     let tr: PoliticiansByIdTranslate = translate(&lang);
     let p = ctrl.politician()?;

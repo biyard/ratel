@@ -13,7 +13,7 @@ use by_components::icons::arrows::ArrowLeft;
 
 #[component]
 pub fn PreparingPage(
-    lang: Language,
+    #[props(default = Language::En)] lang: Language,
     #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
 ) -> Element {
     let tr: PreparingTranslate = translate(&lang);
@@ -39,7 +39,7 @@ pub fn PreparingPage(
             }
 
             div { class: "flex flex-row gap-10 max-[900px]:!flex-col",
-                PrimaryLink { size: ButtonSize::Normal, to: Route::HomePage { lang },
+                PrimaryLink { size: ButtonSize::Normal, to: Route::HomePage {},
                     ArrowLeft {
                         class: "[&>path]:stroke-3",
                         width: "20",

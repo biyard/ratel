@@ -12,7 +12,7 @@ use dto::CryptoStance;
 use dto::Party;
 
 #[component]
-pub fn PoliticiansPage(lang: Language) -> Element {
+pub fn PoliticiansPage(#[props(default = Language::En)] lang: Language) -> Element {
     let mut ctrl = Controller::new(lang)?;
     let tr: PoliticiansTranslate = translate(&lang);
     use_scroll(move |_, y, is_end, _| {
@@ -98,7 +98,6 @@ pub fn PoliticiansPage(lang: Language) -> Element {
                                 Link {
                                     class: "grid grid-cols-5 items-center border-b border-b-c-wg-80 cursor-pointer min-w-1100 w-full",
                                     to: Route::PoliticiansByIdPage {
-                                        lang,
                                         id: politician.id,
                                     },
                                     div { class: "px-20 py-14 col-span-1",

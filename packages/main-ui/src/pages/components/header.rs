@@ -16,7 +16,7 @@ use dioxus_popup::PopupService;
 #[component]
 pub fn Header(
     #[props(default ="".to_string())] class: String,
-    lang: Language,
+    #[props(default = Language::En)] lang: Language,
     selected: i32,
 ) -> Element {
     let tr: HeaderTranslate = translate(&lang);
@@ -146,7 +146,7 @@ pub fn Header(
                         }
                         Link {
                             class: "px-20 py-10 bg-primary hover:bg-hover text-black text-sm cursor-pointer rounded-full font-bold flex items-center justify-center order-2 max-tablet:!order-1",
-                            to: Route::PreparingPage { lang },
+                            to: Route::PreparingPage {},
                             onclick: move |_| expanded.set(false),
                             {tr.get_ratel}
                         }
@@ -192,7 +192,7 @@ pub fn A(
         } else {
             Link {
                 class: "p-10 hover:text-white",
-                to: Route::HomePage { lang },
+                to: Route::HomePage {},
                 onclick: move |_| {
                     if let Some(onclick) = onclick {
                         onclick(());

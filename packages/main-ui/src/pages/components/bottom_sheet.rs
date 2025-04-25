@@ -12,7 +12,7 @@ pub fn BottomSheet(
     let stroke = use_memo(move || if hover() { "#000203" } else { "#777677" });
 
     rsx! {
-        div { class: "w-full fixed bottom-0 left-0 flex flex-row items-center justify-center py-30 cursor-pointer z-11",
+        div { class: "fixed bottom-0 left-[calc(50%-20px)] flex flex-row items-center justify-center py-30 cursor-pointer z-11",
             MouseScrollDown {
                 color: stroke,
                 fill,

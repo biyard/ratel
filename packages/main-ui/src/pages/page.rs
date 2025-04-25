@@ -4,9 +4,11 @@ use by_components::meta::MetaPage;
 use subscription::Subscription;
 
 use super::components::*;
+use super::controller::*;
 
 #[component]
-pub fn HomePage(lang: Language) -> Element {
+pub fn HomePage(#[props(default = Language::En)] lang: Language) -> Element {
+    let ctrl = Controller::new(lang)?;
     let tr: TopTranslate = translate(&lang);
     let image = asset!("/public/logos/logo.png");
     let mut muted = use_signal(|| true);
@@ -70,7 +72,10 @@ pub fn HomePage(lang: Language) -> Element {
             div { class: "w-full flex flex-col justify-start items-center max-desktop:px-30 max-tablet:gap-58",
                 Top { lang }
                 About { lang }
-                PresidentialElection { lang }
+                PresidentialElection {
+                    lang,
+                    candidates: ctrl.candidates().unwrap_or_default(),
+                }
                 PoliticianStance { lang }
                 Community { lang }
                 Support { lang }
