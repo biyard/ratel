@@ -1,6 +1,7 @@
 mod _routes;
 mod components;
 mod controller;
+mod my_profile;
 mod page;
 mod politicians;
 mod preparing;
@@ -9,6 +10,7 @@ mod privacy_policy;
 
 pub use _routes::*;
 pub use layout::*;
+pub use my_profile::*;
 pub use page::*;
 pub use politicians::*;
 pub use preparing::*;

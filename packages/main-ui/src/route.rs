@@ -2,30 +2,30 @@ use crate::pages::*;
 use bdk::prelude::*;
 
 #[derive(Clone, Routable, Debug, PartialEq)]
-#[rustfmt::skip]
 pub enum Route {
     #[nest("/en")]
     #[layout(RootLayout)]
     #[route("/")]
-    HomePage {  },
+    HomePage {},
 
     #[route("/politicians")]
-    PoliticiansPage {  },
+    PoliticiansPage {},
     #[route("/politicians/:id")]
     PoliticiansByIdPage { id: i64 },
 
     #[route("/presidential-election")]
-    PresidentialElectionPage {  },
+    PresidentialElectionPage {},
 
     #[route("/privacy-policy")]
-    PrivacyPolicyPage {  },
+    PrivacyPolicyPage {},
 
     #[route("/preparing")]
-    PreparingPage {  },
+    PreparingPage {},
 
+    #[route("/my-profile")]
+    MyProfilePage {},
     #[end_layout]
     #[end_nest]
-
     #[redirect("/", || Route::HomePage {  })]
     #[route("/:..route")]
     NotFoundPage { route: Vec<String> },

@@ -139,8 +139,9 @@ pub fn Header(
                                     "aria-expanded": open_logout(),
                                     span { class: "max-tablet:hidden", {email} }
                                     div { class: "w-full flex flex-col gap-30",
-                                        button {
+                                        Link {
                                             class: "btn secondary sm !rounded-full max-tablet:!bg-transparent max-tablet:!text-c-wg-50 max-tablet:hover:!text-primary max-tablet:!py-0",
+                                            to: Route::MyProfilePage {},
                                             onclick: move |_| {
                                                 open_logout.set(false);
                                             },
