@@ -15,7 +15,6 @@ pub fn Top(
 ) -> Element {
     let tr: TopTranslate = translate(&lang);
     let mut popup: PopupService = use_context();
-    let white_paper = asset!("/public/documents/Ratel-Token-White-Paper.pdf");
 
     rsx! {
         div {

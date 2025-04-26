@@ -20,13 +20,6 @@ pub fn Header(
 ) -> Element {
     let tr: HeaderTranslate = translate(&lang);
     let mut popup: PopupService = use_context();
-    let current_path: Route = use_route();
-    let selected_menu = use_memo(move || match current_path {
-        Route::PresidentialElectionPage { .. } => 2,
-        Route::PoliticiansPage { .. } => 3,
-        Route::PoliticiansByIdPage { .. } => 3,
-        _ => 0,
-    });
     let mut user_service: UserService = use_context();
     let mut expanded = use_signal(|| false);
     let mobile_menu = use_memo(move || {
@@ -139,14 +132,14 @@ pub fn Header(
                                     "aria-expanded": open_logout(),
                                     span { class: "max-tablet:hidden", {email} }
                                     div { class: "w-full flex flex-col gap-30",
-                                        Link {
-                                            class: "btn secondary sm !rounded-full max-tablet:!bg-transparent max-tablet:!text-c-wg-50 max-tablet:hover:!text-primary max-tablet:!py-0",
-                                            to: Route::MyProfilePage {},
-                                            onclick: move |_| {
-                                                open_logout.set(false);
-                                            },
-                                            "View Profile"
-                                        }
+                                        // Link {
+                                        //     class: "btn secondary sm !rounded-full max-tablet:!bg-transparent max-tablet:!text-c-wg-50 max-tablet:hover:!text-primary max-tablet:!py-0",
+                                        //     to: Route::MyProfilePage {},
+                                        //     onclick: move |_| {
+                                        //         open_logout.set(false);
+                                        //     },
+                                        //     "View Profile"
+                                        // }
                                         button {
                                             class: "btn",
 

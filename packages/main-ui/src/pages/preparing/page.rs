@@ -17,7 +17,6 @@ pub fn PreparingPage(
     #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
 ) -> Element {
     let tr: PreparingTranslate = translate(&lang);
-    let white_paper = asset!("/public/documents/Ratel-Token-White-Paper.pdf");
 
     rsx! {
         div {

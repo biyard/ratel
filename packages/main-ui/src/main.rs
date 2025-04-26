@@ -1,4 +1,3 @@
-#![allow(unused_variables)]
 pub mod components;
 pub mod config;
 pub mod pages;
