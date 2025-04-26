@@ -7,6 +7,8 @@ use crate::components::{
 
 #[component]
 pub fn CandidateCard(lang: Language, candidate: PresidentialCandidateSummary) -> Element {
+    let mut show_more = use_signal(|| false);
+
     rsx! {
         div {
             id: "presidential-candidate-{candidate.id}",
@@ -40,9 +42,17 @@ pub fn CandidateCard(lang: Language, candidate: PresidentialCandidateSummary) ->
                 }
                 button {
                     class: "w-full rounded-[10px] bg-neutral-800 py-6 flex flex-row items-center gap-4 text-sm/22 font-semibold text-white justify-center hover:bg-neutral-700 cursor-pointer transition-all duration-200 ease-in-out group aria-hidden:hidden",
-                    "aria-hidden": candidate.election_pledges.len() < 4,
+                    "aria-hidden": candidate.election_pledges.len() < 4 || show_more(),
+                    onclick: move |_| show_more.set(!show_more()),
                     "See More"
                     ShapeArrowDown { class: "[&>path]:stroke-neutral-600 [&>path]:fill-neutral-600 group-hover:[&>path]:stroke-neutral-400 group-hover:[&>path]:fill-neutral-400 transition-all duration-200 ease-in-out" }
+                }
+                div {
+                    class: "flex-col gap-8 hidden aria-show:flex",
+                    "aria-show": show_more(),
+                    for promise in candidate.election_pledges.iter().skip(3) {
+                        ElectionPledgeCard { promise: promise.clone() }
+                    }
                 }
             } // end of candidate body
 
