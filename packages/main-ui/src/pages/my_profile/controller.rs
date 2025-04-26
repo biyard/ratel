@@ -27,4 +27,8 @@ impl Controller {
 
         Ok(ctrl)
     }
+
+    pub fn upgrade_membership(&self) {
+        tracing::debug!("Upgrade membership");
+    }
 }

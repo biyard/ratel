@@ -2,7 +2,9 @@ use crate::pages::components::SectionHeader;
 
 use super::*;
 use bdk::prelude::*;
+use components::*;
 use controller::*;
+use dto::*;
 use i18n::*;
 
 #[component]
@@ -23,7 +25,7 @@ pub fn MyProfilePage(#[props(default = Language::En)] lang: Language) -> Element
             }
 
             div { class: "w-full flex flex-row gap-100",
-                div { class: "flex flex-col items-center justify-center",
+                div { class: "min-w-150 flex flex-col items-center justify-center",
                     img {
                         class: "w-150 h-150 rounded-full object-cover",
                         src: ctrl.profile_url(),
@@ -42,15 +44,23 @@ pub fn MyProfilePage(#[props(default = Language::En)] lang: Language) -> Element
                         }
                     }
 
-                    label { class: "w-full flex flex-row gap-24 items-center",
+                    label { class: "w-full flex flex-row gap-24 items-center justify-between",
                         span { class: "w-100", {tr.label_membership} }
-                        div { class: "grow-1 flex flex-row w-full justify-between items-center",
-                            "General"
 
-                            button { class: "btn secondary sm", {tr.btn_contact} }
+                        button {
+                            class: "btn secondary sm",
+                            onclick: move |_| ctrl.upgrade_membership(),
+                            {tr.btn_upgrade}
+                        }
 
+                    }
+
+                    div { class: "w-full grid grid-cols-4 gap-10",
+                        for membership in Membership::VARIANTS {
+                            MembershipCard { selected: false, membership: *membership }
                         }
                     }
+
 
                     label { class: "w-full flex flex-row gap-24 items-center",
                         span { class: "w-100", {tr.label_email} }

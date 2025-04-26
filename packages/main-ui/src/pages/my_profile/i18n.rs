@@ -33,9 +33,9 @@ translate! {
         ko: "서비스에 대한 정보를 수신하는 것에 동의합니다.",
     }
 
-    btn_contact:{
-        en: "Inquiry premium membership",
-        ko: "유료 멤버쉽 문의하기",
+    btn_upgrade:{
+        en: "Upgrade",
+        ko: "업그레이드",
     }
 
     description: {
