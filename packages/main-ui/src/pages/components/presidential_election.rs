@@ -44,16 +44,17 @@ pub fn PresidentialElection(
                     }
                 }
 
-                Link {
-                    class: "btn secondary sm order-2 max-tablet:!order-1",
-                    to: Route::PresidentialElectionPage {},
-                    "View All"
-                    ArrowRight {
-                        class: "[&>path]:stroke-3",
-                        width: "15",
-                        height: "15",
+                div { class: "w-full flex flex-row justify-center order-2 max-tablet:!order-1",
+                    Link {
+                        class: "btn secondary sm",
+                        to: Route::PresidentialElectionPage {},
+                        "View All"
+                        ArrowRight {
+                            class: "[&>path]:stroke-3",
+                            width: "15",
+                            height: "15",
+                        }
                     }
-
                 }
             }
 
