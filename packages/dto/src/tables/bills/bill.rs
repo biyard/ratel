@@ -1,7 +1,6 @@
 use crate::{VoteOption, tables::Vote};
 
 use bdk::prelude::*;
-use by_types::QueryResponse;
 
 #[derive(
     Debug, Clone, Eq, PartialEq, Default, by_macros::ApiModel, dioxus_translate::Translate, Copy,
@@ -13,7 +12,7 @@ pub enum BillSorter {
     Newest = 1,
 }
 
-#[api_model(base = "/v1/bills", table = bills, iter_type = QueryResponse)]
+#[api_model(base = "/v1/bills", table = bills)]
 pub struct Bill {
     #[api_model(summary, primary_key)]
     pub id: i64,
@@ -21,7 +20,7 @@ pub struct Bill {
     pub created_at: i64,
 
     #[api_model(summary, unique)]
-    pub bill_no: String, // actual bills number in the assembly
+    pub bill_no: i64, // actual bills number in the assembly
     #[api_model(summary, unique)]
     pub bill_id: String, // ex. PRC_E0O9Q0W6A3S0T1U3M0H0O5H7Q6C6H2
     #[api_model(summary)]

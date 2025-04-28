@@ -42,12 +42,22 @@ pub enum ServiceError {
     VerifyException(String),
     SignException,
     DatabaseException(String),
+
+    // NA OpenAPI
     OpenApiResponseError(String),
+    #[translate(en = "Failed to parse response")]
+    NaOpenApiResponseParsingError,
+    #[translate(en = "Failed to call national assembly API")]
+    NaOpenApiRequestError,
+    #[translate(en = "Could not find any resource")]
+    NaOpenApiEmptyRow,
+    #[translate(en = "Failed to parse website")]
+    HtmlParseError(String),
+
     BadRequest,
     JsonDeserializeError(String),
     WalletNotFound,
     WalletError(String),
-    HtmlParseError(String),
     UniqueViolation(String),
 
     #[translate(en = "Required input value is missing", ko = "필수 입력값이 없습니다.")]
