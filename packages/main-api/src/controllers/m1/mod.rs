@@ -1,5 +1,5 @@
-pub mod assembly_members;
-pub mod bills;
+// pub mod assembly_members;
+// pub mod bills;
 use bdk::prelude::*;
 use by_axum::{
     auth::Authorization,
@@ -17,13 +17,13 @@ use reqwest::StatusCode;
 pub struct MenaceController {}
 
 impl MenaceController {
-    pub fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Router> {
+    pub fn route(_pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Router> {
         Ok(by_axum::axum::Router::new()
-            .nest(
-                "/assembly-members",
-                assembly_members::AssemblyMemberControllerM1::new(pool.clone()).route(),
-            )
-            .nest("/bills", bills::BillsController::new(pool.clone()).route())
+            // .nest(
+            //     "/assembly-members",
+            //     assembly_members::AssemblyMemberControllerM1::new(pool.clone()).route(),
+            // )
+            // .nest("/bills", bills::BillsController::new(pool.clone()).route())
             .layer(middleware::from_fn(authorize_organization)))
     }
 }
