@@ -249,9 +249,10 @@ jobs:
           target: wasm32-unknown-unknown
           toolchain: stable
 
+      - uses: cargo-bins/cargo-binstall@main
       - name: Install dependencies
         run: |
-          cargo install toml-cli
+          cargo binstall toml-cli
 
       - name: Cache builder
         id: fetcher-build-cache
