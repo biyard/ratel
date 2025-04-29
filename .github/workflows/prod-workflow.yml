@@ -122,3 +122,60 @@ jobs:
         run: |
           npm i -g aws-cdk
           make deploy
+
+  fetcher:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          ssh-key: ${{ secrets.PULL_KEY_REPO }}
+
+      - uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          components: clippy, rustfmt
+          target: wasm32-unknown-unknown
+          toolchain: stable
+
+      - name: Install dependencies
+        run: |
+          cargo install toml-cli
+
+      - name: Cache builder
+        id: fetcher-build-cache
+        uses: actions/cache@v3
+        with:
+          key: fetcher-build-cache
+          path: |
+            packages/fetcher/target
+
+      - name: Deploy APIs
+        env:
+          REGION: ap-northeast-2
+          ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          ENV: prod
+          RUST_LOG: info
+          SERVICE: fetcher
+          DOMAIN: api.ratel.foundation
+          AUTH_DOMAIN: ratel.foundation
+          DATABASE_TYPE: postgres
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          OPENAPI_KEY: ${{ secrets.OPENAPI_KEY }}
+          AUTH_SECRET_KEY: ${{ secrets.AUTH_SECRET_KEY }}
+          JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
+          SERVER_KEY: ${{ secrets.AUTH_SECRET_KEY }}
+          SLACK_CHANNEL_BILL: ${{ secrets.SLACK_CHANNEL_BILL }}
+          BASE_DOMAIN: ratel.foundation
+          MIGRATE: false
+          ENABLE_S3: false
+          ENABLE_LAMBDA: true
+        run: |
+          npm i -g aws-cdk
+          make deploy
