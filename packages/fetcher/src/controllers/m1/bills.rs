@@ -141,7 +141,7 @@ impl BillWriterController {
                     .await;
 
                 if res.is_ok() {
-                    tracing::info!("fetched {} bill", bill_no);
+                    tracing::debug!("fetched {} bill", bill_no);
                     break;
                 } else {
                     tracing::error!("Failed to fetch bill {}: {:?}", bill_no, res);
@@ -178,7 +178,7 @@ impl BillWriterController {
             let res = self
                 .fetch_bill(BillWriterFetchBillRequest { bill_no })
                 .await;
-            tracing::info!("fetched {:?}", res);
+            tracing::debug!("fetched {:?}", res);
 
             if let Ok(b) = res {
                 bill = b.clone();
@@ -212,7 +212,7 @@ impl BillWriterController {
         &self,
         BillWriterFetchBillRequest { bill_no }: BillWriterFetchBillRequest,
     ) -> Result<BillWriter> {
-        tracing::info!("fetch_bill {}", bill_no);
+        tracing::debug!("fetch_bill {}", bill_no);
 
         let bill = self.cli.get_bill(bill_no).await?;
         tracing::debug!("bill: {:?}", bill);
