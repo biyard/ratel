@@ -1,10 +1,13 @@
-use bdk::prelude::*;
+use std::{sync::Arc, time::Duration};
+
+use bdk::prelude::{fullstack::once_cell, *};
 use by_axum::{
     aide,
     auth::Authorization,
     axum::{Extension, Json, extract::State, native_routing::post},
 };
 use dto::*;
+use tokio::time::sleep;
 
 use crate::modules::national_assembly::{AssemblyClient, html_parser::HtmlParser};
 
@@ -22,6 +25,7 @@ pub struct BillWriterController {
     bill_channel: &'static str,
     pool: sqlx::Pool<sqlx::Postgres>,
 }
+static INSTANCE: OnceCell<Logger> = OnceCell::new();
 
 impl BillWriterController {
     pub fn new(pool: sqlx::Pool<sqlx::Postgres>) -> Self {
@@ -29,12 +33,21 @@ impl BillWriterController {
         let cli = AssemblyClient::new(crate::config::get().openapi_key.to_string());
         let bill_channel = crate::config::get().slack.bill;
 
-        Self {
+        let ctrl = Self {
             repo,
             pool,
             cli,
             bill_channel,
-        }
+        };
+
+        let arc = Arc::new(ctrl.clone());
+
+        tokio::spawn(async move {
+            let _ = arc.fetch_recent_bills().await;
+            sleep(Duration::from_secs(60 * 60)).await;
+        });
+
+        ctrl
     }
 
     pub fn route(&self) -> Result<by_axum::axum::Router> {
