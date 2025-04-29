@@ -1,6 +1,9 @@
-use std::{sync::Arc, time::Duration};
+use std::{
+    sync::{Arc, OnceLock},
+    time::Duration,
+};
 
-use bdk::prelude::{fullstack::once_cell, *};
+use bdk::prelude::*;
 use by_axum::{
     aide,
     auth::Authorization,
@@ -25,10 +28,10 @@ pub struct BillWriterController {
     bill_channel: &'static str,
     pool: sqlx::Pool<sqlx::Postgres>,
 }
-static INSTANCE: OnceCell<Logger> = OnceCell::new();
+static INSTANCE: OnceLock<bool> = OnceLock::new();
 
 impl BillWriterController {
-    pub fn new(pool: sqlx::Pool<sqlx::Postgres>) -> Self {
+    pub async fn new(pool: sqlx::Pool<sqlx::Postgres>) -> Self {
         let repo = BillWriter::get_repository(pool.clone());
         let cli = AssemblyClient::new(crate::config::get().openapi_key.to_string());
         let bill_channel = crate::config::get().slack.bill;
@@ -42,10 +45,19 @@ impl BillWriterController {
 
         let arc = Arc::new(ctrl.clone());
 
-        tokio::spawn(async move {
-            let _ = arc.fetch_recent_bills().await;
-            sleep(Duration::from_secs(60 * 60)).await;
-        });
+        if INSTANCE.get().is_none() {
+            let res = INSTANCE.set(true);
+            if let Err(e) = res {
+                btracing::notify_error!(
+                    ctrl.bill_channel,
+                    &format!("Failed to initialize INSTANCE on {e:?}",)
+                );
+            }
+            tokio::spawn(async move {
+                let _ = arc.fetch_recent_bills().await;
+                sleep(Duration::from_secs(60 * 60)).await;
+            });
+        }
 
         ctrl
     }
