@@ -270,7 +270,7 @@ jobs:
           ENV: dev
           RUST_LOG: info
           SERVICE: fetcher
-          DOMAIN: api.dev.ratel.foundation
+          DOMAIN: fetcher-api.dev.ratel.foundation
           AUTH_DOMAIN: dev.ratel.foundation
           DATABASE_TYPE: postgres
           DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
