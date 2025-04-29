@@ -99,26 +99,21 @@ impl BillWriterController {
             .id;
 
         let rp = bill_info.get_representative_proposers();
-        let sql = format!(
-            "SELECT * from assembly_members where name in ('{}')",
-            rp.join("','")
-        );
-        tracing::debug!("sql: {}", sql);
 
-        let representative_members = sqlx::query(&sql)
-            .map(AssemblyMember::from)
-            .fetch_all(&self.pool)
-            .await?;
+        let representative_members =
+            sqlx::query("SELECT * from assembly_members where name = ANY($1)")
+                .bind(&rp)
+                .map(AssemblyMember::from)
+                .fetch_all(&self.pool)
+                .await?;
 
         let cp = bill_info.get_co_proposers();
-        let sql = format!(
-            "SELECT * from assembly_members where name in ('{}')",
-            cp.join("','")
-        );
-        let co_proposer_members = sqlx::query(&sql)
-            .map(AssemblyMember::from)
-            .fetch_all(&self.pool)
-            .await?;
+        let co_proposer_members =
+            sqlx::query("SELECT * from assembly_members where name = ANY($1)")
+                .bind(cp)
+                .map(AssemblyMember::from)
+                .fetch_all(&self.pool)
+                .await?;
 
         let repo = Proposer::get_repository(self.pool.clone());
         let mut tx = self.pool.begin().await?;
