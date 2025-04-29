@@ -1,4 +1,4 @@
-@theme {
+@theme static {
   /* Tailwindcss variables */
   --spacing: 1px;
   --color-black: #000203;
@@ -58,6 +58,7 @@
   --color-neutral-500: #737373;
   --color-neutral-600: #525252;
   --color-neutral-700: #404040;
+  --color-neutral-800: #262626;
   --color-c-c-20: #6eedd8;
   --color-c-p-20: #ff9eee;
   --color-c-p-50: #db2780;
@@ -67,9 +68,13 @@
   --color-bg: #1a1a1a;
   --color-tab-hover: #282828;
   --color-mission-title: #DEE1E6;
+  --color-tag: #DEE1E6;
+  --color-component-bg: #191919;
 
   --breakpoint-desktop:1177px;
   --breakpoint-tablet:900px;
   --breakpoint-mobile:500px;
   --breakpoint-sm-mobile:380px;
+
+  --container-desktop: 1177px;
 }

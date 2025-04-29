@@ -201,7 +201,7 @@ impl UserService {
         self.loggedin.set(true);
     }
 
-    pub fn get_user_info(&self) -> Option<(String, String)> {
+    pub fn get_user_info(&self) -> Option<(String, String, String)> {
         let info = (self.user_info)();
 
         if info.email.is_none() || info.nickname.is_none() {
@@ -210,6 +210,7 @@ impl UserService {
 
         Some((
             info.nickname.clone().unwrap(),
+            info.email.clone().unwrap(),
             // TODO: default image
             info.profile_url.clone().unwrap_or_default(),
         ))

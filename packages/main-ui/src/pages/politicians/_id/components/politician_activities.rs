@@ -36,8 +36,9 @@ pub fn PoliticianActivities(
                 Dropdown {
                     items: BillSorter::variants(&lang),
                     onselect: |item: String| {
-                        let sort: BillSorter = item.parse().unwrap_or_default();
                         tracing::debug!("Selected item: {:?}", item);
+                        let sort: BillSorter = item.parse().unwrap_or_default();
+                        tracing::debug!("sort: {sort:?}")
                     },
                 }
 

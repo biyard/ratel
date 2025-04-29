@@ -39,3 +39,23 @@ input[type="number"]::-webkit-outer-spin-button {
 input[type="number"] {
   -moz-appearance: textfield;
 }
+
+article.election-pledge > p {
+  font-weight: 700;
+  font-size: 18px;
+  line-height: 22px;
+  letter-spacing: 0%;
+  color: white;
+}
+
+article.election-pledge > ol > li {
+  font-weight: 500;
+  font-size: 15px;
+  line-height: 22px;
+  letter-spacing: 0%;
+  color: var(--color-neutral-400);
+  list-style-type: disc;
+  list-style-position: inside;
+  margin-left: 10px;
+}
+
