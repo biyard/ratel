@@ -52,7 +52,7 @@ async fn api_main() -> Result<Router> {
     }
 
     let app = app
-        .nest("/m1", controllers::m1::route(pool)?)
+        .nest("/m1", controllers::m1::route(pool).await?)
         .layer(middleware::from_fn(authorization_middleware));
 
     Ok(app)

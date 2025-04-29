@@ -16,11 +16,13 @@ use by_types::Role;
 use dto::*;
 use reqwest::StatusCode;
 
-pub fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Router> {
+pub async fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Router> {
     Ok(by_axum::axum::Router::new()
         .nest(
             "/bills",
-            bills::BillWriterController::new(pool.clone()).route()?,
+            bills::BillWriterController::new(pool.clone())
+                .await
+                .route()?,
         )
         // .nest(
         //     "/assembly-members",
