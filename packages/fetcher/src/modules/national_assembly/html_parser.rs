@@ -37,7 +37,6 @@ impl HtmlParser {
             }
         }
 
-        tracing::error!("Failed to find the element with the selector");
         Err(ServiceError::HtmlParseError(
             "Failed to parse response".to_string(),
         ))
@@ -50,7 +49,6 @@ impl HtmlParser {
             let description = element.text().collect::<Vec<_>>().join(" ");
             return Ok(description);
         } else {
-            tracing::error!("Failed to find the element with the selector");
             Err(ServiceError::HtmlParseError(
                 "Failed to parse response".to_string(),
             ))

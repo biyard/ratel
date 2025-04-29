@@ -29,7 +29,6 @@ btracing = { path = "./deps/rust-sdk/packages/btracing" }
 
 serde = { version = "1.0.197", features = ["derive"] }
 serde_json = "1.0.133"
-slog = "2.7.0"
 dto = { path = "./packages/dto" }
 reqwest = { version = "0.12.5", features = ["blocking", "json", "multipart"] }
 sqlx = { version = "0.8.3", features = [

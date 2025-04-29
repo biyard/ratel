@@ -28,12 +28,12 @@ dependencies = [
 
 [[package]]
 name = "aide"
-version = "0.14.1"
+version = "0.14.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2ef7da148319b3f1ac7d338f7a144521ee399cd65e4381aa0c17994e74304aa8"
+checksum = "a2477554ebf38aea815a9c4729100cfc32f766876c45b9c9c38ef221b9d1a703"
 dependencies = [
  "aide-macros",
- "axum 0.8.1",
+ "axum 0.8.3",
  "axum-extra",
  "bytes",
  "cfg-if",
@@ -42,6 +42,7 @@ dependencies = [
  "schemars",
  "serde",
  "serde_json",
+ "serde_qs 0.14.0",
  "thiserror 2.0.12",
  "tower-layer",
  "tower-service",
@@ -201,7 +202,7 @@ checksum = "edca88bc138befd0323b20752846e6587272d3b03b0343c8ea28a6f819e6e71f"
 dependencies = [
  "async-trait",
  "axum-core 0.4.5",
- "axum-macros",
+ "axum-macros 0.4.2",
  "base64 0.22.1",
  "bytes",
  "futures-util",
@@ -234,11 +235,12 @@ dependencies = [
 
 [[package]]
 name = "axum"
-version = "0.8.1"
+version = "0.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6d6fd624c75e18b3b4c6b9caf42b1afe24437daaee904069137d8bab077be8b8"
+checksum = "de45108900e1f9b9242f7f2e254aa3e2c029c921c258fe9e6b4217eeebd54288"
 dependencies = [
- "axum-core 0.5.0",
+ "axum-core 0.5.2",
+ "axum-macros 0.5.0",
  "bytes",
  "form_urlencoded",
  "futures-util",
@@ -289,12 +291,12 @@ dependencies = [
 
 [[package]]
 name = "axum-core"
-version = "0.5.0"
+version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "df1362f362fd16024ae199c1970ce98f9661bf5ef94b9808fee734bc3698b733"
+checksum = "68464cd0412f486726fb3373129ef5d2993f90c34bc2bc1c1e9943b2f4fc7ca6"
 dependencies = [
  "bytes",
- "futures-util",
+ "futures-core",
  "http",
  "http-body",
  "http-body-util",
@@ -313,8 +315,8 @@ version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "460fc6f625a1f7705c6cf62d0d070794e94668988b1c38111baeec177c715f7b"
 dependencies = [
- "axum 0.8.1",
- "axum-core 0.5.0",
+ "axum 0.8.3",
+ "axum-core 0.5.2",
  "bytes",
  "form_urlencoded",
  "futures-util",
@@ -337,6 +339,17 @@ name = "axum-macros"
 version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "57d123550fa8d071b7255cb0cc04dc302baa6c8c4a79f55701552684d8399bce"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.100",
+]
+
+[[package]]
+name = "axum-macros"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "604fde5e028fea851ce1d8570bbdc034bec850d157f7569d10f347d06808c05c"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -492,6 +505,7 @@ version = "0.1.2"
 dependencies = [
  "dioxus",
  "gloo-timers",
+ "serde",
  "tracing",
 ]
 
@@ -506,7 +520,7 @@ name = "by-axum"
 version = "0.2.14"
 dependencies = [
  "aide",
- "axum 0.8.1",
+ "axum 0.8.3",
  "by-types",
  "dioxus-aws",
  "http",
@@ -572,7 +586,7 @@ name = "by-types"
 version = "0.3.9"
 dependencies = [
  "aide",
- "axum 0.8.1",
+ "axum 0.8.3",
  "reqwest",
  "schemars",
  "serde",
@@ -1734,6 +1748,7 @@ checksum = "37909eebbb50d72f9059c3b6d82c0463f2ff062c9e95845c43a6c9c0355411be"
 name = "fetcher"
 version = "0.1.0"
 dependencies = [
+ "axum 0.8.3",
  "bdk",
  "dto",
  "scraper",
@@ -2865,7 +2880,6 @@ dependencies = [
  "scraper",
  "serde",
  "serde_json",
- "slog",
  "tokio",
  "tower 0.5.2",
  "tracing",
@@ -3990,6 +4004,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "serde_qs"
+version = "0.14.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8b417bedc008acbdf6d6b4bc482d29859924114bbe2650b7921fb68a261d0aa6"
+dependencies = [
+ "axum 0.8.3",
+ "futures",
+ "percent-encoding",
+ "serde",
+ "thiserror 2.0.12",
+]
+
+[[package]]
 name = "serde_repr"
 version = "0.1.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4035,7 +4062,7 @@ dependencies = [
  "send_wrapper",
  "serde",
  "serde_json",
- "serde_qs",
+ "serde_qs 0.13.0",
  "server_fn_macro_default",
  "thiserror 2.0.12",
  "throw_error",

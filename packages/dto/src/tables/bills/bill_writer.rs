@@ -1,13 +1,15 @@
 use bdk::prelude::*;
 
-#[api_model(base = "/m1/bills", table = bills, action = [fetch_recent_bills])]
+#[api_model(base = "/m1/bills", table = bills, action = [fetch_recent_bills, fetch_bills(start_bill_no = i64, end_bill_no = i64)])]
 pub struct BillWriter {
     #[api_model(summary, primary_key)]
     pub id: i64,
     #[api_model(summary, auto = insert)]
     pub created_at: i64,
+    #[api_model(summary, auto = [insert, update])]
+    pub updated_at: i64,
 
-    #[api_model(summary, unique, action = fetch_bill)]
+    #[api_model(summary, unique, action = [fetch_bill, fetch_proposers])]
     pub bill_no: i64, // actual bills number in the assembly
     #[api_model(summary, unique)]
     pub bill_id: String, // ex. PRC_E0O9Q0W6A3S0T1U3M0H0O5H7Q6C6H2
@@ -76,16 +78,19 @@ pub struct BillWriter {
     pub promulgation_date: Option<i32>, // Date promulgated
     #[api_model(version = v0.1)]
     pub promulgation_number: Option<String>, // Promulgation number
+    #[api_model(version = v0.1)]
+    pub link_url: String, // URL for details
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub enum ProposerKind {
-    #[default]
     #[translate(ko = "의원", en = "Member")]
     Member = 1,
     #[translate(ko = "정부", en = "Government")]
     Government = 2,
+    #[default]
+    Other = 99,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]

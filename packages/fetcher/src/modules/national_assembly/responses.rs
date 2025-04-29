@@ -336,10 +336,7 @@ impl Into<BillWriter> for BillDetail {
             title: self.bill_name,
             date: self.proposal_date,
 
-            proposer_kind: self
-                .proposer_kind
-                .parse()
-                .expect("Failed to parse proposer_kind"),
+            proposer_kind: self.proposer_kind.parse().unwrap_or_default(),
             proposer_name: self.proposer_name,
             proposal_session: self.proposal_session,
             proposal_date,
@@ -347,7 +344,7 @@ impl Into<BillWriter> for BillDetail {
             committee: self
                 .committee_name
                 .clone()
-                .map(|name| name.parse().expect("Failed to parse committee_name")),
+                .map(|name| name.parse().unwrap_or_default()),
             committee_name: self.committee_name,
             committee_referral_date: self.committee_referral_date.map(to_date),
             committee_presentation_date: self.committee_presentation_date.map(to_date),
@@ -367,6 +364,7 @@ impl Into<BillWriter> for BillDetail {
             promulgated_law_name: self.promulgated_law_name,
             promulgation_date: self.promulgation_date.map(to_date),
             promulgation_number: self.promulgation_number,
+            link_url: self.link_url,
 
             ..Default::default()
         }
@@ -374,5 +372,119 @@ impl Into<BillWriter> for BillDetail {
 }
 
 fn to_date(date: String) -> i32 {
-    date.replace("-", "").parse().expect("Failed to parse date")
+    if let Ok(res) = date.replace("-", "").parse() {
+        res
+    } else {
+        tracing::error!("Failed to parse date: {}", date);
+        0
+    }
+}
+
+// Represents summary information and processing status for a legislative bill
+// Based on image_29867a.png
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct BillInfo {
+    // 1: BILL_ID (의안ID)
+    #[serde(rename(deserialize = "BILL_ID"))]
+    pub bill_id: String,
+
+    // 2: BILL_NO (의안번호)
+    #[serde(rename(deserialize = "BILL_NO"))]
+    pub bill_no: String,
+
+    // 3: BILL_NAME (법률안명)
+    #[serde(rename(deserialize = "BILL_NAME"))]
+    pub bill_name: String, // Title of the bill
+
+    // 4: COMMITTEE (소관위원회) - Assuming optional
+    #[serde(rename(deserialize = "COMMITTEE"))]
+    pub committee_name: Option<String>, // Name of the responsible committee
+
+    // 5: PROPOSE_DT (제안일)
+    #[serde(rename(deserialize = "PROPOSE_DT"))]
+    pub propose_date: String, // Date proposed
+
+    // 6: PROC_RESULT (본회의심의결과) - Assuming optional
+    #[serde(rename(deserialize = "PROC_RESULT"))]
+    pub plenary_processing_result: Option<String>, // Result from plenary session
+
+    // 7: AGE (대수)
+    #[serde(rename(deserialize = "AGE"))]
+    pub assembly_term: String, // Assembly term (e.g., "21")
+
+    // 8: DETAIL_LINK (상세페이지)
+    #[serde(rename(deserialize = "DETAIL_LINK"))]
+    pub detail_link: String, // URL to detail page
+
+    // 9: PROPOSER (제안자) - Could be names or description like "정부"
+    #[serde(rename(deserialize = "PROPOSER"))]
+    pub proposer_info: String, // Proposer information
+
+    // 10: MEMBER_LIST (제안자목록링크)
+    #[serde(rename(deserialize = "MEMBER_LIST"))]
+    pub proposer_list_link: String, // URL to list of proposers
+
+    // 11: LAW_PROC_DT (법사위처리일) - Assuming optional
+    #[serde(rename(deserialize = "LAW_PROC_DT"))]
+    pub law_committee_processing_date: Option<String>, // Date processed by Legislation & Judiciary Committee
+
+    // 12: LAW_PRESENT_DT (법사위상정일) - Assuming optional
+    #[serde(rename(deserialize = "LAW_PRESENT_DT"))]
+    pub law_committee_presentation_date: Option<String>, // Date presented to L&J Committee
+
+    // 13: LAW_SUBMIT_DT (법사위회부일) - Assuming optional
+    #[serde(rename(deserialize = "LAW_SUBMIT_DT"))]
+    pub law_committee_referral_date: Option<String>, // Date referred to L&J Committee
+
+    // 14: CMT_PROC_RESULT_CD (소관위처리결과) - Assuming optional (Result code)
+    #[serde(rename(deserialize = "CMT_PROC_RESULT_CD"))]
+    pub committee_processing_result_code: Option<String>, // Result code from responsible committee
+
+    // 15: CMT_PROC_DT (소관위처리일) - Assuming optional
+    #[serde(rename(deserialize = "CMT_PROC_DT"))]
+    pub committee_processing_date: Option<String>, // Date processed by responsible committee
+
+    // 16: CMT_PRESENT_DT (소관위상정일) - Assuming optional
+    #[serde(rename(deserialize = "CMT_PRESENT_DT"))]
+    pub committee_presentation_date: Option<String>, // Date presented to responsible committee
+
+    // 17: COMMITTEE_DT (소관위회부일) - Assuming optional
+    #[serde(rename(deserialize = "COMMITTEE_DT"))]
+    pub committee_referral_date: Option<String>, // Date referred to responsible committee
+
+    // 18: PROC_DT (의결일) - Assuming optional (Likely plenary resolution date)
+    #[serde(rename(deserialize = "PROC_DT"))]
+    pub resolution_date: Option<String>, // Date resolved/voted on
+
+    // 19: COMMITTEE_ID (소관위원회ID) - Assuming optional
+    #[serde(rename(deserialize = "COMMITTEE_ID"))]
+    pub committee_id: Option<String>, // ID of the responsible committee
+
+    // 20: PUBL_PROPOSER (공동발의자) - Likely list of names
+    #[serde(rename(deserialize = "PUBL_PROPOSER"))]
+    pub public_proposers: String, // Co-sponsors / Public proposers
+
+    // 21: LAW_PROC_RESULT_CD (법사위처리결과) - Assuming optional (Result code)
+    #[serde(rename(deserialize = "LAW_PROC_RESULT_CD"))]
+    pub law_committee_processing_result_code: Option<String>, // Result code from L&J Committee
+
+    // 22: RST_PROPOSER (대표발의자)
+    #[serde(rename(deserialize = "RST_PROPOSER"))]
+    pub representative_proposer: String, // Representative proposer/sponsor
+}
+
+impl BillInfo {
+    pub fn get_representative_proposers(&self) -> Vec<String> {
+        self.representative_proposer
+            .split(',')
+            .map(|s| s.to_string())
+            .collect()
+    }
+
+    pub fn get_co_proposers(&self) -> Vec<String> {
+        self.public_proposers
+            .split(',')
+            .map(|s| s.to_string())
+            .collect()
+    }
 }

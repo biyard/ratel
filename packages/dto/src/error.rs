@@ -53,6 +53,7 @@ pub enum ServiceError {
     NaOpenApiEmptyRow,
     #[translate(en = "Failed to parse website")]
     HtmlParseError(String),
+    FetchError(Vec<(i64, String)>),
 
     BadRequest,
     JsonDeserializeError(String),
