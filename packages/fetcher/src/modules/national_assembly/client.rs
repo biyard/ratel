@@ -16,6 +16,21 @@ impl AssemblyClient {
         Self { key }
     }
 
+    pub async fn get_proposers(&self, bill_no: i64) -> Result<BillInfo> {
+        let age = bill_no / 100000;
+
+        let proposers: Vec<BillInfo> = self
+            .get(
+                GET_PROPOSERS,
+                1,
+                100,
+                HashMap::from([("BILL_NO", bill_no.to_string()), ("AGE", age.to_string())]),
+            )
+            .await?;
+
+        Ok(proposers[0].clone())
+    }
+
     pub async fn get_bill(&self, bill_no: i64) -> Result<BillDetail> {
         let bills: Vec<BillDetail> = self
             .get(

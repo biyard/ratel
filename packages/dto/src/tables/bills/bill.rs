@@ -18,6 +18,8 @@ pub struct Bill {
     pub id: i64,
     #[api_model(summary, auto = insert)]
     pub created_at: i64,
+    #[api_model(summary, auto = [insert, update])]
+    pub updated_at: i64,
 
     #[api_model(summary, unique)]
     pub bill_no: i64, // actual bills number in the assembly

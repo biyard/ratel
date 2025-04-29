@@ -2,6 +2,11 @@ use bdk::prelude::*;
 use by_types::config::*;
 
 #[derive(Debug)]
+pub struct SlackChannel {
+    pub bill: &'static str,
+}
+
+#[derive(Debug)]
 pub struct Config {
     // pub env: &'static str,
     pub openapi_key: &'static str,
@@ -10,6 +15,7 @@ pub struct Config {
     // pub signing_domain: &'static str,
     // pub auth: AuthConfig,
     pub migrate: bool,
+    pub slack: SlackChannel,
 }
 
 impl Default for Config {
@@ -24,6 +30,9 @@ impl Default for Config {
             migrate: option_env!("MIGRATE")
                 .map(|s| s.parse::<bool>().unwrap_or(false))
                 .unwrap_or(false),
+            slack: SlackChannel {
+                bill: option_env!("SLACK_CHANNEL_BILL").expect("SLACK_CHANNEL_BILL is required"),
+            },
         }
     }
 }
