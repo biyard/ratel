@@ -1,10 +1,6 @@
-#![allow(unused)]
-use crate::*;
 use by_types::QueryResponse;
 
 use bdk::prelude::*;
-use lazy_static::lazy_static;
-use validator::ValidationError;
 
 #[derive(validator::Validate)]
 #[api_model(base = "/v1/users", read_action = user_info, table = users, iter_type=QueryResponse)]
@@ -31,4 +27,42 @@ pub struct User {
     pub term_agreed: bool, // TODO: make it required (prod table schema)
     #[api_model(action = signup)]
     pub informed_agreed: bool, // TODO: add it prod table schema
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub enum Membership {
+    #[default]
+    #[translate(en = "Free", ko = "무료")]
+    Free = 1,
+    #[translate(en = "Standard", ko = "표준")]
+    Standard = 2,
+    #[translate(en = "Premium", ko = "프리미엄")]
+    Premium = 3,
+    #[translate(en = "VIP", ko = "VIP")]
+    Vip = 4,
+}
+
+impl Membership {
+    pub fn get_description(&self) -> &'static str {
+        match self {
+            Membership::Free => "Free membership with basic features. (only read)",
+            Membership::Standard => {
+                "Standard membership with additional features. (voting on legislatives)"
+            }
+            Membership::Premium => {
+                "Premium membership with all features.(receive legislative updates ahead of others"
+            }
+            Membership::Vip => "VIP membership with exclusive benefits(reward as validators).",
+        }
+    }
+
+    pub fn get_price(&self) -> i32 {
+        match self {
+            Membership::Free => 0,
+            Membership::Standard => 5000,
+            Membership::Premium => 50000,
+            Membership::Vip => 100000,
+        }
+    }
 }

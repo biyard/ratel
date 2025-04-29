@@ -68,7 +68,7 @@ pub fn Subscription(lang: Language) -> Element {
                                             });
                                         }
                                         Err(e) => {
-                                            btracing::e!(lang, ServiceError::EmailAlreadySubscribed);
+                                            btracing::e!(lang, e);
                                         }
                                     }
                                 },

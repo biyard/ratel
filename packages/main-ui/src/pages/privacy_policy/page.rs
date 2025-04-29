@@ -6,7 +6,7 @@ use bdk::prelude::*;
 use i18n::*;
 
 #[component]
-pub fn PrivacyPolicyPage(lang: Language) -> Element {
+pub fn PrivacyPolicyPage(#[props(default = Language::En)] lang: Language) -> Element {
     let tr: PrivacyPolicyTranslate = translate(&lang);
 
     rsx! {

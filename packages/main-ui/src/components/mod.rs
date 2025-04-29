@@ -1,7 +1,11 @@
 pub mod button;
+pub mod candidate_card;
 pub mod checkbox;
+pub mod coming_soon;
 pub mod confirm_popup;
+pub mod crypto_stance;
 pub mod dropdown;
+pub mod election_pledge_card;
 pub mod icon_text;
 pub mod icons;
 pub mod indicators;
