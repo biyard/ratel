@@ -1,27 +1,18 @@
 [package]
-name = "main-api"
-version = "0.7.13"
+name = "fetcher"
+version = "0.1.0"
 authors.workspace = true
 description.workspace = true
 edition.workspace = true
 repository.workspace = true
+license.workspace = true
 
 [dependencies]
 dto = { workspace = true, features = ["server"] }
 serde.workspace = true
 serde_json.workspace = true
-
 bdk = { workspace = true, features = ["be"] }
-
 tokio = { version = "1.40.0", features = ["full"] }
-tower = "0.5.1"
-chrono = "0.4.39"
-uuid = { version = "1.10.1", features = ["v4"] }
 tracing = "0.1.41"
-tracing-subscriber = "0.3.19"
-validator = "0.20.0"
 scraper = "0.23.1"
-
-[features]
-default = []
-lambda = ["bdk/lambda"]
+axum = { version = "0.8.1", features = ["macros"] }
