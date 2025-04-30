@@ -141,7 +141,7 @@ impl BillWriterController {
                     .await;
 
                 if res.is_ok() {
-                    tracing::debug!("fetched {} bill", bill_no);
+                    tracing::info!("fetched {} bill", bill_no);
                     break;
                 } else {
                     tracing::error!("Failed to fetch bill {}: {:?}", bill_no, res);
@@ -181,6 +181,7 @@ impl BillWriterController {
             tracing::debug!("fetched {:?}", res);
 
             if let Ok(b) = res {
+                tracing::info!("fetched {}", bill_no);
                 bill = b.clone();
                 btracing::notify!(
                     self.bill_channel,
