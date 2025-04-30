@@ -74,6 +74,9 @@ pub enum ServiceError {
 
     #[translate(en = "You might have already liked", ko = "이미 좋아요를 눌렀습니다.")]
     AlreadyLiked,
+
+    SlackNotificationError(String),
+    JWTGenerationFail(String),
 }
 
 impl<E: Error + 'static> From<E> for ServiceError {

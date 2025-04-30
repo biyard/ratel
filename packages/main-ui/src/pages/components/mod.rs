@@ -14,7 +14,7 @@ mod politician_card;
 mod politician_stance;
 mod presidential_election;
 mod signin_popup_footer;
-mod signup_popup;
+pub mod signup_popup;
 pub mod subscription;
 mod support;
 mod top;
