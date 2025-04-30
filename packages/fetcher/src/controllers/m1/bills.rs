@@ -308,6 +308,7 @@ impl BillWriterController {
                         promulgation_date,
                         promulgation_number,
                         link_url: Some(link_url),
+                        industry: None,
                     },
                 )
                 .await?
@@ -345,6 +346,7 @@ impl BillWriterController {
                     bill.promulgation_date,
                     bill.promulgation_number,
                     bill.link_url,
+                    None,
                 )
                 .await?
         };
