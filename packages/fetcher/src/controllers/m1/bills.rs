@@ -178,7 +178,7 @@ impl BillWriterController {
             let res = self
                 .fetch_bill(BillWriterFetchBillRequest { bill_no })
                 .await;
-            tracing::info!("fetched {:?}", res);
+            tracing::debug!("fetched {:?}", res);
 
             if let Ok(b) = res {
                 tracing::info!("fetched {}", bill_no);
