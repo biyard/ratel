@@ -14,6 +14,7 @@ pub struct Config {
     pub signing_domain: &'static str,
     pub auth: AuthConfig,
     pub migrate: bool,
+    pub slack_webhook_url: &'static str,
 }
 
 impl Default for Config {
@@ -32,6 +33,8 @@ impl Default for Config {
             migrate: option_env!("MIGRATE")
                 .map(|s| s.parse::<bool>().unwrap_or(false))
                 .unwrap_or(false),
+            slack_webhook_url: option_env!("SLACK_WEBHOOK_URL")
+                .expect("SLACK_WEBHOOK_URL is required"),
         }
     }
 }

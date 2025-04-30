@@ -24,6 +24,8 @@ pub enum Route {
 
     #[route("/my-profile")]
     MyProfilePage {},
+    #[route("/become-sponsor")]
+    BecomeSponsorPage {},
     #[end_layout]
     #[end_nest]
     #[redirect("/", || Route::HomePage {  })]
