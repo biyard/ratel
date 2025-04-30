@@ -1,4 +1,4 @@
-// mod components;
+mod components;
 mod controller;
 mod i18n;
 mod page;

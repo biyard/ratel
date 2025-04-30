@@ -225,6 +225,7 @@ jobs:
           MIGRATE: false
           ENABLE_S3: false
           ENABLE_LAMBDA: true
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |
           npm i -g aws-cdk
           make deploy

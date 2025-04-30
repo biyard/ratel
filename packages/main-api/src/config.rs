@@ -33,9 +33,8 @@ impl Default for Config {
             migrate: option_env!("MIGRATE")
                 .map(|s| s.parse::<bool>().unwrap_or(false))
                 .unwrap_or(false),
-            slack_webhook_url: option_env!("SLACK_WEBHOOK_URL").unwrap_or(
-                "https://hooks.slack.com/services/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",
-            ),
+            slack_webhook_url: option_env!("SLACK_WEBHOOK_URL")
+                .expect("SLACK_WEBHOOK_URL is required"),
         }
     }
 }
