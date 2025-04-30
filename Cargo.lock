@@ -2894,7 +2894,6 @@ dependencies = [
  "serde",
  "tracing",
  "url",
- "urlencoding",
  "validator",
  "wallet-adapter",
  "wasm-bindgen",

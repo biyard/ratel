@@ -1,3 +1,4 @@
+use crate::utils::users::extract_user_email;
 use bdk::prelude::*;
 use by_axum::{
     auth::Authorization,
@@ -34,13 +35,20 @@ impl SubscriptionController {
 
     pub async fn act_subscription(
         State(ctrl): State<SubscriptionController>,
-        Extension(_auth): Extension<Option<Authorization>>,
+        Extension(auth): Extension<Option<Authorization>>,
         Json(body): Json<SubscriptionAction>,
-    ) -> Result<Json<Subscription>> {
+    ) -> Result<Json<String>> {
         tracing::debug!("act_subscription {:?}", body);
 
         match body {
-            SubscriptionAction::Subscribe(req) => Ok(Json(ctrl.subscribe(req).await?)),
+            SubscriptionAction::Subscribe(req) => {
+                let _ = Json(ctrl.subscribe(req).await?);
+                Ok(Json("ok".to_string()))
+            }
+            SubscriptionAction::Sponsor(_) => {
+                ctrl.notify_slack(auth).await?;
+                Ok(Json("ok".to_string()))
+            }
         }
     }
 
@@ -61,6 +69,23 @@ impl SubscriptionController {
         let subscription = self.repo.insert(req.email).await?;
 
         Ok(subscription)
+    }
+
+    async fn notify_slack(&self, auth: Option<Authorization>) -> Result<()> {
+        let config = crate::config::get();
+        let email = extract_user_email(&self.pool, auth)
+            .await
+            .unwrap_or_default();
+
+        tracing::debug!("notify_slack: {:?}", email);
+
+        let msg = format!(
+            "Ratel: New sponsorship request from {}. Please check the email.",
+            email
+        );
+
+        btracing::notify!(config.slack_webhook_url.to_string(), &msg);
+        Ok(())
     }
 
     async fn query(&self, query: SubscriptionQuery) -> Result<QueryResponse<SubscriptionSummary>> {
