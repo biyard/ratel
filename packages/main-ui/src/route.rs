@@ -1,30 +1,32 @@
 use crate::pages::*;
 use bdk::prelude::*;
-use dioxus_translate::Language;
 
 #[derive(Clone, Routable, Debug, PartialEq)]
-#[rustfmt::skip]
 pub enum Route {
-    #[nest("/:lang")]
+    #[nest("/en")]
     #[layout(RootLayout)]
     #[route("/")]
-    HomePage { lang: Language },
+    HomePage {},
 
     #[route("/politicians")]
-    PoliticiansPage { lang: Language },
+    PoliticiansPage {},
     #[route("/politicians/:id")]
-    PoliticiansByIdPage { lang: Language, id: i64 },
+    PoliticiansByIdPage { id: i64 },
+
+    #[route("/presidential-election")]
+    PresidentialElectionPage {},
 
     #[route("/privacy-policy")]
-    PrivacyPolicyPage { lang: Language },
+    PrivacyPolicyPage {},
 
     #[route("/preparing")]
-    PreparingPage { lang: Language },
+    PreparingPage {},
 
+    #[route("/my-profile")]
+    MyProfilePage {},
     #[end_layout]
     #[end_nest]
-
-    #[redirect("/", || Route::HomePage { lang: Language::default() })]
+    #[redirect("/", || Route::HomePage {  })]
     #[route("/:..route")]
     NotFoundPage { route: Vec<String> },
 }

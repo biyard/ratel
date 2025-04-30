@@ -13,10 +13,7 @@ pub fn PoliticianCard(
 ) -> Element {
     rsx! {
         Link {
-            to: Route::PoliticiansByIdPage {
-                lang,
-                id,
-            },
+            to: Route::PoliticiansByIdPage { id },
             class: "relative col-span-1 w-full h-full rounded-[10px] overflow-hidden max-[900px]:!min-w-[210px]",
 
             background_image: format!("url({})", image_url),

@@ -62,7 +62,7 @@ impl PhantomAuth {
         if let Ok(wallet) = self.wallet.clone() {
             // background connect
             return match self.adapter.connect(wallet).await {
-                Ok(account) => {
+                Ok(_account) => {
                     let public_key = self.get_public_key_array();
                     let mut signin_input = SigninInput::new();
                     signin_input

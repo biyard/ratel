@@ -9,7 +9,7 @@ use crate::{
         confirm_popup::SigninPopupFooter,
         icons,
     },
-    services::{user_service::UserService, vote_service::VoteService},
+    services::vote_service::VoteService,
 };
 
 #[component]
@@ -22,7 +22,6 @@ pub fn VoteConfirm(
     let tr: VoteConfirmTranslate = translate(&lang);
     let mut popup: PopupService = use_context();
     let vote_service: VoteService = use_context();
-    let user_service: UserService = use_context();
     let description = tr.description.replace("{}", &vote.to_string());
 
     rsx! {

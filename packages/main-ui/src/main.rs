@@ -1,4 +1,3 @@
-#![allow(unused_variables)]
 pub mod components;
 pub mod config;
 pub mod pages;
@@ -42,6 +41,7 @@ fn app() -> Element {
     let conf = config::get();
 
     let css = include_str!("../public/theme.css");
+    let custom = include_str!("../public/custom.css");
 
     rsx! {
         btracing::ToastTracing {}
@@ -88,7 +88,7 @@ fn app() -> Element {
             src: "https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs",
             r#type: "module",
         }
-        document::Style { r#type: "text/tailwindcss", {css} }
+        document::Style { r#type: "text/tailwindcss", "{css} {custom}" }
 
         // document::Script { r#type: "module", src: asset!("/public/dep.js"), defer: true }
 
@@ -131,7 +131,7 @@ mod api {
         let changefreq = "daily";
         let priority = 1.0;
 
-        for lang in ["ko", "en"] {
+        for lang in ["en"] {
             xml.push_str(&format!(
             "<url><loc>https://ratel.foundation/{lang}</loc><lastmod>{today}</lastmod><changefreq>{changefreq}</changefreq><priority>{priority}</priority></url>",
         ));
@@ -147,7 +147,7 @@ mod api {
             .unwrap();
         let ids = assembly_members.iter().map(|m| m.id).collect::<Vec<_>>();
 
-        for lang in ["ko", "en"] {
+        for lang in ["en"] {
             for id in ids.iter() {
                 xml.push_str(&format!(
                     "<url><loc>https://ratel.foundation/{lang}/politicians/{id}</loc><lastmod>{today}</lastmod><changefreq>{changefreq}</changefreq><priority>{priority}</priority></url>",
@@ -157,7 +157,7 @@ mod api {
 
         let changefreq = "monthly";
 
-        for lang in ["ko", "en"] {
+        for lang in ["en"] {
             xml.push_str(&format!(
                 "<url><loc>https://ratel.foundation/{lang}/politicians</loc><lastmod>{today}</lastmod><changefreq>{changefreq}</changefreq><priority>{priority}</priority></url>",
         ));
@@ -165,7 +165,7 @@ mod api {
 
         let priority = 0.3;
 
-        for lang in ["ko", "en"] {
+        for lang in ["en"] {
             xml.push_str(&format!(
                 "<url><loc>https://ratel.foundation/{lang}/privacy-policy</loc><lastmod>{today}</lastmod><changefreq>{changefreq}</changefreq><priority>{priority}</priority></url>",
         ));
