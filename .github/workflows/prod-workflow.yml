@@ -173,6 +173,8 @@ jobs:
           SERVER_KEY: ${{ secrets.AUTH_SECRET_KEY }}
           SLACK_CHANNEL_BILL: ${{ secrets.SLACK_CHANNEL_BILL }}
           BASE_DOMAIN: ratel.foundation
+          REPO_NAME: ratel/fetcher
+
           MIGRATE: false
           ENABLE_S3: false
           ENABLE_FARGATE: true

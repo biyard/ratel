@@ -80,6 +80,19 @@ pub struct BillWriter {
     pub promulgation_number: Option<String>, // Promulgation number
     #[api_model(version = v0.1)]
     pub link_url: String, // URL for details
+
+    #[api_model(version = v0.2, type = INTEGER)]
+    pub industry: Option<Industry>,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub enum Industry {
+    #[default]
+    Others = 0,
+
+    #[translate(en = "Crypto")]
+    Crypto = 1,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]
