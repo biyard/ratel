@@ -73,9 +73,13 @@ impl SubscriptionController {
 
     async fn notify_slack(&self, auth: Option<Authorization>) -> Result<()> {
         let config = crate::config::get();
-        let email = extract_user_email(&self.pool, auth)
-            .await
-            .unwrap_or_default();
+        let email = match extract_user_email(&self.pool, auth).await {
+            Ok(email) => email,
+            Err(e) => {
+                tracing::error!("Failed to extract user email: {:?}", e);
+                return Err(e);
+            }
+        };
 
         tracing::debug!("notify_slack: {:?}", email);
 
