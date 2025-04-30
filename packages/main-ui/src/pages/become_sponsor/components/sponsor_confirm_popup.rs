@@ -5,21 +5,29 @@ use crate::{
     },
     route::Route,
 };
-
 use bdk::prelude::*;
+use dioxus_popup::PopupService;
+
 #[component]
 pub fn SponsorConfirmPopup(
     #[props(default ="welcome_popup".to_string())] id: String,
     lang: Language,
 ) -> Element {
     let tr = translate::<SponsorPopupTranslate>(&lang);
-
+    let mut popup: PopupService = use_context();
     rsx! {
         div { id, class: "max-w-400 w-full mx-5 max-mobile:!max-w-full",
             div { class: "w-full flex flex-col gap-35",
                 WelcomeHeader { lang, title: tr.title, description: tr.message }
 
-                PrimaryLink { size: ButtonSize::Normal, to: Route::HomePage {}, {tr.start} }
+                PrimaryLink {
+                    size: ButtonSize::Normal,
+                    to: Route::HomePage {},
+                    onclick: move |_| {
+                        popup.close();
+                    },
+                    {tr.start}
+                }
             }
         }
     }
