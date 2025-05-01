@@ -88,7 +88,7 @@ impl SubscriptionController {
             email
         );
 
-        btracing::notify!(config.slack_webhook_url.to_string(), &msg);
+        btracing::notify!(config.slack_channel_sponsor.to_string(), &msg);
         Ok(())
     }
 
