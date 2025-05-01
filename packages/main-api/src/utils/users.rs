@@ -20,7 +20,7 @@ pub async fn extract_user_id(
                 .await
                 .map_err(|e| {
                     tracing::error!("failed to get user: {:?}", e);
-                    ServiceError::InvalideUser
+                    ServiceError::InvalidUser
                 })?
                 .id
         }
@@ -52,7 +52,7 @@ pub async fn extract_user_email(
                 .await
                 .map_err(|e| {
                     tracing::error!("failed to get user: {:?}", e);
-                    ServiceError::InvalideUser
+                    ServiceError::InvalidUser
                 })?
                 .email
         }
