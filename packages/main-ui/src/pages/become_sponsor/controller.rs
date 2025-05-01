@@ -12,6 +12,7 @@ pub struct Controller {
     #[allow(dead_code)]
     pub lang: Language,
     pub user_info: UserInfo,
+    pub nav: Navigator,
 }
 
 impl Controller {
@@ -25,7 +26,11 @@ impl Controller {
             nav.push(Route::HomePage {});
         }
 
-        let ctrl = Self { lang, user_info };
+        let ctrl = Self {
+            lang,
+            user_info,
+            nav,
+        };
 
         Ok(ctrl)
     }
@@ -33,7 +38,14 @@ impl Controller {
     pub async fn notify_slack(&self) {
         let client = Subscription::get_client(&crate::config::get().main_api_endpoint);
         let mut popup: PopupService = use_context();
-        let email = self.user_info.email.clone().unwrap_or_default();
+        let email = match self.user_info.email.clone() {
+            Some(email) => email,
+            None => {
+                tracing::error!("user email not found");
+                self.nav.push(Route::HomePage {});
+                return;
+            }
+        };
 
         // FIXME: notify slack error: Unknown("error decoding response body")
         match client.sponsor(email).await {
