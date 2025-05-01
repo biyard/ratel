@@ -75,7 +75,15 @@ pub enum ServiceError {
     #[translate(en = "You might have already liked", ko = "이미 좋아요를 눌렀습니다.")]
     AlreadyLiked,
 
+    #[translate(
+        en = "Failed to send Slack notification",
+        ko = "슬랙 알림 전송에 실패했습니다."
+    )]
     SlackNotificationError(String),
+    #[translate(
+        en = "Failed to generate JWT token",
+        ko = "JWT 토큰 생성에 실패했습니다."
+    )]
     JWTGenerationFail(String),
 }
 
