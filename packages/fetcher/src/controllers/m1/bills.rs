@@ -352,7 +352,9 @@ impl BillWriterController {
                 .await?
         };
 
-        self.fetch_proposers(bill.bill_no).await?;
+        if let Err(e) = self.fetch_proposers(bill.bill_no).await {
+            tracing::warn!("Failed to fetch proposers: {:?}", e);
+        }
 
         Ok(bill)
     }
