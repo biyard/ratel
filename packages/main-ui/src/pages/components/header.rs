@@ -132,23 +132,21 @@ pub fn Header(
                                     "aria-expanded": open_logout(),
                                     span { class: "max-tablet:hidden", {email} }
                                     div { class: "w-full flex flex-col gap-30",
-                                        // Link {
-                                        //     class: "btn secondary sm !rounded-full max-tablet:!bg-transparent max-tablet:!text-c-wg-50 max-tablet:hover:!text-primary max-tablet:!py-0",
-                                        //     to: Route::MyProfilePage {},
-                                        //     onclick: move |_| {
-                                        //         open_logout.set(false);
-                                        //     },
-                                        //     "View Profile"
-                                        // }
+                                        Link {
+                                            class: "btn secondary sm !rounded-full max-tablet:!bg-transparent max-tablet:!text-c-wg-50 max-tablet:hover:!text-primary max-tablet:!py-0",
+                                            to: Route::BecomeSponsorPage {},
+                                            onclick: move |_| {
+                                                open_logout.set(false);
+                                            },
+                                            {tr.become_a_sponsor}
+                                        }
                                         button {
                                             class: "btn",
-
                                             onclick: move |_| async move {
                                                 open_logout.set(false);
                                                 user_service.logout().await;
                                             },
-
-                                            "Logout"
+                                            {tr.logout}
                                         }
                                     }
                                 }
@@ -279,5 +277,15 @@ translate! {
     sign_in: {
         ko: "로그인하기",
         en: "Sign in",
+    }
+
+    logout: {
+        ko: "로그아웃",
+        en: "Logout",
+    }
+
+    become_a_sponsor: {
+        ko: "후원하기",
+        en: "Become a sponsor",
     }
 }

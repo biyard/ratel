@@ -72,6 +72,10 @@ impl UserInfo {
             profile_url: Some(profile_url),
         }
     }
+
+    pub fn is_login(&self) -> bool {
+        !self.principal.is_empty()
+    }
 }
 
 impl Default for UserInfo {
