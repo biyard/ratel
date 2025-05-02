@@ -112,6 +112,7 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           JWT_SECRET_KEY: ${{ secrets.DEV_JWT_SECRET }}
+          SLACK_CHANNEL_SPONSOR: ${{ secrets.DEV_SLACK }}
         run: |
           cd packages/main-api  && make test
 
@@ -184,6 +185,7 @@ jobs:
           ENV: dev
           SERVICE: main-api
           DOMAIN: api.dev.ratel.foundation
+          SLACK_CHANNEL_SPONSOR: ${{ secrets.DEV_SLACK }}
         run: |
           make build
 
