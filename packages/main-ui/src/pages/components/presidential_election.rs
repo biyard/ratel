@@ -1,6 +1,9 @@
 mod i18n;
 
-use bdk::prelude::{by_components::icons::arrows::ArrowRight, *};
+use bdk::prelude::{
+    by_components::icons::{self, arrows::ArrowRight},
+    *,
+};
 use dto::*;
 use i18n::*;
 
@@ -22,10 +25,20 @@ pub fn PresidentialElection(
         section {
             id: "presidential-election",
             class: "w-full max-w-desktop min-h-screen flex flex-col items-start justify-start pt-120 gap-50 max-tablet:pt-68 max-tablet:!h-auto overflow-hidden",
-            SectionHeader {
-                section_name: tr.section_name,
-                title: tr.title,
-                description: tr.description,
+            div { class: "w-full flex flex-col gap-0",
+                SectionHeader {
+                    section_name: tr.section_name,
+                    title: tr.title,
+                    description: tr.description,
+                }
+                div { class: "w-full flex flex-row gap-2 items-start text-xs text-neutral-80",
+                    icons::help_support::Info {
+                        class: "[&>path]:stroke-primary [&>circle]:fill-primary",
+                        width: "18",
+                        height: "18",
+                    }
+                    {tr.info}
+                }
             }
 
             p {
