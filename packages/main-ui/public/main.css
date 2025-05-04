@@ -45,6 +45,7 @@ article.election-pledge > p {
   font-size: 18px;
   line-height: 22px;
   letter-spacing: 0%;
+  margin-bottom: 10px;
   color: white;
 }
 
@@ -57,5 +58,7 @@ article.election-pledge > ol > li {
   list-style-type: disc;
   list-style-position: inside;
   margin-left: 10px;
+  padding-left: 1.5em;
+  text-indent: -1.5em;
 }
 
