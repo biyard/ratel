@@ -38,7 +38,7 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         pool,
         User,
         AssemblyMember,
-        Bill,
+        BillWriter,
         Vote,
         Proposer,
         Support,
