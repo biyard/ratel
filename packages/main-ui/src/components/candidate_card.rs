@@ -6,8 +6,12 @@ use crate::components::{
 };
 
 #[component]
-pub fn CandidateCard(lang: Language, candidate: PresidentialCandidateSummary) -> Element {
+pub fn CandidateCard(lang: Language, mut candidate: PresidentialCandidateSummary) -> Element {
     let mut show_more = use_signal(|| false);
+
+    candidate
+        .election_pledges
+        .sort_by(|a, b| b.likes.cmp(&a.likes));
 
     rsx! {
         div {
