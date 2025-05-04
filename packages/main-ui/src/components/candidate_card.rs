@@ -1,4 +1,7 @@
-use bdk::prelude::{by_components::icons::arrows::ShapeArrowDown, *};
+use bdk::prelude::{
+    by_components::icons::arrows::{ShapeArrowDown, ShapeArrowUp},
+    *,
+};
 use dto::*;
 
 use crate::components::{
@@ -47,7 +50,7 @@ pub fn CandidateCard(lang: Language, mut candidate: PresidentialCandidateSummary
                 button {
                     class: "w-full rounded-[10px] bg-neutral-800 py-6 flex flex-row items-center gap-4 text-sm/22 font-semibold text-white justify-center hover:bg-neutral-700 cursor-pointer transition-all duration-200 ease-in-out group aria-hidden:hidden",
                     "aria-hidden": candidate.election_pledges.len() < 4 || show_more(),
-                    onclick: move |_| show_more.set(!show_more()),
+                    onclick: move |_| show_more.set(true),
                     "See More"
                     ShapeArrowDown { class: "[&>path]:stroke-neutral-600 [&>path]:fill-neutral-600 group-hover:[&>path]:stroke-neutral-400 group-hover:[&>path]:fill-neutral-400 transition-all duration-200 ease-in-out" }
                 }
@@ -58,6 +61,15 @@ pub fn CandidateCard(lang: Language, mut candidate: PresidentialCandidateSummary
                         ElectionPledgeCard { promise: promise.clone() }
                     }
                 }
+                button {
+                    class: "w-full rounded-[10px] bg-neutral-800 py-6 flex flex-row items-center gap-4 text-sm/22 font-semibold text-white justify-center hover:bg-neutral-700 cursor-pointer transition-all duration-200 ease-in-out group aria-hidden:hidden",
+                    "aria-hidden": candidate.election_pledges.len() < 4 || !show_more(),
+                    onclick: move |_| show_more.set(false),
+                    "Collapse"
+                    ShapeArrowUp { class: "[&>path]:stroke-neutral-600 [&>path]:fill-neutral-600 group-hover:[&>path]:stroke-neutral-400 group-hover:[&>path]:fill-neutral-400 transition-all duration-200 ease-in-out" }
+                }
+
+
             } // end of candidate body
 
         }
