@@ -85,6 +85,18 @@ pub enum ServiceError {
         ko = "JWT 토큰 생성에 실패했습니다."
     )]
     JWTGenerationFail(String),
+
+    // feeds
+    #[translate(en = "Failed to write a post")]
+    FeedWritePostError,
+    #[translate(en = "Failed to write a comment")]
+    FeedWriteCommentError,
+    #[translate(en = "You must write a comment on a valid feed")]
+    FeedInvalidParentId,
+    #[translate(en = "You must quote a valid feed")]
+    FeedInvalidQuoteId,
+    #[translate(en = "You should select industry or a parent feed")]
+    FeedExclusiveParentOrIndustry,
 }
 
 impl<E: Error + 'static> From<E> for ServiceError {
