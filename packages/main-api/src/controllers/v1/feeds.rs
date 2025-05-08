@@ -348,3 +348,35 @@ impl FeedController {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::tests::{TestContext, setup};
+
+    #[tokio::test]
+    async fn test_write_post() {
+        let TestContext {
+            user: _,
+            now,
+            endpoint,
+            ..
+        } = setup().await.unwrap();
+        let html_contents = format!("<p>Test {now}</p>");
+        let title = Some(format!("Test Title {now}"));
+        // predefined industry: Crypto
+        let industry_id = 1;
+
+        let res = Feed::get_client(&endpoint)
+            .write_post(html_contents.clone(), industry_id, title.clone())
+            .await;
+
+        assert!(res.is_ok());
+
+        let feed = res.unwrap();
+        assert_eq!(feed.html_contents, html_contents);
+        assert_eq!(feed.industry_id, industry_id);
+        assert_eq!(feed.title, title);
+        assert_eq!(feed.feed_type, FeedType::Post);
+    }
+}
