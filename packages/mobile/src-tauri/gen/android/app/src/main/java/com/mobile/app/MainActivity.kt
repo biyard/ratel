@@ -1,3 +1,3 @@
-package com.mobile.app
+package com.ratel.ratelMobile
 
 class MainActivity : TauriActivity()
