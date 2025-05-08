@@ -120,6 +120,7 @@ jobs:
           ENABLE_S3: false
           ENABLE_LAMBDA: true
           SLACK_CHANNEL_SPONSOR: ${{ secrets.SLACK_CHANNEL_SPONSOR }}
+          SLACK_CHANNEL_ABUSING: ${{ secrets.SLACK_CHANNEL_ABUSING }}
         run: |
           npm i -g aws-cdk
           make deploy
