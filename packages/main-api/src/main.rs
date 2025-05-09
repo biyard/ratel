@@ -46,6 +46,8 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         PresidentialCandidate,
         ElectionPledge,
         ElectionPledgeLike,
+        Industry,
+        Feed,
     );
 
     tracing::info!("Migration done");
@@ -211,6 +213,10 @@ pub mod tests {
         rest_api::set_message(conf.signing_domain.to_string());
         rest_api::set_api_service(app.clone());
         rest_api::add_authorization(&format!("Bearer {}", admin_token));
+        Industry::get_repository(pool.clone())
+            .insert("Crypto".to_string())
+            .await
+            .unwrap();
 
         Ok(TestContext {
             pool,
