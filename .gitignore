@@ -4,6 +4,7 @@
 /packages/main-api/.build/
 target/
 /packages/main-ui/public/dep.js
+/packages/mobile/src-tauri/gen/android/ratel-mobile.json
 dist/
 node_modules/
 .build/
