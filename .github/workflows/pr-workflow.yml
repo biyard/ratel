@@ -185,7 +185,6 @@ jobs:
           ENV: dev
           SERVICE: main-api
           DOMAIN: api.dev.ratel.foundation
-          SLACK_CHANNEL_SPONSOR: ${{ secrets.DEV_SLACK }}
         run: |
           make build
 
@@ -238,4 +237,4 @@ jobs:
           ECR_NAME: test-fetcher
         run: |
           npm i -g aws-cdk
-          make docker.build
+          cd packages/fetcher && make docker.build
