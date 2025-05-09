@@ -23,8 +23,8 @@ pub struct TeamPath {
 
 #[derive(Clone, Debug)]
 pub struct TeamController {
-    repo: UserRepository,
-    team: TeamRepository,
+    user: UserRepository,
+    repo: TeamRepository,
     pool: sqlx::Pool<sqlx::Postgres>,
 }
 
@@ -84,7 +84,7 @@ impl TeamController {
         let user_id = extract_user_id(&self.pool, auth).await?;
 
         let user = self
-            .repo
+            .user
             .insert(
                 "".to_string(),
                 username.clone(),
@@ -112,7 +112,7 @@ impl TeamController {
         param: TeamUpdateProfileImageRequest,
     ) -> Result<Team> {
         let (_user_id, _team) = self.has_permission(auth, id).await?;
-        let res = self.team.update(id, param.into()).await?;
+        let res = self.repo.update(id, param.into()).await?;
 
         Ok(res)
     }
@@ -124,9 +124,45 @@ impl TeamController {
         param: TeamUpdateTeamNameRequest,
     ) -> Result<Team> {
         let (_user_id, _team) = self.has_permission(auth, id).await?;
-        let res = self.team.update(id, param.into()).await?;
+        let res = self.repo.update(id, param.into()).await?;
 
         Ok(res)
+    }
+
+    async fn invite_member(
+        &self,
+        id: i64,
+        auth: Option<Authorization>,
+        TeamInviteMemberRequest { email }: TeamInviteMemberRequest,
+    ) -> Result<Team> {
+        let (_user_id, _team) = self.has_permission(auth, id).await?;
+
+        let user = match User::query_builder()
+            .email_equals(email)
+            .query()
+            .map(User::from)
+            .fetch_one(&self.pool)
+            .await
+        {
+            Ok(user) => user,
+            Err(_) => {
+                // FIXME: allow pending user
+                return Err(ServiceError::InvalidUser);
+            }
+        };
+
+        TeamMember::get_repository(self.pool.clone())
+            .insert(id, user.id)
+            .await?;
+
+        let team = Team::query_builder()
+            .id_equals(id)
+            .query()
+            .map(Team::from)
+            .fetch_one(&self.pool)
+            .await?;
+
+        Ok(team)
     }
 
     async fn delete(&self, id: i64, auth: Option<Authorization>) -> Result<Team> {
@@ -134,7 +170,7 @@ impl TeamController {
             return Err(ServiceError::Unauthorized);
         }
 
-        let res = self.team.delete(id).await?;
+        let res = self.repo.delete(id).await?;
 
         Ok(res)
     }
@@ -145,7 +181,11 @@ impl TeamController {
         let repo = User::get_repository(pool.clone());
         let team = Team::get_repository(pool.clone());
 
-        Self { repo, pool, team }
+        Self {
+            user: repo,
+            pool,
+            repo: team,
+        }
     }
 
     pub fn route(&self) -> Result<by_axum::axum::Router> {
@@ -186,7 +226,10 @@ impl TeamController {
                 let res = ctrl.update_team_name(id, auth, param).await?;
                 Ok(Json(res))
             }
-
+            TeamByIdAction::InviteMember(param) => {
+                let res = ctrl.invite_member(id, auth, param).await?;
+                Ok(Json(res))
+            }
             TeamByIdAction::Delete(_) => {
                 let res = ctrl.delete(id, auth).await?;
                 Ok(Json(res))
