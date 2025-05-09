@@ -6,37 +6,38 @@ plugins {
     id("rust")
 }
 
-val tauriProperties = Properties().apply {
-    val propFile = file("tauri.properties")
-    if (propFile.exists()) {
-        propFile.inputStream().use { load(it) }
-    }
+val env = Properties()
+val envFile = rootProject.file(".env")
+if (envFile.exists()) {
+    env.load(envFile.inputStream())
 }
 
 android {
     compileSdk = 34
     namespace = "com.ratel.ratelMobile"
+
     defaultConfig {
-        manifestPlaceholders["usesCleartextTraffic"] = "false"
         applicationId = "com.ratel.ratelMobile"
         minSdk = 24
         targetSdk = 34
-        versionCode = tauriProperties.getProperty("tauri.android.versionCode", "1").toInt()
-        versionName = tauriProperties.getProperty("tauri.android.versionName", "1.0")
+        versionCode = 2
+        versionName = "2.0"
     }
+
     signingConfigs {
-        release {
-            storeFile file(System.getenv("KEYSTORE_FILE"))
-            storePassword System.getenv("KEYSTORE_PASSWORD")
-            keyAlias System.getenv("KEY_ALIAS")
-            keyPassword System.getenv("KEY_PASSWORD")
+        create("release") {
+            storeFile = file(env.getProperty("KEYSTORE_FILE") ?: throw GradleException("KEYSTORE_FILE not set"))
+            storePassword = env.getProperty("KEYSTORE_PASSWORD") ?: throw GradleException("KEYSTORE_PASSWORD not set")
+            keyAlias = env.getProperty("KEY_ALIAS") ?: throw GradleException("KEY_ALIAS not set")
+            keyPassword = env.getProperty("KEY_PASSWORD") ?: throw GradleException("KEY_PASSWORD not set")
         }
     }
+
     buildTypes {
-        release {
-            signingConfig signingConfigs.release
-            minifyEnabled false
-            shrinkResources false
+        getByName("release") {
+            signingConfig = signingConfigs.getByName("release")
+            isMinifyEnabled = false
+            isShrinkResources = false
         }
         getByName("debug") {
             manifestPlaceholders["usesCleartextTraffic"] = "true"
