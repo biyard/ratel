@@ -38,6 +38,8 @@ pub enum ServiceError {
     UserAlreadyExists,
     #[translate(en = "Could not find a valid user", ko = "유효하지 않은 사용자입니다.")]
     InvalidUser,
+    #[translate(en = "Please change team name.")]
+    DuplicatedTeamName,
 
     VerifyException(String),
     SignException,
