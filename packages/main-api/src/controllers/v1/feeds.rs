@@ -57,6 +57,7 @@ impl FeedController {
             html_contents,
             industry_id,
             title,
+            quote_feed_id,
         }: FeedWritePostRequest,
     ) -> Result<Feed> {
         let user_id = extract_user_id(&self.pool, auth).await?;
@@ -71,7 +72,7 @@ impl FeedController {
                 None,
                 title,
                 None,
-                None,
+                quote_feed_id,
             )
             .await
             .map_err(|e| {
@@ -97,11 +98,15 @@ impl FeedController {
         })?;
 
         let feed = Feed::query_builder()
-            .parent_id_equals(parent_id)
+            .id_equals(parent_id)
             .query()
             .map(Feed::from)
             .fetch_one(&self.pool)
-            .await?;
+            .await
+            .map_err(|e| {
+                tracing::error!("failed to get a feed {parent_id}: {e}");
+                ServiceError::FeedInvalidParentId
+            })?;
 
         let res = self
             .repo
@@ -140,11 +145,15 @@ impl FeedController {
         })?;
 
         let feed = Feed::query_builder()
-            .parent_id_equals(parent_id)
+            .id_equals(parent_id)
             .query()
             .map(Feed::from)
             .fetch_one(&self.pool)
-            .await?;
+            .await
+            .map_err(|e| {
+                tracing::error!("failed to get a feed {parent_id}: {e}");
+                ServiceError::FeedInvalidParentId
+            })?;
 
         let res = self
             .repo
@@ -174,13 +183,13 @@ impl FeedController {
             html_contents,
             quote_feed_id,
             parent_id,
-            industry_id,
         }: FeedRepostRequest,
     ) -> Result<Feed> {
         let user_id = extract_user_id(&self.pool, auth).await?;
-        if industry_id.is_none() && parent_id.is_none() {
-            return Err(ServiceError::FeedExclusiveParentOrIndustry);
-        }
+        let parent_id = parent_id.ok_or_else(|| {
+            tracing::error!("parent id is missing: {user_id}");
+            ServiceError::FeedInvalidParentId
+        })?;
 
         let quote_feed_id = quote_feed_id.ok_or_else(|| {
             tracing::error!("quote feed id is missing: {user_id}");
@@ -193,19 +202,28 @@ impl FeedController {
             ServiceError::FeedInvalidQuoteId
         })?;
 
-        let industry_id = match industry_id {
-            Some(industry_id) => industry_id,
-            None => {
-                let feed = Feed::query_builder()
-                    .id_equals(quote_feed_id)
-                    .query()
-                    .map(Feed::from)
-                    .fetch_one(&self.pool)
-                    .await?;
+        let industry_id = Feed::query_builder()
+            .id_equals(parent_id)
+            .query()
+            .map(Feed::from)
+            .fetch_one(&self.pool)
+            .await
+            .map_err(|e| {
+                tracing::error!("failed to get a feed {parent_id}: {e}");
+                ServiceError::FeedInvalidParentId
+            })?
+            .industry_id;
 
-                feed.industry_id
-            }
-        };
+        Feed::query_builder()
+            .id_equals(quote_feed_id)
+            .query()
+            .map(Feed::from)
+            .fetch_one(&self.pool)
+            .await
+            .map_err(|e| {
+                tracing::error!("failed to get a feed {quote_feed_id}: {e}");
+                ServiceError::FeedInvalidQuoteId
+            })?;
 
         let res = self
             .repo
@@ -214,10 +232,10 @@ impl FeedController {
                 FeedType::Repost,
                 user_id,
                 industry_id,
-                parent_id,
+                Some(parent_id),
                 None,
                 None,
-                None,
+                Some(quote_feed_id),
             )
             .await
             .map_err(|e| {
@@ -357,7 +375,7 @@ mod tests {
     #[tokio::test]
     async fn test_write_post() {
         let TestContext {
-            user: _,
+            user,
             now,
             endpoint,
             ..
@@ -368,7 +386,7 @@ mod tests {
         let industry_id = 1;
 
         let res = Feed::get_client(&endpoint)
-            .write_post(html_contents.clone(), industry_id, title.clone())
+            .write_post(html_contents.clone(), industry_id, title.clone(), None)
             .await;
 
         assert!(res.is_ok());
@@ -378,5 +396,246 @@ mod tests {
         assert_eq!(feed.industry_id, industry_id);
         assert_eq!(feed.title, title);
         assert_eq!(feed.feed_type, FeedType::Post);
+        assert_eq!(feed.user_id, user.id);
+        assert_eq!(feed.parent_id, None);
+        assert_eq!(feed.quote_feed_id, None);
+    }
+
+    #[tokio::test]
+    async fn test_write_post_with_quote() {
+        let TestContext {
+            user,
+            now,
+            endpoint,
+            pool,
+            ..
+        } = setup().await.unwrap();
+        let html_contents = format!("<p>Test {now}</p>");
+        let title = Some(format!("Test Title {now}"));
+        // predefined industry: Crypto
+        let industry_id = 1;
+
+        let quote = Feed::query_builder()
+            .feed_type_equals(FeedType::Reply)
+            .order_by_created_at_asc()
+            .limit(1)
+            .query()
+            .map(Feed::from)
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+
+        let res = Feed::get_client(&endpoint)
+            .write_post(
+                html_contents.clone(),
+                industry_id,
+                title.clone(),
+                Some(quote.id),
+            )
+            .await;
+
+        assert!(res.is_ok());
+
+        let feed = res.unwrap();
+        assert_eq!(feed.html_contents, html_contents);
+        assert_eq!(feed.industry_id, industry_id);
+        assert_eq!(feed.title, title);
+        assert_eq!(feed.feed_type, FeedType::Post);
+        assert_eq!(feed.user_id, user.id);
+        assert_eq!(feed.parent_id, None);
+        assert_eq!(feed.quote_feed_id, Some(quote.id));
+    }
+
+    #[tokio::test]
+    async fn test_write_comment() {
+        let TestContext {
+            user,
+            now,
+            endpoint,
+            pool,
+            ..
+        } = setup().await.unwrap();
+
+        let post = Feed::query_builder()
+            .feed_type_equals(FeedType::Post)
+            .order_by_created_at_asc()
+            .limit(1)
+            .query()
+            .map(Feed::from)
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+
+        let html_contents = format!("<p>Comment {now}</p>");
+
+        let res = Feed::get_client(&endpoint)
+            .comment(html_contents.clone(), Some(post.id))
+            .await;
+
+        assert!(res.is_ok(), "res: {:?}", res);
+
+        let feed = res.unwrap();
+        assert_eq!(feed.html_contents, html_contents);
+        assert_eq!(feed.industry_id, post.industry_id);
+        assert_eq!(feed.title, None);
+        assert_eq!(feed.feed_type, FeedType::Reply);
+        assert_eq!(feed.parent_id, Some(post.id));
+        assert_eq!(feed.user_id, user.id);
+    }
+
+    #[tokio::test]
+    async fn test_write_repost_as_comment() {
+        let TestContext {
+            user,
+            now,
+            endpoint,
+            pool,
+            ..
+        } = setup().await.unwrap();
+
+        let post = Feed::query_builder()
+            .feed_type_equals(FeedType::Post)
+            .order_by_created_at_asc()
+            .limit(1)
+            .query()
+            .map(Feed::from)
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+
+        let quote_feed = Feed::query_builder()
+            .feed_type_equals(FeedType::Reply)
+            .order_by_created_at_asc()
+            .limit(1)
+            .query()
+            .map(Feed::from)
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+
+        let html_contents = format!(
+            "<quote-feed>{}</quote-feed><p>Repost {}</p>",
+            quote_feed.id, now
+        );
+
+        let res = Feed::get_client(&endpoint)
+            .repost(html_contents.clone(), Some(post.id), Some(quote_feed.id))
+            .await;
+
+        assert!(res.is_ok(), "res: {:?}", res);
+
+        let feed = res.unwrap();
+        assert_eq!(feed.html_contents, html_contents);
+        assert_eq!(feed.industry_id, post.industry_id);
+        assert_eq!(feed.title, None);
+        assert_eq!(feed.feed_type, FeedType::Repost);
+        assert_eq!(feed.parent_id, Some(post.id));
+        assert_eq!(feed.quote_feed_id, Some(quote_feed.id));
+        assert_eq!(feed.user_id, user.id);
+    }
+
+    #[tokio::test]
+    async fn test_comment_with_invalid_parent_id() {
+        let TestContext { now, endpoint, .. } = setup().await.unwrap();
+
+        let html_contents = format!("<p>Comment {now}</p>");
+
+        let res = Feed::get_client(&endpoint)
+            .comment(html_contents.clone(), Some(0))
+            .await;
+
+        assert!(res.is_err(), "res: {:?}", res);
+
+        assert_eq!(res, Err(ServiceError::FeedInvalidParentId));
+    }
+
+    #[tokio::test]
+    async fn test_comment_with_none() {
+        let TestContext { now, endpoint, .. } = setup().await.unwrap();
+
+        let html_contents = format!("<p>Comment {now}</p>");
+
+        let res = Feed::get_client(&endpoint)
+            .comment(html_contents.clone(), None)
+            .await;
+
+        assert!(res.is_err(), "res: {:?}", res);
+
+        assert_eq!(res, Err(ServiceError::FeedInvalidParentId));
+    }
+
+    #[tokio::test]
+    async fn test_review_with_invalid_parent_id() {
+        let TestContext { now, endpoint, .. } = setup().await.unwrap();
+
+        let html_contents = format!("<p>Review {now}</p>");
+
+        let res = Feed::get_client(&endpoint)
+            .review_doc(html_contents, Some(0), Some(1))
+            .await;
+
+        assert!(res.is_err(), "res: {:?}", res);
+
+        assert_eq!(res, Err(ServiceError::FeedInvalidParentId));
+    }
+
+    #[tokio::test]
+    async fn test_repost_with_invalid_parent_id() {
+        let TestContext {
+            pool,
+            now,
+            endpoint,
+            ..
+        } = setup().await.unwrap();
+
+        let html_contents = format!("<p>Review {now}</p>");
+
+        let quote = Feed::query_builder()
+            .feed_type_equals(FeedType::Reply)
+            .order_by_created_at_asc()
+            .limit(1)
+            .query()
+            .map(Feed::from)
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+
+        let res = Feed::get_client(&endpoint)
+            .repost(html_contents, Some(0), Some(quote.id))
+            .await;
+
+        assert!(res.is_err(), "res: {:?}", res);
+
+        assert_eq!(res, Err(ServiceError::FeedInvalidParentId));
+    }
+
+    #[tokio::test]
+    async fn test_repost_with_invalid_quote_id() {
+        let TestContext {
+            pool,
+            now,
+            endpoint,
+            ..
+        } = setup().await.unwrap();
+
+        let html_contents = format!("<p>Review {now}</p>");
+
+        let feed = Feed::query_builder()
+            .feed_type_equals(FeedType::Post)
+            .order_by_created_at_asc()
+            .limit(1)
+            .query()
+            .map(Feed::from)
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+
+        let res = Feed::get_client(&endpoint)
+            .repost(html_contents, Some(feed.id), Some(0))
+            .await;
+
+        assert!(res.is_err(), "res: {:?}", res);
+
+        assert_eq!(res, Err(ServiceError::FeedInvalidQuoteId));
     }
 }
