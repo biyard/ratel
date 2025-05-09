@@ -5,6 +5,7 @@
 target/
 /packages/main-ui/public/dep.js
 /packages/mobile/src-tauri/gen/android/ratel-mobile.json
+/packages/mobile/src-tauri/gen/android/.env
 dist/
 node_modules/
 .build/
@@ -15,3 +16,5 @@ node_modules/
 /blob-report/
 /playwright/.cache/
 /screenshots/
+release.keystore
+

@@ -15,7 +15,9 @@ platform :android do
       track: "internal",
       json_key: "./ratel-mobile.json", 
       package_name: "com.ratel.ratelMobile",
-      aab: "./app/build/outputs/bundle/universalRelease/app-universal-release.aab"  
+      aab: "./app/build/outputs/bundle/universalRelease/app-universal-release.aab",
+      skip_upload_apk: true,
+      release_status: "draft"
     )
   end
 end
