@@ -2892,6 +2892,7 @@ dependencies = [
  "bdk",
  "chrono",
  "dto",
+ "rest-api",
  "scraper",
  "serde",
  "serde_json",
