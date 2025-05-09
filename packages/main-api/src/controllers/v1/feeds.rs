@@ -410,10 +410,12 @@ mod tests {
             pool,
             ..
         } = setup().await.unwrap();
+
         let html_contents = format!("<p>Test {now}</p>");
         let title = Some(format!("Test Title {now}"));
         // predefined industry: Crypto
         let industry_id = 1;
+        test_write_comment().await;
 
         let quote = Feed::query_builder()
             .feed_type_equals(FeedType::Reply)
@@ -455,6 +457,7 @@ mod tests {
             pool,
             ..
         } = setup().await.unwrap();
+        test_write_post().await;
 
         let post = Feed::query_builder()
             .feed_type_equals(FeedType::Post)
@@ -492,6 +495,7 @@ mod tests {
             pool,
             ..
         } = setup().await.unwrap();
+        test_write_comment().await;
 
         let post = Feed::query_builder()
             .feed_type_equals(FeedType::Post)
@@ -587,6 +591,7 @@ mod tests {
             endpoint,
             ..
         } = setup().await.unwrap();
+        test_write_comment().await;
 
         let html_contents = format!("<p>Review {now}</p>");
 
@@ -617,6 +622,7 @@ mod tests {
             endpoint,
             ..
         } = setup().await.unwrap();
+        test_write_post().await;
 
         let html_contents = format!("<p>Review {now}</p>");
 
