@@ -372,8 +372,47 @@ mod tests {
     use super::*;
     use crate::tests::{TestContext, setup};
 
+    async fn test_setup() {
+        let TestContext {
+            user, pool, now, ..
+        } = setup().await.unwrap();
+        let html_contents = format!("<p>Test {now}</p>");
+        let title = Some(format!("Test Title {now}"));
+        // predefined industry: Crypto
+        let industry_id = 1;
+
+        let post = Feed::get_repository(pool.clone())
+            .insert(
+                html_contents.clone(),
+                FeedType::Post,
+                user.id,
+                industry_id,
+                None,
+                title,
+                None,
+                None,
+            )
+            .await
+            .unwrap();
+
+        let _ = Feed::get_repository(pool.clone())
+            .insert(
+                html_contents,
+                FeedType::Reply,
+                user.id,
+                industry_id,
+                Some(post.id),
+                None,
+                None,
+                None,
+            )
+            .await
+            .unwrap();
+    }
+
     #[tokio::test]
     async fn test_write_post() {
+        test_setup().await;
         let TestContext {
             user,
             now,
@@ -403,6 +442,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_write_post_with_quote() {
+        test_setup().await;
         let TestContext {
             user,
             now,
@@ -415,7 +455,6 @@ mod tests {
         let title = Some(format!("Test Title {now}"));
         // predefined industry: Crypto
         let industry_id = 1;
-        test_write_comment().await;
 
         let quote = Feed::query_builder()
             .feed_type_equals(FeedType::Reply)
@@ -450,6 +489,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_write_comment() {
+        test_setup().await;
         let TestContext {
             user,
             now,
@@ -457,7 +497,6 @@ mod tests {
             pool,
             ..
         } = setup().await.unwrap();
-        test_write_post().await;
 
         let post = Feed::query_builder()
             .feed_type_equals(FeedType::Post)
@@ -495,7 +534,7 @@ mod tests {
             pool,
             ..
         } = setup().await.unwrap();
-        test_write_comment().await;
+        test_setup().await;
 
         let post = Feed::query_builder()
             .feed_type_equals(FeedType::Post)
@@ -591,7 +630,7 @@ mod tests {
             endpoint,
             ..
         } = setup().await.unwrap();
-        test_write_comment().await;
+        test_setup().await;
 
         let html_contents = format!("<p>Review {now}</p>");
 
@@ -622,7 +661,6 @@ mod tests {
             endpoint,
             ..
         } = setup().await.unwrap();
-        test_write_post().await;
 
         let html_contents = format!("<p>Review {now}</p>");
 
