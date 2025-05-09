@@ -2,7 +2,7 @@ use super::*;
 use bdk::prelude::*;
 
 #[derive(validator::Validate)]
-#[api_model(base = "/v1/teams", table = users, action = [], action_by_id = [delete])]
+#[api_model(base = "/v1/teams", table = users, action = [], action_by_id = [delete, invite_member(email = String)])]
 pub struct Team {
     #[api_model(primary_key)]
     pub id: i64,
@@ -18,6 +18,9 @@ pub struct Team {
     pub parent_id: i64,
     #[api_model(action = create, action_by_id = [update_team_name])]
     pub username: String,
+
+    #[api_model(many_to_many = team_members, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = team_id)]
+    pub members: Vec<User>,
 }
 
 impl From<User> for Team {
@@ -29,6 +32,8 @@ impl From<User> for Team {
             profile_url: user.profile_url,
             parent_id: user.parent_id.expect("Team must have parent_id"),
             username: user.username,
+
+            ..Default::default()
         }
     }
 }
