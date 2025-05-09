@@ -14,8 +14,7 @@ js-sys = "0.3"
 serde = { version = "1", features = ["derive"] }
 serde-wasm-bindgen = "0.6"
 
-[workspace]
-members = ["src-tauri"]
+bdk = { workspace = true, features = ["fe"] }
 
 [profile]
 
@@ -28,3 +27,9 @@ inherits = "dev"
 
 [profile.android-dev]
 inherits = "dev"
+
+[features]
+default = []
+web = ["bdk/web"]
+server = []
+
