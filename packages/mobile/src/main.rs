@@ -1,10 +1,15 @@
 mod app;
 
+use crate::tracing::Level;
+
+use bdk::prelude::*;
+
+#[cfg(not(feature = "server"))]
 use app::App;
-use dioxus::prelude::*;
-use dioxus_logger::tracing::Level;
 
 fn main() {
     dioxus_logger::init(Level::INFO).expect("failed to init logger");
-    launch(App);
+
+    #[cfg(not(feature = "server"))]
+    dioxus_aws::launch(App);
 }
