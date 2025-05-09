@@ -7,6 +7,7 @@ mod feeds;
 mod presidential_candidates;
 pub mod subscriptions;
 pub mod supports;
+mod teams;
 pub mod users;
 
 use bdk::prelude::*;
@@ -15,6 +16,7 @@ use dto::*;
 
 pub fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Router> {
     Ok(by_axum::axum::Router::new()
+        .nest("/teams", teams::TeamController::new(pool.clone()).route()?)
         .nest("/feeds", feeds::FeedController::new(pool.clone()).route()?)
         .nest(
             "/election-pledges",
