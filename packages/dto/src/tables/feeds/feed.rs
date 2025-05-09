@@ -2,7 +2,7 @@ use bdk::prelude::*;
 use validator::Validate;
 
 #[derive(Validate)]
-#[api_model(base = "/v1/feeds", table = feeds, action = [repost(industry_id = Option<i64>)], action_by_id = [delete])]
+#[api_model(base = "/v1/feeds", table = feeds, action = [], action_by_id = [delete])]
 pub struct Feed {
     #[api_model(summary, primary_key)]
     pub id: i64,
@@ -37,7 +37,7 @@ pub struct Feed {
     // Reply
 
     // Repost
-    #[api_model(summary, nullable, indexed, action = [repost])]
+    #[api_model(summary, nullable, indexed, action = [repost, write_post])]
     pub quote_feed_id: Option<i64>,
 }
 
@@ -46,6 +46,8 @@ pub struct Feed {
 pub enum FeedType {
     #[default]
     Post = 1,
+
+    // Belows are kinds of comments
     Reply = 2,
     Repost = 3,
     DocReview = 4,
