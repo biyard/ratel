@@ -273,3 +273,144 @@ impl TeamController {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::tests::{TestContext, setup, setup_test_user};
+
+    #[tokio::test]
+    async fn test_create_team() {
+        let TestContext {
+            user,
+            now,
+            endpoint,
+            ..
+        } = setup().await.unwrap();
+
+        let cli = Team::get_client(&endpoint);
+        let profile_url = format!("https://test.com/team-{}", now);
+        let username = format!("create-team-{}", now);
+
+        let res = cli
+            .create(profile_url.clone(), username.clone())
+            .await
+            .expect("failed to create team");
+
+        assert_eq!(res.profile_url, profile_url);
+        assert_eq!(res.username, username);
+        assert_eq!(res.parent_id, user.id);
+    }
+
+    #[tokio::test]
+    async fn test_invite_team_member() {
+        let TestContext {
+            user,
+            now,
+            endpoint,
+            pool,
+            ..
+        } = setup().await.unwrap();
+
+        let cli = Team::get_client(&endpoint);
+        let profile_url = format!("https://test.com/team-{}", now);
+        let username = format!("invite-team-{}", now);
+
+        let res = cli
+            .create(profile_url.clone(), username.clone())
+            .await
+            .expect("failed to create team");
+
+        let id = uuid::Uuid::new_v4().to_string();
+        let new_user = setup_test_user(&id, &pool).await.unwrap();
+        tracing::debug!("new_user: {:?}", new_user);
+
+        let res = cli
+            .invite_member(res.id, new_user.email.clone())
+            .await
+            .expect("failed to invite member");
+
+        assert_eq!(res.profile_url, profile_url);
+        assert_eq!(res.username, username);
+        assert_eq!(res.parent_id, user.id);
+        assert_eq!(res.members.len(), 1);
+        assert_eq!(res.members[0].id, new_user.id);
+        assert_eq!(res.members[0].email, new_user.email);
+
+        let id = uuid::Uuid::new_v4().to_string();
+        let new_user2 = setup_test_user(&id, &pool).await.unwrap();
+        tracing::debug!("new_user: {:?}", new_user2);
+
+        let res = cli
+            .invite_member(res.id, new_user2.email.clone())
+            .await
+            .expect("failed to invite member");
+
+        assert_eq!(res.profile_url, profile_url);
+        assert_eq!(res.username, username);
+        assert_eq!(res.parent_id, user.id);
+        assert_eq!(res.members.len(), 2);
+        assert_eq!(res.members[0].id, new_user.id);
+        assert_eq!(res.members[0].email, new_user.email);
+        assert_eq!(res.members[1].id, new_user2.id);
+        assert_eq!(res.members[1].email, new_user2.email);
+    }
+
+    #[tokio::test]
+    async fn test_update_team_name() {
+        let TestContext {
+            user,
+            now,
+            endpoint,
+            ..
+        } = setup().await.unwrap();
+
+        let cli = Team::get_client(&endpoint);
+        let profile_url = format!("https://test.com/team-{}", now);
+        let username = format!("update-team-{}", now);
+
+        let res = cli
+            .create(profile_url.clone(), username.clone())
+            .await
+            .expect("failed to create team");
+
+        let new_username = format!("update-team-name-{}", now);
+        let res = cli
+            .update_team_name(res.id, new_username.clone())
+            .await
+            .expect("failed to update team name");
+
+        assert_eq!(res.profile_url, profile_url);
+        assert_eq!(res.username, new_username);
+        assert_eq!(res.parent_id, user.id);
+    }
+
+    #[tokio::test]
+    async fn test_update_team_profile_image() {
+        let TestContext {
+            user,
+            now,
+            endpoint,
+            ..
+        } = setup().await.unwrap();
+
+        let cli = Team::get_client(&endpoint);
+        let profile_url = format!("https://test.com/team-{}", now);
+        let username = format!("update-team-{}", now);
+
+        let res = cli
+            .create(profile_url.clone(), username.clone())
+            .await
+            .expect("failed to create team");
+
+        let new_profile_url = format!("https://test.com/team-profile-{}", now);
+        let res = cli
+            .update_profile_image(res.id, new_profile_url.clone())
+            .await
+            .expect("failed to update team profile image");
+
+        assert_eq!(res.profile_url, new_profile_url);
+        assert_eq!(res.username, username);
+        assert_eq!(res.parent_id, user.id);
+    }
+}
