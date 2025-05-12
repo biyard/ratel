@@ -95,6 +95,8 @@ impl UserControllerV1 {
             return Err(ServiceError::BadRequest);
         }
 
+        let username = req.email.split("@").collect::<Vec<&str>>()[0].to_string();
+
         let user = self
             .users
             .insert(
@@ -104,6 +106,9 @@ impl UserControllerV1 {
                 req.profile_url,
                 req.term_agreed,
                 req.informed_agreed,
+                UserType::Individual,
+                None,
+                username,
             )
             .await?;
 

@@ -82,12 +82,12 @@ pub struct BillWriter {
     pub link_url: String, // URL for details
 
     #[api_model(version = v0.2, type = INTEGER)]
-    pub industry: Option<Industry>,
+    pub industry: Option<IndustryType>,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
-pub enum Industry {
+pub enum IndustryType {
     #[default]
     Others = 0,
 

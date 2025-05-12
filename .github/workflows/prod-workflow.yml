@@ -122,6 +122,7 @@ jobs:
           ENABLE_LAMBDA: true
           SLACK_CHANNEL_SPONSOR: ${{ secrets.SLACK_CHANNEL_SPONSOR }}
           US_CONGRESS_KEY: ${{ secrets.US_CONGRESS_KEY }}
+          SLACK_CHANNEL_ABUSING: ${{ secrets.SLACK_CHANNEL_ABUSING }}
         run: |
           npm i -g aws-cdk
           make deploy

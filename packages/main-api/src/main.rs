@@ -46,6 +46,9 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         PresidentialCandidate,
         ElectionPledge,
         ElectionPledgeLike,
+        Industry,
+        Feed,
+        TeamMember,
     );
 
     tracing::info!("Migration done");
@@ -127,13 +130,14 @@ pub mod tests {
                 profile_url.clone(),
                 true,
                 true,
+                UserType::Individual,
+                None,
+                email.clone(),
             )
             .await?;
         tracing::debug!("{:?}", u);
 
-        let user = user.find_one(&UserReadAction::new().user_info()).await?;
-
-        Ok(user)
+        Ok(u)
     }
 
     pub fn setup_jwt_token(user: User) -> (Claims, String) {
@@ -153,7 +157,6 @@ pub mod tests {
 
     pub async fn setup() -> Result<TestContext> {
         let app = api_main().await?;
-        let id = uuid::Uuid::new_v4().to_string();
         let now = SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
             .unwrap()
@@ -203,6 +206,7 @@ pub mod tests {
 
         let _ = migration(&pool).await;
 
+        let id = uuid::Uuid::new_v4().to_string();
         let user = setup_test_user(&id, &pool).await.unwrap();
         let (claims, admin_token) = setup_jwt_token(user.clone());
 
@@ -211,6 +215,10 @@ pub mod tests {
         rest_api::set_message(conf.signing_domain.to_string());
         rest_api::set_api_service(app.clone());
         rest_api::add_authorization(&format!("Bearer {}", admin_token));
+        Industry::get_repository(pool.clone())
+            .insert("Crypto".to_string())
+            .await
+            .unwrap();
 
         Ok(TestContext {
             pool,
