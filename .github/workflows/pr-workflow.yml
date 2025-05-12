@@ -113,6 +113,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           JWT_SECRET_KEY: ${{ secrets.DEV_JWT_SECRET }}
           SLACK_CHANNEL_SPONSOR: ${{ secrets.DEV_SLACK }}
+          US_CONGRESS_KEY: ${{ secrets.US_CONGRESS_KEY }}
         run: |
           cd packages/main-api  && make test
 
@@ -235,6 +236,7 @@ jobs:
           BASE_DOMAIN: ratel.foundation
           REPO_NAME: ratel/fetcher
           ECR_NAME: test-fetcher
+          US_CONGRESS_KEY: ${{ secrets.US_CONGRESS_KEY }}
         run: |
           npm i -g aws-cdk
           cd packages/fetcher && make docker.build

@@ -7,6 +7,7 @@ mod presidential_candidates;
 mod proposers;
 mod subscriptions;
 mod supports;
+mod us_bills;
 mod users;
 mod votes;
 
@@ -19,5 +20,6 @@ pub use presidential_candidates::*;
 pub use proposers::*;
 pub use subscriptions::*;
 pub use supports::*;
+pub use us_bills::*;
 pub use users::*;
 pub use votes::*;
