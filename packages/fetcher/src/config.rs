@@ -16,6 +16,8 @@ pub struct Config {
     // pub auth: AuthConfig,
     pub migrate: bool,
     pub slack: SlackChannel,
+    #[allow(dead_code)]
+    pub us_congress_key: &'static str,
 }
 
 impl Default for Config {
@@ -33,6 +35,7 @@ impl Default for Config {
             slack: SlackChannel {
                 bill: option_env!("SLACK_CHANNEL_BILL").expect("SLACK_CHANNEL_BILL is required"),
             },
+            us_congress_key: option_env!("US_CONGRESS_KEY").expect("US_CONGRESS_KEY is required"),
         }
     }
 }
