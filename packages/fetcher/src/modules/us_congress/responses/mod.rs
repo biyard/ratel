@@ -18,8 +18,6 @@ use dto::USBillWriter;
 
 pub fn convert_to_bill_writer(
     detail: BillDetail,
-    titles: BillTitles,
-    subject: BillSubject,
     summary: BillSummaries,
     texts: BillTexts,
 ) -> USBillWriter {
@@ -27,7 +25,7 @@ pub fn convert_to_bill_writer(
         congress: detail.bill.congress,
         bill_no: detail.bill.number.parse().unwrap_or_default(),
         bill_type: detail.convert_bill_type(),
-        title: titles.get_display_title().unwrap_or_default(),
+        title: detail.bill.title.clone(),
         summary: summary.get_last_texts(),
 
         bill_id: format!(
@@ -42,9 +40,9 @@ pub fn convert_to_bill_writer(
         xml_url: texts.get_xml_url(),
 
         origin_chamber: detail.get_origin_chamber(),
+        industry: detail.get_policy_area(),
         action_date: detail.bill.latest_action.action_date,
         update_date: detail.bill.update_date,
-        industry: subject.into_policy_area(),
         ..Default::default()
     }
 }

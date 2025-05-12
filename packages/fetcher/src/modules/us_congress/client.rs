@@ -16,11 +16,11 @@ impl UsCongressClient {
         Self { key }
     }
 
-    pub async fn list_bills(&self) -> Result<Vec<BillInfo>> {
+    pub async fn list_bills(&self, offset: i64, limit: i64) -> Result<Vec<BillInfo>> {
         let bills: Vec<BillInfo> = self
             .list(
-                0,
-                100,
+                offset,
+                limit,
                 None,
                 None,
                 Some("updateDate+desc".to_string()),
@@ -187,13 +187,15 @@ impl UsCongressClient {
         let ep = endpoint.unwrap_or_else(|| "".to_string());
 
         let mut url = format!(
-            "https://api.congress.gov/v3/bill/{congress}/{bill_type}/{bill_no}/{}",
+            "https://api.congress.gov/v3/bill/{congress}/{bill_type}/{bill_no}/{}?",
             ep
         );
 
         for (key, value) in params {
-            url.push_str(&format!("&{}={}", key, value));
+            url.push_str(&format!("{}={}&", key, value));
         }
+
+        tracing::debug!("url: {}", url);
 
         let response = client
             .get(&url)

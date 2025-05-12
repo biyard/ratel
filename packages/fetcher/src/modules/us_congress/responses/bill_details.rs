@@ -1,4 +1,7 @@
-use super::common::{LatestAction, PolicyArea};
+use super::{
+    bill_subject::convert_policy_area,
+    common::{LatestAction, PolicyArea},
+};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -8,111 +11,63 @@ pub struct BillDetail {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct BillDetailItem {
-    /// 1: 법안 조치 정보
-    pub actions: ResourceCount,
-
-    /// 2: 법안 수정안 정보
-    pub amendments: ResourceCount,
-
-    /// 3: CBO 비용 추정
+    /// 1: CBO 비용 추정
     #[serde(rename = "cboCostEstimates")]
     pub cbo_cost_estimates: Vec<CboEstimate>,
 
-    /// 4: 위원회 보고서
+    /// 2: 위원회 보고서
     #[serde(rename = "committeeReports")]
-    pub committee_reports: Vec<CommitteeReport>,
-
-    /// 5: 위원회 정보
-    pub committees: ResourceCount,
-
-    /// 6: 의회 회기
+    pub committee_reports: Option<Vec<CommitteeReport>>,
+    /// 3: 의회 회기
     pub congress: i64,
 
-    /// 7: 헌법적 권한 진술문
+    /// 4: 헌법적 권한 진술문
     #[serde(rename = "constitutionalAuthorityStatementText")]
     pub constitutional_authority_statement_text: Option<String>,
 
-    /// 8: 공동 발의자 정보
-    pub cosponsors: CosponsorInfo,
-
-    /// 9: 발의 날짜
+    /// 5: 발의 날짜
     #[serde(rename = "introducedDate")]
     pub introduced_date: String,
 
-    /// 10: 최근 조치 정보
+    /// 6: 최근 조치 정보
     #[serde(rename = "latestAction")]
     pub latest_action: LatestAction,
 
-    /// 11: 법률 정보
-    pub laws: Vec<LawInfo>,
+    /// 7: 법률 정보
+    pub laws: Option<Vec<LawInfo>>,
 
-    /// 12: 법안 번호
+    /// 8: 법안 번호
     pub number: String,
 
-    /// 13: 발의 원
+    /// 9: 발의 원
     #[serde(rename = "originChamber")]
     pub origin_chamber: String,
 
-    /// 14: 정책 영역
+    /// 10: 발의 원 코드
+    #[serde(rename = "originChamberCode")]
+    pub origin_chamber_code: String,
+
+    /// 11: 정책 영역
     #[serde(rename = "policyArea")]
     pub policy_area: PolicyArea,
 
-    /// 15: 관련 법안
-    #[serde(rename = "relatedBills")]
-    pub related_bills: ResourceCount,
-
-    /// 16: 발의자 정보
+    /// 12: 발의자 정보
     pub sponsors: Vec<Sponsor>,
 
-    /// 17: 주제
-    pub subjects: ResourceCount,
-
-    /// 18: 요약
-    pub summaries: ResourceCount,
-
-    /// 19: 법안 텍스트 버전
-    #[serde(rename = "textVersions")]
-    pub text_versions: ResourceCount,
-
-    /// 20: 법안 제목
+    /// 13: 법안 제목
     pub title: String,
 
-    /// 21: 법안 제목 정보
-    pub titles: ResourceCount,
-
-    /// 22: 법안 유형
+    /// 14: 법안 유형
     #[serde(rename = "type")]
     pub bill_type: String,
 
-    /// 23: 업데이트 날짜
+    /// 15: 업데이트 날짜
     #[serde(rename = "updateDate")]
     pub update_date: String,
 
-    /// 24: 텍스트 포함 업데이트 날짜
+    /// 16: 텍스트 포함 업데이트 날짜
     #[serde(rename = "updateDateIncludingText")]
     pub update_date_including_text: String,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct ResourceCount {
-    /// 1: 항목 수
-    pub count: u32,
-
-    /// 2: 리소스 URL
-    pub url: String,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct CosponsorInfo {
-    /// 1: 공동발의자 수
-    pub count: u32,
-
-    /// 2: 철회한 공동발의자를 포함한 수
-    #[serde(rename = "countIncludingWithdrawnCosponsors")]
-    pub count_including_withdrawn_cosponsors: u32,
-
-    /// 3: 리소스 URL
-    pub url: String,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -191,7 +146,8 @@ pub struct Sponsor {
 
 impl BillDetail {
     pub fn convert_bill_type(&self) -> dto::USBillType {
-        match self.bill.bill_type.as_str() {
+        let lower_case_bill_type = self.bill.bill_type.to_lowercase();
+        match lower_case_bill_type.as_str() {
             "hr" => dto::USBillType::HouseBill,
             "s" => dto::USBillType::SenateBill,
             "hjres" => dto::USBillType::HouseJointResolution,
@@ -210,5 +166,9 @@ impl BillDetail {
             "Senate" => dto::Chamber::Senate,
             _ => dto::Chamber::Unknown,
         }
+    }
+
+    pub fn get_policy_area(&self) -> dto::PolicyArea {
+        convert_policy_area(&self.bill.policy_area.name)
     }
 }
