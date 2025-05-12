@@ -1,6 +1,7 @@
 mod config;
 mod controllers;
 mod modules;
+mod utils;
 
 use bdk::prelude::{
     by_axum::{auth::authorization_middleware, axum::Router, axum::middleware},
@@ -27,7 +28,7 @@ macro_rules! migrate {
 async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
     tracing::info!("Running migration");
 
-    migrate!(pool, BillWriter,);
+    migrate!(pool, BillWriter, USBillWriter);
 
     tracing::info!("Migration done");
     Ok(())
