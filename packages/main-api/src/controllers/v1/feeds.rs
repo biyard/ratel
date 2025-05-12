@@ -527,6 +527,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_write_repost_as_comment() {
+        test_setup().await;
         let TestContext {
             user,
             now,
@@ -534,7 +535,6 @@ mod tests {
             pool,
             ..
         } = setup().await.unwrap();
-        test_setup().await;
 
         let post = Feed::query_builder()
             .feed_type_equals(FeedType::Post)
