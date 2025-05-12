@@ -1,5 +1,6 @@
 // mod assembly_members;
 mod bills;
+mod us;
 
 use bdk::prelude::*;
 
@@ -28,6 +29,12 @@ pub async fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Ro
         //     "/assembly-members",
         //     assembly_members::AssemblyMemberController::new(pool).route()?,
         // )
+        .nest(
+            "/us/bills",
+            us::bills::USBillWriterController::new(pool.clone())
+                .await
+                .route()?,
+        )
         .layer(middleware::from_fn(authorize_router)))
 }
 

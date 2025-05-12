@@ -70,6 +70,7 @@ jobs:
           VERSIONS: v1
           V1_ENDPOINT: api.ratel.foundation
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          US_CONGRESS_KEY: ${{ secrets.US_CONGRESS_KEY }}
         run: |
           npm i -g aws-cdk @tailwindcss/cli
           make deploy-web
@@ -120,6 +121,7 @@ jobs:
           ENABLE_S3: false
           ENABLE_LAMBDA: true
           SLACK_CHANNEL_SPONSOR: ${{ secrets.SLACK_CHANNEL_SPONSOR }}
+          US_CONGRESS_KEY: ${{ secrets.US_CONGRESS_KEY }}
         run: |
           npm i -g aws-cdk
           make deploy
@@ -175,6 +177,7 @@ jobs:
           SLACK_CHANNEL_BILL: ${{ secrets.SLACK_CHANNEL_BILL }}
           BASE_DOMAIN: ratel.foundation
           REPO_NAME: ratel/fetcher
+          US_CONGRESS_KEY: ${{ secrets.US_CONGRESS_KEY }}
 
           MIGRATE: false
           ENABLE_S3: false
