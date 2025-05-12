@@ -32,7 +32,7 @@ impl BillSubject {
     }
 }
 
-fn convert_policy_area(r#type: &str) -> dto::PolicyArea {
+pub fn convert_policy_area(r#type: &str) -> dto::PolicyArea {
     match r#type {
         "Agriculture and Food" => dto::PolicyArea::AgricultureAndFood,
         "Animals" => dto::PolicyArea::Animals,

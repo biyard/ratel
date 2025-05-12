@@ -111,6 +111,7 @@ impl USBillWriterController {
         mut bill_no: i64,
         end: i64,
     ) -> Result<USBillWriter> {
+        tracing::debug!("fetch_bills {:?} {:?} {:?}", congress, bill_type, bill_no);
         let mut bill_nos: Vec<(i64, String)> = vec![];
         loop {
             for i in 0..3 {
@@ -216,10 +217,10 @@ impl USBillWriterController {
             .get_bill(congress, bill_type.to_code(), bill_no)
             .await?;
 
-        let titles = self
-            .cli
-            .get_bill_titles(congress, bill_type.to_code(), bill_no)
-            .await?;
+        // let titles = self
+        //     .cli
+        //     .get_bill_titles(congress, bill_type.to_code(), bill_no)
+        //     .await?;
 
         let texts = self
             .cli
@@ -231,12 +232,12 @@ impl USBillWriterController {
             .get_bill_summary(congress, bill_type.to_code(), bill_no)
             .await?;
 
-        let subject = self
-            .cli
-            .get_bill_subject(congress, bill_type.to_code(), bill_no)
-            .await?;
+        // let subject = self
+        //     .cli
+        //     .get_bill_subject(congress, bill_type.to_code(), bill_no)
+        //     .await?;
 
-        let bill: USBillWriter = convert_to_bill_writer(bill, titles, subject, summary, texts);
+        let bill: USBillWriter = convert_to_bill_writer(bill, summary, texts);
 
         let bill = if let Some(b) = USBillWriter::query_builder()
             .congress_equals(congress)
