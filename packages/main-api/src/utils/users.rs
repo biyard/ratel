@@ -31,6 +31,8 @@ pub async fn extract_user_id(
         _ => return Err(ServiceError::Unauthorized),
     };
 
+    tracing::debug!("authorized user_id: {:?}", user_id);
+
     Ok(user_id)
 }
 
