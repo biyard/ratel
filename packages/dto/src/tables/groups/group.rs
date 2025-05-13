@@ -55,6 +55,19 @@ pub enum GroupPermission {
 
 pub struct GroupPermissions(Vec<GroupPermission>);
 
+impl Default for GroupPermissions {
+    fn default() -> Self {
+        Self(vec![
+            GroupPermission::ReadPosts,
+            GroupPermission::ReadReplies,
+            GroupPermission::WriteReplies,
+            GroupPermission::DeleteReplies,
+            GroupPermission::ReadProfile,
+            GroupPermission::UpdateProfile,
+        ])
+    }
+}
+
 impl AsRef<[GroupPermission]> for GroupPermissions {
     fn as_ref(&self) -> &[GroupPermission] {
         &self.0
