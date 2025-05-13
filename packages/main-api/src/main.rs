@@ -76,7 +76,7 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         .is_none()
     {
         Group::get_repository(pool.clone())
-            .insert("ServiceAdmin".to_string(), 1)
+            .insert("ServiceAdmin".to_string(), 1, 0xffffffffffffffffu64 as i64)
             .await?;
     }
 
