@@ -24,13 +24,43 @@ pub struct Group {
 pub enum GroupPermission {
     #[default]
     #[translate(en = "Read posts")]
-    ReadPosts = 1,
+    ReadPosts = 0,
     #[translate(en = "Read replies")]
-    ReadReplies = 1 << 1,
+    ReadReplies = 1,
     #[translate(en = "Write posts")]
-    WritePosts = 1 << 2,
+    WritePosts = 2,
     #[translate(en = "Write replies")]
-    WriteReplies = 1 << 3,
+    WriteReplies = 3,
     #[translate(en = "Write comments")]
-    WritePendingPosts = 1 << 4,
+    WritePendingPosts = 4,
+}
+
+pub struct GroupPermissions(Vec<GroupPermission>);
+
+impl AsRef<[GroupPermission]> for GroupPermissions {
+    fn as_ref(&self) -> &[GroupPermission] {
+        &self.0
+    }
+}
+
+impl From<GroupPermissions> for i64 {
+    fn from(permissions: GroupPermissions) -> Self {
+        let mut result = 0;
+        for permission in permissions.0 {
+            result |= 1 << permission as i32;
+        }
+        result
+    }
+}
+
+impl From<i64> for GroupPermissions {
+    fn from(permissions: i64) -> Self {
+        let mut vec = Vec::new();
+        for i in 0..64 {
+            if permissions & (1 << i) != 0 {
+                vec.push(GroupPermission::try_from(i as i32).unwrap());
+            }
+        }
+        Self(vec)
+    }
 }

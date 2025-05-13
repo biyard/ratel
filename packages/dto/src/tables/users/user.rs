@@ -38,6 +38,7 @@ pub struct User {
     pub username: String,
 
     #[api_model(many_to_many = group_members, foreign_table_name = groups, foreign_primary_key = group_id, foreign_reference_key = user_id)]
+    #[serde(default)]
     pub groups: Vec<Group>,
 }
 
