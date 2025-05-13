@@ -67,6 +67,29 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
             .await?;
     }
 
+    if User::query_builder()
+        .id_equals(1)
+        .query()
+        .map(User::from)
+        .fetch_optional(pool)
+        .await?
+        .is_none()
+    {
+        User::get_repository(pool.clone())
+            .insert(
+                "ServiceAdmin".to_string(),
+                "user-principal-1".to_string(),
+                "".to_string(),
+                "profile_url".to_string(),
+                true,
+                true,
+                UserType::Individual,
+                None,
+                "admin".to_string(),
+            )
+            .await?;
+    }
+
     if Group::query_builder()
         .id_equals(1)
         .query()
@@ -153,9 +176,11 @@ pub mod tests {
         let principal = format!("user-principal-{}", id);
         let email = format!("user-{id}@test.com");
         let profile_url = format!("https://test.com/{id}");
+        let mut tx = pool.begin().await?;
 
         let u = user
-            .insert(
+            .insert_with_tx(
+                &mut *tx,
                 nickname.clone(),
                 principal.clone(),
                 email.clone(),
@@ -166,11 +191,21 @@ pub mod tests {
                 None,
                 email.clone(),
             )
+            .await?
+            .unwrap();
+
+        let g = Group::query_builder()
+            .name_contains("ServiceAdmin".to_string())
+            .query()
+            .map(Group::from)
+            .fetch_one(pool)
             .await?;
 
         GroupMember::get_repository(pool.clone())
-            .insert(u.id, 1)
+            .insert_with_tx(&mut *tx, u.id, g.id)
             .await?;
+
+        tx.commit().await?;
 
         tracing::debug!("{:?}", u);
 
