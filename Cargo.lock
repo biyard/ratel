@@ -5864,7 +5864,7 @@ dependencies = [
  "base64 0.22.1",
  "candid",
  "chrono",
- "dioxus-fullstack",
+ "dioxus-fullstack 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
  "gloo-net",
  "reqwest",
  "ring",
