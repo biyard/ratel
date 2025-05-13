@@ -58,7 +58,7 @@ impl NewsController {
             html_content,
         }: NewsCreateRequest,
     ) -> Result<News> {
-        let user = check_service_admin(&self.pool, auth).await?;
+        let user = check_service_admin(&self.pool, auth, GroupPermission::WriteNews).await?;
 
         let news = self.repo.insert(title, html_content, user.id).await?;
 
@@ -71,7 +71,7 @@ impl NewsController {
         auth: Option<Authorization>,
         param: NewsUpdateRequest,
     ) -> Result<News> {
-        let user = check_service_admin(&self.pool, auth).await?;
+        let user = check_service_admin(&self.pool, auth, GroupPermission::UpdateNews).await?;
 
         btracing::notify!(
             crate::config::get().slack_channel_monitor,
@@ -86,7 +86,7 @@ impl NewsController {
     }
 
     async fn delete(&self, id: i64, auth: Option<Authorization>) -> Result<News> {
-        let user = check_service_admin(&self.pool, auth).await?;
+        let user = check_service_admin(&self.pool, auth, GroupPermission::DeleteNews).await?;
 
         let res = self.repo.delete(id).await?;
         btracing::notify!(

@@ -5,6 +5,7 @@ use dto::*;
 pub async fn check_service_admin(
     pool: &sqlx::Pool<sqlx::Postgres>,
     auth: Option<Authorization>,
+    perm: GroupPermission,
 ) -> Result<User> {
     let user = match auth {
         Some(Authorization::UserSig(sig)) => {
@@ -23,7 +24,13 @@ pub async fn check_service_admin(
                     Error::InvalidUser
                 })?;
 
-            if user.groups.iter().filter(|x| x.id == 1).count() == 0 {
+            if user
+                .groups
+                .iter()
+                .filter(|x| x.permissions & (perm as i64) != 0)
+                .count()
+                == 0
+            {
                 return Err(Error::Unauthorized);
             }
             user
@@ -46,7 +53,13 @@ pub async fn check_service_admin(
                     Error::InvalidUser
                 })?;
             tracing::debug!("extracted user: {:?}", user);
-            if user.groups.iter().filter(|x| x.id == 1).count() == 0 {
+            if user
+                .groups
+                .iter()
+                .filter(|x| x.permissions & (perm as i64) != 0)
+                .count()
+                == 0
+            {
                 return Err(Error::Unauthorized);
             }
             user
