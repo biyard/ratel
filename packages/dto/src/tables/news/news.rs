@@ -11,9 +11,9 @@ pub struct News {
     #[api_model(summary, auto = [insert, update])]
     pub updated_at: i64,
 
-    #[api_model(summary, action = create)]
+    #[api_model(summary, action = create, action_by_id = [update])]
     pub title: String,
-    #[api_model(summary, action = create)]
+    #[api_model(summary, action = create, action_by_id = [update])]
     pub html_content: String,
     #[api_model(many_to_one = users)]
     pub user_id: i64,

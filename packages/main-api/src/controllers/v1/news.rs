@@ -12,6 +12,8 @@ use by_types::QueryResponse;
 use dto::*;
 use sqlx::postgres::PgRow;
 
+use crate::utils::users::check_service_admin;
+
 #[derive(
     Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
 )]
@@ -50,10 +52,17 @@ impl NewsController {
 
     async fn create(
         &self,
-        _auth: Option<Authorization>,
-        _param: NewsCreateRequest,
+        auth: Option<Authorization>,
+        NewsCreateRequest {
+            title,
+            html_content,
+        }: NewsCreateRequest,
     ) -> Result<News> {
-        todo!()
+        let user = check_service_admin(&self.pool, auth).await?;
+
+        let news = self.repo.insert(title, html_content, user.id).await?;
+
+        Ok(news)
     }
 
     async fn update(
@@ -62,32 +71,31 @@ impl NewsController {
         auth: Option<Authorization>,
         param: NewsUpdateRequest,
     ) -> Result<News> {
-        if auth.is_none() {
-            return Err(Error::Unauthorized);
-        }
+        let user = check_service_admin(&self.pool, auth).await?;
 
+        btracing::notify!(
+            crate::config::get().slack_channel_monitor,
+            &format!(
+                "admin user({:?}) will update news {:?} with {:?}",
+                user.email, id, param
+            )
+        );
         let res = self.repo.update(id, param.into()).await?;
 
         Ok(res)
     }
 
     async fn delete(&self, id: i64, auth: Option<Authorization>) -> Result<News> {
-        if auth.is_none() {
-            return Err(Error::Unauthorized);
-        }
+        let user = check_service_admin(&self.pool, auth).await?;
 
         let res = self.repo.delete(id).await?;
+        btracing::notify!(
+            crate::config::get().slack_channel_monitor,
+            &format!("admin user({:?}) deleted news({:?})", user.email, res)
+        );
 
         Ok(res)
     }
-
-    // async fn run_read_action(
-    //     &self,
-    //     _auth: Option<Authorization>,
-    //     NewsReadAction { action, .. }: NewsReadAction,
-    // ) -> Result<News> {
-    //     todo!()
-    // }
 }
 
 impl NewsController {
@@ -165,12 +173,83 @@ impl NewsController {
         match q {
             NewsParam::Query(param) => {
                 Ok(Json(NewsGetResponse::Query(ctrl.query(auth, param).await?)))
-            } // NewsParam::Read(param)
-              //     if param.action == Some(NewsReadActionType::ActionType) =>
-              // {
-              //     let res = ctrl.run_read_action(auth, param).await?;
-              //     Ok(Json(NewsGetResponse::Read(res)))
-              // }
+            }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::tests::{TestContext, setup};
+
+    #[tokio::test]
+    async fn test_create_news_without_permission() {
+        let TestContext { now, endpoint, .. } = setup().await.unwrap();
+
+        let title = format!("Test News {}", now);
+        let html_content = format!("<p>This is a test news content.</p> {now}");
+
+        let news = News::get_client(&endpoint)
+            .create(title.clone(), html_content.clone())
+            .await;
+
+        assert_eq!(news, Err(Error::Unauthorized));
+    }
+
+    #[tokio::test]
+    async fn test_create_news() {
+        let TestContext {
+            admin,
+            now,
+            endpoint,
+            admin_token,
+            ..
+        } = setup().await.unwrap();
+        rest_api::add_authorization(&format!("Bearer {}", admin_token));
+
+        let title = format!("Test News {}", now);
+        let html_content = format!("<p>This is a test news content.</p> {now}");
+
+        let news = News::get_client(&endpoint)
+            .create(title.clone(), html_content.clone())
+            .await
+            .unwrap();
+
+        assert_eq!(news.title, title);
+        assert_eq!(news.html_content, html_content);
+        assert_eq!(news.user_id, admin.id);
+    }
+
+    #[tokio::test]
+    async fn test_update_news() {
+        let TestContext {
+            admin,
+            now,
+            endpoint,
+            admin_token,
+            ..
+        } = setup().await.unwrap();
+        rest_api::add_authorization(&format!("Bearer {}", admin_token));
+
+        let title = format!("Test News {}", now);
+        let html_content = format!("<p>This is a test news content.</p> {now}");
+
+        let news = News::get_client(&endpoint)
+            .create(title.clone(), html_content.clone())
+            .await
+            .unwrap();
+
+        let new_title = format!("Updated News {}", now);
+        let new_html_content = format!("<p>This is an updated news content.</p> {now}");
+
+        let updated_news = News::get_client(&endpoint)
+            .update(news.id, new_title.clone(), new_html_content.clone())
+            .await
+            .unwrap();
+
+        assert_eq!(updated_news.title, new_title);
+        assert_eq!(updated_news.html_content, new_html_content);
+        assert_eq!(updated_news.user_id, admin.id);
     }
 }
