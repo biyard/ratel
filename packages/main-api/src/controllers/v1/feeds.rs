@@ -703,6 +703,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_repost_with_invalid_parent_id() {
+        test_setup().await;
         let TestContext {
             pool,
             now,
@@ -710,7 +711,6 @@ mod tests {
             user,
             ..
         } = setup().await.unwrap();
-        test_setup().await;
 
         let html_contents = format!("<p>Review {now}</p>");
 
