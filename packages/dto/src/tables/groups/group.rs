@@ -25,14 +25,24 @@ pub enum GroupPermission {
     #[default]
     #[translate(en = "Read posts")]
     ReadPosts = 0,
-    #[translate(en = "Read replies")]
-    ReadReplies = 1,
     #[translate(en = "Write posts")]
-    WritePosts = 2,
-    #[translate(en = "Write replies")]
-    WriteReplies = 3,
+    WritePosts = 1,
+    #[translate(en = "Delete posts")]
+    DeletePosts = 2,
     #[translate(en = "Write pending posts")]
-    WritePendingPosts = 4,
+    WritePendingPosts = 3,
+
+    #[translate(en = "Read replies")]
+    ReadReplies = 4,
+    #[translate(en = "Write replies")]
+    WriteReplies = 5,
+    #[translate(en = "Delete replies")]
+    DeleteReplies = 6,
+
+    #[translate(en = "Read profile")]
+    ReadProfile = 7,
+    #[translate(en = "Update profile")]
+    UpdateProfile = 8,
 
     // Admin
     #[translate(en = "[Admin] Delete news")]
