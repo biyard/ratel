@@ -13,7 +13,7 @@ impl PermissionVerifier for GeneralPermissionVerifier {
     fn has_permission(&self, user: &User, perm: GroupPermission) -> bool {
         user.groups
             .iter()
-            .filter(|x| x.permissions & (perm as i64) != 0)
+            .filter(|x| x.permissions & (1_i64 << (perm as i32)) != 0)
             .count()
             > 0
     }
