@@ -12,7 +12,7 @@ use by_types::QueryResponse;
 use dto::*;
 use sqlx::postgres::PgRow;
 
-use crate::utils::users::check_service_admin;
+use crate::security::check_perm;
 
 #[derive(
     Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
@@ -58,7 +58,13 @@ impl NewsController {
             html_content,
         }: NewsCreateRequest,
     ) -> Result<News> {
-        let user = check_service_admin(&self.pool, auth, GroupPermission::WriteNews).await?;
+        let user = check_perm(
+            &self.pool,
+            auth,
+            RatelResource::News,
+            GroupPermission::WriteNews,
+        )
+        .await?;
 
         let news = self.repo.insert(title, html_content, user.id).await?;
 
@@ -71,7 +77,13 @@ impl NewsController {
         auth: Option<Authorization>,
         param: NewsUpdateRequest,
     ) -> Result<News> {
-        let user = check_service_admin(&self.pool, auth, GroupPermission::UpdateNews).await?;
+        let user = check_perm(
+            &self.pool,
+            auth,
+            RatelResource::News,
+            GroupPermission::UpdateNews,
+        )
+        .await?;
 
         btracing::notify!(
             crate::config::get().slack_channel_monitor,
@@ -86,7 +98,13 @@ impl NewsController {
     }
 
     async fn delete(&self, id: i64, auth: Option<Authorization>) -> Result<News> {
-        let user = check_service_admin(&self.pool, auth, GroupPermission::DeleteNews).await?;
+        let user = check_perm(
+            &self.pool,
+            auth,
+            RatelResource::News,
+            GroupPermission::DeleteNews,
+        )
+        .await?;
 
         let res = self.repo.delete(id).await?;
         btracing::notify!(
