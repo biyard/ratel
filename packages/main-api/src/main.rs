@@ -14,6 +14,7 @@ mod controllers {
 
 pub mod config;
 pub mod models;
+pub mod security;
 pub mod utils;
 
 macro_rules! migrate {
