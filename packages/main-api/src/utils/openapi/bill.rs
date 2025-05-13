@@ -1,6 +1,6 @@
 use crate::models::openapi::national_bill::AssemblyBill;
 use bdk::prelude::*;
-use dto::ServiceError;
+use dto::Error;
 use scraper::{Html, Selector};
 use serde_json::Value;
 use std::collections::HashMap;
@@ -10,7 +10,7 @@ const ASSEMBLY_UNIT: &str = "제22대";
 pub async fn fetch_bills(
     page_index: u32, // page num; start from 1 not 0
     page_size: u32,  // request per page
-) -> Result<Vec<AssemblyBill>, ServiceError> {
+) -> Result<Vec<AssemblyBill>, Error> {
     let config = crate::config::get();
     let mut params = HashMap::new();
     params.insert("KEY", config.openapi_key.to_string());
@@ -34,7 +34,7 @@ pub async fn fetch_bills(
         let rows = match response[1]["row"].as_array() {
             Some(rows) => rows,
             None => {
-                return Err(ServiceError::OpenApiResponseError(
+                return Err(Error::OpenApiResponseError(
                     "Failed to parse response".to_string(),
                 ));
             }
@@ -43,20 +43,19 @@ pub async fn fetch_bills(
             match serde_json::from_value(serde_json::Value::Array(rows.clone())) {
                 Ok(rst) => rst,
                 Err(e) => {
-                    return Err(ServiceError::JsonDeserializeError(e.to_string()));
+                    return Err(Error::JsonDeserializeError(e.to_string()));
                 }
             };
         return Ok(rst);
     } else {
-        return Err(ServiceError::OpenApiResponseError(
+        return Err(Error::OpenApiResponseError(
             "Failed to parse response".to_string(),
         ));
     }
 }
 
-pub async fn get_file_book_id(
-    site_link: String, // link to the file
-) -> Result<String, ServiceError> {
+pub async fn get_file_book_id(site_link: String, // link to the file
+) -> Result<String, Error> {
     let client = reqwest::Client::new();
     let resp = client
         .get(site_link)
@@ -82,7 +81,7 @@ pub async fn get_file_book_id(
             }
         }
     }
-    Err(ServiceError::HtmlParseError(
+    Err(Error::HtmlParseError(
         "Failed to parse response".to_string(),
     ))
 }

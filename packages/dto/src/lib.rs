@@ -8,4 +8,4 @@ pub use info::*;
 pub use joined_tables::*;
 pub use tables::*;
 
-pub type Result<T> = std::result::Result<T, error::ServiceError>;
+pub type Result<T> = std::result::Result<T, error::Error>;
