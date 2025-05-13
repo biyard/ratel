@@ -2,6 +2,8 @@ use by_types::QueryResponse;
 
 use bdk::prelude::*;
 
+use crate::Group;
+
 #[derive(validator::Validate)]
 #[api_model(base = "/v1/users", read_action = user_info, table = users, iter_type=QueryResponse)]
 pub struct User {
@@ -34,6 +36,9 @@ pub struct User {
     pub parent_id: Option<i64>,
     #[api_model(version = v0.1, indexed, unique)]
     pub username: String,
+
+    #[api_model(many_to_many = group_members, foreign_table_name = groups, foreign_primary_key = group_id, foreign_reference_key = user_id)]
+    pub groups: Vec<Group>,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]

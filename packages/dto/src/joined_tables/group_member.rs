@@ -2,8 +2,8 @@ use bdk::prelude::*;
 use validator::Validate;
 
 #[derive(Validate)]
-#[api_model(base = "/v1/groups", table = groups, action = [], action_by_id = [delete, update])]
-pub struct Group {
+#[api_model(base = "/", table = group_members, action = [], action_by_id = [delete, update])]
+pub struct GroupMember {
     #[api_model(summary, primary_key)]
     pub id: i64,
     #[api_model(summary, auto = [insert])]
@@ -11,7 +11,8 @@ pub struct Group {
     #[api_model(summary, auto = [insert, update])]
     pub updated_at: i64,
 
-    pub name: String,
     #[api_model(many_to_one = users)]
     pub user_id: i64,
+    #[api_model(many_to_one = groups)]
+    pub group_id: i64,
 }
