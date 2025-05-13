@@ -7,8 +7,6 @@ target/
 dist/
 node_modules/
 .build/
-**/*.lock
-**/package-lock.json
 
 # Playwright
 /test-results/

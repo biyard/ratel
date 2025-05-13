@@ -89,7 +89,7 @@ impl PromotionController {
             .await
             .map_err(|e| {
                 tracing::error!("failed to insert post promotion: {:?}", e);
-                ServiceError::PromotionWritePostError
+                Error::PromotionWritePostError
             })?;
 
         Ok(res)
@@ -103,7 +103,7 @@ impl PromotionController {
     ) -> Result<Promotion> {
         // TODO: ONLY SERVICE OPERATOR CAN PERFROM
         if auth.is_none() {
-            return Err(ServiceError::Unauthorized);
+            return Err(Error::Unauthorized);
         }
 
         let res = self.repo.update(id, param.into()).await?;
@@ -114,7 +114,7 @@ impl PromotionController {
     async fn delete(&self, id: i64, auth: Option<Authorization>) -> Result<Promotion> {
         // TODO: ONLY SERVICE OPERATOR CAN PERFROM
         if auth.is_none() {
-            return Err(ServiceError::Unauthorized);
+            return Err(Error::Unauthorized);
         }
 
         let res = self.repo.delete(id).await?;
