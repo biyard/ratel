@@ -12,7 +12,7 @@ use by_types::QueryResponse;
 use dto::*;
 use sqlx::postgres::PgRow;
 
-use crate::utils::users::extract_user_id;
+use crate::security::check_perm;
 
 #[derive(
     Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
@@ -58,9 +58,16 @@ impl FeedController {
             industry_id,
             title,
             quote_feed_id,
+            user_id,
         }: FeedWritePostRequest,
     ) -> Result<Feed> {
-        let user_id = extract_user_id(&self.pool, auth).await?;
+        let _user = check_perm(
+            &self.pool,
+            auth,
+            RatelResource::Post { team_id: user_id },
+            GroupPermission::WritePosts,
+        )
+        .await?;
 
         let res = self
             .repo
@@ -89,9 +96,16 @@ impl FeedController {
         FeedCommentRequest {
             html_contents,
             parent_id,
+            user_id,
         }: FeedCommentRequest,
     ) -> Result<Feed> {
-        let user_id = extract_user_id(&self.pool, auth).await?;
+        let _user = check_perm(
+            &self.pool,
+            auth,
+            RatelResource::Post { team_id: user_id },
+            GroupPermission::WriteReplies,
+        )
+        .await?;
         let parent_id = parent_id.ok_or_else(|| {
             tracing::error!("parent id is missing: {user_id}");
             Error::FeedInvalidParentId
@@ -135,10 +149,17 @@ impl FeedController {
         FeedReviewDocRequest {
             html_contents,
             parent_id,
+            user_id,
             part_id: _,
         }: FeedReviewDocRequest,
     ) -> Result<Feed> {
-        let user_id = extract_user_id(&self.pool, auth).await?;
+        let _user = check_perm(
+            &self.pool,
+            auth,
+            RatelResource::Post { team_id: user_id },
+            GroupPermission::WriteReplies,
+        )
+        .await?;
         let parent_id = parent_id.ok_or_else(|| {
             tracing::error!("parent id is missing: {user_id}");
             Error::FeedInvalidParentId
@@ -183,9 +204,16 @@ impl FeedController {
             html_contents,
             quote_feed_id,
             parent_id,
+            user_id,
         }: FeedRepostRequest,
     ) -> Result<Feed> {
-        let user_id = extract_user_id(&self.pool, auth).await?;
+        let _user = check_perm(
+            &self.pool,
+            auth,
+            RatelResource::Post { team_id: user_id },
+            GroupPermission::WriteReplies,
+        )
+        .await?;
         let parent_id = parent_id.ok_or_else(|| {
             tracing::error!("parent id is missing: {user_id}");
             Error::FeedInvalidParentId
@@ -252,9 +280,33 @@ impl FeedController {
         auth: Option<Authorization>,
         param: FeedUpdateRequest,
     ) -> Result<Feed> {
-        if auth.is_none() {
-            return Err(Error::Unauthorized);
-        }
+        let feed = Feed::query_builder()
+            .id_equals(id)
+            .query()
+            .map(Feed::from)
+            .fetch_one(&self.pool)
+            .await
+            .map_err(|e| {
+                tracing::error!("failed to get a feed {id}: {e}");
+                Error::FeedInvalidParentId
+            })?;
+        let _user = check_perm(
+            &self.pool,
+            auth,
+            match feed.feed_type {
+                FeedType::Post => RatelResource::Post {
+                    team_id: feed.user_id,
+                },
+                _ => RatelResource::Reply {
+                    team_id: feed.user_id,
+                },
+            },
+            match feed.feed_type {
+                FeedType::Post => GroupPermission::WritePosts,
+                _ => GroupPermission::WriteReplies,
+            },
+        )
+        .await?;
 
         let res = self.repo.update(id, param.into()).await?;
 
@@ -425,7 +477,13 @@ mod tests {
         let industry_id = 1;
 
         let res = Feed::get_client(&endpoint)
-            .write_post(html_contents.clone(), industry_id, title.clone(), None)
+            .write_post(
+                html_contents.clone(),
+                user.id,
+                industry_id,
+                title.clone(),
+                None,
+            )
             .await;
 
         assert!(res.is_ok());
@@ -469,6 +527,7 @@ mod tests {
         let res = Feed::get_client(&endpoint)
             .write_post(
                 html_contents.clone(),
+                user.id,
                 industry_id,
                 title.clone(),
                 Some(quote.id),
@@ -511,7 +570,7 @@ mod tests {
         let html_contents = format!("<p>Comment {now}</p>");
 
         let res = Feed::get_client(&endpoint)
-            .comment(html_contents.clone(), Some(post.id))
+            .comment(html_contents.clone(), user.id, Some(post.id))
             .await;
 
         assert!(res.is_ok(), "res: {:?}", res);
@@ -562,7 +621,12 @@ mod tests {
         );
 
         let res = Feed::get_client(&endpoint)
-            .repost(html_contents.clone(), Some(post.id), Some(quote_feed.id))
+            .repost(
+                html_contents.clone(),
+                user.id,
+                Some(post.id),
+                Some(quote_feed.id),
+            )
             .await;
 
         assert!(res.is_ok(), "res: {:?}", res);
@@ -579,12 +643,17 @@ mod tests {
 
     #[tokio::test]
     async fn test_comment_with_invalid_parent_id() {
-        let TestContext { now, endpoint, .. } = setup().await.unwrap();
+        let TestContext {
+            user,
+            now,
+            endpoint,
+            ..
+        } = setup().await.unwrap();
 
         let html_contents = format!("<p>Comment {now}</p>");
 
         let res = Feed::get_client(&endpoint)
-            .comment(html_contents.clone(), Some(0))
+            .comment(html_contents.clone(), user.id, Some(0))
             .await;
 
         assert!(res.is_err(), "res: {:?}", res);
@@ -594,12 +663,17 @@ mod tests {
 
     #[tokio::test]
     async fn test_comment_with_none() {
-        let TestContext { now, endpoint, .. } = setup().await.unwrap();
+        let TestContext {
+            now,
+            user,
+            endpoint,
+            ..
+        } = setup().await.unwrap();
 
         let html_contents = format!("<p>Comment {now}</p>");
 
         let res = Feed::get_client(&endpoint)
-            .comment(html_contents.clone(), None)
+            .comment(html_contents.clone(), user.id, None)
             .await;
 
         assert!(res.is_err(), "res: {:?}", res);
@@ -609,12 +683,17 @@ mod tests {
 
     #[tokio::test]
     async fn test_review_with_invalid_parent_id() {
-        let TestContext { now, endpoint, .. } = setup().await.unwrap();
+        let TestContext {
+            user,
+            now,
+            endpoint,
+            ..
+        } = setup().await.unwrap();
 
         let html_contents = format!("<p>Review {now}</p>");
 
         let res = Feed::get_client(&endpoint)
-            .review_doc(html_contents, Some(0), Some(1))
+            .review_doc(html_contents, user.id, Some(0), Some(1))
             .await;
 
         assert!(res.is_err(), "res: {:?}", res);
@@ -628,6 +707,7 @@ mod tests {
             pool,
             now,
             endpoint,
+            user,
             ..
         } = setup().await.unwrap();
         test_setup().await;
@@ -645,7 +725,7 @@ mod tests {
             .unwrap();
 
         let res = Feed::get_client(&endpoint)
-            .repost(html_contents, Some(0), Some(quote.id))
+            .repost(html_contents, user.id, Some(0), Some(quote.id))
             .await;
 
         assert!(res.is_err(), "res: {:?}", res);
@@ -659,6 +739,7 @@ mod tests {
             pool,
             now,
             endpoint,
+            user,
             ..
         } = setup().await.unwrap();
 
@@ -675,7 +756,7 @@ mod tests {
             .unwrap();
 
         let res = Feed::get_client(&endpoint)
-            .repost(html_contents, Some(feed.id), Some(0))
+            .repost(html_contents, user.id, Some(feed.id), Some(0))
             .await;
 
         assert!(res.is_err(), "res: {:?}", res);
