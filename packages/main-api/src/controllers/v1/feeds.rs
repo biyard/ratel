@@ -77,7 +77,7 @@ impl FeedController {
             .await
             .map_err(|e| {
                 tracing::error!("failed to insert post feed: {:?}", e);
-                ServiceError::FeedWritePostError
+                Error::FeedWritePostError
             })?;
 
         Ok(res)
@@ -94,7 +94,7 @@ impl FeedController {
         let user_id = extract_user_id(&self.pool, auth).await?;
         let parent_id = parent_id.ok_or_else(|| {
             tracing::error!("parent id is missing: {user_id}");
-            ServiceError::FeedInvalidParentId
+            Error::FeedInvalidParentId
         })?;
 
         let feed = Feed::query_builder()
@@ -105,7 +105,7 @@ impl FeedController {
             .await
             .map_err(|e| {
                 tracing::error!("failed to get a feed {parent_id}: {e}");
-                ServiceError::FeedInvalidParentId
+                Error::FeedInvalidParentId
             })?;
 
         let res = self
@@ -123,7 +123,7 @@ impl FeedController {
             .await
             .map_err(|e| {
                 tracing::error!("failed to insert comment feed: {:?}", e);
-                ServiceError::FeedWriteCommentError
+                Error::FeedWriteCommentError
             })?;
 
         Ok(res)
@@ -141,7 +141,7 @@ impl FeedController {
         let user_id = extract_user_id(&self.pool, auth).await?;
         let parent_id = parent_id.ok_or_else(|| {
             tracing::error!("parent id is missing: {user_id}");
-            ServiceError::FeedInvalidParentId
+            Error::FeedInvalidParentId
         })?;
 
         let feed = Feed::query_builder()
@@ -152,7 +152,7 @@ impl FeedController {
             .await
             .map_err(|e| {
                 tracing::error!("failed to get a feed {parent_id}: {e}");
-                ServiceError::FeedInvalidParentId
+                Error::FeedInvalidParentId
             })?;
 
         let res = self
@@ -170,7 +170,7 @@ impl FeedController {
             .await
             .map_err(|e| {
                 tracing::error!("failed to insert comment feed: {:?}", e);
-                ServiceError::FeedWriteCommentError
+                Error::FeedWriteCommentError
             })?;
 
         Ok(res)
@@ -188,7 +188,7 @@ impl FeedController {
         let user_id = extract_user_id(&self.pool, auth).await?;
         let parent_id = parent_id.ok_or_else(|| {
             tracing::error!("parent id is missing: {user_id}");
-            ServiceError::FeedInvalidParentId
+            Error::FeedInvalidParentId
         })?;
 
         let quote_feed_id = quote_feed_id.ok_or_else(|| {
@@ -199,7 +199,7 @@ impl FeedController {
                     "invalid quote feed id:{user_id}"
                 );
             });
-            ServiceError::FeedInvalidQuoteId
+            Error::FeedInvalidQuoteId
         })?;
 
         let industry_id = Feed::query_builder()
@@ -210,7 +210,7 @@ impl FeedController {
             .await
             .map_err(|e| {
                 tracing::error!("failed to get a feed {parent_id}: {e}");
-                ServiceError::FeedInvalidParentId
+                Error::FeedInvalidParentId
             })?
             .industry_id;
 
@@ -222,7 +222,7 @@ impl FeedController {
             .await
             .map_err(|e| {
                 tracing::error!("failed to get a feed {quote_feed_id}: {e}");
-                ServiceError::FeedInvalidQuoteId
+                Error::FeedInvalidQuoteId
             })?;
 
         let res = self
@@ -240,7 +240,7 @@ impl FeedController {
             .await
             .map_err(|e| {
                 tracing::error!("failed to insert comment feed: {:?}", e);
-                ServiceError::FeedWriteCommentError
+                Error::FeedWriteCommentError
             })?;
 
         Ok(res)
@@ -253,7 +253,7 @@ impl FeedController {
         param: FeedUpdateRequest,
     ) -> Result<Feed> {
         if auth.is_none() {
-            return Err(ServiceError::Unauthorized);
+            return Err(Error::Unauthorized);
         }
 
         let res = self.repo.update(id, param.into()).await?;
@@ -263,7 +263,7 @@ impl FeedController {
 
     async fn delete(&self, id: i64, auth: Option<Authorization>) -> Result<Feed> {
         if auth.is_none() {
-            return Err(ServiceError::Unauthorized);
+            return Err(Error::Unauthorized);
         }
 
         let res = self.repo.delete(id).await?;
@@ -589,7 +589,7 @@ mod tests {
 
         assert!(res.is_err(), "res: {:?}", res);
 
-        assert_eq!(res, Err(ServiceError::FeedInvalidParentId));
+        assert_eq!(res, Err(Error::FeedInvalidParentId));
     }
 
     #[tokio::test]
@@ -604,7 +604,7 @@ mod tests {
 
         assert!(res.is_err(), "res: {:?}", res);
 
-        assert_eq!(res, Err(ServiceError::FeedInvalidParentId));
+        assert_eq!(res, Err(Error::FeedInvalidParentId));
     }
 
     #[tokio::test]
@@ -619,7 +619,7 @@ mod tests {
 
         assert!(res.is_err(), "res: {:?}", res);
 
-        assert_eq!(res, Err(ServiceError::FeedInvalidParentId));
+        assert_eq!(res, Err(Error::FeedInvalidParentId));
     }
 
     #[tokio::test]
@@ -650,7 +650,7 @@ mod tests {
 
         assert!(res.is_err(), "res: {:?}", res);
 
-        assert_eq!(res, Err(ServiceError::FeedInvalidParentId));
+        assert_eq!(res, Err(Error::FeedInvalidParentId));
     }
 
     #[tokio::test]
@@ -680,6 +680,6 @@ mod tests {
 
         assert!(res.is_err(), "res: {:?}", res);
 
-        assert_eq!(res, Err(ServiceError::FeedInvalidQuoteId));
+        assert_eq!(res, Err(Error::FeedInvalidQuoteId));
     }
 }
