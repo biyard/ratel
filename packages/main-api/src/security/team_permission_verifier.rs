@@ -13,6 +13,10 @@ impl TeamPermissionVerifier {
 
 impl PermissionVerifier for TeamPermissionVerifier {
     fn has_permission(&self, user: &User, perm: GroupPermission) -> bool {
+        if user.id == self.team_id {
+            return true;
+        }
+
         user.groups
             .iter()
             .filter(|x| x.user_id == self.team_id && x.permissions & (perm as i64) != 0)
