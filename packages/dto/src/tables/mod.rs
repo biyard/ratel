@@ -1,19 +1,25 @@
 mod assembly_members;
 mod bills;
 mod election_pledges;
+mod feeds;
+mod industries;
 mod presidential_candidates;
 mod proposers;
 mod subscriptions;
 mod supports;
+mod us_bills;
 mod users;
 mod votes;
 
 pub use assembly_members::*;
 pub use bills::*;
 pub use election_pledges::*;
+pub use feeds::*;
+pub use industries::*;
 pub use presidential_candidates::*;
 pub use proposers::*;
 pub use subscriptions::*;
 pub use supports::*;
+pub use us_bills::*;
 pub use users::*;
 pub use votes::*;

@@ -113,6 +113,7 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           JWT_SECRET_KEY: ${{ secrets.DEV_JWT_SECRET }}
+          US_CONGRESS_KEY: ${{ secrets.US_CONGRESS_KEY }}
         run: |
           cd packages/main-api  && make test
 
@@ -226,6 +227,8 @@ jobs:
           ENABLE_S3: false
           ENABLE_LAMBDA: true
           SLACK_CHANNEL_SPONSOR: ${{ secrets.DEV_SLACK }}
+          US_CONGRESS_KEY: ${{ secrets.US_CONGRESS_KEY }}
+          SLACK_CHANNEL_ABUSING: ${{ secrets.DEV_SLACK }}
         run: |
           npm i -g aws-cdk
           make deploy
@@ -282,6 +285,7 @@ jobs:
           SLACK_CHANNEL_BILL: ${{ secrets.DEV_SLACK }}
           BASE_DOMAIN: ratel.foundation
           REPO_NAME: ratel/fetcher
+          US_CONGRESS_KEY: ${{ secrets.US_CONGRESS_KEY }}
 
           MIGRATE: false
           ENABLE_S3: false
