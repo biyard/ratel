@@ -19,7 +19,7 @@ pub struct Team {
     #[api_model(action = create, action_by_id = [update_team_name])]
     pub username: String,
 
-    #[api_model(many_to_many = team_members, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = team_id)]
+    #[api_model(many_to_many = group_members, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = team_id)]
     pub members: Vec<User>,
 }
 
