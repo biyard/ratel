@@ -24,9 +24,25 @@ pub struct User {
     pub profile_url: String,
 
     #[api_model(action = signup)]
-    pub term_agreed: bool, // TODO: make it required (prod table schema)
+    pub term_agreed: bool,
     #[api_model(action = signup)]
-    pub informed_agreed: bool, // TODO: add it prod table schema
+    pub informed_agreed: bool,
+
+    #[api_model(type = INTEGER, indexed, version = v0.1)]
+    pub user_type: UserType,
+    #[api_model(version = v0.1, indexed)]
+    pub parent_id: Option<i64>,
+    #[api_model(version = v0.1, indexed, unique)]
+    pub username: String,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub enum UserType {
+    #[default]
+    Individual = 1,
+    Team = 2,
+    Bot = 3,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]

@@ -806,6 +806,8 @@ version = "0.3.9"
 dependencies = [
  "aide",
  "axum 0.8.4",
+ "cookie",
+ "gloo-net",
  "reqwest",
  "schemars",
  "serde",
@@ -4341,6 +4343,7 @@ dependencies = [
  "bdk",
  "chrono",
  "dto",
+ "rest-api",
  "scraper",
  "serde",
  "serde_json",
@@ -5861,11 +5864,15 @@ dependencies = [
  "base64 0.22.1",
  "candid",
  "chrono",
+ "dioxus-fullstack",
+ "gloo-net",
  "reqwest",
  "ring",
  "serde",
  "simple_asn1",
+ "tokio",
  "tracing",
+ "web-sys",
 ]
 
 [[package]]
