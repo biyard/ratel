@@ -3,16 +3,12 @@
   "version": "1.0.0",
   "description": "<a id=\"readme-top\"></a>",
   "main": "index.js",
-  "scripts": {"build:css": "tailwindcss -c packages/main-ui/tailwind.config.js -i packages/main-ui/public/input.css -o packages/main-ui/public/tailwind.css"},
+  "scripts": {},
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "@playwright/test": "^1.51.1",
-    "@types/node": "^22.13.17",
-    "tailwindcss": "^4.1.6"
-  },
-  "dependencies": {
-    "@tailwindcss/cli": "^4.1.6"
+    "@types/node": "^22.13.17"
   }
 }
