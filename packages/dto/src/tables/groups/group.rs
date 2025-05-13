@@ -33,6 +33,14 @@ pub enum GroupPermission {
     WriteReplies = 3,
     #[translate(en = "Write comments")]
     WritePendingPosts = 4,
+
+    // Admin
+    #[translate(en = "[Admin] Delete news")]
+    DeleteNews = 61,
+    #[translate(en = "[Admin] Update news")]
+    UpdateNews = 62,
+    #[translate(en = "[Admin] Write news")]
+    WriteNews = 63,
 }
 
 pub struct GroupPermissions(Vec<GroupPermission>);
@@ -56,9 +64,9 @@ impl From<GroupPermissions> for i64 {
 impl From<i64> for GroupPermissions {
     fn from(permissions: i64) -> Self {
         let mut vec = Vec::new();
-        for i in 0..64 {
-            if permissions & (1 << i) != 0 {
-                vec.push(GroupPermission::try_from(i as i32).unwrap());
+        for i in GroupPermission::VARIANTS {
+            if permissions & (1 << (*i as i32)) != 0 {
+                vec.push(GroupPermission::try_from(*i as i32).unwrap());
             }
         }
         Self(vec)
