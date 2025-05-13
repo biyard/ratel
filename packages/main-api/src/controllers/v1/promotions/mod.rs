@@ -64,6 +64,7 @@ impl PromotionController {
         Ok(QueryResponse { total_count, items })
     }
     
+    
     async fn write_promotion(
         &self,
         auth: Option<Authorization>,
