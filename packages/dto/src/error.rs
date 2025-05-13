@@ -97,6 +97,12 @@ pub enum ServiceError {
     FeedInvalidQuoteId,
     #[translate(en = "You should select industry or a parent feed")]
     FeedExclusiveParentOrIndustry,
+
+    //promotions
+    #[translate(
+        en = "Failed to write a promotion", 
+        ko = "프로모션 작성에 실패했습니다.")]
+    PromotionWritePostError,
 }
 
 impl<E: Error + 'static> From<E> for ServiceError {

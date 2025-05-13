@@ -5,6 +5,7 @@ pub mod bills;
 mod election_pledges;
 mod feeds;
 mod presidential_candidates;
+mod promotions;
 pub mod subscriptions;
 pub mod supports;
 pub mod users;
@@ -37,5 +38,9 @@ pub fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Router> 
         .nest(
             "/subscriptions",
             subscriptions::SubscriptionController::new(pool.clone()).route(),
+        )
+        .nest(
+            "/promotions",
+            promotions::PromotionController::new(pool.clone()).route()?,
         ))
 }
