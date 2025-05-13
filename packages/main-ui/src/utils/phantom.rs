@@ -208,6 +208,6 @@ impl PhantomAuth {
     //     self.adapter.get_sol_balance(account)
     // }
 
-    // pub async fn connect_mobile(&self) -> Result<WalletAccount, ServiceError> {
+    // pub async fn connect_mobile(&self) -> Result<WalletAccount, Error> {
     // }
 }

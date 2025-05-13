@@ -274,12 +274,12 @@ impl UserService {
         //     WalletSigner::Phantom => {
         //         let signal = self.phantom.read();
         //         if signal.is_none() {
-        //             return Err(ServiceError::Unauthorized.into());
+        //             return Err(Error::Unauthorized.into());
         //         }
         //         let phantom = signal.as_ref().unwrap();
 
         //         if !phantom.is_connected() {
-        //             return Err(ServiceError::Unauthorized.into());
+        //             return Err(Error::Unauthorized.into());
         //         }
         //     }
         //     _ => rest_api::set_signer(Box::new(*self)),
