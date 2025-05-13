@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use bdk::prelude::reqwest;
 
-use dto::{Result, ServiceError};
+use dto::{Error, Result};
 
 use super::*;
 
@@ -153,19 +153,16 @@ impl UsCongressClient {
             .get(&url)
             .send()
             .await
-            .map_err(|e| ServiceError::FetchError(vec![(0, e.to_string())]))?;
+            .map_err(|e| Error::FetchError(vec![(0, e.to_string())]))?;
 
         if response.status().is_success() {
             let result = response
                 .json::<T>()
                 .await
-                .map_err(|e| ServiceError::JsonDeserializeError(e.to_string()))?;
+                .map_err(|e| Error::JsonDeserializeError(e.to_string()))?;
             Ok(result)
         } else {
-            Err(ServiceError::FetchError(vec![(
-                0,
-                "Request failed".to_string(),
-            )]))
+            Err(Error::FetchError(vec![(0, "Request failed".to_string())]))
         }
     }
 
@@ -201,19 +198,16 @@ impl UsCongressClient {
             .get(&url)
             .send()
             .await
-            .map_err(|e| ServiceError::FetchError(vec![(0, e.to_string())]))?;
+            .map_err(|e| Error::FetchError(vec![(0, e.to_string())]))?;
 
         if response.status().is_success() {
             let result = response
                 .json::<T>()
                 .await
-                .map_err(|e| ServiceError::JsonDeserializeError(e.to_string()))?;
+                .map_err(|e| Error::JsonDeserializeError(e.to_string()))?;
             Ok(result)
         } else {
-            Err(ServiceError::FetchError(vec![(
-                0,
-                "Request failed".to_string(),
-            )]))
+            Err(Error::FetchError(vec![(0, "Request failed".to_string())]))
         }
     }
 }
