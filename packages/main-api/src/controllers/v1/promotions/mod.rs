@@ -71,7 +71,7 @@ impl PromotionController {
             title,
             html_contents,
             price_payed,
-            accepted,
+            ..
         }: PromotionWritePromotionRequest,
     ) -> Result<Promotion> {
        
@@ -84,7 +84,7 @@ impl PromotionController {
                 html_contents,
                 user_id,
                 price_payed,
-                accepted,
+                false,
             )
             .await
             .map_err(|e| {
@@ -101,6 +101,7 @@ impl PromotionController {
         auth: Option<Authorization>,
         param: PromotionUpdateRequest,
     ) -> Result<Promotion> {
+        // TODO: ONLY SERVICE OPERATOR CAN PERFROM
         if auth.is_none() {
             return Err(ServiceError::Unauthorized);
         }
@@ -111,6 +112,7 @@ impl PromotionController {
     }
 
     async fn delete(&self, id: i64, auth: Option<Authorization>) -> Result<Promotion> {
+        // TODO: ONLY SERVICE OPERATOR CAN PERFROM
         if auth.is_none() {
             return Err(ServiceError::Unauthorized);
         }
