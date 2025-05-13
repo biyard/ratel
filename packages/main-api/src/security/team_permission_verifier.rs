@@ -19,7 +19,7 @@ impl PermissionVerifier for TeamPermissionVerifier {
 
         user.groups
             .iter()
-            .filter(|x| x.user_id == self.team_id && x.permissions & (perm as i64) != 0)
+            .filter(|x| x.user_id == self.team_id && x.permissions & (1_i64 << (perm as i32)) != 0)
             .count()
             > 0
     }
