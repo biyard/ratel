@@ -1,0 +1,14 @@
+{
+  "app": {
+    "name": "ratel",
+    "default_platform": "web",
+    "server": false
+  },
+  "web": {
+    "index_path": "index.html"
+  },
+  "mobile": {
+    "app_id": "com.ratel.ratelMobile",
+    "server": false
+  }
+}

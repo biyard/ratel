@@ -27,6 +27,19 @@ setup.tool:
 run: clean public/tailwind.css
 	CARGO_TARGET_DIR=$(PWD)/target $(BUILD_ENV) dx serve --fullstack $(DXFLAGS)
 
+run.android: clean public/tailwind.css
+	CARGO_TARGET_DIR=$(PWD)/target $(BUILD_ENV) dx serve --platform android --features mobile $(DXFLAGS)
+
+run.ios: clean public/tailwind.css
+	cargo build --target aarch64-apple-ios-sim
+	CARGO_TARGET_DIR=$(PWD)/target $(BUILD_ENV) dx serve --platform ios --features mobile --verbose
+
+build.android:
+	$(BUILD_ENV) RUST_LOG=trace dx build --release --platform android --features mobile --verbose
+
+build.ios:
+	$(BUILD_ENV) dx build --release --platform ios --features mobile --verbose
+
 build: clean public/tailwind.css
 	$(BUILD_ENV) dx build --release --fullstack --server-features lambda
 	cp -r $(WORKSPACE_ROOT)/target/dx/$(SERVICE)/release/web $(ARTIFACT_DIR)

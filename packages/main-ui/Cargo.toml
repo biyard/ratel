@@ -30,9 +30,11 @@ wallet-adapter = "=1.0.4-beta"
 hex = "0.4.3"
 validator = "0.20.0"
 regex = "1.11.1"
+libc = "0.2.172"
 
 [features]
 default = []
 web = ["bdk/web"]
+mobile = ["bdk/mobile"]
 server = ["bdk/server", "dto/server"]
 lambda = ["server", "bdk/lambda"]
