@@ -31,7 +31,7 @@ pub enum GroupPermission {
     WritePosts = 2,
     #[translate(en = "Write replies")]
     WriteReplies = 3,
-    #[translate(en = "Write comments")]
+    #[translate(en = "Write pending posts")]
     WritePendingPosts = 4,
 
     // Admin
