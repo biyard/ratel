@@ -1,0 +1,30 @@
+[profile]
+
+[profile.dioxus-client]
+inherits = "dev"
+opt-level = 2
+
+[profile.dioxus-server]
+inherits = "dev"
+opt-level = 2
+
+[profile.dioxus-wasm]
+inherits = "dev"
+opt-level = 2
+
+[profile.dioxus-android]
+inherits = "dev"
+opt-level = 1
+lto = false           
+codegen-units = 16    
+debug = true         
+incremental = true
+
+[profile.release]
+opt-level = "z"
+debug = false
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+incremental = false

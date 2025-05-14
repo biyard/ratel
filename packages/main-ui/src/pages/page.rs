@@ -13,48 +13,51 @@ pub fn HomePage(#[props(default = Language::En)] lang: Language) -> Element {
     let image = asset!("/public/logos/logo.png");
     let mut muted = use_signal(|| true);
 
-    use_effect(|| {
-        use wasm_bindgen::JsCast;
-        use web_sys::{Element, window};
+    #[cfg(feature = "web")]
+    {
+        use_effect(|| {
+            use wasm_bindgen::JsCast;
+            use web_sys::{Element, window};
 
-        if let Some(window) = window() {
-            let location = window.location();
-            if let Ok(hash) = location.hash() {
-                tracing::debug!("hash :{hash}");
+            if let Some(window) = window() {
+                let location = window.location();
+                if let Ok(hash) = location.hash() {
+                    tracing::debug!("hash :{hash}");
 
-                if !hash.is_empty() {
-                    let document = window.document().unwrap();
-                    // web_sys::console::log_1(&hash);
-                    if let Some(target) = document.query_selector(&hash).ok().flatten() {
-                        let scroll = web_sys::ScrollIntoViewOptions::new();
-                        scroll.set_behavior(web_sys::ScrollBehavior::Smooth);
+                    if !hash.is_empty() {
+                        let document = window.document().unwrap();
+                        // web_sys::console::log_1(&hash);
+                        if let Some(target) = document.query_selector(&hash).ok().flatten() {
+                            let scroll = web_sys::ScrollIntoViewOptions::new();
+                            scroll.set_behavior(web_sys::ScrollBehavior::Smooth);
 
-                        let _ = target
-                            .dyn_ref::<Element>()
-                            .unwrap()
-                            .scroll_into_view_with_scroll_into_view_options(&scroll);
+                            let _ = target
+                                .dyn_ref::<Element>()
+                                .unwrap()
+                                .scroll_into_view_with_scroll_into_view_options(&scroll);
+                        }
                     }
                 }
             }
-        }
-    });
+        });
+    }
 
     rsx! {
         MetaPage { title: "Ratel", description: tr.description, image: "{image}" }
         div { class: "absolute top-0 left-0 w-full h-auto",
             div { class: "absolute inset-0 bg-background/95 z-1" }
-            div { class: "absolute relative w-full z-0",
-                video {
-                    class: "w-full h-screen object-cover",
-                    autoplay: true,
-                    muted: muted(),
-                    playsinline: "false",
-                    onmouseenter: move |_| muted.set(false),
-                    onmouseleave: move |_| muted.set(true),
-                    r#loop: true,
-                    src: asset!("/public/videos/ratel.mp4"),
-                }
+                div { class: "absolute relative w-full z-0",
+            video {
+                class: "w-full h-screen object-cover",
+                autoplay: true,
+                muted: muted(),
+                playsinline: "false",
+                onmouseenter: move |_| muted.set(false),
+                onmouseleave: move |_| muted.set(true),
+                r#loop: true,
+                src: asset!("/public/videos/ratel.mp4"),
             }
+        }
         }
 
         a {
