@@ -6,39 +6,25 @@ plugins {
     id("rust")
 }
 
-val env = Properties()
-val envFile = rootProject.file(".env")
-if (envFile.exists()) {
-    env.load(envFile.inputStream())
+val tauriProperties = Properties().apply {
+    val propFile = file("tauri.properties")
+    if (propFile.exists()) {
+        propFile.inputStream().use { load(it) }
+    }
 }
 
 android {
     compileSdk = 34
     namespace = "com.ratel.ratelMobile"
-
     defaultConfig {
+        manifestPlaceholders["usesCleartextTraffic"] = "false"
         applicationId = "com.ratel.ratelMobile"
         minSdk = 24
         targetSdk = 34
-        versionCode = 2
-        versionName = "2.0"
+        versionCode = tauriProperties.getProperty("tauri.android.versionCode", "1").toInt()
+        versionName = tauriProperties.getProperty("tauri.android.versionName", "1.0")
     }
-
-    signingConfigs {
-        create("release") {
-            storeFile = file(env.getProperty("KEYSTORE_FILE") ?: throw GradleException("KEYSTORE_FILE not set"))
-            storePassword = env.getProperty("KEYSTORE_PASSWORD") ?: throw GradleException("KEYSTORE_PASSWORD not set")
-            keyAlias = env.getProperty("KEY_ALIAS") ?: throw GradleException("KEY_ALIAS not set")
-            keyPassword = env.getProperty("KEY_PASSWORD") ?: throw GradleException("KEY_PASSWORD not set")
-        }
-    }
-
     buildTypes {
-        getByName("release") {
-            signingConfig = signingConfigs.getByName("release")
-            isMinifyEnabled = false
-            isShrinkResources = false
-        }
         getByName("debug") {
             manifestPlaceholders["usesCleartextTraffic"] = "true"
             isDebuggable = true
@@ -78,12 +64,6 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.4")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.0")
-}
-
-tasks.whenTaskAdded {
-    if (this.name.contains("rustBuild", ignoreCase = true)) {
-        this.enabled = false
-    }
 }
 
 apply(from = "tauri.build.gradle.kts")
