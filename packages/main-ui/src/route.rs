@@ -3,8 +3,11 @@ use bdk::prelude::*;
 
 #[derive(Clone, Routable, Debug, PartialEq)]
 pub enum Route {
-    #[nest("/en")]
-    #[layout(RootLayout)]
+    #[nest("/")]
+    #[layout(SocialLayout)]
+    #[end_nest]
+    #[nest("/landing")]
+    #[layout(LandingLayout)]
     #[route("/")]
     HomePage {},
 

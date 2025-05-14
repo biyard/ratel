@@ -1,5 +1,7 @@
 use super::{controller::Controller, *};
-use crate::{components::button::primary_button::PrimaryButton, pages::components::SectionHeader};
+use crate::{
+    components::button::primary_button::PrimaryButton, pages::landing::components::SectionHeader,
+};
 use bdk::prelude::*;
 use i18n::*;
 
