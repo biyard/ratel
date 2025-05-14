@@ -4,10 +4,11 @@
 /packages/main-api/.build/
 target/
 /packages/main-ui/public/dep.js
-/packages/mobile/src-tauri/gen/android/ratel-mobile.json
-/packages/mobile/src-tauri/gen/android/.env
-/packages/mobile/src-tauri/gen/android/app/google-services.json
-/packages/mobile/src-tauri/gen/apple/fastlane/Appfile
+/packages/app/gen/android/ratel-mobile.json
+/packages/app/gen/android/.env
+/packages/app/gen/android/app/google-services.json
+/packages/app/gen/apple/fastlane/Appfile
+/packages/app/gen/apple/mobile_iOS/GoogleService-Info.plist
 dist/
 node_modules/
 .build/

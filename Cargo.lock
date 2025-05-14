@@ -584,9 +584,9 @@ dependencies = [
  "by-components",
  "by-macros",
  "by-types",
- "dioxus 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
+ "dioxus",
  "dioxus-aws",
- "dioxus-fullstack 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
+ "dioxus-fullstack",
  "dioxus-logger 0.5.1",
  "dioxus-popup",
  "dioxus-translate",
@@ -745,7 +745,7 @@ dependencies = [
 name = "btracing"
 version = "0.1.2"
 dependencies = [
- "dioxus 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
+ "dioxus",
  "gloo-timers",
  "serde",
  "tracing",
@@ -792,7 +792,7 @@ name = "by-components"
 version = "0.1.3"
 dependencies = [
  "by-macros",
- "dioxus 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
+ "dioxus",
  "dioxus-translate",
  "js-sys",
  "num-format",
@@ -1150,32 +1150,11 @@ checksum = "c2459377285ad874054d797f3ccebf984978aa39129f6eafde5cdc8315b612f8"
 
 [[package]]
 name = "const-serialize"
-version = "0.6.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "08259976d62c715c4826cb4a3d64a3a9e5c5f68f964ff6087319857f569f93a6"
-dependencies = [
- "const-serialize-macro 0.6.2",
- "serde",
-]
-
-[[package]]
-name = "const-serialize"
 version = "0.6.3"
 source = "git+https://github.com/hackartists/dioxus.git#b1f3635381cc43de23d8a8a959341cfd5f93ee3f"
 dependencies = [
- "const-serialize-macro 0.6.3",
+ "const-serialize-macro",
  "serde",
-]
-
-[[package]]
-name = "const-serialize-macro"
-version = "0.6.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "04382d0d9df7434af6b1b49ea1a026ef39df1b0738b1cc373368cf175354f6eb"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.101",
 ]
 
 [[package]]
@@ -1508,19 +1487,6 @@ dependencies = [
 
 [[package]]
 name = "dashmap"
-version = "5.5.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "978747c1d849a7d2ee5e8adc0159961c48fb7e5db2f06af6723b80123bb53856"
-dependencies = [
- "cfg-if",
- "hashbrown 0.14.5",
- "lock_api",
- "once_cell",
- "parking_lot_core",
-]
-
-[[package]]
-name = "dashmap"
 version = "6.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5041cc499144891f3790297212f32a74fb938e5136a14943f338ef9e0ae276cf"
@@ -1588,50 +1554,27 @@ dependencies = [
 [[package]]
 name = "dioxus"
 version = "0.6.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "60a247114500f1a78e87022defa8173de847accfada8e8809dfae23a118a580c"
-dependencies = [
- "dioxus-cli-config 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "dioxus-config-macro 0.6.2",
- "dioxus-core 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "dioxus-core-macro 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "dioxus-devtools 0.6.2",
- "dioxus-document 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "dioxus-fullstack 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "dioxus-history 0.6.2",
- "dioxus-hooks 0.6.2",
- "dioxus-html 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "dioxus-logger 0.6.2",
- "dioxus-signals 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "dioxus-web 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "manganis 0.6.2",
- "warnings",
-]
-
-[[package]]
-name = "dioxus"
-version = "0.6.3"
 source = "git+https://github.com/hackartists/dioxus.git#b1f3635381cc43de23d8a8a959341cfd5f93ee3f"
 dependencies = [
- "dioxus-cli-config 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
- "dioxus-config-macro 0.6.3",
+ "dioxus-cli-config",
+ "dioxus-config-macro",
  "dioxus-config-macros",
- "dioxus-core 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
- "dioxus-core-macro 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
- "dioxus-devtools 0.6.3",
- "dioxus-document 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
- "dioxus-fullstack 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
- "dioxus-history 0.6.3",
- "dioxus-hooks 0.6.3",
- "dioxus-html 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
+ "dioxus-core",
+ "dioxus-core-macro",
+ "dioxus-devtools",
+ "dioxus-document",
+ "dioxus-fullstack",
+ "dioxus-history",
+ "dioxus-hooks",
+ "dioxus-html",
  "dioxus-liveview",
  "dioxus-logger 0.6.3",
  "dioxus-mobile",
  "dioxus-router",
- "dioxus-signals 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
+ "dioxus-signals",
  "dioxus-ssr",
- "dioxus-web 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
- "manganis 0.6.3",
+ "dioxus-web",
+ "manganis",
  "serde",
  "warnings",
 ]
@@ -1643,9 +1586,9 @@ dependencies = [
  "axum 0.7.9",
  "axum-core 0.4.5",
  "base64 0.22.1",
- "dioxus 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
- "dioxus-cli-config 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
- "dioxus-fullstack 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
+ "dioxus",
+ "dioxus-cli-config",
+ "dioxus-fullstack",
  "http",
  "lambda_http 0.12.0",
  "lambda_runtime 0.12.0",
@@ -1660,28 +1603,9 @@ dependencies = [
 [[package]]
 name = "dioxus-cli-config"
 version = "0.6.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cdd16948f1ffdb068dd9a64812158073a4250e2af4e98ea31fdac0312e6bce86"
-dependencies = [
- "wasm-bindgen",
-]
-
-[[package]]
-name = "dioxus-cli-config"
-version = "0.6.3"
 source = "git+https://github.com/hackartists/dioxus.git#b1f3635381cc43de23d8a8a959341cfd5f93ee3f"
 dependencies = [
  "wasm-bindgen",
-]
-
-[[package]]
-name = "dioxus-config-macro"
-version = "0.6.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "75cbf582fbb1c32d34a1042ea675469065574109c95154468710a4d73ee98b49"
-dependencies = [
- "proc-macro2",
- "quote",
 ]
 
 [[package]]
@@ -1701,34 +1625,13 @@ source = "git+https://github.com/hackartists/dioxus.git#b1f3635381cc43de23d8a8a9
 [[package]]
 name = "dioxus-core"
 version = "0.6.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9c03f451a119e47433c16e2d8eb5b15bf7d6e6734eb1a4c47574e6711dadff8d"
-dependencies = [
- "const_format",
- "dioxus-core-types 0.6.2",
- "futures-channel",
- "futures-util",
- "generational-box 0.6.2",
- "longest-increasing-subsequence",
- "rustc-hash",
- "rustversion",
- "serde",
- "slab",
- "slotmap",
- "tracing",
- "warnings",
-]
-
-[[package]]
-name = "dioxus-core"
-version = "0.6.3"
 source = "git+https://github.com/hackartists/dioxus.git#b1f3635381cc43de23d8a8a959341cfd5f93ee3f"
 dependencies = [
  "const_format",
- "dioxus-core-types 0.6.3",
+ "dioxus-core-types",
  "futures-channel",
  "futures-util",
- "generational-box 0.6.3",
+ "generational-box",
  "longest-increasing-subsequence",
  "rustc-hash",
  "rustversion",
@@ -1742,35 +1645,13 @@ dependencies = [
 [[package]]
 name = "dioxus-core-macro"
 version = "0.6.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "105c954caaaedf8cd10f3d1ba576b01e18aa8d33ad435182125eefe488cf0064"
-dependencies = [
- "convert_case 0.6.0",
- "dioxus-rsx 0.6.2",
- "proc-macro2",
- "quote",
- "syn 2.0.101",
-]
-
-[[package]]
-name = "dioxus-core-macro"
-version = "0.6.3"
 source = "git+https://github.com/hackartists/dioxus.git#b1f3635381cc43de23d8a8a959341cfd5f93ee3f"
 dependencies = [
  "convert_case 0.6.0",
- "dioxus-rsx 0.6.3",
+ "dioxus-rsx",
  "proc-macro2",
  "quote",
  "syn 2.0.101",
-]
-
-[[package]]
-name = "dioxus-core-types"
-version = "0.6.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "91a82fccfa48574eb7aa183e297769540904694844598433a9eb55896ad9f93b"
-dependencies = [
- "once_cell",
 ]
 
 [[package]]
@@ -1790,23 +1671,23 @@ dependencies = [
  "base64 0.22.1",
  "cocoa 0.25.0",
  "core-foundation 0.9.4",
- "dioxus-cli-config 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
- "dioxus-core 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
- "dioxus-devtools 0.6.3",
- "dioxus-document 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
- "dioxus-history 0.6.3",
- "dioxus-hooks 0.6.3",
- "dioxus-html 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
- "dioxus-interpreter-js 0.6.3",
- "dioxus-signals 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
+ "dioxus-cli-config",
+ "dioxus-core",
+ "dioxus-devtools",
+ "dioxus-document",
+ "dioxus-history",
+ "dioxus-hooks",
+ "dioxus-html",
+ "dioxus-interpreter-js",
+ "dioxus-signals",
  "dunce",
  "futures-channel",
  "futures-util",
- "generational-box 0.6.3",
+ "generational-box",
  "global-hotkey",
  "infer 0.11.0",
  "jni",
- "lazy-js-bundle 0.6.3",
+ "lazy-js-bundle",
  "muda 0.15.3",
  "ndk",
  "ndk-context",
@@ -1832,28 +1713,12 @@ dependencies = [
 
 [[package]]
 name = "dioxus-devtools"
-version = "0.6.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "712a7300f1e8181218187b03502044157eef04e0a25b518117c5ef9ae1096880"
-dependencies = [
- "dioxus-core 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "dioxus-devtools-types 0.6.2",
- "dioxus-signals 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "serde",
- "serde_json",
- "tracing",
- "tungstenite 0.23.0",
- "warnings",
-]
-
-[[package]]
-name = "dioxus-devtools"
 version = "0.6.3"
 source = "git+https://github.com/hackartists/dioxus.git#b1f3635381cc43de23d8a8a959341cfd5f93ee3f"
 dependencies = [
- "dioxus-core 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
- "dioxus-devtools-types 0.6.3",
- "dioxus-signals 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
+ "dioxus-core",
+ "dioxus-devtools-types",
+ "dioxus-signals",
  "serde",
  "serde_json",
  "tracing",
@@ -1863,40 +1728,11 @@ dependencies = [
 
 [[package]]
 name = "dioxus-devtools-types"
-version = "0.6.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f62434973c0c9c5a3bc42e9cd5e7070401c2062a437fb5528f318c3e42ebf4ff"
-dependencies = [
- "dioxus-core 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "serde",
-]
-
-[[package]]
-name = "dioxus-devtools-types"
 version = "0.6.3"
 source = "git+https://github.com/hackartists/dioxus.git#b1f3635381cc43de23d8a8a959341cfd5f93ee3f"
 dependencies = [
- "dioxus-core 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
+ "dioxus-core",
  "serde",
-]
-
-[[package]]
-name = "dioxus-document"
-version = "0.6.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "802a2014d1662b6615eec0a275745822ee4fc66aacd9d0f2fb33d6c8da79b8f2"
-dependencies = [
- "dioxus-core 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "dioxus-core-macro 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "dioxus-core-types 0.6.2",
- "dioxus-html 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "futures-channel",
- "futures-util",
- "generational-box 0.6.2",
- "lazy-js-bundle 0.6.2",
- "serde",
- "serde_json",
- "tracing",
 ]
 
 [[package]]
@@ -1904,41 +1740,17 @@ name = "dioxus-document"
 version = "0.6.3"
 source = "git+https://github.com/hackartists/dioxus.git#b1f3635381cc43de23d8a8a959341cfd5f93ee3f"
 dependencies = [
- "dioxus-core 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
- "dioxus-core-macro 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
- "dioxus-core-types 0.6.3",
- "dioxus-html 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
+ "dioxus-core",
+ "dioxus-core-macro",
+ "dioxus-core-types",
+ "dioxus-html",
  "futures-channel",
  "futures-util",
- "generational-box 0.6.3",
- "lazy-js-bundle 0.6.3",
+ "generational-box",
+ "lazy-js-bundle",
  "serde",
  "serde_json",
  "tracing",
-]
-
-[[package]]
-name = "dioxus-fullstack"
-version = "0.6.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fe99b48a1348eec385b5c4bd3e80fd863b0d3b47257d34e2ddc58754dec5d128"
-dependencies = [
- "base64 0.22.1",
- "bytes",
- "ciborium",
- "dioxus-devtools 0.6.2",
- "dioxus-history 0.6.2",
- "dioxus-lib 0.6.2",
- "dioxus-web 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "dioxus_server_macro 0.6.2",
- "futures-channel",
- "futures-util",
- "generational-box 0.6.2",
- "once_cell",
- "serde",
- "server_fn 0.6.15",
- "tracing",
- "web-sys",
 ]
 
 [[package]]
@@ -1951,26 +1763,26 @@ dependencies = [
  "base64 0.22.1",
  "bytes",
  "ciborium",
- "dioxus-cli-config 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
- "dioxus-devtools 0.6.3",
- "dioxus-history 0.6.3",
- "dioxus-interpreter-js 0.6.3",
+ "dioxus-cli-config",
+ "dioxus-devtools",
+ "dioxus-history",
+ "dioxus-interpreter-js",
  "dioxus-isrg",
- "dioxus-lib 0.6.3",
+ "dioxus-lib",
  "dioxus-mobile",
  "dioxus-ssr",
- "dioxus-web 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
- "dioxus_server_macro 0.6.3",
+ "dioxus-web",
+ "dioxus_server_macro",
  "futures-channel",
  "futures-util",
- "generational-box 0.6.3",
+ "generational-box",
  "http",
  "hyper",
  "once_cell",
  "parking_lot",
  "pin-project",
  "serde",
- "server_fn 0.7.8",
+ "server_fn",
  "thiserror 1.0.69",
  "tokio",
  "tokio-stream",
@@ -1985,38 +1797,11 @@ dependencies = [
 
 [[package]]
 name = "dioxus-history"
-version = "0.6.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5ae4e22616c698f35b60727313134955d885de2d32e83689258e586ebc9b7909"
-dependencies = [
- "dioxus-core 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "tracing",
-]
-
-[[package]]
-name = "dioxus-history"
 version = "0.6.3"
 source = "git+https://github.com/hackartists/dioxus.git#b1f3635381cc43de23d8a8a959341cfd5f93ee3f"
 dependencies = [
- "dioxus-core 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
+ "dioxus-core",
  "tracing",
-]
-
-[[package]]
-name = "dioxus-hooks"
-version = "0.6.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "948e2b3f20d9d4b2c300aaa60281b1755f3298684448920b27106da5841896d0"
-dependencies = [
- "dioxus-core 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "dioxus-signals 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "futures-channel",
- "futures-util",
- "generational-box 0.6.2",
- "rustversion",
- "slab",
- "tracing",
- "warnings",
 ]
 
 [[package]]
@@ -2024,11 +1809,11 @@ name = "dioxus-hooks"
 version = "0.6.3"
 source = "git+https://github.com/hackartists/dioxus.git#b1f3635381cc43de23d8a8a959341cfd5f93ee3f"
 dependencies = [
- "dioxus-core 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
- "dioxus-signals 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
+ "dioxus-core",
+ "dioxus-signals",
  "futures-channel",
  "futures-util",
- "generational-box 0.6.3",
+ "generational-box",
  "rustversion",
  "slab",
  "tracing",
@@ -2038,42 +1823,20 @@ dependencies = [
 [[package]]
 name = "dioxus-html"
 version = "0.6.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "59c9a40e6fee20ce7990095492dedb6a753eebe05e67d28271a249de74dc796d"
-dependencies = [
- "async-trait",
- "dioxus-core 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "dioxus-core-macro 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "dioxus-core-types 0.6.2",
- "dioxus-hooks 0.6.2",
- "dioxus-html-internal-macro 0.6.2",
- "enumset",
- "euclid",
- "futures-channel",
- "generational-box 0.6.2",
- "keyboard-types",
- "lazy-js-bundle 0.6.2",
- "rustversion",
- "tracing",
-]
-
-[[package]]
-name = "dioxus-html"
-version = "0.6.3"
 source = "git+https://github.com/hackartists/dioxus.git#b1f3635381cc43de23d8a8a959341cfd5f93ee3f"
 dependencies = [
  "async-trait",
- "dioxus-core 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
- "dioxus-core-macro 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
- "dioxus-core-types 0.6.3",
- "dioxus-hooks 0.6.3",
- "dioxus-html-internal-macro 0.6.3",
+ "dioxus-core",
+ "dioxus-core-macro",
+ "dioxus-core-types",
+ "dioxus-hooks",
+ "dioxus-html-internal-macro",
  "enumset",
  "euclid",
  "futures-channel",
- "generational-box 0.6.3",
+ "generational-box",
  "keyboard-types",
- "lazy-js-bundle 0.6.3",
+ "lazy-js-bundle",
  "rustversion",
  "serde",
  "serde_json",
@@ -2083,18 +1846,6 @@ dependencies = [
 
 [[package]]
 name = "dioxus-html-internal-macro"
-version = "0.6.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "43ba87b53688a2c9f619ecdf4b3b955bc1f08bd0570a80a0d626c405f6d14a76"
-dependencies = [
- "convert_case 0.6.0",
- "proc-macro2",
- "quote",
- "syn 2.0.101",
-]
-
-[[package]]
-name = "dioxus-html-internal-macro"
 version = "0.6.3"
 source = "git+https://github.com/hackartists/dioxus.git#b1f3635381cc43de23d8a8a959341cfd5f93ee3f"
 dependencies = [
@@ -2106,30 +1857,14 @@ dependencies = [
 
 [[package]]
 name = "dioxus-interpreter-js"
-version = "0.6.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "330707b10ca75cb0eb05f9e5f8d80217cd0d7e62116a8277ae363c1a09b57a22"
-dependencies = [
- "js-sys",
- "lazy-js-bundle 0.6.2",
- "rustc-hash",
- "sledgehammer_bindgen",
- "sledgehammer_utils",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
-]
-
-[[package]]
-name = "dioxus-interpreter-js"
 version = "0.6.3"
 source = "git+https://github.com/hackartists/dioxus.git#b1f3635381cc43de23d8a8a959341cfd5f93ee3f"
 dependencies = [
- "dioxus-core 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
- "dioxus-core-types 0.6.3",
- "dioxus-html 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
+ "dioxus-core",
+ "dioxus-core-types",
+ "dioxus-html",
  "js-sys",
- "lazy-js-bundle 0.6.3",
+ "lazy-js-bundle",
  "rustc-hash",
  "serde",
  "sledgehammer_bindgen",
@@ -2154,36 +1889,18 @@ dependencies = [
 
 [[package]]
 name = "dioxus-lib"
-version = "0.6.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5405b71aa9b8b0c3e0d22728f12f34217ca5277792bd315878cc6ecab7301b72"
-dependencies = [
- "dioxus-config-macro 0.6.2",
- "dioxus-core 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "dioxus-core-macro 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "dioxus-document 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "dioxus-history 0.6.2",
- "dioxus-hooks 0.6.2",
- "dioxus-html 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "dioxus-rsx 0.6.2",
- "dioxus-signals 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "warnings",
-]
-
-[[package]]
-name = "dioxus-lib"
 version = "0.6.3"
 source = "git+https://github.com/hackartists/dioxus.git#b1f3635381cc43de23d8a8a959341cfd5f93ee3f"
 dependencies = [
- "dioxus-config-macro 0.6.3",
- "dioxus-core 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
- "dioxus-core-macro 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
- "dioxus-document 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
- "dioxus-history 0.6.3",
- "dioxus-hooks 0.6.3",
- "dioxus-html 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
- "dioxus-rsx 0.6.3",
- "dioxus-signals 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
+ "dioxus-config-macro",
+ "dioxus-core",
+ "dioxus-core-macro",
+ "dioxus-document",
+ "dioxus-history",
+ "dioxus-hooks",
+ "dioxus-html",
+ "dioxus-rsx",
+ "dioxus-signals",
  "warnings",
 ]
 
@@ -2193,16 +1910,16 @@ version = "0.6.3"
 source = "git+https://github.com/hackartists/dioxus.git#b1f3635381cc43de23d8a8a959341cfd5f93ee3f"
 dependencies = [
  "axum 0.7.9",
- "dioxus-cli-config 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
- "dioxus-core 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
- "dioxus-devtools 0.6.3",
- "dioxus-document 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
- "dioxus-history 0.6.3",
- "dioxus-html 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
- "dioxus-interpreter-js 0.6.3",
+ "dioxus-cli-config",
+ "dioxus-core",
+ "dioxus-devtools",
+ "dioxus-document",
+ "dioxus-history",
+ "dioxus-html",
+ "dioxus-interpreter-js",
  "futures-channel",
  "futures-util",
- "generational-box 0.6.3",
+ "generational-box",
  "rustc-hash",
  "serde",
  "serde_json",
@@ -2228,24 +1945,11 @@ dependencies = [
 
 [[package]]
 name = "dioxus-logger"
-version = "0.6.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "545961e752f6c8bf59c274951b3c8b18a106db6ad2f9e2035b29e1f2a3e899b1"
-dependencies = [
- "console_error_panic_hook",
- "dioxus-cli-config 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "tracing",
- "tracing-subscriber",
- "tracing-wasm",
-]
-
-[[package]]
-name = "dioxus-logger"
 version = "0.6.3"
 source = "git+https://github.com/hackartists/dioxus.git#b1f3635381cc43de23d8a8a959341cfd5f93ee3f"
 dependencies = [
  "console_error_panic_hook",
- "dioxus-cli-config 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
+ "dioxus-cli-config",
  "tracing",
  "tracing-subscriber",
  "tracing-wasm",
@@ -2256,9 +1960,9 @@ name = "dioxus-mobile"
 version = "0.6.3"
 source = "git+https://github.com/hackartists/dioxus.git#b1f3635381cc43de23d8a8a959341cfd5f93ee3f"
 dependencies = [
- "dioxus-cli-config 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
+ "dioxus-cli-config",
  "dioxus-desktop",
- "dioxus-lib 0.6.3",
+ "dioxus-lib",
  "jni",
  "libc",
  "once_cell",
@@ -2268,7 +1972,7 @@ dependencies = [
 name = "dioxus-oauth"
 version = "0.6.6"
 dependencies = [
- "dioxus 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
+ "dioxus",
  "reqwest",
  "serde",
  "serde-wasm-bindgen 0.6.5",
@@ -2285,7 +1989,7 @@ name = "dioxus-popup"
 version = "0.1.3"
 dependencies = [
  "by-components",
- "dioxus 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
+ "dioxus",
 ]
 
 [[package]]
@@ -2293,9 +1997,9 @@ name = "dioxus-router"
 version = "0.6.3"
 source = "git+https://github.com/hackartists/dioxus.git#b1f3635381cc43de23d8a8a959341cfd5f93ee3f"
 dependencies = [
- "dioxus-cli-config 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
- "dioxus-history 0.6.3",
- "dioxus-lib 0.6.3",
+ "dioxus-cli-config",
+ "dioxus-history",
+ "dioxus-lib",
  "dioxus-router-macro",
  "rustversion",
  "tracing",
@@ -2319,18 +2023,6 @@ dependencies = [
 
 [[package]]
 name = "dioxus-rsx"
-version = "0.6.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3eb588e05800b5a7eb90b2f40fca5bbd7626e823fb5e1ba21e011de649b45aa1"
-dependencies = [
- "proc-macro2",
- "proc-macro2-diagnostics",
- "quote",
- "syn 2.0.101",
-]
-
-[[package]]
-name = "dioxus-rsx"
 version = "0.6.3"
 source = "git+https://github.com/hackartists/dioxus.git#b1f3635381cc43de23d8a8a959341cfd5f93ee3f"
 dependencies = [
@@ -2343,29 +2035,12 @@ dependencies = [
 [[package]]
 name = "dioxus-signals"
 version = "0.6.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "10e032dbb3a2c0386ec8b8ee59bc20b5aeb67038147c855801237b45b13d72ac"
-dependencies = [
- "dioxus-core 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "futures-channel",
- "futures-util",
- "generational-box 0.6.2",
- "once_cell",
- "parking_lot",
- "rustc-hash",
- "tracing",
- "warnings",
-]
-
-[[package]]
-name = "dioxus-signals"
-version = "0.6.3"
 source = "git+https://github.com/hackartists/dioxus.git#b1f3635381cc43de23d8a8a959341cfd5f93ee3f"
 dependencies = [
- "dioxus-core 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
+ "dioxus-core",
  "futures-channel",
  "futures-util",
- "generational-box 0.6.3",
+ "generational-box",
  "once_cell",
  "parking_lot",
  "rustc-hash",
@@ -2379,8 +2054,8 @@ version = "0.6.3"
 source = "git+https://github.com/hackartists/dioxus.git#b1f3635381cc43de23d8a8a959341cfd5f93ee3f"
 dependencies = [
  "askama_escape",
- "dioxus-core 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
- "dioxus-core-types 0.6.3",
+ "dioxus-core",
+ "dioxus-core-types",
  "rustc-hash",
 ]
 
@@ -2413,56 +2088,24 @@ version = "0.1.3"
 [[package]]
 name = "dioxus-web"
 version = "0.6.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7e7c12475c3d360058b8afe1b68eb6dfc9cbb7dcd760aed37c5f85c561c83ed1"
-dependencies = [
- "async-trait",
- "ciborium",
- "dioxus-cli-config 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "dioxus-core 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "dioxus-core-types 0.6.2",
- "dioxus-devtools 0.6.2",
- "dioxus-document 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "dioxus-history 0.6.2",
- "dioxus-html 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "dioxus-interpreter-js 0.6.2",
- "dioxus-signals 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "futures-channel",
- "futures-util",
- "generational-box 0.6.2",
- "js-sys",
- "lazy-js-bundle 0.6.2",
- "rustc-hash",
- "serde",
- "serde-wasm-bindgen 0.5.0",
- "serde_json",
- "tracing",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
-]
-
-[[package]]
-name = "dioxus-web"
-version = "0.6.3"
 source = "git+https://github.com/hackartists/dioxus.git#b1f3635381cc43de23d8a8a959341cfd5f93ee3f"
 dependencies = [
  "async-trait",
  "ciborium",
- "dioxus-cli-config 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
- "dioxus-core 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
- "dioxus-core-types 0.6.3",
- "dioxus-devtools 0.6.3",
- "dioxus-document 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
- "dioxus-history 0.6.3",
- "dioxus-html 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
- "dioxus-interpreter-js 0.6.3",
- "dioxus-signals 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
+ "dioxus-cli-config",
+ "dioxus-core",
+ "dioxus-core-types",
+ "dioxus-devtools",
+ "dioxus-document",
+ "dioxus-history",
+ "dioxus-html",
+ "dioxus-interpreter-js",
+ "dioxus-signals",
  "futures-channel",
  "futures-util",
- "generational-box 0.6.3",
+ "generational-box",
  "js-sys",
- "lazy-js-bundle 0.6.3",
+ "lazy-js-bundle",
  "rustc-hash",
  "serde",
  "serde-wasm-bindgen 0.5.0",
@@ -2475,24 +2118,12 @@ dependencies = [
 
 [[package]]
 name = "dioxus_server_macro"
-version = "0.6.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "371a5b21989a06b53c5092e977b3f75d0e60a65a4c15a2aa1d07014c3b2dda97"
-dependencies = [
- "proc-macro2",
- "quote",
- "server_fn_macro 0.6.15",
- "syn 2.0.101",
-]
-
-[[package]]
-name = "dioxus_server_macro"
 version = "0.6.3"
 source = "git+https://github.com/hackartists/dioxus.git#b1f3635381cc43de23d8a8a959341cfd5f93ee3f"
 dependencies = [
  "proc-macro2",
  "quote",
- "server_fn_macro 0.7.8",
+ "server_fn_macro",
  "syn 2.0.101",
 ]
 
@@ -3195,16 +2826,6 @@ dependencies = [
 
 [[package]]
 name = "generational-box"
-version = "0.6.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a673cf4fb0ea6a91aa86c08695756dfe875277a912cdbf33db9a9f62d47ed82b"
-dependencies = [
- "parking_lot",
- "tracing",
-]
-
-[[package]]
-name = "generational-box"
 version = "0.6.3"
 source = "git+https://github.com/hackartists/dioxus.git#b1f3635381cc43de23d8a8a959341cfd5f93ee3f"
 dependencies = [
@@ -3465,7 +3086,7 @@ version = "0.1.3"
 dependencies = [
  "base64 0.22.1",
  "candid",
- "dioxus 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
+ "dioxus",
  "dioxus-oauth",
  "gloo-storage",
  "reqwest",
@@ -4386,12 +4007,6 @@ dependencies = [
 
 [[package]]
 name = "lazy-js-bundle"
-version = "0.6.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e49596223b9d9d4947a14a25c142a6e7d8ab3f27eb3ade269d238bb8b5c267e2"
-
-[[package]]
-name = "lazy-js-bundle"
 version = "0.6.3"
 source = "git+https://github.com/hackartists/dioxus.git#b1f3635381cc43de23d8a8a959341cfd5f93ee3f"
 
@@ -4616,35 +4231,12 @@ dependencies = [
 
 [[package]]
 name = "manganis"
-version = "0.6.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "317af44b15e7605b85f04525449a3bb631753040156c9b318e6cba8a3ea4ef73"
-dependencies = [
- "const-serialize 0.6.2",
- "manganis-core 0.6.2",
- "manganis-macro 0.6.2",
-]
-
-[[package]]
-name = "manganis"
 version = "0.6.3"
 source = "git+https://github.com/hackartists/dioxus.git#b1f3635381cc43de23d8a8a959341cfd5f93ee3f"
 dependencies = [
- "const-serialize 0.6.3",
- "manganis-core 0.6.3",
- "manganis-macro 0.6.3",
-]
-
-[[package]]
-name = "manganis-core"
-version = "0.6.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c38bee65cc725b2bba23b5dbb290f57c8be8fadbe2043fb7e2ce73022ea06519"
-dependencies = [
- "const-serialize 0.6.2",
- "dioxus-cli-config 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "dioxus-core-types 0.6.2",
- "serde",
+ "const-serialize",
+ "manganis-core",
+ "manganis-macro",
 ]
 
 [[package]]
@@ -4652,23 +4244,10 @@ name = "manganis-core"
 version = "0.6.3"
 source = "git+https://github.com/hackartists/dioxus.git#b1f3635381cc43de23d8a8a959341cfd5f93ee3f"
 dependencies = [
- "const-serialize 0.6.3",
- "dioxus-cli-config 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
- "dioxus-core-types 0.6.3",
+ "const-serialize",
+ "dioxus-cli-config",
+ "dioxus-core-types",
  "serde",
-]
-
-[[package]]
-name = "manganis-macro"
-version = "0.6.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d9f4f71310913c40174d9f0cfcbcb127dad0329ecdb3945678a120db22d3d065"
-dependencies = [
- "dunce",
- "manganis-core 0.6.2",
- "proc-macro2",
- "quote",
- "syn 2.0.101",
 ]
 
 [[package]]
@@ -4678,7 +4257,7 @@ source = "git+https://github.com/hackartists/dioxus.git#b1f3635381cc43de23d8a8a9
 dependencies = [
  "dunce",
  "macro-string",
- "manganis-core 0.6.3",
+ "manganis-core",
  "proc-macro2",
  "quote",
  "syn 2.0.101",
@@ -4810,32 +4389,6 @@ dependencies = [
  "libc",
  "wasi 0.11.0+wasi-snapshot-preview1",
  "windows-sys 0.52.0",
-]
-
-[[package]]
-name = "mobile"
-version = "0.1.0"
-dependencies = [
- "serde",
- "serde_json",
- "tauri",
- "tauri-build",
- "tauri-plugin-opener",
-]
-
-[[package]]
-name = "mobile-ui"
-version = "0.1.0"
-dependencies = [
- "bdk",
- "dioxus 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "dioxus-logger 0.6.2",
- "js-sys",
- "serde",
- "serde-wasm-bindgen 0.6.5",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
 ]
 
 [[package]]
@@ -6060,6 +5613,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "ratel"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-opener",
+]
+
+[[package]]
 name = "raw-window-handle"
 version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6201,7 +5765,7 @@ dependencies = [
  "base64 0.22.1",
  "candid",
  "chrono",
- "dioxus-fullstack 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
+ "dioxus-fullstack",
  "gloo-net",
  "reqwest",
  "ring",
@@ -6624,17 +6188,6 @@ dependencies = [
 
 [[package]]
 name = "serde_qs"
-version = "0.12.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0431a35568651e363364210c91983c1da5eb29404d9f0928b67d4ebcfa7d330c"
-dependencies = [
- "percent-encoding",
- "serde",
- "thiserror 1.0.69",
-]
-
-[[package]]
-name = "serde_qs"
 version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cd34f36fe4c5ba9654417139a9b3a20d2e1de6012ee678ad14d240c22c78d8d6"
@@ -6743,34 +6296,6 @@ dependencies = [
 
 [[package]]
 name = "server_fn"
-version = "0.6.15"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4fae7a3038a32e5a34ba32c6c45eb4852f8affaf8b794ebfcd4b1099e2d62ebe"
-dependencies = [
- "bytes",
- "const_format",
- "dashmap 5.5.3",
- "futures",
- "gloo-net",
- "http",
- "js-sys",
- "once_cell",
- "send_wrapper",
- "serde",
- "serde_json",
- "serde_qs 0.12.0",
- "server_fn_macro_default 0.6.15",
- "thiserror 1.0.69",
- "url",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "wasm-streams",
- "web-sys",
- "xxhash-rust",
-]
-
-[[package]]
-name = "server_fn"
 version = "0.7.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8d05a9e3fd8d7404985418db38c6617cc793a1a27f398d4fbc9dfe8e41b804e6"
@@ -6778,7 +6303,7 @@ dependencies = [
  "axum 0.7.9",
  "bytes",
  "const_format",
- "dashmap 6.1.0",
+ "dashmap",
  "futures",
  "gloo-net",
  "http",
@@ -6793,7 +6318,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_qs 0.13.0",
- "server_fn_macro_default 0.7.8",
+ "server_fn_macro_default",
  "thiserror 2.0.12",
  "throw_error",
  "tower 0.5.2",
@@ -6803,20 +6328,6 @@ dependencies = [
  "wasm-bindgen-futures",
  "wasm-streams",
  "web-sys",
- "xxhash-rust",
-]
-
-[[package]]
-name = "server_fn_macro"
-version = "0.6.15"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "faaaf648c6967aef78177c0610478abb5a3455811f401f3c62d10ae9bd3901a1"
-dependencies = [
- "const_format",
- "convert_case 0.6.0",
- "proc-macro2",
- "quote",
- "syn 2.0.101",
  "xxhash-rust",
 ]
 
@@ -6836,21 +6347,11 @@ dependencies = [
 
 [[package]]
 name = "server_fn_macro_default"
-version = "0.6.15"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7f2aa8119b558a17992e0ac1fd07f080099564f24532858811ce04f742542440"
-dependencies = [
- "server_fn_macro 0.6.15",
- "syn 2.0.101",
-]
-
-[[package]]
-name = "server_fn_macro_default"
 version = "0.7.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "eb8b274f568c94226a8045668554aace8142a59b8bca5414ac5a79627c825568"
 dependencies = [
- "server_fn_macro 0.7.8",
+ "server_fn_macro",
  "syn 2.0.101",
 ]
 
