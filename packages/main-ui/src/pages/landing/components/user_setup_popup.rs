@@ -10,7 +10,7 @@ use super::{
 use crate::{
     components::{button::primary_button::PrimaryButton, checkbox::Checkbox},
     config,
-    pages::components::LabeledInput,
+    pages::landing::components::LabeledInput,
     services::user_service::UserService,
 };
 

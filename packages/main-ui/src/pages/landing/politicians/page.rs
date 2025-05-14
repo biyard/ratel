@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 use crate::components::{dropdown::Dropdown, party::PartyIcon};
-use crate::pages::components::FooterWithSocial;
-use crate::pages::components::SectionHeader;
+use crate::pages::landing::components::FooterWithSocial;
+use crate::pages::landing::components::SectionHeader;
 use crate::route::Route;
 
 use super::{controller::*, i18n::*};

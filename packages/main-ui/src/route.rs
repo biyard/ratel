@@ -5,11 +5,21 @@ use bdk::prelude::*;
 pub enum Route {
     #[nest("/")]
     #[layout(SocialLayout)]
+    #[route("/")]
+    IndexPage {},
+    #[route("/explore")]
+    ExplorePage {},
+    #[route("/my-network")]
+    MyNetworkPage {},
+    #[route("/notifications")]
+    NotificationsPage {},
+    #[route("/my-profile")]
+    MyProfilePage {},
     #[end_nest]
     #[nest("/landing")]
     #[layout(LandingLayout)]
     #[route("/")]
-    HomePage {},
+    LandingPage {},
 
     #[route("/politicians")]
     PoliticiansPage {},
@@ -25,13 +35,11 @@ pub enum Route {
     #[route("/preparing")]
     PreparingPage {},
 
-    #[route("/my-profile")]
-    MyProfilePage {},
     #[route("/become-sponsor")]
     BecomeSponsorPage {},
     #[end_layout]
     #[end_nest]
-    #[redirect("/", || Route::HomePage {  })]
+    #[redirect("/", || Route::LandingPage {  })]
     #[route("/:..route")]
     NotFoundPage { route: Vec<String> },
 }

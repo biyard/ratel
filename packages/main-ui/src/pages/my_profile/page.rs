@@ -1,5 +1,3 @@
-use crate::pages::components::SectionHeader;
-
 use super::*;
 use bdk::prelude::*;
 use components::*;
@@ -18,12 +16,6 @@ pub fn MyProfilePage(#[props(default = Language::En)] lang: Language) -> Element
         div {
             id: "my-profile",
             class: "w-full max-w-desktop min-h-screen flex flex-col !justify-start gap-72 py-150 max-tablet:!px-30 max-tablet:!overflow-y-scroll max-tablet:!pt-40 px-10",
-            SectionHeader {
-                section_name: tr.section_name,
-                title: tr.title,
-                description: tr.description,
-            }
-
             div { class: "w-full flex flex-row gap-100",
                 div { class: "min-w-150 flex flex-col items-center justify-center",
                     img {

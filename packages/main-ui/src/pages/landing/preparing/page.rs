@@ -5,7 +5,7 @@ use crate::{
         icons::ComingSoon,
         socials::Socials,
     },
-    pages::preparing::i18n::PreparingTranslate,
+    pages::landing::preparing::i18n::PreparingTranslate,
     route::Route,
 };
 use bdk::prelude::*;
@@ -38,7 +38,7 @@ pub fn PreparingPage(
             }
 
             div { class: "flex flex-row gap-10 max-[900px]:!flex-col",
-                PrimaryLink { size: ButtonSize::Normal, to: Route::HomePage {},
+                PrimaryLink { size: ButtonSize::Normal, to: Route::LandingPage {},
                     ArrowLeft {
                         class: "[&>path]:stroke-3",
                         width: "20",

@@ -195,7 +195,7 @@ pub fn A(
     onclick: Option<EventHandler<()>>,
 ) -> Element {
     let current_path: Route = use_route();
-    let is_home = matches!(current_path, Route::HomePage { .. });
+    let is_home = matches!(current_path, Route::LandingPage { .. });
 
     rsx! {
         if is_home {
@@ -213,7 +213,7 @@ pub fn A(
         } else {
             Link {
                 class: "p-10 hover:text-white",
-                to: Route::HomePage {},
+                to: Route::LandingPage {},
                 onclick: move |_| {
                     if let Some(onclick) = onclick {
                         onclick(());
