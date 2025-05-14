@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 use bdk::prelude::*;
 use dioxus_popup::PopupService;
-use dto::{ServiceError, Subscription};
+use dto::{Error, Subscription};
 
 use super::{
     signin_popup_footer::SigninPopupFooter, welcome_header::WelcomeHeader,
@@ -131,7 +131,7 @@ pub fn UserSetupPopup(
                                     .await
                                 {
                                     match e {
-                                        ServiceError::UserAlreadyExists => {
+                                        Error::UserAlreadyExists => {
                                             popup.close();
                                             return;
                                         }

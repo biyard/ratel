@@ -7,7 +7,7 @@ use crate::{
 };
 use bdk::prelude::*;
 use dioxus_popup::PopupService;
-use dto::{Bill, BillSorter, ServiceError};
+use dto::{Bill, BillSorter, Error};
 
 #[component]
 pub fn PoliticianActivities(
@@ -181,7 +181,7 @@ pub fn BillCard(
                     class: "{supportive_class}",
                     onclick: move |_| {
                         if already_voted {
-                            btracing::e!(lang, ServiceError::AlreadyVoted);
+                            btracing::e!(lang, Error::AlreadyVoted);
                             return;
                         }
                         tracing::debug!("Vote supportive clicked");
@@ -208,7 +208,7 @@ pub fn BillCard(
                     class: "{against_class}",
                     onclick: move |_| {
                         if already_voted {
-                            btracing::e!(lang, ServiceError::AlreadyVoted);
+                            btracing::e!(lang, Error::AlreadyVoted);
                             return;
                         }
                         tracing::debug!("Vote against clicked");

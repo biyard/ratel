@@ -122,16 +122,16 @@ impl TopicControllerV1 {
         tracing::debug!("create_topic {:?}", body);
 
         if body.title.is_empty() || body.content.is_empty() {
-            return Err(ServiceError::BadRequest);
+            return Err(Error::BadRequest);
         }
 
         if body.ended_at < chrono::Utc::now().timestamp() {
-            return Err(ServiceError::BadRequest);
+            return Err(Error::BadRequest);
         }
 
         match body.status {
             TopicStatus::Ongoing | TopicStatus::Finished | TopicStatus::Cancelled => {
-                return Err(ServiceError::BadRequest);
+                return Err(Error::BadRequest);
             }
             _ => {}
         }
