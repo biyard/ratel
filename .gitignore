@@ -6,6 +6,7 @@ target/
 /packages/main-ui/public/dep.js
 /packages/mobile/src-tauri/gen/android/ratel-mobile.json
 /packages/mobile/src-tauri/gen/android/.env
+/packages/mobile/src-tauri/gen/android/app/google-services.json
 /packages/mobile/src-tauri/gen/apple/fastlane/Appfile
 dist/
 node_modules/
