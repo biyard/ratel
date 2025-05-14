@@ -67,7 +67,7 @@ impl TeamController {
 
         // FIXME: check if the user is a member of the team.
         if team.parent_id != user_id {
-            return Err(ServiceError::Unauthorized);
+            return Err(Error::Unauthorized);
         }
 
         Ok((user_id, team))
@@ -99,7 +99,7 @@ impl TeamController {
             .await
             .map_err(|e| {
                 tracing::error!("Failed to create team: {:?}", e);
-                ServiceError::DuplicatedTeamName
+                Error::DuplicatedTeamName
             })?;
 
         Ok(user.into())
@@ -147,7 +147,7 @@ impl TeamController {
             Ok(user) => user,
             Err(_) => {
                 // FIXME: allow pending user
-                return Err(ServiceError::InvalidUser);
+                return Err(Error::InvalidUser);
             }
         };
 
@@ -167,7 +167,7 @@ impl TeamController {
 
     async fn delete(&self, id: i64, auth: Option<Authorization>) -> Result<Team> {
         if auth.is_none() {
-            return Err(ServiceError::Unauthorized);
+            return Err(Error::Unauthorized);
         }
 
         let res = self.repo.delete(id).await?;

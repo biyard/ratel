@@ -101,7 +101,7 @@ impl CommentControllerV1 {
             .await?;
 
         if comment.topic_id != topic_id {
-            return Err(ServiceError::BadRequest);
+            return Err(Error::BadRequest);
         }
 
         Ok(Json(comment))
@@ -117,7 +117,7 @@ impl CommentControllerV1 {
 
         match param {
             CommentParam::Query(q) => ctrl.list_by_topic_id(topic_id, q).await,
-            _ => Err(ServiceError::BadRequest)?,
+            _ => Err(Error::BadRequest)?,
         }
     }
 }
@@ -186,7 +186,7 @@ impl CommentControllerV1 {
             .await?;
 
         if comment.topic_id != topic_id {
-            return Err(ServiceError::BadRequest);
+            return Err(Error::BadRequest);
         }
 
         self.like.insert(id, user.id).await?;
@@ -215,7 +215,7 @@ impl CommentControllerV1 {
             .await?;
 
         if comment.topic_id != topic_id {
-            return Err(ServiceError::BadRequest);
+            return Err(Error::BadRequest);
         }
 
         self.like.delete(id).await?;

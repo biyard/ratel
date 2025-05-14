@@ -40,7 +40,7 @@ impl BotController {
 
         // FIXME: check if the user is a member of the team.
         if bot.parent_id != user_id {
-            return Err(ServiceError::Unauthorized);
+            return Err(Error::Unauthorized);
         }
 
         Ok((user_id, bot))

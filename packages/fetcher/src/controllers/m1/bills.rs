@@ -159,7 +159,7 @@ impl BillWriterController {
         if bill_nos.is_empty() {
             Ok(Default::default())
         } else {
-            Err(ServiceError::FetchError(bill_nos))
+            Err(Error::FetchError(bill_nos))
         }
     }
 
