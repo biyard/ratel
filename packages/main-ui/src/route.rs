@@ -3,10 +3,23 @@ use bdk::prelude::*;
 
 #[derive(Clone, Routable, Debug, PartialEq)]
 pub enum Route {
-    #[nest("/en")]
-    #[layout(RootLayout)]
+    #[nest("/")]
+    #[layout(SocialLayout)]
     #[route("/")]
-    HomePage {},
+    IndexPage {},
+    #[route("/explore")]
+    ExplorePage {},
+    #[route("/my-network")]
+    MyNetworkPage {},
+    #[route("/notifications")]
+    NotificationsPage {},
+    #[route("/my-profile")]
+    MyProfilePage {},
+    #[end_nest]
+    #[nest("/landing")]
+    #[layout(LandingLayout)]
+    #[route("/")]
+    LandingPage {},
 
     #[route("/politicians")]
     PoliticiansPage {},
@@ -22,13 +35,11 @@ pub enum Route {
     #[route("/preparing")]
     PreparingPage {},
 
-    #[route("/my-profile")]
-    MyProfilePage {},
     #[route("/become-sponsor")]
     BecomeSponsorPage {},
     #[end_layout]
     #[end_nest]
-    #[redirect("/", || Route::HomePage {  })]
+    #[redirect("/", || Route::LandingPage {  })]
     #[route("/:..route")]
     NotFoundPage { route: Vec<String> },
 }

@@ -22,7 +22,7 @@ pub fn SponsorConfirmPopup(
 
                 PrimaryLink {
                     size: ButtonSize::Normal,
-                    to: Route::HomePage {},
+                    to: Route::LandingPage {},
                     onclick: move |_| {
                         popup.close();
                     },

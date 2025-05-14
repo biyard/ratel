@@ -1,4 +1,4 @@
-use crate::pages::{SearchBox, components::SectionHeader};
+use crate::pages::landing::{SearchBox, components::SectionHeader};
 
 use super::*;
 use bdk::prelude::*;
