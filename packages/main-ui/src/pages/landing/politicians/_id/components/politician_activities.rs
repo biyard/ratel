@@ -1,8 +1,7 @@
-#![allow(non_snake_case)]
 use super::*;
 use crate::{
     components::dropdown::Dropdown,
-    pages::{components::SignupPopup, politicians::_id::controller::Controller},
+    pages::landing::{components::SignupPopup, politicians::_id::controller::Controller},
     services::user_service::UserService,
 };
 use bdk::prelude::*;

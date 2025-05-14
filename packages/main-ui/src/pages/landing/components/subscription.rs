@@ -2,7 +2,7 @@
 use crate::{
     components::{confirm_popup::ConfirmPopup, socials::Socials},
     config,
-    pages::components::InputWithButton,
+    pages::landing::components::InputWithButton,
 };
 use bdk::prelude::*;
 use dioxus_popup::PopupService;

@@ -1,5 +1,5 @@
 #![allow(non_snake_case)]
-use crate::pages::components::FooterWithSocial;
+use crate::pages::landing::components::FooterWithSocial;
 
 use super::*;
 use bdk::prelude::*;
