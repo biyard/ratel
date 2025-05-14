@@ -23,7 +23,7 @@ impl Controller {
 
         let nav = use_navigator();
         if !user_info.is_login() {
-            nav.push(Route::HomePage {});
+            nav.push(Route::LandingPage {});
         }
 
         let ctrl = Self {
@@ -42,7 +42,7 @@ impl Controller {
             Some(email) => email,
             None => {
                 tracing::error!("user email not found");
-                self.nav.push(Route::HomePage {});
+                self.nav.push(Route::LandingPage {});
                 return;
             }
         };

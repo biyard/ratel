@@ -50,7 +50,7 @@ pub fn LandingLayout(#[props(default = Language::En)] lang: Language) -> Element
         0
     });
     let current_path: Route = use_route();
-    let is_home = matches!(current_path, Route::HomePage { .. });
+    let is_home = matches!(current_path, Route::LandingPage { .. });
 
     #[cfg(feature = "web")]
     let _ = use_coroutine(move |_: UnboundedReceiver<()>| async move {

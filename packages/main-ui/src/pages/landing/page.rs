@@ -7,7 +7,7 @@ use super::components::*;
 use super::controller::*;
 
 #[component]
-pub fn HomePage(#[props(default = Language::En)] lang: Language) -> Element {
+pub fn LandingPage(#[props(default = Language::En)] lang: Language) -> Element {
     let ctrl = Controller::new(lang)?;
     let tr: TopTranslate = translate(&lang);
     let image = asset!("/public/logos/logo.png");

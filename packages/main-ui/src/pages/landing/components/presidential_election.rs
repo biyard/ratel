@@ -9,7 +9,7 @@ use i18n::*;
 
 use crate::{
     components::{candidate_card::CandidateCard, coming_soon::ComingSoon},
-    pages::components::SectionHeader,
+    pages::landing::components::SectionHeader,
     route::Route,
 };
 
