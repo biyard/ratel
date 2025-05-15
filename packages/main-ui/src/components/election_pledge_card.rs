@@ -23,7 +23,7 @@ pub fn ElectionPledgeCard(promise: ElectionPledge) -> Element {
                     class: "flex flex-row items-center gap-4 hover:bg-background px-10 py-5 rounded-full cursor-pointer",
                     onclick: move |_| async move {
                         if liked() {
-                            btracing::e!(ServiceError::AlreadyLiked);
+                            btracing::e!(Error::AlreadyLiked);
                             return;
                         }
                         match ElectionPledge::get_client(crate::config::get().main_api_endpoint)

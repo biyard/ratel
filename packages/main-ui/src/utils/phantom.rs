@@ -1,5 +1,5 @@
 use bdk::prelude::*;
-use dto::ServiceError;
+use dto::Error;
 // use ed25519_dalek::Signature as Ed25519Signature;
 use hex::encode;
 use wallet_adapter::{SigninInput, Wallet, WalletAccount, WalletAdapter, WalletResult};
@@ -58,7 +58,7 @@ impl PhantomAuth {
         }
     }
 
-    pub async fn connect_desktop(&mut self) -> Result<(), ServiceError> {
+    pub async fn connect_desktop(&mut self) -> Result<(), Error> {
         if let Ok(wallet) = self.wallet.clone() {
             // background connect
             return match self.adapter.connect(wallet).await {
@@ -75,17 +75,17 @@ impl PhantomAuth {
                             self.active_account = Some(output.account);
                             Ok(())
                         }
-                        Err(e) => Err(ServiceError::WalletError(
+                        Err(e) => Err(Error::WalletError(
                             format!("Failed to connect wallet: {:?}", e).to_string(),
                         )),
                     }
                 }
-                Err(e) => Err(ServiceError::WalletError(
+                Err(e) => Err(Error::WalletError(
                     format!("Failed to connect wallet: {:?}", e).to_string(),
                 )),
             };
         }
-        Err(ServiceError::WalletNotFound)
+        Err(Error::WalletNotFound)
     }
 
     pub fn get_account(&self) -> WalletResult<&WalletAccount> {
@@ -127,10 +127,10 @@ impl PhantomAuth {
         }
     }
 
-    pub async fn disconnect(&mut self) -> Result<(), ServiceError> {
+    pub async fn disconnect(&mut self) -> Result<(), Error> {
         match self.adapter.disconnect().await {
             Ok(_) => Ok(()),
-            Err(e) => Err(ServiceError::WalletError(
+            Err(e) => Err(Error::WalletError(
                 format!("Failed to disconnect wallet: {:?}", e).to_string(),
             )),
         }
@@ -170,7 +170,7 @@ impl PhantomAuth {
         self.cached_signiture.is_some()
     }
 
-    pub async fn signin_message(&mut self) -> Result<(), ServiceError> {
+    pub async fn signin_message(&mut self) -> Result<(), Error> {
         match self.adapter.connected_account() {
             Ok(account) => {
                 match self.sign(&account.address).await {
@@ -178,14 +178,12 @@ impl PhantomAuth {
                         self.cached_signiture = Some(signature);
                     }
                     None => {
-                        return Err(ServiceError::WalletError(
-                            "Failed to sign message".to_string(),
-                        ));
+                        return Err(Error::WalletError("Failed to sign message".to_string()));
                     }
                 }
                 Ok(())
             }
-            Err(_) => return Err(ServiceError::WalletNotFound),
+            Err(_) => return Err(Error::WalletNotFound),
         }
     }
 
@@ -210,6 +208,6 @@ impl PhantomAuth {
     //     self.adapter.get_sol_balance(account)
     // }
 
-    // pub async fn connect_mobile(&self) -> Result<WalletAccount, ServiceError> {
+    // pub async fn connect_mobile(&self) -> Result<WalletAccount, Error> {
     // }
 }
