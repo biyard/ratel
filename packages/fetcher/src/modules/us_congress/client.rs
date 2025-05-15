@@ -9,11 +9,15 @@ use super::*;
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq, Default)]
 pub struct UsCongressClient {
     key: String,
+    url: String,
 }
 
 impl UsCongressClient {
     pub fn new(key: String) -> Self {
-        Self { key }
+        Self {
+            key,
+            url: "https://api.congress.gov/v3/bill".to_string(),
+        }
     }
 
     pub async fn list_bills(&self, offset: i64, limit: i64) -> Result<Vec<BillInfo>> {
@@ -37,30 +41,9 @@ impl UsCongressClient {
         bill_type: &str,
         bill_no: i64,
     ) -> Result<BillDetail> {
-        let mut params = HashMap::new();
-        let bill_details: BillDetail = self.get(congress, bill_type, bill_no, None, params).await?;
+        let bill_details: BillDetail = self.get(congress, bill_type, bill_no, None).await?;
 
         Ok(bill_details)
-    }
-
-    pub async fn get_bill_subject(
-        &self,
-        congress: i64,
-        bill_type: &str,
-        bill_no: i64,
-    ) -> Result<BillSubject> {
-        let mut params = HashMap::new();
-        let bill_subject: BillSubject = self
-            .get(
-                congress,
-                bill_type,
-                bill_no,
-                Some(SUBJECTS.to_string()),
-                params,
-            )
-            .await?;
-
-        Ok(bill_subject)
     }
 
     pub async fn get_bill_summary(
@@ -69,15 +52,8 @@ impl UsCongressClient {
         bill_type: &str,
         bill_no: i64,
     ) -> Result<BillSummaries> {
-        let mut params = HashMap::new();
         let bill_summary: BillSummaries = self
-            .get(
-                congress,
-                bill_type,
-                bill_no,
-                Some(SUMMARY.to_string()),
-                params,
-            )
+            .get(congress, bill_type, bill_no, Some(SUMMARY.to_string()))
             .await?;
 
         Ok(bill_summary)
@@ -89,9 +65,8 @@ impl UsCongressClient {
         bill_type: &str,
         bill_no: i64,
     ) -> Result<BillTexts> {
-        let mut params = HashMap::new();
         let bill_text: BillTexts = self
-            .get(congress, bill_type, bill_no, Some(TEXT.to_string()), params)
+            .get(congress, bill_type, bill_no, Some(TEXT.to_string()))
             .await?;
 
         Ok(bill_text)
@@ -103,15 +78,8 @@ impl UsCongressClient {
         bill_type: &str,
         bill_no: i64,
     ) -> Result<BillTitles> {
-        let mut params = HashMap::new();
         let bill_titles: BillTitles = self
-            .get(
-                congress,
-                bill_type,
-                bill_no,
-                Some(TITLES.to_string()),
-                params,
-            )
+            .get(congress, bill_type, bill_no, Some(TITLES.to_string()))
             .await?;
 
         Ok(bill_titles)
@@ -129,7 +97,6 @@ impl UsCongressClient {
     where
         T: serde::de::DeserializeOwned,
     {
-        params.insert("api_key", self.key.clone());
         params.insert("format", "json".to_string());
         params.insert("offset", offset.to_string());
         params.insert("limit", limit.to_string());
@@ -143,10 +110,10 @@ impl UsCongressClient {
             params.insert("sort", sort);
         }
         let client = reqwest::Client::new();
-        let mut url = format!("https://api.congress.gov/v3/bill?api_key={}", self.key);
+        let mut url = format!("{}/?", self.url);
 
         for (key, value) in params {
-            url.push_str(&format!("&{}={}", key, value));
+            url.push_str(&format!("{}={}&", key, value));
         }
 
         let response = client
@@ -175,21 +142,18 @@ impl UsCongressClient {
         bill_type: &str,
         bill_no: i64,
         endpoint: Option<String>,
-        mut params: HashMap<&str, String>,
     ) -> Result<T>
     where
         T: serde::de::DeserializeOwned,
     {
+        let mut params = HashMap::new();
         params.insert("api_key", self.key.clone());
         params.insert("format", "json".to_string());
         let client = reqwest::Client::new();
 
         let ep = endpoint.unwrap_or_else(|| "".to_string());
 
-        let mut url = format!(
-            "https://api.congress.gov/v3/bill/{congress}/{bill_type}/{bill_no}/{}?",
-            ep
-        );
+        let mut url = format!("{}/{congress}/{bill_type}/{bill_no}/{}?", self.url, ep);
 
         for (key, value) in params {
             url.push_str(&format!("{}={}&", key, value));
