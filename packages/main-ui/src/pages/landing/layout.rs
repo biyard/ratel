@@ -10,6 +10,15 @@ use by_components::meta::MetaSeoTemplate;
 
 #[component]
 pub fn LandingLayout(#[props(default = Language::En)] lang: Language) -> Element {
+    let user_service: UserService = use_context();
+    let nav = use_navigator();
+
+    use_effect(move || {
+        if user_service.loggedin() {
+            nav.push(Route::IndexPage {});
+        }
+    });
+
     #[cfg(feature = "web")]
     let mut scroll_position = use_signal(|| 0.0);
     let selected = use_memo(move || {
