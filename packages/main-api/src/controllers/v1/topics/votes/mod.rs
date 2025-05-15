@@ -101,7 +101,7 @@ impl VoteControllerV1 {
 impl VoteControllerV1 {
     async fn vote(&self, topic_id: i64, body: VoteVotingRequest) -> Result<Json<Vote>> {
         if body.amount < 0 {
-            return Err(ServiceError::BadRequest);
+            return Err(Error::BadRequest);
         }
 
         let user = self

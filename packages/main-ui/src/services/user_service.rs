@@ -182,11 +182,12 @@ impl UserService {
     pub async fn get_user_info_from_server(&mut self) {
         let cli = (self.cli)();
         rest_api::set_signer(Box::new(*self));
+        tracing::debug!("UserService::get_user_info_from_server");
 
         let user: User = match cli.user_info().await {
             Ok(v) => v,
             Err(e) => match e {
-                ServiceError::NotFound => {
+                Error::NotFound => {
                     return;
                 }
                 e => {
@@ -231,14 +232,14 @@ impl UserService {
                     let principal = firebase.get_principal();
                     if principal.is_empty() {
                         tracing::error!("UserService::login: principal is empty");
-                        return Err(ServiceError::Unauthorized);
+                        return Err(Error::Unauthorized);
                     }
 
                     let (email, name, profile_url) = match firebase.get_user_info() {
                         Some(v) => v,
                         None => {
                             tracing::error!("UserService::login: None");
-                            return Err(ServiceError::Unauthorized);
+                            return Err(Error::Unauthorized);
                         }
                     };
 
@@ -246,7 +247,7 @@ impl UserService {
                 }
                 Err(e) => {
                     tracing::error!("UserService::login: error={:?}", e);
-                    return Err(ServiceError::Unauthorized);
+                    return Err(Error::Unauthorized);
                 }
             };
 
@@ -274,12 +275,12 @@ impl UserService {
         //     WalletSigner::Phantom => {
         //         let signal = self.phantom.read();
         //         if signal.is_none() {
-        //             return Err(ServiceError::Unauthorized.into());
+        //             return Err(Error::Unauthorized.into());
         //         }
         //         let phantom = signal.as_ref().unwrap();
 
         //         if !phantom.is_connected() {
-        //             return Err(ServiceError::Unauthorized.into());
+        //             return Err(Error::Unauthorized.into());
         //         }
         //     }
         //     _ => rest_api::set_signer(Box::new(*self)),
@@ -501,7 +502,7 @@ impl UserService {
             Ok(_) => Ok(()),
             Err(e) => {
                 tracing::error!("UserService::phantom_wallet: error={:?}", e);
-                Err(ServiceError::WalletError(e.to_string()))
+                Err(Error::WalletError(e.to_string()))
             }
         }
     }
@@ -534,16 +535,12 @@ impl rest_api::Signer for UserService {
 
                 if !firebase.get_login() {
                     tracing::debug!("UserService::sign: not login {firebase:?}");
-                    return Err(Box::<ServiceException>::new(
-                        ServiceError::Unauthorized.into(),
-                    ));
+                    return Err(Box::<ServiceException>::new(Error::Unauthorized.into()));
                 }
 
                 let sig = firebase.sign(msg);
                 if sig.is_none() {
-                    return Err(Box::<ServiceException>::new(
-                        ServiceError::Unauthorized.into(),
-                    ));
+                    return Err(Box::<ServiceException>::new(Error::Unauthorized.into()));
                 }
                 let sig = rest_api::Signature {
                     signature: sig.unwrap().as_ref().to_vec(),
@@ -558,35 +555,27 @@ impl rest_api::Signer for UserService {
 
                 if signal.is_none() {
                     tracing::debug!("UserService::sign: not login {signal:?}");
-                    return Err(Box::<ServiceException>::new(
-                        ServiceError::Unauthorized.into(),
-                    ));
+                    return Err(Box::<ServiceException>::new(Error::Unauthorized.into()));
                 }
 
                 let phantom = signal.as_ref().unwrap();
 
                 if !phantom.is_connected() {
                     tracing::debug!("UserService::sign: not login {phantom:?}");
-                    return Err(Box::<ServiceException>::new(
-                        ServiceError::Unauthorized.into(),
-                    ));
+                    return Err(Box::<ServiceException>::new(Error::Unauthorized.into()));
                 }
 
                 let sig = match phantom.get_signer() {
                     Some(v) => v,
                     None => {
-                        return Err(Box::<ServiceException>::new(
-                            ServiceError::Unauthorized.into(),
-                        ));
+                        return Err(Box::<ServiceException>::new(Error::Unauthorized.into()));
                     }
                 };
 
                 return Ok(sig.clone());
             }
             WalletSigner::None => {
-                return Err(Box::<ServiceException>::new(
-                    ServiceError::Unauthorized.into(),
-                ));
+                return Err(Box::<ServiceException>::new(Error::Unauthorized.into()));
             }
         }
     }

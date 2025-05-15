@@ -1,4 +1,4 @@
-use std::error::Error;
+use std::error::Error as StdError;
 
 use serde::{Deserialize, Serialize};
 
@@ -6,7 +6,7 @@ use bdk::prelude::*;
 
 #[derive(Debug, Serialize)]
 pub struct ServiceException {
-    pub inner: ServiceError,
+    pub inner: Error,
 }
 
 impl std::fmt::Display for ServiceException {
@@ -15,12 +15,12 @@ impl std::fmt::Display for ServiceException {
     }
 }
 
-impl Error for ServiceException {}
+impl StdError for ServiceException {}
 
 #[derive(Debug, Serialize, PartialEq, Eq, Deserialize, Translate)]
 #[repr(u64)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
-pub enum ServiceError {
+pub enum Error {
     Unknown(String),
 
     #[translate(en = "Could not find any resource", ko = "리소스를 찾을 수 없습니다.")]
@@ -38,6 +38,8 @@ pub enum ServiceError {
     UserAlreadyExists,
     #[translate(en = "Could not find a valid user", ko = "유효하지 않은 사용자입니다.")]
     InvalidUser,
+    #[translate(en = "Please change team name.")]
+    DuplicatedTeamName,
 
     VerifyException(String),
     SignException,
@@ -85,31 +87,43 @@ pub enum ServiceError {
         ko = "JWT 토큰 생성에 실패했습니다."
     )]
     JWTGenerationFail(String),
+
+    // feeds
+    #[translate(en = "Failed to write a post")]
+    FeedWritePostError,
+    #[translate(en = "Failed to write a comment")]
+    FeedWriteCommentError,
+    #[translate(en = "You must write a comment on a valid feed")]
+    FeedInvalidParentId,
+    #[translate(en = "You must quote a valid feed")]
+    FeedInvalidQuoteId,
+    #[translate(en = "You should select industry or a parent feed")]
+    FeedExclusiveParentOrIndustry,
 }
 
-impl<E: Error + 'static> From<E> for ServiceError {
+impl<E: StdError + 'static> From<E> for Error {
     fn from(e: E) -> Self {
-        ServiceError::Unknown(e.to_string())
+        Error::Unknown(e.to_string())
     }
 }
 
-impl Into<ServiceException> for ServiceError {
+impl Into<ServiceException> for Error {
     fn into(self) -> ServiceException {
         ServiceException { inner: self }
     }
 }
 
-impl ServiceError {
+impl Error {
     pub fn to_string(&self) -> String {
         format!("{:?}", self)
     }
 }
 
-unsafe impl Send for ServiceError {}
-unsafe impl Sync for ServiceError {}
+unsafe impl Send for Error {}
+unsafe impl Sync for Error {}
 
 #[cfg(feature = "server")]
-impl by_axum::axum::response::IntoResponse for ServiceError {
+impl by_axum::axum::response::IntoResponse for Error {
     fn into_response(self) -> by_axum::axum::response::Response {
         (
             by_axum::axum::http::StatusCode::BAD_REQUEST,

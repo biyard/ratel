@@ -10,7 +10,7 @@ pub async fn extract_user_id(
         Some(Authorization::UserSig(sig)) => {
             let principal = sig.principal().map_err(|e| {
                 tracing::error!("failed to get principal: {:?}", e);
-                ServiceError::Unauthorized
+                Error::Unauthorized
             })?;
             User::query_builder()
                 .principal_equals(principal)
@@ -20,16 +20,18 @@ pub async fn extract_user_id(
                 .await
                 .map_err(|e| {
                     tracing::error!("failed to get user: {:?}", e);
-                    ServiceError::InvalidUser
+                    Error::InvalidUser
                 })?
                 .id
         }
         Some(Authorization::Bearer { claims }) => claims.sub.parse::<i64>().map_err(|e| {
             tracing::error!("failed to parse user id: {:?}", e);
-            ServiceError::Unauthorized
+            Error::Unauthorized
         })?,
-        _ => return Err(ServiceError::Unauthorized),
+        _ => return Err(Error::Unauthorized),
     };
+
+    tracing::debug!("authorized user_id: {:?}", user_id);
 
     Ok(user_id)
 }
@@ -42,7 +44,7 @@ pub async fn extract_user_email(
         Some(Authorization::UserSig(sig)) => {
             let principal = sig.principal().map_err(|e| {
                 tracing::error!("failed to get principal: {:?}", e);
-                ServiceError::Unauthorized
+                Error::Unauthorized
             })?;
             User::query_builder()
                 .principal_equals(principal)
@@ -52,7 +54,7 @@ pub async fn extract_user_email(
                 .await
                 .map_err(|e| {
                     tracing::error!("failed to get user: {:?}", e);
-                    ServiceError::InvalidUser
+                    Error::InvalidUser
                 })?
                 .email
         }
@@ -61,7 +63,7 @@ pub async fn extract_user_email(
             .get("email")
             .unwrap_or(&"".to_string())
             .to_string(),
-        _ => return Err(ServiceError::Unauthorized),
+        _ => return Err(Error::Unauthorized),
     };
 
     Ok(email)

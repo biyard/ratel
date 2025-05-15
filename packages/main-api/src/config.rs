@@ -15,6 +15,8 @@ pub struct Config {
     pub auth: AuthConfig,
     pub migrate: bool,
     pub slack_channel_sponsor: &'static str,
+    pub slack_channel_abusing: &'static str,
+    pub slack_channel_monitor: &'static str,
 }
 
 impl Default for Config {
@@ -35,6 +37,10 @@ impl Default for Config {
                 .unwrap_or(false),
             slack_channel_sponsor: option_env!("SLACK_CHANNEL_SPONSOR")
                 .expect("SLACK_CHANNEL_SPONSOR is required"),
+            slack_channel_abusing: option_env!("SLACK_CHANNEL_ABUSING")
+                .expect("SLACK_CHANNEL_ABUSING is required"),
+            slack_channel_monitor: option_env!("SLACK_CHANNEL_MONITOR")
+                .expect("SLACK_CHANNEL_MONITOR is required"),
         }
     }
 }
