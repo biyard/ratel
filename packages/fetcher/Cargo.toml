@@ -16,3 +16,4 @@ tokio = { version = "1.40.0", features = ["full"] }
 tracing = "0.1.41"
 scraper = "0.23.1"
 axum = { version = "0.8.1", features = ["macros"] }
+chrono = "0.4.41"

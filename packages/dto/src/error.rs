@@ -53,11 +53,29 @@ pub enum Error {
     NaOpenApiRequestError,
     #[translate(en = "Could not find any resource")]
     NaOpenApiEmptyRow,
+
+    // US Congress API
+    #[translate(en = "Failed to call US Congress API")]
+    UsCongressApiError(String),
+    #[translate(en = "Failed to call US Congress API")]
+    UsCongressApiRequestError,
+
+    // HK OpenData API
+    #[translate(en = "Failed to call HK OpenData API")]
+    HkOpenDataApiError(String),
+    #[translate(en = "Failed to parse response in HK OpenData API")]
+    HkOpenDataApiResponseParsingError,
+    #[translate(en = "Failed to call HK OpenData API")]
+    HkOpenDataApiRequestError,
+    #[translate(en = "Could not find any resource")]
+    HkOpenDataApiEmptyRow,
+
     #[translate(en = "Failed to parse website")]
     HtmlParseError(String),
     FetchError(Vec<(i64, String)>),
+    #[translate(en = "Failed to initialize reqwest client")]
+    ReqwestClientError(String),
 
-    BadRequest,
     JsonDeserializeError(String),
     WalletNotFound,
     WalletError(String),

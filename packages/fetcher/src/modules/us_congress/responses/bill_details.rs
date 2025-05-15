@@ -1,19 +1,16 @@
-use super::{
-    bill_subject::convert_policy_area,
-    common::{LatestAction, PolicyArea},
-};
+use super::common::{LatestAction, PolicyArea};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct BillDetail {
-    pub bill: BillDetailItem,
+pub struct BillDetailResponse {
+    pub bill: BillDetail,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct BillDetailItem {
+pub struct BillDetail {
     /// 1: CBO 비용 추정
     #[serde(rename = "cboCostEstimates")]
-    pub cbo_cost_estimates: Vec<CboEstimate>,
+    pub cbo_cost_estimates: Option<Vec<CboEstimate>>,
 
     /// 2: 위원회 보고서
     #[serde(rename = "committeeReports")]
@@ -49,7 +46,7 @@ pub struct BillDetailItem {
 
     /// 11: 정책 영역
     #[serde(rename = "policyArea")]
-    pub policy_area: PolicyArea,
+    pub policy_area: Option<PolicyArea>,
 
     /// 12: 발의자 정보
     pub sponsors: Vec<Sponsor>,
@@ -146,7 +143,7 @@ pub struct Sponsor {
 
 impl BillDetail {
     pub fn convert_bill_type(&self) -> dto::USBillType {
-        let lower_case_bill_type = self.bill.bill_type.to_lowercase();
+        let lower_case_bill_type = self.bill_type.to_lowercase();
         match lower_case_bill_type.as_str() {
             "hr" => dto::USBillType::HouseBill,
             "s" => dto::USBillType::SenateBill,
@@ -161,7 +158,7 @@ impl BillDetail {
     }
 
     pub fn get_origin_chamber(&self) -> dto::Chamber {
-        match self.bill.origin_chamber.as_str() {
+        match self.origin_chamber.as_str() {
             "House" => dto::Chamber::House,
             "Senate" => dto::Chamber::Senate,
             _ => dto::Chamber::Unknown,
@@ -169,6 +166,49 @@ impl BillDetail {
     }
 
     pub fn get_policy_area(&self) -> dto::PolicyArea {
-        convert_policy_area(&self.bill.policy_area.name)
+        if let Some(policy_area) = &self.policy_area {
+            convert_policy_area(&policy_area.name)
+        } else {
+            dto::PolicyArea::Others
+        }
+    }
+}
+
+pub fn convert_policy_area(r#type: &str) -> dto::PolicyArea {
+    match r#type {
+        "Agriculture and Food" => dto::PolicyArea::AgricultureAndFood,
+        "Animals" => dto::PolicyArea::Animals,
+        "Armed Forces and National Security" => dto::PolicyArea::ArmedForcesAndNationalSecurity,
+        "Arts, Culture, Religion" => dto::PolicyArea::ArtsCultureReligion,
+        "Civil Rights and Liberties, Minority Issues" => dto::PolicyArea::CivilRightsAndLiberties,
+        "Commerce" => dto::PolicyArea::Commerce,
+        "Congress" => dto::PolicyArea::Congress,
+        "Crime and Law Enforcement" => dto::PolicyArea::CrimeAndLawEnforcement,
+        "Economics and Public Finance" => dto::PolicyArea::EconomicsAndPublicFinance,
+        "Education" => dto::PolicyArea::Education,
+        "Emergency Management" => dto::PolicyArea::EmergencyManagement,
+        "Energy" => dto::PolicyArea::Energy,
+        "Environmental Protection" => dto::PolicyArea::EnvironmentalProtection,
+        "Families" => dto::PolicyArea::Families,
+        "Finance and Financial Sector" => dto::PolicyArea::FinanceAndFinancialSector,
+        "Foreign Trade and International Finance" => {
+            dto::PolicyArea::ForeignTradeAndInternationalFinance
+        }
+        "Government Operations and Politics" => dto::PolicyArea::GovernmentOperationsAndPolitics,
+        "Health" => dto::PolicyArea::Health,
+        "Housing and Community Development" => dto::PolicyArea::HousingAndCommunityDevelopment,
+        "Immigration" => dto::PolicyArea::Immigration,
+        "International Affairs" => dto::PolicyArea::InternationalAffairs,
+        "Labor and Employment" => dto::PolicyArea::LaborAndEmployment,
+        "Law" => dto::PolicyArea::Law,
+        "Native Americans" => dto::PolicyArea::NativeAmericans,
+        "Public Lands and Natural Resources" => dto::PolicyArea::PublicLandsAndNaturalResources,
+        "Science, Technology, Communications" => dto::PolicyArea::ScienceTechnologyCommunications,
+        "Social Welfare" => dto::PolicyArea::SocialWelfare,
+        "Sports and Recreation" => dto::PolicyArea::SportsAndRecreation,
+        "Taxation" => dto::PolicyArea::Taxation,
+        "Transportation and Public Works" => dto::PolicyArea::TransportationAndPublicWorks,
+        "Water Resources Development" => dto::PolicyArea::WaterResourcesDevelopment,
+        _ => dto::PolicyArea::Others,
     }
 }

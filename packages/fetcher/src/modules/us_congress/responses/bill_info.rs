@@ -1,10 +1,5 @@
-use super::common::{LatestAction, PolicyArea};
+use super::common::LatestAction;
 use serde::{Deserialize, Serialize};
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct BillList {
-    pub bills: Vec<BillInfo>,
-}
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct BillInfo {

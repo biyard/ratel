@@ -41,9 +41,9 @@ impl UsCongressClient {
         bill_type: &str,
         bill_no: i64,
     ) -> Result<BillDetail> {
-        let bill_details: BillDetail = self.get(congress, bill_type, bill_no, None).await?;
+        let BillDetailResponse { bill, .. } = self.get(congress, bill_type, bill_no, None).await?;
 
-        Ok(bill_details)
+        Ok(bill)
     }
 
     pub async fn get_bill_summary(
@@ -116,20 +116,19 @@ impl UsCongressClient {
             url.push_str(&format!("{}={}&", key, value));
         }
 
-        let response = client
-            .get(&url)
-            .send()
-            .await
-            .map_err(|e| Error::FetchError(vec![(0, e.to_string())]))?;
+        let response = client.get(&url).send().await.map_err(|e| {
+            tracing::error!("Failed to send request: {}", e);
+            Error::UsCongressApiRequestError
+        })?;
 
         if response.status().is_success() {
-            let result = response
-                .json::<T>()
-                .await
-                .map_err(|e| Error::JsonDeserializeError(e.to_string()))?;
+            let result = response.json::<T>().await.map_err(|e| {
+                tracing::error!("Failed to parse response: {}", e);
+                Error::JsonDeserializeError(e.to_string())
+            })?;
             Ok(result)
         } else {
-            Err(Error::FetchError(vec![(0, "Request failed".to_string())]))
+            Err(Error::UsCongressApiRequestError)
         }
     }
 
@@ -158,11 +157,10 @@ impl UsCongressClient {
 
         tracing::debug!("url: {}", url);
 
-        let response = client
-            .get(&url)
-            .send()
-            .await
-            .map_err(|e| Error::FetchError(vec![(0, e.to_string())]))?;
+        let response = client.get(&url).send().await.map_err(|e| {
+            tracing::error!("Failed to send request: {}", e);
+            Error::UsCongressApiRequestError
+        })?;
 
         if response.status().is_success() {
             let result = response
