@@ -1,12 +1,12 @@
 use crate::models::openapi::national_assembly::{EnMember, Member};
 use bdk::prelude::*;
-use dto::ServiceError;
+use dto::Error;
 use serde_json::Value;
 use std::collections::HashMap;
 
 const DEFAULT_PAGE_INDEX: u32 = 1; // page num; start from 1 not 0
 const DEFAULT_PAGE_SIZE: u32 = 300; // request per page
-pub async fn fetch_active_members() -> Result<Vec<Member>, ServiceError> {
+pub async fn fetch_active_members() -> Result<Vec<Member>, Error> {
     let config = crate::config::get();
     let mut params = HashMap::new();
     params.insert("KEY", config.openapi_key.to_string());
@@ -29,7 +29,7 @@ pub async fn fetch_active_members() -> Result<Vec<Member>, ServiceError> {
         let rows = match response[1]["row"].as_array() {
             Some(rows) => rows,
             None => {
-                return Err(ServiceError::OpenApiResponseError(
+                return Err(Error::OpenApiResponseError(
                     "Failed to parse response".to_string(),
                 ));
             }
@@ -38,12 +38,12 @@ pub async fn fetch_active_members() -> Result<Vec<Member>, ServiceError> {
         {
             Ok(rst) => rst,
             Err(e) => {
-                return Err(ServiceError::JsonDeserializeError(e.to_string()));
+                return Err(Error::JsonDeserializeError(e.to_string()));
             }
         };
         return Ok(rst);
     } else {
-        return Err(ServiceError::OpenApiResponseError(
+        return Err(Error::OpenApiResponseError(
             "Failed to parse response".to_string(),
         ));
     }
@@ -51,7 +51,7 @@ pub async fn fetch_active_members() -> Result<Vec<Member>, ServiceError> {
 
 pub async fn get_active_member_en(
     code: String, // assembly member code
-) -> Result<EnMember, ServiceError> {
+) -> Result<EnMember, Error> {
     let config = crate::config::get();
     let mut params = HashMap::new();
     params.insert("KEY", config.openapi_key.to_string());
@@ -73,7 +73,7 @@ pub async fn get_active_member_en(
         let rows = match response[1]["row"].as_array() {
             Some(rows) => rows,
             None => {
-                return Err(ServiceError::OpenApiResponseError(
+                return Err(Error::OpenApiResponseError(
                     "Failed to parse response".to_string(),
                 ));
             }
@@ -81,12 +81,12 @@ pub async fn get_active_member_en(
         let rst: EnMember = match serde_json::from_value(rows[0].clone()) {
             Ok(rst) => rst,
             Err(e) => {
-                return Err(ServiceError::JsonDeserializeError(e.to_string()));
+                return Err(Error::JsonDeserializeError(e.to_string()));
             }
         };
         return Ok(rst);
     } else {
-        return Err(ServiceError::OpenApiResponseError(
+        return Err(Error::OpenApiResponseError(
             "Failed to parse response".to_string(),
         ));
     }
@@ -94,7 +94,7 @@ pub async fn get_active_member_en(
 
 pub async fn get_member_profile_image(
     code: String, // assembly member code
-) -> Result<String, ServiceError> {
+) -> Result<String, Error> {
     let config = crate::config::get();
     let mut params = HashMap::new();
     params.insert("KEY", config.openapi_key.to_string());

@@ -1,5 +1,5 @@
 use bdk::prelude::*;
-use dto::{Result, ServiceError};
+use dto::{Error, Result};
 use scraper::{Html, Selector};
 
 #[derive(Debug, Clone, PartialEq)]
@@ -37,7 +37,7 @@ impl HtmlParser {
             }
         }
 
-        Err(ServiceError::HtmlParseError(
+        Err(Error::HtmlParseError(
             "Failed to parse response".to_string(),
         ))
     }
@@ -49,7 +49,7 @@ impl HtmlParser {
             let description = element.text().collect::<Vec<_>>().join(" ");
             return Ok(description);
         } else {
-            Err(ServiceError::HtmlParseError(
+            Err(Error::HtmlParseError(
                 "Failed to parse response".to_string(),
             ))
         }

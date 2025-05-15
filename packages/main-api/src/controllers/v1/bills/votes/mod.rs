@@ -85,7 +85,7 @@ impl VoteController {
             .fetch_one(&self.pool)
             .await
         {
-            Ok(_) => Err(ServiceError::UniqueViolation("Already voted".to_string())),
+            Ok(_) => Err(Error::UniqueViolation("Already voted".to_string())),
             Err(_) => {
                 let vote = self
                     .repo

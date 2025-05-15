@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use bdk::prelude::reqwest;
 
-use dto::{Result, ServiceError};
+use dto::{Error, Result};
 
 use super::*;
 
@@ -97,31 +97,29 @@ impl AssemblyClient {
             .await
             .map_err(|e| {
                 tracing::error!("Failed to send request: {}", e);
-                ServiceError::NaOpenApiRequestError
+                Error::NaOpenApiRequestError
             })?
             .json()
             .await
             .map_err(|e| {
                 tracing::error!("Failed to parse response: {}", e);
-                ServiceError::NaOpenApiResponseParsingError
+                Error::NaOpenApiResponseParsingError
             })?;
 
         tracing::debug!("Response: {:?}", json);
 
-        let response = json[endpoint]
-            .as_array()
-            .ok_or(ServiceError::NaOpenApiEmptyRow)?;
+        let response = json[endpoint].as_array().ok_or(Error::NaOpenApiEmptyRow)?;
 
         tracing::debug!("{} Response: {:?}", endpoint, response);
 
         if response.is_empty() {
-            return Err(ServiceError::NaOpenApiEmptyRow);
+            return Err(Error::NaOpenApiEmptyRow);
         }
 
         let rows = match response[1].get("row") {
             Some(rows) => rows,
             None => {
-                return Err(ServiceError::NaOpenApiEmptyRow);
+                return Err(Error::NaOpenApiEmptyRow);
             }
         };
         tracing::debug!("{} row data: {:?}", endpoint, rows);

@@ -70,10 +70,7 @@ impl AssemblyMemberControllerV1 {
         let user_id = match auth {
             Some(Authorization::UserSig(sig)) => {
                 User::query_builder()
-                    .principal_equals(
-                        sig.principal()
-                            .map_err(|_| dto::ServiceError::Unauthorized)?,
-                    )
+                    .principal_equals(sig.principal().map_err(|_| dto::Error::Unauthorized)?)
                     .query()
                     .map(User::from)
                     .fetch_optional(&mut *tx)

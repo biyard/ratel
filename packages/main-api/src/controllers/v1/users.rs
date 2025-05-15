@@ -36,7 +36,7 @@ impl UserControllerV1 {
         Json(body): Json<UserAction>,
     ) -> Result<Json<User>> {
         tracing::debug!("act_user: sig={:?} {:?}", sig, body);
-        let sig = sig.ok_or(ServiceError::Unauthorized)?;
+        let sig = sig.ok_or(Error::Unauthorized)?;
         body.validate()?;
 
         match body {
@@ -52,13 +52,10 @@ impl UserControllerV1 {
         Query(mut req): Query<UserReadAction>,
     ) -> Result<Json<User>> {
         tracing::debug!("read_user: sig={:?}", sig);
-        let principal = sig
-            .ok_or(ServiceError::Unauthorized)?
-            .principal()
-            .map_err(|s| {
-                tracing::error!("failed to get principal: {:?}", s);
-                ServiceError::Unknown(s.to_string())
-            })?;
+        let principal = sig.ok_or(Error::Unauthorized)?.principal().map_err(|s| {
+            tracing::error!("failed to get principal: {:?}", s);
+            Error::Unknown(s.to_string())
+        })?;
         req.validate()?;
 
         match req.action {
@@ -71,7 +68,7 @@ impl UserControllerV1 {
                 req.principal = Some(principal);
                 ctrl.login(req).await
             }
-            None | Some(UserReadActionType::ByPrincipal) => Err(ServiceError::BadRequest)?,
+            None | Some(UserReadActionType::ByPrincipal) => Err(Error::BadRequest)?,
         }
     }
 }
@@ -88,11 +85,11 @@ impl UserControllerV1 {
     pub async fn signup(&self, req: UserSignupRequest, sig: Signature) -> Result<Json<User>> {
         let principal = sig.principal().map_err(|s| {
             tracing::error!("failed to get principal: {:?}", s);
-            ServiceError::Unauthorized
+            Error::Unauthorized
         })?;
 
         if req.term_agreed == false {
-            return Err(ServiceError::BadRequest);
+            return Err(Error::BadRequest);
         }
 
         let username = req.email.split("@").collect::<Vec<&str>>()[0].to_string();
@@ -121,7 +118,7 @@ impl UserControllerV1 {
             .users
             .find_one(&req)
             .await
-            .map_err(|_| ServiceError::NotFound)?;
+            .map_err(|_| Error::NotFound)?;
 
         Ok(Json(user))
     }

@@ -14,14 +14,42 @@ use route::Route;
 use services::{user_service::UserService, vote_service::VoteService};
 use theme::Theme;
 
+#[cfg(target_os = "ios")]
+fn redirect_logs_to_file() {
+    use std::fs::OpenOptions;
+    use std::os::unix::io::IntoRawFd;
+
+    let file = OpenOptions::new()
+        .create(true)
+        .write(true)
+        .truncate(true)
+        .open("/tmp/ios_rust_log.txt")
+        .unwrap();
+
+    let fd = file.into_raw_fd();
+    unsafe {
+        libc::dup2(fd, libc::STDOUT_FILENO);
+        libc::dup2(fd, libc::STDERR_FILENO);
+    }
+}
+
 fn main() {
     let conf = config::get();
+    #[cfg(target_os = "ios")]
+    redirect_logs_to_file();
     dioxus_logger::init(conf.log_level).expect("failed to init logger");
     tracing::debug!("config: {:?}", conf);
     rest_api::set_message(conf.domain.to_string());
 
+    #[cfg(feature = "mobile")]
+    {
+        dioxus_aws::launch(app);
+    }
+
     #[cfg(feature = "web")]
-    dioxus_aws::launch(app);
+    {
+        dioxus_aws::launch(app);
+    }
 
     #[cfg(feature = "server")]
     {
@@ -33,6 +61,7 @@ fn main() {
     }
 }
 
+#[allow(dead_code)]
 fn app() -> Element {
     Theme::init();
     UserService::init();

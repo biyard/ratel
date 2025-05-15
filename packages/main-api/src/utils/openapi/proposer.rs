@@ -1,12 +1,12 @@
 use crate::models::openapi::national_proposer::AssemblyProposer;
 use bdk::prelude::*;
-use dto::ServiceError;
+use dto::Error;
 use serde_json::Value;
 use std::collections::HashMap;
 
 const AGE: u32 = 22; // 22nd assembly
 
-pub async fn fetch_proposers(index: u32, size: u32) -> Result<Vec<AssemblyProposer>, ServiceError> {
+pub async fn fetch_proposers(index: u32, size: u32) -> Result<Vec<AssemblyProposer>, Error> {
     let config = crate::config::get();
     let mut params = HashMap::new();
     params.insert("KEY", config.openapi_key.to_string());
@@ -30,7 +30,7 @@ pub async fn fetch_proposers(index: u32, size: u32) -> Result<Vec<AssemblyPropos
         let rows = match response[1]["row"].as_array() {
             Some(rows) => rows,
             None => {
-                return Err(ServiceError::OpenApiResponseError(
+                return Err(Error::OpenApiResponseError(
                     "Failed to parse response".to_string(),
                 ));
             }
@@ -39,18 +39,18 @@ pub async fn fetch_proposers(index: u32, size: u32) -> Result<Vec<AssemblyPropos
             match serde_json::from_value(serde_json::Value::Array(rows.clone())) {
                 Ok(rst) => rst,
                 Err(e) => {
-                    return Err(ServiceError::JsonDeserializeError(e.to_string()));
+                    return Err(Error::JsonDeserializeError(e.to_string()));
                 }
             };
         return Ok(rst);
     } else {
-        return Err(ServiceError::OpenApiResponseError(
+        return Err(Error::OpenApiResponseError(
             "Failed to parse response".to_string(),
         ));
     }
 }
 
-pub async fn fetch_proposer_by_bill_id(bill_no: String) -> Result<AssemblyProposer, ServiceError> {
+pub async fn fetch_proposer_by_bill_id(bill_no: String) -> Result<AssemblyProposer, Error> {
     let config = crate::config::get();
     let mut params = HashMap::new();
     params.insert("KEY", config.openapi_key.to_string());
@@ -75,7 +75,7 @@ pub async fn fetch_proposer_by_bill_id(bill_no: String) -> Result<AssemblyPropos
         let rows = match response[1]["row"].as_array() {
             Some(rows) => rows,
             None => {
-                return Err(ServiceError::OpenApiResponseError(
+                return Err(Error::OpenApiResponseError(
                     "Failed to parse response".to_string(),
                 ));
             }
@@ -84,7 +84,7 @@ pub async fn fetch_proposer_by_bill_id(bill_no: String) -> Result<AssemblyPropos
             match serde_json::from_value(serde_json::Value::Array(rows.clone())) {
                 Ok(rst) => rst,
                 Err(e) => {
-                    return Err(ServiceError::JsonDeserializeError(e.to_string()));
+                    return Err(Error::JsonDeserializeError(e.to_string()));
                 }
             };
         for proposer in rst {
@@ -92,11 +92,11 @@ pub async fn fetch_proposer_by_bill_id(bill_no: String) -> Result<AssemblyPropos
                 return Ok(proposer);
             }
         }
-        return Err(ServiceError::OpenApiResponseError(
+        return Err(Error::OpenApiResponseError(
             "Failed to find proposer".to_string(),
         ));
     } else {
-        return Err(ServiceError::OpenApiResponseError(
+        return Err(Error::OpenApiResponseError(
             "Failed to parse response".to_string(),
         ));
     }
