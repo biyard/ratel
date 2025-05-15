@@ -182,6 +182,7 @@ impl UserService {
     pub async fn get_user_info_from_server(&mut self) {
         let cli = (self.cli)();
         rest_api::set_signer(Box::new(*self));
+        tracing::debug!("UserService::get_user_info_from_server");
 
         let user: User = match cli.user_info().await {
             Ok(v) => v,
