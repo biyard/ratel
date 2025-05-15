@@ -28,7 +28,7 @@ macro_rules! migrate {
 async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
     tracing::info!("Running migration");
 
-    migrate!(pool, BillWriter, USBillWriter);
+    migrate!(pool, BillWriter, USBillWriter, HKBillWriter);
 
     tracing::info!("Migration done");
     Ok(())
