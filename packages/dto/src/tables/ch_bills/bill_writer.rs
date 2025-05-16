@@ -1,6 +1,6 @@
 use bdk::prelude::*;
 
-#[api_model(base = "/m1/ch/bills", table = ch_bills, action = [fetch_bills(year = i64, start_bill_no = i64, end_bill_no = i64), fetch_recent_bills(year = i64)])]
+#[api_model(base = "/m1/ch/bills", table = ch_bills, action = [fetch_bills(start_page_no = i64, end_page_no = i64), fetch_recent_bills(year = i64)])]
 pub struct CHBillWriter {
     #[api_model(summary, primary_key)]
     pub id: i64,
@@ -19,11 +19,11 @@ pub struct CHBillWriter {
     #[api_model(summary)]
     pub title: String,
     #[api_model(summary)]
-    pub description: String,
+    pub description: Option<String>,
     #[api_model(summary)]
-    pub initial_situation: String,
+    pub initial_situation: Option<String>,
     #[api_model(summary)]
-    pub procedings: String,
+    pub procedings: Option<String>,
     #[api_model(summary)]
-    pub date: String,
+    pub date: i32,
 }

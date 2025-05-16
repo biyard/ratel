@@ -38,10 +38,14 @@ pub async fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Ro
                 .route()?,
         )
         .nest(
-            "/ch/bills",
-            ch::bills::CHBillWriterController::new(pool.clone())
             "/hk/bills",
             hk::bills::HKBillWriterController::new(pool.clone())
+                .await
+                .route()?,
+        )
+        .nest(
+            "/ch/bills",
+            ch::bills::CHBillWriterController::new(pool.clone())
                 .await
                 .route()?,
         )

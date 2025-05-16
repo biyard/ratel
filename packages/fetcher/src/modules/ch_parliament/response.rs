@@ -1,6 +1,6 @@
+use crate::utils::iso_to_date;
 use dto::CHBillWriter;
 use serde::{Deserialize, Serialize};
-
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct CHAffair {
     // 1: 법안 ID e.g., 20250001
@@ -11,19 +11,22 @@ pub struct CHAffair {
     pub formatted_id: String,
 
     // 3: 법안 제목
-    pub description: String,
+    pub title: String,
 
-    // 4: 법안 제안 당시 상태
+    // 4: 법안 상세 내용
+    pub description: Option<String>,
+
+    // 5: 법안 제안 당시 상태
     #[serde(rename = "initialSituation")]
-    pub initial_situation: String,
+    pub initial_situation: Option<String>,
 
-    // 5: 법안 진행 상황
-    pub proceedings: String,
+    // 6: 법안 진행 상황
+    pub proceedings: Option<String>,
 
-    // 6: 법안 심사 과정
+    // 7: 법안 심사 과정
     pub objectives: Vec<Objective>,
 
-    // 7: 법안 업데이트 날짜
+    // 8: 법안 업데이트 날짜
     pub updated: String,
 }
 
@@ -42,9 +45,12 @@ pub struct Resolution {
     pub date: String,
 
     // 2: 위원회
-    pub committee: Committee,
+    pub committee: Option<Committee>,
 
-    // 3: 상세 내용
+    // 3: 의회 대수
+    pub council: Option<i64>,
+
+    // 4: 상세 내용
     pub text: String,
 }
 
@@ -76,13 +82,33 @@ impl Into<CHBillWriter> for CHAffair {
             bill_id: self.id,
             year: self.get_year(),
             bill_no: self.get_bill_no(),
-            title: self.description.clone(),
+            title: self.title.clone(),
             description: self.description.clone(),
             initial_situation: self.initial_situation.clone(),
             procedings: self.proceedings.clone(),
-            date: self.updated.clone(),
+            date: iso_to_date(self.updated),
 
             ..Default::default()
         }
     }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct CHAffairSummary {
+    // 1: 법안 ID e.g., 20250001
+    pub id: i64,
+
+    // 2: 법안 업데이트 날짜
+    pub updated: String,
+
+    // 3: 마지막 페이지 여부
+    #[serde(rename = "hasMorePages")]
+    pub has_more_pages: Option<bool>,
+
+    // 4: 법안 번호 e.g., 25.001
+    #[serde(rename = "formattedId")]
+    pub formatted_id: String,
+
+    // 5: 법안 제목
+    pub title: String,
 }
