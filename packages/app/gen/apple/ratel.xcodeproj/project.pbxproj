@@ -32,6 +32,7 @@
 		674B836973F016B855684B90 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		6918D23A661219D35A94BAD8 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
 		806E182DA5633638FCACC622 /* ratel_iOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ratel_iOS.entitlements; sourceTree = "<group>"; };
+		847CAE372DD73114009EC8FD /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		8CD23D7A00CD4B57FE3C23BF /* lib.rs */ = {isa = PBXFileReference; lastKnownFileType = text; path = lib.rs; sourceTree = "<group>"; };
 		9785022095F4D25180E2919B /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 		980AA3D5A7786FA2E88B2E0E /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
@@ -136,6 +137,7 @@
 		D844015891B027BB16EE0FD1 /* ratel_iOS */ = {
 			isa = PBXGroup;
 			children = (
+				847CAE372DD73114009EC8FD /* AppDelegate.swift */,
 				674B836973F016B855684B90 /* Info.plist */,
 				806E182DA5633638FCACC622 /* ratel_iOS.entitlements */,
 			);
