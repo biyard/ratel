@@ -1,5 +1,6 @@
 mod assembly_members;
 mod bills;
+mod ch_bills;
 mod election_pledges;
 mod feeds;
 mod groups;
@@ -15,6 +16,7 @@ mod votes;
 
 pub use assembly_members::*;
 pub use bills::*;
+pub use ch_bills::*;
 pub use election_pledges::*;
 pub use feeds::*;
 pub use groups::*;

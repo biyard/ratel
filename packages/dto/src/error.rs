@@ -57,6 +57,16 @@ pub enum Error {
     HtmlParseError(String),
     FetchError(Vec<(i64, String)>),
 
+    // Swiss OpenAPI
+    #[translate(en = "Failed to call Swiss OpenData API")]
+    ChOpenDataApiError(String),
+    #[translate(en = "Failed to parse response in HK OpenData API")]
+    ChOpenDataApiResponseParsingError,
+    #[translate(en = "Failed to call HK OpenData API")]
+    ChOpenDataApiRequestError,
+    #[translate(en = "Could not find any resource")]
+    ChOpenDataApiEmptyRow,
+
     BadRequest,
     JsonDeserializeError(String),
     WalletNotFound,
