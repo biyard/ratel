@@ -8,7 +8,7 @@ target/
 /packages/app/gen/android/.env
 /packages/app/gen/android/app/google-services.json
 /packages/app/gen/apple/fastlane/Appfile
-/packages/app/gen/apple/mobile_iOS/GoogleService-Info.plist
+/packages/app/gen/apple/ratel_iOS/GoogleService-Info.plist
 dist/
 node_modules/
 .build/

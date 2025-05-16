@@ -5617,6 +5617,7 @@ dependencies = [
 name = "ratel"
 version = "0.1.0"
 dependencies = [
+ "cc",
  "serde",
  "serde_json",
  "tauri",
