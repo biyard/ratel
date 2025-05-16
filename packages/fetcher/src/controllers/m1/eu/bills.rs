@@ -21,7 +21,7 @@ pub struct EUBillWriterController {
 }
 
 static INSTANCE: OnceLock<bool> = OnceLock::new();
-static CURRENT_YEAR: i64 = chrono::Utc::now().year() as i64;
+static CURRENT_YEAR: i64 = 2025;
 static CURRENT_TERM: i64 = 10;
 
 impl EUBillWriterController {
