@@ -19,7 +19,7 @@ impl HkCouncilClient {
     }
 
     pub async fn list_bills(&self, offset: i64, limit: i64) -> Result<Vec<HKBill>> {
-        let bills: Vec<HKBill> = self.get(limit, offset, false, vec![], None, None).await?;
+        let bills: Vec<HKBill> = self.get(offset, limit, false, vec![], None, None).await?;
 
         Ok(bills)
     }
@@ -32,12 +32,12 @@ impl HkCouncilClient {
         end_date: &str,
     ) -> Result<Vec<HKBill>> {
         let filter = format!(
-            "bill_gazette_date ge datetime'{}'T00:00:00' and bill_gazette_date lt datetime'{}'T00:00:00'",
+            "bill_gazette_date ge datetime'{}T00:00:00' and bill_gazette_date lt datetime'{}T00:00:00'",
             start_date, end_date
         );
 
         let bills: Vec<HKBill> = self
-            .get(limit, offset, true, vec![], None, Some(filter))
+            .get(offset, limit, true, vec![], None, Some(filter))
             .await?;
 
         Ok(bills)
@@ -52,7 +52,7 @@ impl HkCouncilClient {
         let filter = format!("year(bill_gazette_date) eq {}", year);
 
         let bills: Vec<HKBill> = self
-            .get(limit, offset, true, vec![], None, Some(filter))
+            .get(offset, limit, true, vec![], None, Some(filter))
             .await?;
 
         Ok(bills)
@@ -103,7 +103,7 @@ impl HkCouncilClient {
         }
 
         let client = reqwest::Client::builder()
-            .danger_accept_invalid_certs(true)
+            .danger_accept_invalid_certs(true) // need to accept invalid certs
             .build()
             .map_err(|e| Error::ReqwestClientError(e.to_string()))?;
 

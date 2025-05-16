@@ -242,7 +242,7 @@ mod tests {
 
         let cli = HKBillWriter::get_client(&endpoint);
 
-        let bill = cli.fetch_bill(1).await;
+        let bill = cli.fetch_bill("1".to_string()).await;
 
         assert!(bill.is_ok(), "Failed to fetch bill: {:?}", bill);
         let bill = bill.unwrap();
