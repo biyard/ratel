@@ -6,7 +6,7 @@ use std::collections::HashMap;
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct EUAdoptedText {
     // 1: 문서 ID e.g., eli/dl/doc/TA-9-2022-0201
-    pub id: i64,
+    pub id: String,
 
     // 2: 의회 대수 e.g., org/ep-9
     pub parliamentary_term: String,
@@ -31,22 +31,22 @@ pub struct EUAdoptedText {
 
     // 8. 공개 등록부 표기
     #[serde(rename = "notation_publicRegister")]
-    pub notation_public_register: String,
+    pub notation_public_register: Option<String>,
 
     // 9. 라벨
     pub label: String,
 
     // 10. 디렉토리 코드 목록
     #[serde(rename = "isAboutDirectoryCode")]
-    pub directory_codes: Vec<String>,
+    pub directory_codes: Option<Vec<String>>,
 
     // 11. 주제 분야 목록 e.g., http://publications.europa.eu/resource/authority/subject-matter/PESC
     #[serde(rename = "isAboutSubjectMatter")]
-    pub subject_matters: Vec<String>,
+    pub subject_matters: Option<Vec<String>>,
 
     // 12. 관련 주제 URI 목록 e.g., http://eurovoc.europa.eu/584
     #[serde(rename = "is_about")]
-    pub topics: Vec<String>,
+    pub topics: Option<Vec<String>>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -125,11 +125,24 @@ impl Into<EUBillWriter> for EUAdoptedText {
 
             title: self.titles.get("en").unwrap_or(&"".to_string()).clone(),
             alternative_title: self.titles.get("en").map(|s| s.clone()),
-            pdf_url: self.realizations[0]
+            // FIXME: need check
+            pdf_url: Some(format!(
+                "https://redmapl3.europarl.europa.eu/RedmapFront/media/reds_iPlTa_Itm/{0}/{0}-FNL_en.pdf",
+                self.identifier,
+            )),
+            // FIXME: need full url
+            xml_url: self.realizations[0]
                 .embodiments
                 .iter()
-                .find(|r| r.id.ends_with("/en/pdf"))
+                .find(|r| r.id.ends_with("/en/xml"))
                 .and_then(|e| Some(e.file_path.clone())),
+            // FIXME: need full url
+            docs_url: self.realizations[0]
+                .embodiments
+                .iter()
+                .find(|r| r.id.ends_with("/en/docx"))
+                .and_then(|e| Some(e.file_path.clone())),
+
             ..Default::default()
         }
     }
