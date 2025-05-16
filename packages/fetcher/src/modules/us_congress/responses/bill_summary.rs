@@ -43,7 +43,7 @@ impl BillSummaries {
     pub fn convert_bill_status(&self) -> dto::USBillStatus {
         let summary = self.extract_summary_texts();
 
-        let last_summary = match summary.last() {
+        let _last_summary = match summary.last() {
             Some(last_summary) => last_summary,
             None => return dto::USBillStatus::Unknown,
         };

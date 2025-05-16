@@ -24,6 +24,9 @@ pub struct BillTextFormat {
 
 impl BillTexts {
     pub fn get_pdf_url(&self) -> Option<String> {
+        if self.text_versions.is_empty() {
+            return None;
+        }
         self.text_versions[0]
             .formats
             .iter()
@@ -32,6 +35,9 @@ impl BillTexts {
     }
 
     pub fn get_html_url(&self) -> Option<String> {
+        if self.text_versions.is_empty() {
+            return None;
+        }
         self.text_versions[0]
             .formats
             .iter()
@@ -40,6 +46,9 @@ impl BillTexts {
     }
 
     pub fn get_xml_url(&self) -> Option<String> {
+        if self.text_versions.is_empty() {
+            return None;
+        }
         self.text_versions[0]
             .formats
             .iter()

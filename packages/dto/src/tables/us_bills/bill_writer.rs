@@ -1,6 +1,6 @@
 use bdk::prelude::*;
 
-#[api_model(base = "/m1/bills", table = us_bills, action = [fetch_bills(start_bill_no = i64, end_bill_no = i64)])]
+#[api_model(base = "/m1/us/bills", table = us_bills, action = [fetch_bills(start_bill_no = i64, end_bill_no = i64)])]
 pub struct USBillWriter {
     #[api_model(summary, primary_key)]
     pub id: i64,
