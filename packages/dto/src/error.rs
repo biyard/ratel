@@ -51,8 +51,6 @@ pub enum Error {
     NaOpenApiResponseParsingError,
     #[translate(en = "Failed to call national assembly API")]
     NaOpenApiRequestError,
-    #[translate(en = "Could not find any resource")]
-    NaOpenApiEmptyRow,
 
     // US Congress API
     #[translate(en = "Failed to call US Congress API")]
@@ -67,24 +65,31 @@ pub enum Error {
     HkOpenDataApiResponseParsingError,
     #[translate(en = "Failed to call HK OpenData API")]
     HkOpenDataApiRequestError,
-    #[translate(en = "Could not find any resource")]
-    HkOpenDataApiEmptyRow,
+
+    // Swiss OpenAPI
+    #[translate(en = "Failed to call Swiss OpenData API")]
+    ChOpenDataApiError(String),
+    #[translate(en = "Failed to parse response in Swiss OpenData API")]
+    ChOpenDataApiResponseParsingError,
+    #[translate(en = "Failed to call Swiss OpenData API")]
+    ChOpenDataApiRequestError,
+
+    // EU OpenAPI
+    #[translate(en = "Failed to call EU OpenData API")]
+    EuOpenDataApiError(String),
+    #[translate(en = "Failed to parse response in EU OpenData API")]
+    EuOpenDataApiResponseParsingError,
+    #[translate(en = "Failed to call EU OpenData API")]
+    EuOpenDataApiRequestError,
+    EuOpenDataFetchError(Vec<(String, String)>),
 
     #[translate(en = "Failed to parse website")]
     HtmlParseError(String),
     FetchError(Vec<(i64, String)>),
     #[translate(en = "Failed to initialize reqwest client")]
     ReqwestClientError(String),
-
-    // Swiss OpenAPI
-    #[translate(en = "Failed to call Swiss OpenData API")]
-    ChOpenDataApiError(String),
-    #[translate(en = "Failed to parse response in HK OpenData API")]
-    ChOpenDataApiResponseParsingError,
-    #[translate(en = "Failed to call HK OpenData API")]
-    ChOpenDataApiRequestError,
     #[translate(en = "Could not find any resource")]
-    ChOpenDataApiEmptyRow,
+    ApiEmptyRow,
 
     BadRequest,
     JsonDeserializeError(String),

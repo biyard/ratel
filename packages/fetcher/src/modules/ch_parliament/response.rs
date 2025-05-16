@@ -24,7 +24,7 @@ pub struct CHAffair {
     pub proceedings: Option<String>,
 
     // 7: 법안 심사 과정
-    pub objectives: Vec<Objective>,
+    // pub objectives: Vec<Objective>,
 
     // 8: 법안 업데이트 날짜
     pub updated: String,

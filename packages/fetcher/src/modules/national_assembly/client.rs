@@ -108,18 +108,18 @@ impl AssemblyClient {
 
         tracing::debug!("Response: {:?}", json);
 
-        let response = json[endpoint].as_array().ok_or(Error::NaOpenApiEmptyRow)?;
+        let response = json[endpoint].as_array().ok_or(Error::ApiEmptyRow)?;
 
         tracing::debug!("{} Response: {:?}", endpoint, response);
 
         if response.is_empty() {
-            return Err(Error::NaOpenApiEmptyRow);
+            return Err(Error::ApiEmptyRow);
         }
 
         let rows = match response[1].get("row") {
             Some(rows) => rows,
             None => {
-                return Err(Error::NaOpenApiEmptyRow);
+                return Err(Error::ApiEmptyRow);
             }
         };
         tracing::debug!("{} row data: {:?}", endpoint, rows);

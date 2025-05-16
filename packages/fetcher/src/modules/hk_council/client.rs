@@ -63,13 +63,10 @@ impl HkCouncilClient {
         let bills: Vec<HKBill> = self.get(0, 1, false, vec![], None, Some(filter)).await?;
 
         if bills.is_empty() {
-            return Err(Error::HkOpenDataApiEmptyRow);
+            return Err(Error::ApiEmptyRow);
         }
 
-        let bill = bills
-            .into_iter()
-            .next()
-            .ok_or(Error::HkOpenDataApiEmptyRow)?;
+        let bill = bills.into_iter().next().ok_or(Error::ApiEmptyRow)?;
 
         Ok(bill)
     }
@@ -123,7 +120,7 @@ impl HkCouncilClient {
                 Error::HkOpenDataApiResponseParsingError
             })?;
 
-        let value = json.get("value").ok_or(Error::HkOpenDataApiEmptyRow)?;
+        let value = json.get("value").ok_or(Error::ApiEmptyRow)?;
 
         Ok(serde_json::from_value(value.clone())?)
     }
