@@ -18,13 +18,26 @@ impl ChParliamentClient {
         }
     }
 
+    pub async fn list_bill_ids(&self, page_no: i64) -> Result<(Vec<i64>, bool)> {
+        let bills: Vec<CHAffairSummary> = self.list(page_no).await?;
+
+        let bill_ids = bills.iter().map(|bill| bill.id).collect();
+
+        let is_last_page = if let Some(last_page) = bills.last() {
+            last_page.has_more_pages.unwrap_or(false)
+        } else {
+            false
+        };
+
+        Ok((bill_ids, is_last_page))
+    }
+
     pub async fn get_bill(&self, bill_id: i64) -> Result<CHAffair> {
         let bill_details: CHAffair = self.get(bill_id).await?;
 
         Ok(bill_details)
     }
 
-    #[allow(dead_code)]
     async fn list<T>(&self, page_no: i64) -> Result<T>
     where
         T: serde::de::DeserializeOwned,
@@ -35,11 +48,14 @@ impl ChParliamentClient {
         params.insert("pretty", "true".to_string());
         params.insert("pageNumber", page_no.to_string());
 
+        tracing::debug!("ch_parliament list url: {} param: {:?}", self.url, params);
+
         let client = reqwest::Client::new();
 
-        let json: serde_json::Value = client
+        let result: T = client
             .get(self.url.clone())
             .query(&params)
+            .header(reqwest::header::ACCEPT, "application/json") // Need to set the header to accept JSON
             .send()
             .await
             .map_err(|e| {
@@ -53,9 +69,7 @@ impl ChParliamentClient {
                 Error::ChOpenDataApiResponseParsingError
             })?;
 
-        let value = json.get("value").ok_or(Error::ChOpenDataApiEmptyRow)?;
-
-        Ok(serde_json::from_value(value.clone())?)
+        Ok(result)
     }
 
     async fn get<T>(&self, bill_id: i64) -> Result<T>
@@ -73,11 +87,19 @@ impl ChParliamentClient {
             bill_id.to_string()  // bill id
         );
 
+        tracing::debug!(
+            "ch_parliament get url: {} param: {:?} bill_id {:?}",
+            url,
+            params,
+            bill_id
+        );
+
         let client = reqwest::Client::new();
 
-        let json: serde_json::Value = client
+        let result: T = client
             .get(url)
             .query(&params)
+            .header(reqwest::header::ACCEPT, "application/json") // Need to set the header to accept JSON
             .send()
             .await
             .map_err(|e| {
@@ -91,8 +113,6 @@ impl ChParliamentClient {
                 Error::ChOpenDataApiResponseParsingError
             })?;
 
-        let value = json.get("value").ok_or(Error::ChOpenDataApiEmptyRow)?;
-
-        Ok(serde_json::from_value(value.clone())?)
+        Ok(result)
     }
 }

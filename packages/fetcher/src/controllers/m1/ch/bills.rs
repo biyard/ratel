@@ -60,7 +60,7 @@ impl CHBillWriterController {
         tracing::debug!("act_bill {:?}", body);
         let res = match body {
             CHBillWriterAction::FetchBills(param) => {
-                ctrl.fetch_bills(param.year, param.start_bill_no, param.end_bill_no)
+                ctrl.fetch_bills(param.start_page_no, param.end_page_no)
                     .await?
             }
             CHBillWriterAction::FetchRecentBills(param) => {
@@ -73,31 +73,38 @@ impl CHBillWriterController {
 }
 
 impl CHBillWriterController {
-    async fn fetch_bills(&self, year: i64, mut bill_no: i64, end: i64) -> Result<CHBillWriter> {
-        tracing::debug!("fetch_bills {:?} {:?}", year, bill_no);
+    async fn fetch_bills(&self, mut page_no: i64, end: i64) -> Result<CHBillWriter> {
+        tracing::debug!("fetch_bills {:?} {:?}", page_no, end);
         let mut bill_ids: Vec<(i64, String)> = vec![];
 
         loop {
-            for i in 0..3 {
-                let bill_id = format!("{:04}{:04}", year, bill_no)
-                    .parse::<i64>()
-                    .unwrap_or_default();
-                let res = self
-                    .fetch_bill(CHBillWriterFetchBillRequest { bill_id })
-                    .await;
+            let (bill_id_list, is_last) = self.cli.list_bill_ids(page_no).await?;
+            tracing::debug!("bill_id_list {:?}", bill_id_list);
 
-                if res.is_ok() {
-                    tracing::info!("fetched {} bill", bill_id);
-                    break;
-                } else {
-                    tracing::error!("Failed to fetch bill {}: {:?}", bill_id, res);
-                    if i == 2 {
-                        bill_ids.push((bill_id, format!("{:?}", res)));
+            for bill_id in bill_id_list {
+                for i in 0..3 {
+                    let res = self
+                        .fetch_bill(CHBillWriterFetchBillRequest { bill_id })
+                        .await;
+
+                    if res.is_ok() {
+                        tracing::info!("fetched {} bill", bill_id);
+                        break;
+                    } else {
+                        tracing::error!("Failed to fetch bill {}: {:?}", bill_id, res);
+                        if i == 2 {
+                            bill_ids.push((bill_id, format!("{:?}", res)));
+                        }
                     }
                 }
             }
-            bill_no += 1;
-            if bill_no > end {
+
+            if is_last {
+                break;
+            }
+
+            page_no += 1;
+            if page_no > end {
                 break;
             }
         }
@@ -178,9 +185,9 @@ impl CHBillWriterController {
                         year: Some(year),
                         bill_no: Some(bill_no),
                         title: Some(title),
-                        description: Some(description),
-                        initial_situation: Some(initial_situation),
-                        procedings: Some(procedings),
+                        description,
+                        initial_situation,
+                        procedings,
                         date: Some(date),
                     },
                 )
