@@ -4,25 +4,25 @@
 # SPDX-License-Identifier: Apache-2.0
 # SPDX-License-Identifier: MIT
 
--keep class com.ratel.ratelMobile.* {
+-keep class foundation.ratel.app.* {
   native <methods>;
 }
 
--keep class com.ratel.ratelMobile.WryActivity {
+-keep class foundation.ratel.app.WryActivity {
   public <init>(...);
 
-  void setWebView(com.ratel.ratelMobile.RustWebView);
+  void setWebView(foundation.ratel.app.RustWebView);
   java.lang.Class getAppClass(...);
   java.lang.String getVersion();
 }
 
--keep class com.ratel.ratelMobile.Ipc {
+-keep class foundation.ratel.app.Ipc {
   public <init>(...);
 
   @android.webkit.JavascriptInterface public <methods>;
 }
 
--keep class com.ratel.ratelMobile.RustWebView {
+-keep class foundation.ratel.app.RustWebView {
   public <init>(...);
 
   void loadUrlMainThread(...);
@@ -30,6 +30,6 @@
   void evalScript(...);
 }
 
--keep class com.ratel.ratelMobile.RustWebChromeClient,com.ratel.ratelMobile.RustWebViewClient {
+-keep class foundation.ratel.app.RustWebChromeClient,foundation.ratel.app.RustWebViewClient {
   public <init>(...);
 }

@@ -6,7 +6,7 @@
 
 @file:Suppress("unused", "SetJavaScriptEnabled")
 
-package com.ratel.ratelMobile
+package foundation.ratel.app
 
 import android.annotation.SuppressLint
 import android.webkit.*

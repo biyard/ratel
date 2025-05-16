@@ -1,4 +1,4 @@
-package com.ratel.ratelMobile
+package foundation.ratel.app
 
 import android.content.pm.PackageManager
 import android.os.Build
@@ -44,7 +44,14 @@ class MainActivity : TauriActivity() {
 
             val token = task.result
             Log.d(TAG, "FCM Registration token: $token")
+            sendRegistrationToServer(token)
         })
+    }
+
+    private fun sendRegistrationToServer(token: String?) {
+        Log.d(TAG, "sendRegistrationTokenToServer($token)")
+
+        // TODO: add store token to db with use rust backend code
     }
 
     override fun onRequestPermissionsResult(

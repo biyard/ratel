@@ -6,7 +6,7 @@
 
 @file:Suppress("unused")
 
-package com.ratel.ratelMobile
+package foundation.ratel.app
 
 import android.webkit.*
 

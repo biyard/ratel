@@ -4,7 +4,7 @@
 
 /* THIS FILE IS AUTO-GENERATED. DO NOT MODIFY!! */
 
-package com.ratel.ratelMobile
+package foundation.ratel.app
 
 import android.os.Bundle
 import android.content.Intent

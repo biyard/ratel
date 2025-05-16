@@ -1,6 +1,6 @@
 name: ratel
 options:
-  bundleIdPrefix: com.ratel.ratelMobile
+  bundleIdPrefix: foundation.ratel.app
   deploymentTarget:
     iOS: 13.0
 fileGroups: [../../src]
@@ -11,7 +11,7 @@ settingGroups:
   app:
     base:
       PRODUCT_NAME: ratel
-      PRODUCT_BUNDLE_IDENTIFIER: com.ratel.ratelMobile
+      PRODUCT_BUNDLE_IDENTIFIER: foundation.ratel.app
 targetTemplates:
   app:
     type: application

@@ -1,4 +1,4 @@
-package com.ratel.ratelMobile
+package foundation.ratel.app
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -16,7 +16,7 @@ import android.webkit.WebView
 import android.app.PendingIntent
 import android.content.Intent
 import android.media.RingtoneManager
-import com.ratel.ratelMobile.MainActivity
+import foundation.ratel.app.MainActivity
 
 class MyFirebaseService : FirebaseMessagingService() {
     override fun onMessageReceived(remoteMessage: RemoteMessage) {

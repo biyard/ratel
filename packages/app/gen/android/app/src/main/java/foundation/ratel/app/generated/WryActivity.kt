@@ -4,9 +4,9 @@
 // SPDX-License-Identifier: Apache-2.0
 // SPDX-License-Identifier: MIT
 
-package com.ratel.ratelMobile
+package foundation.ratel.app
 
-import com.ratel.ratelMobile.RustWebView
+import foundation.ratel.app.RustWebView
 import android.annotation.SuppressLint
 import android.os.Build
 import android.os.Bundle
