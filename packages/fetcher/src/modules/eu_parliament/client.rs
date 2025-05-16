@@ -117,6 +117,12 @@ impl EuParliamentClient {
 
         let value = json.get("data").ok_or(Error::ApiEmptyRow)?;
 
-        Ok(serde_json::from_value(value.clone())?)
+        if value.is_array() {
+            if let Some(first_item) = value.get(0) {
+                return Ok(serde_json::from_value(first_item.clone())?);
+            }
+        }
+
+        Err(Error::ApiEmptyRow)
     }
 }

@@ -22,7 +22,7 @@ pub struct EUBillWriterController {
 
 static INSTANCE: OnceLock<bool> = OnceLock::new();
 static CURRENT_YEAR: i64 = 2025;
-static CURRENT_TERM: i64 = 9;
+static CURRENT_TERM: i64 = 10;
 
 impl EUBillWriterController {
     pub async fn new(pool: sqlx::Pool<sqlx::Postgres>) -> Self {
@@ -61,7 +61,7 @@ impl EUBillWriterController {
         tracing::debug!("act_bill {:?}", body);
         let res = match body {
             EUBillWriterAction::FetchBills(param) => {
-                ctrl.fetch_bills(Some(param.year), param.start_page_no, param.end_page_no)
+                ctrl.fetch_bills(Some(param.year), param.start_bill_no, param.end_bill_no)
                     .await?
             }
             EUBillWriterAction::FetchRecentBills(param) => {
