@@ -82,6 +82,14 @@ impl AssemblyClient {
     where
         T: serde::de::DeserializeOwned,
     {
+        if page < 0 {
+            return Err(Error::InvalidInput);
+        }
+
+        if page_size < 1 {
+            return Err(Error::InvalidInput);
+        }
+
         params.insert("KEY", self.key.clone());
         params.insert("type", "json".to_string());
         params.insert("pIndex", page.to_string());

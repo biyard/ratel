@@ -41,6 +41,13 @@ impl EuParliamentClient {
     where
         T: serde::de::DeserializeOwned,
     {
+        if offset < 0 {
+            return Err(Error::InvalidInput);
+        }
+
+        if limit < 1 {
+            return Err(Error::InvalidInput);
+        }
         let mut params = HashMap::new();
         params.insert("format", "application/ld+json".to_string());
         params.insert("offset", offset.to_string());

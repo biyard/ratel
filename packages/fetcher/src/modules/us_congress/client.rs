@@ -97,6 +97,14 @@ impl UsCongressClient {
     where
         T: serde::de::DeserializeOwned,
     {
+        if offset < 0 {
+            return Err(Error::InvalidInput);
+        }
+
+        if limit < 1 {
+            return Err(Error::InvalidInput);
+        }
+
         params.insert("format", "json".to_string());
         params.insert("offset", offset.to_string());
         params.insert("limit", limit.to_string());

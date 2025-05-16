@@ -83,6 +83,14 @@ impl HkCouncilClient {
     where
         T: serde::de::DeserializeOwned,
     {
+        if offset < 0 {
+            return Err(Error::InvalidInput);
+        }
+
+        if limit < 1 {
+            return Err(Error::InvalidInput);
+        }
+
         let mut params = HashMap::new();
         params.insert("$top", limit.to_string());
         params.insert("$skip", offset.to_string());
