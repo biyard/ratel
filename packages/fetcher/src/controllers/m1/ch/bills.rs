@@ -21,7 +21,7 @@ pub struct CHBillWriterController {
 }
 
 static INSTANCE: OnceLock<bool> = OnceLock::new();
-static CURRENT_YEAR: i64 = 2025;
+static CURRENT_YEAR: i64 = chrono::Utc::now().year() as i64;
 
 impl CHBillWriterController {
     pub async fn new(pool: sqlx::Pool<sqlx::Postgres>) -> Self {
@@ -173,7 +173,7 @@ impl CHBillWriterController {
                 title,
                 description,
                 initial_situation,
-                procedings,
+                proceedings,
                 date,
                 ..
             } = bill;
@@ -187,7 +187,7 @@ impl CHBillWriterController {
                         title: Some(title),
                         description,
                         initial_situation,
-                        procedings,
+                        proceedings,
                         date: Some(date),
                     },
                 )
@@ -201,7 +201,7 @@ impl CHBillWriterController {
                     bill.title,
                     bill.description,
                     bill.initial_situation,
-                    bill.procedings,
+                    bill.proceedings,
                     bill.date,
                 )
                 .await?

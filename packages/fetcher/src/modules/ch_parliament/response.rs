@@ -85,7 +85,7 @@ impl Into<CHBillWriter> for CHAffair {
             title: self.title.clone(),
             description: self.description.clone(),
             initial_situation: self.initial_situation.clone(),
-            procedings: self.proceedings.clone(),
+            proceedings: self.proceedings.clone(),
             date: iso_to_date(self.updated),
 
             ..Default::default()

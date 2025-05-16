@@ -23,7 +23,7 @@ pub struct CHBillWriter {
     #[api_model(summary)]
     pub initial_situation: Option<String>,
     #[api_model(summary)]
-    pub procedings: Option<String>,
+    pub proceedings: Option<String>,
     #[api_model(summary)]
     pub date: i32,
 }
