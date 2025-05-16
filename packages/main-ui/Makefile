@@ -46,6 +46,12 @@ build: clean public/tailwind.css
 
 	mv $(ARTIFACT_DIR)/server $(ARTIFACT_DIR)/bootstrap
 
+build.mobile: clean public/tailwind.css
+	$(BUILD_ENV) dx build --release --fullstack --server-features lambda
+	cp -r $(WORKSPACE_ROOT)/target/dx/$(SERVICE)/release/web $(ARTIFACT_DIR)
+
+	mv $(ARTIFACT_DIR)/web/server $(ARTIFACT_DIR)/bootstrap
+
 public/dep.js:
 	cd $(WORKSPACE_ROOT)/deps/js && make build && cp ./dist/main.js $(PWD)/public/dep.js
 
