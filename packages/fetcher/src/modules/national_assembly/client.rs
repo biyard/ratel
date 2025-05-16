@@ -83,11 +83,11 @@ impl AssemblyClient {
         T: serde::de::DeserializeOwned,
     {
         if page < 0 {
-            return Err(Error::InvalidInput);
+            return Err(Error::InvalidInputValue);
         }
 
         if page_size < 1 {
-            return Err(Error::InvalidInput);
+            return Err(Error::InvalidInputValue);
         }
 
         params.insert("KEY", self.key.clone());
