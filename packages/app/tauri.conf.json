@@ -4,9 +4,11 @@
   "version": "0.1.0",
   "identifier": "com.ratel.ratelMobile",
   "build": {
-    "beforeDevCommand": "",
-    "beforeBuildCommand": "",
-    "frontendDist": "./dist"
+    "beforeDevCommand": "cd main-ui && make run",
+    "devUrl": "http://localhost:8080",
+
+    "beforeBuildCommand": "cd main-ui && make build.mobile",
+    "frontendDist": "../../target/dx/main-ui/release/web/public"
   },
   "app": {
     "withGlobalTauri": true,

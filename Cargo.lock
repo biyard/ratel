@@ -4203,6 +4203,7 @@ dependencies = [
  "base64 0.22.1",
  "bdk",
  "chrono",
+ "console_error_panic_hook",
  "dioxus-oauth",
  "dto",
  "google-wallet",

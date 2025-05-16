@@ -15,13 +15,13 @@ if lsof -i tcp:$PORT >/dev/null; then
   kill -9 $(lsof -ti tcp:$PORT)
 fi
 
-echo "Building static files with dx..."
-source ~/.zshrc && envs_ratel && cd ../main-ui && ENV=dev make build.mobile
+# echo "Building static files with dx..."
+# source ~/.zshrc && envs_ratel && cd ../main-ui && ENV=dev make build.mobile
 
-echo "Syncing static files to Tauri dist..."
-rm -rf "$TAURI_DIST_DIR"
-mkdir -p "$TAURI_DIST_DIR"
-cp -r "$DX_OUTPUT_DIR"/* "$TAURI_DIST_DIR"
+# echo "Syncing static files to Tauri dist..."
+# rm -rf "$TAURI_DIST_DIR"
+# mkdir -p "$TAURI_DIST_DIR"
+# cp -r "$DX_OUTPUT_DIR"/* "$TAURI_DIST_DIR"
 
 echo "Launching Tauri android Dev..."
 pwd
