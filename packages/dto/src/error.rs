@@ -76,6 +76,17 @@ pub enum Error {
     #[translate(en = "Failed to initialize reqwest client")]
     ReqwestClientError(String),
 
+    // Swiss OpenAPI
+    #[translate(en = "Failed to call Swiss OpenData API")]
+    ChOpenDataApiError(String),
+    #[translate(en = "Failed to parse response in HK OpenData API")]
+    ChOpenDataApiResponseParsingError,
+    #[translate(en = "Failed to call HK OpenData API")]
+    ChOpenDataApiRequestError,
+    #[translate(en = "Could not find any resource")]
+    ChOpenDataApiEmptyRow,
+
+    BadRequest,
     JsonDeserializeError(String),
     WalletNotFound,
     WalletError(String),
