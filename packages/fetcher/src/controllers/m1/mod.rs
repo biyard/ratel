@@ -1,6 +1,7 @@
 // mod assembly_members;
 mod bills;
 mod ch;
+mod eu;
 mod hk;
 mod us;
 
@@ -46,6 +47,12 @@ pub async fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Ro
         .nest(
             "/ch/bills",
             ch::bills::CHBillWriterController::new(pool.clone())
+                .await
+                .route()?,
+        )
+        .nest(
+            "/eu/bills",
+            eu::bills::EUBillWriterController::new(pool.clone())
                 .await
                 .route()?,
         )
