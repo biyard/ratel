@@ -14,7 +14,7 @@ pub fn LandingLayout(#[props(default = Language::En)] lang: Language) -> Element
     let nav = use_navigator();
 
     use_effect(move || {
-        if user_service.loggedin() {
+        if crate::config::get().experiment && user_service.loggedin() {
             nav.push(Route::IndexPage {});
         }
     });
