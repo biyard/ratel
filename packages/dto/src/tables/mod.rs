@@ -1,8 +1,11 @@
 mod assembly_members;
 mod bills;
+mod ch_bills;
 mod election_pledges;
+mod eu_bills;
 mod feeds;
 mod groups;
+mod hk_bills;
 mod industries;
 mod news;
 mod presidential_candidates;
@@ -15,9 +18,12 @@ mod votes;
 
 pub use assembly_members::*;
 pub use bills::*;
+pub use ch_bills::*;
 pub use election_pledges::*;
+pub use eu_bills::*;
 pub use feeds::*;
 pub use groups::*;
+pub use hk_bills::*;
 pub use industries::*;
 pub use news::*;
 pub use presidential_candidates::*;
