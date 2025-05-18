@@ -274,7 +274,8 @@ mod tests {
         } = setup().await.unwrap();
         setup_quiz(&pool).await;
 
-        let quiz_result = QuizResult::get_client(&endpoint)
+        let cli = QuizResult::get_client(&endpoint);
+        let quiz_result = cli
             .answer(vec![
                 QuizAnswer {
                     quiz_id: 1,
@@ -292,6 +293,26 @@ mod tests {
             .await
             .unwrap();
 
+        assert_eq!(quiz_result.principal, user.principal);
+        assert_eq!(quiz_result.results.len(), 2);
+
+        for r in quiz_result.results.iter() {
+            if r.presidential_candidate_id == 1 {
+                assert_eq!(r.support, 2);
+                assert_eq!(r.against, 0);
+            } else if r.presidential_candidate_id == 2 {
+                assert_eq!(r.support, 1);
+                assert_eq!(r.against, 1);
+            } else {
+                assert!(
+                    false,
+                    "Unexpected presidential candidate id: {}",
+                    r.presidential_candidate_id
+                );
+            }
+        }
+
+        let quiz_result = cli.get_result(quiz_result.principal).await.unwrap();
         assert_eq!(quiz_result.principal, user.principal);
         assert_eq!(quiz_result.results.len(), 2);
 
