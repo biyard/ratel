@@ -176,7 +176,7 @@ mod tests {
     use super::*;
     use crate::tests::{TestContext, setup};
 
-    async fn setup_quiz(pool: &sqlx::Pool<sqlx::Postgres>) {
+    async fn setup_quiz(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<[i64; 5]> {
         let pc = PresidentialCandidate::get_repository(pool.clone());
 
         let mut tx = pool.begin().await.unwrap();
@@ -262,6 +262,8 @@ mod tests {
             .unwrap();
 
         tx.commit().await.unwrap();
+
+        Ok([pc1.id, pc2.id, quiz1.id, quiz2.id, quiz3.id])
     }
 
     #[tokio::test]
@@ -272,21 +274,21 @@ mod tests {
             pool,
             ..
         } = setup().await.unwrap();
-        setup_quiz(&pool).await;
+        let [pc1, pc2, q1, q2, q3] = setup_quiz(&pool).await.unwrap();
 
         let cli = QuizResult::get_client(&endpoint);
         let quiz_result = cli
             .answer(vec![
                 QuizAnswer {
-                    quiz_id: 1,
+                    quiz_id: q1,
                     answer: QuizOptions::Like,
                 },
                 QuizAnswer {
-                    quiz_id: 2,
+                    quiz_id: q2,
                     answer: QuizOptions::Dislike,
                 },
                 QuizAnswer {
-                    quiz_id: 3,
+                    quiz_id: q3,
                     answer: QuizOptions::Like,
                 },
             ])
@@ -297,10 +299,10 @@ mod tests {
         assert_eq!(quiz_result.results.len(), 2);
 
         for r in quiz_result.results.iter() {
-            if r.presidential_candidate_id == 1 {
+            if r.presidential_candidate_id == pc1 {
                 assert_eq!(r.support, 2);
                 assert_eq!(r.against, 0);
-            } else if r.presidential_candidate_id == 2 {
+            } else if r.presidential_candidate_id == pc2 {
                 assert_eq!(r.support, 1);
                 assert_eq!(r.against, 1);
             } else {
@@ -317,10 +319,10 @@ mod tests {
         assert_eq!(quiz_result.results.len(), 2);
 
         for r in quiz_result.results.iter() {
-            if r.presidential_candidate_id == 1 {
+            if r.presidential_candidate_id == pc1 {
                 assert_eq!(r.support, 2);
                 assert_eq!(r.against, 0);
-            } else if r.presidential_candidate_id == 2 {
+            } else if r.presidential_candidate_id == pc2 {
                 assert_eq!(r.support, 1);
                 assert_eq!(r.against, 1);
             } else {
