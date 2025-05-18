@@ -2,7 +2,7 @@ use bdk::prelude::*;
 use validator::Validate;
 
 #[derive(Validate)]
-#[api_model(base = "/v1/quizzes/results", table = quiz_results, action = [answer(options = Vec<QuizAnswer>)])]
+#[api_model(base = "/v1/quizzes/results", table = quiz_results)]
 pub struct QuizResult {
     #[api_model(primary_key)]
     pub id: i64,
@@ -11,17 +11,21 @@ pub struct QuizResult {
     #[api_model(auto = [insert, update])]
     pub updated_at: i64,
 
-    #[api_model(read_action = [get_result])]
+    #[api_model(read_action = [get_result], unique)]
     pub principal: String,
 
     #[api_model(type = JSONB)]
     pub results: Vec<SupportPolicy>,
+
+    #[api_model(type = JSONB, action = [answer])]
+    pub answers: Vec<QuizAnswer>,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Default, serde::Serialize, serde::Deserialize)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct SupportPolicy {
     pub presidential_candidate_id: i64,
+    pub candidate_name: String,
     pub support: i64,
     pub against: i64,
 }

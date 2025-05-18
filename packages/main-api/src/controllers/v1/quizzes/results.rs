@@ -23,7 +23,7 @@ impl QuizResultController {
     async fn anwser(
         &self,
         auth: Option<Authorization>,
-        QuizResultAnswerRequest { options }: QuizResultAnswerRequest,
+        QuizResultAnswerRequest { answers }: QuizResultAnswerRequest,
     ) -> Result<QuizResult> {
         let user = extract_user_with_allowing_anonymous(&self.pool, auth).await?;
         let quizzes: HashMap<i64, Quiz> = Quiz::query_builder()
@@ -36,12 +36,23 @@ impl QuizResultController {
             .map(|q| (q.id, q))
             .collect();
 
+        let candidates: HashMap<i64, PresidentialCandidate> =
+            PresidentialCandidate::query_builder()
+                .order_by_id_desc()
+                .query()
+                .map(PresidentialCandidate::from)
+                .fetch_all(&self.pool)
+                .await?
+                .into_iter()
+                .map(|q| (q.id, q))
+                .collect();
+
         tracing::debug!("quizzes: {:?}", quizzes.len());
 
         let mut likes = vec![];
         let mut dislikes = vec![];
 
-        for q in options.iter() {
+        for q in answers.iter() {
             match q.answer {
                 QuizOptions::Like => {
                     likes.push(q.quiz_id);
@@ -65,6 +76,10 @@ impl QuizResultController {
                             p.presidential_candidate_id,
                             SupportPolicy {
                                 presidential_candidate_id: p.presidential_candidate_id,
+                                candidate_name: candidates
+                                    .get(&p.presidential_candidate_id)
+                                    .map(|c| c.name.clone())
+                                    .unwrap_or_default(),
                                 support: 1,
                                 against: 0,
                             },
@@ -88,6 +103,10 @@ impl QuizResultController {
                             p.presidential_candidate_id,
                             SupportPolicy {
                                 presidential_candidate_id: p.presidential_candidate_id,
+                                candidate_name: candidates
+                                    .get(&p.presidential_candidate_id)
+                                    .map(|c| c.name.clone())
+                                    .unwrap_or_default(),
                                 support: 0,
                                 against: 1,
                             },
@@ -104,7 +123,7 @@ impl QuizResultController {
         let results = results.into_values().collect();
         tracing::debug!("results: {:?}", results);
 
-        let result = self.repo.insert(user.principal, results).await?;
+        let result = self.repo.insert(user.principal, results, answers).await?;
 
         Ok(result)
     }
@@ -320,9 +339,11 @@ mod tests {
 
         for r in quiz_result.results.iter() {
             if r.presidential_candidate_id == pc1 {
+                assert_eq!(r.candidate_name, "Candidate 1");
                 assert_eq!(r.support, 2);
                 assert_eq!(r.against, 0);
             } else if r.presidential_candidate_id == pc2 {
+                assert_eq!(r.candidate_name, "Candidate 2");
                 assert_eq!(r.support, 1);
                 assert_eq!(r.against, 1);
             } else {
