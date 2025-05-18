@@ -9,8 +9,8 @@ pub fn ResultsPage(
     id: ReadOnlySignal<String>,
 ) -> Element {
     let ctrl = Controller::new(lang, id)?;
-    let tr: ResultsTranslate = translate(&lang);
-    let (result, candidate) = ctrl.result()?;
+    let _tr: ResultsTranslate = translate(&lang);
+    let (_result, candidate) = ctrl.result()?;
 
     rsx! {
         by_components::meta::MetaPage { title: "{candidate.name}", image: "{candidate.image}" }
