@@ -8,12 +8,20 @@ pub fn ResultsPage(
     #[props(default = Language::En)] lang: Language,
     id: ReadOnlySignal<String>,
 ) -> Element {
-    let mut _ctrl = Controller::new(lang)?;
+    let ctrl = Controller::new(lang, id)?;
     let tr: ResultsTranslate = translate(&lang);
+    let (result, candidate) = ctrl.result()?;
 
     rsx! {
-        by_components::meta::MetaPage { title: tr.title }
+        by_components::meta::MetaPage { title: "{candidate.name}", image: "{candidate.image}" }
 
-        div { id: "results", "{tr.title} PAGE" } // end of this page
+        div { id: "results", class: "flex flex-col",
+            img {
+                src: candidate.image,
+                alt: candidate.name,
+                class: "w-full max-w-200",
+            }
+
+        }
     }
 }

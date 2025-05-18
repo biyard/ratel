@@ -44,3 +44,19 @@ pub enum QuizOptions {
     Like = 1,
     Dislike = 2,
 }
+
+impl QuizResult {
+    pub fn most_supportive_candidate(&self) -> i64 {
+        let mut max = 0;
+        let mut candidate_id = 0;
+
+        for result in &self.results {
+            if result.support > max {
+                max = result.support;
+                candidate_id = result.presidential_candidate_id;
+            }
+        }
+
+        candidate_id
+    }
+}
