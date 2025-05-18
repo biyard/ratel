@@ -32,6 +32,11 @@ pub enum Route {
         PreparingPage {},
         #[route("/become-sponsor")]
         BecomeSponsorPage {},
+        #[route("/quizzes")]
+        QuizzesPage {},
+
+        #[route("/quizzes/results/:id")]
+        ResultsPage {id: String},
     #[end_layout]
 
     #[route("/:..route")]
