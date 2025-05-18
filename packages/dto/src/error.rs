@@ -99,6 +99,10 @@ pub enum Error {
     FeedInvalidQuoteId,
     #[translate(en = "You should select industry or a parent feed")]
     FeedExclusiveParentOrIndustry,
+
+    // quizzes
+    #[translate(en = "You must select a valid quiz")]
+    InvalidQuizId,
 }
 
 impl<E: StdError + 'static> From<E> for Error {

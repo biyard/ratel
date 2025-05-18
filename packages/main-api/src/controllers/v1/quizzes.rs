@@ -1,3 +1,5 @@
+mod results;
+
 use bdk::prelude::*;
 use by_axum::{
     aide,
@@ -55,7 +57,11 @@ impl QuizController {
     pub fn route(&self) -> Result<by_axum::axum::Router> {
         Ok(by_axum::axum::Router::new()
             .route("/", get(Self::get_quiz))
-            .with_state(self.clone()))
+            .with_state(self.clone())
+            .nest(
+                "/results",
+                results::QuizResultController::new(self.pool.clone()).route()?,
+            ))
     }
 
     pub async fn get_quiz(
