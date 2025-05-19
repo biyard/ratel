@@ -7,6 +7,7 @@ mod election_pledges;
 mod feeds;
 mod news;
 mod presidential_candidates;
+mod quizzes;
 pub mod subscriptions;
 pub mod supports;
 mod teams;
@@ -18,6 +19,10 @@ use dto::*;
 
 pub fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Router> {
     Ok(by_axum::axum::Router::new()
+        .nest(
+            "/quizzes",
+            quizzes::QuizController::new(pool.clone()).route()?,
+        )
         .nest("/news", news::NewsController::new(pool.clone()).route()?)
         .nest("/bots", bots::BotController::new(pool.clone()).route()?)
         .nest("/teams", teams::TeamController::new(pool.clone()).route()?)

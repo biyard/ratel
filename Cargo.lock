@@ -1602,6 +1602,7 @@ dependencies = [
  "dioxus-hooks 0.6.2",
  "dioxus-html 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "dioxus-logger 0.6.2",
+ "dioxus-router 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "dioxus-signals 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "dioxus-web 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "manganis 0.6.2",
@@ -1627,7 +1628,7 @@ dependencies = [
  "dioxus-liveview",
  "dioxus-logger 0.6.3",
  "dioxus-mobile",
- "dioxus-router",
+ "dioxus-router 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
  "dioxus-signals 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
  "dioxus-ssr",
  "dioxus-web 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
@@ -2265,6 +2266,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "dioxus-motion"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "05b22f47699c0f8cdba183906f4ff9dd633d0bc36ddd57db370000e79d123917"
+dependencies = [
+ "dioxus 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "easer",
+ "futures-channel",
+ "futures-util",
+ "instant",
+ "wasm-bindgen",
+ "web-sys",
+]
+
+[[package]]
 name = "dioxus-oauth"
 version = "0.6.6"
 dependencies = [
@@ -2291,16 +2307,44 @@ dependencies = [
 [[package]]
 name = "dioxus-router"
 version = "0.6.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7266a76fc9e4a91f56499d1d1aecfff7168952b6627a6008b4e9748d6bf863e4"
+dependencies = [
+ "dioxus-cli-config 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "dioxus-history 0.6.2",
+ "dioxus-lib 0.6.2",
+ "dioxus-router-macro 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rustversion",
+ "tracing",
+ "url",
+ "urlencoding",
+]
+
+[[package]]
+name = "dioxus-router"
+version = "0.6.3"
 source = "git+https://github.com/hackartists/dioxus.git#b1f3635381cc43de23d8a8a959341cfd5f93ee3f"
 dependencies = [
  "dioxus-cli-config 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
  "dioxus-history 0.6.3",
  "dioxus-lib 0.6.3",
- "dioxus-router-macro",
+ "dioxus-router-macro 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
  "rustversion",
  "tracing",
  "url",
  "urlencoding",
+]
+
+[[package]]
+name = "dioxus-router-macro"
+version = "0.6.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2743ffb79e9a7d33d779c87d6deea2a6c047d0736012f95d63b909b83f0a6fd2"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "slab",
+ "syn 2.0.101",
 ]
 
 [[package]]
@@ -2650,6 +2694,15 @@ name = "dyn-clone"
 version = "1.0.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1c7a8fb8a9fbf66c1f703fe16184d10ca0ee9d23be5b4436400408ba54a95005"
+
+[[package]]
+name = "easer"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fba524f8b83c9c5bde02c2bb1627de9d1f81980489a6d54168cdfd08c258f917"
+dependencies = [
+ "num-traits",
+]
 
 [[package]]
 name = "ed25519"
@@ -4079,6 +4132,9 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e0242819d153cba4b4b05a5a8f2a7e9bbf97b6055b2a002b395c96b5ff3c0222"
 dependencies = [
  "cfg-if",
+ "js-sys",
+ "wasm-bindgen",
+ "web-sys",
 ]
 
 [[package]]
@@ -4589,6 +4645,7 @@ dependencies = [
  "base64 0.22.1",
  "bdk",
  "chrono",
+ "dioxus-motion",
  "dioxus-oauth",
  "dto",
  "google-wallet",
