@@ -297,6 +297,7 @@ impl UserService {
         Ok(())
     }
 
+    #[allow(unused_mut)]
     pub async fn login_with_firebase(&mut self) -> UserEvent {
         tracing::debug!("UserService::login: Firebase");
         let (evt, principal, email, name, profile_url) = match self.request_to_firebase().await {
