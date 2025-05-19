@@ -11,6 +11,8 @@ pub enum Route {
         ExplorePage {},
         #[route("/my-network")]
         MyNetworkPage {},
+        #[route("/message")]
+        MessagesPage {},
         #[route("/notifications")]
         NotificationsPage {},
         #[route("/my-profile")]
