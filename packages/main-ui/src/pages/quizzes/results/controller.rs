@@ -6,6 +6,7 @@ pub struct Controller {
     #[allow(dead_code)]
     pub lang: Language,
     pub result: Resource<(QuizResult, PresidentialCandidate)>,
+    pub id: ReadOnlySignal<String>,
 }
 
 impl Controller {
@@ -32,8 +33,20 @@ impl Controller {
             }
         })?;
 
-        let ctrl = Self { lang, result };
+        let ctrl = Self { lang, result, id };
 
         Ok(ctrl)
+    }
+
+    pub fn location(&self) -> String {
+        let conf = crate::config::get();
+        let url = format!(
+            "{}%3A%2F%2F{}%2Fquizzes%2Fresults%2F{}",
+            if conf.env == "local" { "http" } else { "https" },
+            conf.domain,
+            self.id()
+        );
+
+        url
     }
 }

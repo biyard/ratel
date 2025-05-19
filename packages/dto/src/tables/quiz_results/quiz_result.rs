@@ -47,16 +47,25 @@ pub enum QuizOptions {
 
 impl QuizResult {
     pub fn most_supportive_candidate(&self) -> i64 {
-        let mut max = 0;
-        let mut candidate_id = 0;
+        let candidates = self.percentage_of_each_candidate();
+
+        candidates[0].0
+    }
+
+    pub fn percentage_of_each_candidate(&self) -> Vec<(i64, String, f64)> {
+        let mut percentages = vec![];
 
         for result in &self.results {
-            if result.support > max {
-                max = result.support;
-                candidate_id = result.presidential_candidate_id;
-            }
+            let total = result.support + result.against;
+            let percentage = (result.support as f64 / total as f64) * 100.0;
+            percentages.push((
+                result.presidential_candidate_id,
+                result.candidate_name.clone(),
+                percentage,
+            ));
         }
 
-        candidate_id
+        percentages.sort_by(|a, b| b.2.partial_cmp(&a.2).unwrap());
+        percentages
     }
 }

@@ -32,10 +32,14 @@ validator = "0.20.0"
 regex = "1.11.1"
 libc = "0.2.172"
 dioxus-motion = { version = "0.3.1", optional = true, default-features = false }
+ring = { version = "0.17.8" }
+simple_asn1 = "0.6.2"
+candid = "0.10.11"
+gloo-storage = "0.3.0"
 
 [features]
 default = []
-web = ["bdk/web", "dioxus-motion/web"]
+web = ["bdk/web", "dioxus-motion/web", "ring/wasm32_unknown_unknown_js"]
 mobile = ["bdk/mobile"]
 server = ["bdk/server", "dto/server"]
 lambda = ["server", "bdk/lambda"]
