@@ -34,6 +34,7 @@ fn redirect_logs_to_file() {
 }
 
 fn main() {
+    console_error_panic_hook::set_once();
     let conf = config::get();
     #[cfg(target_os = "ios")]
     redirect_logs_to_file();
