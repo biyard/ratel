@@ -3,44 +3,49 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 63;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
 		14934F5AE460032605E4275C /* main.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0BDBF5FED787C5E065709A5E /* main.mm */; };
+		1743017E7D5D60A898A521FA /* Pods_ratel_iOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = ECA98B76CAE20F827BAA5ED8 /* Pods_ratel_iOS.framework */; };
 		233C8D116731CF05A39F7A9A /* assets in Resources */ = {isa = PBXBuildFile; fileRef = 34891E22FAAA4B23C8917CCD /* assets */; };
 		648377255ED8E582BA3495A2 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9785022095F4D25180E2919B /* Security.framework */; };
 		76AAD5E0C9AD2ECFEE30AA02 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 427DBB49E9AA86D20E9E1A74 /* Assets.xcassets */; };
 		76C077BD1115AC8DDBE7475A /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1D48EB0355B400C17FD3ACBF /* MetalKit.framework */; };
 		77D3D37ACB743AE8154BCE98 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 980AA3D5A7786FA2E88B2E0E /* CoreGraphics.framework */; };
-		8382B6FC8B15F217061D34C3 /* libapp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E95B7E5413FBF5FD2B9AB643 /* libapp.a */; };
+		783BE5008A0259691306498E /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 0243210CE159561908307DF3 /* GoogleService-Info.plist */; };
 		925DDFDDA02055F9310FB0B2 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CD5867DA6E1B01EFC915203D /* QuartzCore.framework */; };
 		BB993A9A86BFD66AF7599908 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 02C07ACFFE14F879359C660F /* UIKit.framework */; };
 		C161909C7EBC3AA48901CC2D /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6918D23A661219D35A94BAD8 /* Metal.framework */; };
+		CBCE1F30E0D77A118A0803A8 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AD9C265F5F9103AB5E73C20 /* AppDelegate.swift */; };
 		D13A7865B3609D5B1064962A /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C05879DB6479CE03FD4807EA /* WebKit.framework */; };
 		F7A33772DA89F45DAC17BB86 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A2F4721A9F64CE23EA9DDF8A /* LaunchScreen.storyboard */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		0243210CE159561908307DF3 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		02C07ACFFE14F879359C660F /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		0BDBF5FED787C5E065709A5E /* main.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = main.mm; sourceTree = "<group>"; };
 		1D48EB0355B400C17FD3ACBF /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = System/Library/Frameworks/MetalKit.framework; sourceTree = SDKROOT; };
-		20C56CF5090E8CDB1307A14C /* ratel_iOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; name = ratel_iOS.app; path = ratel.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		20C56CF5090E8CDB1307A14C /* ratel_iOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = ratel_iOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		34891E22FAAA4B23C8917CCD /* assets */ = {isa = PBXFileReference; lastKnownFileType = folder; path = assets; sourceTree = SOURCE_ROOT; };
 		427DBB49E9AA86D20E9E1A74 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		4E8A2416E3B9B215BBCD8AE7 /* main.rs */ = {isa = PBXFileReference; lastKnownFileType = text; path = main.rs; sourceTree = "<group>"; };
+		4E8A2416E3B9B215BBCD8AE7 /* main.rs */ = {isa = PBXFileReference; path = main.rs; sourceTree = "<group>"; };
 		674B836973F016B855684B90 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		6918D23A661219D35A94BAD8 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
 		806E182DA5633638FCACC622 /* ratel_iOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ratel_iOS.entitlements; sourceTree = "<group>"; };
-		847CAE372DD73114009EC8FD /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		8CD23D7A00CD4B57FE3C23BF /* lib.rs */ = {isa = PBXFileReference; lastKnownFileType = text; path = lib.rs; sourceTree = "<group>"; };
+		8AD9C265F5F9103AB5E73C20 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		8CD23D7A00CD4B57FE3C23BF /* lib.rs */ = {isa = PBXFileReference; path = lib.rs; sourceTree = "<group>"; };
 		9785022095F4D25180E2919B /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 		980AA3D5A7786FA2E88B2E0E /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 		A2F4721A9F64CE23EA9DDF8A /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 		C05879DB6479CE03FD4807EA /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
+		CCBCF071FA66E83616D33079 /* Pods-ratel_iOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ratel_iOS.debug.xcconfig"; path = "Target Support Files/Pods-ratel_iOS/Pods-ratel_iOS.debug.xcconfig"; sourceTree = "<group>"; };
 		CD5867DA6E1B01EFC915203D /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		DC33B04C283520153EB81D2D /* bindings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bindings.h; sourceTree = "<group>"; };
-		E95B7E5413FBF5FD2B9AB643 /* libapp.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libapp.a; sourceTree = "<group>"; };
+		DECF18F390F485CDBD141091 /* Pods-ratel_iOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ratel_iOS.release.xcconfig"; path = "Target Support Files/Pods-ratel_iOS/Pods-ratel_iOS.release.xcconfig"; sourceTree = "<group>"; };
+		ECA98B76CAE20F827BAA5ED8 /* Pods_ratel_iOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ratel_iOS.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -48,7 +53,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8382B6FC8B15F217061D34C3 /* libapp.a in Frameworks */,
 				77D3D37ACB743AE8154BCE98 /* CoreGraphics.framework in Frameworks */,
 				C161909C7EBC3AA48901CC2D /* Metal.framework in Frameworks */,
 				76C077BD1115AC8DDBE7475A /* MetalKit.framework in Frameworks */,
@@ -56,6 +60,7 @@
 				648377255ED8E582BA3495A2 /* Security.framework in Frameworks */,
 				BB993A9A86BFD66AF7599908 /* UIKit.framework in Frameworks */,
 				D13A7865B3609D5B1064962A /* WebKit.framework in Frameworks */,
+				1743017E7D5D60A898A521FA /* Pods_ratel_iOS.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -68,20 +73,13 @@
 				34891E22FAAA4B23C8917CCD /* assets */,
 				427DBB49E9AA86D20E9E1A74 /* Assets.xcassets */,
 				A2F4721A9F64CE23EA9DDF8A /* LaunchScreen.storyboard */,
-				0973FA3C817E013C62EFFE66 /* Externals */,
 				D844015891B027BB16EE0FD1 /* ratel_iOS */,
 				85913A8DF73FF8391A7612D2 /* Sources */,
 				390D1F5DA4BA12DB3EF4D8E5 /* src */,
 				AD81B4FD9EAC555C0342E21B /* Frameworks */,
 				71EE44668859B7781EF1CAEA /* Products */,
+				B896D3086A1916F4E7C033C0 /* Pods */,
 			);
-			sourceTree = "<group>";
-		};
-		0973FA3C817E013C62EFFE66 /* Externals */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = Externals;
 			sourceTree = "<group>";
 		};
 		390D1F5DA4BA12DB3EF4D8E5 /* src */ = {
@@ -123,21 +121,32 @@
 			isa = PBXGroup;
 			children = (
 				980AA3D5A7786FA2E88B2E0E /* CoreGraphics.framework */,
-				E95B7E5413FBF5FD2B9AB643 /* libapp.a */,
 				6918D23A661219D35A94BAD8 /* Metal.framework */,
 				1D48EB0355B400C17FD3ACBF /* MetalKit.framework */,
 				CD5867DA6E1B01EFC915203D /* QuartzCore.framework */,
 				9785022095F4D25180E2919B /* Security.framework */,
 				02C07ACFFE14F879359C660F /* UIKit.framework */,
 				C05879DB6479CE03FD4807EA /* WebKit.framework */,
+				ECA98B76CAE20F827BAA5ED8 /* Pods_ratel_iOS.framework */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		B896D3086A1916F4E7C033C0 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				CCBCF071FA66E83616D33079 /* Pods-ratel_iOS.debug.xcconfig */,
+				DECF18F390F485CDBD141091 /* Pods-ratel_iOS.release.xcconfig */,
+			);
+			name = Pods;
+			path = Pods;
 			sourceTree = "<group>";
 		};
 		D844015891B027BB16EE0FD1 /* ratel_iOS */ = {
 			isa = PBXGroup;
 			children = (
-				847CAE372DD73114009EC8FD /* AppDelegate.swift */,
+				8AD9C265F5F9103AB5E73C20 /* AppDelegate.swift */,
+				0243210CE159561908307DF3 /* GoogleService-Info.plist */,
 				674B836973F016B855684B90 /* Info.plist */,
 				806E182DA5633638FCACC622 /* ratel_iOS.entitlements */,
 			);
@@ -159,18 +168,18 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = CD5AD9B549B21A436A4D8C6F /* Build configuration list for PBXNativeTarget "ratel_iOS" */;
 			buildPhases = (
+				9C8128E6CB8AAEDED2E09622 /* [CP] Check Pods Manifest.lock */,
 				989E48C6935013760D464BE3 /* Build Rust Code */,
 				AF623652BF519CDD5AA594F0 /* Sources */,
 				F52C6C4A74F863D773B608EB /* Resources */,
 				EDB5AEF4524E8757C8B23D34 /* Frameworks */,
+				2912888B1963481B581FF1E1 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
 			name = ratel_iOS;
-			packageProductDependencies = (
-			);
 			productName = ratel_iOS;
 			productReference = 20C56CF5090E8CDB1307A14C /* ratel_iOS.app */;
 			productType = "com.apple.product-type.application";
@@ -183,6 +192,8 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+				};
 			};
 			buildConfigurationList = A28086A44435320ECF777810 /* Build configuration list for PBXProject "ratel" */;
 			compatibilityVersion = "Xcode 14.0";
@@ -194,6 +205,8 @@
 			);
 			mainGroup = 071E66BD4B8013FC51F5401B;
 			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 54;
+			productRefGroup = 71EE44668859B7781EF1CAEA /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -208,6 +221,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				76AAD5E0C9AD2ECFEE30AA02 /* Assets.xcassets in Resources */,
+				783BE5008A0259691306498E /* GoogleService-Info.plist in Resources */,
 				F7A33772DA89F45DAC17BB86 /* LaunchScreen.storyboard in Resources */,
 				233C8D116731CF05A39F7A9A /* assets in Resources */,
 			);
@@ -216,6 +230,23 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		2912888B1963481B581FF1E1 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-ratel_iOS/Pods-ratel_iOS-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-ratel_iOS/Pods-ratel_iOS-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-ratel_iOS/Pods-ratel_iOS-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
 		989E48C6935013760D464BE3 /* Build Rust Code */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
@@ -230,12 +261,34 @@
 			outputFileListPaths = (
 			);
 			outputPaths = (
-				"$(SRCROOT)/Externals/x86_64/${CONFIGURATION}/libapp.a",
-				"$(SRCROOT)/Externals/arm64/${CONFIGURATION}/libapp.a",
+				"$(SRCROOT)/Externals/x86_64/debug/libapp.a",
+				"$(SRCROOT)/Externals/arm64/debug/libapp.a",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "export PATH=\"$HOME/.cargo/bin:$PATH\"\n\ncargo tauri ios xcode-script -v --platform ${PLATFORM_DISPLAY_NAME:?} --sdk-root ${SDKROOT:?} --framework-search-paths \"${FRAMEWORK_SEARCH_PATHS:?}\" --header-search-paths \"${HEADER_SEARCH_PATHS:?}\" --gcc-preprocessor-definitions \"${GCC_PREPROCESSOR_DEFINITIONS:-}\" --configuration ${CONFIGURATION:?} ${FORCE_COLOR} ${ARCHS:?}\n";
+			shellScript = "echo \"PROJECT_DIR=$PROJECT_DIR\"\necho \"SRCROOT=$SRCROOT\"\necho \"Check .a file presence:\"\nls -l \"$SRCROOT/Externals/x86_64/debug/libapp.a\"\necho \"Checking OTHER_LDFLAGS: $OTHER_LDFLAGS\"\ncargo tauri ios xcode-script -v --platform ${PLATFORM_DISPLAY_NAME:?} --sdk-root ${SDKROOT:?} --framework-search-paths \"${FRAMEWORK_SEARCH_PATHS:?}\" --header-search-paths \"${HEADER_SEARCH_PATHS:?}\" --gcc-preprocessor-definitions \"${GCC_PREPROCESSOR_DEFINITIONS:-}\" --configuration ${CONFIGURATION:?} ${FORCE_COLOR} ${ARCHS:?}\n";
+		};
+		9C8128E6CB8AAEDED2E09622 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-ratel_iOS-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -244,6 +297,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CBCE1F30E0D77A118A0803A8 /* AppDelegate.swift in Sources */,
 				14934F5AE460032605E4275C /* main.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -372,6 +426,7 @@
 		};
 		996162A90643F57F16524DA2 /* release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = DECF18F390F485CDBD141091 /* Pods-ratel_iOS.release.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ARCHS = arm64;
@@ -380,10 +435,6 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				ENABLE_BITCODE = NO;
 				"EXCLUDED_ARCHS[sdk=iphoneos*]" = x86_64;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"\".\"",
-				);
 				INFOPLIST_FILE = ratel_iOS/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -391,21 +442,30 @@
 				);
 				"LIBRARY_SEARCH_PATHS[arch=arm64]" = (
 					"$(inherited)",
-					"$(PROJECT_DIR)/Externals/arm64/$(CONFIGURATION)",
+					"$(PROJECT_DIR)/Externals/arm64/debug",
 					"$(SDKROOT)/usr/lib/swift",
 					"$(TOOLCHAIN_DIR)/usr/lib/swift/$(PLATFORM_NAME)",
 					"$(TOOLCHAIN_DIR)/usr/lib/swift-5.0/$(PLATFORM_NAME)",
 				);
 				"LIBRARY_SEARCH_PATHS[arch=x86_64]" = (
 					"$(inherited)",
-					"$(PROJECT_DIR)/Externals/x86_64/$(CONFIGURATION)",
+					"$(PROJECT_DIR)/Externals/x86_64/debug",
 					"$(SDKROOT)/usr/lib/swift",
 					"$(TOOLCHAIN_DIR)/usr/lib/swift/$(PLATFORM_NAME)",
 					"$(TOOLCHAIN_DIR)/usr/lib/swift-5.0/$(PLATFORM_NAME)",
 				);
+				"OTHER_LDFLAGS[arch=arm64]" = (
+					"$(inherited)",
+					"-lapp",
+				);
+				"OTHER_LDFLAGS[arch=x86_64]" = (
+					"$(inherited)",
+					"-lapp",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = foundation.ratel.app;
 				PRODUCT_NAME = ratel;
 				SDKROOT = iphoneos;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALID_ARCHS = arm64;
 			};
@@ -413,6 +473,7 @@
 		};
 		CF8B6D112DAF53A94200D6BF /* debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = CCBCF071FA66E83616D33079 /* Pods-ratel_iOS.debug.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ARCHS = arm64;
@@ -421,10 +482,6 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				ENABLE_BITCODE = NO;
 				"EXCLUDED_ARCHS[sdk=iphoneos*]" = x86_64;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"\".\"",
-				);
 				INFOPLIST_FILE = ratel_iOS/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -432,21 +489,30 @@
 				);
 				"LIBRARY_SEARCH_PATHS[arch=arm64]" = (
 					"$(inherited)",
-					"$(PROJECT_DIR)/Externals/arm64/$(CONFIGURATION)",
+					"$(PROJECT_DIR)/Externals/arm64/debug",
 					"$(SDKROOT)/usr/lib/swift",
 					"$(TOOLCHAIN_DIR)/usr/lib/swift/$(PLATFORM_NAME)",
 					"$(TOOLCHAIN_DIR)/usr/lib/swift-5.0/$(PLATFORM_NAME)",
 				);
 				"LIBRARY_SEARCH_PATHS[arch=x86_64]" = (
 					"$(inherited)",
-					"$(PROJECT_DIR)/Externals/x86_64/$(CONFIGURATION)",
+					"$(PROJECT_DIR)/Externals/x86_64/debug",
 					"$(SDKROOT)/usr/lib/swift",
 					"$(TOOLCHAIN_DIR)/usr/lib/swift/$(PLATFORM_NAME)",
 					"$(TOOLCHAIN_DIR)/usr/lib/swift-5.0/$(PLATFORM_NAME)",
 				);
+				"OTHER_LDFLAGS[arch=arm64]" = (
+					"$(inherited)",
+					"-lapp",
+				);
+				"OTHER_LDFLAGS[arch=x86_64]" = (
+					"$(inherited)",
+					"-lapp",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = foundation.ratel.app;
 				PRODUCT_NAME = ratel;
 				SDKROOT = iphoneos;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALID_ARCHS = arm64;
 			};

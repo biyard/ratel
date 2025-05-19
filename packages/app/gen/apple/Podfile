@@ -1,14 +1,17 @@
+platform :ios, '13.0'
+project 'ratel.xcodeproj'
 # Uncomment the next line to define a global platform for your project
 
 target 'ratel_iOS' do
-platform :ios, '13.0'
-  # Pods for ratel_iOS
+  use_frameworks!
+  pod 'Firebase'                  
+  pod 'FirebaseMessaging'        
 end
 
-target 'ratel_macOS' do
-platform :osx, '11.0'
-  # Pods for ratel_macOS
-end
+# target 'ratel_macOS' do
+# platform :osx, '11.0'
+#   # Pods for ratel_macOS
+# end
 
 # Delete the deployment target for iOS and macOS, causing it to be inherited from the Podfile
 post_install do |installer|

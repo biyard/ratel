@@ -6,8 +6,11 @@ target/
 /packages/main-ui/public/dep.js
 /packages/app/gen/android/ratel-mobile.json
 /packages/app/gen/android/.env
+/packages/app/gen/android/keystore.jks
+/packages/app/gen/android/local.properties
 /packages/app/gen/android/app/google-services.json
 /packages/app/gen/apple/fastlane/Appfile
+/packages/app/gen/apple/Pods
 /packages/app/gen/apple/ratel_iOS/GoogleService-Info.plist
 dist/
 node_modules/

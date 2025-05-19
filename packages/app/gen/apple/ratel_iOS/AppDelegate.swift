@@ -1,5 +1,7 @@
 import Foundation
+import FirebaseCore
 import Firebase
+import FirebaseMessaging
 import UserNotifications
 
 @objc(AppDelegate)
