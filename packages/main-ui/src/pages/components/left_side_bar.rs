@@ -7,7 +7,7 @@ use bdk::prelude::{
 
 use crate::{
     components::icons::{Palace, Pentagon2, RewardCoin},
-    pages::components::{SideRoundedAccordian, SideRoundedBox},
+    pages::components::{LeftSideProfile, SideRoundedAccordian, SideRoundedBox},
 };
 
 #[component]
@@ -33,7 +33,17 @@ pub fn LeftSidebar(lang: Language) -> Element {
     ];
 
     rsx! {
+        //FIXME: fix to connect api
         div { class: "flex flex-col w-fit h-fit gap-10 justify-start items-start",
+            LeftSideProfile {
+                lang,
+                name: "Hyejin Choi",
+                profile: "https://lh3.googleusercontent.com/a/ACg8ocIGf0gpB8MQdGkp5TXW1327nRpuPz70iy_hQY2NXNwanRXbFw=s96-c",
+                description: "Office of Rep.",
+                exp: 4,
+                total_exp: 5,
+            }
+
             SideRoundedBox {
                 div { class: "flex flex-col w-full justify-start items-start gap-20",
                     LeftSideItem {
