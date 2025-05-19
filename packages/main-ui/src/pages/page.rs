@@ -1,5 +1,5 @@
 #![allow(unused)]
-use crate::pages::components::{LeftSidebar, RightSidebar};
+use crate::pages::components::{FeedContents, LeftSidebar, RightSidebar};
 
 use super::*;
 use bdk::prelude::*;
@@ -17,9 +17,7 @@ pub fn IndexPage(#[props(default = Language::En)] lang: Language) -> Element {
         //FIXME: fix to connect api
         div { class: "flex flex-row w-full justify-start items-start py-20 gap-20",
             LeftSidebar { lang }
-            div { class: "flex flex-col w-full justify-start items-start text-white",
-                "feed section"
-            }
+            FeedContents { lang }
             RightSidebar {
                 lang,
                 promotions: vec![
