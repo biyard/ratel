@@ -19,6 +19,7 @@ pub struct Config {
     pub log_level: Level,
     pub main_api_endpoint: &'static str,
     pub firebase: FirebaseConfig,
+    pub experiment: bool,
 }
 
 impl Default for Config {
@@ -59,6 +60,9 @@ impl Default for Config {
                     .expect("You must set FIREBASE_MEASUREMENT_ID")
                     .to_string(),
             },
+            experiment: option_env!("EXPERIMENT")
+                .map(|s| s.parse().unwrap_or(false))
+                .unwrap_or(false),
         }
     }
 }
