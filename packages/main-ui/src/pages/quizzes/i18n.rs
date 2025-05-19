@@ -13,9 +13,9 @@ translate! {
         en: "Start",
     },
 
-    btn_already_done: {
-        ko: "이미 완료하셨습니다",
-        en: "Already done",
+    btn_go_to_result: {
+        ko: "결과 보러가기",
+        en: "Go to Result",
     },
 
     btn_like: {
