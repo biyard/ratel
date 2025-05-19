@@ -17,9 +17,7 @@ pub fn SideRoundedAccordian(icon: Element, title: String, children: Element) -> 
                     },
                     div { class: "flex flex-row w-full justify-start items-center gap-4",
                         {icon}
-                        div { class: "font-bold text-sm text-neutral-500 leading-[16px]",
-                            {title}
-                        }
+                        div { class: "font-bold text-sm/16 text-neutral-500", {title} }
                     }
 
                     if is_clicked() {

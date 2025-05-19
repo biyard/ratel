@@ -12,7 +12,7 @@ pub fn SearchBox(lang: Language, onsearch: EventHandler<String>) -> Element {
                 height: "24",
             }
             input {
-                class: "bg-transparent text-neutral-400 placeholder-neutral-500 focus:outline-none w-full font-medium text-sm leading-4",
+                class: "bg-transparent text-neutral-400 placeholder-neutral-500 focus:outline-none w-full font-medium text-sm/16",
                 r#type: "text",
                 placeholder: tr.search,
                 onchange: move |e| {

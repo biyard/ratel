@@ -118,9 +118,7 @@ pub fn Profile(url: String, name: String) -> Element {
             img { class: "w-24 h-24 rounded-full object-cover", src: url }
 
             div { class: "flex flex-row w-fit h-fit justify-center items-center gap-1 py-3",
-                div { class: "font-medium text-[15px] text-neutral-500 leading-[18px]",
-                    {name}
-                }
+                div { class: "font-medium text-[15px]/18 text-neutral-500", {name} }
                 ShapeArrowDown {
                     class: "[&>path]:stroke-[#737373] [&>path]:fill-[#737373]",
                     size: 12,
@@ -138,9 +136,7 @@ pub fn Menu(text: String, icon: Element, link: Route) -> Element {
             class: "flex flex-col w-fit justify-center items-center p-10",
             to: link,
             {icon}
-            div { class: "font-medium text-neutral-500 text-[15px] leading-[18px]",
-                {text}
-            }
+            div { class: "font-medium text-neutral-500 text-[15px]/18", {text} }
         }
     }
 }

@@ -1,5 +1,6 @@
 mod components;
 mod controller;
+mod dto;
 mod explore;
 mod i18n;
 mod landing;
@@ -10,6 +11,7 @@ mod my_profile;
 mod notifications;
 mod page;
 
+pub use dto::*;
 pub use layout::*;
 pub use page::*;
 
