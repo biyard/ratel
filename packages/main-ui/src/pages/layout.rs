@@ -9,7 +9,7 @@ pub fn SocialLayout(#[props(default = Language::En)] lang: Language) -> Element 
         div { class: "flex flex-col justify-start items-center",
             SocialHeader { lang, onsearch: |_| {} }
 
-            div { class: "w-full max-w-[1440px]", Outlet::<Route> {} }
+            div { class: "w-full max-w-desktop", Outlet::<Route> {} }
         }
         PopupZone {}
     }
