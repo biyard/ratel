@@ -24,7 +24,18 @@ pub fn QuizzesPage(#[props(default = Language::En)] lang: Language) -> Element {
                 "autoplay": true,
             }
 
-            button { class: "btn primary w-full", onclick: move |_| ctrl.start(), {tr.btn_start} }
+            button {
+                class: "btn primary w-full !hidden aria-hidden:!flex",
+                onclick: move |_| ctrl.start(),
+                "aria-show": !ctrl.already_done(),
+                {tr.btn_start}
+            }
+
+            button {
+                class: "btn w-full !hidden aria-show:!flex",
+                "aria-show": ctrl.already_done(),
+                {tr.btn_already_done}
+            }
         } // end of this page
 
         for (i , quiz) in ctrl.quizzes()?.into_iter().enumerate() {

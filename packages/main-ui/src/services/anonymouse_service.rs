@@ -38,6 +38,10 @@ impl AnonymouseService {
         use_context_provider(move || srv);
     }
 
+    pub fn set_signer(&self) {
+        rest_api::set_signer(Box::new(*self));
+    }
+
     pub fn get_identity(&self) -> Ed25519KeyPair {
         ring::signature::Ed25519KeyPair::from_pkcs8(&self.private_key())
             .expect("Could not read the key pair.")

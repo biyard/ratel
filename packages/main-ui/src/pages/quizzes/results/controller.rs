@@ -1,12 +1,17 @@
-use bdk::prelude::*;
+use bdk::prelude::{dioxus_popup::PopupService, *};
 use dto::{PresidentialCandidate, QuizResult};
+
+use crate::{pages::landing::components::SignupPopup, services::user_service::UserService};
 
 #[derive(Clone, Copy, DioxusController)]
 pub struct Controller {
-    #[allow(dead_code)]
     pub lang: Language,
     pub result: Resource<(QuizResult, PresidentialCandidate)>,
     pub id: ReadOnlySignal<String>,
+    pub popup: PopupService,
+    #[cfg(feature = "web")]
+    pub anonymous: crate::services::anonymouse_service::AnonymouseService,
+    pub user_service: UserService,
 }
 
 impl Controller {
@@ -33,7 +38,15 @@ impl Controller {
             }
         })?;
 
-        let ctrl = Self { lang, result, id };
+        let ctrl = Self {
+            lang,
+            result,
+            id,
+            popup: use_context(),
+            #[cfg(feature = "web")]
+            anonymous: use_context(),
+            user_service: use_context(),
+        };
 
         Ok(ctrl)
     }
@@ -48,5 +61,20 @@ impl Controller {
         );
 
         url
+    }
+
+    pub fn sign_up(&mut self) {
+        self.popup.open(rsx! {
+            SignupPopup { lang: self.lang }
+        });
+    }
+
+    pub fn is_mine(&self) -> bool {
+        #[allow(unused_variables)]
+        let anon = false;
+        #[cfg(feature = "web")]
+        let anon = self.anonymous.get_principal() == self.id();
+
+        anon && !self.user_service.is_logined()
     }
 }

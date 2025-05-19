@@ -14,6 +14,7 @@ pub struct Controller {
     pub current_step: Signal<usize>,
     pub answer: Signal<Vec<QuizAnswer>>,
     pub nav: Navigator,
+    pub already_done: Signal<bool>,
 }
 
 impl Controller {
@@ -25,6 +26,30 @@ impl Controller {
                 .unwrap_or_default()
                 .items
         })?;
+        #[allow(unused_mut)]
+        let mut already_done = use_signal(|| false);
+        #[cfg(feature = "web")]
+        let user_service: crate::services::user_service::UserService = use_context();
+        #[cfg(feature = "web")]
+        let anonymouse_service: crate::services::anonymouse_service::AnonymouseService =
+            use_context();
+
+        #[cfg(feature = "web")]
+        use_future(move || async move {
+            let principal = if user_service.is_logined() {
+                user_service.user_info().principal
+            } else {
+                anonymouse_service.get_principal()
+            };
+
+            if QuizResult::get_client(crate::config::get().main_api_endpoint)
+                .get_result(principal)
+                .await
+                .is_ok()
+            {
+                already_done.set(true);
+            };
+        });
 
         let ctrl = Self {
             lang,
@@ -34,6 +59,7 @@ impl Controller {
             quizzes,
             answer: use_signal(|| vec![]),
             nav: use_navigator(),
+            already_done,
         };
 
         Ok(ctrl)

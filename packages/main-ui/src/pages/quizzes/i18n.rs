@@ -13,6 +13,11 @@ translate! {
         en: "Start",
     },
 
+    btn_already_done: {
+        ko: "이미 완료하셨습니다",
+        en: "Already done",
+    },
+
     btn_like: {
         ko: "좋아요",
         en: "Like",

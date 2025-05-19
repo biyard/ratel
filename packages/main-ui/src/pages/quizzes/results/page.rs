@@ -8,7 +8,7 @@ pub fn ResultsPage(
     #[props(default = Language::En)] lang: Language,
     id: ReadOnlySignal<String>,
 ) -> Element {
-    let ctrl = Controller::new(lang, id)?;
+    let mut ctrl = Controller::new(lang, id)?;
     let _tr: ResultsTranslate = translate(&lang);
     let (result, candidate) = ctrl.result()?;
     let (_, name, percent) = &result.percentage_of_each_candidate()[0];
@@ -18,7 +18,7 @@ pub fn ResultsPage(
 
         div {
             id: "results",
-            class: "flex flex-col max-w-500 w-full items-center h-screen py-50 justify-between text-center gap-30",
+            class: "flex flex-col max-w-500 w-full items-center h-screen py-70 justify-between text-center gap-30",
             div { class: "flex flex-col max-w-500 w-full items-center text-center gap-30",
                 img {
                     src: candidate.image,
@@ -49,7 +49,12 @@ pub fn ResultsPage(
             }
 
             div { class: "flex flex-row justify-around items-center w-full",
-                button { class: "btn primary", "Sign up and Save" }
+                button {
+                    class: "btn primary !hidden aria-show:!flex",
+                    "aria-show": ctrl.is_mine(),
+                    onclick: move |_| ctrl.sign_up(),
+                    "Sign up and Save"
+                }
                 a {
                     href: "https://twitter.com/intent/tweet?text=My+stance+on+crypto+policy+by+Ratel!&url={ctrl.location()}&hashtags=Ratel,crypto,election_pledge,south_korea,presidential_election",
                     target: "_blank",
