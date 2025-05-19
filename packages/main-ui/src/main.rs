@@ -11,6 +11,9 @@ use by_components::{effects::HoverEffects, responsive::Responsive};
 use dioxus_oauth::prelude::FirebaseProvider;
 use dioxus_popup::PopupService;
 use route::Route;
+
+#[cfg(feature = "web")]
+use services::anonymouse_service::*;
 use services::{user_service::UserService, vote_service::VoteService};
 use theme::Theme;
 
@@ -64,6 +67,8 @@ fn main() {
 #[allow(dead_code)]
 fn app() -> Element {
     Theme::init();
+    #[cfg(feature = "web")]
+    AnonymouseService::init();
     UserService::init();
     PopupService::init();
     VoteService::init();
@@ -117,6 +122,7 @@ fn app() -> Element {
             src: "https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs",
             r#type: "module",
         }
+        document::Script { src: "https://d3js.org/d3.v7.min.js" }
         document::Style { r#type: "text/tailwindcss", "{css} {custom}" }
 
         // document::Script { r#type: "module", src: asset!("/public/dep.js"), defer: true }
