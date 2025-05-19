@@ -10,6 +10,7 @@ mod my_network;
 mod my_profile;
 mod notifications;
 mod page;
+mod quizzes;
 
 pub use dto::*;
 pub use layout::*;
@@ -21,3 +22,4 @@ pub use messages::*;
 pub use my_network::*;
 pub use my_profile::*;
 pub use notifications::*;
+pub use quizzes::*;

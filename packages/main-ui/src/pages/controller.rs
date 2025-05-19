@@ -14,7 +14,7 @@ impl Controller {
         let nav = use_navigator();
         use_effect(move || {
             tracing::debug!("Checking login status {}", user_service.loggedin());
-            if !user_service.loggedin() {
+            if !crate::config::get().experiment || !user_service.loggedin() {
                 nav.replace(Route::LandingPage {});
             }
         });

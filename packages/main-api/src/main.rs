@@ -53,6 +53,9 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         Feed,
         TeamMember,
         News,
+        Quiz,
+        QuizResult,
+        ElectionPledgeQuiz,
     );
 
     if Industry::query_builder()
@@ -195,15 +198,8 @@ pub mod tests {
             .await?
             .unwrap();
 
-        let g = Group::query_builder()
-            .name_contains("ServiceAdmin".to_string())
-            .query()
-            .map(Group::from)
-            .fetch_one(pool)
-            .await?;
-
         GroupMember::get_repository(pool.clone())
-            .insert_with_tx(&mut *tx, u.id, g.id)
+            .insert_with_tx(&mut *tx, u.id, 1)
             .await?;
 
         tx.commit().await?;

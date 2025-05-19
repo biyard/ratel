@@ -2,14 +2,19 @@
 use bdk::prelude::*;
 
 #[component]
-pub fn ThumbsUp(#[props(default = "white".to_string())] color: String) -> Element {
+pub fn ThumbsUp(
+    #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
+    #[props(default = "white".to_string())] color: String,
+    #[props(default = 31)] size: i32,
+) -> Element {
     rsx! {
         svg {
-            width: "31",
-            height: "31",
+            width: "{size}",
+            height: "{size}",
             view_box: "0 0 31 31",
             fill: "none",
             xmlns: "http://www.w3.org/2000/svg",
+            ..attributes,
             path {
                 fill_rule: "evenodd",
                 clip_rule: "evenodd",
@@ -31,14 +36,19 @@ pub fn ThumbsUp(#[props(default = "white".to_string())] color: String) -> Elemen
 }
 
 #[component]
-pub fn ThumbsDown(#[props(default = "white".to_string())] color: String) -> Element {
+pub fn ThumbsDown(
+    #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
+    #[props(default = "white".to_string())] color: String,
+    #[props(default = 31)] size: i32,
+) -> Element {
     rsx! {
         svg {
-            width: "31",
-            height: "31",
+            width: "{size}",
+            height: "{size}",
             view_box: "0 0 31 31",
             fill: "none",
             xmlns: "http://www.w3.org/2000/svg",
+            ..attributes,
             path {
                 fill_rule: "evenodd",
                 clip_rule: "evenodd",

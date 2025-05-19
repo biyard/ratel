@@ -46,18 +46,18 @@ pub fn LandingPage(#[props(default = Language::En)] lang: Language) -> Element {
         MetaPage { title: "Ratel", description: tr.description, image: "{image}" }
         div { class: "absolute top-0 left-0 w-full h-auto",
             div { class: "absolute inset-0 bg-background/95 z-1" }
-                div { class: "absolute relative w-full z-0",
-            video {
-                class: "w-full h-screen object-cover",
-                autoplay: true,
-                muted: muted(),
-                playsinline: "false",
-                onmouseenter: move |_| muted.set(false),
-                onmouseleave: move |_| muted.set(true),
-                r#loop: true,
-                src: asset!("/public/videos/ratel.mp4"),
+            div { class: "absolute relative w-full z-0",
+                video {
+                    class: "w-full h-screen object-cover",
+                    autoplay: true,
+                    muted: muted(),
+                    playsinline: "false",
+                    onmouseenter: move |_| muted.set(false),
+                    onmouseleave: move |_| muted.set(true),
+                    r#loop: true,
+                    src: asset!("/public/videos/ratel.mp4"),
+                }
             }
-        }
         }
 
         a {

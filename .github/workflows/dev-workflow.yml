@@ -177,6 +177,7 @@ jobs:
           VERSIONS: v1
           V1_ENDPOINT: api.dev.ratel.foundation
           DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
+          EXPERIMENT: true
         run: |
           npm i -g aws-cdk @tailwindcss/cli
           make deploy-web
