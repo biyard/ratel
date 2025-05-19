@@ -5,7 +5,7 @@ use bdk::prelude::*;
 #[rustfmt::skip]
 pub enum Route {
     #[layout(SocialLayout)]
-        #[route("/")]
+        #[route("/social")]
         IndexPage {},
         #[route("/explore")]
         ExplorePage {},
@@ -19,24 +19,27 @@ pub enum Route {
         MyProfilePage {},
     #[end_layout]
 
-    #[nest("/landing")]
-        #[layout(LandingLayout)]
-            #[route("/")]
-            LandingPage {},
-            #[route("/politicians")]
-            PoliticiansPage {},
-            #[route("/politicians/:id")]
-            PoliticiansByIdPage { id: i64 },
-            #[route("/presidential-election")]
-            PresidentialElectionPage {},
-            #[route("/privacy-policy")]
-            PrivacyPolicyPage {},
-            #[route("/preparing")]
-            PreparingPage {},
-            #[route("/become-sponsor")]
-            BecomeSponsorPage {},
-        #[end_layout]
-    #[end_nest]
+    #[layout(LandingLayout)]
+        #[route("/")]
+        LandingPage {},
+        #[route("/politicians")]
+        PoliticiansPage {},
+        #[route("/politicians/:id")]
+        PoliticiansByIdPage { id: i64 },
+        #[route("/presidential-election")]
+        PresidentialElectionPage {},
+        #[route("/privacy-policy")]
+        PrivacyPolicyPage {},
+        #[route("/preparing")]
+        PreparingPage {},
+        #[route("/become-sponsor")]
+        BecomeSponsorPage {},
+        #[route("/quizzes")]
+        QuizzesPage {},
+
+        #[route("/quizzes/results/:id")]
+        ResultsPage {id: String},
+    #[end_layout]
 
     #[route("/:..route")]
     NotFoundPage { route: Vec<String> },

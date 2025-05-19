@@ -15,13 +15,14 @@ use validator::Validate;
 #[derive(Clone, Debug)]
 pub struct UserControllerV1 {
     users: UserRepository,
+    pool: Pool<Postgres>,
 }
 
 impl UserControllerV1 {
     pub fn route(pool: Pool<Postgres>) -> Result<by_axum::axum::Router> {
         let users = User::get_repository(pool.clone());
 
-        let ctrl = UserControllerV1 { users };
+        let ctrl = UserControllerV1 { users, pool };
 
         Ok(by_axum::axum::Router::new()
             .route("/", get(Self::read_user).post(Self::act_user))
@@ -93,6 +94,32 @@ impl UserControllerV1 {
         }
 
         let username = req.email.split("@").collect::<Vec<&str>>()[0].to_string();
+
+        if let Ok(user) = User::query_builder()
+            .principal_equals(principal.clone())
+            .user_type_equals(UserType::Anonymous)
+            .query()
+            .map(User::from)
+            .fetch_one(&self.pool)
+            .await
+        {
+            let user = self
+                .users
+                .update(
+                    user.id,
+                    UserRepositoryUpdateRequest::new()
+                        .with_email(req.email)
+                        .with_nickname(req.nickname)
+                        .with_profile_url(req.profile_url)
+                        .with_term_agreed(req.term_agreed)
+                        .with_informed_agreed(req.informed_agreed)
+                        .with_username(username)
+                        .with_user_type(UserType::Individual),
+                )
+                .await?;
+
+            return Ok(Json(user));
+        }
 
         let user = self
             .users

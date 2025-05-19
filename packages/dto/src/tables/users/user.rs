@@ -49,6 +49,7 @@ pub enum UserType {
     Individual = 1,
     Team = 2,
     Bot = 3,
+    Anonymous = 99,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]
