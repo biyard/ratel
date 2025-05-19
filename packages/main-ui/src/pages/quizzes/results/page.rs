@@ -56,7 +56,7 @@ pub fn ResultsPage(
                     "Sign up and Save"
                 }
                 a {
-                    href: "https://twitter.com/intent/tweet?text=My+stance+on+crypto+policy+by+Ratel!&url={ctrl.location()}&hashtags=Ratel,crypto,election_pledge,south_korea,presidential_election",
+                    href: "https://x.com/intent/tweet?text=My+stance+on+crypto+policy+by+Ratel!&url={ctrl.location()}&hashtags=Ratel,crypto,election_pledge,south_korea,presidential_election",
                     target: "_blank",
                     class: "btn",
                     Share3 { class: "[&>path]:stroke-white" }

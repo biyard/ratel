@@ -28,7 +28,7 @@ pub fn QuizzesPage(#[props(default = Language::En)] lang: Language) -> Element {
             }
 
             button {
-                class: "btn primary w-full !hidden aria-hidden:!flex",
+                class: "btn primary w-full !hidden aria-show:!flex",
                 onclick: move |_| ctrl.start(),
                 "aria-show": !ctrl.already_done(),
                 {tr.btn_start}

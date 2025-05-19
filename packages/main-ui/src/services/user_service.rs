@@ -191,35 +191,45 @@ impl UserService {
         ))
     }
 
+    #[cfg(feature = "server")]
+    async fn request_to_firebase(
+        &mut self,
+    ) -> Result<(google_wallet::WalletEvent, String, String, String, String)> {
+        unimplemented!();
+    }
+
+    #[cfg(feature = "web")]
     async fn request_to_firebase(
         &mut self,
     ) -> Result<(google_wallet::WalletEvent, String, String, String, String)> {
         let mut firebase = self.firebase.write();
-        let (evt, principal, email, name, profile_url) =
-            match firebase.request_wallet_with_google().await {
-                Ok(evt) => {
-                    tracing::debug!("UserService::login: cred={:?}", evt);
-                    let principal = firebase.get_principal();
-                    if principal.is_empty() {
-                        tracing::error!("UserService::login: principal is empty");
-                        return Err(Error::Unauthorized);
-                    }
-
-                    let (email, name, profile_url) = match firebase.get_user_info() {
-                        Some(v) => v,
-                        None => {
-                            tracing::error!("UserService::login: None");
-                            return Err(Error::Unauthorized);
-                        }
-                    };
-
-                    (evt, principal, email, name, profile_url)
-                }
-                Err(e) => {
-                    tracing::error!("UserService::login: error={:?}", e);
+        let (evt, principal, email, name, profile_url) = match firebase
+            .request_wallet_with_google_and_keypair(self.anonymous.private_key().as_ref())
+            .await
+        {
+            Ok(evt) => {
+                tracing::debug!("UserService::login: cred={:?}", evt);
+                let principal = firebase.get_principal();
+                if principal.is_empty() {
+                    tracing::error!("UserService::login: principal is empty");
                     return Err(Error::Unauthorized);
                 }
-            };
+
+                let (email, name, profile_url) = match firebase.get_user_info() {
+                    Some(v) => v,
+                    None => {
+                        tracing::error!("UserService::login: None");
+                        return Err(Error::Unauthorized);
+                    }
+                };
+
+                (evt, principal, email, name, profile_url)
+            }
+            Err(e) => {
+                tracing::error!("UserService::login: error={:?}", e);
+                return Err(Error::Unauthorized);
+            }
+        };
 
         Ok((evt, principal, email, name, profile_url))
     }
