@@ -86,9 +86,7 @@ pub fn LeftSidebar(lang: Language) -> Element {
                             width: "20",
                             height: "20",
                         }
-                        div { class: "font-bold text-white text-sm leading-[16px]",
-                            {tr.create_space}
-                        }
+                        div { class: "font-bold text-white text-sm/16", {tr.create_space} }
                     }
                     ContentList { contents: spaces }
                 }
@@ -114,9 +112,7 @@ pub fn LeftSidebar(lang: Language) -> Element {
                             width: "20",
                             height: "20",
                         }
-                        div { class: "font-bold text-white text-sm leading-[16px]",
-                            {tr.create_community}
-                        }
+                        div { class: "font-bold text-white text-sm/16", {tr.create_community} }
                     }
                     ContentList { contents: communities }
                 }
@@ -131,7 +127,7 @@ pub fn ContentList(contents: Vec<String>) -> Element {
     rsx! {
         div { class: "flex flex-col w-full justify-start items-start gap-16",
             for content in contents.iter().take(3) {
-                button { class: "cursor-pointer w-full justify-start items-start font-normal text-white text-base leading-[16px] overflow-hidden text-ellipsis whitespace-nowrap text-start",
+                button { class: "cursor-pointer w-full justify-start items-start font-normal text-white text-base/16 overflow-hidden text-ellipsis whitespace-nowrap text-start",
                     {content.clone()}
                 }
             }
@@ -144,7 +140,7 @@ pub fn LeftSideItem(icon: Element, text: String) -> Element {
     rsx! {
         button { class: "cursor-pointer flex flex-row w-full justify-start items-center gap-4",
             {icon}
-            div { class: "font-bold text-white text-sm leading-[16px]", {text} }
+            div { class: "font-bold text-white text-sm/16", {text} }
         }
     }
 }
