@@ -41,6 +41,7 @@ impl PromotionController {
             .end_at_greater_than_equals(now)
             .limit(param.size())
             .page(param.page())
+            .order_by_priority_desc()
             .query()
             .map(|row: PgRow| {
                 use sqlx::Row;
@@ -362,5 +363,9 @@ mod tests {
         assert_eq!(promote.status, PromotionStatus::Approved);
         assert_eq!(promote.promotion_type, PromotionType::Feed);
         assert_eq!(promote.priority, now);
+
+        let promotes = cli.query(PromotionQuery::new(10)).await.unwrap();
+        assert!(promotes.items.len() >= 1);
+        assert_eq!(promotes.items[0].id, promote.id);
     }
 }
