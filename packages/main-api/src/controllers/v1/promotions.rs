@@ -60,6 +60,7 @@ impl PromotionController {
         PromotionPromoteFeedRequest {
             name,
             description,
+            image_url,
             feed_id,
             start_at,
             end_at,
@@ -73,6 +74,7 @@ impl PromotionController {
             .insert(
                 name,
                 description,
+                image_url,
                 PromotionType::Feed,
                 PromotionStatus::Requested,
                 start_at,
@@ -308,11 +310,13 @@ mod tests {
 
         let title = format!("Test Title {now}");
         let description = format!("<p>Test {now}</p>");
+        let image_url = format!("https://test.com/{now}");
 
         let promote = cli
             .promote_feed(
                 title.clone(),
                 description.clone(),
+                image_url.clone(),
                 start_at,
                 end_at,
                 feed.id,
@@ -322,6 +326,7 @@ mod tests {
 
         assert_eq!(promote.name, title);
         assert_eq!(promote.description, description);
+        assert_eq!(promote.image_url, image_url);
         assert_eq!(promote.feed_id, Some(feed.id));
         assert_eq!(promote.requester_id, user.id);
         assert_eq!(promote.start_at, start_at);
@@ -349,6 +354,7 @@ mod tests {
 
         assert_eq!(promote.name, title);
         assert_eq!(promote.description, description);
+        assert_eq!(promote.image_url, image_url);
         assert_eq!(promote.feed_id, Some(feed.id));
         assert_eq!(promote.requester_id, user.id);
         assert_eq!(promote.start_at, start_at);
