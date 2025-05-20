@@ -1,5 +1,7 @@
+use crate::components::icons::{Facebook, X};
+
 use super::*;
-use bdk::prelude::{by_components::icons::links_share::Share3, *};
+use bdk::prelude::*;
 use controller::*;
 use i18n::*;
 
@@ -55,11 +57,20 @@ pub fn ResultsPage(
                     onclick: move |_| ctrl.sign_up(),
                     "Sign up and Save"
                 }
-                a {
-                    href: "https://x.com/intent/tweet?text=My+stance+on+crypto+policy+by+Ratel!&url={ctrl.location()}&hashtags=Ratel,crypto,election_pledge,south_korea,presidential_election",
-                    target: "_blank",
-                    class: "btn",
-                    Share3 { class: "[&>path]:stroke-white" }
+                div { class: "flex flex-row gap-20 items-center",
+                    a {
+                        href: "https://www.facebook.com/sharer/sharer.php?u={ctrl.location()}",
+                        target: "_blank",
+                        class: "btn",
+                        Facebook { size: 40 }
+                    }
+
+                    a {
+                        href: "https://x.com/intent/tweet?text=My+stance+on+crypto+policy+by+Ratel!&url={ctrl.location()}&hashtags=Ratel,crypto,election_pledge,south_korea,presidential_election",
+                        target: "_blank",
+                        class: "btn rounded-[2px] bg-black w-35 h-35",
+                        X { size: 20 }
+                    }
                 }
             }
         }
