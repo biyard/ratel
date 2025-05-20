@@ -33,7 +33,7 @@ impl PromotionController {
         _auth: Option<Authorization>,
         param: PromotionQuery,
     ) -> Result<QueryResponse<PromotionSummary>> {
-        let now = chrono::Utc::now().timestamp_millis();
+        let now = chrono::Utc::now().timestamp();
 
         let mut total_count = 0;
         let items: Vec<PromotionSummary> = PromotionSummary::query_builder()
