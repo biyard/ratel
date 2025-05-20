@@ -62,7 +62,7 @@ impl NewsController {
             &self.pool,
             auth,
             RatelResource::News,
-            GroupPermission::WriteNews,
+            GroupPermission::ManageNews,
         )
         .await?;
 
@@ -81,7 +81,7 @@ impl NewsController {
             &self.pool,
             auth,
             RatelResource::News,
-            GroupPermission::UpdateNews,
+            GroupPermission::ManageNews,
         )
         .await?;
 
@@ -102,7 +102,7 @@ impl NewsController {
             &self.pool,
             auth,
             RatelResource::News,
-            GroupPermission::DeleteNews,
+            GroupPermission::ManageNews,
         )
         .await?;
 
