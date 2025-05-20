@@ -13,7 +13,6 @@ pub struct Controller {
 impl Controller {
     pub fn new(lang: Language, id: ReadOnlySignal<i64>) -> std::result::Result<Self, RenderError> {
         let user: UserService = use_context();
-        tracing::debug!("user: {:?}", user);
 
         let politician = use_server_future(move || {
             let id = id();

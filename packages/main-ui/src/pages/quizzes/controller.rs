@@ -14,6 +14,8 @@ pub struct Controller {
     pub current_step: Signal<usize>,
     pub answer: Signal<Vec<QuizAnswer>>,
     pub nav: Navigator,
+    pub already_done: Signal<bool>,
+    pub principal: Memo<String>,
 }
 
 impl Controller {
@@ -25,6 +27,38 @@ impl Controller {
                 .unwrap_or_default()
                 .items
         })?;
+        #[allow(unused_mut)]
+        let mut already_done = use_signal(|| false);
+        #[cfg(feature = "web")]
+        let anonymouse_service: crate::services::anonymouse_service::AnonymouseService =
+            use_context();
+        #[cfg(feature = "web")]
+        let user_service: crate::services::user_service::UserService = use_context();
+
+        let principal = use_memo(move || {
+            #[cfg(feature = "web")]
+            if user_service.is_logined() {
+                return user_service.user_info().principal;
+            } else {
+                return anonymouse_service.get_principal();
+            };
+
+            #[cfg(not(feature = "web"))]
+            return "".to_string();
+        });
+
+        #[cfg(feature = "web")]
+        use_future(move || async move {
+            let principal = principal();
+
+            if QuizResult::get_client(crate::config::get().main_api_endpoint)
+                .get_result(principal)
+                .await
+                .is_ok()
+            {
+                already_done.set(true);
+            };
+        });
 
         let ctrl = Self {
             lang,
@@ -34,9 +68,21 @@ impl Controller {
             quizzes,
             answer: use_signal(|| vec![]),
             nav: use_navigator(),
+            already_done,
+            principal,
         };
 
         Ok(ctrl)
+    }
+
+    pub fn progress(&self) -> f32 {
+        let quizzes = self.quizzes().unwrap_or_default();
+        if quizzes.is_empty() || self.current_step() == 0 {
+            return 0.0;
+        }
+        let step = self.current_step() - 1;
+        let total = quizzes.len();
+        (step as f32 / total as f32) * 100.0
     }
 
     pub fn start(&mut self) {
@@ -101,5 +147,11 @@ impl Controller {
         }
         self.answer.set(answers);
         self.next().await;
+    }
+
+    pub fn go_to_result(&mut self) {
+        self.nav.push(Route::ResultsPage {
+            id: self.principal(),
+        });
     }
 }

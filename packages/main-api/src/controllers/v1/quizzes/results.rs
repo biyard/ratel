@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use bdk::prelude::*;
 use by_axum::{
@@ -60,17 +60,45 @@ impl QuizResultController {
                 QuizOptions::Dislike => {
                     dislikes.push(q.quiz_id);
                 }
-            }
+            };
         }
 
         let mut results: HashMap<i64, SupportPolicy> = HashMap::new();
+        let mut likes_pledges: HashSet<(i64, i64)> = HashSet::new();
+        let mut hlike: HashSet<i64> = HashSet::new();
+
+        let ep = ElectionPledgeLike::get_repository(self.pool.clone());
 
         for l in likes.iter() {
             tracing::debug!("like: {}", l);
             if let Some(q) = quizzes.get(l) {
-                for p in q.election_pledges.iter() {
+                for p in q.like_election_pledges.iter() {
+                    if hlike.contains(&p.id) {
+                        continue;
+                    }
+                    hlike.insert(p.id);
+
+                    if ElectionPledgeLike::query_builder()
+                        .election_pledge_id_equals(p.id)
+                        .user_id_equals(user.id)
+                        .query()
+                        .map(ElectionPledgeLike::from)
+                        .fetch_all(&self.pool)
+                        .await?
+                        .is_empty()
+                    {
+                        likes_pledges.insert((p.id, user.id));
+                    }
+
+                    let c = candidates
+                        .get(&p.presidential_candidate_id)
+                        .expect("Candidate not found");
+
                     if let Some(support_policy) = results.get_mut(&p.presidential_candidate_id) {
                         support_policy.support += 1;
+                        support_policy.percent = (support_policy.support as f64
+                            / (c.election_pledges.len()) as f64)
+                            * 100.0;
                     } else {
                         results.insert(
                             p.presidential_candidate_id,
@@ -81,7 +109,7 @@ impl QuizResultController {
                                     .map(|c| c.name.clone())
                                     .unwrap_or_default(),
                                 support: 1,
-                                against: 0,
+                                percent: (1.0 / (c.election_pledges.len()) as f64) * 100.0,
                             },
                         );
                     }
@@ -95,9 +123,33 @@ impl QuizResultController {
         for d in dislikes.iter() {
             tracing::debug!("dislike: {}", d);
             if let Some(q) = quizzes.get(d) {
-                for p in q.election_pledges.iter() {
+                for p in q.dislike_election_pledges.iter() {
+                    if hlike.contains(&p.id) {
+                        continue;
+                    }
+                    hlike.insert(p.id);
+
+                    if ElectionPledgeLike::query_builder()
+                        .election_pledge_id_equals(p.id)
+                        .user_id_equals(user.id)
+                        .query()
+                        .map(ElectionPledgeLike::from)
+                        .fetch_all(&self.pool)
+                        .await?
+                        .is_empty()
+                    {
+                        likes_pledges.insert((p.id, user.id));
+                    }
+
+                    let c = candidates
+                        .get(&p.presidential_candidate_id)
+                        .expect("Candidate not found");
+
                     if let Some(support_policy) = results.get_mut(&p.presidential_candidate_id) {
-                        support_policy.against += 1;
+                        support_policy.support += 1;
+                        support_policy.percent = (support_policy.support as f64
+                            / (c.election_pledges.len()) as f64)
+                            * 100.0;
                     } else {
                         results.insert(
                             p.presidential_candidate_id,
@@ -107,8 +159,8 @@ impl QuizResultController {
                                     .get(&p.presidential_candidate_id)
                                     .map(|c| c.name.clone())
                                     .unwrap_or_default(),
-                                support: 0,
-                                against: 1,
+                                support: 1,
+                                percent: (1.0 / (c.election_pledges.len()) as f64) * 100.0,
                             },
                         );
                     }
@@ -123,9 +175,21 @@ impl QuizResultController {
         let results = results.into_values().collect();
         tracing::debug!("results: {:?}", results);
 
-        let result = self.repo.insert(user.principal, results, answers).await?;
+        let mut tx = self.pool.begin().await?;
+        let result = self
+            .repo
+            .insert_with_tx(&mut *tx, user.principal, results, answers)
+            .await?;
 
-        Ok(result)
+        for (election_pledge_id, user_id) in likes_pledges.into_iter() {
+            tracing::debug!("likes_pledges: {:?} {:?}", election_pledge_id, user_id);
+            ep.insert_with_tx(&mut *tx, election_pledge_id, user_id)
+                .await?;
+        }
+
+        tx.commit().await?;
+
+        Ok(result.unwrap_or_default())
     }
 
     async fn get_result(
@@ -262,7 +326,7 @@ mod tests {
             .unwrap()
             .unwrap();
 
-        let epq = ElectionPledgeQuiz::get_repository(pool.clone());
+        let epq = ElectionPledgeQuizLike::get_repository(pool.clone());
         epq.insert_with_tx(&mut *tx, ep1.id, quiz1.id)
             .await
             .unwrap()
@@ -276,6 +340,12 @@ mod tests {
             .unwrap()
             .unwrap();
         epq.insert_with_tx(&mut *tx, ep4.id, quiz3.id)
+            .await
+            .unwrap()
+            .unwrap();
+
+        let epl = ElectionPledgeQuizDislike::get_repository(pool.clone());
+        epl.insert_with_tx(&mut *tx, ep1.id, quiz2.id)
             .await
             .unwrap()
             .unwrap();
@@ -320,10 +390,8 @@ mod tests {
         for r in quiz_result.results.iter() {
             if r.presidential_candidate_id == pc1 {
                 assert_eq!(r.support, 2);
-                assert_eq!(r.against, 0);
             } else if r.presidential_candidate_id == pc2 {
                 assert_eq!(r.support, 1);
-                assert_eq!(r.against, 1);
             } else {
                 assert!(
                     false,
@@ -341,11 +409,9 @@ mod tests {
             if r.presidential_candidate_id == pc1 {
                 assert_eq!(r.candidate_name, "Candidate 1");
                 assert_eq!(r.support, 2);
-                assert_eq!(r.against, 0);
             } else if r.presidential_candidate_id == pc2 {
                 assert_eq!(r.candidate_name, "Candidate 2");
                 assert_eq!(r.support, 1);
-                assert_eq!(r.against, 1);
             } else {
                 assert!(
                     false,
