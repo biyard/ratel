@@ -17,17 +17,17 @@ pub struct QuizResult {
     #[api_model(type = JSONB)]
     pub results: Vec<SupportPolicy>,
 
-    #[api_model(type = JSONB, action = [answer])]
+    #[api_model(type = JSONB, action = [answer], version = v0.1)]
     pub answers: Vec<QuizAnswer>,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Default, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, PartialEq, Default, serde::Serialize, serde::Deserialize)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct SupportPolicy {
     pub presidential_candidate_id: i64,
     pub candidate_name: String,
     pub support: i64,
-    pub against: i64,
+    pub percent: f64,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Default, serde::Serialize, serde::Deserialize)]
@@ -47,16 +47,23 @@ pub enum QuizOptions {
 
 impl QuizResult {
     pub fn most_supportive_candidate(&self) -> i64 {
-        let mut max = 0;
-        let mut candidate_id = 0;
+        let candidates = self.percentage_of_each_candidate();
+
+        candidates[0].0
+    }
+
+    pub fn percentage_of_each_candidate(&self) -> Vec<(i64, String, f64)> {
+        let mut percentages = vec![];
 
         for result in &self.results {
-            if result.support > max {
-                max = result.support;
-                candidate_id = result.presidential_candidate_id;
-            }
+            percentages.push((
+                result.presidential_candidate_id,
+                result.candidate_name.clone(),
+                result.percent,
+            ));
         }
 
-        candidate_id
+        percentages.sort_by(|a, b| b.2.partial_cmp(&a.2).unwrap());
+        percentages
     }
 }
