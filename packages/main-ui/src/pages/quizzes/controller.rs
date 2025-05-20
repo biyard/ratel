@@ -75,6 +75,16 @@ impl Controller {
         Ok(ctrl)
     }
 
+    pub fn progress(&self) -> f32 {
+        let quizzes = self.quizzes().unwrap_or_default();
+        if quizzes.is_empty() || self.current_step() == 0 {
+            return 0.0;
+        }
+        let step = self.current_step() - 1;
+        let total = quizzes.len();
+        (step as f32 / total as f32) * 100.0
+    }
+
     pub fn start(&mut self) {
         self.started.set(true);
         self.current_step.set(1);
