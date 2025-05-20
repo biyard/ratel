@@ -1,7 +1,4 @@
-use crate::{
-    components::icons::{ThumbsDown, ThumbsUp},
-    route::Route,
-};
+use crate::components::icons::{ThumbsDown, ThumbsUp};
 
 use super::*;
 use bdk::prelude::*;
@@ -34,10 +31,8 @@ pub fn QuizzesPage(#[props(default = Language::En)] lang: Language) -> Element {
                 {tr.btn_start}
             }
 
-            Link {
-                to: Route::ResultsPage {
-                    id: ctrl.principal(),
-                },
+            button {
+                onclick: move |_| ctrl.go_to_result(),
                 class: "btn w-full !hidden aria-show:!flex",
                 "aria-show": ctrl.already_done(),
                 {tr.btn_go_to_result}

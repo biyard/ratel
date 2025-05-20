@@ -17,7 +17,7 @@ pub struct QuizResult {
     #[api_model(type = JSONB)]
     pub results: Vec<SupportPolicy>,
 
-    #[api_model(type = JSONB, action = [answer])]
+    #[api_model(type = JSONB, action = [answer], version = v0.1)]
     pub answers: Vec<QuizAnswer>,
 }
 
