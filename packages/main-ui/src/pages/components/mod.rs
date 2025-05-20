@@ -1,3 +1,5 @@
+mod create_feed_box;
+mod feed_content;
 mod feed_contents;
 mod header;
 mod left_side_bar;
@@ -7,6 +9,8 @@ mod search_box;
 mod side_rounded_accordian;
 mod side_rounded_box;
 
+pub use create_feed_box::*;
+pub use feed_content::*;
 pub use feed_contents::*;
 pub use header::*;
 pub use left_side_bar::*;
