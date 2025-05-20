@@ -1,6 +1,6 @@
 mod _routes;
 mod become_sponsor;
-mod components;
+pub(super) mod components;
 mod controller;
 mod layout;
 mod page;
