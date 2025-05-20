@@ -33,8 +33,12 @@ impl PromotionController {
         _auth: Option<Authorization>,
         param: PromotionQuery,
     ) -> Result<QueryResponse<PromotionSummary>> {
+        let now = chrono::Utc::now().timestamp_millis();
+
         let mut total_count = 0;
         let items: Vec<PromotionSummary> = PromotionSummary::query_builder()
+            .start_at_less_than_equals(now)
+            .end_at_greater_than_equals(now)
             .limit(param.size())
             .page(param.page())
             .query()
@@ -115,7 +119,12 @@ impl PromotionController {
         Ok(res)
     }
 
-    async fn approve(&self, id: i64, auth: Option<Authorization>) -> Result<Promotion> {
+    async fn approve(
+        &self,
+        id: i64,
+        auth: Option<Authorization>,
+        PromotionApproveRequest { priority }: PromotionApproveRequest,
+    ) -> Result<Promotion> {
         check_perm(
             &self.pool,
             auth,
@@ -128,7 +137,9 @@ impl PromotionController {
             .repo
             .update(
                 id,
-                PromotionRepositoryUpdateRequest::new().with_status(PromotionStatus::Approved),
+                PromotionRepositoryUpdateRequest::new()
+                    .with_status(PromotionStatus::Approved)
+                    .with_priority(priority),
             )
             .await?;
 
@@ -140,12 +151,12 @@ impl PromotionController {
         _auth: Option<Authorization>,
         _param: PromotionReadAction,
     ) -> Result<Promotion> {
-        let now = chrono::Utc::now().timestamp_millis();
+        let now = chrono::Utc::now().timestamp();
 
         let promotion = Promotion::query_builder()
             .start_at_less_than_equals(now)
             .end_at_greater_than_equals(now)
-            .order_by_priority_asc()
+            .order_by_priority_desc()
             .query()
             .map(Promotion::from)
             .fetch_one(&self.pool)
@@ -203,8 +214,8 @@ impl PromotionController {
                 let res = ctrl.delete(id, auth).await?;
                 Ok(Json(res))
             }
-            PromotionByIdAction::Approve(_) => {
-                let res = ctrl.approve(id, auth).await?;
+            PromotionByIdAction::Approve(param) => {
+                let res = ctrl.approve(id, auth, param).await?;
                 Ok(Json(res))
             }
         }
@@ -246,5 +257,104 @@ impl PromotionController {
             }
             _ => Err(Error::BadRequest),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::tests::{TestContext, setup};
+
+    async fn test_setup(user: &User, now: i64, pool: &sqlx::Pool<sqlx::Postgres>) -> Feed {
+        let html_contents = format!("<p>Test {now}</p>");
+        let title = Some(format!("Test Title {now}"));
+        // predefined industry: Crypto
+        let industry_id = 1;
+
+        let post = Feed::get_repository(pool.clone())
+            .insert(
+                html_contents.clone(),
+                FeedType::Post,
+                user.id,
+                industry_id,
+                None,
+                title,
+                None,
+                None,
+            )
+            .await
+            .unwrap();
+
+        post
+    }
+
+    #[tokio::test]
+    async fn test_promotions() {
+        let TestContext {
+            user,
+            now,
+            endpoint,
+            pool,
+            admin_token,
+            user_token,
+            ..
+        } = setup().await.unwrap();
+
+        let feed = test_setup(&user, now, &pool).await;
+
+        let cli = Promotion::get_client(&endpoint);
+        let start_at = chrono::Utc::now().timestamp() % 3600;
+        let end_at = chrono::Utc::now().timestamp() + (3 * 3600);
+
+        let title = format!("Test Title {now}");
+        let description = format!("<p>Test {now}</p>");
+
+        let promote = cli
+            .promote_feed(
+                title.clone(),
+                description.clone(),
+                start_at,
+                end_at,
+                feed.id,
+            )
+            .await
+            .expect("failed to promote feed");
+
+        assert_eq!(promote.name, title);
+        assert_eq!(promote.description, description);
+        assert_eq!(promote.feed_id, Some(feed.id));
+        assert_eq!(promote.requester_id, user.id);
+        assert_eq!(promote.start_at, start_at);
+        assert_eq!(promote.end_at, end_at);
+        assert_eq!(promote.status, PromotionStatus::Requested);
+        assert_eq!(promote.promotion_type, PromotionType::Feed);
+        assert_eq!(promote.priority, 0);
+
+        rest_api::add_authorization(&format!("Bearer {}", admin_token));
+
+        let promote = cli
+            .approve(promote.id, now)
+            .await
+            .expect("failed to approve promotion");
+
+        assert_eq!(promote.status, PromotionStatus::Approved);
+        assert_eq!(promote.priority, now);
+
+        rest_api::add_authorization(&format!("Bearer {}", user_token));
+
+        let promote = cli
+            .hot_promotion()
+            .await
+            .expect("failed to get hot promotion");
+
+        assert_eq!(promote.name, title);
+        assert_eq!(promote.description, description);
+        assert_eq!(promote.feed_id, Some(feed.id));
+        assert_eq!(promote.requester_id, user.id);
+        assert_eq!(promote.start_at, start_at);
+        assert_eq!(promote.end_at, end_at);
+        assert_eq!(promote.status, PromotionStatus::Approved);
+        assert_eq!(promote.promotion_type, PromotionType::Feed);
+        assert_eq!(promote.priority, now);
     }
 }

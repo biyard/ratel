@@ -27,6 +27,7 @@ pub struct Promotion {
     #[api_model(action = [promote_feed])]
     pub end_at: i64,
 
+    #[api_model(action_by_id = [approve])]
     pub priority: i64,
 
     #[api_model(many_to_one = users)]
