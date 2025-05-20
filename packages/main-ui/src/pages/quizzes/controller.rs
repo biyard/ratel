@@ -138,4 +138,10 @@ impl Controller {
         self.answer.set(answers);
         self.next().await;
     }
+
+    pub fn go_to_result(&mut self) {
+        self.nav.push(Route::ResultsPage {
+            id: self.principal(),
+        });
+    }
 }
