@@ -2,6 +2,10 @@
   @apply font-semibold gap-10 flex items-center justify-center text-[15px]/16 rounded-[10px] text-c-wg-50 hover:text-primary cursor-pointer flex flex-row gap-10 items-center justify-center;
 }
 
+.btn.disabled {
+  @apply hover:!text-c-wg-50
+}
+
 .btn.primary  {
   @apply font-bold gap-10 flex items-center justify-center text-base rounded-[10px] bg-btn-p hover:bg-btn-p-hover text-btn-p-text hover:text-btn-p-hover-text cursor-pointer px-40 py-20 flex flex-row gap-10 items-center justify-center;
 }

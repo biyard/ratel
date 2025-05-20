@@ -13,6 +13,11 @@ translate! {
         en: "Start",
     },
 
+    btn_go_to_result: {
+        ko: "결과 보러가기",
+        en: "Go to Result",
+    },
+
     btn_like: {
         ko: "좋아요",
         en: "Like",
