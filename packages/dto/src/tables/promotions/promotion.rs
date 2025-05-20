@@ -2,7 +2,7 @@ use bdk::prelude::*;
 use validator::Validate;
 
 #[derive(Validate)]
-#[api_model(base = "/v1/promotions", table = promotion, read_action = [hot_promotion], action = [promote_feed(feed_id = i64)], action_by_id = [delete, update, approve])]
+#[api_model(base = "/v1/promotions", table = promotions, read_action = [hot_promotion], action = [promote_feed(feed_id = i64)], action_by_id = [delete, update, approve])]
 pub struct Promotion {
     #[api_model(summary, primary_key)]
     pub id: i64,
@@ -15,6 +15,8 @@ pub struct Promotion {
     pub name: String,
     #[api_model(summary, action = [promote_feed])]
     pub description: String,
+    #[api_model(summary, action = [promote_feed])]
+    pub image_url: String,
 
     #[api_model(summary, type = INTEGER)]
     pub promotion_type: PromotionType,
