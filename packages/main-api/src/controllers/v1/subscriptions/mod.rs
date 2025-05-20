@@ -1,4 +1,5 @@
 use crate::utils::users::extract_user_email;
+
 use bdk::prelude::*;
 use by_axum::{
     auth::Authorization,
@@ -11,6 +12,8 @@ use by_axum::{
 use by_types::QueryResponse;
 use dto::*;
 use sqlx::postgres::PgRow;
+use sqlx::Row;
+use dto::Error;
 
 #[derive(Clone, Debug)]
 pub struct SubscriptionController {
@@ -39,12 +42,21 @@ impl SubscriptionController {
         Json(body): Json<SubscriptionAction>,
     ) -> Result<Json<String>> {
         tracing::debug!("act_subscription {:?}", body);
-
         match body {
             SubscriptionAction::Subscribe(req) => {
+                let row = sqlx::query("SELECT COUNT(*) as count FROM subscriptions WHERE email = $1")
+                .bind(req.email.clone())
+                .fetch_one(&ctrl.pool)
+                .await?;
+
+                let count: i64 = row.try_get("count").unwrap_or(0);
+                if count > 0 {
+                    return Err(Error::BadRequest);
+                }
                 let _ = Json(ctrl.subscribe(req).await?);
                 Ok(Json("ok".to_string()))
             }
+
             SubscriptionAction::Sponsor(_) => {
                 ctrl.notify_slack(auth).await?;
                 Ok(Json("ok".to_string()))
@@ -66,7 +78,7 @@ impl SubscriptionController {
 
 impl SubscriptionController {
     async fn subscribe(&self, req: SubscriptionSubscribeRequest) -> Result<Subscription> {
-        let subscription = self.repo.insert(req.email).await?;
+        let subscription = self.repo.insert(req.email, true).await?;
 
         Ok(subscription)
     }
@@ -108,4 +120,18 @@ impl SubscriptionController {
             .await?;
         Ok(QueryResponse { total_count, items })
     }
+
+    // pub async fn check_email_exists(&self, email: &str) -> Result<bool, ApiError> {
+    //     let row = sqlx::query("SELECT COUNT(*) as count FROM subscriptions WHERE email = $1")
+    //         .bind(email)
+    //         .fetch_one(&self.pool)
+    //         .await
+    //         .map_err(|e| {
+    //             tracing::error!("DB error checking subscription: {}", e);
+    //             ApiError::InternalError("Failed to check email".to_string())
+    //         })?;
+
+    //     let count: i64 = row.try_get("count").unwrap_or(0);
+    //     Ok(count > 0)
+    // }
 }

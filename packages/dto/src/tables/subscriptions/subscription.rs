@@ -15,4 +15,7 @@ pub struct Subscription {
     #[validate(email)]
     #[api_model(summary, action = [subscribe, sponsor], unique)] // TODO: version = v1.1
     pub email: String,
+
+    #[api_model(summary, action_by_id = update)]
+    pub is_subscribed: bool,
 }
