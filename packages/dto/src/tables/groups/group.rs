@@ -45,12 +45,10 @@ pub enum GroupPermission {
     UpdateProfile = 8,
 
     // Admin
-    #[translate(en = "[Admin] Delete news")]
-    DeleteNews = 61,
-    #[translate(en = "[Admin] Update news")]
-    UpdateNews = 62,
-    #[translate(en = "[Admin] Write news")]
-    WriteNews = 63,
+    #[translate(en = "[Admin] Manage promotions")]
+    ManagePromotions = 62,
+    #[translate(en = "[Admin] Manage news")]
+    ManageNews = 63,
 }
 
 pub struct GroupPermissions(Vec<GroupPermission>);
