@@ -86,11 +86,9 @@ pub fn LeftSidebar(lang: Language) -> Element {
                 },
                 title: tr.spaces,
                 div { class: "flex flex-col w-full justify-start items-start gap-16",
-                    button {
+                    a {
                         class: "cursor-pointer flex flex-row w-full justify-start items-center gap-4",
-                        onclick: move |_| {
-                            tracing::debug!("create a spaces button clicked");
-                        },
+                        href: "#create_feed",
                         Add {
                             class: "[&>path]:stroke-white",
                             width: "20",
@@ -100,7 +98,6 @@ pub fn LeftSidebar(lang: Language) -> Element {
                     }
                     ContentList { contents: spaces }
                 }
-            
             }
             SideRoundedAccordian {
                 icon: rsx! {
@@ -126,7 +123,6 @@ pub fn LeftSidebar(lang: Language) -> Element {
                     }
                     ContentList { contents: communities }
                 }
-            
             }
         }
     }
