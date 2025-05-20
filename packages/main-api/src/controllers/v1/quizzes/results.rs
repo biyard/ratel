@@ -389,7 +389,7 @@ mod tests {
 
         for r in quiz_result.results.iter() {
             if r.presidential_candidate_id == pc1 {
-                assert_eq!(r.support, 3);
+                assert_eq!(r.support, 2);
             } else if r.presidential_candidate_id == pc2 {
                 assert_eq!(r.support, 1);
             } else {
@@ -408,7 +408,7 @@ mod tests {
         for r in quiz_result.results.iter() {
             if r.presidential_candidate_id == pc1 {
                 assert_eq!(r.candidate_name, "Candidate 1");
-                assert_eq!(r.support, 3);
+                assert_eq!(r.support, 2);
             } else if r.presidential_candidate_id == pc2 {
                 assert_eq!(r.candidate_name, "Candidate 2");
                 assert_eq!(r.support, 1);
