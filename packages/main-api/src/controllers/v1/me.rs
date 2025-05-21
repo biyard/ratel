@@ -87,6 +87,7 @@ mod tests {
                 UserType::Team,
                 Some(user_id),
                 username,
+                "".to_string(),
             )
             .await
             .unwrap()
@@ -110,6 +111,7 @@ mod tests {
                 UserType::Team,
                 Some(admin_id),
                 username,
+                "".to_string(),
             )
             .await
             .unwrap()
@@ -139,6 +141,7 @@ mod tests {
                 UserType::Team,
                 Some(admin_id),
                 username,
+                "".to_string(),
             )
             .await
             .unwrap()

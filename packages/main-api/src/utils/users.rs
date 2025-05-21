@@ -32,6 +32,7 @@ pub async fn extract_user_with_allowing_anonymous(
                             UserType::Anonymous,
                             None,
                             principal.clone(),
+                            "".to_string(),
                         )
                         .await?
                 }
