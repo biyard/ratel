@@ -92,6 +92,7 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
                 UserType::Individual,
                 None,
                 "admin".to_string(),
+                "".to_string(),
             )
             .await?;
     }
@@ -196,6 +197,7 @@ pub mod tests {
                 UserType::Individual,
                 None,
                 email.clone(),
+                "".to_string(),
             )
             .await?
             .unwrap();
@@ -229,6 +231,7 @@ pub mod tests {
                 UserType::Individual,
                 None,
                 email.clone(),
+                "".to_string(),
             )
             .await?;
 

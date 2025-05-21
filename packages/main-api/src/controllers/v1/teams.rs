@@ -98,6 +98,7 @@ impl TeamController {
                 UserType::Team,
                 Some(user_id),
                 username,
+                "".to_string(),
             )
             .await
             .map_err(|e| {

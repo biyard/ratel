@@ -92,6 +92,7 @@ impl BotController {
                 UserType::Bot,
                 Some(user_id),
                 username,
+                "".to_string(),
             )
             .await?;
 
