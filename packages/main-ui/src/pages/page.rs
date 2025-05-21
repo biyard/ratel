@@ -40,8 +40,8 @@ pub fn IndexPage(#[props(default = Language::En)] lang: Language) -> Element {
     rsx! {
         by_components::meta::MetaPage { title: tr.title }
 
-        div { class: "flex flex-col w-full justify-start items-start",
-            div { class: "flex flex-row w-full justify-start items-start py-20 gap-20",
+        div { class: "flex flex-col w-full h-screen justify-start items-start",
+            div { class: "flex flex-row w-full h-[calc(100vh)] justify-start items-start py-20 gap-20",
                 LeftSidebar {
                     lang,
                     profile: profile.clone(),
@@ -57,11 +57,14 @@ pub fn IndexPage(#[props(default = Language::En)] lang: Language) -> Element {
                         ctrl.signout();
                     },
                 }
-                FeedContents {
-                    lang,
-                    my_feeds,
-                    following_feeds,
-                    profile: profile.profile.clone(),
+
+                div { class: "flex flex-row w-full ",
+                    FeedContents {
+                        lang,
+                        my_feeds,
+                        following_feeds,
+                        profile: profile.profile.clone(),
+                    }
                 }
                 RightSidebar {
                     lang,

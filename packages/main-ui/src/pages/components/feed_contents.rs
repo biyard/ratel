@@ -20,7 +20,7 @@ pub fn FeedContents(
     let mut selected_tab = use_signal(|| Tab::Me);
 
     rsx! {
-        div { class: "flex flex-col w-full justify-start items-start text-white",
+        div { class: "flex flex-col w-full h-full justify-start items-start text-white",
             FeedTab {
                 lang,
                 selected_tab: selected_tab(),
@@ -31,10 +31,13 @@ pub fn FeedContents(
 
             CreateFeed { lang, profile }
 
-            if selected_tab() == Tab::Me {
-                MyFeedList { lang, my_feeds }
-            } else {
-                FollowingFeedList { lang, following_feeds }
+            div { class: "flex flex-col w-full h-[calc(100vh-250px)] overflow-y-scroll",
+
+                if selected_tab() == Tab::Me {
+                    MyFeedList { lang, my_feeds }
+                } else {
+                    FollowingFeedList { lang, following_feeds }
+                }
             }
         }
     }
