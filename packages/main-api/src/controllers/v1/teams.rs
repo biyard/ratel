@@ -83,9 +83,12 @@ impl TeamController {
     ) -> Result<Team> {
         let user_id = extract_user_id(&self.pool, auth).await?;
 
-        let user = self
+        let mut tx = self.pool.begin().await?;
+
+        let team = self
             .user
-            .insert(
+            .insert_with_tx(
+                &mut *tx,
                 "".to_string(),
                 username.clone(),
                 username.clone(),
@@ -100,9 +103,16 @@ impl TeamController {
             .map_err(|e| {
                 tracing::error!("Failed to create team: {:?}", e);
                 Error::DuplicatedTeamName
-            })?;
+            })?
+            .ok_or(Error::DuplicatedTeamName)?;
 
-        Ok(user.into())
+        TeamMember::get_repository(self.pool.clone())
+            .insert_with_tx(&mut *tx, team.id, user_id)
+            .await?;
+
+        tx.commit().await?;
+
+        Ok(team.into())
     }
 
     async fn update_profile_image(
