@@ -1,4 +1,7 @@
 use bdk::prelude::*;
+use gloo_events::EventListener;
+use wasm_bindgen::JsCast;
+use web_sys::{HtmlElement, window};
 
 use crate::pages::{components::FeedContent, controller::FeedList};
 
@@ -61,9 +64,48 @@ pub fn CreateFeed(lang: Language, profile: String) -> Element {
 
 #[component]
 pub fn MyFeedList(lang: Language, my_feeds: Vec<FeedList>) -> Element {
+    let mut visible_count = use_signal(|| 10);
+    let mut listener = use_signal(|| None as Option<EventListener>);
+
+    let feed_container_id = "feed-scroll-container";
+
+    use_effect({
+        move || {
+            if let Some(container) = window()
+                .and_then(|w| w.document())
+                .and_then(|d| d.get_element_by_id(feed_container_id))
+                .and_then(|el| el.dyn_into::<HtmlElement>().ok())
+            {
+                let new_listener = EventListener::new(&container, "scroll", {
+                    let container = container.clone();
+                    move |_event| {
+                        let scroll_top = container.scroll_top();
+                        let scroll_height = container.scroll_height();
+                        let client_height = container.client_height();
+
+                        if scroll_top + client_height as i32 >= scroll_height as i32 - 5 {
+                            visible_count.set(visible_count() + 5);
+                            tracing::debug!("visible count: {}", visible_count());
+                        }
+                    }
+                });
+
+                listener.set(Some(new_listener));
+            }
+        }
+    });
+
+    let visible_feeds = my_feeds
+        .iter()
+        .take(visible_count())
+        .cloned()
+        .collect::<Vec<_>>();
+
     rsx! {
-        div { class: "flex flex-col w-full justify-start items-start gap-10",
-            for feed in my_feeds {
+        div {
+            id: feed_container_id,
+            class: "flex flex-col w-full h-[calc(100vh-300px)] overflow-y-scroll",
+            for feed in visible_feeds {
                 FeedContent { lang, feed }
             }
         }
@@ -72,9 +114,47 @@ pub fn MyFeedList(lang: Language, my_feeds: Vec<FeedList>) -> Element {
 
 #[component]
 pub fn FollowingFeedList(lang: Language, following_feeds: Vec<FeedList>) -> Element {
+    let mut visible_count = use_signal(|| 10);
+    let mut listener = use_signal(|| None as Option<EventListener>);
+    let container_id = "following-scroll-container";
+
+    use_effect({
+        move || {
+            if let Some(container) = window()
+                .and_then(|w| w.document())
+                .and_then(|d| d.get_element_by_id(container_id))
+                .and_then(|el| el.dyn_into::<HtmlElement>().ok())
+            {
+                let event_listener = EventListener::new(&container, "scroll", {
+                    let container = container.clone();
+                    move |_event| {
+                        let scroll_top = container.scroll_top();
+                        let scroll_height = container.scroll_height();
+                        let client_height = container.client_height();
+
+                        if scroll_top + client_height as i32 >= scroll_height as i32 - 5 {
+                            visible_count.set(visible_count() + 5);
+                            tracing::debug!("Following visible count: {}", visible_count());
+                        }
+                    }
+                });
+
+                listener.set(Some(event_listener));
+            }
+        }
+    });
+
+    let visible_items = following_feeds
+        .iter()
+        .take(visible_count())
+        .cloned()
+        .collect::<Vec<_>>();
+
     rsx! {
-        div { class: "flex flex-col w-full justify-start items-start gap-10",
-            for feed in following_feeds {
+        div {
+            id: container_id,
+            class: "flex flex-col w-full h-[calc(100vh-300px)] overflow-y-scroll gap-10",
+            for feed in visible_items {
                 FeedContent { lang, feed }
             }
         }
