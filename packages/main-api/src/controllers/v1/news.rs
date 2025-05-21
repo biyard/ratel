@@ -37,6 +37,7 @@ impl NewsController {
         let items: Vec<NewsSummary> = NewsSummary::query_builder()
             .limit(param.size())
             .page(param.page())
+            .order_by_created_at_desc()
             .query()
             .map(|row: PgRow| {
                 use sqlx::Row;
