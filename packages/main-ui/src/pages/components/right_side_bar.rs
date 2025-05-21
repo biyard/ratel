@@ -1,16 +1,21 @@
 use bdk::prelude::{by_components::icons::arrows::ArrowRight, *};
+use dto::{NewsSummary, Promotion};
+use html2text::from_read;
 
 use crate::{
     components::follow::Follow,
-    pages::{FeedModel, NewsModel, PromotionModel, components::SideRoundedBox},
+    pages::{components::SideRoundedBox, controller::Follower},
+    utils::text::insert_word_breaks,
 };
 
 #[component]
 pub fn RightSidebar(
     lang: Language,
-    promotions: Vec<PromotionModel>,
-    news: Vec<NewsModel>,
-    feeds: Vec<FeedModel>,
+    promotion: Promotion,
+    news: Vec<NewsSummary>,
+    followers: Vec<Follower>,
+
+    follow: EventHandler<i64>,
 ) -> Element {
     let tr: RightSidebarTranslate = translate(&lang);
     rsx! {
@@ -21,12 +26,10 @@ pub fn RightSidebar(
                 onclick: move |_| {
                     tracing::debug!("hot promotion view all clicked");
                 },
-                for promotion in promotions.iter().take(1) {
-                    HotPromotion {
-                        image: promotion.profile.clone(),
-                        title: promotion.title.clone(),
-                        description: promotion.description.clone(),
-                    }
+                HotPromotion {
+                    image: promotion.image_url.clone(),
+                    title: promotion.name.clone(),
+                    description: promotion.description.clone(),
                 }
             }
             ViewAllSection {
@@ -36,12 +39,12 @@ pub fn RightSidebar(
                     tracing::debug!("news view all clicked");
                 },
                 div { class: "flex flex-col w-full justify-start items-start gap-15",
-                    for (idx , ns) in news.iter().take(3).enumerate() {
+                    for (idx , ns) in news.iter().enumerate() {
                         NewsTopic {
                             title: ns.title.clone(),
-                            description: ns.description.clone(),
+                            description: ns.html_content.clone(),
                         }
-                        if idx < news.len().min(3) - 1 {
+                        if idx < news.len() - 1 {
                             div { class: "flex flex-row w-full h-1 justify-start items-start bg-neutral-800" }
                         }
                     }
@@ -54,12 +57,16 @@ pub fn RightSidebar(
                     tracing::debug!("feed view all clicked");
                 },
                 div { class: "flex flex-col w-full justify-start items-start gap-35",
-                    for feed in feeds.iter().take(3) {
+                    for follower in followers.iter().take(3) {
                         FeedUser {
                             lang,
-                            profile: feed.image.clone(),
-                            name: feed.title.clone(),
-                            description: feed.description.clone(),
+                            id: follower.id.clone(),
+                            profile: follower.image.clone(),
+                            name: follower.title.clone(),
+                            description: follower.description.clone(),
+                            follow: move |id: i64| {
+                                follow.call(id);
+                            },
                         }
                     }
                 }
@@ -69,7 +76,14 @@ pub fn RightSidebar(
 }
 
 #[component]
-pub fn FeedUser(lang: Language, profile: String, name: String, description: String) -> Element {
+pub fn FeedUser(
+    lang: Language,
+    id: i64,
+    profile: String,
+    name: String,
+    description: String,
+    follow: EventHandler<i64>,
+) -> Element {
     rsx! {
         div { class: "flex flex-row w-full justify-start items-start gap-10",
             img { class: "w-50 h-50 rounded-full object-cover", src: profile }
@@ -87,6 +101,7 @@ pub fn FeedUser(lang: Language, profile: String, name: String, description: Stri
                     lang,
                     onclick: move |_| {
                         tracing::debug!("follow button clicked");
+                        follow.call(id);
                     },
                 }
             }
@@ -96,13 +111,15 @@ pub fn FeedUser(lang: Language, profile: String, name: String, description: Stri
 
 #[component]
 pub fn NewsTopic(title: String, description: String) -> Element {
+    let plain_text = from_read(description.as_bytes(), 140).replace('\n', " ");
+    let broken_text = insert_word_breaks(&plain_text);
     rsx! {
         div { class: "cursor-pointer flex flex-col w-full justify-start items-start gap-4",
             div { class: "font-medium text-white text-base/25 text-start line-clamp-1",
                 {title}
             }
-            div { class: "font-light text-white text-sm/20 text-start line-clamp-2",
-                {description}
+            div { class: "font-light text-white text-sm/20 w-full text-start line-clamp-2 text-ellipsis",
+                {broken_text}
             }
         }
     }
@@ -157,7 +174,6 @@ pub fn ViewAllSection(
                             }
                         }
                     }
-                
                 }
             }
         }

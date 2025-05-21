@@ -3726,6 +3726,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "html2text"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "caa7e2d430ced5b3759001d6b11007ef1ee082b45c34a65752ed7acaca0bc578"
+dependencies = [
+ "html5ever 0.26.0",
+ "markup5ever 0.11.0",
+ "tendril",
+ "unicode-width",
+ "xml5ever",
+]
+
+[[package]]
 name = "html5ever"
 version = "0.26.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4652,6 +4665,7 @@ dependencies = [
  "gloo-storage",
  "google-wallet",
  "hex",
+ "html2text",
  "libc",
  "num-format",
  "regex",
@@ -9818,6 +9832,17 @@ checksum = "ec1cdab258fb55c0da61328dc52c8764709b249011b2cad0454c72f0bf10a1f6"
 dependencies = [
  "libc",
  "windows-sys 0.59.0",
+]
+
+[[package]]
+name = "xml5ever"
+version = "0.17.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4034e1d05af98b51ad7214527730626f019682d797ba38b51689212118d8e650"
+dependencies = [
+ "log",
+ "mac",
+ "markup5ever 0.11.0",
 ]
 
 [[package]]

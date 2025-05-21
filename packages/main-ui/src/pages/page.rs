@@ -13,6 +13,9 @@ pub fn IndexPage(#[props(default = Language::En)] lang: Language) -> Element {
 
     let my_feeds = ctrl.my_feeds()?;
     let following_feeds = ctrl.following_feeds()?;
+    let hot_promotions = ctrl.hot_promotions()?;
+    let news = ctrl.news()?;
+    let followers = ctrl.followers()?;
 
     let nickname = ctrl.nickname();
     let profile = ctrl.profile();
@@ -32,51 +35,13 @@ pub fn IndexPage(#[props(default = Language::En)] lang: Language) -> Element {
                 }
                 RightSidebar {
                     lang,
-                    promotions: vec![
-                        PromotionModel {
-                            profile: "https://lh3.googleusercontent.com/a/ACg8ocIGf0gpB8MQdGkp5TXW1327nRpuPz70iy_hQY2NXNwanRXbFw=s96-c"
-                                .to_string(),
-                            title: "Crypto promotion".to_string(),
-                            description: "A new research on engagement of crypto currency".to_string(),
-                        },
-                    ],
-                    news: vec![
-                        NewsModel {
-                            title: "Legislative social".to_string(),
-                            description: "Ratel has launched legislative social to engage industry-friendly legislative blah blah ..."
-                                .to_string(),
-                        },
-                        NewsModel {
-                            title: "Presidential candidates ".to_string(),
-                            description: "Ratel has started to like election pledges on crypto industry of each presidential blah blah ..."
-                                .to_string(),
-                        },
-                        NewsModel {
-                            title: "New Promotions ".to_string(),
-                            description: "Ratel engages and supports marketing for industrial promotions which helps blah blah ..."
-                                .to_string(),
-                        },
-                    ],
-                    feeds: vec![
-                        FeedModel {
-                            image: "https://lh3.googleusercontent.com/a/ACg8ocIGf0gpB8MQdGkp5TXW1327nRpuPz70iy_hQY2NXNwanRXbFw=s96-c"
-                                .to_string(),
-                            title: "Donald Trump".to_string(),
-                            description: "President of the US".to_string(),
-                        },
-                        FeedModel {
-                            image: "https://lh3.googleusercontent.com/a/ACg8ocIGf0gpB8MQdGkp5TXW1327nRpuPz70iy_hQY2NXNwanRXbFw=s96-c"
-                                .to_string(),
-                            title: "Elon Musk".to_string(),
-                            description: "CEO of Tesla and SpaceX".to_string(),
-                        },
-                        FeedModel {
-                            image: "https://lh3.googleusercontent.com/a/ACg8ocIGf0gpB8MQdGkp5TXW1327nRpuPz70iy_hQY2NXNwanRXbFw=s96-c"
-                                .to_string(),
-                            title: "Jongseok Park".to_string(),
-                            description: "National Assembly of blah blah".to_string(),
-                        },
-                    ],
+                    promotion: hot_promotions,
+                    news,
+                    followers,
+
+                    follow: move |id: i64| async move {
+                        ctrl.follow(id).await;
+                    },
                 }
             }
 
