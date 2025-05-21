@@ -1,8 +1,8 @@
 use bdk::prelude::*;
-use dto::FeedType;
+use dto::{FeedType, News, NewsQuery, NewsSummary, Promotion};
 use serde::{Deserialize, Serialize};
 
-use crate::{route::Route, services::user_service::UserService};
+use crate::{config, route::Route, services::user_service::UserService};
 
 #[derive(Clone, Copy, DioxusController)]
 pub struct Controller {
@@ -12,6 +12,9 @@ pub struct Controller {
     pub my_feeds: Resource<Vec<FeedList>>,
     #[allow(dead_code)]
     pub following_feeds: Resource<Vec<FeedList>>,
+    pub hot_promotions: Resource<Promotion>,
+    pub news: Resource<Vec<NewsSummary>>,
+    pub followers: Resource<Vec<Follower>>,
 
     pub profile: Signal<String>,
     pub nickname: Signal<String>,
@@ -24,6 +27,17 @@ pub enum ContentType {
     Crypto,
     #[translate(ko = "Social", en = "Social")]
     Social,
+}
+
+#[derive(Clone, Serialize, Deserialize, Eq, PartialEq)]
+pub struct Follower {
+    pub id: i64,
+
+    pub image: String,
+    pub title: String,
+    pub description: String,
+
+    pub followed: bool,
 }
 
 #[derive(Clone, Serialize, Deserialize, Eq, PartialEq)]
@@ -45,6 +59,7 @@ pub struct FeedList {
     //additional info
     pub profile: String,
     pub nickname: String,
+    pub saved: bool,
 
     pub content_type: ContentType,
 
@@ -91,7 +106,8 @@ impl Controller {
                     number_of_shared: 40,
 
                     profile: "https://lh3.googleusercontent.com/a/ACg8ocIGf0gpB8MQdGkp5TXW1327nRpuPz70iy_hQY2NXNwanRXbFw=s96-c".to_string(),
-                    nickname: "victor".to_string()
+                    nickname: "victor".to_string(),
+                    saved: false,
                 },
                 FeedList {
                     id: 1,
@@ -112,7 +128,8 @@ impl Controller {
                     number_of_shared: 60,
 
                      profile: "https://lh3.googleusercontent.com/a/ACg8ocIGf0gpB8MQdGkp5TXW1327nRpuPz70iy_hQY2NXNwanRXbFw=s96-c".to_string(),
-                    nickname: "victor".to_string()
+                    nickname: "victor".to_string(),
+                    saved: false,
                 },
                 FeedList {
                     id: 2,
@@ -133,7 +150,8 @@ impl Controller {
                     number_of_shared: 60,
 
                     profile: "https://lh3.googleusercontent.com/a/ACg8ocIGf0gpB8MQdGkp5TXW1327nRpuPz70iy_hQY2NXNwanRXbFw=s96-c".to_string(),
-                    nickname: "victor".to_string()
+                    nickname: "victor".to_string(),
+                    saved: false,
                 },
             ]
         })?;
@@ -159,7 +177,8 @@ impl Controller {
                     number_of_shared: 40,
 
                     profile: "https://lh3.googleusercontent.com/a/ACg8ocIGf0gpB8MQdGkp5TXW1327nRpuPz70iy_hQY2NXNwanRXbFw=s96-c".to_string(),
-                    nickname: "victor".to_string()
+                    nickname: "victor".to_string(),
+                    saved: false,
                 },
                 FeedList {
                     id: 1,
@@ -180,7 +199,8 @@ impl Controller {
                     number_of_shared: 60,
 
                     profile: "https://lh3.googleusercontent.com/a/ACg8ocIGf0gpB8MQdGkp5TXW1327nRpuPz70iy_hQY2NXNwanRXbFw=s96-c".to_string(),
-                    nickname: "victor".to_string()
+                    nickname: "victor".to_string(),
+                    saved: false,
                 },
                 FeedList {
                     id: 2,
@@ -201,8 +221,64 @@ impl Controller {
                     number_of_shared: 60,
 
                     profile: "https://lh3.googleusercontent.com/a/ACg8ocIGf0gpB8MQdGkp5TXW1327nRpuPz70iy_hQY2NXNwanRXbFw=s96-c".to_string(),
-                    nickname: "victor".to_string()
+                    nickname: "victor".to_string(),
+                    saved: false,
                 },
+            ]
+        })?;
+
+        let hot_promotions = use_server_future(move || async move {
+            match Promotion::get_client(config::get().main_api_endpoint)
+                .hot_promotion()
+                .await
+            {
+                Ok(promotion) => promotion,
+                Err(e) => {
+                    tracing::debug!("query hot promotion failed with error: {:?}", e);
+                    Default::default()
+                }
+            }
+        })?;
+
+        let news = use_server_future(move || async move {
+            match News::get_client(config::get().main_api_endpoint)
+                .query(NewsQuery {
+                    size: 3,
+                    bookmark: None,
+                })
+                .await
+            {
+                Ok(promotion) => promotion.items,
+                Err(e) => {
+                    tracing::debug!("query hot promotion failed with error: {:?}", e);
+                    Default::default()
+                }
+            }
+        })?;
+
+        let followers = use_server_future(move || async move {
+            vec![
+                Follower {
+                    id: 1,
+                    image: "https://lh3.googleusercontent.com/a/ACg8ocIGf0gpB8MQdGkp5TXW1327nRpuPz70iy_hQY2NXNwanRXbFw=s96-c".to_string(),
+                    title: "Donald Trump".to_string(),
+                    description: "President of the US".to_string(),
+                    followed: false,
+                }, 
+                Follower {
+                    id: 2,
+                    image: "https://lh3.googleusercontent.com/a/ACg8ocIGf0gpB8MQdGkp5TXW1327nRpuPz70iy_hQY2NXNwanRXbFw=s96-c".to_string(),
+                    title: "Elon Musk".to_string(),
+                    description: "CEO of Tesla and SpaceX".to_string(),
+                    followed: false,
+                }, 
+                Follower {
+                    id: 3,
+                    image: "https://lh3.googleusercontent.com/a/ACg8ocIGf0gpB8MQdGkp5TXW1327nRpuPz70iy_hQY2NXNwanRXbFw=s96-c".to_string(),
+                    title: "Jongseok Park".to_string(),
+                    description: "National Assembly of blah blah".to_string(),
+                    followed: false,
+                }
             ]
         })?;
 
@@ -210,6 +286,9 @@ impl Controller {
             lang,
             my_feeds,
             following_feeds,
+            hot_promotions,
+            news,
+            followers,
 
             nickname: use_signal(|| info.nickname.unwrap_or_default()),
             profile: use_signal(|| info.profile_url.unwrap_or_default()),
@@ -227,5 +306,9 @@ impl Controller {
 
     pub async fn create_feed(&mut self, content_type: ContentType, description: String) {
         tracing::debug!("create feed info: {:?} {:?}", content_type, description);
+    }
+
+    pub async fn follow(&mut self, id: i64) {
+        tracing::debug!("follow user id: {:?}", id);
     }
 }

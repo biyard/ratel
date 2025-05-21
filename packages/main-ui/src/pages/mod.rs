@@ -1,6 +1,5 @@
 mod components;
 mod controller;
-mod dto;
 mod explore;
 mod i18n;
 mod landing;
@@ -12,7 +11,6 @@ mod notifications;
 mod page;
 mod quizzes;
 
-pub use dto::*;
 pub use layout::*;
 pub use page::*;
 
