@@ -15,9 +15,11 @@ pub struct Controller {
     pub hot_promotions: Resource<Promotion>,
     pub news: Resource<Vec<NewsSummary>>,
     pub followers: Resource<Vec<Follower>>,
+    pub profile: Resource<Profile>,
 
-    pub profile: Signal<String>,
-    pub nickname: Signal<String>,
+    pub spaces: Resource<Vec<SpaceList>>,
+    pub communities: Resource<Vec<CommunityList>>,
+    pub accounts: Resource<Vec<AccountList>>
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug, Eq, PartialEq, Translate, Default)]
@@ -27,6 +29,85 @@ pub enum ContentType {
     Crypto,
     #[translate(ko = "Social", en = "Social")]
     Social,
+}
+
+#[derive(Clone, Serialize, Deserialize, Debug, Eq, PartialEq, Translate, Default)]
+pub enum National {
+    #[translate(ko = "United State", en = "United State")]
+    #[default]
+    US,
+    #[translate(ko = "Korea", en = "Korea")]
+    Korea,
+}
+
+#[derive(Clone, Serialize, Deserialize, Eq, PartialEq, Debug)]
+pub struct AccountList {
+    pub id: i64,
+    pub created_at: i64,
+    pub updated_at: i64,
+
+    pub profile: String,
+    pub email: String,
+}
+
+#[derive(Clone, Serialize, Deserialize, Eq, PartialEq, Debug)]
+pub struct CommunityList {
+    pub id: i64,
+    pub created_at: i64,
+    pub updated_at: i64,
+
+    pub html_contents: String,
+    pub title: Option<String>,
+}
+
+#[derive(Clone, Serialize, Deserialize, Eq, PartialEq, Debug)]
+pub struct SpaceList {
+    pub id: i64,
+    pub created_at: i64,
+    pub updated_at: i64,
+
+    pub html_contents: String,
+    pub space_type: FeedType,
+
+    pub user_id: i64,
+    pub parent_id: Option<i64>,
+    pub title: Option<String>,
+    pub part_id: Option<i64>,
+    pub quote_feed_id: Option<i64>,
+
+    //additional info
+    pub profile: String,
+    pub nickname: String,
+    pub saved: bool,
+
+    pub content_type: ContentType,
+
+    pub number_of_accepters: i64,
+    pub number_of_rejecters: i64,
+    pub number_of_comments: i64,
+    pub number_of_rewards: i64,
+    pub number_of_shared: i64,
+}
+
+#[derive(Clone, Serialize, Deserialize, Eq, PartialEq, Debug)]
+pub struct Profile {
+    pub profile: String,
+    pub nickname: String,
+    pub email: String,
+    pub description: Option<String>,
+
+    pub national: National,
+    pub tier: i64,
+
+    pub exp: i64, //나의 현재 경험치
+    pub total_exp: i64, //레벨업 하기 위한 필요한 총 경험치 
+
+    pub followers: i64,
+    pub replies: i64,
+    pub posts: i64,
+    pub spaces: i64,
+    pub votes: i64,
+    pub surveys: i64,
 }
 
 #[derive(Clone, Serialize, Deserialize, Eq, PartialEq)]
@@ -50,7 +131,6 @@ pub struct FeedList {
     pub feed_type: FeedType,
 
     pub user_id: i64,
-    pub industry_id: i64,
     pub parent_id: Option<i64>,
     pub title: Option<String>,
     pub part_id: Option<i64>,
@@ -74,8 +154,6 @@ impl Controller {
         let user_service: UserService = use_context();
         let nav = use_navigator();
 
-        let info = user_service.user_info();
-
         use_effect(move || {
             if !crate::config::get().experiment || !user_service.loggedin() {
                 nav.replace(Route::LandingPage {});
@@ -94,7 +172,6 @@ impl Controller {
                     html_contents: "<div>hello</div>".to_string(),
                     feed_type: dto::FeedType::Post,
                     user_id: 1,
-                    industry_id: 1,
                     parent_id: None,
                     title: Some("test".to_string()),
                     part_id: None,
@@ -116,7 +193,6 @@ impl Controller {
                     html_contents: "<div>hello2</div>".to_string(),
                     feed_type: dto::FeedType::Post,
                     user_id: 1,
-                    industry_id: 1,
                     parent_id: None,
                     title: Some("test".to_string()),
                     part_id: None,
@@ -138,7 +214,6 @@ impl Controller {
                     html_contents: "<div>hello3</div>".to_string(),
                     feed_type: dto::FeedType::Post,
                     user_id: 1,
-                    industry_id: 1,
                     parent_id: None,
                     title: Some("test".to_string()),
                     part_id: None,
@@ -165,7 +240,6 @@ impl Controller {
                     html_contents: "<div>hello</div>".to_string(),
                     feed_type: dto::FeedType::Post,
                     user_id: 1,
-                    industry_id: 1,
                     parent_id: None,
                     title: Some("test3".to_string()),
                     part_id: None,
@@ -187,7 +261,6 @@ impl Controller {
                     html_contents: "<div>hello2</div>".to_string(),
                     feed_type: dto::FeedType::Post,
                     user_id: 1,
-                    industry_id: 1,
                     parent_id: None,
                     title: Some("test4".to_string()),
                     part_id: None,
@@ -209,7 +282,6 @@ impl Controller {
                     html_contents: "<div>hello3</div>".to_string(),
                     feed_type: dto::FeedType::Post,
                     user_id: 1,
-                    industry_id: 1,
                     parent_id: None,
                     title: Some("test5".to_string()),
                     part_id: None,
@@ -219,6 +291,103 @@ impl Controller {
                     number_of_comments: 50,
                     number_of_rewards: 50,
                     number_of_shared: 60,
+
+                    profile: "https://lh3.googleusercontent.com/a/ACg8ocIGf0gpB8MQdGkp5TXW1327nRpuPz70iy_hQY2NXNwanRXbFw=s96-c".to_string(),
+                    nickname: "victor".to_string(),
+                    saved: false,
+                },
+            ]
+        })?;
+
+        let communities = use_server_future(move || async move {
+            vec![
+                CommunityList {
+                    id: 0,
+                    created_at: 1747726155,
+                    updated_at: 1747726155,
+                    html_contents: "<div>hello</div>".to_string(),
+                    title: Some("test1".to_string())
+                },
+                CommunityList {
+                    id: 0,
+                    created_at: 1747726155,
+                    updated_at: 1747726155,
+                    html_contents: "<div>hello</div>".to_string(),
+                    title: Some("test12".to_string())
+                },
+                CommunityList {
+                    id: 0,
+                    created_at: 1747726155,
+                    updated_at: 1747726155,
+                    html_contents: "<div>hello</div>".to_string(),
+                    title: Some("test123".to_string())
+                }
+            ]
+        })?;
+
+        let spaces = use_server_future(move || async move {
+            vec![
+                 SpaceList {
+                    id: 0,
+                    created_at: 1747726155,
+                    updated_at: 1747726155,
+                    html_contents: "<div>hello</div>".to_string(),
+                    space_type: dto::FeedType::Post,
+                    user_id: 1,
+                    parent_id: None,
+                    title: Some("test3".to_string()),
+                    part_id: None,
+                    quote_feed_id: None,
+                    content_type: ContentType::Crypto,
+                    number_of_accepters: 705,
+                    number_of_rejecters: 212,
+                    number_of_comments: 30,
+                    number_of_rewards: 30,
+                    number_of_shared: 40,
+
+                    profile: "https://lh3.googleusercontent.com/a/ACg8ocIGf0gpB8MQdGkp5TXW1327nRpuPz70iy_hQY2NXNwanRXbFw=s96-c".to_string(),
+                    nickname: "victor".to_string(),
+                    saved: false,
+                },
+                SpaceList {
+                    id: 0,
+                    created_at: 1747726155,
+                    updated_at: 1747726155,
+                    html_contents: "<div>hello</div>".to_string(),
+                    space_type: dto::FeedType::Post,
+                    user_id: 1,
+                    parent_id: None,
+                    title: Some("test4".to_string()),
+                    part_id: None,
+                    quote_feed_id: None,
+                    content_type: ContentType::Crypto,
+                    number_of_accepters: 705,
+                    number_of_rejecters: 212,
+                    number_of_comments: 30,
+                    number_of_rewards: 30,
+                    number_of_shared: 40,
+
+                    profile: "https://lh3.googleusercontent.com/a/ACg8ocIGf0gpB8MQdGkp5TXW1327nRpuPz70iy_hQY2NXNwanRXbFw=s96-c".to_string(),
+                    nickname: "victor".to_string(),
+                    saved: false,
+                },
+                SpaceList {
+                    id: 0,
+                    created_at: 1747726155,
+                    updated_at: 1747726155,
+                    html_contents: "<div>hello</div>".to_string(),
+                    space_type: dto::FeedType::Post,
+                    user_id: 1,
+                    parent_id: None,
+                    title: Some("test5".to_string()),
+                    part_id: None,
+                    quote_feed_id: None,
+                    content_type: ContentType::Crypto,
+                    number_of_accepters: 705,
+                    number_of_rejecters: 212,
+                    number_of_comments: 30,
+                    number_of_rewards: 30,
+                    number_of_shared: 40,
 
                     profile: "https://lh3.googleusercontent.com/a/ACg8ocIGf0gpB8MQdGkp5TXW1327nRpuPz70iy_hQY2NXNwanRXbFw=s96-c".to_string(),
                     nickname: "victor".to_string(),
@@ -282,24 +451,59 @@ impl Controller {
             ]
         })?;
 
-        let mut ctrl = Self {
+        let profile = use_server_future(move || async move {
+            Profile {
+                profile: "https://lh3.googleusercontent.com/a/ACg8ocIGf0gpB8MQdGkp5TXW1327nRpuPz70iy_hQY2NXNwanRXbFw=s96-c".to_string(),
+                nickname: "Jongseok Park".to_string(),
+                email: "victor@biyard.co".to_string(),
+                description: Some("Office of Rep.".to_string()),
+
+                national: National::US,
+                tier: 1,
+
+                exp: 4,
+                total_exp: 6,
+
+                followers: 12501,
+                replies: 503101,
+                posts: 420201,
+                spaces: 3153,
+                votes: 125,
+                surveys: 3153
+            }
+        })?;
+
+        let accounts = use_server_future(move || async move {
+            vec! [
+                AccountList {
+                    id: 0,
+                    created_at: 1747726155,
+                    updated_at: 1747726155,
+                    profile: "https://lh3.googleusercontent.com/a/ACg8ocIGf0gpB8MQdGkp5TXW1327nRpuPz70iy_hQY2NXNwanRXbFw=s96-c".to_string(),
+                    email: "victor@biyard.co".to_string(),
+                },
+                AccountList {
+                    id: 1,
+                    created_at: 1747726155,
+                    updated_at: 1747726155,
+                    profile: "https://lh3.googleusercontent.com/a/ACg8ocIGf0gpB8MQdGkp5TXW1327nRpuPz70iy_hQY2NXNwanRXbFw=s96-c".to_string(),
+                    email: "victor1@biyard.co".to_string(),
+                }
+            ]
+        })?;
+
+        let ctrl = Self {
             lang,
             my_feeds,
             following_feeds,
             hot_promotions,
             news,
             followers,
-
-            nickname: use_signal(|| info.nickname.unwrap_or_default()),
-            profile: use_signal(|| info.profile_url.unwrap_or_default()),
+            profile,
+            spaces,
+            communities,
+            accounts
         };
-
-        use_effect(move || {
-            let info = user_service.user_info();
-
-            ctrl.nickname.set(info.nickname.unwrap_or_default());
-            ctrl.profile.set(info.profile_url.unwrap_or_default());
-        });
 
         Ok(ctrl)
     }
@@ -336,5 +540,13 @@ impl Controller {
 
     pub async fn follow(&mut self, id: i64) {
         tracing::debug!("follow user id: {:?}", id);
+    }
+
+    pub async fn add_account(&mut self) {
+        tracing::debug!("add account");
+    }
+
+    pub fn signout(&mut self) {
+        tracing::debug!("signout");
     }
 }

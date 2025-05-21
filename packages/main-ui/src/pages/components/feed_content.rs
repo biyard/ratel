@@ -89,20 +89,11 @@ pub fn ContentDescription(lang: Language, html: String) -> Element {
     let tr: ContentDescriptionTranslate = translate(&lang);
     let mut show_all = use_signal(|| false);
 
-    let display_html = if show_all() {
-        html.clone()
-    } else {
-        format!(
-            "<div style=\"max-height: 50px; overflow: hidden;\">{}</div>",
-            html
-        )
-    };
-
     rsx! {
         div { class: "flex flex-col w-full justify-start items-start",
             div {
                 class: "font-normal text-c-wg-30 text-[15px]/24",
-                dangerous_inner_html: "{display_html}",
+                dangerous_inner_html: if show_all() { html.clone() } else { format!("<div style=\"max-height: 50px; overflow: hidden;\">{}</div>", html) },
             }
             div {
                 class: "cursor-pointer underline font-normal text-white text-[15px]/24",

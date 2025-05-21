@@ -16,22 +16,52 @@ pub fn IndexPage(#[props(default = Language::En)] lang: Language) -> Element {
     let hot_promotions = ctrl.hot_promotions()?;
     let news = ctrl.news()?;
     let followers = ctrl.followers()?;
+    let profile = ctrl.profile()?;
+    let spaces = ctrl.spaces()?;
+    let communities = ctrl.communities()?;
+    let accounts = ctrl.accounts()?;
 
-    let nickname = ctrl.nickname();
-    let profile = ctrl.profile();
+    let recent_feeds: Vec<String> = my_feeds
+        .iter()
+        .map(|v| v.title.clone().unwrap_or_default())
+        .take(3)
+        .collect();
+    let recent_spaces: Vec<String> = spaces
+        .iter()
+        .map(|v| v.title.clone().unwrap_or_default())
+        .take(3)
+        .collect();
+    let recent_communities: Vec<String> = communities
+        .iter()
+        .map(|v| v.title.clone().unwrap_or_default())
+        .take(3)
+        .collect();
 
     rsx! {
         by_components::meta::MetaPage { title: tr.title }
 
-        //FIXME: fix to connect api
         div { class: "flex flex-col w-full justify-start items-start",
             div { class: "flex flex-row w-full justify-start items-start py-20 gap-20",
-                LeftSidebar { lang }
+                LeftSidebar {
+                    lang,
+                    profile: profile.clone(),
+                    recent_feeds,
+                    recent_spaces,
+                    recent_communities,
+                    accounts,
+
+                    add_account: move |_| async move {
+                        ctrl.add_account().await;
+                    },
+                    sign_out: move |_| {
+                        ctrl.signout();
+                    },
+                }
                 FeedContents {
                     lang,
                     my_feeds,
                     following_feeds,
-                    profile: profile.clone(),
+                    profile: profile.profile.clone(),
                 }
                 RightSidebar {
                     lang,
@@ -47,8 +77,8 @@ pub fn IndexPage(#[props(default = Language::En)] lang: Language) -> Element {
 
             CreateFeedBox {
                 lang,
-                nickname,
-                profile,
+                nickname: profile.nickname.clone(),
+                profile: profile.profile.clone(),
                 onsend: move |(content_type, description): (ContentType, String)| async move {
                     ctrl.create_feed(content_type, description).await;
                 },
