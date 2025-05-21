@@ -7,41 +7,48 @@ use bdk::prelude::{
 
 use crate::{
     components::icons::{Palace, Pentagon2, RewardCoin},
-    pages::components::{LeftSideProfile, SideRoundedAccordian, SideRoundedBox},
+    pages::{
+        components::{LeftSideProfile, SideRoundedAccordian, SideRoundedBox},
+        controller::{AccountList, Profile},
+    },
 };
 
 #[component]
-pub fn LeftSidebar(lang: Language) -> Element {
+pub fn LeftSidebar(
+    lang: Language,
+    profile: Profile,
+    accounts: Vec<AccountList>,
+    recent_feeds: Vec<String>,
+    recent_spaces: Vec<String>,
+    recent_communities: Vec<String>,
+
+    add_account: EventHandler<MouseEvent>,
+    sign_out: EventHandler<MouseEvent>,
+) -> Element {
     let tr: LeftSidebarTranslate = translate(&lang);
-    //FIXME: fix to connect api
-    let recent = vec![
-        "Crypto/DAO Treasury Transparent".to_string(),
-        "Crypto/DAO Act Investor".to_string(),
-        "Crypto/DAO Welcome to Protector".to_string(),
-    ];
-
-    let spaces = vec![
-        "Crypto/DAO Treasury Transparent".to_string(),
-        "Crypto/DAO Act Investor".to_string(),
-        "Crypto/DAO Welcome to Protector".to_string(),
-    ];
-
-    let communities = vec![
-        "Crypto/DAO Treasury Transparent".to_string(),
-        "Crypto/DAO Act Investor".to_string(),
-        "Crypto/DAO Welcome to Protector".to_string(),
-    ];
 
     rsx! {
-        //FIXME: fix to connect api
         div { class: "flex flex-col w-fit h-fit gap-10 justify-start items-start",
             LeftSideProfile {
                 lang,
-                name: "Hyejin Choi",
-                profile: "https://lh3.googleusercontent.com/a/ACg8ocIGf0gpB8MQdGkp5TXW1327nRpuPz70iy_hQY2NXNwanRXbFw=s96-c",
-                description: "Office of Rep.",
-                exp: 4,
-                total_exp: 5,
+                email: profile.email,
+                name: profile.nickname,
+                profile: profile.profile,
+                description: profile.description.unwrap_or_default(),
+                exp: profile.exp,
+                total_exp: profile.total_exp,
+
+                followers: profile.followers,
+                replies: profile.replies,
+                posts: profile.posts,
+                spaces: profile.spaces,
+                votes: profile.votes,
+                surveys: profile.surveys,
+
+                accounts,
+
+                add_account,
+                sign_out,
             }
 
             SideRoundedBox {
@@ -78,7 +85,7 @@ pub fn LeftSidebar(lang: Language) -> Element {
                 },
                 title: tr.recent,
 
-                ContentList { contents: recent }
+                ContentList { contents: recent_feeds }
             }
             SideRoundedAccordian {
                 icon: rsx! {
@@ -96,7 +103,7 @@ pub fn LeftSidebar(lang: Language) -> Element {
                         }
                         div { class: "font-bold text-white text-sm/16", {tr.create_space} }
                     }
-                    ContentList { contents: spaces }
+                    ContentList { contents: recent_spaces }
                 }
             }
             SideRoundedAccordian {
@@ -121,7 +128,7 @@ pub fn LeftSidebar(lang: Language) -> Element {
                         }
                         div { class: "font-bold text-white text-sm/16", {tr.create_community} }
                     }
-                    ContentList { contents: communities }
+                    ContentList { contents: recent_communities }
                 }
             }
         }
