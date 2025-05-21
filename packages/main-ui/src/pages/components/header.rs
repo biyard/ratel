@@ -22,11 +22,14 @@ pub fn SocialHeader(lang: Language, onsearch: EventHandler<String>) -> Element {
     let mut popup: PopupService = use_context();
     let user = user_service.user_info();
 
-    let nickname = user.nickname;
-    let profile_url = user.profile_url;
-    let is_login = match user.email {
-        Some(_) => true,
-        None => false,
+    let is_login = user.email.is_some();
+    let (nickname, profile_url) = if is_login {
+        (
+            user.nickname.unwrap_or_default(),
+            user.profile_url.unwrap_or_default(),
+        )
+    } else {
+        (String::new(), String::new())
     };
 
     rsx! {
@@ -87,10 +90,7 @@ pub fn SocialHeader(lang: Language, onsearch: EventHandler<String>) -> Element {
                 }
 
                 if is_login {
-                    Profile {
-                        url: profile_url.unwrap_or_default(),
-                        name: nickname.unwrap_or_default(),
-                    }
+                    Profile { url: profile_url, name: nickname }
                 } else {
                     button {
                         class: "p-10 text-[15px] font-bold text-secondary hover:text-hover cursor-pointer max-tablet:!px-44 max-tablet:!py-15 order-1  max-tablet:!order-2",
@@ -103,7 +103,6 @@ pub fn SocialHeader(lang: Language, onsearch: EventHandler<String>) -> Element {
                         {tr.sign_in}
                     }
                 }
-            
             }
         }
     }

@@ -178,8 +178,8 @@ pub fn FeedTab(lang: Language, selected_tab: Tab, onchange: EventHandler<Tab>) -
                     },
 
                     div {
-                        class: "font-bold text-sm/20 aria-active:text-white text-neutral-400 h-25",
-                        "aria-active": selected_tab == tab,
+                        class: "font-bold text-sm/20 aria-selected:text-white text-neutral-400 h-25",
+                        "aria-selected": selected_tab == tab,
                         {tab.translate(&lang)}
                     }
                     if selected_tab == tab {

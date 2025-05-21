@@ -336,7 +336,7 @@ impl Controller {
             {
                 Ok(promotion) => promotion.items,
                 Err(e) => {
-                    tracing::debug!("query hot promotion failed with error: {:?}", e);
+                    tracing::debug!("query news failed with error: {:?}", e);
                     Default::default()
                 }
             }

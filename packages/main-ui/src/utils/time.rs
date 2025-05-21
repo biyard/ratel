@@ -20,7 +20,7 @@ pub fn format_prev_time(timestamp: i64) -> String {
         return format!("{}d ago", check_date(duration.num_days()));
     } else if duration.num_days() < 365 {
         let months = duration.num_days() / 30;
-        return format!("{}th ago", check_date(months));
+        return format!("{}mo ago", check_date(months));
     } else {
         let years = duration.num_days() / 365;
         return format!("{}y ago", check_date(years));
