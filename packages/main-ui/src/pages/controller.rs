@@ -1,8 +1,8 @@
 use bdk::prelude::*;
-use dto::{FeedType, News, NewsQuery, NewsSummary, Promotion};
+use dto::{Feed, FeedType, News, NewsQuery, NewsSummary, Promotion, User};
 use serde::{Deserialize, Serialize};
 
-use crate::{config, route::Route, services::user_service::UserService};
+use crate::{config, route::Route, services::user_service::UserService, utils::text::extract_title_from_html};
 
 #[derive(Clone, Copy, DioxusController)]
 pub struct Controller {
@@ -305,7 +305,33 @@ impl Controller {
     }
 
     pub async fn create_feed(&mut self, content_type: ContentType, description: String) {
-        tracing::debug!("create feed info: {:?} {:?}", content_type, description);
+        //FIXME: fix to real industry_id
+        let industry_id = 1;
+        let title = extract_title_from_html(&description);
+        tracing::debug!("create feed info: {:?} {:?} {:?} {:?}", content_type, industry_id, title, description);
+
+        let user_id = match User::get_client(config::get().main_api_endpoint).user_info().await {
+            Ok(v) => v.id,
+            Err(e) => {
+                btracing::error!("failed to get user id with error: {:?}", e);
+                0
+            },
+        };
+
+        if user_id == 0 {
+            return;
+        }
+        
+        match Feed::get_client(config::get().main_api_endpoint).write_post(description, user_id, 1, Some(title), None).await {
+            Ok(_) => {
+                btracing::info!("success to create feed");
+                self.my_feeds.restart();
+                self.following_feeds.restart();
+            },
+            Err(e) => {
+                btracing::error!("failed to create feed with error: {:?}", e);
+            },
+        };
     }
 
     pub async fn follow(&mut self, id: i64) {
