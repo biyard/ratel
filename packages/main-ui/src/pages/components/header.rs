@@ -22,6 +22,7 @@ pub fn SocialHeader(
     current_page: RouteTab,
     onroute: EventHandler<MouseEvent>,
 ) -> Element {
+    let mut search_extend = use_signal(|| false);
     let tr: SocialHeaderTranslate = translate(&lang);
 
     let user_service: UserService = use_context();
@@ -42,7 +43,9 @@ pub fn SocialHeader(
         div { class: "w-screen h-80 flex items-center justify-center z-100 max-tablet:!h-48",
             div { class: "w-full max-w-desktop m-10 flex flex-row justify-between items-center",
                 div { class: "hidden max-tablet:flex max-tablet:flex-row max-tablet:items-center max-tablet:justify-between max-tablet:w-full max-tablet:px-16 max-tablet:py-4",
-                    div { class: "flex flex-row w-fit justify-start items-center gap-10",
+                    div {
+                        class: "flex flex-row w-fit justify-start items-center gap-10 aria-expanded:w-full",
+                        aria_expanded: search_extend(),
                         div {
                             class: "cursor-pointer flex flex-col w-fit justify-center items-center p-10",
                             onclick: move |e| {
@@ -54,17 +57,67 @@ pub fn SocialHeader(
                                 height: "32",
                             }
                         }
-                        Search {
-                            class: "[&>path]:stroke-neutral-500 [&>circle]:stroke-neutral-500",
-                            width: "32",
-                            height: "32",
+
+                        div {
+                            class: "flex flex-row w-fit justify-start items-center gap-10 aria-expanded:w-full transition-all duration-300 ease-in-out",
+                            aria_expanded: search_extend(),
+
+                            div {
+                                class: format_args!(
+                                    "transition-all duration-300 ease-in-out {}",
+                                    if search_extend() {
+                                        "opacity-0 scale-95 pointer-events-none"
+                                    } else {
+                                        "opacity-100 scale-100"
+                                    },
+                                ),
+                                onclick: move |_| search_extend.set(true),
+                                Search {
+                                    class: "[&>path]:stroke-neutral-500 [&>circle]:stroke-neutral-500",
+                                    width: "32",
+                                    height: "32",
+                                }
+                            }
+
+                            div {
+                                class: format_args!(
+                                    "transition-all duration-300 ease-in-out w-full {}",
+                                    if search_extend() {
+                                        "opacity-100 scale-100"
+                                    } else {
+                                        "opacity-0 scale-95 hidden"
+                                    },
+                                ),
+                                MobileSearchBox {
+                                    lang,
+                                    onsearch,
+                                    onextend: move |_| search_extend.set(false),
+                                }
+                            }
                         }
                     }
 
-                    RatelSymbolWithText { size: 36 }
+                    div {
+                        class: format_args!(
+                            "transition-all duration-300 ease-in-out {}",
+                            if search_extend() {
+                                "opacity-0 scale-95 hidden"
+                            } else {
+                                "opacity-100 scale-100"
+                            },
+                        ),
+                        RatelSymbolWithText { size: 36 }
+                    }
 
                     img {
-                        class: "w-30 h-30 rounded-full object-cover",
+                        class: format_args!(
+                            "w-30 h-30 rounded-full object-cover transition-all duration-300 ease-in-out {}",
+                            if search_extend() {
+                                "opacity-0 scale-95 hidden"
+                            } else {
+                                "opacity-100 scale-100"
+                            },
+                        ),
                         src: profile_url.clone(),
                     }
 
