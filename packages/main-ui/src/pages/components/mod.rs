@@ -1,3 +1,4 @@
+mod bottom_navigation_bar;
 mod bottom_sheet;
 mod create_feed_box;
 mod feed_content;
@@ -10,6 +11,7 @@ mod search_box;
 mod side_rounded_accordian;
 mod side_rounded_box;
 
+pub use bottom_navigation_bar::*;
 pub use bottom_sheet::*;
 pub use create_feed_box::*;
 pub use feed_content::*;
