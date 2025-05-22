@@ -1,3 +1,4 @@
+mod _id;
 mod components;
 mod controller;
 mod explore;
@@ -14,6 +15,7 @@ mod quizzes;
 pub use layout::*;
 pub use page::*;
 
+pub use _id::*;
 pub use explore::*;
 pub use landing::*;
 pub use messages::*;
