@@ -11,6 +11,8 @@ use i18n::*;
 
 #[component]
 pub fn IndexPage(#[props(default = Language::En)] lang: Language) -> Element {
+    let mut is_write = use_signal(|| false);
+
     let mut ctrl = Controller::new(lang)?;
     let tr: IndexTranslate = translate(&lang);
 
@@ -54,6 +56,9 @@ pub fn IndexPage(#[props(default = Language::En)] lang: Language) -> Element {
                         recent_communities: recent_communities.clone(),
                         accounts: accounts.clone(),
 
+                        onwrite: move |_| {
+                            is_write.set(true);
+                        },
                         add_account: move |_| async move {
                             ctrl.add_account().await;
                         },
@@ -69,6 +74,11 @@ pub fn IndexPage(#[props(default = Language::En)] lang: Language) -> Element {
                         my_feeds,
                         following_feeds,
                         profile: profile.profile.clone(),
+
+                        is_write: is_write(),
+                        onwrite: move |_| {
+                            is_write.set(true);
+                        },
                     }
                 }
                 div { class: "flex flex-row w-fit max-tablet:!hidden",
@@ -85,7 +95,9 @@ pub fn IndexPage(#[props(default = Language::En)] lang: Language) -> Element {
                 }
             }
 
-            div { class: "fixed bottom-85 left-0 w-full hidden max-tablet:!flex",
+            div {
+                class: "fixed bottom-85 left-0 w-full hidden max-tablet:flex aria-hidden:!hidden",
+                aria_hidden: is_write(),
                 BottomSheet {
                     lang,
                     profile: profile.clone(),
@@ -103,11 +115,16 @@ pub fn IndexPage(#[props(default = Language::En)] lang: Language) -> Element {
                 }
             }
 
-            div { class: "flex flex-row w-full justify-start items-start max-tablet:!hidden",
+            div {
+                class: "flex flex-row w-full justify-start items-start aria-hidden:!hidden",
+                aria_hidden: !is_write(),
                 CreateFeedBox {
                     lang,
                     nickname: profile.nickname.clone(),
                     profile: profile.profile.clone(),
+                    onclose: move |_| {
+                        is_write.set(false);
+                    },
                     onsend: move |(content_type, description): (ContentType, String)| async move {
                         ctrl.create_feed(content_type, description).await;
                     },

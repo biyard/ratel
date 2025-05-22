@@ -1,4 +1,4 @@
-use bdk::prelude::*;
+use bdk::prelude::{by_components::icons::edit::Edit1, *};
 use gloo_events::EventListener;
 use wasm_bindgen::JsCast;
 use web_sys::{HtmlElement, window};
@@ -19,6 +19,9 @@ pub fn FeedContents(
     profile: String,
     my_feeds: Vec<FeedList>,
     following_feeds: Vec<FeedList>,
+
+    is_write: bool,
+    onwrite: EventHandler<MouseEvent>,
 ) -> Element {
     let mut selected_tab = use_signal(|| Tab::Me);
 
@@ -32,9 +35,11 @@ pub fn FeedContents(
                 },
             }
 
-            CreateFeed { lang, profile }
+            div { class: "flex flex-row w-full justify-start items-start max-tablet:hidden",
+                CreateFeed { lang, profile, onwrite }
+            }
 
-            div { class: "flex flex-col w-full h-[calc(100vh-250px)] overflow-y-scroll",
+            div { class: "flex flex-col w-full h-[calc(100vh-250px)] max-tablet:!h-full overflow-y-scroll",
 
                 if selected_tab() == Tab::Me {
                     MyFeedList { lang, my_feeds }
@@ -42,12 +47,26 @@ pub fn FeedContents(
                     FollowingFeedList { lang, following_feeds }
                 }
             }
+
+            a {
+                class: "cursor-pointer fixed bottom-160 right-16 w-fit h-fit hidden max-tablet:flex rounded-full bg-primary p-15 aria-hidden:!hidden",
+                href: "#create_feed",
+                onclick: move |e| {
+                    onwrite.call(e);
+                },
+                aria_hidden: is_write,
+                Edit1 {
+                    class: "[&>path]:stroke-neutral-900",
+                    width: "30",
+                    height: "30",
+                }
+            }
         }
     }
 }
 
 #[component]
-pub fn CreateFeed(lang: Language, profile: String) -> Element {
+pub fn CreateFeed(lang: Language, profile: String, onwrite: EventHandler<MouseEvent>) -> Element {
     let tr: CreateFeedTranslate = translate(&lang);
 
     rsx! {
@@ -55,6 +74,9 @@ pub fn CreateFeed(lang: Language, profile: String) -> Element {
             img { class: "w-36 h-36 rounded-full object-cover", src: profile }
             a {
                 class: "flex flex-row w-full h-fit justify-start items-center bg-neutral-800 border border-neutral-700 rounded-[100px] font-normal text-text-secondary text-sm/16 px-15 py-10",
+                onclick: move |e| {
+                    onwrite.call(e);
+                },
                 href: "#create_feed",
                 {tr.desc}
             }

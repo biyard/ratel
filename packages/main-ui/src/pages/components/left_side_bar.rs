@@ -24,6 +24,7 @@ pub fn LeftSidebar(
 
     add_account: EventHandler<MouseEvent>,
     sign_out: EventHandler<MouseEvent>,
+    onwrite: EventHandler<MouseEvent>,
 ) -> Element {
     let tr: LeftSidebarTranslate = translate(&lang);
 
@@ -95,6 +96,9 @@ pub fn LeftSidebar(
                 div { class: "flex flex-col w-full justify-start items-start gap-16",
                     a {
                         class: "cursor-pointer flex flex-row w-full justify-start items-center gap-4",
+                        onclick: move |e| {
+                            onwrite.call(e);
+                        },
                         href: "#create_feed",
                         Add {
                             class: "[&>path]:stroke-white",

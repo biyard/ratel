@@ -174,7 +174,7 @@ pub fn Account(
     sign_out: EventHandler<MouseEvent>,
 ) -> Element {
     let tr: AccountTranslate = translate(&lang);
-    let accounts: Vec<AccountList> = vec![];
+
     rsx! {
         div { class: "flex flex-col w-full justify-start items-start px-20 pt-20 pb-30 bg-neutral-900 rounded-t-[20px] border-t border-t-neutral-700 gap-20",
             div { class: "flex flex-row w-full justify-between items-center",
