@@ -83,10 +83,21 @@ pub fn BottomSheet(
             body.add_event_listener_with_callback("touchend", touch_end.as_ref().unchecked_ref())
                 .unwrap();
 
-            // FIXME: That line is causing countless errors.
-            // FIXME: No problem with movement, but needs improvement
-            touch_move.forget();
-            touch_end.forget();
+            let _ = move || {
+                body.remove_event_listener_with_callback(
+                    "touchmove",
+                    touch_move.as_ref().unchecked_ref(),
+                )
+                .ok();
+                body.remove_event_listener_with_callback(
+                    "touchend",
+                    touch_end.as_ref().unchecked_ref(),
+                )
+                .ok();
+
+                touch_move.forget();
+                touch_end.forget();
+            };
         }
     });
 

@@ -244,9 +244,7 @@ pub fn RichText(
         }
         script { src: "https://cdn.jsdelivr.net/npm/quill@2.0.0-dev.4/dist/quill.min.js" }
 
-        // 에디터 + 툴바 전체 wrapper
         div { class: "flex flex-col w-full h-150 justify-between items-start gap-5",
-            // 툴바 + 버튼 Row (맨 위에)
             div {
                 id: format!("{}_toolbar_wrapper", id),
                 class: "flex flex-row justify-between h-49 items-center w-full gap-8",
@@ -258,7 +256,6 @@ pub fn RichText(
                 }
             }
 
-            // 에디터 본문
             div {
                 id: id.clone(),
                 class: "rich-text-editor w-full h-[100px] overflow-y-auto border border-gray-300 rounded-md",
