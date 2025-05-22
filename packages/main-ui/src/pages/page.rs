@@ -52,7 +52,7 @@ pub fn IndexPage(#[props(default = Language::En)] lang: Language) -> Element {
                         recent_feeds: recent_feeds.clone(),
                         recent_spaces: recent_spaces.clone(),
                         recent_communities: recent_communities.clone(),
-                        accounts,
+                        accounts: accounts.clone(),
 
                         add_account: move |_| async move {
                             ctrl.add_account().await;
@@ -92,6 +92,14 @@ pub fn IndexPage(#[props(default = Language::En)] lang: Language) -> Element {
                     recent_feeds,
                     recent_spaces,
                     recent_communities,
+                    accounts,
+
+                    add_account: move |_| async move {
+                        ctrl.add_account().await;
+                    },
+                    sign_out: move |_| {
+                        ctrl.signout();
+                    },
                 }
             }
 
