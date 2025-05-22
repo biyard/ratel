@@ -83,21 +83,8 @@ pub fn BottomSheet(
             body.add_event_listener_with_callback("touchend", touch_end.as_ref().unchecked_ref())
                 .unwrap();
 
-            let _ = move || {
-                body.remove_event_listener_with_callback(
-                    "touchmove",
-                    touch_move.as_ref().unchecked_ref(),
-                )
-                .ok();
-                body.remove_event_listener_with_callback(
-                    "touchend",
-                    touch_end.as_ref().unchecked_ref(),
-                )
-                .ok();
-
-                touch_move.forget();
-                touch_end.forget();
-            };
+            touch_move.forget();
+            touch_end.forget();
         }
     });
 
