@@ -17,6 +17,7 @@ pub fn CreateFeedBox(
     profile: String,
     nickname: String,
     onsend: EventHandler<(ContentType, String)>,
+    onclose: EventHandler<MouseEvent>,
 ) -> Element {
     let tr: CreateFeedBoxTranslate = translate(&lang);
 
@@ -25,7 +26,7 @@ pub fn CreateFeedBox(
 
     rsx! {
         div {
-            class: "relative flex flex-col w-full justify-start items-start px-14 pt-15 pb-12 border border-t-6 border-primary gap-11 rounded-t-lg",
+            class: "relative flex flex-col w-full justify-start items-start px-14 pt-15 pb-12 border border-t-6 border-primary gap-11 rounded-t-lg z-60",
             id: "create_feed",
             div { class: "flex flex-col w-full justify-start items-start gap-10 pb-50",
                 div { class: "flex flex-row w-full justify-between items-center",
@@ -42,17 +43,23 @@ pub fn CreateFeedBox(
 
                     div { class: "flex flex-row w-fit justify-start items-center gap-20",
                         Dropdown {
-                            class: "w-320 h-40 border border-border-primary rounded-lg placeholder-text-neutral-500",
+                            class: "w-320 h-40 border border-border-primary rounded-lg placeholder-text-neutral-500 max-tablet:!hidden",
                             items: ContentType::variants(&lang),
                             onselect: move |value: String| {
                                 selected_value.set(value.parse::<ContentType>().unwrap());
                             },
                         }
 
-                        DoubleArrowDown {
-                            class: "[&>path]:stroke-white",
-                            width: "18",
-                            height: "18",
+                        div {
+                            class: "cursor-pointer w-fit h-fit",
+                            onclick: move |e| {
+                                onclose.call(e);
+                            },
+                            DoubleArrowDown {
+                                class: "[&>path]:stroke-white",
+                                width: "18",
+                                height: "18",
+                            }
                         }
                     }
                 }
@@ -88,7 +95,7 @@ translate! {
     CreateFeedBoxTranslate;
 
     hint: {
-        ko: "Type here...",
-        en: "Type here..."
+        ko: "Type here, Use Markdown, BB code, or HTML to format. Drag or paste images.",
+        en: "Type here, Use Markdown, BB code, or HTML to format. Drag or paste images."
     }
 }
