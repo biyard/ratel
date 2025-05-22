@@ -1,7 +1,9 @@
 use bdk::prelude::{
     by_components::icons::{
         arrows::{ShapeArrowDown, ShapeArrowUp},
+        security::Logout,
         time::Update,
+        validations::{Add, Clear},
     },
     *,
 };
@@ -9,7 +11,7 @@ use wasm_bindgen::{JsCast, prelude::Closure};
 
 use crate::{
     components::icons::{Badge, Grade, Palace, Pentagon2},
-    pages::controller::Profile,
+    pages::controller::{AccountList, Profile},
 };
 
 use web_sys::{TouchEvent, window};
@@ -21,7 +23,12 @@ pub fn BottomSheet(
     recent_feeds: Vec<String>,
     recent_spaces: Vec<String>,
     recent_communities: Vec<String>,
+
+    accounts: Vec<AccountList>,
+    add_account: EventHandler<MouseEvent>,
+    sign_out: EventHandler<MouseEvent>,
 ) -> Element {
+    let mut profile_clicked = use_signal(|| false);
     let mut is_dragging = use_signal(|| false);
     let mut start_y = use_signal(|| 0.0);
     let mut translate_y = use_signal(|| 70.0);
@@ -80,7 +87,27 @@ pub fn BottomSheet(
         }
     });
 
+    tracing::debug!("translate-y: {:?}", translate_y());
+
     rsx! {
+        if translate_y() == 0.0 || profile_clicked() {
+            div { class: "fixed inset-0 z-40 bg-black opacity-50" }
+        }
+        div {
+            class: "fixed bottom-0 left-0 w-full z-51 aria-hidden:hidden",
+            aria_hidden: !profile_clicked(),
+            Account {
+                lang,
+                nickname: profile.nickname.clone(),
+                email: profile.email,
+                accounts,
+                onprev: move |_| {
+                    profile_clicked.set(false);
+                },
+                add_account,
+                sign_out,
+            }
+        }
         div {
             class: "fixed bottom-100 left-0 w-full z-50 bg-neutral-800 rounded-t-[20px] transition-all duration-300 ease-in-out",
             style: format!(
@@ -123,6 +150,98 @@ pub fn BottomSheet(
                         recent_feeds,
                         recent_communities,
                         recent_spaces,
+
+                        onclick_profile: move |_| {
+                            profile_clicked.set(true);
+                            is_dragging.set(false);
+                            translate_y.set(70.0);
+                        },
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[component]
+pub fn Account(
+    lang: Language,
+    nickname: String,
+    email: String,
+    accounts: Vec<AccountList>,
+    onprev: EventHandler<MouseEvent>,
+    add_account: EventHandler<MouseEvent>,
+    sign_out: EventHandler<MouseEvent>,
+) -> Element {
+    let tr: AccountTranslate = translate(&lang);
+    let accounts: Vec<AccountList> = vec![];
+    rsx! {
+        div { class: "flex flex-col w-full justify-start items-start px-20 pt-20 pb-30 bg-neutral-900 rounded-t-[20px] border-t border-t-neutral-700 gap-20",
+            div { class: "flex flex-row w-full justify-between items-center",
+                div { class: "flex flex-col w-fit justify-start items-start gap-4",
+                    div { class: "font-bold text-lg/20 text-white", {nickname} }
+                    div { class: "font-semibold text-sm/20 text-neutral-500", {email} }
+                }
+
+                div {
+                    class: "cursor-pointer w-fit h-fit p-7 bg-[#27272a] rounded-full",
+                    onclick: move |e| {
+                        onprev.call(e);
+                    },
+                    Clear {
+                        class: "[&>path]:stroke-neutral-400",
+                        width: "15",
+                        height: "15",
+                    }
+                }
+            }
+
+            div { class: "flex flex-col w-full gap-20",
+                div { class: "font-bold text-sm/16 text-neutral-500", {tr.switch_account} }
+
+                div { class: "flex flex-col w-full justify-start items-start gap-12",
+                    for account in accounts {
+                        div {
+                            class: "cursor-pointer flex flex-row w-full justify-start items-center gap-8",
+                            onclick: move |_| {
+                                tracing::debug!("change account button clicked");
+                            },
+                            img {
+                                class: "w-20 h-20 rounded-full object-cover",
+                                src: account.profile,
+                            }
+                            div { class: "font-normal text-white text-sm/20", {account.email} }
+                        }
+                    }
+                }
+
+                DivideContainer {}
+
+                div { class: "flex flex-col w-full justify-start items-start gap-12",
+                    div {
+                        class: "cursor-pointer flex flex-row w-full justify-start items-center gap-4",
+                        onclick: move |e| {
+                            add_account.call(e);
+                        },
+                        Add {
+                            class: "[&>path]:stroke-white",
+                            width: "20",
+                            height: "20",
+                            fill: "white",
+                        }
+                        div { class: "font-bold text-white text-sm/16", {tr.add_another_account} }
+                    }
+                    div {
+                        class: "cursor-pointer flex flex-row w-full justify-start items-center gap-4",
+                        onclick: move |e| {
+                            sign_out.call(e);
+                        },
+                        Logout {
+                            class: "[&>path]:stroke-white",
+                            width: "20",
+                            height: "20",
+                        }
+                        div { class: "font-bold text-white text-sm/16", {tr.sign_out} }
                     }
                 }
             }
@@ -139,11 +258,17 @@ pub fn BottomInformation(
     recent_feeds: Vec<String>,
     recent_spaces: Vec<String>,
     recent_communities: Vec<String>,
+
+    onclick_profile: EventHandler<MouseEvent>,
 ) -> Element {
     rsx! {
         div { class: "flex flex-col w-full justify-start items-start bg-neutral-900 p-20",
             div { class: "flex flex-col w-full justify-start items-start gap-10",
-                div { class: "flex flex-col w-full justify-start items-start gap-4",
+                div {
+                    class: "cursor-pointer flex flex-col w-full justify-start items-start gap-4",
+                    onclick: move |e| {
+                        onclick_profile.call(e);
+                    },
                     div { class: "font-medium text-sm/14 text-[#f9fafb]", {description} }
                 }
 
@@ -299,5 +424,22 @@ translate! {
     diamond: {
         ko: "Diamond",
         en: "Diamond"
+    }
+}
+
+translate! {
+    AccountTranslate;
+
+    switch_account: {
+        ko: "Switch Account",
+        en: "Switch Account"
+    },
+    add_another_account: {
+        ko: "Add Another Account",
+        en: "Add Another Account"
+    },
+    sign_out: {
+        ko: "Sign Out",
+        en: "Sign Out"
     }
 }
