@@ -1,7 +1,7 @@
 use bdk::prelude::*;
 
 use crate::{
-    pages::components::{BottomSheet, SocialHeader},
+    pages::components::{BottomNavigationBar, SocialHeader},
     route::Route,
 };
 use dioxus_popup::PopupZone;
@@ -63,7 +63,7 @@ pub fn SocialLayout(#[props(default = Language::En)] lang: Language) -> Element 
             div {
                 class: "flex-shrink-0 w-full aria-hidden:!hidden",
                 aria_hidden: selected() == RouteTab::Notification,
-                BottomSheet {
+                BottomNavigationBar {
                     lang,
                     current_page: selected(),
                     onroute: move |route: RouteTab| {

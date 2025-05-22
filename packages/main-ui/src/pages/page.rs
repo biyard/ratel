@@ -1,5 +1,8 @@
 #![allow(unused)]
-use crate::pages::components::{CreateFeedBox, FeedContents, LeftSidebar, RightSidebar};
+use crate::pages::{
+    components::BottomSheet,
+    components::{CreateFeedBox, FeedContents, LeftSidebar, RightSidebar},
+};
 
 use super::*;
 use bdk::prelude::*;
@@ -42,20 +45,22 @@ pub fn IndexPage(#[props(default = Language::En)] lang: Language) -> Element {
 
         div { class: "flex flex-col w-full h-screen justify-start items-start",
             div { class: "flex flex-row w-full h-[calc(100vh)] justify-start items-start py-20 gap-20",
-                LeftSidebar {
-                    lang,
-                    profile: profile.clone(),
-                    recent_feeds,
-                    recent_spaces,
-                    recent_communities,
-                    accounts,
+                div { class: "flex flex-row w-fit max-tablet:!hidden",
+                    LeftSidebar {
+                        lang,
+                        profile: profile.clone(),
+                        recent_feeds: recent_feeds.clone(),
+                        recent_spaces: recent_spaces.clone(),
+                        recent_communities: recent_communities.clone(),
+                        accounts,
 
-                    add_account: move |_| async move {
-                        ctrl.add_account().await;
-                    },
-                    sign_out: move |_| {
-                        ctrl.signout();
-                    },
+                        add_account: move |_| async move {
+                            ctrl.add_account().await;
+                        },
+                        sign_out: move |_| {
+                            ctrl.signout();
+                        },
+                    }
                 }
 
                 div { class: "flex flex-row w-full ",
@@ -66,25 +71,39 @@ pub fn IndexPage(#[props(default = Language::En)] lang: Language) -> Element {
                         profile: profile.profile.clone(),
                     }
                 }
-                RightSidebar {
-                    lang,
-                    promotion: hot_promotions,
-                    news,
-                    followers,
+                div { class: "flex flex-row w-fit max-tablet:!hidden",
+                    RightSidebar {
+                        lang,
+                        promotion: hot_promotions,
+                        news,
+                        followers,
 
-                    follow: move |id: i64| async move {
-                        ctrl.follow(id).await;
-                    },
+                        follow: move |id: i64| async move {
+                            ctrl.follow(id).await;
+                        },
+                    }
                 }
             }
 
-            CreateFeedBox {
-                lang,
-                nickname: profile.nickname.clone(),
-                profile: profile.profile.clone(),
-                onsend: move |(content_type, description): (ContentType, String)| async move {
-                    ctrl.create_feed(content_type, description).await;
-                },
+            div { class: "fixed bottom-85 left-0 w-full hidden max-tablet:!flex",
+                BottomSheet {
+                    lang,
+                    profile: profile.clone(),
+                    recent_feeds,
+                    recent_spaces,
+                    recent_communities,
+                }
+            }
+
+            div { class: "flex flex-row w-full justify-start items-start max-tablet:!hidden",
+                CreateFeedBox {
+                    lang,
+                    nickname: profile.nickname.clone(),
+                    profile: profile.profile.clone(),
+                    onsend: move |(content_type, description): (ContentType, String)| async move {
+                        ctrl.create_feed(content_type, description).await;
+                    },
+                }
             }
         }
     }
