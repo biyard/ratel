@@ -1,13 +1,10 @@
 use bdk::prelude::{
-    by_components::{
-        icons::{arrows::DoubleArrowDown, chat::RoundBubble},
-        rich_texts::RichText,
-    },
+    by_components::icons::{arrows::DoubleArrowDown, chat::RoundBubble},
     *,
 };
 
 use crate::{
-    components::{dropdown::Dropdown, icons::Badge},
+    components::{dropdown::Dropdown, icons::Badge, rich_text::RichText},
     pages::controller::ContentType,
 };
 
@@ -28,7 +25,7 @@ pub fn CreateFeedBox(
         div {
             class: "relative flex flex-col w-full justify-start items-start px-14 pt-15 pb-12 border border-t-6 border-primary gap-11 rounded-t-lg z-60",
             id: "create_feed",
-            div { class: "flex flex-col w-full justify-start items-start gap-10 pb-50",
+            div { class: "flex flex-col w-full justify-start items-start gap-10 pb-12",
                 div { class: "flex flex-row w-full justify-between items-center",
                     div { class: "flex flex-row w-fit justify-start items-center gap-10",
                         img {
@@ -64,27 +61,34 @@ pub fn CreateFeedBox(
                     }
                 }
 
+                Dropdown {
+                    class: "w-full h-40 border border-border-primary rounded-lg placeholder-text-neutral-500 hidden max-tablet:!flex",
+                    items: ContentType::variants(&lang),
+                    onselect: move |value: String| {
+                        selected_value.set(value.parse::<ContentType>().unwrap());
+                    },
+                }
+
                 RichText {
                     content: content(),
                     onchange: move |value| content.set(value),
                     change_location: true,
                     remove_border: true,
                     placeholder: tr.hint,
-                }
-            }
-
-            div { class: "absolute bottom-10 right-10",
-                div {
-                    class: "cursor-pointer p-8 bg-primary rounded-full",
-                    onclick: move |_| {
-                        onsend.call((selected_value(), content()));
+                    send_button: rsx! {
+                        div {
+                            class: "cursor-pointer p-8 bg-primary rounded-full",
+                            onclick: move |_| {
+                                onsend.call((selected_value(), content()));
+                            },
+                            RoundBubble {
+                                width: "24",
+                                height: "24",
+                                fill: "none",
+                                class: "[&>path]:stroke-neutral-900 [&>line]:stroke-neutral-900",
+                            }
+                        }
                     },
-                    RoundBubble {
-                        width: "24",
-                        height: "24",
-                        fill: "none",
-                        class: "[&>path]:stroke-neutral-900 [&>line]:stroke-neutral-900",
-                    }
                 }
             }
         }

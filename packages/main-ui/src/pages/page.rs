@@ -46,7 +46,7 @@ pub fn IndexPage(#[props(default = Language::En)] lang: Language) -> Element {
         by_components::meta::MetaPage { title: tr.title }
 
         div { class: "flex flex-col w-full h-screen justify-start items-start",
-            div { class: "flex flex-row w-full h-[calc(100vh)] justify-start items-start py-20 gap-20",
+            div { class: "flex flex-row w-full h-[calc(100vh)] justify-start items-start py-20 px-10 gap-20",
                 div { class: "flex flex-row w-fit max-tablet:!hidden",
                     LeftSidebar {
                         lang,
