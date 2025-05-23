@@ -66,7 +66,7 @@ pub fn ResultsPage(
                     }
 
                     a {
-                        href: "https://x.com/intent/tweet?text=My+stance+on+crypto+policy+by+Ratel!&url={ctrl.location()}&hashtags=Ratel,crypto,election_pledge,south_korea,presidential_election",
+                        href: "https://x.com/intent/tweet?text=%5B%F0%9F%93%A2%2B%EB%82%98%EC%9D%98%2B%EA%B3%B5%EC%95%BD%2B%EC%84%B1%ED%96%A5%2B%EA%B3%B5%EC%9C%A0%ED%95%98%EA%B8%B0%5D&url={ctrl.location()}&hashtags={candidate.tags}",
                         target: "_blank",
                         class: "btn rounded-[2px] bg-black w-35 h-35",
                         X { size: 20 }
