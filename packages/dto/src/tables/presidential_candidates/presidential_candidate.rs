@@ -24,4 +24,10 @@ pub struct PresidentialCandidate {
 
     #[api_model(summary, one_to_many = election_pledges, foreign_key = presidential_candidate_id, nested)]
     pub election_pledges: Vec<ElectionPledge>,
+
+    #[api_model(summary, version = v0.1)]
+    pub description: String,
+
+    #[api_model(summary, version = v0.1)]
+    pub tags: String,
 }

@@ -13,7 +13,11 @@ pub fn ResultsPage(
     let mut ctrl = Controller::new(lang, id)?;
     let _tr: ResultsTranslate = translate(&lang);
     let (result, candidate) = ctrl.result()?;
-    let (_, name, percent) = &result.percentage_of_each_candidate()[0];
+    let (_, _name, percent) = &result.percentage_of_each_candidate()[0];
+    let description = format!(
+        "{}<p>🎖️ 정책 성향 일치율: <b>{:.1}%</b></p>",
+        candidate.description, percent
+    );
 
     rsx! {
         by_components::meta::MetaPage { title: "{candidate.name}", image: "{candidate.image}" }
@@ -27,26 +31,24 @@ pub fn ResultsPage(
                     alt: candidate.name,
                     class: "w-full max-w-200",
                 }
-                p { class: "text-xl px-10",
-                    "The candidate whose pledges you supported the most was presidential candidate "
-                    span { class: "text-primary font-bold", "{name}" }
-                    " and you supported "
-                    span { class: "text-primary", "{percent:.1}%" }
-                    " of his pledges."
+                p {
+                    class: "text-xl/40 px-10 text-left flex flex-col gap-10",
+                    dangerous_inner_html: "{description}",
+
                 }
-                div { class: "flex flex-col gap-10 w-full px-10",
-                    h2 { class: "heading2", "Your support for each candidate" }
-                    for (_ , name , percent) in result.percentage_of_each_candidate().iter() {
-                        div { class: "flex flex-col gap-5 w-full",
-                            p { class: "w-100 text-left", "{name}" }
-                            div { class: "w-[{percent}%] h-20",
-                                div { class: "animate-grow bg-primary h-full flex flex-row items-center justify-end text-right rounded-sm py-auto",
-                                    span { class: "px-10", "{percent:.1}%" }
-                                }
-                            }
-                        }
-                    }
-                }
+                        // div { class: "flex flex-col gap-10 w-full px-10",
+            //     h2 { class: "heading2", "Your support for each candidate" }
+            //     for (_ , name , percent) in result.percentage_of_each_candidate().iter() {
+            //         div { class: "flex flex-col gap-5 w-full",
+            //             p { class: "w-100 text-left", "{name}" }
+            //             div { class: "w-[{percent}%] h-20",
+            //                 div { class: "animate-grow bg-primary h-full flex flex-row items-center justify-end text-right rounded-sm py-auto",
+            //                     span { class: "px-10", "{percent:.1}%" }
+            //                 }
+            //             }
+            //         }
+            //     }
+            // }
 
             }
 
@@ -66,7 +68,7 @@ pub fn ResultsPage(
                     }
 
                     a {
-                        href: "https://x.com/intent/tweet?text=My+stance+on+crypto+policy+by+Ratel!&url={ctrl.location()}&hashtags=Ratel,crypto,election_pledge,south_korea,presidential_election",
+                        href: "https://x.com/intent/tweet?text=%5B%F0%9F%93%A2%20%EB%82%98%EC%9D%98%20%EA%B3%B5%EC%95%BD%20%EC%84%B1%ED%96%A5%20%EA%B3%B5%EC%9C%A0%ED%95%98%EA%B8%B0%5D&url={ctrl.location()}&hashtags={candidate.tags}",
                         target: "_blank",
                         class: "btn rounded-[2px] bg-black w-35 h-35",
                         X { size: 20 }
