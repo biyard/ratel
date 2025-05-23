@@ -4,37 +4,38 @@ use bdk::prelude::{
     },
     *,
 };
+use dto::SpaceSummary;
 
 use crate::{
     components::icons::{Badge, Feed2, RewardCoin},
-    pages::{components::Label, controller::FeedList},
+    pages::components::Label,
     utils::time::format_prev_time,
 };
 
 #[component]
-pub fn FeedContent(lang: Language, feed: FeedList, onclick: EventHandler<i64>) -> Element {
+pub fn FeedContent(lang: Language, space: SpaceSummary, onclick: EventHandler<i64>) -> Element {
     rsx! {
         div {
             class: "cursor-pointer flex flex-col w-full justify-start items-start px-20 pt-20 pb-10 bg-footer rounded-lg gap-10",
             onclick: move |_| {
-                onclick.call(feed.id);
+                onclick.call(space.id);
             },
             div { class: "flex flex-col w-full justify-start items-start gap-10",
                 TopContent {
-                    label: feed.content_type.translate(&lang),
-                    title: feed.title.unwrap_or_default(),
-                    image: feed.profile.clone(),
-                    nickname: feed.nickname.clone(),
-                    created_at: feed.created_at,
+                    label: space.content_type.translate(&lang),
+                    title: space.title.unwrap_or_default(),
+                    image: space.proposer_profile.unwrap_or_default(),
+                    nickname: space.proposer_nickname.unwrap_or_default(),
+                    created_at: space.created_at,
                 }
 
-                ContentDescription { lang, html: feed.html_contents }
+                ContentDescription { lang, html: space.html_contents }
 
                 BottomContent {
-                    like: feed.number_of_likes,
-                    comment: feed.number_of_comments,
-                    reward: feed.number_of_rewards,
-                    shared: feed.number_of_shared,
+                    like: space.likes,
+                    comment: space.comments,
+                    reward: space.rewards,
+                    shared: space.shares,
                 }
             }
         }

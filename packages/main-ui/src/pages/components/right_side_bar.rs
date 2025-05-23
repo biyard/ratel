@@ -1,11 +1,9 @@
 use bdk::prelude::{by_components::icons::arrows::ArrowRight, *};
-use dto::{NewsSummary, Promotion};
+use dto::{NewsSummary, Promotion, User};
 use html2text::from_read;
 
 use crate::{
-    components::follow::Follow,
-    pages::{components::SideRoundedBox, controller::Follower},
-    utils::text::insert_word_breaks,
+    components::follow::Follow, pages::components::SideRoundedBox, utils::text::insert_word_breaks,
 };
 
 #[component]
@@ -13,7 +11,7 @@ pub fn RightSidebar(
     lang: Language,
     promotion: Promotion,
     news: Vec<NewsSummary>,
-    followers: Vec<Follower>,
+    followers: Vec<User>,
 
     follow: EventHandler<i64>,
 ) -> Element {
@@ -61,9 +59,9 @@ pub fn RightSidebar(
                         FeedUser {
                             lang,
                             id: follower.id.clone(),
-                            profile: follower.image.clone(),
-                            name: follower.title.clone(),
-                            description: follower.description.clone(),
+                            profile: follower.profile_url.clone(),
+                            name: follower.nickname.clone(),
+                            description: "".to_string(),
                             follow: move |id: i64| {
                                 follow.call(id);
                             },

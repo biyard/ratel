@@ -1,12 +1,12 @@
 #![allow(unused)]
-use crate::{
-    dto::content_type::ContentType,
-    pages::components::{BottomSheet, CreateFeedBox, FeedContents, LeftSidebar, RightSidebar},
+use crate::pages::components::{
+    BottomSheet, CreateFeedBox, FeedContents, LeftSidebar, RightSidebar,
 };
 
 use super::*;
 use bdk::prelude::*;
 use controller::*;
+use dto::ContentType;
 use i18n::*;
 
 #[component]
@@ -16,22 +16,25 @@ pub fn IndexPage(#[props(default = Language::En)] lang: Language) -> Element {
     let mut ctrl = Controller::new(lang)?;
     let tr: IndexTranslate = translate(&lang);
 
-    let my_feeds = ctrl.my_feeds()?;
-    let following_feeds = ctrl.following_feeds()?;
+    let landing_data = ctrl.landing_data()?;
     let hot_promotions = ctrl.hot_promotions()?;
     let news = ctrl.news()?;
-    let followers = ctrl.followers()?;
     let profile = ctrl.profile()?;
-    let spaces = ctrl.spaces()?;
     let communities = ctrl.communities()?;
     let accounts = ctrl.accounts()?;
 
-    let recent_feeds: Vec<String> = my_feeds
+    let my_spaces = landing_data.my_spaces;
+    let following_spaces = landing_data.following_spaces;
+
+    let followers = landing_data.follower_list;
+    let profile_data = landing_data.profile_data;
+
+    let recent_feeds: Vec<String> = my_spaces
         .iter()
         .map(|v| v.title.clone().unwrap_or_default())
         .take(3)
         .collect();
-    let recent_spaces: Vec<String> = spaces
+    let recent_spaces: Vec<String> = my_spaces
         .iter()
         .map(|v| v.title.clone().unwrap_or_default())
         .take(3)
@@ -50,7 +53,7 @@ pub fn IndexPage(#[props(default = Language::En)] lang: Language) -> Element {
                 div { class: "flex flex-row w-fit max-tablet:!hidden",
                     LeftSidebar {
                         lang,
-                        profile: profile.clone(),
+                        profile: profile_data.clone(),
                         recent_feeds: recent_feeds.clone(),
                         recent_spaces: recent_spaces.clone(),
                         recent_communities: recent_communities.clone(),
@@ -71,8 +74,8 @@ pub fn IndexPage(#[props(default = Language::En)] lang: Language) -> Element {
                 div { class: "flex flex-row w-full ",
                     FeedContents {
                         lang,
-                        my_feeds,
-                        following_feeds,
+                        my_spaces,
+                        following_spaces,
                         profile: profile.profile.clone(),
 
                         is_write: is_write(),
