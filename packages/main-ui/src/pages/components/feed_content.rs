@@ -7,7 +7,7 @@ use bdk::prelude::{
 
 use crate::{
     components::icons::{Badge, Feed2, RewardCoin},
-    pages::controller::FeedList,
+    pages::{components::Label, controller::FeedList},
     utils::time::format_prev_time,
 };
 
@@ -157,15 +157,6 @@ pub fn TopContent(
                     {format_prev_time(created_at)}
                 }
             }
-        }
-    }
-}
-
-#[component]
-pub fn Label(label: String) -> Element {
-    rsx! {
-        div { class: "px-8 border border-border-primary bg-transparent rounded-[4px] font-semibold text-white text-xs/25",
-            {label}
         }
     }
 }
