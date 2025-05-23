@@ -60,7 +60,7 @@ pub fn ThreadPage(#[props(default = Language::En)] lang: Language, id: i64) -> E
                     }
                 }
 
-                div { class: "flex flex-row w-full ", {"Hello"} }
+                div { class: "flex flex-row w-full ", {"Thread"} }
             }
 
             div {
