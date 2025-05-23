@@ -362,11 +362,13 @@ mod tests {
         assert_eq!(res.profile_url, profile_url);
         assert_eq!(res.username, username);
         assert_eq!(res.parent_id, user.id);
-        assert_eq!(res.members.len(), 2);
-        assert_eq!(res.members[0].id, new_user.id);
-        assert_eq!(res.members[0].email, new_user.email);
-        assert_eq!(res.members[1].id, new_user2.id);
-        assert_eq!(res.members[1].email, new_user2.email);
+        assert_eq!(res.members.len(), 3);
+        assert_eq!(res.members[0].id, user.id);
+        assert_eq!(res.members[0].email, user.email);
+        assert_eq!(res.members[1].id, new_user.id);
+        assert_eq!(res.members[1].email, new_user.email);
+        assert_eq!(res.members[2].id, new_user2.id);
+        assert_eq!(res.members[2].email, new_user2.email);
     }
 
     #[tokio::test]
