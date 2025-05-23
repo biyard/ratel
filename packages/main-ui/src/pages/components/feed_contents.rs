@@ -1,9 +1,10 @@
 use bdk::prelude::{by_components::icons::edit::Edit1, *};
+use dto::SpaceSummary;
 use gloo_events::EventListener;
 use wasm_bindgen::JsCast;
 use web_sys::{HtmlElement, window};
 
-use crate::pages::{components::FeedContent, controller::FeedList};
+use crate::pages::components::FeedContent;
 
 #[derive(Clone, PartialEq, Translate)]
 pub enum Tab {
@@ -17,8 +18,8 @@ pub enum Tab {
 pub fn FeedContents(
     lang: Language,
     profile: String,
-    my_feeds: Vec<FeedList>,
-    following_feeds: Vec<FeedList>,
+    my_spaces: Vec<SpaceSummary>,
+    following_spaces: Vec<SpaceSummary>,
 
     is_write: bool,
     onwrite: EventHandler<MouseEvent>,
@@ -43,9 +44,9 @@ pub fn FeedContents(
             div { class: "flex flex-col w-full h-[calc(100vh-250px)] max-tablet:!h-full overflow-y-scroll",
 
                 if selected_tab() == Tab::Me {
-                    MyFeedList { lang, my_feeds, onclick }
+                    MyFeedList { lang, my_spaces, onclick }
                 } else {
-                    FollowingFeedList { lang, following_feeds, onclick }
+                    FollowingFeedList { lang, following_spaces, onclick }
                 }
             }
 
@@ -86,7 +87,11 @@ pub fn CreateFeed(lang: Language, profile: String, onwrite: EventHandler<MouseEv
 }
 
 #[component]
-pub fn MyFeedList(lang: Language, my_feeds: Vec<FeedList>, onclick: EventHandler<i64>) -> Element {
+pub fn MyFeedList(
+    lang: Language,
+    my_spaces: Vec<SpaceSummary>,
+    onclick: EventHandler<i64>,
+) -> Element {
     let mut visible_count = use_signal(|| 10);
     let mut listener = use_signal(|| None as Option<EventListener>);
 
@@ -118,7 +123,7 @@ pub fn MyFeedList(lang: Language, my_feeds: Vec<FeedList>, onclick: EventHandler
         }
     });
 
-    let visible_feeds = my_feeds
+    let visible_spaces = my_spaces
         .iter()
         .take(visible_count())
         .cloned()
@@ -128,8 +133,8 @@ pub fn MyFeedList(lang: Language, my_feeds: Vec<FeedList>, onclick: EventHandler
         div {
             id: feed_container_id,
             class: "flex flex-col w-full h-[calc(100vh-300px)] overflow-y-scroll",
-            for feed in visible_feeds {
-                FeedContent { lang, feed, onclick }
+            for space in visible_spaces {
+                FeedContent { lang, space, onclick }
             }
         }
     }
@@ -138,7 +143,7 @@ pub fn MyFeedList(lang: Language, my_feeds: Vec<FeedList>, onclick: EventHandler
 #[component]
 pub fn FollowingFeedList(
     lang: Language,
-    following_feeds: Vec<FeedList>,
+    following_spaces: Vec<SpaceSummary>,
     onclick: EventHandler<i64>,
 ) -> Element {
     let mut visible_count = use_signal(|| 10);
@@ -171,7 +176,7 @@ pub fn FollowingFeedList(
         }
     });
 
-    let visible_items = following_feeds
+    let visible_items = following_spaces
         .iter()
         .take(visible_count())
         .cloned()
@@ -181,8 +186,8 @@ pub fn FollowingFeedList(
         div {
             id: container_id,
             class: "flex flex-col w-full h-[calc(100vh-300px)] overflow-y-scroll gap-10",
-            for feed in visible_items {
-                FeedContent { lang, feed, onclick }
+            for space in visible_items {
+                FeedContent { lang, space, onclick }
             }
         }
     }

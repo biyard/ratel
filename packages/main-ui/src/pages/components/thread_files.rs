@@ -2,10 +2,10 @@ use bdk::prelude::{
     by_components::icons::{alignments::AlignToBottom, links_share::Link2},
     *,
 };
+use dto::{File, FileExtension};
 
 use crate::{
     components::icons::{Docs, Jpg, Pdf, Png, Pptx, Xlsx, Zip},
-    dto::file::{File, FileExtension},
     pages::components::BlackRoundedBox,
 };
 

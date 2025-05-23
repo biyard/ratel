@@ -2,11 +2,9 @@ use bdk::prelude::{
     by_components::icons::{arrows::DoubleArrowDown, chat::RoundBubble},
     *,
 };
+use dto::ContentType;
 
-use crate::{
-    components::{dropdown::Dropdown, icons::Badge, rich_text::RichText},
-    dto::content_type::ContentType,
-};
+use crate::components::{dropdown::Dropdown, icons::Badge, rich_text::RichText};
 
 #[component]
 pub fn CreateFeedBox(

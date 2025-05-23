@@ -4,10 +4,10 @@ use bdk::prelude::{
     },
     *,
 };
+use dto::ContentType;
 
 use crate::{
     components::icons::{Badge, Feed2, RewardCoin},
-    dto::content_type::ContentType,
     pages::components::Label,
     utils::time::format_prev_time,
 };

@@ -8,23 +8,27 @@ use i18n::*;
 #[component]
 pub fn ThreadPage(#[props(default = Language::En)] lang: Language, id: i64) -> Element {
     let mut is_write = use_signal(|| false);
-    let mut ctrl = Controller::new(lang)?;
+    let mut ctrl = Controller::new(lang, id)?;
 
+    let landing_data = ctrl.landing_data()?;
     let profile = ctrl.profile()?;
-    let accounts = ctrl.accounts()?;
-    let my_feeds = ctrl.my_feeds()?;
-    let spaces = ctrl.spaces()?;
     let communities = ctrl.communities()?;
-    let thread = ctrl.threads()?;
+    let accounts = ctrl.accounts()?;
 
-    tracing::debug!("threads: {:?}", thread);
+    let my_spaces = landing_data.my_spaces;
+    let following_spaces = landing_data.following_spaces;
 
-    let recent_feeds: Vec<String> = my_feeds
+    let profile_data = landing_data.profile_data;
+    let space = ctrl.space()?;
+
+    tracing::debug!("space: {:?}", space);
+
+    let recent_feeds: Vec<String> = my_spaces
         .iter()
         .map(|v| v.title.clone().unwrap_or_default())
         .take(3)
         .collect();
-    let recent_spaces: Vec<String> = spaces
+    let recent_spaces: Vec<String> = following_spaces
         .iter()
         .map(|v| v.title.clone().unwrap_or_default())
         .take(3)
@@ -45,7 +49,7 @@ pub fn ThreadPage(#[props(default = Language::En)] lang: Language, id: i64) -> E
                 div { class: "flex flex-row w-fit max-tablet:!hidden",
                     LeftSidebar {
                         lang,
-                        profile: profile.clone(),
+                        profile: profile_data.clone(),
                         recent_feeds: recent_feeds.clone(),
                         recent_spaces: recent_spaces.clone(),
                         recent_communities: recent_communities.clone(),
@@ -66,7 +70,7 @@ pub fn ThreadPage(#[props(default = Language::En)] lang: Language, id: i64) -> E
                 div { class: "flex flex-row w-full ",
                     Threads {
                         lang,
-                        thread,
+                        space,
                         ondownload: move |(name, url): (String, Option<String>)| async move {
                             ctrl.download_file(name, url).await;
                         },
