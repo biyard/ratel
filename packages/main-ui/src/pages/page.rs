@@ -8,6 +8,14 @@ use i18n::*;
 
 #[component]
 pub fn IndexPage(#[props(default = Language::En)] lang: Language) -> Element {
+    if !crate::config::get().experiment {
+        return rsx! {
+            div { class: "absolute bg-background w-screen h-screen top-0 left-0 flex items-center justify-center text-white",
+                Loader { class: "w-200" }
+            }
+        };
+    }
+
     let mut ctrl = Controller::new(lang)?;
     let tr: IndexTranslate = translate(&lang);
 
