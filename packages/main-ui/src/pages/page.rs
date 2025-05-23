@@ -1,87 +1,91 @@
-#![allow(non_snake_case)]
-use bdk::prelude::{by_components::icons::video_camera::VideoPlaylist, *};
-use by_components::meta::MetaPage;
-use subscription::Subscription;
+#![allow(unused)]
+use crate::pages::components::{CreateFeedBox, FeedContents, LeftSidebar, RightSidebar};
 
-use super::components::*;
-use super::controller::*;
+use super::*;
+use bdk::prelude::*;
+use controller::*;
+use i18n::*;
 
 #[component]
-pub fn HomePage(#[props(default = Language::En)] lang: Language) -> Element {
-    let ctrl = Controller::new(lang)?;
-    let tr: TopTranslate = translate(&lang);
-    let image = asset!("/public/logos/logo.png");
-    let mut muted = use_signal(|| true);
+pub fn IndexPage(#[props(default = Language::En)] lang: Language) -> Element {
+    let mut ctrl = Controller::new(lang)?;
+    let tr: IndexTranslate = translate(&lang);
 
-    use_effect(|| {
-        use wasm_bindgen::JsCast;
-        use web_sys::{Element, window};
+    let my_feeds = ctrl.my_feeds()?;
+    let following_feeds = ctrl.following_feeds()?;
+    let hot_promotions = ctrl.hot_promotions()?;
+    let news = ctrl.news()?;
+    let followers = ctrl.followers()?;
+    let profile = ctrl.profile()?;
+    let spaces = ctrl.spaces()?;
+    let communities = ctrl.communities()?;
+    let accounts = ctrl.accounts()?;
 
-        if let Some(window) = window() {
-            let location = window.location();
-            if let Ok(hash) = location.hash() {
-                tracing::debug!("hash :{hash}");
-
-                if !hash.is_empty() {
-                    let document = window.document().unwrap();
-                    // web_sys::console::log_1(&hash);
-                    if let Some(target) = document.query_selector(&hash).ok().flatten() {
-                        let scroll = web_sys::ScrollIntoViewOptions::new();
-                        scroll.set_behavior(web_sys::ScrollBehavior::Smooth);
-
-                        let _ = target
-                            .dyn_ref::<Element>()
-                            .unwrap()
-                            .scroll_into_view_with_scroll_into_view_options(&scroll);
-                    }
-                }
-            }
-        }
-    });
+    let recent_feeds: Vec<String> = my_feeds
+        .iter()
+        .map(|v| v.title.clone().unwrap_or_default())
+        .take(3)
+        .collect();
+    let recent_spaces: Vec<String> = spaces
+        .iter()
+        .map(|v| v.title.clone().unwrap_or_default())
+        .take(3)
+        .collect();
+    let recent_communities: Vec<String> = communities
+        .iter()
+        .map(|v| v.title.clone().unwrap_or_default())
+        .take(3)
+        .collect();
 
     rsx! {
-        MetaPage { title: "Ratel", description: tr.description, image: "{image}" }
-        div { class: "absolute top-0 left-0 w-full h-auto",
-            div { class: "absolute inset-0 bg-background/95 z-1" }
-            div { class: "absolute relative w-full z-0",
-                video {
-                    class: "w-full h-screen object-cover",
-                    autoplay: true,
-                    muted: muted(),
-                    playsinline: "false",
-                    onmouseenter: move |_| muted.set(false),
-                    onmouseleave: move |_| muted.set(true),
-                    r#loop: true,
-                    src: asset!("/public/videos/ratel.mp4"),
-                }
-            }
-        }
+        by_components::meta::MetaPage { title: tr.title }
 
-        a {
-            class: "absolute bottom-10 right-10 group z-20",
-            href: "https://www.youtube.com/watch?v=v36xYZf70iM",
-            target: "_blank",
-            VideoPlaylist {
-                class: "transition-all [&>path]:stroke-white [&>path]:stroke-1 hover:[&>path]:stroke-primary cursor-pointer",
-                width: "40",
-                height: "40",
-            }
-        }
-
-        div { class: "w-full flex flex-col justify-start items-center z-2",
-            div { class: "w-full flex flex-col justify-start items-center max-desktop:px-30 max-tablet:gap-58",
-                Top { lang }
-                About { lang }
-                PresidentialElection {
+        div { class: "flex flex-col w-full h-screen justify-start items-start",
+            div { class: "flex flex-row w-full h-[calc(100vh)] justify-start items-start py-20 gap-20",
+                LeftSidebar {
                     lang,
-                    candidates: ctrl.candidates().unwrap_or_default(),
+                    profile: profile.clone(),
+                    recent_feeds,
+                    recent_spaces,
+                    recent_communities,
+                    accounts,
+
+                    add_account: move |_| async move {
+                        ctrl.add_account().await;
+                    },
+                    sign_out: move |_| {
+                        ctrl.signout();
+                    },
                 }
-                PoliticianStance { lang }
-                Community { lang }
-                Support { lang }
+
+                div { class: "flex flex-row w-full ",
+                    FeedContents {
+                        lang,
+                        my_feeds,
+                        following_feeds,
+                        profile: profile.profile.clone(),
+                    }
+                }
+                RightSidebar {
+                    lang,
+                    promotion: hot_promotions,
+                    news,
+                    followers,
+
+                    follow: move |id: i64| async move {
+                        ctrl.follow(id).await;
+                    },
+                }
             }
-            Subscription { lang }
-            Footer { lang }
+
+            CreateFeedBox {
+                lang,
+                nickname: profile.nickname.clone(),
+                profile: profile.profile.clone(),
+                onsend: move |(content_type, description): (ContentType, String)| async move {
+                    ctrl.create_feed(content_type, description).await;
+                },
+            }
         }
     }
 }

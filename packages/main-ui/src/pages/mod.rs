@@ -1,22 +1,23 @@
-mod _routes;
-mod become_sponsor;
 mod components;
 mod controller;
-mod my_profile;
-mod page;
-mod politicians;
-mod preparing;
-mod presidential_election;
-mod privacy_policy;
-
-pub use _routes::*;
-pub use become_sponsor::*;
-pub use layout::*;
-pub use my_profile::*;
-pub use page::*;
-pub use politicians::*;
-pub use preparing::*;
-pub use presidential_election::*;
-pub use privacy_policy::*;
-
+mod explore;
+mod i18n;
+mod landing;
 mod layout;
+mod messages;
+mod my_network;
+mod my_profile;
+mod notifications;
+mod page;
+mod quizzes;
+
+pub use layout::*;
+pub use page::*;
+
+pub use explore::*;
+pub use landing::*;
+pub use messages::*;
+pub use my_network::*;
+pub use my_profile::*;
+pub use notifications::*;
+pub use quizzes::*;

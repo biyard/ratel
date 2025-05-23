@@ -20,7 +20,7 @@ impl<'a> AppClaims<'a> {
 
         generate_jwt(&mut claims).map_err(|e| {
             tracing::error!("Failed to generate JWT: {}", e);
-            ServiceError::JWTGenerationFail(e.to_string())
+            Error::JWTGenerationFail(e.to_string())
         })
     }
 

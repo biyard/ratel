@@ -1,5 +1,6 @@
 mod bsky;
 mod discord;
+mod facebook;
 mod google;
 mod logo;
 mod metamask;
@@ -10,6 +11,7 @@ mod youtube;
 
 pub use bsky::*;
 pub use discord::*;
+pub use facebook::*;
 pub use google::*;
 pub use logo::*;
 pub use metamask::*;

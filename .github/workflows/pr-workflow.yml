@@ -59,7 +59,7 @@ jobs:
         run: |
           echo "" > packages/main-ui/public/tailwind.css
           echo "" > packages/main-ui/public/dep.js
-          cd packages/main-ui && cargo test --tests
+          cd packages/main-ui && cargo test --tests --features web
 
   test-with-server:
     runs-on: ubuntu-latest

@@ -12,7 +12,7 @@ use by_types::QueryResponse;
 use dto::*;
 use sqlx::postgres::PgRow;
 
-use crate::utils::users::extract_user_id;
+use crate::security::check_perm;
 
 #[derive(
     Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
@@ -58,9 +58,16 @@ impl FeedController {
             industry_id,
             title,
             quote_feed_id,
+            user_id,
         }: FeedWritePostRequest,
     ) -> Result<Feed> {
-        let user_id = extract_user_id(&self.pool, auth).await?;
+        let _user = check_perm(
+            &self.pool,
+            auth,
+            RatelResource::Post { team_id: user_id },
+            GroupPermission::WritePosts,
+        )
+        .await?;
 
         let res = self
             .repo
@@ -77,7 +84,7 @@ impl FeedController {
             .await
             .map_err(|e| {
                 tracing::error!("failed to insert post feed: {:?}", e);
-                ServiceError::FeedWritePostError
+                Error::FeedWritePostError
             })?;
 
         Ok(res)
@@ -89,12 +96,19 @@ impl FeedController {
         FeedCommentRequest {
             html_contents,
             parent_id,
+            user_id,
         }: FeedCommentRequest,
     ) -> Result<Feed> {
-        let user_id = extract_user_id(&self.pool, auth).await?;
+        let _user = check_perm(
+            &self.pool,
+            auth,
+            RatelResource::Post { team_id: user_id },
+            GroupPermission::WriteReplies,
+        )
+        .await?;
         let parent_id = parent_id.ok_or_else(|| {
             tracing::error!("parent id is missing: {user_id}");
-            ServiceError::FeedInvalidParentId
+            Error::FeedInvalidParentId
         })?;
 
         let feed = Feed::query_builder()
@@ -105,7 +119,7 @@ impl FeedController {
             .await
             .map_err(|e| {
                 tracing::error!("failed to get a feed {parent_id}: {e}");
-                ServiceError::FeedInvalidParentId
+                Error::FeedInvalidParentId
             })?;
 
         let res = self
@@ -123,7 +137,7 @@ impl FeedController {
             .await
             .map_err(|e| {
                 tracing::error!("failed to insert comment feed: {:?}", e);
-                ServiceError::FeedWriteCommentError
+                Error::FeedWriteCommentError
             })?;
 
         Ok(res)
@@ -135,13 +149,20 @@ impl FeedController {
         FeedReviewDocRequest {
             html_contents,
             parent_id,
+            user_id,
             part_id: _,
         }: FeedReviewDocRequest,
     ) -> Result<Feed> {
-        let user_id = extract_user_id(&self.pool, auth).await?;
+        let _user = check_perm(
+            &self.pool,
+            auth,
+            RatelResource::Post { team_id: user_id },
+            GroupPermission::WriteReplies,
+        )
+        .await?;
         let parent_id = parent_id.ok_or_else(|| {
             tracing::error!("parent id is missing: {user_id}");
-            ServiceError::FeedInvalidParentId
+            Error::FeedInvalidParentId
         })?;
 
         let feed = Feed::query_builder()
@@ -152,7 +173,7 @@ impl FeedController {
             .await
             .map_err(|e| {
                 tracing::error!("failed to get a feed {parent_id}: {e}");
-                ServiceError::FeedInvalidParentId
+                Error::FeedInvalidParentId
             })?;
 
         let res = self
@@ -170,7 +191,7 @@ impl FeedController {
             .await
             .map_err(|e| {
                 tracing::error!("failed to insert comment feed: {:?}", e);
-                ServiceError::FeedWriteCommentError
+                Error::FeedWriteCommentError
             })?;
 
         Ok(res)
@@ -183,12 +204,19 @@ impl FeedController {
             html_contents,
             quote_feed_id,
             parent_id,
+            user_id,
         }: FeedRepostRequest,
     ) -> Result<Feed> {
-        let user_id = extract_user_id(&self.pool, auth).await?;
+        let _user = check_perm(
+            &self.pool,
+            auth,
+            RatelResource::Post { team_id: user_id },
+            GroupPermission::WriteReplies,
+        )
+        .await?;
         let parent_id = parent_id.ok_or_else(|| {
             tracing::error!("parent id is missing: {user_id}");
-            ServiceError::FeedInvalidParentId
+            Error::FeedInvalidParentId
         })?;
 
         let quote_feed_id = quote_feed_id.ok_or_else(|| {
@@ -199,7 +227,7 @@ impl FeedController {
                     "invalid quote feed id:{user_id}"
                 );
             });
-            ServiceError::FeedInvalidQuoteId
+            Error::FeedInvalidQuoteId
         })?;
 
         let industry_id = Feed::query_builder()
@@ -210,7 +238,7 @@ impl FeedController {
             .await
             .map_err(|e| {
                 tracing::error!("failed to get a feed {parent_id}: {e}");
-                ServiceError::FeedInvalidParentId
+                Error::FeedInvalidParentId
             })?
             .industry_id;
 
@@ -222,7 +250,7 @@ impl FeedController {
             .await
             .map_err(|e| {
                 tracing::error!("failed to get a feed {quote_feed_id}: {e}");
-                ServiceError::FeedInvalidQuoteId
+                Error::FeedInvalidQuoteId
             })?;
 
         let res = self
@@ -240,7 +268,7 @@ impl FeedController {
             .await
             .map_err(|e| {
                 tracing::error!("failed to insert comment feed: {:?}", e);
-                ServiceError::FeedWriteCommentError
+                Error::FeedWriteCommentError
             })?;
 
         Ok(res)
@@ -252,9 +280,33 @@ impl FeedController {
         auth: Option<Authorization>,
         param: FeedUpdateRequest,
     ) -> Result<Feed> {
-        if auth.is_none() {
-            return Err(ServiceError::Unauthorized);
-        }
+        let feed = Feed::query_builder()
+            .id_equals(id)
+            .query()
+            .map(Feed::from)
+            .fetch_one(&self.pool)
+            .await
+            .map_err(|e| {
+                tracing::error!("failed to get a feed {id}: {e}");
+                Error::FeedInvalidParentId
+            })?;
+        let _user = check_perm(
+            &self.pool,
+            auth,
+            match feed.feed_type {
+                FeedType::Post => RatelResource::Post {
+                    team_id: feed.user_id,
+                },
+                _ => RatelResource::Reply {
+                    team_id: feed.user_id,
+                },
+            },
+            match feed.feed_type {
+                FeedType::Post => GroupPermission::WritePosts,
+                _ => GroupPermission::WriteReplies,
+            },
+        )
+        .await?;
 
         let res = self.repo.update(id, param.into()).await?;
 
@@ -263,7 +315,7 @@ impl FeedController {
 
     async fn delete(&self, id: i64, auth: Option<Authorization>) -> Result<Feed> {
         if auth.is_none() {
-            return Err(ServiceError::Unauthorized);
+            return Err(Error::Unauthorized);
         }
 
         let res = self.repo.delete(id).await?;
@@ -425,7 +477,13 @@ mod tests {
         let industry_id = 1;
 
         let res = Feed::get_client(&endpoint)
-            .write_post(html_contents.clone(), industry_id, title.clone(), None)
+            .write_post(
+                html_contents.clone(),
+                user.id,
+                industry_id,
+                title.clone(),
+                None,
+            )
             .await;
 
         assert!(res.is_ok());
@@ -469,6 +527,7 @@ mod tests {
         let res = Feed::get_client(&endpoint)
             .write_post(
                 html_contents.clone(),
+                user.id,
                 industry_id,
                 title.clone(),
                 Some(quote.id),
@@ -511,7 +570,7 @@ mod tests {
         let html_contents = format!("<p>Comment {now}</p>");
 
         let res = Feed::get_client(&endpoint)
-            .comment(html_contents.clone(), Some(post.id))
+            .comment(html_contents.clone(), user.id, Some(post.id))
             .await;
 
         assert!(res.is_ok(), "res: {:?}", res);
@@ -562,7 +621,12 @@ mod tests {
         );
 
         let res = Feed::get_client(&endpoint)
-            .repost(html_contents.clone(), Some(post.id), Some(quote_feed.id))
+            .repost(
+                html_contents.clone(),
+                user.id,
+                Some(post.id),
+                Some(quote_feed.id),
+            )
             .await;
 
         assert!(res.is_ok(), "res: {:?}", res);
@@ -579,58 +643,74 @@ mod tests {
 
     #[tokio::test]
     async fn test_comment_with_invalid_parent_id() {
-        let TestContext { now, endpoint, .. } = setup().await.unwrap();
-
-        let html_contents = format!("<p>Comment {now}</p>");
-
-        let res = Feed::get_client(&endpoint)
-            .comment(html_contents.clone(), Some(0))
-            .await;
-
-        assert!(res.is_err(), "res: {:?}", res);
-
-        assert_eq!(res, Err(ServiceError::FeedInvalidParentId));
-    }
-
-    #[tokio::test]
-    async fn test_comment_with_none() {
-        let TestContext { now, endpoint, .. } = setup().await.unwrap();
-
-        let html_contents = format!("<p>Comment {now}</p>");
-
-        let res = Feed::get_client(&endpoint)
-            .comment(html_contents.clone(), None)
-            .await;
-
-        assert!(res.is_err(), "res: {:?}", res);
-
-        assert_eq!(res, Err(ServiceError::FeedInvalidParentId));
-    }
-
-    #[tokio::test]
-    async fn test_review_with_invalid_parent_id() {
-        let TestContext { now, endpoint, .. } = setup().await.unwrap();
-
-        let html_contents = format!("<p>Review {now}</p>");
-
-        let res = Feed::get_client(&endpoint)
-            .review_doc(html_contents, Some(0), Some(1))
-            .await;
-
-        assert!(res.is_err(), "res: {:?}", res);
-
-        assert_eq!(res, Err(ServiceError::FeedInvalidParentId));
-    }
-
-    #[tokio::test]
-    async fn test_repost_with_invalid_parent_id() {
         let TestContext {
-            pool,
+            user,
             now,
             endpoint,
             ..
         } = setup().await.unwrap();
+
+        let html_contents = format!("<p>Comment {now}</p>");
+
+        let res = Feed::get_client(&endpoint)
+            .comment(html_contents.clone(), user.id, Some(0))
+            .await;
+
+        assert!(res.is_err(), "res: {:?}", res);
+
+        assert_eq!(res, Err(Error::FeedInvalidParentId));
+    }
+
+    #[tokio::test]
+    async fn test_comment_with_none() {
+        let TestContext {
+            now,
+            user,
+            endpoint,
+            ..
+        } = setup().await.unwrap();
+
+        let html_contents = format!("<p>Comment {now}</p>");
+
+        let res = Feed::get_client(&endpoint)
+            .comment(html_contents.clone(), user.id, None)
+            .await;
+
+        assert!(res.is_err(), "res: {:?}", res);
+
+        assert_eq!(res, Err(Error::FeedInvalidParentId));
+    }
+
+    #[tokio::test]
+    async fn test_review_with_invalid_parent_id() {
+        let TestContext {
+            user,
+            now,
+            endpoint,
+            ..
+        } = setup().await.unwrap();
+
+        let html_contents = format!("<p>Review {now}</p>");
+
+        let res = Feed::get_client(&endpoint)
+            .review_doc(html_contents, user.id, Some(0), Some(1))
+            .await;
+
+        assert!(res.is_err(), "res: {:?}", res);
+
+        assert_eq!(res, Err(Error::FeedInvalidParentId));
+    }
+
+    #[tokio::test]
+    async fn test_repost_with_invalid_parent_id() {
         test_setup().await;
+        let TestContext {
+            pool,
+            now,
+            endpoint,
+            user,
+            ..
+        } = setup().await.unwrap();
 
         let html_contents = format!("<p>Review {now}</p>");
 
@@ -645,12 +725,12 @@ mod tests {
             .unwrap();
 
         let res = Feed::get_client(&endpoint)
-            .repost(html_contents, Some(0), Some(quote.id))
+            .repost(html_contents, user.id, Some(0), Some(quote.id))
             .await;
 
         assert!(res.is_err(), "res: {:?}", res);
 
-        assert_eq!(res, Err(ServiceError::FeedInvalidParentId));
+        assert_eq!(res, Err(Error::FeedInvalidParentId));
     }
 
     #[tokio::test]
@@ -659,6 +739,7 @@ mod tests {
             pool,
             now,
             endpoint,
+            user,
             ..
         } = setup().await.unwrap();
 
@@ -675,11 +756,11 @@ mod tests {
             .unwrap();
 
         let res = Feed::get_client(&endpoint)
-            .repost(html_contents, Some(feed.id), Some(0))
+            .repost(html_contents, user.id, Some(feed.id), Some(0))
             .await;
 
         assert!(res.is_err(), "res: {:?}", res);
 
-        assert_eq!(res, Err(ServiceError::FeedInvalidQuoteId));
+        assert_eq!(res, Err(Error::FeedInvalidQuoteId));
     }
 }
