@@ -1,5 +1,8 @@
 #![allow(unused)]
-use crate::pages::components::{CreateFeedBox, FeedContents, LeftSidebar, RightSidebar};
+use crate::{
+    components::loader::Loader,
+    pages::components::{CreateFeedBox, FeedContents, LeftSidebar, RightSidebar},
+};
 
 use super::*;
 use bdk::prelude::*;
