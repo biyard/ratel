@@ -78,7 +78,7 @@ impl SubscriptionController {
 
 impl SubscriptionController {
     async fn subscribe(&self, req: SubscriptionSubscribeRequest) -> Result<Subscription> {
-        let subscription = self.repo.insert(req.email, true).await?;
+        let subscription = self.repo.insert(req.email).await?;
 
         Ok(subscription)
     }
@@ -120,18 +120,4 @@ impl SubscriptionController {
             .await?;
         Ok(QueryResponse { total_count, items })
     }
-
-    // pub async fn check_email_exists(&self, email: &str) -> Result<bool, ApiError> {
-    //     let row = sqlx::query("SELECT COUNT(*) as count FROM subscriptions WHERE email = $1")
-    //         .bind(email)
-    //         .fetch_one(&self.pool)
-    //         .await
-    //         .map_err(|e| {
-    //             tracing::error!("DB error checking subscription: {}", e);
-    //             ApiError::InternalError("Failed to check email".to_string())
-    //         })?;
-
-    //     let count: i64 = row.try_get("count").unwrap_or(0);
-    //     Ok(count > 0)
-    // }
 }
