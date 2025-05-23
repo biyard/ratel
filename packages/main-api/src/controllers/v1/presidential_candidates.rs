@@ -129,7 +129,14 @@ mod tests {
         let t2 = format!("test-pledge2-{}", now);
 
         let doc = repo
-            .insert(name.clone(), image.clone(), crypto_stance, party)
+            .insert(
+                name.clone(),
+                image.clone(),
+                crypto_stance,
+                party,
+                "".to_string(),
+                "".to_string(),
+            )
             .await
             .unwrap();
 
