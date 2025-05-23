@@ -27,18 +27,10 @@ pub fn SocialHeader(
 
     let user_service: UserService = use_context();
     let mut popup: PopupService = use_context();
-    let user = user_service.user_info();
-
-    let is_login = user.email.is_some();
-    let (nickname, profile_url) = if is_login {
-        (
-            user.nickname.unwrap_or_default(),
-            user.profile_url.unwrap_or_default(),
-        )
-    } else {
-        (String::new(), String::new())
+    let (is_login, nickname, _email, profile_url) = match user_service.get_user_info() {
+        Some(v) => (true, v.0, v.1, v.2),
+        None => (false, "".to_string(), "".to_string(), "".to_string()),
     };
-
     rsx! {
         div { class: "w-screen h-80 flex items-center justify-center z-100 max-tablet:!h-48",
             div { class: "w-full max-w-desktop m-10 flex flex-row justify-between items-center",

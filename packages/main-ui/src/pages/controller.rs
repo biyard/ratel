@@ -463,7 +463,9 @@ impl Controller {
         tracing::debug!("add account");
     }
 
-    pub fn signout(&mut self) {
+    pub async fn signout(&mut self) {
         tracing::debug!("signout");
+        let mut user: UserService = use_context();
+        user.logout().await;
     }
 }
