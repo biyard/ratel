@@ -15,6 +15,9 @@ pub fn ThreadPage(#[props(default = Language::En)] lang: Language, id: i64) -> E
     let my_feeds = ctrl.my_feeds()?;
     let spaces = ctrl.spaces()?;
     let communities = ctrl.communities()?;
+    let thread = ctrl.threads()?;
+
+    tracing::debug!("threads: {:?}", thread);
 
     let recent_feeds: Vec<String> = my_feeds
         .iter()
@@ -60,7 +63,15 @@ pub fn ThreadPage(#[props(default = Language::En)] lang: Language, id: i64) -> E
                     }
                 }
 
-                div { class: "flex flex-row w-full ", {"Thread"} }
+                div { class: "flex flex-row w-full ",
+                    Threads {
+                        lang,
+                        thread,
+                        ondownload: move |(name, url): (String, Option<String>)| async move {
+                            ctrl.download_file(name, url).await;
+                        },
+                    }
+                }
             }
 
             div {
