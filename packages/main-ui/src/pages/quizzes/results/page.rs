@@ -13,7 +13,11 @@ pub fn ResultsPage(
     let mut ctrl = Controller::new(lang, id)?;
     let _tr: ResultsTranslate = translate(&lang);
     let (result, candidate) = ctrl.result()?;
-    let (_, _name, percent) = &result.percentage_of_each_candidate()[0];
+    let (_, _name, percent) = &result
+        .percentage_of_each_candidate()
+        .get(0)
+        .map(|v| v.clone())
+        .unwrap_or((0, "".to_string(), 0.0));
     let description = format!(
         "{}<p>🎖️ 정책 성향 일치율: <b>{:.1}%</b></p>",
         candidate.description, percent
