@@ -5,7 +5,6 @@ use std::{
 
 use bdk::prelude::*;
 use by_axum::{
-    aide,
     auth::Authorization,
     axum::{Extension, Json, extract::State, native_routing::post},
 };
@@ -13,13 +12,6 @@ use dto::*;
 use tokio::time::sleep;
 
 use crate::modules::us_congress::{UsCongressClient, convert_to_bill_writer};
-
-#[derive(
-    Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
-)]
-pub struct BillPath {
-    pub id: i64,
-}
 
 #[derive(Clone, Debug)]
 pub struct USBillWriterController {
@@ -142,7 +134,7 @@ impl USBillWriterController {
         if bill_nos.is_empty() {
             Ok(Default::default())
         } else {
-            Err(ServiceError::FetchError(bill_nos))
+            Err(Error::FetchError(bill_nos))
         }
     }
 

@@ -1,4 +1,4 @@
-use std::error::Error;
+use std::error::Error as StdError;
 
 use serde::{Deserialize, Serialize};
 
@@ -6,7 +6,7 @@ use bdk::prelude::*;
 
 #[derive(Debug, Serialize)]
 pub struct ServiceException {
-    pub inner: ServiceError,
+    pub inner: Error,
 }
 
 impl std::fmt::Display for ServiceException {
@@ -15,12 +15,12 @@ impl std::fmt::Display for ServiceException {
     }
 }
 
-impl Error for ServiceException {}
+impl StdError for ServiceException {}
 
 #[derive(Debug, Serialize, PartialEq, Eq, Deserialize, Translate)]
 #[repr(u64)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
-pub enum ServiceError {
+pub enum Error {
     Unknown(String),
 
     #[translate(en = "Could not find any resource", ko = "리소스를 찾을 수 없습니다.")]
@@ -51,11 +51,45 @@ pub enum ServiceError {
     NaOpenApiResponseParsingError,
     #[translate(en = "Failed to call national assembly API")]
     NaOpenApiRequestError,
-    #[translate(en = "Could not find any resource")]
-    NaOpenApiEmptyRow,
+
+    // US Congress API
+    #[translate(en = "Failed to call US Congress API")]
+    UsCongressApiError(String),
+    #[translate(en = "Failed to call US Congress API")]
+    UsCongressApiRequestError,
+
+    // HK OpenData API
+    #[translate(en = "Failed to call HK OpenData API")]
+    HkOpenDataApiError(String),
+    #[translate(en = "Failed to parse response in HK OpenData API")]
+    HkOpenDataApiResponseParsingError,
+    #[translate(en = "Failed to call HK OpenData API")]
+    HkOpenDataApiRequestError,
+
+    // Swiss OpenAPI
+    #[translate(en = "Failed to call Swiss OpenData API")]
+    ChOpenDataApiError(String),
+    #[translate(en = "Failed to parse response in Swiss OpenData API")]
+    ChOpenDataApiResponseParsingError,
+    #[translate(en = "Failed to call Swiss OpenData API")]
+    ChOpenDataApiRequestError,
+
+    // EU OpenAPI
+    #[translate(en = "Failed to call EU OpenData API")]
+    EuOpenDataApiError(String),
+    #[translate(en = "Failed to parse response in EU OpenData API")]
+    EuOpenDataApiResponseParsingError,
+    #[translate(en = "Failed to call EU OpenData API")]
+    EuOpenDataApiRequestError,
+    EuOpenDataFetchError(Vec<(String, String)>),
+
     #[translate(en = "Failed to parse website")]
     HtmlParseError(String),
     FetchError(Vec<(i64, String)>),
+    #[translate(en = "Failed to initialize reqwest client")]
+    ReqwestClientError(String),
+    #[translate(en = "Could not find any resource")]
+    ApiEmptyRow,
 
     BadRequest,
     JsonDeserializeError(String),
@@ -99,31 +133,35 @@ pub enum ServiceError {
     FeedInvalidQuoteId,
     #[translate(en = "You should select industry or a parent feed")]
     FeedExclusiveParentOrIndustry,
+
+    // quizzes
+    #[translate(en = "You must select a valid quiz")]
+    InvalidQuizId,
 }
 
-impl<E: Error + 'static> From<E> for ServiceError {
+impl<E: StdError + 'static> From<E> for Error {
     fn from(e: E) -> Self {
-        ServiceError::Unknown(e.to_string())
+        Error::Unknown(e.to_string())
     }
 }
 
-impl Into<ServiceException> for ServiceError {
+impl Into<ServiceException> for Error {
     fn into(self) -> ServiceException {
         ServiceException { inner: self }
     }
 }
 
-impl ServiceError {
+impl Error {
     pub fn to_string(&self) -> String {
         format!("{:?}", self)
     }
 }
 
-unsafe impl Send for ServiceError {}
-unsafe impl Sync for ServiceError {}
+unsafe impl Send for Error {}
+unsafe impl Sync for Error {}
 
 #[cfg(feature = "server")]
-impl by_axum::axum::response::IntoResponse for ServiceError {
+impl by_axum::axum::response::IntoResponse for Error {
     fn into_response(self) -> by_axum::axum::response::Response {
         (
             by_axum::axum::http::StatusCode::BAD_REQUEST,

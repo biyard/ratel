@@ -1,0 +1,7 @@
+[application]
+name = "TauriApp"
+platform = "web"
+
+[web.app]
+title = "Tauri Dioxus"
+default_platform = "web"

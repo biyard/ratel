@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use bdk::prelude::reqwest;
 
-use dto::{Result, ServiceError};
+use dto::{Error, Result};
 
 use super::*;
 
@@ -82,6 +82,14 @@ impl AssemblyClient {
     where
         T: serde::de::DeserializeOwned,
     {
+        if page < 0 {
+            return Err(Error::InvalidInputValue);
+        }
+
+        if page_size < 1 {
+            return Err(Error::InvalidInputValue);
+        }
+
         params.insert("KEY", self.key.clone());
         params.insert("type", "json".to_string());
         params.insert("pIndex", page.to_string());
@@ -97,31 +105,29 @@ impl AssemblyClient {
             .await
             .map_err(|e| {
                 tracing::error!("Failed to send request: {}", e);
-                ServiceError::NaOpenApiRequestError
+                Error::NaOpenApiRequestError
             })?
             .json()
             .await
             .map_err(|e| {
                 tracing::error!("Failed to parse response: {}", e);
-                ServiceError::NaOpenApiResponseParsingError
+                Error::NaOpenApiResponseParsingError
             })?;
 
         tracing::debug!("Response: {:?}", json);
 
-        let response = json[endpoint]
-            .as_array()
-            .ok_or(ServiceError::NaOpenApiEmptyRow)?;
+        let response = json[endpoint].as_array().ok_or(Error::ApiEmptyRow)?;
 
         tracing::debug!("{} Response: {:?}", endpoint, response);
 
         if response.is_empty() {
-            return Err(ServiceError::NaOpenApiEmptyRow);
+            return Err(Error::ApiEmptyRow);
         }
 
         let rows = match response[1].get("row") {
             Some(rows) => rows,
             None => {
-                return Err(ServiceError::NaOpenApiEmptyRow);
+                return Err(Error::ApiEmptyRow);
             }
         };
         tracing::debug!("{} row data: {:?}", endpoint, rows);

@@ -27,4 +27,4 @@ sqlx = { workspace = true,  optional = true }
 
 [features]
 web = ["bdk/web"]
-server = ["bdk/be", "sqlx"]
+server = ["bdk/server", "sqlx"]

@@ -36,7 +36,7 @@ impl ElectionPledgeController {
 
         self.repo.insert(id, user_id).await.map_err(|e| {
             tracing::error!("failed to insert like: {:?}", e);
-            ServiceError::AlreadyLiked
+            Error::AlreadyLiked
         })?;
 
         let res = ElectionPledge::query_builder(user_id)
@@ -47,7 +47,7 @@ impl ElectionPledgeController {
             .await
             .map_err(|e| {
                 tracing::error!("failed to get election pledge: {:?}", e);
-                ServiceError::NotFound
+                Error::NotFound
             })?;
 
         Ok(res)
@@ -106,7 +106,14 @@ mod tests {
         let t2 = format!("test-pledge2-{}", now);
 
         let doc = repo
-            .insert(name.clone(), image.clone(), crypto_stance, party)
+            .insert(
+                name.clone(),
+                image.clone(),
+                crypto_stance,
+                party,
+                "".to_string(),
+                "".to_string(),
+            )
             .await
             .unwrap();
 

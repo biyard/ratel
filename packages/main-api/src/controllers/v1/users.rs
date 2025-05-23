@@ -15,13 +15,14 @@ use validator::Validate;
 #[derive(Clone, Debug)]
 pub struct UserControllerV1 {
     users: UserRepository,
+    pool: Pool<Postgres>,
 }
 
 impl UserControllerV1 {
     pub fn route(pool: Pool<Postgres>) -> Result<by_axum::axum::Router> {
         let users = User::get_repository(pool.clone());
 
-        let ctrl = UserControllerV1 { users };
+        let ctrl = UserControllerV1 { users, pool };
 
         Ok(by_axum::axum::Router::new()
             .route("/", get(Self::read_user).post(Self::act_user))
@@ -36,7 +37,7 @@ impl UserControllerV1 {
         Json(body): Json<UserAction>,
     ) -> Result<Json<User>> {
         tracing::debug!("act_user: sig={:?} {:?}", sig, body);
-        let sig = sig.ok_or(ServiceError::Unauthorized)?;
+        let sig = sig.ok_or(Error::Unauthorized)?;
         body.validate()?;
 
         match body {
@@ -52,13 +53,10 @@ impl UserControllerV1 {
         Query(mut req): Query<UserReadAction>,
     ) -> Result<Json<User>> {
         tracing::debug!("read_user: sig={:?}", sig);
-        let principal = sig
-            .ok_or(ServiceError::Unauthorized)?
-            .principal()
-            .map_err(|s| {
-                tracing::error!("failed to get principal: {:?}", s);
-                ServiceError::Unknown(s.to_string())
-            })?;
+        let principal = sig.ok_or(Error::Unauthorized)?.principal().map_err(|s| {
+            tracing::error!("failed to get principal: {:?}", s);
+            Error::Unknown(s.to_string())
+        })?;
         req.validate()?;
 
         match req.action {
@@ -71,7 +69,7 @@ impl UserControllerV1 {
                 req.principal = Some(principal);
                 ctrl.login(req).await
             }
-            None | Some(UserReadActionType::ByPrincipal) => Err(ServiceError::BadRequest)?,
+            None | Some(UserReadActionType::ByPrincipal) => Err(Error::BadRequest)?,
         }
     }
 }
@@ -88,14 +86,40 @@ impl UserControllerV1 {
     pub async fn signup(&self, req: UserSignupRequest, sig: Signature) -> Result<Json<User>> {
         let principal = sig.principal().map_err(|s| {
             tracing::error!("failed to get principal: {:?}", s);
-            ServiceError::Unauthorized
+            Error::Unauthorized
         })?;
 
         if req.term_agreed == false {
-            return Err(ServiceError::BadRequest);
+            return Err(Error::BadRequest);
         }
 
         let username = req.email.split("@").collect::<Vec<&str>>()[0].to_string();
+
+        if let Ok(user) = User::query_builder()
+            .principal_equals(principal.clone())
+            .user_type_equals(UserType::Anonymous)
+            .query()
+            .map(User::from)
+            .fetch_one(&self.pool)
+            .await
+        {
+            let user = self
+                .users
+                .update(
+                    user.id,
+                    UserRepositoryUpdateRequest::new()
+                        .with_email(req.email)
+                        .with_nickname(req.nickname)
+                        .with_profile_url(req.profile_url)
+                        .with_term_agreed(req.term_agreed)
+                        .with_informed_agreed(req.informed_agreed)
+                        .with_username(username)
+                        .with_user_type(UserType::Individual),
+                )
+                .await?;
+
+            return Ok(Json(user));
+        }
 
         let user = self
             .users
@@ -109,6 +133,7 @@ impl UserControllerV1 {
                 UserType::Individual,
                 None,
                 username,
+                "".to_string(),
             )
             .await?;
 
@@ -121,7 +146,7 @@ impl UserControllerV1 {
             .users
             .find_one(&req)
             .await
-            .map_err(|_| ServiceError::NotFound)?;
+            .map_err(|_| Error::NotFound)?;
 
         Ok(Json(user))
     }
