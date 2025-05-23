@@ -1,11 +1,30 @@
 use bdk::prelude::*;
+use serde::{Deserialize, Serialize};
 
 use crate::{
-    pages::controller::{
-        AccountList, CommunityList, ContentType, FeedList, National, Profile, SpaceList,
-    },
+    dto::{content_type::ContentType, file::File},
+    pages::controller::{AccountList, CommunityList, FeedList, National, Profile, SpaceList},
     services::user_service::UserService,
 };
+
+#[derive(Clone, Serialize, Deserialize, Eq, PartialEq, Debug)]
+pub struct Thread {
+    pub id: i64,
+    pub created_at: i64,
+    pub updated_at: i64,
+
+    pub number_of_comments: i64,
+    pub number_of_rewards: i64,
+    pub number_of_shared: i64,
+
+    pub content_type: ContentType,
+
+    pub proposer: String,
+    pub title: String,
+    pub description: String, //html format
+
+    pub files: Vec<File>,
+}
 
 #[derive(Clone, Copy, DioxusController)]
 pub struct Controller {

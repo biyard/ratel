@@ -22,6 +22,7 @@ pub fn FeedContents(
 
     is_write: bool,
     onwrite: EventHandler<MouseEvent>,
+    onclick: EventHandler<i64>,
 ) -> Element {
     let mut selected_tab = use_signal(|| Tab::Me);
 
@@ -42,9 +43,9 @@ pub fn FeedContents(
             div { class: "flex flex-col w-full h-[calc(100vh-250px)] max-tablet:!h-full overflow-y-scroll",
 
                 if selected_tab() == Tab::Me {
-                    MyFeedList { lang, my_feeds }
+                    MyFeedList { lang, my_feeds, onclick }
                 } else {
-                    FollowingFeedList { lang, following_feeds }
+                    FollowingFeedList { lang, following_feeds, onclick }
                 }
             }
 
@@ -85,7 +86,7 @@ pub fn CreateFeed(lang: Language, profile: String, onwrite: EventHandler<MouseEv
 }
 
 #[component]
-pub fn MyFeedList(lang: Language, my_feeds: Vec<FeedList>) -> Element {
+pub fn MyFeedList(lang: Language, my_feeds: Vec<FeedList>, onclick: EventHandler<i64>) -> Element {
     let mut visible_count = use_signal(|| 10);
     let mut listener = use_signal(|| None as Option<EventListener>);
 
@@ -128,14 +129,18 @@ pub fn MyFeedList(lang: Language, my_feeds: Vec<FeedList>) -> Element {
             id: feed_container_id,
             class: "flex flex-col w-full h-[calc(100vh-300px)] overflow-y-scroll",
             for feed in visible_feeds {
-                FeedContent { lang, feed }
+                FeedContent { lang, feed, onclick }
             }
         }
     }
 }
 
 #[component]
-pub fn FollowingFeedList(lang: Language, following_feeds: Vec<FeedList>) -> Element {
+pub fn FollowingFeedList(
+    lang: Language,
+    following_feeds: Vec<FeedList>,
+    onclick: EventHandler<i64>,
+) -> Element {
     let mut visible_count = use_signal(|| 10);
     let mut listener = use_signal(|| None as Option<EventListener>);
     let container_id = "following-scroll-container";
@@ -177,7 +182,7 @@ pub fn FollowingFeedList(lang: Language, following_feeds: Vec<FeedList>) -> Elem
             id: container_id,
             class: "flex flex-col w-full h-[calc(100vh-300px)] overflow-y-scroll gap-10",
             for feed in visible_items {
-                FeedContent { lang, feed }
+                FeedContent { lang, feed, onclick }
             }
         }
     }

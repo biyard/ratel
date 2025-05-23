@@ -1,7 +1,7 @@
 #![allow(unused)]
-use crate::pages::{
-    components::BottomSheet,
-    components::{CreateFeedBox, FeedContents, LeftSidebar, RightSidebar},
+use crate::{
+    dto::content_type::ContentType,
+    pages::components::{BottomSheet, CreateFeedBox, FeedContents, LeftSidebar, RightSidebar},
 };
 
 use super::*;
@@ -78,6 +78,9 @@ pub fn IndexPage(#[props(default = Language::En)] lang: Language) -> Element {
                         is_write: is_write(),
                         onwrite: move |_| {
                             is_write.set(true);
+                        },
+                        onclick: move |id: i64| {
+                            ctrl.move_to_threads(id);
                         },
                     }
                 }

@@ -12,9 +12,13 @@ use crate::{
 };
 
 #[component]
-pub fn FeedContent(lang: Language, feed: FeedList) -> Element {
+pub fn FeedContent(lang: Language, feed: FeedList, onclick: EventHandler<i64>) -> Element {
     rsx! {
-        div { class: "flex flex-col w-full justify-start items-start px-20 pt-20 pb-10 bg-footer rounded-lg gap-10",
+        div {
+            class: "cursor-pointer flex flex-col w-full justify-start items-start px-20 pt-20 pb-10 bg-footer rounded-lg gap-10",
+            onclick: move |_| {
+                onclick.call(feed.id);
+            },
             div { class: "flex flex-col w-full justify-start items-start gap-10",
                 TopContent {
                     label: feed.content_type.translate(&lang),

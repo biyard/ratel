@@ -2,12 +2,13 @@ use bdk::prelude::*;
 use dto::{Feed, FeedType, News, NewsQuery, NewsSummary, Promotion, User};
 use serde::{Deserialize, Serialize};
 
-use crate::{config, route::Route, services::user_service::UserService, utils::text::extract_title_from_html};
+use crate::{config, dto::content_type::ContentType, route::Route, services::user_service::UserService, utils::text::extract_title_from_html};
 
 #[derive(Clone, Copy, DioxusController)]
 pub struct Controller {
     #[allow(dead_code)]
     pub lang: Language,
+    pub nav: Navigator,
     #[allow(dead_code)]
     pub my_feeds: Resource<Vec<FeedList>>,
     #[allow(dead_code)]
@@ -20,15 +21,6 @@ pub struct Controller {
     pub spaces: Resource<Vec<SpaceList>>,
     pub communities: Resource<Vec<CommunityList>>,
     pub accounts: Resource<Vec<AccountList>>
-}
-
-#[derive(Clone, Serialize, Deserialize, Debug, Eq, PartialEq, Translate, Default)]
-pub enum ContentType {
-    #[translate(ko = "Crypto", en = "Crypto")]
-    #[default]
-    Crypto,
-    #[translate(ko = "Social", en = "Social")]
-    Social,
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug, Eq, PartialEq, Translate, Default)]
@@ -411,6 +403,7 @@ impl Controller {
 
         let ctrl = Self {
             lang,
+            nav: use_navigator(),
             my_feeds,
             following_feeds,
             hot_promotions,
@@ -467,5 +460,9 @@ impl Controller {
         tracing::debug!("signout");
         let mut user: UserService = use_context();
         user.logout().await;
+    }
+
+    pub fn move_to_threads(&self, id: i64) {
+        self.nav.push(Route::ThreadPage { id });
     }
 }

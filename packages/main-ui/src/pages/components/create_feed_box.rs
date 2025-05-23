@@ -5,7 +5,7 @@ use bdk::prelude::{
 
 use crate::{
     components::{dropdown::Dropdown, icons::Badge, rich_text::RichText},
-    pages::controller::ContentType,
+    dto::content_type::ContentType,
 };
 
 #[component]
