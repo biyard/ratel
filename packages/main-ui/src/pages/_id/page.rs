@@ -54,8 +54,8 @@ pub fn ThreadPage(#[props(default = Language::En)] lang: Language, id: i64) -> E
                         add_account: move |_| async move {
                             ctrl.add_account().await;
                         },
-                        sign_out: move |_| {
-                            ctrl.signout();
+                        sign_out: move |_| async move {
+                            ctrl.signout().await;
                         },
                     }
                 }
@@ -77,8 +77,8 @@ pub fn ThreadPage(#[props(default = Language::En)] lang: Language, id: i64) -> E
                     add_account: move |_| async move {
                         ctrl.add_account().await;
                     },
-                    sign_out: move |_| {
-                        ctrl.signout();
+                    sign_out: move |_| async move {
+                        ctrl.signout().await;
                     },
                 }
             }

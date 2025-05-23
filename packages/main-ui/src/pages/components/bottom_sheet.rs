@@ -5,16 +5,17 @@ use bdk::prelude::{
         time::Update,
         validations::{Add, Clear},
     },
+    dioxus::web::WebEventExt,
     *,
 };
-use wasm_bindgen::{JsCast, prelude::Closure};
+use wasm_bindgen::JsCast;
 
 use crate::{
     components::icons::{Badge, Grade, Palace, Pentagon2},
     pages::controller::{AccountList, Profile},
 };
 
-use web_sys::{TouchEvent, window};
+use web_sys::window;
 
 #[component]
 pub fn BottomSheet(
@@ -28,65 +29,11 @@ pub fn BottomSheet(
     add_account: EventHandler<MouseEvent>,
     sign_out: EventHandler<MouseEvent>,
 ) -> Element {
+    let mut is_scrolling = use_signal(|| false);
     let mut profile_clicked = use_signal(|| false);
     let mut is_dragging = use_signal(|| false);
     let mut start_y = use_signal(|| 0.0);
     let mut translate_y = use_signal(|| 70.0);
-
-    use_effect({
-        move || {
-            let window = window().unwrap();
-            let document = window.document().unwrap();
-            let body = document.body().unwrap();
-
-            let touch_move = Closure::wrap(Box::new({
-                move |event: web_sys::Event| {
-                    if !is_dragging() {
-                        return;
-                    }
-                    let event: &TouchEvent = match event.dyn_ref::<TouchEvent>() {
-                        Some(e) => e,
-                        None => return,
-                    };
-                    if let Some(touch) = event.touches().item(0) {
-                        let y = touch.client_y() as f64;
-                        let delta = y - start_y();
-                        let height = window.inner_height().unwrap().as_f64().unwrap();
-                        let new_val = (translate_y() + delta / height * 100.0).clamp(0.0, 90.0);
-                        translate_y.set(new_val);
-                        start_y.set(y);
-                    }
-                }
-            }) as Box<dyn FnMut(web_sys::Event)>);
-
-            let touch_end = Closure::wrap(Box::new({
-                move |event: web_sys::Event| {
-                    is_dragging.set(false);
-                    let _: &TouchEvent = match event.dyn_ref::<TouchEvent>() {
-                        Some(e) => e,
-                        None => return,
-                    };
-
-                    let current = translate_y();
-                    if current < 30.0 {
-                        translate_y.set(0.0);
-                    } else if current > 60.0 {
-                        translate_y.set(70.0);
-                    } else {
-                        translate_y.set(current);
-                    }
-                }
-            }) as Box<dyn FnMut(web_sys::Event)>);
-
-            body.add_event_listener_with_callback("touchmove", touch_move.as_ref().unchecked_ref())
-                .unwrap();
-            body.add_event_listener_with_callback("touchend", touch_end.as_ref().unchecked_ref())
-                .unwrap();
-
-            touch_move.forget();
-            touch_end.forget();
-        }
-    });
 
     tracing::debug!("translate-y: {:?}", translate_y());
 
@@ -118,13 +65,53 @@ pub fn BottomSheet(
 
             div {
                 class: "flex flex-col w-full justify-start items-start gap-8",
+                // onvisible: move |e| {},
+                onscroll: move |_| {
+                    is_scrolling.set(true);
+                },
+
                 ontouchstart: move |e| {
+                    if let Some(ev) = e.as_web_event().dyn_ref::<web_sys::TouchEvent>() {
+                        if let Some(touch) = ev.touches().item(0) {
+                            let target = ev
+                                .target()
+                                .and_then(|t| t.dyn_into::<web_sys::HtmlElement>().ok());
+                            if let Some(el) = target {
+                                let scroll_top = el.scroll_top();
+                                if scroll_top == 0 {
+                                    is_dragging.set(true);
+                                    start_y.set(touch.client_y() as f64);
+                                }
+                            }
+                        }
+                    }
+                },
+                ontouchmove: move |e| {
+                    if !is_dragging() {
+                        return;
+                    }
                     if let Some(ev) = e.data.downcast::<web_sys::TouchEvent>() {
                         if let Some(touch) = ev.touches().item(0) {
-                            tracing::debug!("drag start {:?}", touch.client_y());
-                            is_dragging.set(true);
-                            start_y.set(touch.client_y() as f64);
+                            let y = touch.client_y() as f64;
+                            let delta = y - start_y();
+                            let height = window().unwrap().inner_height().unwrap().as_f64().unwrap();
+                            let new_val = (translate_y() + delta / height * 100.0).clamp(0.0, 90.0);
+                            translate_y.set(new_val);
+                            start_y.set(y);
                         }
+                    }
+                },
+
+                ontouchend: move |_e| {
+                    is_dragging.set(false);
+                    is_scrolling.set(false);
+                    let current = translate_y();
+                    if current < 30.0 {
+                        translate_y.set(0.0);
+                    } else if current > 60.0 {
+                        translate_y.set(70.0);
+                    } else {
+                        translate_y.set(current);
                     }
                 },
 
