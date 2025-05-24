@@ -42,7 +42,7 @@ pub fn QuizzesPage(#[props(default = Language::En)] lang: Language) -> Element {
         div {
             class: "absolute relative left-0 top-0 py-70 px-20 w-screen h-screen hidden aria-started:!flex flex-col overflow-hidden",
             "aria-started": ctrl.started(),
-            div { class: "w-full flex flex-row gap-10 items-center",
+            div { class: "w-full flex flex-row gap-10 items-center lg:py-10",
                 div { class: "w-full rounded-full h-5 bg-component-bg",
                     div { class: "transition-all duration-500 w-[{ctrl.progress()}%] rounded-full h-full bg-primary" }
                 }
