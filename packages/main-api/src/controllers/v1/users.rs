@@ -133,6 +133,7 @@ impl UserControllerV1 {
                 UserType::Individual,
                 None,
                 username,
+                "".to_string(),
             )
             .await?;
 

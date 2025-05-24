@@ -83,9 +83,12 @@ impl TeamController {
     ) -> Result<Team> {
         let user_id = extract_user_id(&self.pool, auth).await?;
 
-        let user = self
+        let mut tx = self.pool.begin().await?;
+
+        let team = self
             .user
-            .insert(
+            .insert_with_tx(
+                &mut *tx,
                 "".to_string(),
                 username.clone(),
                 username.clone(),
@@ -95,14 +98,22 @@ impl TeamController {
                 UserType::Team,
                 Some(user_id),
                 username,
+                "".to_string(),
             )
             .await
             .map_err(|e| {
                 tracing::error!("Failed to create team: {:?}", e);
                 Error::DuplicatedTeamName
-            })?;
+            })?
+            .ok_or(Error::DuplicatedTeamName)?;
 
-        Ok(user.into())
+        TeamMember::get_repository(self.pool.clone())
+            .insert_with_tx(&mut *tx, team.id, user_id)
+            .await?;
+
+        tx.commit().await?;
+
+        Ok(team.into())
     }
 
     async fn update_profile_image(
@@ -333,9 +344,11 @@ mod tests {
         assert_eq!(res.profile_url, profile_url);
         assert_eq!(res.username, username);
         assert_eq!(res.parent_id, user.id);
-        assert_eq!(res.members.len(), 1);
-        assert_eq!(res.members[0].id, new_user.id);
-        assert_eq!(res.members[0].email, new_user.email);
+        assert_eq!(res.members.len(), 2);
+        assert_eq!(res.members[0].id, user.id);
+        assert_eq!(res.members[0].email, user.email);
+        assert_eq!(res.members[1].id, new_user.id);
+        assert_eq!(res.members[1].email, new_user.email);
 
         let id = uuid::Uuid::new_v4().to_string();
         let new_user2 = setup_test_user(&id, &pool).await.unwrap();
@@ -349,11 +362,13 @@ mod tests {
         assert_eq!(res.profile_url, profile_url);
         assert_eq!(res.username, username);
         assert_eq!(res.parent_id, user.id);
-        assert_eq!(res.members.len(), 2);
-        assert_eq!(res.members[0].id, new_user.id);
-        assert_eq!(res.members[0].email, new_user.email);
-        assert_eq!(res.members[1].id, new_user2.id);
-        assert_eq!(res.members[1].email, new_user2.email);
+        assert_eq!(res.members.len(), 3);
+        assert_eq!(res.members[0].id, user.id);
+        assert_eq!(res.members[0].email, user.email);
+        assert_eq!(res.members[1].id, new_user.id);
+        assert_eq!(res.members[1].email, new_user.email);
+        assert_eq!(res.members[2].id, new_user2.id);
+        assert_eq!(res.members[2].email, new_user2.email);
     }
 
     #[tokio::test]

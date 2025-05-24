@@ -271,6 +271,8 @@ mod tests {
                 "https://".to_string(),
                 CryptoStance::Supportive,
                 Party::PeoplePowerParty,
+                "".to_string(),
+                "".to_string(),
             )
             .await
             .unwrap()
@@ -282,6 +284,8 @@ mod tests {
                 "https://".to_string(),
                 CryptoStance::Supportive,
                 Party::DemocraticParty,
+                "".to_string(),
+                "".to_string(),
             )
             .await
             .unwrap()
