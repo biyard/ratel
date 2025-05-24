@@ -7,7 +7,7 @@ pub enum Route {
     #[layout(SocialLayout)]
         #[route("/social")]
         IndexPage {},
-        #[route("/social/:id")]
+        #[route("/threads/:id")]
         ThreadPage { id: i64 },
         #[route("/explore")]
         ExplorePage {},

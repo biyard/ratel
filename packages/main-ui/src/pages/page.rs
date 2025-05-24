@@ -58,9 +58,9 @@ pub fn IndexPage(#[props(default = Language::En)] lang: Language) -> Element {
                     LeftSidebar {
                         lang,
                         profile: profile_data.clone(),
-                        recent_feeds: recent_feeds.clone(),
-                        recent_spaces: recent_spaces.clone(),
-                        recent_communities: recent_communities.clone(),
+                        // recent_feeds: recent_feeds.clone(),
+                        // recent_spaces: recent_spaces.clone(),
+                        // recent_communities: recent_communities.clone(),
                         accounts: accounts.clone(),
 
                         onwrite: move |_| {
