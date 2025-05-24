@@ -1,14 +1,14 @@
 use bdk::prelude::{
-    by_components::icons::{file::File, other_devices::Bookmark, time::Update, validations::Add},
+    by_components::icons::{file::File, other_devices::Bookmark},
     *,
 };
 
 use dto::User;
 
 use crate::{
-    components::icons::{Palace, Pentagon2, RewardCoin},
+    components::icons::RewardCoin,
     pages::{
-        components::{LeftSideProfile, SideRoundedAccordian, SideRoundedBox},
+        components::{LeftSideProfile, SideRoundedBox},
         controller::AccountList,
     },
 };
@@ -18,10 +18,9 @@ pub fn LeftSidebar(
     lang: Language,
     profile: User,
     accounts: Vec<AccountList>,
-    recent_feeds: Vec<String>,
-    recent_spaces: Vec<String>,
-    recent_communities: Vec<String>,
-
+    // recent_feeds: Vec<String>,
+    // recent_spaces: Vec<String>,
+    // recent_communities: Vec<String>,
     add_account: EventHandler<MouseEvent>,
     sign_out: EventHandler<MouseEvent>,
     onwrite: EventHandler<MouseEvent>,
@@ -80,61 +79,61 @@ pub fn LeftSidebar(
                     }
                 }
             }
-            SideRoundedAccordian {
-                icon: rsx! {
-                    Update { class: "[&>path]:stroke-neutral-500", width: "20", height: "20" }
-                },
-                title: tr.recent,
+                // SideRoundedAccordian {
+        //     icon: rsx! {
+        //         Update { class: "[&>path]:stroke-neutral-500", width: "20", height: "20" }
+        //     },
+        //     title: tr.recent,
 
-                ContentList { contents: recent_feeds }
-            }
-            SideRoundedAccordian {
-                icon: rsx! {
-                    Palace { class: "[&>path]:stroke-neutral-500", width: "20", height: "20" }
-                },
-                title: tr.spaces,
-                div { class: "flex flex-col w-full justify-start items-start gap-16",
-                    a {
-                        class: "cursor-pointer flex flex-row w-full justify-start items-center gap-4",
-                        onclick: move |e| {
-                            onwrite.call(e);
-                        },
-                        href: "#create_feed",
-                        Add {
-                            class: "[&>path]:stroke-white",
-                            width: "20",
-                            height: "20",
-                        }
-                        div { class: "font-bold text-white text-sm/16", {tr.create_space} }
-                    }
-                    ContentList { contents: recent_spaces }
-                }
-            }
-            SideRoundedAccordian {
-                icon: rsx! {
-                    Pentagon2 {
-                        class: "[&>path]:stroke-neutral-500 [&>path]:fill-transparent",
-                        width: "20",
-                        height: "20",
-                    }
-                },
-                title: tr.communities,
-                div { class: "flex flex-col w-full justify-start items-start gap-16",
-                    button {
-                        class: "cursor-pointer flex flex-row w-full justify-start items-center gap-4",
-                        onclick: move |_| {
-                            tracing::debug!("create a community button clicked");
-                        },
-                        Add {
-                            class: "[&>path]:stroke-white",
-                            width: "20",
-                            height: "20",
-                        }
-                        div { class: "font-bold text-white text-sm/16", {tr.create_community} }
-                    }
-                    ContentList { contents: recent_communities }
-                }
-            }
+        //     ContentList { contents: recent_feeds }
+        // }
+        // SideRoundedAccordian {
+        //     icon: rsx! {
+        //         Palace { class: "[&>path]:stroke-neutral-500", width: "20", height: "20" }
+        //     },
+        //     title: tr.spaces,
+        //     div { class: "flex flex-col w-full justify-start items-start gap-16",
+        //         a {
+        //             class: "cursor-pointer flex flex-row w-full justify-start items-center gap-4",
+        //             onclick: move |e| {
+        //                 onwrite.call(e);
+        //             },
+        //             href: "#create_feed",
+        //             Add {
+        //                 class: "[&>path]:stroke-white",
+        //                 width: "20",
+        //                 height: "20",
+        //             }
+        //             div { class: "font-bold text-white text-sm/16", {tr.create_space} }
+        //         }
+        //         ContentList { contents: recent_spaces }
+        //     }
+        // }
+        // SideRoundedAccordian {
+        //     icon: rsx! {
+        //         Pentagon2 {
+        //             class: "[&>path]:stroke-neutral-500 [&>path]:fill-transparent",
+        //             width: "20",
+        //             height: "20",
+        //         }
+        //     },
+        //     title: tr.communities,
+        //     div { class: "flex flex-col w-full justify-start items-start gap-16",
+        //         button {
+        //             class: "cursor-pointer flex flex-row w-full justify-start items-center gap-4",
+        //             onclick: move |_| {
+        //                 tracing::debug!("create a community button clicked");
+        //             },
+        //             Add {
+        //                 class: "[&>path]:stroke-white",
+        //                 width: "20",
+        //                 height: "20",
+        //             }
+        //             div { class: "font-bold text-white text-sm/16", {tr.create_community} }
+        //         }
+        //         ContentList { contents: recent_communities }
+        //     }
+        // }
         }
     }
 }

@@ -1,5 +1,5 @@
 use bdk::prelude::*;
-use dto::{ContentType, FeedType, News, NewsQuery, NewsSummary, Promotion, Space, User};
+use dto::{ContentType, News, NewsQuery, NewsSummary, Promotion, Space, User};
 use dto::{Follower, LandingData};
 use serde::{Deserialize, Serialize};
 
@@ -61,8 +61,8 @@ pub struct Profile {
     pub national: National,
     pub tier: i64,
 
-    pub exp: i64,       //나의 현재 경험치
-    pub total_exp: i64, //레벨업 하기 위한 필요한 총 경험치
+    pub exp: i64,
+    pub total_exp: i64,
 
     pub followers: i64,
     pub replies: i64,
@@ -70,34 +70,6 @@ pub struct Profile {
     pub spaces: i64,
     pub votes: i64,
     pub surveys: i64,
-}
-
-#[derive(Clone, Serialize, Deserialize, Eq, PartialEq)]
-pub struct FeedList {
-    pub id: i64,
-    pub created_at: i64,
-    pub updated_at: i64,
-
-    pub html_contents: String,
-    pub feed_type: FeedType,
-
-    pub user_id: i64,
-    pub parent_id: Option<i64>,
-    pub title: Option<String>,
-    pub part_id: Option<i64>,
-    pub quote_feed_id: Option<i64>,
-
-    //additional info
-    pub profile: String,
-    pub nickname: String,
-    pub saved: bool,
-
-    pub content_type: ContentType,
-
-    pub number_of_likes: i64,
-    pub number_of_comments: i64,
-    pub number_of_rewards: i64,
-    pub number_of_shared: i64,
 }
 
 impl Controller {
