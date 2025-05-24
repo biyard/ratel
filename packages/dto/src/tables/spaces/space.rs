@@ -2,7 +2,7 @@ use crate::SpaceLike;
 use crate::{SpaceComment, SpaceCommentCreateRequest};
 use validator::Validate;
 
-//TODO: action(like, comments, find_by_id, create_space)
+//TODO: action(like, comments, find_by_id, create_space), query_action
 #[derive(Validate)]
 #[api_model(base = "/v1/spaces", table = spaces, action = [like, comments(comments = SpaceCommentCreateRequest)])]
 pub struct Space {
