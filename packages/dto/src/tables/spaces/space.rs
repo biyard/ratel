@@ -2,6 +2,7 @@ use crate::SpaceLike;
 use crate::{SpaceComment, SpaceCommentCreateRequest};
 use validator::Validate;
 
+//TODO: action(like, comments, find_by_id, create_space)
 #[derive(Validate)]
 #[api_model(base = "/v1/spaces", table = spaces, action = [like, comments(comments = SpaceCommentCreateRequest)])]
 pub struct Space {
@@ -52,7 +53,7 @@ pub struct Space {
     #[api_model(summary)]
     pub shares: i64, //공유자 수
 
-    #[api_model(summary, action = create, type = JSONB, version = v0.1, action_by_id = update)]
+    #[api_model(summary, action = create, type = JSONB, version = v0.1)]
     pub files: Vec<File>,
 
     #[api_model(summary, one_to_many = space_likes)]
