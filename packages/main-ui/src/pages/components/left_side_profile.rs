@@ -9,7 +9,7 @@ use bdk::prelude::{
 use num_format::{Locale, ToFormattedString};
 
 use crate::{
-    components::icons::{Badge, Grade, US},
+    components::icons::{Badge, Grade},
     pages::{components::SideRoundedBox, controller::AccountList},
 };
 
@@ -303,10 +303,10 @@ pub fn Profile(
                 div { class: "font-medium text-sm/14 text-[#f9fafb]", {description} }
             }
 
-            div { class: "flex flex-row w-full justify-start items-center gap-4",
-                US {}
-                div { class: "font-medium text-sm/14 text-[#f9fafb]", "Oregon, United State" }
-            }
+        // div { class: "flex flex-row w-full justify-start items-center gap-4",
+        //     US {}
+        //     div { class: "font-medium text-sm/14 text-[#f9fafb]", "Oregon, United State" }
+        // }
         }
     }
 }

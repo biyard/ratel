@@ -1,22 +1,22 @@
 use bdk::prelude::{
-    by_components::icons::{
-        file::File, other_devices::Bookmark, time::Update, user::User, validations::Add,
-    },
+    by_components::icons::{file::File, other_devices::Bookmark, time::Update, validations::Add},
     *,
 };
+
+use dto::User;
 
 use crate::{
     components::icons::{Palace, Pentagon2, RewardCoin},
     pages::{
         components::{LeftSideProfile, SideRoundedAccordian, SideRoundedBox},
-        controller::{AccountList, Profile},
+        controller::AccountList,
     },
 };
 
 #[component]
 pub fn LeftSidebar(
     lang: Language,
-    profile: Profile,
+    profile: User,
     accounts: Vec<AccountList>,
     recent_feeds: Vec<String>,
     recent_spaces: Vec<String>,
@@ -24,6 +24,7 @@ pub fn LeftSidebar(
 
     add_account: EventHandler<MouseEvent>,
     sign_out: EventHandler<MouseEvent>,
+    onwrite: EventHandler<MouseEvent>,
 ) -> Element {
     let tr: LeftSidebarTranslate = translate(&lang);
 
@@ -33,17 +34,17 @@ pub fn LeftSidebar(
                 lang,
                 email: profile.email,
                 name: profile.nickname,
-                profile: profile.profile,
-                description: profile.description.unwrap_or_default(),
-                exp: profile.exp,
-                total_exp: profile.total_exp,
+                profile: profile.profile_url,
+                description: "".to_string(),
+                exp: 0,
+                total_exp: 0,
 
-                followers: profile.followers,
-                replies: profile.replies,
-                posts: profile.posts,
-                spaces: profile.spaces,
-                votes: profile.votes,
-                surveys: profile.surveys,
+                followers: 0,
+                replies: 0,
+                posts: 0,
+                spaces: 0,
+                votes: 0,
+                surveys: 0,
 
                 accounts,
 
@@ -61,7 +62,7 @@ pub fn LeftSidebar(
                     }
                     LeftSideItem {
                         icon: rsx! {
-                            User { class: "[&>path]:stroke-neutral-500", width: "20", height: "20" }
+                            crate::by_components::icons::user::User { class: "[&>path]:stroke-neutral-500", width: "20", height: "20" }
                         },
                         text: tr.my_profile,
                     }
@@ -95,6 +96,9 @@ pub fn LeftSidebar(
                 div { class: "flex flex-col w-full justify-start items-start gap-16",
                     a {
                         class: "cursor-pointer flex flex-row w-full justify-start items-center gap-4",
+                        onclick: move |e| {
+                            onwrite.call(e);
+                        },
                         href: "#create_feed",
                         Add {
                             class: "[&>path]:stroke-white",
