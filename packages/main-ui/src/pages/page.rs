@@ -1,6 +1,7 @@
 #![allow(unused)]
-use crate::pages::components::{
-    BottomSheet, CreateFeedBox, FeedContents, LeftSidebar, RightSidebar,
+use crate::{
+    components::loader::Loader,
+    pages::components::{BottomSheet, CreateFeedBox, FeedContents, LeftSidebar, RightSidebar},
 };
 
 use super::*;
@@ -11,8 +12,11 @@ use i18n::*;
 
 #[component]
 pub fn IndexPage(#[props(default = Language::En)] lang: Language) -> Element {
-    let mut is_write = use_signal(|| false);
+    if !crate::config::get().experiment {
+        return rsx! {};
+    }
 
+    let mut is_write = use_signal(|| false);
     let mut ctrl = Controller::new(lang)?;
     let tr: IndexTranslate = translate(&lang);
 

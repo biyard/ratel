@@ -20,6 +20,7 @@ pub struct Team {
     pub username: String,
 
     #[api_model(many_to_many = team_members, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = team_id)]
+    #[serde(default)]
     pub members: Vec<User>,
 }
 

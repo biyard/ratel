@@ -43,6 +43,10 @@ pub struct User {
     #[api_model(many_to_many = group_members, foreign_table_name = groups, foreign_primary_key = group_id, foreign_reference_key = user_id)]
     #[serde(default)]
     pub groups: Vec<Group>,
+
+    // profile contents
+    #[api_model(version = v0.2)]
+    pub html_contents: String,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]
