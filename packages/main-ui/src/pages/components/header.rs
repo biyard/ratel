@@ -1,8 +1,5 @@
 use bdk::prelude::{
-    by_components::icons::{
-        arrows::ShapeArrowDown, chat::RoundBubble, edit::Search, home::Home1,
-        internet_script::Internet, notification::Bell, user::UserGroup,
-    },
+    by_components::icons::{arrows::ShapeArrowDown, edit::Search, home::Home1, notification::Bell},
     dioxus_popup::PopupService,
     *,
 };
@@ -120,54 +117,73 @@ pub fn SocialHeader(
                 }
 
                 div { class: "flex flex-row gap-10 items-center max-tablet:!hidden",
-                    Menu {
-                        icon: rsx! {
-                            Home1 { class: "[&>path]:stroke-[#737373]", width: "24", height: "24" }
-                        },
-                        link: Route::IndexPage {},
-                        text: tr.home,
+                    Link { class: "social-menu-item", to: Route::IndexPage {},
+                        Home1 {
+                            class: "[&>path]:stroke-[#737373]",
+                            width: "24",
+                            height: "24",
+                        }
+                        {tr.home}
                     }
-                    Menu {
-                        icon: rsx! {
-                            Internet {
-                                class: "[&>path]:stroke-[#737373] [&>path]:fill-[#737373] [&>circle]:stroke-[#737373]",
-                                width: "24",
-                                height: "24",
-                            }
-                        },
-                        link: Route::ExplorePage {},
-                        text: tr.explore,
+
+                    Link { class: "social-menu-item", to: Route::IndexPage {},
+                        by_components::icons::internet_script::Internet {
+                            class: "[&>path]:stroke-[#737373] [&>path]:fill-[#737373] [&>circle]:stroke-[#737373]",
+                            width: "24",
+                            height: "24",
+                        }
+                        {tr.election}
                     }
-                    Menu {
-                        icon: rsx! {
-                            UserGroup { class: "[&>path]:stroke-[#737373]", width: "24", height: "24" }
-                        },
-                        link: Route::MyNetworkPage {},
-                        text: tr.my_network,
+                    Link { class: "social-menu-item", to: Route::IndexPage {},
+                        by_components::icons::user::UserGroup {
+                            class: "[&>path]:stroke-[#737373]",
+                            width: "24",
+                            height: "24",
+                        }
+                        {tr.politicians}
                     }
-                    Menu {
-                        icon: rsx! {
-                            RoundBubble {
-                                class: "[&>path]:stroke-[#737373] [&>line]:stroke-[#737373]",
-                                width: "24",
-                                height: "24",
-                                fill: "none",
-                            }
-                        },
-                        link: Route::MessagesPage {},
-                        text: tr.message,
-                    }
-                    Menu {
-                        icon: rsx! {
-                            Bell {
-                                class: "[&>path]:stroke-[#737373] [&>path]:fill-[#737373]",
-                                width: "24",
-                                height: "24",
-                            }
-                        },
-                        link: Route::NotificationsPage {},
-                        text: tr.notification,
-                    }
+
+                    // Menu {
+                    //     icon: rsx! {
+                    //         Internet {
+                    //             class: "[&>path]:stroke-[#737373] [&>path]:fill-[#737373] [&>circle]:stroke-[#737373]",
+                    //             width: "24",
+                    //             height: "24",
+                    //         }
+                    //     },
+                    //     link: Route::ExplorePage {},
+                    //     text: tr.explore,
+                    // }
+                    // Menu {
+                    //     icon: rsx! {
+                    //         UserGroup { class: "[&>path]:stroke-[#737373]", width: "24", height: "24" }
+                    //     },
+                    //     link: Route::MyNetworkPage {},
+                    //     text: tr.my_network,
+                    // }
+                    // Menu {
+                    //     icon: rsx! {
+                    //         RoundBubble {
+                    //             class: "[&>path]:stroke-[#737373] [&>line]:stroke-[#737373]",
+                    //             width: "24",
+                    //             height: "24",
+                    //             fill: "none",
+                    //         }
+                    //     },
+                    //     link: Route::MessagesPage {},
+                    //     text: tr.message,
+                    // }
+                    // Menu {
+                    //     icon: rsx! {
+                    //         Bell {
+                    //             class: "[&>path]:stroke-[#737373] [&>path]:fill-[#737373]",
+                    //             width: "24",
+                    //             height: "24",
+                    //         }
+                    //     },
+                    //     link: Route::NotificationsPage {},
+                    //     text: tr.notification,
+                    // }
 
                     if is_login {
                         Profile { url: profile_url.clone(), name: nickname }
@@ -209,18 +225,6 @@ pub fn Profile(url: String, name: String) -> Element {
     }
 }
 
-#[component]
-pub fn Menu(text: String, icon: Element, link: Route) -> Element {
-    rsx! {
-        Link {
-            class: "flex flex-col w-fit justify-center items-center p-10",
-            to: link,
-            {icon}
-            div { class: "font-medium text-neutral-500 text-[15px]/18", {text} }
-        }
-    }
-}
-
 translate! {
     SocialHeaderTranslate;
 
@@ -228,6 +232,17 @@ translate! {
         ko: "Home",
         en: "Home"
     },
+
+    election: {
+        ko: "Election",
+        en: "Election"
+    }
+
+    politicians: {
+        ko: "Politicians",
+        en: "Politicians"
+    }
+
     explore: {
         ko: "Explore",
         en: "Explore"

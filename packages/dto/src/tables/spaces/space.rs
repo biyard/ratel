@@ -41,17 +41,17 @@ pub struct Space {
     pub content_type: ContentType,
 
     #[api_model(summary)]
-    pub accepters: i64, // 찬성 수
+    pub accepters: i64,
     #[api_model(summary)]
-    pub rejecters: i64, // 반대 수
+    pub rejecters: i64,
     #[api_model(summary)]
-    pub likes: i64, //좋아요 수
+    pub likes: i64,
     #[api_model(summary)]
-    pub comments: i64, // 코멘트 수
+    pub comments: i64,
     #[api_model(summary)]
-    pub rewards: i64, //리워드 토큰 수?
+    pub rewards: i64,
     #[api_model(summary)]
-    pub shares: i64, //공유자 수
+    pub shares: i64,
 
     #[api_model(summary, action = create, type = JSONB, version = v0.1)]
     pub files: Vec<File>,
