@@ -16,7 +16,7 @@ pub fn RightSidebar(
     let tr: RightSidebarTranslate = translate(&lang);
     rsx! {
         div { class: "flex flex-col w-full max-w-280 h-full justify-start items-start gap-10 max-tablet:!hidden",
-            ViewAllSection {
+            RoundedSection {
                 lang,
                 header: tr.hot_promotion,
                 onclick: move |_| {
@@ -28,7 +28,7 @@ pub fn RightSidebar(
                     description: promotion.description.clone(),
                 }
             }
-            ViewAllSection {
+            RoundedSection {
                 lang,
                 header: tr.news,
                 onclick: move |_| {
@@ -143,7 +143,7 @@ pub fn HotPromotion(image: String, title: String, description: String) -> Elemen
 }
 
 #[component]
-pub fn ViewAllSection(
+pub fn RoundedSection(
     lang: Language,
     header: String,
     onclick: EventHandler<MouseEvent>,
