@@ -109,7 +109,15 @@ mod tests {
 
         let mut tx = pool.begin().await.unwrap();
         for q in quizzes {
-            quiz.insert_with_tx(&mut *tx, q.clone()).await.unwrap();
+            quiz.insert_with_tx(
+                &mut *tx,
+                q.clone(),
+                "Like".to_string(),
+                "Dislike".to_string(),
+                Party::DemocraticParty,
+            )
+            .await
+            .unwrap();
         }
         tx.commit().await.unwrap();
 

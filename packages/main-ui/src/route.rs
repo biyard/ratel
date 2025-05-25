@@ -5,8 +5,13 @@ use bdk::prelude::*;
 #[rustfmt::skip]
 pub enum Route {
     #[layout(SocialLayout)]
-        #[route("/social")]
-        IndexPage {},
+        #[layout(MyPageLayout)]
+            #[route("/social")]
+            IndexPage {},
+        #[end_layout]
+
+        #[route("/threads/:id")]
+        ThreadPage { id: i64 },
         #[route("/explore")]
         ExplorePage {},
         #[route("/my-network")]

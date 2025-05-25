@@ -10,6 +10,7 @@ mod my_profile;
 mod notifications;
 mod page;
 mod quizzes;
+mod threads;
 
 pub use layout::*;
 pub use page::*;
@@ -21,3 +22,4 @@ pub use my_network::*;
 pub use my_profile::*;
 pub use notifications::*;
 pub use quizzes::*;
+pub use threads::*;
