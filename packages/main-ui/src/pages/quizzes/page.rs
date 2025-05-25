@@ -1,4 +1,4 @@
-use crate::components::icons::ThumbsUp;
+use crate::components::icons::{ThumbsUp, Tokenpost};
 
 use super::*;
 use bdk::prelude::*;
@@ -12,6 +12,14 @@ pub fn QuizzesPage(#[props(default = Language::En)] lang: Language) -> Element {
 
     rsx! {
         by_components::meta::MetaPage { title: tr.title }
+
+        a {
+            class: "absolute bottom-0 left-0 w-screen py-10 flex items-center justify-center text-c-wg-50 text-xs flex flex-row gap-5 cursor-pointer z-100",
+            href: "https://tokenpost.com",
+            target: "_blank",
+            "Co-operated with"
+            Tokenpost { height: 25 }
+        }
 
         div {
             id: "quizzes",
