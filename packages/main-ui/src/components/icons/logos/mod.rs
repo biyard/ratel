@@ -6,6 +6,7 @@ mod logo;
 mod metamask;
 mod phantom;
 mod telegram;
+mod tokenpost;
 mod x;
 mod youtube;
 
@@ -17,5 +18,6 @@ pub use logo::*;
 pub use metamask::*;
 pub use phantom::*;
 pub use telegram::*;
+pub use tokenpost::*;
 pub use x::*;
 pub use youtube::*;
