@@ -1,10 +1,8 @@
-use bdk::prelude::{by_components::icons::arrows::ArrowRight, *};
+use bdk::prelude::*;
 use dto::{NewsSummary, Promotion, User};
 use html2text::from_read;
 
-use crate::{
-    components::follow::Follow, pages::components::SideRoundedBox, utils::text::insert_word_breaks,
-};
+use crate::{components::follow::Follow, utils::text::insert_word_breaks};
 
 #[component]
 pub fn RightSidebar(
@@ -17,7 +15,7 @@ pub fn RightSidebar(
 ) -> Element {
     let tr: RightSidebarTranslate = translate(&lang);
     rsx! {
-        div { class: "flex flex-col w-fit h-full justify-start items-start gap-10",
+        div { class: "flex flex-col w-full max-w-280 h-full justify-start items-start gap-10 max-tablet:!hidden",
             ViewAllSection {
                 lang,
                 header: tr.hot_promotion,
@@ -48,27 +46,27 @@ pub fn RightSidebar(
                     }
                 }
             }
-            ViewAllSection {
-                lang,
-                header: tr.add_feed,
-                onclick: move |_| {
-                    tracing::debug!("feed view all clicked");
-                },
-                div { class: "flex flex-col w-full justify-start items-start gap-35",
-                    for follower in followers.iter().take(3) {
-                        FeedUser {
-                            lang,
-                            id: follower.id.clone(),
-                            profile: follower.profile_url.clone(),
-                            name: follower.nickname.clone(),
-                            description: "".to_string(),
-                            follow: move |id: i64| {
-                                follow.call(id);
-                            },
-                        }
-                    }
-                }
-            }
+                // ViewAllSection {
+        //     lang,
+        //     header: tr.add_feed,
+        //     onclick: move |_| {
+        //         tracing::debug!("feed view all clicked");
+        //     },
+        //     div { class: "flex flex-col w-full justify-start items-start gap-35",
+        //         for follower in followers.iter().take(3) {
+        //             FeedUser {
+        //                 lang,
+        //                 id: follower.id.clone(),
+        //                 profile: follower.profile_url.clone(),
+        //                 name: follower.nickname.clone(),
+        //                 description: "".to_string(),
+        //                 follow: move |id: i64| {
+        //                     follow.call(id);
+        //                 },
+        //             }
+        //         }
+        //     }
+        // }
         }
     }
 }
@@ -151,29 +149,12 @@ pub fn ViewAllSection(
     onclick: EventHandler<MouseEvent>,
     children: Element,
 ) -> Element {
-    let tr: ViewAllSectionTranslate = translate(&lang);
+    // let tr: ViewAllSectionTranslate = translate(&lang);
+
     rsx! {
-        button {
-            SideRoundedBox {
-                div { class: "flex flex-col w-full justify-start items-start gap-10",
-                    div { class: "font-bold text-white text-[15px]/20", {header} }
-                    div { class: "flex flex-col w-full justify-start items-start gap-20",
-                        {children}
-                        div {
-                            class: "cursor-pointer flex flex-row w-full justify-start items-center gap-5",
-                            onclick,
-                            div { class: "font-semibold text-sm/16 text-neutral-400",
-                                {tr.view_all}
-                            }
-                            ArrowRight {
-                                class: "[&>path]:stroke-neutral-400",
-                                width: "20",
-                                height: "20",
-                            }
-                        }
-                    }
-                }
-            }
+        div { class: "w-full flex flex-col px-16 py-20 rounded-[10px] bg-footer justify-start items-start gap-10",
+            div { class: "font-bold text-white text-[15px]/20", {header} }
+            div { class: "flex flex-col w-full justify-start items-start gap-20", {children} }
         }
     }
 }
