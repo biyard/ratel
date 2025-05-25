@@ -36,143 +36,95 @@ impl QuizResultController {
             .map(|q| (q.id, q))
             .collect();
 
-        let candidates: HashMap<i64, PresidentialCandidate> =
-            PresidentialCandidate::query_builder()
-                .order_by_id_desc()
-                .query()
-                .map(PresidentialCandidate::from)
-                .fetch_all(&self.pool)
-                .await?
-                .into_iter()
-                .map(|q| (q.id, q))
-                .collect();
+        let candidates: Vec<PresidentialCandidate> = PresidentialCandidate::query_builder()
+            .order_by_id_desc()
+            .query()
+            .map(PresidentialCandidate::from)
+            .fetch_all(&self.pool)
+            .await?;
 
         tracing::debug!("quizzes: {:?}", quizzes.len());
 
-        let mut likes = vec![];
-        let mut dislikes = vec![];
+        let ppp_candidate = candidates
+            .iter()
+            .filter(|e| e.party == Party::PeoplePowerParty)
+            .collect::<Vec<_>>()[0]
+            .clone();
 
-        for q in answers.iter() {
-            match q.answer {
-                QuizOptions::Like => {
-                    likes.push(q.quiz_id);
-                }
-                QuizOptions::Dislike => {
-                    dislikes.push(q.quiz_id);
-                }
-            };
-        }
+        let dp_candidate = candidates
+            .iter()
+            .filter(|e| e.party == Party::DemocraticParty)
+            .collect::<Vec<_>>()[0]
+            .clone();
 
-        let mut results: HashMap<i64, SupportPolicy> = HashMap::new();
+        let mut ppp_supports = 0;
+        let mut dp_supports = 0;
+
         let mut likes_pledges: HashSet<(i64, i64)> = HashSet::new();
         let mut hlike: HashSet<i64> = HashSet::new();
 
         let ep = ElectionPledgeLike::get_repository(self.pool.clone());
 
-        for l in likes.iter() {
-            tracing::debug!("like: {}", l);
-            if let Some(q) = quizzes.get(l) {
-                for p in q.like_election_pledges.iter() {
-                    if hlike.contains(&p.id) {
-                        continue;
-                    }
-                    hlike.insert(p.id);
-
-                    if ElectionPledgeLike::query_builder()
-                        .election_pledge_id_equals(p.id)
-                        .user_id_equals(user.id)
-                        .query()
-                        .map(ElectionPledgeLike::from)
-                        .fetch_all(&self.pool)
-                        .await?
-                        .is_empty()
-                    {
-                        likes_pledges.insert((p.id, user.id));
-                    }
-
-                    let c = candidates
-                        .get(&p.presidential_candidate_id)
-                        .expect("Candidate not found");
-
-                    if let Some(support_policy) = results.get_mut(&p.presidential_candidate_id) {
-                        support_policy.support += 1;
-                        support_policy.percent = (support_policy.support as f64
-                            / (c.election_pledges.len()) as f64)
-                            * 100.0;
-                    } else {
-                        results.insert(
-                            p.presidential_candidate_id,
-                            SupportPolicy {
-                                presidential_candidate_id: p.presidential_candidate_id,
-                                candidate_name: candidates
-                                    .get(&p.presidential_candidate_id)
-                                    .map(|c| c.name.clone())
-                                    .unwrap_or_default(),
-                                support: 1,
-                                percent: (1.0 / (c.election_pledges.len()) as f64) * 100.0,
-                            },
-                        );
-                    }
-                }
+        for q in answers.iter() {
+            let quiz = quizzes.get(&q.quiz_id).ok_or(Error::InvalidQuizId)?;
+            if (quiz.like_party == Party::PeoplePowerParty && q.answer == QuizOptions::Like)
+                || (quiz.like_party != Party::PeoplePowerParty && q.answer == QuizOptions::Dislike)
+            {
+                ppp_supports += 1;
             } else {
-                tracing::error!("Quiz not found: {}", l);
-                return Err(Error::InvalidQuizId);
+                dp_supports += 1;
+            }
+
+            let election_pledges = match q.answer {
+                QuizOptions::Like => {
+                    tracing::debug!("Quiz {} liked", q.quiz_id);
+                    &quiz.like_election_pledges
+                }
+                QuizOptions::Dislike => {
+                    tracing::debug!("Quiz {} disliked", q.quiz_id);
+                    &quiz.dislike_election_pledges
+                }
+            };
+
+            for p in election_pledges {
+                if hlike.contains(&p.id) {
+                    continue;
+                }
+                hlike.insert(p.id);
+
+                if ElectionPledgeLike::query_builder()
+                    .election_pledge_id_equals(p.id)
+                    .user_id_equals(user.id)
+                    .query()
+                    .map(ElectionPledgeLike::from)
+                    .fetch_all(&self.pool)
+                    .await?
+                    .is_empty()
+                {
+                    likes_pledges.insert((p.id, user.id));
+                }
             }
         }
 
-        for d in dislikes.iter() {
-            tracing::debug!("dislike: {}", d);
-            if let Some(q) = quizzes.get(d) {
-                for p in q.dislike_election_pledges.iter() {
-                    if hlike.contains(&p.id) {
-                        continue;
-                    }
-                    hlike.insert(p.id);
+        let total_supports = ppp_supports + dp_supports;
 
-                    if ElectionPledgeLike::query_builder()
-                        .election_pledge_id_equals(p.id)
-                        .user_id_equals(user.id)
-                        .query()
-                        .map(ElectionPledgeLike::from)
-                        .fetch_all(&self.pool)
-                        .await?
-                        .is_empty()
-                    {
-                        likes_pledges.insert((p.id, user.id));
-                    }
+        let results: Vec<SupportPolicy> = vec![
+            SupportPolicy {
+                presidential_candidate_id: ppp_candidate.id,
+                candidate_name: ppp_candidate.name.clone(),
+                support: ppp_supports,
+                percent: (ppp_supports as f64 / total_supports as f64) * 100.0,
+            },
+            SupportPolicy {
+                presidential_candidate_id: dp_candidate.id,
+                candidate_name: dp_candidate.name.clone(),
+                support: dp_supports,
+                percent: (dp_supports as f64 / total_supports as f64) * 100.0,
+            },
+        ];
 
-                    let c = candidates
-                        .get(&p.presidential_candidate_id)
-                        .expect("Candidate not found");
-
-                    if let Some(support_policy) = results.get_mut(&p.presidential_candidate_id) {
-                        support_policy.support += 1;
-                        support_policy.percent = (support_policy.support as f64
-                            / (c.election_pledges.len()) as f64)
-                            * 100.0;
-                    } else {
-                        results.insert(
-                            p.presidential_candidate_id,
-                            SupportPolicy {
-                                presidential_candidate_id: p.presidential_candidate_id,
-                                candidate_name: candidates
-                                    .get(&p.presidential_candidate_id)
-                                    .map(|c| c.name.clone())
-                                    .unwrap_or_default(),
-                                support: 1,
-                                percent: (1.0 / (c.election_pledges.len()) as f64) * 100.0,
-                            },
-                        );
-                    }
-                }
-            } else {
-                tracing::error!("Quiz not found: {}", d);
-                return Err(Error::InvalidQuizId);
-            }
-        }
         tracing::debug!("length of results: {:?}", results.len());
         tracing::debug!("principal: {}", user.principal);
-        let results = results.into_values().collect();
         tracing::debug!("results: {:?}", results);
 
         let mut tx = self.pool.begin().await?;
