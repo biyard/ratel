@@ -28,7 +28,7 @@ pub fn LeftSidebar(
     let tr: LeftSidebarTranslate = translate(&lang);
 
     rsx! {
-        div { class: "flex flex-col w-fit h-fit gap-10 justify-start items-start",
+        div { class: "flex flex-col w-fit h-fit gap-10 justify-start items-start max-tablet:!hidden",
             LeftSideProfile {
                 lang,
                 email: profile.email,
