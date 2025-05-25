@@ -21,3 +21,7 @@
 .heading1 {
   @apply text-[32px] font-bold text-white
 }
+
+.social-menu-item {
+  @apply flex flex-col w-fit justify-center items-center p-10 font-medium text-neutral-500 text-[15px]/18
+}
