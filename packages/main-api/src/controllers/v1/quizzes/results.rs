@@ -267,17 +267,35 @@ mod tests {
 
         let quiz = Quiz::get_repository(pool.clone());
         let quiz1 = quiz
-            .insert_with_tx(&mut *tx, "Quiz 1".to_string())
+            .insert_with_tx(
+                &mut *tx,
+                "Quiz 1".to_string(),
+                "Like".to_string(),
+                "Dislike".to_string(),
+                Party::PeoplePowerParty,
+            )
             .await
             .unwrap()
             .unwrap();
         let quiz2 = quiz
-            .insert_with_tx(&mut *tx, "Quiz 2".to_string())
+            .insert_with_tx(
+                &mut *tx,
+                "Quiz 2".to_string(),
+                "Like".to_string(),
+                "Dislike".to_string(),
+                Party::DemocraticParty,
+            )
             .await
             .unwrap()
             .unwrap();
         let quiz3 = quiz
-            .insert_with_tx(&mut *tx, "Quiz 3".to_string())
+            .insert_with_tx(
+                &mut *tx,
+                "Quiz 3".to_string(),
+                "Like".to_string(),
+                "Dislike".to_string(),
+                Party::PeoplePowerParty,
+            )
             .await
             .unwrap()
             .unwrap();
