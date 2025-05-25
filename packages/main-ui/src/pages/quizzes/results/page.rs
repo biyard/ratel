@@ -1,4 +1,7 @@
-use crate::components::icons::{Facebook, X};
+use crate::{
+    components::icons::{Facebook, X},
+    route::Route,
+};
 
 use super::*;
 use bdk::prelude::*;
@@ -28,32 +31,26 @@ pub fn ResultsPage(
 
         div {
             id: "results",
-            class: "flex flex-col max-w-500 w-full items-center h-screen py-70 justify-between text-center gap-30",
+            class: "flex flex-col max-w-500 w-full items-center h-screen pt-70 pb-30 justify-between text-center gap-30",
             div { class: "flex flex-col max-w-500 w-full items-center text-center gap-30",
-                img {
-                    src: candidate.image,
-                    alt: candidate.name,
-                    class: "w-full max-w-200",
+                div { class: "w-full flex flex-col gap-10 items-center",
+                    img {
+                        src: candidate.image,
+                        alt: candidate.name,
+                        class: "w-full max-w-200 max-h-300 object-cover object-top rounded-lg",
+                    }
+                    Link {
+                        class: "btn !text-sm",
+                        to: Route::PresidentialElectionPage {},
+                        "모든 공약 보러가기"
+                    }
                 }
+
                 p {
-                    class: "text-xl/40 px-10 text-left flex flex-col gap-10",
+                    class: "text-lg  px-10 text-left flex flex-col gap-10",
                     dangerous_inner_html: "{description}",
 
                 }
-                        // div { class: "flex flex-col gap-10 w-full px-10",
-            //     h2 { class: "heading2", "Your support for each candidate" }
-            //     for (_ , name , percent) in result.percentage_of_each_candidate().iter() {
-            //         div { class: "flex flex-col gap-5 w-full",
-            //             p { class: "w-100 text-left", "{name}" }
-            //             div { class: "w-[{percent}%] h-20",
-            //                 div { class: "animate-grow bg-primary h-full flex flex-row items-center justify-end text-right rounded-sm py-auto",
-            //                     span { class: "px-10", "{percent:.1}%" }
-            //                 }
-            //             }
-            //         }
-            //     }
-            // }
-
             }
 
             div { class: "flex flex-row justify-around items-center w-full",
