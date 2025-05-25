@@ -12,9 +12,14 @@ use by_components::meta::MetaSeoTemplate;
 pub fn LandingLayout(#[props(default = Language::En)] lang: Language) -> Element {
     let user_service: UserService = use_context();
     let nav = use_navigator();
+    let current_path: Route = use_route();
+    let current_path2 = current_path.clone();
 
     use_effect(move || {
-        if crate::config::get().experiment && user_service.loggedin() {
+        if !matches!(current_path2, Route::QuizzesPage {})
+            && crate::config::get().experiment
+            && user_service.loggedin()
+        {
             nav.push(Route::IndexPage {});
         }
     });
@@ -58,7 +63,6 @@ pub fn LandingLayout(#[props(default = Language::En)] lang: Language) -> Element
         #[cfg(not(feature = "web"))]
         0
     });
-    let current_path: Route = use_route();
     let is_home = matches!(current_path, Route::LandingPage { .. });
 
     #[cfg(feature = "web")]

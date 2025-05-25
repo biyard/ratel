@@ -20,7 +20,6 @@ pub fn IndexPage(#[props(default = Language::En)] lang: Language) -> Element {
         by_components::meta::MetaPage { title: tr.title }
 
         div { class: "flex flex-col w-full h-full justify-start items-start text-white",
-
             CreateFeed {
                 lang,
                 profile: profile.profile,
