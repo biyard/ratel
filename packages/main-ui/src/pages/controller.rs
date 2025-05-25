@@ -78,7 +78,7 @@ impl Controller {
         let nav = use_navigator();
 
         use_effect(move || {
-            if !crate::config::get().experiment || !user_service.loggedin() {
+            if !user_service.loggedin() {
                 nav.replace(Route::LandingPage {});
             }
         });

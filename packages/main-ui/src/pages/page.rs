@@ -12,10 +12,6 @@ use i18n::*;
 
 #[component]
 pub fn IndexPage(#[props(default = Language::En)] lang: Language) -> Element {
-    if !crate::config::get().experiment {
-        return rsx! {};
-    }
-
     let mut is_write = use_signal(|| false);
     let mut ctrl = Controller::new(lang)?;
     let tr: IndexTranslate = translate(&lang);
@@ -54,54 +50,49 @@ pub fn IndexPage(#[props(default = Language::En)] lang: Language) -> Element {
 
         div { class: "flex flex-col w-full h-screen justify-start items-start",
             div { class: "flex flex-row w-full h-[calc(100vh)] justify-start items-start py-20 px-10 gap-20",
-                div { class: "flex flex-row w-fit max-tablet:!hidden",
-                    LeftSidebar {
-                        lang,
-                        profile: profile_data.clone(),
-                        // recent_feeds: recent_feeds.clone(),
-                        // recent_spaces: recent_spaces.clone(),
-                        // recent_communities: recent_communities.clone(),
-                        accounts: accounts.clone(),
+                LeftSidebar {
+                    lang,
+                    profile: profile_data.clone(),
+                    // recent_feeds: recent_feeds.clone(),
+                    // recent_spaces: recent_spaces.clone(),
+                    // recent_communities: recent_communities.clone(),
+                    accounts: accounts.clone(),
 
-                        onwrite: move |_| {
-                            is_write.set(true);
-                        },
-                        add_account: move |_| async move {
-                            ctrl.add_account().await;
-                        },
-                        sign_out: move |_| async move {
-                            ctrl.signout().await;
-                        },
-                    }
+                    onwrite: move |_| {
+                        is_write.set(true);
+                    },
+                    add_account: move |_| async move {
+                        ctrl.add_account().await;
+                    },
+                    sign_out: move |_| async move {
+                        ctrl.signout().await;
+                    },
                 }
 
-                div { class: "flex flex-row w-full ",
-                    FeedContents {
-                        lang,
-                        my_spaces,
-                        following_spaces,
-                        profile: profile.profile.clone(),
+                FeedContents {
+                    lang,
+                    my_spaces,
+                    following_spaces,
+                    profile: profile.profile.clone(),
 
-                        is_write: is_write(),
-                        onwrite: move |_| {
-                            is_write.set(true);
-                        },
-                        onclick: move |id: i64| {
-                            ctrl.move_to_threads(id);
-                        },
-                    }
+                    is_write: is_write(),
+                    onwrite: move |_| {
+                        is_write.set(true);
+                    },
+                    onclick: move |id: i64| {
+                        ctrl.move_to_threads(id);
+                    },
                 }
-                div { class: "flex flex-row w-fit max-tablet:!hidden",
-                    RightSidebar {
-                        lang,
-                        promotion: hot_promotions,
-                        news,
-                        followers,
 
-                        follow: move |id: i64| async move {
-                            ctrl.follow(id).await;
-                        },
-                    }
+                RightSidebar {
+                    lang,
+                    promotion: hot_promotions,
+                    news,
+                    followers,
+
+                    follow: move |id: i64| async move {
+                        ctrl.follow(id).await;
+                    },
                 }
             }
 
