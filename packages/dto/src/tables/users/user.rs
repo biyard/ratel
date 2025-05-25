@@ -2,7 +2,7 @@ use by_types::QueryResponse;
 
 use bdk::prelude::*;
 
-use crate::Group;
+use crate::{Follower, Group};
 
 #[derive(validator::Validate)]
 #[api_model(base = "/v1/users", read_action = user_info, table = users, iter_type=QueryResponse)]
@@ -37,6 +37,9 @@ pub struct User {
     #[api_model(version = v0.1, indexed, unique)]
     pub username: String,
 
+    #[api_model(one_to_many = followers, foreign_key = user_id)]
+    #[serde(default)]
+    pub followers: Vec<Follower>,
     #[api_model(many_to_many = group_members, foreign_table_name = groups, foreign_primary_key = group_id, foreign_reference_key = user_id)]
     #[serde(default)]
     pub groups: Vec<Group>,

@@ -49,7 +49,7 @@ impl QuizResult {
     pub fn most_supportive_candidate(&self) -> i64 {
         let candidates = self.percentage_of_each_candidate();
 
-        candidates[0].0
+        candidates.get(0).map(|x| x.0).unwrap_or(0)
     }
 
     pub fn percentage_of_each_candidate(&self) -> Vec<(i64, String, f64)> {
