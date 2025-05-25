@@ -1,4 +1,4 @@
-use crate::pages::components::FeedContents;
+use crate::pages::components::{CreateFeed, MyFeedList};
 
 use super::*;
 use bdk::prelude::*;
@@ -15,24 +15,27 @@ pub fn IndexPage(#[props(default = Language::En)] lang: Language) -> Element {
     let profile = ctrl.profile()?;
 
     let my_spaces = landing_data.my_spaces;
-    let following_spaces = landing_data.following_spaces;
 
     rsx! {
         by_components::meta::MetaPage { title: tr.title }
 
-        FeedContents {
-            lang,
-            my_spaces,
-            following_spaces,
-            profile: profile.profile.clone(),
+        div { class: "flex flex-col w-full h-full justify-start items-start text-white",
 
-            is_write: is_write(),
-            onwrite: move |_| {
-                is_write.set(true);
-            },
-            onclick: move |id: i64| {
-                ctrl.move_to_threads(id);
-            },
+            CreateFeed {
+                lang,
+                profile: profile.profile,
+                onwrite: move |_| {
+                    is_write.set(true);
+                },
+            }
+
+            MyFeedList {
+                lang,
+                my_spaces,
+                onclick: move |id: i64| {
+                    ctrl.move_to_threads(id);
+                },
+            }
         }
     }
 }
