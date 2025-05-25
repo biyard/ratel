@@ -219,6 +219,8 @@ impl Controller {
             accounts,
         };
 
+        use_context_provider(move || ctrl);
+
         Ok(ctrl)
     }
 
