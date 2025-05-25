@@ -294,7 +294,7 @@ mod tests {
                 "Quiz 3".to_string(),
                 "Like".to_string(),
                 "Dislike".to_string(),
-                Party::PeoplePowerParty,
+                Party::DemocraticParty,
             )
             .await
             .unwrap()
