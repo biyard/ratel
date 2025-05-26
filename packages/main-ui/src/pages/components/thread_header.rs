@@ -4,7 +4,7 @@ use bdk::prelude::{
     },
     *,
 };
-use dto::ContentType;
+use dto::{FeedType, by_components::icons::validations::Add};
 
 use crate::{
     components::icons::{Badge, Feed2, RewardCoin},
@@ -22,7 +22,7 @@ pub fn ThreadHeader(
     number_of_rewards: i64,
     number_of_shared: i64,
     created_at: i64,
-    content_type: ContentType,
+    feed_type: FeedType,
     onback: EventHandler<MouseEvent>,
 ) -> Element {
     rsx! {
@@ -35,7 +35,7 @@ pub fn ThreadHeader(
             }
             ThreadHeaderContents {
                 lang,
-                content_type,
+                feed_type,
                 title,
                 profile,
                 proposer,
@@ -48,7 +48,7 @@ pub fn ThreadHeader(
 #[component]
 pub fn ThreadHeaderContents(
     lang: Language,
-    content_type: ContentType,
+    feed_type: FeedType,
     title: String,
     profile: String,
     proposer: String,
@@ -56,7 +56,10 @@ pub fn ThreadHeaderContents(
 ) -> Element {
     rsx! {
         div { class: "flex flex-col w-full justify-start items-start gap-10",
-            Label { label: content_type.translate(&lang) }
+            div { class: "flex flex-row w-full justify-between items-center",
+                Label { label: "Crypto" }
+                CreateSpaceButton { lang }
+            }
             div { class: "flex flex-row w-full justify-between items-center gap-20",
                 div { class: "font-bold text-[20px]/30 text-white", {title} }
                 div { class: "w-20 h-20",
@@ -146,11 +149,35 @@ pub fn ThreadHeaderIcon(
 }
 
 #[component]
+pub fn CreateSpaceButton(lang: Language) -> Element {
+    let tr: CreateSpaceButtonTranslate = translate(&lang);
+    rsx! {
+        div { class: "create-space-button",
+            Add {
+                class: "[&>stroke]:fill-neutral-500",
+                width: "20",
+                height: "20",
+            }
+            div { {tr.create_space} }
+        }
+    }
+}
+
+#[component]
 pub fn IconBox(icon: Element, text: String) -> Element {
     rsx! {
         div { class: "flex flex-row w-fit justify-start items-center gap-4",
             {icon}
             div { class: "font-medium text-[15px]/18 text-white", {text} }
         }
+    }
+}
+
+translate! {
+    CreateSpaceButtonTranslate;
+
+    create_space: {
+        ko: "Create a Space",
+        en: "Create a Space"
     }
 }

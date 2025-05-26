@@ -22,7 +22,7 @@ pub fn FeedContent(lang: Language, feed: FeedSummary, onclick: EventHandler<i64>
             },
             div { class: "flex flex-col w-full justify-start items-start gap-10",
                 TopContent {
-                    label: feed.feed_type.translate(&lang),
+                    label: "Crypto",
                     title: feed.title.unwrap_or_default(),
                     image: feed.profile_image.unwrap_or_default(),
                     nickname: feed.proposer_name.unwrap_or_default(),

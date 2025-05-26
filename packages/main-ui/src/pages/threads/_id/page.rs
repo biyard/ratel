@@ -10,33 +10,12 @@ pub fn ThreadPage(#[props(default = Language::En)] lang: Language, id: i64) -> E
     let mut is_write = use_signal(|| false);
     let mut ctrl = Controller::new(lang, id)?;
 
-    let landing_data = ctrl.landing_data()?;
-    let profile = ctrl.profile()?;
-    let communities = ctrl.communities()?;
     let accounts = ctrl.accounts()?;
+    let feed = ctrl.feed()?;
 
-    let my_spaces = landing_data.my_spaces;
-    let following_spaces = landing_data.following_spaces;
-
-    let space = ctrl.space()?;
-
-    tracing::debug!("space: {:?}", space);
-
-    let recent_feeds: Vec<String> = my_spaces
-        .iter()
-        .map(|v| v.title.clone().unwrap_or_default())
-        .take(3)
-        .collect();
-    let recent_spaces: Vec<String> = following_spaces
-        .iter()
-        .map(|v| v.title.clone().unwrap_or_default())
-        .take(3)
-        .collect();
-    let recent_communities: Vec<String> = communities
-        .iter()
-        .map(|v| v.title.clone().unwrap_or_default())
-        .take(3)
-        .collect();
+    let recent_feeds: Vec<String> = vec![];
+    let recent_spaces: Vec<String> = vec![];
+    let recent_communities: Vec<String> = vec![];
 
     let profile_data = ctrl.my_info();
 
@@ -71,7 +50,7 @@ pub fn ThreadPage(#[props(default = Language::En)] lang: Language, id: i64) -> E
                 div { class: "flex flex-row w-full ",
                     Threads {
                         lang,
-                        space,
+                        feed,
                         ondownload: move |(name, url): (String, Option<String>)| async move {
                             ctrl.download_file(name, url).await;
                         },
@@ -84,7 +63,7 @@ pub fn ThreadPage(#[props(default = Language::En)] lang: Language, id: i64) -> E
                 aria_hidden: is_write(),
                 BottomSheet {
                     lang,
-                    profile: profile.clone(),
+                    profile: profile_data.clone(),
                     recent_feeds,
                     recent_spaces,
                     recent_communities,

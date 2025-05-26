@@ -10,9 +10,8 @@ pub fn IndexPage(#[props(default = Language::En)] lang: Language) -> Element {
     let mut ctrl: Controller = use_context();
     let tr: IndexTranslate = translate(&lang);
 
-    let profile = ctrl.profile()?;
-
     let feeds = ctrl.feeds()?;
+    let my_info = ctrl.my_info();
 
     rsx! {
         by_components::meta::MetaPage { title: tr.title }
@@ -20,7 +19,7 @@ pub fn IndexPage(#[props(default = Language::En)] lang: Language) -> Element {
         div { class: "flex flex-col w-full h-fit justify-start items-start text-white",
             CreateFeed {
                 lang,
-                profile: profile.profile.clone(),
+                profile: my_info.profile_url,
                 onwrite: move |_| {
                     ctrl.change_write(true);
                 },
