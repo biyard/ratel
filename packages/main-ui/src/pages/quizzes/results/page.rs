@@ -34,7 +34,7 @@ pub fn ResultsPage(
 
     rsx! {
         by_components::meta::MetaPage {
-            title: "{candidate.name}",
+            title: "Ratel 크립토 정책 성향 조사: {candidate.name}",
             image: "{candidate.image}",
             description: meta_description,
         }
