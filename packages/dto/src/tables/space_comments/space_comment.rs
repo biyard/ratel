@@ -18,10 +18,10 @@ pub struct SpaceComment {
 
     #[api_model(summary, many_to_one = spaces)]
     pub space_id: i64,
-    #[api_model(summary, nullable, many_to_one = spaces)]
+    #[api_model(summary, nullable)]
     pub parent_id: Option<i64>,
     #[api_model(action = create, summary)]
     pub comment: String, //html format
-    #[api_model(one_to_many = space_comments, foreign_key = comment_id)]
-    pub replies: Vec<SpaceComment>,
+                         // #[api_model(one_to_many = space_comments, foreign_key = comment_id)]
+                         // pub replies: Vec<SpaceComment>,
 }

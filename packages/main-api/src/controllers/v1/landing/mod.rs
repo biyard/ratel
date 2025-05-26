@@ -47,7 +47,6 @@ impl LandingController {
             LandingDataParam::Read(param)
                 if param.action == Some(LandingDataReadActionType::FindOne) =>
             {
-                tracing::debug!("hello");
                 let res = ctrl.find_one(auth).await?;
                 Ok(Json(LandingDataGetResponse::Read(res)))
             }

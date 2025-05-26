@@ -1,10 +1,8 @@
-use crate::SpaceLike;
-use crate::{SpaceComment, SpaceCommentCreateRequest};
 use validator::Validate;
 
 //TODO: action(like, comments, find_by_id, create_space), query_action
 #[derive(Validate)]
-#[api_model(base = "/v1/spaces", table = spaces, action = [like, comments(comments = SpaceCommentCreateRequest)])]
+#[api_model(base = "/v1/spaces", table = spaces, action = [create_space(user_ids = Vec<i64>)])]
 pub struct Space {
     #[api_model(summary, primary_key, read_action = [find_by_id])]
     pub id: i64,
@@ -13,53 +11,41 @@ pub struct Space {
     #[api_model(summary, auto = [insert, update])]
     pub updated_at: i64,
 
-    #[api_model(summary, action = [create_space])]
+    #[api_model(summary, nullable)]
+    pub title: Option<String>,
+    #[api_model(summary)]
     pub html_contents: String,
-    #[api_model(summary, action = [create_space])]
+    #[api_model(summary)]
     pub space_type: SpaceType,
     #[api_model(summary, many_to_one = users)]
     pub user_id: i64,
     #[api_model(summary, many_to_one = industries)]
     pub industry_id: i64,
 
-    #[api_model(summary, nullable, indexed)]
-    pub parent_id: Option<i64>,
-    #[api_model(summary, nullable, action = [create_space])]
-    pub title: Option<String>,
-    #[api_model(summary, nullable, indexed)]
-    pub part_id: Option<i64>,
-    #[api_model(summary, nullable, indexed)]
-    pub quote_space_id: Option<i64>,
+    #[api_model(summary, many_to_one = feeds, action = create_space)]
+    pub feed_id: i64,
 
     #[api_model(summary)]
     pub proposer_profile: Option<String>,
     #[api_model(summary)]
     pub proposer_nickname: Option<String>,
-    #[api_model(summary)]
-    pub is_saved: bool,
     #[api_model(summary, action = [create_space])]
     pub content_type: ContentType,
 
-    #[api_model(summary)]
-    pub accepters: i64,
-    #[api_model(summary)]
-    pub rejecters: i64,
-    #[api_model(summary)]
+    #[api_model(one_to_many = space_members, foreign_key = space_id)]
+    #[serde(default)]
+    pub members: Vec<SpaceMember>,
+
+    #[api_model(summary, many_to_many = space_users, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = space_id, aggregator = count, unique)]
     pub likes: i64,
-    #[api_model(summary)]
+    #[api_model(summary, one_to_many = space_comments, foreign_key = space_id, aggregator=count)]
     pub comments: i64,
     #[api_model(summary)]
+    #[serde(default)]
     pub rewards: i64,
     #[api_model(summary)]
+    #[serde(default)]
     pub shares: i64,
-
-    #[api_model(summary, action = create, type = JSONB, version = v0.1)]
-    pub files: Vec<File>,
-
-    #[api_model(summary, one_to_many = space_likes)]
-    pub like_items: Vec<SpaceLike>,
-    #[api_model(summary, one_to_many = space_comments)]
-    pub comment_items: Vec<SpaceComment>,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]
@@ -85,6 +71,8 @@ pub enum ContentType {
 }
 
 pub use bdk::prelude::*;
+
+use crate::SpaceMember;
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]

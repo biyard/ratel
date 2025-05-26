@@ -15,6 +15,7 @@ use crate::{
 #[component]
 pub fn ThreadHeader(
     lang: Language,
+    is_creator: bool,
     profile: String,
     proposer: String,
     title: String,
@@ -23,7 +24,8 @@ pub fn ThreadHeader(
     number_of_shared: i64,
     created_at: i64,
     feed_type: FeedType,
-    onback: EventHandler<MouseEvent>,
+    create_space: EventHandler<MouseEvent>,
+    onprev: EventHandler<MouseEvent>,
 ) -> Element {
     rsx! {
         div { class: "flex flex-col w-full justify-between items-start gap-10 max-tablet:gap-25",
@@ -31,15 +33,17 @@ pub fn ThreadHeader(
                 number_of_comments,
                 number_of_rewards,
                 number_of_shared,
-                onback,
+                onprev,
             }
             ThreadHeaderContents {
                 lang,
+                is_creator,
                 feed_type,
                 title,
                 profile,
                 proposer,
                 created_at,
+                create_space,
             }
         }
     }
@@ -48,17 +52,21 @@ pub fn ThreadHeader(
 #[component]
 pub fn ThreadHeaderContents(
     lang: Language,
+    is_creator: bool,
     feed_type: FeedType,
     title: String,
     profile: String,
     proposer: String,
     created_at: i64,
+    create_space: EventHandler<MouseEvent>,
 ) -> Element {
     rsx! {
         div { class: "flex flex-col w-full justify-start items-start gap-10",
             div { class: "flex flex-row w-full justify-between items-center",
                 Label { label: "Crypto" }
-                CreateSpaceButton { lang }
+                if is_creator {
+                    CreateSpaceButton { lang, create_space }
+                }
             }
             div { class: "flex flex-row w-full justify-between items-center gap-20",
                 div { class: "font-bold text-[20px]/30 text-white", {title} }
@@ -98,14 +106,14 @@ pub fn ThreadHeaderIcon(
     number_of_comments: i64,
     number_of_rewards: i64,
     number_of_shared: i64,
-    onback: EventHandler<MouseEvent>,
+    onprev: EventHandler<MouseEvent>,
 ) -> Element {
     rsx! {
         div { class: "flex flex-row w-full justify-between items-center",
             div {
                 class: "cursor-pointer w-fit h-fit",
                 onclick: move |e| {
-                    onback.call(e);
+                    onprev.call(e);
                 },
                 ArrowLeft {
                     class: "[&>path]:stroke-white",
@@ -149,10 +157,14 @@ pub fn ThreadHeaderIcon(
 }
 
 #[component]
-pub fn CreateSpaceButton(lang: Language) -> Element {
+pub fn CreateSpaceButton(lang: Language, create_space: EventHandler<MouseEvent>) -> Element {
     let tr: CreateSpaceButtonTranslate = translate(&lang);
     rsx! {
-        div { class: "create-space-button",
+        div {
+            class: "cursor-pointer create-space-button",
+            onclick: move |e| {
+                create_space.call(e);
+            },
             Add {
                 class: "[&>stroke]:fill-neutral-500",
                 width: "20",

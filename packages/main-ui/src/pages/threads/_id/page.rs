@@ -51,8 +51,15 @@ pub fn ThreadPage(#[props(default = Language::En)] lang: Language, id: i64) -> E
                     Threads {
                         lang,
                         feed,
+                        user_id: profile_data.id,
+                        create_space: move |_| {
+                            ctrl.create_space();
+                        },
                         ondownload: move |(name, url): (String, Option<String>)| async move {
                             ctrl.download_file(name, url).await;
+                        },
+                        onprev: move |_| {
+                            ctrl.prev_page();
                         },
                     }
                 }
