@@ -54,7 +54,6 @@ pub fn SocialLayout(#[props(default = Language::En)] lang: Language) -> Element 
 
             div { class: "w-full max-w-desktop flex-1 overflow-y-auto", Outlet::<Route> {} }
 
-
             div { class: "flex-shrink-0 w-full",
                 // aria_hidden: selected() == RouteTab::Notification,
                 BottomNavigationBar {
@@ -72,8 +71,8 @@ pub fn SocialLayout(#[props(default = Language::En)] lang: Language) -> Element 
 
 #[component]
 pub fn MyPageLayout(#[props(default = Language::En)] lang: Language) -> Element {
-    let mut is_write = use_signal(|| false);
     let mut ctrl = Controller::new(lang)?;
+    let is_write = ctrl.is_write();
 
     let landing_data = ctrl.landing_data()?;
     let hot_promotions = ctrl.hot_promotions()?;
@@ -117,7 +116,7 @@ pub fn MyPageLayout(#[props(default = Language::En)] lang: Language) -> Element 
                     accounts: accounts.clone(),
 
                     onwrite: move |_| {
-                        is_write.set(true);
+                        ctrl.change_write(true);
                     },
                     add_account: move |_| async move {
                         ctrl.add_account().await;
@@ -142,8 +141,24 @@ pub fn MyPageLayout(#[props(default = Language::En)] lang: Language) -> Element 
             }
 
             div {
-                class: "fixed bottom-85 left-0 w-full hidden max-tablet:flex aria-hidden:!hidden",
-                aria_hidden: is_write(),
+                class: "flex flex-row w-full justify-start items-start mb-85 aria-hidden:!hidden z-50",
+                aria_hidden: !is_write,
+                CreateFeedBox {
+                    lang,
+                    nickname: profile.nickname.clone(),
+                    profile: profile.profile.clone(),
+                    onclose: move |_| {
+                        ctrl.change_write(false);
+                    },
+                    onsend: move |(content_type, description): (ContentType, String)| async move {
+                        ctrl.create_feed(content_type, description).await;
+                    },
+                }
+            }
+
+            div {
+                class: "fixed bottom-85 left-0 w-full hidden max-tablet:flex aria-hidden:!hidden z-60",
+                aria_hidden: is_write,
                 BottomSheet {
                     lang,
                     profile: profile.clone(),
@@ -157,22 +172,6 @@ pub fn MyPageLayout(#[props(default = Language::En)] lang: Language) -> Element 
                     },
                     sign_out: move |_| async move {
                         ctrl.signout().await;
-                    },
-                }
-            }
-
-            div {
-                class: "flex flex-row w-full justify-start items-start aria-hidden:!hidden",
-                aria_hidden: !is_write(),
-                CreateFeedBox {
-                    lang,
-                    nickname: profile.nickname.clone(),
-                    profile: profile.profile.clone(),
-                    onclose: move |_| {
-                        is_write.set(false);
-                    },
-                    onsend: move |(content_type, description): (ContentType, String)| async move {
-                        ctrl.create_feed(content_type, description).await;
                     },
                 }
             }

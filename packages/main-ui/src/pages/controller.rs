@@ -12,6 +12,7 @@ pub struct Controller {
     #[allow(dead_code)]
     pub lang: Language,
     pub nav: Navigator,
+    pub is_write: Signal<bool>,
 
     pub landing_data: Resource<LandingData>,
     pub my_info: Signal<MyInfo>,
@@ -221,6 +222,7 @@ impl Controller {
         let ctrl = Self {
             lang,
             nav: use_navigator(),
+            is_write: use_signal(|| false),
             my_info,
             landing_data,
             hot_promotions,
@@ -233,6 +235,10 @@ impl Controller {
         use_context_provider(move || ctrl);
 
         Ok(ctrl)
+    }
+
+    pub fn change_write(&mut self, is_write: bool) {
+        self.is_write.set(is_write);
     }
 
     pub async fn create_feed(&mut self, content_type: ContentType, description: String) {
