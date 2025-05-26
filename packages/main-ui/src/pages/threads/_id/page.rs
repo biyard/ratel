@@ -50,8 +50,12 @@ pub fn ThreadPage(#[props(default = Language::En)] lang: Language, id: i64) -> E
                 div { class: "flex flex-row w-full ",
                     Threads {
                         lang,
-                        feed,
+                        feed: feed.clone(),
                         user_id: profile_data.id,
+                        exist_spaces: !feed.spaces.is_empty(),
+                        enter_space: move |_| {
+                            ctrl.enter_space();
+                        },
                         create_space: move |_| {
                             ctrl.create_space();
                         },

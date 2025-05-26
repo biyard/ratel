@@ -7,7 +7,7 @@ use bdk::prelude::{
 use dto::{FeedType, by_components::icons::validations::Add};
 
 use crate::{
-    components::icons::{Badge, Feed2, RewardCoin},
+    components::icons::{Badge, Feed2, Palace, RewardCoin},
     pages::components::Label,
     utils::time::format_prev_time,
 };
@@ -24,12 +24,16 @@ pub fn ThreadHeader(
     number_of_shared: i64,
     created_at: i64,
     feed_type: FeedType,
+    exist_spaces: bool,
+    enter_space: EventHandler<MouseEvent>,
     create_space: EventHandler<MouseEvent>,
     onprev: EventHandler<MouseEvent>,
 ) -> Element {
     rsx! {
         div { class: "flex flex-col w-full justify-between items-start gap-10 max-tablet:gap-25",
             ThreadHeaderIcon {
+                exist_spaces,
+                enter_space,
                 number_of_comments,
                 number_of_rewards,
                 number_of_shared,
@@ -38,6 +42,7 @@ pub fn ThreadHeader(
             ThreadHeaderContents {
                 lang,
                 is_creator,
+                exist_spaces,
                 feed_type,
                 title,
                 profile,
@@ -53,6 +58,7 @@ pub fn ThreadHeader(
 pub fn ThreadHeaderContents(
     lang: Language,
     is_creator: bool,
+    exist_spaces: bool,
     feed_type: FeedType,
     title: String,
     profile: String,
@@ -64,7 +70,7 @@ pub fn ThreadHeaderContents(
         div { class: "flex flex-col w-full justify-start items-start gap-10",
             div { class: "flex flex-row w-full justify-between items-center",
                 Label { label: "Crypto" }
-                if is_creator {
+                if is_creator && !exist_spaces {
                     CreateSpaceButton { lang, create_space }
                 }
             }
@@ -103,9 +109,12 @@ pub fn Profile(profile: String, proposer: String) -> Element {
 
 #[component]
 pub fn ThreadHeaderIcon(
+    exist_spaces: bool,
+
     number_of_comments: i64,
     number_of_rewards: i64,
     number_of_shared: i64,
+    enter_space: EventHandler<MouseEvent>,
     onprev: EventHandler<MouseEvent>,
 ) -> Element {
     rsx! {
@@ -123,6 +132,20 @@ pub fn ThreadHeaderIcon(
             }
 
             div { class: "flex flex-row w-fit justify-start items-center gap-20",
+                if exist_spaces {
+                    div {
+                        class: "cursor-pointer flex flex-row w-fit justify-start items-center gap-5",
+                        onclick: move |e| {
+                            enter_space.call(e);
+                        },
+                        Palace {
+                            class: "[&>path]:stroke-neutral-500",
+                            width: "24",
+                            height: "24",
+                        }
+                        div { class: "font-medium text-white text-[15px]/18", "Space" }
+                    }
+                }
                 IconBox {
                     icon: rsx! {
                         RoundBubble2 {
