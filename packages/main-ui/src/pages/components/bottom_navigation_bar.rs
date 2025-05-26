@@ -1,7 +1,5 @@
 use bdk::prelude::{
-    by_components::icons::{
-        chat::RoundBubble, home::Home1, internet_script::Internet, user::UserGroup,
-    },
+    by_components::icons::{home::Home1, internet_script::Internet, user::UserGroup},
     *,
 };
 
@@ -24,7 +22,7 @@ pub fn BottomNavigationBar(
                         Internet {
                             class: format!(
                                 "{}",
-                                if current_page == RouteTab::Explore {
+                                if current_page == RouteTab::Presidential {
                                     "[&>path]:stroke-white [&>path]:fill-white [&>circle]:stroke-white"
                                 } else {
                                     "[&>path]:stroke-neutral-500 [&>path]:fill-neutral-500 [&>circle]:stroke-neutral-500"
@@ -34,11 +32,11 @@ pub fn BottomNavigationBar(
                             height: "32",
                         }
                     },
-                    link: Route::ExplorePage {},
-                    text: tr.explore,
-                    selected: current_page == RouteTab::Explore,
+                    link: Route::PresidentialElectionPage {},
+                    text: tr.election,
+                    selected: current_page == RouteTab::Presidential,
                     onselected: move |_| {
-                        onroute.call(RouteTab::Explore);
+                        onroute.call(RouteTab::Presidential);
                     },
                 }
                 BottomIcon {
@@ -68,7 +66,7 @@ pub fn BottomNavigationBar(
                         UserGroup {
                             class: format!(
                                 "{}",
-                                if current_page == RouteTab::MyNetwork {
+                                if current_page == RouteTab::Politician {
                                     "[&>path]:stroke-white"
                                 } else {
                                     "[&>path]:stroke-neutral-500"
@@ -78,36 +76,36 @@ pub fn BottomNavigationBar(
                             height: "32",
                         }
                     },
-                    link: Route::MyNetworkPage {},
-                    text: tr.my_network,
-                    selected: current_page == RouteTab::MyNetwork,
+                    link: Route::PoliticiansPage {},
+                    text: tr.politicians,
+                    selected: current_page == RouteTab::Politician,
                     onselected: move |_| {
-                        onroute.call(RouteTab::MyNetwork);
+                        onroute.call(RouteTab::Politician);
                     },
                 }
-                BottomIcon {
-                    icon: rsx! {
-                        RoundBubble {
-                            class: format!(
-                                "{}",
-                                if current_page == RouteTab::Message {
-                                    "[&>path]:stroke-white [&>line]:stroke-white"
-                                } else {
-                                    "[&>path]:stroke-neutral-500 [&>line]:stroke-neutral-500"
-                                },
-                            ),
-                            width: "32",
-                            height: "32",
-                            fill: "none",
-                        }
-                    },
-                    link: Route::MessagesPage {},
-                    text: tr.message,
-                    selected: current_page == RouteTab::Message,
-                    onselected: move |_| {
-                        onroute.call(RouteTab::Message);
-                    },
-                }
+                        // BottomIcon {
+            //     icon: rsx! {
+            //         RoundBubble {
+            //             class: format!(
+            //                 "{}",
+            //                 if current_page == RouteTab::Message {
+            //                     "[&>path]:stroke-white [&>line]:stroke-white"
+            //                 } else {
+            //                     "[&>path]:stroke-neutral-500 [&>line]:stroke-neutral-500"
+            //                 },
+            //             ),
+            //             width: "32",
+            //             height: "32",
+            //             fill: "none",
+            //         }
+            //     },
+            //     link: Route::MessagesPage {},
+            //     text: tr.message,
+            //     selected: current_page == RouteTab::Message,
+            //     onselected: move |_| {
+            //         onroute.call(RouteTab::Message);
+            //     },
+            // }
             }
         }
     }
@@ -141,6 +139,14 @@ pub fn BottomIcon(
 translate! {
     BottomSheetTranslate;
 
+    election: {
+        ko: "Election",
+        en: "Election"
+    },
+    politicians: {
+        ko: "Politicians",
+        en: "Politicians"
+    },
     explore: {
         ko: "Explore",
         en: "Explore"
