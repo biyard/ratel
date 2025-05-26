@@ -1,6 +1,6 @@
 use bdk::prelude::*;
 
-use crate::{MyInfo, SpaceSummary, User};
+use crate::{SpaceSummary, User};
 
 //내 아이디 별 관심 스페이스 리스트 조회
 //TODO: query landing data
@@ -9,5 +9,4 @@ pub struct LandingData {
     pub my_spaces: Vec<SpaceSummary>,
     pub following_spaces: Vec<SpaceSummary>,
     pub follower_list: Vec<User>,
-    pub profile_data: MyInfo,
 }

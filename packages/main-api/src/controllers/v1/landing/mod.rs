@@ -9,31 +9,18 @@ use by_axum::{
 };
 use dto::*;
 
-use crate::utils::users::extract_user_id;
-
 #[derive(Clone, Debug)]
 pub struct LandingController {
     pool: sqlx::Pool<sqlx::Postgres>,
 }
 
 impl LandingController {
-    async fn find_one(&self, auth: Option<Authorization>) -> Result<LandingData> {
-        let user_id = extract_user_id(&self.pool, auth).await?;
-
-        let profile_data = MyInfo::query_builder()
-            .id_equals(user_id)
-            .query()
-            .map(MyInfo::from)
-            .fetch_one(&self.pool)
-            .await?;
-
-        tracing::debug!("profile data: {:?}", profile_data);
-
+    async fn find_one(&self, _auth: Option<Authorization>) -> Result<LandingData> {
+        let _pool = self.pool.clone();
         Ok(LandingData {
             my_spaces: vec![],
             following_spaces: vec![],
             follower_list: vec![],
-            profile_data,
         })
     }
 }

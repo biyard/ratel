@@ -87,7 +87,7 @@ pub fn MyPageLayout(#[props(default = Language::En)] lang: Language) -> Element 
     let my_spaces = landing_data.my_spaces;
 
     let followers = landing_data.follower_list;
-    let profile_data = landing_data.profile_data;
+    let profile_data = ctrl.my_info();
 
     let recent_feeds: Vec<String> = my_spaces
         .iter()
