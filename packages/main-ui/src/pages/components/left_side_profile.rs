@@ -113,17 +113,17 @@ pub fn LeftSideProfile(
                                         is_profile_clicked.set(clicked);
                                     },
                                 }
-                                Tier {
-                                    lang,
-                                    exp,
-                                    total_exp,
-                                    followers,
-                                    replies,
-                                    posts,
-                                    spaces,
-                                    votes,
-                                    surveys,
-                                }
+                                                        // Tier {
+                            //     lang,
+                            //     exp,
+                            //     total_exp,
+                            //     followers,
+                            //     replies,
+                            //     posts,
+                            //     spaces,
+                            //     votes,
+                            //     surveys,
+                            // }
                             }
                         }
                     }
@@ -292,9 +292,13 @@ pub fn Profile(
                 onchange_clicked.call(!clicked);
             },
             div { class: "relative w-fit h-fit",
-                img {
-                    class: "w-80 h-80 rounded-full object-cover",
-                    src: profile,
+                if profile != "" {
+                    img {
+                        class: "w-80 h-80 rounded-full object-cover",
+                        src: profile,
+                    }
+                } else {
+                    div { class: "w-80 h-80 rounded-full bg-neutral-400" }
                 }
                 div { class: "absolute bottom-0 right-0", Grade {} }
             }
