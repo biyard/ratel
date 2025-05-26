@@ -33,7 +33,7 @@ pub use right_side_bar::*;
 pub use search_box::*;
 // pub use side_rounded_accordian::*;
 pub use side_rounded_box::*;
-pub use thread_comments::*;
+// pub use thread_comments::*;
 pub use thread_contents::*;
 pub use thread_files::*;
 pub use thread_header::*;

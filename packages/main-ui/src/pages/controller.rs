@@ -21,10 +21,8 @@ pub struct Controller {
     pub my_info: Signal<MyInfo>,
     pub hot_promotions: Resource<Promotion>,
     pub news: Resource<Vec<NewsSummary>>,
-    pub profile: Resource<Profile>,
 
     pub feeds: Resource<Vec<FeedSummary>>,
-    pub communities: Resource<Vec<CommunityList>>,
     pub accounts: Resource<Vec<AccountList>>,
 
     pub size: Signal<usize>,
@@ -133,45 +131,6 @@ impl Controller {
         let user = user_service.user_info();
         tracing::debug!("user info: {:?}", user);
 
-        // let my_feeds = use_server_future(move || async move {
-        //     match Space::get_client(config::get().main_api_endpoint)
-        //         .query_my_spaces()
-        //         .await
-        //     {
-        //         Ok(promotion) => promotion.items,
-        //         Err(e) => {
-        //             tracing::debug!("query hot promotion failed with error: {:?}", e);
-        //             Default::default()
-        //         }
-        //     }
-        // });
-
-        let communities = use_server_future(move || async move {
-            vec![
-                // CommunityList {
-                //     id: 0,
-                //     created_at: 1747726155,
-                //     updated_at: 1747726155,
-                //     html_contents: "<div>hello</div>".to_string(),
-                //     title: Some("test1".to_string()),
-                // },
-                // CommunityList {
-                //     id: 0,
-                //     created_at: 1747726155,
-                //     updated_at: 1747726155,
-                //     html_contents: "<div>hello</div>".to_string(),
-                //     title: Some("test12".to_string()),
-                // },
-                // CommunityList {
-                //     id: 0,
-                //     created_at: 1747726155,
-                //     updated_at: 1747726155,
-                //     html_contents: "<div>hello</div>".to_string(),
-                //     title: Some("test123".to_string()),
-                // },
-            ]
-        })?;
-
         let hot_promotions = use_server_future(move || async move {
             match Promotion::get_client(config::get().main_api_endpoint)
                 .hot_promotion()
@@ -201,46 +160,7 @@ impl Controller {
             }
         })?;
 
-        let profile = use_server_future(move || async move {
-            Profile {
-                profile: "https://lh3.googleusercontent.com/a/ACg8ocIGf0gpB8MQdGkp5TXW1327nRpuPz70iy_hQY2NXNwanRXbFw=s96-c".to_string(),
-                nickname: "Jongseok Park".to_string(),
-                email: "victor@biyard.co".to_string(),
-                description: Some("Office of Rep.".to_string()),
-
-                national: National::US,
-                tier: 1,
-
-                exp: 4,
-                total_exp: 6,
-
-                followers: 12501,
-                replies: 503101,
-                posts: 420201,
-                spaces: 3153,
-                votes: 125,
-                surveys: 3153
-            }
-        })?;
-
-        let accounts = use_server_future(move || async move {
-            vec! [
-                // AccountList {
-                //     id: 0,
-                //     created_at: 1747726155,
-                //     updated_at: 1747726155,
-                //     profile: "https://lh3.googleusercontent.com/a/ACg8ocIGf0gpB8MQdGkp5TXW1327nRpuPz70iy_hQY2NXNwanRXbFw=s96-c".to_string(),
-                //     email: "victor@biyard.co".to_string(),
-                // },
-                // AccountList {
-                //     id: 1,
-                //     created_at: 1747726155,
-                //     updated_at: 1747726155,
-                //     profile: "https://lh3.googleusercontent.com/a/ACg8ocIGf0gpB8MQdGkp5TXW1327nRpuPz70iy_hQY2NXNwanRXbFw=s96-c".to_string(),
-                //     email: "victor1@biyard.co".to_string(),
-                // }
-            ]
-        })?;
+        let accounts = use_server_future(move || async move { vec![] })?;
 
         let ctrl = Self {
             lang,
@@ -251,8 +171,6 @@ impl Controller {
             landing_data,
             hot_promotions,
             news,
-            profile,
-            communities,
             accounts,
             feeds,
         };

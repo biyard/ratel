@@ -1,135 +1,47 @@
 use bdk::prelude::*;
-use dto::{LandingData, MyInfo, Space};
+use dto::{Feed, MyInfo};
 
-use crate::{
-    config,
-    pages::controller::{AccountList, CommunityList, National, Profile},
-    services::user_service::UserService,
-};
+use crate::{config, pages::controller::AccountList, services::user_service::UserService};
 
 #[derive(Clone, Copy, DioxusController)]
 pub struct Controller {
     #[allow(dead_code)]
     pub lang: Language,
-
-    #[allow(dead_code)]
-    pub landing_data: Resource<LandingData>,
-    pub profile: Resource<Profile>,
     pub my_info: Signal<MyInfo>,
-
-    pub communities: Resource<Vec<CommunityList>>,
     pub accounts: Resource<Vec<AccountList>>,
-
-    pub space: Resource<Space>,
+    pub feed: Resource<Feed>,
 }
 
 impl Controller {
     pub fn new(lang: Language, id: i64) -> std::result::Result<Self, RenderError> {
         let user_service: UserService = use_context();
-        let landing_data = use_server_future(move || async move {
-            match LandingData::get_client(config::get().main_api_endpoint)
-                .find_one()
+        let accounts = use_server_future(move || async move { vec![] })?;
+
+        let feed = use_server_future(move || async move {
+            match Feed::get_client(config::get().main_api_endpoint)
+                .get(id)
                 .await
             {
-                Ok(space) => space,
+                Ok(feed) => feed,
                 Err(e) => {
-                    tracing::debug!("query spaces failed with error: {:?}", e);
+                    tracing::debug!("query feed failed with error: {:?}", e);
                     Default::default()
                 }
             }
         })?;
 
-        let profile = use_server_future(move || async move {
-            Profile {
-                profile: "https://lh3.googleusercontent.com/a/ACg8ocIGf0gpB8MQdGkp5TXW1327nRpuPz70iy_hQY2NXNwanRXbFw=s96-c".to_string(),
-                nickname: "Jongseok Park".to_string(),
-                email: "victor@biyard.co".to_string(),
-                description: Some("Office of Rep.".to_string()),
-
-                national: National::US,
-                tier: 1,
-
-                exp: 4,
-                total_exp: 6,
-
-                followers: 12501,
-                replies: 503101,
-                posts: 420201,
-                spaces: 3153,
-                votes: 125,
-                surveys: 3153
-            }
-        })?;
-
-        let accounts = use_server_future(move || async move {
-            vec! [
-                // AccountList {
-                //     id: 0,
-                //     created_at: 1747726155,
-                //     updated_at: 1747726155,
-                //     profile: "https://lh3.googleusercontent.com/a/ACg8ocIGf0gpB8MQdGkp5TXW1327nRpuPz70iy_hQY2NXNwanRXbFw=s96-c".to_string(),
-                //     email: "victor@biyard.co".to_string(),
-                // },
-                // AccountList {
-                //     id: 1,
-                //     created_at: 1747726155,
-                //     updated_at: 1747726155,
-                //     profile: "https://lh3.googleusercontent.com/a/ACg8ocIGf0gpB8MQdGkp5TXW1327nRpuPz70iy_hQY2NXNwanRXbFw=s96-c".to_string(),
-                //     email: "victor1@biyard.co".to_string(),
-                // }
-            ]
-        })?;
-
-        let communities = use_server_future(move || async move {
-            vec![
-                // CommunityList {
-                //     id: 0,
-                //     created_at: 1747726155,
-                //     updated_at: 1747726155,
-                //     html_contents: "<div>hello</div>".to_string(),
-                //     title: Some("test1".to_string()),
-                // },
-                // CommunityList {
-                //     id: 0,
-                //     created_at: 1747726155,
-                //     updated_at: 1747726155,
-                //     html_contents: "<div>hello</div>".to_string(),
-                //     title: Some("test12".to_string()),
-                // },
-                // CommunityList {
-                //     id: 0,
-                //     created_at: 1747726155,
-                //     updated_at: 1747726155,
-                //     html_contents: "<div>hello</div>".to_string(),
-                //     title: Some("test123".to_string()),
-                // },
-            ]
-        })?;
-
-        let space = use_server_future(move || async move {
-            match Space::get_client(config::get().main_api_endpoint)
-                .find_by_id(id)
-                .await
-            {
-                Ok(space) => space,
-                Err(e) => {
-                    tracing::debug!("query spaces failed with error: {:?}", e);
-                    Default::default()
-                }
-            }
-        })?;
         let my_info = user_service.my_info();
 
-        let ctrl = Self {
+        let mut ctrl = Self {
             lang,
-            profile,
             accounts,
-            communities,
-            landing_data,
             my_info: use_signal(|| my_info),
-
-            space,
+            feed,
         };
+
+        use_effect(move || {
+            ctrl.my_info.set(user_service.my_info());
+        });
 
         Ok(ctrl)
     }

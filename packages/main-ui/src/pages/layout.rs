@@ -77,36 +77,20 @@ pub fn MyPageLayout(#[props(default = Language::En)] lang: Language) -> Element 
     let landing_data = ctrl.landing_data()?;
     let hot_promotions = ctrl.hot_promotions()?;
     let news = ctrl.news()?;
-    let profile = ctrl.profile()?;
-    let communities = ctrl.communities()?;
     let accounts = ctrl.accounts()?;
 
     tracing::debug!("landing_data: {:?}", landing_data.clone());
 
-    let my_spaces = landing_data.my_spaces;
-
     let followers = landing_data.follower_list;
     let profile_data = ctrl.my_info();
 
-    let recent_feeds: Vec<String> = my_spaces
-        .iter()
-        .map(|v| v.title.clone().unwrap_or_default())
-        .take(3)
-        .collect();
-    let recent_spaces: Vec<String> = my_spaces
-        .iter()
-        .map(|v| v.title.clone().unwrap_or_default())
-        .take(3)
-        .collect();
-    let recent_communities: Vec<String> = communities
-        .iter()
-        .map(|v| v.title.clone().unwrap_or_default())
-        .take(3)
-        .collect();
+    let recent_feeds: Vec<String> = vec![];
+    let recent_spaces: Vec<String> = vec![];
+    let recent_communities: Vec<String> = vec![];
 
     rsx! {
         div { class: "flex flex-col w-full h-screen justify-start items-start",
-            div { class: "flex flex-row w-full h-[calc(100vh)] justify-start items-start py-20 px-10 gap-20",
+            div { class: "flex flex-row w-full h-full max-h-[calc(100vh)] justify-start items-start py-20 px-10 gap-20",
                 LeftSidebar {
                     lang,
                     profile: profile_data.clone(),
@@ -145,8 +129,8 @@ pub fn MyPageLayout(#[props(default = Language::En)] lang: Language) -> Element 
                 aria_hidden: !is_write,
                 CreateFeedBox {
                     lang,
-                    nickname: profile.nickname.clone(),
-                    profile: profile.profile.clone(),
+                    nickname: profile_data.nickname.clone(),
+                    profile: profile_data.profile_url.clone(),
                     onclose: move |_| {
                         ctrl.change_write(false);
                     },
@@ -161,7 +145,7 @@ pub fn MyPageLayout(#[props(default = Language::En)] lang: Language) -> Element 
                 aria_hidden: is_write,
                 BottomSheet {
                     lang,
-                    profile: profile.clone(),
+                    profile: profile_data.clone(),
                     recent_feeds,
                     recent_spaces,
                     recent_communities,
