@@ -22,12 +22,25 @@ pub fn ResultsPage(
         .map(|v| v.clone())
         .unwrap_or((0, "".to_string(), 0.0));
     let description = format!(
-        "{}<p>🎖️ 정책 성향 일치율: <b>{:.1}%</b></p>",
+        "{}\n<p>🎖️ 정책 성향 일치율: <b>{:.1}%</b></p>",
         candidate.description, percent
     );
 
+    let meta_description = description
+        .replace("<p>", "")
+        .replace("</p>", "")
+        .replace("<b>", "")
+        .replace("</b>", "");
+
     rsx! {
-        by_components::meta::MetaPage { title: "{candidate.name}", image: "{candidate.image}" }
+        by_components::meta::MetaPage {
+            title: "Ratel 크립토 정책 성향 조사: {candidate.name}",
+            image: "{candidate.image}",
+            description: meta_description,
+        }
+        document::Meta { property: "og:image:width", content: "400" }
+        document::Meta { property: "og:image:height", content: "600" }
+
 
         div {
             id: "results",
