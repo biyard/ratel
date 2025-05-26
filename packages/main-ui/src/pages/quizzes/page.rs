@@ -28,7 +28,7 @@ pub fn QuizzesPage(#[props(default = Language::En)] lang: Language) -> Element {
             div { class: "w-full flex flex-col items-center gap-10",
                 dotlottie-player {
                     src: asset!("/public/animations/ani_logo.json"),
-                    class: "w-193 h-250",
+                    class: "w-193 h-200",
                     "autoplay": true,
                 }
                 p {
