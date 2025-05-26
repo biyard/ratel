@@ -17,6 +17,7 @@ pub fn LandingLayout(#[props(default = Language::En)] lang: Language) -> Element
 
     use_effect(move || {
         if !matches!(current_path2, Route::QuizzesPage {})
+            && !matches!(current_path2, Route::ResultsPage { .. })
             && crate::config::get().experiment
             && user_service.loggedin()
         {
