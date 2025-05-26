@@ -2,7 +2,6 @@ use bdk::prelude::*;
 
 use crate::{SpaceSummary, User};
 
-//내 아이디 별 관심 스페이스 리스트 조회
 //TODO: query landing data
 #[api_model(base = "/v1/landings", database = skip, read_action = find_one)]
 pub struct LandingData {

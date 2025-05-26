@@ -1,5 +1,8 @@
 use bdk::prelude::*;
-use dto::{ContentType, MyInfo, News, NewsQuery, NewsSummary, Promotion, Space, User};
+use dto::{
+    ContentType, Feed, FeedQuery, FeedSummary, MyInfo, News, NewsQuery, NewsSummary, Promotion,
+    User,
+};
 use dto::{Follower, LandingData};
 use serde::{Deserialize, Serialize};
 
@@ -20,8 +23,11 @@ pub struct Controller {
     pub news: Resource<Vec<NewsSummary>>,
     pub profile: Resource<Profile>,
 
+    pub feeds: Resource<Vec<FeedSummary>>,
     pub communities: Resource<Vec<CommunityList>>,
     pub accounts: Resource<Vec<AccountList>>,
+
+    pub size: Signal<usize>,
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug, Eq, PartialEq, Translate, Default)]
@@ -79,7 +85,7 @@ impl Controller {
         let user_service: UserService = use_context();
         let nav = use_navigator();
         let mut my_info = use_signal(|| MyInfo::default());
-        tracing::debug!("my info 11");
+        let size = use_signal(|| 10);
 
         use_effect(move || {
             if !user_service.loggedin() {
@@ -87,8 +93,6 @@ impl Controller {
             }
 
             my_info.set(user_service.my_info());
-
-            tracing::debug!("my info 22: {:?}", user_service.my_info());
         });
 
         let landing_data = use_server_future(move || {
@@ -99,6 +103,25 @@ impl Controller {
                     .await
                 {
                     Ok(space) => space,
+                    Err(e) => {
+                        tracing::debug!("query spaces failed with error: {:?}", e);
+                        Default::default()
+                    }
+                }
+            }
+        })?;
+
+        let feeds = use_server_future(move || {
+            let size = size();
+            async move {
+                match Feed::get_client(config::get().main_api_endpoint)
+                    .query(FeedQuery {
+                        size,
+                        bookmark: None,
+                    })
+                    .await
+                {
+                    Ok(feed) => feed.items,
                     Err(e) => {
                         tracing::debug!("query spaces failed with error: {:?}", e);
                         Default::default()
@@ -223,6 +246,7 @@ impl Controller {
             lang,
             nav: use_navigator(),
             is_write: use_signal(|| false),
+            size,
             my_info,
             landing_data,
             hot_promotions,
@@ -230,11 +254,16 @@ impl Controller {
             profile,
             communities,
             accounts,
+            feeds,
         };
 
         use_context_provider(move || ctrl);
 
         Ok(ctrl)
+    }
+
+    pub fn add_size(&mut self) {
+        self.size.set(self.size() + 5);
     }
 
     pub fn change_write(&mut self, is_write: bool) {
@@ -268,13 +297,15 @@ impl Controller {
             return;
         }
 
-        match Space::get_client(config::get().main_api_endpoint)
-            .create_space(description, dto::SpaceType::Post, Some(title), content_type)
+        match Feed::get_client(config::get().main_api_endpoint)
+            .write_post(description, user_id, industry_id, Some(title), None)
             .await
         {
             Ok(_) => {
                 btracing::info!("success to create space");
                 self.landing_data.restart();
+                self.feeds.restart();
+                self.is_write.set(false);
             }
             Err(e) => {
                 btracing::error!("failed to create space with error: {:?}", e);
