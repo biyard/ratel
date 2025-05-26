@@ -1,9 +1,13 @@
 use bdk::prelude::*;
-use dto::{LandingData, Space};
+use dto::{
+    Feed, MyInfo, Space, SpaceType, TotalInfo, TotalInfoQuery, TotalInfoSummary,
+    dioxus_popup::PopupService,
+};
 
 use crate::{
     config,
-    pages::controller::{AccountList, CommunityList, National, Profile},
+    pages::{components::CreateSpacePopup, controller::AccountList},
+    route::Route,
     services::user_service::UserService,
 };
 
@@ -11,121 +15,67 @@ use crate::{
 pub struct Controller {
     #[allow(dead_code)]
     pub lang: Language,
-
-    #[allow(dead_code)]
-    pub landing_data: Resource<LandingData>,
-    pub profile: Resource<Profile>,
-
-    pub communities: Resource<Vec<CommunityList>>,
+    pub nav: Navigator,
+    pub total_users: Signal<Resource<Vec<TotalInfoSummary>>>,
+    pub my_info: Signal<MyInfo>,
     pub accounts: Resource<Vec<AccountList>>,
-
-    pub space: Resource<Space>,
+    pub feed: Resource<Feed>,
+    #[allow(dead_code)]
+    pub id: i64,
+    #[allow(dead_code)]
+    pub popup: PopupService,
 }
 
 impl Controller {
     pub fn new(lang: Language, id: i64) -> std::result::Result<Self, RenderError> {
-        let landing_data = use_server_future(move || async move {
-            match LandingData::get_client(config::get().main_api_endpoint)
-                .find_one()
+        let user_service: UserService = use_context();
+        let accounts = use_server_future(move || async move { vec![] })?;
+
+        let feed = use_server_future(move || async move {
+            match Feed::get_client(config::get().main_api_endpoint)
+                .get(id)
                 .await
             {
-                Ok(space) => space,
+                Ok(feed) => feed,
                 Err(e) => {
-                    tracing::debug!("query spaces failed with error: {:?}", e);
+                    tracing::debug!("query feed failed with error: {:?}", e);
                     Default::default()
                 }
             }
         })?;
 
-        let profile = use_server_future(move || async move {
-            Profile {
-                profile: "https://lh3.googleusercontent.com/a/ACg8ocIGf0gpB8MQdGkp5TXW1327nRpuPz70iy_hQY2NXNwanRXbFw=s96-c".to_string(),
-                nickname: "Jongseok Park".to_string(),
-                email: "victor@biyard.co".to_string(),
-                description: Some("Office of Rep.".to_string()),
-
-                national: National::US,
-                tier: 1,
-
-                exp: 4,
-                total_exp: 6,
-
-                followers: 12501,
-                replies: 503101,
-                posts: 420201,
-                spaces: 3153,
-                votes: 125,
-                surveys: 3153
-            }
-        })?;
-
-        let accounts = use_server_future(move || async move {
-            vec! [
-                // AccountList {
-                //     id: 0,
-                //     created_at: 1747726155,
-                //     updated_at: 1747726155,
-                //     profile: "https://lh3.googleusercontent.com/a/ACg8ocIGf0gpB8MQdGkp5TXW1327nRpuPz70iy_hQY2NXNwanRXbFw=s96-c".to_string(),
-                //     email: "victor@biyard.co".to_string(),
-                // },
-                // AccountList {
-                //     id: 1,
-                //     created_at: 1747726155,
-                //     updated_at: 1747726155,
-                //     profile: "https://lh3.googleusercontent.com/a/ACg8ocIGf0gpB8MQdGkp5TXW1327nRpuPz70iy_hQY2NXNwanRXbFw=s96-c".to_string(),
-                //     email: "victor1@biyard.co".to_string(),
-                // }
-            ]
-        })?;
-
-        let communities = use_server_future(move || async move {
-            vec![
-                // CommunityList {
-                //     id: 0,
-                //     created_at: 1747726155,
-                //     updated_at: 1747726155,
-                //     html_contents: "<div>hello</div>".to_string(),
-                //     title: Some("test1".to_string()),
-                // },
-                // CommunityList {
-                //     id: 0,
-                //     created_at: 1747726155,
-                //     updated_at: 1747726155,
-                //     html_contents: "<div>hello</div>".to_string(),
-                //     title: Some("test12".to_string()),
-                // },
-                // CommunityList {
-                //     id: 0,
-                //     created_at: 1747726155,
-                //     updated_at: 1747726155,
-                //     html_contents: "<div>hello</div>".to_string(),
-                //     title: Some("test123".to_string()),
-                // },
-            ]
-        })?;
-
-        let space = use_server_future(move || async move {
-            match Space::get_client(config::get().main_api_endpoint)
-                .find_by_id(id)
+        let total_users = use_server_future(move || async move {
+            match TotalInfo::get_client(config::get().main_api_endpoint)
+                .query(TotalInfoQuery {
+                    size: 100,
+                    bookmark: None,
+                })
                 .await
             {
-                Ok(space) => space,
+                Ok(feed) => feed.items,
                 Err(e) => {
-                    tracing::debug!("query spaces failed with error: {:?}", e);
+                    tracing::debug!("query feed failed with error: {:?}", e);
                     Default::default()
                 }
             }
         })?;
 
-        let ctrl = Self {
+        let my_info = user_service.my_info();
+
+        let mut ctrl = Self {
             lang,
-            profile,
+            nav: use_navigator(),
             accounts,
-            communities,
-            landing_data,
-
-            space,
+            my_info: use_signal(|| my_info),
+            total_users: use_signal(|| total_users),
+            feed,
+            popup: use_context(),
+            id,
         };
+
+        use_effect(move || {
+            ctrl.my_info.set(user_service.my_info());
+        });
 
         Ok(ctrl)
     }
@@ -138,6 +88,53 @@ impl Controller {
         tracing::debug!("signout");
         let mut user: UserService = use_context();
         user.logout().await;
+    }
+
+    pub async fn create(&mut self, user_ids: Vec<i64>) {
+        match Space::get_client(config::get().main_api_endpoint)
+            .create_space(SpaceType::Post, self.id, user_ids)
+            .await
+        {
+            Ok(_) => {
+                tracing::info!("success to create space");
+            }
+            Err(e) => {
+                btracing::error!(
+                    "failed to create space with error: {}",
+                    e.translate(&self.lang)
+                );
+            }
+        };
+    }
+
+    pub fn enter_space(&mut self) {
+        self.nav.replace(Route::IndexPage {});
+    }
+
+    pub fn create_space(&mut self) {
+        let users = match self.total_users()() {
+            Some(v) => v,
+            None => vec![],
+        };
+        let mut ctrl = *self;
+
+        self.popup
+            .open(rsx! {
+                CreateSpacePopup {
+                    lang: self.lang,
+                    users,
+                    onsend: move |ids: Vec<i64>| async move {
+                        tracing::debug!("selected user ids: {:?}", ids);
+                        ctrl.create(ids).await;
+                        ctrl.popup.close();
+                    },
+                }
+            })
+            .with_title("Invite to Committee");
+    }
+
+    pub fn prev_page(&self) {
+        self.nav.replace(Route::IndexPage {});
     }
 
     #[allow(unused)]

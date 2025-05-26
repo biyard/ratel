@@ -7,30 +7,30 @@ use i18n::*;
 
 #[component]
 pub fn IndexPage(#[props(default = Language::En)] lang: Language) -> Element {
-    let mut is_write = use_signal(|| false);
-    let ctrl: Controller = use_context();
+    let mut ctrl: Controller = use_context();
     let tr: IndexTranslate = translate(&lang);
 
-    let landing_data = ctrl.landing_data()?;
-    let profile = ctrl.profile()?;
-
-    let my_spaces = landing_data.my_spaces;
+    let feeds = ctrl.feeds()?;
+    let my_info = ctrl.my_info();
 
     rsx! {
         by_components::meta::MetaPage { title: tr.title }
 
-        div { class: "flex flex-col w-full h-full justify-start items-start text-white",
+        div { class: "flex flex-col w-full h-fit justify-start items-start text-white",
             CreateFeed {
                 lang,
-                profile: profile.profile,
+                profile: my_info.profile_url,
                 onwrite: move |_| {
-                    is_write.set(true);
+                    ctrl.change_write(true);
                 },
             }
 
             MyFeedList {
                 lang,
-                my_spaces,
+                feeds,
+                add_size: move |_| {
+                    ctrl.add_size();
+                },
                 onclick: move |id: i64| {
                     ctrl.move_to_threads(id);
                 },

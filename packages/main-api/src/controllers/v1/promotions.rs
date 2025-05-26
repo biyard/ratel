@@ -280,10 +280,14 @@ mod tests {
                 FeedType::Post,
                 user.id,
                 industry_id,
+                Some(user.nickname.clone()),
+                Some(user.profile_url.clone()),
                 None,
                 title,
                 None,
                 None,
+                0,
+                0,
             )
             .await
             .unwrap();

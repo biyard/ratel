@@ -134,6 +134,10 @@ pub enum Error {
     #[translate(en = "You should select industry or a parent feed")]
     FeedExclusiveParentOrIndustry,
 
+    // spaces
+    #[translate(en = "Failed to write a space")]
+    SpaceWritePostError,
+
     // quizzes
     #[translate(en = "You must select a valid quiz")]
     InvalidQuizId,
