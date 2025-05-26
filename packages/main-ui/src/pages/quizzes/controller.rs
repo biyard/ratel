@@ -15,7 +15,6 @@ pub struct Controller {
     pub answer: Signal<Vec<QuizAnswer>>,
     pub nav: Navigator,
     pub already_done: Signal<bool>,
-    pub principal: Memo<String>,
 }
 
 impl Controller {
@@ -35,21 +34,15 @@ impl Controller {
         #[cfg(feature = "web")]
         let user_service: crate::services::user_service::UserService = use_context();
 
-        let principal = use_memo(move || {
-            #[cfg(feature = "web")]
-            if user_service.is_logined() {
-                return user_service.user_info().principal;
-            } else {
-                return anonymouse_service.get_principal();
-            };
-
-            #[cfg(not(feature = "web"))]
-            return "".to_string();
-        });
-
         #[cfg(feature = "web")]
         use_future(move || async move {
-            let principal = principal();
+            let user_info = user_service.user_info();
+
+            let principal = if user_info.principal != "" {
+                user_info.principal
+            } else {
+                anonymouse_service.get_principal()
+            };
 
             if QuizResult::get_client(crate::config::get().main_api_endpoint)
                 .get_result(principal)
@@ -69,7 +62,6 @@ impl Controller {
             answer: use_signal(|| vec![]),
             nav: use_navigator(),
             already_done,
-            principal,
         };
 
         Ok(ctrl)
