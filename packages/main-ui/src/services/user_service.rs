@@ -81,7 +81,9 @@ pub struct UserService {
     pub signer: Signal<WalletSigner>,
     pub firebase: Signal<google_wallet::FirebaseWallet>,
     pub cli: Signal<UserClient>,
+    pub my_cli: Signal<MyInfoClient>,
     pub user_info: Signal<UserInfo>,
+    pub my_info: Signal<MyInfo>,
     pub loggedin: Signal<bool>,
     #[cfg(feature = "web")]
     pub anonymous: AnonymouseService,
@@ -104,7 +106,9 @@ impl UserService {
             signer: use_signal(move || signer),
             firebase: use_signal(move || firebase.clone()),
             cli: use_signal(move || User::get_client(&conf.main_api_endpoint)),
+            my_cli: use_signal(move || MyInfo::get_client(&conf.main_api_endpoint)),
             user_info: use_signal(|| UserInfo::default()),
+            my_info: use_signal(|| MyInfo::default()),
             loggedin: use_signal(|| loggedin),
             #[cfg(feature = "web")]
             anonymous: use_context(),
@@ -151,6 +155,7 @@ impl UserService {
 
     pub async fn get_user_info_from_server(&mut self) {
         let cli = (self.cli)();
+        let my_cli = (self.my_cli)();
         rest_api::set_signer(Box::new(*self));
         tracing::debug!("UserService::get_user_info_from_server");
 
@@ -167,6 +172,21 @@ impl UserService {
             },
         };
 
+        let my_info: MyInfo = match my_cli.my_info().await {
+            Ok(v) => v,
+            Err(e) => match e {
+                Error::NotFound => {
+                    return;
+                }
+                e => {
+                    tracing::error!("UserService::get_my_info_from_server: error={:?}", e);
+                    return;
+                }
+            },
+        };
+
+        tracing::debug!("my info: {:?}", my_info);
+
         self.user_info.set(UserInfo {
             principal: user.principal,
             email: Some(user.email),
@@ -174,6 +194,7 @@ impl UserService {
             profile_url: Some(user.profile_url),
         });
         self.loggedin.set(true);
+        self.my_info.set(my_info);
     }
 
     pub fn get_user_info(&self) -> Option<(String, String, String)> {

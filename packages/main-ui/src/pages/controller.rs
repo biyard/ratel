@@ -1,5 +1,8 @@
 use bdk::prelude::*;
-use dto::{ContentType, News, NewsQuery, NewsSummary, Promotion, Space, User};
+use dto::{
+    ContentType, Feed, FeedQuery, FeedSummary, MyInfo, News, NewsQuery, NewsSummary, Promotion,
+    User,
+};
 use dto::{Follower, LandingData};
 use serde::{Deserialize, Serialize};
 
@@ -12,14 +15,17 @@ pub struct Controller {
     #[allow(dead_code)]
     pub lang: Language,
     pub nav: Navigator,
+    pub is_write: Signal<bool>,
 
     pub landing_data: Resource<LandingData>,
+    pub my_info: Signal<MyInfo>,
     pub hot_promotions: Resource<Promotion>,
     pub news: Resource<Vec<NewsSummary>>,
-    pub profile: Resource<Profile>,
 
-    pub communities: Resource<Vec<CommunityList>>,
+    pub feeds: Resource<Vec<FeedSummary>>,
     pub accounts: Resource<Vec<AccountList>>,
+
+    pub size: Signal<usize>,
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug, Eq, PartialEq, Translate, Default)]
@@ -76,67 +82,54 @@ impl Controller {
     pub fn new(lang: Language) -> std::result::Result<Self, RenderError> {
         let user_service: UserService = use_context();
         let nav = use_navigator();
+        let mut my_info = use_signal(|| MyInfo::default());
+        let size = use_signal(|| 10);
 
         use_effect(move || {
             if !user_service.loggedin() {
                 nav.replace(Route::LandingPage {});
             }
+
+            my_info.set(user_service.my_info());
         });
 
-        let user = user_service.user_info();
-        tracing::debug!("user info: {:?}", user);
-
-        let landing_data = use_server_future(move || async move {
-            match LandingData::get_client(config::get().main_api_endpoint)
-                .find_one()
-                .await
-            {
-                Ok(space) => space,
-                Err(e) => {
-                    tracing::debug!("query spaces failed with error: {:?}", e);
-                    Default::default()
+        let landing_data = use_server_future(move || {
+            let _user_service: UserService = user_service.clone();
+            async move {
+                match LandingData::get_client(config::get().main_api_endpoint)
+                    .find_one()
+                    .await
+                {
+                    Ok(space) => space,
+                    Err(e) => {
+                        tracing::debug!("query spaces failed with error: {:?}", e);
+                        Default::default()
+                    }
                 }
             }
         })?;
 
-        // let my_feeds = use_server_future(move || async move {
-        //     match Space::get_client(config::get().main_api_endpoint)
-        //         .query_my_spaces()
-        //         .await
-        //     {
-        //         Ok(promotion) => promotion.items,
-        //         Err(e) => {
-        //             tracing::debug!("query hot promotion failed with error: {:?}", e);
-        //             Default::default()
-        //         }
-        //     }
-        // });
-
-        let communities = use_server_future(move || async move {
-            vec![
-                // CommunityList {
-                //     id: 0,
-                //     created_at: 1747726155,
-                //     updated_at: 1747726155,
-                //     html_contents: "<div>hello</div>".to_string(),
-                //     title: Some("test1".to_string()),
-                // },
-                // CommunityList {
-                //     id: 0,
-                //     created_at: 1747726155,
-                //     updated_at: 1747726155,
-                //     html_contents: "<div>hello</div>".to_string(),
-                //     title: Some("test12".to_string()),
-                // },
-                // CommunityList {
-                //     id: 0,
-                //     created_at: 1747726155,
-                //     updated_at: 1747726155,
-                //     html_contents: "<div>hello</div>".to_string(),
-                //     title: Some("test123".to_string()),
-                // },
-            ]
+        let feeds = use_server_future(move || {
+            let size = size();
+            async move {
+                match Feed::get_client(config::get().main_api_endpoint)
+                    .query(FeedQuery {
+                        size,
+                        bookmark: None,
+                    })
+                    .await
+                {
+                    Ok(feed) => feed.items,
+                    Err(e) => {
+                        tracing::debug!("query spaces failed with error: {:?}", e);
+                        Default::default()
+                    }
+                }
+            }
         })?;
+
+        let user = user_service.user_info();
+        tracing::debug!("user info: {:?}", user);
 
         let hot_promotions = use_server_future(move || async move {
             match Promotion::get_client(config::get().main_api_endpoint)
@@ -167,61 +160,32 @@ impl Controller {
             }
         })?;
 
-        let profile = use_server_future(move || async move {
-            Profile {
-                profile: "https://lh3.googleusercontent.com/a/ACg8ocIGf0gpB8MQdGkp5TXW1327nRpuPz70iy_hQY2NXNwanRXbFw=s96-c".to_string(),
-                nickname: "Jongseok Park".to_string(),
-                email: "victor@biyard.co".to_string(),
-                description: Some("Office of Rep.".to_string()),
-
-                national: National::US,
-                tier: 1,
-
-                exp: 4,
-                total_exp: 6,
-
-                followers: 12501,
-                replies: 503101,
-                posts: 420201,
-                spaces: 3153,
-                votes: 125,
-                surveys: 3153
-            }
-        })?;
-
-        let accounts = use_server_future(move || async move {
-            vec! [
-                // AccountList {
-                //     id: 0,
-                //     created_at: 1747726155,
-                //     updated_at: 1747726155,
-                //     profile: "https://lh3.googleusercontent.com/a/ACg8ocIGf0gpB8MQdGkp5TXW1327nRpuPz70iy_hQY2NXNwanRXbFw=s96-c".to_string(),
-                //     email: "victor@biyard.co".to_string(),
-                // },
-                // AccountList {
-                //     id: 1,
-                //     created_at: 1747726155,
-                //     updated_at: 1747726155,
-                //     profile: "https://lh3.googleusercontent.com/a/ACg8ocIGf0gpB8MQdGkp5TXW1327nRpuPz70iy_hQY2NXNwanRXbFw=s96-c".to_string(),
-                //     email: "victor1@biyard.co".to_string(),
-                // }
-            ]
-        })?;
+        let accounts = use_server_future(move || async move { vec![] })?;
 
         let ctrl = Self {
             lang,
             nav: use_navigator(),
+            is_write: use_signal(|| false),
+            size,
+            my_info,
             landing_data,
             hot_promotions,
             news,
-            profile,
-            communities,
             accounts,
+            feeds,
         };
 
         use_context_provider(move || ctrl);
 
         Ok(ctrl)
+    }
+
+    pub fn add_size(&mut self) {
+        self.size.set(self.size() + 5);
+    }
+
+    pub fn change_write(&mut self, is_write: bool) {
+        self.is_write.set(is_write);
     }
 
     pub async fn create_feed(&mut self, content_type: ContentType, description: String) {
@@ -251,13 +215,15 @@ impl Controller {
             return;
         }
 
-        match Space::get_client(config::get().main_api_endpoint)
-            .create_space(description, dto::SpaceType::Post, Some(title), content_type)
+        match Feed::get_client(config::get().main_api_endpoint)
+            .write_post(description, user_id, industry_id, Some(title), None)
             .await
         {
             Ok(_) => {
                 btracing::info!("success to create space");
                 self.landing_data.restart();
+                self.feeds.restart();
+                self.is_write.set(false);
             }
             Err(e) => {
                 btracing::error!("failed to create space with error: {:?}", e);

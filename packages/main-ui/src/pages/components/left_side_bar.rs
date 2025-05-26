@@ -3,7 +3,7 @@ use bdk::prelude::{
     *,
 };
 
-use dto::User;
+use dto::MyInfo;
 
 use crate::{
     components::icons::RewardCoin,
@@ -16,7 +16,7 @@ use crate::{
 #[component]
 pub fn LeftSidebar(
     lang: Language,
-    profile: User,
+    profile: MyInfo,
     accounts: Vec<AccountList>,
     // recent_feeds: Vec<String>,
     // recent_spaces: Vec<String>,

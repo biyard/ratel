@@ -1,6 +1,6 @@
 #![allow(non_snake_case)]
 use crate::components::{dropdown::Dropdown, party::PartyIcon};
-use crate::pages::landing::components::FooterWithSocial;
+// use crate::pages::landing::components::FooterWithSocial;
 use crate::pages::landing::components::SectionHeader;
 use crate::route::Route;
 
@@ -140,21 +140,21 @@ pub fn PoliticiansPage(#[props(default = Language::En)] lang: Language) -> Eleme
                 }
             } // table
         } // div
-
-        if !ctrl.is_end() {
-            div {
-                class: "fixed bottom-52 left-0 w-full h-283 z-10 pointer-events-none",
-                style: "background: linear-gradient(180deg, rgba(30, 30, 30, 0) -36.75%, rgba(30, 30, 30, 0.4) 52.94%, #1E1E1E 88.39%);",
-            }
-        }
-
-        div { class: "fixed bottom-0 left-0 w-full flex items-center justify-center bg-bg z-10",
-            div { class: "max-w-1177 w-full flex items-center justify-center mx-10",
-                FooterWithSocial { lang }
-            }
-        }
     }
 }
+
+// if !ctrl.is_end() {
+//     div {
+//         class: "fixed bottom-52 left-0 w-full h-283 z-10 pointer-events-none",
+//         style: "background: linear-gradient(180deg, rgba(30, 30, 30, 0) -36.75%, rgba(30, 30, 30, 0.4) 52.94%, #1E1E1E 88.39%);",
+//     }
+// }
+
+// div { class: "fixed bottom-0 left-0 w-full flex items-center justify-center bg-bg z-10",
+//     div { class: "max-w-1177 w-full flex items-center justify-center mx-10",
+//         FooterWithSocial { lang }
+//     }
+// }
 
 #[component]
 pub fn SearchBox(

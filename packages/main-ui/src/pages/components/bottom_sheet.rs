@@ -8,11 +8,12 @@ use bdk::prelude::{
     dioxus::web::WebEventExt,
     *,
 };
+use dto::MyInfo;
 use wasm_bindgen::JsCast;
 
 use crate::{
     components::icons::{Badge, Grade, Palace, Pentagon2},
-    pages::controller::{AccountList, Profile},
+    pages::controller::AccountList,
 };
 
 use web_sys::window;
@@ -20,7 +21,7 @@ use web_sys::window;
 #[component]
 pub fn BottomSheet(
     lang: Language,
-    profile: Profile,
+    profile: MyInfo,
     recent_feeds: Vec<String>,
     recent_spaces: Vec<String>,
     recent_communities: Vec<String>,
@@ -120,9 +121,13 @@ pub fn BottomSheet(
                         div { class: "w-36 h-5 bg-neutral-600 rounded-lg" }
                     }
                     div { class: "flex flex-row w-full justify-start items-center gap-4",
-                        img {
-                            class: "w-24 h-24 rounded-full object-cover",
-                            src: profile.profile.clone(),
+                        if profile.profile_url == "" {
+                            div { class: "w-24 h-24 rounded-full bg-neutral-400" }
+                        } else {
+                            img {
+                                class: "w-24 h-24 rounded-full object-cover",
+                                src: profile.profile_url.clone(),
+                            }
                         }
                         div { class: "font-bold text-lg/21 text-white", {profile.nickname.clone()} }
                         Badge {}
@@ -132,9 +137,9 @@ pub fn BottomSheet(
                 if translate_y() < 20.0 {
                     BottomInformation {
                         lang,
-                        description: profile.description.clone().unwrap_or_default(),
-                        exp: profile.exp,
-                        total_exp: profile.total_exp,
+                        description: "".to_string(),
+                        exp: 0,
+                        total_exp: 0,
                         recent_feeds,
                         recent_communities,
                         recent_spaces,
