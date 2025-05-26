@@ -1,4 +1,5 @@
 use bdk::prelude::*;
+use dto::dioxus_popup::PopupService;
 use dto::{
     ContentType, Feed, FeedQuery, FeedSummary, MyInfo, News, NewsQuery, NewsSummary, Promotion,
     User,
@@ -6,6 +7,7 @@ use dto::{
 use dto::{Follower, LandingData};
 use serde::{Deserialize, Serialize};
 
+use crate::pages::components::EditProfilePopup;
 use crate::{
     config, route::Route, services::user_service::UserService, utils::text::extract_title_from_html,
 };
@@ -15,6 +17,7 @@ pub struct Controller {
     #[allow(dead_code)]
     pub lang: Language,
     pub nav: Navigator,
+    pub popup: PopupService,
     pub is_write: Signal<bool>,
 
     pub landing_data: Resource<LandingData>,
@@ -167,6 +170,7 @@ impl Controller {
             nav: use_navigator(),
             is_write: use_signal(|| false),
             size,
+            popup: use_context(),
             my_info,
             landing_data,
             hot_promotions,
@@ -178,6 +182,40 @@ impl Controller {
         use_context_provider(move || ctrl);
 
         Ok(ctrl)
+    }
+
+    pub fn edit_profile(&mut self) {
+        let my_info = self.my_info();
+
+        let profile = my_info.profile_url;
+        let nickname = my_info.nickname;
+        let description = my_info.html_contents;
+
+        let mut ctrl = self.clone();
+
+        self.popup
+            .open(rsx! {
+                EditProfilePopup {
+                    lang: self.lang,
+                    profile,
+                    nickname,
+                    description,
+                    onedit: move |(profile, nickname, description): (String, String, String)| async move {
+                        ctrl.edit(profile, nickname, description).await;
+                        ctrl.popup.close();
+                    },
+                }
+            })
+            .with_title("Edit Profile");
+    }
+
+    pub async fn edit(&mut self, profile: String, nickname: String, description: String) {
+        tracing::debug!(
+            "profile: {:?} nickname: {:?} description: {:?}",
+            profile,
+            nickname,
+            description
+        );
     }
 
     pub fn add_size(&mut self) {

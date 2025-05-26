@@ -62,3 +62,22 @@ article.election-pledge > ol > li {
   text-indent: -1.5em;
 }
 
+article.my-profile > p {
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 14px;
+  color: #f9fafb;
+}
+
+article.my-profile > ol > li {
+  font-weight: 300;
+  font-size: 12px;
+  line-height: 14px;
+  letter-spacing: 0%;
+  color: #f9fafb;
+  list-style-type: disc;
+  list-style-position: inside;
+  padding-left: 1.5em;
+  text-indent: -1.5em;
+}
+

@@ -65,7 +65,7 @@ pub fn SocialLayout(#[props(default = Language::En)] lang: Language) -> Element 
                 }
             }
         }
-        PopupZone {}
+        PopupZone { background_color: "#1A1A1A", border_class: "none" }
     }
 }
 
@@ -101,6 +101,9 @@ pub fn MyPageLayout(#[props(default = Language::En)] lang: Language) -> Element 
 
                     onwrite: move |_| {
                         ctrl.change_write(true);
+                    },
+                    edit_profile: move |_| {
+                        ctrl.edit_profile();
                     },
                     add_account: move |_| async move {
                         ctrl.add_account().await;
