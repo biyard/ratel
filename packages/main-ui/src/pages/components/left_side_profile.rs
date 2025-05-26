@@ -36,6 +36,7 @@ pub fn LeftSideProfile(
 
     add_account: EventHandler<MouseEvent>,
     sign_out: EventHandler<MouseEvent>,
+    edit_profile: EventHandler<MouseEvent>,
 ) -> Element {
     let mut is_clicked = use_signal(|| true);
     let mut is_profile_clicked = use_signal(|| false);
@@ -106,11 +107,15 @@ pub fn LeftSideProfile(
                         if is_clicked() {
                             div { class: "flex flex-col w-full justify-start items-start gap-30",
                                 Profile {
+                                    lang,
                                     profile,
                                     description,
                                     clicked: is_profile_clicked(),
                                     onchange_clicked: move |clicked: bool| {
                                         is_profile_clicked.set(clicked);
+                                    },
+                                    edit_profile: move |e| {
+                                        edit_profile.call(e);
                                     },
                                 }
                                                         // Tier {
@@ -280,10 +285,12 @@ pub fn GaugeBar(gauge: f32) -> Element {
 
 #[component]
 pub fn Profile(
+    lang: Language,
     profile: String,
     description: String,
     clicked: bool,
     onchange_clicked: EventHandler<bool>,
+    edit_profile: EventHandler<MouseEvent>,
 ) -> Element {
     rsx! {
         div {
@@ -304,7 +311,18 @@ pub fn Profile(
             }
 
             div { class: "flex flex-col w-full justify-start items-start gap-4",
-                div { class: "font-medium text-sm/14 text-[#f9fafb]", {description} }
+                article {
+                    class: "my-profile",
+                    dangerous_inner_html: description.clone(),
+                }
+            }
+
+            div {
+                class: "cursor-pointer w-full h-fit",
+                onclick: move |e| {
+                    edit_profile.call(e);
+                },
+                EditButton { lang }
             }
 
         // div { class: "flex flex-row w-full justify-start items-center gap-4",
@@ -312,6 +330,25 @@ pub fn Profile(
         //     div { class: "font-medium text-sm/14 text-[#f9fafb]", "Oregon, United State" }
         // }
         }
+    }
+}
+
+#[component]
+pub fn EditButton(lang: Language) -> Element {
+    let tr: EditButtonTranslate = translate(&lang);
+    rsx! {
+        div { class: "flex flex-row w-full justify-center items-center py-15 bg-primary rounded-[10px] font-bold text-[#000203] text-sm/19",
+            {tr.edit_profile}
+        }
+    }
+}
+
+translate! {
+    EditButtonTranslate;
+
+    edit_profile: {
+        ko: "Edit Profile",
+        en: "Edit Profile"
     }
 }
 

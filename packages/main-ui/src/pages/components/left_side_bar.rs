@@ -22,6 +22,7 @@ pub fn LeftSidebar(
     // recent_spaces: Vec<String>,
     // recent_communities: Vec<String>,
     add_account: EventHandler<MouseEvent>,
+    edit_profile: EventHandler<MouseEvent>,
     sign_out: EventHandler<MouseEvent>,
     onwrite: EventHandler<MouseEvent>,
 ) -> Element {
@@ -34,7 +35,7 @@ pub fn LeftSidebar(
                 email: profile.email,
                 name: profile.nickname,
                 profile: profile.profile_url,
-                description: "".to_string(),
+                description: profile.html_contents,
                 exp: 0,
                 total_exp: 0,
 
@@ -49,6 +50,7 @@ pub fn LeftSidebar(
 
                 add_account,
                 sign_out,
+                edit_profile,
             }
 
             SideRoundedBox {
