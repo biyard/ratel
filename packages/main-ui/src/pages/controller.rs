@@ -77,27 +77,33 @@ impl Controller {
         let user_service: UserService = use_context();
         let nav = use_navigator();
 
+        let mut landing_data = use_server_future(move || {
+            let _user_service: UserService = user_service.clone();
+            async move {
+                match LandingData::get_client(config::get().main_api_endpoint)
+                    .find_one()
+                    .await
+                {
+                    Ok(space) => space,
+                    Err(e) => {
+                        tracing::debug!("query spaces failed with error: {:?}", e);
+                        Default::default()
+                    }
+                }
+            }
+        })?;
+
         use_effect(move || {
             if !user_service.loggedin() {
                 nav.replace(Route::LandingPage {});
             }
+
+            //FIXME: remove this line when cookie issue is resolved.
+            landing_data.restart();
         });
 
         let user = user_service.user_info();
         tracing::debug!("user info: {:?}", user);
-
-        let landing_data = use_server_future(move || async move {
-            match LandingData::get_client(config::get().main_api_endpoint)
-                .find_one()
-                .await
-            {
-                Ok(space) => space,
-                Err(e) => {
-                    tracing::debug!("query spaces failed with error: {:?}", e);
-                    Default::default()
-                }
-            }
-        })?;
 
         // let my_feeds = use_server_future(move || async move {
         //     match Space::get_client(config::get().main_api_endpoint)

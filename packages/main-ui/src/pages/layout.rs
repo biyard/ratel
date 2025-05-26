@@ -82,6 +82,8 @@ pub fn MyPageLayout(#[props(default = Language::En)] lang: Language) -> Element 
     let communities = ctrl.communities()?;
     let accounts = ctrl.accounts()?;
 
+    tracing::debug!("landing_data: {:?}", landing_data.clone());
+
     let my_spaces = landing_data.my_spaces;
 
     let followers = landing_data.follower_list;
