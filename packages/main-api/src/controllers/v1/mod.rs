@@ -14,6 +14,7 @@ mod quizzes;
 pub mod subscriptions;
 pub mod supports;
 mod teams;
+mod totals;
 pub mod users;
 
 use bdk::prelude::*;
@@ -23,6 +24,10 @@ use dto::*;
 pub fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Router> {
     Ok(by_axum::axum::Router::new()
         .nest("/me", me::MeController::new(pool.clone()).route()?)
+        .nest(
+            "/totals",
+            totals::TotalController::new(pool.clone()).route()?,
+        )
         .nest(
             "/landings",
             landing::LandingController::new(pool.clone()).route()?,

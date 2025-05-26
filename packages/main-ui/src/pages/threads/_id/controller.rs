@@ -1,15 +1,26 @@
 use bdk::prelude::*;
-use dto::{Feed, MyInfo};
+use dto::{Feed, MyInfo, TotalInfo, TotalInfoQuery, TotalInfoSummary, dioxus_popup::PopupService};
 
-use crate::{config, pages::controller::AccountList, services::user_service::UserService};
+use crate::{
+    config,
+    pages::{components::CreateSpacePopup, controller::AccountList},
+    route::Route,
+    services::user_service::UserService,
+};
 
 #[derive(Clone, Copy, DioxusController)]
 pub struct Controller {
     #[allow(dead_code)]
     pub lang: Language,
+    pub nav: Navigator,
+    pub total_users: Signal<Resource<Vec<TotalInfoSummary>>>,
     pub my_info: Signal<MyInfo>,
     pub accounts: Resource<Vec<AccountList>>,
     pub feed: Resource<Feed>,
+    #[allow(dead_code)]
+    pub id: i64,
+    #[allow(dead_code)]
+    pub popup: PopupService,
 }
 
 impl Controller {
@@ -30,13 +41,33 @@ impl Controller {
             }
         })?;
 
+        let total_users = use_server_future(move || async move {
+            match TotalInfo::get_client(config::get().main_api_endpoint)
+                .query(TotalInfoQuery {
+                    size: 100,
+                    bookmark: None,
+                })
+                .await
+            {
+                Ok(feed) => feed.items,
+                Err(e) => {
+                    tracing::debug!("query feed failed with error: {:?}", e);
+                    Default::default()
+                }
+            }
+        })?;
+
         let my_info = user_service.my_info();
 
         let mut ctrl = Self {
             lang,
+            nav: use_navigator(),
             accounts,
             my_info: use_signal(|| my_info),
+            total_users: use_signal(|| total_users),
             feed,
+            popup: use_context(),
+            id,
         };
 
         use_effect(move || {
@@ -54,6 +85,28 @@ impl Controller {
         tracing::debug!("signout");
         let mut user: UserService = use_context();
         user.logout().await;
+    }
+
+    pub fn create_space(&mut self) {
+        let users = match self.total_users()() {
+            Some(v) => v,
+            None => vec![],
+        };
+        self.popup
+            .open(rsx! {
+                CreateSpacePopup {
+                    lang: self.lang,
+                    users,
+                    onsend: move |ids: Vec<i64>| {
+                        tracing::debug!("selected user ids: {:?}", ids);
+                    },
+                }
+            })
+            .with_title("Invite to Committee");
+    }
+
+    pub fn prev_page(&self) {
+        self.nav.replace(Route::IndexPage {});
     }
 
     #[allow(unused)]

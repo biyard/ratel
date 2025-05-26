@@ -1,6 +1,8 @@
 use bdk::prelude::*;
 use validator::Validate;
 
+use crate::Space;
+
 #[derive(Validate)]
 #[api_model(base = "/v1/feeds", table = feeds, action = [], action_by_id = [delete])]
 pub struct Feed {
@@ -47,6 +49,9 @@ pub struct Feed {
     // Repost
     #[api_model(summary, nullable, indexed, action = [repost, write_post])]
     pub quote_feed_id: Option<i64>,
+
+    #[api_model(summary, one_to_many = spaces, foreign_key = feed_id)]
+    pub spaces: Vec<Space>,
 
     #[api_model(summary, many_to_many = feed_users, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = feed_id, aggregator = count, unique)]
     pub likes: i64,

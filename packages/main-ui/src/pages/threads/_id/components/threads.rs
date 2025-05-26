@@ -7,12 +7,16 @@ use crate::pages::components::{ThreadContents, ThreadFiles, ThreadHeader};
 pub fn Threads(
     lang: Language,
     feed: Feed,
+    user_id: i64,
+    create_space: EventHandler<MouseEvent>,
     ondownload: EventHandler<(String, Option<String>)>,
+    onprev: EventHandler<MouseEvent>,
 ) -> Element {
     rsx! {
         div { class: "flex flex-col w-full justify-start items-start px-10 gap-25 max-tablet:gap-40",
             ThreadHeader {
                 lang,
+                is_creator: user_id == feed.user_id,
                 profile: feed.profile_image.unwrap_or_default(),
                 proposer: feed.proposer_name.unwrap_or_default(),
                 title: feed.title.unwrap_or_default(),
@@ -21,7 +25,8 @@ pub fn Threads(
                 number_of_shared: feed.shares,
                 created_at: feed.created_at,
                 feed_type: feed.feed_type,
-                onback: move |_| {},
+                create_space,
+                onprev,
             }
 
             div { class: "flex flex-col w-full justify-start items-start gap-10",
