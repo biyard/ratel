@@ -7,8 +7,7 @@ use i18n::*;
 
 #[component]
 pub fn IndexPage(#[props(default = Language::En)] lang: Language) -> Element {
-    let mut is_write = use_signal(|| false);
-    let ctrl: Controller = use_context();
+    let mut ctrl: Controller = use_context();
     let tr: IndexTranslate = translate(&lang);
 
     let landing_data = ctrl.landing_data()?;
@@ -19,12 +18,12 @@ pub fn IndexPage(#[props(default = Language::En)] lang: Language) -> Element {
     rsx! {
         by_components::meta::MetaPage { title: tr.title }
 
-        div { class: "flex flex-col w-full h-full justify-start items-start text-white",
+        div { class: "flex flex-col w-full h-fit justify-start items-start text-white",
             CreateFeed {
                 lang,
-                profile: profile.profile,
+                profile: profile.profile.clone(),
                 onwrite: move |_| {
-                    is_write.set(true);
+                    ctrl.change_write(true);
                 },
             }
 
