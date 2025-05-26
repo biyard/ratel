@@ -1,5 +1,5 @@
 use bdk::prelude::*;
-use dto::{ContentType, News, NewsQuery, NewsSummary, Promotion, Space, User};
+use dto::{ContentType, MyInfo, News, NewsQuery, NewsSummary, Promotion, Space, User};
 use dto::{Follower, LandingData};
 use serde::{Deserialize, Serialize};
 
@@ -14,6 +14,7 @@ pub struct Controller {
     pub nav: Navigator,
 
     pub landing_data: Resource<LandingData>,
+    pub my_info: Signal<MyInfo>,
     pub hot_promotions: Resource<Promotion>,
     pub news: Resource<Vec<NewsSummary>>,
     pub profile: Resource<Profile>,
@@ -76,8 +77,20 @@ impl Controller {
     pub fn new(lang: Language) -> std::result::Result<Self, RenderError> {
         let user_service: UserService = use_context();
         let nav = use_navigator();
+        let mut my_info = use_signal(|| MyInfo::default());
+        tracing::debug!("my info 11");
 
-        let mut landing_data = use_server_future(move || {
+        use_effect(move || {
+            if !user_service.loggedin() {
+                nav.replace(Route::LandingPage {});
+            }
+
+            my_info.set(user_service.my_info());
+
+            tracing::debug!("my info 22: {:?}", user_service.my_info());
+        });
+
+        let landing_data = use_server_future(move || {
             let _user_service: UserService = user_service.clone();
             async move {
                 match LandingData::get_client(config::get().main_api_endpoint)
@@ -92,15 +105,6 @@ impl Controller {
                 }
             }
         })?;
-
-        use_effect(move || {
-            if !user_service.loggedin() {
-                nav.replace(Route::LandingPage {});
-            }
-
-            //FIXME: remove this line when cookie issue is resolved.
-            landing_data.restart();
-        });
 
         let user = user_service.user_info();
         tracing::debug!("user info: {:?}", user);
@@ -217,6 +221,7 @@ impl Controller {
         let ctrl = Self {
             lang,
             nav: use_navigator(),
+            my_info,
             landing_data,
             hot_promotions,
             news,

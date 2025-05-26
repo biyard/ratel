@@ -18,7 +18,6 @@ pub fn ThreadPage(#[props(default = Language::En)] lang: Language, id: i64) -> E
     let my_spaces = landing_data.my_spaces;
     let following_spaces = landing_data.following_spaces;
 
-    let profile_data = landing_data.profile_data;
     let space = ctrl.space()?;
 
     tracing::debug!("space: {:?}", space);
@@ -38,6 +37,8 @@ pub fn ThreadPage(#[props(default = Language::En)] lang: Language, id: i64) -> E
         .map(|v| v.title.clone().unwrap_or_default())
         .take(3)
         .collect();
+
+    let profile_data = ctrl.my_info();
 
     let tr: ThreadTranslate = translate(&lang);
 

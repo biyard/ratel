@@ -1,5 +1,5 @@
 use bdk::prelude::*;
-use dto::{LandingData, Space};
+use dto::{LandingData, MyInfo, Space};
 
 use crate::{
     config,
@@ -15,6 +15,7 @@ pub struct Controller {
     #[allow(dead_code)]
     pub landing_data: Resource<LandingData>,
     pub profile: Resource<Profile>,
+    pub my_info: Signal<MyInfo>,
 
     pub communities: Resource<Vec<CommunityList>>,
     pub accounts: Resource<Vec<AccountList>>,
@@ -24,6 +25,7 @@ pub struct Controller {
 
 impl Controller {
     pub fn new(lang: Language, id: i64) -> std::result::Result<Self, RenderError> {
+        let user_service: UserService = use_context();
         let landing_data = use_server_future(move || async move {
             match LandingData::get_client(config::get().main_api_endpoint)
                 .find_one()
@@ -116,6 +118,7 @@ impl Controller {
                 }
             }
         })?;
+        let my_info = user_service.my_info();
 
         let ctrl = Self {
             lang,
@@ -123,6 +126,7 @@ impl Controller {
             accounts,
             communities,
             landing_data,
+            my_info: use_signal(|| my_info),
 
             space,
         };
