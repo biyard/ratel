@@ -1,5 +1,5 @@
 use bdk::prelude::{by_components::icons::edit::Edit1, *};
-use dto::SpaceSummary;
+use dto::FeedSummary;
 use gloo_events::EventListener;
 use wasm_bindgen::JsCast;
 use web_sys::{HtmlElement, window};
@@ -18,8 +18,8 @@ pub enum Tab {
 pub fn FeedContents(
     lang: Language,
     profile: String,
-    my_spaces: Vec<SpaceSummary>,
-    following_spaces: Vec<SpaceSummary>,
+    feeds: Vec<FeedSummary>,
+    following_feeds: Vec<FeedSummary>,
 
     is_write: bool,
     onwrite: EventHandler<MouseEvent>,
@@ -44,9 +44,14 @@ pub fn FeedContents(
             div { class: "flex flex-col w-full h-[calc(100vh-250px)] max-tablet:!h-full overflow-y-scroll",
 
                 if selected_tab() == Tab::Me {
-                    MyFeedList { lang, my_spaces, onclick }
+                    MyFeedList {
+                        lang,
+                        feeds,
+                        onclick,
+                        add_size: move |_| {},
+                    }
                 } else {
-                    FollowingFeedList { lang, following_spaces, onclick }
+                    FollowingFeedList { lang, following_feeds, onclick }
                 }
             }
 
@@ -72,7 +77,7 @@ pub fn CreateFeed(lang: Language, profile: String, onwrite: EventHandler<MouseEv
     let tr: CreateFeedTranslate = translate(&lang);
 
     rsx! {
-        div { class: "flex flex-row w-full justify-start items-center bg-bg p-20 rounded-lg gap-10 mb-10 max-tablet:hidden",
+        div { class: "flex flex-row w-full justify-start items-center bg-bg p-20 rounded-lg gap-10 mb-10",
             img { class: "w-36 h-36 rounded-full object-cover", src: profile }
             a {
                 class: "flex flex-row w-full h-fit justify-start items-center bg-neutral-800 border border-neutral-700 rounded-[100px] font-normal text-text-secondary text-sm/16 px-15 py-10",
@@ -89,7 +94,8 @@ pub fn CreateFeed(lang: Language, profile: String, onwrite: EventHandler<MouseEv
 #[component]
 pub fn MyFeedList(
     lang: Language,
-    my_spaces: Vec<SpaceSummary>,
+    feeds: Vec<FeedSummary>,
+    add_size: EventHandler<usize>,
     onclick: EventHandler<i64>,
 ) -> Element {
     let mut visible_count = use_signal(|| 10);
@@ -112,6 +118,7 @@ pub fn MyFeedList(
                         let client_height = container.client_height();
 
                         if scroll_top + client_height as i32 >= scroll_height as i32 - 5 {
+                            add_size.call(visible_count() + 5);
                             visible_count.set(visible_count() + 5);
                             tracing::debug!("visible count: {}", visible_count());
                         }
@@ -123,7 +130,7 @@ pub fn MyFeedList(
         }
     });
 
-    let visible_spaces = my_spaces
+    let visible_feeds = feeds
         .iter()
         .take(visible_count())
         .cloned()
@@ -132,9 +139,9 @@ pub fn MyFeedList(
     rsx! {
         div {
             id: feed_container_id,
-             class: "flex flex-col w-full h-[calc(100vh-300px)] max-tablet:!h-full  overflow-y-scroll",
-            for space in visible_spaces {
-                FeedContent { lang, space, onclick }
+            class: "flex flex-col w-full h-[calc(100vh-300px)] max-tablet:!h-[calc(100vh-300px)]  overflow-y-scroll",
+            for feed in visible_feeds {
+                FeedContent { lang, feed, onclick }
             }
         }
     }
@@ -143,7 +150,7 @@ pub fn MyFeedList(
 #[component]
 pub fn FollowingFeedList(
     lang: Language,
-    following_spaces: Vec<SpaceSummary>,
+    following_feeds: Vec<FeedSummary>,
     onclick: EventHandler<i64>,
 ) -> Element {
     let mut visible_count = use_signal(|| 10);
@@ -176,7 +183,7 @@ pub fn FollowingFeedList(
         }
     });
 
-    let visible_items = following_spaces
+    let visible_items = following_feeds
         .iter()
         .take(visible_count())
         .cloned()
@@ -186,8 +193,8 @@ pub fn FollowingFeedList(
         div {
             id: container_id,
             class: "flex flex-col w-full h-[calc(100vh-300px)] overflow-y-scroll gap-10",
-            for space in visible_items {
-                FeedContent { lang, space, onclick }
+            for feed in visible_items {
+                FeedContent { lang, feed, onclick }
             }
         }
     }

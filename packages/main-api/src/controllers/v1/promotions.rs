@@ -280,10 +280,14 @@ mod tests {
                 FeedType::Post,
                 user.id,
                 industry_id,
+                Some(user.nickname),
+                Some(user.profile_url),
                 None,
                 title,
                 None,
                 None,
+                0,
+                0,
             )
             .await
             .unwrap();

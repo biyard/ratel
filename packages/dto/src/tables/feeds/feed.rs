@@ -23,6 +23,14 @@ pub struct Feed {
     #[api_model(summary, many_to_one = industries, action = [write_post])]
     pub industry_id: i64,
 
+    #[api_model(version = v0.1, summary, nullable)]
+    #[serde(default)]
+    pub proposer_name: Option<String>,
+
+    #[api_model(version = v0.1, summary, nullable)]
+    #[serde(default)]
+    pub profile_image: Option<String>,
+
     // parent feed ID
     #[api_model(summary, nullable, indexed, action = [review_doc, comment, repost])]
     pub parent_id: Option<i64>,
@@ -39,6 +47,17 @@ pub struct Feed {
     // Repost
     #[api_model(summary, nullable, indexed, action = [repost, write_post])]
     pub quote_feed_id: Option<i64>,
+
+    #[api_model(summary, many_to_many = feed_users, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = feed_id, aggregator = count, unique)]
+    pub likes: i64,
+    #[api_model(summary, one_to_many = feed_comments, foreign_key = feed_id, aggregator=count)]
+    pub comments: i64,
+    #[api_model(version = v0.1, summary)]
+    #[serde(default)]
+    pub rewards: i64,
+    #[api_model(version = v0.1, summary)]
+    #[serde(default)]
+    pub shares: i64,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]

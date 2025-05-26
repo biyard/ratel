@@ -52,6 +52,8 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         ElectionPledgeLike,
         Industry,
         Feed,
+        FeedUser,
+        FeedComment,
         TeamMember,
         News,
         Quiz,

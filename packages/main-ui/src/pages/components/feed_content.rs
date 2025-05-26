@@ -4,7 +4,7 @@ use bdk::prelude::{
     },
     *,
 };
-use dto::SpaceSummary;
+use dto::FeedSummary;
 
 use crate::{
     components::icons::{Badge, Feed2, RewardCoin},
@@ -13,29 +13,29 @@ use crate::{
 };
 
 #[component]
-pub fn FeedContent(lang: Language, space: SpaceSummary, onclick: EventHandler<i64>) -> Element {
+pub fn FeedContent(lang: Language, feed: FeedSummary, onclick: EventHandler<i64>) -> Element {
     rsx! {
         div {
             class: "cursor-pointer flex flex-col w-full justify-start items-start px-20 pt-20 pb-10 bg-footer rounded-lg gap-10",
             onclick: move |_| {
-                onclick.call(space.id);
+                onclick.call(feed.id);
             },
             div { class: "flex flex-col w-full justify-start items-start gap-10",
                 TopContent {
-                    label: space.content_type.translate(&lang),
-                    title: space.title.unwrap_or_default(),
-                    image: space.proposer_profile.unwrap_or_default(),
-                    nickname: space.proposer_nickname.unwrap_or_default(),
-                    created_at: space.created_at,
+                    label: feed.feed_type.translate(&lang),
+                    title: feed.title.unwrap_or_default(),
+                    image: feed.profile_image.unwrap_or_default(),
+                    nickname: feed.proposer_name.unwrap_or_default(),
+                    created_at: feed.created_at,
                 }
 
-                ContentDescription { lang, html: space.html_contents }
+                ContentDescription { id: feed.id, lang, html: feed.html_contents }
 
                 BottomContent {
-                    like: space.likes,
-                    comment: space.comments,
-                    reward: space.rewards,
-                    shared: space.shares,
+                    like: feed.likes,
+                    comment: feed.comments,
+                    reward: feed.rewards,
+                    shared: feed.shares,
                 }
             }
         }
@@ -90,18 +90,38 @@ pub fn IconBox(icon: Element, text: String) -> Element {
 }
 
 #[component]
-pub fn ContentDescription(lang: Language, html: String) -> Element {
+pub fn ContentDescription(id: i64, lang: Language, html: String) -> Element {
     let tr: ContentDescriptionTranslate = translate(&lang);
     let mut show_all = use_signal(|| false);
+    let mut show_button = use_signal(|| false);
+
+    let content_id = format!("content-description-html-{id}");
+
+    use_effect({
+        let content_id = content_id.clone();
+        move || {
+            let window = web_sys::window().unwrap();
+            let document = window.document().unwrap();
+            if let Some(el) = document.get_element_by_id(&content_id) {
+                let scroll_height = el.scroll_height();
+                let client_height = el.client_height();
+                if scroll_height > client_height {
+                    show_button.set(true);
+                }
+            }
+        }
+    });
 
     rsx! {
         div { class: "flex flex-col w-full justify-start items-start",
             div {
+                id: content_id,
                 class: "font-normal text-c-wg-30 text-[15px]/24",
                 dangerous_inner_html: if show_all() { html.clone() } else { format!("<div style=\"max-height: 50px; overflow: hidden;\">{}</div>", html) },
             }
             div {
-                class: "cursor-pointer underline font-normal text-white text-[15px]/24",
+                class: "cursor-pointer underline font-normal text-white text-[15px]/24 aria-hidden:!hidden",
+                aria_hidden: !show_button(),
                 onclick: move |_| show_all.set(!show_all()),
                 if show_all() {
                     {tr.close}
@@ -144,9 +164,13 @@ pub fn TopContent(
 
             div { class: "flex flex-row w-full justify-between items-center",
                 div { class: "flex flex-row w-full justify-start items-center gap-10",
-                    img {
-                        class: "w-24 h-24 rounded-full object-cover",
-                        src: image,
+                    if image == "" {
+                        div { class: "w-24 h-24 rounded-full bg-neutral-400" }
+                    } else {
+                        img {
+                            class: "w-24 h-24 rounded-full object-cover",
+                            src: image,
+                        }
                     }
                     div { class: "flex flex-row w-fit justify-start items-center gap-4",
                         div { class: "font-medium text-white text-base/24", {nickname} }

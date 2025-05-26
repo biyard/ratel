@@ -37,6 +37,7 @@ impl FeedController {
         let items: Vec<FeedSummary> = FeedSummary::query_builder()
             .limit(param.size())
             .page(param.page())
+            .order_by_created_at_desc()
             .query()
             .map(|row: PgRow| {
                 use sqlx::Row;
@@ -61,7 +62,7 @@ impl FeedController {
             user_id,
         }: FeedWritePostRequest,
     ) -> Result<Feed> {
-        let _user = check_perm(
+        let user = check_perm(
             &self.pool,
             auth,
             RatelResource::Post { team_id: user_id },
@@ -76,10 +77,18 @@ impl FeedController {
                 FeedType::Post,
                 user_id,
                 industry_id,
+                if user.nickname == "" {
+                    Some(user.email)
+                } else {
+                    Some(user.nickname)
+                },
+                Some(user.profile_url),
                 None,
                 title,
                 None,
                 quote_feed_id,
+                0,
+                0,
             )
             .await
             .map_err(|e| {
@@ -99,7 +108,7 @@ impl FeedController {
             user_id,
         }: FeedCommentRequest,
     ) -> Result<Feed> {
-        let _user = check_perm(
+        let user = check_perm(
             &self.pool,
             auth,
             RatelResource::Post { team_id: user_id },
@@ -129,10 +138,18 @@ impl FeedController {
                 FeedType::Reply,
                 user_id,
                 feed.industry_id,
+                if user.nickname == "" {
+                    Some(user.email)
+                } else {
+                    Some(user.nickname)
+                },
+                Some(user.profile_url),
                 Some(parent_id),
                 None,
                 None,
                 None,
+                0,
+                0,
             )
             .await
             .map_err(|e| {
@@ -153,7 +170,7 @@ impl FeedController {
             part_id: _,
         }: FeedReviewDocRequest,
     ) -> Result<Feed> {
-        let _user = check_perm(
+        let user = check_perm(
             &self.pool,
             auth,
             RatelResource::Post { team_id: user_id },
@@ -183,10 +200,18 @@ impl FeedController {
                 FeedType::DocReview,
                 user_id,
                 feed.industry_id,
+                if user.nickname == "" {
+                    Some(user.email)
+                } else {
+                    Some(user.nickname)
+                },
+                Some(user.profile_url),
                 Some(parent_id),
                 None,
                 None,
                 None,
+                0,
+                0,
             )
             .await
             .map_err(|e| {
@@ -207,7 +232,7 @@ impl FeedController {
             user_id,
         }: FeedRepostRequest,
     ) -> Result<Feed> {
-        let _user = check_perm(
+        let user = check_perm(
             &self.pool,
             auth,
             RatelResource::Post { team_id: user_id },
@@ -260,10 +285,18 @@ impl FeedController {
                 FeedType::Repost,
                 user_id,
                 industry_id,
+                if user.nickname == "" {
+                    Some(user.email)
+                } else {
+                    Some(user.nickname)
+                },
+                Some(user.profile_url),
                 Some(parent_id),
                 None,
                 None,
                 Some(quote_feed_id),
+                0,
+                0,
             )
             .await
             .map_err(|e| {
@@ -439,10 +472,14 @@ mod tests {
                 FeedType::Post,
                 user.id,
                 industry_id,
+                Some(user.nickname.clone()),
+                Some(user.profile_url.clone()),
                 None,
                 title,
                 None,
                 None,
+                0,
+                0,
             )
             .await
             .unwrap();
@@ -453,10 +490,14 @@ mod tests {
                 FeedType::Reply,
                 user.id,
                 industry_id,
+                Some(user.nickname),
+                Some(user.profile_url),
                 Some(post.id),
                 None,
                 None,
                 None,
+                0,
+                0,
             )
             .await
             .unwrap();

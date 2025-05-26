@@ -10,10 +10,9 @@ pub fn IndexPage(#[props(default = Language::En)] lang: Language) -> Element {
     let mut ctrl: Controller = use_context();
     let tr: IndexTranslate = translate(&lang);
 
-    let landing_data = ctrl.landing_data()?;
     let profile = ctrl.profile()?;
 
-    let my_spaces = landing_data.my_spaces;
+    let feeds = ctrl.feeds()?;
 
     rsx! {
         by_components::meta::MetaPage { title: tr.title }
@@ -29,7 +28,10 @@ pub fn IndexPage(#[props(default = Language::En)] lang: Language) -> Element {
 
             MyFeedList {
                 lang,
-                my_spaces,
+                feeds,
+                add_size: move |_| {
+                    ctrl.add_size();
+                },
                 onclick: move |id: i64| {
                     ctrl.move_to_threads(id);
                 },
