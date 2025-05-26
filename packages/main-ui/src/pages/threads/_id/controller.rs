@@ -1,5 +1,8 @@
 use bdk::prelude::*;
-use dto::{Feed, MyInfo, TotalInfo, TotalInfoQuery, TotalInfoSummary, dioxus_popup::PopupService};
+use dto::{
+    Feed, MyInfo, Space, SpaceType, TotalInfo, TotalInfoQuery, TotalInfoSummary,
+    dioxus_popup::PopupService,
+};
 
 use crate::{
     config,
@@ -87,18 +90,43 @@ impl Controller {
         user.logout().await;
     }
 
+    pub async fn create(&mut self, user_ids: Vec<i64>) {
+        match Space::get_client(config::get().main_api_endpoint)
+            .create_space(SpaceType::Post, self.id, user_ids)
+            .await
+        {
+            Ok(_) => {
+                tracing::info!("success to create space");
+            }
+            Err(e) => {
+                btracing::error!(
+                    "failed to create space with error: {}",
+                    e.translate(&self.lang)
+                );
+            }
+        };
+    }
+
+    pub fn enter_space(&mut self) {
+        self.nav.replace(Route::IndexPage {});
+    }
+
     pub fn create_space(&mut self) {
         let users = match self.total_users()() {
             Some(v) => v,
             None => vec![],
         };
+        let mut ctrl = *self;
+
         self.popup
             .open(rsx! {
                 CreateSpacePopup {
                     lang: self.lang,
                     users,
-                    onsend: move |ids: Vec<i64>| {
+                    onsend: move |ids: Vec<i64>| async move {
                         tracing::debug!("selected user ids: {:?}", ids);
+                        ctrl.create(ids).await;
+                        ctrl.popup.close();
                     },
                 }
             })

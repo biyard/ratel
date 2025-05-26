@@ -15,7 +15,8 @@ pub struct Space {
     pub title: Option<String>,
     #[api_model(summary)]
     pub html_contents: String,
-    #[api_model(summary)]
+    #[api_model(summary, type = INTEGER, action = [create_space])]
+    #[serde(default)]
     pub space_type: SpaceType,
     #[api_model(summary, many_to_one = users)]
     pub user_id: i64,
@@ -29,7 +30,8 @@ pub struct Space {
     pub proposer_profile: Option<String>,
     #[api_model(summary)]
     pub proposer_nickname: Option<String>,
-    #[api_model(summary, action = [create_space])]
+    #[api_model(summary , type = INTEGER)]
+    #[serde(default)]
     pub content_type: ContentType,
 
     #[api_model(one_to_many = space_members, foreign_key = space_id)]
@@ -37,8 +39,10 @@ pub struct Space {
     pub members: Vec<SpaceMember>,
 
     #[api_model(summary, many_to_many = space_users, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = space_id, aggregator = count, unique)]
+    #[serde(default)]
     pub likes: i64,
     #[api_model(summary, one_to_many = space_comments, foreign_key = space_id, aggregator=count)]
+    #[serde(default)]
     pub comments: i64,
     #[api_model(summary)]
     #[serde(default)]
