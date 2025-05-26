@@ -38,6 +38,9 @@ pub fn ThreadPage(#[props(default = Language::En)] lang: Language, id: i64) -> E
                         onwrite: move |_| {
                             is_write.set(true);
                         },
+                        edit_profile: move |_| {
+                            tracing::debug!("edit profile button clicked");
+                        },
                         add_account: move |_| async move {
                             ctrl.add_account().await;
                         },
