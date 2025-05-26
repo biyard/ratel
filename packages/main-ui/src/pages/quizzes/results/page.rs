@@ -38,6 +38,9 @@ pub fn ResultsPage(
             image: "{candidate.image}",
             description: meta_description,
         }
+        document::Meta { property: "og:image:width", content: "400" }
+        document::Meta { property: "og:image:height", content: "600" }
+
 
         div {
             id: "results",
