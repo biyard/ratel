@@ -1,5 +1,5 @@
 use bdk::prelude::{
-    by_components::icons::{arrows::ShapeArrowDown, edit::Search, home::Home1, notification::Bell},
+    by_components::icons::{arrows::ShapeArrowDown, edit::Search, home::Home1},
     dioxus_popup::PopupService,
     *,
 };
@@ -35,17 +35,17 @@ pub fn SocialHeader(
                     div {
                         class: "flex flex-row w-fit justify-start items-center gap-10 aria-expanded:w-full",
                         aria_expanded: search_extend(),
-                        div {
-                            class: "cursor-pointer flex flex-col w-fit justify-center items-center p-10",
-                            onclick: move |e| {
-                                onroute.call(e);
-                            },
-                            Bell {
-                                class: "[&>path]:stroke-neutral-500 [&>path]:fill-neutral-500",
-                                width: "32",
-                                height: "32",
-                            }
-                        }
+                        // div {
+                        //     class: "cursor-pointer flex flex-col w-fit justify-center items-center p-10",
+                        //     onclick: move |e| {
+                        //         onroute.call(e);
+                        //     },
+                        //     Bell {
+                        //         class: "[&>path]:stroke-neutral-500 [&>path]:fill-neutral-500",
+                        //         width: "32",
+                        //         height: "32",
+                        //     }
+                        // }
 
                         div {
                             class: "flex flex-row w-fit justify-start items-center gap-10 aria-expanded:w-full transition-all duration-300 ease-in-out",
@@ -126,7 +126,9 @@ pub fn SocialHeader(
                         {tr.home}
                     }
 
-                    Link { class: "social-menu-item", to: Route::IndexPage {},
+                    Link {
+                        class: "social-menu-item",
+                        to: Route::PresidentialElectionPage {},
                         by_components::icons::internet_script::Internet {
                             class: "[&>path]:stroke-[#737373] [&>path]:fill-[#737373] [&>circle]:stroke-[#737373]",
                             width: "24",
@@ -134,7 +136,9 @@ pub fn SocialHeader(
                         }
                         {tr.election}
                     }
-                    Link { class: "social-menu-item", to: Route::IndexPage {},
+                    Link {
+                        class: "social-menu-item",
+                        to: Route::PoliticiansPage {},
                         by_components::icons::user::UserGroup {
                             class: "[&>path]:stroke-[#737373]",
                             width: "24",
