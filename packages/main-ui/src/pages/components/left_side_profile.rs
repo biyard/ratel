@@ -320,6 +320,8 @@ pub fn Profile(
             div {
                 class: "cursor-pointer w-full h-fit",
                 onclick: move |e| {
+                    e.prevent_default();
+                    e.stop_propagation();
                     edit_profile.call(e);
                 },
                 EditButton { lang }
