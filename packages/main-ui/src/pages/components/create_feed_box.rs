@@ -1,3 +1,4 @@
+#![allow(unused)]
 use bdk::prelude::{
     by_components::icons::{arrows::DoubleArrowDown, chat::RoundBubble},
     *,
@@ -7,21 +8,33 @@ use dto::{
     by_components::icons::{arrows::DoubleArrowUp, validations::Clear},
 };
 
-use crate::components::{dropdown::Dropdown, icons::Badge, rich_text::RichText};
+use crate::{
+    components::{dropdown::Dropdown, icons::Badge, rich_text::RichText},
+    services::backend_api::BackendApi,
+};
+
+use dto::File;
+
+#[cfg(feature = "web")]
+use crate::utils::file::handle_file_upload;
 
 #[component]
 pub fn CreateFeedBox(
     lang: Language,
     profile: String,
     nickname: String,
-    onsend: EventHandler<(ContentType, String)>,
+    onsend: EventHandler<(Vec<File>, ContentType, String)>,
     onclose: EventHandler<MouseEvent>,
 ) -> Element {
+    let api: BackendApi = use_context();
     let mut minimize = use_signal(|| false);
     let tr: CreateFeedBoxTranslate = translate(&lang);
 
     let mut selected_value = use_signal(|| ContentType::Crypto);
     let mut content = use_signal(|| "".to_string());
+    let mut feed_files: Signal<Vec<File>> = use_signal(|| vec![]);
+
+    tracing::debug!("this line come: {:?}", feed_files());
 
     rsx! {
         div {
@@ -104,6 +117,17 @@ pub fn CreateFeedBox(
                         },
                     }
 
+                    div { class: "flex flex-col w-full justify-start items-start gap-10 my-10",
+                        for (i , file) in feed_files().iter().enumerate() {
+                            FileBox {
+                                file: file.clone(),
+                                ondelete: move |_| {
+                                    feed_files.with_mut(|v| v.remove(i));
+                                },
+                            }
+                        }
+                    }
+
                     RichText {
                         content: content(),
                         onchange: move |value| content.set(value),
@@ -114,7 +138,7 @@ pub fn CreateFeedBox(
                             div {
                                 class: "cursor-pointer p-8 bg-primary rounded-full",
                                 onclick: move |_| {
-                                    onsend.call((selected_value(), content()));
+                                    onsend.call((feed_files(), selected_value(), content()));
                                 },
                                 RoundBubble {
                                     width: "24",
@@ -124,7 +148,40 @@ pub fn CreateFeedBox(
                                 }
                             }
                         },
+                        onupload: move |ev: FormEvent| async move {
+                            spawn(async move {
+                                #[cfg(feature = "web")]
+                                if let Some(file_engine) = ev.files() {
+                                    let result = handle_file_upload(file_engine, api).await;
+                                    tracing::debug!("file upload results: {:?}", result);
+                                    if !result.is_empty() && result[0].clone().url.is_some() {
+                                        feed_files.push(result[0].clone());
+                                    }
+                                }
+                            });
+                        },
                     }
+                }
+            }
+        }
+    }
+}
+
+#[component]
+pub fn FileBox(file: File, ondelete: EventHandler<MouseEvent>) -> Element {
+    rsx! {
+        div { class: "flex flex-row w-full justify-between items-center px-10 py-5 border border-border-primary rounded-lg",
+            div { class: "text-sm/16 font-semibold text-white", {file.name} }
+            div {
+                class: "cursor-pointer w-24 h-24",
+                onclick: move |e| {
+                    ondelete.call(e);
+                },
+                Clear {
+                    width: "24",
+                    height: "24",
+                    fill: "none",
+                    class: "[&>path]:stroke-white [&>line]:stroke-white",
                 }
             }
         }

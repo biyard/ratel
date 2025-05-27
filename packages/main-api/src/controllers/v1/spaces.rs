@@ -72,6 +72,7 @@ impl SpaceController {
                 Some(user.nickname),
                 ContentType::Crypto,
                 SpaceStatus::Draft,
+                feed.files,
                 0,
                 0,
             )

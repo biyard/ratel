@@ -2,7 +2,7 @@ use super::*;
 use controller::*;
 
 use bdk::prelude::*;
-use dto::ContentType;
+use dto::{ContentType, File};
 
 use crate::{
     components::loader::Loader,
@@ -143,8 +143,8 @@ pub fn MyPageLayout(#[props(default = Language::En)] lang: Language) -> Element 
                     onclose: move |_| {
                         ctrl.change_write(false);
                     },
-                    onsend: move |(content_type, description): (ContentType, String)| async move {
-                        ctrl.create_feed(content_type, description).await;
+                    onsend: move |(files, content_type, description): (Vec<File>, ContentType, String)| async move {
+                        ctrl.create_feed(files, content_type, description).await;
                     },
                 }
             }
