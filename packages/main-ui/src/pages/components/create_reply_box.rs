@@ -29,6 +29,7 @@ pub fn CreateReplyBox(id: String, lang: Language, onsend: EventHandler<String>) 
                         }
                     }
                 },
+                onupload: move |_| {},
             }
         }
     }

@@ -29,3 +29,7 @@
 .create-space-button {
   @apply flex flex-row w-fit h-fit justify-start items-center bg-white px-14 py-8 rounded-[100px] gap-4 font-bold text-[#18181B] text-sm/16
 }
+
+.create-space-small-button {
+  @apply flex flex-row w-fit h-fit justify-start items-center bg-white px-12 py-4 rounded-[100px] gap-4 font-bold text-[#18181B] text-xs/16
+}

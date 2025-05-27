@@ -286,6 +286,7 @@ mod tests {
                 title,
                 None,
                 None,
+                vec![],
                 0,
                 0,
             )
