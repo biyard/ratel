@@ -10,7 +10,6 @@ pub fn ThreadPage(#[props(default = Language::En)] lang: Language, id: i64) -> E
     let mut is_write = use_signal(|| false);
     let mut ctrl = Controller::new(lang, id)?;
 
-    let accounts = ctrl.accounts()?;
     let feed = ctrl.feed()?;
 
     let recent_feeds: Vec<String> = vec![];
@@ -33,7 +32,6 @@ pub fn ThreadPage(#[props(default = Language::En)] lang: Language, id: i64) -> E
                         // recent_feeds: recent_feeds.clone(),
                         // recent_spaces: recent_spaces.clone(),
                         // recent_communities: recent_communities.clone(),
-                        accounts: accounts.clone(),
 
                         onwrite: move |_| {
                             is_write.set(true);
@@ -41,8 +39,8 @@ pub fn ThreadPage(#[props(default = Language::En)] lang: Language, id: i64) -> E
                         edit_profile: move |_| {
                             tracing::debug!("edit profile button clicked");
                         },
-                        add_account: move |_| async move {
-                            ctrl.add_account().await;
+                        create_team: move |_| async move {
+                            ctrl.create_team().await;
                         },
                         sign_out: move |_| async move {
                             ctrl.signout().await;
@@ -81,10 +79,9 @@ pub fn ThreadPage(#[props(default = Language::En)] lang: Language, id: i64) -> E
                     recent_feeds,
                     recent_spaces,
                     recent_communities,
-                    accounts,
 
-                    add_account: move |_| async move {
-                        ctrl.add_account().await;
+                    create_team: move |_| async move {
+                        ctrl.create_team().await;
                     },
                     sign_out: move |_| async move {
                         ctrl.signout().await;

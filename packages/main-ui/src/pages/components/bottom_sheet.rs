@@ -8,13 +8,10 @@ use bdk::prelude::{
     dioxus::web::WebEventExt,
     *,
 };
-use dto::MyInfo;
+use dto::{MyInfo, Team};
 use wasm_bindgen::JsCast;
 
-use crate::{
-    components::icons::{Badge, Grade, Palace, Pentagon2},
-    pages::controller::AccountList,
-};
+use crate::components::icons::{Badge, Grade, Palace, Pentagon2};
 
 use web_sys::window;
 
@@ -26,8 +23,7 @@ pub fn BottomSheet(
     recent_spaces: Vec<String>,
     recent_communities: Vec<String>,
 
-    accounts: Vec<AccountList>,
-    add_account: EventHandler<MouseEvent>,
+    create_team: EventHandler<MouseEvent>,
     sign_out: EventHandler<MouseEvent>,
 ) -> Element {
     let mut is_scrolling = use_signal(|| false);
@@ -45,15 +41,15 @@ pub fn BottomSheet(
         div {
             class: "fixed bottom-0 left-0 w-full z-51 aria-hidden:hidden",
             aria_hidden: !profile_clicked(),
-            Account {
+            TeamBox {
                 lang,
                 nickname: profile.nickname.clone(),
                 email: profile.email,
-                accounts,
+                teams: profile.teams,
                 onprev: move |_| {
                     profile_clicked.set(false);
                 },
-                add_account,
+                create_team,
                 sign_out,
             }
         }
@@ -157,13 +153,13 @@ pub fn BottomSheet(
 }
 
 #[component]
-pub fn Account(
+pub fn TeamBox(
     lang: Language,
     nickname: String,
     email: String,
-    accounts: Vec<AccountList>,
+    teams: Vec<Team>,
     onprev: EventHandler<MouseEvent>,
-    add_account: EventHandler<MouseEvent>,
+    create_team: EventHandler<MouseEvent>,
     sign_out: EventHandler<MouseEvent>,
 ) -> Element {
     let tr: AccountTranslate = translate(&lang);
@@ -193,7 +189,7 @@ pub fn Account(
                 div { class: "font-bold text-sm/16 text-neutral-500", {tr.switch_account} }
 
                 div { class: "flex flex-col w-full justify-start items-start gap-12",
-                    for account in accounts {
+                    for team in teams {
                         div {
                             class: "cursor-pointer flex flex-row w-full justify-start items-center gap-8",
                             onclick: move |_| {
@@ -201,9 +197,9 @@ pub fn Account(
                             },
                             img {
                                 class: "w-20 h-20 rounded-full object-cover",
-                                src: account.profile,
+                                src: team.profile_url,
                             }
-                            div { class: "font-normal text-white text-sm/20", {account.email} }
+                            div { class: "font-normal text-white text-sm/20", {team.username} }
                         }
                     }
                 }
@@ -214,7 +210,7 @@ pub fn Account(
                     div {
                         class: "cursor-pointer flex flex-row w-full justify-start items-center gap-4",
                         onclick: move |e| {
-                            add_account.call(e);
+                            create_team.call(e);
                         },
                         Add {
                             class: "[&>path]:stroke-white",

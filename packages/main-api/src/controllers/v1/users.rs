@@ -15,6 +15,8 @@ use sqlx::{Pool, Postgres};
 use tracing::instrument;
 use validator::Validate;
 
+use crate::utils::users::extract_user_id;
+
 #[derive(Clone, Debug)]
 pub struct UserControllerV1 {
     users: UserRepository,
@@ -48,41 +50,7 @@ impl UserControllerV1 {
         Path(UserByIdPath { id }): Path<UserByIdPath>,
         Json(body): Json<UserByIdAction>,
     ) -> Result<Json<User>> {
-        if auth.is_none() {
-            tracing::debug!("No Authorization header");
-            return Err(Error::Unauthorized);
-        }
-
-        let auth = auth.clone().unwrap();
-
-        tracing::debug!("auth: {:?}", auth);
-
-        let user_id = match auth {
-            Authorization::Bearer { claims } => claims.sub,
-            Authorization::UserSig(sig) => {
-                let principal = sig.principal().map_err(|e| {
-                    tracing::error!("failed to get principal: {:?}", e);
-                    Error::Unauthorized
-                })?;
-                let user = User::query_builder()
-                    .principal_equals(principal)
-                    .query()
-                    .map(User::from)
-                    .fetch_one(&ctrl.pool)
-                    .await
-                    .map_err(|e| {
-                        tracing::error!("failed to get user: {:?}", e);
-                        Error::InvalidUser
-                    })?;
-                user.id.to_string()
-            }
-            _ => {
-                tracing::debug!("Authorization header is not Bearer");
-                return Err(Error::Unauthorized);
-            }
-        };
-
-        let user_id = user_id.parse::<i64>().unwrap();
+        let user_id = extract_user_id(&ctrl.pool, auth).await?;
 
         if user_id != id {
             return Err(Error::Unauthorized);

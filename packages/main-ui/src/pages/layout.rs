@@ -77,7 +77,6 @@ pub fn MyPageLayout(#[props(default = Language::En)] lang: Language) -> Element 
     let landing_data = ctrl.landing_data()?;
     let hot_promotions = ctrl.hot_promotions()?;
     let news = ctrl.news()?;
-    let accounts = ctrl.accounts()?;
 
     tracing::debug!("landing_data: {:?}", landing_data.clone());
 
@@ -97,7 +96,6 @@ pub fn MyPageLayout(#[props(default = Language::En)] lang: Language) -> Element 
                     // recent_feeds: recent_feeds.clone(),
                     // recent_spaces: recent_spaces.clone(),
                     // recent_communities: recent_communities.clone(),
-                    accounts: accounts.clone(),
 
                     onwrite: move |_| {
                         ctrl.change_write(true);
@@ -105,8 +103,8 @@ pub fn MyPageLayout(#[props(default = Language::En)] lang: Language) -> Element 
                     edit_profile: move |_| {
                         ctrl.edit_profile();
                     },
-                    add_account: move |_| async move {
-                        ctrl.add_account().await;
+                    create_team: move |_| {
+                        ctrl.create_team();
                     },
                     sign_out: move |_| async move {
                         ctrl.signout().await;
@@ -152,10 +150,9 @@ pub fn MyPageLayout(#[props(default = Language::En)] lang: Language) -> Element 
                     recent_feeds,
                     recent_spaces,
                     recent_communities,
-                    accounts,
 
-                    add_account: move |_| async move {
-                        ctrl.add_account().await;
+                    create_team: move |_| {
+                        ctrl.create_team();
                     },
                     sign_out: move |_| async move {
                         ctrl.signout().await;
