@@ -141,6 +141,9 @@ pub enum Error {
     // quizzes
     #[translate(en = "You must select a valid quiz")]
     InvalidQuizId,
+
+    #[translate(en = "You must pass a valid team name")]
+    InvalidTeamname,
 }
 
 impl<E: StdError + 'static> From<E> for Error {
