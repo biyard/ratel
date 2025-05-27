@@ -5,6 +5,7 @@ use bdk::prelude::*;
 use dto::ContentType;
 
 use crate::{
+    components::loader::Loader,
     pages::components::{
         BottomNavigationBar, BottomSheet, CreateFeedBox, LeftSidebar, RightSidebar, SocialHeader,
     },
@@ -52,7 +53,14 @@ pub fn SocialLayout(#[props(default = Language::En)] lang: Language) -> Element 
                 }
             }
 
-            div { class: "w-full max-w-desktop flex-1 overflow-y-auto", Outlet::<Route> {} }
+            SuspenseBoundary {
+                fallback: |_| rsx! {
+                    div { class: "absolute bg-background w-screen h-screen top-0 left-0 flex items-center justify-center text-white",
+                        Loader { class: "w-200" }
+                    }
+                },
+                div { class: "w-full max-w-desktop flex-1 overflow-y-auto", Outlet::<Route> {} }
+            }
 
             div { class: "flex-shrink-0 w-full",
                 // aria_hidden: selected() == RouteTab::Notification,
