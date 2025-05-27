@@ -96,7 +96,7 @@ pub fn MyPageLayout(#[props(default = Language::En)] lang: Language) -> Element 
     let recent_communities: Vec<String> = vec![];
 
     rsx! {
-        div { class: "flex flex-col w-full h-screen justify-start items-start",
+        div { class: "flex flex-col w-full h-screen justify-between items-between",
             div { class: "flex flex-row w-full h-full max-h-[calc(100vh)] justify-start items-start py-20 px-10 gap-20",
                 LeftSidebar {
                     lang,
@@ -134,7 +134,7 @@ pub fn MyPageLayout(#[props(default = Language::En)] lang: Language) -> Element 
             }
 
             div {
-                class: "flex flex-row w-full justify-start items-start mb-85 aria-hidden:!hidden z-50",
+                class: "flex flex-row w-full justify-end items-end aria-hidden:!hidden z-50",
                 aria_hidden: !is_write,
                 CreateFeedBox {
                     lang,

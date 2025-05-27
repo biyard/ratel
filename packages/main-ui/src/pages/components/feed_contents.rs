@@ -149,7 +149,7 @@ pub fn MyFeedList(
     rsx! {
         div {
             id: feed_container_id,
-            class: "flex flex-col w-full h-[calc(100vh-300px)] max-tablet:!h-[calc(100vh-300px)]  overflow-y-scroll",
+            class: "flex flex-col w-full h-[calc(100vh-300px)] max-tablet:!h-[calc(100vh-300px)]  overflow-y-scroll gap-10",
             for feed in visible_feeds {
                 if feed.spaces.is_empty() || feed.spaces[0].status != SpaceStatus::Draft
                     || (feed.spaces[0].user_id == my_user_id

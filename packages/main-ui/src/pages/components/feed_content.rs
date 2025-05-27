@@ -7,7 +7,7 @@ use bdk::prelude::{
 use dto::{FeedSummary, by_components::icons::validations::Add};
 
 use crate::{
-    components::icons::{Badge, Feed2, RewardCoin},
+    components::icons::{Badge, Feed2, Palace, RewardCoin},
     pages::components::Label,
     utils::time::format_prev_time,
 };
@@ -43,6 +43,7 @@ pub fn FeedContent(
                 ContentDescription { id: feed.id, lang, html: feed.html_contents }
 
                 BottomContent {
+                    exist_spaces,
                     like: feed.likes,
                     comment: feed.comments,
                     reward: feed.rewards,
@@ -54,9 +55,23 @@ pub fn FeedContent(
 }
 
 #[component]
-pub fn BottomContent(like: i64, comment: i64, reward: i64, shared: i64) -> Element {
+pub fn BottomContent(
+    exist_spaces: bool,
+    like: i64,
+    comment: i64,
+    reward: i64,
+    shared: i64,
+) -> Element {
     rsx! {
-        div { class: "flex flex-row w-full justify-between items-center px-20 py-10",
+        div { class: "flex flex-row w-full justify-end items-center",
+            if exist_spaces {
+                IconBox {
+                    icon: rsx! {
+                        Palace { class: "[&>path]:stroke-neutral-500", width: "18", height: "18" }
+                    },
+                    text: "Space",
+                }
+            }
             IconBox {
                 icon: rsx! {
                     ThumbsUp { class: "[&>path]:stroke-neutral-500", width: "18", height: "18" }
@@ -93,7 +108,7 @@ pub fn BottomContent(like: i64, comment: i64, reward: i64, shared: i64) -> Eleme
 #[component]
 pub fn IconBox(icon: Element, text: String) -> Element {
     rsx! {
-        div { class: "flex flex-row w-fit justify-start items-center px-20 py-16 gap-10",
+        div { class: "flex flex-row w-fit justify-start items-center px-10 py-15 gap-5",
             {icon}
             div { class: "font-medium text-white text-[15px]/18", {text} }
         }
@@ -197,7 +212,7 @@ pub fn TopContent(
                     }
                 }
 
-                div { class: "font-light text-sm/17 text-white whitespace-nowrap",
+                div { class: "font-thin text-sm/17 text-white whitespace-nowrap",
                     {format_prev_time(created_at)}
                 }
             }
