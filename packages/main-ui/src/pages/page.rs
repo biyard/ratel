@@ -16,7 +16,7 @@ pub fn IndexPage(#[props(default = Language::En)] lang: Language) -> Element {
     rsx! {
         by_components::meta::MetaPage { title: tr.title }
 
-        div { class: "flex flex-col w-full h-fit justify-start items-start text-white",
+        div { class: "relative flex flex-col w-full h-fit justify-start items-start text-white",
             CreateFeed {
                 lang,
                 profile: my_info.profile_url,
