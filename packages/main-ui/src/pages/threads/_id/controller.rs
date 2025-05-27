@@ -5,10 +5,7 @@ use dto::{
 };
 
 use crate::{
-    config,
-    pages::{components::CreateSpacePopup, controller::AccountList},
-    route::Route,
-    services::user_service::UserService,
+    config, pages::components::CreateSpacePopup, route::Route, services::user_service::UserService,
 };
 
 #[derive(Clone, Copy, DioxusController)]
@@ -18,7 +15,6 @@ pub struct Controller {
     pub nav: Navigator,
     pub total_users: Signal<Resource<Vec<TotalInfoSummary>>>,
     pub my_info: Signal<MyInfo>,
-    pub accounts: Resource<Vec<AccountList>>,
     pub feed: Resource<Feed>,
     #[allow(dead_code)]
     pub id: i64,
@@ -29,7 +25,6 @@ pub struct Controller {
 impl Controller {
     pub fn new(lang: Language, id: i64) -> std::result::Result<Self, RenderError> {
         let user_service: UserService = use_context();
-        let accounts = use_server_future(move || async move { vec![] })?;
 
         let feed = use_server_future(move || async move {
             match Feed::get_client(config::get().main_api_endpoint)
@@ -65,7 +60,6 @@ impl Controller {
         let mut ctrl = Self {
             lang,
             nav: use_navigator(),
-            accounts,
             my_info: use_signal(|| my_info),
             total_users: use_signal(|| total_users),
             feed,
@@ -80,8 +74,8 @@ impl Controller {
         Ok(ctrl)
     }
 
-    pub async fn add_account(&mut self) {
-        tracing::debug!("add account");
+    pub async fn create_team(&mut self) {
+        tracing::debug!("create team");
     }
 
     pub async fn signout(&mut self) {

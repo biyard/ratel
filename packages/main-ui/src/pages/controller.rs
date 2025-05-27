@@ -1,10 +1,13 @@
+use crate::pages::components::CreateTeamPopup;
 use bdk::prelude::*;
+use dto::Team;
 use dto::dioxus_popup::PopupService;
 use dto::{
     ContentType, Feed, FeedQuery, FeedSummary, MyInfo, News, NewsQuery, NewsSummary, Promotion,
     User,
 };
 use dto::{Follower, LandingData};
+use regex::Regex;
 use serde::{Deserialize, Serialize};
 
 use crate::pages::components::EditProfilePopup;
@@ -27,7 +30,6 @@ pub struct Controller {
     pub news: Resource<Vec<NewsSummary>>,
 
     pub feeds: Resource<Vec<FeedSummary>>,
-    pub accounts: Resource<Vec<AccountList>>,
 
     pub size: Signal<usize>,
 }
@@ -164,8 +166,6 @@ impl Controller {
             }
         })?;
 
-        let accounts = use_server_future(move || async move { vec![] })?;
-
         let ctrl = Self {
             lang,
             nav: use_navigator(),
@@ -177,13 +177,49 @@ impl Controller {
             landing_data,
             hot_promotions,
             news,
-            accounts,
             feeds,
         };
 
         use_context_provider(move || ctrl);
 
         Ok(ctrl)
+    }
+
+    pub fn create_team(&mut self) {
+        tracing::debug!("create_team");
+        let mut ctrl = self.clone();
+
+        self.popup
+            .open(rsx! {
+                CreateTeamPopup {
+                    lang: self.lang,
+                    oncreate: move |(profile, username): (String, String)| async move {
+                        if !ctrl.create_team_validation_check(profile.clone(), username.clone()) {
+                            return;
+                        }
+                        ctrl.create_team_request(profile, username).await;
+                        ctrl.popup.close();
+                    },
+                }
+            })
+            .with_title("Edit Profile");
+    }
+
+    pub async fn create_team_request(&mut self, profile: String, username: String) {
+        tracing::debug!("profile: {:?} username: {:?}", profile, username);
+
+        match Team::get_client(config::get().main_api_endpoint)
+            .create(profile, username)
+            .await
+        {
+            Ok(_) => {
+                tracing::debug!("success to create team");
+                self.user_service.update_my_info().await;
+            }
+            Err(e) => {
+                btracing::error!("failed to create team with error: {:?}", e);
+            }
+        };
     }
 
     pub fn edit_profile(&mut self) {
@@ -203,7 +239,16 @@ impl Controller {
                     nickname,
                     description,
                     onedit: move |(profile, nickname, description): (String, String, String)| async move {
-                        ctrl.edit(profile, nickname, description).await;
+                        if !ctrl
+                            .edit_profile_validation_check(
+                                profile.clone(),
+                                nickname.clone(),
+                                description.clone(),
+                            )
+                        {
+                            return;
+                        }
+                        ctrl.edit_profile_request(profile, nickname, description).await;
                         ctrl.popup.close();
                     },
                 }
@@ -211,7 +256,12 @@ impl Controller {
             .with_title("Edit Profile");
     }
 
-    pub async fn edit(&mut self, profile: String, nickname: String, description: String) {
+    pub async fn edit_profile_request(
+        &mut self,
+        profile: String,
+        nickname: String,
+        description: String,
+    ) {
         let info = self.my_info();
 
         tracing::debug!(
@@ -302,10 +352,6 @@ impl Controller {
         };
     }
 
-    pub async fn add_account(&mut self) {
-        tracing::debug!("add account");
-    }
-
     pub async fn signout(&mut self) {
         tracing::debug!("signout");
         let mut user: UserService = use_context();
@@ -315,4 +361,60 @@ impl Controller {
     pub fn move_to_threads(&self, id: i64) {
         self.nav.push(Route::ThreadPage { id });
     }
+
+    pub fn edit_profile_validation_check(
+        &self,
+        profile: String,
+        nickname: String,
+        description: String,
+    ) -> bool {
+        if profile.is_empty() {
+            btracing::e!(self.lang, ValidationError::ProfileRequired);
+            return false;
+        }
+        if nickname.is_empty() {
+            btracing::e!(self.lang, ValidationError::NicknameRequired);
+            return false;
+        }
+        if description.is_empty() {
+            btracing::e!(self.lang, ValidationError::DescriptionRequired);
+            return false;
+        }
+        true
+    }
+
+    pub fn create_team_validation_check(&self, profile: String, username: String) -> bool {
+        let valid_pattern = Regex::new("^[a-z0-9_-]*$").unwrap();
+
+        if profile.is_empty() {
+            btracing::e!(self.lang, ValidationError::TeamProfileRequired);
+            return false;
+        }
+        if username.is_empty() {
+            btracing::e!(self.lang, ValidationError::UsernameRequired);
+            return false;
+        }
+        if !valid_pattern.is_match(&username) {
+            btracing::e!(self.lang, ValidationError::UsernameFormatFailed);
+            return false;
+        }
+        true
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Translate)]
+pub enum ValidationError {
+    #[translate(en = "Please select the team profile.")]
+    TeamProfileRequired,
+    #[translate(en = "Please enter the username.")]
+    UsernameRequired,
+    #[translate(en = "Please enter a username that matches the format.")]
+    UsernameFormatFailed,
+
+    #[translate(en = "Please select the profile.")]
+    ProfileRequired,
+    #[translate(en = "Please enter the nickname.")]
+    NicknameRequired,
+    #[translate(en = "Please enter the description.")]
+    DescriptionRequired,
 }
