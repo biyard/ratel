@@ -8,25 +8,22 @@ use bdk::prelude::{
     dioxus::web::WebEventExt,
     *,
 };
+use dto::{MyInfo, Team};
 use wasm_bindgen::JsCast;
 
-use crate::{
-    components::icons::{Badge, Grade, Palace, Pentagon2},
-    pages::controller::{AccountList, Profile},
-};
+use crate::components::icons::{Badge, Grade, Palace, Pentagon2};
 
 use web_sys::window;
 
 #[component]
 pub fn BottomSheet(
     lang: Language,
-    profile: Profile,
+    profile: MyInfo,
     recent_feeds: Vec<String>,
     recent_spaces: Vec<String>,
     recent_communities: Vec<String>,
 
-    accounts: Vec<AccountList>,
-    add_account: EventHandler<MouseEvent>,
+    create_team: EventHandler<MouseEvent>,
     sign_out: EventHandler<MouseEvent>,
 ) -> Element {
     let mut is_scrolling = use_signal(|| false);
@@ -44,15 +41,15 @@ pub fn BottomSheet(
         div {
             class: "fixed bottom-0 left-0 w-full z-51 aria-hidden:hidden",
             aria_hidden: !profile_clicked(),
-            Account {
+            TeamBox {
                 lang,
                 nickname: profile.nickname.clone(),
                 email: profile.email,
-                accounts,
+                teams: profile.teams,
                 onprev: move |_| {
                     profile_clicked.set(false);
                 },
-                add_account,
+                create_team,
                 sign_out,
             }
         }
@@ -120,9 +117,13 @@ pub fn BottomSheet(
                         div { class: "w-36 h-5 bg-neutral-600 rounded-lg" }
                     }
                     div { class: "flex flex-row w-full justify-start items-center gap-4",
-                        img {
-                            class: "w-24 h-24 rounded-full object-cover",
-                            src: profile.profile.clone(),
+                        if profile.profile_url == "" {
+                            div { class: "w-24 h-24 rounded-full bg-neutral-400" }
+                        } else {
+                            img {
+                                class: "w-24 h-24 rounded-full object-cover",
+                                src: profile.profile_url.clone(),
+                            }
                         }
                         div { class: "font-bold text-lg/21 text-white", {profile.nickname.clone()} }
                         Badge {}
@@ -132,9 +133,9 @@ pub fn BottomSheet(
                 if translate_y() < 20.0 {
                     BottomInformation {
                         lang,
-                        description: profile.description.clone().unwrap_or_default(),
-                        exp: profile.exp,
-                        total_exp: profile.total_exp,
+                        description: "".to_string(),
+                        exp: 0,
+                        total_exp: 0,
                         recent_feeds,
                         recent_communities,
                         recent_spaces,
@@ -152,13 +153,13 @@ pub fn BottomSheet(
 }
 
 #[component]
-pub fn Account(
+pub fn TeamBox(
     lang: Language,
     nickname: String,
     email: String,
-    accounts: Vec<AccountList>,
+    teams: Vec<Team>,
     onprev: EventHandler<MouseEvent>,
-    add_account: EventHandler<MouseEvent>,
+    create_team: EventHandler<MouseEvent>,
     sign_out: EventHandler<MouseEvent>,
 ) -> Element {
     let tr: AccountTranslate = translate(&lang);
@@ -188,7 +189,7 @@ pub fn Account(
                 div { class: "font-bold text-sm/16 text-neutral-500", {tr.switch_account} }
 
                 div { class: "flex flex-col w-full justify-start items-start gap-12",
-                    for account in accounts {
+                    for team in teams {
                         div {
                             class: "cursor-pointer flex flex-row w-full justify-start items-center gap-8",
                             onclick: move |_| {
@@ -196,9 +197,9 @@ pub fn Account(
                             },
                             img {
                                 class: "w-20 h-20 rounded-full object-cover",
-                                src: account.profile,
+                                src: team.profile_url,
                             }
-                            div { class: "font-normal text-white text-sm/20", {account.email} }
+                            div { class: "font-normal text-white text-sm/20", {team.username} }
                         }
                     }
                 }
@@ -209,7 +210,7 @@ pub fn Account(
                     div {
                         class: "cursor-pointer flex flex-row w-full justify-start items-center gap-4",
                         onclick: move |e| {
-                            add_account.call(e);
+                            create_team.call(e);
                         },
                         Add {
                             class: "[&>path]:stroke-white",

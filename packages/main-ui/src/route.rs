@@ -22,17 +22,24 @@ pub enum Route {
         NotificationsPage {},
         #[route("/my-profile")]
         MyProfilePage {},
-    #[end_layout]
-
-    #[layout(LandingLayout)]
-        #[route("/")]
-        LandingPage {},
         #[route("/politicians")]
         PoliticiansPage {},
         #[route("/politicians/:id")]
         PoliticiansByIdPage { id: i64 },
         #[route("/presidential-election")]
         PresidentialElectionPage {},
+
+        #[nest("/teams/:teamname")]
+    #[layout(TeamsByIdLayout)]
+    #[route("/")]
+    TeamsByIdPage { teamname: String },
+    #[end_layout]
+    #[end_nest]
+    #[end_layout]
+
+    #[layout(LandingLayout)]
+        #[route("/")]
+        LandingPage {},
         #[route("/privacy-policy")]
         PrivacyPolicyPage {},
         #[route("/preparing")]
@@ -41,6 +48,14 @@ pub enum Route {
         BecomeSponsorPage {},
         #[route("/quizzes")]
         QuizzesPage {},
+
+        #[route("/politician")]
+        PoliticiansPageForLanding {},
+        #[route("/presidential-elections")]
+        PresidentialElectionPageForLanding {},
+
+        #[route("/advocacy-campaigns/:id")]
+        AdvocacyCampaignsByIdPage { id: i64},
 
         #[route("/quizzes/results/:id")]
         ResultsPage {id: String},

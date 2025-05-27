@@ -10,6 +10,7 @@ pub struct Config {
     pub assembly_system_url: &'static str,
     pub assembly_detail_url: &'static str,
     pub aws: AwsConfig,
+    pub bucket: BucketConfig,
     pub database: DatabaseConfig,
     pub signing_domain: &'static str,
     pub auth: AuthConfig,
@@ -17,6 +18,13 @@ pub struct Config {
     pub slack_channel_sponsor: &'static str,
     pub slack_channel_abusing: &'static str,
     pub slack_channel_monitor: &'static str,
+}
+
+#[derive(Debug)]
+pub struct BucketConfig {
+    pub name: &'static str,
+    pub asset_dir: &'static str,
+    pub expire: u64,
 }
 
 impl Default for Config {
@@ -32,6 +40,15 @@ impl Default for Config {
             aws: AwsConfig::default(),
             database: DatabaseConfig::default(),
             auth: AuthConfig::default(),
+            bucket: BucketConfig {
+                name: option_env!("BUCKET_NAME").expect("You must set BUCKET_NAME"),
+                asset_dir: option_env!("ASSET_DIR").expect("You must set ASSET_DIR"),
+                expire: option_env!("BUCKET_EXPIRE").unwrap_or_else(|| {
+                    tracing::warn!("We recommend to set BUCKET_EXPIRE. BUCKET_EXPIRE is not set. Default is 3600.");
+                    "3600"
+                }) .parse()
+                    .unwrap(),
+            },
             migrate: option_env!("MIGRATE")
                 .map(|s| s.parse::<bool>().unwrap_or(false))
                 .unwrap_or(false),

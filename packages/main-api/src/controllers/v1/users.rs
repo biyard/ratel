@@ -1,5 +1,8 @@
+use crate::by_axum::axum::extract::Path;
+use crate::by_axum::axum::routing::post;
 use crate::utils::middlewares::authorization_middleware;
 use bdk::prelude::*;
+use by_axum::auth::Authorization;
 use by_axum::axum::{
     Extension, Json,
     extract::{Query, State},
@@ -12,10 +15,20 @@ use sqlx::{Pool, Postgres};
 use tracing::instrument;
 use validator::Validate;
 
+use crate::utils::users::extract_user_id;
+
 #[derive(Clone, Debug)]
 pub struct UserControllerV1 {
     users: UserRepository,
     pool: Pool<Postgres>,
+}
+
+#[derive(
+    Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
+)]
+#[serde(rename_all = "kebab-case")]
+pub struct UserByIdPath {
+    pub id: i64,
 }
 
 impl UserControllerV1 {
@@ -26,8 +39,26 @@ impl UserControllerV1 {
 
         Ok(by_axum::axum::Router::new()
             .route("/", get(Self::read_user).post(Self::act_user))
+            .route("/:id", post(Self::act_user_by_id))
             .with_state(ctrl.clone())
             .layer(middleware::from_fn(authorization_middleware)))
+    }
+
+    pub async fn act_user_by_id(
+        State(ctrl): State<UserControllerV1>,
+        Extension(auth): Extension<Option<Authorization>>,
+        Path(UserByIdPath { id }): Path<UserByIdPath>,
+        Json(body): Json<UserByIdAction>,
+    ) -> Result<Json<User>> {
+        let user_id = extract_user_id(&ctrl.pool, auth).await?;
+
+        if user_id != id {
+            return Err(Error::Unauthorized);
+        }
+
+        match body {
+            UserByIdAction::EditProfile(req) => ctrl.edit_profile(id, req).await,
+        }
     }
 
     #[instrument]
@@ -75,6 +106,23 @@ impl UserControllerV1 {
 }
 
 impl UserControllerV1 {
+    pub async fn edit_profile(&self, id: i64, req: UserEditProfileRequest) -> Result<Json<User>> {
+        let user = self
+            .users
+            .update(
+                id,
+                UserRepositoryUpdateRequest {
+                    nickname: Some(req.nickname),
+                    profile_url: Some(req.profile_url),
+                    html_contents: Some(req.html_contents),
+                    ..Default::default()
+                },
+            )
+            .await?;
+
+        Ok(Json(user))
+    }
+
     #[instrument]
     pub async fn login(&self, req: UserReadAction) -> Result<Json<User>> {
         let user = self.users.find_one(&req).await?;

@@ -21,6 +21,8 @@ tracing = "0.1.41"
 tracing-subscriber = "0.3.19"
 validator = "0.20.0"
 scraper = "0.23.1"
+aws-config = "1.5.10"
+aws-sdk-s3 = "1.74.0"
 
 [dev-dependencies]
 rest-api = { workspace = true, features = ["test"] }
