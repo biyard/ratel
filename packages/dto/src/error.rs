@@ -138,6 +138,14 @@ pub enum Error {
     #[translate(en = "Failed to write a space")]
     SpaceWritePostError,
 
+    // metadata
+    #[translate(en = "Data already exists. Please enter different data.")]
+    InvalidType,
+    #[translate(en = "Failed to get URL for upload. Please try again.")]
+    AssetError(String),
+    #[translate(en = "Failed to upload file. Please try again.")]
+    UploadMetadataError(String),
+
     // quizzes
     #[translate(en = "You must select a valid quiz")]
     InvalidQuizId,

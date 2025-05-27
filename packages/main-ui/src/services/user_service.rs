@@ -197,6 +197,25 @@ impl UserService {
         self.my_info.set(my_info);
     }
 
+    pub async fn update_my_info(&mut self) {
+        let my_cli = (self.my_cli)();
+
+        let my_info: MyInfo = match my_cli.my_info().await {
+            Ok(v) => v,
+            Err(e) => match e {
+                Error::NotFound => {
+                    return;
+                }
+                e => {
+                    tracing::error!("UserService::get_my_info_from_server: error={:?}", e);
+                    return;
+                }
+            },
+        };
+
+        self.my_info.set(my_info);
+    }
+
     pub fn get_user_info(&self) -> Option<(String, String, String)> {
         let info = (self.user_info)();
 

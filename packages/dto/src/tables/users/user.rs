@@ -14,14 +14,14 @@ pub struct User {
     #[api_model(auto = [insert, update])]
     pub updated_at: i64,
 
-    #[api_model(action = signup)]
+    #[api_model(action = signup, action_by_id = edit_profile)]
     pub nickname: String,
     #[api_model(unique, read_action = by_principal)]
     pub principal: String,
     #[api_model(action = signup, read_action = [check_email, login], unique)]
     #[validate(email)]
     pub email: String,
-    #[api_model(action = signup, nullable)]
+    #[api_model(action = signup, nullable, action_by_id = edit_profile)]
     #[validate(url)]
     pub profile_url: String,
 
@@ -45,7 +45,7 @@ pub struct User {
     pub groups: Vec<Group>,
 
     // profile contents
-    #[api_model(version = v0.2)]
+    #[api_model(version = v0.2, action_by_id = edit_profile)]
     pub html_contents: String,
 }
 
