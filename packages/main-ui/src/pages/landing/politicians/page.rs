@@ -12,6 +12,13 @@ use dto::CryptoStance;
 use dto::Party;
 
 #[component]
+pub fn PoliticiansPageForLanding(#[props(default = Language::En)] lang: Language) -> Element {
+    rsx! {
+        PoliticiansPage { lang }
+    }
+}
+
+#[component]
 pub fn PoliticiansPage(#[props(default = Language::En)] lang: Language) -> Element {
     let mut ctrl = Controller::new(lang)?;
     let tr: PoliticiansTranslate = translate(&lang);

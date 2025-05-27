@@ -65,6 +65,9 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         ElectionPledgeQuizLike,
         ElectionPledgeQuizDislike,
         Promotion,
+        AdvocacyCampaign,
+        AdvocacyCampaignAuthor,
+        AdvocacyCampaignVoter,
     );
 
     if Industry::query_builder()
