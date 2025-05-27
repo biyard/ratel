@@ -30,11 +30,11 @@ pub enum Route {
         PresidentialElectionPage {},
 
         #[nest("/teams/:teamname")]
-            #[layout(TeamsByIdLayout)]
-                #[route("/")]
-                TeamsByIdPage { teamname: String },
-            #[end_layout]
-        #[end_nest]
+    #[layout(TeamsByIdLayout)]
+    #[route("/")]
+    TeamsByIdPage { teamname: String },
+    #[end_layout]
+    #[end_nest]
     #[end_layout]
 
     #[layout(LandingLayout)]
@@ -48,6 +48,14 @@ pub enum Route {
         BecomeSponsorPage {},
         #[route("/quizzes")]
         QuizzesPage {},
+
+        #[route("/politician")]
+        PoliticiansPageForLanding {},
+        #[route("/presidential-elections")]
+        PresidentialElectionPageForLanding {},
+
+        #[route("/advocacy-campaigns/:id")]
+        AdvocacyCampaignsByIdPage { id: i64},
 
         #[route("/quizzes/results/:id")]
         ResultsPage {id: String},

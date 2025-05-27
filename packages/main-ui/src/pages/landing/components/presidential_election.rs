@@ -60,7 +60,8 @@ pub fn PresidentialElection(
                 div { class: "w-full flex flex-row justify-center order-2 max-tablet:!order-1",
                     Link {
                         class: "btn secondary sm",
-                        to: Route::PresidentialElectionPage {},
+                        to: Route::PresidentialElectionPageForLanding {
+                        },
                         "View All"
                         ArrowRight {
                             class: "[&>path]:stroke-3",

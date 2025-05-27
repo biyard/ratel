@@ -2,6 +2,7 @@ pub mod assembly_members;
 pub mod bills;
 // pub mod patrons;
 // pub mod topics;
+mod advocacy_campaigns;
 mod assets;
 mod bots;
 mod election_pledges;
@@ -28,6 +29,10 @@ use crate::config;
 pub fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Router> {
     let conf = config::get();
     Ok(by_axum::axum::Router::new()
+        .nest(
+            "/advocacy-campaigns",
+            advocacy_campaigns::AdvocacyCampaignController::new(pool.clone()).route()?,
+        )
         .nest("/me", me::MeController::new(pool.clone()).route()?)
         .nest(
             "/spaces",

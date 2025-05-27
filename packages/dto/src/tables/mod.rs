@@ -1,3 +1,4 @@
+mod advocacy_campaigns;
 mod assembly_members;
 mod bills;
 mod ch_bills;
@@ -26,6 +27,7 @@ mod us_bills;
 mod users;
 mod votes;
 
+pub use advocacy_campaigns::*;
 pub use assembly_members::*;
 pub use bills::*;
 pub use ch_bills::*;

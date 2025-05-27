@@ -6,6 +6,15 @@ use controller::*;
 use i18n::*;
 
 #[component]
+pub fn PresidentialElectionPageForLanding(
+    #[props(default = Default::default())] lang: Language,
+) -> Element {
+    rsx! {
+        PresidentialElectionPage { lang }
+    }
+}
+
+#[component]
 pub fn PresidentialElectionPage(#[props(default = Default::default())] lang: Language) -> Element {
     let mut ctrl = Controller::new(lang)?;
     let tr: PresidentialElectionTranslate = translate(&lang);
