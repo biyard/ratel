@@ -20,3 +20,5 @@ pub mod section_header;
 pub mod socials;
 pub mod tooltip;
 pub mod upload_image;
+
+pub mod quick_menu;
