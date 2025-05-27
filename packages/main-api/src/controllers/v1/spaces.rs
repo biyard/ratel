@@ -71,6 +71,7 @@ impl SpaceController {
                 Some(user.profile_url),
                 Some(user.nickname),
                 ContentType::Crypto,
+                SpaceStatus::Draft,
                 0,
                 0,
             )

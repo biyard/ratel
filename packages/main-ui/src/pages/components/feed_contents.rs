@@ -1,5 +1,5 @@
 use bdk::prelude::{by_components::icons::edit::Edit1, *};
-use dto::FeedSummary;
+use dto::{FeedSummary, SpaceStatus};
 use gloo_events::EventListener;
 use wasm_bindgen::JsCast;
 use web_sys::{HtmlElement, window};
@@ -18,6 +18,7 @@ pub enum Tab {
 pub fn FeedContents(
     lang: Language,
     profile: String,
+    my_user_id: i64,
     feeds: Vec<FeedSummary>,
     following_feeds: Vec<FeedSummary>,
 
@@ -46,12 +47,19 @@ pub fn FeedContents(
                 if selected_tab() == Tab::Me {
                     MyFeedList {
                         lang,
+                        my_user_id,
                         feeds,
                         onclick,
+                        create_space: move |_| {},
                         add_size: move |_| {},
                     }
                 } else {
-                    FollowingFeedList { lang, following_feeds, onclick }
+                    FollowingFeedList {
+                        lang,
+                        my_user_id,
+                        following_feeds,
+                        onclick,
+                    }
                 }
             }
 
@@ -94,7 +102,9 @@ pub fn CreateFeed(lang: Language, profile: String, onwrite: EventHandler<MouseEv
 #[component]
 pub fn MyFeedList(
     lang: Language,
+    my_user_id: i64,
     feeds: Vec<FeedSummary>,
+    create_space: EventHandler<i64>,
     add_size: EventHandler<usize>,
     onclick: EventHandler<i64>,
 ) -> Element {
@@ -141,7 +151,21 @@ pub fn MyFeedList(
             id: feed_container_id,
             class: "flex flex-col w-full h-[calc(100vh-300px)] max-tablet:!h-[calc(100vh-300px)]  overflow-y-scroll",
             for feed in visible_feeds {
-                FeedContent { lang, feed, onclick }
+                if feed.spaces.is_empty() || feed.spaces[0].status != SpaceStatus::Draft
+                    || (feed.spaces[0].user_id == my_user_id
+                        && feed.spaces[0].status == SpaceStatus::Draft)
+                {
+                    FeedContent {
+                        lang,
+                        feed: feed.clone(),
+                        is_creator: my_user_id == feed.user_id,
+                        exist_spaces: !feed.spaces.is_empty(),
+                        onclick,
+                        create_space: move |_| {
+                            create_space.call(feed.id);
+                        },
+                    }
+                }
             }
         }
     }
@@ -150,6 +174,7 @@ pub fn MyFeedList(
 #[component]
 pub fn FollowingFeedList(
     lang: Language,
+    my_user_id: i64,
     following_feeds: Vec<FeedSummary>,
     onclick: EventHandler<i64>,
 ) -> Element {
@@ -194,7 +219,14 @@ pub fn FollowingFeedList(
             id: container_id,
             class: "flex flex-col w-full h-[calc(100vh-300px)] overflow-y-scroll gap-10",
             for feed in visible_items {
-                FeedContent { lang, feed, onclick }
+                FeedContent {
+                    lang,
+                    feed: feed.clone(),
+                    is_creator: my_user_id == feed.user_id,
+                    exist_spaces: !feed.spaces.is_empty(),
+                    onclick,
+                    create_space: move |_| {},
+                }
             }
         }
     }

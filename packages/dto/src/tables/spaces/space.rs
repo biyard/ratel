@@ -33,6 +33,9 @@ pub struct Space {
     #[api_model(summary , type = INTEGER)]
     #[serde(default)]
     pub content_type: ContentType,
+    #[api_model(summary, version = v0.1, type = INTEGER)]
+    #[serde(default)]
+    pub status: SpaceStatus,
 
     #[api_model(one_to_many = space_members, foreign_key = space_id)]
     #[serde(default)]
@@ -50,6 +53,15 @@ pub struct Space {
     #[api_model(summary)]
     #[serde(default)]
     pub shares: i64,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub enum SpaceStatus {
+    #[default]
+    Draft = 1,
+    InProgress = 2,
+    Finish = 3,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]
