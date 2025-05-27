@@ -5,6 +5,7 @@ pub mod bills;
 mod bots;
 mod election_pledges;
 mod feeds;
+mod followers;
 mod me;
 mod news;
 mod presidential_candidates;
@@ -34,6 +35,7 @@ pub fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Router> 
         .nest("/bots", bots::BotController::new(pool.clone()).route()?)
         .nest("/teams", teams::TeamController::new(pool.clone()).route()?)
         .nest("/feeds", feeds::FeedController::new(pool.clone()).route()?)
+        .nest("/followers", followers::FollowerController::new(pool.clone()).route()?)
         .nest(
             "/election-pledges",
             election_pledges::ElectionPledgeController::new(pool.clone()).route()?,

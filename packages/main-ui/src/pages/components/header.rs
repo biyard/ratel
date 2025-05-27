@@ -142,6 +142,14 @@ pub fn SocialHeader(
                         }
                         {tr.politicians}
                     }
+                    Link { class: "social-menu-item", to: Route::MyNetworkPage {},
+                        by_components::icons::user::UserGroup {
+                            class: "[&>path]:stroke-[#737373]",
+                            width: "24",
+                            height: "24",
+                        }
+                        {tr.my_network}
+                    }
 
                     // Menu {
                     //     icon: rsx! {
