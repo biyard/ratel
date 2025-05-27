@@ -7,21 +7,17 @@ use dto::MyInfo;
 
 use crate::{
     components::icons::RewardCoin,
-    pages::{
-        components::{LeftSideProfile, SideRoundedBox},
-        controller::AccountList,
-    },
+    pages::components::{LeftSideProfile, SideRoundedBox},
 };
 
 #[component]
 pub fn LeftSidebar(
     lang: Language,
     profile: MyInfo,
-    accounts: Vec<AccountList>,
     // recent_feeds: Vec<String>,
     // recent_spaces: Vec<String>,
     // recent_communities: Vec<String>,
-    add_account: EventHandler<MouseEvent>,
+    create_team: EventHandler<MouseEvent>,
     edit_profile: EventHandler<MouseEvent>,
     sign_out: EventHandler<MouseEvent>,
     onwrite: EventHandler<MouseEvent>,
@@ -46,9 +42,9 @@ pub fn LeftSidebar(
                 votes: 0,
                 surveys: 0,
 
-                accounts,
+                teams: profile.teams,
 
-                add_account,
+                create_team,
                 sign_out,
                 edit_profile,
             }
