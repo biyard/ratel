@@ -185,6 +185,20 @@ impl TeamController {
 
         Ok(res)
     }
+
+    async fn get_team_by_username(
+        &self,
+        _auth: Option<Authorization>,
+        TeamReadAction { username, .. }: TeamReadAction,
+    ) -> Result<Team> {
+        Team::query_builder()
+            .username_equals(username.ok_or(Error::InvalidTeamname)?)
+            .query()
+            .map(Team::from)
+            .fetch_one(&self.pool)
+            .await
+            .map_err(|_| Error::NotFound)
+    }
 }
 
 impl TeamController {
@@ -275,12 +289,12 @@ impl TeamController {
         match q {
             TeamParam::Query(param) => {
                 Ok(Json(TeamGetResponse::Query(ctrl.query(auth, param).await?)))
-            } // TeamParam::Read(param)
-              //     if param.action == Some(TeamReadActionType::ActionType) =>
-              // {
-              //     let res = ctrl.run_read_action(auth, param).await?;
-              //     Ok(Json(TeamGetResponse::Read(res)))
-              // }
+            }
+            TeamParam::Read(param) if param.action == Some(TeamReadActionType::GetByUsername) => {
+                let res = ctrl.get_team_by_username(auth, param).await?;
+                Ok(Json(TeamGetResponse::Read(res)))
+            }
+            _ => Err(Error::BadRequest),
         }
     }
 }
