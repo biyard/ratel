@@ -1,7 +1,8 @@
 #![allow(non_snake_case)]
 use bdk::prelude::*;
+use dto::by_components::icons::arrows::ArrowRight;
 
-use crate::components::indicators::Indicator;
+use crate::{components::indicators::Indicator, route::Route};
 
 #[component]
 pub fn SectionHeader(
@@ -27,7 +28,32 @@ pub fn SectionHeader(
                 }
 
                 if with_line {
-                    div { class: "col-span-1 w-full h-full flex flex-col items-center justify-center max-tablet:!hidden",
+                    div { class: "col-span-1 w-full h-full flex flex-col items-center justify-center max-tablet:!hidden gap-5",
+                        div { class: "w-full flex flex-col gap-5 items-end justify-end",
+                            Link {
+                                class: "btn group !gap-0",
+                                to: Route::QuizzesPage {},
+                                "Go to Quiz"
+                                ArrowRight {
+                                    width: "20",
+                                    height: "20",
+                                    class: "[&>path]:stroke-c-wg-50 group-hover:[&>path]:stroke-primary",
+                                }
+                            }
+                            Link {
+                                class: "btn group !gap-0",
+                                to: Route::AdvocacyCampaignsByIdPage {
+                                    id: 1,
+                                },
+                                "Go to Advocacy Campaign"
+                                ArrowRight {
+                                    width: "20",
+                                    height: "20",
+                                    class: "[&>path]:stroke-c-wg-50 group-hover:[&>path]:stroke-primary",
+                                }
+
+                            }
+                        }
                         div { class: "w-full h-1 bg-c-wg-70" }
                     }
                 }
