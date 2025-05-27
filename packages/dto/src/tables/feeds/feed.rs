@@ -1,7 +1,7 @@
 use bdk::prelude::*;
 use validator::Validate;
 
-use crate::Space;
+use crate::{File, Space};
 
 #[derive(Validate)]
 #[api_model(base = "/v1/feeds", table = feeds, action = [], action_by_id = [delete])]
@@ -57,6 +57,9 @@ pub struct Feed {
     pub likes: i64,
     #[api_model(summary, one_to_many = feed_comments, foreign_key = feed_id, aggregator=count)]
     pub comments: i64,
+    #[api_model(version = v0.1, summary, action = write_post, type = JSONB)]
+    #[serde(default)]
+    pub files: Vec<File>,
     #[api_model(version = v0.1, summary)]
     #[serde(default)]
     pub rewards: i64,
