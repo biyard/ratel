@@ -1,8 +1,16 @@
+use crate::pages::components::CreateTeamPopup;
 use bdk::prelude::*;
-use dto::{ContentType, News, NewsQuery, NewsSummary, Promotion, Space, User};
+use dto::Team;
+use dto::dioxus_popup::PopupService;
+use dto::{
+    ContentType, Feed, FeedQuery, FeedSummary, MyInfo, News, NewsQuery, NewsSummary, Promotion,
+    User,
+};
 use dto::{Follower, LandingData};
+use regex::Regex;
 use serde::{Deserialize, Serialize};
 
+use crate::pages::components::EditProfilePopup;
 use crate::{
     config, route::Route, services::user_service::UserService, utils::text::extract_title_from_html,
 };
@@ -12,14 +20,18 @@ pub struct Controller {
     #[allow(dead_code)]
     pub lang: Language,
     pub nav: Navigator,
+    pub popup: PopupService,
+    pub user_service: UserService,
+    pub is_write: Signal<bool>,
 
     pub landing_data: Resource<LandingData>,
+    pub my_info: Signal<MyInfo>,
     pub hot_promotions: Resource<Promotion>,
     pub news: Resource<Vec<NewsSummary>>,
-    pub profile: Resource<Profile>,
 
-    pub communities: Resource<Vec<CommunityList>>,
-    pub accounts: Resource<Vec<AccountList>>,
+    pub feeds: Resource<Vec<FeedSummary>>,
+
+    pub size: Signal<usize>,
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug, Eq, PartialEq, Translate, Default)]
@@ -76,67 +88,54 @@ impl Controller {
     pub fn new(lang: Language) -> std::result::Result<Self, RenderError> {
         let user_service: UserService = use_context();
         let nav = use_navigator();
+        let mut my_info = use_signal(|| MyInfo::default());
+        let size = use_signal(|| 10);
 
         use_effect(move || {
             if !user_service.loggedin() {
                 nav.replace(Route::LandingPage {});
             }
+
+            my_info.set(user_service.my_info());
         });
 
-        let user = user_service.user_info();
-        tracing::debug!("user info: {:?}", user);
-
-        let landing_data = use_server_future(move || async move {
-            match LandingData::get_client(config::get().main_api_endpoint)
-                .find_one()
-                .await
-            {
-                Ok(space) => space,
-                Err(e) => {
-                    tracing::debug!("query spaces failed with error: {:?}", e);
-                    Default::default()
+        let landing_data = use_server_future(move || {
+            let _user_service: UserService = user_service.clone();
+            async move {
+                match LandingData::get_client(config::get().main_api_endpoint)
+                    .find_one()
+                    .await
+                {
+                    Ok(space) => space,
+                    Err(e) => {
+                        tracing::debug!("query spaces failed with error: {:?}", e);
+                        Default::default()
+                    }
                 }
             }
         })?;
 
-        // let my_feeds = use_server_future(move || async move {
-        //     match Space::get_client(config::get().main_api_endpoint)
-        //         .query_my_spaces()
-        //         .await
-        //     {
-        //         Ok(promotion) => promotion.items,
-        //         Err(e) => {
-        //             tracing::debug!("query hot promotion failed with error: {:?}", e);
-        //             Default::default()
-        //         }
-        //     }
-        // });
-
-        let communities = use_server_future(move || async move {
-            vec![
-                // CommunityList {
-                //     id: 0,
-                //     created_at: 1747726155,
-                //     updated_at: 1747726155,
-                //     html_contents: "<div>hello</div>".to_string(),
-                //     title: Some("test1".to_string()),
-                // },
-                // CommunityList {
-                //     id: 0,
-                //     created_at: 1747726155,
-                //     updated_at: 1747726155,
-                //     html_contents: "<div>hello</div>".to_string(),
-                //     title: Some("test12".to_string()),
-                // },
-                // CommunityList {
-                //     id: 0,
-                //     created_at: 1747726155,
-                //     updated_at: 1747726155,
-                //     html_contents: "<div>hello</div>".to_string(),
-                //     title: Some("test123".to_string()),
-                // },
-            ]
+        let feeds = use_server_future(move || {
+            let size = size();
+            async move {
+                match Feed::get_client(config::get().main_api_endpoint)
+                    .query(FeedQuery {
+                        size,
+                        bookmark: None,
+                    })
+                    .await
+                {
+                    Ok(feed) => feed.items,
+                    Err(e) => {
+                        tracing::debug!("query spaces failed with error: {:?}", e);
+                        Default::default()
+                    }
+                }
+            }
         })?;
+
+        let user = user_service.user_info();
+        tracing::debug!("user info: {:?}", user);
 
         let hot_promotions = use_server_future(move || async move {
             match Promotion::get_client(config::get().main_api_endpoint)
@@ -167,61 +166,131 @@ impl Controller {
             }
         })?;
 
-        let profile = use_server_future(move || async move {
-            Profile {
-                profile: "https://lh3.googleusercontent.com/a/ACg8ocIGf0gpB8MQdGkp5TXW1327nRpuPz70iy_hQY2NXNwanRXbFw=s96-c".to_string(),
-                nickname: "Jongseok Park".to_string(),
-                email: "victor@biyard.co".to_string(),
-                description: Some("Office of Rep.".to_string()),
-
-                national: National::US,
-                tier: 1,
-
-                exp: 4,
-                total_exp: 6,
-
-                followers: 12501,
-                replies: 503101,
-                posts: 420201,
-                spaces: 3153,
-                votes: 125,
-                surveys: 3153
-            }
-        })?;
-
-        let accounts = use_server_future(move || async move {
-            vec! [
-                // AccountList {
-                //     id: 0,
-                //     created_at: 1747726155,
-                //     updated_at: 1747726155,
-                //     profile: "https://lh3.googleusercontent.com/a/ACg8ocIGf0gpB8MQdGkp5TXW1327nRpuPz70iy_hQY2NXNwanRXbFw=s96-c".to_string(),
-                //     email: "victor@biyard.co".to_string(),
-                // },
-                // AccountList {
-                //     id: 1,
-                //     created_at: 1747726155,
-                //     updated_at: 1747726155,
-                //     profile: "https://lh3.googleusercontent.com/a/ACg8ocIGf0gpB8MQdGkp5TXW1327nRpuPz70iy_hQY2NXNwanRXbFw=s96-c".to_string(),
-                //     email: "victor1@biyard.co".to_string(),
-                // }
-            ]
-        })?;
-
         let ctrl = Self {
             lang,
             nav: use_navigator(),
+            is_write: use_signal(|| false),
+            size,
+            popup: use_context(),
+            user_service,
+            my_info,
             landing_data,
             hot_promotions,
             news,
-            profile,
-            communities,
-            accounts,
+            feeds,
         };
 
         use_context_provider(move || ctrl);
 
         Ok(ctrl)
+    }
+
+    pub fn create_team(&mut self) {
+        tracing::debug!("create_team");
+        let mut ctrl = self.clone();
+
+        self.popup
+            .open(rsx! {
+                CreateTeamPopup {
+                    lang: self.lang,
+                    oncreate: move |(profile, username): (String, String)| async move {
+                        if !ctrl.create_team_validation_check(profile.clone(), username.clone()) {
+                            return;
+                        }
+                        ctrl.create_team_request(profile, username).await;
+                        ctrl.popup.close();
+                    },
+                }
+            })
+            .with_title("Edit Profile");
+    }
+
+    pub async fn create_team_request(&mut self, profile: String, username: String) {
+        tracing::debug!("profile: {:?} username: {:?}", profile, username);
+
+        match Team::get_client(config::get().main_api_endpoint)
+            .create(profile, username)
+            .await
+        {
+            Ok(_) => {
+                tracing::debug!("success to create team");
+                self.user_service.update_my_info().await;
+            }
+            Err(e) => {
+                btracing::error!("failed to create team with error: {:?}", e);
+            }
+        };
+    }
+
+    pub fn edit_profile(&mut self) {
+        let my_info = self.my_info();
+
+        let profile = my_info.profile_url;
+        let nickname = my_info.nickname;
+        let description = my_info.html_contents;
+
+        let mut ctrl = self.clone();
+
+        self.popup
+            .open(rsx! {
+                EditProfilePopup {
+                    lang: self.lang,
+                    profile,
+                    nickname,
+                    description,
+                    onedit: move |(profile, nickname, description): (String, String, String)| async move {
+                        if !ctrl
+                            .edit_profile_validation_check(
+                                profile.clone(),
+                                nickname.clone(),
+                                description.clone(),
+                            )
+                        {
+                            return;
+                        }
+                        ctrl.edit_profile_request(profile, nickname, description).await;
+                        ctrl.popup.close();
+                    },
+                }
+            })
+            .with_title("Edit Profile");
+    }
+
+    pub async fn edit_profile_request(
+        &mut self,
+        profile: String,
+        nickname: String,
+        description: String,
+    ) {
+        let info = self.my_info();
+
+        tracing::debug!(
+            "profile: {:?} nickname: {:?} description: {:?}",
+            profile,
+            nickname,
+            description
+        );
+
+        match User::get_client(config::get().main_api_endpoint)
+            .edit_profile(info.id, nickname, profile, description)
+            .await
+        {
+            Ok(_) => {
+                tracing::debug!("success to edit profile");
+                self.user_service.update_my_info().await;
+            }
+            Err(e) => {
+                btracing::error!("failed to edit profile with error: {:?}", e);
+            }
+        };
+    }
+
+    pub fn add_size(&mut self) {
+        self.size.set(self.size() + 5);
+    }
+
+    pub fn change_write(&mut self, is_write: bool) {
+        self.is_write.set(is_write);
     }
 
     pub async fn create_feed(&mut self, content_type: ContentType, description: String) {
@@ -251,13 +320,15 @@ impl Controller {
             return;
         }
 
-        match Space::get_client(config::get().main_api_endpoint)
-            .create_space(description, dto::SpaceType::Post, Some(title), content_type)
+        match Feed::get_client(config::get().main_api_endpoint)
+            .write_post(description, user_id, industry_id, Some(title), None)
             .await
         {
             Ok(_) => {
                 btracing::info!("success to create space");
                 self.landing_data.restart();
+                self.feeds.restart();
+                self.is_write.set(false);
             }
             Err(e) => {
                 btracing::error!("failed to create space with error: {:?}", e);
@@ -281,10 +352,6 @@ impl Controller {
         };
     }
 
-    pub async fn add_account(&mut self) {
-        tracing::debug!("add account");
-    }
-
     pub async fn signout(&mut self) {
         tracing::debug!("signout");
         let mut user: UserService = use_context();
@@ -294,4 +361,60 @@ impl Controller {
     pub fn move_to_threads(&self, id: i64) {
         self.nav.push(Route::ThreadPage { id });
     }
+
+    pub fn edit_profile_validation_check(
+        &self,
+        profile: String,
+        nickname: String,
+        description: String,
+    ) -> bool {
+        if profile.is_empty() {
+            btracing::e!(self.lang, ValidationError::ProfileRequired);
+            return false;
+        }
+        if nickname.is_empty() {
+            btracing::e!(self.lang, ValidationError::NicknameRequired);
+            return false;
+        }
+        if description.is_empty() {
+            btracing::e!(self.lang, ValidationError::DescriptionRequired);
+            return false;
+        }
+        true
+    }
+
+    pub fn create_team_validation_check(&self, profile: String, username: String) -> bool {
+        let valid_pattern = Regex::new("^[a-z0-9_-]*$").unwrap();
+
+        if profile.is_empty() {
+            btracing::e!(self.lang, ValidationError::TeamProfileRequired);
+            return false;
+        }
+        if username.is_empty() {
+            btracing::e!(self.lang, ValidationError::UsernameRequired);
+            return false;
+        }
+        if !valid_pattern.is_match(&username) {
+            btracing::e!(self.lang, ValidationError::UsernameFormatFailed);
+            return false;
+        }
+        true
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Translate)]
+pub enum ValidationError {
+    #[translate(en = "Please select the team profile.")]
+    TeamProfileRequired,
+    #[translate(en = "Please enter the username.")]
+    UsernameRequired,
+    #[translate(en = "Please enter a username that matches the format.")]
+    UsernameFormatFailed,
+
+    #[translate(en = "Please select the profile.")]
+    ProfileRequired,
+    #[translate(en = "Please enter the nickname.")]
+    NicknameRequired,
+    #[translate(en = "Please enter the description.")]
+    DescriptionRequired,
 }

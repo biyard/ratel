@@ -1,16 +1,13 @@
 use bdk::prelude::{
-    by_components::icons::{
-        arrows::{ShapeArrowDown, ShapeArrowUp},
-        security::Logout,
-        validations::Add,
-    },
+    by_components::icons::{arrows::ShapeArrowDown, security::Logout, validations::Add},
     *,
 };
+use dto::Team;
 use num_format::{Locale, ToFormattedString};
 
 use crate::{
     components::icons::{Badge, Grade},
-    pages::{components::SideRoundedBox, controller::AccountList},
+    pages::components::SideRoundedBox,
 };
 
 #[component]
@@ -32,12 +29,12 @@ pub fn LeftSideProfile(
     votes: i64,
     surveys: i64,
 
-    accounts: Vec<AccountList>,
+    teams: Vec<Team>,
 
-    add_account: EventHandler<MouseEvent>,
+    create_team: EventHandler<MouseEvent>,
     sign_out: EventHandler<MouseEvent>,
+    edit_profile: EventHandler<MouseEvent>,
 ) -> Element {
-    let mut is_clicked = use_signal(|| true);
     let mut is_profile_clicked = use_signal(|| false);
 
     rsx! {
@@ -58,10 +55,10 @@ pub fn LeftSideProfile(
                             }
                         }
 
-                        Account {
+                        TeamBox {
                             lang,
-                            accounts,
-                            add_account,
+                            teams,
+                            create_team,
                             sign_out,
                         }
                     }
@@ -71,12 +68,12 @@ pub fn LeftSideProfile(
         div { class: "aria-active:!hidden", "aria-active": is_profile_clicked(),
             SideRoundedBox {
                 div { class: "flex flex-col w-full justify-start items-start",
-                    div { class: "flex flex-col w-full gap-20",
-                        div {
-                            class: "cursor-pointer flex flex-row justify-between items-center",
-                            onclick: move |_| {
-                                is_clicked.set(!is_clicked());
-                            },
+                    div {
+                        class: "cursor-pointer flex flex-col w-full gap-20",
+                        onclick: move |_| {
+                            is_profile_clicked.set(!is_profile_clicked());
+                        },
+                        div { class: "flex flex-row justify-between items-center",
 
                             div { class: "flex flex-row w-fit justify-start items-center gap-4",
                                 div { class: "font-bold text-white text-lg/21", {name} }
@@ -84,47 +81,34 @@ pub fn LeftSideProfile(
                                 Badge {}
                             }
 
-                            if is_clicked() {
-                                div { class: "flex flex-row w-fit h-fit",
-                                    ShapeArrowDown {
-                                        class: "[&>path]:stroke-white [&>path]:fill-white",
-                                        size: 14,
-                                        fill: "white",
-                                    }
-                                }
-                            } else {
-                                div { class: "flex flex-row w-fit h-fit",
-                                    ShapeArrowUp {
-                                        class: "[&>path]:stroke-white [&>path]:fill-white",
-                                        size: 14,
-                                        fill: "white",
-                                    }
-                                }
+                            ShapeArrowDown {
+                                class: "[&>path]:stroke-white [&>path]:fill-white",
+                                size: 14,
+                                fill: "white",
                             }
                         }
 
-                        if is_clicked() {
-                            div { class: "flex flex-col w-full justify-start items-start gap-30",
-                                Profile {
-                                    profile,
-                                    description,
-                                    clicked: is_profile_clicked(),
-                                    onchange_clicked: move |clicked: bool| {
-                                        is_profile_clicked.set(clicked);
-                                    },
-                                }
-                                Tier {
-                                    lang,
-                                    exp,
-                                    total_exp,
-                                    followers,
-                                    replies,
-                                    posts,
-                                    spaces,
-                                    votes,
-                                    surveys,
-                                }
+                        div { class: "flex flex-col w-full justify-start items-start gap-30",
+                            Profile {
+                                lang,
+                                profile,
+                                description,
+                                clicked: is_profile_clicked(),
+                                edit_profile: move |e| {
+                                    edit_profile.call(e);
+                                },
                             }
+                                                // Tier {
+                        //     lang,
+                        //     exp,
+                        //     total_exp,
+                        //     followers,
+                        //     replies,
+                        //     posts,
+                        //     spaces,
+                        //     votes,
+                        //     surveys,
+                        // }
                         }
                     }
                 }
@@ -134,10 +118,10 @@ pub fn LeftSideProfile(
 }
 
 #[component]
-pub fn Account(
+pub fn TeamBox(
     lang: Language,
-    accounts: Vec<AccountList>,
-    add_account: EventHandler<MouseEvent>,
+    teams: Vec<Team>,
+    create_team: EventHandler<MouseEvent>,
     sign_out: EventHandler<MouseEvent>,
 ) -> Element {
     let tr: AccountTranslate = translate(&lang);
@@ -145,10 +129,10 @@ pub fn Account(
     rsx! {
         div { class: "flex flex-col w-full justify-start items-start px-16 py-20 rounded-lg bg-neutral-800 gap-20",
             div { class: "flex flex-col w-full gap-20",
-                div { class: "font-bold text-sm/16 text-neutral-500", {tr.switch_account} }
+                div { class: "font-bold text-sm/16 text-neutral-500", {tr.my_team} }
 
                 div { class: "flex flex-col w-full justify-start items-start gap-12",
-                    for account in accounts {
+                    for team in teams {
                         div {
                             class: "cursor-pointer flex flex-row w-full justify-start items-center gap-8",
                             onclick: move |_| {
@@ -156,9 +140,9 @@ pub fn Account(
                             },
                             img {
                                 class: "w-20 h-20 rounded-full object-cover",
-                                src: account.profile,
+                                src: team.profile_url,
                             }
-                            div { class: "font-normal text-white text-sm/20", {account.email} }
+                            div { class: "font-normal text-white text-sm/20", {team.username} }
                         }
                     }
                 }
@@ -168,7 +152,7 @@ pub fn Account(
                 div {
                     class: "cursor-pointer flex flex-row w-full justify-start items-center gap-4",
                     onclick: move |e| {
-                        add_account.call(e);
+                        create_team.call(e);
                     },
                     Add {
                         class: "[&>path]:stroke-white",
@@ -176,7 +160,7 @@ pub fn Account(
                         height: "20",
                         fill: "white",
                     }
-                    div { class: "font-bold text-white text-sm/16", {tr.add_another_account} }
+                    div { class: "font-bold text-white text-sm/16", {tr.create_team} }
                 }
                 div {
                     class: "cursor-pointer flex flex-row w-full justify-start items-center gap-4",
@@ -280,30 +264,43 @@ pub fn GaugeBar(gauge: f32) -> Element {
 
 #[component]
 pub fn Profile(
+    lang: Language,
     profile: String,
     description: String,
     clicked: bool,
-    onchange_clicked: EventHandler<bool>,
+    edit_profile: EventHandler<MouseEvent>,
 ) -> Element {
     rsx! {
-        div {
-            class: "cursor-pointer flex flex-col w-full justify-start items-start gap-20",
-            onclick: move |_| {
-                onchange_clicked.call(!clicked);
-            },
+        div { class: "cursor-pointer flex flex-col w-full justify-start items-start gap-20",
             div { class: "relative w-fit h-fit",
-                img {
-                    class: "w-80 h-80 rounded-full object-cover",
-                    src: profile,
+                if profile != "" {
+                    img {
+                        class: "w-80 h-80 rounded-full object-cover",
+                        src: profile,
+                    }
+                } else {
+                    div { class: "w-80 h-80 rounded-full bg-neutral-400" }
                 }
                 div { class: "absolute bottom-0 right-0", Grade {} }
             }
 
             div { class: "flex flex-col w-full justify-start items-start gap-4",
-                div { class: "font-medium text-sm/14 text-[#f9fafb]", {description} }
+                article {
+                    class: "my-profile",
+                    dangerous_inner_html: description.clone(),
+                }
             }
 
-        // div { class: "flex flex-row w-full justify-start items-center gap-4",
+            div {
+                class: "cursor-pointer w-full h-fit",
+                onclick: move |e| {
+                    e.prevent_default();
+                    e.stop_propagation();
+                    edit_profile.call(e);
+                },
+                EditButton { lang }
+            }
+                // div { class: "flex flex-row w-full justify-start items-center gap-4",
         //     US {}
         //     div { class: "font-medium text-sm/14 text-[#f9fafb]", "Oregon, United State" }
         // }
@@ -311,16 +308,35 @@ pub fn Profile(
     }
 }
 
+#[component]
+pub fn EditButton(lang: Language) -> Element {
+    let tr: EditButtonTranslate = translate(&lang);
+    rsx! {
+        div { class: "flex flex-row w-full justify-center items-center py-15 bg-primary rounded-[10px] font-bold text-[#000203] text-sm/19",
+            {tr.edit_profile}
+        }
+    }
+}
+
+translate! {
+    EditButtonTranslate;
+
+    edit_profile: {
+        ko: "Edit Profile",
+        en: "Edit Profile"
+    }
+}
+
 translate! {
     AccountTranslate;
 
-    switch_account: {
-        ko: "Switch Account",
-        en: "Switch Account"
+    my_team: {
+        ko: "My Team",
+        en: "My Team"
     },
-    add_another_account: {
-        ko: "Add Another Account",
-        en: "Add Another Account"
+    create_team: {
+        ko: "Create Team",
+        en: "Create Team"
     },
     sign_out: {
         ko: "Sign Out",

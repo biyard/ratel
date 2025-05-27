@@ -49,7 +49,13 @@ impl Controller {
 
         #[cfg(feature = "web")]
         use_future(move || async move {
-            let principal = principal();
+            let user_info = user_service.user_info();
+
+            let principal = if user_info.principal != "" {
+                user_info.principal
+            } else {
+                anonymouse_service.get_principal()
+            };
 
             if QuizResult::get_client(crate::config::get().main_api_endpoint)
                 .get_result(principal)

@@ -62,3 +62,59 @@ article.election-pledge > ol > li {
   text-indent: -1.5em;
 }
 
+article.my-profile > p {
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 14px;
+  color: #f9fafb;
+}
+
+article.my-profile > ol > li {
+  font-weight: 300;
+  font-size: 12px;
+  line-height: 14px;
+  letter-spacing: 0%;
+  color: #f9fafb;
+  list-style-type: disc;
+  list-style-position: inside;
+  padding-left: 1.5em;
+  text-indent: -1.5em;
+}
+
+
+
+article#advocacy-campaign-details > h2 {
+  font-weight: 700;
+  font-size: 24px;
+  line-height: 28px;
+  letter-spacing: 0%;
+  color: white;
+  margin-bottom: 10px;
+  margin-top: 50px;
+  z-index: 50;
+}
+
+article#advocacy-campaign-details > p {
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 22px;
+    letter-spacing: 0%;
+    color: var(--color-neutral-400);
+    margin-bottom: 20px;
+    z-index: 50;
+  }
+
+@media (max-width: 1024px) {
+  article#advocacy-campaign-details > p {
+    font-size: 14px;
+    z-index: 50;
+  }
+
+}
+@media (max-width: 1024px) {
+  article#advocacy-campaign-details > h2 {
+    font-size: 20px;
+    margin-top: 30px;
+    margin-bottom: 6px;
+  }
+}
