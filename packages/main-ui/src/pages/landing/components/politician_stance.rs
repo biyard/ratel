@@ -79,7 +79,10 @@ pub fn PoliticianStance(
                 description: tr.description,
             }
             div { class: "hidden max-[900px]:!block",
-                SecondaryLink { size: ButtonSize::Small, to: Route::PoliticiansPage {},
+                SecondaryLink {
+                    size: ButtonSize::Small,
+                    to: Route::PoliticiansPageForLanding {
+                    },
                     div { class: "flex flex-row gap-10 items-center justify-center font-bold text-sm text-black",
                         {tr.view_all}
                         ArrowRight {

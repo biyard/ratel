@@ -46,6 +46,7 @@ pub struct User {
 
     // profile contents
     #[api_model(version = v0.2, action_by_id = edit_profile)]
+    #[serde(default)]
     pub html_contents: String,
 }
 
