@@ -28,6 +28,13 @@ pub enum Route {
         PoliticiansByIdPage { id: i64 },
         #[route("/presidential-election")]
         PresidentialElectionPage {},
+
+        #[nest("/teams/:teamname")]
+            #[layout(TeamsByIdLayout)]
+                #[route("/")]
+                TeamsByIdPage { teamname: String },
+            #[end_layout]
+        #[end_nest]
     #[end_layout]
 
     #[layout(LandingLayout)]
