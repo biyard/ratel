@@ -18,6 +18,7 @@ pub struct Controller {
     pub lang: Language,
     pub nav: Navigator,
     pub popup: PopupService,
+    pub user_service: UserService,
     pub is_write: Signal<bool>,
 
     pub landing_data: Resource<LandingData>,
@@ -171,6 +172,7 @@ impl Controller {
             is_write: use_signal(|| false),
             size,
             popup: use_context(),
+            user_service,
             my_info,
             landing_data,
             hot_promotions,
@@ -210,12 +212,27 @@ impl Controller {
     }
 
     pub async fn edit(&mut self, profile: String, nickname: String, description: String) {
+        let info = self.my_info();
+
         tracing::debug!(
             "profile: {:?} nickname: {:?} description: {:?}",
             profile,
             nickname,
             description
         );
+
+        match User::get_client(config::get().main_api_endpoint)
+            .edit_profile(info.id, nickname, profile, description)
+            .await
+        {
+            Ok(_) => {
+                tracing::debug!("success to edit profile");
+                self.user_service.update_my_info().await;
+            }
+            Err(e) => {
+                btracing::error!("failed to edit profile with error: {:?}", e);
+            }
+        };
     }
 
     pub fn add_size(&mut self) {
