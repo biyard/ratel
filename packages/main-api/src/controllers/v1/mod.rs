@@ -2,6 +2,7 @@ pub mod assembly_members;
 pub mod bills;
 // pub mod patrons;
 // pub mod topics;
+mod assets;
 mod bots;
 mod election_pledges;
 mod feeds;
@@ -22,7 +23,10 @@ use bdk::prelude::*;
 
 use dto::*;
 
+use crate::config;
+
 pub fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Router> {
+    let conf = config::get();
     Ok(by_axum::axum::Router::new()
         .nest("/me", me::MeController::new(pool.clone()).route()?)
         .nest(
@@ -36,6 +40,10 @@ pub fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Router> 
         .nest(
             "/landings",
             landing::LandingController::new(pool.clone()).route()?,
+        )
+        .nest(
+            "/assets",
+            assets::AssetController::new(&conf.aws, &conf.bucket).route()?,
         )
         .nest(
             "/promotions",
