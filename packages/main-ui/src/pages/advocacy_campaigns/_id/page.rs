@@ -26,7 +26,7 @@ pub fn AdvocacyCampaignsByIdPage(
 
         div { class: "absolute fixed bg-background py-30 bottom-0 flex items-center justify-center w-full z-100 px-20",
             button {
-                class: "group max-w-desktop w-full btn primary flex items-center justify-center aria-voted:!bg-neutral-600 aria-voted:!text-secondary",
+                class: "group max-w-desktop w-full btn secondary flex items-center justify-center aria-voted:!bg-neutral-600 aria-voted:!text-secondary",
                 "aria-voted": campaign.voted,
                 onclick: move |_| async move { ctrl.handle_agree().await },
                 span { class: "group-aria-voted:!hidden", {tr.btn_agree} }
@@ -62,9 +62,8 @@ pub fn AdvocacyCampaignsByIdPage(
                                     {author.nickname.clone()}
                                 }
                             }
-                            p {
-                                class: "flex flex-col text-c-wg-70 max-tablet:!hidden",
-                                dangerous_inner_html: author.html_contents.clone(),
+                            p { class: "flex flex-col text-c-wg-70 max-tablet:!hidden",
+                                p { dangerous_inner_html: author.html_contents.clone() }
                             }
                         }
                     }
