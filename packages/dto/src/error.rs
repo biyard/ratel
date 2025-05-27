@@ -1,8 +1,8 @@
-use std::error::Error as StdError;
+use std::{error::Error as StdError, str::FromStr};
 
 use serde::{Deserialize, Serialize};
 
-use bdk::prelude::*;
+use bdk::prelude::{dioxus::CapturedError, *};
 
 #[derive(Debug, Serialize)]
 pub struct ServiceException {
@@ -141,6 +141,9 @@ pub enum Error {
     // quizzes
     #[translate(en = "You must select a valid quiz")]
     InvalidQuizId,
+
+    #[translate(en = "You must pass a valid team name")]
+    InvalidTeamname,
 }
 
 impl<E: StdError + 'static> From<E> for Error {
@@ -152,6 +155,19 @@ impl<E: StdError + 'static> From<E> for Error {
 impl Into<ServiceException> for Error {
     fn into(self) -> ServiceException {
         ServiceException { inner: self }
+    }
+}
+
+impl Into<CapturedError> for Error {
+    fn into(self) -> CapturedError {
+        CapturedError::from_str(&self.to_string())
+            .expect("Failed to convert Error to CapturedError. This should not happen.")
+    }
+}
+
+impl Into<RenderError> for Error {
+    fn into(self) -> RenderError {
+        RenderError::Aborted(self.into())
     }
 }
 
