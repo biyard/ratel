@@ -25,3 +25,6 @@ pub use notifications::*;
 pub use quizzes::*;
 pub use teams::*;
 pub use threads::*;
+
+mod advocacy_campaigns;
+pub use advocacy_campaigns::*;
