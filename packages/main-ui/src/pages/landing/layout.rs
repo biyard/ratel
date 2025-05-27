@@ -2,7 +2,7 @@ use bdk::prelude::*;
 
 use super::components::*;
 use crate::{
-    components::{loader::Loader, popup_zone::PopupZone},
+    components::{loader::Loader, popup_zone::PopupZone, quick_menu::QuickMenu},
     route::Route,
     services::user_service::UserService,
 };
@@ -102,6 +102,8 @@ pub fn LandingLayout(#[props(default = Language::En)] lang: Language) -> Element
             author: "Ratel Foundation",
             url: "https://ratel.foundation",
         }
+
+        QuickMenu {}
         div { class: "w-full h-full bg-background text-white",
             Header { lang, selected: selected() }
             SuspenseBoundary {
