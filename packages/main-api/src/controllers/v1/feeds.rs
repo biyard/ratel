@@ -338,10 +338,13 @@ impl FeedController {
 
         Self { repo, pool }
     }
-
+    // 
     pub fn route(&self) -> Result<by_axum::axum::Router> {
         Ok(by_axum::axum::Router::new()
-            .route("/:id", get(Self::get_feed_by_id).post(Self::act_feed_by_id))
+            .route("/industry/:industry_id", get(Self::get_feed_by_industry_id))
+            .with_state(self.clone())
+            .route("/:id", get(Self::get_feed_by_id)
+            .post(Self::act_feed_by_id))
             .with_state(self.clone())
             .route("/", post(Self::act_feed).get(Self::get_feed))
             .with_state(self.clone()))
@@ -395,6 +398,22 @@ impl FeedController {
                 .query()
                 .map(Feed::from)
                 .fetch_one(&ctrl.pool)
+                .await?,
+        ))
+    }
+
+    pub async fn get_feed_by_industry_id(
+        State(ctrl): State<FeedController>,
+        Extension(_auth): Extension<Option<Authorization>>,
+        Path(industry_id): Path<i64>,
+    ) -> Result<Json<Vec<Feed>>> {
+        tracing::debug!("get_feed_by_industry_id {:?}", industry_id);
+        Ok(Json(
+            Feed::query_builder()
+                .industry_id_equals(industry_id)
+                .query()
+                .map(Feed::from)
+                .fetch_all(&ctrl.pool)
                 .await?,
         ))
     }
