@@ -12,7 +12,7 @@ use by_axum::{
 use by_types::QueryResponse;
 use dto::*;
 use sqlx::postgres::PgRow;
-use sqlx::Row;
+// use sqlx::Row;
 use dto::Error;
 
 #[derive(Clone, Debug)]
@@ -44,16 +44,10 @@ impl SubscriptionController {
         tracing::debug!("act_subscription {:?}", body);
         match body {
             SubscriptionAction::Subscribe(req) => {
-                let row = sqlx::query("SELECT COUNT(*) as count FROM subscriptions WHERE email = $1")
-                .bind(req.email.clone())
-                .fetch_one(&ctrl.pool)
-                .await?;
-
-                let count: i64 = row.try_get("count").unwrap_or(0);
-                if count > 0 {
-                    return Err(Error::BadRequest);
-                }
-                let _ = Json(ctrl.subscribe(req).await?);
+                let _ = Json(ctrl.subscribe(req).await.map_err(|e| {
+                    tracing::error!("failed to insert new email subscriber: {:?}", e);
+                    Error::BadRequest
+                })?);
                 Ok(Json("ok".to_string()))
             }
 
