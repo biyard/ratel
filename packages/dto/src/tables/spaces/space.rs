@@ -36,6 +36,9 @@ pub struct Space {
     #[api_model(summary, version = v0.1, type = INTEGER)]
     #[serde(default)]
     pub status: SpaceStatus,
+    #[api_model(version = v0.1, summary, type = JSONB)]
+    #[serde(default)]
+    pub files: Vec<File>,
 
     #[api_model(one_to_many = space_members, foreign_key = space_id)]
     #[serde(default)]

@@ -60,6 +60,7 @@ impl FeedController {
             title,
             quote_feed_id,
             user_id,
+            files,
         }: FeedWritePostRequest,
     ) -> Result<Feed> {
         let user = check_perm(
@@ -87,6 +88,7 @@ impl FeedController {
                 title,
                 None,
                 quote_feed_id,
+                files,
                 0,
                 0,
             )
@@ -148,6 +150,7 @@ impl FeedController {
                 None,
                 None,
                 None,
+                feed.files,
                 0,
                 0,
             )
@@ -210,6 +213,7 @@ impl FeedController {
                 None,
                 None,
                 None,
+                feed.files,
                 0,
                 0,
             )
@@ -255,7 +259,7 @@ impl FeedController {
             Error::FeedInvalidQuoteId
         })?;
 
-        let industry_id = Feed::query_builder()
+        let feed = Feed::query_builder()
             .id_equals(parent_id)
             .query()
             .map(Feed::from)
@@ -264,8 +268,7 @@ impl FeedController {
             .map_err(|e| {
                 tracing::error!("failed to get a feed {parent_id}: {e}");
                 Error::FeedInvalidParentId
-            })?
-            .industry_id;
+            })?;
 
         Feed::query_builder()
             .id_equals(quote_feed_id)
@@ -284,7 +287,7 @@ impl FeedController {
                 html_contents,
                 FeedType::Repost,
                 user_id,
-                industry_id,
+                feed.industry_id,
                 if user.nickname == "" {
                     Some(user.email)
                 } else {
@@ -295,6 +298,7 @@ impl FeedController {
                 None,
                 None,
                 Some(quote_feed_id),
+                feed.files,
                 0,
                 0,
             )
@@ -478,6 +482,7 @@ mod tests {
                 title,
                 None,
                 None,
+                vec![],
                 0,
                 0,
             )
@@ -496,6 +501,7 @@ mod tests {
                 None,
                 None,
                 None,
+                vec![],
                 0,
                 0,
             )
@@ -524,6 +530,7 @@ mod tests {
                 industry_id,
                 title.clone(),
                 None,
+                vec![],
             )
             .await;
 
@@ -572,6 +579,7 @@ mod tests {
                 industry_id,
                 title.clone(),
                 Some(quote.id),
+                vec![],
             )
             .await;
 

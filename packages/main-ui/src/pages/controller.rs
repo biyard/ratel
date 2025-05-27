@@ -2,8 +2,8 @@ use crate::pages::components::{CreateSpacePopup, CreateTeamPopup};
 use bdk::prelude::*;
 use dto::dioxus_popup::PopupService;
 use dto::{
-    ContentType, Feed, FeedQuery, FeedSummary, MyInfo, News, NewsQuery, NewsSummary, Promotion,
-    Space, SpaceType, TotalInfoQuery, TotalInfoSummary, User,
+    ContentType, Feed, FeedQuery, FeedSummary, File, MyInfo, News, NewsQuery, NewsSummary,
+    Promotion, Space, SpaceType, TotalInfoQuery, TotalInfoSummary, User,
 };
 use dto::{Follower, LandingData};
 use dto::{Team, TotalInfo};
@@ -351,7 +351,12 @@ impl Controller {
         self.is_write.set(is_write);
     }
 
-    pub async fn create_feed(&mut self, content_type: ContentType, description: String) {
+    pub async fn create_feed(
+        &mut self,
+        files: Vec<File>,
+        content_type: ContentType,
+        description: String,
+    ) {
         //FIXME: fix to real industry_id
         let industry_id = 1;
         let title = extract_title_from_html(&description);
@@ -379,7 +384,7 @@ impl Controller {
         }
 
         match Feed::get_client(config::get().main_api_endpoint)
-            .write_post(description, user_id, industry_id, Some(title), None)
+            .write_post(description, user_id, industry_id, Some(title), None, files)
             .await
         {
             Ok(_) => {
