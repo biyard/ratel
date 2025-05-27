@@ -91,13 +91,30 @@ article#advocacy-campaign-details > h2 {
   color: white;
   margin-bottom: 10px;
   margin-top: 50px;
+  z-index: 50;
 }
 
 article#advocacy-campaign-details > p {
-  font-weight: 500;
-  font-size: 16px;
-  line-height: 22px;
-  letter-spacing: 0%;
-  color: var(--color-neutral-400);
-  margin-bottom: 20px;
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 22px;
+    letter-spacing: 0%;
+    color: var(--color-neutral-400);
+    margin-bottom: 20px;
+    z-index: 50;
+  }
+
+@media (max-width: 1024px) {
+  article#advocacy-campaign-details > p {
+    font-size: 14px;
+    z-index: 50;
+  }
+
+}
+@media (max-width: 1024px) {
+  article#advocacy-campaign-details > h2 {
+    font-size: 20px;
+    margin-top: 30px;
+    margin-bottom: 6px;
+  }
 }
