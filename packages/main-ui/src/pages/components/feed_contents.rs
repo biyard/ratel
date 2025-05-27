@@ -85,7 +85,7 @@ pub fn CreateFeed(lang: Language, profile: String, onwrite: EventHandler<MouseEv
     let tr: CreateFeedTranslate = translate(&lang);
 
     rsx! {
-        div { class: "flex flex-row w-full justify-start items-center bg-bg p-20 rounded-lg gap-10 mb-10",
+        div { class: "absolute top-0 flex flex-row w-full justify-start items-center bg-bg p-20 rounded-lg gap-10 mb-10",
             img { class: "w-36 h-36 rounded-full object-cover", src: profile }
             a {
                 class: "flex flex-row w-full h-fit justify-start items-center bg-neutral-800 border border-neutral-700 rounded-[100px] font-normal text-text-secondary text-sm/16 px-15 py-10",
@@ -127,7 +127,7 @@ pub fn MyFeedList(
                         let scroll_height = container.scroll_height();
                         let client_height = container.client_height();
 
-                        if scroll_top + client_height as i32 >= scroll_height as i32 - 5 {
+                        if scroll_top + client_height as i32 >= scroll_height as i32 - 20 {
                             add_size.call(visible_count() + 5);
                             visible_count.set(visible_count() + 5);
                             tracing::debug!("visible count: {}", visible_count());
@@ -150,6 +150,7 @@ pub fn MyFeedList(
         div {
             id: feed_container_id,
             class: "flex flex-col w-full h-[calc(100vh-300px)] max-tablet:!h-[calc(100vh-300px)]  overflow-y-scroll gap-10",
+            div { class: "pt-80" }
             for feed in visible_feeds {
                 if feed.spaces.is_empty() || feed.spaces[0].status != SpaceStatus::Draft
                     || (feed.spaces[0].user_id == my_user_id
