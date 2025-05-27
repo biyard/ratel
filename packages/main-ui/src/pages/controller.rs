@@ -1,12 +1,12 @@
-use crate::pages::components::CreateTeamPopup;
+use crate::pages::components::{CreateSpacePopup, CreateTeamPopup};
 use bdk::prelude::*;
-use dto::Team;
 use dto::dioxus_popup::PopupService;
 use dto::{
     ContentType, Feed, FeedQuery, FeedSummary, MyInfo, News, NewsQuery, NewsSummary, Promotion,
-    User,
+    Space, SpaceType, TotalInfoQuery, TotalInfoSummary, User,
 };
 use dto::{Follower, LandingData};
+use dto::{Team, TotalInfo};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 
@@ -24,6 +24,7 @@ pub struct Controller {
     pub user_service: UserService,
     pub is_write: Signal<bool>,
 
+    pub total_users: Signal<Resource<Vec<TotalInfoSummary>>>,
     pub landing_data: Resource<LandingData>,
     pub my_info: Signal<MyInfo>,
     pub hot_promotions: Resource<Promotion>,
@@ -137,6 +138,22 @@ impl Controller {
         let user = user_service.user_info();
         tracing::debug!("user info: {:?}", user);
 
+        let total_users = use_server_future(move || async move {
+            match TotalInfo::get_client(config::get().main_api_endpoint)
+                .query(TotalInfoQuery {
+                    size: 100,
+                    bookmark: None,
+                })
+                .await
+            {
+                Ok(info) => info.items,
+                Err(e) => {
+                    tracing::debug!("query feed failed with error: {:?}", e);
+                    Default::default()
+                }
+            }
+        })?;
+
         let hot_promotions = use_server_future(move || async move {
             match Promotion::get_client(config::get().main_api_endpoint)
                 .hot_promotion()
@@ -175,6 +192,7 @@ impl Controller {
             user_service,
             my_info,
             landing_data,
+            total_users: use_signal(|| total_users),
             hot_promotions,
             news,
             feeds,
@@ -183,6 +201,46 @@ impl Controller {
         use_context_provider(move || ctrl);
 
         Ok(ctrl)
+    }
+
+    pub fn create_space(&mut self, feed_id: i64) {
+        let users = match self.total_users()() {
+            Some(v) => v,
+            None => vec![],
+        };
+        let mut ctrl = self.clone();
+
+        self.popup
+            .open(rsx! {
+                CreateSpacePopup {
+                    lang: self.lang,
+                    users,
+                    onsend: move |ids: Vec<i64>| async move {
+                        tracing::debug!("selected user ids: {:?}", ids);
+                        ctrl.create_space_request(feed_id, ids).await;
+                        ctrl.popup.close();
+                    },
+                }
+            })
+            .with_title("Invite to Committee");
+    }
+
+    pub async fn create_space_request(&mut self, feed_id: i64, user_ids: Vec<i64>) {
+        match Space::get_client(config::get().main_api_endpoint)
+            .create_space(SpaceType::Post, feed_id, user_ids)
+            .await
+        {
+            Ok(_) => {
+                tracing::info!("success to create space");
+                self.feeds.restart();
+            }
+            Err(e) => {
+                btracing::error!(
+                    "failed to create space with error: {}",
+                    e.translate(&self.lang)
+                );
+            }
+        };
     }
 
     pub fn create_team(&mut self) {

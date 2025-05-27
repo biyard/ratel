@@ -4,7 +4,7 @@ use bdk::prelude::{
     },
     *,
 };
-use dto::FeedSummary;
+use dto::{FeedSummary, by_components::icons::validations::Add};
 
 use crate::{
     components::icons::{Badge, Feed2, RewardCoin},
@@ -13,7 +13,14 @@ use crate::{
 };
 
 #[component]
-pub fn FeedContent(lang: Language, feed: FeedSummary, onclick: EventHandler<i64>) -> Element {
+pub fn FeedContent(
+    lang: Language,
+    feed: FeedSummary,
+    is_creator: bool,
+    exist_spaces: bool,
+    create_space: EventHandler<MouseEvent>,
+    onclick: EventHandler<i64>,
+) -> Element {
     rsx! {
         div {
             class: "cursor-pointer flex flex-col w-full justify-start items-start px-20 pt-20 pb-10 bg-footer rounded-lg gap-10",
@@ -22,10 +29,14 @@ pub fn FeedContent(lang: Language, feed: FeedSummary, onclick: EventHandler<i64>
             },
             div { class: "flex flex-col w-full justify-start items-start gap-10",
                 TopContent {
+                    lang,
                     label: "Crypto",
                     title: feed.title.unwrap_or_default(),
                     image: feed.profile_image.unwrap_or_default(),
                     nickname: feed.proposer_name.unwrap_or_default(),
+                    create_space,
+                    is_creator,
+                    exist_spaces,
                     created_at: feed.created_at,
                 }
 
@@ -135,17 +146,25 @@ pub fn ContentDescription(id: i64, lang: Language, html: String) -> Element {
 
 #[component]
 pub fn TopContent(
+    lang: Language,
     label: String,
     title: String,
     image: String,
     nickname: String,
     created_at: i64,
+    is_creator: bool,
+    exist_spaces: bool,
+
+    create_space: EventHandler<MouseEvent>,
 ) -> Element {
     rsx! {
         div { class: "flex flex-col w-full justify-start items-start gap-10",
             div { class: "flex flex-row w-full justify-between items-center",
                 Label { label }
                 div { class: "flex flex-row w-fit justify-start items-center gap-10",
+                    if is_creator && !exist_spaces {
+                        CreateSpaceButton { lang, create_space }
+                    }
                     Bookmark {
                         class: "[&>path]:stroke-neutral-500",
                         width: "20",
@@ -183,6 +202,36 @@ pub fn TopContent(
                 }
             }
         }
+    }
+}
+
+#[component]
+pub fn CreateSpaceButton(lang: Language, create_space: EventHandler<MouseEvent>) -> Element {
+    let tr: CreateSpaceButtonTranslate = translate(&lang);
+    rsx! {
+        div {
+            class: "cursor-pointer create-space-small-button",
+            onclick: move |e| {
+                e.prevent_default();
+                e.stop_propagation();
+                create_space.call(e);
+            },
+            Add {
+                class: "[&>stroke]:fill-neutral-500",
+                width: "20",
+                height: "20",
+            }
+            div { {tr.create_space} }
+        }
+    }
+}
+
+translate! {
+    CreateSpaceButtonTranslate;
+
+    create_space: {
+        ko: "Create a Space",
+        en: "Create a Space"
     }
 }
 

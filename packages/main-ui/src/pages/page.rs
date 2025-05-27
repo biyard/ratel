@@ -28,6 +28,10 @@ pub fn IndexPage(#[props(default = Language::En)] lang: Language) -> Element {
             MyFeedList {
                 lang,
                 feeds,
+                my_user_id: my_info.id,
+                create_space: move |feed_id: i64| {
+                    ctrl.create_space(feed_id);
+                },
                 add_size: move |_| {
                     ctrl.add_size();
                 },
