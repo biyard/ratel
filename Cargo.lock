@@ -5549,6 +5549,7 @@ dependencies = [
  "gloo",
  "gloo-events",
  "gloo-storage",
+ "gloo-timers",
  "google-wallet",
  "hex",
  "html2text",
