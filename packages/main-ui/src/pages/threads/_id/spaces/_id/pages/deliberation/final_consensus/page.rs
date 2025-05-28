@@ -3,7 +3,7 @@ use bdk::prelude::*;
 use crate::pages::threads::_id::spaces::_id::pages::deliberation::final_consensus::controller::Controller;
 
 #[component]
-pub fn FinalConsensus(
+pub fn DeliberationFinalConsensus(
     #[props(default = Language::En)] lang: Language,
     feed_id: i64,
     id: i64,

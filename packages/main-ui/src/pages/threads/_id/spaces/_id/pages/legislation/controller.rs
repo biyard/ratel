@@ -1,3 +1,4 @@
+#![allow(unused)]
 use bdk::prelude::*;
 
 use crate::route::Route;
@@ -18,6 +19,7 @@ pub struct Controller {
 
 impl Controller {
     pub fn new(lang: Language, feed_id: i64, id: i64) -> std::result::Result<Self, RenderError> {
+        tracing::debug!("11111");
         let nav = use_navigator();
 
         let ctrl = Self {
@@ -28,11 +30,12 @@ impl Controller {
             is_edit: use_signal(|| false),
         };
 
+        use_context_provider(|| ctrl);
+
         use_effect(move || {
             nav.replace(Route::LegislationSummary { feed_id, id });
         });
 
-        use_context_provider(|| ctrl);
         Ok(ctrl)
     }
 

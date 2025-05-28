@@ -33,7 +33,7 @@ impl Controller {
         };
 
         use_effect(move || {
-            nav.replace(Route::Summary { feed_id, id });
+            nav.replace(Route::DeliberationSummary { feed_id, id });
         });
 
         use_context_provider(|| ctrl);

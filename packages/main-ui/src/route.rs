@@ -12,13 +12,13 @@ pub enum Route {
 
         #[layout(DeliberationSettingLayout)]
             #[route("/threads/:feed_id/spaces/:id/deliberations/summary")]
-            Summary { feed_id: i64, id: i64 },
+            DeliberationSummary { feed_id: i64, id: i64 },
             #[route("/threads/:feed_id/spaces/:id/deliberations/deliberation")]
             Deliberation { feed_id: i64, id: i64 },
             #[route("/threads/:feed_id/spaces/:id/deliberations/final-consensus")]
-            FinalConsensus { feed_id: i64, id: i64 },
+            DeliberationFinalConsensus { feed_id: i64, id: i64 },
             #[route("/threads/:feed_id/spaces/:id/deliberations/poll")]
-            Poll { feed_id: i64, id: i64 },
+            DeliberationPoll { feed_id: i64, id: i64 },
         #[end_layout]
 
         #[layout(LegislationSettingLayout)]
@@ -31,6 +31,13 @@ pub enum Route {
             NftSummary { feed_id: i64, id: i64 },
             #[route("/threads/:feed_id/spaces/:id/nfts/nft")]
             Nft { feed_id: i64, id: i64 },
+        #[end_layout]
+
+        #[layout(PollSettingLayout)]
+            #[route("/threads/:feed_id/spaces/:id/polls/summary")]
+            PollSummary { feed_id: i64, id: i64 },
+            #[route("/threads/:feed_id/spaces/:id/polls/poll")]
+            Poll { feed_id: i64, id: i64 },
         #[end_layout]
 
         #[route("/threads/:id")]

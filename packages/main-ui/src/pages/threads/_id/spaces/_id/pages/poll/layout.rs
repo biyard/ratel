@@ -2,29 +2,30 @@ use super::*;
 use crate::{
     pages::{
         SpaceEditButton, SpaceMoreButton,
-        threads::_id::spaces::_id::pages::nft::controller::Controller,
+        threads::_id::spaces::_id::pages::poll::controller::Controller,
     },
     route::Route,
 };
 use bdk::prelude::*;
-use dto::by_components::{
-    icons::{file::File, shopping::Cube},
-    loaders::cube_loader::CubeLoader,
-};
+use by_components::loaders::cube_loader::CubeLoader;
+use dto::by_components::icons::{email::Vote, file::File};
 
 #[component]
-pub fn NftSettingLayout(children: Element) -> Element {
+pub fn PollSettingLayout(children: Element) -> Element {
     let route = use_route::<Route>();
     let (lang, feed_id, id) = match route {
-        Route::NftSummary { feed_id, id } | Route::Nft { feed_id, id } => {
+        Route::PollSummary { feed_id, id } | Route::Poll { feed_id, id } => {
             (Language::En, feed_id, id)
         }
         _ => (Language::En, 0, 0),
     };
 
     let mut ctrl = Controller::new(lang, feed_id, id)?;
+
     rsx! {
-        div { id: "nft-setting-layout", class: "flex flex-row w-full gap-20",
+        div {
+            id: "deliberation-setting-layout",
+            class: "flex flex-row w-full gap-20",
 
             SuspenseBoundary {
                 fallback: |_| rsx! {
@@ -46,7 +47,7 @@ pub fn NftSettingLayout(children: Element) -> Element {
                     SpaceMoreButton {}
                 }
                 div { class: "flex-col py-20 px-12 rounded-[10px] bg-[#191919]",
-                    for n in NftSettingStep::VARIANTS {
+                    for n in PollSettingStep::VARIANTS {
                         div {
                             class: "cursor-pointer flex flex-row w-full justify-start items-center px-4 py-8 rounded-[4px] gap-4 aria-selected:!bg-neutral-800",
                             aria_selected: ctrl.current_step() == *n,
@@ -55,12 +56,12 @@ pub fn NftSettingLayout(children: Element) -> Element {
                             },
                             {
                                 match n {
-                                    NftSettingStep::Summary => rsx! {
+                                    PollSettingStep::Summary => rsx! {
                                         File { class: "[&>path]:stroke-neutral-500", width: "20", height: "20" }
                                     },
-                                    NftSettingStep::Nft => rsx! {
-                                        Cube {
-                                            class: "[&>path]:stroke-neutral-500",
+                                    PollSettingStep::Poll => rsx! {
+                                        Vote {
+                                            class: "[&>path]:stroke-neutral-500 [&>rect]:stroke-neutral-500",
                                             width: "20",
                                             height: "20",
                                             fill: "none",
@@ -74,6 +75,7 @@ pub fn NftSettingLayout(children: Element) -> Element {
                     }
                 }
             }
-        }
+
+        } // end of this page
     }
 }
