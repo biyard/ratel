@@ -26,6 +26,13 @@ pub enum Route {
             LegislationSummary { feed_id: i64, id: i64 },
         #[end_layout]
 
+        #[layout(NftSettingLayout)]
+            #[route("/threads/:feed_id/spaces/:id/nfts/summary")]
+            NftSummary { feed_id: i64, id: i64 },
+            #[route("/threads/:feed_id/spaces/:id/nfts/nft")]
+            Nft { feed_id: i64, id: i64 },
+        #[end_layout]
+
         #[route("/threads/:id")]
         ThreadPage { id: i64 },
         #[route("/threads/:feed_id/spaces/:id")]
