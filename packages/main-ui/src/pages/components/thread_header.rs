@@ -96,10 +96,14 @@ pub fn ThreadHeaderContents(
 pub fn Profile(profile: String, proposer: String) -> Element {
     rsx! {
         div { class: "flex flex-row w-fit justify-start items-center gap-8",
-            img {
-                class: "w-20 h-20 object-cover rounded-full",
-                src: profile,
-                alt: "{proposer}",
+            if !profile.is_empty() {
+                img {
+                    class: "w-20 h-20 object-cover rounded-full",
+                    src: profile,
+                    alt: "{proposer}",
+                }
+            } else {
+                div { class: "w-20 h-20 rounded-full bg-neutral-400" }
             }
             div { class: "font-semibold text-sm/20 text-white", {proposer.clone()} }
             Badge {}

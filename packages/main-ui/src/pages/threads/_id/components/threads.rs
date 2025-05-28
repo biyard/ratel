@@ -35,7 +35,7 @@ pub fn Threads(
 
             div { class: "flex flex-col w-full justify-start items-start gap-10",
                 ThreadContents { description: feed.html_contents }
-                ThreadFiles { lang, files: vec![], ondownload }
+                ThreadFiles { lang, files: feed.files, ondownload }
                         // ThreadComments {
             //     lang,
             //     number_of_comments: feed.comments,
