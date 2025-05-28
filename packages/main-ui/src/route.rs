@@ -12,6 +12,8 @@ pub enum Route {
 
         #[route("/threads/:id")]
         ThreadPage { id: i64 },
+        #[route("/threads/:feed_id/spaces/:id")]
+        SpacePage {feed_id: i64, id: i64},
         #[route("/explore")]
         ExplorePage {},
         #[route("/my-network")]
