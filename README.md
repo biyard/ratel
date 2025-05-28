@@ -66,7 +66,7 @@
 
 [![Main Page][product-screenshot]](https://ratel.foundation)
 
-Ratel is the **world’s first decentralized legislative platform** designed to bridge the gap between **crypto users and policymakers**. Built on **blockchain and AI**, Ratel ensures **transparency, governance, and active community participation** in shaping crypto regulations.
+Ratel is the **world's first decentralized legislative platform** designed to bridge the gap between **crypto users and policymakers**. Built on **blockchain and AI**, Ratel ensures **transparency, governance, and active community participation** in shaping crypto regulations.
 
 In many countries, including South Korea, crypto regulations are **lagging behind** while policymakers and industry stakeholders remain disconnected. **Institutional participation is limited, ICOs and IEOs are banned, and startups are forced to move abroad** due to unclear regulations. This has turned the crypto market into a **speculative space dominated by retail investors, rather than an environment fostering sustainable innovation**.
 
@@ -95,27 +95,28 @@ Our ultimate goal is to create a **fair, transparent, and innovation-friendly cr
 <!-- GETTING STARTED -->
 ## Getting Started
 
-This is an example of how you may give instructions on setting up your project locally.
-To get a local copy up and running follow these simple example steps.
+### Quick Setup
 
-### Prerequisites
+1. **Install prerequisites**: Rust, Dioxus CLI, PostgreSQL, LLVM
+2. **Clone and setup**:
+   ```sh
+   git clone https://github.com/biyard/ratel.git
+   cd ratel
+   source scripts/setup-local-env.sh
+   createdb ratel_dev
+   ```
+3. **Run servers**:
+   ```sh
+   # Terminal 1: Backend
+   cd packages/main-api && cargo run
+   
+   # Terminal 2: Frontend
+   source scripts/setup-local-env.sh
+   cd packages/main-ui && dx serve --fullstack
+   ```
+4. **Access**: http://localhost:8080
 
-This is an example of how to list things you need to use the software and how to install them.
-* rust
-  ```sh
-  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-  ```
-
-* Dioxus
-  - Refer to [Dioxus getting started](https://dioxuslabs.com/learn/0.6/getting_started/#install-cargo-binstall)
-  ``` sh
-  cargo install cargo-binstall
-  cargo binstall dioxus-cli
-  ```
-
-### Building
-
-Coming soon
+📖 **Detailed setup guide**: [docs/LOCAL_SETUP.md](docs/LOCAL_SETUP.md)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -139,7 +140,7 @@ Coming soon
 
 * Launch the official Ratel website & social media presence.
 * Introduce $RATEL governance token.
-* Begin beta testing of the platform, focusing on **lawmakers’ stance tracking** and **community engagement**.
+* Begin beta testing of the platform, focusing on **lawmakers' stance tracking** and **community engagement**.
 
 🗳️ **Q2 2025 – DAO Governance & Legislative Participation**
 
