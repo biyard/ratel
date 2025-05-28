@@ -14,9 +14,9 @@ use dto::by_components::icons::{chat::Discuss, email::Vote, file::File, validati
 pub fn DeliberationSettingLayout(children: Element) -> Element {
     let route = use_route::<Route>();
     let (lang, feed_id, id) = match route {
-        Route::Summary { feed_id, id }
+        Route::DeliberationSummary { feed_id, id }
         | Route::Deliberation { feed_id, id }
-        | Route::FinalConsensus { feed_id, id }
+        | Route::DeliberationFinalConsensus { feed_id, id }
         | Route::Poll { feed_id, id } => (Language::En, feed_id, id),
         _ => (Language::En, 0, 0),
     };

@@ -17,10 +17,12 @@ pub enum DeliberationSettingStep {
 impl DeliberationSettingStep {
     pub fn to_route(&self, _lang: Language, feed_id: i64, id: i64) -> Route {
         match self {
-            DeliberationSettingStep::Summary => Route::Summary { feed_id, id },
+            DeliberationSettingStep::Summary => Route::DeliberationSummary { feed_id, id },
             DeliberationSettingStep::Deliberation => Route::Deliberation { feed_id, id },
-            DeliberationSettingStep::Poll => Route::Poll { feed_id, id },
-            DeliberationSettingStep::FinalConsensus => Route::FinalConsensus { feed_id, id },
+            DeliberationSettingStep::Poll => Route::DeliberationPoll { feed_id, id },
+            DeliberationSettingStep::FinalConsensus => {
+                Route::DeliberationFinalConsensus { feed_id, id }
+            }
         }
     }
 }
@@ -28,10 +30,10 @@ impl DeliberationSettingStep {
 impl From<Route> for DeliberationSettingStep {
     fn from(route: Route) -> Self {
         match route {
-            Route::Summary { .. } => Self::Summary,
+            Route::DeliberationSummary { .. } => Self::Summary,
             Route::Deliberation { .. } => Self::Deliberation,
-            Route::FinalConsensus { .. } => Self::FinalConsensus,
-            Route::Poll { .. } => Self::Poll,
+            Route::DeliberationFinalConsensus { .. } => Self::FinalConsensus,
+            Route::DeliberationPoll { .. } => Self::Poll,
             _ => Self::Summary,
         }
     }

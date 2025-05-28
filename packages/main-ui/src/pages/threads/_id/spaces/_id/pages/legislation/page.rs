@@ -7,6 +7,7 @@ pub fn LegislationPage(
     feed_id: i64,
     id: i64,
 ) -> Element {
+    tracing::debug!("33333");
     let _ctrl = Controller::new(lang, feed_id, id)?;
 
     rsx! {
