@@ -11,14 +11,19 @@ pub enum Route {
         #[end_layout]
 
         #[layout(DeliberationSettingLayout)]
-            #[route("/threads/:feed_id/spaces/:id/summary")]
+            #[route("/threads/:feed_id/spaces/:id/deliberations/summary")]
             Summary { feed_id: i64, id: i64 },
-            #[route("/threads/:feed_id/spaces/:id/deliberation")]
+            #[route("/threads/:feed_id/spaces/:id/deliberations/deliberation")]
             Deliberation { feed_id: i64, id: i64 },
-            #[route("/threads/:feed_id/spaces/:id/final-consensus")]
+            #[route("/threads/:feed_id/spaces/:id/deliberations/final-consensus")]
             FinalConsensus { feed_id: i64, id: i64 },
-            #[route("/threads/:feed_id/spaces/:id/poll")]
+            #[route("/threads/:feed_id/spaces/:id/deliberations/poll")]
             Poll { feed_id: i64, id: i64 },
+        #[end_layout]
+
+        #[layout(LegislationSettingLayout)]
+            #[route("/threads/:feed_id/spaces/:id/legislations/summary")]
+            LegislationSummary { feed_id: i64, id: i64 },
         #[end_layout]
 
         #[route("/threads/:id")]
