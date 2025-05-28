@@ -10,6 +10,17 @@ pub enum Route {
             IndexPage {},
         #[end_layout]
 
+        #[layout(DeliberationSettingLayout)]
+            #[route("/threads/:feed_id/spaces/:id/summary")]
+            Summary { feed_id: i64, id: i64 },
+            #[route("/threads/:feed_id/spaces/:id/deliberation")]
+            Deliberation { feed_id: i64, id: i64 },
+            #[route("/threads/:feed_id/spaces/:id/final-consensus")]
+            FinalConsensus { feed_id: i64, id: i64 },
+            #[route("/threads/:feed_id/spaces/:id/poll")]
+            Poll { feed_id: i64, id: i64 },
+        #[end_layout]
+
         #[route("/threads/:id")]
         ThreadPage { id: i64 },
         #[route("/threads/:feed_id/spaces/:id")]
