@@ -10,35 +10,43 @@ pub enum Route {
             IndexPage {},
         #[end_layout]
 
-        #[layout(DeliberationSettingLayout)]
-            #[route("/threads/:feed_id/spaces/:id/deliberations/summary")]
-            DeliberationSummary { feed_id: i64, id: i64 },
-            #[route("/threads/:feed_id/spaces/:id/deliberations/deliberation")]
-            Deliberation { feed_id: i64, id: i64 },
-            #[route("/threads/:feed_id/spaces/:id/deliberations/final-consensus")]
-            DeliberationFinalConsensus { feed_id: i64, id: i64 },
-            #[route("/threads/:feed_id/spaces/:id/deliberations/poll")]
-            DeliberationPoll { feed_id: i64, id: i64 },
-        #[end_layout]
+        #[nest("/threads")]
+            #[nest("/:feed_id")]
+                #[nest("/spaces")]
+                    #[nest("/:id")]
+                        #[layout(DeliberationSettingLayout)]
+                            #[route("/deliberations/summary")]
+                            DeliberationSummary { feed_id: i64, id: i64 },
+                            #[route("/deliberations/deliberation")]
+                            Deliberation { feed_id: i64, id: i64 },
+                            #[route("/deliberations/final-consensus")]
+                            DeliberationFinalConsensus { feed_id: i64, id: i64 },
+                            #[route("/deliberations/poll")]
+                            DeliberationPoll { feed_id: i64, id: i64 },
+                        #[end_layout]
 
-        #[layout(LegislationSettingLayout)]
-            #[route("/threads/:feed_id/spaces/:id/legislations/summary")]
-            LegislationSummary { feed_id: i64, id: i64 },
-        #[end_layout]
+                        #[layout(LegislationSettingLayout)]
+                            #[route("/legislations/summary")]
+                            LegislationSummary { feed_id: i64, id: i64 },
+                        #[end_layout]
 
-        #[layout(NftSettingLayout)]
-            #[route("/threads/:feed_id/spaces/:id/nfts/summary")]
-            NftSummary { feed_id: i64, id: i64 },
-            #[route("/threads/:feed_id/spaces/:id/nfts/nft")]
-            Nft { feed_id: i64, id: i64 },
-        #[end_layout]
+                        #[layout(NftSettingLayout)]
+                            #[route("/nfts/summary")]
+                            NftSummary { feed_id: i64, id: i64 },
+                            #[route("/nfts/nft")]
+                            Nft { feed_id: i64, id: i64 },
+                        #[end_layout]
 
-        #[layout(PollSettingLayout)]
-            #[route("/threads/:feed_id/spaces/:id/polls/summary")]
-            PollSummary { feed_id: i64, id: i64 },
-            #[route("/threads/:feed_id/spaces/:id/polls/poll")]
-            Poll { feed_id: i64, id: i64 },
-        #[end_layout]
+                        #[layout(PollSettingLayout)]
+                            #[route("/polls/summary")]
+                            PollSummary { feed_id: i64, id: i64 },
+                            #[route("/polls/poll")]
+                            Poll { feed_id: i64, id: i64 },
+                        #[end_layout]
+                    #[end_nest]
+                #[end_nest]
+            #[end_nest]
+        #[end_nest]
 
         #[route("/threads/:id")]
         ThreadPage { id: i64 },
