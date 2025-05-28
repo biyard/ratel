@@ -1,9 +1,9 @@
-use crate::pages::components::{CreateSpacePopup, CreateTeamPopup};
+use crate::pages::components::{CreateSpacePopup, CreateTeamPopup, SelectSpaceFormPopup};
 use bdk::prelude::*;
 use dto::dioxus_popup::PopupService;
 use dto::{
     ContentType, Feed, FeedQuery, FeedSummary, File, MyInfo, News, NewsQuery, NewsSummary,
-    Promotion, Space, SpaceType, TotalInfoQuery, TotalInfoSummary, User,
+    Promotion, Space, SpaceForm, SpaceType, TotalInfoQuery, TotalInfoSummary, User,
 };
 use dto::{Follower, LandingData};
 use dto::{Team, TotalInfo};
@@ -208,26 +208,52 @@ impl Controller {
             Some(v) => v,
             None => vec![],
         };
-        let mut ctrl = self.clone();
+        let mut ctrl = *self;
 
         self.popup
             .open(rsx! {
                 CreateSpacePopup {
                     lang: self.lang,
                     users,
-                    onsend: move |ids: Vec<i64>| async move {
+                    onsend: move |ids: Vec<i64>| {
                         tracing::debug!("selected user ids: {:?}", ids);
-                        ctrl.create_space_request(feed_id, ids).await;
-                        ctrl.popup.close();
+                        ctrl.open_select_space_form_popup_modal(feed_id, ids);
                     },
                 }
             })
             .with_title("Invite to Committee");
     }
 
-    pub async fn create_space_request(&mut self, feed_id: i64, user_ids: Vec<i64>) {
+    pub fn open_select_space_form_popup_modal(&mut self, feed_id: i64, ids: Vec<i64>) {
+        let mut ctrl = *self;
+
+        self.popup
+            .open(rsx! {
+                SelectSpaceFormPopup {
+                    lang: self.lang,
+                    onsend: {
+                        move |form: SpaceForm| {
+                            let ids = ids.clone();
+                            async move {
+                                tracing::debug!("space form: {:?}", form);
+                                ctrl.create_space_request(feed_id, ids.clone(), form).await;
+                                ctrl.popup.close();
+                            }
+                        }
+                    },
+                }
+            })
+            .with_title("Select a Space Form");
+    }
+
+    pub async fn create_space_request(
+        &mut self,
+        feed_id: i64,
+        user_ids: Vec<i64>,
+        space_form: SpaceForm,
+    ) {
         match Space::get_client(config::get().main_api_endpoint)
-            .create_space(SpaceType::Post, feed_id, user_ids)
+            .create_space(SpaceType::Post, space_form, feed_id, user_ids)
             .await
         {
             Ok(_) => {
