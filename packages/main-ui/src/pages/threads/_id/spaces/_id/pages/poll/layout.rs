@@ -11,16 +11,12 @@ use by_components::loaders::cube_loader::CubeLoader;
 use dto::by_components::icons::{email::Vote, file::File};
 
 #[component]
-pub fn PollSettingLayout(children: Element) -> Element {
-    let route = use_route::<Route>();
-    let (lang, feed_id, id) = match route {
-        Route::PollSummary { feed_id, id } | Route::Poll { feed_id, id } => {
-            (Language::En, feed_id, id)
-        }
-        _ => (Language::En, 0, 0),
-    };
-
-    let mut ctrl = Controller::new(lang, feed_id, id)?;
+pub fn PollSettingLayout(
+    #[props(default = Language::En)] lang: Language,
+    feed_id: ReadOnlySignal<i64>,
+    id: ReadOnlySignal<i64>,
+) -> Element {
+    let mut ctrl = Controller::new(lang, feed_id(), id())?;
 
     rsx! {
         div {

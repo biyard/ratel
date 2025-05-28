@@ -13,16 +13,12 @@ use dto::by_components::{
 };
 
 #[component]
-pub fn NftSettingLayout(children: Element) -> Element {
-    let route = use_route::<Route>();
-    let (lang, feed_id, id) = match route {
-        Route::NftSummary { feed_id, id } | Route::Nft { feed_id, id } => {
-            (Language::En, feed_id, id)
-        }
-        _ => (Language::En, 0, 0),
-    };
-
-    let mut ctrl = Controller::new(lang, feed_id, id)?;
+pub fn NftSettingLayout(
+    #[props(default = Language::En)] lang: Language,
+    feed_id: ReadOnlySignal<i64>,
+    id: ReadOnlySignal<i64>,
+) -> Element {
+    let mut ctrl = Controller::new(lang, feed_id(), id())?;
     rsx! {
         div { id: "nft-setting-layout", class: "flex flex-row w-full gap-20",
 

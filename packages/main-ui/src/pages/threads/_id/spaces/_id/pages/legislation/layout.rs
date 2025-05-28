@@ -11,14 +11,12 @@ use bdk::prelude::*;
 use dto::by_components::loaders::cube_loader::CubeLoader;
 
 #[component]
-pub fn LegislationSettingLayout(children: Element) -> Element {
-    let route = use_route::<Route>();
-    let (lang, feed_id, id) = match route {
-        Route::LegislationSummary { feed_id, id } => (Language::En, feed_id, id),
-        _ => (Language::En, 0, 0),
-    };
-
-    let mut ctrl = Controller::new(lang, feed_id, id)?;
+pub fn LegislationSettingLayout(
+    #[props(default = Language::En)] lang: Language,
+    feed_id: ReadOnlySignal<i64>,
+    id: ReadOnlySignal<i64>,
+) -> Element {
+    let mut ctrl = Controller::new(lang, feed_id(), id())?;
 
     rsx! {
         div {
