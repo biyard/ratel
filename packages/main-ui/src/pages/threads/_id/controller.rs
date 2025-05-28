@@ -86,7 +86,12 @@ impl Controller {
 
     pub async fn create(&mut self, user_ids: Vec<i64>) {
         match Space::get_client(config::get().main_api_endpoint)
-            .create_space(SpaceType::Post, self.id, user_ids)
+            .create_space(
+                SpaceType::Post,
+                dto::SpaceForm::Deliberation, //FIXME: fix to real space form
+                self.id,
+                user_ids,
+            )
             .await
         {
             Ok(_) => {

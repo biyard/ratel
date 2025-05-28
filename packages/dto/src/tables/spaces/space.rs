@@ -18,6 +18,10 @@ pub struct Space {
     #[api_model(summary, type = INTEGER, action = [create_space])]
     #[serde(default)]
     pub space_type: SpaceType,
+    #[api_model(summary, type = INTEGER, action = [create_space])]
+    #[serde(default)]
+    pub space_form: SpaceForm,
+
     #[api_model(summary, many_to_one = users)]
     pub user_id: i64,
     #[api_model(summary, many_to_one = industries)]
@@ -65,6 +69,17 @@ pub enum SpaceStatus {
     Draft = 1,
     InProgress = 2,
     Finish = 3,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub enum SpaceForm {
+    #[default]
+    Legislation = 1,
+
+    Poll = 2,
+    Deliberation = 3,
+    Nft = 4,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]
