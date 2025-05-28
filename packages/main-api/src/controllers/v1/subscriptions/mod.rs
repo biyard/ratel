@@ -1,4 +1,5 @@
 use crate::utils::users::extract_user_email;
+
 use bdk::prelude::*;
 use by_axum::{
     auth::Authorization,
@@ -11,6 +12,8 @@ use by_axum::{
 use by_types::QueryResponse;
 use dto::*;
 use sqlx::postgres::PgRow;
+// use sqlx::Row;
+use dto::Error;
 
 #[derive(Clone, Debug)]
 pub struct SubscriptionController {
@@ -39,12 +42,15 @@ impl SubscriptionController {
         Json(body): Json<SubscriptionAction>,
     ) -> Result<Json<String>> {
         tracing::debug!("act_subscription {:?}", body);
-
         match body {
             SubscriptionAction::Subscribe(req) => {
-                let _ = Json(ctrl.subscribe(req).await?);
+                let _ = Json(ctrl.subscribe(req).await.map_err(|e| {
+                    tracing::error!("failed to insert new email subscriber: {:?}", e);
+                    Error::BadRequest
+                })?);
                 Ok(Json("ok".to_string()))
             }
+
             SubscriptionAction::Sponsor(_) => {
                 ctrl.notify_slack(auth).await?;
                 Ok(Json("ok".to_string()))
