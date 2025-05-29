@@ -1,4 +1,5 @@
 DOMAIN ?= incheonheroes.world
+id ?= 1
 
 node_modules:
 	npm install
@@ -16,3 +17,8 @@ help:
 
 list:
 	node cli.js list
+
+deploy:
+	@echo "Deploying IncheonContents contract..."
+	$(DEPLOY_ENVS) node cli.js deploy Membership $(CLI_CONTRACT_OWNER_ADDR) "Membership" "M" 'https://$(DOMAIN)/metadata/json/$(id).json'
+

@@ -18,6 +18,7 @@ pub struct Config {
     pub slack: SlackChannel,
     #[allow(dead_code)]
     pub us_congress_key: &'static str,
+    pub rpc_endpoint: &'static str,
 }
 
 impl Default for Config {
@@ -36,6 +37,7 @@ impl Default for Config {
                 bill: option_env!("SLACK_CHANNEL_BILL").expect("SLACK_CHANNEL_BILL is required"),
             },
             us_congress_key: option_env!("US_CONGRESS_KEY").expect("US_CONGRESS_KEY is required"),
+            rpc_endpoint: option_env!("RPC_ENDPOINT").expect("RPC_ENDPOINT is required"),
         }
     }
 }

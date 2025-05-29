@@ -232,6 +232,7 @@ jobs:
           BASE_DOMAIN: ratel.foundation
           REPO_NAME: ratel/fetcher
           US_CONGRESS_KEY: ${{ secrets.US_CONGRESS_KEY }}
+          RPC_ENDPOINT: https://public-en.node.kaia.io
 
           MIGRATE: false
           ENABLE_S3: false

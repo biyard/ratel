@@ -47,6 +47,12 @@ pub struct Space {
     #[api_model(one_to_many = space_members, foreign_key = space_id)]
     #[serde(default)]
     pub members: Vec<SpaceMember>,
+    #[api_model(summary, one_to_many = space_contracts, foreign_key = space_id)]
+    #[serde(default)]
+    pub contracts: Vec<SpaceContract>,
+    #[api_model(summary, one_to_many = space_holders, foreign_key = space_id)]
+    #[serde(default)]
+    pub holders: Vec<SpaceHolder>,
 
     #[api_model(summary, many_to_many = space_users, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = space_id, aggregator = count, unique)]
     #[serde(default)]
@@ -106,7 +112,7 @@ pub enum ContentType {
 
 pub use bdk::prelude::*;
 
-use crate::SpaceMember;
+use crate::{SpaceContract, SpaceHolder, SpaceMember};
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
