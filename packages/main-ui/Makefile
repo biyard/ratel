@@ -13,10 +13,15 @@ REDIRECT_URI ?= http://localhost:3000
 WORKSPACE_ROOT ?= ../..
 ARTIFACT_DIR ?= $(WORKSPACE_ROOT)/.build/$(SERVICE)
 MAIN_API_ENDPOINT ?= https://api.dev.ratel.foundation
-RUSTFLAGS ?= -D warnings
+RUSTFLAGS ?= -D warnings --cfg ENV=\"$(ENV)\"
 DXFLAGS ?=
 
 BUILD_ENV ?= ENV=$(ENV) VERSION=$(VERSION) COMMIT=$(COMMIT) RUST_LOG=$(RUST_LOG) ENV=$(ENV) DOMAIN=${DOMAIN} AWS_REGION=${REGION} AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY} SERVICE=$(SERVICE) WORKSPACE_ROOT=$(WORKSPACE_ROOT) BASE_URL=$(BASE_URL) MAIN_API_ENDPOINT=$(MAIN_API_ENDPOINT) REDIRECT_URI=$(REDIRECT_URI) RUSTFLAGS="$(RUSTFLAGS)"
+
+# Apple Silicon WebAssembly compilation settings
+WASM_ENV = CC_wasm32_unknown_unknown=/opt/homebrew/opt/llvm/bin/clang \
+	AR_wasm32_unknown_unknown=/opt/homebrew/opt/llvm/bin/llvm-ar \
+	CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_LINKER=rust-lld
 
 setup.tool:
 	cargo binstall dioxus-cli
@@ -25,7 +30,11 @@ setup.tool:
 	npm i -g webpack-cli
 
 run: clean public/tailwind.css
-	CARGO_TARGET_DIR=$(PWD)/target $(BUILD_ENV) dx serve --fullstack $(DXFLAGS)
+	$(WASM_ENV) CARGO_TARGET_DIR=$(PWD)/target $(BUILD_ENV) dx serve --fullstack $(DXFLAGS)
+
+# Fast development mode (no clean, with cache and hot-reload)
+run-fast: public/tailwind.css
+	$(WASM_ENV) CARGO_INCREMENTAL=1 $(BUILD_ENV) dx serve --fullstack $(DXFLAGS)
 
 run.android: clean public/tailwind.css
 	CARGO_TARGET_DIR=$(PWD)/target $(BUILD_ENV) dx serve --platform android --features mobile $(DXFLAGS)
@@ -43,7 +52,6 @@ build.ios:
 build: clean public/tailwind.css
 	$(BUILD_ENV) dx build --release --fullstack --server-features lambda
 	cp -r $(WORKSPACE_ROOT)/target/dx/$(SERVICE)/release/web $(ARTIFACT_DIR)
-
 	mv $(ARTIFACT_DIR)/server $(ARTIFACT_DIR)/bootstrap
 
 public/dep.js:

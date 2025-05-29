@@ -95,28 +95,105 @@ Our ultimate goal is to create a **fair, transparent, and innovation-friendly cr
 <!-- GETTING STARTED -->
 ## Getting Started
 
-### Quick Setup
+### 🚀 Quick Start - Development Environment
 
-1. **Install prerequisites**: Rust, Dioxus CLI, PostgreSQL, LLVM
-2. **Clone and setup**:
-   ```sh
-   git clone https://github.com/biyard/ratel.git
-   cd ratel
-   source scripts/setup-local-env.sh
-   createdb ratel_dev
-   ```
-3. **Run servers**:
-   ```sh
-   # Terminal 1: Backend
-   cd packages/main-api && cargo run
-   
-   # Terminal 2: Frontend
-   source scripts/setup-local-env.sh
-   cd packages/main-ui && dx serve --fullstack
-   ```
-4. **Access**: http://localhost:8080
+### Prerequisites
 
-📖 **Detailed setup guide**: [docs/LOCAL_SETUP.md](docs/LOCAL_SETUP.md)
+Make sure you have the following tools installed:
+
+- **Rust & Cargo**: [Install Rust](https://rustup.rs/)
+- **Node.js & npm**: [Install Node.js](https://nodejs.org/)
+- **Java 11+**: `brew install openjdk@11` (for Firebase emulator)
+- **PostgreSQL**: `brew install postgresql`
+
+### Development Workflow
+
+```bash
+# 1. Setup and start all development services
+make start
+
+# 2. Access your application
+# Frontend:     http://localhost:8080
+# Backend API:  http://localhost:3000
+# Firebase UI:  http://localhost:4000
+
+# 3. Stop all services when done
+make stop
+```
+
+### Available Make Targets
+
+| Command | Description |
+|---------|-------------|
+| `make setup` | Install required development tools |
+| `make dev` | Start frontend only (fast development) |
+| `make start` | Start full development environment (all services) |
+| `make stop` | Stop all development services |
+| `make clean-dev` | Clean logs and temporary files |
+| `make status` | Show development environment status |
+
+### Development Services
+
+When you run `make start`, the following services will be started:
+
+- **🔥 Firebase Emulator Suite**
+  - Auth: `localhost:9099`
+  - Firestore: `localhost:8081` 
+  - UI: `localhost:4000`
+
+- **🌐 Backend API** (`localhost:3000`)
+  - Rust/Axum server with hot reload
+  - PostgreSQL database integration
+  - Auto-migration on startup
+
+- **🎨 Frontend** (`localhost:8080`)
+  - Dioxus/Rust WASM application
+  - Hot reload enabled
+  - Tailwind CSS integration
+
+### Log Files
+
+All services log to the `logs/` directory:
+
+```bash
+# View logs in real-time
+tail -f logs/backend.log
+tail -f logs/frontend.log  
+tail -f logs/firebase.log
+
+# Or check service status
+make status
+```
+
+### Troubleshooting
+
+**Frontend compilation errors (ring crate):**
+The Makefile automatically sets WASM compilation environment variables to fix common issues.
+
+**Backend compilation taking long:**
+First-time compilation can take 5-10 minutes. Subsequent builds are much faster due to incremental compilation.
+
+**Database connection issues:**
+Make sure PostgreSQL is running: `brew services start postgresql`
+
+### Project Structure
+
+```
+ratel/
+├── packages/
+│   ├── main-ui/          # Frontend (Dioxus + Rust)
+│   ├── main-api/         # Backend API (Rust + Axum)
+│   ├── dto/              # Data transfer objects
+│   ├── fetcher/          # Data fetcher service
+│   └── mobile/           # Mobile app
+├── deps/
+│   └── rust-sdk/         # Shared Rust SDK
+├── logs/                 # Development logs
+└── Makefile              # Development workflow
+```
+
+📖 **Need help?** Check our detailed guide:
+- [Local Development Guide](LOCAL_DEVELOPMENT.md) - Complete setup and troubleshooting
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

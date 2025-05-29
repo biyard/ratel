@@ -1,0 +1,34 @@
+{
+  "emulators": {
+    "auth": {
+      "port": 9099,
+      "host": "localhost"
+    },
+    "firestore": {
+      "port": 8081,
+      "host": "localhost"
+    },
+    "ui": {
+      "enabled": true,
+      "port": 4000,
+      "host": "localhost"
+    },
+    "hub": {
+      "port": 4400,
+      "host": "localhost"
+    },
+    "singleProjectMode": true
+  },
+  "auth": {
+    "users": [
+      {
+        "localId": "test-user-1",
+        "email": "test@example.com",
+        "displayName": "Test User",
+        "photoUrl": "https://via.placeholder.com/150",
+        "emailVerified": true,
+        "disabled": false
+      }
+    ]
+  }
+} 

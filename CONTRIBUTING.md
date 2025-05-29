@@ -9,10 +9,10 @@ Thank you for your interest in contributing to Ratel! 🎉
 # Clone and setup
 git clone https://github.com/biyard/ratel.git
 cd ratel
-source scripts/setup-local-env.sh
+make start
 
 # Install prerequisites: Rust, Dioxus CLI, PostgreSQL, LLVM
-# See docs/LOCAL_SETUP.md for details
+# See LOCAL_DEVELOPMENT.md for details
 ```
 
 ### Project Structure
@@ -57,7 +57,7 @@ Look for issues labeled:
 
 ## 🤝 Getting Help
 
-- Check [Local Setup Guide](docs/LOCAL_SETUP.md)
+- Check [Local Development Guide](LOCAL_DEVELOPMENT.md)
 - Search existing issues
 - Ask questions in GitHub Discussions
 - Tag maintainers for urgent issues
