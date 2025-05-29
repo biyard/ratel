@@ -19,8 +19,8 @@ translate! {
     },
 
     btn_like: {
-        ko: "좋아요",
-        en: "Like",
+        ko: "더 좋아요",
+        en: "더 좋아요",
     },
     btn_dislike: {
         ko: "싫어요",

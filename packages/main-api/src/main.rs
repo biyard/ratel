@@ -38,6 +38,7 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
     migrate!(
         pool,
         User,
+        Follower,
         Group,
         GroupMember,
         AssemblyMember,
@@ -51,12 +52,22 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         ElectionPledgeLike,
         Industry,
         Feed,
+        FeedUser,
+        FeedComment,
+        Space,
+        SpaceComment,
+        SpaceUser,
+        SpaceMember,
         TeamMember,
         News,
         Quiz,
         QuizResult,
         ElectionPledgeQuizLike,
         ElectionPledgeQuizDislike,
+        Promotion,
+        AdvocacyCampaign,
+        AdvocacyCampaignAuthor,
+        AdvocacyCampaignVoter,
     );
 
     if Industry::query_builder()
@@ -91,6 +102,7 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
                 UserType::Individual,
                 None,
                 "admin".to_string(),
+                "".to_string(),
             )
             .await?;
     }
@@ -195,6 +207,7 @@ pub mod tests {
                 UserType::Individual,
                 None,
                 email.clone(),
+                "".to_string(),
             )
             .await?
             .unwrap();
@@ -228,6 +241,7 @@ pub mod tests {
                 UserType::Individual,
                 None,
                 email.clone(),
+                "".to_string(),
             )
             .await?;
 

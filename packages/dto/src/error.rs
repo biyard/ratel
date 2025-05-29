@@ -1,8 +1,8 @@
-use std::error::Error as StdError;
+use std::{error::Error as StdError, str::FromStr};
 
 use serde::{Deserialize, Serialize};
 
-use bdk::prelude::*;
+use bdk::prelude::{dioxus::CapturedError, *};
 
 #[derive(Debug, Serialize)]
 pub struct ServiceException {
@@ -44,6 +44,16 @@ pub enum Error {
     UserAlreadyExists,
     #[translate(en = "Could not find a valid user", ko = "유효하지 않은 사용자입니다.")]
     InvalidUser,
+    #[translate(
+        en = "You must pass a valid email",
+        ko = "유효한 이메일을 입력해야 합니다."
+    )]
+    InvalidEmail,
+    #[translate(
+        en = "You must pass a valid principal",
+        ko = "유효한 계정 주소를 입력해야 합니다."
+    )]
+    InvalidPrinciapl,
     #[translate(en = "Please change team name.")]
     DuplicatedTeamName,
 
@@ -140,9 +150,24 @@ pub enum Error {
     #[translate(en = "You should select industry or a parent feed")]
     FeedExclusiveParentOrIndustry,
 
+    // spaces
+    #[translate(en = "Failed to write a space")]
+    SpaceWritePostError,
+
+    // metadata
+    #[translate(en = "Data already exists. Please enter different data.")]
+    InvalidType,
+    #[translate(en = "Failed to get URL for upload. Please try again.")]
+    AssetError(String),
+    #[translate(en = "Failed to upload file. Please try again.")]
+    UploadMetadataError(String),
+
     // quizzes
     #[translate(en = "You must select a valid quiz")]
     InvalidQuizId,
+
+    #[translate(en = "You must pass a valid team name")]
+    InvalidTeamname,
 }
 
 impl<E: StdError + 'static> From<E> for Error {
@@ -154,6 +179,19 @@ impl<E: StdError + 'static> From<E> for Error {
 impl Into<ServiceException> for Error {
     fn into(self) -> ServiceException {
         ServiceException { inner: self }
+    }
+}
+
+impl Into<CapturedError> for Error {
+    fn into(self) -> CapturedError {
+        CapturedError::from_str(&self.to_string())
+            .expect("Failed to convert Error to CapturedError. This should not happen.")
+    }
+}
+
+impl Into<RenderError> for Error {
+    fn into(self) -> RenderError {
+        RenderError::Aborted(self.into())
     }
 }
 

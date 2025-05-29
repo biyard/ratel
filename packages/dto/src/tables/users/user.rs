@@ -2,7 +2,7 @@ use by_types::QueryResponse;
 
 use bdk::prelude::*;
 
-use crate::Group;
+use crate::{Follower, Group};
 
 #[derive(validator::Validate)]
 #[api_model(base = "/v1/users", read_action = user_info, table = users, iter_type=QueryResponse)]
@@ -14,14 +14,14 @@ pub struct User {
     #[api_model(auto = [insert, update])]
     pub updated_at: i64,
 
-    #[api_model(action = signup)]
+    #[api_model(action = signup, action_by_id = edit_profile)]
     pub nickname: String,
     #[api_model(unique, read_action = by_principal)]
     pub principal: String,
     #[api_model(action = signup, read_action = [check_email, login], unique)]
     #[validate(email)]
     pub email: String,
-    #[api_model(action = signup, nullable)]
+    #[api_model(action = signup, nullable, action_by_id = edit_profile)]
     #[validate(url)]
     pub profile_url: String,
 
@@ -37,9 +37,17 @@ pub struct User {
     #[api_model(version = v0.1, indexed, unique)]
     pub username: String,
 
+    #[api_model(one_to_many = followers, foreign_key = user_id)]
+    #[serde(default)]
+    pub followers: Vec<Follower>,
     #[api_model(many_to_many = group_members, foreign_table_name = groups, foreign_primary_key = group_id, foreign_reference_key = user_id)]
     #[serde(default)]
     pub groups: Vec<Group>,
+
+    // profile contents
+    #[api_model(version = v0.2, action_by_id = edit_profile)]
+    #[serde(default)]
+    pub html_contents: String,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]

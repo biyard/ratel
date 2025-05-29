@@ -44,6 +44,7 @@ pub fn LandingPage(#[props(default = Language::En)] lang: Language) -> Element {
 
     rsx! {
         MetaPage { title: "Ratel", description: tr.description, image: "{image}" }
+
         div { class: "absolute top-0 left-0 w-full h-auto",
             div { class: "absolute inset-0 bg-background/95 z-1" }
             div { class: "absolute relative w-full z-0",

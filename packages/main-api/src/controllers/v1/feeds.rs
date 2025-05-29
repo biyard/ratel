@@ -37,6 +37,7 @@ impl FeedController {
         let items: Vec<FeedSummary> = FeedSummary::query_builder()
             .limit(param.size())
             .page(param.page())
+            .order_by_created_at_desc()
             .query()
             .map(|row: PgRow| {
                 use sqlx::Row;
@@ -59,9 +60,10 @@ impl FeedController {
             title,
             quote_feed_id,
             user_id,
+            files,
         }: FeedWritePostRequest,
     ) -> Result<Feed> {
-        let _user = check_perm(
+        let user = check_perm(
             &self.pool,
             auth,
             RatelResource::Post { team_id: user_id },
@@ -76,10 +78,19 @@ impl FeedController {
                 FeedType::Post,
                 user_id,
                 industry_id,
+                if user.nickname == "" {
+                    Some(user.email)
+                } else {
+                    Some(user.nickname)
+                },
+                Some(user.profile_url),
                 None,
                 title,
                 None,
                 quote_feed_id,
+                files,
+                0,
+                0,
             )
             .await
             .map_err(|e| {
@@ -99,7 +110,7 @@ impl FeedController {
             user_id,
         }: FeedCommentRequest,
     ) -> Result<Feed> {
-        let _user = check_perm(
+        let user = check_perm(
             &self.pool,
             auth,
             RatelResource::Post { team_id: user_id },
@@ -129,10 +140,19 @@ impl FeedController {
                 FeedType::Reply,
                 user_id,
                 feed.industry_id,
+                if user.nickname == "" {
+                    Some(user.email)
+                } else {
+                    Some(user.nickname)
+                },
+                Some(user.profile_url),
                 Some(parent_id),
                 None,
                 None,
                 None,
+                feed.files,
+                0,
+                0,
             )
             .await
             .map_err(|e| {
@@ -153,7 +173,7 @@ impl FeedController {
             part_id: _,
         }: FeedReviewDocRequest,
     ) -> Result<Feed> {
-        let _user = check_perm(
+        let user = check_perm(
             &self.pool,
             auth,
             RatelResource::Post { team_id: user_id },
@@ -183,10 +203,19 @@ impl FeedController {
                 FeedType::DocReview,
                 user_id,
                 feed.industry_id,
+                if user.nickname == "" {
+                    Some(user.email)
+                } else {
+                    Some(user.nickname)
+                },
+                Some(user.profile_url),
                 Some(parent_id),
                 None,
                 None,
                 None,
+                feed.files,
+                0,
+                0,
             )
             .await
             .map_err(|e| {
@@ -207,7 +236,7 @@ impl FeedController {
             user_id,
         }: FeedRepostRequest,
     ) -> Result<Feed> {
-        let _user = check_perm(
+        let user = check_perm(
             &self.pool,
             auth,
             RatelResource::Post { team_id: user_id },
@@ -230,7 +259,7 @@ impl FeedController {
             Error::FeedInvalidQuoteId
         })?;
 
-        let industry_id = Feed::query_builder()
+        let feed = Feed::query_builder()
             .id_equals(parent_id)
             .query()
             .map(Feed::from)
@@ -239,8 +268,7 @@ impl FeedController {
             .map_err(|e| {
                 tracing::error!("failed to get a feed {parent_id}: {e}");
                 Error::FeedInvalidParentId
-            })?
-            .industry_id;
+            })?;
 
         Feed::query_builder()
             .id_equals(quote_feed_id)
@@ -259,11 +287,20 @@ impl FeedController {
                 html_contents,
                 FeedType::Repost,
                 user_id,
-                industry_id,
+                feed.industry_id,
+                if user.nickname == "" {
+                    Some(user.email)
+                } else {
+                    Some(user.nickname)
+                },
+                Some(user.profile_url),
                 Some(parent_id),
                 None,
                 None,
                 Some(quote_feed_id),
+                feed.files,
+                0,
+                0,
             )
             .await
             .map_err(|e| {
@@ -458,10 +495,15 @@ mod tests {
                 FeedType::Post,
                 user.id,
                 industry_id,
+                Some(user.nickname.clone()),
+                Some(user.profile_url.clone()),
                 None,
                 title,
                 None,
                 None,
+                vec![],
+                0,
+                0,
             )
             .await
             .unwrap();
@@ -472,10 +514,15 @@ mod tests {
                 FeedType::Reply,
                 user.id,
                 industry_id,
+                Some(user.nickname),
+                Some(user.profile_url),
                 Some(post.id),
                 None,
                 None,
                 None,
+                vec![],
+                0,
+                0,
             )
             .await
             .unwrap();
@@ -502,6 +549,7 @@ mod tests {
                 industry_id,
                 title.clone(),
                 None,
+                vec![],
             )
             .await;
 
@@ -550,6 +598,7 @@ mod tests {
                 industry_id,
                 title.clone(),
                 Some(quote.id),
+                vec![],
             )
             .await;
 

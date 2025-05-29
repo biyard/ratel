@@ -120,6 +120,7 @@ jobs:
           MIGRATE: false
           ENABLE_S3: false
           ENABLE_LAMBDA: true
+          BUCKET_NAME: ratel.foundation
           SLACK_CHANNEL_SPONSOR: ${{ secrets.SLACK_CHANNEL_SPONSOR }}
           US_CONGRESS_KEY: ${{ secrets.US_CONGRESS_KEY }}
           SLACK_CHANNEL_ABUSING: ${{ secrets.SLACK_CHANNEL_ABUSING }}
@@ -127,57 +128,57 @@ jobs:
           npm i -g aws-cdk
           make deploy
 
-  mobile-android:
-    runs-on: ubuntu-22.04
+  # mobile-android:
+  #   runs-on: ubuntu-22.04
 
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: recursive
-          ssh-key: ${{ secrets.PULL_KEY_REPO }}
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #       with:
+  #         submodules: recursive
+  #         ssh-key: ${{ secrets.PULL_KEY_REPO }}
 
-      - uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          components: clippy, rustfmt
-          target: wasm32-unknown-unknown
-          toolchain: stable
+  #     - uses: actions-rust-lang/setup-rust-toolchain@v1
+  #       with:
+  #         components: clippy, rustfmt
+  #         target: wasm32-unknown-unknown
+  #         toolchain: stable
 
-      - uses: cargo-bins/cargo-binstall@main
+  #     - uses: cargo-bins/cargo-binstall@main
 
-      - name: Install dioxus-cli
-        run: |
-          cargo binstall dioxus-cli --force
-          cargo binstall toml-cli --force
+  #     - name: Install dioxus-cli
+  #       run: |
+  #         cargo binstall dioxus-cli --force
+  #         cargo binstall toml-cli --force
       
-      - name: Install Tauri CLI
-        run: cargo install tauri-cli
+  #     - name: Install Tauri CLI
+  #       run: cargo install tauri-cli
       
-      - name: Decode keystore
-        run: |
-          echo "$KEYSTORE_BASE64" | base64 -d > release.keystore
-        env:
-          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+  #     - name: Decode keystore
+  #       run: |
+  #         echo "$KEYSTORE_BASE64" | base64 -d > release.keystore
+  #       env:
+  #         KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
           
-      - name: Create .env for signing
-        run: |
-          KEYSTORE_FILE=../../../../../../release.keystore
-          KEYSTORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS=${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}
+  #     - name: Create .env for signing
+  #       run: |
+  #         KEYSTORE_FILE=../../../../../../release.keystore
+  #         KEYSTORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}
+  #         KEY_ALIAS=${{ secrets.KEY_ALIAS }}
+  #         KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}
 
-      - name: Install Fastlane
-        run: npm install fastlane
+  #     - name: Install Fastlane
+  #       run: npm install fastlane
 
-      - name: Restore service account json
-        run: |
-          echo "$GOOGLE_PLAY_JSON" | base64 --decode > packages/mobile/src-tauri/gen/android/ratel-mobile.json
-        env:
-          GOOGLE_PLAY_JSON: ${{ secrets.GOOGLE_PLAY_JSON }}
+  #     - name: Restore service account json
+  #       run: |
+  #         echo "$GOOGLE_PLAY_JSON" | base64 --decode > packages/mobile/src-tauri/gen/android/ratel-mobile.json
+  #       env:
+  #         GOOGLE_PLAY_JSON: ${{ secrets.GOOGLE_PLAY_JSON }}
 
-      - name: Build & deploy to Play Store via Fastlane
-        run: |
-          cd packages/mobile/src-tauri/gen/android
-          fastlane deploy
+  #     - name: Build & deploy to Play Store via Fastlane
+  #       run: |
+  #         cd packages/mobile/src-tauri/gen/android
+  #         fastlane deploy
 
   fetcher:
     runs-on: ubuntu-latest

@@ -61,7 +61,9 @@ pub async fn check_perm(
     let verifier: Box<dyn PermissionVerifier> = match rsc {
         RatelResource::Post { team_id } => Box::new(TeamPermissionVerifier::new(team_id)),
         RatelResource::Reply { team_id } => Box::new(TeamPermissionVerifier::new(team_id)),
-        RatelResource::News => Box::new(GeneralPermissionVerifier::new()),
+        RatelResource::News | RatelResource::Promotions => {
+            Box::new(GeneralPermissionVerifier::new())
+        }
     };
 
     if !verifier.has_permission(&user, perm) {

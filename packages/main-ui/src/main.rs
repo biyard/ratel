@@ -1,5 +1,6 @@
 pub mod components;
 pub mod config;
+pub mod dto;
 pub mod pages;
 pub mod route;
 pub mod services;
@@ -14,7 +15,7 @@ use route::Route;
 
 #[cfg(feature = "web")]
 use services::anonymouse_service::*;
-use services::{user_service::UserService, vote_service::VoteService};
+use services::{backend_api::BackendApi, user_service::UserService, vote_service::VoteService};
 use theme::Theme;
 
 #[cfg(target_os = "ios")]
@@ -69,6 +70,7 @@ fn app() -> Element {
     Theme::init();
     #[cfg(feature = "web")]
     AnonymouseService::init();
+    BackendApi::init();
     UserService::init();
     PopupService::init();
     VoteService::init();
@@ -127,7 +129,7 @@ fn app() -> Element {
 
         // document::Script { r#type: "module", src: asset!("/public/dep.js"), defer: true }
 
-        Responsive { tablet: 900.0, Router::<Route> {} }
+        Responsive { desktop: 1200.0, tablet: 900.0, Router::<Route> {} }
     }
 }
 
