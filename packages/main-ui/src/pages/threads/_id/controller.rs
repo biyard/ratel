@@ -94,6 +94,7 @@ impl Controller {
         {
             Ok(_) => {
                 tracing::info!("success to create space");
+                self.feed.restart();
             }
             Err(e) => {
                 btracing::error!(
@@ -105,7 +106,15 @@ impl Controller {
     }
 
     pub fn enter_space(&mut self) {
-        self.nav.replace(Route::IndexPage {});
+        let space_id = match self.feed() {
+            Ok(v) => v.spaces[0].id,
+            Err(_) => 0,
+        };
+
+        self.nav.replace(Route::SpacePage {
+            feed_id: self.id,
+            id: space_id,
+        });
     }
 
     pub fn create_space(&mut self) {

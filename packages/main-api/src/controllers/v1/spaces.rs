@@ -2,14 +2,11 @@ use bdk::prelude::*;
 use by_axum::{
     aide,
     auth::Authorization,
-    axum::{
-        Extension, Json,
-        extract::{Path, State},
-        routing::{get, post},
-    },
+    axum::{Extension, Json, extract::State, routing::post},
 };
 use dto::*;
 
+use crate::by_axum::axum::extract::Query;
 use crate::security::check_perm;
 
 #[derive(
@@ -27,6 +24,17 @@ pub struct SpaceController {
 }
 
 impl SpaceController {
+    async fn get_space_by_id(&self, _auth: Option<Authorization>, id: i64) -> Result<Space> {
+        tracing::debug!("get_space {:?}", id);
+
+        Ok(Space::query_builder()
+            .id_equals(id)
+            .query()
+            .map(Space::from)
+            .fetch_one(&self.pool)
+            .await?)
+    }
+
     async fn create_space(
         &self,
         auth: Option<Authorization>,
@@ -113,27 +121,26 @@ impl SpaceController {
 
     pub fn route(&self) -> Result<by_axum::axum::Router> {
         Ok(by_axum::axum::Router::new()
-            .route("/:id", get(Self::get_space_by_id))
-            .with_state(self.clone())
-            .route("/", post(Self::act_space))
+            .route("/", post(Self::act_space).get(Self::get_space))
             .with_state(self.clone()))
     }
 
-    pub async fn get_space_by_id(
+    pub async fn get_space(
         State(ctrl): State<SpaceController>,
-        Extension(_auth): Extension<Option<Authorization>>,
-        Path(SpacePath { id }): Path<SpacePath>,
-    ) -> Result<Json<Space>> {
-        tracing::debug!("get_space {:?}", id);
+        Extension(auth): Extension<Option<Authorization>>,
+        Query(q): Query<SpaceParam>,
+    ) -> Result<Json<SpaceGetResponse>> {
+        tracing::debug!("space {:?}", q);
 
-        Ok(Json(
-            Space::query_builder()
-                .id_equals(id)
-                .query()
-                .map(Space::from)
-                .fetch_one(&ctrl.pool)
-                .await?,
-        ))
+        match q {
+            SpaceParam::Read(param) if param.action == Some(SpaceReadActionType::FindById) => {
+                let res = ctrl
+                    .get_space_by_id(auth, param.id.unwrap_or_default())
+                    .await?;
+                Ok(Json(SpaceGetResponse::Read(res)))
+            }
+            _ => Err(Error::BadRequest),
+        }
     }
 
     pub async fn act_space(
