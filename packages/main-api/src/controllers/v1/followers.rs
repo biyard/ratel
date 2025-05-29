@@ -36,7 +36,7 @@ impl FollowerController {
     ) -> Result<QueryResponse<FollowerSummary>> {
         let mut total_count = 0;
 
-        let user_exists = User::query_builder()
+        let _user_exists = User::query_builder()
             .id_equals(user_id)
             .query()
             .map(User::from)
@@ -72,7 +72,7 @@ impl FollowerController {
     ) -> Result<QueryResponse<FollowerSummary>> {
         let mut total_count = 0;
 
-        let user_exists = User::query_builder()
+        let _user_exists = User::query_builder()
             .id_equals(user_id)
             .query()
             .map(User::from)
@@ -177,17 +177,15 @@ impl FollowerController {
         }
         let auth_user_id = extract_user_id(&self.pool, auth).await?;
 
-        if let is_following = Follower::query_builder()
+        let is_following = Follower::query_builder()
             .follower_id_equals(user_id)
             .followed_id_equals(auth_user_id)
             .query()
             .map(Follower::from)
-            .fetch_one(&self.pool)
-            .await{
-                return Err(Error::InternalServerError);
-            }
+            .fetch_optional(&self.pool)
+            .await?;
 
-        if !is_following {
+        if is_following.is_none() {
             return Err(Error::NotFollowingUser);
         }
         let res = self.repo.delete(user_id).await?;
@@ -246,25 +244,6 @@ impl FollowerController {
             }
         }
     }
-
-    // pub async fn act_news_by_id(
-    //     State(ctrl): State<FollowerController>,
-    //     Extension(auth): Extension<Option<Authorization>>,
-    //     Path(NewsPath { id }): Path<NewsPath>,
-    //     Json(body): Json<NewsByIdAction>,
-    // ) -> Result<Json<News>> {
-    //     tracing::debug!("act_news_by_id {:?} {:?}", id, body);
-    //     match body {
-    //         NewsByIdAction::Update(param) => {
-    //             let res = ctrl.update(id, auth, param).await?;
-    //             Ok(Json(res))
-    //         }
-    //         NewsByIdAction::Delete(_) => {
-    //             let res = ctrl.delete(id, auth).await?;
-    //             Ok(Json(res))
-    //         }
-    //     }
-    // }
 
     // Fetch the all followers of the authenticated user
     pub async fn get_followers(
