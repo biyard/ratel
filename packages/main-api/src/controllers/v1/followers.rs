@@ -12,15 +12,14 @@ use by_types::QueryResponse;
 use dto::*;
 use sqlx::postgres::PgRow;
 
-// use crate::security::check_perm;
 use crate::utils::users::extract_user_id;
 
-// #[derive(
-//     Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
-// )]
-// pub struct NewsPath {
-//     pub id: i64,
-// }
+#[derive(
+    Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
+)]
+pub struct UserPath {
+    pub user_id: i64,
+}
 
 #[derive(Clone, Debug)]
 pub struct FollowerController {
@@ -29,13 +28,113 @@ pub struct FollowerController {
 }
 
 impl FollowerController {
-    async fn query(
+    async fn query_user_followings(
         &self,
+        user_id: i64,
         _auth: Option<Authorization>,
         param: FollowerQuery,
     ) -> Result<QueryResponse<FollowerSummary>> {
         let mut total_count = 0;
+
+        let user_exists = User::query_builder()
+            .id_equals(user_id)
+            .query()
+            .map(User::from)
+            .fetch_one(&self.pool)
+            .await
+            .map_err(|e| {
+                tracing::error!("User not found {user_id}: {e}");
+                Error::NotFound
+            })?;
+
         let items: Vec<FollowerSummary> = FollowerSummary::query_builder()
+            .followed_id_equals(user_id)
+            .limit(param.size())
+            .page(param.page())
+            .query()
+            .map(|row: PgRow| {
+                use sqlx::Row;
+
+                total_count = row.try_get("total_count").unwrap_or_default();
+                row.into()
+            })
+            .fetch_all(&self.pool)
+            .await?;
+
+        Ok(QueryResponse { total_count, items })
+    }
+    
+    async fn query_user_followers(
+        &self,
+        user_id: i64,
+        _auth: Option<Authorization>,
+        param: FollowerQuery,
+    ) -> Result<QueryResponse<FollowerSummary>> {
+        let mut total_count = 0;
+
+        let user_exists = User::query_builder()
+            .id_equals(user_id)
+            .query()
+            .map(User::from)
+            .fetch_one(&self.pool)
+            .await
+            .map_err(|e| {
+                tracing::error!("User not found {user_id}: {e}");
+                Error::NotFound
+            })?;
+
+        let items: Vec<FollowerSummary> = FollowerSummary::query_builder()
+            .follower_id_equals(user_id)
+            .limit(param.size())
+            .page(param.page())
+            .query()
+            .map(|row: PgRow| {
+                use sqlx::Row;
+
+                total_count = row.try_get("total_count").unwrap_or_default();
+                row.into()
+            })
+            .fetch_all(&self.pool)
+            .await?;
+
+        Ok(QueryResponse { total_count, items })
+    }
+
+    async fn query_followings(
+        &self,
+        auth: Option<Authorization>,
+        param: FollowerQuery,
+    ) -> Result<QueryResponse<FollowerSummary>> {
+        let mut total_count = 0;
+        let user_id = extract_user_id(&self.pool, auth).await?;
+
+        let items: Vec<FollowerSummary> = FollowerSummary::query_builder()
+            .follower_id_equals(user_id)
+            .limit(param.size())
+            .page(param.page())
+            .query()
+            .map(|row: PgRow| {
+                use sqlx::Row;
+
+                total_count = row.try_get("total_count").unwrap_or_default();
+                row.into()
+            })
+            .fetch_all(&self.pool)
+            .await?;
+
+        Ok(QueryResponse { total_count, items })
+    }
+
+    async fn query_followers(
+        &self,
+        auth: Option<Authorization>,
+        param: FollowerQuery,
+    ) -> Result<QueryResponse<FollowerSummary>> {
+        let mut total_count = 0;
+        let user_id = extract_user_id(&self.pool, auth).await?;
+
+        let items: Vec<FollowerSummary> = FollowerSummary::query_builder()
+            .followed_id_equals(user_id)
             .limit(param.size())
             .page(param.page())
             .query()
@@ -65,56 +164,36 @@ impl FollowerController {
             .fetch_one(&self.pool)
             .await
         {
-            return Err(Error::BadRequest);
+            return Err(Error::AlreadyFollowing);
         }
         
         let follower = self.repo.insert(user_id, req.followed_id).await?;
         Ok(follower)
     }
 
-    // async fn update(
-    //     &self,
-    //     id: i64,
-    //     auth: Option<Authorization>,
-    //     param: NewsUpdateRequest,
-    // ) -> Result<News> {
-    //     let user = check_perm(
-    //         &self.pool,
-    //         auth,
-    //         RatelResource::News,
-    //         GroupPermission::UpdateNews,
-    //     )
-    //     .await?;
+    async fn delete(&self, user_id: i64, auth: Option<Authorization>) -> Result<Follower> {
+        if auth.is_none() {
+            return Err(Error::Unauthorized);
+        }
+        let auth_user_id = extract_user_id(&self.pool, auth).await?;
 
-    //     btracing::notify!(
-    //         crate::config::get().slack_channel_monitor,
-    //         &format!(
-    //             "admin user({:?}) will update news {:?} with {:?}",
-    //             user.email, id, param
-    //         )
-    //     );
-    //     let res = self.repo.update(id, param.into()).await?;
+        if let is_following = Follower::query_builder()
+            .follower_id_equals(user_id)
+            .followed_id_equals(auth_user_id)
+            .query()
+            .map(Follower::from)
+            .fetch_one(&self.pool)
+            .await{
+                return Err(Error::InternalServerError);
+            }
 
-    //     Ok(res)
-    // }
+        if !is_following {
+            return Err(Error::NotFollowingUser);
+        }
+        let res = self.repo.delete(user_id).await?;
 
-    // async fn delete(&self, id: i64, auth: Option<Authorization>) -> Result<News> {
-    //     let user = check_perm(
-    //         &self.pool,
-    //         auth,
-    //         RatelResource::News,
-    //         GroupPermission::DeleteNews,
-    //     )
-    //     .await?;
-
-    //     let res = self.repo.delete(id).await?;
-    //     btracing::notify!(
-    //         crate::config::get().slack_channel_monitor,
-    //         &format!("admin user({:?}) deleted news({:?})", user.email, res)
-    //     );
-
-    //     Ok(res)
-    // }
+        Ok(res)
+    }
 }
 
 impl FollowerController {
@@ -128,6 +207,11 @@ impl FollowerController {
         Ok(by_axum::axum::Router::new()
             // .route("/:id", get(Self::get_news_by_id).post(Self::act_news_by_id))
             // .with_state(self.clone())
+            .route("/followings/:user_id", get(Self::get_user_followings))
+            .route("/followers/:user_id", get(Self::get_user_followers))
+            .route("/followings", get(Self::get_followings))
+            .route("/:user_id", get(Self::act_unfollow))
+            .with_state(self.clone())
             .route("/", post(Self::act_follower)
             .get(Self::get_followers))
             .with_state(self.clone()))
@@ -145,6 +229,21 @@ impl FollowerController {
                 Ok(Json(res))
             },
             FollowerAction::Unfollow(_) => todo!(),
+        }
+    }
+
+    pub async fn act_unfollow(
+        State(ctrl): State<FollowerController>,
+        Extension(auth): Extension<Option<Authorization>>,
+        Path(UserPath { user_id }): Path<UserPath>,
+        Json(body): Json<FollowerByIdAction>,
+    ) -> Result<Json<Follower>> {
+        tracing::debug!("act_unfollow {:?}", body);
+        match body {
+            FollowerByIdAction::Delete(_) => {
+                let res = ctrl.delete(user_id, auth).await?;
+                Ok(Json(res))
+            }
         }
     }
 
@@ -167,23 +266,7 @@ impl FollowerController {
     //     }
     // }
 
-    // pub async fn get_news_by_id(
-    //     State(ctrl): State<FollowerController>,
-    //     Extension(_auth): Extension<Option<Authorization>>,
-    //     Path(NewsPath { id }): Path<NewsPath>,
-    // ) -> Result<Json<News>> {
-    //     tracing::debug!("get_news {:?}", id);
-
-    //     Ok(Json(
-    //         News::query_builder()
-    //             .id_equals(id)
-    //             .query()
-    //             .map(News::from)
-    //             .fetch_one(&ctrl.pool)
-    //             .await?,
-    //     ))
-    // }
-
+    // Fetch the all followers of the authenticated user
     pub async fn get_followers(
         State(ctrl): State<FollowerController>,
         Extension(auth): Extension<Option<Authorization>>,
@@ -193,7 +276,52 @@ impl FollowerController {
 
         match q {
             FollowerParam::Query(param) => {
-                Ok(Json(FollowerGetResponse::Query(ctrl.query(auth, param).await?)))
+                Ok(Json(FollowerGetResponse::Query(ctrl.query_followers(auth, param).await?)))
+            }
+        }
+    }
+
+    // Fetch the all followings of the authenticated user
+    pub async fn get_followings(
+        State(ctrl): State<FollowerController>,
+        Extension(auth): Extension<Option<Authorization>>,
+        Query(q): Query<FollowerParam>,
+    ) -> Result<Json<FollowerGetResponse>> {
+        tracing::debug!("list_followings {:?}", q);
+
+        match q {
+            FollowerParam::Query(param) => {
+                Ok(Json(FollowerGetResponse::Query(ctrl.query_followings(auth, param).await?)))
+            }
+        }
+    }
+
+    pub async fn get_user_followings(
+        State(ctrl): State<FollowerController>,
+        Extension(auth): Extension<Option<Authorization>>,
+        Query(q): Query<FollowerParam>,
+        Path(UserPath { user_id }): Path<UserPath>,
+    ) -> Result<Json<FollowerGetResponse>> {
+        tracing::debug!("list_users_followings {:?}", q);
+
+        match q {
+            FollowerParam::Query(param) => {
+                Ok(Json(FollowerGetResponse::Query(ctrl.query_user_followings(user_id, auth, param).await?)))
+            }
+        }
+    }
+
+    pub async fn get_user_followers(
+        State(ctrl): State<FollowerController>,
+        Extension(auth): Extension<Option<Authorization>>,
+        Query(q): Query<FollowerParam>,
+        Path(UserPath { user_id }): Path<UserPath>,
+    ) -> Result<Json<FollowerGetResponse>> {
+        tracing::debug!("list_users_followings {:?}", q);
+
+        match q {
+            FollowerParam::Query(param) => {
+                Ok(Json(FollowerGetResponse::Query(ctrl.query_user_followers(user_id, auth, param).await?)))
             }
         }
     }

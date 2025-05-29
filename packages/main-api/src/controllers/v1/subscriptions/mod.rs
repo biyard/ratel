@@ -46,7 +46,7 @@ impl SubscriptionController {
             SubscriptionAction::Subscribe(req) => {
                 let _ = Json(ctrl.subscribe(req).await.map_err(|e| {
                     tracing::error!("failed to insert new email subscriber: {:?}", e);
-                    Error::BadRequest
+                    Error::DuplicatedSubscribe
                 })?);
                 Ok(Json("ok".to_string()))
             }
