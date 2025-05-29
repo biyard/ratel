@@ -1,11 +1,14 @@
 use bdk::prelude::*;
 use dto::{
-    Feed, MyInfo, Space, SpaceType, TotalInfo, TotalInfoQuery, TotalInfoSummary,
+    Feed, MyInfo, Space, SpaceForm, SpaceType, TotalInfo, TotalInfoQuery, TotalInfoSummary,
     dioxus_popup::PopupService,
 };
 
 use crate::{
-    config, pages::components::CreateSpacePopup, route::Route, services::user_service::UserService,
+    config,
+    pages::components::{CreateSpacePopup, SelectSpaceFormPopup},
+    route::Route,
+    services::user_service::UserService,
 };
 
 #[derive(Clone, Copy, DioxusController)]
@@ -84,13 +87,14 @@ impl Controller {
         user.logout().await;
     }
 
-    pub async fn create(&mut self, user_ids: Vec<i64>) {
+    pub async fn create(&mut self, user_ids: Vec<i64>, space_form: SpaceForm) {
         match Space::get_client(config::get().main_api_endpoint)
-            .create_space(SpaceType::Post, self.id, user_ids)
+            .create_space(SpaceType::Post, space_form, self.id, user_ids)
             .await
         {
             Ok(_) => {
                 tracing::info!("success to create space");
+                self.feed.restart();
             }
             Err(e) => {
                 btracing::error!(
@@ -102,7 +106,15 @@ impl Controller {
     }
 
     pub fn enter_space(&mut self) {
-        self.nav.replace(Route::IndexPage {});
+        let space_id = match self.feed() {
+            Ok(v) => v.spaces[0].id,
+            Err(_) => 0,
+        };
+
+        self.nav.replace(Route::SpacePage {
+            feed_id: self.id,
+            id: space_id,
+        });
     }
 
     pub fn create_space(&mut self) {
@@ -117,14 +129,35 @@ impl Controller {
                 CreateSpacePopup {
                     lang: self.lang,
                     users,
-                    onsend: move |ids: Vec<i64>| async move {
+                    onsend: move |ids: Vec<i64>| {
                         tracing::debug!("selected user ids: {:?}", ids);
-                        ctrl.create(ids).await;
-                        ctrl.popup.close();
+                        ctrl.open_select_space_form_popup_modal(ids);
                     },
                 }
             })
             .with_title("Invite to Committee");
+    }
+
+    pub fn open_select_space_form_popup_modal(&mut self, ids: Vec<i64>) {
+        let mut ctrl = *self;
+
+        self.popup
+            .open(rsx! {
+                SelectSpaceFormPopup {
+                    lang: self.lang,
+                    onsend: {
+                        move |form: SpaceForm| {
+                            let ids = ids.clone();
+                            async move {
+                                tracing::debug!("space form: {:?}", form);
+                                ctrl.create(ids.clone(), form).await;
+                                ctrl.popup.close();
+                            }
+                        }
+                    },
+                }
+            })
+            .with_title("Select a Space Form");
     }
 
     pub fn prev_page(&self) {

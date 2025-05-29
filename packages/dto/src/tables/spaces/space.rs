@@ -18,6 +18,10 @@ pub struct Space {
     #[api_model(summary, type = INTEGER, action = [create_space])]
     #[serde(default)]
     pub space_type: SpaceType,
+    #[api_model(version = v0.1, summary, type = INTEGER, action = [create_space])]
+    #[serde(default)]
+    pub space_form: SpaceForm,
+
     #[api_model(summary, many_to_one = users)]
     pub user_id: i64,
     #[api_model(summary, many_to_one = industries)]
@@ -33,10 +37,22 @@ pub struct Space {
     #[api_model(summary , type = INTEGER)]
     #[serde(default)]
     pub content_type: ContentType,
+    #[api_model(summary, version = v0.1, type = INTEGER)]
+    #[serde(default)]
+    pub status: SpaceStatus,
+    #[api_model(version = v0.1, summary, type = JSONB)]
+    #[serde(default)]
+    pub files: Vec<File>,
 
     #[api_model(one_to_many = space_members, foreign_key = space_id)]
     #[serde(default)]
     pub members: Vec<SpaceMember>,
+    #[api_model(summary, one_to_many = space_contracts, foreign_key = space_id)]
+    #[serde(default)]
+    pub contracts: Vec<SpaceContract>,
+    #[api_model(summary, one_to_many = space_holders, foreign_key = space_id)]
+    #[serde(default)]
+    pub holders: Vec<SpaceHolder>,
 
     #[api_model(summary, many_to_many = space_users, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = space_id, aggregator = count, unique)]
     #[serde(default)]
@@ -50,6 +66,26 @@ pub struct Space {
     #[api_model(summary)]
     #[serde(default)]
     pub shares: i64,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub enum SpaceStatus {
+    #[default]
+    Draft = 1,
+    InProgress = 2,
+    Finish = 3,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub enum SpaceForm {
+    #[default]
+    Legislation = 1,
+
+    Poll = 2,
+    Deliberation = 3,
+    Nft = 4,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]
@@ -76,7 +112,7 @@ pub enum ContentType {
 
 pub use bdk::prelude::*;
 
-use crate::SpaceMember;
+use crate::{SpaceContract, SpaceHolder, SpaceMember};
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]

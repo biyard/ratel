@@ -34,7 +34,14 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         USBillWriter,
         HKBillWriter,
         CHBillWriter,
-        EUBillWriter
+        EUBillWriter,
+        EventLog,
+        Space,
+        SpaceComment,
+        SpaceUser,
+        SpaceMember,
+        SpaceContract,
+        SpaceHolder,
     );
 
     tracing::info!("Migration done");

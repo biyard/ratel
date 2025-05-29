@@ -30,6 +30,8 @@ pub async fn handle_file_upload(file_engine: Arc<dyn FileEngine>, api: BackendAp
                 let file_name_copy = file_name.clone();
                 let ext = file_name.rsplitn(2, '.').nth(0).unwrap_or("").to_string();
 
+                tracing::debug!("file type: {:?}", ext.clone());
+
                 let file_type = FileType::from_str(&ext.clone());
                 let file_type = if file_type.is_ok() {
                     Some(file_type.unwrap())
