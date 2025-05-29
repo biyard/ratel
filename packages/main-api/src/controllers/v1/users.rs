@@ -189,10 +189,16 @@ impl UserControllerV1 {
     }
 
     #[instrument]
-    pub async fn check_email(&self, req: UserReadAction) -> Result<Json<User>> {
-        let user = self
-            .users
-            .find_one(&req)
+    pub async fn check_email(
+        &self,
+        UserReadAction { email, .. }: UserReadAction,
+    ) -> Result<Json<User>> {
+        let user = User::query_builder()
+            .email_equals(email.ok_or(Error::InvalidEmail)?)
+            .user_type_equals(UserType::Individual)
+            .query()
+            .map(User::from)
+            .fetch_one(&self.pool)
             .await
             .map_err(|_| Error::NotFound)?;
 
@@ -200,8 +206,18 @@ impl UserControllerV1 {
     }
 
     #[instrument]
-    pub async fn user_info(&self, req: UserReadAction) -> Result<Json<User>> {
-        let user = self.users.find_one(&req).await?;
+    pub async fn user_info(
+        &self,
+        UserReadAction { principal, .. }: UserReadAction,
+    ) -> Result<Json<User>> {
+        let user = User::query_builder()
+            .principal_equals(principal.ok_or(Error::InvalidUser)?)
+            .user_type_equals(UserType::Individual)
+            .query()
+            .map(User::from)
+            .fetch_one(&self.pool)
+            .await
+            .map_err(|_| Error::NotFound)?;
 
         Ok(Json(user))
     }
