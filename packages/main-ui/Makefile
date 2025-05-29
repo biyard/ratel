@@ -19,8 +19,10 @@ DXFLAGS ?=
 BUILD_ENV ?= ENV=$(ENV) VERSION=$(VERSION) COMMIT=$(COMMIT) RUST_LOG=$(RUST_LOG) ENV=$(ENV) DOMAIN=${DOMAIN} AWS_REGION=${REGION} AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY} SERVICE=$(SERVICE) WORKSPACE_ROOT=$(WORKSPACE_ROOT) BASE_URL=$(BASE_URL) MAIN_API_ENDPOINT=$(MAIN_API_ENDPOINT) REDIRECT_URI=$(REDIRECT_URI) RUSTFLAGS="$(RUSTFLAGS)"
 
 # Apple Silicon WebAssembly compilation settings
-WASM_ENV = CC_wasm32_unknown_unknown=/opt/homebrew/opt/llvm/bin/clang \
-	AR_wasm32_unknown_unknown=/opt/homebrew/opt/llvm/bin/llvm-ar \
+# Dynamically detect Homebrew prefix to support different installation paths
+HOMEBREW_PREFIX ?= $(shell command -v brew >/dev/null 2>&1 && brew --prefix || echo "/opt/homebrew")
+WASM_ENV = CC_wasm32_unknown_unknown=$(HOMEBREW_PREFIX)/opt/llvm/bin/clang \
+	AR_wasm32_unknown_unknown=$(HOMEBREW_PREFIX)/opt/llvm/bin/llvm-ar \
 	CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_LINKER=rust-lld
 
 setup.tool:

@@ -101,10 +101,10 @@ Our ultimate goal is to create a **fair, transparent, and innovation-friendly cr
 
 Make sure you have the following tools installed:
 
-- **Rust & Cargo**: [Install Rust](https://rustup.rs/)
-- **Node.js & npm**: [Install Node.js](https://nodejs.org/)
-- **Java 11+**: `brew install openjdk@11` (for Firebase emulator)
-- **PostgreSQL**: `brew install postgresql`
+* **Rust & Cargo**: [Install Rust](https://rustup.rs/)
+* **Node.js & npm**: [Install Node.js](https://nodejs.org/)
+* **Java 11+**: `brew install openjdk@11` (for Firebase emulator)
+* **PostgreSQL**: `brew install postgresql`
 
 ### Development Workflow
 
@@ -137,9 +137,9 @@ make stop
 When you run `make start`, the following services will be started:
 
 - **🔥 Firebase Emulator Suite**
-  - Auth: `localhost:9099`
-  - Firestore: `localhost:8081` 
-  - UI: `localhost:4000`
+  * Auth: `localhost:9099`
+  * Firestore: `localhost:8081` 
+  * UI: `localhost:4000`
 
 - **🌐 Backend API** (`localhost:3000`)
   - Rust/Axum server with hot reload
@@ -147,9 +147,9 @@ When you run `make start`, the following services will be started:
   - Auto-migration on startup
 
 - **🎨 Frontend** (`localhost:8080`)
-  - Dioxus/Rust WASM application
-  - Hot reload enabled
-  - Tailwind CSS integration
+  * Dioxus/Rust WASM application
+  * Hot reload enabled
+  * Tailwind CSS integration
 
 ### Log Files
 
@@ -168,10 +168,10 @@ make status
 ### Troubleshooting
 
 **Frontend compilation errors (ring crate):**
-The Makefile automatically sets WASM compilation environment variables to fix common issues.
+The Makefile automatically sets WASM compilation environment variables to address common issues.
 
 **Backend compilation taking long:**
-First-time compilation can take 5-10 minutes. Subsequent builds are much faster due to incremental compilation.
+First-time compilation can take 5–10 minutes. Subsequent builds are much faster due to incremental compilation.
 
 **Database connection issues:**
 Make sure PostgreSQL is running: `brew services start postgresql`
@@ -193,7 +193,7 @@ ratel/
 ```
 
 📖 **Need help?** Check our detailed guide:
-- [Local Development Guide](LOCAL_DEVELOPMENT.md) - Complete setup and troubleshooting
+* [Local Development Guide](LOCAL_DEVELOPMENT.md) - Complete setup and troubleshooting
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

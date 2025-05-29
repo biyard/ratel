@@ -124,6 +124,8 @@ dev: setup
 	make run-fast
 
 # Start full development environment (all services)
+# SECURITY NOTE: These are development-only credentials
+# Never use these values in production environments
 start: setup
 	@echo "🚀 Starting full development environment..."
 	@echo "🔥 Starting Firebase emulator..."

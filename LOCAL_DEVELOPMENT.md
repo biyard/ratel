@@ -2,6 +2,21 @@
 
 Complete guide for setting up and running Ratel in your local development environment.
 
+## 📋 Table of Contents
+
+- [🎯 Overview](#-overview)
+- [⚡ Quick Start](#-quick-start)
+  - [1. Prerequisites](#1-prerequisites)
+  - [2. Clone and Start](#2-clone-and-start)
+  - [3. Access the Application](#3-access-the-application)
+- [🔥 Firebase Emulator Features](#-firebase-emulator-features)
+- [📁 Project Structure](#-project-structure)
+- [🛠️ Manual Setup (Alternative)](#️-manual-setup-alternative)
+- [🔧 Troubleshooting](#-troubleshooting)
+- [📊 Development Commands](#-development-commands)
+- [🚀 Advanced Configuration](#-advanced-configuration)
+- [❓ FAQ](#-faq)
+
 ## 🎯 Overview
 
 Ratel uses an integrated development environment with:
@@ -60,10 +75,10 @@ That's it! The Makefile will automatically:
 
 Once all services are running, you can access:
 
-- **Frontend**: http://localhost:8080 (Main web application)
-- **Backend API**: http://localhost:3000 (REST API server)
-- **Firebase UI**: http://localhost:4000
-- **Firebase Auth Emulator**: http://localhost:9099
+- **Frontend**: [http://localhost:8080](http://localhost:8080) (Main web application)
+- **Backend API**: [http://localhost:3000](http://localhost:3000) (REST API server)
+- **Firebase UI**: [http://localhost:4000](http://localhost:4000)
+- **Firebase Auth Emulator**: [http://localhost:9099](http://localhost:9099)
 
 ## 🔥 Firebase Emulator Features
 
@@ -76,13 +91,13 @@ The Firebase emulator provides:
 
 ### Testing Authentication
 
-1. Open Firebase UI: http://localhost:4000
+1. Open Firebase UI: [http://localhost:4000](http://localhost:4000)
 2. Go to Authentication tab
 3. Add test users or use the fake Google login
 
 ## 📁 Project Structure
 
-```
+```text
 ratel/
 ├── packages/
 │   ├── main-ui/             # Dioxus frontend
@@ -270,7 +285,7 @@ make start
    make start
    ```
 
-2. **Open the application**: http://localhost:8080
+2. **Open the application**: [http://localhost:8080](http://localhost:8080)
 
 3. **Test login flow**:
    - Click "Login with Google"
@@ -284,7 +299,7 @@ make start
    - Users are stored in the local emulator
 
 5. **Verify in Firebase UI**:
-   - Open http://localhost:4000
+   - Open [http://localhost:4000](http://localhost:4000)
    - Go to Authentication tab
    - Firebase UI should show the logged-in user
 
@@ -292,10 +307,10 @@ make start
 
 ```bash
 # Test backend health
-curl http://localhost:3000/health
+curl [http://localhost:3000/health](http://localhost:3000/health)
 
 # Test API endpoints
-curl http://localhost:3000/api/v1/users
+curl [http://localhost:3000/api/v1/users](http://localhost:3000/api/v1/users)
 ```
 
 ## 🚀 Development Workflow
