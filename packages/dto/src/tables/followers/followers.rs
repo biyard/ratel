@@ -1,8 +1,9 @@
 use bdk::prelude::*;
 use validator::Validate;
+use crate::User;
 
 #[derive(Validate)]
-#[api_model(base = "/v1/followers", table = followers, action = [], action_by_id = [delete])]
+#[api_model(base = "/v1/followers", table = followers, action_by_id = [delete])]
 pub struct Follower {
     #[api_model(summary, primary_key)]
     pub id: i64,
@@ -12,20 +13,30 @@ pub struct Follower {
     pub updated_at: i64,
 
     #[api_model(summary, 
-        many_to_many = followers_users, 
-        foreign_table_name = users, 
-        foreign_primary_key = user_id, 
-        foreign_reference_key = follower_id, 
-        aggregator = count, 
-        action = [follow])]
+        many_to_one = users,
+        action = [unfollow, follow])]
     pub follower_id: i64,
+
+    #[api_model(summary, 
+        many_to_one = users, 
+        action = [unfollow, follow])]
+    pub followed_id: i64,
 
     #[api_model(summary, 
         many_to_many = followers_users, 
         foreign_table_name = users, 
         foreign_primary_key = user_id, 
-        foreign_reference_key = followed_id, 
+        foreign_reference_key = follower_id, 
         aggregator = count, 
-        action = [follow])]
-    pub followed_id: i64,
+        action = [unfollow, follow])]
+    pub followers: Vec<User>,
+
+    #[api_model(summary, 
+        many_to_many = followers_users, 
+        foreign_table_name = users, 
+        foreign_primary_key = user_id, 
+        foreign_reference_key = follower_id, 
+        aggregator = count, 
+        action = [unfollow, follow])]
+    pub followings: Vec<User>,
 }

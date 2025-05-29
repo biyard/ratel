@@ -8,6 +8,7 @@ mod feeds;
 mod news;
 mod presidential_candidates;
 mod quizzes;
+mod followers;
 pub mod subscriptions;
 pub mod supports;
 mod teams;
@@ -44,6 +45,10 @@ pub fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Router> 
         .nest(
             "/supports",
             supports::SupportController::route(pool.clone())?,
+        )
+        .nest(
+            "/followers",
+            followers::FollowerController::new(pool.clone()).route()?,
         )
         .nest(
             "/subscriptions",
