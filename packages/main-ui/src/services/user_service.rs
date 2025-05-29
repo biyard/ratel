@@ -257,15 +257,15 @@ impl UserService {
     ) -> Result<(google_wallet::WalletEvent, String, String, String, String)> {
         let mut firebase = self.firebase.write();
         
-        // 로컬 개발 환경 확인
+        // Check local development environment
         let env = option_env!("ENV").unwrap_or("local");
         let is_local_dev = env == "local" || env == "dev";
         
         let (evt, principal, email, name, profile_url) = if is_local_dev {
-            // 로컬 개발 환경에서는 로컬 스토리지의 기존 키 사용 또는 새로 생성
+            // In local development environment, use existing key from local storage or generate new one
             tracing::debug!("Using local development environment");
             
-            // 먼저 로컬 스토리지에서 키 로드 시도
+            // First try to load key from local storage
             if let Some(principal) = firebase.try_setup_from_storage() {
                 tracing::debug!("Using existing key from local storage");
                 let (email, name, profile_url) = (
@@ -279,10 +279,10 @@ impl UserService {
                 
                 (google_wallet::WalletEvent::Login, principal, email, name, profile_url)
             } else {
-                // 로컬 키가 없으면 새로 생성
+                // Generate new local key if none exists
                 tracing::debug!("Generating new local development key");
                 
-                // Ed25519 키페어 생성
+                // Generate Ed25519 keypair
                 use ring::rand::SystemRandom;
                 use ring::signature::Ed25519KeyPair;
                 use base64::{Engine, engine::general_purpose};
@@ -314,7 +314,7 @@ impl UserService {
                 }
             }
         } else {
-            // 프로덕션 환경에서는 기존 구글 드라이브 로직 사용
+            // In production environment, use existing Google Drive logic
             match firebase
                 .request_wallet_with_google_and_keypair(self.anonymous.private_key().as_ref())
                 .await
@@ -396,7 +396,7 @@ impl UserService {
         {
             Ok(v) => v,
             Err(e) => {
-                // 중복 키 오류인 경우 기존 사용자로 로그인 시도
+                // If duplicate key error, try to login with existing user
                 if e.to_string().contains("duplicate key value violates unique constraint") {
                     tracing::debug!("User already exists, attempting login with email: {}", email);
                     match cli.login(email.to_string()).await {
