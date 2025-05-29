@@ -38,6 +38,16 @@ pub enum Error {
     UserAlreadyExists,
     #[translate(en = "Could not find a valid user", ko = "유효하지 않은 사용자입니다.")]
     InvalidUser,
+    #[translate(
+        en = "You must pass a valid email",
+        ko = "유효한 이메일을 입력해야 합니다."
+    )]
+    InvalidEmail,
+    #[translate(
+        en = "You must pass a valid principal",
+        ko = "유효한 계정 주소를 입력해야 합니다."
+    )]
+    InvalidPrinciapl,
     #[translate(en = "Please change team name.")]
     DuplicatedTeamName,
 
