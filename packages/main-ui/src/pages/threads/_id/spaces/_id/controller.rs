@@ -54,30 +54,22 @@ impl Controller {
             my_info,
         };
 
-        ctrl.check_permission();
-
-        Ok(ctrl)
-    }
-
-    pub fn check_permission(&self) {
-        let nav = use_navigator();
-
-        let (user_id, members) = match self.space() {
-            Ok(v) => (v.user_id, v.members),
+        //FIXME: fix to check with backend logic
+        let (user_id, members) = match space.suspend() {
+            Ok(v) => {
+                let v = v();
+                (v.user_id, v.members)
+            }
             Err(_) => (0, vec![]),
         };
-
         let members: Vec<i64> = members.iter().map(|v| v.user_id).collect();
-
-        let ctrl = self.clone();
-
-        use_effect(move || {
-            let id = ctrl.clone().my_info().id;
-            if id != 0 {
-                if user_id != id && !members.contains(&id) {
-                    nav.replace(Route::LandingPage {});
-                }
+        let id = my_info().id;
+        if id != 0 {
+            if user_id != id && !members.contains(&id) {
+                nav.replace(Route::LandingPage {});
             }
-        });
+        }
+
+        Ok(ctrl)
     }
 }

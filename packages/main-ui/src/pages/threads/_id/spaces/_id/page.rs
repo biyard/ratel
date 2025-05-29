@@ -16,16 +16,18 @@ pub fn SpacePage(
 
     let space_form = space.space_form;
 
+    tracing::debug!("space {:?}", space);
+
     rsx! {
         by_components::meta::MetaPage { title: tr.title }
 
-        if space_form == SpaceForm::Legislation {
+        if space_form == SpaceForm::Legislation && space.id != 0 {
             LegislationPage { lang, feed_id, id }
-        } else if space_form == SpaceForm::Poll {
+        } else if space_form == SpaceForm::Poll && space.id != 0 {
             PollPage { lang, feed_id, id }
-        } else if space_form == SpaceForm::Deliberation {
+        } else if space_form == SpaceForm::Deliberation && space.id != 0 {
             DeliberationPage { lang, feed_id, id }
-        } else {
+        } else if space_form == SpaceForm::Nft && space.id != 0 {
             NftPage { lang, feed_id, id }
         }
     }
