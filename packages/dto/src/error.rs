@@ -35,6 +35,12 @@ pub enum Error {
         en = "You might have already registered",
         ko = "이미 등록된 사용자입니다."
     )]
+    NotFollowingUser,
+    #[translate(en = "Not following the selected user", ko = "유효하지 않은 사용자입니다.")]
+    AlreadyFollowing,
+    #[translate(en = "Already following the selected user", ko = "유효하지 않은 사용자입니다.")]
+    DuplicatedSubscribe,
+    #[translate(en = "Already subscribed to newsletter", ko = "유효하지 않은 사용자입니다.")]
     UserAlreadyExists,
     #[translate(en = "Could not find a valid user", ko = "유효하지 않은 사용자입니다.")]
     InvalidUser,
