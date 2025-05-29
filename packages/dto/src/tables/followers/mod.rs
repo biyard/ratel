@@ -1,3 +1,3 @@
-mod follower;
+mod followers;
 
-pub use follower::*;
+pub use followers::*;

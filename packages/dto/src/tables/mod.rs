@@ -29,6 +29,7 @@ mod supports;
 mod us_bills;
 mod users;
 mod votes;
+mod followers;
 
 pub use advocacy_campaigns::*;
 pub use assembly_members::*;
@@ -61,3 +62,4 @@ pub use supports::*;
 pub use us_bills::*;
 pub use users::*;
 pub use votes::*;
+pub use followers::*;
