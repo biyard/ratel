@@ -9,6 +9,7 @@
   "license": "ISC",
   "devDependencies": {
     "@playwright/test": "^1.51.1",
-    "@types/node": "^22.13.17"
+    "@types/node": "^22.13.17",
+    "tailwindcss": "^4.1.7"
   }
 }

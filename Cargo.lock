@@ -4822,6 +4822,7 @@ dependencies = [
  "bdk",
  "candid",
  "chrono",
+ "dioxus 0.6.3 (git+https://github.com/hackartists/dioxus.git)",
  "dioxus-motion",
  "dioxus-oauth",
  "dto",

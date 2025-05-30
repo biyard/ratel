@@ -39,6 +39,7 @@ simple_asn1 = "0.6.2"
 candid = "0.10.11"
 gloo-storage = "0.3.0"
 html2text = "0.5"
+dioxus = { workspace = true, features = ["web"] }
 
 [features]
 default = []
