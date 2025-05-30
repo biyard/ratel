@@ -9,7 +9,15 @@ pub struct Controller {
 impl Controller {
     pub fn new(lang: Language) -> std::result::Result<Self, RenderError> {
         let ctrl = Self { lang };
-
         Ok(ctrl)
+    }
+
+    pub fn get_connections(&self) -> Vec<&'static str> {
+        vec![
+            "Alice Johnson",
+            "Bob Smith",
+            "Charlie Wang",
+            "Debbie Patel",
+        ]
     }
 }
