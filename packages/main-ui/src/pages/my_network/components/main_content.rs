@@ -77,7 +77,7 @@ pub fn MainContent() -> Element {
                     {(0..4).map(|_| rsx!(
                         div { class: "bg-neutral-800 p-4 rounded flex justify-between items-center p-4",
                             div { class: "flex items-center space-x-4",
-                                div { class: "w-10 h-10 rounded-full bg-neutral-700" }
+                                div { class: "w-40 h-40 rounded-full bg-neutral-700" }
                                 div {
                                     div { class: "font-semibold", "User name" }
                                     div { class: "text-sm text-gray-400", "Candidate for State Senate, NY, Reform Alliance" }
