@@ -14,10 +14,10 @@ impl Controller {
 
     pub fn get_connections(&self) -> Vec<&'static str> {
         vec![
-            "Alice Johnson",
-            "Bob Smith",
-            "Charlie Wang",
-            "Debbie Patel",
+            "Smith Johnson",
+            "Bob Anderson",
+            "Charlie JUlie",
+            "Debbie Samuel",
         ]
     }
 }

@@ -15,14 +15,11 @@ This is a scoped and functional implementation of the **My Network** feature as 
 - `README.md`: Documentation
 
 ## 🖼 Screenshot
-
-> ⚠️ Due to local setup issues with `dioxus serve`, I couldn’t take a live screenshot.  
-However, the component is fully implemented and visually structured using TailwindCSS.
+> ⚠️ Due to local setup issues with `dioxus serve`, I couldn’t take a live screenshot. However, the component is fully implemented and visually structured using TailwindCSS.
 
 ## 📌 Notes
-
 - Fully scoped to reflect UI/logic separation
 - Ready for integration with future backend or async data
-- Responsive styling applied using Tailwind classes
+- Responsive styling applied using Tailwind css
 
 ---
