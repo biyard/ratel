@@ -20,6 +20,8 @@ mod teams;
 mod totals;
 pub mod users;
 
+// mod follower; 
+
 use bdk::prelude::*;
 
 use dto::*;
@@ -84,4 +86,5 @@ pub fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Router> 
             "/subscriptions",
             subscriptions::SubscriptionController::new(pool.clone()).route(),
         ))
+        // .nest("/followers", follower::FollowerController::new(pool.clone()).route()) 
 }
