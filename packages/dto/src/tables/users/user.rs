@@ -50,6 +50,14 @@ pub struct User {
     pub html_contents: String,
 }
 
+impl User {
+    pub fn is_admin(&self) -> bool {
+        self.groups
+            .iter()
+            .any(|g| g.permissions == 0xffffffffffffffffu64 as i64)
+    }
+}
+
 #[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub enum UserType {
