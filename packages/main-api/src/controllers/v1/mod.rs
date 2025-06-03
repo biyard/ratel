@@ -20,6 +20,7 @@ pub mod supports;
 mod teams;
 mod totals;
 pub mod users;
+pub mod suggested_users;
 
 use bdk::prelude::*;
 
@@ -85,5 +86,8 @@ pub fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Router> 
         .nest(
             "/subscriptions",
             subscriptions::SubscriptionController::new(pool.clone()).route(),
+        ).nest(
+            "/suggested-users",
+            suggested_users::SuggestedUserController::new(pool.clone()).route()?,
         ))
 }
