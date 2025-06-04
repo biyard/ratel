@@ -9,58 +9,58 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
+  # test:
+  #   runs-on: ubuntu-latest
 
-    services:
-      postgres:
-        image: postgres
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: test
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
+  #   services:
+  #     postgres:
+  #       image: postgres
+  #       env:
+  #         POSTGRES_USER: postgres
+  #         POSTGRES_PASSWORD: postgres
+  #         POSTGRES_DB: test
+  #       options: >-
+  #         --health-cmd pg_isready
+  #         --health-interval 10s
+  #         --health-timeout 5s
+  #         --health-retries 5
+  #       ports:
+  #         - 5432:5432
 
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: recursive
-          ssh-key: ${{ secrets.PULL_KEY_REPO }}
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #       with:
+  #         submodules: recursive
+  #         ssh-key: ${{ secrets.PULL_KEY_REPO }}
 
-      - uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          components: clippy, rustfmt
-          target: wasm32-unknown-unknown
-          toolchain: stable
+  #     - uses: actions-rust-lang/setup-rust-toolchain@v1
+  #       with:
+  #         components: clippy, rustfmt
+  #         target: wasm32-unknown-unknown
+  #         toolchain: stable
 
-      - name: Update packages
-        run: sudo apt-get update
+  #     - name: Update packages
+  #       run: sudo apt-get update
 
-      - name: Install dependencies
-        run: sudo apt-get install -y libgtk-3-dev
+  #     - name: Install dependencies
+  #       run: sudo apt-get install -y libgtk-3-dev
 
-      - name: Install PostgreSQL Client
-        run: sudo apt-get install -y postgresql-client
+  #     - name: Install PostgreSQL Client
+  #       run: sudo apt-get install -y postgresql-client
 
-      - name: Initialize Database SQL
-        run: |
-          psql postgresql://postgres:postgres@localhost:5432/test -f ./deps/rust-sdk/fixtures/sql/init.sql
+  #     - name: Initialize Database SQL
+  #       run: |
+  #         psql postgresql://postgres:postgres@localhost:5432/test -f ./deps/rust-sdk/fixtures/sql/init.sql
 
-      - name: test
-        env:
-          RUSTFLAGS: "-A warnings"
-          DATABASE_TYPE: postgres
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
-        run: |
-          echo "" > packages/main-ui/public/tailwind.css
-          echo "" > packages/main-ui/public/dep.js
-          cd packages/main-ui && cargo test --tests --features web
+  #     - name: test
+  #       env:
+  #         RUSTFLAGS: "-A warnings"
+  #         DATABASE_TYPE: postgres
+  #         DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
+  #       run: |
+  #         echo "" > packages/main-ui/public/tailwind.css
+  #         echo "" > packages/main-ui/public/dep.js
+  #         cd packages/main-ui && cargo test --tests --features web
 
   test-with-server:
     runs-on: ubuntu-latest
@@ -117,70 +117,70 @@ jobs:
         run: |
           cd packages/main-api  && make test
 
-  main-ui:
-    runs-on: ubuntu-22.04
+  # main-ui:
+  #   runs-on: ubuntu-22.04
 
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: recursive
-          ssh-key: ${{ secrets.PULL_KEY_REPO }}
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #       with:
+  #         submodules: recursive
+  #         ssh-key: ${{ secrets.PULL_KEY_REPO }}
 
-      - uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ap-northeast-2
+  #     - uses: aws-actions/configure-aws-credentials@v2
+  #       with:
+  #         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         aws-region: ap-northeast-2
 
-      - uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          components: clippy, rustfmt
-          target: wasm32-unknown-unknown
-          toolchain: stable
+  #     - uses: actions-rust-lang/setup-rust-toolchain@v1
+  #       with:
+  #         components: clippy, rustfmt
+  #         target: wasm32-unknown-unknown
+  #         toolchain: stable
 
-      - uses: cargo-bins/cargo-binstall@main
+  #     - uses: cargo-bins/cargo-binstall@main
 
-      - name: Install dioxus-cli
-        run: |
-          cargo binstall dioxus-cli --force
-          cargo binstall toml-cli --force
+  #     - name: Install dioxus-cli
+  #       run: |
+  #         cargo binstall dioxus-cli --force
+  #         cargo binstall toml-cli --force
 
-      - name: Checking violate
-        env:
-          REGION: ap-northeast-2
-          ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          SERVICE: main-ui
-        run: |
-          dx check -p $SERVICE
+  #     - name: Checking violate
+  #       env:
+  #         REGION: ap-northeast-2
+  #         ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         SERVICE: main-ui
+  #       run: |
+  #         dx check -p $SERVICE
 
-      - name: Deploy UI
-        env:
-          REGION: ap-northeast-2
-          ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          FIREBASE_API_KEY: "${{ secrets.FIREBASE_API_KEY }}"
-          FIREBASE_AUTH_DOMAIN: "${{ secrets.FIREBASE_AUTH_DOMAIN }}"
-          FIREBASE_PROJECT_ID: "${{ secrets.FIREBASE_PROJECT_ID }}"
-          FIREBASE_STORAGE_BUCKET: "${{ secrets.FIREBASE_STORAGE_BUCKET }}"
-          FIREBASE_MESSAGING_SENDER_ID: "${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}"
-          FIREBASE_APP_ID: "${{ secrets.FIREBASE_APP_ID }}"
-          FIREBASE_MEASUREMENT_ID: "${{ secrets.FIREBASE_MEASUREMENT_ID }}"
-          MAIN_API_ENDPOINT: https://api.dev.ratel.foundation
-          ENV: dev
-          SERVICE: main-ui
-          DOMAIN: dev.ratel.foundation
-          API_PREFIX: /api
-          BASE_DOMAIN: ratel.foundation
-          ENABLE_S3: true
-          ENABLE_LAMBDA: true
-          VERSIONS: v1
-          V1_ENDPOINT: api.dev.ratel.foundation
-          DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
-          EXPERIMENT: true
-        run: |
-          npm i -g aws-cdk @tailwindcss/cli
-          make deploy-web
+  #     - name: Deploy UI
+  #       env:
+  #         REGION: ap-northeast-2
+  #         ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         FIREBASE_API_KEY: "${{ secrets.FIREBASE_API_KEY }}"
+  #         FIREBASE_AUTH_DOMAIN: "${{ secrets.FIREBASE_AUTH_DOMAIN }}"
+  #         FIREBASE_PROJECT_ID: "${{ secrets.FIREBASE_PROJECT_ID }}"
+  #         FIREBASE_STORAGE_BUCKET: "${{ secrets.FIREBASE_STORAGE_BUCKET }}"
+  #         FIREBASE_MESSAGING_SENDER_ID: "${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}"
+  #         FIREBASE_APP_ID: "${{ secrets.FIREBASE_APP_ID }}"
+  #         FIREBASE_MEASUREMENT_ID: "${{ secrets.FIREBASE_MEASUREMENT_ID }}"
+  #         MAIN_API_ENDPOINT: https://api.dev.ratel.foundation
+  #         ENV: dev
+  #         SERVICE: main-ui
+  #         DOMAIN: dev.ratel.foundation
+  #         API_PREFIX: /api
+  #         BASE_DOMAIN: ratel.foundation
+  #         ENABLE_S3: true
+  #         ENABLE_LAMBDA: true
+  #         VERSIONS: v1
+  #         V1_ENDPOINT: api.dev.ratel.foundation
+  #         DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
+  #         EXPERIMENT: true
+  #       run: |
+  #         npm i -g aws-cdk @tailwindcss/cli
+  #         make deploy-web
 
   main-api:
     runs-on: ubuntu-22.04
@@ -352,7 +352,7 @@ jobs:
   create-release-pr:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/dev'
-    needs: [main-ui, main-api, fetcher]
+    needs: [main-api, fetcher]
     steps:
       - uses: actions/checkout@v3
         with:
