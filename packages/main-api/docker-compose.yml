@@ -22,5 +22,8 @@ services:
       HASURA_GRAPHQL_DATABASE_URL: ${DATABASE_URL}
       HASURA_GRAPHQL_ENABLE_CONSOLE: "true" # set to "false" to disable console
       HASURA_GRAPHQL_ADMIN_SECRET: ratel
-      HASURA_GRAPHQL_AUTH_HOOK: http://192.168.0.46:3000/auth/hasura
+      HASURA_GRAPHQL_AUTH_HOOK: https://api.dev.ratel.foundation/v1/auth/hasura
       HASURA_GRAPHQL_AUTH_HOOK_MODE: GET
+      HASURA_GRAPHQL_ENABLED_LOG_TYPES: "startup,http-log,webhook-log,query-log"
+      HASURA_GRAPHQL_LOG_LEVEL: debug
+      HASURA_GRAPHQL_DEV_MODE: true
