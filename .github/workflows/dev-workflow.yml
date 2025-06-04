@@ -352,7 +352,7 @@ jobs:
   create-release-pr:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/dev'
-    needs: [main-ui, main-api, fetcher]
+    needs: [main-api, fetcher]
     steps:
       - uses: actions/checkout@v3
         with:
