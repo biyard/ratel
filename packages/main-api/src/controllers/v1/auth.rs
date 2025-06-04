@@ -114,7 +114,7 @@ impl AuthController {
 )]
 pub struct HasuraAuthRequest {
     pub headers: std::collections::HashMap<String, String>,
-    pub request: HasuraAuthInnerRequest,
+    pub request: Option<HasuraAuthInnerRequest>,
 }
 
 #[derive(
@@ -126,6 +126,7 @@ pub struct HasuraAuthRequest {
     schemars::JsonSchema,
     aide::OperationIo,
 )]
+#[serde(rename_all = "camelCase")]
 pub struct HasuraAuthInnerRequest {
     pub variables: std::collections::HashMap<String, serde_json::Value>,
     pub operation_name: String,
