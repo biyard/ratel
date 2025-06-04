@@ -37,7 +37,7 @@ impl SuggestedUserController {
 
         let user_id = extract_user_id(&self.pool, auth.clone()).await;        
         if user_id.is_err() {
-            return Err(Error::NotFound);
+            return Err(Error::Unauthorized);
         }        
         let user_id = user_id.unwrap();
 
@@ -104,7 +104,6 @@ impl SuggestedUserController {
                 tracing::error!("Failed to fetch suggested users for user {}: {:?}", user_id, e);
                 Error::DatabaseException(e.to_string())
             })?;
-        let total_count = suggested.len() as i64;
         
         for i in suggested.iter() {
             tracing::debug!("Suggested User: {:?}", i);
@@ -122,12 +121,28 @@ impl SuggestedUserController {
         auth: Option<Authorization>,
         param: SuggestedUserUpdateRequest,
     ) -> Result<()> {
-        let res = self.repo
-            .update(id, param.into()).await?;
-
-        if res.user_id != extract_user_id(&self.pool, auth.clone()).await? {
+        // Use query_builder instead of the get method
+        let suggestion = SuggestedUser::query_builder()
+            .id_equals(id)
+            .query()
+            .map(SuggestedUser::from)
+            .fetch_optional(&self.pool)
+            .await
+            .map_err(|e| Error::DatabaseException(e.to_string()))?;
+            
+        if suggestion.is_none() {
+            tracing::error!("Suggestion with id {} not found", id);
+            return Err(Error::NotFound);
+        }
+        
+        let user_id = extract_user_id(&self.pool, auth.clone()).await?;
+        if suggestion.unwrap().user_id != user_id {
             return Err(Error::Unauthorized);
         }
+
+        let _res = self.repo
+            .update(id, param.into()).await?;
+
         Ok(())
     }
 }
@@ -156,9 +171,9 @@ impl SuggestedUserController {
         Extension(auth): Extension<Option<Authorization>>,
         Query(q): Query<SuggestedUserParam>,
     ) -> Result<Json<SuggestedUserGetResponse>> {
-        // if auth.is_none() {
-        //     return Err(Error::Unauthorized);
-        // }
+        if auth.is_none() {
+            return Err(Error::Unauthorized);
+        }
         match q {
         SuggestedUserParam::Query(param) => {
             if param.size() > 20 {

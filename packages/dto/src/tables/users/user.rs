@@ -43,7 +43,7 @@ pub struct User {
     #[api_model(many_to_many = group_members, foreign_table_name = groups, foreign_primary_key = group_id, foreign_reference_key = user_id)]
     #[serde(default)]
     pub groups: Vec<Group>,
-    #[api_model(one_to_many = suggested_users, foreign_primary_key = user_id)]
+    #[api_model(one_to_many = suggested_users, foreign_key = user_id)]
     #[serde(default)]
     pub suggested_users: Vec<SuggestedUser>,
 
