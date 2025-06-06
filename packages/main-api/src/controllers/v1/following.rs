@@ -261,6 +261,12 @@ mod tests {
             ..Default::default()
         };
 
+        let query_res = cli.query(user1.id, auth.clone(), param.clone()).await.unwrap();
+        let follower_ids: Vec<i64> = query_res.items.iter()
+            .map(|f| f.following_id)
+            .collect();
+        assert!(follower_ids.contains(&user2.id), "User1 should be following user2");
+
         // Test unfollow operation
         let unfollow_result = cli.unfollow(user2.id, auth.clone()).await;
         assert!(unfollow_result.is_ok(), "Should be able to unfollow user2");
