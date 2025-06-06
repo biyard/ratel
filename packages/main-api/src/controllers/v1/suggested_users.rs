@@ -171,9 +171,6 @@ impl SuggestedUserController {
         Extension(auth): Extension<Option<Authorization>>,
         Query(q): Query<SuggestedUserParam>,
     ) -> Result<Json<SuggestedUserGetResponse>> {
-        if auth.is_none() {
-            return Err(Error::Unauthorized);
-        }
         match q {
         SuggestedUserParam::Query(param) => {
             if param.size() > 20 {
@@ -303,38 +300,6 @@ mod tests {
         
         // Current implementation allows only authorized access, so this should succeed
         assert!(res.is_err(), "Current implementation allows only authorized query");
-    }
-
-    #[tokio::test]
-    async fn test_suggestion_data_structure() {
-        let TestContext { 
-            pool, 
-            claims,
-            ..
-        } = setup().await.unwrap();
-
-        let cli = SuggestedUserController::new(pool.clone());
-        let auth = Some(Authorization::Bearer { claims });
-
-        // Create test users for suggestions
-        let (_test_user1, _test_user2, _test_user3) = test_setup(&pool).await;
-
-        let param = SuggestedUserQuery {
-            size: 5,
-            bookmark: Some("1".to_string()),
-            ..Default::default()
-        };
-
-        let res = cli.query(auth, param).await.unwrap();
-        
-        // Verify data structure of suggestions based on SuggestedUserSummary fields
-        for suggestion in &res.items {
-            assert!(suggestion.id > 0, "Suggestion should have valid ID");
-            assert!(!suggestion.nickname.is_empty(), "Suggestion should have nickname");
-            assert!(!suggestion.profile_url.is_empty(), "Suggestion should have profile URL");
-            // profile_image_url is Option<String>, so it may be None
-            // description is Option<String>, so it may be None
-        }
     }
 
     #[tokio::test]

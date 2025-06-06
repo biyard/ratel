@@ -20,7 +20,9 @@ pub mod supports;
 mod teams;
 mod totals;
 pub mod users;
-pub mod suggested_users;
+mod suggested_users;
+mod followers;
+mod following;
 
 use bdk::prelude::*;
 
@@ -89,5 +91,12 @@ pub fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Router> 
         ).nest(
             "/suggested-users",
             suggested_users::SuggestedUserController::new(pool.clone()).route()?,
-        ))
+        ).nest(
+            "/followers",
+            followers::FollowerController::new(pool.clone()).route()?,
+        ).nest(
+            "/following",
+            following::FollowingController::new(pool.clone()).route()?,
+        )
+    )
 }
