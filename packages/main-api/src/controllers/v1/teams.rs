@@ -79,6 +79,8 @@ impl TeamController {
         TeamCreateRequest {
             profile_url,
             username,
+            nickname,
+            html_contents,
         }: TeamCreateRequest,
     ) -> Result<Team> {
         let user_id = extract_user_id(&self.pool, auth).await?;
@@ -89,7 +91,7 @@ impl TeamController {
             .user
             .insert_with_tx(
                 &mut *tx,
-                "".to_string(),
+                nickname,
                 username.clone(),
                 username.clone(),
                 profile_url,
@@ -98,7 +100,7 @@ impl TeamController {
                 UserType::Team,
                 Some(user_id),
                 username,
-                "".to_string(),
+                html_contents,
             )
             .await
             .map_err(|e| {

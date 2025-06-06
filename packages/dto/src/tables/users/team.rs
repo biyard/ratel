@@ -11,6 +11,8 @@ pub struct Team {
     #[api_model(auto = [insert, update])]
     pub updated_at: i64,
 
+    #[api_model(action = create)]
+    pub nickname: String,
     #[api_model(action = create, action_by_id = [update_profile_image])]
     #[validate(url)]
     pub profile_url: String,
@@ -22,6 +24,10 @@ pub struct Team {
     #[api_model(many_to_many = team_members, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = team_id)]
     #[serde(default)]
     pub members: Vec<User>,
+
+    #[api_model(action = create)]
+    #[serde(default)]
+    pub html_contents: String,
 }
 
 impl From<User> for Team {
@@ -33,6 +39,8 @@ impl From<User> for Team {
             profile_url: user.profile_url,
             parent_id: user.parent_id.expect("Team must have parent_id"),
             username: user.username,
+            nickname: user.nickname,
+            html_contents: user.html_contents,
 
             ..Default::default()
         }
