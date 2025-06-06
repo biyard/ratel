@@ -14,6 +14,7 @@ use std::sync::Arc;
 pub struct AssetController {
     config: Arc<AwsConfig>,
     bucket_name: &'static str,
+    bucket_domain: &'static str,
     asset_dir: &'static str,
     expire: u64,
 }
@@ -23,6 +24,7 @@ impl AssetController {
         config: &AwsConfig,
         &BucketConfig {
             name,
+            domain,
             asset_dir,
             expire,
         }: &BucketConfig,
@@ -36,6 +38,7 @@ impl AssetController {
         Self {
             config,
             bucket_name: name,
+            bucket_domain: domain,
             asset_dir,
             expire,
         }
@@ -96,7 +99,7 @@ impl AssetController {
                     Error::AssetError(e.to_string())
                 })?;
             presigned_uris.push(presigned_request.uri().to_string());
-            uris.push(format!("https://{}/{}", ctrl.bucket_name, key));
+            uris.push(format!("https://{}/{}", ctrl.bucket_domain, key));
         }
 
         Ok(Json(AssetPresignedUris {

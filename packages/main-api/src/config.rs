@@ -23,6 +23,7 @@ pub struct Config {
 #[derive(Debug)]
 pub struct BucketConfig {
     pub name: &'static str,
+    pub domain: &'static str,
     pub asset_dir: &'static str,
     pub expire: u64,
 }
@@ -42,6 +43,7 @@ impl Default for Config {
             auth: AuthConfig::default(),
             bucket: BucketConfig {
                 name: option_env!("BUCKET_NAME").expect("You must set BUCKET_NAME"),
+                domain: option_env!("BUCKET_DOMAIN").expect("You must set BUCKET_DOMAIN"),
                 asset_dir: option_env!("ASSET_DIR").expect("You must set ASSET_DIR"),
                 expire: option_env!("BUCKET_EXPIRE").unwrap_or_else(|| {
                     tracing::warn!("We recommend to set BUCKET_EXPIRE. BUCKET_EXPIRE is not set. Default is 3600.");

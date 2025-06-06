@@ -26,7 +26,8 @@ SLACK_CHANNEL_SPONSOR ?=
 SLACK_CHANNEL_ABUSING ?=
 SLACK_CHANNEL_MONITOR ?=
 
-BUCKET_NAME ?= dev.ratel.foundation
+BUCKET_NAME ?= ratel-metadata
+BUCKET_DOMAIN ?= metadata.ratel.foundation
 BUCKET_EXPIRE ?= 3600
 ASSET_DIR ?= metadata
 
