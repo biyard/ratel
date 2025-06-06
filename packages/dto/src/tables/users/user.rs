@@ -39,9 +39,12 @@ pub struct User {
     #[api_model(version = v0.1, indexed, unique)]
     pub username: String,
 
-    #[api_model(one_to_many = followers, foreign_key = user_id)]
+    #[api_model(one_to_many = followers, foreign_key = following_id)]
     #[serde(default)]
     pub followers: Vec<Follower>,
+    #[api_model(one_to_many = followers, foreign_key = follower_id)]
+    #[serde(default)]
+    pub following: Vec<Follower>,
     #[api_model(many_to_many = group_members, foreign_table_name = groups, foreign_primary_key = group_id, foreign_reference_key = user_id)]
     #[serde(default)]
     pub groups: Vec<Group>,
