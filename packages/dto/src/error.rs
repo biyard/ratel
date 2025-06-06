@@ -162,6 +162,10 @@ pub enum Error {
 
     #[translate(en = "You must pass a valid team name")]
     InvalidTeamname,
+
+    // my network
+    #[translate(en = "User is already in your network")]
+    AlreadyFollowing,
 }
 
 impl<E: StdError + 'static> From<E> for Error {
