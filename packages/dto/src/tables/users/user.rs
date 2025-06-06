@@ -4,6 +4,8 @@ use bdk::prelude::*;
 
 use crate::{Follower, Group};
 
+use super::Team;
+
 #[derive(validator::Validate)]
 #[api_model(base = "/v1/users", read_action = user_info, table = users, iter_type=QueryResponse)]
 pub struct User {
@@ -43,6 +45,10 @@ pub struct User {
     #[api_model(many_to_many = group_members, foreign_table_name = groups, foreign_primary_key = group_id, foreign_reference_key = user_id)]
     #[serde(default)]
     pub groups: Vec<Group>,
+
+    #[api_model(many_to_many = team_members, foreign_table_name = users, foreign_primary_key = team_id, foreign_reference_key = user_id)]
+    #[serde(default)]
+    pub teams: Vec<Team>,
 
     // profile contents
     #[api_model(version = v0.2, action_by_id = edit_profile)]
