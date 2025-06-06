@@ -34,7 +34,7 @@ impl FollowingController {
     ) -> Result<QueryResponse<FollowerSummary>> {
         let mut total_count = 0;
         let items: Vec<FollowerSummary> = FollowerSummary::query_builder()
-            .following_id_equals(user_id)
+            .follower_id_equals(user_id)
             .limit(param.size())
             .page(param.page())
             .order_by_created_at_desc()
@@ -47,7 +47,7 @@ impl FollowingController {
             .fetch_all(&self.pool)
             .await
             .map_err(|e| {
-                tracing::error!("Failed to fetch suggested users for user {}: {:?}", user_id, e);
+                tracing::error!("Failed to fetch followed users for user {}: {:?}", user_id, e);
                 Error::DatabaseException(e.to_string())
             })?;
 
@@ -177,7 +177,7 @@ impl FollowingController {
         Path(FollowingPath { id }): Path<FollowingPath>,
         Json(body): Json<FollowerByIdAction>,
     ) -> Result<Json<Follower>> {
-        tracing::debug!("act_feed_by_id {:?} {:?}", id, body);
+        tracing::debug!("act_follower_by_id {:?} {:?}", id, body);
         match body {
             FollowerByIdAction::Follow(_) => {
                 let res = ctrl.follow(id, auth).await?;

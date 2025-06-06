@@ -11,7 +11,7 @@ pub struct Follower {
     #[api_model(summary, auto = [insert, update])]
     pub updated_at: i64,
 
-    #[api_model(summary, nullable)]
+    #[api_model(summary)]
     pub follower_nickname: String,
     #[api_model(summary, nullable)]
     pub follower_profile_url: String,
@@ -20,7 +20,7 @@ pub struct Follower {
     #[api_model(summary, nullable)]
     pub follower_description: Option<String>,
 
-    #[api_model(summary, nullable)]
+    #[api_model(summary)]
     pub following_nickname: String,
     #[api_model(summary, nullable)]
     pub following_profile_url: String,
