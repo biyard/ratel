@@ -17,6 +17,7 @@ pub mod popup;
 pub mod popup_zone;
 pub mod rich_text;
 pub mod section_header;
+pub mod selectbox;
 pub mod socials;
 pub mod tooltip;
 pub mod upload_image;

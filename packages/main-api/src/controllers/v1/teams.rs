@@ -79,6 +79,8 @@ impl TeamController {
         TeamCreateRequest {
             profile_url,
             username,
+            nickname,
+            html_contents,
         }: TeamCreateRequest,
     ) -> Result<Team> {
         let user_id = extract_user_id(&self.pool, auth).await?;
@@ -89,7 +91,7 @@ impl TeamController {
             .user
             .insert_with_tx(
                 &mut *tx,
-                "".to_string(),
+                nickname,
                 username.clone(),
                 username.clone(),
                 profile_url,
@@ -98,7 +100,7 @@ impl TeamController {
                 UserType::Team,
                 Some(user_id),
                 username,
-                "".to_string(),
+                html_contents,
             )
             .await
             .map_err(|e| {
@@ -318,7 +320,12 @@ mod tests {
         let username = format!("create-team-{}", now);
 
         let res = cli
-            .create(profile_url.clone(), username.clone())
+            .create(
+                username.clone(),
+                profile_url.clone(),
+                username.clone(),
+                "".to_string(),
+            )
             .await
             .expect("failed to create team");
 
@@ -342,7 +349,12 @@ mod tests {
         let username = format!("invite-team-{}", now);
 
         let res = cli
-            .create(profile_url.clone(), username.clone())
+            .create(
+                username.clone(),
+                profile_url.clone(),
+                username.clone(),
+                "".to_string(),
+            )
             .await
             .expect("failed to create team");
 
@@ -399,7 +411,12 @@ mod tests {
         let username = format!("update-team-{}", now);
 
         let res = cli
-            .create(profile_url.clone(), username.clone())
+            .create(
+                username.clone(),
+                profile_url.clone(),
+                username.clone(),
+                "".to_string(),
+            )
             .await
             .expect("failed to create team");
 
@@ -428,7 +445,12 @@ mod tests {
         let username = format!("update-team-{}", now);
 
         let res = cli
-            .create(profile_url.clone(), username.clone())
+            .create(
+                username.clone(),
+                profile_url.clone(),
+                username.clone(),
+                "".to_string(),
+            )
             .await
             .expect("failed to create team");
 

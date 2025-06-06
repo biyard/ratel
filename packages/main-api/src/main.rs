@@ -58,6 +58,8 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         SpaceComment,
         SpaceUser,
         SpaceMember,
+        SpaceContract,
+        SpaceHolder,
         TeamMember,
         News,
         Quiz,
@@ -68,6 +70,7 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         AdvocacyCampaign,
         AdvocacyCampaignAuthor,
         AdvocacyCampaignVoter,
+        EventLog,
     );
 
     if Industry::query_builder()

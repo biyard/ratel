@@ -1,3 +1,4 @@
+#![allow(unused)]
 use bdk::prelude::*;
 use wasm_bindgen::{JsCast, prelude::Closure};
 use web_sys::js_sys::eval;
@@ -14,6 +15,7 @@ pub fn RichText(
     #[props(default = "".to_string())] placeholder: String,
 
     #[props(default = None)] send_button: Option<Element>,
+    onupload: EventHandler<FormEvent>,
 ) -> Element {
     let mut closure_ref = use_signal(|| None as Option<Closure<dyn FnMut(web_sys::Event)>>);
 
@@ -265,11 +267,29 @@ pub fn RichText(
         input {
             r#type: "file",
             id: format!("file-input-{}", id),
+            accept: ".png,.jpg,.jpeg,.pdf,.xlsx,.zip,.pptx",
             style: "display:none;",
-            onchange: move |evt| {
-                if let Some(file_engine) = evt.files() {
-                    let filenames = file_engine.files();
-                    tracing::debug!("filenames: {:?}", filenames);
+            onchange: {
+                let id = format!("file-input-{}", id);
+                move |ev| {
+                    onupload.call(ev);
+                    #[cfg(feature = "web")]
+                    {
+                        let id = id.clone();
+                        spawn(async move {
+                            use gloo_timers::future::TimeoutFuture;
+                            TimeoutFuture::new(0).await;
+                            let input = web_sys::window()
+                                .unwrap()
+                                .document()
+                                .unwrap()
+                                .get_element_by_id(&id.clone())
+                                .unwrap()
+                                .dyn_into::<web_sys::HtmlInputElement>()
+                                .unwrap();
+                            input.set_value("");
+                        });
+                    }
                 }
             },
         }

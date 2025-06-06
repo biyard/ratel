@@ -4,7 +4,7 @@ translate! {
     ThreadTranslate;
 
     title: {
-        ko: "thread",
-        en: "thread"
+        ko: "Feed",
+        en: "Feed"
     }
 }

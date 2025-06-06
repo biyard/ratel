@@ -4,6 +4,7 @@ pub mod bills;
 // pub mod topics;
 mod advocacy_campaigns;
 mod assets;
+mod auth;
 mod bots;
 mod election_pledges;
 mod feeds;
@@ -29,6 +30,7 @@ use crate::config;
 pub fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Router> {
     let conf = config::get();
     Ok(by_axum::axum::Router::new()
+        .nest("/auth", auth::AuthController::new(pool.clone()).route()?)
         .nest(
             "/advocacy-campaigns",
             advocacy_campaigns::AdvocacyCampaignController::new(pool.clone()).route()?,
