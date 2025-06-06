@@ -320,7 +320,12 @@ mod tests {
         let username = format!("create-team-{}", now);
 
         let res = cli
-            .create(profile_url.clone(), username.clone())
+            .create(
+                username.clone(),
+                profile_url.clone(),
+                username.clone(),
+                "".to_string(),
+            )
             .await
             .expect("failed to create team");
 
@@ -344,7 +349,12 @@ mod tests {
         let username = format!("invite-team-{}", now);
 
         let res = cli
-            .create(profile_url.clone(), username.clone())
+            .create(
+                username.clone(),
+                profile_url.clone(),
+                username.clone(),
+                "".to_string(),
+            )
             .await
             .expect("failed to create team");
 
@@ -401,7 +411,12 @@ mod tests {
         let username = format!("update-team-{}", now);
 
         let res = cli
-            .create(profile_url.clone(), username.clone())
+            .create(
+                username.clone(),
+                profile_url.clone(),
+                username.clone(),
+                "".to_string(),
+            )
             .await
             .expect("failed to create team");
 
@@ -430,7 +445,12 @@ mod tests {
         let username = format!("update-team-{}", now);
 
         let res = cli
-            .create(profile_url.clone(), username.clone())
+            .create(
+                username.clone(),
+                profile_url.clone(),
+                username.clone(),
+                "".to_string(),
+            )
             .await
             .expect("failed to create team");
 
