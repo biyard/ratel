@@ -7,18 +7,18 @@ pub struct BillSummaries {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct BillSummaryItem {
-    // 1. 이행 날짜
+    // 1. Action date
     #[serde(rename = "actionDate")]
     pub action_date: String,
-    // 2. 이행 내용
+    // 2. Action description
     #[serde(rename = "actionDesc")]
     pub action_desc: String,
-    // 3. 요약 내용
+    // 3. Summary text
     pub text: String,
-    // 4. 업데이트 날짜
+    // 4. Update date
     #[serde(rename = "updateDate")]
     pub update_date: String,
-    // 5. 버전 코드
+    // 5. Version code
     #[serde(rename = "versionCode")]
     pub version_code: String,
 }
