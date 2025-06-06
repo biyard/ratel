@@ -11,6 +11,7 @@ pub struct Team {
     #[api_model(auto = [insert, update])]
     pub updated_at: i64,
 
+    pub user_type: UserType,
     #[api_model(action = create)]
     pub nickname: String,
     #[api_model(action = create, action_by_id = [update_profile_image])]
