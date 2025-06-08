@@ -66,6 +66,12 @@ pub struct Feed {
     #[api_model(version = v0.1, summary)]
     #[serde(default)]
     pub shares: i64,
+
+    #[api_model(version = v0.2, summary, action = [write_post])]
+    pub url: Option<String>,
+    #[api_model(version = v0.2, summary, type = INTEGER, action = [write_post])]
+    #[serde(default)]
+    pub url_type: UrlType,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]
@@ -78,4 +84,12 @@ pub enum FeedType {
     Reply = 2,
     Repost = 3,
     DocReview = 4,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub enum UrlType {
+    #[default]
+    None = 0,
+    Image = 1,
 }
