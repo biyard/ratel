@@ -61,6 +61,8 @@ impl FeedController {
             quote_feed_id,
             user_id,
             files,
+            url,
+            url_type,
         }: FeedWritePostRequest,
     ) -> Result<Feed> {
         let user = check_perm(
@@ -91,6 +93,8 @@ impl FeedController {
                 files,
                 0,
                 0,
+                url,
+                url_type,
             )
             .await
             .map_err(|e| {
@@ -153,6 +157,8 @@ impl FeedController {
                 feed.files,
                 0,
                 0,
+                None,
+                UrlType::None,
             )
             .await
             .map_err(|e| {
@@ -216,6 +222,8 @@ impl FeedController {
                 feed.files,
                 0,
                 0,
+                None,
+                UrlType::None,
             )
             .await
             .map_err(|e| {
@@ -301,6 +309,8 @@ impl FeedController {
                 feed.files,
                 0,
                 0,
+                None,
+                UrlType::None,
             )
             .await
             .map_err(|e| {
@@ -485,6 +495,8 @@ mod tests {
                 vec![],
                 0,
                 0,
+                None,
+                UrlType::None,
             )
             .await
             .unwrap();
@@ -504,6 +516,8 @@ mod tests {
                 vec![],
                 0,
                 0,
+                None,
+                UrlType::None,
             )
             .await
             .unwrap();

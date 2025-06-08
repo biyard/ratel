@@ -11,5 +11,6 @@ pub struct Industry {
     #[api_model(summary, auto = [insert, update])]
     pub updated_at: i64,
 
+    #[api_model(summary, unique)]
     pub name: String,
 }
