@@ -1,7 +1,7 @@
 use bdk::prelude::*;
 use validator::Validate;
 
-use crate::{File, Space};
+use crate::{File, Industry, Space, User};
 
 #[derive(Validate)]
 #[api_model(base = "/v1/feeds", table = feeds, action = [], action_by_id = [delete])]
@@ -72,6 +72,12 @@ pub struct Feed {
     #[api_model(version = v0.2, summary, type = INTEGER, action = [write_post])]
     #[serde(default)]
     pub url_type: UrlType,
+
+    #[api_model(one_to_many = users, reference_key = user_id, foreign_key = id, summary)]
+    pub author: Vec<User>,
+
+    #[api_model(one_to_many = industries, reference_key = industry_id, foreign_key = id, summary)]
+    pub industry: Vec<Industry>,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]
