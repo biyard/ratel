@@ -51,6 +51,30 @@ impl FeedController {
         Ok(QueryResponse { total_count, items })
     }
 
+    async fn posts_by_user_id(
+        &self,
+        _auth: Option<Authorization>,
+        param: FeedQuery,
+    ) -> Result<QueryResponse<FeedSummary>> {
+        let mut total_count = 0;
+        let items: Vec<FeedSummary> = FeedSummary::query_builder()
+            .limit(param.size())
+            .page(param.page())
+            .user_id_equals(param.user_id.unwrap_or_default())
+            .order_by_created_at_desc()
+            .query()
+            .map(|row: PgRow| {
+                use sqlx::Row;
+
+                total_count = row.try_get("total_count").unwrap_or_default();
+                row.into()
+            })
+            .fetch_all(&self.pool)
+            .await?;
+
+        Ok(QueryResponse { total_count, items })
+    }
+
     async fn write_post(
         &self,
         auth: Option<Authorization>,
@@ -454,6 +478,11 @@ impl FeedController {
         tracing::debug!("list_feed {:?}", q);
 
         match q {
+            FeedParam::Query(param) if param.action == Some(FeedQueryActionType::PostsByUserId) => {
+                Ok(Json(FeedGetResponse::Query(
+                    ctrl.posts_by_user_id(auth, param).await?,
+                )))
+            }
             FeedParam::Query(param) => {
                 Ok(Json(FeedGetResponse::Query(ctrl.query(auth, param).await?)))
             } // FeedParam::Read(param)
