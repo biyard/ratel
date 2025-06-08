@@ -19,7 +19,7 @@ pub struct Feed {
     #[api_model(summary, type = INTEGER)]
     pub feed_type: FeedType,
 
-    #[api_model(summary, many_to_one = users, action = [write_post, comment, review_doc, repost])]
+    #[api_model(summary, many_to_one = users, query_action = posts_by_user_id, action = [write_post, comment, review_doc, repost])]
     pub user_id: i64,
 
     #[api_model(summary, many_to_one = industries, action = [write_post])]
