@@ -223,10 +223,7 @@ impl SpaceBadgeController {
             //     get(Self::get_space_badge_by_id).post(Self::act_space_badge_by_id),
             // )
             // .with_state(self.clone())
-            .route(
-                "/",
-                post(Self::act_space_badge), // .get(Self::get_space_badge)
-            )
+            .route("/", post(Self::act_space_badge))
             .with_state(self.clone())
     }
 
@@ -280,27 +277,6 @@ impl SpaceBadgeController {
     //             .fetch_one(&ctrl.pool)
     //             .await?,
     //     ))
-    // }
-
-    // pub async fn get_space_badge(
-    //     State(ctrl): State<SpaceBadgeController>,
-    //     Path(SpaceBadgeParentPath { space_id }): Path<SpaceBadgeParentPath>,
-    //     Extension(auth): Extension<Option<Authorization>>,
-    //     Query(q): Query<SpaceBadgeParam>,
-    // ) -> Result<Json<SpaceBadgeGetResponse>> {
-    //     tracing::debug!("list_space_badge {} {:?}", space_id, q);
-
-    //     match q {
-    //         SpaceBadgeParam::Query(param) => Ok(Json(SpaceBadgeGetResponse::Query(
-    //             ctrl.query(space_id, auth, param).await?,
-    //         ))),
-    //         // SpaceBadgeParam::Read(param)
-    //         //     if param.action == Some(SpaceBadgeReadActionType::ActionType) =>
-    //         // {
-    //         //     let res = ctrl.run_read_action(auth, param).await?;
-    //         //     Ok(Json(SpaceBadgeGetResponse::Read(res)))
-    //         // }
-    //     }
     // }
 }
 
