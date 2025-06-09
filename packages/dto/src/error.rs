@@ -22,6 +22,7 @@ impl StdError for ServiceException {}
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum Error {
     Unknown(String),
+    Klaytn(String),
 
     #[translate(en = "Could not find any resource", ko = "리소스를 찾을 수 없습니다.")]
     NotFound,
@@ -38,6 +39,16 @@ pub enum Error {
     UserAlreadyExists,
     #[translate(en = "Could not find a valid user", ko = "유효하지 않은 사용자입니다.")]
     InvalidUser,
+    #[translate(
+        en = "You must pass a valid email",
+        ko = "유효한 이메일을 입력해야 합니다."
+    )]
+    InvalidEmail,
+    #[translate(
+        en = "You must pass a valid principal",
+        ko = "유효한 계정 주소를 입력해야 합니다."
+    )]
+    InvalidPrinciapl,
     #[translate(en = "Please change team name.")]
     DuplicatedTeamName,
 
@@ -152,6 +163,9 @@ pub enum Error {
 
     #[translate(en = "You must pass a valid team name")]
     InvalidTeamname,
+
+    #[translate(en = "Failed to create a badge. Please try again.")]
+    BadgeCreationFailure,
 }
 
 impl<E: StdError + 'static> From<E> for Error {

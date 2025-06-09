@@ -1,7 +1,9 @@
 mod general_permission_verifier;
+mod space_permission_verifier;
 mod team_permission_verifier;
 
 pub use general_permission_verifier::*;
+use space_permission_verifier::SpacePermissionVerifier;
 pub use team_permission_verifier::*;
 
 use bdk::prelude::{by_axum::auth::Authorization, *};
@@ -63,6 +65,10 @@ pub async fn check_perm(
         RatelResource::Reply { team_id } => Box::new(TeamPermissionVerifier::new(team_id)),
         RatelResource::News | RatelResource::Promotions => {
             Box::new(GeneralPermissionVerifier::new())
+        }
+
+        RatelResource::Space { space_id } => {
+            Box::new(SpacePermissionVerifier::new(user.id, space_id, pool).await)
         }
     };
 

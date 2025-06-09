@@ -2,9 +2,10 @@ use super::*;
 use controller::*;
 
 use bdk::prelude::*;
-use dto::ContentType;
+use dto::{ContentType, File};
 
 use crate::{
+    components::loader::Loader,
     pages::components::{
         BottomNavigationBar, BottomSheet, CreateFeedBox, LeftSidebar, RightSidebar, SocialHeader,
     },
@@ -52,7 +53,14 @@ pub fn SocialLayout(#[props(default = Language::En)] lang: Language) -> Element 
                 }
             }
 
-            div { class: "w-full max-w-desktop flex-1 overflow-y-auto", Outlet::<Route> {} }
+            SuspenseBoundary {
+                fallback: |_| rsx! {
+                    div { class: "absolute bg-background w-screen h-screen top-0 left-0 flex items-center justify-center text-white",
+                        Loader { class: "w-200" }
+                    }
+                },
+                div { class: "w-full max-w-desktop flex-1 overflow-y-auto", Outlet::<Route> {} }
+            }
 
             div { class: "flex-shrink-0 w-full",
                 // aria_hidden: selected() == RouteTab::Notification,
@@ -88,7 +96,7 @@ pub fn MyPageLayout(#[props(default = Language::En)] lang: Language) -> Element 
     let recent_communities: Vec<String> = vec![];
 
     rsx! {
-        div { class: "flex flex-col w-full h-screen justify-start items-start",
+        div { class: "flex flex-col w-full h-screen justify-between items-between",
             div { class: "flex flex-row w-full h-full max-h-[calc(100vh)] justify-start items-start py-20 px-10 gap-20",
                 LeftSidebar {
                     lang,
@@ -126,7 +134,7 @@ pub fn MyPageLayout(#[props(default = Language::En)] lang: Language) -> Element 
             }
 
             div {
-                class: "flex flex-row w-full justify-start items-start mb-85 aria-hidden:!hidden z-50",
+                class: "flex flex-row w-full justify-end items-end aria-hidden:!hidden z-50",
                 aria_hidden: !is_write,
                 CreateFeedBox {
                     lang,
@@ -135,8 +143,8 @@ pub fn MyPageLayout(#[props(default = Language::En)] lang: Language) -> Element 
                     onclose: move |_| {
                         ctrl.change_write(false);
                     },
-                    onsend: move |(content_type, description): (ContentType, String)| async move {
-                        ctrl.create_feed(content_type, description).await;
+                    onsend: move |(files, content_type, description): (Vec<File>, ContentType, String)| async move {
+                        ctrl.create_feed(files, content_type, description).await;
                     },
                 }
             }

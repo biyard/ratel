@@ -16,7 +16,7 @@ pub fn IndexPage(#[props(default = Language::En)] lang: Language) -> Element {
     rsx! {
         by_components::meta::MetaPage { title: tr.title }
 
-        div { class: "flex flex-col w-full h-fit justify-start items-start text-white",
+        div { class: "relative flex flex-col w-full h-fit justify-start items-start text-white",
             CreateFeed {
                 lang,
                 profile: my_info.profile_url,
@@ -28,6 +28,10 @@ pub fn IndexPage(#[props(default = Language::En)] lang: Language) -> Element {
             MyFeedList {
                 lang,
                 feeds,
+                my_user_id: my_info.id,
+                create_space: move |feed_id: i64| {
+                    ctrl.create_space(feed_id);
+                },
                 add_size: move |_| {
                     ctrl.add_size();
                 },

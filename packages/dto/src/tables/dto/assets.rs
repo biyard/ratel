@@ -29,6 +29,9 @@ pub enum FileType {
     SVG,
     AI,
 
+    PDF,
+    XLSX,
+
     // 3D Model
     GLB,
     GLTF,
@@ -49,6 +52,10 @@ impl FileType {
         match s {
             "jpg" | "jpeg" => Ok(FileType::JPG),
             "png" => Ok(FileType::PNG),
+            "svg" => Ok(FileType::SVG),
+            "pdf" => Ok(FileType::PDF),
+            "xlsx" | "xls" => Ok(FileType::XLSX),
+            "pptx" => Ok(FileType::PPTX),
             _ => Err(Error::InvalidType),
         }
     }

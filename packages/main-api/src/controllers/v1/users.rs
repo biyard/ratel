@@ -141,8 +141,6 @@ impl UserControllerV1 {
             return Err(Error::BadRequest);
         }
 
-        let username = req.email.split("@").collect::<Vec<&str>>()[0].to_string();
-
         if let Ok(user) = User::query_builder()
             .principal_equals(principal.clone())
             .user_type_equals(UserType::Anonymous)
@@ -161,7 +159,7 @@ impl UserControllerV1 {
                         .with_profile_url(req.profile_url)
                         .with_term_agreed(req.term_agreed)
                         .with_informed_agreed(req.informed_agreed)
-                        .with_username(username)
+                        .with_username(req.username)
                         .with_user_type(UserType::Individual),
                 )
                 .await?;
@@ -180,7 +178,7 @@ impl UserControllerV1 {
                 req.informed_agreed,
                 UserType::Individual,
                 None,
-                username,
+                req.username,
                 "".to_string(),
             )
             .await?;
@@ -189,10 +187,16 @@ impl UserControllerV1 {
     }
 
     #[instrument]
-    pub async fn check_email(&self, req: UserReadAction) -> Result<Json<User>> {
-        let user = self
-            .users
-            .find_one(&req)
+    pub async fn check_email(
+        &self,
+        UserReadAction { email, .. }: UserReadAction,
+    ) -> Result<Json<User>> {
+        let user = User::query_builder()
+            .email_equals(email.ok_or(Error::InvalidEmail)?)
+            .user_type_equals(UserType::Individual)
+            .query()
+            .map(User::from)
+            .fetch_one(&self.pool)
             .await
             .map_err(|_| Error::NotFound)?;
 
@@ -200,8 +204,18 @@ impl UserControllerV1 {
     }
 
     #[instrument]
-    pub async fn user_info(&self, req: UserReadAction) -> Result<Json<User>> {
-        let user = self.users.find_one(&req).await?;
+    pub async fn user_info(
+        &self,
+        UserReadAction { principal, .. }: UserReadAction,
+    ) -> Result<Json<User>> {
+        tracing::debug!("principal 111: {:?}", principal);
+        let user = User::query_builder()
+            .principal_equals(principal.ok_or(Error::InvalidUser)?)
+            .query()
+            .map(User::from)
+            .fetch_one(&self.pool)
+            .await
+            .map_err(|_| Error::NotFound)?;
 
         Ok(Json(user))
     }

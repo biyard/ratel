@@ -1,15 +1,19 @@
+mod badges;
+mod comments;
+
 use bdk::prelude::*;
 use by_axum::{
     aide,
     auth::Authorization,
     axum::{
         Extension, Json,
-        extract::{Path, State},
+        extract::State,
         routing::{get, post},
     },
 };
-use dto::*;
+use dto::{by_axum::axum::extract::Path, *};
 
+use crate::by_axum::axum::extract::Query;
 use crate::security::check_perm;
 
 #[derive(
@@ -27,6 +31,19 @@ pub struct SpaceController {
 }
 
 impl SpaceController {
+    async fn get_space_by_id(&self, _auth: Option<Authorization>, id: i64) -> Result<Space> {
+        tracing::debug!("get_space {:?}", id);
+
+        Ok(Space::query_builder()
+            .id_equals(id)
+            .comments_builder(SpaceComment::query_builder())
+            .feed_comments_builder(SpaceComment::query_builder())
+            .query()
+            .map(Space::from)
+            .fetch_one(&self.pool)
+            .await?)
+    }
+
     async fn create_space(
         &self,
         auth: Option<Authorization>,
@@ -59,37 +76,45 @@ impl SpaceController {
         )
         .await?;
 
+        let mut tx = self.pool.begin().await?;
+
         let res = self
             .repo
-            .insert(
+            .insert_with_tx(
+                &mut *tx,
                 feed.title,
                 feed.html_contents,
                 space_type,
                 user.id,
                 feed.industry_id,
                 feed_id,
-                Some(user.profile_url),
-                Some(user.nickname),
-                ContentType::Crypto,
-                0,
-                0,
+                SpaceStatus::Draft,
+                feed.files,
             )
             .await
             .map_err(|e| {
                 tracing::error!("failed to insert post space: {:?}", e);
                 Error::SpaceWritePostError
-            })?;
+            })?
+            .ok_or(Error::SpaceWritePostError)?;
+
+        let g = SpaceGroup::get_repository(self.pool.clone());
+        let group = g
+            .insert_with_tx(&mut *tx, res.id, "Admin".to_string())
+            .await?
+            .ok_or(Error::SpaceWritePostError)?;
 
         for id in user_ids {
             let _ = self
                 .space_member_repo
-                .insert(id, res.id)
+                .insert_with_tx(&mut *tx, id, res.id, group.id)
                 .await
                 .map_err(|e| {
                     tracing::error!("failed to insert space with member error: {:?}", e);
                     Error::SpaceWritePostError
                 })?;
         }
+        tx.commit().await?;
 
         Ok(res)
     }
@@ -107,29 +132,48 @@ impl SpaceController {
         }
     }
 
-    pub fn route(&self) -> Result<by_axum::axum::Router> {
+    pub async fn route(&self) -> Result<by_axum::axum::Router> {
         Ok(by_axum::axum::Router::new()
-            .route("/:id", get(Self::get_space_by_id))
+            .route("/", post(Self::act_space).get(Self::get_space))
             .with_state(self.clone())
-            .route("/", post(Self::act_space))
-            .with_state(self.clone()))
+            .route("/:id", get(Self::get_by_id))
+            .with_state(self.clone())
+            .nest(
+                "/:space-id/comments",
+                comments::SpaceCommentController::new(self.pool.clone()).route(),
+            )
+            .nest(
+                "/:space-id/badges",
+                badges::SpaceBadgeController::new(self.pool.clone())
+                    .await
+                    .route(),
+            ))
     }
 
-    pub async fn get_space_by_id(
+    pub async fn get_by_id(
         State(ctrl): State<SpaceController>,
-        Extension(_auth): Extension<Option<Authorization>>,
+        Extension(auth): Extension<Option<Authorization>>,
         Path(SpacePath { id }): Path<SpacePath>,
     ) -> Result<Json<Space>> {
-        tracing::debug!("get_space {:?}", id);
+        Ok(Json(ctrl.get_space_by_id(auth, id).await?))
+    }
 
-        Ok(Json(
-            Space::query_builder()
-                .id_equals(id)
-                .query()
-                .map(Space::from)
-                .fetch_one(&ctrl.pool)
-                .await?,
-        ))
+    pub async fn get_space(
+        State(ctrl): State<SpaceController>,
+        Extension(auth): Extension<Option<Authorization>>,
+        Query(q): Query<SpaceParam>,
+    ) -> Result<Json<SpaceGetResponse>> {
+        tracing::debug!("space {:?}", q);
+
+        match q {
+            SpaceParam::Read(param) if param.action == Some(SpaceReadActionType::FindById) => {
+                let res = ctrl
+                    .get_space_by_id(auth, param.id.unwrap_or_default())
+                    .await?;
+                Ok(Json(SpaceGetResponse::Read(res)))
+            }
+            _ => Err(Error::BadRequest),
+        }
     }
 
     pub async fn act_space(

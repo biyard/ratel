@@ -1,7 +1,7 @@
 use bdk::prelude::*;
 use validator::Validate;
 
-use crate::Space;
+use crate::{File, Industry, Space, User};
 
 #[derive(Validate)]
 #[api_model(base = "/v1/feeds", table = feeds, action = [], action_by_id = [delete])]
@@ -19,19 +19,11 @@ pub struct Feed {
     #[api_model(summary, type = INTEGER)]
     pub feed_type: FeedType,
 
-    #[api_model(summary, many_to_one = users, action = [write_post, comment, review_doc, repost])]
+    #[api_model(summary, many_to_one = users, query_action = posts_by_user_id, action = [write_post, comment, review_doc, repost])]
     pub user_id: i64,
 
     #[api_model(summary, many_to_one = industries, action = [write_post])]
     pub industry_id: i64,
-
-    #[api_model(version = v0.1, summary, nullable)]
-    #[serde(default)]
-    pub proposer_name: Option<String>,
-
-    #[api_model(version = v0.1, summary, nullable)]
-    #[serde(default)]
-    pub profile_image: Option<String>,
 
     // parent feed ID
     #[api_model(summary, nullable, indexed, action = [review_doc, comment, repost])]
@@ -55,14 +47,29 @@ pub struct Feed {
 
     #[api_model(summary, many_to_many = feed_users, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = feed_id, aggregator = count, unique)]
     pub likes: i64,
-    #[api_model(summary, one_to_many = feed_comments, foreign_key = feed_id, aggregator=count)]
+    #[api_model(summary, one_to_many = feeds, foreign_key = parent_id, aggregator=count)]
     pub comments: i64,
+    #[api_model(version = v0.1, summary, action = write_post, type = JSONB)]
+    #[serde(default)]
+    pub files: Vec<File>,
     #[api_model(version = v0.1, summary)]
     #[serde(default)]
     pub rewards: i64,
     #[api_model(version = v0.1, summary)]
     #[serde(default)]
     pub shares: i64,
+
+    #[api_model(version = v0.2, summary, action = [write_post])]
+    pub url: Option<String>,
+    #[api_model(version = v0.2, summary, type = INTEGER, action = [write_post])]
+    #[serde(default)]
+    pub url_type: UrlType,
+
+    #[api_model(one_to_many = users, reference_key = user_id, foreign_key = id, summary)]
+    pub author: Vec<User>,
+
+    #[api_model(one_to_many = industries, reference_key = industry_id, foreign_key = id, summary)]
+    pub industry: Vec<Industry>,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]
@@ -75,4 +82,12 @@ pub enum FeedType {
     Reply = 2,
     Repost = 3,
     DocReview = 4,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub enum UrlType {
+    #[default]
+    None = 0,
+    Image = 1,
 }
