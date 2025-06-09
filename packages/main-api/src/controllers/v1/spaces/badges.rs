@@ -194,6 +194,8 @@ impl SpaceBadgeController {
 
         let mut token_ids = vec![];
         let mut values = vec![];
+        let mut badge_ids = vec![];
+
         let contract_address = space
             .badges
             .first()
@@ -202,6 +204,7 @@ impl SpaceBadgeController {
 
         for b in space.badges.iter() {
             if ids.contains(&b.id) {
+                badge_ids.push(b.id);
                 token_ids.push(b.token_id.unwrap_or_default() as u64);
                 values.push(1);
                 if b.contract.is_none()
@@ -217,6 +220,15 @@ impl SpaceBadgeController {
         contract.set_fee_payer(self.feepayer.clone());
 
         contract.mint_batch(evm_address, token_ids, values).await?;
+
+        let mut tx = self.pool.begin().await?;
+
+        let repo = UserBadge::get_repository(self.pool.clone());
+
+        for badge_id in badge_ids {
+            repo.insert_with_tx(&mut *tx, user.id, badge_id).await?;
+        }
+        tx.commit().await?;
 
         Ok(SpaceBadge::default())
     }
