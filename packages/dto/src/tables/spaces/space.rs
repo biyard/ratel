@@ -22,9 +22,6 @@ pub struct Space {
     #[api_model(summary, type = INTEGER, action = [create_space])]
     #[serde(default)]
     pub space_type: SpaceType,
-    // #[api_model(version = v0.1, summary, type = INTEGER, action = [create_space])]
-    // #[serde(default)]
-    // pub space_form: SpaceForm,
     #[api_model(summary, many_to_one = users)]
     pub user_id: i64,
     #[api_model(summary, many_to_one = industries)]
@@ -53,9 +50,11 @@ pub struct Space {
     pub holders: Vec<SpaceHolder>,
 
     #[api_model(one_to_many = users, reference_key = user_id, foreign_key = id)]
+    #[serde(default)]
     pub author: Vec<User>,
 
     #[api_model(one_to_many = industries, reference_key = industry_id, foreign_key = id)]
+    #[serde(default)]
     pub industry: Vec<Industry>,
     // #[api_model(many_to_many = redeem_codes, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = meta_id)]
     // #[serde(default)]
