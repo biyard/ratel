@@ -53,6 +53,7 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         Industry,
         Feed,
         FeedUser,
+        RedeemCode,
         Space,
         SpaceUser,
         SpaceMember,

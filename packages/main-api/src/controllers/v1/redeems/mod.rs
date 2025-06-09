@@ -86,7 +86,7 @@ impl RedeemCodeController {
 
         // Check if the code has already been used
         if redeem_code.used.contains(&code_index) {
-            return Err(Error::InvalidRedeemCode);
+            return Ok(redeem_code);
         }
 
         let res = self
