@@ -4,7 +4,7 @@ use validator::Validate;
 use crate::BadgeCreateRequest;
 
 #[derive(Validate)]
-#[api_model(base = "/v1/spaces/:space-id/badges", table = space_badges, action = [create(badges = Vec<BadgeCreateRequest>)])]
+#[api_model(base = "/v1/spaces/:space-id/badges", table = space_badges, action = [create(badges = Vec<BadgeCreateRequest>), claim(ids = Vec<i64>, evm_address = String)])]
 pub struct SpaceBadge {
     #[api_model(primary_key)]
     pub id: i64,
