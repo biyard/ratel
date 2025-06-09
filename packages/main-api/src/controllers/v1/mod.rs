@@ -27,7 +27,7 @@ use dto::*;
 
 use crate::config;
 
-pub fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Router> {
+pub async fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Router> {
     let conf = config::get();
     Ok(by_axum::axum::Router::new()
         .nest("/auth", auth::AuthController::new(pool.clone()).route()?)
@@ -38,7 +38,7 @@ pub fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Router> 
         .nest("/me", me::MeController::new(pool.clone()).route()?)
         .nest(
             "/spaces",
-            spaces::SpaceController::new(pool.clone()).route()?,
+            spaces::SpaceController::new(pool.clone()).route().await?,
         )
         .nest(
             "/totals",
