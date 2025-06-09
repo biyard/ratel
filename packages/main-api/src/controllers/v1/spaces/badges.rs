@@ -175,15 +175,15 @@ impl SpaceBadgeController {
         tracing::debug!("Claiming badges for user: {:?}", user);
 
         let badges =
-            sqlx::query("SELECT id FROM user_badges WHERE user_id = $1 AND badge_id = ANY($2)")
+            sqlx::query("SELECT * FROM user_badges WHERE user_id = $1 AND badge_id = ANY($2)")
                 .bind(user.id)
                 .bind(&ids)
-                .map(SpaceBadge::from)
+                .map(UserBadge::from)
                 .fetch_all(&self.pool)
                 .await?;
         tracing::debug!("Claimed badges: {:?}", badges);
 
-        ids.retain(|id| !badges.iter().any(|b| b.id == *id));
+        ids.retain(|id| !badges.iter().any(|b| b.badge_id == *id));
         tracing::debug!("Remaining ids to claim: {:?}", ids);
 
         let space = Space::query_builder()
