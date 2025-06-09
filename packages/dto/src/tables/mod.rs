@@ -1,5 +1,6 @@
 mod advocacy_campaigns;
 mod assembly_members;
+mod badges;
 mod bills;
 mod ch_bills;
 mod dto;
@@ -32,6 +33,7 @@ mod votes;
 
 pub use advocacy_campaigns::*;
 pub use assembly_members::*;
+pub use badges::*;
 pub use bills::*;
 pub use ch_bills::*;
 pub use dto::*;
