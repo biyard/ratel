@@ -18,6 +18,7 @@ use crate::{
     security::check_perm,
     utils::{
         contracts::erc1155::Erc1155Contract,
+        users::extract_user_with_allowing_anonymous,
         wallets::{kaia_local_wallet::KaiaLocalWallet, local_fee_payer::LocalFeePayer},
     },
 };
@@ -126,6 +127,8 @@ impl SpaceBadgeController {
                     serde_json::json!({
                         "name": format!("{} #{}", b.name, b.token_id.unwrap_or_default()),
                         "image": b.image_url,
+                        "animation_url": b.image_url,
+
                     })
                     .to_string()
                     .as_bytes()
@@ -154,20 +157,69 @@ impl SpaceBadgeController {
         contract.set_wallet(self.owner.clone());
         contract.set_fee_payer(self.feepayer.clone());
 
-        contract
-            .mint_batch(contract_address.clone(), ids, values)
-            .await?;
+        contract.mint_batch(contract_address, ids, values).await?;
 
         Ok(SpaceBadge::default())
     }
 
-    // async fn run_read_action(
-    //     &self,
-    //     _auth: Option<Authorization>,
-    //     SpaceBadgeReadAction { action, .. }: SpaceBadgeReadAction,
-    // ) -> Result<SpaceBadge> {
-    //     todo!()
-    // }
+    async fn claim(
+        &self,
+        space_id: i64,
+        auth: Option<Authorization>,
+        SpaceBadgeClaimRequest {
+            mut ids,
+            evm_address,
+        }: SpaceBadgeClaimRequest,
+    ) -> Result<SpaceBadge> {
+        let user = extract_user_with_allowing_anonymous(&self.pool, auth).await?;
+
+        let badges =
+            sqlx::query("SELECT id FROM user_badges WHERE user_id = $1 AND badge_id = ANY($2)")
+                .bind(user.id)
+                .bind(&ids)
+                .map(SpaceBadge::from)
+                .fetch_all(&self.pool)
+                .await?;
+        tracing::debug!("Claimed badges: {:?}", badges);
+
+        ids.retain(|id| !badges.iter().any(|b| b.id == *id));
+        tracing::debug!("Remaining ids to claim: {:?}", ids);
+
+        let space = Space::query_builder()
+            .id_equals(space_id)
+            .query()
+            .map(Space::from)
+            .fetch_one(&self.pool)
+            .await?;
+
+        let mut token_ids = vec![];
+        let mut values = vec![];
+        let contract_address = space
+            .badges
+            .first()
+            .and_then(|b| b.contract.clone())
+            .ok_or(Error::BadgeCreationFailure)?;
+
+        for b in space.badges.iter() {
+            if ids.contains(&b.id) {
+                token_ids.push(b.token_id.unwrap_or_default() as u64);
+                values.push(1);
+                if b.contract.is_none()
+                    || contract_address != b.contract.clone().unwrap_or_default()
+                {
+                    return Err(Error::BadgeCreationFailure);
+                }
+            }
+        }
+
+        let mut contract = Erc1155Contract::new(&contract_address, self.provider.clone());
+        contract.set_wallet(self.owner.clone());
+        contract.set_fee_payer(self.feepayer.clone());
+
+        contract.mint_batch(evm_address, token_ids, values).await?;
+
+        Ok(SpaceBadge::default())
+    }
 }
 
 impl SpaceBadgeController {
@@ -220,7 +272,8 @@ impl SpaceBadgeController {
         by_axum::axum::Router::new()
             // .route(
             //     "/:id",
-            //     get(Self::get_space_badge_by_id).post(Self::act_space_badge_by_id),
+            //     // get(Self::get_space_badge_by_id).
+            //     post(Self::act_space_badge_by_id),
             // )
             // .with_state(self.clone())
             .route("/", post(Self::act_space_badge))
@@ -239,6 +292,10 @@ impl SpaceBadgeController {
                 let res = ctrl.create(space_id, auth, param).await?;
                 Ok(Json(res))
             }
+            SpaceBadgeAction::Claim(param) => {
+                let res = ctrl.claim(space_id, auth, param).await?;
+                Ok(Json(res))
+            }
         }
     }
 
@@ -250,16 +307,7 @@ impl SpaceBadgeController {
     // ) -> Result<Json<SpaceBadge>> {
     //     tracing::debug!("act_space_badge_by_id {} {:?} {:?}", space_id, id, body);
 
-    //     match body {
-    //         SpaceBadgeByIdAction::Update(param) => {
-    //             let res = ctrl.update(id, auth, param).await?;
-    //             Ok(Json(res))
-    //         }
-    //         SpaceBadgeByIdAction::Delete(_) => {
-    //             let res = ctrl.delete(id, auth).await?;
-    //             Ok(Json(res))
-    //         }
-    //     }
+    //     match body {}
     // }
 
     // pub async fn get_space_badge_by_id(
