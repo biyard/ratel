@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use aws_sdk_s3::primitives::ByteStream;
 use by_axum::{
     aide,
@@ -9,15 +11,25 @@ use by_axum::{
     },
 };
 use dto::*;
+use ethers::providers::{Http, Provider};
 
-use crate::{config, security::check_perm};
+use crate::{
+    config,
+    security::check_perm,
+    utils::{
+        contracts::erc1155::Erc1155Contract,
+        wallets::{kaia_local_wallet::KaiaLocalWallet, local_fee_payer::LocalFeePayer},
+    },
+};
 
 #[derive(Clone, Debug)]
 pub struct SpaceBadgeController {
     repo: SpaceBadgeRepository,
     pool: sqlx::Pool<sqlx::Postgres>,
+    provider: Arc<Provider<Http>>,
 
-    // contract: IncheonContentsContract<LocalFeePayer, KaiaLocalWallet>,
+    owner: KaiaLocalWallet,
+    feepayer: LocalFeePayer,
     cli: aws_sdk_s3::Client,
 }
 
@@ -94,6 +106,7 @@ impl SpaceBadgeController {
         tx.commit().await?;
 
         let c = &config::get().bucket;
+        let contract_address = badges[0].contract.clone().unwrap_or_default();
 
         let mut ids = vec![];
         let mut values = vec![];
@@ -137,7 +150,13 @@ impl SpaceBadgeController {
             }
         }
 
-        // self.contract.mint_batch(evm_address, ids, values).await?;
+        let mut contract = Erc1155Contract::new(&contract_address, self.provider.clone());
+        contract.set_wallet(self.owner.clone());
+        contract.set_fee_payer(self.feepayer.clone());
+
+        contract
+            .mint_batch(contract_address.clone(), ids, values)
+            .await?;
 
         Ok(SpaceBadge::default())
     }
@@ -173,8 +192,28 @@ impl SpaceBadgeController {
 
         let config = config.load().await;
         let cli = aws_sdk_s3::Client::new(&config);
+        let provider = Provider::<Http>::try_from(conf.kaia.endpoint).unwrap();
+        let provider = Arc::new(provider);
 
-        Self { repo, pool, cli }
+        let owner = KaiaLocalWallet::new(conf.kaia.owner_key, provider.clone())
+            .await
+            .expect("Failed to create owner wallet");
+        let feepayer = LocalFeePayer::new(
+            conf.kaia.feepayer_address,
+            conf.kaia.feepayer_key,
+            provider.clone(),
+        )
+        .await
+        .expect("Failed to create fee payer wallet");
+
+        Self {
+            repo,
+            pool,
+            cli,
+            owner,
+            feepayer,
+            provider,
+        }
     }
 
     pub fn route(&self) -> by_axum::axum::Router {
