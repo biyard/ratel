@@ -71,6 +71,9 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         AdvocacyCampaignAuthor,
         AdvocacyCampaignVoter,
         EventLog,
+        Badge,
+        UserBadge,
+        SpaceBadge,
     );
 
     if Industry::query_builder()

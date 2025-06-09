@@ -1,3 +1,5 @@
+mod badges;
+
 use bdk::prelude::*;
 use by_axum::{
     aide,
@@ -76,8 +78,6 @@ impl SpaceController {
                 user.id,
                 feed.industry_id,
                 feed_id,
-                Some(user.profile_url),
-                Some(user.nickname),
                 SpaceStatus::Draft,
                 feed.files,
             )
@@ -117,7 +117,11 @@ impl SpaceController {
     pub fn route(&self) -> Result<by_axum::axum::Router> {
         Ok(by_axum::axum::Router::new()
             .route("/", post(Self::act_space).get(Self::get_space))
-            .with_state(self.clone()))
+            .with_state(self.clone())
+            .nest(
+                "/:space-id/badges",
+                badges::SpaceBadgeController::new(self.pool.clone()).route(),
+            ))
     }
 
     pub async fn get_space(
