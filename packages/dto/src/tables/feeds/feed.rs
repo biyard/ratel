@@ -25,14 +25,6 @@ pub struct Feed {
     #[api_model(summary, many_to_one = industries, action = [write_post])]
     pub industry_id: i64,
 
-    #[api_model(version = v0.1, summary, nullable)]
-    #[serde(default)]
-    pub proposer_name: Option<String>,
-
-    #[api_model(version = v0.1, summary, nullable)]
-    #[serde(default)]
-    pub profile_image: Option<String>,
-
     // parent feed ID
     #[api_model(summary, nullable, indexed, action = [review_doc, comment, repost])]
     pub parent_id: Option<i64>,

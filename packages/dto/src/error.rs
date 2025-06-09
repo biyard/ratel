@@ -162,6 +162,9 @@ pub enum Error {
 
     #[translate(en = "You must pass a valid team name")]
     InvalidTeamname,
+
+    #[translate(en = "Failed to create a badge. Please try again.")]
+    BadgeCreationFailure,
 }
 
 impl<E: StdError + 'static> From<E> for Error {
