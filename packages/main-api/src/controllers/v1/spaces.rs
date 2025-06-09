@@ -132,7 +132,7 @@ impl SpaceController {
         }
     }
 
-    pub fn route(&self) -> Result<by_axum::axum::Router> {
+    pub async fn route(&self) -> Result<by_axum::axum::Router> {
         Ok(by_axum::axum::Router::new()
             .route("/", post(Self::act_space).get(Self::get_space))
             .with_state(self.clone())
@@ -144,7 +144,9 @@ impl SpaceController {
             )
             .nest(
                 "/:space-id/badges",
-                badges::SpaceBadgeController::new(self.pool.clone()).route(),
+                badges::SpaceBadgeController::new(self.pool.clone())
+                    .await
+                    .route(),
             ))
     }
 

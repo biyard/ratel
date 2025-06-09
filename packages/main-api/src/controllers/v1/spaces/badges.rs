@@ -1,3 +1,4 @@
+use aws_sdk_s3::primitives::ByteStream;
 use by_axum::{
     aide,
     auth::Authorization,
@@ -9,12 +10,15 @@ use by_axum::{
 };
 use dto::*;
 
-use crate::utils::users::extract_user_id;
+use crate::{config, security::check_perm};
 
 #[derive(Clone, Debug)]
 pub struct SpaceBadgeController {
     repo: SpaceBadgeRepository,
     pool: sqlx::Pool<sqlx::Postgres>,
+
+    // contract: IncheonContentsContract<LocalFeePayer, KaiaLocalWallet>,
+    cli: aws_sdk_s3::Client,
 }
 
 impl SpaceBadgeController {
@@ -48,11 +52,18 @@ impl SpaceBadgeController {
         auth: Option<Authorization>,
         SpaceBadgeCreateRequest { badges }: SpaceBadgeCreateRequest,
     ) -> Result<SpaceBadge> {
-        let mut tx = self.pool.begin().await?;
         let repo = Badge::get_repository(self.pool.clone());
-        let creator_id = extract_user_id(&self.pool, auth).await?;
+        let user = check_perm(
+            &self.pool,
+            auth,
+            RatelResource::Space { space_id },
+            GroupPermission::ManageSpace,
+        )
+        .await?;
+        let creator_id = user.id;
+        let mut tx = self.pool.begin().await?;
 
-        for b in badges {
+        for b in badges.clone() {
             let BadgeCreateRequest {
                 name,
                 image_url,
@@ -82,6 +93,52 @@ impl SpaceBadgeController {
 
         tx.commit().await?;
 
+        let c = &config::get().bucket;
+
+        let mut ids = vec![];
+        let mut values = vec![];
+
+        for b in badges.iter() {
+            let path = format!(
+                "{}/json/{:064x}.json",
+                c.asset_dir,
+                b.token_id.unwrap_or_default()
+            );
+            match self
+                .cli
+                .put_object()
+                .bucket(c.name)
+                .key(&path)
+                .body(ByteStream::from(
+                    serde_json::json!({
+                        "name": format!("{} #{}", b.name, b.token_id.unwrap_or_default()),
+                        "image": b.image_url,
+                    })
+                    .to_string()
+                    .as_bytes()
+                    .to_vec(),
+                ))
+                .content_type("application/json")
+                .send()
+                .await
+            {
+                Ok(_) => {
+                    ids.push(b.token_id.unwrap_or_default() as u64);
+                    values.push(1);
+                    tracing::debug!("Uploaded to s3: {}", path);
+                }
+                Err(e) => {
+                    tracing::warn!(
+                        "Failed to upload to s3 for {}: {}",
+                        b.token_id.unwrap_or_default(),
+                        e
+                    );
+                }
+            }
+        }
+
+        // self.contract.mint_batch(evm_address, ids, values).await?;
+
         Ok(SpaceBadge::default())
     }
 
@@ -95,10 +152,29 @@ impl SpaceBadgeController {
 }
 
 impl SpaceBadgeController {
-    pub fn new(pool: sqlx::Pool<sqlx::Postgres>) -> Self {
+    pub async fn new(pool: sqlx::Pool<sqlx::Postgres>) -> Self {
         let repo = SpaceBadge::get_repository(pool.clone());
 
-        Self { repo, pool }
+        let conf = config::get();
+
+        use aws_config::BehaviorVersion;
+        use aws_config::{Region, defaults};
+        use aws_sdk_s3::config::Credentials;
+
+        let config = defaults(BehaviorVersion::latest())
+            .region(Region::new(conf.aws.region))
+            .credentials_provider(Credentials::new(
+                conf.aws.access_key_id,
+                conf.aws.secret_access_key,
+                None,
+                None,
+                "credential",
+            ));
+
+        let config = config.load().await;
+        let cli = aws_sdk_s3::Client::new(&config);
+
+        Self { repo, pool, cli }
     }
 
     pub fn route(&self) -> by_axum::axum::Router {

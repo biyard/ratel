@@ -18,6 +18,16 @@ pub struct Config {
     pub slack_channel_sponsor: &'static str,
     pub slack_channel_abusing: &'static str,
     pub slack_channel_monitor: &'static str,
+    pub kaia: KaiaConfig,
+}
+
+#[derive(Debug)]
+pub struct KaiaConfig {
+    pub endpoint: &'static str,
+    pub owner_key: &'static str,
+    pub owner_address: &'static str,
+    pub feepayer_key: &'static str,
+    pub feepayer_address: &'static str,
 }
 
 #[derive(Debug)]
@@ -30,6 +40,14 @@ pub struct BucketConfig {
 impl Default for Config {
     fn default() -> Self {
         Config {
+            kaia: KaiaConfig {
+                endpoint: option_env!("KAIA_ENDPOINT").expect("You must set KAIA_ENDPOINT"),
+                owner_key: option_env!("KAIA_OWNER_KEY").expect("You must set KAIA_OWNER_KEY"),
+                owner_address: option_env!("KAIA_OWNER_ADDR").expect("You must set KAIA_OWNER_ADDRESS"),
+                feepayer_key: option_env!("KAIA_FEEPAYER_KEY").expect("You must set KAIA_FEEPAYER_KEY"),
+                feepayer_address: option_env!("KAIA_FEEPAYER_ADDR").expect("You must set KAIA_FEEPAYER_ADDR"),
+            },
+
             env: option_env!("ENV").expect("You must set ENV"),
             domain: option_env!("DOMAIN").expect("You must set DOMAIN"),
             openapi_key: option_env!("OPENAPI_KEY").expect("OPENAPI_KEY is required"),
