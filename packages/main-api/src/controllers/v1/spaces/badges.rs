@@ -172,6 +172,7 @@ impl SpaceBadgeController {
         }: SpaceBadgeClaimRequest,
     ) -> Result<SpaceBadge> {
         let user = extract_user_with_allowing_anonymous(&self.pool, auth).await?;
+        tracing::debug!("Claiming badges for user: {:?}", user);
 
         let badges =
             sqlx::query("SELECT id FROM user_badges WHERE user_id = $1 AND badge_id = ANY($2)")
