@@ -4,9 +4,13 @@ use bdk::prelude::*;
 use by_axum::{
     aide,
     auth::Authorization,
-    axum::{Extension, Json, extract::State, routing::post},
+    axum::{
+        Extension, Json,
+        extract::State,
+        routing::{get, post},
+    },
 };
-use dto::*;
+use dto::{by_axum::axum::extract::Path, *};
 
 use crate::by_axum::axum::extract::Query;
 use crate::security::check_perm;
@@ -118,10 +122,20 @@ impl SpaceController {
         Ok(by_axum::axum::Router::new()
             .route("/", post(Self::act_space).get(Self::get_space))
             .with_state(self.clone())
+            .route("/:id", get(Self::get_by_id))
+            .with_state(self.clone())
             .nest(
                 "/:space-id/badges",
                 badges::SpaceBadgeController::new(self.pool.clone()).route(),
             ))
+    }
+
+    pub async fn get_by_id(
+        State(ctrl): State<SpaceController>,
+        Extension(auth): Extension<Option<Authorization>>,
+        Path(SpacePath { id }): Path<SpacePath>,
+    ) -> Result<Json<Space>> {
+        Ok(Json(ctrl.get_space_by_id(auth, id).await?))
     }
 
     pub async fn get_space(
