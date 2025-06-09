@@ -148,7 +148,7 @@ async fn api_main() -> Result<Router> {
     }
 
     let app = app
-        .nest("/v1", controllers::v1::route(pool.clone())?)
+        .nest("/v1", controllers::v1::route(pool.clone()).await?)
         .nest(
             "/m1",
             controllers::m1::MenaceController::route(pool.clone())?,
