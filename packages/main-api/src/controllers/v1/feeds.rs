@@ -35,6 +35,7 @@ impl FeedController {
     ) -> Result<QueryResponse<FeedSummary>> {
         let mut total_count = 0;
         let items: Vec<FeedSummary> = FeedSummary::query_builder()
+            .feed_type_equals(FeedType::Post)
             .limit(param.size())
             .page(param.page())
             .order_by_created_at_desc()
