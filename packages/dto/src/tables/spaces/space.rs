@@ -18,10 +18,9 @@ pub struct Space {
     #[api_model(summary, type = INTEGER, action = [create_space])]
     #[serde(default)]
     pub space_type: SpaceType,
-    #[api_model(version = v0.1, summary, type = INTEGER, action = [create_space])]
-    #[serde(default)]
-    pub space_form: SpaceForm,
-
+    // #[api_model(version = v0.1, summary, type = INTEGER, action = [create_space])]
+    // #[serde(default)]
+    // pub space_form: SpaceForm,
     #[api_model(summary, many_to_one = users)]
     pub user_id: i64,
     #[api_model(summary, many_to_one = industries)]
@@ -34,9 +33,10 @@ pub struct Space {
     pub proposer_profile: Option<String>,
     #[api_model(summary)]
     pub proposer_nickname: Option<String>,
-    #[api_model(summary , type = INTEGER)]
-    #[serde(default)]
-    pub content_type: ContentType,
+    // FIXME: remove this field. duplicated with industry_id
+    // #[api_model(summary , type = INTEGER)]
+    // #[serde(default)]
+    // pub content_type: ContentType,
     #[api_model(summary, version = v0.1, type = INTEGER)]
     #[serde(default)]
     pub status: SpaceStatus,
@@ -44,28 +44,35 @@ pub struct Space {
     #[serde(default)]
     pub files: Vec<File>,
 
+    // FIXME: separate members into a different table for joined table of users and spaces
     #[api_model(one_to_many = space_members, foreign_key = space_id)]
     #[serde(default)]
     pub members: Vec<SpaceMember>,
     #[api_model(summary, one_to_many = space_contracts, foreign_key = space_id)]
     #[serde(default)]
     pub contracts: Vec<SpaceContract>,
+    // FIXME: separate holders into a different table for joined table of users and spaces
     #[api_model(summary, one_to_many = space_holders, foreign_key = space_id)]
     #[serde(default)]
     pub holders: Vec<SpaceHolder>,
 
-    #[api_model(summary, many_to_many = space_users, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = space_id, aggregator = count, unique)]
-    #[serde(default)]
-    pub likes: i64,
-    #[api_model(summary, one_to_many = space_comments, foreign_key = space_id, aggregator=count)]
-    #[serde(default)]
-    pub comments: i64,
-    #[api_model(summary)]
-    #[serde(default)]
-    pub rewards: i64,
-    #[api_model(summary)]
-    #[serde(default)]
-    pub shares: i64,
+    // #[api_model(summary, many_to_many = space_users, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = space_id, aggregator = count, unique)]
+    // #[serde(default)]
+    // pub likes: i64,
+    // #[api_model(summary, one_to_many = space_comments, foreign_key = space_id, aggregator=count)]
+    // #[serde(default)]
+    // pub comments: i64,
+    // #[api_model(summary)]
+    // #[serde(default)]
+    // pub rewards: i64,
+    // #[api_model(summary)]
+    // #[serde(default)]
+    // pub shares: i64,
+    #[api_model(one_to_many = users, reference_key = user_id, foreign_key = id, summary)]
+    pub author: Vec<User>,
+
+    #[api_model(one_to_many = industries, reference_key = industry_id, foreign_key = id, summary)]
+    pub industry: Vec<Industry>,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]
@@ -79,25 +86,13 @@ pub enum SpaceStatus {
 
 #[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
-pub enum SpaceForm {
+pub enum SpaceType {
     #[default]
     Legislation = 1,
-
     Poll = 2,
     Deliberation = 3,
     Nft = 4,
-}
-
-#[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
-pub enum SpaceType {
-    #[default]
-    Post = 1,
-
-    // Belows are kinds of comments
-    Reply = 2,
-    Repost = 3,
-    DocReview = 4,
+    Commitee = 5,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]
@@ -112,7 +107,7 @@ pub enum ContentType {
 
 pub use bdk::prelude::*;
 
-use crate::{SpaceContract, SpaceHolder, SpaceMember};
+use crate::{Industry, SpaceContract, SpaceHolder, SpaceMember, User};
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
