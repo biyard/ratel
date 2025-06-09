@@ -2,7 +2,7 @@ use by_types::QueryResponse;
 
 use bdk::prelude::*;
 
-use crate::{Follower, Group};
+use crate::{Group};
 
 use super::Team;
 
@@ -33,16 +33,17 @@ pub struct User {
     pub informed_agreed: bool,
 
     #[api_model(type = INTEGER, indexed, version = v0.1)]
-    pub user_type: UserType,
+    pub user_type: UserType,    
     #[api_model(version = v0.1, indexed)]
     pub parent_id: Option<i64>,
     #[api_model(action = signup, version = v0.1, indexed, unique)]
     pub username: String,
 
-    #[api_model(one_to_many = followers, foreign_key = user_id)]
-    #[serde(default)]
-    pub followers: Vec<Follower>,
-    #[api_model(many_to_many = group_members, foreign_table_name = groups, foreign_primary_key = group_id, foreign_reference_key = user_id)]
+    #[api_model(many_to_many = my_networks, foreign_table_name = users, foreign_primary_key = follower_id, foreign_reference_key = following_id, aggregator = count)]
+    pub followers_count: i64,
+    #[api_model(many_to_many = my_networks, foreign_table_name = users, foreign_primary_key = following_id, foreign_reference_key = follower_id, aggregator = count)]
+    pub followings_count: i64,
+    #[api_model(many_to_many = group_members, foreign_table_name = groups, foreign_primary_key = group_id, foreign_reference_key = user_id)]   
     #[serde(default)]
     pub groups: Vec<Group>,
 

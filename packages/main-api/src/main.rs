@@ -38,7 +38,6 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
     migrate!(
         pool,
         User,
-        Follower,
         Group,
         GroupMember,
         AssemblyMember,
@@ -69,10 +68,12 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         AdvocacyCampaignAuthor,
         AdvocacyCampaignVoter,
         EventLog,
+        Mynetwork,
         Badge,
         UserBadge,
         SpaceBadge,
         SpaceGroup,
+
     );
 
     if Industry::query_builder()
