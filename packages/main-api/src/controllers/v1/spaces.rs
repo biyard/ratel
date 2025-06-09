@@ -1,4 +1,5 @@
 mod badges;
+mod comments;
 
 use bdk::prelude::*;
 use by_axum::{
@@ -35,6 +36,8 @@ impl SpaceController {
 
         Ok(Space::query_builder()
             .id_equals(id)
+            .comments_builder(SpaceComment::query_builder())
+            .feed_comments_builder(SpaceComment::query_builder())
             .query()
             .map(Space::from)
             .fetch_one(&self.pool)
@@ -135,6 +138,10 @@ impl SpaceController {
             .with_state(self.clone())
             .route("/:id", get(Self::get_by_id))
             .with_state(self.clone())
+            .nest(
+                "/:space-id/comments",
+                comments::SpaceCommentController::new(self.pool.clone()).route(),
+            )
             .nest(
                 "/:space-id/badges",
                 badges::SpaceBadgeController::new(self.pool.clone()).route(),

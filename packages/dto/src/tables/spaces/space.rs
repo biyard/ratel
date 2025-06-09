@@ -1,6 +1,6 @@
 pub use bdk::prelude::*;
 
-use crate::{Badge, Industry, RedeemCode, SpaceContract, SpaceGroup, User};
+use crate::*;
 
 use validator::Validate;
 
@@ -63,6 +63,14 @@ pub struct Space {
     #[api_model(many_to_many = redeem_codes, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = meta_id)]
     #[serde(default)]
     pub codes: Vec<RedeemCode>,
+
+    #[api_model(summary, one_to_many = feeds, foreign_key = parent_id, nested)]
+    #[serde(default)]
+    pub comments: Vec<SpaceComment>,
+
+    #[api_model(summary, one_to_many = feeds, reference_key = feed_id, foreign_key = parent_id, nested)]
+    #[serde(default)]
+    pub feed_comments: Vec<SpaceComment>,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]

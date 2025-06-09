@@ -47,7 +47,7 @@ pub struct Feed {
 
     #[api_model(summary, many_to_many = feed_users, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = feed_id, aggregator = count, unique)]
     pub likes: i64,
-    #[api_model(summary, one_to_many = feed_comments, foreign_key = feed_id, aggregator=count)]
+    #[api_model(summary, one_to_many = feeds, foreign_key = parent_id, aggregator=count)]
     pub comments: i64,
     #[api_model(version = v0.1, summary, action = write_post, type = JSONB)]
     #[serde(default)]
