@@ -1,5 +1,9 @@
 mod badges;
 mod comments;
+mod redeem_codes;
+
+use crate::by_axum::axum::extract::Query;
+use crate::security::check_perm;
 use bdk::prelude::*;
 use by_axum::{
     aide,
@@ -11,12 +15,6 @@ use by_axum::{
     },
 };
 use dto::{by_axum::axum::extract::Path, *};
-use uuid::Uuid;
-
-use crate::security::check_perm;
-use crate::{by_axum::axum::extract::Query, utils::users::extract_user_with_allowing_anonymous};
-
-use super::redeems;
 
 #[derive(
     Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
@@ -33,11 +31,14 @@ pub struct SpaceController {
 }
 
 impl SpaceController {
-    async fn get_space_by_id(&self, auth: Option<Authorization>, id: i64) -> Result<Space> {
-        let user = extract_user_with_allowing_anonymous(&self.pool, auth).await?;
+    async fn get_space_by_id(&self, _auth: Option<Authorization>, id: i64) -> Result<Space> {
+        // let user: std::result::Result<User, Error> =
+        //     extract_user_with_allowing_anonymous(&self.pool, auth).await;
+        // tracing::debug!("user: {:?}", user);
+
         let mut tx = self.pool.begin().await?;
 
-        let mut space = Space::query_builder()
+        let space = Space::query_builder()
             .id_equals(id)
             .comments_builder(SpaceComment::query_builder())
             .feed_comments_builder(SpaceComment::query_builder())
@@ -45,33 +46,34 @@ impl SpaceController {
             .map(Space::from)
             .fetch_one(&mut *tx)
             .await?;
-
-        let redeem_codes = RedeemCode::query_builder()
-            .user_id_equals(user.id)
-            .meta_id_equals(id)
-            .query()
-            .map(RedeemCode::from)
-            .fetch_optional(&mut *tx)
-            .await?;
-        if redeem_codes.is_some() {
-            space.codes = vec![redeem_codes.unwrap()];
-        } else {
-            let redeem_code_repo = RedeemCode::get_repository(self.pool.clone());
-            let mut codes = vec![];
-            for _ in 0..space.num_of_redeem_codes {
-                let id = Uuid::new_v4().to_string();
-                codes.push(id);
-            }
-            let res = redeem_code_repo
-                .insert_with_tx(&mut *tx, user.id, id, codes, vec![])
-                .await?;
-            if res.is_none() {
-                tracing::error!("failed to insert redeem codes for space {id}");
-                return Err(Error::RedeemCodeCreationFailure);
-            } else {
-                space.codes = vec![res.unwrap()];
-            }
-        }
+        // if let Ok(user) = user {
+        //     let redeem_codes = RedeemCode::query_builder()
+        //         .user_id_equals(user.id)
+        //         .meta_id_equals(id)
+        //         .query()
+        //         .map(RedeemCode::from)
+        //         .fetch_optional(&mut *tx)
+        //         .await?;
+        //     if redeem_codes.is_some() {
+        //         space.codes = vec![redeem_codes.unwrap()];
+        //     } else {
+        //         let redeem_code_repo = RedeemCode::get_repository(self.pool.clone());
+        //         let mut codes = vec![];
+        //         for _ in 0..space.num_of_redeem_codes {
+        //             let id = Uuid::new_v4().to_string();
+        //             codes.push(id);
+        //         }
+        //         let res = redeem_code_repo
+        //             .insert_with_tx(&mut *tx, user.id, id, codes, vec![])
+        //             .await?;
+        //         if res.is_none() {
+        //             tracing::error!("failed to insert redeem codes for space {id}");
+        //             return Err(Error::RedeemCodeCreationFailure);
+        //         } else {
+        //             space.codes = vec![res.unwrap()];
+        //         }
+        //     }
+        // }
         tx.commit().await?;
         Ok(space)
     }
@@ -181,6 +183,10 @@ impl SpaceController {
                 badges::SpaceBadgeController::new(self.pool.clone())
                     .await
                     .route(),
+            )
+            .nest(
+                "/:space-id/redeem-codes",
+                redeem_codes::SpaceRedeemCodeController::new(self.pool.clone()).route(),
             ))
     }
 
