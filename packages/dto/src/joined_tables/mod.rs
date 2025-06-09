@@ -2,6 +2,7 @@ mod election_pledges_quizzes;
 mod election_pledges_users;
 mod feed_users;
 mod group_member;
+mod onboards;
 mod redeem_codes;
 mod space_badges;
 mod space_users;
@@ -21,6 +22,7 @@ pub use advocacy_campaign_authors::*;
 mod advocacy_campaign_voters;
 pub use advocacy_campaign_voters::*;
 
+pub use onboards::*;
 pub use redeem_codes::*;
 pub use space_badges::*;
 pub use user_badges::*;

@@ -70,6 +70,10 @@ pub struct Feed {
 
     #[api_model(one_to_many = industries, reference_key = industry_id, foreign_key = id, summary)]
     pub industry: Vec<Industry>,
+
+    #[api_model(one_to_many = onboards, foreign_key = meta_id, summary, aggregator = exist)]
+    #[serde(default)]
+    pub onboard: bool,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]
