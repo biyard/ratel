@@ -34,7 +34,7 @@ pub struct User {
     pub user_type: UserType,
     #[api_model(version = v0.1, indexed)]
     pub parent_id: Option<i64>,
-    #[api_model(version = v0.1, indexed, unique)]
+    #[api_model(action = signup, version = v0.1, indexed, unique)]
     pub username: String,
 
     #[api_model(one_to_many = followers, foreign_key = user_id)]
