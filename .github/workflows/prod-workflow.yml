@@ -125,10 +125,10 @@ jobs:
           US_CONGRESS_KEY: ${{ secrets.US_CONGRESS_KEY }}
           SLACK_CHANNEL_ABUSING: ${{ secrets.SLACK_CHANNEL_ABUSING }}
 
-          KAIA_FEEPAYER_KEY: ${{ secrets.PROD_KLAYTN_FEEPAYER_KEY }}
-          KAIA_FEEPAYER_ADDR: ${{ secrets.PROD_KLAYTN_FEEPAYER_ADDR }}
-          KAIA_OWNER_KEY: ${{ secrets.PROD_KLAYTN_OWNER_KEY }}
-          KAIA_OWNER_ADDR: ${{ secrets.PROD_KLAYTN_OWNER_KEY_ADDR }}
+          KAIA_FEEPAYER_KEY: ${{ secrets.PROD_KAIA_FEEPAYER_KEY }}
+          KAIA_FEEPAYER_ADDR: ${{ secrets.PROD_KAIA_FEEPAYER_ADDR }}
+          KAIA_OWNER_KEY: ${{ secrets.PROD_KAIA_OWNER_KEY }}
+          KAIA_OWNER_ADDR: ${{ secrets.PROD_KAIA_OWNER_KEY_ADDR }}
           KAIA_ENDPOINT: https://public-en.node.kaia.io
         run: |
           npm i -g aws-cdk
