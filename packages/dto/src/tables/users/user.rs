@@ -2,7 +2,7 @@ use by_types::QueryResponse;
 
 use bdk::prelude::*;
 
-use crate::{Follower, Group};
+use crate::{Badge, Follower, Group};
 
 use super::Team;
 
@@ -54,6 +54,9 @@ pub struct User {
     #[api_model(version = v0.2, action_by_id = edit_profile)]
     #[serde(default)]
     pub html_contents: String,
+
+    #[api_model(many_to_many = user_badges, foreign_table_name = badges, foreign_primary_key = badge_id, foreign_reference_key = user_id)]
+    pub badges: Vec<Badge>,
 }
 
 impl User {
