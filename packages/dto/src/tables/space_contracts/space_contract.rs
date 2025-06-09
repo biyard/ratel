@@ -2,19 +2,19 @@ use bdk::prelude::*;
 use validator::Validate;
 
 #[derive(Validate)]
-#[api_model(base = "/v1/space-contracts", table = space_contracts)]
+#[api_model(base = "/v1/spaces/:space-id/contracts", table = space_contracts)]
 pub struct SpaceContract {
-    #[api_model(summary, primary_key, read_action = [find_by_id])]
+    #[api_model(primary_key)]
     pub id: i64,
-    #[api_model(summary, auto = [insert])]
+    #[api_model(auto = [insert])]
     pub created_at: i64,
-    #[api_model(summary, auto = [insert, update])]
+    #[api_model(auto = [insert, update])]
     pub updated_at: i64,
 
-    #[api_model(summary, many_to_one = spaces)]
+    #[api_model(many_to_one = spaces)]
     pub space_id: i64,
-    #[api_model(summary)]
-    pub creator: String,
-    #[api_model(summary)]
+    pub name: String,
     pub contract_address: String,
+    #[api_model(version = v0.1)]
+    pub asset_dir: String,
 }

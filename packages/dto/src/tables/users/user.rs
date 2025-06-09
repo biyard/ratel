@@ -36,7 +36,7 @@ pub struct User {
     pub user_type: UserType,    
     #[api_model(version = v0.1, indexed)]
     pub parent_id: Option<i64>,
-    #[api_model(version = v0.1, indexed, unique)]
+    #[api_model(action = signup, version = v0.1, indexed, unique)]
     pub username: String,
 
     #[api_model(many_to_many = my_networks, foreign_table_name = users, foreign_primary_key = follower_id, foreign_reference_key = following_id, aggregator = count)]

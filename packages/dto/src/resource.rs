@@ -4,4 +4,5 @@ pub enum RatelResource {
     Reply { team_id: i64 },
     News,
     Promotions,
+    Space { space_id: i64 },
 }

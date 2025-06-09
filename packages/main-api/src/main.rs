@@ -52,9 +52,7 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         Industry,
         Feed,
         FeedUser,
-        FeedComment,
         Space,
-        SpaceComment,
         SpaceUser,
         SpaceMember,
         SpaceContract,
@@ -71,6 +69,11 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         AdvocacyCampaignVoter,
         EventLog,
         Mynetwork,
+        Badge,
+        UserBadge,
+        SpaceBadge,
+        SpaceGroup,
+
     );
 
     if Industry::query_builder()
@@ -146,7 +149,7 @@ async fn api_main() -> Result<Router> {
     }
 
     let app = app
-        .nest("/v1", controllers::v1::route(pool.clone())?)
+        .nest("/v1", controllers::v1::route(pool.clone()).await?)
         .nest(
             "/m1",
             controllers::m1::MenaceController::route(pool.clone())?,

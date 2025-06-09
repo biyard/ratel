@@ -6434,12 +6434,16 @@ dependencies = [
 name = "main-api"
 version = "0.7.13"
 dependencies = [
+ "async-trait",
  "aws-config",
  "aws-sdk-s3",
  "bdk",
  "chrono",
  "dto",
+ "ethers",
+ "hex",
  "rest-api",
+ "rlp",
  "scraper",
  "serde",
  "serde_json",
