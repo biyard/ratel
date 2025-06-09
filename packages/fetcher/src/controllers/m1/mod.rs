@@ -3,6 +3,7 @@ mod bills;
 mod ch;
 mod eu;
 mod hk;
+mod log;
 mod us;
 
 use bdk::prelude::*;
@@ -18,6 +19,7 @@ use by_axum::{
 };
 use by_types::Role;
 use dto::*;
+use log::logs;
 use reqwest::StatusCode;
 
 pub async fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Router> {
@@ -28,6 +30,7 @@ pub async fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Ro
                 .await
                 .route()?,
         )
+        .nest("/logs", logs::LogController::new(pool.clone()).route()?)
         // .nest(
         //     "/assembly-members",
         //     assembly_members::AssemblyMemberController::new(pool).route()?,

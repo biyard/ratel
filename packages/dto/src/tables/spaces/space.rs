@@ -1,3 +1,7 @@
+pub use bdk::prelude::*;
+
+use crate::*;
+
 use validator::Validate;
 
 //TODO: action(like, comments, find_by_id, create_space), query_action
@@ -19,49 +23,74 @@ pub struct Space {
     #[serde(default)]
     pub space_type: SpaceType,
     #[api_model(summary, many_to_one = users)]
-    pub user_id: i64,
+    pub owner_id: i64,
     #[api_model(summary, many_to_one = industries)]
     pub industry_id: i64,
 
     #[api_model(summary, many_to_one = feeds, action = create_space)]
     pub feed_id: i64,
 
-    #[api_model(summary)]
-    pub proposer_profile: Option<String>,
-    #[api_model(summary)]
-    pub proposer_nickname: Option<String>,
-    #[api_model(summary , type = INTEGER)]
+    #[api_model(summary, version = v0.1, type = INTEGER)]
     #[serde(default)]
-    pub content_type: ContentType,
+    pub status: SpaceStatus,
+    #[api_model(version = v0.1, summary, type = JSONB)]
+    #[serde(default)]
+    pub files: Vec<File>,
 
-    #[api_model(one_to_many = space_members, foreign_key = space_id)]
+    #[api_model(summary, one_to_many = space_contracts, foreign_key = space_id)]
     #[serde(default)]
-    pub members: Vec<SpaceMember>,
+    pub contracts: Vec<SpaceContract>,
+    // FIXME: separate holders into a different table for joined table of users and spaces
+    // #[api_model(summary, one_to_many = space_holders, foreign_key = space_id)]
+    // #[serde(default)]
+    // pub holders: Vec<SpaceHolder>,
+    #[api_model(one_to_many = users, reference_key = owner_id, foreign_key = id)]
+    #[serde(default)]
+    pub author: Vec<User>,
 
-    #[api_model(summary, many_to_many = space_users, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = space_id, aggregator = count, unique)]
+    #[api_model(one_to_many = industries, reference_key = industry_id, foreign_key = id)]
     #[serde(default)]
-    pub likes: i64,
-    #[api_model(summary, one_to_many = space_comments, foreign_key = space_id, aggregator=count)]
+    pub industry: Vec<Industry>,
+    #[api_model(many_to_many = space_badges, foreign_table_name = badges, foreign_primary_key = badge_id, foreign_reference_key = space_id)]
     #[serde(default)]
-    pub comments: i64,
-    #[api_model(summary)]
+    pub badges: Vec<Badge>,
+    #[api_model(many_to_many = space_members, foreign_reference_key = space_id, foreign_primary_key = user_id, foreign_table_name = users)]
     #[serde(default)]
-    pub rewards: i64,
-    #[api_model(summary)]
+    pub members: Vec<User>,
+    #[api_model(one_to_many = space_groups, foreign_key = space_id)]
     #[serde(default)]
-    pub shares: i64,
+    pub groups: Vec<SpaceGroup>,
+    #[api_model(many_to_many = redeem_codes, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = meta_id)]
+    #[serde(default)]
+    pub codes: Vec<RedeemCode>,
+
+    #[api_model(summary, one_to_many = feeds, foreign_key = parent_id, nested)]
+    #[serde(default)]
+    pub comments: Vec<SpaceComment>,
+
+    #[api_model(summary, one_to_many = feeds, reference_key = feed_id, foreign_key = parent_id, nested)]
+    #[serde(default)]
+    pub feed_comments: Vec<SpaceComment>,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub enum SpaceStatus {
+    #[default]
+    Draft = 1,
+    InProgress = 2,
+    Finish = 3,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub enum SpaceType {
     #[default]
-    Post = 1,
-
-    // Belows are kinds of comments
-    Reply = 2,
-    Repost = 3,
-    DocReview = 4,
+    Legislation = 1,
+    Poll = 2,
+    Deliberation = 3,
+    Nft = 4,
+    Commitee = 5,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]
@@ -73,10 +102,6 @@ pub enum ContentType {
     #[translate(ko = "Social", en = "Social")]
     Social = 2,
 }
-
-pub use bdk::prelude::*;
-
-use crate::SpaceMember;
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]

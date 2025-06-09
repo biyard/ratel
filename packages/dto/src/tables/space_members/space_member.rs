@@ -16,4 +16,7 @@ pub struct SpaceMember {
     pub user_id: i64,
     #[api_model(many_to_one = spaces)]
     pub space_id: i64,
+
+    #[api_model(many_to_one = space_groups)]
+    pub space_group_id: i64,
 }

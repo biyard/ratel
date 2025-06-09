@@ -9,71 +9,71 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  main-ui:
-    runs-on: ubuntu-22.04
+  # main-ui:
+  #   runs-on: ubuntu-22.04
 
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: recursive
-          ssh-key: ${{ secrets.PULL_KEY_REPO }}
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #       with:
+  #         submodules: recursive
+  #         ssh-key: ${{ secrets.PULL_KEY_REPO }}
 
-      - uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ap-northeast-2
+  #     - uses: aws-actions/configure-aws-credentials@v2
+  #       with:
+  #         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         aws-region: ap-northeast-2
 
-      - uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          components: clippy, rustfmt
-          target: wasm32-unknown-unknown
-          toolchain: stable
+  #     - uses: actions-rust-lang/setup-rust-toolchain@v1
+  #       with:
+  #         components: clippy, rustfmt
+  #         target: wasm32-unknown-unknown
+  #         toolchain: stable
 
-      - uses: cargo-bins/cargo-binstall@main
+  #     - uses: cargo-bins/cargo-binstall@main
 
-      - name: Install dioxus-cli
-        run: |
-          cargo binstall dioxus-cli --force
-          cargo binstall toml-cli --force
+  #     - name: Install dioxus-cli
+  #       run: |
+  #         cargo binstall dioxus-cli --force
+  #         cargo binstall toml-cli --force
 
-      - name: Checking violate
-        env:
-          REGION: ap-northeast-2
-          ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          SERVICE: main-ui
-        run: |
-          dx check -p $SERVICE
+  #     - name: Checking violate
+  #       env:
+  #         REGION: ap-northeast-2
+  #         ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         SERVICE: main-ui
+  #       run: |
+  #         dx check -p $SERVICE
 
-      - name: Deploy UI
-        env:
-          REGION: ap-northeast-2
-          ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          FIREBASE_API_KEY: "${{ secrets.FIREBASE_API_KEY }}"
-          FIREBASE_AUTH_DOMAIN: "${{ secrets.FIREBASE_AUTH_DOMAIN }}"
-          FIREBASE_PROJECT_ID: "${{ secrets.FIREBASE_PROJECT_ID }}"
-          FIREBASE_STORAGE_BUCKET: "${{ secrets.FIREBASE_STORAGE_BUCKET }}"
-          FIREBASE_MESSAGING_SENDER_ID: "${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}"
-          FIREBASE_APP_ID: "${{ secrets.FIREBASE_APP_ID }}"
-          FIREBASE_MEASUREMENT_ID: "${{ secrets.FIREBASE_MEASUREMENT_ID }}"
-          MAIN_API_ENDPOINT: https://api.ratel.foundation
-          ENV: prod
-          RUST_LOG: info
-          SERVICE: main-ui
-          DOMAIN: ratel.foundation
-          API_PREFIX: /api
-          BASE_DOMAIN: ratel.foundation
-          ENABLE_S3: true
-          ENABLE_LAMBDA: true
-          VERSIONS: v1
-          V1_ENDPOINT: api.ratel.foundation
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          US_CONGRESS_KEY: ${{ secrets.US_CONGRESS_KEY }}
-        run: |
-          npm i -g aws-cdk @tailwindcss/cli
-          make deploy-web
+  #     - name: Deploy UI
+  #       env:
+  #         REGION: ap-northeast-2
+  #         ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         FIREBASE_API_KEY: "${{ secrets.FIREBASE_API_KEY }}"
+  #         FIREBASE_AUTH_DOMAIN: "${{ secrets.FIREBASE_AUTH_DOMAIN }}"
+  #         FIREBASE_PROJECT_ID: "${{ secrets.FIREBASE_PROJECT_ID }}"
+  #         FIREBASE_STORAGE_BUCKET: "${{ secrets.FIREBASE_STORAGE_BUCKET }}"
+  #         FIREBASE_MESSAGING_SENDER_ID: "${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}"
+  #         FIREBASE_APP_ID: "${{ secrets.FIREBASE_APP_ID }}"
+  #         FIREBASE_MEASUREMENT_ID: "${{ secrets.FIREBASE_MEASUREMENT_ID }}"
+  #         MAIN_API_ENDPOINT: https://api.ratel.foundation
+  #         ENV: prod
+  #         RUST_LOG: info
+  #         SERVICE: main-ui
+  #         DOMAIN: ratel.foundation
+  #         API_PREFIX: /api
+  #         BASE_DOMAIN: ratel.foundation
+  #         ENABLE_S3: true
+  #         ENABLE_LAMBDA: true
+  #         VERSIONS: v1
+  #         V1_ENDPOINT: api.ratel.foundation
+  #         DATABASE_URL: ${{ secrets.DATABASE_URL }}
+  #         US_CONGRESS_KEY: ${{ secrets.US_CONGRESS_KEY }}
+  #       run: |
+  #         npm i -g aws-cdk @tailwindcss/cli
+  #         make deploy-web
 
   main-api:
     runs-on: ubuntu-22.04
@@ -120,10 +120,16 @@ jobs:
           MIGRATE: false
           ENABLE_S3: false
           ENABLE_LAMBDA: true
-          BUCKET_NAME: ratel.foundation
+          BUCKET_NAME: metadata.ratel.foundation
           SLACK_CHANNEL_SPONSOR: ${{ secrets.SLACK_CHANNEL_SPONSOR }}
           US_CONGRESS_KEY: ${{ secrets.US_CONGRESS_KEY }}
           SLACK_CHANNEL_ABUSING: ${{ secrets.SLACK_CHANNEL_ABUSING }}
+
+          KAIA_FEEPAYER_KEY: ${{ secrets.PROD_KAIA_FEEPAYER_KEY }}
+          KAIA_FEEPAYER_ADDR: ${{ secrets.PROD_KAIA_FEEPAYER_ADDR }}
+          KAIA_OWNER_KEY: ${{ secrets.PROD_KAIA_OWNER_KEY }}
+          KAIA_OWNER_ADDR: ${{ secrets.PROD_KAIA_OWNER_KEY_ADDR }}
+          KAIA_ENDPOINT: https://public-en.node.kaia.io
         run: |
           npm i -g aws-cdk
           make deploy
@@ -232,6 +238,7 @@ jobs:
           BASE_DOMAIN: ratel.foundation
           REPO_NAME: ratel/fetcher
           US_CONGRESS_KEY: ${{ secrets.US_CONGRESS_KEY }}
+          RPC_ENDPOINT: https://public-en.node.kaia.io
 
           MIGRATE: false
           ENABLE_S3: false

@@ -44,6 +44,10 @@ pub enum GroupPermission {
     #[translate(en = "Update profile")]
     UpdateProfile = 8,
 
+    // Space permission
+    #[translate(en = "Manage space")]
+    ManageSpace = 20,
+
     // Admin
     #[translate(en = "[Admin] Manage promotions")]
     ManagePromotions = 62,

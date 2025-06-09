@@ -11,6 +11,7 @@ VERSION ?= $(shell toml get Cargo.toml package.version | tr -d \")
 RUSTFLAGS ?= -D warnings
 API_MODEL_ARTIFACT_DIR ?= $(PWD)/.build/api-models
 CARGO_TARGET_DIR ?= $(PWD)/target
+HASURA_GRAPHQL_AUTH_HOOK ?= https://api.dev.ratel.foundation/v1/auth/hasura
 
 SECRET_TOKEN ?=
 RUST_LOG ?= debug
@@ -25,7 +26,7 @@ SLACK_CHANNEL_SPONSOR ?=
 SLACK_CHANNEL_ABUSING ?=
 SLACK_CHANNEL_MONITOR ?=
 
-BUCKET_NAME ?= dev.ratel.foundation
+BUCKET_NAME ?= metadata.ratel.foundation
 BUCKET_EXPIRE ?= 3600
 ASSET_DIR ?= metadata
 
