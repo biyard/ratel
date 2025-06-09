@@ -74,6 +74,7 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         Badge,
         UserBadge,
         SpaceBadge,
+        SpaceGroup,
     );
 
     if Industry::query_builder()
