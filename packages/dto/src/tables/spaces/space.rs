@@ -1,6 +1,6 @@
 pub use bdk::prelude::*;
 
-use crate::{Badge, Industry, SpaceContract, SpaceHolder, SpaceMember, User};
+use crate::{Badge, Industry, RedeemCode, SpaceContract, SpaceGroup, User};
 
 use validator::Validate;
 
@@ -23,7 +23,7 @@ pub struct Space {
     #[serde(default)]
     pub space_type: SpaceType,
     #[api_model(summary, many_to_one = users)]
-    pub user_id: i64,
+    pub owner_id: i64,
     #[api_model(summary, many_to_one = industries)]
     pub industry_id: i64,
 
@@ -37,31 +37,32 @@ pub struct Space {
     #[serde(default)]
     pub files: Vec<File>,
 
-    // FIXME: separate members into a different table for joined table of users and spaces
-    #[api_model(one_to_many = space_members, foreign_key = space_id)]
-    #[serde(default)]
-    pub members: Vec<SpaceMember>,
     #[api_model(summary, one_to_many = space_contracts, foreign_key = space_id)]
     #[serde(default)]
     pub contracts: Vec<SpaceContract>,
     // FIXME: separate holders into a different table for joined table of users and spaces
-    #[api_model(summary, one_to_many = space_holders, foreign_key = space_id)]
-    #[serde(default)]
-    pub holders: Vec<SpaceHolder>,
-
-    #[api_model(one_to_many = users, reference_key = user_id, foreign_key = id)]
+    // #[api_model(summary, one_to_many = space_holders, foreign_key = space_id)]
+    // #[serde(default)]
+    // pub holders: Vec<SpaceHolder>,
+    #[api_model(one_to_many = users, reference_key = owner_id, foreign_key = id)]
     #[serde(default)]
     pub author: Vec<User>,
 
     #[api_model(one_to_many = industries, reference_key = industry_id, foreign_key = id)]
     #[serde(default)]
     pub industry: Vec<Industry>,
-    // #[api_model(many_to_many = redeem_codes, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = meta_id)]
-    // #[serde(default)]
-    // pub codes: Vec<RedeemCode>,
     #[api_model(many_to_many = space_badges, foreign_table_name = badges, foreign_primary_key = badge_id, foreign_reference_key = space_id)]
     #[serde(default)]
     pub badges: Vec<Badge>,
+    #[api_model(many_to_many = space_members, foreign_reference_key = space_id, foreign_primary_key = user_id, foreign_table_name = users)]
+    #[serde(default)]
+    pub members: Vec<User>,
+    #[api_model(one_to_many = space_groups, foreign_key = space_id)]
+    #[serde(default)]
+    pub groups: Vec<SpaceGroup>,
+    #[api_model(many_to_many = redeem_codes, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = meta_id)]
+    #[serde(default)]
+    pub codes: Vec<RedeemCode>,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]

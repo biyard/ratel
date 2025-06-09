@@ -73,9 +73,12 @@ impl SpaceController {
         )
         .await?;
 
+        let mut tx = self.pool.begin().await?;
+
         let res = self
             .repo
-            .insert(
+            .insert_with_tx(
+                &mut *tx,
                 feed.title,
                 feed.html_contents,
                 space_type,
@@ -89,18 +92,26 @@ impl SpaceController {
             .map_err(|e| {
                 tracing::error!("failed to insert post space: {:?}", e);
                 Error::SpaceWritePostError
-            })?;
+            })?
+            .ok_or(Error::SpaceWritePostError)?;
+
+        let g = SpaceGroup::get_repository(self.pool.clone());
+        let group = g
+            .insert_with_tx(&mut *tx, res.id, "Admin".to_string())
+            .await?
+            .ok_or(Error::SpaceWritePostError)?;
 
         for id in user_ids {
             let _ = self
                 .space_member_repo
-                .insert(id, res.id)
+                .insert_with_tx(&mut *tx, id, res.id, group.id)
                 .await
                 .map_err(|e| {
                     tracing::error!("failed to insert space with member error: {:?}", e);
                     Error::SpaceWritePostError
                 })?;
         }
+        tx.commit().await?;
 
         Ok(res)
     }
