@@ -2,7 +2,7 @@ use bdk::prelude::*;
 use validator::Validate;
 
 #[derive(Validate)]
-#[api_model(base = "/", table = redeem_codes, action = [], action_by_id = [delete, update])]
+#[api_model(base = "/redeem", table = redeem_codes, action = [], action_by_id = [use_code(code = String)])]
 pub struct RedeemCode {
     #[api_model(primary_key)]
     pub id: i64,
@@ -19,6 +19,6 @@ pub struct RedeemCode {
     #[api_model(type = JSONB)]
     pub codes: Vec<String>,
 
-    #[api_model(type = JSONB)]
+    #[api_model(type = JSONB, summary)]
     pub used: Vec<i32>,
 }

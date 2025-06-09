@@ -165,6 +165,14 @@ pub enum Error {
 
     #[translate(en = "Failed to create a badge. Please try again.")]
     BadgeCreationFailure,
+
+    // redeem codes
+    #[translate(en = "Failed to create redeem codes")]
+    RedeemCodeCreationFailure,
+    #[translate(en = "Failed to use redeem code")]
+    InvalidRedeemCode,
+    #[translate(en = "Redeem Code is not exists")]
+    RedeemCodeNotFound,
 }
 
 impl<E: StdError + 'static> From<E> for Error {
