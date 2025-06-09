@@ -56,6 +56,7 @@ pub struct User {
     pub html_contents: String,
 
     #[api_model(many_to_many = user_badges, foreign_table_name = badges, foreign_primary_key = badge_id, foreign_reference_key = user_id)]
+    #[serde(default)]
     pub badges: Vec<Badge>,
 }
 
