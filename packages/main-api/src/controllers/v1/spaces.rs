@@ -40,7 +40,6 @@ impl SpaceController {
         auth: Option<Authorization>,
         SpaceCreateSpaceRequest {
             space_type,
-            space_form,
             feed_id,
             user_ids,
         }: SpaceCreateSpaceRequest,
@@ -74,17 +73,13 @@ impl SpaceController {
                 feed.title,
                 feed.html_contents,
                 space_type,
-                space_form,
                 user.id,
                 feed.industry_id,
                 feed_id,
                 Some(user.profile_url),
                 Some(user.nickname),
-                ContentType::Crypto,
                 SpaceStatus::Draft,
                 feed.files,
-                0,
-                0,
             )
             .await
             .map_err(|e| {
