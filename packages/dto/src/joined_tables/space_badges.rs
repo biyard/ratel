@@ -19,10 +19,3 @@ pub struct SpaceBadge {
     #[api_model(many_to_one = badges)]
     pub badge_id: i64,
 }
-
-// https://metadata.ratel.foundation/digital-act/digitalact-bit2.gif
-// https://metadata.ratel.foundation/digital-act/digitalact-dog2.gif
-// https://metadata.ratel.foundation/digital-act/digitalact-ether2.gif
-// https://metadata.ratel.foundation/digital-act/digitalact-kaia2.gif
-// https://metadata.ratel.foundation/digital-act/digitalact-sol2.gif
-// https://metadata.ratel.foundation/digital-act/digitalact-teth2.gif
