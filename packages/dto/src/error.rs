@@ -56,6 +56,11 @@ pub enum Error {
     SignException,
     DatabaseException(String),
 
+    #[translate(en = "Please change group name.")]
+    DuplicatedGroupName,
+    #[translate(en = "Failed to insert group member")]
+    InsertGroupMemberFailed,
+
     // NA OpenAPI
     OpenApiResponseError(String),
     #[translate(en = "Failed to parse response")]

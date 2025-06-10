@@ -280,6 +280,8 @@ mod tests {
                 FeedType::Post,
                 user.id,
                 industry_id,
+                None,
+                title,
                 Some(user.nickname.clone()),
                 Some(user.profile_url.clone()),
                 None,
@@ -287,8 +289,6 @@ mod tests {
                 None,
                 None,
                 vec![],
-                0,
-                0,
             )
             .await
             .unwrap();
