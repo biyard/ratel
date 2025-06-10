@@ -2,8 +2,8 @@ mod badges;
 mod comments;
 mod redeem_codes;
 
-use crate::by_axum::axum::extract::Query;
 use crate::security::check_perm;
+use crate::{by_axum::axum::extract::Query, utils::users::extract_user_id};
 use bdk::prelude::*;
 use by_axum::{
     aide,
@@ -89,8 +89,11 @@ impl SpaceController {
         }: SpaceCreateSpaceRequest,
     ) -> Result<Space> {
         let _ = space_type;
+        let user_id = extract_user_id(&self.pool, auth.clone())
+            .await
+            .unwrap_or_default();
 
-        let feed = Feed::query_builder()
+        let feed = Feed::query_builder(user_id)
             .id_equals(feed_id)
             .query()
             .map(Feed::from)
@@ -110,7 +113,6 @@ impl SpaceController {
             GroupPermission::WritePosts,
         )
         .await?;
-
         let mut tx = self.pool.begin().await?;
 
         let res = self
