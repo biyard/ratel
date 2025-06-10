@@ -99,8 +99,9 @@ impl TeamController {
                 false,
                 UserType::Team,
                 Some(user_id),
-                username,
+                username.clone(),
                 html_contents,
+                username,
             )
             .await
             .map_err(|e| {
