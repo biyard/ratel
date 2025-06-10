@@ -211,6 +211,7 @@ impl UserControllerV1 {
         tracing::debug!("principal 111: {:?}", principal);
         let user = User::query_builder()
             .principal_equals(principal.ok_or(Error::InvalidUser)?)
+            .user_type_equals(UserType::Individual)
             .query()
             .map(User::from)
             .fetch_one(&self.pool)
