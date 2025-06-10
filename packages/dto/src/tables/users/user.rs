@@ -58,6 +58,10 @@ pub struct User {
     #[api_model(many_to_many = user_badges, foreign_table_name = badges, foreign_primary_key = badge_id, foreign_reference_key = user_id)]
     #[serde(default)]
     pub badges: Vec<Badge>,
+
+    #[api_model(version = v0.3, indexed, unique, action = signup, action = update_evm_address)]
+    #[serde(default)]
+    pub evm_address: String,
 }
 
 impl User {

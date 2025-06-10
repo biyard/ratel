@@ -114,8 +114,10 @@ impl SpaceBadgeController {
 
         for b in badges.iter() {
             let path = format!(
-                "{}/json/{:064x}.json",
+                "{}/json/{}/{}/{}.json",
                 c.asset_dir,
+                config::get().env,
+                space_id,
                 b.token_id.unwrap_or_default()
             );
             match self

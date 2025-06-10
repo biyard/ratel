@@ -73,6 +73,7 @@ impl UserControllerV1 {
 
         match body {
             UserAction::Signup(req) => ctrl.signup(req, sig).await,
+            UserAction::UpdateEvmAddress(req) => ctrl.update_evm_address(req, sig).await,
         }
     }
 
@@ -131,6 +132,34 @@ impl UserControllerV1 {
     }
 
     #[instrument]
+    pub async fn update_evm_address(
+        &self,
+        req: UserUpdateEvmAddressRequest,
+        sig: Signature,
+    ) -> Result<Json<User>> {
+        let principal = sig.principal().map_err(|s| {
+            tracing::error!("failed to get principal: {:?}", s);
+            Error::Unauthorized
+        })?;
+        let user = User::query_builder()
+            .principal_equals(principal.clone())
+            .query()
+            .map(User::from)
+            .fetch_one(&self.pool)
+            .await?;
+
+        let user = self
+            .users
+            .update(
+                user.id,
+                UserRepositoryUpdateRequest::new().with_evm_address(req.evm_address),
+            )
+            .await?;
+
+        Ok(Json(user))
+    }
+
+    #[instrument]
     pub async fn signup(&self, req: UserSignupRequest, sig: Signature) -> Result<Json<User>> {
         let principal = sig.principal().map_err(|s| {
             tracing::error!("failed to get principal: {:?}", s);
@@ -160,6 +189,7 @@ impl UserControllerV1 {
                         .with_term_agreed(req.term_agreed)
                         .with_informed_agreed(req.informed_agreed)
                         .with_username(req.username)
+                        .with_evm_address(req.evm_address)
                         .with_user_type(UserType::Individual),
                 )
                 .await?;
@@ -180,6 +210,7 @@ impl UserControllerV1 {
                 None,
                 req.username,
                 "".to_string(),
+                req.evm_address,
             )
             .await?;
 
