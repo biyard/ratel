@@ -91,8 +91,9 @@ impl BotController {
                 false,
                 UserType::Bot,
                 Some(user_id),
-                username,
+                username.clone(),
                 "".to_string(),
+                username,
             )
             .await?;
 
