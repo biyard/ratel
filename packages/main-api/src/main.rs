@@ -17,64 +17,64 @@ pub mod models;
 pub mod security;
 pub mod utils;
 
-macro_rules! migrate {
-    ($pool:ident, $($table:ident),* $(,)?) => {
-        {
-            $(
-                let t = $table::get_repository($pool.clone());
-                t.create_this_table().await?;
-            )*
-            $(
-                let t = $table::get_repository($pool.clone());
-                t.create_related_tables().await?;
-            )*
-        }
-    };
-}
+// macro_rules! migrate {
+//     ($pool:ident, $($table:ident),* $(,)?) => {
+//         {
+//             $(
+//                 let t = $table::get_repository($pool.clone());
+//                 t.create_this_table().await?;
+//             )*
+//             $(
+//                 let t = $table::get_repository($pool.clone());
+//                 t.create_related_tables().await?;
+//             )*
+//         }
+//     };
+// }
 
 async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
     tracing::info!("Running migration");
 
-    migrate!(
-        pool,
-        User,
-        Follower,
-        Group,
-        GroupMember,
-        AssemblyMember,
-        BillWriter,
-        Vote,
-        Proposer,
-        Support,
-        Subscription,
-        PresidentialCandidate,
-        ElectionPledge,
-        ElectionPledgeLike,
-        Industry,
-        Feed,
-        FeedUser,
-        RedeemCode,
-        Space,
-        SpaceUser,
-        SpaceMember,
-        SpaceContract,
-        SpaceHolder,
-        TeamMember,
-        News,
-        Quiz,
-        QuizResult,
-        ElectionPledgeQuizLike,
-        ElectionPledgeQuizDislike,
-        Promotion,
-        AdvocacyCampaign,
-        AdvocacyCampaignAuthor,
-        AdvocacyCampaignVoter,
-        EventLog,
-        Badge,
-        UserBadge,
-        SpaceBadge,
-        SpaceGroup,
-    );
+    // migrate!(
+    //     pool,
+    //     User,
+    //     Follower,
+    //     Group,
+    //     GroupMember,
+    //     AssemblyMember,
+    //     BillWriter,
+    //     Vote,
+    //     Proposer,
+    //     Support,
+    //     Subscription,
+    //     PresidentialCandidate,
+    //     ElectionPledge,
+    //     ElectionPledgeLike,
+    //     Industry,
+    //     Feed,
+    //     FeedUser,
+    //     RedeemCode,
+    //     Space,
+    //     SpaceUser,
+    //     SpaceMember,
+    //     SpaceContract,
+    //     SpaceHolder,
+    //     TeamMember,
+    //     News,
+    //     Quiz,
+    //     QuizResult,
+    //     ElectionPledgeQuizLike,
+    //     ElectionPledgeQuizDislike,
+    //     Promotion,
+    //     AdvocacyCampaign,
+    //     AdvocacyCampaignAuthor,
+    //     AdvocacyCampaignVoter,
+    //     EventLog,
+    //     Badge,
+    //     UserBadge,
+    //     SpaceBadge,
+    //     SpaceGroup,
+    // );
 
     if Industry::query_builder()
         .id_equals(1)
