@@ -49,7 +49,7 @@ impl SpaceRedeemCodeController {
             .user_id_equals(user.id)
             .query()
             .map(RedeemCode::from)
-            .fetch_optional(&mut *tx)
+            .fetch_optional(&self.pool)
             .await?;
         let redeem_code = if redeem_code.is_none() {
             let redeem_code_repo = RedeemCode::get_repository(self.pool.clone());
@@ -58,7 +58,7 @@ impl SpaceRedeemCodeController {
                 .id_equals(meta_id)
                 .query()
                 .map(Space::from)
-                .fetch_one(&mut *tx)
+                .fetch_one(&self.pool)
                 .await?;
             for _ in 0..space.num_of_redeem_codes {
                 let id = Uuid::new_v4().to_string();
