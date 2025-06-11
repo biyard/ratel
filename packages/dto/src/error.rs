@@ -179,6 +179,9 @@ pub enum Error {
     InvalidRedeemCode,
     #[translate(en = "Redeem Code is not exists")]
     RedeemCodeNotFound,
+
+    #[translate(en = "You are already following this user")]
+    AlreadyFollowing,
 }
 
 impl<E: StdError + 'static> From<E> for Error {

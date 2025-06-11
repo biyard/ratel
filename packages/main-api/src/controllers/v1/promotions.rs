@@ -282,13 +282,13 @@ mod tests {
                 industry_id,
                 None,
                 title,
-                Some(user.nickname.clone()),
-                Some(user.profile_url.clone()),
-                None,
-                title,
                 None,
                 None,
                 vec![],
+                0,
+                0,
+                None,
+                UrlType::None,
             )
             .await
             .unwrap();
