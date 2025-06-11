@@ -1,8 +1,10 @@
 use bdk::prelude::*;
 use validator::Validate;
 
+use crate::GroupMemberUser;
+
 #[derive(Validate)]
-#[api_model(base = "/v1/groups", table = groups, action = [], action_by_id = [delete, update])]
+#[api_model(base = "/v1/teams/:team_id/groups", table = groups, action = [create(users = Vec<i64>, permissions = Vec<GroupPermission>)], action_by_id = [update(users = Vec<i64>, permissions = Vec<GroupPermission>), invite_member(user_ids = Vec<i64>), delete])]
 pub struct Group {
     #[api_model(summary, primary_key)]
     pub id: i64,
@@ -11,9 +13,20 @@ pub struct Group {
     #[api_model(summary, auto = [insert, update])]
     pub updated_at: i64,
 
+    #[api_model(summary, action = create, action_by_id = [update])]
     pub name: String,
+    #[api_model(summary, version = v0.1, action = create, action_by_id = [update])]
+    pub description: String,
+
+    #[api_model(summary, version = v0.1, action = create, action_by_id = [update])]
+    pub image_url: String,
+
     #[api_model(many_to_one = users)]
     pub user_id: i64,
+
+    #[api_model(many_to_many = group_members, foreign_table_name = groups, foreign_primary_key = group_id, foreign_reference_key = user_id)]
+    #[serde(default)]
+    pub members: Vec<GroupMemberUser>,
 
     #[api_model(version = v0.1)]
     pub permissions: i64,
@@ -44,6 +57,13 @@ pub enum GroupPermission {
     #[translate(en = "Update profile")]
     UpdateProfile = 8,
 
+    #[translate(en = "Invite member")]
+    InviteMember = 9,
+    #[translate(en = "Update group")]
+    UpdateGroup = 10,
+    #[translate(en = "Delete group")]
+    DeleteGroup = 11,
+
     // Space permission
     #[translate(en = "Manage space")]
     ManageSpace = 20,
@@ -55,7 +75,7 @@ pub enum GroupPermission {
     ManageNews = 63,
 }
 
-pub struct GroupPermissions(Vec<GroupPermission>);
+pub struct GroupPermissions(pub Vec<GroupPermission>);
 
 impl Default for GroupPermissions {
     fn default() -> Self {
