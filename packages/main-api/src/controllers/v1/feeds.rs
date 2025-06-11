@@ -82,10 +82,26 @@ impl FeedController {
             .await
             .unwrap_or_default();
         let mut total_count = 0;
-
+        let status = if let Some(status) = param.status {
+            if status == FeedStatus::Draft {
+                check_perm(
+                    &self.pool,
+                    auth,
+                    RatelResource::Post { team_id: user_id },
+                    GroupPermission::ReadPostDrafts,
+                )
+                .await?;
+                FeedStatus::Draft
+            } else {
+                status
+            }
+        } else {
+            FeedStatus::Published
+        };
         let items: Vec<FeedSummary> = FeedSummary::query_builder(user_id)
             .limit(param.size())
             .page(param.page())
+            .status_equals(status)
             .user_id_equals(param.user_id.unwrap_or_default())
             .order_by_created_at_desc()
             .query()
@@ -115,7 +131,7 @@ impl FeedController {
             .insert(
                 FeedType::default(),
                 user_id,
-                0,
+                1,
                 None,
                 None,
                 None,
@@ -159,7 +175,7 @@ impl FeedController {
 
         let feed = Feed::query_builder(user_id)
             .id_equals(parent_id)
-            .status_equals(FeedStatus::Published)
+            .status_not_equals(FeedStatus::Draft)
             .query()
             .map(Feed::from)
             .fetch_one(&self.pool)
@@ -291,7 +307,7 @@ impl FeedController {
 
         let feed = Feed::query_builder(user_id)
             .id_equals(parent_id)
-            .status_equals(FeedStatus::Published)
+            .status_not_equals(FeedStatus::Draft)
             .query()
             .map(Feed::from)
             .fetch_one(&self.pool)
@@ -303,7 +319,7 @@ impl FeedController {
 
         Feed::query_builder(user_id)
             .id_equals(quote_feed_id)
-            .status_equals(FeedStatus::Published)
+            .status_not_equals(FeedStatus::Draft)
             .query()
             .map(Feed::from)
             .fetch_one(&self.pool)
@@ -515,17 +531,26 @@ impl FeedController {
         Path(FeedPath { id }): Path<FeedPath>,
     ) -> Result<Json<Feed>> {
         tracing::debug!("get_feed {:?}", id);
-        let user_id = extract_user_id(&ctrl.pool, auth).await.unwrap_or_default();
+        let user_id = extract_user_id(&ctrl.pool, auth.clone())
+            .await
+            .unwrap_or_default();
 
-        Ok(Json(
-            Feed::query_builder(user_id)
-                .status_equals(FeedStatus::Published)
-                .id_equals(id)
-                .query()
-                .map(Feed::from)
-                .fetch_one(&ctrl.pool)
-                .await?,
-        ))
+        let res = Feed::query_builder(user_id)
+            .id_equals(id)
+            .query()
+            .map(Feed::from)
+            .fetch_one(&ctrl.pool)
+            .await?;
+        if res.status == FeedStatus::Draft {
+            check_perm(
+                &ctrl.pool,
+                auth,
+                RatelResource::Post { team_id: user_id },
+                GroupPermission::ReadPostDrafts,
+            )
+            .await?;
+        }
+        Ok(Json(res))
     }
 
     pub async fn get_feed(
