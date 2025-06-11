@@ -53,9 +53,11 @@ impl GroupController {
             .fetch_one(&self.pool)
             .await?;
 
+        tracing::debug!("team data: {:?} {:?}", team.members, user_id);
+
         let is_member = team.members.iter().any(|member| member.id == user_id);
 
-        if !is_member {
+        if !is_member && team.id != user_id {
             return Err(Error::Unauthorized);
         }
         Ok((user_id, team))
@@ -184,7 +186,7 @@ impl GroupController {
         if auth.is_none() {
             return Err(Error::Unauthorized);
         }
-        let (_user_id, _team) = self.has_permission(auth.clone(), team_id).await?;
+        let (user_id, _team) = self.has_permission(auth.clone(), team_id).await?;
         let mut tx = self.pool.begin().await?;
 
         let perms: i64 = GroupPermissions(permissions).into();
@@ -200,6 +202,17 @@ impl GroupController {
             .ok_or(Error::DuplicatedGroupName)?;
 
         let group_id = group.id;
+
+        let _ = self
+            .group_member_repo
+            .insert_with_tx(&mut *tx, user_id, group_id)
+            .await
+            .map_err(|e| {
+                tracing::error!("Failed to create group member: {:?}", e);
+                Error::InsertGroupMemberFailed
+            })?
+            .ok_or(Error::InsertGroupMemberFailed)?;
+
         for user_id in users {
             let _ = self
                 .group_member_repo
