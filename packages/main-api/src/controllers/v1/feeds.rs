@@ -429,7 +429,7 @@ impl FeedController {
 
     async fn publish_draft(&self, id: i64, auth: Option<Authorization>) -> Result<Feed> {
         let user_id = extract_user_id(&self.pool, auth).await?;
-        let feed = Feed::query_builder(user_id)
+        Feed::query_builder(user_id)
             .id_equals(id)
             .status_equals(FeedStatus::Draft)
             .query()
