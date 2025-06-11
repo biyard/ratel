@@ -85,18 +85,19 @@ impl GroupController {
         let mut tx = self.pool.begin().await?;
 
         for user_id in user_ids {
-            let _ = match User::query_builder()
-                .id_equals(user_id)
-                .query()
-                .map(User::from)
-                .fetch_one(&self.pool)
-                .await
-            {
-                Ok(user) => user,
-                Err(_) => {
-                    return Err(Error::InvalidUser);
-                }
-            };
+            // let _ = match User::query_builder()
+            //     .id_equals(user_id)
+            //     .query()
+            //     .map(User::from)
+            //     .fetch_one(&self.pool)
+            //     .await
+            // {
+            //     Ok(user) => user,
+            //     Err(e) => {
+            //         tracing::error!("insert user failed with error: {:?}", e);
+            //         return Err(Error::InvalidUser);
+            //     }
+            // };
 
             let _ = GroupMember::get_repository(self.pool.clone())
                 .insert_with_tx(&mut *tx, user_id, id)

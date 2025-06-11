@@ -92,6 +92,7 @@ impl UserControllerV1 {
         req.validate()?;
 
         match req.action {
+            Some(UserReadActionType::FindByEmail) => ctrl.find_by_email(req).await,
             Some(UserReadActionType::CheckEmail) => ctrl.check_email(req).await,
             Some(UserReadActionType::UserInfo) => {
                 req.principal = Some(principal);
@@ -225,6 +226,22 @@ impl UserControllerV1 {
         let user = User::query_builder()
             .email_equals(email.ok_or(Error::InvalidEmail)?)
             .user_type_equals(UserType::Individual)
+            .query()
+            .map(User::from)
+            .fetch_one(&self.pool)
+            .await
+            .map_err(|_| Error::NotFound)?;
+
+        Ok(Json(user))
+    }
+
+    #[instrument]
+    async fn find_by_email(
+        &self,
+        UserReadAction { email, .. }: UserReadAction,
+    ) -> Result<Json<User>> {
+        let user = User::query_builder()
+            .email_equals(email.ok_or(Error::InvalidEmail)?)
             .query()
             .map(User::from)
             .fetch_one(&self.pool)

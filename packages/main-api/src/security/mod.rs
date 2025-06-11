@@ -29,6 +29,7 @@ pub async fn check_perm(
             })?;
             let user = User::query_builder()
                 .principal_equals(principal)
+                .groups_builder(Group::query_builder())
                 .query()
                 .map(User::from)
                 .fetch_one(pool)
