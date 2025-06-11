@@ -5,7 +5,7 @@ use by_axum::auth::Authorization;
 use by_axum::axum::{
     Extension, Json,
     extract::{Path, State},
-    routing::{post},
+    routing::post,
 };
 
 use dto::*;
@@ -55,7 +55,12 @@ impl MynetworkController {
 
         // Create the network relationship
 
-        let network = self.repo.insert(follower_id, to_be_followed).await?;
+        let network = self.repo.insert(follower_id, to_be_followed).await
+            .map_err(|e| {
+                    tracing::error!("failed to insert follower: {:?}", e);
+
+                    Error::DatabaseException(e.to_string())
+                })?;
 
         Ok(network)
     }
@@ -124,7 +129,6 @@ impl MynetworkController {
             }
         }
     }
-
 }
 
 #[cfg(test)]
