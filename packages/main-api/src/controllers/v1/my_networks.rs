@@ -210,9 +210,10 @@ mod tests {
             "Should not be able to follow user2 twice"
         );
 
-        // let unfollow_result = cli.unfollow(user2.id, auth.clone()).await;
+        //clean db
+        let unfollow_result = cli.unfollow(user2.id, auth.clone()).await;
 
-        // assert!(unfollow_result.is_ok(), "Should be able to unfollow user2");
+        assert!(unfollow_result.is_ok(), "Should be able to unfollow user2");
 
         if let Err(error) = follow_again_result {
             match error {
