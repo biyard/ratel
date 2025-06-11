@@ -114,6 +114,12 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           JWT_SECRET_KEY: ${{ secrets.DEV_JWT_SECRET }}
           US_CONGRESS_KEY: ${{ secrets.US_CONGRESS_KEY }}
+
+          KAIA_FEEPAYER_KEY: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+          KAIA_FEEPAYER_ADDR: "0x742d35Cc6634C0532925a3b8D72C1a6C4A2c4c8f"
+          KAIA_OWNER_KEY: "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
+          KAIA_OWNER_ADDR: "0x8ba1f109551bD432803012645Hac136c1c5c45e3"
+          KAIA_ENDPOINT: https://public-en.node.kaia.io
         run: |
           cd packages/main-api  && make test
 
@@ -231,11 +237,11 @@ jobs:
           US_CONGRESS_KEY: ${{ secrets.US_CONGRESS_KEY }}
           SLACK_CHANNEL_ABUSING: ${{ secrets.DEV_SLACK }}
 
-          KAIA_ENDPOINT: https://public-en-kairos.node.kaia.io
-          KAIA_FEEPAYER_KEY: ${{ secrets.DEV_KAIA_KEY }}
-          KAIA_FEEPAYER_ADDR: ${{ secrets.DEV_KAIA_ADDR }}
-          KAIA_OWNER_KEY: ${{ secrets.DEV_KAIA_KEY }}
-          KAIA_OWNER_ADDR: ${{ secrets.DEV_KAIA_ADDR }}
+          KAIA_FEEPAYER_KEY: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+          KAIA_FEEPAYER_ADDR: "0x742d35Cc6634C0532925a3b8D72C1a6C4A2c4c8f"
+          KAIA_OWNER_KEY: "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
+          KAIA_OWNER_ADDR: "0x8ba1f109551bD432803012645Hac136c1c5c45e3"
+          KAIA_ENDPOINT: https://public-en.node.kaia.io
         run: |
           npm i -g aws-cdk
           make deploy
