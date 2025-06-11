@@ -1,4 +1,5 @@
 /target/
+.vscode/*
 /.build/
 .DS_Store
 /packages/main-api/.build/

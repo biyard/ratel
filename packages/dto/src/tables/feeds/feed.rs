@@ -1,10 +1,10 @@
 use bdk::prelude::*;
 use validator::Validate;
 
-use crate::{File, Industry, Space, User};
+use crate::*;
 
 #[derive(Validate)]
-#[api_model(base = "/v1/feeds", table = feeds, action = [], action_by_id = [delete])]
+#[api_model(base = "/v1/feeds", table = feeds, action = [], action_by_id = [delete, like(value = bool)])]
 pub struct Feed {
     #[api_model(summary, primary_key)]
     pub id: i64,
@@ -47,6 +47,10 @@ pub struct Feed {
 
     #[api_model(summary, many_to_many = feed_users, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = feed_id, aggregator = count, unique)]
     pub likes: i64,
+
+    #[api_model(summary, many_to_many = feed_users, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = feed_id, aggregator = exist)]
+    pub is_liked: bool,
+
     #[api_model(summary, one_to_many = feeds, foreign_key = parent_id, aggregator=count)]
     pub comments: i64,
     #[api_model(version = v0.1, summary, action = write_post, type = JSONB)]
@@ -66,10 +70,14 @@ pub struct Feed {
     pub url_type: UrlType,
 
     #[api_model(one_to_many = users, reference_key = user_id, foreign_key = id, summary)]
-    pub author: Vec<User>,
+    pub author: Vec<FeedAuthor>,
 
     #[api_model(one_to_many = industries, reference_key = industry_id, foreign_key = id, summary)]
     pub industry: Vec<Industry>,
+
+    #[api_model(one_to_many = onboards, foreign_key = meta_id, summary, aggregator = exist)]
+    #[serde(default)]
+    pub onboard: bool,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]

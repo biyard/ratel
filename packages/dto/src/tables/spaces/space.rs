@@ -60,6 +60,9 @@ pub struct Space {
     #[api_model(one_to_many = space_groups, foreign_key = space_id)]
     #[serde(default)]
     pub groups: Vec<SpaceGroup>,
+
+    #[api_model(version = v0.1, action = create_space)]
+    pub num_of_redeem_codes: i64,
     #[api_model(many_to_many = redeem_codes, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = meta_id)]
     #[serde(default)]
     pub codes: Vec<RedeemCode>,
