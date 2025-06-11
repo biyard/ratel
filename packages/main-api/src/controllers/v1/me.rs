@@ -88,6 +88,7 @@ mod tests {
                 Some(user_id),
                 username,
                 "".to_string(),
+                format!("0x{:40x}", now + 2), // unique evm_address
             )
             .await
             .unwrap()
@@ -112,6 +113,7 @@ mod tests {
                 Some(admin_id),
                 username,
                 "".to_string(),
+                format!("0x{:40x}2", now + 2), // unique evm_address
             )
             .await
             .unwrap()
@@ -142,6 +144,7 @@ mod tests {
                 Some(admin_id),
                 username,
                 "".to_string(),
+                format!("0x{:40x}3", now + 3), // unique evm_address
             )
             .await
             .unwrap()
