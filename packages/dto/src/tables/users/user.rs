@@ -5,6 +5,7 @@ use bdk::prelude::*;
 use crate::{Badge, Follower, Group};
 
 use super::Team;
+use crate::GroupRepositoryQueryBuilder;
 
 #[derive(validator::Validate)]
 #[api_model(base = "/v1/users", read_action = user_info, table = users, iter_type=QueryResponse)]
@@ -42,7 +43,7 @@ pub struct User {
     #[api_model(one_to_many = followers, foreign_key = user_id)]
     #[serde(default)]
     pub followers: Vec<Follower>,
-    #[api_model(many_to_many = group_members, foreign_table_name = groups, foreign_primary_key = group_id, foreign_reference_key = user_id)]
+    #[api_model(many_to_many = group_members, foreign_table_name = groups, foreign_primary_key = group_id, foreign_reference_key = user_id, nested)]
     #[serde(default)]
     pub groups: Vec<Group>,
 

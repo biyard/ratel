@@ -239,9 +239,9 @@ impl UserControllerV1 {
         &self,
         UserReadAction { principal, .. }: UserReadAction,
     ) -> Result<Json<User>> {
-        tracing::debug!("principal 111: {:?}", principal);
         let user = User::query_builder()
             .principal_equals(principal.ok_or(Error::InvalidUser)?)
+            .groups_builder(Group::query_builder())
             .user_type_equals(UserType::Individual)
             .query()
             .map(User::from)
