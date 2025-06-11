@@ -280,7 +280,7 @@ mod tests {
                 FeedType::Post,
                 user.id,
                 industry_id,
-                Some(0),
+                None,
                 title,
                 None,
                 None,

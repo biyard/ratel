@@ -4,13 +4,9 @@ use by_axum::auth::Authorization;
 
 use by_axum::axum::{
     Extension, Json,
-    extract::{Path, Query, State},
-    routing::{get, post},
+    extract::{Path, State},
+    routing::{post},
 };
-
-use by_types::QueryResponse;
-
-use sqlx::postgres::PgRow;
 
 use dto::*;
 
@@ -98,9 +94,6 @@ impl MynetworkController {
     pub fn route(&self) -> Result<by_axum::axum::Router> {
         let router = by_axum::axum::Router::new()
             .route("/", post(Self::act_follower_by_id))
-            .with_state(self.clone())
-            .route("/:id/followings", get(Self::get_followings))
-            .route("/:id/followers", get(Self::get_followers))
             .with_state(self.clone());
 
         Ok(router)
@@ -132,183 +125,6 @@ impl MynetworkController {
         }
     }
 
-    pub async fn get_followings(
-        State(ctrl): State<MynetworkController>,
-
-        Extension(_): Extension<Option<Authorization>>,
-
-        Path(MynetworkPath { id }): Path<MynetworkPath>,
-
-        Query(param): Query<UserQuery>,
-    ) -> Result<Json<QueryResponse<User>>> {
-        // Get paginated list of users that the given user is following
-
-        let mut total_count = 0;
-
-        let following_ids: Vec<i64> = Mynetwork::query_builder()
-            .follower_id_equals(id)
-            .limit(param.size())
-            .page(param.page())
-            .order_by_created_at_desc()
-            .query()
-            .map(|row: PgRow| {
-                use sqlx::Row;
-
-                total_count = row.try_get("total_count").unwrap_or_default();
-
-                let network: Mynetwork = row.into();
-
-                network.following_id
-            })
-            .fetch_all(&ctrl.pool)
-            .await
-            .map_err(|e| {
-                tracing::error!("failed to get following relationships: {:?}", e);
-
-                Error::DatabaseException(e.to_string())
-            })?;
-
-        // If no following relationships found, return empty result
-
-        if following_ids.is_empty() {
-            return Ok(Json(QueryResponse {
-                items: vec![],
-
-                total_count: 0,
-            }));
-        }
-
-        // Get the actual user details for the following IDs
-
-        let users: Vec<User> = if following_ids.is_empty() {
-            vec![]
-        } else {
-            // Create OR conditions for multiple IDs using BitOr operator
-
-            let mut combined_query = None;
-
-            for following_id in following_ids {
-                let single_query = User::query_builder().id_equals(following_id);
-
-                match combined_query {
-                    None => combined_query = Some(single_query),
-
-                    Some(existing_query) => combined_query = Some(existing_query | single_query),
-                }
-            }
-
-            if let Some(query) = combined_query {
-                query
-                    .order_by_created_at_desc()
-                    .query()
-                    .map(User::from)
-                    .fetch_all(&ctrl.pool)
-                    .await
-                    .map_err(|e| {
-                        tracing::error!("failed to get users: {:?}", e);
-
-                        Error::DatabaseException(e.to_string())
-                    })?
-            } else {
-                vec![]
-            }
-        };
-
-        Ok(Json(QueryResponse {
-            items: users,
-
-            total_count,
-        }))
-    }
-
-    pub async fn get_followers(
-        State(ctrl): State<MynetworkController>,
-
-        Extension(_): Extension<Option<Authorization>>,
-
-        Path(MynetworkPath { id }): Path<MynetworkPath>,
-
-        Query(param): Query<UserQuery>,
-    ) -> Result<Json<QueryResponse<User>>> {
-        // Get paginated list of users that are following the given user
-
-        let mut total_count = 0;
-
-        let follower_ids: Vec<i64> = Mynetwork::query_builder()
-            .following_id_equals(id)
-            .limit(param.size())
-            .page(param.page())
-            .order_by_created_at_desc()
-            .query()
-            .map(|row: PgRow| {
-                use sqlx::Row;
-
-                total_count = row.try_get("total_count").unwrap_or_default();
-
-                let network: Mynetwork = row.into();
-
-                network.follower_id
-            })
-            .fetch_all(&ctrl.pool)
-            .await
-            .map_err(|e| {
-                tracing::error!("failed to get follower relationships: {:?}", e);
-
-                Error::DatabaseException(e.to_string())
-            })?;
-
-        // If no follower relationships found, return empty result
-
-        if follower_ids.is_empty() {
-            return Ok(Json(QueryResponse {
-                items: vec![],
-
-                total_count: 0,
-            }));
-        }
-
-        // Get the actual user details for the follower IDs
-
-        let users: Vec<User> = if follower_ids.is_empty() {
-            vec![]
-        } else {
-            // Create OR conditions for multiple IDs using BitOr operator
-
-            let mut combined_query = None;
-
-            for follower_id in follower_ids {
-                let single_query = User::query_builder().id_equals(follower_id);
-
-                match combined_query {
-                    None => combined_query = Some(single_query),
-
-                    Some(existing_query) => combined_query = Some(existing_query | single_query),
-                }
-            }
-
-            if let Some(query) = combined_query {
-                query
-                    .order_by_created_at_desc()
-                    .query()
-                    .map(User::from)
-                    .fetch_all(&ctrl.pool)
-                    .await
-                    .map_err(|e| {
-                        tracing::error!("failed to get users: {:?}", e);
-
-                        Error::DatabaseException(e.to_string())
-                    })?
-            } else {
-                vec![]
-            }
-        };
-
-        Ok(Json(QueryResponse {
-            items: users,
-
-            total_count,
-        }))
-    }
 }
 
 #[cfg(test)]
