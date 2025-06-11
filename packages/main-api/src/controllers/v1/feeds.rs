@@ -577,6 +577,8 @@ mod tests {
                 title.clone(),
                 None,
                 vec![],
+                None,
+                UrlType::None,
             )
             .await;
 
@@ -626,6 +628,8 @@ mod tests {
                 title.clone(),
                 Some(quote.id),
                 vec![],
+                None,
+                UrlType::None,
             )
             .await;
 
