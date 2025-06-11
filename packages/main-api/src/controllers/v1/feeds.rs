@@ -610,7 +610,45 @@ mod tests {
         // predefined industry: Crypto
         let industry_id = 1;
 
-        let quote = Feed::query_builder()
+        let post = Feed::get_repository(pool.clone())
+            .insert(
+                html_contents.clone(),
+                FeedType::Post,
+                user.id,
+                industry_id,
+                None,
+                title.clone(),
+                None,
+                None,
+                vec![],
+                0,
+                0,
+                None,
+                UrlType::None,
+            )
+            .await
+            .unwrap();
+
+        let _ = Feed::get_repository(pool.clone())
+            .insert(
+                html_contents.clone(),
+                FeedType::Reply,
+                user.id,
+                industry_id,
+                Some(post.id),
+                title.clone(),
+                None,
+                None,
+                vec![],
+                0,
+                0,
+                None,
+                UrlType::None,
+            )
+            .await
+            .unwrap();
+
+        let quote = Feed::query_builder(user.id.clone())
             .feed_type_equals(FeedType::Reply)
             .order_by_created_at_asc()
             .limit(1)
@@ -630,6 +668,7 @@ mod tests {
                 vec![],
                 None,
                 UrlType::None,
+
             )
             .await;
 
@@ -656,7 +695,31 @@ mod tests {
             ..
         } = setup().await.unwrap();
 
-        let post = Feed::query_builder()
+        let html_contents = format!("<p>Test {now}</p>");
+        let title = Some(format!("Test Title {now}"));
+        // predefined industry: Crypto
+        let industry_id = 1;
+
+        let _ = Feed::get_repository(pool.clone())
+            .insert(
+                html_contents.clone(),
+                FeedType::Post,
+                user.id,
+                industry_id,
+                None,
+                title.clone(),
+                None,
+                None,
+                vec![],
+                0,
+                0,
+                None,
+                UrlType::None,
+            )
+            .await
+            .unwrap();
+
+        let post = Feed::query_builder(user.id.clone())
             .feed_type_equals(FeedType::Post)
             .order_by_created_at_asc()
             .limit(1)
@@ -694,7 +757,50 @@ mod tests {
             ..
         } = setup().await.unwrap();
 
-        let post = Feed::query_builder()
+        let html_contents = format!("<p>Test {now}</p>");
+        let title = Some(format!("Test Title {now}"));
+        // predefined industry: Crypto
+        let industry_id = 1;
+
+        let _ = Feed::get_repository(pool.clone())
+            .insert(
+                html_contents.clone(),
+                FeedType::Post,
+                user.id,
+                industry_id,
+                None,
+                title.clone(),
+                None,
+                None,
+                vec![],
+                0,
+                0,
+                None,
+                UrlType::None,
+            )
+            .await
+            .unwrap();
+
+        let _ = Feed::get_repository(pool.clone())
+            .insert(
+                html_contents.clone(),
+                FeedType::Reply,
+                user.id,
+                industry_id,
+                None,
+                title.clone(),
+                None,
+                None,
+                vec![],
+                0,
+                0,
+                None,
+                UrlType::None,
+            )
+            .await
+            .unwrap();
+
+        let post = Feed::query_builder(user.id.clone())
             .feed_type_equals(FeedType::Post)
             .order_by_created_at_asc()
             .limit(1)
@@ -704,7 +810,7 @@ mod tests {
             .await
             .unwrap();
 
-        let quote_feed = Feed::query_builder()
+        let quote_feed = Feed::query_builder(user.id.clone())
             .feed_type_equals(FeedType::Reply)
             .order_by_created_at_asc()
             .limit(1)
@@ -813,7 +919,30 @@ mod tests {
 
         let html_contents = format!("<p>Review {now}</p>");
 
-        let quote = Feed::query_builder()
+        let title = Some(format!("Test Title {now}"));
+        // predefined industry: Crypto
+        let industry_id = 1;
+
+        let _ = Feed::get_repository(pool.clone())
+            .insert(
+                html_contents.clone(),
+                FeedType::Reply,
+                user.id,
+                industry_id,
+                None,
+                title.clone(),
+                None,
+                None,
+                vec![],
+                0,
+                0,
+                None,
+                UrlType::None,
+            )
+            .await
+            .unwrap();
+
+        let quote = Feed::query_builder(user.id.clone())
             .feed_type_equals(FeedType::Reply)
             .order_by_created_at_asc()
             .limit(1)
@@ -844,7 +973,30 @@ mod tests {
 
         let html_contents = format!("<p>Review {now}</p>");
 
-        let feed = Feed::query_builder()
+        let title = Some(format!("Test Title {now}"));
+        // predefined industry: Crypto
+        let industry_id = 1;
+
+        let _ = Feed::get_repository(pool.clone())
+            .insert(
+                html_contents.clone(),
+                FeedType::Post,
+                user.id,
+                industry_id,
+                None,
+                title.clone(),
+                None,
+                None,
+                vec![],
+                0,
+                0,
+                None,
+                UrlType::None,
+            )
+            .await
+            .unwrap();
+
+        let feed = Feed::query_builder(user.id.clone())
             .feed_type_equals(FeedType::Post)
             .order_by_created_at_asc()
             .limit(1)
