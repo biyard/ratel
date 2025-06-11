@@ -34,3 +34,4 @@ rest-api = { workspace = true, features = ["test"] }
 [features]
 default = []
 lambda = ["bdk/lambda"]
+full-test = []
