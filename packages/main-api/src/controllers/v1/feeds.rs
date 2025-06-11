@@ -441,9 +441,6 @@ impl FeedController {
                 Error::FeedPublishError
             })?;
 
-        if feed.status != FeedStatus::Draft {
-            return Err(Error::FeedPublishError);
-        }
         let res = self
             .repo
             .update(
