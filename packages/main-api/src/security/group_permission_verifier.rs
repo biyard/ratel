@@ -20,6 +20,7 @@ impl PermissionVerifier for GroupPermissionVerifier {
         let mut group = None;
 
         for g in user.groups.clone() {
+            tracing::debug!("group info: {:?} {:?}", g.id, self.group_id);
             if g.id == self.group_id {
                 group = Some(g);
                 break;
@@ -32,8 +33,10 @@ impl PermissionVerifier for GroupPermissionVerifier {
 
         let group = group.unwrap();
 
+        //FIXME: fix to check with group member table
         let is_member = group.members.iter().any(|member| member.id == user.id);
 
+        tracing::debug!("group members: {:?} {:?}", group.members, user.id,);
         let permission_check = group.permissions & (1_i64 << (perm as i32)) != 0;
 
         permission_check && is_member
