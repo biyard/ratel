@@ -610,13 +610,32 @@ mod tests {
         // predefined industry: Crypto
         let industry_id = 1;
 
+        let post = Feed::get_repository(pool.clone())
+            .insert(
+                html_contents.clone(),
+                FeedType::Post,
+                user.id,
+                industry_id,
+                None,
+                title.clone(),
+                None,
+                None,
+                vec![],
+                0,
+                0,
+                None,
+                UrlType::None,
+            )
+            .await
+            .unwrap();
+
         let _ = Feed::get_repository(pool.clone())
             .insert(
                 html_contents.clone(),
                 FeedType::Reply,
                 user.id,
                 industry_id,
-                None,
+                Some(post.id),
                 title.clone(),
                 None,
                 None,

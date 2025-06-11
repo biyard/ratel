@@ -265,9 +265,6 @@ impl UserControllerV1 {
         Query(param): Query<UserQuery>,
     ) -> Result<Json<QueryResponse<User>>> {
         // Get paginated list of users that the given user is following
-
-        let mut total_count = 0;
-
         let following_ids: Vec<i64> = Mynetwork::query_builder()
             .follower_id_equals(id)
             .limit(param.size())
@@ -275,10 +272,6 @@ impl UserControllerV1 {
             .order_by_created_at_desc()
             .query()
             .map(|row: PgRow| {
-                use sqlx::Row;
-
-                total_count = row.try_get("total_count").unwrap_or_default();
-
                 let network: Mynetwork = row.into();
 
                 network.following_id
@@ -291,15 +284,7 @@ impl UserControllerV1 {
                 Error::DatabaseException(e.to_string())
             })?;
 
-        // If no following relationships found, return empty result
-        if following_ids.is_empty() {
-            return Ok(Json(QueryResponse {
-                items: vec![],
-
-                total_count: 0,
-            }));
-        }
-
+        let total_count = following_ids.len() as i64;
         // Get the actual user details for the following IDs
         let users: Vec<User> = if following_ids.is_empty() {
             vec![]
@@ -307,6 +292,7 @@ impl UserControllerV1 {
             // Create OR conditions for multiple IDs using BitOr operator
 
             let mut combined_query = None;
+
 
             for following_id in following_ids {
                 let single_query = User::query_builder().id_equals(following_id);
@@ -353,22 +339,15 @@ impl UserControllerV1 {
         Query(param): Query<UserQuery>,
     ) -> Result<Json<QueryResponse<User>>> {
         // Get paginated list of users that are following the given user
-
-        let mut total_count = 0;
-
         let follower_ids: Vec<i64> = Mynetwork::query_builder()
-            .following_id_equals(id)
+        .following_id_equals(id)
             .limit(param.size())
             .page(param.page())
             .order_by_created_at_desc()
             .query()
-            .map(|row: PgRow| {
-                use sqlx::Row;
-
-                total_count = row.try_get("total_count").unwrap_or_default();
-
+            .map(|row: PgRow| {                
                 let network: Mynetwork = row.into();
-
+                
                 network.follower_id
             })
             .fetch_all(&ctrl.pool)
@@ -378,19 +357,10 @@ impl UserControllerV1 {
 
                 Error::DatabaseException(e.to_string())
             })?;
-
-        // If no follower relationships found, return empty result
-
-        if follower_ids.is_empty() {
-            return Ok(Json(QueryResponse {
-                items: vec![],
-
-                total_count: 0,
-            }));
-        }
-
-        // Get the actual user details for the follower IDs
-
+            
+            
+        let total_count = follower_ids.len() as i64;
+            // Get the actual user details for the follower IDs
         let users: Vec<User> = if follower_ids.is_empty() {
             vec![]
         } else {
