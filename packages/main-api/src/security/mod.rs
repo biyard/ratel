@@ -1,8 +1,10 @@
 mod general_permission_verifier;
+mod group_permission_verifier;
 mod space_permission_verifier;
 mod team_permission_verifier;
 
 pub use general_permission_verifier::*;
+pub use group_permission_verifier::*;
 use space_permission_verifier::SpacePermissionVerifier;
 pub use team_permission_verifier::*;
 
@@ -69,6 +71,11 @@ pub async fn check_perm(
 
         RatelResource::Space { space_id } => {
             Box::new(SpacePermissionVerifier::new(user.id, space_id, pool).await)
+        }
+        RatelResource::UpdateGroup { group_id } => Box::new(GroupPermissionVerifier::new(group_id)),
+        RatelResource::DeleteGroup { group_id } => Box::new(GroupPermissionVerifier::new(group_id)),
+        RatelResource::InviteMember { group_id } => {
+            Box::new(GroupPermissionVerifier::new(group_id))
         }
     };
 

@@ -70,7 +70,7 @@ pub async fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Ro
             election_pledges::ElectionPledgeController::new(pool.clone()).route()?,
         )
         .nest(
-            "/groups",
+            "/teams/:team_id/groups",
             groups::GroupController::new(pool.clone()).route()?,
         )
         .nest(

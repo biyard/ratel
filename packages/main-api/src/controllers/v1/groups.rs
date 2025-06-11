@@ -1,4 +1,3 @@
-#![allow(unused)]
 use bdk::prelude::*;
 use by_axum::{
     aide,
@@ -13,13 +12,22 @@ use by_types::QueryResponse;
 use dto::*;
 use sqlx::postgres::PgRow;
 
-use crate::{security::check_perm, utils::users::extract_user_id};
+use crate::security::check_perm;
+use crate::utils::users::extract_user_id;
+
+#[derive(
+    Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
+)]
+pub struct GroupIdPath {
+    pub team_id: i64,
+    pub id: i64,
+}
 
 #[derive(
     Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
 )]
 pub struct GroupPath {
-    pub id: i64,
+    pub team_id: i64,
 }
 
 #[derive(Clone, Debug)]
@@ -34,27 +42,28 @@ impl GroupController {
     async fn has_permission(
         &self,
         auth: Option<Authorization>,
-        group_id: i64,
-    ) -> Result<(i64, Group)> {
+        team_id: i64,
+    ) -> Result<(i64, Team)> {
         let user_id = extract_user_id(&self.pool, auth).await?;
 
-        let group = Group::query_builder()
-            .id_equals(group_id)
+        let team = Team::query_builder()
+            .id_equals(team_id)
             .query()
-            .map(Group::from)
+            .map(Team::from)
             .fetch_one(&self.pool)
             .await?;
 
-        let is_member = group.members.iter().any(|member| member.id == user_id);
+        let is_member = team.members.iter().any(|member| member.id == user_id);
 
         if !is_member {
             return Err(Error::Unauthorized);
         }
-        Ok((user_id, group))
+        Ok((user_id, team))
     }
 
     async fn invite_member(
         &self,
+        team_id: i64,
         id: i64,
         auth: Option<Authorization>,
         GroupInviteMemberRequest { user_ids }: GroupInviteMemberRequest,
@@ -62,15 +71,23 @@ impl GroupController {
         if auth.is_none() {
             return Err(Error::Unauthorized);
         }
-        let (_user_id, _group) = self.has_permission(auth, id).await?;
+        let (_user_id, _team) = self.has_permission(auth.clone(), team_id).await?;
+        check_perm(
+            &self.pool,
+            auth,
+            RatelResource::InviteMember { group_id: id },
+            GroupPermission::InviteMember,
+        )
+        .await?;
+
         let mut tx = self.pool.begin().await?;
 
         for user_id in user_ids {
-            let user = match User::query_builder()
+            let _ = match User::query_builder()
                 .id_equals(user_id)
                 .query()
                 .map(User::from)
-                .fetch_one(&mut *tx)
+                .fetch_one(&self.pool)
                 .await
             {
                 Ok(user) => user,
@@ -91,6 +108,7 @@ impl GroupController {
 
     async fn update(
         &self,
+        team_id: i64,
         id: i64,
         auth: Option<Authorization>,
         param: GroupUpdateRequest,
@@ -98,17 +116,31 @@ impl GroupController {
         if auth.is_none() {
             return Err(Error::Unauthorized);
         }
-        let (_user_id, _group) = self.has_permission(auth, id).await?;
+        let (_user_id, _team) = self.has_permission(auth.clone(), team_id).await?;
+        check_perm(
+            &self.pool,
+            auth,
+            RatelResource::UpdateGroup { group_id: id },
+            GroupPermission::UpdateGroup,
+        )
+        .await?;
         let res = self.repo.update(id, param.into()).await?;
 
         Ok(res)
     }
 
-    async fn delete(&self, id: i64, auth: Option<Authorization>) -> Result<Group> {
+    async fn delete(&self, team_id: i64, id: i64, auth: Option<Authorization>) -> Result<Group> {
         if auth.is_none() {
             return Err(Error::Unauthorized);
         }
-        let (_user_id, _group) = self.has_permission(auth, id).await?;
+        let (_user_id, _team) = self.has_permission(auth.clone(), team_id).await?;
+        check_perm(
+            &self.pool,
+            auth,
+            RatelResource::DeleteGroup { group_id: id },
+            GroupPermission::DeleteGroup,
+        )
+        .await?;
 
         let res = self.repo.delete(id).await?;
 
@@ -140,6 +172,7 @@ impl GroupController {
     async fn create(
         &self,
         auth: Option<Authorization>,
+        team_id: i64,
         GroupCreateRequest {
             name,
             description,
@@ -148,14 +181,17 @@ impl GroupController {
             permissions,
         }: GroupCreateRequest,
     ) -> Result<Group> {
-        let user_id = extract_user_id(&self.pool, auth).await?;
+        if auth.is_none() {
+            return Err(Error::Unauthorized);
+        }
+        let (_user_id, _team) = self.has_permission(auth.clone(), team_id).await?;
         let mut tx = self.pool.begin().await?;
 
         let perms: i64 = GroupPermissions(permissions).into();
 
         let group = self
             .repo
-            .insert_with_tx(&mut *tx, name, description, image_url, user_id, perms)
+            .insert_with_tx(&mut *tx, name, description, image_url, team_id, perms)
             .await
             .map_err(|e| {
                 tracing::error!("Failed to create group: {:?}", e);
@@ -164,7 +200,7 @@ impl GroupController {
             .ok_or(Error::DuplicatedGroupName)?;
 
         let group_id = group.id;
-        for user in users {
+        for user_id in users {
             let _ = self
                 .group_member_repo
                 .insert_with_tx(&mut *tx, user_id, group_id)
@@ -208,8 +244,9 @@ impl GroupController {
     pub async fn get_group_by_id(
         State(ctrl): State<GroupController>,
         Extension(_auth): Extension<Option<Authorization>>,
-        Path(GroupPath { id }): Path<GroupPath>,
+        Path(GroupIdPath { team_id, id }): Path<GroupIdPath>,
     ) -> Result<Json<Group>> {
+        let _team_id = team_id;
         tracing::debug!("get_group {:?}", id);
 
         Ok(Json(
@@ -225,21 +262,21 @@ impl GroupController {
     pub async fn act_group_by_id(
         State(ctrl): State<GroupController>,
         Extension(auth): Extension<Option<Authorization>>,
-        Path(GroupPath { id }): Path<GroupPath>,
+        Path(GroupIdPath { team_id, id }): Path<GroupIdPath>,
         Json(body): Json<GroupByIdAction>,
     ) -> Result<Json<Group>> {
         tracing::debug!("act_group_by_id {:?} {:?}", id, body);
         match body {
             GroupByIdAction::Delete(_) => {
-                let res = ctrl.delete(id, auth).await?;
+                let res = ctrl.delete(team_id, id, auth).await?;
                 Ok(Json(res))
             }
             GroupByIdAction::Update(param) => {
-                let res = ctrl.update(id, auth, param).await?;
+                let res = ctrl.update(team_id, id, auth, param).await?;
                 Ok(Json(res))
             }
             GroupByIdAction::InviteMember(param) => {
-                let res = ctrl.invite_member(id, auth, param).await?;
+                let res = ctrl.invite_member(team_id, id, auth, param).await?;
                 Ok(Json(res))
             }
         }
@@ -249,26 +286,28 @@ impl GroupController {
         State(ctrl): State<GroupController>,
         Extension(auth): Extension<Option<Authorization>>,
         Query(q): Query<GroupParam>,
+        Path(GroupPath { team_id }): Path<GroupPath>,
     ) -> Result<Json<GroupGetResponse>> {
+        let _team_id = team_id;
         tracing::debug!("list groups: {:?}", q);
 
         match q {
             GroupParam::Query(param) => Ok(Json(GroupGetResponse::Query(
                 ctrl.query(auth, param).await?,
             ))),
-            _ => Err(Error::BadRequest),
         }
     }
 
     pub async fn act_group(
         State(ctrl): State<GroupController>,
         Extension(auth): Extension<Option<Authorization>>,
+        Path(team_id): Path<i64>,
         Json(body): Json<GroupAction>,
     ) -> Result<Json<Group>> {
         tracing::debug!("act group {:?}", body);
         match body {
             GroupAction::Create(param) => {
-                let res = ctrl.create(auth, param).await?;
+                let res = ctrl.create(auth, team_id, param).await?;
                 Ok(Json(res))
             }
         }
