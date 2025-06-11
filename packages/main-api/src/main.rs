@@ -53,6 +53,7 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         Industry,
         Feed,
         FeedUser,
+        RedeemCode,
         Space,
         SpaceUser,
         SpaceMember,
@@ -73,6 +74,7 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         UserBadge,
         SpaceBadge,
         SpaceGroup,
+        Onboard,
     );
 
     if Industry::query_builder()
@@ -108,6 +110,7 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
                 None,
                 "admin".to_string(),
                 "".to_string(),
+                "0x000".to_string(),
             )
             .await?;
     }
@@ -219,6 +222,7 @@ pub mod tests {
                 None,
                 email.clone(),
                 "".to_string(),
+                id.clone(),
             )
             .await?
             .unwrap();
@@ -253,6 +257,7 @@ pub mod tests {
                 None,
                 email.clone(),
                 "".to_string(),
+                id.to_string(),
             )
             .await?;
 

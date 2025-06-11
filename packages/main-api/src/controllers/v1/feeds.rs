@@ -12,7 +12,7 @@ use by_types::QueryResponse;
 use dto::*;
 use sqlx::postgres::PgRow;
 
-use crate::security::check_perm;
+use crate::{security::check_perm, utils::users::extract_user_id};
 
 #[derive(
     Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
@@ -30,11 +30,12 @@ pub struct FeedController {
 impl FeedController {
     async fn query(
         &self,
-        _auth: Option<Authorization>,
+        auth: Option<Authorization>,
         param: FeedQuery,
     ) -> Result<QueryResponse<FeedSummary>> {
         let mut total_count = 0;
-        let items: Vec<FeedSummary> = FeedSummary::query_builder()
+        let user_id = extract_user_id(&self.pool, auth).await.unwrap_or_default();
+        let items: Vec<FeedSummary> = FeedSummary::query_builder(user_id)
             .feed_type_equals(FeedType::Post)
             .limit(param.size())
             .page(param.page())
@@ -48,17 +49,18 @@ impl FeedController {
             })
             .fetch_all(&self.pool)
             .await?;
-
+        tracing::debug!("query feed items: {:?}", items);
         Ok(QueryResponse { total_count, items })
     }
 
     async fn posts_by_user_id(
         &self,
-        _auth: Option<Authorization>,
+        auth: Option<Authorization>,
         param: FeedQuery,
     ) -> Result<QueryResponse<FeedSummary>> {
+        let user_id = extract_user_id(&self.pool, auth).await.unwrap_or_default();
         let mut total_count = 0;
-        let items: Vec<FeedSummary> = FeedSummary::query_builder()
+        let items: Vec<FeedSummary> = FeedSummary::query_builder(user_id)
             .limit(param.size())
             .page(param.page())
             .user_id_equals(param.user_id.unwrap_or_default())
@@ -133,7 +135,7 @@ impl FeedController {
             user_id,
         }: FeedCommentRequest,
     ) -> Result<Feed> {
-        check_perm(
+        let user = check_perm(
             &self.pool,
             auth,
             RatelResource::Post { team_id: user_id },
@@ -145,7 +147,7 @@ impl FeedController {
             Error::FeedInvalidParentId
         })?;
 
-        let feed = Feed::query_builder()
+        let feed = Feed::query_builder(user.id)
             .id_equals(parent_id)
             .query()
             .map(Feed::from)
@@ -192,7 +194,7 @@ impl FeedController {
             part_id: _,
         }: FeedReviewDocRequest,
     ) -> Result<Feed> {
-        check_perm(
+        let user = check_perm(
             &self.pool,
             auth,
             RatelResource::Post { team_id: user_id },
@@ -204,7 +206,7 @@ impl FeedController {
             Error::FeedInvalidParentId
         })?;
 
-        let feed = Feed::query_builder()
+        let feed = Feed::query_builder(user.id)
             .id_equals(parent_id)
             .query()
             .map(Feed::from)
@@ -251,7 +253,7 @@ impl FeedController {
             user_id,
         }: FeedRepostRequest,
     ) -> Result<Feed> {
-        check_perm(
+        let user = check_perm(
             &self.pool,
             auth,
             RatelResource::Post { team_id: user_id },
@@ -274,7 +276,7 @@ impl FeedController {
             Error::FeedInvalidQuoteId
         })?;
 
-        let feed = Feed::query_builder()
+        let feed = Feed::query_builder(user.id)
             .id_equals(parent_id)
             .query()
             .map(Feed::from)
@@ -285,7 +287,7 @@ impl FeedController {
                 Error::FeedInvalidParentId
             })?;
 
-        Feed::query_builder()
+        Feed::query_builder(user.id)
             .id_equals(quote_feed_id)
             .query()
             .map(Feed::from)
@@ -328,7 +330,10 @@ impl FeedController {
         auth: Option<Authorization>,
         param: FeedUpdateRequest,
     ) -> Result<Feed> {
-        let feed = Feed::query_builder()
+        let user_id = extract_user_id(&self.pool, auth.clone())
+            .await
+            .unwrap_or_default();
+        let feed = Feed::query_builder(user_id)
             .id_equals(id)
             .query()
             .map(Feed::from)
@@ -338,7 +343,7 @@ impl FeedController {
                 tracing::error!("failed to get a feed {id}: {e}");
                 Error::FeedInvalidParentId
             })?;
-        let _user = check_perm(
+        check_perm(
             &self.pool,
             auth,
             match feed.feed_type {
@@ -371,6 +376,26 @@ impl FeedController {
         Ok(res)
     }
 
+    async fn like(&self, id: i64, auth: Option<Authorization>, value: bool) -> Result<Feed> {
+        let user_id = extract_user_id(&self.pool, auth).await?;
+        let repo = FeedUser::get_repository(self.pool.clone());
+        if !value {
+            let feed_user = FeedUser::query_builder()
+                .feed_id_equals(id)
+                .user_id_equals(user_id)
+                .query()
+                .map(FeedUser::from)
+                .fetch_optional(&self.pool)
+                .await?;
+            if let Some(feed_user) = feed_user {
+                repo.delete(feed_user.id).await?;
+            }
+        } else {
+            repo.insert(id, user_id).await?;
+        }
+
+        Ok(Feed::default())
+    }
     // async fn run_read_action(
     //     &self,
     //     _auth: Option<Authorization>,
@@ -427,18 +452,23 @@ impl FeedController {
                 let res = ctrl.delete(id, auth).await?;
                 Ok(Json(res))
             }
+            FeedByIdAction::Like(FeedLikeRequest { value }) => {
+                let res = ctrl.like(id, auth, value).await?;
+                Ok(Json(res))
+            }
         }
     }
 
     pub async fn get_feed_by_id(
         State(ctrl): State<FeedController>,
-        Extension(_auth): Extension<Option<Authorization>>,
+        Extension(auth): Extension<Option<Authorization>>,
         Path(FeedPath { id }): Path<FeedPath>,
     ) -> Result<Json<Feed>> {
         tracing::debug!("get_feed {:?}", id);
+        let user_id = extract_user_id(&ctrl.pool, auth).await.unwrap_or_default();
 
         Ok(Json(
-            Feed::query_builder()
+            Feed::query_builder(user_id)
                 .id_equals(id)
                 .query()
                 .map(Feed::from)

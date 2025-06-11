@@ -22,6 +22,8 @@ mod teams;
 mod totals;
 pub mod users;
 
+mod redeems;
+
 use bdk::prelude::*;
 
 use dto::*;
@@ -90,5 +92,9 @@ pub async fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Ro
         .nest(
             "/subscriptions",
             subscriptions::SubscriptionController::new(pool.clone()).route(),
+        )
+        .nest(
+            "/redeems",
+            redeems::RedeemCodeController::new(pool.clone()).route(),
         ))
 }
