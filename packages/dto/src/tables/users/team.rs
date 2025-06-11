@@ -2,9 +2,9 @@ use super::*;
 use bdk::prelude::*;
 
 #[derive(validator::Validate)]
-#[api_model(base = "/v1/teams", table = users, action = [], action_by_id = [delete, invite_member(email = String)])]
+#[api_model(base = "/v1/teams", table = users, action = [], action_by_id = [delete, invite_member(email = String)], read_action = get_by_id)]
 pub struct Team {
-    #[api_model(primary_key)]
+    #[api_model(primary_key, read_action = get_by_id)]
     pub id: i64,
     #[api_model(auto = insert)]
     pub created_at: i64,

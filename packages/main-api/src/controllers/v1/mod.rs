@@ -21,6 +21,7 @@ pub mod supports;
 mod teams;
 mod totals;
 pub mod users;
+mod my_networks;
 
 mod redeems;
 
@@ -96,5 +97,8 @@ pub async fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Ro
         .nest(
             "/redeems",
             redeems::RedeemCodeController::new(pool.clone()).route(),
+        ).nest(
+            "/my_networks",
+            my_networks::MynetworkController::new(pool.clone()).route()?,
         ))
 }
