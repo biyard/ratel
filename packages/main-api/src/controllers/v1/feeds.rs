@@ -116,8 +116,12 @@ impl FeedController {
 
         Ok(QueryResponse { total_count, items })
     }
-    async fn create_draft(&self, auth: Option<Authorization>) -> Result<Feed> {
-        let user_id = extract_user_id(&self.pool, auth.clone()).await?;
+    async fn create_draft(
+        &self,
+        auth: Option<Authorization>,
+        param: FeedCreateDraftRequest,
+    ) -> Result<Feed> {
+        let user_id = param.user_id;
         check_perm(
             &self.pool,
             auth,
@@ -160,20 +164,12 @@ impl FeedController {
             parent_id,
         }: FeedCommentRequest,
     ) -> Result<Feed> {
-        let user_id = extract_user_id(&self.pool, auth.clone()).await?;
-        check_perm(
-            &self.pool,
-            auth,
-            RatelResource::Post { team_id: user_id },
-            GroupPermission::WriteReplies,
-        )
-        .await?;
         let parent_id = parent_id.ok_or_else(|| {
-            tracing::error!("parent id is missing: {user_id}");
+            tracing::error!("parent id is missing");
             Error::FeedInvalidParentId
         })?;
 
-        let feed = Feed::query_builder(user_id)
+        let feed = Feed::query_builder(0)
             .id_equals(parent_id)
             .status_not_equals(FeedStatus::Draft)
             .query()
@@ -185,6 +181,14 @@ impl FeedController {
                 Error::FeedInvalidParentId
             })?;
 
+        let user_id = feed.user_id;
+        check_perm(
+            &self.pool,
+            auth,
+            RatelResource::Post { team_id: user_id },
+            GroupPermission::WriteReplies,
+        )
+        .await?;
         let res = self
             .repo
             .insert(
@@ -279,9 +283,9 @@ impl FeedController {
             html_contents,
             quote_feed_id,
             parent_id,
+            user_id,
         }: FeedRepostRequest,
     ) -> Result<Feed> {
-        let user_id = extract_user_id(&self.pool, auth.clone()).await?;
         check_perm(
             &self.pool,
             auth,
@@ -290,12 +294,12 @@ impl FeedController {
         )
         .await?;
         let parent_id = parent_id.ok_or_else(|| {
-            tracing::error!("parent id is missing: {user_id}");
+            tracing::error!("parent id is missing");
             Error::FeedInvalidParentId
         })?;
 
         let quote_feed_id = quote_feed_id.ok_or_else(|| {
-            tracing::error!("quote feed id is missing: {user_id}");
+            tracing::error!("quote feed id is missing");
             tokio::spawn(async move {
                 btracing::notify!(
                     crate::config::get().slack_channel_abusing,
@@ -305,7 +309,7 @@ impl FeedController {
             Error::FeedInvalidQuoteId
         })?;
 
-        let feed = Feed::query_builder(user_id)
+        let feed = Feed::query_builder(0)
             .id_equals(parent_id)
             .status_not_equals(FeedStatus::Draft)
             .query()
@@ -361,8 +365,7 @@ impl FeedController {
         auth: Option<Authorization>,
         param: FeedUpdateRequest,
     ) -> Result<Feed> {
-        let user_id = extract_user_id(&self.pool, auth.clone()).await?;
-        let feed = Feed::query_builder(user_id)
+        let feed = Feed::query_builder(0)
             .id_equals(id)
             .status_equals(FeedStatus::Draft)
             .query()
@@ -385,7 +388,7 @@ impl FeedController {
                 },
             },
             match feed.feed_type {
-                FeedType::Post => GroupPermission::WritePosts,
+                FeedType::Post => GroupPermission::WritePendingPosts,
                 _ => GroupPermission::WriteReplies,
             },
         )
@@ -428,8 +431,7 @@ impl FeedController {
     }
 
     async fn publish_draft(&self, id: i64, auth: Option<Authorization>) -> Result<Feed> {
-        let user_id = extract_user_id(&self.pool, auth).await?;
-        Feed::query_builder(user_id)
+        let feed = Feed::query_builder(0)
             .id_equals(id)
             .status_equals(FeedStatus::Draft)
             .query()
@@ -441,6 +443,15 @@ impl FeedController {
                 Error::FeedPublishError
             })?;
 
+        check_perm(
+            &self.pool,
+            auth,
+            RatelResource::Post {
+                team_id: feed.user_id,
+            },
+            GroupPermission::WritePendingPosts,
+        )
+        .await?;
         let res = self
             .repo
             .update(
@@ -484,7 +495,7 @@ impl FeedController {
     ) -> Result<Json<Feed>> {
         tracing::debug!("act_feed {:?}", body);
         let feed = match body {
-            FeedAction::Create(_) => ctrl.create_draft(auth).await?,
+            FeedAction::CreateDraft(param) => ctrl.create_draft(auth, param).await?,
             FeedAction::Comment(param) => ctrl.comment(auth, param).await?,
             FeedAction::Repost(param) => ctrl.repost(auth, param).await?,
             // FeedAction::WritePost(param) => ctrl.write_post(auth, param).await?,
@@ -635,13 +646,14 @@ mod tests {
         let title = Some(format!("Test Title {now}"));
         // predefined industry: Crypto
         let industry_id = 1;
-        let res = Feed::get_client(&endpoint).create().await;
+        let res = Feed::get_client(&endpoint)
+            .create_draft(FeedType::Post, user.id)
+            .await;
         assert!(res.is_ok());
         let res = res.unwrap();
         let res = Feed::get_client(&endpoint)
             .update(
                 res.id,
-                FeedType::Post,
                 industry_id,
                 None,
                 None,
@@ -691,13 +703,14 @@ mod tests {
             .await
             .unwrap();
 
-        let feed = Feed::get_client(&endpoint).create().await;
+        let feed = Feed::get_client(&endpoint)
+            .create_draft(FeedType::Post, user.id)
+            .await;
         assert!(feed.is_ok());
         let feed = feed.unwrap();
         let res = Feed::get_client(&endpoint)
             .update(
                 feed.id,
-                FeedType::Post,
                 industry_id,
                 None,
                 Some(quote.id),
@@ -808,7 +821,12 @@ mod tests {
         );
 
         let res = Feed::get_client(&endpoint)
-            .repost(Some(post.id), Some(quote_feed.id), html_contents.clone())
+            .repost(
+                user.id,
+                Some(post.id),
+                Some(quote_feed.id),
+                html_contents.clone(),
+            )
             .await;
 
         assert!(res.is_ok(), "res: {:?}", res);
@@ -825,12 +843,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_comment_with_invalid_parent_id() {
-        let TestContext {
-            user,
-            now,
-            endpoint,
-            ..
-        } = setup().await.unwrap();
+        let TestContext { now, endpoint, .. } = setup().await.unwrap();
 
         let html_contents = format!("<p>Comment {now}</p>");
 
@@ -845,12 +858,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_comment_with_none() {
-        let TestContext {
-            now,
-            user,
-            endpoint,
-            ..
-        } = setup().await.unwrap();
+        let TestContext { now, endpoint, .. } = setup().await.unwrap();
 
         let html_contents = format!("<p>Comment {now}</p>");
 
@@ -907,7 +915,7 @@ mod tests {
             .unwrap();
 
         let res = Feed::get_client(&endpoint)
-            .repost(Some(0), Some(quote.id), html_contents)
+            .repost(user.id, Some(0), Some(quote.id), html_contents)
             .await;
 
         assert!(res.is_err(), "res: {:?}", res);
@@ -938,7 +946,7 @@ mod tests {
             .unwrap();
 
         let res = Feed::get_client(&endpoint)
-            .repost(Some(feed.id), Some(0), html_contents)
+            .repost(user.id, Some(feed.id), Some(0), html_contents)
             .await;
 
         assert!(res.is_err(), "res: {:?}", res);
