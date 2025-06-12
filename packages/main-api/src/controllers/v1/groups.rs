@@ -12,7 +12,7 @@ use by_types::QueryResponse;
 use dto::*;
 use sqlx::postgres::PgRow;
 
-use crate::security::check_perm;
+use crate::security::check_group_perm;
 use crate::utils::users::extract_user_id;
 
 #[derive(
@@ -21,6 +21,15 @@ use crate::utils::users::extract_user_id;
 pub struct GroupIdPath {
     pub team_id: i64,
     pub id: i64,
+}
+
+#[derive(
+    Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
+)]
+pub struct GroupEmailIdPath {
+    pub team_id: i64,
+    pub id: i64,
+    pub email: String,
 }
 
 #[derive(
@@ -63,6 +72,40 @@ impl GroupController {
         Ok((user_id, team))
     }
 
+    async fn check_email(
+        &self,
+        team_id: i64,
+        id: i64,
+        GroupCheckEmailRequest { email }: GroupCheckEmailRequest,
+    ) -> Result<Group> {
+        let _team_id = team_id;
+        let user = User::query_builder()
+            .email_equals(email)
+            .query()
+            .map(User::from)
+            .fetch_optional(&self.pool)
+            .await
+            .map_err(|e| {
+                tracing::error!("Failed to query user: {:?}", e);
+                Error::NotFound
+            })?
+            .ok_or(Error::NotFound)?;
+
+        let exists = GroupMember::query_builder()
+            .group_id_equals(id)
+            .user_id_equals(user.id)
+            .query()
+            .map(GroupMember::from)
+            .fetch_optional(&self.pool)
+            .await?;
+
+        if exists.is_some() {
+            return Err(Error::UserAlreadyExists);
+        }
+
+        Ok(Group::default())
+    }
+
     async fn invite_member(
         &self,
         team_id: i64,
@@ -74,10 +117,15 @@ impl GroupController {
             return Err(Error::Unauthorized);
         }
         let (_user_id, _team) = self.has_permission(auth.clone(), team_id).await?;
-        check_perm(
+
+        //INFO: checking group permission
+        check_group_perm(
             &self.pool,
             auth,
-            RatelResource::InviteMember { group_id: id },
+            RatelResource::InviteMember {
+                team_id: team_id,
+                group_id: id,
+            },
             GroupPermission::InviteMember,
         )
         .await?;
@@ -85,16 +133,27 @@ impl GroupController {
         let mut tx = self.pool.begin().await?;
 
         for user_id in user_ids {
-            let _ = match User::query_builder()
-                .id_equals(user_id)
-                .query()
-                .map(User::from)
-                .fetch_one(&self.pool)
+            // let _ = match User::query_builder()
+            //     .id_equals(user_id)
+            //     .query()
+            //     .map(User::from)
+            //     .fetch_one(&self.pool)
+            //     .await
+            // {
+            //     Ok(user) => user,
+            //     Err(e) => {
+            //         tracing::error!("insert user failed with error: {:?}", e);
+            //         return Err(Error::InvalidUser);
+            //     }
+            // };
+
+            let _ = match TeamMember::get_repository(self.pool.clone())
+                .insert_with_tx(&mut *tx, team_id, user_id)
                 .await
             {
-                Ok(user) => user,
-                Err(_) => {
-                    return Err(Error::InvalidUser);
+                Ok(_) => {}
+                Err(e) => {
+                    tracing::error!("insert to team member failed with error: {:?}", e);
                 }
             };
 
@@ -119,10 +178,13 @@ impl GroupController {
             return Err(Error::Unauthorized);
         }
         let (_user_id, _team) = self.has_permission(auth.clone(), team_id).await?;
-        check_perm(
+        check_group_perm(
             &self.pool,
             auth,
-            RatelResource::UpdateGroup { group_id: id },
+            RatelResource::UpdateGroup {
+                team_id: team_id,
+                group_id: id,
+            },
             GroupPermission::UpdateGroup,
         )
         .await?;
@@ -136,10 +198,13 @@ impl GroupController {
             return Err(Error::Unauthorized);
         }
         let (_user_id, _team) = self.has_permission(auth.clone(), team_id).await?;
-        check_perm(
+        check_group_perm(
             &self.pool,
             auth,
-            RatelResource::DeleteGroup { group_id: id },
+            RatelResource::DeleteGroup {
+                team_id: team_id,
+                group_id: id,
+            },
             GroupPermission::DeleteGroup,
         )
         .await?;
@@ -186,7 +251,7 @@ impl GroupController {
         if auth.is_none() {
             return Err(Error::Unauthorized);
         }
-        let (user_id, _team) = self.has_permission(auth.clone(), team_id).await?;
+        let (_user_id, _team) = self.has_permission(auth.clone(), team_id).await?;
         let mut tx = self.pool.begin().await?;
 
         let perms: i64 = GroupPermissions(permissions).into();
@@ -205,7 +270,7 @@ impl GroupController {
 
         let _ = self
             .group_member_repo
-            .insert_with_tx(&mut *tx, user_id, group_id)
+            .insert_with_tx(&mut *tx, team_id, group_id)
             .await
             .map_err(|e| {
                 tracing::error!("Failed to create group member: {:?}", e);
@@ -292,6 +357,11 @@ impl GroupController {
                 let res = ctrl.invite_member(team_id, id, auth, param).await?;
                 Ok(Json(res))
             }
+            //FIXME: fix to read action
+            GroupByIdAction::CheckEmail(param) => {
+                let res = ctrl.check_email(team_id, id, param).await?;
+                Ok(Json(res))
+            }
         }
     }
 
@@ -308,6 +378,9 @@ impl GroupController {
             GroupParam::Query(param) => Ok(Json(GroupGetResponse::Query(
                 ctrl.query(auth, param).await?,
             ))),
+            // GroupParam::Read(param) => Ok(Json(GroupGetResponse::Read(
+            //     ctrl.check_email(auth, param).await?,
+            // ))),
         }
     }
 
