@@ -141,6 +141,8 @@ pub enum Error {
     // feeds
     #[translate(en = "Failed to write a post")]
     FeedWritePostError,
+    #[translate(en = "Failed to publish a post")]
+    FeedPublishError,
     #[translate(en = "Failed to write a comment")]
     FeedWriteCommentError,
     #[translate(en = "You must write a comment on a valid feed")]
