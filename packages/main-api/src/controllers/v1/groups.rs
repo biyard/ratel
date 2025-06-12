@@ -26,6 +26,15 @@ pub struct GroupIdPath {
 #[derive(
     Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
 )]
+pub struct GroupEmailIdPath {
+    pub team_id: i64,
+    pub id: i64,
+    pub email: String,
+}
+
+#[derive(
+    Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
+)]
 pub struct GroupPath {
     pub team_id: i64,
 }
@@ -61,6 +70,40 @@ impl GroupController {
             return Err(Error::Unauthorized);
         }
         Ok((user_id, team))
+    }
+
+    async fn check_email(
+        &self,
+        team_id: i64,
+        id: i64,
+        GroupCheckEmailRequest { email }: GroupCheckEmailRequest,
+    ) -> Result<Group> {
+        let _team_id = team_id;
+        let user = User::query_builder()
+            .email_equals(email)
+            .query()
+            .map(User::from)
+            .fetch_optional(&self.pool)
+            .await
+            .map_err(|e| {
+                tracing::error!("Failed to query user: {:?}", e);
+                Error::NotFound
+            })?
+            .ok_or(Error::NotFound)?;
+
+        let exists = GroupMember::query_builder()
+            .group_id_equals(id)
+            .user_id_equals(user.id)
+            .query()
+            .map(GroupMember::from)
+            .fetch_optional(&self.pool)
+            .await?;
+
+        if exists.is_some() {
+            return Err(Error::UserAlreadyExists);
+        }
+
+        Ok(Group::default())
     }
 
     async fn invite_member(
@@ -314,6 +357,11 @@ impl GroupController {
                 let res = ctrl.invite_member(team_id, id, auth, param).await?;
                 Ok(Json(res))
             }
+            //FIXME: fix to read action
+            GroupByIdAction::CheckEmail(param) => {
+                let res = ctrl.check_email(team_id, id, param).await?;
+                Ok(Json(res))
+            }
         }
     }
 
@@ -330,6 +378,9 @@ impl GroupController {
             GroupParam::Query(param) => Ok(Json(GroupGetResponse::Query(
                 ctrl.query(auth, param).await?,
             ))),
+            // GroupParam::Read(param) => Ok(Json(GroupGetResponse::Read(
+            //     ctrl.check_email(auth, param).await?,
+            // ))),
         }
     }
 

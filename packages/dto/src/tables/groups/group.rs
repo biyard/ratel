@@ -4,7 +4,7 @@ use validator::Validate;
 use crate::GroupMemberUser;
 
 #[derive(Validate)]
-#[api_model(base = "/v1/teams/:team_id/groups", table = groups, action = [create(users = Vec<i64>, permissions = Vec<GroupPermission>)], action_by_id = [update(users = Vec<i64>, permissions = Vec<GroupPermission>), invite_member(user_ids = Vec<i64>), delete])]
+#[api_model(base = "/v1/teams/:team_id/groups", table = groups, action = [create(users = Vec<i64>, permissions = Vec<GroupPermission>)], action_by_id = [update(users = Vec<i64>, permissions = Vec<GroupPermission>), check_email(email = String), invite_member(user_ids = Vec<i64>), delete])]
 pub struct Group {
     #[api_model(summary, primary_key)]
     pub id: i64,
