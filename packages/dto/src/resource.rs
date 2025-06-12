@@ -6,7 +6,7 @@ pub enum RatelResource {
     Promotions,
     Space { space_id: i64 },
 
-    InviteMember { group_id: i64 },
-    UpdateGroup { group_id: i64 },
-    DeleteGroup { group_id: i64 },
+    InviteMember { team_id: i64, group_id: i64 },
+    UpdateGroup { team_id: i64, group_id: i64 },
+    DeleteGroup { team_id: i64, group_id: i64 },
 }
