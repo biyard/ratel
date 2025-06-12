@@ -196,6 +196,7 @@ impl TeamController {
     ) -> Result<Team> {
         Team::query_builder()
             .username_equals(username.ok_or(Error::InvalidTeamname)?)
+            .members_builder(User::query_builder())
             .groups_builder(Group::query_builder())
             .query()
             .map(Team::from)

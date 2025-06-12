@@ -104,6 +104,16 @@ impl GroupController {
             //     }
             // };
 
+            let _ = match TeamMember::get_repository(self.pool.clone())
+                .insert_with_tx(&mut *tx, team_id, user_id)
+                .await
+            {
+                Ok(_) => {}
+                Err(e) => {
+                    tracing::error!("insert to team member failed with error: {:?}", e);
+                }
+            };
+
             let _ = GroupMember::get_repository(self.pool.clone())
                 .insert_with_tx(&mut *tx, user_id, id)
                 .await?;
