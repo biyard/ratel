@@ -1,4 +1,7 @@
+use crate::Group;
+
 use super::*;
+use crate::GroupRepositoryQueryBuilder;
 use bdk::prelude::*;
 
 #[derive(validator::Validate)]
@@ -18,6 +21,9 @@ pub struct Team {
     #[validate(url)]
     pub profile_url: String,
 
+    #[api_model(read_action = [check_email, login, find_by_email], unique)]
+    pub email: String,
+
     pub parent_id: i64,
     #[api_model(action = create, read_action = get_by_username, action_by_id = [update_team_name])]
     pub username: String,
@@ -25,6 +31,9 @@ pub struct Team {
     #[api_model(many_to_many = team_members, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = team_id)]
     #[serde(default)]
     pub members: Vec<User>,
+    #[api_model(many_to_many = group_members, foreign_table_name = groups, foreign_primary_key = group_id, foreign_reference_key = user_id, nested)]
+    #[serde(default)]
+    pub groups: Vec<Group>,
 
     #[api_model(action = create)]
     #[serde(default)]

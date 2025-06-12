@@ -2,43 +2,67 @@ use super::*;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq, Default)]
 pub struct GroupPermissionVerifier {
+    team_id: i64,
     group_id: i64,
+    team: Option<Team>,
+    group: Option<Group>,
+    group_member: Option<GroupMember>,
 }
 
 impl GroupPermissionVerifier {
-    pub fn new(group_id: i64) -> Self {
-        Self { group_id }
+    pub async fn new(pool: &sqlx::Pool<sqlx::Postgres>, team_id: i64, group_id: i64) -> Self {
+        let team = Team::query_builder()
+            .id_equals(team_id)
+            .query()
+            .map(Team::from)
+            .fetch_optional(pool)
+            .await
+            .unwrap_or_default();
+
+        let group = Group::query_builder()
+            .id_equals(group_id)
+            .query()
+            .map(Group::from)
+            .fetch_optional(pool)
+            .await
+            .unwrap_or_default();
+
+        let group_member = GroupMember::query_builder()
+            .group_id_equals(group_id)
+            .user_id_equals(team_id)
+            .query()
+            .map(GroupMember::from)
+            .fetch_optional(pool)
+            .await
+            .unwrap_or_default();
+
+        Self {
+            team_id,
+            group_id,
+            team,
+            group,
+            group_member,
+        }
     }
 }
 
-impl PermissionVerifier for GroupPermissionVerifier {
-    fn has_permission(&self, user: &User, perm: GroupPermission) -> bool {
-        if user.id == self.group_id {
-            return true;
-        }
-
-        let mut group = None;
-
-        for g in user.groups.clone() {
-            tracing::debug!("group info: {:?} {:?}", g.id, self.group_id);
-            if g.id == self.group_id {
-                group = Some(g);
-                break;
-            }
-        }
-
-        if group.is_none() {
+impl MainGroupPermissionVerifier for GroupPermissionVerifier {
+    fn has_group_permission(&self, perm: GroupPermission) -> bool {
+        if self.group.clone().is_none() {
             return false;
         }
 
-        let group = group.unwrap();
+        if self.team.is_none() {
+            return false;
+        }
 
-        //FIXME: fix to check with group member table
-        let is_member = group.members.iter().any(|member| member.id == user.id);
+        if self.group_member.is_none() {
+            return false;
+        }
 
-        tracing::debug!("group members: {:?} {:?}", group.members, user.id,);
+        let group = self.group.clone().unwrap_or_default();
         let permission_check = group.permissions & (1_i64 << (perm as i32)) != 0;
 
-        permission_check && is_member
+        permission_check
     }
 }
