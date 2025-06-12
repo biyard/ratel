@@ -12,7 +12,7 @@ use by_types::QueryResponse;
 use dto::*;
 use sqlx::postgres::PgRow;
 
-use crate::security::check_perm;
+use crate::security::check_group_perm;
 use crate::utils::users::extract_user_id;
 
 #[derive(
@@ -74,10 +74,15 @@ impl GroupController {
             return Err(Error::Unauthorized);
         }
         let (_user_id, _team) = self.has_permission(auth.clone(), team_id).await?;
-        check_perm(
+
+        //INFO: checking group permission
+        check_group_perm(
             &self.pool,
             auth,
-            RatelResource::InviteMember { group_id: id },
+            RatelResource::InviteMember {
+                team_id: team_id,
+                group_id: id,
+            },
             GroupPermission::InviteMember,
         )
         .await?;
@@ -120,10 +125,13 @@ impl GroupController {
             return Err(Error::Unauthorized);
         }
         let (_user_id, _team) = self.has_permission(auth.clone(), team_id).await?;
-        check_perm(
+        check_group_perm(
             &self.pool,
             auth,
-            RatelResource::UpdateGroup { group_id: id },
+            RatelResource::UpdateGroup {
+                team_id: team_id,
+                group_id: id,
+            },
             GroupPermission::UpdateGroup,
         )
         .await?;
@@ -137,10 +145,13 @@ impl GroupController {
             return Err(Error::Unauthorized);
         }
         let (_user_id, _team) = self.has_permission(auth.clone(), team_id).await?;
-        check_perm(
+        check_group_perm(
             &self.pool,
             auth,
-            RatelResource::DeleteGroup { group_id: id },
+            RatelResource::DeleteGroup {
+                team_id: team_id,
+                group_id: id,
+            },
             GroupPermission::DeleteGroup,
         )
         .await?;
@@ -187,7 +198,7 @@ impl GroupController {
         if auth.is_none() {
             return Err(Error::Unauthorized);
         }
-        let (user_id, _team) = self.has_permission(auth.clone(), team_id).await?;
+        let (_user_id, _team) = self.has_permission(auth.clone(), team_id).await?;
         let mut tx = self.pool.begin().await?;
 
         let perms: i64 = GroupPermissions(permissions).into();
@@ -206,7 +217,7 @@ impl GroupController {
 
         let _ = self
             .group_member_repo
-            .insert_with_tx(&mut *tx, user_id, group_id)
+            .insert_with_tx(&mut *tx, team_id, group_id)
             .await
             .map_err(|e| {
                 tracing::error!("Failed to create group member: {:?}", e);

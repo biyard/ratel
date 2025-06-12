@@ -52,7 +52,19 @@ impl UserControllerV1 {
     ) -> Result<Json<User>> {
         let user_id = extract_user_id(&ctrl.pool, auth).await?;
 
-        if user_id != id {
+        let team = match TeamMember::query_builder()
+            .team_id_equals(id)
+            .user_id_equals(user_id)
+            .query()
+            .map(TeamMember::from)
+            .fetch_one(&ctrl.pool)
+            .await
+        {
+            Ok(v) => Some(v),
+            Err(_) => None,
+        };
+
+        if user_id != id && team.is_none() {
             return Err(Error::Unauthorized);
         }
 
