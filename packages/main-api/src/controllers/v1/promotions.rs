@@ -276,19 +276,19 @@ mod tests {
 
         let post = Feed::get_repository(pool.clone())
             .insert(
-                html_contents.clone(),
                 FeedType::Post,
                 user.id,
                 industry_id,
                 None,
-                title,
-                Some(user.nickname.clone()),
-                Some(user.profile_url.clone()),
                 None,
                 title,
+                html_contents.clone(),
                 None,
-                None,
+                UrlType::None,
                 vec![],
+                0,
+                0,
+                FeedStatus::Published,
             )
             .await
             .unwrap();

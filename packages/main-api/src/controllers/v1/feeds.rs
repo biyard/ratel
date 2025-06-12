@@ -34,9 +34,29 @@ impl FeedController {
         param: FeedQuery,
     ) -> Result<QueryResponse<FeedSummary>> {
         let mut total_count = 0;
-        let user_id = extract_user_id(&self.pool, auth).await.unwrap_or_default();
+        let user_id = extract_user_id(&self.pool, auth.clone())
+            .await
+            .unwrap_or_default();
+
+        let status = if let Some(status) = param.status {
+            if status == FeedStatus::Draft {
+                check_perm(
+                    &self.pool,
+                    auth,
+                    RatelResource::Post { team_id: user_id },
+                    GroupPermission::ReadPostDrafts,
+                )
+                .await?;
+                FeedStatus::Draft
+            } else {
+                status
+            }
+        } else {
+            FeedStatus::Published
+        };
         let items: Vec<FeedSummary> = FeedSummary::query_builder(user_id)
             .feed_type_equals(FeedType::Post)
+            .status_equals(status)
             .limit(param.size())
             .page(param.page())
             .order_by_created_at_desc()
@@ -58,11 +78,30 @@ impl FeedController {
         auth: Option<Authorization>,
         param: FeedQuery,
     ) -> Result<QueryResponse<FeedSummary>> {
-        let user_id = extract_user_id(&self.pool, auth).await.unwrap_or_default();
+        let user_id = extract_user_id(&self.pool, auth.clone())
+            .await
+            .unwrap_or_default();
         let mut total_count = 0;
+        let status = if let Some(status) = param.status {
+            if status == FeedStatus::Draft {
+                check_perm(
+                    &self.pool,
+                    auth,
+                    RatelResource::Post { team_id: user_id },
+                    GroupPermission::ReadPostDrafts,
+                )
+                .await?;
+                FeedStatus::Draft
+            } else {
+                status
+            }
+        } else {
+            FeedStatus::Published
+        };
         let items: Vec<FeedSummary> = FeedSummary::query_builder(user_id)
             .limit(param.size())
             .page(param.page())
+            .status_equals(status)
             .user_id_equals(param.user_id.unwrap_or_default())
             .order_by_created_at_desc()
             .query()
@@ -77,21 +116,12 @@ impl FeedController {
 
         Ok(QueryResponse { total_count, items })
     }
-
-    async fn write_post(
+    async fn create_draft(
         &self,
         auth: Option<Authorization>,
-        FeedWritePostRequest {
-            html_contents,
-            industry_id,
-            title,
-            quote_feed_id,
-            user_id,
-            files,
-            url,
-            url_type,
-        }: FeedWritePostRequest,
+        param: FeedCreateDraftRequest,
     ) -> Result<Feed> {
+        let user_id = param.user_id;
         check_perm(
             &self.pool,
             auth,
@@ -103,19 +133,19 @@ impl FeedController {
         let res = self
             .repo
             .insert(
-                html_contents,
-                FeedType::Post,
+                FeedType::default(),
                 user_id,
-                industry_id,
+                1,
                 None,
-                title,
                 None,
-                quote_feed_id,
-                files,
+                None,
+                String::default(),
+                None,
+                UrlType::default(),
+                vec![],
                 0,
                 0,
-                url,
-                url_type,
+                FeedStatus::Draft,
             )
             .await
             .map_err(|e| {
@@ -132,23 +162,16 @@ impl FeedController {
         FeedCommentRequest {
             html_contents,
             parent_id,
-            user_id,
         }: FeedCommentRequest,
     ) -> Result<Feed> {
-        let user = check_perm(
-            &self.pool,
-            auth,
-            RatelResource::Post { team_id: user_id },
-            GroupPermission::WriteReplies,
-        )
-        .await?;
         let parent_id = parent_id.ok_or_else(|| {
-            tracing::error!("parent id is missing: {user_id}");
+            tracing::error!("parent id is missing");
             Error::FeedInvalidParentId
         })?;
 
-        let feed = Feed::query_builder(user.id)
+        let feed = Feed::query_builder(0)
             .id_equals(parent_id)
+            .status_not_equals(FeedStatus::Draft)
             .query()
             .map(Feed::from)
             .fetch_one(&self.pool)
@@ -158,81 +181,30 @@ impl FeedController {
                 Error::FeedInvalidParentId
             })?;
 
+        let user_id = feed.user_id;
+        check_perm(
+            &self.pool,
+            auth,
+            RatelResource::Post { team_id: user_id },
+            GroupPermission::WriteReplies,
+        )
+        .await?;
         let res = self
             .repo
             .insert(
-                html_contents,
                 FeedType::Reply,
                 user_id,
                 feed.industry_id,
                 Some(parent_id),
                 None,
                 None,
-                None,
-                feed.files,
-                0,
-                0,
-                None,
-                UrlType::None,
-            )
-            .await
-            .map_err(|e| {
-                tracing::error!("failed to insert comment feed: {:?}", e);
-                Error::FeedWriteCommentError
-            })?;
-
-        Ok(res)
-    }
-
-    async fn review_doc(
-        &self,
-        auth: Option<Authorization>,
-        FeedReviewDocRequest {
-            html_contents,
-            parent_id,
-            user_id,
-            part_id: _,
-        }: FeedReviewDocRequest,
-    ) -> Result<Feed> {
-        let user = check_perm(
-            &self.pool,
-            auth,
-            RatelResource::Post { team_id: user_id },
-            GroupPermission::WriteReplies,
-        )
-        .await?;
-        let parent_id = parent_id.ok_or_else(|| {
-            tracing::error!("parent id is missing: {user_id}");
-            Error::FeedInvalidParentId
-        })?;
-
-        let feed = Feed::query_builder(user.id)
-            .id_equals(parent_id)
-            .query()
-            .map(Feed::from)
-            .fetch_one(&self.pool)
-            .await
-            .map_err(|e| {
-                tracing::error!("failed to get a feed {parent_id}: {e}");
-                Error::FeedInvalidParentId
-            })?;
-
-        let res = self
-            .repo
-            .insert(
                 html_contents,
-                FeedType::DocReview,
-                user_id,
-                feed.industry_id,
-                Some(parent_id),
-                None,
-                None,
-                None,
-                feed.files,
-                0,
-                0,
                 None,
                 UrlType::None,
+                vec![],
+                0,
+                0,
+                FeedStatus::Draft,
             )
             .await
             .map_err(|e| {
@@ -242,6 +214,67 @@ impl FeedController {
 
         Ok(res)
     }
+
+    // async fn review_doc(
+    //     &self,
+    //     auth: Option<Authorization>,
+    //     FeedReviewDocRequest {
+    //         html_contents,
+    //         parent_id,
+    //         part_id: _,
+    //     }: FeedReviewDocRequest,
+    // ) -> Result<Feed> {
+    //     let user_id = extract_user_id(&self.pool, auth.clone())
+    //         .await?;
+    //     check_perm(
+    //         &self.pool,
+    //         auth,
+    //         RatelResource::Post { team_id: user_id },
+    //         GroupPermission::WriteReplies,
+    //     )
+    //     .await?;
+    //     let parent_id = parent_id.ok_or_else(|| {
+    //         tracing::error!("parent id is missing: {user_id}");
+    //         Error::FeedInvalidParentId
+    //     })?;
+
+    //     let feed = Feed::query_builder(user_id)
+    //         .id_equals(parent_id)
+    //         .query()
+    //         .map(Feed::from)
+    //         .fetch_one(&self.pool)
+    //         .await
+    //         .map_err(|e| {
+    //             tracing::error!("failed to get a feed {parent_id}: {e}");
+    //             Error::FeedInvalidParentId
+    //         })?;
+
+    //     let res = self
+    //         .repo
+    //         .insert(
+    //             html_contents,
+    //             FeedType::DocReview,
+    //             user_id,
+    //             feed.industry_id,
+    //             Some(parent_id),
+    //             None,
+    //             None,
+    //             None,
+    //             feed.files,
+    //             0,
+    //             0,
+    //             FeedStatus::Draft,
+    //             None,
+    //             UrlType::None,
+    //         )
+    //         .await
+    //         .map_err(|e| {
+    //             tracing::error!("failed to insert comment feed: {:?}", e);
+    //             Error::FeedWriteCommentError
+    //         })?;
+
+    //     Ok(res)
+    // }
 
     async fn repost(
         &self,
@@ -253,7 +286,7 @@ impl FeedController {
             user_id,
         }: FeedRepostRequest,
     ) -> Result<Feed> {
-        let user = check_perm(
+        check_perm(
             &self.pool,
             auth,
             RatelResource::Post { team_id: user_id },
@@ -261,12 +294,12 @@ impl FeedController {
         )
         .await?;
         let parent_id = parent_id.ok_or_else(|| {
-            tracing::error!("parent id is missing: {user_id}");
+            tracing::error!("parent id is missing");
             Error::FeedInvalidParentId
         })?;
 
         let quote_feed_id = quote_feed_id.ok_or_else(|| {
-            tracing::error!("quote feed id is missing: {user_id}");
+            tracing::error!("quote feed id is missing");
             tokio::spawn(async move {
                 btracing::notify!(
                     crate::config::get().slack_channel_abusing,
@@ -276,8 +309,9 @@ impl FeedController {
             Error::FeedInvalidQuoteId
         })?;
 
-        let feed = Feed::query_builder(user.id)
+        let feed = Feed::query_builder(0)
             .id_equals(parent_id)
+            .status_not_equals(FeedStatus::Draft)
             .query()
             .map(Feed::from)
             .fetch_one(&self.pool)
@@ -287,8 +321,9 @@ impl FeedController {
                 Error::FeedInvalidParentId
             })?;
 
-        Feed::query_builder(user.id)
+        Feed::query_builder(user_id)
             .id_equals(quote_feed_id)
+            .status_not_equals(FeedStatus::Draft)
             .query()
             .map(Feed::from)
             .fetch_one(&self.pool)
@@ -301,19 +336,19 @@ impl FeedController {
         let res = self
             .repo
             .insert(
-                html_contents,
                 FeedType::Repost,
                 user_id,
                 feed.industry_id,
                 Some(parent_id),
-                None,
-                None,
                 Some(quote_feed_id),
-                feed.files,
-                0,
-                0,
+                None,
+                html_contents,
                 None,
                 UrlType::None,
+                vec![],
+                0,
+                0,
+                FeedStatus::Published,
             )
             .await
             .map_err(|e| {
@@ -330,11 +365,9 @@ impl FeedController {
         auth: Option<Authorization>,
         param: FeedUpdateRequest,
     ) -> Result<Feed> {
-        let user_id = extract_user_id(&self.pool, auth.clone())
-            .await
-            .unwrap_or_default();
-        let feed = Feed::query_builder(user_id)
+        let feed = Feed::query_builder(0)
             .id_equals(id)
+            .status_equals(FeedStatus::Draft)
             .query()
             .map(Feed::from)
             .fetch_one(&self.pool)
@@ -355,7 +388,7 @@ impl FeedController {
                 },
             },
             match feed.feed_type {
-                FeedType::Post => GroupPermission::WritePosts,
+                FeedType::Post => GroupPermission::WritePendingPosts,
                 _ => GroupPermission::WriteReplies,
             },
         )
@@ -396,6 +429,42 @@ impl FeedController {
 
         Ok(Feed::default())
     }
+
+    async fn publish_draft(&self, id: i64, auth: Option<Authorization>) -> Result<Feed> {
+        let feed = Feed::query_builder(0)
+            .id_equals(id)
+            .status_equals(FeedStatus::Draft)
+            .query()
+            .map(Feed::from)
+            .fetch_one(&self.pool)
+            .await
+            .map_err(|e| {
+                tracing::error!("failed to get a feed {id}: {e}");
+                Error::FeedPublishError
+            })?;
+
+        check_perm(
+            &self.pool,
+            auth,
+            RatelResource::Post {
+                team_id: feed.user_id,
+            },
+            GroupPermission::WritePendingPosts,
+        )
+        .await?;
+        let res = self
+            .repo
+            .update(
+                id,
+                FeedRepositoryUpdateRequest {
+                    status: Some(FeedStatus::Published),
+                    ..Default::default()
+                },
+            )
+            .await?;
+
+        Ok(res)
+    }
     // async fn run_read_action(
     //     &self,
     //     _auth: Option<Authorization>,
@@ -415,7 +484,6 @@ impl FeedController {
     pub fn route(&self) -> Result<by_axum::axum::Router> {
         Ok(by_axum::axum::Router::new()
             .route("/:id", get(Self::get_feed_by_id).post(Self::act_feed_by_id))
-            .with_state(self.clone())
             .route("/", post(Self::act_feed).get(Self::get_feed))
             .with_state(self.clone()))
     }
@@ -427,10 +495,12 @@ impl FeedController {
     ) -> Result<Json<Feed>> {
         tracing::debug!("act_feed {:?}", body);
         let feed = match body {
-            FeedAction::WritePost(param) => ctrl.write_post(auth, param).await?,
+            FeedAction::CreateDraft(param) => ctrl.create_draft(auth, param).await?,
             FeedAction::Comment(param) => ctrl.comment(auth, param).await?,
-            FeedAction::ReviewDoc(param) => ctrl.review_doc(auth, param).await?,
             FeedAction::Repost(param) => ctrl.repost(auth, param).await?,
+            // FeedAction::WritePost(param) => ctrl.write_post(auth, param).await?,
+
+            // FeedAction::ReviewDoc(param) => ctrl.review_doc(auth, param).await?,
         };
 
         Ok(Json(feed))
@@ -456,6 +526,10 @@ impl FeedController {
                 let res = ctrl.like(id, auth, value).await?;
                 Ok(Json(res))
             }
+            FeedByIdAction::Publish(_) => {
+                let res = ctrl.publish_draft(id, auth).await?;
+                Ok(Json(res))
+            }
         }
     }
 
@@ -465,16 +539,26 @@ impl FeedController {
         Path(FeedPath { id }): Path<FeedPath>,
     ) -> Result<Json<Feed>> {
         tracing::debug!("get_feed {:?}", id);
-        let user_id = extract_user_id(&ctrl.pool, auth).await.unwrap_or_default();
+        let user_id = extract_user_id(&ctrl.pool, auth.clone())
+            .await
+            .unwrap_or_default();
 
-        Ok(Json(
-            Feed::query_builder(user_id)
-                .id_equals(id)
-                .query()
-                .map(Feed::from)
-                .fetch_one(&ctrl.pool)
-                .await?,
-        ))
+        let res = Feed::query_builder(user_id)
+            .id_equals(id)
+            .query()
+            .map(Feed::from)
+            .fetch_one(&ctrl.pool)
+            .await?;
+        if res.status == FeedStatus::Draft {
+            check_perm(
+                &ctrl.pool,
+                auth,
+                RatelResource::Post { team_id: user_id },
+                GroupPermission::ReadPostDrafts,
+            )
+            .await?;
+        }
+        Ok(Json(res))
     }
 
     pub async fn get_feed(
@@ -485,19 +569,13 @@ impl FeedController {
         tracing::debug!("list_feed {:?}", q);
 
         match q {
-            FeedParam::Query(param) if param.action == Some(FeedQueryActionType::PostsByUserId) => {
-                Ok(Json(FeedGetResponse::Query(
+            FeedParam::Query(param) => match param.action {
+                Some(FeedQueryActionType::PostsByUserId) => Ok(Json(FeedGetResponse::Query(
                     ctrl.posts_by_user_id(auth, param).await?,
-                )))
-            }
-            FeedParam::Query(param) => {
-                Ok(Json(FeedGetResponse::Query(ctrl.query(auth, param).await?)))
-            } // FeedParam::Read(param)
-              //     if param.action == Some(FeedReadActionType::ActionType) =>
-              // {
-              //     let res = ctrl.run_read_action(auth, param).await?;
-              //     Ok(Json(FeedGetResponse::Read(res)))
-              // }
+                ))),
+
+                None => Ok(Json(FeedGetResponse::Query(ctrl.query(auth, param).await?))),
+            },
         }
     }
 }
@@ -518,38 +596,38 @@ mod tests {
 
         let post = Feed::get_repository(pool.clone())
             .insert(
-                html_contents.clone(),
                 FeedType::Post,
                 user.id,
                 industry_id,
                 None,
+                None,
                 title,
+                html_contents.clone(),
                 None,
-                None,
+                UrlType::None,
                 vec![],
                 0,
                 0,
-                None,
-                UrlType::None,
+                FeedStatus::Draft,
             )
             .await
             .unwrap();
 
         let _ = Feed::get_repository(pool.clone())
             .insert(
-                html_contents,
                 FeedType::Reply,
                 user.id,
                 industry_id,
                 Some(post.id),
                 None,
                 None,
+                html_contents,
                 None,
+                UrlType::None,
                 vec![],
                 0,
                 0,
-                None,
-                UrlType::None,
+                FeedStatus::Draft,
             )
             .await
             .unwrap();
@@ -568,17 +646,22 @@ mod tests {
         let title = Some(format!("Test Title {now}"));
         // predefined industry: Crypto
         let industry_id = 1;
-
         let res = Feed::get_client(&endpoint)
-            .write_post(
-                html_contents.clone(),
-                user.id,
+            .create_draft(FeedType::Post, user.id)
+            .await;
+        assert!(res.is_ok());
+        let res = res.unwrap();
+        let res = Feed::get_client(&endpoint)
+            .update(
+                res.id,
                 industry_id,
-                title.clone(),
                 None,
-                vec![],
+                None,
+                title.clone(),
+                html_contents.clone(),
                 None,
                 UrlType::None,
+                vec![],
             )
             .await;
 
@@ -610,7 +693,7 @@ mod tests {
         // predefined industry: Crypto
         let industry_id = 1;
 
-        let quote = Feed::query_builder()
+        let quote = Feed::query_builder(user.id)
             .feed_type_equals(FeedType::Reply)
             .order_by_created_at_asc()
             .limit(1)
@@ -620,18 +703,36 @@ mod tests {
             .await
             .unwrap();
 
+        let feed = Feed::get_client(&endpoint)
+            .create_draft(FeedType::Post, user.id)
+            .await;
+        assert!(feed.is_ok());
+        let feed = feed.unwrap();
         let res = Feed::get_client(&endpoint)
-            .write_post(
-                html_contents.clone(),
-                user.id,
+            .update(
+                feed.id,
                 industry_id,
-                title.clone(),
+                None,
                 Some(quote.id),
-                vec![],
+                title.clone(),
+                html_contents.clone(),
                 None,
                 UrlType::None,
+                vec![],
             )
             .await;
+        // let res = Feed::get_client(&endpoint)
+        //     .write_post(
+        //         html_contents.clone(),
+        //         user.id,
+        //         industry_id,
+        //         title.clone(),
+        //         Some(quote.id),
+        //         vec![],
+        //         None,
+        //         UrlType::None,
+        //     )
+        //     .await;
 
         assert!(res.is_ok());
 
@@ -656,7 +757,7 @@ mod tests {
             ..
         } = setup().await.unwrap();
 
-        let post = Feed::query_builder()
+        let post = Feed::query_builder(user.id)
             .feed_type_equals(FeedType::Post)
             .order_by_created_at_asc()
             .limit(1)
@@ -669,7 +770,7 @@ mod tests {
         let html_contents = format!("<p>Comment {now}</p>");
 
         let res = Feed::get_client(&endpoint)
-            .comment(html_contents.clone(), user.id, Some(post.id))
+            .comment(Some(post.id), html_contents.clone())
             .await;
 
         assert!(res.is_ok(), "res: {:?}", res);
@@ -694,7 +795,7 @@ mod tests {
             ..
         } = setup().await.unwrap();
 
-        let post = Feed::query_builder()
+        let post = Feed::query_builder(user.id)
             .feed_type_equals(FeedType::Post)
             .order_by_created_at_asc()
             .limit(1)
@@ -704,7 +805,7 @@ mod tests {
             .await
             .unwrap();
 
-        let quote_feed = Feed::query_builder()
+        let quote_feed = Feed::query_builder(0)
             .feed_type_equals(FeedType::Reply)
             .order_by_created_at_asc()
             .limit(1)
@@ -721,10 +822,10 @@ mod tests {
 
         let res = Feed::get_client(&endpoint)
             .repost(
-                html_contents.clone(),
                 user.id,
                 Some(post.id),
                 Some(quote_feed.id),
+                html_contents.clone(),
             )
             .await;
 
@@ -742,17 +843,12 @@ mod tests {
 
     #[tokio::test]
     async fn test_comment_with_invalid_parent_id() {
-        let TestContext {
-            user,
-            now,
-            endpoint,
-            ..
-        } = setup().await.unwrap();
+        let TestContext { now, endpoint, .. } = setup().await.unwrap();
 
         let html_contents = format!("<p>Comment {now}</p>");
 
         let res = Feed::get_client(&endpoint)
-            .comment(html_contents.clone(), user.id, Some(0))
+            .comment(Some(0), html_contents.clone())
             .await;
 
         assert!(res.is_err(), "res: {:?}", res);
@@ -762,17 +858,12 @@ mod tests {
 
     #[tokio::test]
     async fn test_comment_with_none() {
-        let TestContext {
-            now,
-            user,
-            endpoint,
-            ..
-        } = setup().await.unwrap();
+        let TestContext { now, endpoint, .. } = setup().await.unwrap();
 
         let html_contents = format!("<p>Comment {now}</p>");
 
         let res = Feed::get_client(&endpoint)
-            .comment(html_contents.clone(), user.id, None)
+            .comment(None, html_contents.clone())
             .await;
 
         assert!(res.is_err(), "res: {:?}", res);
@@ -780,25 +871,25 @@ mod tests {
         assert_eq!(res, Err(Error::FeedInvalidParentId));
     }
 
-    #[tokio::test]
-    async fn test_review_with_invalid_parent_id() {
-        let TestContext {
-            user,
-            now,
-            endpoint,
-            ..
-        } = setup().await.unwrap();
+    // #[tokio::test]
+    // async fn test_review_with_invalid_parent_id() {
+    //     let TestContext {
+    //         user,
+    //         now,
+    //         endpoint,
+    //         ..
+    //     } = setup().await.unwrap();
 
-        let html_contents = format!("<p>Review {now}</p>");
+    //     let html_contents = format!("<p>Review {now}</p>");
 
-        let res = Feed::get_client(&endpoint)
-            .review_doc(html_contents, user.id, Some(0), Some(1))
-            .await;
+    //     let res = Feed::get_client(&endpoint)
+    //         .review_doc(html_contents, user.id, Some(0), Some(1))
+    //         .await;
 
-        assert!(res.is_err(), "res: {:?}", res);
+    //     assert!(res.is_err(), "res: {:?}", res);
 
-        assert_eq!(res, Err(Error::FeedInvalidParentId));
-    }
+    //     assert_eq!(res, Err(Error::FeedInvalidParentId));
+    // }
 
     #[tokio::test]
     async fn test_repost_with_invalid_parent_id() {
@@ -813,7 +904,7 @@ mod tests {
 
         let html_contents = format!("<p>Review {now}</p>");
 
-        let quote = Feed::query_builder()
+        let quote = Feed::query_builder(0)
             .feed_type_equals(FeedType::Reply)
             .order_by_created_at_asc()
             .limit(1)
@@ -824,7 +915,7 @@ mod tests {
             .unwrap();
 
         let res = Feed::get_client(&endpoint)
-            .repost(html_contents, user.id, Some(0), Some(quote.id))
+            .repost(user.id, Some(0), Some(quote.id), html_contents)
             .await;
 
         assert!(res.is_err(), "res: {:?}", res);
@@ -844,7 +935,7 @@ mod tests {
 
         let html_contents = format!("<p>Review {now}</p>");
 
-        let feed = Feed::query_builder()
+        let feed = Feed::query_builder(0)
             .feed_type_equals(FeedType::Post)
             .order_by_created_at_asc()
             .limit(1)
@@ -855,7 +946,7 @@ mod tests {
             .unwrap();
 
         let res = Feed::get_client(&endpoint)
-            .repost(html_contents, user.id, Some(feed.id), Some(0))
+            .repost(user.id, Some(feed.id), Some(0), html_contents)
             .await;
 
         assert!(res.is_err(), "res: {:?}", res);

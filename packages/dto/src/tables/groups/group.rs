@@ -44,6 +44,8 @@ pub enum GroupPermission {
     DeletePosts = 2,
     #[translate(en = "Write pending posts")]
     WritePendingPosts = 3,
+    #[translate(en = "Read post drafts")]
+    ReadPostDrafts = 12,
 
     #[translate(en = "Read replies")]
     ReadReplies = 4,

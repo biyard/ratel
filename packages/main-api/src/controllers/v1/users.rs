@@ -9,9 +9,11 @@ use by_axum::axum::{
     middleware,
     routing::get,
 };
+use by_types::QueryResponse;
 use dto::*;
 use rest_api::Signature;
 use sqlx::{Pool, Postgres};
+use sqlx::postgres::PgRow;
 use tracing::instrument;
 use validator::Validate;
 
@@ -40,6 +42,8 @@ impl UserControllerV1 {
         Ok(by_axum::axum::Router::new()
             .route("/", get(Self::read_user).post(Self::act_user))
             .route("/:id", post(Self::act_user_by_id))
+            .route("/:id/followings", get(Self::get_followings))
+            .route("/:id/followers", get(Self::get_followers))
             .with_state(ctrl.clone())
             .layer(middleware::from_fn(authorization_middleware)))
     }
@@ -279,5 +283,151 @@ impl UserControllerV1 {
             .map_err(|_| Error::NotFound)?;
 
         Ok(Json(user))
+    }
+
+    #[instrument]
+    pub async fn get_followings(
+        State(ctrl): State<UserControllerV1>,
+        Extension(_): Extension<Option<Authorization>>,
+        Path(UserByIdPath { id }): Path<UserByIdPath>,
+
+        Query(param): Query<UserQuery>,
+    ) -> Result<Json<QueryResponse<User>>> {
+        // Get paginated list of users that the given user is following
+        let following_ids: Vec<i64> = Mynetwork::query_builder()
+            .follower_id_equals(id)
+            .limit(param.size())
+            .page(param.page())
+            .order_by_created_at_desc()
+            .query()
+            .map(|row: PgRow| {
+                let network: Mynetwork = row.into();
+
+                network.following_id
+            })
+            .fetch_all(&ctrl.pool)
+            .await
+            .map_err(|e| {
+                tracing::error!("failed to get following relationships: {:?}", e);
+
+                Error::DatabaseException(e.to_string())
+            })?;
+
+        let total_count = following_ids.len() as i64;
+        // Get the actual user details for the following IDs
+        let users: Vec<User> = if following_ids.is_empty() {
+            vec![]
+        } else {
+            // Create OR conditions for multiple IDs using BitOr operator
+
+            let mut combined_query = None;
+
+
+            for following_id in following_ids {
+                let single_query = User::query_builder().id_equals(following_id);
+
+                match combined_query {
+                    None => combined_query = Some(single_query),
+
+                    Some(existing_query) => combined_query = Some(existing_query | single_query),
+                }
+            }
+
+            if let Some(query) = combined_query {
+                query
+                    .order_by_created_at_desc()
+                    .query()
+                    .map(User::from)
+                    .fetch_all(&ctrl.pool)
+                    .await
+                    .map_err(|e| {
+                        tracing::error!("failed to get users: {:?}", e);
+
+                        Error::DatabaseException(e.to_string())
+                    })?
+            } else {
+                vec![]
+            }
+        };
+
+        Ok(Json(QueryResponse {
+            items: users,
+            total_count,
+        }))
+    }
+
+
+    #[instrument]
+    pub async fn get_followers(
+        State(ctrl): State<UserControllerV1>,
+
+        Extension(_): Extension<Option<Authorization>>,
+
+        Path(UserByIdPath { id }): Path<UserByIdPath>,
+
+        Query(param): Query<UserQuery>,
+    ) -> Result<Json<QueryResponse<User>>> {
+        // Get paginated list of users that are following the given user
+        let follower_ids: Vec<i64> = Mynetwork::query_builder()
+        .following_id_equals(id)
+            .limit(param.size())
+            .page(param.page())
+            .order_by_created_at_desc()
+            .query()
+            .map(|row: PgRow| {                
+                let network: Mynetwork = row.into();
+                
+                network.follower_id
+            })
+            .fetch_all(&ctrl.pool)
+            .await
+            .map_err(|e| {
+                tracing::error!("failed to get follower relationships: {:?}", e);
+
+                Error::DatabaseException(e.to_string())
+            })?;
+            
+            
+        let total_count = follower_ids.len() as i64;
+            // Get the actual user details for the follower IDs
+        let users: Vec<User> = if follower_ids.is_empty() {
+            vec![]
+        } else {
+            // Create OR conditions for multiple IDs using BitOr operator
+
+            let mut combined_query = None;
+
+            for follower_id in follower_ids {
+                let single_query = User::query_builder().id_equals(follower_id);
+
+                match combined_query {
+                    None => combined_query = Some(single_query),
+
+                    Some(existing_query) => combined_query = Some(existing_query | single_query),
+                }
+            }
+
+            if let Some(query) = combined_query {
+                query
+                    .order_by_created_at_desc()
+                    .query()
+                    .map(User::from)
+                    .fetch_all(&ctrl.pool)
+                    .await
+                    .map_err(|e| {
+                        tracing::error!("failed to get users: {:?}", e);
+
+                        Error::DatabaseException(e.to_string())
+                    })?
+            } else {
+                vec![]
+            }
+        };
+
+        Ok(Json(QueryResponse {
+            items: users,
+
+            total_count,
+        }))
     }
 }
