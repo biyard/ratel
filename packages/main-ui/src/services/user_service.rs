@@ -251,43 +251,96 @@ impl UserService {
         ))
     }
 
-    #[cfg(feature = "server")]
-    async fn request_to_firebase(
-        &mut self,
-    ) -> Result<(google_wallet::WalletEvent, String, String, String, String)> {
-        unimplemented!();
-    }
-
     #[cfg(feature = "web")]
     async fn request_to_firebase(
         &mut self,
     ) -> Result<(google_wallet::WalletEvent, String, String, String, String)> {
         let mut firebase = self.firebase.write();
-        let (evt, principal, email, name, profile_url) = match firebase
-            .request_wallet_with_google_and_keypair(self.anonymous.private_key().as_ref())
-            .await
-        {
-            Ok(evt) => {
-                tracing::debug!("UserService::login: cred={:?}", evt);
-                let principal = firebase.get_principal();
-                if principal.is_empty() {
-                    tracing::error!("UserService::login: principal is empty");
-                    return Err(Error::Unauthorized);
-                }
-
-                let (email, name, profile_url) = match firebase.get_user_info() {
-                    Some(v) => v,
-                    None => {
-                        tracing::error!("UserService::login: None");
+        
+        // Check local development environment
+        let env = option_env!("ENV").unwrap_or("local");
+        let is_local_dev = env == "local" || env == "dev";
+        
+        let (evt, principal, email, name, profile_url) = if is_local_dev {
+            // In local development environment, use existing key from local storage or generate new one
+            tracing::debug!("Using local development environment");
+            
+            // First try to load key from local storage
+            if let Some(principal) = firebase.try_setup_from_storage() {
+                tracing::debug!("Using existing key from local storage");
+                let (email, name, profile_url) = (
+                    "dev@localhost".to_string(),
+                    "Development User".to_string(), 
+                    "https://via.placeholder.com/150".to_string()
+                );
+                firebase.email = Some(email.clone());
+                firebase.name = Some(name.clone());
+                firebase.photo_url = Some(profile_url.clone());
+                
+                (google_wallet::WalletEvent::Login, principal, email, name, profile_url)
+            } else {
+                // Generate new local key if none exists
+                tracing::debug!("Generating new local development key");
+                
+                // Generate Ed25519 keypair
+                use ring::rand::SystemRandom;
+                use ring::signature::Ed25519KeyPair;
+                use base64::{Engine, engine::general_purpose};
+                
+                let rng = SystemRandom::new();
+                match Ed25519KeyPair::generate_pkcs8(&rng) {
+                    Ok(pkcs8_bytes) => {
+                        let private_key_b64 = general_purpose::STANDARD.encode(pkcs8_bytes.as_ref());
+                        if let Some(principal) = firebase.try_setup_from_private_key(private_key_b64) {
+                            let (email, name, profile_url) = (
+                                "dev@localhost".to_string(),
+                                "Development User".to_string(),
+                                "https://via.placeholder.com/150".to_string()
+                            );
+                            firebase.email = Some(email.clone());
+                            firebase.name = Some(name.clone());
+                            firebase.photo_url = Some(profile_url.clone());
+                            
+                            (google_wallet::WalletEvent::Signup, principal, email, name, profile_url)
+                        } else {
+                            tracing::error!("Failed to setup wallet from generated key");
+                            return Err(Error::Unauthorized);
+                        }
+                    }
+                    Err(e) => {
+                        tracing::error!("Failed to generate Ed25519 key: {:?}", e);
                         return Err(Error::Unauthorized);
                     }
-                };
-
-                (evt, principal, email, name, profile_url)
+                }
             }
-            Err(e) => {
-                tracing::error!("UserService::login: error={:?}", e);
-                return Err(Error::Unauthorized);
+        } else {
+            // In production environment, use existing Google Drive logic
+            match firebase
+                .request_wallet_with_google_and_keypair(self.anonymous.private_key().as_ref())
+                .await
+            {
+                Ok(evt) => {
+                    tracing::debug!("UserService::login: cred={:?}", evt);
+                    let principal = firebase.get_principal();
+                    if principal.is_empty() {
+                        tracing::error!("UserService::login: principal is empty");
+                        return Err(Error::Unauthorized);
+                    }
+
+                    let (email, name, profile_url) = match firebase.get_user_info() {
+                        Some(v) => v,
+                        None => {
+                            tracing::error!("UserService::login: None");
+                            return Err(Error::Unauthorized);
+                        }
+                    };
+
+                    (evt, principal, email, name, profile_url)
+                }
+                Err(e) => {
+                    tracing::error!("UserService::login: error={:?}", e);
+                    return Err(Error::Unauthorized);
+                }
             }
         };
 
@@ -296,7 +349,16 @@ impl UserService {
 
     pub async fn login(&mut self) -> UserEvent {
         match (self.signer)() {
-            WalletSigner::Firebase => self.login_with_firebase().await,
+            WalletSigner::Firebase => {
+                #[cfg(feature = "web")]
+                {
+                    self.login_with_firebase().await
+                }
+                #[cfg(not(feature = "web"))]
+                {
+                    UserEvent::Logout
+                }
+            },
             WalletSigner::None => UserEvent::Logout,
         }
     }
@@ -334,12 +396,29 @@ impl UserService {
         {
             Ok(v) => v,
             Err(e) => {
-                tracing::error!("UserService::signup: error={:?}", e);
-                rest_api::remove_signer();
-                #[cfg(feature = "web")]
-                self.anonymous.set_signer();
-
-                return Err(e);
+                // If duplicate key error, try to login with existing user
+                if e.to_string().contains("duplicate key value violates unique constraint") {
+                    tracing::debug!("User already exists, attempting login with email: {}", email);
+                    match cli.login(email.to_string()).await {
+                        Ok(existing_user) => {
+                            tracing::debug!("Successfully logged in existing user: {:?}", existing_user);
+                            existing_user
+                        }
+                        Err(login_error) => {
+                            tracing::error!("UserService::signup: duplicate user but login failed={:?}", login_error);
+                            rest_api::remove_signer();
+                            #[cfg(feature = "web")]
+                            self.anonymous.set_signer();
+                            return Err(login_error);
+                        }
+                    }
+                } else {
+                    tracing::error!("UserService::signup: error={:?}", e);
+                    rest_api::remove_signer();
+                    #[cfg(feature = "web")]
+                    self.anonymous.set_signer();
+                    return Err(e);
+                }
             }
         };
 
@@ -358,6 +437,7 @@ impl UserService {
     }
 
     #[allow(unused_mut)]
+    #[cfg(feature = "web")]
     pub async fn login_with_firebase(&mut self) -> UserEvent {
         tracing::debug!("UserService::login: Firebase");
         let (evt, principal, email, name, profile_url) = match self.request_to_firebase().await {

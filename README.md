@@ -66,7 +66,7 @@
 
 [![Main Page][product-screenshot]](https://ratel.foundation)
 
-Ratel is the **world’s first decentralized legislative platform** designed to bridge the gap between **crypto users and policymakers**. Built on **blockchain and AI**, Ratel ensures **transparency, governance, and active community participation** in shaping crypto regulations.
+Ratel is the **world's first decentralized legislative platform** designed to bridge the gap between **crypto users and policymakers**. Built on **blockchain and AI**, Ratel ensures **transparency, governance, and active community participation** in shaping crypto regulations.
 
 In many countries, including South Korea, crypto regulations are **lagging behind** while policymakers and industry stakeholders remain disconnected. **Institutional participation is limited, ICOs and IEOs are banned, and startups are forced to move abroad** due to unclear regulations. This has turned the crypto market into a **speculative space dominated by retail investors, rather than an environment fostering sustainable innovation**.
 
@@ -95,27 +95,105 @@ Our ultimate goal is to create a **fair, transparent, and innovation-friendly cr
 <!-- GETTING STARTED -->
 ## Getting Started
 
-This is an example of how you may give instructions on setting up your project locally.
-To get a local copy up and running follow these simple example steps.
+### 🚀 Quick Start - Development Environment
 
 ### Prerequisites
 
-This is an example of how to list things you need to use the software and how to install them.
-* rust
-  ```sh
-  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-  ```
+Make sure you have the following tools installed:
 
-* Dioxus
-  - Refer to [Dioxus getting started](https://dioxuslabs.com/learn/0.6/getting_started/#install-cargo-binstall)
-  ``` sh
-  cargo install cargo-binstall
-  cargo binstall dioxus-cli
-  ```
+* **Rust & Cargo**: [Install Rust](https://rustup.rs/)
+* **Node.js & npm**: [Install Node.js](https://nodejs.org/)
+* **Java 11+**: `brew install openjdk@11` (for Firebase emulator)
+* **PostgreSQL**: `brew install postgresql`
 
-### Building
+### Development Workflow
 
-Coming soon
+```bash
+# 1. Setup and start all development services
+make start
+
+# 2. Access your application
+# Frontend:     http://localhost:8080
+# Backend API:  http://localhost:3000
+# Firebase UI:  http://localhost:4000
+
+# 3. Stop all services when done
+make stop
+```
+
+### Available Make Targets
+
+| Command | Description |
+|---------|-------------|
+| `make setup` | Install required development tools |
+| `make dev` | Start frontend only (fast development) |
+| `make start` | Start full development environment (all services) |
+| `make stop` | Stop all development services |
+| `make clean-dev` | Clean logs and temporary files |
+| `make status` | Show development environment status |
+
+### Development Services
+
+When you run `make start`, the following services will be started:
+
+- **🔥 Firebase Emulator Suite**
+  * Auth: `localhost:9099`
+  * Firestore: `localhost:8081` 
+  * UI: `localhost:4000`
+
+- **🌐 Backend API** (`localhost:3000`)
+  - Rust/Axum server with hot reload
+  - PostgreSQL database integration
+  - Auto-migration on startup
+
+- **🎨 Frontend** (`localhost:8080`)
+  * Dioxus/Rust WASM application
+  * Hot reload enabled
+  * Tailwind CSS integration
+
+### Log Files
+
+All services log to the `logs/` directory:
+
+```bash
+# View logs in real-time
+tail -f logs/backend.log
+tail -f logs/frontend.log  
+tail -f logs/firebase.log
+
+# Or check service status
+make status
+```
+
+### Troubleshooting
+
+**Frontend compilation errors (ring crate):**
+The Makefile automatically sets WASM compilation environment variables to address common issues.
+
+**Backend compilation taking long:**
+First-time compilation can take 5–10 minutes. Subsequent builds are much faster due to incremental compilation.
+
+**Database connection issues:**
+Make sure PostgreSQL is running: `brew services start postgresql`
+
+### Project Structure
+
+```
+ratel/
+├── packages/
+│   ├── main-ui/          # Frontend (Dioxus + Rust)
+│   ├── main-api/         # Backend API (Rust + Axum)
+│   ├── dto/              # Data transfer objects
+│   ├── fetcher/          # Data fetcher service
+│   └── mobile/           # Mobile app
+├── deps/
+│   └── rust-sdk/         # Shared Rust SDK
+├── logs/                 # Development logs
+└── Makefile              # Development workflow
+```
+
+📖 **Need help?** Check our detailed guide:
+* [Local Development Guide](LOCAL_DEVELOPMENT.md) - Complete setup and troubleshooting
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -139,7 +217,7 @@ Coming soon
 
 * Launch the official Ratel website & social media presence.
 * Introduce $RATEL governance token.
-* Begin beta testing of the platform, focusing on **lawmakers’ stance tracking** and **community engagement**.
+* Begin beta testing of the platform, focusing on **lawmakers' stance tracking** and **community engagement**.
 
 🗳️ **Q2 2025 – DAO Governance & Legislative Participation**
 
