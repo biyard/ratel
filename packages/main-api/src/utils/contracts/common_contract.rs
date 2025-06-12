@@ -170,9 +170,10 @@ pub struct TransactionReceipt {
 
 #[cfg(test)]
 mod tests {
-    use crate::wallets::wallet::KaiaLocalWallet;
+    // use crate::utils::wallets::kaia_local_wallet::KaiaLocalWallet;
 
-    use super::*;
+
+    // use super::*;
 
     #[cfg(feature = "full-test")]
     #[tokio::test]
