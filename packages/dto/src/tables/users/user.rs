@@ -21,7 +21,7 @@ pub struct User {
     pub nickname: String,
     #[api_model(unique, read_action = by_principal)]
     pub principal: String,
-    #[api_model(action = signup, read_action = [check_email, login], unique)]
+    #[api_model(action = signup, read_action = [check_email, login, find_by_email], unique)]
     #[validate(email)]
     pub email: String,
     #[api_model(action = signup, nullable, action_by_id = edit_profile)]
@@ -38,6 +38,7 @@ pub struct User {
     #[api_model(version = v0.1, indexed)]
     pub parent_id: Option<i64>,
     #[api_model(action = signup, version = v0.1, indexed, unique)]
+    #[serde(default)]
     pub username: String,
 
     #[api_model(many_to_many = my_networks, foreign_table_name = users, foreign_primary_key = follower_id, foreign_reference_key = following_id, aggregator = count)]
