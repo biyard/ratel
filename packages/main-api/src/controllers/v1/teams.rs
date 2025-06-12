@@ -196,6 +196,8 @@ impl TeamController {
     ) -> Result<Team> {
         Team::query_builder()
             .username_equals(username.ok_or(Error::InvalidTeamname)?)
+            .members_builder(User::query_builder())
+            .groups_builder(Group::query_builder())
             .query()
             .map(Team::from)
             .fetch_one(&self.pool)
@@ -275,6 +277,7 @@ impl TeamController {
         Ok(Json(
             Team::query_builder()
                 .id_equals(id)
+                .groups_builder(Group::query_builder())
                 .query()
                 .map(Team::from)
                 .fetch_one(&ctrl.pool)
