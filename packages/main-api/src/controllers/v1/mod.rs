@@ -8,6 +8,7 @@ mod auth;
 mod bots;
 mod election_pledges;
 mod feeds;
+mod groups;
 mod landing;
 mod me;
 mod news;
@@ -20,6 +21,7 @@ pub mod supports;
 mod teams;
 mod totals;
 pub mod users;
+mod my_networks;
 
 mod redeems;
 
@@ -71,6 +73,10 @@ pub async fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Ro
             election_pledges::ElectionPledgeController::new(pool.clone()).route()?,
         )
         .nest(
+            "/teams/:team_id/groups",
+            groups::GroupController::new(pool.clone()).route()?,
+        )
+        .nest(
             "/presidential-candidates",
             presidential_candidates::PresidentialCandidateController::new(pool.clone()).route()?,
         )
@@ -91,5 +97,8 @@ pub async fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Ro
         .nest(
             "/redeems",
             redeems::RedeemCodeController::new(pool.clone()).route(),
+        ).nest(
+            "/my-networks",
+            my_networks::MynetworkController::new(pool.clone()).route()?,
         ))
 }

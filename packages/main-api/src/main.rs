@@ -38,7 +38,6 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
     migrate!(
         pool,
         User,
-        Follower,
         Group,
         GroupMember,
         AssemblyMember,
@@ -56,9 +55,10 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         RedeemCode,
         Space,
         SpaceUser,
-        SpaceMember,
         SpaceContract,
         SpaceHolder,
+        SpaceGroup,
+        SpaceMember,
         TeamMember,
         News,
         Quiz,
@@ -73,8 +73,8 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         Badge,
         UserBadge,
         SpaceBadge,
-        SpaceGroup,
         Onboard,
+        Mynetwork,
     );
 
     if Industry::query_builder()
@@ -124,7 +124,13 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         .is_none()
     {
         Group::get_repository(pool.clone())
-            .insert("ServiceAdmin".to_string(), 1, 0xffffffffffffffffu64 as i64)
+            .insert(
+                "ServiceAdmin".to_string(),
+                "".to_string(),
+                "".to_string(),
+                1,
+                0xffffffffffffffffu64 as i64,
+            )
             .await?;
     }
 
@@ -216,7 +222,7 @@ pub mod tests {
                 None,
                 email.clone(),
                 "".to_string(),
-                id.clone(),
+                format!("0x{}", id),
             )
             .await?
             .unwrap();
@@ -251,7 +257,7 @@ pub mod tests {
                 None,
                 email.clone(),
                 "".to_string(),
-                id.to_string(),
+                format!("0x{}", id),
             )
             .await?;
 

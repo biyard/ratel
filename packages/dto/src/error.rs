@@ -56,6 +56,11 @@ pub enum Error {
     SignException,
     DatabaseException(String),
 
+    #[translate(en = "Please change group name.")]
+    DuplicatedGroupName,
+    #[translate(en = "Failed to insert group member")]
+    InsertGroupMemberFailed,
+
     // NA OpenAPI
     OpenApiResponseError(String),
     #[translate(en = "Failed to parse response")]
@@ -136,6 +141,8 @@ pub enum Error {
     // feeds
     #[translate(en = "Failed to write a post")]
     FeedWritePostError,
+    #[translate(en = "Failed to publish a post")]
+    FeedPublishError,
     #[translate(en = "Failed to write a comment")]
     FeedWriteCommentError,
     #[translate(en = "You must write a comment on a valid feed")]
@@ -166,6 +173,10 @@ pub enum Error {
 
     #[translate(en = "Failed to create a badge. Please try again.")]
     BadgeCreationFailure,
+    #[translate(en = "Already Claimed")]
+    AlreadyClaimed,
+    #[translate(en = "Only 1 NFT can be minted.")]
+    NFTLimitedError,
 
     // redeem codes
     #[translate(en = "Failed to create redeem codes")]
@@ -174,6 +185,9 @@ pub enum Error {
     InvalidRedeemCode,
     #[translate(en = "Redeem Code is not exists")]
     RedeemCodeNotFound,
+
+    #[translate(en = "You are already following this user")]
+    AlreadyFollowing,
 }
 
 impl<E: StdError + 'static> From<E> for Error {
