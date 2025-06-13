@@ -10,7 +10,6 @@ use by_axum::{
 };
 use by_types::QueryResponse;
 use dto::*;
-use sqlx::postgres::PgRow;
 
 use crate::utils::users::extract_user_id;
 
@@ -39,7 +38,7 @@ impl TeamController {
             .limit(param.size())
             .page(param.page())
             .query()
-            .map(|row: PgRow| {
+            .map(|row: sqlx::postgres::PgRow| {
                 use sqlx::Row;
 
                 total_count = row.try_get("total_count").unwrap_or_default();
@@ -194,15 +193,53 @@ impl TeamController {
         _auth: Option<Authorization>,
         TeamReadAction { username, .. }: TeamReadAction,
     ) -> Result<Team> {
-        Team::query_builder()
+        use sqlx::Row;
+
+        let mut team = Team::query_builder()
             .username_equals(username.ok_or(Error::InvalidTeamname)?)
             .members_builder(TeamUser::query_builder())
-            // .groups_builder(Group::query_builder())
             .query()
             .map(Team::from)
             .fetch_one(&self.pool)
-            .await
-            .map_err(|_| Error::NotFound)
+            .await?;
+
+        let sql = r#"
+        SELECT DISTINCT ON (g.id)
+            g.id,
+            g.created_at,
+            g.updated_at,
+            g.name,
+            g.description,
+            g.image_url,
+            g.creator_id,
+            g.permissions,
+            (
+                SELECT COUNT(*) FROM group_members gm2 WHERE gm2.group_id = g.id 
+            ) AS member_count
+        FROM groups g
+        JOIN group_members gm ON g.id = gm.group_id
+        WHERE gm.user_id = $1
+    "#;
+
+        let group_rows = sqlx::query(sql)
+            .bind(team.id)
+            .map(|row: sqlx::postgres::PgRow| GroupUser {
+                id: row.get("id"),
+                created_at: row.get("created_at"),
+                updated_at: row.get("updated_at"),
+                name: row.get("name"),
+                description: row.get("description"),
+                image_url: row.get("image_url"),
+                creator_id: row.get("creator_id"),
+                permissions: row.get("permissions"),
+                member_count: row.get("member_count"),
+            })
+            .fetch_all(&self.pool)
+            .await?;
+
+        team.groups = group_rows;
+
+        Ok(team)
     }
 }
 
@@ -277,7 +314,7 @@ impl TeamController {
         Ok(Json(
             Team::query_builder()
                 .id_equals(id)
-                // .groups_builder(Group::query_builder())
+                // .groups_builder(GroupUser::query_builder())
                 .query()
                 .map(Team::from)
                 .fetch_one(&ctrl.pool)
