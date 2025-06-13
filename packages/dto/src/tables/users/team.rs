@@ -1,7 +1,7 @@
 use crate::Group;
+use crate::TeamUser;
 
 use super::*;
-use crate::GroupRepositoryQueryBuilder;
 use bdk::prelude::*;
 
 #[derive(validator::Validate)]
@@ -30,8 +30,8 @@ pub struct Team {
 
     #[api_model(many_to_many = team_members, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = team_id, nested)]
     #[serde(default)]
-    pub members: Vec<User>,
-    #[api_model(many_to_many = group_members, foreign_table_name = groups, foreign_primary_key = group_id, foreign_reference_key = user_id, nested)]
+    pub members: Vec<TeamUser>,
+    #[api_model(many_to_many = group_members, foreign_table_name = groups, foreign_primary_key = group_id, foreign_reference_key = user_id)]
     #[serde(default)]
     pub groups: Vec<Group>,
 

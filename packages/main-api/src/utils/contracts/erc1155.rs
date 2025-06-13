@@ -18,6 +18,26 @@ impl<T: KaiaWallet, W: KaiaWallet> Erc1155Contract<T, W> {
         Self { contract }
     }
 
+    pub async fn balance_of_batch(&self, addrs: Vec<String>, ids: Vec<u64>) -> Result<Vec<U256>> {
+        let addrs: Vec<Address> = addrs
+            .into_iter()
+            .map(|e| e.parse::<Address>().unwrap_or(Address::zero()))
+            .collect();
+
+        let ids: Vec<U256> = ids.into_iter().map(|e| U256::from(e)).collect();
+
+        let nfts = self
+            .contract
+            .contract
+            .method("balanceOfBatch", (addrs, ids))
+            .map_err(|e| Error::Klaytn(e.to_string()))?
+            .call()
+            .await
+            .map_err(|e| Error::Klaytn(e.to_string()))?;
+
+        Ok(nfts)
+    }
+
     pub async fn mint_batch(
         &self,
         addr: String,
