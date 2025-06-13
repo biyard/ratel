@@ -63,8 +63,8 @@ pub enum GroupPermission {
 
     #[translate(en = "Invite member")]
     InviteMember = 9,
-    #[translate(en = "Update group")]
-    UpdateGroup = 10,
+    #[translate(en = "Manage group")]
+    ManageGroup = 10,
     #[translate(en = "Delete group")]
     DeleteGroup = 11,
 
