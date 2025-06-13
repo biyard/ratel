@@ -6,11 +6,11 @@ use by_axum::{
     auth::Authorization,
     axum::{
         Extension, Json,
-        extract::{Path, State},
-        routing::post,
+        extract::{Path, Query, State},
+        routing::{get, post},
     },
 };
-use dto::*;
+use dto::{by_types::QueryResponse, sqlx::postgres::PgRow, *};
 use ethers::providers::{Http, Provider};
 
 use crate::{
@@ -58,6 +58,34 @@ impl SpaceBadgeController {
 
     //     Ok(QueryResponse { total_count, items })
     // }
+
+    async fn query(
+        &self,
+        auth: Option<Authorization>,
+        param: SpaceBadgeQuery,
+    ) -> Result<QueryResponse<UserBadge>> {
+        let mut total_count = 0;
+
+        let user = extract_user_with_allowing_anonymous(&self.pool, auth).await?;
+
+        tracing::debug!("111 size: {} page: {}", param.size(), param.page());
+
+        let items = UserBadge::query_builder()
+            .user_id_equals(user.id)
+            .limit(param.size())
+            .page(param.page())
+            .query()
+            .map(|row: PgRow| {
+                use sqlx::Row;
+
+                total_count = row.try_get("total_count").unwrap_or_default();
+                row.into()
+            })
+            .fetch_all(&self.pool)
+            .await?;
+
+        Ok(QueryResponse { total_count, items })
+    }
 
     async fn create(
         &self,
@@ -168,25 +196,26 @@ impl SpaceBadgeController {
         &self,
         space_id: i64,
         auth: Option<Authorization>,
-        SpaceBadgeClaimRequest {
-            mut ids,
-            evm_address,
-        }: SpaceBadgeClaimRequest,
+        SpaceBadgeClaimRequest { ids, evm_address }: SpaceBadgeClaimRequest,
     ) -> Result<SpaceBadge> {
         let user = extract_user_with_allowing_anonymous(&self.pool, auth).await?;
         tracing::debug!("Claiming badges for user: {:?}", user);
 
-        let badges =
-            sqlx::query("SELECT * FROM user_badges WHERE user_id = $1 AND badge_id = ANY($2)")
-                .bind(user.id)
-                .bind(&ids)
-                .map(UserBadge::from)
-                .fetch_all(&self.pool)
-                .await?;
+        let badges = sqlx::query("SELECT * FROM user_badges WHERE user_id = $1")
+            .bind(user.id)
+            .map(UserBadge::from)
+            .fetch_all(&self.pool)
+            .await?;
+
         tracing::debug!("Claimed badges: {:?}", badges);
 
-        ids.retain(|id| !badges.iter().any(|b| b.badge_id == *id));
-        tracing::debug!("Remaining ids to claim: {:?}", ids);
+        if !badges.is_empty() {
+            return Err(Error::AlreadyClaimed);
+        }
+
+        if ids.len() != 1 {
+            return Err(Error::NFTLimitedError);
+        }
 
         let space = Space::query_builder()
             .id_equals(space_id)
@@ -291,8 +320,21 @@ impl SpaceBadgeController {
             //     post(Self::act_space_badge_by_id),
             // )
             // .with_state(self.clone())
+            .route("/", get(Self::get_user_badge))
             .route("/", post(Self::act_space_badge))
             .with_state(self.clone())
+    }
+
+    async fn get_user_badge(
+        State(ctrl): State<SpaceBadgeController>,
+        Extension(auth): Extension<Option<Authorization>>,
+        Query(q): Query<SpaceBadgeParam>,
+    ) -> Result<Json<UserBadgeGetResponse>> {
+        match q {
+            SpaceBadgeParam::Query(param) => Ok(Json(UserBadgeGetResponse::Query(
+                ctrl.query(auth, param).await?,
+            ))),
+        }
     }
 
     pub async fn act_space_badge(

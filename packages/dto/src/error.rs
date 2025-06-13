@@ -173,6 +173,10 @@ pub enum Error {
 
     #[translate(en = "Failed to create a badge. Please try again.")]
     BadgeCreationFailure,
+    #[translate(en = "Already Claimed")]
+    AlreadyClaimed,
+    #[translate(en = "Only 1 NFT can be minted.")]
+    NFTLimitedError,
 
     // redeem codes
     #[translate(en = "Failed to create redeem codes")]
