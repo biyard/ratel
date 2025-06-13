@@ -2,9 +2,10 @@ use by_types::QueryResponse;
 
 use bdk::prelude::*;
 
-use crate::{Badge, Follower, Group};
+use crate::{Badge, Group};
 
 use super::Team;
+use crate::GroupRepositoryQueryBuilder;
 
 #[derive(validator::Validate)]
 #[api_model(base = "/v1/users", read_action = user_info, table = users, iter_type=QueryResponse)]
@@ -20,7 +21,7 @@ pub struct User {
     pub nickname: String,
     #[api_model(unique, read_action = by_principal)]
     pub principal: String,
-    #[api_model(action = signup, read_action = [check_email, login], unique)]
+    #[api_model(action = signup, read_action = [check_email, login, find_by_email], unique)]
     #[validate(email)]
     pub email: String,
     #[api_model(action = signup, nullable, action_by_id = edit_profile)]
@@ -37,12 +38,18 @@ pub struct User {
     #[api_model(version = v0.1, indexed)]
     pub parent_id: Option<i64>,
     #[api_model(action = signup, version = v0.1, indexed, unique)]
+    #[serde(default)]
     pub username: String,
 
-    #[api_model(one_to_many = followers, foreign_key = user_id)]
+    #[api_model(many_to_many = my_networks, foreign_table_name = users, foreign_primary_key = follower_id, foreign_reference_key = following_id, aggregator = count)]
     #[serde(default)]
-    pub followers: Vec<Follower>,
-    #[api_model(many_to_many = group_members, foreign_table_name = groups, foreign_primary_key = group_id, foreign_reference_key = user_id)]
+    pub followers_count: i64,
+    
+    #[api_model(many_to_many = my_networks, foreign_table_name = users, foreign_primary_key = following_id, foreign_reference_key = follower_id, aggregator = count)]
+    #[serde(default)]
+    pub followings_count: i64,
+
+    #[api_model(many_to_many = group_members, foreign_table_name = groups, foreign_primary_key = group_id, foreign_reference_key = user_id, nested)]
     #[serde(default)]
     pub groups: Vec<Group>,
 
