@@ -268,15 +268,15 @@ impl GroupController {
 
         let group_id = group.id;
 
-        let _ = self
-            .group_member_repo
-            .insert_with_tx(&mut *tx, team_id, group_id)
-            .await
-            .map_err(|e| {
-                tracing::error!("Failed to create group member: {:?}", e);
-                Error::InsertGroupMemberFailed
-            })?
-            .ok_or(Error::InsertGroupMemberFailed)?;
+        // let _ = self
+        //     .group_member_repo
+        //     .insert_with_tx(&mut *tx, team_id, group_id)
+        //     .await
+        //     .map_err(|e| {
+        //         tracing::error!("Failed to create group member: {:?}", e);
+        //         Error::InsertGroupMemberFailed
+        //     })?
+        //     .ok_or(Error::InsertGroupMemberFailed)?;
 
         for user_id in users {
             let _ = self
