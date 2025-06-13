@@ -1,8 +1,10 @@
-use crate::Group;
+use crate::GroupUser;
 use crate::TeamUser;
+use bdk::prelude::*;
 
 use super::*;
-use bdk::prelude::*;
+// use crate::GroupUserRepositoryQueryBuilder;
+use crate::TeamUserRepositoryQueryBuilder;
 
 #[derive(validator::Validate)]
 #[api_model(base = "/v1/teams", table = users, action = [], action_by_id = [delete, invite_member(email = String)], read_action = get_by_id)]
@@ -31,9 +33,12 @@ pub struct Team {
     #[api_model(many_to_many = team_members, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = team_id, nested)]
     #[serde(default)]
     pub members: Vec<TeamUser>,
-    #[api_model(many_to_many = group_members, foreign_table_name = groups, foreign_primary_key = group_id, foreign_reference_key = user_id)]
+
+    //FIXME: fix to query by api_model using nested keyword
+    // #[api_model(many_to_many = group_members, foreign_table_name = groups, foreign_primary_key = group_id, foreign_reference_key = user_id, nested)]
+    #[api_model(skip)]
     #[serde(default)]
-    pub groups: Vec<Group>,
+    pub groups: Vec<GroupUser>,
 
     #[api_model(action = create)]
     #[serde(default)]

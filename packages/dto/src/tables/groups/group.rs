@@ -24,10 +24,12 @@ pub struct Group {
     #[api_model(many_to_one = users)]
     pub creator_id: i64,
 
+    #[api_model(skip)]
+    #[serde(default)]
+    pub member_count: i64,
     #[api_model(many_to_many = group_members, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = group_id)]
     #[serde(default)]
     pub members: Vec<GroupMemberUser>,
-
     #[api_model(version = v0.1)]
     pub permissions: i64,
 }
