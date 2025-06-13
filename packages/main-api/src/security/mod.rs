@@ -1,10 +1,8 @@
 mod general_permission_verifier;
-mod group_permission_verifier;
 mod space_permission_verifier;
 mod team_permission_verifier;
 
 pub use general_permission_verifier::*;
-pub use group_permission_verifier::*;
 use space_permission_verifier::SpacePermissionVerifier;
 pub use team_permission_verifier::*;
 
@@ -68,16 +66,21 @@ pub async fn check_perm(
     };
 
     let verifier: Box<dyn PermissionVerifier> = match rsc {
-        RatelResource::Post { team_id } => Box::new(TeamPermissionVerifier::new(team_id)),
-        RatelResource::Reply { team_id } => Box::new(TeamPermissionVerifier::new(team_id)),
+        RatelResource::Post { team_id } => {
+            Box::new(TeamPermissionVerifier::new(team_id, pool).await)
+        }
+        RatelResource::Reply { team_id } => {
+            Box::new(TeamPermissionVerifier::new(team_id, pool).await)
+        }
         RatelResource::News | RatelResource::Promotions => {
             Box::new(GeneralPermissionVerifier::new())
         }
-
         RatelResource::Space { space_id } => {
             Box::new(SpacePermissionVerifier::new(user.id, space_id, pool).await)
         }
-        _ => Box::new(SpacePermissionVerifier::new(0, 0, pool).await),
+        RatelResource::Team { team_id } => {
+            Box::new(TeamPermissionVerifier::new(team_id, pool).await)
+        }
     };
 
     if !verifier.has_permission(&user, perm) {
@@ -85,74 +88,6 @@ pub async fn check_perm(
     }
 
     tracing::debug!("authorized user_id: {:?}", user);
-
-    Ok(user)
-}
-
-pub async fn check_group_perm(
-    pool: &sqlx::Pool<sqlx::Postgres>,
-    auth: Option<Authorization>,
-    rsc: RatelResource,
-    perm: GroupPermission,
-) -> Result<User> {
-    let user = match auth {
-        Some(Authorization::UserSig(sig)) => {
-            let principal = sig.principal().map_err(|e| {
-                tracing::error!("failed to get principal: {:?}", e);
-                Error::Unauthorized
-            })?;
-            let user = User::query_builder()
-                .principal_equals(principal)
-                .groups_builder(Group::query_builder())
-                .query()
-                .map(User::from)
-                .fetch_one(pool)
-                .await
-                .map_err(|e| {
-                    tracing::error!("failed to get user: {:?}", e);
-                    Error::InvalidUser
-                })?;
-            user
-        }
-        Some(Authorization::Bearer { claims }) => {
-            let user_id = claims.sub.parse::<i64>().map_err(|e| {
-                tracing::error!("failed to parse user id: {:?}", e);
-                Error::Unauthorized
-            })?;
-            tracing::debug!("extracted user_id: {:?}", user_id);
-
-            let user = User::query_builder()
-                .id_equals(user_id)
-                .query()
-                .map(User::from)
-                .fetch_one(pool)
-                .await
-                .map_err(|e| {
-                    tracing::error!("failed to get user: {:?}", e);
-                    Error::InvalidUser
-                })?;
-            tracing::debug!("extracted user: {:?}", user);
-            user
-        }
-        _ => return Err(Error::Unauthorized),
-    };
-
-    let verifier: Box<dyn MainGroupPermissionVerifier> = match rsc {
-        RatelResource::UpdateGroup { team_id, group_id } => {
-            Box::new(GroupPermissionVerifier::new(pool, team_id, group_id).await)
-        }
-        RatelResource::DeleteGroup { team_id, group_id } => {
-            Box::new(GroupPermissionVerifier::new(pool, team_id, group_id).await)
-        }
-        RatelResource::InviteMember { team_id, group_id } => {
-            Box::new(GroupPermissionVerifier::new(pool, team_id, group_id).await)
-        }
-        _ => Box::new(GroupPermissionVerifier::new(pool, 0, 0).await),
-    };
-
-    if !verifier.has_group_permission(perm) {
-        return Err(Error::Unauthorized);
-    }
 
     Ok(user)
 }
