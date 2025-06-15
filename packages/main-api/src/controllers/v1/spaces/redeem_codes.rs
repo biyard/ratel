@@ -51,15 +51,16 @@ impl SpaceRedeemCodeController {
             .map(RedeemCode::from)
             .fetch_optional(&self.pool)
             .await?;
+        let space = Space::query_builder()
+            .id_equals(meta_id)
+            .query()
+            .map(Space::from)
+            .fetch_one(&self.pool)
+            .await?;
         let redeem_code = if redeem_code.is_none() {
             let redeem_code_repo = RedeemCode::get_repository(self.pool.clone());
             let mut codes = vec![];
-            let space = Space::query_builder()
-                .id_equals(meta_id)
-                .query()
-                .map(Space::from)
-                .fetch_one(&self.pool)
-                .await?;
+
             for _ in 0..space.num_of_redeem_codes {
                 let id = Uuid::new_v4().to_string();
                 codes.push(id);
@@ -74,7 +75,38 @@ impl SpaceRedeemCodeController {
                 res.unwrap()
             }
         } else {
-            redeem_code.unwrap()
+            let redeem_code = redeem_code.unwrap();
+            if redeem_code.codes.len() != space.num_of_redeem_codes as usize {
+                let redeem_code_repo = RedeemCode::get_repository(self.pool.clone());
+                let mut codes = redeem_code.codes.clone();
+                let mut used = redeem_code.used.clone();
+                let prev_num = redeem_code.codes.len() as i64;
+
+                if prev_num > space.num_of_redeem_codes {
+                    codes.truncate(space.num_of_redeem_codes as usize);
+                    used.retain(|&index| index < space.num_of_redeem_codes as i32);
+                } else {
+                    for _ in prev_num..space.num_of_redeem_codes {
+                        let id = Uuid::new_v4().to_string();
+                        codes.push(id);
+                    }
+                }
+
+                let res = redeem_code_repo
+                    .update_with_tx(
+                        &mut *tx,
+                        redeem_code.id,
+                        RedeemCodeRepositoryUpdateRequest {
+                            codes: Some(codes),
+                            used: Some(used),
+                            ..Default::default()
+                        },
+                    )
+                    .await?;
+                res.ok_or(Error::RedeemCodeCreationFailure)?
+            } else {
+                redeem_code
+            }
         };
         tx.commit().await?;
 
