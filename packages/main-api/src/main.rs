@@ -14,6 +14,7 @@ use tower_sessions_sqlx_store::PostgresStore;
 
 mod controllers {
     pub mod m1;
+    pub mod mcp;
     pub mod v1;
 }
 
@@ -181,6 +182,7 @@ async fn api_main() -> Result<Router> {
         ));
 
     let app = app
+        .nest_service("/mcp", controllers::mcp::route(pool.clone()).await?)
         .nest("/v1", controllers::v1::route(pool.clone()).await?)
         .nest(
             "/m1",
