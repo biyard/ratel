@@ -1,3 +1,4 @@
+use crate::utils::strings::check_test_keyword;
 use bdk::prelude::*;
 use by_axum::{
     aide,
@@ -169,6 +170,10 @@ impl FeedController {
             Error::FeedInvalidParentId
         })?;
 
+        if check_test_keyword(Some(&html_contents)) {
+            return Err(Error::NotArrowedString);
+        }
+
         let feed = Feed::query_builder(0)
             .id_equals(parent_id)
             .status_not_equals(FeedStatus::Draft)
@@ -293,6 +298,11 @@ impl FeedController {
             GroupPermission::WriteReplies,
         )
         .await?;
+
+        if check_test_keyword(Some(&html_contents)) {
+            return Err(Error::NotArrowedString);
+        }
+
         let parent_id = parent_id.ok_or_else(|| {
             tracing::error!("parent id is missing");
             Error::FeedInvalidParentId
@@ -393,6 +403,12 @@ impl FeedController {
             },
         )
         .await?;
+
+        if check_test_keyword(Some(&param.clone().title.unwrap_or("".to_string())))
+            || check_test_keyword(Some(&param.clone().html_contents))
+        {
+            return Err(Error::NotArrowedString);
+        }
 
         let res = self.repo.update(id, param.into()).await?;
 

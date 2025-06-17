@@ -6445,6 +6445,7 @@ dependencies = [
  "dto",
  "ethers",
  "hex",
+ "regex",
  "rest-api",
  "rlp",
  "scraper",

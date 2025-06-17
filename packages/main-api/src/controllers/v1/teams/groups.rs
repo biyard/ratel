@@ -1,3 +1,4 @@
+use crate::utils::strings::check_test_keyword;
 use bdk::prelude::*;
 use by_axum::{
     aide,
@@ -147,6 +148,11 @@ impl GroupController {
             GroupPermission::ManageGroup,
         )
         .await?;
+
+        if check_test_keyword(Some(&param.name)) || check_test_keyword(Some(&param.description)) {
+            return Err(Error::NotArrowedString);
+        }
+
         let res = self.repo.update(id, param.into()).await?;
 
         Ok(res)
@@ -207,6 +213,10 @@ impl GroupController {
             GroupPermission::ManageGroup,
         )
         .await?;
+
+        if check_test_keyword(Some(&name)) || check_test_keyword(Some(&description)) {
+            return Err(Error::NotArrowedString);
+        }
 
         let mut tx = self.pool.begin().await?;
 

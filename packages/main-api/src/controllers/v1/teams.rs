@@ -1,5 +1,5 @@
 mod groups;
-
+use crate::utils::strings::check_test_keyword;
 use bdk::prelude::*;
 use by_axum::{
     aide,
@@ -85,6 +85,9 @@ impl TeamController {
         }: TeamCreateRequest,
     ) -> Result<Team> {
         let user_id = extract_user_id(&self.pool, auth).await?;
+        if check_test_keyword(Some(&nickname)) || check_test_keyword(Some(&html_contents)) {
+            return Err(Error::NotArrowedString);
+        }
 
         let mut tx = self.pool.begin().await?;
 
@@ -139,6 +142,9 @@ impl TeamController {
         param: TeamUpdateTeamNameRequest,
     ) -> Result<Team> {
         let (_user_id, _team) = self.has_permission(auth, id).await?;
+        if check_test_keyword(Some(&param.username)) {
+            return Err(Error::NotArrowedString);
+        }
         let res = self.repo.update(id, param.into()).await?;
 
         Ok(res)

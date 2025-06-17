@@ -107,6 +107,8 @@ pub enum Error {
     #[translate(en = "Could not find any resource")]
     ApiEmptyRow,
 
+    #[translate(en = "There are no keywords related to test")]
+    NotArrowedString,
     BadRequest,
     JsonDeserializeError(String),
     WalletNotFound,
