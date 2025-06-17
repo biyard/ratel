@@ -27,6 +27,8 @@ ethers = "=2.0.14"
 async-trait = "0.1.88"
 rlp = "0.5.2"
 hex = "0.4.3"
+tower-sessions = "0.14.0"
+tower-sessions-sqlx-store = { version = "0.15.0", features = ["postgres"] }
 
 [dev-dependencies]
 rest-api = { workspace = true, features = ["test"] }
