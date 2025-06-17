@@ -181,7 +181,7 @@ impl FeedController {
                 Error::FeedInvalidParentId
             })?;
 
-        let user_id = feed.user_id;
+        let user_id = extract_user_id(&self.pool, auth.clone()).await?;
         check_perm(
             &self.pool,
             auth,
@@ -757,8 +757,33 @@ mod tests {
             ..
         } = setup().await.unwrap();
 
+        let html_contents = format!("<p>Test {now}</p>");
+        let title = Some(format!("Test Title {now}"));
+        // predefined industry: Crypto
+        let industry_id = 1;
+
+        let _ = Feed::get_repository(pool.clone())
+            .insert(
+                FeedType::Post,
+                user.id,
+                industry_id,
+                None,
+                None,
+                title,
+                html_contents.clone(),
+                None,
+                UrlType::None,
+                vec![],
+                0,
+                0,
+                FeedStatus::Published,
+            )
+            .await
+            .unwrap();
+
         let post = Feed::query_builder(user.id)
             .feed_type_equals(FeedType::Post)
+            .status_not_equals(FeedStatus::Draft)
             .order_by_created_at_asc()
             .limit(1)
             .query()
@@ -795,8 +820,52 @@ mod tests {
             ..
         } = setup().await.unwrap();
 
+        let html_contents = format!("<p>Test {now}</p>");
+        let title = Some(format!("Test Title {now}"));
+        // predefined industry: Crypto
+        let industry_id = 1;
+
+        let post = Feed::get_repository(pool.clone())
+            .insert(
+                FeedType::Post,
+                user.id,
+                industry_id,
+                None,
+                None,
+                title,
+                html_contents.clone(),
+                None,
+                UrlType::None,
+                vec![],
+                0,
+                0,
+                FeedStatus::Published,
+            )
+            .await
+            .unwrap();
+
+        let _ = Feed::get_repository(pool.clone())
+            .insert(
+                FeedType::Reply,
+                user.id,
+                industry_id,
+                Some(post.id),
+                None,
+                None,
+                html_contents,
+                None,
+                UrlType::None,
+                vec![],
+                0,
+                0,
+                FeedStatus::Published,
+            )
+            .await
+            .unwrap();
+
         let post = Feed::query_builder(user.id)
             .feed_type_equals(FeedType::Post)
+            .status_not_equals(FeedStatus::Draft)
             .order_by_created_at_asc()
             .limit(1)
             .query()
@@ -805,8 +874,9 @@ mod tests {
             .await
             .unwrap();
 
-        let quote_feed = Feed::query_builder(0)
+        let quote_feed = Feed::query_builder(user.id)
             .feed_type_equals(FeedType::Reply)
+            .status_not_equals(FeedStatus::Draft)
             .order_by_created_at_asc()
             .limit(1)
             .query()
@@ -933,10 +1003,36 @@ mod tests {
             ..
         } = setup().await.unwrap();
 
+        let html_contents = format!("<p>Test {now}</p>");
+        let title = Some(format!("Test Title {now}"));
+        // predefined industry: Crypto
+        let industry_id = 1;
+
+        let _ = Feed::get_repository(pool.clone())
+            .insert(
+                FeedType::Post,
+                user.id,
+                industry_id,
+                None,
+                None,
+                title,
+                html_contents.clone(),
+                None,
+                UrlType::None,
+                vec![],
+                0,
+                0,
+                FeedStatus::Published,
+            )
+            .await
+            .unwrap();
+
+
         let html_contents = format!("<p>Review {now}</p>");
 
         let feed = Feed::query_builder(0)
             .feed_type_equals(FeedType::Post)
+            .status_not_equals(FeedStatus::Draft)
             .order_by_created_at_asc()
             .limit(1)
             .query()
