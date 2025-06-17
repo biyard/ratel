@@ -98,7 +98,7 @@ impl MynetworkController {
 
     pub fn route(&self) -> Result<by_axum::axum::Router> {
         let router = by_axum::axum::Router::new()
-            .route("/", post(Self::act_follower_by_id))
+            .route("/:id", post(Self::act_follower_by_id))
             .with_state(self.clone());
 
         Ok(router)
