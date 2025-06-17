@@ -1,5 +1,6 @@
 use crate::by_axum::axum::extract::Path;
 use crate::by_axum::axum::routing::post;
+use crate::utils::strings::check_test_keyword;
 use bdk::prelude::*;
 use by_axum::auth::Authorization;
 use by_axum::axum::{
@@ -193,6 +194,10 @@ impl UserControllerV1 {
     pub async fn signup(&self, req: UserSignupRequest, principal: String) -> Result<Json<User>> {
         if req.term_agreed == false {
             return Err(Error::BadRequest);
+        }
+
+        if check_test_keyword(Some(&req.nickname)) || check_test_keyword(Some(&req.username)) {
+            return Err(Error::NotArrowedString);
         }
 
         if let Ok(user) = User::query_builder()
