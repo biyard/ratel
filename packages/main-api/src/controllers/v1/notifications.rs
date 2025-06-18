@@ -42,8 +42,9 @@ impl NotificationController {
             .query()
             .map(|row: PgRow| {
                 use sqlx::Row;
-
-                total_count = row.try_get("total_count").unwrap_or_default();
+                if total_count == 0 {
+                    total_count = row.try_get("total_count").unwrap_or_default();
+                }
                 row.into()
             })
             .fetch_all(&self.pool)
