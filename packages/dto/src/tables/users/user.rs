@@ -4,6 +4,7 @@ use bdk::prelude::*;
 
 use crate::{Badge, Group};
 
+use super::Follower;
 use super::Team;
 use crate::GroupRepositoryQueryBuilder;
 
@@ -44,7 +45,7 @@ pub struct User {
     #[api_model(many_to_many = my_networks, foreign_table_name = users, foreign_primary_key = follower_id, foreign_reference_key = following_id, aggregator = count)]
     #[serde(default)]
     pub followers_count: i64,
-    
+
     #[api_model(many_to_many = my_networks, foreign_table_name = users, foreign_primary_key = following_id, foreign_reference_key = follower_id, aggregator = count)]
     #[serde(default)]
     pub followings_count: i64,
@@ -61,6 +62,14 @@ pub struct User {
     #[api_model(version = v0.2, action_by_id = edit_profile)]
     #[serde(default)]
     pub html_contents: String,
+
+    #[api_model(many_to_many = my_networks, foreign_table_name = users, foreign_primary_key = follower_id, foreign_reference_key = following_id)]
+    #[serde(default)]
+    pub followers: Vec<Follower>,
+
+    #[api_model(many_to_many = my_networks, foreign_table_name = users, foreign_primary_key = following_id, foreign_reference_key = follower_id)]
+    #[serde(default)]
+    pub followings: Vec<Follower>,
 
     #[api_model(many_to_many = user_badges, foreign_table_name = badges, foreign_primary_key = badge_id, foreign_reference_key = user_id)]
     #[serde(default)]
