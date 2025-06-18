@@ -1,6 +1,7 @@
 mod author;
 mod bot;
 mod feed_author;
+mod follower;
 mod group_member_user;
 mod my_info;
 mod team;
@@ -11,6 +12,7 @@ mod user;
 pub use author::*;
 pub use bot::*;
 pub use feed_author::*;
+pub use follower::*;
 pub use group_member_user::*;
 pub use my_info::*;
 pub use team::*;
