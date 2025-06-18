@@ -57,7 +57,6 @@ impl NotificationController {
 
     async fn create_notification(
         &self,
-        _auth: Option<Authorization>,
         NotificationCreateRequest {
             user_id,
             title,
@@ -174,12 +173,12 @@ impl NotificationController {
 
     pub async fn act_notification(
         State(ctrl): State<NotificationController>,
-        Extension(auth): Extension<Option<Authorization>>,
+        Extension(_auth): Extension<Option<Authorization>>,
         Json(body): Json<NotificationAction>,
     ) -> Result<Json<Notification>> {
         match body {
             NotificationAction::Create (param) => {
-                let notification = ctrl.create_notification(auth, param).await?;
+                let notification = ctrl.create_notification(param).await?;
                 Ok(Json(notification))
             }
         }
