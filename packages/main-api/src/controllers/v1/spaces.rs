@@ -1,5 +1,6 @@
 mod badges;
 mod comments;
+mod discussions;
 mod redeem_codes;
 
 use crate::security::check_perm;
@@ -179,6 +180,12 @@ impl SpaceController {
             .nest(
                 "/:space-id/comments",
                 comments::SpaceCommentController::new(self.pool.clone()).route(),
+            )
+            .nest(
+                "/:space-id/discussions",
+                discussions::SpaceDiscussionController::new(self.pool.clone())
+                    .await
+                    .route(),
             )
             .nest(
                 "/:space-id/badges",

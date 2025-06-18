@@ -55,12 +55,15 @@ impl MynetworkController {
 
         // Create the network relationship
 
-        let network = self.repo.insert(follower_id, to_be_followed).await
+        let network = self
+            .repo
+            .insert(follower_id, to_be_followed)
+            .await
             .map_err(|e| {
-                    tracing::error!("failed to insert follower: {:?}", e);
+                tracing::error!("failed to insert follower: {:?}", e);
 
-                    Error::DatabaseException(e.to_string())
-                })?;
+                Error::DatabaseException(e.to_string())
+            })?;
 
         Ok(network)
     }
