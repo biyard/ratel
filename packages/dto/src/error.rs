@@ -194,6 +194,17 @@ pub enum Error {
     #[translate(en = "Redeem Code is not exists")]
     RedeemCodeNotFound,
 
+    // discussion
+    #[translate(en = "Failed to create discussion")]
+    DiscussionInsertFailed,
+    #[translate(en = "Discussion not found")]
+    DiscussionNotFound,
+    #[translate(en = "Failed to create discussion user")]
+    DiscussionCreateUserFailed(String),
+    #[translate(en = "Failed to update discussion")]
+    UpdateDiscussionError(String),
+    PipelineNotFound,
+
     #[translate(en = "You are already following this user")]
     AlreadyFollowing,
 }
