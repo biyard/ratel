@@ -56,6 +56,14 @@ pub enum Error {
     SignException,
     DatabaseException(String),
 
+    #[translate(en = "AWS Chime service error occurred. Please try again later.")]
+    AwsChimeError(String),
+    #[translate(en = "AWS Media Pipelines error occurred. Please try again later.")]
+    AwsMediaPipelinesError(String),
+    #[translate(en = "AWS Media Convert error occurred. Please try again later.")]
+    AwsMediaConvertError(String),
+    AwsS3Error(String),
+
     #[translate(en = "Please change group name.")]
     DuplicatedGroupName,
     #[translate(en = "Failed to insert group member")]
