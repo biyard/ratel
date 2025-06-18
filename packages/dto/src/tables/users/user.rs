@@ -2,7 +2,7 @@ use by_types::QueryResponse;
 
 use bdk::prelude::*;
 
-use crate::{Badge, Group};
+use crate::{Badge, Group, Notification};
 
 use super::Team;
 use crate::GroupRepositoryQueryBuilder;
@@ -56,6 +56,10 @@ pub struct User {
     #[api_model(many_to_many = team_members, foreign_table_name = users, foreign_primary_key = team_id, foreign_reference_key = user_id)]
     #[serde(default)]
     pub teams: Vec<Team>,
+
+    #[api_model(one_to_many = notifications, foreign_key = user_id)]
+    #[serde(default)]
+    pub notifications: Vec<Notification>,
 
     // profile contents
     #[api_model(version = v0.2, action_by_id = edit_profile)]
