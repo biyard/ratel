@@ -20,6 +20,7 @@ pub struct Config {
     pub slack_channel_abusing: &'static str,
     pub slack_channel_monitor: &'static str,
     pub kaia: KaiaConfig,
+    pub from_email: &'static str,
 }
 
 #[derive(Debug)]
@@ -48,6 +49,7 @@ impl Default for Config {
                 feepayer_key: option_env!("KAIA_FEEPAYER_KEY").expect("You must set KAIA_FEEPAYER_KEY"),
                 feepayer_address: option_env!("KAIA_FEEPAYER_ADDR").expect("You must set KAIA_FEEPAYER_ADDR"),
             },
+            from_email: option_env!("FROM_EMAIL").unwrap_or("no-reply@ratel.foundation"),
 
             env: option_env!("ENV").expect("You must set ENV"),
             domain: option_env!("DOMAIN").expect("You must set DOMAIN"),

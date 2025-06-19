@@ -34,29 +34,13 @@ pub async fn extract_user_with_allowing_anonymous(
                             principal.clone(),
                             "".to_string(),
                             principal.clone(),
+                            "".to_string(),
                         )
                         .await?
                 }
             }
         }
-        Some(Authorization::Bearer { claims }) => {
-            let user_id = claims.sub.parse::<i64>().map_err(|e| {
-                tracing::error!("failed to parse user id: {:?}", e);
-                Error::Unauthorized
-            })?;
-
-            User::query_builder()
-                .id_equals(user_id)
-                .query()
-                .map(User::from)
-                .fetch_one(pool)
-                .await
-                .map_err(|e| {
-                    tracing::error!("failed to get user: {:?}", e);
-                    Error::InvalidUser
-                })?
-        }
-        _ => return Err(Error::Unauthorized),
+        _ => return extract_user(pool, auth).await,
     };
 
     tracing::debug!("authorized user_id: {:?}", user);
