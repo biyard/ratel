@@ -185,11 +185,10 @@ pub async fn extract_user_email(
                 })?
                 .email
         }
-        Some(Authorization::Bearer { claims }) => claims
-            .custom
-            .get("email")
-            .unwrap_or(&"".to_string())
-            .to_string(),
+        Some(Authorization::Bearer { ref claims }) => match claims.custom.get("email") {
+            Some(email) => email.clone(),
+            None => extract_user(pool, auth).await?.email,
+        },
         _ => return Err(Error::Unauthorized),
     };
 
