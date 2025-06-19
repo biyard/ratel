@@ -15,9 +15,9 @@ pub struct Space {
     #[api_model(summary, auto = [insert, update])]
     pub updated_at: i64,
 
-    #[api_model(summary, nullable)]
+    #[api_model(summary, nullable, action_by_id = [update_space])]
     pub title: Option<String>,
-    #[api_model(summary)]
+    #[api_model(summary, action_by_id = [update_space])]
     pub html_contents: String,
     #[api_model(summary, type = INTEGER, action = [create_space])]
     #[serde(default)]
@@ -33,7 +33,7 @@ pub struct Space {
     #[api_model(summary, version = v0.1, type = INTEGER)]
     #[serde(default)]
     pub status: SpaceStatus,
-    #[api_model(version = v0.1, summary, type = JSONB)]
+    #[api_model(version = v0.1, summary, type = JSONB, action_by_id = [update_space])]
     #[serde(default)]
     pub files: Vec<File>,
 
