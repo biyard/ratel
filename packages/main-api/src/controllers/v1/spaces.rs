@@ -9,11 +9,7 @@ use bdk::prelude::*;
 use by_axum::{
     aide,
     auth::Authorization,
-    axum::{
-        Extension, Json,
-        extract::State,
-        routing::{get, post},
-    },
+    axum::{Extension, Json, extract::State, routing::post},
 };
 use dto::{by_axum::axum::extract::Path, *};
 
@@ -77,6 +73,68 @@ impl SpaceController {
         // }
         tx.commit().await?;
         Ok(space)
+    }
+
+    async fn update_space(
+        &self,
+        space_id: i64,
+        auth: Option<Authorization>,
+        SpaceUpdateSpaceRequest {
+            title,
+            html_contents,
+            files,
+        }: SpaceUpdateSpaceRequest,
+    ) -> Result<Space> {
+        let user_id = extract_user_id(&self.pool, auth.clone())
+            .await
+            .unwrap_or_default();
+
+        let space = Space::query_builder()
+            .id_equals(space_id)
+            .query()
+            .map(Space::from)
+            .fetch_one(&self.pool.clone())
+            .await
+            .map_err(|e| {
+                tracing::error!("failed to get a space {space_id}: {e}");
+                Error::FeedInvalidQuoteSpaceId
+            })?;
+
+        let feed = Feed::query_builder(user_id)
+            .id_equals(space.feed_id)
+            .query()
+            .map(Feed::from)
+            .fetch_one(&self.pool.clone())
+            .await
+            .map_err(|e| {
+                tracing::error!("failed to get a feed {:?}: {e}", space.feed_id);
+                Error::FeedInvalidQuoteId
+            })?;
+
+        let _ = check_perm(
+            &self.pool,
+            auth,
+            RatelResource::Post {
+                team_id: feed.user_id,
+            },
+            GroupPermission::WritePosts,
+        )
+        .await?;
+
+        let res = self
+            .repo
+            .update(
+                space_id,
+                SpaceRepositoryUpdateRequest {
+                    title: title,
+                    html_contents: Some(html_contents),
+                    files: Some(files),
+                    ..Default::default()
+                },
+            )
+            .await?;
+
+        Ok(res)
     }
 
     async fn create_space(
@@ -175,7 +233,7 @@ impl SpaceController {
         Ok(by_axum::axum::Router::new()
             .route("/", post(Self::act_space).get(Self::get_space))
             .with_state(self.clone())
-            .route("/:id", get(Self::get_by_id))
+            .route("/:id", post(Self::act_space_by_id).get(Self::get_by_id))
             .with_state(self.clone())
             .nest(
                 "/:space-id/comments",
@@ -223,6 +281,20 @@ impl SpaceController {
             }
             _ => Err(Error::BadRequest),
         }
+    }
+
+    pub async fn act_space_by_id(
+        State(ctrl): State<SpaceController>,
+        Extension(auth): Extension<Option<Authorization>>,
+        Path(SpacePath { id }): Path<SpacePath>,
+        Json(body): Json<SpaceByIdAction>,
+    ) -> Result<Json<Space>> {
+        tracing::debug!("act_space_by_id {:?} {:?}", id, body);
+        let feed = match body {
+            SpaceByIdAction::UpdateSpace(param) => ctrl.update_space(id, auth, param).await?,
+        };
+
+        Ok(Json(feed))
     }
 
     pub async fn act_space(
