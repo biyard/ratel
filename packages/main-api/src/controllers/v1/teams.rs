@@ -103,6 +103,7 @@ impl TeamController {
                 username.clone(),
                 html_contents,
                 username,
+                "".to_string(),
             )
             .await
             .map_err(|e| {

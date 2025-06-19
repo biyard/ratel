@@ -34,6 +34,7 @@ pub async fn extract_user_with_allowing_anonymous(
                             principal.clone(),
                             "".to_string(),
                             principal.clone(),
+                            "".to_string(),
                         )
                         .await?
                 }

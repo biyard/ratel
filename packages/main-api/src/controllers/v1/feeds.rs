@@ -28,7 +28,7 @@ pub struct FeedController {
 }
 
 impl FeedController {
-    async fn query(
+    pub async fn query(
         &self,
         auth: Option<Authorization>,
         param: FeedQuery,

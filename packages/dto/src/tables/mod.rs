@@ -29,6 +29,7 @@ mod subscriptions;
 mod supports;
 mod us_bills;
 mod users;
+mod verifications;
 mod votes;
 
 pub use advocacy_campaigns::*;
@@ -62,4 +63,5 @@ pub use subscriptions::*;
 pub use supports::*;
 pub use us_bills::*;
 pub use users::*;
+pub use verifications::*;
 pub use votes::*;

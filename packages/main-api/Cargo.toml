@@ -34,6 +34,8 @@ aws-sdk-chimesdkmediapipelines = "1.64.0"
 aws-sdk-mediaconvert = "1.82.0"
 
 rmcp = { version = "0.1.5", git = "https://github.com/modelcontextprotocol/rust-sdk", features = ["server", "transport-io", "transport-streamable-http-server", "transport-sse-server"] }
+aws-sdk-sesv2 = "1.83.0"
+rand = "0.9.1"
 
 
 [dev-dependencies]
