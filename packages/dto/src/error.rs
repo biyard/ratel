@@ -157,6 +157,8 @@ pub enum Error {
     FeedInvalidParentId,
     #[translate(en = "You must quote a valid feed")]
     FeedInvalidQuoteId,
+    #[translate(en = "You must quote a valid space")]
+    FeedInvalidQuoteSpaceId,
     #[translate(en = "You should select industry or a parent feed")]
     FeedExclusiveParentOrIndustry,
 
