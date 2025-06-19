@@ -18,27 +18,27 @@ pub struct User {
     #[api_model(auto = [insert, update])]
     pub updated_at: i64,
 
-    #[api_model(action = signup, action_by_id = edit_profile)]
+    #[api_model(action = [signup, email_signup], action_by_id = edit_profile)]
     pub nickname: String,
     #[api_model(unique, read_action = by_principal)]
     pub principal: String,
-    #[api_model(action = signup, read_action = [check_email, login, find_by_email], unique)]
+    #[api_model(action = [signup, email_signup], read_action = [check_email, login, login_by_password, find_by_email], unique)]
     #[validate(email)]
     pub email: String,
-    #[api_model(action = signup, nullable, action_by_id = edit_profile)]
+    #[api_model(action = [signup, email_signup], nullable, action_by_id = edit_profile)]
     #[validate(url)]
     pub profile_url: String,
 
-    #[api_model(action = signup)]
+    #[api_model(action = [signup, email_signup])]
     pub term_agreed: bool,
-    #[api_model(action = signup)]
+    #[api_model(action = [signup, email_signup])]
     pub informed_agreed: bool,
 
     #[api_model(type = INTEGER, indexed, version = v0.1)]
     pub user_type: UserType,
     #[api_model(version = v0.1, indexed)]
     pub parent_id: Option<i64>,
-    #[api_model(action = signup, version = v0.1, indexed, unique)]
+    #[api_model(action = [signup, email_signup], version = v0.1, indexed, unique)]
     #[serde(default)]
     pub username: String,
 
@@ -78,6 +78,10 @@ pub struct User {
     #[api_model(version = v0.3, indexed, unique, action = signup, action = update_evm_address)]
     #[serde(default)]
     pub evm_address: String,
+
+    #[api_model(version = v0.4, action = [email_signup], read_action = login_by_password)]
+    #[serde(default)]
+    pub password: String,
 }
 
 impl User {
