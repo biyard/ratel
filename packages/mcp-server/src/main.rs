@@ -1,0 +1,44 @@
+mod tools;
+
+use anyhow::Result;
+use tools::RatelMcpServer;
+use tracing_subscriber::{self, layer::SubscriberExt, util::SubscriberInitExt};
+
+use rmcp::transport::streamable_http_server::{
+    StreamableHttpService, session::local::LocalSessionManager,
+};
+
+const BIND_ADDRESS: &str = "0.0.0.0:8000";
+
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    tracing_subscriber::registry()
+        .with(
+            tracing_subscriber::EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| "debug".to_string().into()),
+        )
+        .with(tracing_subscriber::fmt::layer())
+        .init();
+
+    let service = StreamableHttpService::new(
+        RatelMcpServer::new,
+        LocalSessionManager::default().into(),
+        Default::default(),
+    );
+
+    let router = axum::Router::new().nest_service("/mcp", service);
+    let tcp_listener = tokio::net::TcpListener::bind(BIND_ADDRESS).await?;
+    let _ = axum::serve(tcp_listener, router)
+        .with_graceful_shutdown(async { tokio::signal::ctrl_c().await.unwrap() })
+        .await;
+    Ok(())
+}
+
+pub async fn authorization_middleware(
+    req: axum::extract::Request,
+    next: axum::middleware::Next,
+) -> Result<axum::http::Response<axum::body::Body>, axum::http::StatusCode> {
+    tracing::debug!("Authorization middleware {:?}", req.headers());
+
+    Ok(next.run(req).await)
+}

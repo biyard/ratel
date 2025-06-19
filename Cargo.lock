@@ -598,6 +598,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "aws-sdk-sesv2"
+version = "1.83.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5a93c79705fbff33da387f6142ea045fa51395028645f722bf484d315293a5fe"
+dependencies = [
+ "aws-credential-types",
+ "aws-runtime",
+ "aws-smithy-async",
+ "aws-smithy-http",
+ "aws-smithy-json",
+ "aws-smithy-runtime",
+ "aws-smithy-runtime-api",
+ "aws-smithy-types",
+ "aws-types",
+ "bytes",
+ "fastrand",
+ "http 0.2.12",
+ "regex-lite",
+ "tracing",
+]
+
+[[package]]
 name = "aws-sdk-sso"
 version = "1.70.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6509,11 +6531,13 @@ dependencies = [
  "aws-sdk-chimesdkmeetings",
  "aws-sdk-mediaconvert",
  "aws-sdk-s3",
+ "aws-sdk-sesv2",
  "bdk",
  "chrono",
  "dto",
  "ethers",
  "hex",
+ "rand 0.9.1",
  "rest-api",
  "rlp",
  "rmcp",

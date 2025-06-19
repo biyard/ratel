@@ -94,6 +94,7 @@ impl BotController {
                 username.clone(),
                 "".to_string(),
                 username,
+                "".to_string(),
             )
             .await?;
 
