@@ -8261,20 +8261,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ratel-mcp-server"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "axum 0.8.4",
- "rmcp",
- "serde",
- "serde_json",
- "tokio",
- "tracing",
- "tracing-subscriber",
-]
-
-[[package]]
 name = "raw-window-handle"
 version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
