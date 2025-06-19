@@ -16,7 +16,7 @@ use tower_sessions::Session;
 use tracing::instrument;
 use validator::Validate;
 
-use crate::utils::users::extract_user_id;
+use crate::utils::users::{extract_principal, extract_user_id};
 
 #[derive(Clone, Debug)]
 pub struct UserControllerV1 {
@@ -81,16 +81,8 @@ impl UserControllerV1 {
         Extension(auth): Extension<Option<Authorization>>,
         Json(body): Json<UserAction>,
     ) -> Result<Json<User>> {
-        let principal = match auth {
-            Some(Authorization::UserSig(sig)) => sig.principal().map_err(|s| {
-                tracing::error!("failed to get principal: {:?}", s);
-                Error::Unknown(s.to_string())
-            })?,
-            _ => {
-                tracing::debug!("read_user: no auth found");
-                return Err(Error::Unauthorized);
-            }
-        };
+        let principal = extract_principal(&ctrl.pool, auth).await?;
+
         body.validate()?;
 
         match body {
@@ -106,17 +98,7 @@ impl UserControllerV1 {
         Extension(auth): Extension<Option<Authorization>>,
         Query(mut req): Query<UserReadAction>,
     ) -> Result<Json<User>> {
-        let principal = match auth {
-            Some(Authorization::UserSig(sig)) => sig.principal().map_err(|s| {
-                tracing::error!("failed to get principal: {:?}", s);
-                Error::Unknown(s.to_string())
-            })?,
-            Some(Authorization::Session(user_session)) => user_session.principal,
-            _ => {
-                tracing::debug!("read_user: no auth found");
-                return Err(Error::Unauthorized);
-            }
-        };
+        let principal = extract_principal(&ctrl.pool, auth).await?;
 
         req.validate()?;
 
@@ -160,6 +142,7 @@ impl UserControllerV1 {
         let user_session = UserSession {
             user_id: user.id,
             principal: user.principal.clone(),
+            email: user.email.clone(),
         };
         session.insert("user_session", &user_session).await?;
         Ok(Json(user))
