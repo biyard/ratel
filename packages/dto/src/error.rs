@@ -207,6 +207,9 @@ pub enum Error {
 
     #[translate(en = "You are already following this user")]
     AlreadyFollowing,
+
+    #[translate(en = "Notfication failed to send")]
+    NotificationError
 }
 
 impl<E: StdError + 'static> From<E> for Error {

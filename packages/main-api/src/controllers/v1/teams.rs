@@ -13,7 +13,7 @@ use by_axum::{
 use by_types::QueryResponse;
 use dto::*;
 
-use crate::utils::users::extract_user_id;
+use crate::utils::{users::extract_user_id, notifications::send_notification};
 
 #[derive(
     Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
@@ -169,6 +169,18 @@ impl TeamController {
         TeamMember::get_repository(self.pool.clone())
             .insert(id, user.id)
             .await?;
+
+        let _notification = send_notification(
+            &self.pool,
+            user.id,
+            Some("You have been invited to a team".to_string()),
+            format!("You have been invited to join the team: {}", id),
+            None,
+        ).await
+        .map_err(|e| {
+            tracing::error!("Failed to send notification: {:?}", e);
+            Error::NotificationError
+        })?;
 
         let team = Team::query_builder()
             .id_equals(id)
