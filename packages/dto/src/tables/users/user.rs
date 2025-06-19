@@ -22,7 +22,7 @@ pub struct User {
     pub nickname: String,
     #[api_model(unique, read_action = by_principal)]
     pub principal: String,
-    #[api_model(action = [signup, email_signup], read_action = [check_email, login, find_by_email], unique)]
+    #[api_model(action = [signup, email_signup], read_action = [check_email, login, login_by_password, find_by_email], unique)]
     #[validate(email)]
     pub email: String,
     #[api_model(action = [signup, email_signup], nullable, action_by_id = edit_profile)]
@@ -79,7 +79,7 @@ pub struct User {
     #[serde(default)]
     pub evm_address: String,
 
-    #[api_model(version = v0.4, action = email_signup)]
+    #[api_model(version = v0.4, action = [email_signup], read_action = login_by_password)]
     #[serde(default)]
     pub password: String,
 }

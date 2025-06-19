@@ -123,6 +123,10 @@ impl UserControllerV1 {
                 req.principal = Some(principal);
                 ctrl.login(req, session).await
             }
+            Some(UserReadActionType::LoginByPassword) => {
+                tracing::debug!("login with password: {:?}", req);
+                ctrl.login_with_password(req, session).await
+            }
             None | Some(UserReadActionType::ByPrincipal) => Err(Error::BadRequest)?,
         }
     }
@@ -148,6 +152,22 @@ impl UserControllerV1 {
 
     #[instrument]
     pub async fn login(&self, req: UserReadAction, session: Session) -> Result<Json<User>> {
+        let user = self.users.find_one(&req).await?;
+        let user_session = UserSession {
+            user_id: user.id,
+            principal: user.principal.clone(),
+            email: user.email.clone(),
+        };
+        session.insert("user_session", &user_session).await?;
+        Ok(Json(user))
+    }
+
+    pub async fn login_with_password(
+        &self,
+        req: UserReadAction,
+        session: Session,
+    ) -> Result<Json<User>> {
+        tracing::debug!("login with password: {:?}", req);
         let user = self.users.find_one(&req).await?;
         let user_session = UserSession {
             user_id: user.id,
