@@ -34,7 +34,7 @@ pub struct RatelMcpServer {
 
 #[tool(tool_box)]
 impl RatelMcpServer {
-    pub fn new() -> Self {
+    pub fn new() -> Result<Self, std::io::Error> {
         let conf = config::get();
         let pool = if let by_types::DatabaseConfig::Postgres { url, pool_size } = conf.database {
             sqlx::postgres::PgPoolOptions::new()
@@ -45,9 +45,9 @@ impl RatelMcpServer {
             panic!("Database is not initialized. Call init() first.");
         };
 
-        Self {
+        Ok(Self {
             feed: FeedController::new(pool),
-        }
+        })
     }
 
     #[tool(description = "Login with email into Ratel")]

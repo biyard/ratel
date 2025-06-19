@@ -95,14 +95,9 @@ impl UserControllerV1 {
         body.validate()?;
 
         match body {
-<<<<<<< HEAD
             UserAction::Signup(req) => ctrl.signup(req, principal).await,
             UserAction::UpdateEvmAddress(req) => ctrl.update_evm_address(req, principal).await,
-=======
-            UserAction::Signup(req) => ctrl.signup(req, sig).await,
-            UserAction::UpdateEvmAddress(req) => ctrl.update_evm_address(req, sig).await,
-            UserAction::EmailSignup(req) => ctrl.email_signup(req, sig).await,
->>>>>>> 677a3c0 (implement email signup)
+            UserAction::EmailSignup(req) => ctrl.email_signup(req, principal).await,
         }
     }
 
@@ -244,13 +239,8 @@ impl UserControllerV1 {
     pub async fn email_signup(
         &self,
         req: UserEmailSignupRequest,
-        sig: Signature,
+        principal: String,
     ) -> Result<Json<User>> {
-        let principal = sig.principal().map_err(|s| {
-            tracing::error!("failed to get principal: {:?}", s);
-            Error::Unauthorized
-        })?;
-
         if req.term_agreed == false {
             return Err(Error::BadRequest);
         }
