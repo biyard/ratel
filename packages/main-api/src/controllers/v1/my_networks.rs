@@ -55,12 +55,15 @@ impl MynetworkController {
 
         // Create the network relationship
 
-        let network = self.repo.insert(follower_id, to_be_followed).await
+        let network = self
+            .repo
+            .insert(follower_id, to_be_followed)
+            .await
             .map_err(|e| {
-                    tracing::error!("failed to insert follower: {:?}", e);
+                tracing::error!("failed to insert follower: {:?}", e);
 
-                    Error::DatabaseException(e.to_string())
-                })?;
+                Error::DatabaseException(e.to_string())
+            })?;
 
         Ok(network)
     }
@@ -98,7 +101,7 @@ impl MynetworkController {
 
     pub fn route(&self) -> Result<by_axum::axum::Router> {
         let router = by_axum::axum::Router::new()
-            .route("/", post(Self::act_follower_by_id))
+            .route("/:id", post(Self::act_follower_by_id))
             .with_state(self.clone());
 
         Ok(router)

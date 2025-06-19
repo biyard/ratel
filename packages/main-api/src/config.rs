@@ -15,6 +15,7 @@ pub struct Config {
     pub signing_domain: &'static str,
     pub auth: AuthConfig,
     pub migrate: bool,
+    pub chime_bucket_name: &'static str,
     pub slack_channel_sponsor: &'static str,
     pub slack_channel_abusing: &'static str,
     pub slack_channel_monitor: &'static str,
@@ -67,6 +68,7 @@ impl Default for Config {
                 }) .parse()
                     .unwrap(),
             },
+            chime_bucket_name: option_env!("CHIME_BUCKET").expect("CHIME_BUCKET required"),
             migrate: option_env!("MIGRATE")
                 .map(|s| s.parse::<bool>().unwrap_or(false))
                 .unwrap_or(false),

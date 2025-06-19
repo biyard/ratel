@@ -1,11 +1,16 @@
 use bdk::prelude::{by_axum::axum::Router, *};
 #[cfg(test)]
 use by_axum::auth::set_auth_config;
-use by_axum::{auth::authorization_middleware, axum::middleware};
+use by_axum::axum::middleware;
 use by_types::DatabaseConfig;
-use dto::*;
+use dto::{by_axum::auth::authorization_middleware, *};
 use sqlx::postgres::PgPoolOptions;
 use tokio::net::TcpListener;
+use tower_sessions::{
+    SessionManagerLayer,
+    cookie::time::{Duration, OffsetDateTime},
+};
+use tower_sessions_sqlx_store::PostgresStore;
 
 mod controllers {
     pub mod m1;
@@ -54,6 +59,7 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         FeedUser,
         RedeemCode,
         Space,
+        Discussion,
         SpaceUser,
         SpaceContract,
         SpaceHolder,
@@ -156,13 +162,33 @@ async fn api_main() -> Result<Router> {
         migration(&pool).await?;
     }
 
+    let session_store = PostgresStore::new(pool.clone());
+    let res = session_store.migrate().await;
+    if let Err(e) = res {
+        tracing::error!("Failed to migrate session store: {}", e);
+        return Err(e.into());
+    }
+    let is_local = conf.env == "local";
+    let session_layer = SessionManagerLayer::new(session_store)
+        .with_secure(!is_local)
+        .with_http_only(true)
+        .with_same_site(tower_sessions::cookie::SameSite::Lax)
+        .with_path("/")
+        .with_expiry(tower_sessions::Expiry::AtDateTime(
+            OffsetDateTime::now_utc()
+                .checked_add(Duration::days(30))
+                .unwrap(),
+        ));
+
     let app = app
         .nest("/v1", controllers::v1::route(pool.clone()).await?)
         .nest(
             "/m1",
             controllers::m1::MenaceController::route(pool.clone())?,
         )
-        .layer(middleware::from_fn(authorization_middleware));
+        .layer(middleware::from_fn(authorization_middleware))
+        .layer(session_layer);
+
     Ok(app)
 }
 
