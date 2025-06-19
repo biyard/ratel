@@ -68,14 +68,40 @@ pub async fn extract_user(
     pool: &sqlx::Pool<sqlx::Postgres>,
     auth: Option<Authorization>,
 ) -> Result<User> {
+    extract_user_with_options(pool, auth, false).await
+}
+
+pub async fn extract_user_with_options(
+    pool: &sqlx::Pool<sqlx::Postgres>,
+    auth: Option<Authorization>,
+    with_groups: bool,
+) -> Result<User> {
     let user = match auth {
+        Some(Authorization::Session(session)) => {
+            let mut query = User::query_builder().id_equals(session.user_id);
+            if with_groups {
+                query = query.groups_builder(Group::query_builder());
+            }
+            query
+                .query()
+                .map(User::from)
+                .fetch_one(pool)
+                .await
+                .map_err(|e| {
+                    tracing::error!("failed to get user: {:?}", e);
+                    Error::InvalidUser
+                })?
+        }
         Some(Authorization::UserSig(sig)) => {
             let principal = sig.principal().map_err(|e| {
                 tracing::error!("failed to get principal: {:?}", e);
                 Error::Unauthorized
             })?;
-            User::query_builder()
-                .principal_equals(principal)
+            let mut query = User::query_builder().principal_equals(principal);
+            if with_groups {
+                query = query.groups_builder(Group::query_builder());
+            }
+            query
                 .query()
                 .map(User::from)
                 .fetch_one(pool)
@@ -91,8 +117,11 @@ pub async fn extract_user(
                 Error::Unauthorized
             })?;
 
-            User::query_builder()
-                .id_equals(user_id)
+            let mut query = User::query_builder().id_equals(user_id);
+            if with_groups {
+                query = query.groups_builder(Group::query_builder());
+            }
+            query
                 .query()
                 .map(User::from)
                 .fetch_one(pool)
@@ -117,6 +146,7 @@ pub async fn extract_user_id(
     auth: Option<Authorization>,
 ) -> Result<i64> {
     let user_id = match auth {
+        Some(Authorization::Session(session)) => session.user_id,
         Some(Authorization::UserSig(sig)) => {
             let principal = sig.principal().map_err(|e| {
                 tracing::error!("failed to get principal: {:?}", e);
@@ -153,6 +183,7 @@ pub async fn extract_user_email(
     auth: Option<Authorization>,
 ) -> Result<String> {
     let email = match auth {
+        Some(Authorization::Session(session)) => session.email,
         Some(Authorization::UserSig(sig)) => {
             let principal = sig.principal().map_err(|e| {
                 tracing::error!("failed to get principal: {:?}", e);
@@ -179,4 +210,37 @@ pub async fn extract_user_email(
     };
 
     Ok(email)
+}
+
+pub async fn extract_principal(
+    pool: &sqlx::Pool<sqlx::Postgres>,
+    auth: Option<Authorization>,
+) -> Result<String> {
+    let principal = match auth {
+        Some(Authorization::Session(session)) => session.principal,
+        Some(Authorization::UserSig(sig)) => sig.principal().map_err(|e| {
+            tracing::error!("failed to get principal: {:?}", e);
+            Error::Unauthorized
+        })?,
+        Some(Authorization::Bearer { claims }) => {
+            let user_id = claims.sub.parse::<i64>().map_err(|e| {
+                tracing::error!("failed to parse user id: {:?}", e);
+                Error::Unauthorized
+            })?;
+            User::query_builder()
+                .id_equals(user_id)
+                .query()
+                .map(User::from)
+                .fetch_one(pool)
+                .await
+                .map_err(|e| {
+                    tracing::error!("failed to get user: {:?}", e);
+                    Error::InvalidUser
+                })?
+                .principal
+        }
+        _ => return Err(Error::Unauthorized),
+    };
+
+    Ok(principal)
 }
