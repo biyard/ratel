@@ -11,6 +11,7 @@ mod feeds;
 mod landing;
 mod me;
 mod my_networks;
+mod network;
 mod news;
 mod presidential_candidates;
 mod promotions;
@@ -50,6 +51,10 @@ pub async fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Ro
         .nest(
             "/landings",
             landing::LandingController::new(pool.clone()).route()?,
+        )
+        .nest(
+            "/network",
+            network::NetworkController::new(pool.clone()).route()?,
         )
         .nest(
             "/assets",

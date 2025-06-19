@@ -1,23 +1,22 @@
 use crate::by_axum::axum::extract::Path;
 use crate::by_axum::axum::routing::post;
-use crate::utils::middlewares::authorization_middleware;
 use bdk::prelude::*;
 use by_axum::auth::Authorization;
 use by_axum::axum::{
     Extension, Json,
     extract::{Query, State},
-    middleware,
     routing::get,
 };
 use by_types::QueryResponse;
+use dto::by_axum::auth::UserSession;
 use dto::*;
-use rest_api::Signature;
-use sqlx::{Pool, Postgres};
 use sqlx::postgres::PgRow;
+use sqlx::{Pool, Postgres};
+use tower_sessions::Session;
 use tracing::instrument;
 use validator::Validate;
 
-use crate::utils::users::extract_user_id;
+use crate::utils::users::{extract_principal, extract_user_id};
 
 #[derive(Clone, Debug)]
 pub struct UserControllerV1 {
@@ -44,8 +43,7 @@ impl UserControllerV1 {
             .route("/:id", post(Self::act_user_by_id))
             .route("/:id/followings", get(Self::get_followings))
             .route("/:id/followers", get(Self::get_followers))
-            .with_state(ctrl.clone())
-            .layer(middleware::from_fn(authorization_middleware)))
+            .with_state(ctrl.clone()))
     }
 
     pub async fn act_user_by_id(
@@ -80,31 +78,28 @@ impl UserControllerV1 {
     #[instrument]
     pub async fn act_user(
         State(ctrl): State<UserControllerV1>,
-        Extension(sig): Extension<Option<Signature>>,
+        Extension(auth): Extension<Option<Authorization>>,
         Json(body): Json<UserAction>,
     ) -> Result<Json<User>> {
-        tracing::debug!("act_user: sig={:?} {:?}", sig, body);
-        let sig = sig.ok_or(Error::Unauthorized)?;
+        let principal = extract_principal(&ctrl.pool, auth).await?;
+
         body.validate()?;
 
         match body {
-            UserAction::Signup(req) => ctrl.signup(req, sig).await,
-            UserAction::UpdateEvmAddress(req) => ctrl.update_evm_address(req, sig).await,
+            UserAction::Signup(req) => ctrl.signup(req, principal).await,
+            UserAction::UpdateEvmAddress(req) => ctrl.update_evm_address(req, principal).await,
         }
     }
 
     #[instrument]
     pub async fn read_user(
         State(ctrl): State<UserControllerV1>,
-        Extension(sig): Extension<Option<Signature>>,
-
+        Extension(session): Extension<Session>,
+        Extension(auth): Extension<Option<Authorization>>,
         Query(mut req): Query<UserReadAction>,
     ) -> Result<Json<User>> {
-        tracing::debug!("read_user: sig={:?}", sig);
-        let principal = sig.ok_or(Error::Unauthorized)?.principal().map_err(|s| {
-            tracing::error!("failed to get principal: {:?}", s);
-            Error::Unknown(s.to_string())
-        })?;
+        let principal = extract_principal(&ctrl.pool, auth).await?;
+
         req.validate()?;
 
         match req.action {
@@ -116,7 +111,7 @@ impl UserControllerV1 {
             }
             Some(UserReadActionType::Login) => {
                 req.principal = Some(principal);
-                ctrl.login(req).await
+                ctrl.login(req, session).await
             }
             None | Some(UserReadActionType::ByPrincipal) => Err(Error::BadRequest)?,
         }
@@ -142,9 +137,14 @@ impl UserControllerV1 {
     }
 
     #[instrument]
-    pub async fn login(&self, req: UserReadAction) -> Result<Json<User>> {
+    pub async fn login(&self, req: UserReadAction, session: Session) -> Result<Json<User>> {
         let user = self.users.find_one(&req).await?;
-
+        let user_session = UserSession {
+            user_id: user.id,
+            principal: user.principal.clone(),
+            email: user.email.clone(),
+        };
+        session.insert("user_session", &user_session).await?;
         Ok(Json(user))
     }
 
@@ -152,14 +152,10 @@ impl UserControllerV1 {
     pub async fn update_evm_address(
         &self,
         req: UserUpdateEvmAddressRequest,
-        sig: Signature,
+        principal: String,
     ) -> Result<Json<User>> {
-        let principal = sig.principal().map_err(|s| {
-            tracing::error!("failed to get principal: {:?}", s);
-            Error::Unauthorized
-        })?;
         let user = User::query_builder()
-            .principal_equals(principal.clone())
+            .principal_equals(principal)
             .query()
             .map(User::from)
             .fetch_one(&self.pool)
@@ -177,12 +173,7 @@ impl UserControllerV1 {
     }
 
     #[instrument]
-    pub async fn signup(&self, req: UserSignupRequest, sig: Signature) -> Result<Json<User>> {
-        let principal = sig.principal().map_err(|s| {
-            tracing::error!("failed to get principal: {:?}", s);
-            Error::Unauthorized
-        })?;
-
+    pub async fn signup(&self, req: UserSignupRequest, principal: String) -> Result<Json<User>> {
         if req.term_agreed == false {
             return Err(Error::BadRequest);
         }
@@ -322,7 +313,6 @@ impl UserControllerV1 {
 
             let mut combined_query = None;
 
-
             for following_id in following_ids {
                 let single_query = User::query_builder().id_equals(following_id);
 
@@ -356,7 +346,6 @@ impl UserControllerV1 {
         }))
     }
 
-
     #[instrument]
     pub async fn get_followers(
         State(ctrl): State<UserControllerV1>,
@@ -369,14 +358,14 @@ impl UserControllerV1 {
     ) -> Result<Json<QueryResponse<User>>> {
         // Get paginated list of users that are following the given user
         let follower_ids: Vec<i64> = Mynetwork::query_builder()
-        .following_id_equals(id)
+            .following_id_equals(id)
             .limit(param.size())
             .page(param.page())
             .order_by_created_at_desc()
             .query()
-            .map(|row: PgRow| {                
+            .map(|row: PgRow| {
                 let network: Mynetwork = row.into();
-                
+
                 network.follower_id
             })
             .fetch_all(&ctrl.pool)
@@ -386,10 +375,9 @@ impl UserControllerV1 {
 
                 Error::DatabaseException(e.to_string())
             })?;
-            
-            
+
         let total_count = follower_ids.len() as i64;
-            // Get the actual user details for the follower IDs
+        // Get the actual user details for the follower IDs
         let users: Vec<User> = if follower_ids.is_empty() {
             vec![]
         } else {
