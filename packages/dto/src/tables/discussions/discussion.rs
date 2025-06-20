@@ -16,7 +16,7 @@ pub struct Discussion {
     #[api_model(many_to_one = spaces)]
     pub space_id: i64,
 
-    #[api_model(summary)]
+    #[api_model(summary, version = v0.1)]
     pub creator_id: i64,
 
     #[api_model(summary, action = create, action_by_id = update)]

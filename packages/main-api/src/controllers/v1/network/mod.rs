@@ -1,5 +1,5 @@
 use crate::by_axum::axum::routing::get;
-use crate::utils::users::extract_user_id;
+use crate::utils::users::extract_user_with_options;
 use bdk::prelude::*;
 use by_axum::{
     auth::Authorization,
@@ -23,7 +23,8 @@ impl NetworkController {
             .fetch_all(&self.pool)
             .await?;
 
-        let current_user_id = extract_user_id(&self.pool, auth.clone()).await?;
+        let user = extract_user_with_options(&self.pool, auth, false).await?;
+        let current_user_id = user.id;
 
         let suggested_teams_sql = r#"
             SELECT *
