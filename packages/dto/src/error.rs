@@ -157,6 +157,8 @@ pub enum Error {
     FeedInvalidParentId,
     #[translate(en = "You must quote a valid feed")]
     FeedInvalidQuoteId,
+    #[translate(en = "You must quote a valid space")]
+    FeedInvalidQuoteSpaceId,
     #[translate(en = "You should select industry or a parent feed")]
     FeedExclusiveParentOrIndustry,
 
@@ -207,6 +209,11 @@ pub enum Error {
 
     #[translate(en = "You are already following this user")]
     AlreadyFollowing,
+
+    // Email verification
+    SESServiceError(String),
+    #[translate(ko = "인증코드가 잘못되었습니다.", en = "Invalid verification code.")]
+    InvalidVerificationCode,
 }
 
 impl<E: StdError + 'static> From<E> for Error {

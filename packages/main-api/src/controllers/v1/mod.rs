@@ -7,7 +7,7 @@ mod assets;
 mod auth;
 mod bots;
 mod election_pledges;
-mod feeds;
+pub mod feeds;
 mod landing;
 mod me;
 mod my_networks;

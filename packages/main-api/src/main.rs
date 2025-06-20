@@ -3,17 +3,24 @@ use bdk::prelude::{by_axum::axum::Router, *};
 use by_axum::auth::set_auth_config;
 use by_axum::axum::middleware;
 use by_types::DatabaseConfig;
-use dto::{by_axum::auth::authorization_middleware, *};
+use dto::{
+    by_axum::{
+        auth::{authorization_middleware, generate_jwt},
+        axum::{extract::Request, http::Response, middleware::Next},
+    },
+    *,
+};
 use sqlx::postgres::PgPoolOptions;
 use tokio::net::TcpListener;
 use tower_sessions::{
-    SessionManagerLayer,
+    Session, SessionManagerLayer,
     cookie::time::{Duration, OffsetDateTime},
 };
 use tower_sessions_sqlx_store::PostgresStore;
 
 mod controllers {
     pub mod m1;
+    pub mod mcp;
     pub mod v1;
 }
 
@@ -59,7 +66,9 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         FeedUser,
         RedeemCode,
         Space,
+        DiscussionParticipant,
         Discussion,
+        Elearning,
         SpaceUser,
         SpaceContract,
         SpaceHolder,
@@ -81,6 +90,7 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         SpaceBadge,
         Onboard,
         Mynetwork,
+        Verification,
     );
 
     if Industry::query_builder()
@@ -117,6 +127,7 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
                 "admin".to_string(),
                 "".to_string(),
                 "0x000".to_string(),
+                "password".to_string(),
             )
             .await?;
     }
@@ -147,6 +158,7 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
 async fn api_main() -> Result<Router> {
     let app = by_axum::new();
     let conf = config::get();
+    by_axum::auth::set_auth_config(conf.auth.clone());
     tracing::debug!("config: {:?}", conf);
 
     let pool = if let DatabaseConfig::Postgres { url, pool_size } = conf.database {
@@ -158,22 +170,23 @@ async fn api_main() -> Result<Router> {
         panic!("Database is not initialized. Call init() first.");
     };
 
+    let session_store = PostgresStore::new(pool.clone());
     if conf.migrate {
         migration(&pool).await?;
+        let res = session_store.migrate().await;
+        if let Err(e) = res {
+            tracing::error!("Failed to migrate session store: {}", e);
+            return Err(e.into());
+        }
     }
 
-    let session_store = PostgresStore::new(pool.clone());
-    let res = session_store.migrate().await;
-    if let Err(e) = res {
-        tracing::error!("Failed to migrate session store: {}", e);
-        return Err(e.into());
-    }
     let is_local = conf.env == "local";
     let session_layer = SessionManagerLayer::new(session_store)
         .with_secure(!is_local)
         .with_http_only(true)
         .with_same_site(tower_sessions::cookie::SameSite::Lax)
         .with_path("/")
+        .with_domain(format!(".{}", conf.signing_domain))
         .with_expiry(tower_sessions::Expiry::AtDateTime(
             OffsetDateTime::now_utc()
                 .checked_add(Duration::days(30))
@@ -181,15 +194,66 @@ async fn api_main() -> Result<Router> {
         ));
 
     let app = app
+        .nest_service("/mcp", controllers::mcp::route().await?)
         .nest("/v1", controllers::v1::route(pool.clone()).await?)
         .nest(
             "/m1",
             controllers::m1::MenaceController::route(pool.clone())?,
         )
         .layer(middleware::from_fn(authorization_middleware))
-        .layer(session_layer);
+        .layer(session_layer)
+        .layer(middleware::from_fn(cookie_middleware));
 
     Ok(app)
+}
+
+pub async fn cookie_middleware(
+    req: Request,
+    next: Next,
+) -> std::result::Result<Response<by_axum::axum::body::Body>, by_axum::axum::http::StatusCode> {
+    tracing::debug!("Authorization middleware {:?}", req.uri());
+    let session_initialized = if let Some(session) = req.extensions().get::<Session>() {
+        if let Ok(Some(_)) = session
+            .get::<by_axum::auth::UserSession>(by_axum::auth::USER_SESSION_KEY)
+            .await
+        {
+            true
+        } else {
+            false
+        }
+    } else {
+        false
+    };
+
+    let mut res = next.run(req).await;
+    tracing::debug!("Authorization middleware response: {:?}", res.status());
+    if session_initialized {
+        tracing::debug!("Session not initialized, skipping cookie generation.");
+        return Ok(res);
+    }
+
+    if let Some(ref session) = res.extensions().get::<Session>() {
+        tracing::debug!("Checking for user session in response...");
+        if let Ok(Some(user_session)) = session
+            .get::<by_axum::auth::UserSession>(by_axum::auth::USER_SESSION_KEY)
+            .await
+        {
+            tracing::debug!("User session found in response: {:?}", user_session);
+            let mut claims = by_types::Claims {
+                sub: user_session.user_id.to_string(),
+                ..Default::default()
+            };
+
+            let token = generate_jwt(&mut claims)?;
+
+            res.headers_mut().append(
+                reqwest::header::SET_COOKIE,
+                format!("auth_token={}; SameSite=Lax; Path=/; Max-Age=2586226; HttpOnly; Secure; Domain=.{}", token, crate::config::get().signing_domain).parse().unwrap(),
+            );
+        }
+    }
+
+    return Ok(res);
 }
 
 #[tokio::main]

@@ -28,7 +28,7 @@ pub struct FeedController {
 }
 
 impl FeedController {
-    async fn query(
+    pub async fn query(
         &self,
         auth: Option<Authorization>,
         param: FeedQuery,
@@ -37,7 +37,7 @@ impl FeedController {
         let user_id = extract_user_id(&self.pool, auth.clone())
             .await
             .unwrap_or_default();
-
+        let feed_type = param.feed_type.unwrap_or(FeedType::Post);
         let status = if let Some(status) = param.status {
             if status == FeedStatus::Draft {
                 check_perm(
@@ -55,7 +55,7 @@ impl FeedController {
             FeedStatus::Published
         };
         let items: Vec<FeedSummary> = FeedSummary::query_builder(user_id)
-            .feed_type_equals(FeedType::Post)
+            .feed_type_equals(feed_type)
             .status_equals(status)
             .limit(param.size())
             .page(param.page())
@@ -204,7 +204,7 @@ impl FeedController {
                 vec![],
                 0,
                 0,
-                FeedStatus::Draft,
+                FeedStatus::Published,
             )
             .await
             .map_err(|e| {
@@ -544,6 +544,9 @@ impl FeedController {
             .unwrap_or_default();
 
         let res = Feed::query_builder(user_id)
+            .comment_list_builder(
+                Comment::query_builder(user_id).replies_builder(Reply::query_builder()),
+            )
             .id_equals(id)
             .query()
             .map(Feed::from)
@@ -627,7 +630,7 @@ mod tests {
                 vec![],
                 0,
                 0,
-                FeedStatus::Draft,
+                FeedStatus::Published,
             )
             .await
             .unwrap();
@@ -1026,7 +1029,6 @@ mod tests {
             )
             .await
             .unwrap();
-
 
         let html_contents = format!("<p>Review {now}</p>");
 

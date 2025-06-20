@@ -13,7 +13,7 @@ pub struct Feed {
     #[api_model(summary, auto = [insert, update])]
     pub updated_at: i64,
 
-    #[api_model(summary, type = INTEGER, action = [create_draft])]
+    #[api_model(summary, type = INTEGER, queryable, action = [create_draft])]
     pub feed_type: FeedType,
 
     #[api_model(summary, many_to_one = users, action = [create_draft, repost], query_action = posts_by_user_id)]
@@ -59,6 +59,10 @@ pub struct Feed {
 
     #[api_model(summary, one_to_many = feeds, foreign_key = parent_id, aggregator=count)]
     pub comments: i64,
+
+    #[api_model(summary, one_to_many = feeds, foreign_key = parent_id, nested)]
+    pub comment_list: Vec<Comment>,
+
     #[api_model(version = v0.1, summary, type = JSONB, action_by_id = [update])]
     #[serde(default)]
     pub files: Vec<File>,
