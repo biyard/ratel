@@ -156,6 +156,7 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
 async fn api_main() -> Result<Router> {
     let app = by_axum::new();
     let conf = config::get();
+    by_axum::auth::set_auth_config(conf.auth.clone());
     tracing::debug!("config: {:?}", conf);
 
     let pool = if let DatabaseConfig::Postgres { url, pool_size } = conf.database {
