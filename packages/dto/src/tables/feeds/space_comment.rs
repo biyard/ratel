@@ -1,7 +1,7 @@
 use bdk::prelude::*;
 use validator::Validate;
 
-use crate::User;
+use crate::Author;
 
 use super::FeedType;
 
@@ -25,5 +25,5 @@ pub struct SpaceComment {
     pub parent_id: i64,
 
     #[api_model(one_to_many = users, reference_key = user_id, foreign_key = id)]
-    pub author: Vec<User>,
+    pub author: Vec<Author>,
 }

@@ -24,6 +24,8 @@ pub struct SpacePath {
 pub struct SpaceController {
     repo: SpaceRepository,
     space_member_repo: SpaceMemberRepository,
+    discussion_repo: DiscussionRepository,
+    elearning_repo: ElearningRepository,
     pool: sqlx::Pool<sqlx::Postgres>,
 }
 
@@ -83,6 +85,8 @@ impl SpaceController {
             title,
             html_contents,
             files,
+            discussions,
+            elearnings,
         }: SpaceUpdateSpaceRequest,
     ) -> Result<Space> {
         let user_id = extract_user_id(&self.pool, auth.clone())
@@ -121,9 +125,12 @@ impl SpaceController {
         )
         .await?;
 
+        let mut tx = self.pool.begin().await?;
+
         let res = self
             .repo
-            .update(
+            .update_with_tx(
+                &mut *tx,
                 space_id,
                 SpaceRepositoryUpdateRequest {
                     title: title,
@@ -134,7 +141,81 @@ impl SpaceController {
             )
             .await?;
 
-        Ok(res)
+        let discs = Discussion::query_builder()
+            .space_id_equals(space_id)
+            .query()
+            .map(Discussion::from)
+            .fetch_all(&self.pool.clone())
+            .await?;
+
+        for disc in discs {
+            match self.discussion_repo.delete_with_tx(&mut *tx, disc.id).await {
+                Ok(_) => {}
+                Err(e) => {
+                    tx.rollback().await?;
+                    return Err(e);
+                }
+            }
+        }
+
+        for discussion in discussions {
+            match self
+                .discussion_repo
+                .insert_with_tx(
+                    &mut *tx,
+                    space_id,
+                    user_id,
+                    discussion.started_at,
+                    discussion.ended_at,
+                    discussion.name,
+                    discussion.description,
+                    None,
+                    "".to_string(),
+                )
+                .await
+            {
+                Ok(_) => {}
+                Err(e) => {
+                    tx.rollback().await?;
+                    return Err(e);
+                }
+            }
+        }
+
+        let es = Elearning::query_builder()
+            .space_id_equals(space_id)
+            .query()
+            .map(Elearning::from)
+            .fetch_all(&self.pool.clone())
+            .await?;
+
+        for e in es {
+            match self.elearning_repo.delete_with_tx(&mut *tx, e.id).await {
+                Ok(_) => {}
+                Err(e) => {
+                    tx.rollback().await?;
+                    return Err(e);
+                }
+            }
+        }
+
+        for elearning in elearnings {
+            match self
+                .elearning_repo
+                .insert_with_tx(&mut *tx, space_id, elearning.files)
+                .await
+            {
+                Ok(_) => {}
+                Err(e) => {
+                    tx.rollback().await?;
+                    return Err(e);
+                }
+            }
+        }
+
+        tx.commit().await?;
+
+        Ok(res.unwrap())
     }
 
     async fn create_space(
@@ -221,10 +302,14 @@ impl SpaceController {
     pub fn new(pool: sqlx::Pool<sqlx::Postgres>) -> Self {
         let repo = Space::get_repository(pool.clone());
         let space_member_repo = SpaceMember::get_repository(pool.clone());
+        let discussion_repo = Discussion::get_repository(pool.clone());
+        let elearning_repo = Elearning::get_repository(pool.clone());
 
         Self {
             repo,
             pool,
+            discussion_repo,
+            elearning_repo,
             space_member_repo,
         }
     }
