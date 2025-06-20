@@ -6,7 +6,7 @@ use validator::Validate;
 
 //TODO: action(like, comments, find_by_id, create_space), query_action
 #[derive(Validate)]
-#[api_model(base = "/v1/spaces", table = spaces, action = [create_space(user_ids = Vec<i64>)])]
+#[api_model(base = "/v1/spaces", table = spaces, action = [create_space(user_ids = Vec<i64>)], action_by_id = [update_space(discussions = Vec<DiscussionCreateRequest>, elearnings = Vec<ElearningCreateRequest>)])]
 pub struct Space {
     #[api_model(summary, primary_key, read_action = [find_by_id])]
     pub id: i64,
@@ -46,7 +46,7 @@ pub struct Space {
     // pub holders: Vec<SpaceHolder>,
     #[api_model(one_to_many = users, reference_key = owner_id, foreign_key = id)]
     #[serde(default)]
-    pub author: Vec<User>,
+    pub author: Vec<Author>,
 
     #[api_model(one_to_many = industries, reference_key = industry_id, foreign_key = id)]
     #[serde(default)]
@@ -56,7 +56,7 @@ pub struct Space {
     pub badges: Vec<Badge>,
     #[api_model(many_to_many = space_members, foreign_reference_key = space_id, foreign_primary_key = user_id, foreign_table_name = users)]
     #[serde(default)]
-    pub members: Vec<User>,
+    pub members: Vec<Member>,
     #[api_model(one_to_many = space_groups, foreign_key = space_id)]
     #[serde(default)]
     pub groups: Vec<SpaceGroup>,
@@ -74,6 +74,12 @@ pub struct Space {
     #[api_model(summary, one_to_many = feeds, reference_key = feed_id, foreign_key = parent_id, nested)]
     #[serde(default)]
     pub feed_comments: Vec<SpaceComment>,
+    #[api_model(summary, one_to_many = discussions, foreign_key = space_id)]
+    #[serde(default)]
+    pub discussions: Vec<Discussion>,
+    #[api_model(summary, one_to_many = elearnings, foreign_key = space_id)]
+    #[serde(default)]
+    pub elearnings: Vec<Elearning>,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]
