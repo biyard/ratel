@@ -1,3 +1,5 @@
+mod verification;
+
 use crate::by_axum::axum::extract::Path;
 use crate::by_axum::axum::routing::post;
 use bdk::prelude::*;
@@ -36,14 +38,21 @@ impl UserControllerV1 {
     pub fn route(pool: Pool<Postgres>) -> Result<by_axum::axum::Router> {
         let users = User::get_repository(pool.clone());
 
-        let ctrl = UserControllerV1 { users, pool };
+        let ctrl = UserControllerV1 {
+            users,
+            pool: pool.clone(),
+        };
 
         Ok(by_axum::axum::Router::new()
             .route("/", get(Self::read_user).post(Self::act_user))
             .route("/:id", post(Self::act_user_by_id))
             .route("/:id/followings", get(Self::get_followings))
             .route("/:id/followers", get(Self::get_followers))
-            .with_state(ctrl.clone()))
+            .with_state(ctrl.clone())
+            .nest(
+                "/verifications",
+                verification::VerificationController::route(pool.clone())?,
+            ))
     }
 
     pub async fn act_user_by_id(
@@ -88,6 +97,7 @@ impl UserControllerV1 {
         match body {
             UserAction::Signup(req) => ctrl.signup(req, principal).await,
             UserAction::UpdateEvmAddress(req) => ctrl.update_evm_address(req, principal).await,
+            UserAction::EmailSignup(req) => ctrl.email_signup(req, principal).await,
         }
     }
 
@@ -112,6 +122,10 @@ impl UserControllerV1 {
             Some(UserReadActionType::Login) => {
                 req.principal = Some(principal);
                 ctrl.login(req, session).await
+            }
+            Some(UserReadActionType::LoginByPassword) => {
+                tracing::debug!("login with password: {:?}", req);
+                ctrl.login_with_password(req, session).await
             }
             None | Some(UserReadActionType::ByPrincipal) => Err(Error::BadRequest)?,
         }
@@ -138,6 +152,22 @@ impl UserControllerV1 {
 
     #[instrument]
     pub async fn login(&self, req: UserReadAction, session: Session) -> Result<Json<User>> {
+        let user = self.users.find_one(&req).await?;
+        let user_session = UserSession {
+            user_id: user.id,
+            principal: user.principal.clone(),
+            email: user.email.clone(),
+        };
+        session.insert("user_session", &user_session).await?;
+        Ok(Json(user))
+    }
+
+    pub async fn login_with_password(
+        &self,
+        req: UserReadAction,
+        session: Session,
+    ) -> Result<Json<User>> {
+        tracing::debug!("login with password: {:?}", req);
         let user = self.users.find_one(&req).await?;
         let user_session = UserSession {
             user_id: user.id,
@@ -219,6 +249,64 @@ impl UserControllerV1 {
                 req.username,
                 "".to_string(),
                 req.evm_address,
+                "".to_string(),
+            )
+            .await?;
+
+        Ok(Json(user))
+    }
+
+    pub async fn email_signup(
+        &self,
+        req: UserEmailSignupRequest,
+        principal: String,
+    ) -> Result<Json<User>> {
+        if req.term_agreed == false {
+            return Err(Error::BadRequest);
+        }
+
+        if let Ok(user) = User::query_builder()
+            .principal_equals(principal.clone())
+            .user_type_equals(UserType::Anonymous)
+            .query()
+            .map(User::from)
+            .fetch_one(&self.pool)
+            .await
+        {
+            let user = self
+                .users
+                .update(
+                    user.id,
+                    UserRepositoryUpdateRequest::new()
+                        .with_email(req.email)
+                        .with_nickname(req.nickname)
+                        .with_profile_url(req.profile_url)
+                        .with_term_agreed(req.term_agreed)
+                        .with_informed_agreed(req.informed_agreed)
+                        .with_username(req.username)
+                        .with_password(req.password)
+                        .with_user_type(UserType::Individual),
+                )
+                .await?;
+
+            return Ok(Json(user));
+        }
+
+        let user = self
+            .users
+            .insert(
+                req.nickname,
+                principal,
+                req.email,
+                req.profile_url,
+                req.term_agreed,
+                req.informed_agreed,
+                UserType::Individual,
+                None,
+                req.username,
+                "".to_string(),
+                "".to_string(),
+                req.password,
             )
             .await?;
 
