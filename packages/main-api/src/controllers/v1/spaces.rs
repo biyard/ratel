@@ -26,6 +26,7 @@ pub struct SpaceController {
     space_member_repo: SpaceMemberRepository,
     discussion_repo: DiscussionRepository,
     elearning_repo: ElearningRepository,
+    survey_repo: SurveyRepository,
     pool: sqlx::Pool<sqlx::Postgres>,
 }
 
@@ -87,6 +88,7 @@ impl SpaceController {
             files,
             discussions,
             elearnings,
+            surveys,
         }: SpaceUpdateSpaceRequest,
     ) -> Result<Space> {
         let user_id = extract_user_id(&self.pool, auth.clone())
@@ -213,6 +215,60 @@ impl SpaceController {
             }
         }
 
+        if !surveys.is_empty() {
+            let survey = surveys[0].clone();
+            let s = Survey::query_builder()
+                .space_id_equals(space_id)
+                .query()
+                .map(Survey::from)
+                .fetch_all(&self.pool.clone())
+                .await?;
+
+            if s.is_empty() {
+                match self
+                    .survey_repo
+                    .insert_with_tx(
+                        &mut *tx,
+                        space_id,
+                        ProjectStatus::Ready,
+                        survey.started_at,
+                        survey.ended_at,
+                        survey.questions,
+                    )
+                    .await
+                {
+                    Ok(_) => {}
+                    Err(e) => {
+                        tx.rollback().await?;
+                        return Err(e);
+                    }
+                }
+            } else {
+                let s = s[0].clone();
+
+                match self
+                    .survey_repo
+                    .update_with_tx(
+                        &mut *tx,
+                        s.id,
+                        SurveyRepositoryUpdateRequest {
+                            started_at: Some(survey.started_at),
+                            ended_at: Some(survey.ended_at),
+                            questions: Some(survey.questions),
+                            ..Default::default()
+                        },
+                    )
+                    .await
+                {
+                    Ok(_) => {}
+                    Err(e) => {
+                        tx.rollback().await?;
+                        return Err(e);
+                    }
+                }
+            }
+        }
+
         tx.commit().await?;
 
         Ok(res.unwrap())
@@ -304,12 +360,14 @@ impl SpaceController {
         let space_member_repo = SpaceMember::get_repository(pool.clone());
         let discussion_repo = Discussion::get_repository(pool.clone());
         let elearning_repo = Elearning::get_repository(pool.clone());
+        let survey_repo = Survey::get_repository(pool.clone());
 
         Self {
             repo,
             pool,
             discussion_repo,
             elearning_repo,
+            survey_repo,
             space_member_repo,
         }
     }
