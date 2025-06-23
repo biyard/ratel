@@ -27,6 +27,7 @@ pub struct SpaceController {
     discussion_repo: DiscussionRepository,
     elearning_repo: ElearningRepository,
     survey_repo: SurveyRepository,
+    space_draft_repo: SpaceDraftRepository,
     pool: sqlx::Pool<sqlx::Postgres>,
 }
 
@@ -89,6 +90,7 @@ impl SpaceController {
             discussions,
             elearnings,
             surveys,
+            drafts,
         }: SpaceUpdateSpaceRequest,
     ) -> Result<Space> {
         let user_id = extract_user_id(&self.pool, auth.clone())
@@ -269,6 +271,59 @@ impl SpaceController {
             }
         }
 
+        if !drafts.is_empty() {
+            let draft = drafts[0].clone();
+            let s = SpaceDraft::query_builder()
+                .space_id_equals(space_id)
+                .query()
+                .map(SpaceDraft::from)
+                .fetch_all(&self.pool.clone())
+                .await?;
+
+            if s.is_empty() {
+                match self
+                    .space_draft_repo
+                    .insert_with_tx(
+                        &mut *tx,
+                        space_id,
+                        draft.title,
+                        draft.html_contents,
+                        draft.files,
+                    )
+                    .await
+                {
+                    Ok(_) => {}
+                    Err(e) => {
+                        tx.rollback().await?;
+                        return Err(e);
+                    }
+                }
+            } else {
+                let s = s[0].clone();
+
+                match self
+                    .space_draft_repo
+                    .update_with_tx(
+                        &mut *tx,
+                        s.id,
+                        SpaceDraftRepositoryUpdateRequest {
+                            title: Some(draft.title),
+                            html_contents: Some(draft.html_contents),
+                            files: Some(draft.files),
+                            ..Default::default()
+                        },
+                    )
+                    .await
+                {
+                    Ok(_) => {}
+                    Err(e) => {
+                        tx.rollback().await?;
+                        return Err(e);
+                    }
+                }
+            }
+        }
+
         tx.commit().await?;
 
         Ok(res.unwrap())
@@ -358,6 +413,7 @@ impl SpaceController {
     pub fn new(pool: sqlx::Pool<sqlx::Postgres>) -> Self {
         let repo = Space::get_repository(pool.clone());
         let space_member_repo = SpaceMember::get_repository(pool.clone());
+        let space_draft_repo = SpaceDraft::get_repository(pool.clone());
         let discussion_repo = Discussion::get_repository(pool.clone());
         let elearning_repo = Elearning::get_repository(pool.clone());
         let survey_repo = Survey::get_repository(pool.clone());
@@ -369,6 +425,7 @@ impl SpaceController {
             elearning_repo,
             survey_repo,
             space_member_repo,
+            space_draft_repo,
         }
     }
 
