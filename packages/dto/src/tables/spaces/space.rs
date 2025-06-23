@@ -26,6 +26,12 @@ pub struct Space {
     pub owner_id: i64,
     #[api_model(summary, many_to_one = industries)]
     pub industry_id: i64,
+    #[api_model(summary, action_by_id = [update_space], version = v0.2)]
+    #[serde(default)]
+    pub started_at: Option<i64>,
+    #[api_model(summary, action_by_id = [update_space], version = v0.2)]
+    #[serde(default)]
+    pub ended_at: Option<i64>,
 
     #[api_model(summary, many_to_one = feeds, action = create_space)]
     pub feed_id: i64,

@@ -91,6 +91,8 @@ impl SpaceController {
             elearnings,
             surveys,
             drafts,
+            started_at,
+            ended_at,
         }: SpaceUpdateSpaceRequest,
     ) -> Result<Space> {
         let user_id = extract_user_id(&self.pool, auth.clone())
@@ -140,6 +142,8 @@ impl SpaceController {
                     title: title,
                     html_contents: Some(html_contents),
                     files: Some(files),
+                    started_at,
+                    ended_at,
                     ..Default::default()
                 },
             )
@@ -375,6 +379,8 @@ impl SpaceController {
                 space_type,
                 user.id,
                 feed.industry_id,
+                None,
+                None,
                 feed_id,
                 SpaceStatus::Draft,
                 feed.files,
