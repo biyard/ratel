@@ -66,8 +66,8 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         FeedUser,
         RedeemCode,
         Space,
-        DiscussionParticipant,
         Discussion,
+        DiscussionParticipant,
         Elearning,
         SpaceUser,
         SpaceContract,
@@ -313,6 +313,7 @@ pub mod tests {
                 email.clone(),
                 "".to_string(),
                 format!("0x{}", id),
+                "".to_string(), // password
             )
             .await?
             .unwrap();
@@ -348,6 +349,7 @@ pub mod tests {
                 email.clone(),
                 "".to_string(),
                 format!("0x{}", id),
+                "".to_string(), // password
             )
             .await?;
 

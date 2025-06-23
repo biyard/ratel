@@ -8,6 +8,7 @@ mod my_info;
 mod team;
 mod team_user;
 mod total_info;
+mod suggested_user;
 mod user;
 
 pub use author::*;
@@ -20,4 +21,5 @@ pub use my_info::*;
 pub use team::*;
 pub use team_user::*;
 pub use total_info::*;
+pub use suggested_user::*;
 pub use user::*;

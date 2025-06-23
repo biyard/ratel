@@ -17,6 +17,7 @@ mod presidential_candidates;
 mod promotions;
 mod quizzes;
 mod spaces;
+mod suggested_users;
 pub mod subscriptions;
 pub mod supports;
 mod teams;
@@ -97,6 +98,10 @@ pub async fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Ro
         .nest(
             "/redeems",
             redeems::RedeemCodeController::new(pool.clone()).route(),
+        )
+        .nest(
+            "/suggested-users",
+            suggested_users::SuggestedUsersController::new(pool.clone()).route()?,
         )
         .nest(
             "/my-networks",
