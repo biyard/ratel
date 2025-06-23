@@ -6,7 +6,7 @@ use validator::Validate;
 
 //TODO: action(like, comments, find_by_id, create_space), query_action
 #[derive(Validate)]
-#[api_model(base = "/v1/spaces", table = spaces, action = [create_space(user_ids = Vec<i64>)], action_by_id = [update_space(discussions = Vec<DiscussionCreateRequest>, elearnings = Vec<ElearningCreateRequest>)])]
+#[api_model(base = "/v1/spaces", table = spaces, action = [create_space(user_ids = Vec<i64>)], action_by_id = [update_space(discussions = Vec<DiscussionCreateRequest>, elearnings = Vec<ElearningCreateRequest>, surveys = Vec<SurveyCreateRequest>)])]
 pub struct Space {
     #[api_model(summary, primary_key, read_action = [find_by_id])]
     pub id: i64,
@@ -80,6 +80,9 @@ pub struct Space {
     #[api_model(summary, one_to_many = elearnings, foreign_key = space_id)]
     #[serde(default)]
     pub elearnings: Vec<Elearning>,
+    #[api_model(summary, one_to_many = surveys, foreign_key = space_id)]
+    #[serde(default)]
+    pub surveys: Vec<Survey>,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]
