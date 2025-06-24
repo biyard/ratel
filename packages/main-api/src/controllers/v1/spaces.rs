@@ -26,6 +26,8 @@ pub struct SpaceController {
     space_member_repo: SpaceMemberRepository,
     discussion_repo: DiscussionRepository,
     elearning_repo: ElearningRepository,
+    survey_repo: SurveyRepository,
+    space_draft_repo: SpaceDraftRepository,
     pool: sqlx::Pool<sqlx::Postgres>,
 }
 
@@ -77,6 +79,100 @@ impl SpaceController {
         Ok(space)
     }
 
+    async fn posting_space(&self, space_id: i64, auth: Option<Authorization>) -> Result<Space> {
+        let user_id = extract_user_id(&self.pool, auth.clone())
+            .await
+            .unwrap_or_default();
+
+        let space = Space::query_builder()
+            .id_equals(space_id)
+            .query()
+            .map(Space::from)
+            .fetch_one(&self.pool.clone())
+            .await
+            .map_err(|e| {
+                tracing::error!("failed to get a space {space_id}: {e}");
+                Error::FeedInvalidQuoteSpaceId
+            })?;
+
+        let feed = Feed::query_builder(user_id)
+            .id_equals(space.feed_id)
+            .query()
+            .map(Feed::from)
+            .fetch_one(&self.pool.clone())
+            .await
+            .map_err(|e| {
+                tracing::error!("failed to get a feed {:?}: {e}", space.feed_id);
+                Error::FeedInvalidQuoteId
+            })?;
+
+        let _ = check_perm(
+            &self.pool,
+            auth,
+            RatelResource::Post {
+                team_id: feed.user_id,
+            },
+            GroupPermission::WritePosts,
+        )
+        .await?;
+
+        let mut tx = self.pool.begin().await?;
+
+        match self
+            .repo
+            .update_with_tx(
+                &mut *tx,
+                space_id,
+                SpaceRepositoryUpdateRequest {
+                    status: Some(SpaceStatus::InProgress),
+                    ..Default::default()
+                },
+            )
+            .await
+        {
+            Ok(_) => {}
+            Err(e) => {
+                tx.rollback().await?;
+                return Err(e);
+            }
+        };
+
+        let surveys = Survey::query_builder()
+            .space_id_equals(space_id)
+            .query()
+            .map(Survey::from)
+            .fetch_all(&self.pool.clone())
+            .await?;
+
+        if !surveys.is_empty() {
+            let survey = surveys[0].clone();
+
+            match self
+                .survey_repo
+                .update_with_tx(
+                    &mut *tx,
+                    survey.id,
+                    SurveyRepositoryUpdateRequest {
+                        started_at: space.started_at,
+                        ended_at: space.ended_at,
+                        ..Default::default()
+                    },
+                )
+                .await
+            {
+                Ok(_) => {}
+                Err(e) => {
+                    tx.rollback().await?;
+                    return Err(e);
+                }
+            }
+        }
+
+        tx.commit().await?;
+
+        Ok(space)
+    }
+
     async fn update_space(
         &self,
         space_id: i64,
@@ -87,6 +183,10 @@ impl SpaceController {
             files,
             discussions,
             elearnings,
+            surveys,
+            drafts,
+            started_at,
+            ended_at,
         }: SpaceUpdateSpaceRequest,
     ) -> Result<Space> {
         let user_id = extract_user_id(&self.pool, auth.clone())
@@ -136,6 +236,8 @@ impl SpaceController {
                     title: title,
                     html_contents: Some(html_contents),
                     files: Some(files),
+                    started_at,
+                    ended_at,
                     ..Default::default()
                 },
             )
@@ -213,6 +315,113 @@ impl SpaceController {
             }
         }
 
+        if !surveys.is_empty() {
+            let survey = surveys[0].clone();
+            let s = Survey::query_builder()
+                .space_id_equals(space_id)
+                .query()
+                .map(Survey::from)
+                .fetch_all(&self.pool.clone())
+                .await?;
+
+            if s.is_empty() {
+                match self
+                    .survey_repo
+                    .insert_with_tx(
+                        &mut *tx,
+                        space_id,
+                        ProjectStatus::Ready,
+                        survey.started_at,
+                        survey.ended_at,
+                        survey.questions,
+                    )
+                    .await
+                {
+                    Ok(_) => {}
+                    Err(e) => {
+                        tx.rollback().await?;
+                        return Err(e);
+                    }
+                }
+            } else {
+                let s = s[0].clone();
+
+                match self
+                    .survey_repo
+                    .update_with_tx(
+                        &mut *tx,
+                        s.id,
+                        SurveyRepositoryUpdateRequest {
+                            started_at: Some(survey.started_at),
+                            ended_at: Some(survey.ended_at),
+                            questions: Some(survey.questions),
+                            ..Default::default()
+                        },
+                    )
+                    .await
+                {
+                    Ok(_) => {}
+                    Err(e) => {
+                        tx.rollback().await?;
+                        return Err(e);
+                    }
+                }
+            }
+        }
+
+        if !drafts.is_empty() {
+            let draft = drafts[0].clone();
+            let s = SpaceDraft::query_builder()
+                .space_id_equals(space_id)
+                .query()
+                .map(SpaceDraft::from)
+                .fetch_all(&self.pool.clone())
+                .await?;
+
+            if s.is_empty() {
+                match self
+                    .space_draft_repo
+                    .insert_with_tx(
+                        &mut *tx,
+                        space_id,
+                        draft.title,
+                        draft.html_contents,
+                        draft.files,
+                    )
+                    .await
+                {
+                    Ok(_) => {}
+                    Err(e) => {
+                        tx.rollback().await?;
+                        return Err(e);
+                    }
+                }
+            } else {
+                let s = s[0].clone();
+
+                match self
+                    .space_draft_repo
+                    .update_with_tx(
+                        &mut *tx,
+                        s.id,
+                        SpaceDraftRepositoryUpdateRequest {
+                            title: Some(draft.title),
+                            html_contents: Some(draft.html_contents),
+                            files: Some(draft.files),
+                            ..Default::default()
+                        },
+                    )
+                    .await
+                {
+                    Ok(_) => {}
+                    Err(e) => {
+                        tx.rollback().await?;
+                        return Err(e);
+                    }
+                }
+            }
+        }
+
         tx.commit().await?;
 
         Ok(res.unwrap())
@@ -264,6 +473,8 @@ impl SpaceController {
                 space_type,
                 user.id,
                 feed.industry_id,
+                None,
+                None,
                 feed_id,
                 SpaceStatus::Draft,
                 feed.files,
@@ -302,15 +513,19 @@ impl SpaceController {
     pub fn new(pool: sqlx::Pool<sqlx::Postgres>) -> Self {
         let repo = Space::get_repository(pool.clone());
         let space_member_repo = SpaceMember::get_repository(pool.clone());
+        let space_draft_repo = SpaceDraft::get_repository(pool.clone());
         let discussion_repo = Discussion::get_repository(pool.clone());
         let elearning_repo = Elearning::get_repository(pool.clone());
+        let survey_repo = Survey::get_repository(pool.clone());
 
         Self {
             repo,
             pool,
             discussion_repo,
             elearning_repo,
+            survey_repo,
             space_member_repo,
+            space_draft_repo,
         }
     }
 
@@ -377,6 +592,7 @@ impl SpaceController {
         tracing::debug!("act_space_by_id {:?} {:?}", id, body);
         let feed = match body {
             SpaceByIdAction::UpdateSpace(param) => ctrl.update_space(id, auth, param).await?,
+            SpaceByIdAction::PostingSpace(_) => ctrl.posting_space(id, auth).await?,
         };
 
         Ok(Json(feed))
