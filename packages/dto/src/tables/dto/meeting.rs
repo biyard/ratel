@@ -2,7 +2,7 @@ use bdk::prelude::*;
 use validator::Validate;
 
 #[derive(Validate)]
-#[api_model(base = "/v2/deliberations/:deliberation-id/meeting/:discussion_id", database = skip)]
+#[api_model(base = "/v2/spaces/:space-id/meeting/:discussion_id", database = skip)]
 #[serde(rename_all = "PascalCase")]
 pub struct MediaPlacementInfo {
     pub audio_host_url: String,
@@ -15,7 +15,7 @@ pub struct MediaPlacementInfo {
 }
 
 #[derive(Validate)]
-#[api_model(base = "/v2/deliberations/:deliberation-id/meeting/:discussion_id", database = skip)]
+#[api_model(base = "/v2/spaces/:space-id/meeting/:discussion_id", database = skip)]
 #[serde(rename_all = "PascalCase")]
 pub struct MeetingInfo {
     pub meeting_id: String,
@@ -24,7 +24,7 @@ pub struct MeetingInfo {
 }
 
 #[derive(Validate)]
-#[api_model(base = "/v2/deliberations/:deliberation-id/meeting/:discussion_id", database = skip)]
+#[api_model(base = "/v2/spaces/:space-id/meeting/:discussion_id", database = skip)]
 #[serde(rename_all = "PascalCase")]
 pub struct AttendeeInfo {
     pub attendee_id: String,
@@ -32,7 +32,7 @@ pub struct AttendeeInfo {
     pub external_user_id: String,
 }
 
-#[api_model(base = "/v2/deliberations/:deliberation-id/meeting/:discussion_id", database = skip, read_action = find_one)]
+#[api_model(base = "/v2/spaces/:space-id/meeting/:discussion_id", database = skip, read_action = find_one)]
 pub struct MeetingData {
     pub meeting: MeetingInfo,
     pub attendee: AttendeeInfo,
