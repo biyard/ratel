@@ -1,3 +1,4 @@
+use crate::DiscussionUser;
 use by_axum::{
     aide,
     auth::Authorization,
@@ -184,9 +185,39 @@ impl SpaceMeetingController {
 
         // let record = merge_recording_chunks(&meeting_id).await;
 
+        let discussion_participants = DiscussionParticipant::query_builder()
+            .discussion_id_equals(discussion.id)
+            .query()
+            .map(DiscussionParticipant::from)
+            .fetch_all(&self.pool)
+            .await?;
+
+        let user_ids: Vec<i64> = discussion_participants.iter().map(|p| p.user_id).collect();
+
+        let participants = if user_ids.is_empty() {
+            vec![]
+        } else {
+            let placeholders = (1..=user_ids.len())
+                .map(|i| format!("${}", i))
+                .collect::<Vec<_>>()
+                .join(", ");
+            let query = format!("SELECT * FROM users WHERE id IN ({})", placeholders);
+
+            let mut q = sqlx::query(&query);
+
+            for id in &user_ids {
+                q = q.bind(id);
+            }
+
+            let rows = q.map(DiscussionUser::from).fetch_all(&self.pool).await?;
+
+            rows
+        };
+
         Ok(MeetingData {
             meeting: meeting_info,
             attendee,
+            participants,
             record: None,
         })
     }

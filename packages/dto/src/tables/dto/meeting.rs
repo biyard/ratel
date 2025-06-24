@@ -1,3 +1,4 @@
+use crate::DiscussionUser;
 use bdk::prelude::*;
 use validator::Validate;
 
@@ -36,5 +37,6 @@ pub struct AttendeeInfo {
 pub struct MeetingData {
     pub meeting: MeetingInfo,
     pub attendee: AttendeeInfo,
+    pub participants: Vec<DiscussionUser>,
     pub record: Option<String>,
 }
