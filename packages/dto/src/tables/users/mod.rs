@@ -1,5 +1,6 @@
 mod author;
 mod bot;
+mod discussion_user;
 mod feed_author;
 mod follower;
 mod group_member_user;
@@ -12,6 +13,7 @@ mod user;
 
 pub use author::*;
 pub use bot::*;
+pub use discussion_user::*;
 pub use feed_author::*;
 pub use follower::*;
 pub use group_member_user::*;
