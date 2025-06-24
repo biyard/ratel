@@ -21,6 +21,7 @@ impl StdError for ServiceException {}
 #[repr(u64)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum Error {
+    InvalidAction,
     Unknown(String),
     Klaytn(String),
 
