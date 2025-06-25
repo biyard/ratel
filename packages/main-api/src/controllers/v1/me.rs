@@ -89,6 +89,7 @@ mod tests {
                 username,
                 "".to_string(),
                 format!("0x{:40x}", now + 2), // unique evm_address
+                "".to_string(), // password
             )
             .await
             .unwrap()
@@ -114,6 +115,7 @@ mod tests {
                 username,
                 "".to_string(),
                 format!("0x{:40x}2", now + 2), // unique evm_address
+                "".to_string(), // password
             )
             .await
             .unwrap()
@@ -145,6 +147,7 @@ mod tests {
                 username,
                 "".to_string(),
                 format!("0x{:40x}3", now + 3), // unique evm_address
+                "".to_string(), // password
             )
             .await
             .unwrap()
