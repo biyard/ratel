@@ -1,5 +1,5 @@
 [workspace]
-members = ["packages/main-ui", "packages/dto", "packages/main-api", "packages/fetcher", "packages/mobile", "packages/mobile/src-tauri"]
+members = ["packages/main-ui", "packages/dto", "packages/main-api", "packages/fetcher", "packages/mobile", "packages/mobile/src-tauri", "packages/telegram-bot"]
 resolver = "2"
 exclude = ["deps"]
 
@@ -41,6 +41,9 @@ sqlx = { version = "0.8.3", features = [
 
 dioxus = { version = "0.6.3", git = "https://github.com/hackartists/dioxus.git" }
 dioxus-web = { version = "0.6.3", git = "https://github.com/hackartists/dioxus.git" }
+tokio = { version = "1.40.0", features = ["full"] }
+tracing = "0.1.41"
+tracing-subscriber = {version = "0.3.19", features = ["env-filter"] }
 
 [profile.wasm-dev]
 inherits = "dev"
