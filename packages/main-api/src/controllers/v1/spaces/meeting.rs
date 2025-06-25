@@ -10,6 +10,7 @@ use by_axum::{
 };
 use dto::*;
 
+use crate::utils::aws_media_convert::merge_recording_chunks;
 use crate::utils::users::extract_user_with_allowing_anonymous;
 
 #[derive(
@@ -214,11 +215,13 @@ impl SpaceMeetingController {
             rows
         };
 
+        let record = merge_recording_chunks(&meeting_id).await;
+
         Ok(MeetingData {
             meeting: meeting_info,
             attendee,
             participants,
-            record: None,
+            record,
         })
     }
 }
