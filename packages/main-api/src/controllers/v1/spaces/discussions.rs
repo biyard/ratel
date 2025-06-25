@@ -10,7 +10,7 @@ use by_axum::{
 use by_types::QueryResponse;
 use dto::*;
 
-use crate::utils::users::extract_user_with_allowing_anonymous;
+use crate::utils::users::{extract_user_with_allowing_anonymous, extract_user_with_options};
 use sqlx::postgres::PgRow;
 
 #[derive(Clone, Debug)]
@@ -274,8 +274,10 @@ impl SpaceDiscussionController {
     }
 
     async fn exit_meeting(&self, id: i64, auth: Option<Authorization>) -> Result<Discussion> {
-        let user = extract_user_with_allowing_anonymous(&self.pool, auth).await?;
+        let user = extract_user_with_options(&self.pool, auth, false).await?;
         let user_id = user.id;
+
+        tracing::debug!("exit meeting user id: {:?}", user_id);
 
         if user_id == 0 {
             return Err(Error::InvalidUser);
