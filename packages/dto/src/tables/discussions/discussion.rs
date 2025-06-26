@@ -4,7 +4,7 @@ use validator::Validate;
 use crate::*;
 
 #[derive(Validate)]
-#[api_model(base = "/v1/spaces/:space-id/discussions", table = discussions, action = [], action_by_id = [start_meeting, participant_meeting, exit_meeting, start_recording, end_recording, delete])]
+#[api_model(base = "/v1/spaces/:space-id/discussions", table = discussions, action = [create(participants = Vec<i64>)], action_by_id = [start_meeting, participant_meeting, exit_meeting, start_recording, end_recording, delete])]
 pub struct Discussion {
     #[api_model(summary, primary_key)]
     pub id: i64,
@@ -35,17 +35,11 @@ pub struct Discussion {
 
     #[api_model(summary, action_by_id = update)]
     pub pipeline_id: String,
-    // #[api_model(summary, one_to_many = discussion_conversations, foreign_key = discussion_id)]
-    // #[serde(default)]
-    // pub conversations: Vec<DiscussionConversation>,
+
+    #[api_model(summary, many_to_many = discussion_members, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = discussion_id)]
+    #[serde(default)]
+    pub members: Vec<Member>,
     #[api_model(summary, one_to_many = discussion_participants, foreign_key = discussion_id)]
     #[serde(default)]
     pub participants: Vec<DiscussionParticipant>,
-    // #[api_model(summary, many_to_many = discussion_groups, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = discussion_id)]
-    // #[serde(default)]
-    // pub user_id: Vec<User>,
-
-    // #[api_model(summary, many_to_many = discussion_resources, table_name = resources, foreign_primary_key = resource_id, foreign_reference_key = discussion_id)]
-    // #[serde(default)]
-    // pub resources: Vec<ResourceFile>,
 }

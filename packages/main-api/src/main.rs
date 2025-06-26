@@ -71,6 +71,7 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         SpaceDraft,
         DiscussionParticipant,
         Discussion,
+        DiscussionMember,
         Elearning,
         SpaceUser,
         SpaceContract,
