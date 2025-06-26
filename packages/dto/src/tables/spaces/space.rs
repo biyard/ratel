@@ -89,6 +89,9 @@ pub struct Space {
     #[api_model(summary, one_to_many = surveys, foreign_key = space_id)]
     #[serde(default)]
     pub surveys: Vec<Survey>,
+    #[api_model(skip)]
+    #[serde(default)]
+    pub user_responses: Vec<SurveyResponse>,
     #[api_model(summary, one_to_many = space_drafts, foreign_key = space_id)]
     #[serde(default)]
     pub drafts: Vec<SpaceDraft>,
