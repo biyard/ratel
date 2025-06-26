@@ -28,6 +28,7 @@ pub struct SpaceController {
     repo: SpaceRepository,
     space_member_repo: SpaceMemberRepository,
     discussion_repo: DiscussionRepository,
+    discussion_member_repo: DiscussionMemberRepository,
     elearning_repo: ElearningRepository,
     survey_repo: SurveyRepository,
     space_draft_repo: SpaceDraftRepository,
@@ -42,6 +43,7 @@ impl SpaceController {
 
         let mut space = Space::query_builder()
             .id_equals(id)
+            .discussions_builder(Discussion::query_builder())
             .comments_builder(SpaceComment::query_builder())
             .feed_comments_builder(SpaceComment::query_builder())
             .query()
@@ -277,7 +279,9 @@ impl SpaceController {
         }
 
         for discussion in discussions {
-            match self
+            let participants = discussion.participants;
+
+            let discussion = match self
                 .discussion_repo
                 .insert_with_tx(
                     &mut *tx,
@@ -292,11 +296,28 @@ impl SpaceController {
                 )
                 .await
             {
-                Ok(_) => {}
+                Ok(v) => v,
                 Err(e) => {
                     tx.rollback().await?;
                     return Err(e);
                 }
+            }
+            .unwrap_or_default();
+
+            let discussion_id = discussion.id;
+
+            for participant_id in participants {
+                let _ = match self
+                    .discussion_member_repo
+                    .insert_with_tx(&mut *tx, discussion_id, participant_id)
+                    .await
+                {
+                    Ok(_) => {}
+                    Err(e) => {
+                        tx.rollback().await?;
+                        return Err(e);
+                    }
+                };
             }
         }
 
@@ -531,6 +552,7 @@ impl SpaceController {
         let space_member_repo = SpaceMember::get_repository(pool.clone());
         let space_draft_repo = SpaceDraft::get_repository(pool.clone());
         let discussion_repo = Discussion::get_repository(pool.clone());
+        let discussion_member_repo = DiscussionMember::get_repository(pool.clone());
         let elearning_repo = Elearning::get_repository(pool.clone());
         let survey_repo = Survey::get_repository(pool.clone());
 
@@ -538,6 +560,7 @@ impl SpaceController {
             repo,
             pool,
             discussion_repo,
+            discussion_member_repo,
             elearning_repo,
             survey_repo,
             space_member_repo,
