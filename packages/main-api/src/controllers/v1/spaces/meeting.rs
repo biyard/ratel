@@ -216,13 +216,14 @@ impl SpaceMeetingController {
             rows
         };
 
-        let record = merge_recording_chunks(&meeting_id, pipeline_arn).await;
+        // FIXME: remove comment when recording chunk testing
+        // let record = merge_recording_chunks(&meeting_id, pipeline_arn).await;
 
         Ok(MeetingData {
             meeting: meeting_info,
             attendee,
             participants,
-            record,
+            record: None,
         })
     }
 }
