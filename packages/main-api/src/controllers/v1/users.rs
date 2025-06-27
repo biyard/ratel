@@ -250,6 +250,7 @@ impl UserControllerV1 {
                 "".to_string(),
                 req.evm_address,
                 "".to_string(),
+                Membership::Free,
             )
             .await?;
 
@@ -307,6 +308,7 @@ impl UserControllerV1 {
                 "".to_string(),
                 "".to_string(),
                 req.password,
+                Membership::Free,
             )
             .await?;
 

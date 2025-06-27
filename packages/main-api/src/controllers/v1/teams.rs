@@ -104,6 +104,7 @@ impl TeamController {
                 html_contents,
                 username,
                 "".to_string(),
+                Membership::Free,
             )
             .await
             .map_err(|e| {
