@@ -12,7 +12,7 @@ use by_types::QueryResponse;
 use dto::*;
 use sqlx::postgres::PgRow;
 
-use crate::utils::users::extract_user_id;
+use crate::utils::users::{extract_user, extract_user_id};
 
 #[derive(
     Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
@@ -79,7 +79,8 @@ impl BotController {
             username,
         }: BotCreateRequest,
     ) -> Result<Bot> {
-        let user_id = extract_user_id(&self.pool, auth).await?;
+        let user = extract_user(&self.pool, auth).await?;
+        let user_id = user.id;
         let repo = User::get_repository(self.pool.clone());
         let bot = repo
             .insert(
@@ -95,6 +96,7 @@ impl BotController {
                 "".to_string(),
                 username,
                 "".to_string(),
+                user.membership,
             )
             .await?;
 
