@@ -165,7 +165,11 @@ impl ChimeMeetingService {
         Ok(())
     }
 
-    pub async fn make_pipeline(&self, meeting: Meeting, _meeting_name: String) -> Result<String> {
+    pub async fn make_pipeline(
+        &self,
+        meeting: Meeting,
+        _meeting_name: String,
+    ) -> Result<(String, String)> {
         let bucket_name = crate::config::get().chime_bucket_name.to_string();
 
         let client_request_token = uuid::Uuid::new_v4().to_string();
@@ -231,10 +235,10 @@ impl ChimeMeetingService {
 
         tracing::debug!("create_media_capture_pipeline response: {:?}", resp);
 
-        let pipeline_id = resp
+        let (pipeline_id, pipeline_arn) = resp
             .media_capture_pipeline
             .as_ref()
-            .and_then(|p| p.media_pipeline_id.clone())
+            .and_then(|p| Some((p.media_pipeline_id.clone(), p.media_pipeline_arn.clone())))
             .unwrap_or_default();
 
         // let object_key = format!("{}.mp4", pipeline_id);
@@ -266,7 +270,10 @@ impl ChimeMeetingService {
         //         Error::AwsS3Error(e.to_string())
         //     })?;
 
-        Ok(pipeline_id)
+        Ok((
+            pipeline_id.unwrap_or_default(),
+            pipeline_arn.unwrap_or_default(),
+        ))
     }
 
     pub async fn end_pipeline(&self, pipeline_id: &str) -> Result<()> {

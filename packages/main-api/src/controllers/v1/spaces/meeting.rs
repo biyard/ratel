@@ -49,6 +49,7 @@ impl SpaceMeetingController {
             .ok_or(Error::DiscussionNotFound)?;
 
         let meeting_id = discussion.meeting_id.unwrap_or_default();
+        let pipeline_arn = discussion.media_pipeline_arn.unwrap_or_default();
 
         let participant = DiscussionParticipant::query_builder()
             .discussion_id_equals(discussion.id)
@@ -215,7 +216,7 @@ impl SpaceMeetingController {
             rows
         };
 
-        let record = merge_recording_chunks(&meeting_id).await;
+        let record = merge_recording_chunks(&meeting_id, pipeline_arn).await;
 
         Ok(MeetingData {
             meeting: meeting_info,

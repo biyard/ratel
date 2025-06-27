@@ -74,6 +74,7 @@ impl SpaceDiscussionController {
                 description,
                 None,
                 "".to_string(),
+                None,
             )
             .await?;
 
@@ -374,13 +375,14 @@ impl SpaceDiscussionController {
             v
         };
 
-        let pipeline_id = match client.make_pipeline(meeting.clone(), discussion.name).await {
-            Ok(v) => v,
-            Err(e) => {
-                tracing::error!("failed to create pipeline: {:?}", e);
-                return Err(Error::AwsChimeError(e.to_string()));
-            }
-        };
+        let (pipeline_id, pipeline_arn) =
+            match client.make_pipeline(meeting.clone(), discussion.name).await {
+                Ok(v) => v,
+                Err(e) => {
+                    tracing::error!("failed to create pipeline: {:?}", e);
+                    return Err(Error::AwsChimeError(e.to_string()));
+                }
+            };
 
         let discussion = match self
             .repo
@@ -388,6 +390,7 @@ impl SpaceDiscussionController {
                 id,
                 DiscussionRepositoryUpdateRequest {
                     pipeline_id: Some(pipeline_id),
+                    media_pipeline_arn: Some(pipeline_arn),
                     meeting_id: Some(meeting.meeting_id().unwrap().to_string()),
                     ..Default::default()
                 },
