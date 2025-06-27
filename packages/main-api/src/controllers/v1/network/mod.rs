@@ -58,12 +58,12 @@ impl NetworkController {
         // 🧠 SMART TEAM SUGGESTIONS - Advanced ML-inspired scoring system
         let suggested_teams_sql = r#"
             WITH user_activity_stats AS (
-                -- Calculate user's activity and engagement metrics
+                -- Calculate current user's engagement profile for personalized scoring
                 SELECT 
                     $1 as current_user_id,
-                    COALESCE(AVG(EXTRACT(EPOCH FROM NOW()) - u.created_at), 0) as avg_user_age,
                     COUNT(DISTINCT mn.following_id) as following_count,
-                    COUNT(DISTINCT ub.badge_id) as badge_count
+                    COUNT(DISTINCT ub.badge_id) as badge_count,
+                    EXTRACT(EPOCH FROM NOW()) - MAX(u.updated_at) as days_since_activity
                 FROM users u
                 LEFT JOIN my_networks mn ON u.id = mn.follower_id
                 LEFT JOIN user_badges ub ON u.id = ub.user_id
@@ -72,11 +72,19 @@ impl NetworkController {
             team_scores AS (
                 SELECT DISTINCT
                     t.*,
+                    uas.following_count,
+                    uas.badge_count,
+                    uas.days_since_activity,
                     -- 🎯 SMART SCORING ALGORITHM
                     (
-                        -- Network similarity score (30% weight)
+                        -- Network similarity score (30% weight) - scaled by user's network size
                         COALESCE(
-                            (SELECT COUNT(*) * 30.0 
+                            (SELECT COUNT(*) * 30.0 * 
+                             CASE 
+                                WHEN uas.following_count > 10 THEN 1.0  -- Active networker
+                                WHEN uas.following_count > 5 THEN 0.8   -- Moderate networker
+                                ELSE 0.6                                -- New/quiet user
+                             END
                              FROM my_networks mn1 
                              WHERE mn1.follower_id = $1 
                              AND mn1.following_id IN (
@@ -86,9 +94,14 @@ impl NetworkController {
                              )), 0
                         ) +
                         
-                        -- Badge compatibility score (25% weight)
+                        -- Badge compatibility score (25% weight) - enhanced by user's badge activity
                         COALESCE(
-                            (SELECT COUNT(*) * 25.0
+                            (SELECT COUNT(*) * 25.0 * 
+                             CASE 
+                                WHEN uas.badge_count > 3 THEN 1.2  -- Badge collector bonus
+                                WHEN uas.badge_count > 0 THEN 1.0  -- Has some badges
+                                ELSE 0.5                           -- No badges yet
+                             END
                              FROM user_badges ub1
                              JOIN user_badges ub2 ON ub1.badge_id = ub2.badge_id
                              WHERE ub1.user_id = $1 AND ub2.user_id = t.id), 0
@@ -123,6 +136,7 @@ impl NetworkController {
                     EXTRACT(EPOCH FROM NOW()) - t.created_at as age_seconds
                     
                 FROM users t
+                CROSS JOIN user_activity_stats uas
                 WHERE t.id != $1 
                 AND t.user_type = $2
                 AND t.id NOT IN (
@@ -156,12 +170,11 @@ impl NetworkController {
         // 🧠 SMART USER SUGGESTIONS - Advanced collaborative filtering
         let suggested_users_sql = r#"
             WITH user_profile AS (
-                -- Build current user's profile for recommendation
+                -- Build current user's profile for recommendation (optimized - only needed fields)
                 SELECT 
                     $1 as user_id,
-                    ARRAY_AGG(DISTINCT ub.badge_id) as user_badges,
-                    ARRAY_AGG(DISTINCT mn.following_id) as following_list,
-                    ARRAY_AGG(DISTINCT tm.team_id) as team_memberships,
+                    COUNT(DISTINCT ub.badge_id) as badge_count,
+                    COUNT(DISTINCT tm.team_id) as team_count,
                     COUNT(DISTINCT mn.following_id) as following_count
                 FROM users u
                 LEFT JOIN user_badges ub ON u.id = ub.user_id
@@ -172,11 +185,18 @@ impl NetworkController {
             candidate_users AS (
                 SELECT DISTINCT
                     c.*,
-                    -- 🎯 ADVANCED RECOMMENDATION ALGORITHM
+                    up.following_count as user_following_count,
+                    -- 🎯 ADVANCED RECOMMENDATION ALGORITHM (Enhanced with User Profile)
                     (
-                        -- Collaborative filtering score (35% weight)
+                        -- Collaborative filtering score (35% weight) - scaled by user's network activity
                         COALESCE(
-                            (SELECT COUNT(*) * 35.0
+                            (SELECT COUNT(*) * 35.0 * 
+                             CASE 
+                                WHEN up.following_count > 20 THEN 1.2  -- Very active networker bonus
+                                WHEN up.following_count > 10 THEN 1.0  -- Active networker
+                                WHEN up.following_count > 5 THEN 0.8   -- Moderate networker
+                                ELSE 0.6                               -- New/quiet user
+                             END
                              FROM my_networks mn1 
                              JOIN my_networks mn2 ON mn1.following_id = mn2.following_id
                              WHERE mn1.follower_id = $1 
@@ -184,17 +204,28 @@ impl NetworkController {
                              AND mn1.following_id != c.id), 0
                         ) +
                         
-                        -- Badge affinity score (25% weight)
+                        -- Badge affinity score (25% weight) - enhanced with profile context
                         COALESCE(
-                            (SELECT COUNT(*) * 25.0
+                            (SELECT COUNT(*) * 25.0 * 
+                             CASE 
+                                WHEN up.badge_count > 5 THEN 1.3  -- Badge expert bonus
+                                WHEN up.badge_count > 2 THEN 1.1  -- Badge collector bonus
+                                WHEN up.badge_count > 0 THEN 1.0  -- Has some badges
+                                ELSE 0.7                          -- No badges yet
+                             END
                              FROM user_badges ub1
                              JOIN user_badges ub2 ON ub1.badge_id = ub2.badge_id  
                              WHERE ub1.user_id = $1 AND ub2.user_id = c.id), 0
                         ) +
                         
-                        -- Team connection score (20% weight)
+                        -- Team connection score (20% weight) - leveraging team memberships
                         COALESCE(
-                            (SELECT COUNT(*) * 20.0
+                            (SELECT COUNT(*) * 20.0 * 
+                             CASE 
+                                WHEN up.team_count > 3 THEN 1.2  -- Multi-team member bonus
+                                WHEN up.team_count > 0 THEN 1.0  -- Team member
+                                ELSE 0.8                         -- No teams yet
+                             END
                              FROM team_members tm1
                              JOIN team_members tm2 ON tm1.team_id = tm2.team_id
                              WHERE tm1.user_id = $1 AND tm2.user_id = c.id), 0
@@ -221,6 +252,7 @@ impl NetworkController {
                     EXTRACT(EPOCH FROM NOW()) - c.updated_at as inactivity_seconds
                     
                 FROM users c
+                CROSS JOIN user_profile up
                 WHERE c.id != $1 
                 AND c.user_type = $2
                 AND c.id NOT IN (
