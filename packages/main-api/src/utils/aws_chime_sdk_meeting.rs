@@ -237,34 +237,34 @@ impl ChimeMeetingService {
             .and_then(|p| p.media_pipeline_id.clone())
             .unwrap_or_default();
 
-        let object_key = format!("{}.mp4", pipeline_id);
-        let destination_key = format!("chime/{}", object_key);
+        // let object_key = format!("{}.mp4", pipeline_id);
+        // let destination_key = format!("chime/{}", object_key);
 
-        self.s3
-            .copy_object()
-            .copy_source(format!("{}/{}", bucket_name, object_key))
-            .bucket(&bucket_name)
-            .key(&destination_key)
-            .send()
-            .await
-            .map_err(|e| {
-                tracing::error!("failed to copy Chime artifact to chime/ folder: {:?}", e);
-                Error::AwsS3Error(e.to_string())
-            })?;
+        // self.s3
+        //     .copy_object()
+        //     .copy_source(format!("{}/{}", bucket_name, object_key))
+        //     .bucket(&bucket_name)
+        //     .key(&destination_key)
+        //     .send()
+        //     .await
+        //     .map_err(|e| {
+        //         tracing::error!("failed to copy Chime artifact to chime/ folder: {:?}", e);
+        //         Error::AwsS3Error(e.to_string())
+        //     })?;
 
-        self.s3
-            .delete_object()
-            .bucket(&bucket_name)
-            .key(&object_key)
-            .send()
-            .await
-            .map_err(|e| {
-                tracing::warn!(
-                    "failed to delete original Chime artifact after copy: {:?}",
-                    e
-                );
-                Error::AwsS3Error(e.to_string())
-            })?;
+        // self.s3
+        //     .delete_object()
+        //     .bucket(&bucket_name)
+        //     .key(&object_key)
+        //     .send()
+        //     .await
+        //     .map_err(|e| {
+        //         tracing::warn!(
+        //             "failed to delete original Chime artifact after copy: {:?}",
+        //             e
+        //         );
+        //         Error::AwsS3Error(e.to_string())
+        //     })?;
 
         Ok(pipeline_id)
     }
