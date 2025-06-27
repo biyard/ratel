@@ -293,6 +293,7 @@ impl SpaceController {
                     discussion.description,
                     None,
                     "".to_string(),
+                    None,
                 )
                 .await
             {
