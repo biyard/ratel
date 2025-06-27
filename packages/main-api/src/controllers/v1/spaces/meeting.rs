@@ -10,7 +10,7 @@ use by_axum::{
 };
 use dto::*;
 
-use crate::utils::aws_media_convert::merge_recording_chunks;
+// use crate::utils::aws_media_convert::merge_recording_chunks;
 use crate::utils::users::extract_user_with_allowing_anonymous;
 
 #[derive(
@@ -49,7 +49,7 @@ impl SpaceMeetingController {
             .ok_or(Error::DiscussionNotFound)?;
 
         let meeting_id = discussion.meeting_id.unwrap_or_default();
-        let pipeline_arn = discussion.media_pipeline_arn.unwrap_or_default();
+        let _pipeline_arn = discussion.media_pipeline_arn.unwrap_or_default();
 
         let participant = DiscussionParticipant::query_builder()
             .discussion_id_equals(discussion.id)
