@@ -35,6 +35,7 @@ pub async fn extract_user_with_allowing_anonymous(
                             "".to_string(),
                             principal.clone(),
                             "".to_string(),
+                            Membership::Free,
                         )
                         .await?
                 }
@@ -123,6 +124,53 @@ pub async fn extract_user_with_options(
     tracing::debug!("authorized user_id: {:?}", user);
 
     Ok(user)
+}
+
+pub async fn extract_user_id_with_no_error(
+    pool: &sqlx::Pool<sqlx::Postgres>,
+    auth: Option<Authorization>,
+) -> i64 {
+    let user_id = match auth {
+        Some(Authorization::Session(session)) => session.user_id,
+
+        Some(Authorization::UserSig(sig)) => {
+            let principal = match sig.principal() {
+                Ok(p) => p,
+                Err(e) => {
+                    tracing::error!("failed to get principal: {:?}", e);
+                    return 0;
+                }
+            };
+
+            let result = User::query_builder()
+                .principal_equals(principal)
+                .query()
+                .map(User::from)
+                .fetch_one(pool)
+                .await;
+
+            match result {
+                Ok(user) => user.id,
+                Err(e) => {
+                    tracing::error!("failed to get user: {:?}", e);
+                    0
+                }
+            }
+        }
+
+        Some(Authorization::Bearer { claims }) => match claims.sub.parse::<i64>() {
+            Ok(id) => id,
+            Err(e) => {
+                tracing::error!("failed to parse user id: {:?}", e);
+                0
+            }
+        },
+
+        _ => 0,
+    };
+
+    tracing::debug!("authorized user_id: {:?}", user_id);
+    user_id
 }
 
 pub async fn extract_user_id(

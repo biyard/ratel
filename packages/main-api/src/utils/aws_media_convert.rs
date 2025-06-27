@@ -1,11 +1,26 @@
+#![allow(unused)]
 use dto::*;
 
-pub async fn merge_recording_chunks(meeting_id: &str) -> Option<String> {
-    use aws_config::BehaviorVersion;
-    use aws_config::{Region, defaults};
+pub async fn merge_recording_chunks(
+    meeting_id: &str,
+    media_pipeline_arn: String,
+) -> Option<String> {
+    use aws_config::{BehaviorVersion, Region, defaults};
+    use aws_sdk_chimesdkmediapipelines::Client as ChimePipelinesClient;
+    use aws_sdk_chimesdkmediapipelines::types::{
+        ArtifactsConcatenationConfiguration, ArtifactsConcatenationState,
+        AudioArtifactsConcatenationState, AudioConcatenationConfiguration,
+        ChimeSdkMeetingConcatenationConfiguration, CompositedVideoConcatenationConfiguration,
+        ConcatenationSink, ConcatenationSinkType, ConcatenationSource, ConcatenationSourceType,
+        ContentConcatenationConfiguration, DataChannelConcatenationConfiguration,
+        MediaCapturePipelineSourceConfiguration, MeetingEventsConcatenationConfiguration,
+        S3BucketSinkConfiguration, TranscriptionMessagesConcatenationConfiguration,
+        VideoConcatenationConfiguration,
+    };
     use aws_sdk_s3::config::Credentials;
 
     let config = crate::config::get();
+
     let aws_config = defaults(BehaviorVersion::latest())
         .region(Region::new(config.aws.region))
         .credentials_provider(Credentials::new(
@@ -18,114 +33,96 @@ pub async fn merge_recording_chunks(meeting_id: &str) -> Option<String> {
         .load()
         .await;
 
-    let s3_cli = aws_sdk_s3::Client::new(&aws_config);
-
     let bucket_name = config.chime_bucket_name.to_string();
-    let meeting_prefix = format!("{}/video/", meeting_id);
+    let destination_arn = format!("arn:aws:s3:::{}", bucket_name);
 
-    // Check if merged file already exists
-    let merged_key = format!("merged/{}_merged.mp4", meeting_id);
-    match s3_cli
-        .head_object()
-        .bucket(&bucket_name)
-        .key(&merged_key)
-        .send()
-        .await
-    {
-        Ok(_) => {
-            // File already exists, return its URI
-            return Some(format!("s3://{}/{}", bucket_name, merged_key));
-        }
-        Err(_) => {
-            // File doesn't exist, continue with merge process
-        }
-    }
+    let client = ChimePipelinesClient::new(&aws_config);
 
-    let list_objects_output = match s3_cli
-        .list_objects_v2()
-        .bucket(&bucket_name)
-        .prefix(&meeting_prefix)
-        .send()
-        .await
-        .map_err(|e| Error::AwsS3Error(e.to_string()))
-    {
-        Ok(output) => output,
-        Err(e) => {
-            tracing::error!("Failed to list objects in S3: {:?}", e);
-            return None;
-        }
-    };
-
-    let objects = list_objects_output.contents();
-
-    if objects.is_empty() {
-        tracing::error!("No objects found in S3 bucket");
-        return None;
-    }
-
-    let mediaconvert_cli = aws_sdk_mediaconvert::Client::new(&aws_config);
-
-    let mut input_files: Vec<_> = objects
-        .iter()
-        .filter(|obj| obj.key().unwrap_or_default().ends_with(".mp4"))
-        .collect();
-
-    input_files.sort_by_key(|obj| obj.key().unwrap_or_default().to_string());
-
-    let mut job_settings_builder = aws_sdk_mediaconvert::types::JobSettings::builder();
-
-    for obj in &input_files {
-        job_settings_builder = job_settings_builder.inputs(
-            aws_sdk_mediaconvert::types::Input::builder()
-                .file_input(format!("s3://{}/{}", bucket_name, obj.key().unwrap()))
-                .build(),
-        );
-    }
-
-    let job_settings = job_settings_builder
-        .output_groups(
-            aws_sdk_mediaconvert::types::OutputGroup::builder()
-                .output_group_settings(
-                    aws_sdk_mediaconvert::types::OutputGroupSettings::builder()
-                        .file_group_settings(
-                            aws_sdk_mediaconvert::types::FileGroupSettings::builder()
-                                .destination(format!(
-                                    "s3://{}/merged/{}_merged.mp4",
-                                    bucket_name, meeting_id
-                                ))
-                                .build(),
-                        )
-                        .build(),
-                )
-                .outputs(
-                    aws_sdk_mediaconvert::types::Output::builder()
-                        .container_settings(
-                            aws_sdk_mediaconvert::types::ContainerSettings::builder()
-                                .container(aws_sdk_mediaconvert::types::ContainerType::Mp4)
-                                .build(),
-                        )
-                        .build(),
-                )
-                .build(),
+    let artifacts_config = ArtifactsConcatenationConfiguration::builder()
+        .audio(
+            AudioConcatenationConfiguration::builder()
+                .state(AudioArtifactsConcatenationState::Enabled)
+                .build()
+                .unwrap(),
+        )
+        .video(
+            VideoConcatenationConfiguration::builder()
+                .state(ArtifactsConcatenationState::Enabled)
+                .build()
+                .unwrap(),
+        )
+        .content(
+            ContentConcatenationConfiguration::builder()
+                .state(ArtifactsConcatenationState::Enabled)
+                .build()
+                .unwrap(),
+        )
+        .composited_video(
+            CompositedVideoConcatenationConfiguration::builder()
+                .state(ArtifactsConcatenationState::Enabled)
+                .build()
+                .unwrap(),
+        )
+        .data_channel(
+            DataChannelConcatenationConfiguration::builder()
+                .state(ArtifactsConcatenationState::Disabled)
+                .build()
+                .unwrap(),
+        )
+        .transcription_messages(
+            TranscriptionMessagesConcatenationConfiguration::builder()
+                .state(ArtifactsConcatenationState::Disabled)
+                .build()
+                .unwrap(),
+        )
+        .meeting_events(
+            MeetingEventsConcatenationConfiguration::builder()
+                .state(ArtifactsConcatenationState::Disabled)
+                .build()
+                .unwrap(),
         )
         .build();
 
-    let _job = match mediaconvert_cli
-        .create_job()
-        // .role(config.aws.media_convert_role)
-        .settings(job_settings)
-        .send()
-        .await
-    {
-        Ok(job) => job,
-        Err(e) => {
-            tracing::error!("Failed to create MediaConvert job: {:?}", e);
+    let chime_config = ChimeSdkMeetingConcatenationConfiguration::builder()
+        .artifacts_configuration(artifacts_config)
+        .build();
+
+    let source_config = MediaCapturePipelineSourceConfiguration::builder()
+        .media_pipeline_arn(media_pipeline_arn)
+        .chime_sdk_meeting_configuration(chime_config)
+        .build()
+        .unwrap();
+
+    let request = client
+        .create_media_concatenation_pipeline()
+        .sources(
+            ConcatenationSource::builder()
+                .r#type(ConcatenationSourceType::MediaCapturePipeline)
+                .media_capture_pipeline_source_configuration(source_config)
+                .build()
+                .unwrap(),
+        )
+        .sinks(
+            ConcatenationSink::builder()
+                .r#type(ConcatenationSinkType::S3Bucket)
+                .s3_bucket_sink_configuration(
+                    S3BucketSinkConfiguration::builder()
+                        .destination(destination_arn.clone())
+                        .build()
+                        .unwrap(),
+                )
+                .build()
+                .unwrap(),
+        );
+
+    match request.send().await {
+        Ok(resp) => {
+            tracing::info!("Concatenation pipeline started: {:?}", resp);
+            return Some(format!("s3://{}/concatenated/{}/", bucket_name, meeting_id));
+        }
+        Err(err) => {
+            tracing::error!("Failed to start concatenation pipeline: {:?}", err);
             return None;
         }
-    };
-
-    Some(format!(
-        "s3://{}/merged/{}_merged.mp4",
-        bucket_name, meeting_id
-    ))
+    }
 }
