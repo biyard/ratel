@@ -17,6 +17,7 @@ use sqlx::postgres::PgRow;
 pub struct SpaceDiscussionController {
     repo: DiscussionRepository,
     participation_repo: DiscussionParticipantRepository,
+    member_repo: DiscussionMemberRepository,
     pool: sqlx::Pool<sqlx::Postgres>,
 }
 
@@ -54,13 +55,17 @@ impl SpaceDiscussionController {
             ended_at,
             name,
             description,
+            participants,
         }: DiscussionCreateRequest,
     ) -> Result<Discussion> {
         let user = extract_user_with_allowing_anonymous(&self.pool, auth).await?;
 
+        let mut tx = self.pool.begin().await?;
+
         let res = self
             .repo
-            .insert(
+            .insert_with_tx(
+                &mut *tx,
                 space_id,
                 started_at,
                 ended_at,
@@ -72,7 +77,29 @@ impl SpaceDiscussionController {
             )
             .await?;
 
-        Ok(res)
+        let id = res.clone().unwrap_or_default().id;
+
+        let pts = DiscussionMember::query_builder()
+            .discussion_id_equals(id)
+            .query()
+            .map(DiscussionMember::from)
+            .fetch_all(&mut *tx)
+            .await?;
+
+        for pt in pts {
+            let _ = self.member_repo.delete_with_tx(&mut *tx, pt.id).await;
+        }
+
+        for participant in participants {
+            let _ = self
+                .member_repo
+                .insert_with_tx(&mut *tx, id, participant)
+                .await;
+        }
+
+        tx.commit().await?;
+
+        Ok(res.unwrap_or_default())
     }
 
     async fn update(
@@ -406,11 +433,13 @@ impl SpaceDiscussionController {
 impl SpaceDiscussionController {
     pub async fn new(pool: sqlx::Pool<sqlx::Postgres>) -> Self {
         let repo = Discussion::get_repository(pool.clone());
+        let member_repo = DiscussionMember::get_repository(pool.clone());
         let participation_repo = DiscussionParticipant::get_repository(pool.clone());
 
         Self {
             repo,
             participation_repo,
+            member_repo,
             pool,
         }
     }

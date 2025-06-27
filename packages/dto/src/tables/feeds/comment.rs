@@ -27,12 +27,14 @@ pub struct Comment {
     pub html_contents: String,
 
     #[api_model(summary, many_to_many = feed_users, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = feed_id, aggregator = count)]
+    #[serde(default)]
     pub num_of_likes: i64,
 
     #[api_model(summary, many_to_many = feed_users, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = feed_id, aggregator = exist)]
     pub is_liked: bool,
 
     #[api_model(summary, one_to_many = feeds, foreign_key = parent_id, aggregator=count)]
+    #[serde(default)]
     pub num_of_replies: i64,
 
     #[api_model(summary, one_to_many = feeds, foreign_key = parent_id, nested)]

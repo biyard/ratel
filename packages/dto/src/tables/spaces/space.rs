@@ -80,7 +80,7 @@ pub struct Space {
     #[api_model(summary, one_to_many = feeds, reference_key = feed_id, foreign_key = parent_id, nested)]
     #[serde(default)]
     pub feed_comments: Vec<SpaceComment>,
-    #[api_model(summary, one_to_many = discussions, foreign_key = space_id)]
+    #[api_model(summary, one_to_many = discussions, foreign_key = space_id, nested)]
     #[serde(default)]
     pub discussions: Vec<Discussion>,
     #[api_model(summary, one_to_many = elearnings, foreign_key = space_id)]
@@ -89,6 +89,9 @@ pub struct Space {
     #[api_model(summary, one_to_many = surveys, foreign_key = space_id)]
     #[serde(default)]
     pub surveys: Vec<Survey>,
+    #[api_model(skip)]
+    #[serde(default)]
+    pub user_responses: Vec<SurveyResponse>,
     #[api_model(summary, one_to_many = space_drafts, foreign_key = space_id)]
     #[serde(default)]
     pub drafts: Vec<SpaceDraft>,
