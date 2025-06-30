@@ -18,7 +18,7 @@ type ParsedResult = {
   options: ParsedOption[];
 };
 
-export default function BarChart({ parsed }: { parsed: ParsedResult }) {
+export default function BarChartResponse({ parsed }: { parsed: ParsedResult }) {
   const { options } = parsed;
 
   return (

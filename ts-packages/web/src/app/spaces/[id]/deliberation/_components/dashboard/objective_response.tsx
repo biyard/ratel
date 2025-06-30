@@ -6,7 +6,8 @@ import {
 } from '@/lib/api/models/survey';
 import { Answer } from '@/lib/api/models/response';
 import React from 'react';
-import BarChart from '../charts/bar_chart';
+import BarChartResponse from '../charts/bar_chart_response';
+import PieChartResponse from '../charts/pie_chart_response';
 
 function parseObjectiveAnswers(
   question: SingleChoiceQuestion | MultipleChoiceQuestion,
@@ -56,7 +57,8 @@ export default function ObjectiveResponse({
         {question.title}
       </div>
       <div className="flex flex-col gap-3">
-        <BarChart parsed={{ question, ...parsed }} />
+        <BarChartResponse parsed={{ question, ...parsed }} />
+        <PieChartResponse parsed={{ question, ...parsed }} />
       </div>
     </div>
   );
