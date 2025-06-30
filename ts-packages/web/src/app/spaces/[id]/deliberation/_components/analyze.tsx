@@ -5,12 +5,23 @@ import { useDeliberationSpaceContext } from '../provider.client';
 import ObjectiveResponse from './dashboard/objective_response';
 import SubjectiveResponse from './dashboard/subjective_response';
 import { logger } from '@/lib/logger';
+import SummaryReport from './dashboard/summary_report';
 
 export default function AnalyzePage() {
-  const { handleGoBack, handleDownloadExcel, mappedResponses } =
-    useDeliberationSpaceContext();
+  const {
+    handleGoBack,
+    handleDownloadExcel,
+    answers,
+    survey,
+    mappedResponses,
+  } = useDeliberationSpaceContext();
 
   logger.debug('mapped responses: ', mappedResponses);
+
+  const responseCount = answers.length;
+  const startDate =
+    survey.surveys.length > 0 ? survey.surveys[0].started_at : 0;
+  const endDate = survey.surveys.length > 0 ? survey.surveys[0].ended_at : 0;
 
   return (
     <div className="flex flex-col w-full">
@@ -38,6 +49,11 @@ export default function AnalyzePage() {
       </div>
 
       <div className="flex flex-col w-full gap-2.5">
+        <SummaryReport
+          responseCount={responseCount}
+          startDate={startDate}
+          endDate={endDate}
+        />
         {mappedResponses.map((res, index) => {
           return res.question.answer_type === 'multiple_choice' ||
             res.question.answer_type === 'single_choice' ? (
