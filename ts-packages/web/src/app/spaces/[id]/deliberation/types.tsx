@@ -10,6 +10,7 @@ export const DeliberationTab = {
   DELIBERATION: 'Deliberation',
   POLL: 'Poll',
   RECOMMANDATION: 'Recommandation',
+  ANALYZE: 'Analyze',
 } as const;
 
 export type DeliberationTabType =
