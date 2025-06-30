@@ -4,8 +4,9 @@ import React from 'react';
 import { useDeliberationSpaceContext } from '../provider.client';
 
 export default function AnalyzePage() {
-  const { handleGoBack, answer, survey } = useDeliberationSpaceContext();
-  // console.log('survey: ', survey, ', answer: ', answer);
+  const { handleGoBack, handleDownloadExcel, answer, survey } =
+    useDeliberationSpaceContext();
+
   return (
     <div className="flex flex-col w-full">
       <div
@@ -20,10 +21,10 @@ export default function AnalyzePage() {
       <div className="flex flex-row w-full justify-end">
         <div className="w-fit">
           <button
-            className="w-full px-[10px] py-[5px] rounded-[10px] bg-[#fcb300] hover:bg-[#ca8f00] text-black text-bold text-[16px] hover:text-black cursor-pointer"
+            className="w-full px-[20px] py-[10px] rounded-[10px] bg-[#fcb300] hover:bg-[#ca8f00] text-black text-bold text-[16px] hover:text-black cursor-pointer"
             disabled={false}
-            onClick={function (): void {
-              throw new Error('Function not implemented.');
+            onClick={() => {
+              handleDownloadExcel();
             }}
           >
             {'Download Excel'}

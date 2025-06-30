@@ -1,5 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
+import * as XLSX from 'xlsx';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useSpaceByIdContext } from '../providers.client';
 import { ratelApi, useSpaceById } from '@/lib/api/ratel_api';
@@ -22,14 +24,18 @@ import {
   spaceUpdateRequest,
 } from '@/lib/api/models/spaces';
 import { useRouter } from 'next/navigation';
-import { Answer, surveyResponseCreateRequest } from '@/lib/api/models/response';
+import {
+  Answer,
+  SurveyResponse,
+  surveyResponseCreateRequest,
+} from '@/lib/api/models/response';
 import { useApiCall } from '@/lib/api/use-send';
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import { checkString } from '@/lib/string-filter-utils';
 import { FileInfo } from '@/lib/api/models/feeds';
 import { DiscussionCreateRequest } from '@/lib/api/models/discussion';
 import { ElearningCreateRequest } from '@/lib/api/models/elearning';
-import { SurveyCreateRequest } from '@/lib/api/models/survey';
+import { Question, SurveyCreateRequest } from '@/lib/api/models/survey';
 import { SpaceDraftCreateRequest } from '@/lib/api/models/space_draft';
 
 type ContextType = {
@@ -55,6 +61,7 @@ type ContextType = {
   draft: FinalConsensus;
   setDraft: StateSetter<FinalConsensus>;
   handleGoBack: () => void;
+  handleDownloadExcel: () => void;
 
   userType: UserType;
   proposerImage: string;
@@ -203,6 +210,47 @@ export default function ClientProviders({
     setIsEdit(true);
   };
 
+  const handleDownloadExcel = () => {
+    const questions = survey?.surveys?.[0]?.questions || [];
+    const responses = space?.responses || [];
+
+    const excelRows: any[] = [];
+
+    questions.forEach((question, questionIndex) => {
+      const row: any = {
+        Index: questionIndex + 1,
+        Question: question.title,
+      };
+
+      responses.forEach((response, responseIndex) => {
+        const answer =
+          response.answers?.[questionIndex]?.answer ??
+          (question.answer_type === 'short_answer' ||
+          question.answer_type === 'subjective'
+            ? ''
+            : 0);
+
+        row[`Response ${responseIndex + 1}`] = answer;
+      });
+
+      excelRows.push(row);
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(excelRows);
+
+    worksheet['!cols'] = Object.keys(excelRows[0]).map((key) => {
+      const maxLen = Math.max(
+        key.length,
+        ...excelRows.map((row) => String(row[key] ?? '').length),
+      );
+      return { wch: maxLen + 2 };
+    });
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Survey Responses');
+    XLSX.writeFile(workbook, `${space.id}.xlsx`);
+  };
+
   const userType = space.author[0].user_type;
   const proposerImage = space.author[0].profile_url;
   const proposerName = space.author[0].nickname;
@@ -311,6 +359,7 @@ export default function ClientProviders({
         draft,
         setDraft,
         handleGoBack,
+        handleDownloadExcel,
         userType,
         proposerImage,
         proposerName,
