@@ -9,7 +9,7 @@ export const DeliberationTab = {
   SUMMARY: 'Summary',
   DELIBERATION: 'Deliberation',
   POLL: 'Poll',
-  RECOMMANDATION: 'Recommandation',
+  RECOMMANDATION: 'Recommendation',
   ANALYZE: 'Analyze',
 } as const;
 
