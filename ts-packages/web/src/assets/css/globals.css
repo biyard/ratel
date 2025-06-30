@@ -1,0 +1,108 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+html {
+  background-color: var(--color-background);
+  color: var(--color-neutral-400);
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+-webkit-scrollbar {
+  display: none;
+}
+
+.hide-scrollbar {
+  overflow-x: scroll;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+button {
+  @apply cursor-pointer;
+}
+
+a {
+  @apply cursor-pointer;
+}
+
+@theme static {
+  /* Tailwindcss variables */
+  --color-background: #1e1e1e;
+  --color-primary: #fcb300;
+  --color-secondary: #777677;
+
+  --color-btn-hover: #282828;
+
+  --color-c-wg-30: #aeaeae;
+  --color-c-wg-50: #777677;
+  --color-c-wg-70: #464646;
+  --color-c-wg-80: #323232;
+  --color-c-cg-30: #aeb8b8;
+  --color-footer: #191919;
+  --color-copyright: #9095a1;
+  --color-neutral-80: #6b6b6b;
+  --color-neutral-400: #a1a1a1;
+  --color-neutral-500: #737373;
+  --color-neutral-600: #525252;
+  --color-neutral-700: #404040;
+  --color-neutral-800: #262626;
+  --color-c-c-20: #6eedd8;
+  --color-c-p-20: #ff9eee;
+  --color-c-p-50: #db2780;
+  --color-c-p-50-10: #db27801a;
+  --color-supportive: #6eedd8;
+  --color-against: #ff9eee;
+  --color-bg: #1e1e1e;
+  --color-tab-hover: #282828;
+  --color-mission-title: #dee1e6;
+  --color-tag: #dee1e6;
+  --color-component-bg: #191919;
+
+  --breakpoint-desktop: 1177px;
+  --breakpoint-tablet: 900px;
+  --breakpoint-mobile: 500px;
+  --breakpoint-sm-mobile: 380px;
+
+  --container-desktop: 1177px;
+  --container-tablet: 900px;
+  --container-mobile: 500px;
+  --container-sm-mobile: 380px;
+
+  /* Shadcn variables */
+  --color-input: var(--color-c-wg-80);
+  --color-ring: var(--color-primary);
+  --color-error: var(--color-c-p-50);
+}
+
+.sidemenu-link {
+  @apply flex flex-row items-center gap-1 px-1 py-2 rounded-md font-bold text-sm hover:bg-gray-600;
+}
+
+.med-16 {
+  @apply font-medium text-base/[24px] align-middle tracking-[0.5px];
+}
+
+.feed-content h2 {
+  @apply text-base font-bold text-white mb-2 mt-4;
+}
+
+.rule-with-text {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: var(--color-c-wg-30);
+  font-size: 14px;
+}
+
+.rule-with-text::before,
+.rule-with-text::after {
+  content: '';
+  flex: 1;
+  border-top: 1px solid var(--color-c-wg-80);
+  margin: 0 1rem;
+}

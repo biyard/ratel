@@ -85,11 +85,19 @@ impl Default for GroupPermissions {
     fn default() -> Self {
         Self(vec![
             GroupPermission::ReadPosts,
+            GroupPermission::WritePosts,
+            GroupPermission::DeletePosts,
+            GroupPermission::WritePendingPosts,
+            GroupPermission::ReadPostDrafts,
             GroupPermission::ReadReplies,
             GroupPermission::WriteReplies,
             GroupPermission::DeleteReplies,
             GroupPermission::ReadProfile,
             GroupPermission::UpdateProfile,
+            GroupPermission::InviteMember,
+            GroupPermission::ManageGroup,
+            GroupPermission::DeleteGroup,
+            GroupPermission::ManageSpace,
         ])
     }
 }

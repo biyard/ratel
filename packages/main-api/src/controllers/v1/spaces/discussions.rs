@@ -10,13 +10,14 @@ use by_axum::{
 use by_types::QueryResponse;
 use dto::*;
 
-use crate::utils::users::extract_user_with_allowing_anonymous;
+use crate::utils::users::{extract_user_with_allowing_anonymous, extract_user_with_options};
 use sqlx::postgres::PgRow;
 
 #[derive(Clone, Debug)]
 pub struct SpaceDiscussionController {
     repo: DiscussionRepository,
     participation_repo: DiscussionParticipantRepository,
+    member_repo: DiscussionMemberRepository,
     pool: sqlx::Pool<sqlx::Postgres>,
 }
 
@@ -54,13 +55,17 @@ impl SpaceDiscussionController {
             ended_at,
             name,
             description,
+            participants,
         }: DiscussionCreateRequest,
     ) -> Result<Discussion> {
         let user = extract_user_with_allowing_anonymous(&self.pool, auth).await?;
 
+        let mut tx = self.pool.begin().await?;
+
         let res = self
             .repo
-            .insert(
+            .insert_with_tx(
+                &mut *tx,
                 space_id,
                 started_at,
                 ended_at,
@@ -69,10 +74,33 @@ impl SpaceDiscussionController {
                 description,
                 None,
                 "".to_string(),
+                None,
             )
             .await?;
 
-        Ok(res)
+        let id = res.clone().unwrap_or_default().id;
+
+        let pts = DiscussionMember::query_builder()
+            .discussion_id_equals(id)
+            .query()
+            .map(DiscussionMember::from)
+            .fetch_all(&mut *tx)
+            .await?;
+
+        for pt in pts {
+            let _ = self.member_repo.delete_with_tx(&mut *tx, pt.id).await;
+        }
+
+        for participant in participants {
+            let _ = self
+                .member_repo
+                .insert_with_tx(&mut *tx, id, participant)
+                .await;
+        }
+
+        tx.commit().await?;
+
+        Ok(res.unwrap_or_default())
     }
 
     async fn update(
@@ -274,8 +302,10 @@ impl SpaceDiscussionController {
     }
 
     async fn exit_meeting(&self, id: i64, auth: Option<Authorization>) -> Result<Discussion> {
-        let user = extract_user_with_allowing_anonymous(&self.pool, auth).await?;
+        let user = extract_user_with_options(&self.pool, auth, false).await?;
         let user_id = user.id;
+
+        tracing::debug!("exit meeting user id: {:?}", user_id);
 
         if user_id == 0 {
             return Err(Error::InvalidUser);
@@ -345,13 +375,14 @@ impl SpaceDiscussionController {
             v
         };
 
-        let pipeline_id = match client.make_pipeline(meeting.clone(), discussion.name).await {
-            Ok(v) => v,
-            Err(e) => {
-                tracing::error!("failed to create pipeline: {:?}", e);
-                return Err(Error::AwsChimeError(e.to_string()));
-            }
-        };
+        let (pipeline_id, pipeline_arn) =
+            match client.make_pipeline(meeting.clone(), discussion.name).await {
+                Ok(v) => v,
+                Err(e) => {
+                    tracing::error!("failed to create pipeline: {:?}", e);
+                    return Err(Error::AwsChimeError(e.to_string()));
+                }
+            };
 
         let discussion = match self
             .repo
@@ -359,6 +390,7 @@ impl SpaceDiscussionController {
                 id,
                 DiscussionRepositoryUpdateRequest {
                     pipeline_id: Some(pipeline_id),
+                    media_pipeline_arn: Some(pipeline_arn),
                     meeting_id: Some(meeting.meeting_id().unwrap().to_string()),
                     ..Default::default()
                 },
@@ -404,11 +436,13 @@ impl SpaceDiscussionController {
 impl SpaceDiscussionController {
     pub async fn new(pool: sqlx::Pool<sqlx::Postgres>) -> Self {
         let repo = Discussion::get_repository(pool.clone());
+        let member_repo = DiscussionMember::get_repository(pool.clone());
         let participation_repo = DiscussionParticipant::get_repository(pool.clone());
 
         Self {
             repo,
             participation_repo,
+            member_repo,
             pool,
         }
     }

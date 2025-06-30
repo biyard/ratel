@@ -1,14 +1,5 @@
 {
   "name": "ratel",
-  "version": "1.0.0",
-  "description": "<a id=\"readme-top\"></a>",
-  "main": "index.js",
-  "scripts": {},
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "devDependencies": {
-    "@playwright/test": "^1.51.1",
-    "@types/node": "^22.13.17"
-  }
+  "private": true,
+  "workspaces": ["ts-packages/*"]
 }
