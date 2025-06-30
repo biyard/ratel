@@ -148,6 +148,8 @@ impl SpaceBadgeController {
                 space_id,
                 b.token_id.unwrap_or_default()
             );
+
+            tracing::debug!("Uploading to s3: {}", path);
             match self
                 .cli
                 .put_object()
@@ -201,28 +203,40 @@ impl SpaceBadgeController {
         let user = extract_user_with_allowing_anonymous(&self.pool, auth).await?;
         tracing::debug!("Claiming badges for user: {:?}", user);
 
-        let badges = sqlx::query("SELECT * FROM user_badges WHERE user_id = $1")
-            .bind(user.id)
-            .map(UserBadge::from)
-            .fetch_all(&self.pool)
-            .await?;
+        let badges =
+            sqlx::query("SELECT * FROM user_badges WHERE user_id = $1 AND badge_id = ANY($2)")
+                .bind(user.id)
+                .bind(&ids)
+                .map(UserBadge::from)
+                .fetch_all(&self.pool)
+                .await?;
 
         tracing::debug!("Claimed badges: {:?}", badges);
 
-        if !badges.is_empty() {
+        if badges.len() == ids.len() {
             return Err(Error::AlreadyClaimed);
         }
 
-        if ids.len() != 1 {
-            return Err(Error::NFTLimitedError);
+        let ids = ids
+            .into_iter()
+            .filter(|id| !badges.iter().any(|b| b.badge_id == *id))
+            .collect::<Vec<_>>();
+
+        if ids.is_empty() {
+            tracing::debug!("No new badges to claim for user: {}", user.id);
+            return Err(Error::AlreadyClaimed);
         }
 
-        let space = Space::query_builder()
+        tracing::debug!("Filtered badge IDs: {:?}", ids);
+
+        let space = BadgesOfSpace::query_builder()
             .id_equals(space_id)
             .query()
-            .map(Space::from)
+            .map(BadgesOfSpace::from)
             .fetch_one(&self.pool)
             .await?;
+
+        tracing::debug!("Space badges: {:?}", space.badges);
 
         let mut token_ids = vec![];
         let mut values = vec![];
@@ -247,9 +261,21 @@ impl SpaceBadgeController {
             }
         }
 
+        if token_ids.is_empty() {
+            tracing::debug!("No valid badges to mint for user: {}", user.id);
+            return Err(Error::BadgeCreationFailure);
+        }
+
         let mut contract = Erc1155Contract::new(&contract_address, self.provider.clone());
         contract.set_wallet(self.owner.clone());
         contract.set_fee_payer(self.feepayer.clone());
+
+        tracing::debug!(
+            "Minting badges({:?}) for user: {} with contract: {}",
+            token_ids,
+            user.id,
+            contract_address
+        );
 
         contract.mint_batch(evm_address, token_ids, values).await?;
 

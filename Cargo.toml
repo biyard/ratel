@@ -1,5 +1,5 @@
 [workspace]
-members = ["packages/main-ui", "packages/dto", "packages/main-api", "packages/fetcher", "packages/mobile", "packages/mobile/src-tauri"]
+members = ["packages/main-ui", "packages/dto", "packages/main-api", "packages/fetcher", "packages/mobile", "packages/mobile/src-tauri", "packages/telegram-bot", "packages/racing-space"]
 resolver = "2"
 exclude = ["deps"]
 
@@ -12,25 +12,13 @@ license = "MIT"
 
 [workspace.dependencies]
 bdk = { path = "deps/rust-sdk/packages/bdk" }
-
-by-axum = { path = "deps/rust-sdk/packages/by-axum" }
-by-components = { path = "deps/rust-sdk/packages/by-components" }
-by-macros = { path = "deps/rust-sdk/packages/by-macros" }
-by-types = { path = "deps/rust-sdk/packages/by-types" }
-dioxus-translate = { path = "deps/rust-sdk/packages/dioxus-translate", features = [
-    "ko",
-] }
-dioxus-aws = { path = "deps/rust-sdk/packages/dioxus-aws" }
 rest-api = { path = "deps/rust-sdk/packages/rest-api" }
 dioxus-oauth = { path = "./deps/rust-sdk/packages/dioxus-oauth" }
 google-wallet = { path = "./deps/rust-sdk/packages/google-wallet" }
-dioxus-popup = { path = "./deps/rust-sdk/packages/dioxus-popup" }
-btracing = { path = "./deps/rust-sdk/packages/btracing" }
 
 serde = { version = "1.0.197", features = ["derive"] }
 serde_json = "1.0.133"
 dto = { path = "./packages/dto" }
-reqwest = { version = "0.12.5", features = ["blocking", "json", "multipart"] }
 sqlx = { version = "0.8.3", features = [
     "sqlite",
     "postgres",
@@ -38,9 +26,9 @@ sqlx = { version = "0.8.3", features = [
     "time",
     "bigdecimal",
 ] }
-
-dioxus = { version = "0.6.3", git = "https://github.com/hackartists/dioxus.git" }
-dioxus-web = { version = "0.6.3", git = "https://github.com/hackartists/dioxus.git" }
+tokio = { version = "1.40.0", features = ["full"] }
+tracing = "0.1.41"
+tracing-subscriber = {version = "0.3.19", features = ["env-filter"] }
 
 [profile.wasm-dev]
 inherits = "dev"
@@ -51,3 +39,13 @@ inherits = "dev"
 
 [profile.android-dev]
 inherits = "dev"
+
+
+[profile.bevy-wasm-release]
+# Default to release profile values.
+inherits = "release"
+# Optimize with size in mind (also try "z", sometimes it is better).
+# Slightly slows compile times, great improvements to file size and runtime performance.
+opt-level = "z"
+# Strip all debugging information from the binary to slightly reduce file size.
+strip = "debuginfo"

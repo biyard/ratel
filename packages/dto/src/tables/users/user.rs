@@ -82,6 +82,10 @@ pub struct User {
     #[api_model(version = v0.4, action = [email_signup], read_action = login_by_password)]
     #[serde(default)]
     pub password: String,
+
+    #[api_model(version = v0.5, type = INTEGER)]
+    #[serde(default)]
+    pub membership: Membership,
 }
 
 impl User {
@@ -106,30 +110,14 @@ pub enum UserType {
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub enum Membership {
     #[default]
-    #[translate(en = "General", ko = "일반")]
-    General = 1,
-    #[translate(en = "Limited", ko = "리미티드")]
-    Limited = 2,
+    #[translate(en = "Free", ko = "일반")]
+    Free = 1,
+    #[translate(en = "Starter", ko = "스타터")]
+    Paid1 = 2,
     #[translate(en = "Premium", ko = "프리미엄")]
-    Premium = 3,
-}
-
-impl Membership {
-    pub fn get_description(&self) -> &'static str {
-        match self {
-            Membership::General => "General membership with basic features.",
-            Membership::Limited => "Limited membership with some advanced features.",
-            Membership::Premium => {
-                "Premium membership with all features.(receive legislative updates ahead of others"
-            }
-        }
-    }
-
-    pub fn get_price(&self) -> i32 {
-        match self {
-            Membership::General => 10000,
-            Membership::Limited => 30000,
-            Membership::Premium => 50000,
-        }
-    }
+    Paid2 = 3,
+    #[translate(en = "VIP", ko = "VIP")]
+    Paid3 = 4,
+    #[translate(en = "Admin", ko = "관리자")]
+    Admin = 99,
 }
