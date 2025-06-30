@@ -16,7 +16,7 @@ export default function SummaryReport({
 
   let dueDate = '';
   if (timeLeft <= 0) {
-    dueDate = 'Closed';
+    dueDate = '0 Day';
   } else {
     const daysLeft = Math.ceil(timeLeft / (60 * 60 * 24));
     dueDate = `${daysLeft} Day${daysLeft > 1 ? 's' : ''}`;

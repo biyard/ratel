@@ -37,6 +37,8 @@ import { DiscussionCreateRequest } from '@/lib/api/models/discussion';
 import { ElearningCreateRequest } from '@/lib/api/models/elearning';
 import { Question, SurveyCreateRequest } from '@/lib/api/models/survey';
 import { SpaceDraftCreateRequest } from '@/lib/api/models/space_draft';
+import { useQueryClient } from '@tanstack/react-query';
+import { QK_GET_SPACE_BY_SPACE_ID } from '@/constants';
 
 export interface MappedResponse {
   question: Question;
@@ -92,6 +94,7 @@ export default function ClientProviders({
 }: {
   children: React.ReactNode;
 }) {
+  const queryClient = useQueryClient();
   const { spaceId } = useSpaceByIdContext();
   const data = useSpaceById(spaceId);
   const space = data.data;
@@ -196,6 +199,10 @@ export default function ClientProviders({
         ratelApi.responses.respond_answer(spaceId),
         surveyResponseCreateRequest(answer.answers),
       );
+      queryClient.invalidateQueries({
+        queryKey: [QK_GET_SPACE_BY_SPACE_ID, spaceId],
+      });
+      router.refresh();
       showSuccessToast('Your response has been saved successfully.');
       data.refetch();
     } catch (err) {
@@ -212,6 +219,10 @@ export default function ClientProviders({
         ratelApi.spaces.getSpaceBySpaceId(spaceId),
         postingSpaceRequest(),
       );
+      queryClient.invalidateQueries({
+        queryKey: [QK_GET_SPACE_BY_SPACE_ID, spaceId],
+      });
+      router.refresh();
       data.refetch();
 
       showSuccessToast('Your space has been posted successfully.');
@@ -320,6 +331,10 @@ export default function ClientProviders({
         ended_at,
       ),
     );
+    queryClient.invalidateQueries({
+      queryKey: [QK_GET_SPACE_BY_SPACE_ID, spaceId],
+    });
+    router.refresh();
   };
 
   const handleSave = async () => {
@@ -339,6 +354,7 @@ export default function ClientProviders({
 
     logger.debug('discussions: ', discussions);
     logger.debug('surveys', survey.surveys);
+
     try {
       await handleUpdate(
         title,
@@ -351,6 +367,11 @@ export default function ClientProviders({
         survey.surveys,
         draft.drafts,
       );
+
+      queryClient.invalidateQueries({
+        queryKey: [QK_GET_SPACE_BY_SPACE_ID, spaceId],
+      });
+      router.refresh();
       data.refetch();
 
       showSuccessToast('Space has been updated successfully.');
