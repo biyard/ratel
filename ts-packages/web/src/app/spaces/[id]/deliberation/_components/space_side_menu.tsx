@@ -80,7 +80,7 @@ export default function SpaceSideMenu() {
             }}
           >
             <CheckCircle className="[&>path]:stroke-neutral-80 w-5 h-5" />
-            <div className="font-bold text-white text-sm">Recommandation</div>
+            <div className="font-bold text-white text-sm">Recommendation</div>
           </div>
 
           {space.author.some((a) => a.id === userId) &&
