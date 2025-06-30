@@ -83,19 +83,22 @@ export default function SpaceSideMenu() {
             <div className="font-bold text-white text-sm">Recommandation</div>
           </div>
 
-          {space.author.some((a) => a.id === userId) && (
-            <div
-              className={`cursor-pointer flex flex-row gap-1 items-center px-1 py-2 rounded-sm ${
-                selectedType == DeliberationTab.ANALYZE ? 'bg-neutral-800' : ''
-              }`}
-              onClick={() => {
-                setSelectedType(DeliberationTab.ANALYZE);
-              }}
-            >
-              <PieChart1 className="[&>path]:stroke-neutral-80 w-5 h-5" />
-              <div className="font-bold text-white text-sm">Analyze</div>
-            </div>
-          )}
+          {space.author.some((a) => a.id === userId) &&
+            status == SpaceStatus.InProgress && (
+              <div
+                className={`cursor-pointer flex flex-row gap-1 items-center px-1 py-2 rounded-sm ${
+                  selectedType == DeliberationTab.ANALYZE
+                    ? 'bg-neutral-800'
+                    : ''
+                }`}
+                onClick={() => {
+                  setSelectedType(DeliberationTab.ANALYZE);
+                }}
+              >
+                <PieChart1 className="[&>path]:stroke-neutral-80 w-5 h-5" />
+                <div className="font-bold text-white text-sm">Analyze</div>
+              </div>
+            )}
         </div>
       </BlackBox>
       <BlackBox>
