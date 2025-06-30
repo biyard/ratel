@@ -18,8 +18,7 @@ export default function AnalyzePage() {
 
   logger.debug('mapped responses: ', mappedResponses);
 
-  const responseCount =
-    mappedResponses.length > 0 ? mappedResponses[0].answers.length : 0;
+  const responseCount = answers.length;
   const startDate =
     survey.surveys.length > 0 ? survey.surveys[0].started_at : 0;
   const endDate = survey.surveys.length > 0 ? survey.surveys[0].ended_at : 0;
@@ -37,26 +36,26 @@ export default function AnalyzePage() {
 
       <div className="flex flex-row w-full justify-end mb-[20px]">
         <div className="w-fit">
-          {answers.length > 0 && (
-            <button
-              className="w-full px-[20px] py-[10px] rounded-[10px] bg-[#fcb300] hover:bg-[#ca8f00] text-black text-bold text-[16px] hover:text-black cursor-pointer"
-              disabled={false}
-              onClick={() => {
-                handleDownloadExcel();
-              }}
-            >
-              {'Download Excel'}
-            </button>
-          )}
+          <button
+            className="w-full px-[20px] py-[10px] rounded-[10px] bg-[#fcb300] hover:bg-[#ca8f00] text-black text-bold text-[16px] hover:text-black cursor-pointer"
+            disabled={false}
+            onClick={() => {
+              handleDownloadExcel();
+            }}
+          >
+            {'Download Excel'}
+          </button>
         </div>
       </div>
 
       <div className="flex flex-col w-full gap-2.5">
-        <SummaryReport
-          responseCount={responseCount}
-          startDate={startDate}
-          endDate={endDate}
-        />
+        {responseCount > 0 && (
+          <SummaryReport
+            responseCount={responseCount}
+            startDate={startDate}
+            endDate={endDate}
+          />
+        )}
         {mappedResponses.map((res, index) => {
           return res.question.answer_type === 'multiple_choice' ||
             res.question.answer_type === 'single_choice' ? (
