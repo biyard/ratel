@@ -11,6 +11,7 @@ import ClientProviders, {
   useDeliberationSpaceContext,
 } from './provider.client';
 import { DeliberationTab } from './types';
+import AnalyzePage from './_components/analyze';
 
 export default function DeliberationSpacePage() {
   return (
@@ -31,8 +32,10 @@ function Page() {
         <DeliberationPage />
       ) : selectedType == DeliberationTab.POLL ? (
         <PollPage />
-      ) : (
+      ) : selectedType == DeliberationTab.RECOMMANDATION ? (
         <FinalConsensusPage />
+      ) : (
+        <AnalyzePage />
       )}
       <SpaceSideMenu />
     </div>
