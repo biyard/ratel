@@ -18,7 +18,8 @@ export default function AnalyzePage() {
 
   logger.debug('mapped responses: ', mappedResponses);
 
-  const responseCount = answers.length;
+  const responseCount =
+    mappedResponses.length > 0 ? mappedResponses[0].answers.length : 0;
   const startDate =
     survey.surveys.length > 0 ? survey.surveys[0].started_at : 0;
   const endDate = survey.surveys.length > 0 ? survey.surveys[0].ended_at : 0;
