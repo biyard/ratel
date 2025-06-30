@@ -1,5 +1,5 @@
 {
   "name": "ratel",
   "private": true,
-  "workspaces": ["ts-packages/*"]
+  "packageManager": "pnpm@10.11.0"
 }
