@@ -199,12 +199,12 @@ export default function ClientProviders({
         ratelApi.responses.respond_answer(spaceId),
         surveyResponseCreateRequest(answer.answers),
       );
+      data.refetch();
       queryClient.invalidateQueries({
         queryKey: [QK_GET_SPACE_BY_SPACE_ID, spaceId],
       });
       router.refresh();
       showSuccessToast('Your response has been saved successfully.');
-      data.refetch();
     } catch (err) {
       showErrorToast(
         'There was a problem saving your response. Please try again later.',
