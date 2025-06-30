@@ -1,6 +1,5 @@
 import { Answer } from '@/lib/api/models/response';
 import {
-  Question,
   ShortAnswerQuestion,
   SubjectiveQuestion,
 } from '@/lib/api/models/survey';

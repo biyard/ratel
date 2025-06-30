@@ -238,7 +238,7 @@ export default function ClientProviders({
       };
 
       responses.forEach((response, responseIndex) => {
-        let rawAnswer = response.answers?.[questionIndex]?.answer;
+        const rawAnswer = response.answers?.[questionIndex]?.answer;
 
         let parsedAnswer;
 
