@@ -38,12 +38,12 @@ export default function AnalyzePage() {
       </div>
 
       <div className="flex flex-col w-full gap-2.5">
-        {mappedResponses.map((res, index) => {
+        {mappedResponses.map((res) => {
           return res.question.answer_type === 'multiple_choice' ||
             res.question.answer_type === 'single_choice' ? (
             <ObjectiveResponse />
           ) : (
-            <SubjectiveResponse />
+            <SubjectiveResponse question={res.question} answers={res.answers} />
           );
         })}
       </div>
