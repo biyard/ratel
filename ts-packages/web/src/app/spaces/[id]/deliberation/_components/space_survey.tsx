@@ -103,10 +103,12 @@ function ViewSurvey({
   const formattedDate = `${format(new Date(startDate * 1000), 'dd MMM, yyyy')} - ${format(new Date(endDate * 1000), 'dd MMM, yyyy')}`;
   return (
     <div className="flex flex-col w-full gap-[10px]">
-      <div className="flex flex-row w-full justify-between items-center">
-        <div className="text-base text-white font-semibold">Period</div>
-        <div className="text-sm text-white font-normal">{formattedDate}</div>
-      </div>
+      {questions.length !== 0 && (
+        <div className="flex flex-row w-full justify-between items-center">
+          <div className="text-base text-white font-semibold">Period</div>
+          <div className="text-sm text-white font-normal">{formattedDate}</div>
+        </div>
+      )}
       <SurveyViewer
         status={status}
         startDate={startDate}
