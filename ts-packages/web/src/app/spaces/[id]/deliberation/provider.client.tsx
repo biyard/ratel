@@ -56,6 +56,7 @@ type ContextType = {
   setDeliberation: StateSetter<Deliberation>;
   survey: Poll;
   setSurvey: StateSetter<Poll>;
+  answers: SurveyResponse[];
   answer: SurveyAnswer;
   setAnswer: StateSetter<SurveyAnswer>;
   draft: FinalConsensus;
@@ -88,6 +89,8 @@ export default function ClientProviders({
   const { spaceId } = useSpaceByIdContext();
   const data = useSpaceById(spaceId);
   const space = data.data;
+
+  logger.debug('spaces: ', space);
 
   const [selectedType, setSelectedType] = useState<DeliberationTabType>(
     DeliberationTab.SUMMARY,
@@ -134,6 +137,7 @@ export default function ClientProviders({
     })),
   });
 
+  const [answers] = useState<SurveyResponse[]>(space.responses ?? []);
   const [answer, setAnswer] = useState<SurveyAnswer>({
     answers:
       space.user_responses.length != 0 ? space.user_responses[0].answers : [],
@@ -223,14 +227,25 @@ export default function ClientProviders({
       };
 
       responses.forEach((response, responseIndex) => {
-        const answer =
-          response.answers?.[questionIndex]?.answer ??
-          (question.answer_type === 'short_answer' ||
-          question.answer_type === 'subjective'
-            ? ''
-            : 0);
+        let rawAnswer = response.answers?.[questionIndex]?.answer;
 
-        row[`Response ${responseIndex + 1}`] = answer;
+        let parsedAnswer;
+
+        if (typeof rawAnswer === 'string') {
+          parsedAnswer = rawAnswer;
+        } else if (typeof rawAnswer === 'number') {
+          parsedAnswer = rawAnswer + 1;
+        } else if (Array.isArray(rawAnswer)) {
+          parsedAnswer = rawAnswer.map((v) => Number(v) + 1).join(', ');
+        } else {
+          parsedAnswer =
+            question.answer_type === 'short_answer' ||
+            question.answer_type === 'subjective'
+              ? ''
+              : 0;
+        }
+
+        row[`Response ${responseIndex + 1}`] = parsedAnswer;
       });
 
       excelRows.push(row);
@@ -311,6 +326,8 @@ export default function ClientProviders({
       participants: disc.participants.map((member) => member.id),
     }));
 
+    logger.debug('discussions: ', discussions);
+    logger.debug('surveys', survey.surveys);
     try {
       await handleUpdate(
         title,
@@ -354,6 +371,7 @@ export default function ClientProviders({
         setDeliberation,
         survey,
         setSurvey,
+        answers,
         answer,
         setAnswer,
         draft,
