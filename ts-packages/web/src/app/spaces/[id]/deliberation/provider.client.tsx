@@ -38,6 +38,11 @@ import { ElearningCreateRequest } from '@/lib/api/models/elearning';
 import { Question, SurveyCreateRequest } from '@/lib/api/models/survey';
 import { SpaceDraftCreateRequest } from '@/lib/api/models/space_draft';
 
+export interface MappedResponse {
+  question: Question;
+  answers: Answer[];
+}
+
 type ContextType = {
   spaceId: number;
   selectedType: DeliberationTabType;
@@ -57,6 +62,7 @@ type ContextType = {
   survey: Poll;
   setSurvey: StateSetter<Poll>;
   answers: SurveyResponse[];
+  mappedResponses: MappedResponse[];
   answer: SurveyAnswer;
   setAnswer: StateSetter<SurveyAnswer>;
   draft: FinalConsensus;
@@ -151,6 +157,11 @@ export default function ClientProviders({
       files: draft.files,
     })),
   });
+
+  const mappedResponses = mapResponses(
+    survey.surveys?.[0]?.questions ?? [],
+    space?.responses ?? [],
+  );
 
   const router = useRouter();
 
@@ -383,6 +394,7 @@ export default function ClientProviders({
         proposerName,
         createdAt,
         status,
+        mappedResponses,
         handleSetAnswers,
         handleSetStartDate,
         handleSetEndDate,
@@ -415,6 +427,22 @@ export function useDeliberationSpace(): Space {
   }
 
   return space;
+}
+
+function mapResponses(
+  questions: Question[],
+  responses: SurveyResponse[],
+): MappedResponse[] {
+  return questions.map((question, index) => {
+    const answersForQuestion = responses.map(
+      (response) => response.answers[index],
+    );
+
+    return {
+      question,
+      answers: answersForQuestion,
+    };
+  });
 }
 
 function changeStartedAt(timestamp: number) {
