@@ -2,10 +2,16 @@
 import { ArrowLeft } from 'lucide-react';
 import React from 'react';
 import { useDeliberationSpaceContext } from '../provider.client';
+import { logger } from '@/lib/logger';
 
 export default function AnalyzePage() {
-  const { handleGoBack, handleDownloadExcel, answer, survey } =
+  const { handleGoBack, handleDownloadExcel, answers, survey } =
     useDeliberationSpaceContext();
+
+  const questions =
+    survey.surveys.length != 0 ? survey.surveys[0].questions : [];
+
+  logger.debug('questions: ', questions, 'answers: ', answers);
 
   return (
     <div className="flex flex-col w-full">
