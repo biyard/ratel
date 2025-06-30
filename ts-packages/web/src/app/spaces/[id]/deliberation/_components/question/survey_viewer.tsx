@@ -8,6 +8,7 @@ import { Answer } from '@/lib/api/models/response';
 import { usePopup } from '@/lib/contexts/popup-service';
 import CheckPopup from './check_popup';
 import { SpaceStatus } from '@/lib/api/models/spaces';
+import { logger } from '@/lib/logger';
 
 interface Question {
   title: string;
@@ -39,6 +40,15 @@ export default function SurveyViewer({
   const popup = usePopup();
   const is_completed = answer.is_completed;
   const answers: Answer[] = answer.answers;
+
+  logger.debug(
+    'is completed:',
+    is_completed,
+    ' status:',
+    status,
+    'isLive:',
+    isLive,
+  );
 
   const handleSelect = (
     qIdx: number,

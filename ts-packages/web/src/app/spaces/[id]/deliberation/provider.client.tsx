@@ -1,5 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
+import * as XLSX from 'xlsx';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useSpaceByIdContext } from '../providers.client';
 import { ratelApi, useSpaceById } from '@/lib/api/ratel_api';
@@ -22,15 +24,24 @@ import {
   spaceUpdateRequest,
 } from '@/lib/api/models/spaces';
 import { useRouter } from 'next/navigation';
-import { Answer, surveyResponseCreateRequest } from '@/lib/api/models/response';
+import {
+  Answer,
+  SurveyResponse,
+  surveyResponseCreateRequest,
+} from '@/lib/api/models/response';
 import { useApiCall } from '@/lib/api/use-send';
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import { checkString } from '@/lib/string-filter-utils';
 import { FileInfo } from '@/lib/api/models/feeds';
 import { DiscussionCreateRequest } from '@/lib/api/models/discussion';
 import { ElearningCreateRequest } from '@/lib/api/models/elearning';
-import { SurveyCreateRequest } from '@/lib/api/models/survey';
+import { Question, SurveyCreateRequest } from '@/lib/api/models/survey';
 import { SpaceDraftCreateRequest } from '@/lib/api/models/space_draft';
+
+export interface MappedResponse {
+  question: Question;
+  answers: Answer[];
+}
 
 type ContextType = {
   spaceId: number;
@@ -50,11 +61,14 @@ type ContextType = {
   setDeliberation: StateSetter<Deliberation>;
   survey: Poll;
   setSurvey: StateSetter<Poll>;
+  answers: SurveyResponse[];
+  mappedResponses: MappedResponse[];
   answer: SurveyAnswer;
   setAnswer: StateSetter<SurveyAnswer>;
   draft: FinalConsensus;
   setDraft: StateSetter<FinalConsensus>;
   handleGoBack: () => void;
+  handleDownloadExcel: () => void;
 
   userType: UserType;
   proposerImage: string;
@@ -81,6 +95,8 @@ export default function ClientProviders({
   const { spaceId } = useSpaceByIdContext();
   const data = useSpaceById(spaceId);
   const space = data.data;
+
+  logger.debug('spaces: ', space);
 
   const [selectedType, setSelectedType] = useState<DeliberationTabType>(
     DeliberationTab.SUMMARY,
@@ -127,6 +143,7 @@ export default function ClientProviders({
     })),
   });
 
+  const [answers] = useState<SurveyResponse[]>(space.responses ?? []);
   const [answer, setAnswer] = useState<SurveyAnswer>({
     answers:
       space.user_responses.length != 0 ? space.user_responses[0].answers : [],
@@ -140,6 +157,11 @@ export default function ClientProviders({
       files: draft.files,
     })),
   });
+
+  const mappedResponses = mapResponses(
+    survey.surveys?.[0]?.questions ?? [],
+    space?.responses ?? [],
+  );
 
   const router = useRouter();
 
@@ -203,6 +225,58 @@ export default function ClientProviders({
     setIsEdit(true);
   };
 
+  const handleDownloadExcel = () => {
+    const questions = survey?.surveys?.[0]?.questions || [];
+    const responses = space?.responses || [];
+
+    const excelRows: any[] = [];
+
+    questions.forEach((question, questionIndex) => {
+      const row: any = {
+        Index: questionIndex + 1,
+        Question: question.title,
+      };
+
+      responses.forEach((response, responseIndex) => {
+        let rawAnswer = response.answers?.[questionIndex]?.answer;
+
+        let parsedAnswer;
+
+        if (typeof rawAnswer === 'string') {
+          parsedAnswer = rawAnswer;
+        } else if (typeof rawAnswer === 'number') {
+          parsedAnswer = rawAnswer + 1;
+        } else if (Array.isArray(rawAnswer)) {
+          parsedAnswer = rawAnswer.map((v) => Number(v) + 1).join(', ');
+        } else {
+          parsedAnswer =
+            question.answer_type === 'short_answer' ||
+            question.answer_type === 'subjective'
+              ? ''
+              : 0;
+        }
+
+        row[`Response ${responseIndex + 1}`] = parsedAnswer;
+      });
+
+      excelRows.push(row);
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(excelRows);
+
+    worksheet['!cols'] = Object.keys(excelRows[0]).map((key) => {
+      const maxLen = Math.max(
+        key.length,
+        ...excelRows.map((row) => String(row[key] ?? '').length),
+      );
+      return { wch: maxLen + 2 };
+    });
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Survey Responses');
+    XLSX.writeFile(workbook, `${space.id}.xlsx`);
+  };
+
   const userType = space.author[0].user_type;
   const proposerImage = space.author[0].profile_url;
   const proposerName = space.author[0].nickname;
@@ -263,6 +337,8 @@ export default function ClientProviders({
       participants: disc.participants.map((member) => member.id),
     }));
 
+    logger.debug('discussions: ', discussions);
+    logger.debug('surveys', survey.surveys);
     try {
       await handleUpdate(
         title,
@@ -306,16 +382,19 @@ export default function ClientProviders({
         setDeliberation,
         survey,
         setSurvey,
+        answers,
         answer,
         setAnswer,
         draft,
         setDraft,
         handleGoBack,
+        handleDownloadExcel,
         userType,
         proposerImage,
         proposerName,
         createdAt,
         status,
+        mappedResponses,
         handleSetAnswers,
         handleSetStartDate,
         handleSetEndDate,
@@ -348,6 +427,22 @@ export function useDeliberationSpace(): Space {
   }
 
   return space;
+}
+
+function mapResponses(
+  questions: Question[],
+  responses: SurveyResponse[],
+): MappedResponse[] {
+  return questions.map((question, index) => {
+    const answersForQuestion = responses.map(
+      (response) => response.answers[index],
+    );
+
+    return {
+      question,
+      answers: answersForQuestion,
+    };
+  });
 }
 
 function changeStartedAt(timestamp: number) {
