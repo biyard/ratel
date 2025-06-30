@@ -185,8 +185,7 @@ async fn api_main() -> Result<Router> {
         }
     }
 
-    // let is_local = conf.env == "local";
-    let is_local = true;
+    let is_local = conf.env == "local";
     let session_layer = SessionManagerLayer::new(session_store)
         .with_secure(!is_local)
         .with_http_only(true)
