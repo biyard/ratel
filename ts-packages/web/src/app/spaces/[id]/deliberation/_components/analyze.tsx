@@ -36,15 +36,17 @@ export default function AnalyzePage() {
 
       <div className="flex flex-row w-full justify-end mb-[20px]">
         <div className="w-fit">
-          <button
-            className="w-full px-[20px] py-[10px] rounded-[10px] bg-[#fcb300] hover:bg-[#ca8f00] text-black text-bold text-[16px] hover:text-black cursor-pointer"
-            disabled={false}
-            onClick={() => {
-              handleDownloadExcel();
-            }}
-          >
-            {'Download Excel'}
-          </button>
+          {answers.length > 0 && (
+            <button
+              className="w-full px-[20px] py-[10px] rounded-[10px] bg-[#fcb300] hover:bg-[#ca8f00] text-black text-bold text-[16px] hover:text-black cursor-pointer"
+              disabled={false}
+              onClick={() => {
+                handleDownloadExcel();
+              }}
+            >
+              {'Download Excel'}
+            </button>
+          )}
         </div>
       </div>
 
