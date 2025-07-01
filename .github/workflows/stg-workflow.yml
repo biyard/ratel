@@ -1,0 +1,108 @@
+name: Staging deploy
+
+on:
+  push:
+    branches:
+      - stg
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  main-api:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          ssh-key: ${{ secrets.PULL_KEY_REPO }}
+
+      - uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          components: clippy, rustfmt
+          target: wasm32-unknown-unknown
+          toolchain: stable
+
+      - uses: cargo-bins/cargo-binstall@main
+      - name: Install toml-cli
+        run: |
+          cargo binstall toml-cli --force
+
+      - name: Deploy APIs
+        env:
+          REGION: ap-northeast-2
+          ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          ENV: prod
+          RUST_LOG: info
+          SERVICE: main-api
+          DOMAIN: api.stg.ratel.foundation
+          AUTH_DOMAIN: stg.ratel.foundation
+          DATABASE_TYPE: postgres
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          OPENAPI_KEY: ${{ secrets.OPENAPI_KEY }}
+          AUTH_SECRET_KEY: ${{ secrets.AUTH_SECRET_KEY }}
+          JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
+          BASE_DOMAIN: ratel.foundation
+          MIGRATE: false
+          ENABLE_S3: false
+          ENABLE_LAMBDA: true
+          BUCKET_NAME: metadata.ratel.foundation
+          SLACK_CHANNEL_SPONSOR: ${{ secrets.SLACK_CHANNEL_SPONSOR }}
+          US_CONGRESS_KEY: ${{ secrets.US_CONGRESS_KEY }}
+          SLACK_CHANNEL_ABUSING: ${{ secrets.SLACK_CHANNEL_ABUSING }}
+
+          KAIA_FEEPAYER_KEY: ${{ secrets.PROD_KAIA_FEEPAYER_KEY }}
+          KAIA_FEEPAYER_ADDR: ${{ secrets.PROD_KAIA_FEEPAYER_ADDR }}
+          KAIA_OWNER_KEY: ${{ secrets.PROD_KAIA_OWNER_KEY }}
+          KAIA_OWNER_ADDR: ${{ secrets.PROD_KAIA_OWNER_KEY_ADDR }}
+          KAIA_ENDPOINT: https://public-en.node.kaia.io
+        run: |
+          npm i -g aws-cdk
+          make deploy
+
+  nextjs-web:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 10
+          run_install: true
+
+      - name: Run ESLint
+        run: pnpm lint
+
+      - name: Build
+        run: make build
+
+  create-release-pr:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/dev'
+    needs: [main-api, fetcher, nextjs-web]
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          ssh-key: ${{ secrets.PULL_KEY_REPO }}
+      - name: Git pr release action
+        uses: grassedge/git-pr-release-action@v1.0
+        with:
+          base: stg
+          head: main
+          token: ${{ secrets.GITHUB_TOKEN }}
