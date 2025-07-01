@@ -68,37 +68,10 @@ jobs:
           npm i -g aws-cdk
           make deploy
 
-  nextjs-web:
-    runs-on: ubuntu-latest
-
-    defaults:
-      run:
-        working-directory: ts-packages/web
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 10
-          run_install: true
-
-      - name: Run ESLint
-        run: pnpm lint
-
-      - name: Build
-        run: make build
-
   create-release-pr:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/dev'
-    needs: [main-api, fetcher, nextjs-web]
+    needs: [main-api, fetcher]
     steps:
       - uses: actions/checkout@v3
         with:
