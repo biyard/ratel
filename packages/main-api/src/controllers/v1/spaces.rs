@@ -65,7 +65,16 @@ impl SpaceController {
             Vec::new()
         };
 
+        let responses = SurveyResponse::query_builder()
+            .space_id_equals(id)
+            .survey_type_equals(SurveyType::Survey)
+            .query()
+            .map(Into::into)
+            .fetch_all(&self.pool)
+            .await?;
+
         space.user_responses = user_response;
+        space.responses = responses;
         // if let Ok(user) = user {
         //     let redeem_codes = RedeemCode::query_builder()
         //         .user_id_equals(user.id)

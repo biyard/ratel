@@ -197,9 +197,9 @@ async fn api_main() -> Result<Router> {
                 .checked_add(Duration::days(30))
                 .unwrap(),
         ));
-
-    let app = app
-        .nest_service("/mcp", controllers::mcp::route().await?)
+    let mcp_router =
+        by_axum::axum::Router::new().nest_service("/mcp", controllers::mcp::route().await?);
+    let api_router = by_axum::axum::Router::new()
         .nest("/v1", controllers::v1::route(pool.clone()).await?)
         .nest(
             "/m1",
@@ -209,6 +209,7 @@ async fn api_main() -> Result<Router> {
         .layer(session_layer)
         .layer(middleware::from_fn(cookie_middleware));
 
+    let app = app.merge(mcp_router).merge(api_router);
     Ok(app)
 }
 

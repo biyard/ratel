@@ -27,7 +27,7 @@ export default function Header({ post_id }: { post_id: number }) {
   console.log('post author: ', post?.author);
 
   const author_id = post?.author[0].id;
-  const user_id = user.data.id;
+  const user_id = user.data ? user.data.id : 0;
 
   let target;
   if (space_id) {
