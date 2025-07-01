@@ -1,0 +1,6 @@
+app_identifier "foundation.ratel.app" 
+apple_id ENV["APP_STORE_ID"]          
+
+team_id ENV["APP_STORE_TEAM_ID"]
+
+itc_team_id ENV["APP_STORE_TEAM_ID"] 
