@@ -20,4 +20,6 @@ node_modules/
 /screenshots/
 release.keystore
 
+.idea
+
 *.out
