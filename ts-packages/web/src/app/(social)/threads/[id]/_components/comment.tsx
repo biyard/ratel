@@ -1,8 +1,9 @@
 'use client';
 
 import { useFeedByID } from '@/app/(social)/_hooks/feed';
-import Comment, { NewComment } from '@/components/comment';
-import { CommentIcon } from '@/components/icons';
+// import Comment, { NewComment } from '@/components/comment';
+import Comment1, {NewComment1} from '@/components/comment/comment1';
+import { CommentIcon, ChatIcon } from '@/components/icons';
 import { useLoggedIn, useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { writeCommentRequest } from '@/lib/api/models/feeds/comment';
 import { ratelApi } from '@/lib/api/ratel_api';
@@ -46,11 +47,17 @@ export default function ThreadComment({ post_id }: { post_id: number }) {
     <>
       <div className="flex flex-col gap-2.5">
         <div className="flex flex-row text-white gap-2 ">
-          <CommentIcon
+          {/* <CommentIcon
+            width={24}
+            height={24}
+            className="[&>path]:stroke-white [&>line]:stroke-white"
+          /> */}
+          <ChatIcon
             width={24}
             height={24}
             className="[&>path]:stroke-white [&>line]:stroke-white"
           />
+
           <span className="text-base/6 font-medium">
             {(feed?.comments ?? 0).toLocaleString()}{' '}
             {(feed?.comments ?? 0) > 1 ? 'Replies' : 'Reply'}
@@ -63,10 +70,16 @@ export default function ThreadComment({ post_id }: { post_id: number }) {
                 onClick={() => setExpand(true)}
                 className="flex flex-row w-full px-3.5 py-2 gap-2 bg-neutral-800 border border-neutral-700 items-center rounded-lg"
               >
-                <CommentIcon
+                {/* <CommentIcon
                   width={24}
                   height={24}
                   className="[&>path]:stroke-neutral-500"
+                /> */}
+
+                <ChatIcon
+                  width={24}
+                  height={24}
+                  className="[&>path]:stroke-white [&>line]:stroke-white"
                 />
                 <span className="text-neutral-500 text-[15px]/[24px] font-medium">
                   Share your thoughts...
@@ -74,7 +87,7 @@ export default function ThreadComment({ post_id }: { post_id: number }) {
               </button>
             )}
             {expand && (
-              <NewComment
+              <NewComment1
                 onClose={() => setExpand(false)}
                 onSubmit={async (content) =>
                   await handleSubmit(post_id, content)
@@ -85,7 +98,7 @@ export default function ThreadComment({ post_id }: { post_id: number }) {
         )}
       </div>
       {(feed?.comment_list ?? []).map((comment) => (
-        <Comment
+        <Comment1
           key={comment.id}
           comment={comment}
           onSubmit={handleSubmit}
