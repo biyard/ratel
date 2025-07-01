@@ -53,6 +53,7 @@ build.android: $(BUILD_CONFIG_FILE)
 	flutter build appbundle --dart-define-from-file=$(BUILD_CONFIG_FILE) --release
 
 release.android: build-config build.android deploy.android
+release.ios: deploy.ios
 
 build-config: $(BUILD_CONFIG_FILE)
 
@@ -67,6 +68,10 @@ deploy.android:
 		cd android; \
 		fastlane deploy; \
 	fi
+
+.PHONY: deploy.ios
+deploy.ios: build.ios
+	cd ios && fastlane deploy
 
 setup.tools:
 	cargo install flutter_rust_bridge_codegen
