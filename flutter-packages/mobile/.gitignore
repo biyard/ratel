@@ -54,3 +54,6 @@ app.*.map.json
 /ios/Pods/
 /ios/.symlinks/
 /ios/Flutter/ephemeral/
+
+keystore.jks
+android/keystore.jks
