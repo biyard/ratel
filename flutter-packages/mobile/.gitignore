@@ -55,5 +55,7 @@ app.*.map.json
 /ios/.symlinks/
 /ios/Flutter/ephemeral/
 
-keystore.jks
+android/fastlane/ratel-key.json
+android/fastlane/report.xml
 android/keystore.jks
+keystore.jks
