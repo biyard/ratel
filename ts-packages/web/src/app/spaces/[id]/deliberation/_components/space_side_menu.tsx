@@ -4,7 +4,7 @@ import BlackBox from '@/app/(social)/_components/black-box';
 import { getTimeWithFormat } from '@/lib/time-utils';
 import React, { useEffect, useRef, useState } from 'react';
 import Clock from '@/assets/icons/clock.svg';
-import { BottomTriangle, Discuss, Edit1 } from '@/components/icons';
+import { BottomTriangle, Discuss, Edit1, PieChart1 } from '@/components/icons';
 import { File, Vote, CheckCircle } from 'lucide-react';
 import { DeliberationTab } from '../types';
 import { SpaceStatus } from '@/lib/api/models/spaces';
@@ -80,8 +80,25 @@ export default function SpaceSideMenu() {
             }}
           >
             <CheckCircle className="[&>path]:stroke-neutral-80 w-5 h-5" />
-            <div className="font-bold text-white text-sm">Recommandation</div>
+            <div className="font-bold text-white text-sm">Recommendation</div>
           </div>
+
+          {space.author.some((a) => a.id === userId) &&
+            status == SpaceStatus.InProgress && (
+              <div
+                className={`cursor-pointer flex flex-row gap-1 items-center px-1 py-2 rounded-sm ${
+                  selectedType == DeliberationTab.ANALYZE
+                    ? 'bg-neutral-800'
+                    : ''
+                }`}
+                onClick={() => {
+                  setSelectedType(DeliberationTab.ANALYZE);
+                }}
+              >
+                <PieChart1 className="[&>path]:stroke-neutral-80 w-5 h-5" />
+                <div className="font-bold text-white text-sm">Analyze</div>
+              </div>
+            )}
         </div>
       </BlackBox>
       <BlackBox>

@@ -8,6 +8,7 @@ import { Answer } from '@/lib/api/models/response';
 import { usePopup } from '@/lib/contexts/popup-service';
 import CheckPopup from './check_popup';
 import { SpaceStatus } from '@/lib/api/models/spaces';
+import { logger } from '@/lib/logger';
 
 interface Question {
   title: string;
@@ -39,6 +40,15 @@ export default function SurveyViewer({
   const popup = usePopup();
   const is_completed = answer.is_completed;
   const answers: Answer[] = answer.answers;
+
+  logger.debug(
+    'is completed:',
+    is_completed,
+    ' status:',
+    status,
+    'isLive:',
+    isLive,
+  );
 
   const handleSelect = (
     qIdx: number,
@@ -197,7 +207,7 @@ export default function SurveyViewer({
       })}
 
       <div
-        className={`flex flex-row w-full justify-end ${is_completed || status != SpaceStatus.InProgress || !isLive ? 'hidden' : ''}`}
+        className={`flex flex-row w-full justify-end ${is_completed || status != SpaceStatus.InProgress || !isLive || questions.length == 0 ? 'hidden' : ''}`}
       >
         <div
           className="cursor-pointer flex flex-row w-[180px] h-fit py-[14px] px-[40px] justify-center items-center bg-primary hover:opacity-70 rounded-lg font-bold text-[15px] text-[#000203]"
