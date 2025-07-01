@@ -56,8 +56,11 @@ app.*.map.json
 /ios/Flutter/ephemeral/
 
 android/fastlane/ratel-key.json
-android/fastlane/report.xml
-ios/fastlane/report.xml
 android/keystore.jks
 keystore.jks
 .env
+
+android/fastlane/report.xml
+ios/fastlane/report.xml
+ios/Runner.app.dSYM.zip
+ios/Runner.ipa
