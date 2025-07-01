@@ -49,6 +49,25 @@ run.web: $(BUILD_CONFIG_FILE)
 build.ios: $(BUILD_CONFIG_FILE)
 	flutter build ios --dart-define-from-file=$(BUILD_CONFIG_FILE) --release --no-codesign
 
+build.android: $(BUILD_CONFIG_FILE)
+	flutter build appbundle --dart-define-from-file=$(BUILD_CONFIG_FILE) --release
+
+release.android: build-config build.android deploy.android
+
+build-config: $(BUILD_CONFIG_FILE)
+
+deploy.android:
+	@echo "Deploying to Google Play..."
+	@if [ -z "$$GOOGLE_PLAY_KEY_JSON" ]; then \
+		echo "Using local JSON key file"; \
+		cd android; \
+		fastlane deploy; \
+	else \
+		echo "Using JSON key from ENV"; \
+		cd android; \
+		fastlane deploy; \
+	fi
+
 setup.tools:
 	cargo install flutter_rust_bridge_codegen
 
