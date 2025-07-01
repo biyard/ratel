@@ -71,6 +71,10 @@ jobs:
   nextjs-web:
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: ts-packages/web
+
     steps:
       - uses: actions/checkout@v4
 
