@@ -38,8 +38,7 @@ class _WebviewScreenState extends State<WebviewScreen> {
 
     _controller = WebViewController()
       ..loadRequest(Uri.parse('https://ratel.foundation'))
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setUserAgent('random');
+      ..setJavaScriptMode(JavaScriptMode.unrestricted);
   }
 
   @override
