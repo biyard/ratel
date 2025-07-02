@@ -1,0 +1,25 @@
+default_platform(:android)
+
+platform :android do
+  desc "Deploy Android App to Play Store"
+  lane :deploy do
+    if ENV["GOOGLE_PLAY_KEY_JSON"]
+      UI.message("Using JSON key from ENV")
+      json_key_data = ENV["GOOGLE_PLAY_KEY_JSON"]
+    else
+      UI.message("Using local JSON key file")
+      json_key_file = "./fastlane/ratel-key.json"
+    end
+
+    upload_to_play_store(
+      json_key: json_key_file,
+      json_key_data: json_key_data,
+      track: "internal", 
+      release_status: "draft",
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+      aab: "../build/app/outputs/bundle/release/app-release.aab"
+    )
+  end
+end
