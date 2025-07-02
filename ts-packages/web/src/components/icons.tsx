@@ -38,10 +38,9 @@ export { default as Upload } from '@/assets/icons/upload.svg';
 export { default as Add } from '@/assets/icons/add.svg';
 export { default as ChevronLeft } from '@/assets/icons/arrow-left.svg';
 export { default as ChevronRight } from '@/assets/icons/chevron-right.svg';
-export {default as ChatIcon} from '@/assets/icons/icon-chat.svg';
-export {default as PainIcon} from '@/assets/icons/paint.svg'
-export {default as TrashArrowUp} from  '@/assets/icons/trash-arrow-up.svg';
-
+export { default as ChatIcon } from '@/assets/icons/icon-chat.svg';
+export { default as PainIcon } from '@/assets/icons/paint.svg';
+export { default as TrashArrowUp } from '@/assets/icons/trash-arrow-up.svg';
 
 // export {default as TrashArrowUp} from '@assets/icons/trash-arrow-up.svg'
 

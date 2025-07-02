@@ -1,10 +1,8 @@
-// ImagePreviewGallery.tsx
-import { X } from "lucide-react"
-
+import { X } from 'lucide-react';
 interface UploadedImage {
-  id: string
-  src: string
-  name: string
+  id: string;
+  src: string;
+  name: string;
 }
 
 export const ImagePreviewGallery = ({
@@ -12,15 +10,17 @@ export const ImagePreviewGallery = ({
   insertImageFromPreview,
   removeImage,
 }: {
-  uploadedImages: UploadedImage[]
-  insertImageFromPreview: (src: string) => void
-  removeImage: (id: string) => void
+  uploadedImages: UploadedImage[];
+  insertImageFromPreview: (src: string) => void;
+  removeImage: (id: string) => void;
 }) => {
-  if (uploadedImages.length === 0) return null
+  if (uploadedImages.length === 0) return null;
 
   return (
     <div className="bg-gray-800 border border-gray-600 rounded-lg p-4">
-      <h3 className="text-sm font-medium text-gray-300 mb-3">Uploaded Images</h3>
+      <h3 className="text-sm font-medium text-gray-300 mb-3">
+        Uploaded Images
+      </h3>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
         {uploadedImages.map((image) => (
           <div key={image.id} className="relative group">
@@ -42,7 +42,9 @@ export const ImagePreviewGallery = ({
           </div>
         ))}
       </div>
-      <p className="text-xs text-gray-500 mt-2">Click on an image to insert it into the editor</p>
+      <p className="text-xs text-gray-500 mt-2">
+        Click on an image to insert it into the editor
+      </p>
     </div>
-  )
-}
+  );
+};

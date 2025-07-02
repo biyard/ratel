@@ -256,8 +256,7 @@
 // }
 
 'use client';
-
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import Image from 'next/image';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { BendArrowRight, ThumbUp, TrashArrowUp } from '@/components/icons';
@@ -453,7 +452,7 @@ export default function Comment1({ comment, onSubmit, onLike }: CommentProps) {
                   </div>
                 </div>
 
-                <div className='pl-12'>
+                <div className="pl-12">
                   <HtmlViewer html={reply.html_contents} />
                 </div>
               </div>

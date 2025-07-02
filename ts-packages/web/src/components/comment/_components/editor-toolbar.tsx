@@ -1,4 +1,3 @@
-// EditorToolbar.tsx
 import { Button } from '@/components/ui/button';
 import {
   Popover,
@@ -17,7 +16,6 @@ import {
   ImageIcon,
   Paperclip,
   Smile,
-  X,
 } from 'lucide-react';
 
 import { PainIcon } from '@/components/icons';
@@ -36,6 +34,7 @@ export const EditorToolbar = ({
   setShowColorPicker,
   addImage,
 }: {
+  /* eslint-disable-next-line @typescript-eslint/no-explicit-any*/
   editor: any;
   linkUrl: string;
   setLinkUrl: (url: string) => void;

@@ -1,11 +1,8 @@
-
 import { useRef, useState } from 'react';
 import { EditorContent } from '@tiptap/react';
 import { useEditorActions } from './_components/editor-actions';
 import { useRichTextEditor } from './_components/editor-setup';
 import { EditorToolbar } from './_components/editor-toolbar';
-
-
 import { CommentIcon } from '../icons';
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -13,6 +10,7 @@ import { useEffect } from 'react';
 import { ChevronDoubleDownIcon } from '@heroicons/react/20/solid';
 
 interface RichTextEditorProps {
+  /* eslint-disable-next-line @typescript-eslint/no-explicit-any*/
   onSubmit: (content: string) => Promise<any>;
   onClose?: () => void;
   validateString?: (content: string) => boolean;
@@ -29,7 +27,7 @@ export default function RichTextEditor({
   const [linkUrl, setLinkUrl] = useState('');
   const [showLinkPopover, setShowLinkPopover] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
-  const [uploadedImages, setUploadedImages] = useState<
+  const [_uploadedImages, setUploadedImages] = useState<
     { id: string; src: string; name: string }[]
   >([]);
   const [isLoading, setLoading] = useState(false);
@@ -55,8 +53,6 @@ export default function RichTextEditor({
     setColor,
     addImage,
     handleImageUpload,
-    removeImage,
-    insertImageFromPreview,
   } = useEditorActions({
     editor,
     setUploadedImages,
@@ -98,8 +94,6 @@ export default function RichTextEditor({
 
   return (
     <div className={cn('w-full max-w-desktop mx-auto space-y-2', className)}>
-   
-
       <div className="relative bg-neutral-900 border-2 border-primary rounded-lg overflow-hidden">
         <button
           className="absolute top-2 right-2 p-1 flex flex-row z-20"
@@ -108,7 +102,6 @@ export default function RichTextEditor({
         >
           <ChevronDoubleDownIcon width={24} height={24} />
         </button>
-
 
         {/* Editor Content */}
         <div className="min-h-[140px] pt-4">
@@ -137,8 +130,6 @@ export default function RichTextEditor({
             setShowColorPicker={setShowColorPicker}
             addImage={addImage}
           />
-
-        
 
           <button
             onClick={handleSubmit}
