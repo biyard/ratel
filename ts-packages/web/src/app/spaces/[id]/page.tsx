@@ -4,6 +4,7 @@ import { logger } from '@/lib/logger';
 import React from 'react';
 import DeliberationSpacePage from './deliberation';
 import CommitteeSpacePage from './committee/page.client';
+import SprintLeaguePage from './sprint/page.client';
 
 export default async function Page({
   params,
@@ -18,6 +19,8 @@ export default async function Page({
     return <DeliberationSpacePage />;
   } else if (space.data?.space_type === SpaceType.Committee) {
     return <CommitteeSpacePage />;
+  } else if (space.data?.space_type === SpaceType.SprintLeague) {
+    return <SprintLeaguePage />;
   }
 
   logger.debug('Unknown space type:', space.data?.space_type);
