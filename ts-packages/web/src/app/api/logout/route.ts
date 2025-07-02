@@ -1,3 +1,5 @@
+import { config } from '@/config';
+import { ratelApi } from '@/lib/api/ratel_api';
 import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -6,6 +8,19 @@ export async function POST(request: NextRequest) {
   const host = request.headers.get('host') || 'localhost';
 
   logger.debug('host', host);
+
+  const apiBaseUrl: string = config.api_url;
+
+  let targetUrl = `${apiBaseUrl}${ratelApi.users.logout()}`;
+  const res = await fetch(targetUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Cookie: request.headers.get('cookie') || '',
+    },
+  });
+
+  logger.debug('response header', res.headers, 'status', res.status);
 
   const response = NextResponse.json(
     { message: 'Logout successful' },

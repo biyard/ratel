@@ -10,6 +10,7 @@ use dto::{
     },
     *,
 };
+use main_api::{config, controllers, route::route};
 use sqlx::postgres::PgPoolOptions;
 use tokio::net::TcpListener;
 use tower_sessions::{
@@ -17,17 +18,6 @@ use tower_sessions::{
     cookie::time::{Duration, OffsetDateTime},
 };
 use tower_sessions_sqlx_store::PostgresStore;
-
-mod controllers {
-    pub mod m1;
-    pub mod mcp;
-    pub mod v1;
-}
-
-pub mod config;
-pub mod models;
-pub mod security;
-pub mod utils;
 
 macro_rules! migrate {
     ($pool:ident, $($table:ident),* $(,)?) => {
@@ -198,12 +188,8 @@ async fn api_main() -> Result<Router> {
         ));
     let mcp_router =
         by_axum::axum::Router::new().nest_service("/mcp", controllers::mcp::route().await?);
-    let api_router = by_axum::axum::Router::new()
-        .nest("/v1", controllers::v1::route(pool.clone()).await?)
-        .nest(
-            "/m1",
-            controllers::m1::MenaceController::route(pool.clone())?,
-        )
+    let api_router = route(pool.clone())
+        .await?
         .layer(middleware::from_fn(authorization_middleware))
         .layer(session_layer)
         .layer(middleware::from_fn(cookie_middleware));
