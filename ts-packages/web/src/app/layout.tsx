@@ -12,6 +12,8 @@ import { prefetchUserInfo } from './(social)/_hooks/user';
 import Script from 'next/script';
 import { getServerQueryClient } from '@/lib/query-utils.server';
 
+// TODO: REMOVE THIS COMMENT
+ 
 const raleway = Raleway({
   variable: '--font-raleway',
   weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'],
