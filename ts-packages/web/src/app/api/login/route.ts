@@ -51,10 +51,16 @@ export async function GET(request: NextRequest) {
 
   if (idCookie) {
     cookies.push(`${idCookie.split(';')[0]}; ${commonSuffix}`);
+    cookies.push(
+      `${idCookie.split(';')[0]}; ${commonSuffix}; Domain=api.${host}`,
+    );
   }
 
   if (authCookie) {
     cookies.push(`${authCookie.split(';')[0]}; ${commonSuffix}`);
+    cookies.push(
+      `${authCookie.split(';')[0]}; ${commonSuffix} Domain=api.${host}`,
+    );
   }
 
   return new NextResponse(res.body, {
