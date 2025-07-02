@@ -34,6 +34,9 @@ importers:
       '@noble/ed25519':
         specifier: ^2.2.3
         version: 2.3.0
+      '@pixi/devtools':
+        specifier: ^2.0.1
+        version: 2.0.1(pixi.js@8.10.2)
       '@pixi/react':
         specifier: ^8.0.2
         version: 8.0.2(@types/react@19.1.8)(pixi.js@8.10.2)(react@19.1.0)
@@ -94,9 +97,6 @@ importers:
       pixi.js:
         specifier: ^8.10.2
         version: 8.10.2
-      pnpm:
-        specifier: ^10.12.4
-        version: 10.12.4
       react:
         specifier: ^19.0.0
         version: 19.1.0
@@ -1724,6 +1724,11 @@ packages:
 
   '@pixi/colord@2.9.6':
     resolution: {integrity: sha512-nezytU2pw587fQstUu1AsJZDVEynjskwOL+kibwcdxsMBFqPsFFNA7xl0ii/gXuDi6M0xj3mfRJj8pBSc2jCfA==}
+
+  '@pixi/devtools@2.0.1':
+    resolution: {integrity: sha512-TFCqNkJoLNYHDELgQ3bKWvA33twWpoUhQB8Y+hneBdDBunRsqZ5ZzwH7+6E5eVaVn7eeLAXHs9QGRGsxM0fRlw==}
+    peerDependencies:
+      pixi.js: ^7 || ^8
 
   '@pixi/react@8.0.2':
     resolution: {integrity: sha512-A42Bw/1YlxxCXhb+nDIgzPpACx5dOh7Yi+ZfBMlZ1sBB/qc7qyX9k7bdDtrnMqz8OofyF2FXg9gPw9MISFsQTA==}
@@ -5018,11 +5023,6 @@ packages:
     engines: {node: '>=18'}
     hasBin: true
 
-  pnpm@10.12.4:
-    resolution: {integrity: sha512-Xqiw3u2U7WhpHJutTJVUknBcXuuKh++GvGLHSiawN7CP+VcPEIsuTb0d0akYb+qSXlJ/FBxkjoWvRWMQdGgBhA==}
-    engines: {node: '>=18.12'}
-    hasBin: true
-
   possible-typed-array-names@1.1.0:
     resolution: {integrity: sha512-/+5VFTchJDoVj3bhoqi6UeymcD00DAwb1nJwamzPvHEszJ4FpF6SNNbUbOS8yI56qHzdV8eK0qEfOSiodkTdxg==}
     engines: {node: '>= 0.4'}
@@ -8108,6 +8108,10 @@ snapshots:
   '@nolyfill/is-core-module@1.0.39': {}
 
   '@pixi/colord@2.9.6': {}
+
+  '@pixi/devtools@2.0.1(pixi.js@8.10.2)':
+    dependencies:
+      pixi.js: 8.10.2
 
   '@pixi/react@8.0.2(@types/react@19.1.8)(pixi.js@8.10.2)(react@19.1.0)':
     dependencies:
@@ -11857,8 +11861,6 @@ snapshots:
     optionalDependencies:
       fsevents: 2.3.2
     optional: true
-
-  pnpm@10.12.4: {}
 
   possible-typed-array-names@1.1.0: {}
 

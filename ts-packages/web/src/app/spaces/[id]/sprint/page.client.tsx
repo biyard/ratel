@@ -1,51 +1,35 @@
 'use client';
 
-import Image from 'next/image';
-import SprintLeagueCanvas from './components/league-canvas';
-import { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
+import { Background, Character } from './components/sprint-league';
 
+const Base = dynamic(() => import('./components/sprint-league'), {
+  ssr: false,
+});
 export default function SprintLeaguePage() {
-  const [canvasHeight, setCanvasHeight] = useState(0);
-
-  useEffect(() => {
-    const handleResize = () => {
-      const tablet = window.innerWidth <= 768;
-      setCanvasHeight(window.innerHeight * (tablet ? 0.7 : 0.8));
-    };
-
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
+  const user = [
+    {
+      name: '이준석',
+      jsonPath: '/images/lee-jun.json',
+    },
+    {
+      name: '김문수',
+      jsonPath: '/images/kim-moon.json',
+    },
+    {
+      name: '이재명',
+      jsonPath: '/images/lee-jae.json',
+    },
+  ];
   return (
-    <div className="relative w-full h-[80vh] max-tablet:h-[70vh] overflow-hidden">
-      <Image
-        src="/images/sabana-bg.png"
-        alt="Sabana Background"
-        fill
-        className="object-fit z-0"
-        priority
-      />
-
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10">
-        <div className="w-[500px] h-fit max-tablet:w-full">
-          <Image
-            src="/images/sabana-sheet.png"
-            alt="Sprint League Label"
-            width={10000}
-            height={10000}
-          />
-        </div>
-      </div>
-
-      {canvasHeight > 0 && (
-        <SprintLeagueCanvas
-          height={canvasHeight}
-          width={window.innerWidth}
-          targetPercents={[0.5, 0.6, 1]}
-        />
-      )}
+    //FIXME: Use height value, not fixed header height
+    <div className="w-full h-[calc(100vh-120px)] flex justify-center items-center">
+      <Base>
+        <Background names={user.map((u) => u.name)} />
+        {user.map((user, index) => (
+          <Character key={index} jsonPath={user.jsonPath} rank={index + 1} />
+        ))}
+      </Base>
     </div>
   );
 }

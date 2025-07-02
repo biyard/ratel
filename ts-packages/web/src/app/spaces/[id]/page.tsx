@@ -5,6 +5,7 @@ import React from 'react';
 import DeliberationSpacePage from './deliberation';
 import CommitteeSpacePage from './committee/page.client';
 import SprintLeaguePage from './sprint/page.client';
+import { config } from '@/config';
 
 export default async function Page({
   params,
@@ -19,7 +20,10 @@ export default async function Page({
     return <DeliberationSpacePage />;
   } else if (space.data?.space_type === SpaceType.Committee) {
     return <CommitteeSpacePage />;
-  } else if (space.data?.space_type === SpaceType.SprintLeague) {
+  } else if (
+    space.data?.space_type === SpaceType.SprintLeague &&
+    config.experiment
+  ) {
     return <SprintLeaguePage />;
   }
 

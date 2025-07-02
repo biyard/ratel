@@ -18,6 +18,7 @@ interface SpaceFormProps {
   label: string;
   description: string;
   disabled?: boolean;
+  experiment?: boolean;
 }
 
 const SpaceForms: SpaceFormProps[] = [
@@ -36,19 +37,20 @@ const SpaceForms: SpaceFormProps[] = [
   //   disabled: true,
   // },
   {
-    type: SpaceType.SprintLeague,
-    Icon: <Palace />,
-    label: 'Sprint League',
-    description:
-      'Mini social game where three runners compete in a race, and their speed is determined by community voting',
-    disabled: true,
-  },
-  {
     type: SpaceType.Deliberation,
     Icon: <Discuss />,
     label: 'Deliberation',
     description: 'Share perspectives and engage in in-depth discussion.',
   },
+  {
+    type: SpaceType.SprintLeague,
+    Icon: <Palace />,
+    label: 'Sprint League',
+    description:
+      'Mini social game where three runners compete in a race, and their speed is determined by community voting',
+    experiment: true,
+  },
+
   // {
   //   type: SpaceType.Nft,
   //   Icon: <Cube />,
@@ -97,17 +99,12 @@ export default function SelectSpaceForm({ feed_id }: { feed_id: number }) {
   return (
     <div className="flex flex-col gap-2.5 p-1.5">
       {SpaceForms.map((form) => (
-        <div
+        <SpaceForm
           key={form.type}
-          className="aria-hidden:hidden"
-          aria-hidden={form.disabled ? !config.experiment : false}
-        >
-          <SpaceForm
-            form={form}
-            selected={selectedType === form.type}
-            onClick={() => setSelectedType(form.type)}
-          />
-        </div>
+          form={form}
+          selected={selectedType === form.type}
+          onClick={() => setSelectedType(form.type)}
+        />
       ))}
       <LoadablePrimaryButton
         className="w-full mt-4"
@@ -130,13 +127,14 @@ function SpaceForm({
   selected: boolean;
   onClick: () => void;
 }) {
+  const disabled = form.disabled || (form.experiment && !config.experiment);
   return (
     <div
-      className={`flex flex-row gap-2.5 justify-center items-center w-full p-5 border rounded-[10px] ${selected ? 'border-primary' : 'border-neutral-800'}} `}
+      className={`flex flex-row gap-2.5 justify-center items-center w-full p-5 border rounded-[10px] ${selected ? 'border-primary' : 'border-neutral-800'} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}} `}
       onClick={() => {
-        // if (!form.disabled) {
-        //   onClick();
-        // }
+        if (!disabled) {
+          onClick();
+        }
       }}
     >
       <div className="size-8 [&>svg]:size-8">{form.Icon}</div>
