@@ -116,7 +116,7 @@ impl FeedController {
 
         Ok(QueryResponse { total_count, items })
     }
-    async fn create_draft(
+    pub async fn create_draft(
         &self,
         auth: Option<Authorization>,
         param: FeedCreateDraftRequest,
@@ -156,7 +156,7 @@ impl FeedController {
         Ok(res)
     }
 
-    async fn comment(
+    pub async fn comment(
         &self,
         auth: Option<Authorization>,
         FeedCommentRequest {
@@ -359,7 +359,7 @@ impl FeedController {
         Ok(res)
     }
 
-    async fn update(
+    pub async fn update(
         &self,
         id: i64,
         auth: Option<Authorization>,
@@ -409,7 +409,7 @@ impl FeedController {
         Ok(res)
     }
 
-    async fn like(&self, id: i64, auth: Option<Authorization>, value: bool) -> Result<Feed> {
+    pub async fn like(&self, id: i64, auth: Option<Authorization>, value: bool) -> Result<Feed> {
         let user_id = extract_user_id(&self.pool, auth).await?;
         let repo = FeedUser::get_repository(self.pool.clone());
         if !value {
@@ -430,7 +430,7 @@ impl FeedController {
         Ok(Feed::default())
     }
 
-    async fn publish_draft(&self, id: i64, auth: Option<Authorization>) -> Result<Feed> {
+    pub async fn publish_draft(&self, id: i64, auth: Option<Authorization>) -> Result<Feed> {
         let feed = Feed::query_builder(0)
             .id_equals(id)
             .status_equals(FeedStatus::Draft)

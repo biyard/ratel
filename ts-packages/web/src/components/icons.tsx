@@ -62,3 +62,5 @@ export { default as ZoomChat } from '@/assets/icons/chat.svg';
 export { default as ZoomShare } from '@/assets/icons/zoom-share.svg';
 export { default as ZoomRecord } from '@/assets/icons/record.svg';
 export { default as ZoomClose } from '@/assets/icons/zoom-close.svg';
+
+export { default as PieChart1 } from '@/assets/icons/pie-chart-1.svg';

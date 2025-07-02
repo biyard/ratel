@@ -30,6 +30,7 @@ export interface Space {
   elearnings: Elearning[];
   surveys: Survey[];
   user_responses: SurveyResponse[];
+  responses: SurveyResponse[];
   drafts: SpaceDraft[];
 }
 
