@@ -9,6 +9,8 @@ use teloxide::{
 };
 use tracing_subscriber::EnvFilter;
 
+// TODO: REMOVE THIS COMMENT
+
 #[tokio::main]
 async fn main() {
     let conf = config::get();
