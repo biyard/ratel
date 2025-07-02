@@ -7,6 +7,8 @@ import Loading from '@/app/loading';
 import { SpaceType } from '@/lib/api/models/spaces';
 import CommitteeSpaceLayout from './committee/layout';
 import CommitteeSpacePage from './committee/page.client';
+import SprintLeaguePage from './sprint/page.client';
+import SprintLeagueLayout from './sprint/layout';
 
 export async function generateMetadata({
   params,
@@ -54,6 +56,12 @@ export default async function Layout({
       <CommitteeSpaceLayout spaceId={id}>
         <CommitteeSpacePage />
       </CommitteeSpaceLayout>
+    );
+  } else if (spaceType === SpaceType.SprintLeague) {
+    return (
+      <SprintLeagueLayout spaceId={id}>
+        <SprintLeaguePage />
+      </SprintLeagueLayout>
     );
   }
 

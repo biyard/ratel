@@ -100,6 +100,7 @@ export enum SpaceType {
   Deliberation = 3,
   Nft = 4,
   Committee = 5,
+  SprintLeague = 6,
 }
 
 export enum SpaceStatus {
