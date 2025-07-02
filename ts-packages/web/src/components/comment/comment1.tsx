@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils';
 import { useEffect, useRef, useState } from 'react';
 import { logger } from '@/lib/logger';
 import { TrashArrowUp } from '@/components/icons';
+import { ChatIcon } from '@/components/icons';
 
 interface CommentProps {
   comment: CommentType;
@@ -31,8 +32,8 @@ export default function Comment1({ comment, onSubmit, onLike }: CommentProps) {
     comment.num_of_replies > 0 ? (
       showReplies ? (
         <ChevronUp
-          width={24}
-          height={24}
+          width={26}
+          height={26}
           className={` ${showReplies ? '[&>path]:stroke-neutral-700' : ''}`}
         />
       ) : (
@@ -106,17 +107,27 @@ export default function Comment1({ comment, onSubmit, onLike }: CommentProps) {
         {/* Actions */}
         <div className="flex flex-row w-full justify-between items-center gap-2">
           <div className="flex flex-row gap-5">
-            {/* Expand Reply Button */}
-            <button
-              className={`gap-2  flex flex-row justify-center items-center disabled:cursor-not-allowed ${showReplies ? 'bg-primary p-2 rounded-md text-neutral-800' : 'text-primary'}`}
-              disabled={comment.num_of_replies === 0}
-              onClick={() => {
-                setShowReplies(!showReplies);
-              }}
-            >
-              {`${comment.num_of_replies ?? 0} ${comment.num_of_replies <= 1 ? 'Reply' : 'Replies'}`}
-              {ChevronIcon}
-            </button>
+            {/* Number Reply Button */}
+            <div className='relative'>
+              <button
+                className={`gap-2  flex flex-row justify-center items-center disabled:cursor-not-allowed ${showReplies ? 'bg-primary p-2 rounded-md text-neutral-800' : 'text-primary'}`}
+                disabled={comment.num_of_replies === 0}
+                onClick={() => {
+                  setShowReplies(!showReplies);
+                }}
+              >
+                {`${comment.num_of_replies ?? 0} ${comment.num_of_replies <= 1 ? 'Reply' : 'Replies'}`}
+                {ChevronIcon}
+              </button>
+
+              {/*first  Vertical orange line */}
+              {showReplies && expand && (comment.num_of_replies ?? 0) > 0 ? (
+                <div className="absolute  left-10 w-0.5 h-6 bg-primary rounded-t-md" />
+              ) : (
+                ' '
+              )}
+            </div>
+
 
             {/* Reply Button */}
             <div
@@ -154,25 +165,34 @@ export default function Comment1({ comment, onSubmit, onLike }: CommentProps) {
           </button>
         </div>
 
-        {/* Vertical orange line */}
-        {showReplies ? (
-          <div className="absolute top-35 left-18 w-0.5 h-4 bg-primary rounded-t-md" />
+        {/* Vertical orange line
+        {showReplies && expand && (comment.num_of_replies ?? 0) > 0 ? (
+          <div className="absolute top-35 left-20 w-0.5 h-4 bg-primary rounded-t-md" />
         ) : (
           ' '
-        )}
+        )} */}
 
         {/* To show div used to reply comment */}
         {expand && (
-          <NewComment1
-            className="min-h-30"
-            onClose={() => setExpand(false)}
-            onSubmit={async (content) => {
-              if (onSubmit) {
-                await onSubmit(comment.id, content);
-              }
-            }}
-          />
+          <div className="relative">
+            <NewComment1
+              className="min-h-30"
+              onClose={() => setExpand(false)}
+              onSubmit={async (content) => {
+                if (onSubmit) {
+                  await onSubmit(comment.id, content);
+                }
+              }}
+            />
+            {/* Second Vertical orange line */}
+            {showReplies && expand && (comment.num_of_replies ?? 0) > 0 ? (
+              <div className="absolute  left-10 w-0.5 h-10 z-12 bg-primary rounded-t-md" />
+            ) : (
+              ' '
+            )}
+          </div>
         )}
+
 
         {/* To show replies */}
         {showReplies && (
@@ -180,7 +200,7 @@ export default function Comment1({ comment, onSubmit, onLike }: CommentProps) {
             {comment.replies.map((reply) => (
               <div
                 key={reply.id}
-                className="flex flex-col gap-2 p-5 rounded-lg bg-neutral-800"
+                className="flex flex-col gap-2 p-5  bg-neutral-background rounded-lg"
               >
                 <div className="flex flex-row gap-2 items-center">
                   {reply.author?.[0]?.profile_url ? (
@@ -208,13 +228,37 @@ export default function Comment1({ comment, onSubmit, onLike }: CommentProps) {
                     <TrashArrowUp />
                   </div>
                 </div>
-                <LexicalHtmlViewer htmlString={reply.html_contents} />
+
+                <div className=" text-center">{reply.html_contents}</div>
+
+                {/* <LexicalHtmlViewer  htmlString={reply.html_contents} /> */}
               </div>
             ))}
           </div>
         )}
+
+        {/* bottom vertical orange  line */}
+        {showReplies && expand && (comment.num_of_replies ?? 0) > 0 ? (
+          <div className="absolute  left-20 bottom-12 w-0.5 h-21 z-12 bg-primary rounded-t-md" />
+        ) : (
+          ' '
+        )}
+
+        {showReplies && expand && (comment.num_of_replies ?? 0) > 0 ? (
+          <div className=" inline-block">
+            <button
+              className="ml-6 inline-flex items-center justify-center p-2 rounded-md bg-primary text-neutral-800"
+              style={{ width: 'auto' }}
+              disabled={comment.num_of_replies === 0}
+              onClick={() => setShowReplies(!showReplies)}
+            >
+              <ChevronUp className="w-6 h-6" />
+            </button>
+          </div>
+        ) : null}
+
         {/* {expand && (
-          <NewComment1
+          <'NewComment1
             className="min-h-30"
             onClose={() => setExpand(false)}
             onSubmit={async (content) => {
@@ -302,8 +346,14 @@ export function NewComment1({
               <CommentIcon
                 width={24}
                 height={24}
-                className="[&>path]:stroke-black [&>line]:stroke-black"
+                className="[&>path]:stroke-white [&>line]:stroke-white"
               />
+
+              // <ChatIcon
+              //   width={24}
+              //   height={24}
+              //   className="[&>path]:stroke-white [&>line]:stroke-white"
+              // />
             )}
           </button>
         </div>
