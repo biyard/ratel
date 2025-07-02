@@ -1,30 +1,37 @@
 'use client';
 
-import React from 'react';
 import Image from 'next/image';
+import SprintLeagueCanvas from './components/league-canvas';
+import { useEffect, useState } from 'react';
 
 export default function SprintLeaguePage() {
-  const backgroundImagePath = '/images/sabana-bg.png';
-  const backgroundLabel = '/images/sabana-sheet.png';
+  const [canvasHeight, setCanvasHeight] = useState(0);
 
-  const leeJae = '/images/lee-jae.gif';
-  const leeJun = '/images/lee-jun.gif';
-  const kimMoon = '/images/kim-moon.gif';
+  useEffect(() => {
+    const handleResize = () => {
+      const tablet = window.innerWidth <= 768;
+      setCanvasHeight(window.innerHeight * (tablet ? 0.7 : 0.8));
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   return (
     <div className="relative w-full h-[80vh] max-tablet:h-[70vh] overflow-hidden">
       <Image
-        src={backgroundImagePath}
+        src="/images/sabana-bg.png"
         alt="Sabana Background"
         fill
-        className="object-full"
+        className="object-fit z-0"
         priority
       />
 
-      <div className="absolute top-4 max-tablet:top-[50px] left-1/2 -translate-x-1/2 z-10 max-tablet:w-full">
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10">
         <div className="w-[500px] h-fit max-tablet:w-full">
           <Image
-            src={backgroundLabel}
+            src="/images/sabana-sheet.png"
             alt="Sprint League Label"
             width={10000}
             height={10000}
@@ -32,17 +39,13 @@ export default function SprintLeaguePage() {
         </div>
       </div>
 
-      <div className="absolute left-[1%] bottom-[300px] z-20 max-tablet:w-[150px] max-tablet:h-[150px] max-tablet:bottom-[280px]">
-        <Image src={leeJae} alt="Lee Jae" width={300} height={300} />
-      </div>
-
-      <div className="absolute left-[1%] bottom-[150px] z-20 max-tablet:w-[150px] max-tablet:h-[150px]">
-        <Image src={leeJun} alt="Lee Jun" width={300} height={300} />
-      </div>
-
-      <div className="absolute left-[1%] bottom-[10px] z-20 max-tablet:w-[150px] max-tablet:h-[150px]">
-        <Image src={kimMoon} alt="Kim Moon" width={300} height={300} />
-      </div>
+      {canvasHeight > 0 && (
+        <SprintLeagueCanvas
+          height={canvasHeight}
+          width={window.innerWidth}
+          targetPercents={[0.5, 0.6, 1]}
+        />
+      )}
     </div>
   );
 }
