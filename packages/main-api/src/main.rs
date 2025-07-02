@@ -191,7 +191,6 @@ async fn api_main() -> Result<Router> {
         .with_http_only(true)
         .with_same_site(tower_sessions::cookie::SameSite::Lax)
         .with_path("/")
-        .with_domain(format!(".{}", conf.signing_domain))
         .with_expiry(tower_sessions::Expiry::AtDateTime(
             OffsetDateTime::now_utc()
                 .checked_add(Duration::days(30))
