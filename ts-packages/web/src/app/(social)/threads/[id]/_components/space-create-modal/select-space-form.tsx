@@ -1,7 +1,7 @@
 'use client';
 import { Space, SpaceType } from '@/lib/api/models/spaces';
 
-import { Discuss } from '@/components/icons';
+import { Discuss, Palace } from '@/components/icons';
 import { useState } from 'react';
 import { LoadablePrimaryButton } from '@/components/button/primary-button';
 import { apiFetch } from '@/lib/api/apiFetch';
@@ -35,6 +35,14 @@ const SpaceForms: SpaceFormProps[] = [
   //   description: 'Collect quick opinions or preferences.',
   //   disabled: true,
   // },
+  {
+    type: SpaceType.SprintLeague,
+    Icon: <Palace />,
+    label: 'Sprint League',
+    description:
+      'Mini social game where three runners compete in a race, and their speed is determined by community voting',
+    disabled: true,
+  },
   {
     type: SpaceType.Deliberation,
     Icon: <Discuss />,
@@ -89,12 +97,17 @@ export default function SelectSpaceForm({ feed_id }: { feed_id: number }) {
   return (
     <div className="flex flex-col gap-2.5 p-1.5">
       {SpaceForms.map((form) => (
-        <SpaceForm
+        <div
           key={form.type}
-          form={form}
-          selected={selectedType === form.type}
-          onClick={() => setSelectedType(form.type)}
-        />
+          className="aria-hidden:hidden"
+          aria-hidden={form.disabled ? !config.experiment : false}
+        >
+          <SpaceForm
+            form={form}
+            selected={selectedType === form.type}
+            onClick={() => setSelectedType(form.type)}
+          />
+        </div>
       ))}
       <LoadablePrimaryButton
         className="w-full mt-4"
@@ -119,11 +132,11 @@ function SpaceForm({
 }) {
   return (
     <div
-      className={`flex flex-row gap-2.5 justify-center items-center w-full p-5 border rounded-[10px] ${selected ? 'border-primary' : 'border-neutral-800'} ${form.disabled ? 'opacity-50 cursor-not-allowed' : ''}} `}
+      className={`flex flex-row gap-2.5 justify-center items-center w-full p-5 border rounded-[10px] ${selected ? 'border-primary' : 'border-neutral-800'}} `}
       onClick={() => {
-        if (!form.disabled) {
-          onClick();
-        }
+        // if (!form.disabled) {
+        //   onClick();
+        // }
       }}
     >
       <div className="size-8 [&>svg]:size-8">{form.Icon}</div>
