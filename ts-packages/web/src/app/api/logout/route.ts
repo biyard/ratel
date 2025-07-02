@@ -45,21 +45,6 @@ export async function POST(request: NextRequest) {
       maxAge: 0,
       path: '/',
       sameSite: 'none',
-      secure: true,
-      httpOnly: true,
-    });
-    response.cookies.set('auth_token', '', {
-      maxAge: 0,
-      path: '/',
-      sameSite: 'none',
-      secure: true,
-      httpOnly: true,
-    });
-
-    response.cookies.set('id', '', {
-      maxAge: 0,
-      path: '/',
-      sameSite: 'none',
       domain: `.${host}`,
       secure: true,
       httpOnly: true,
