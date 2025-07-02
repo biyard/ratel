@@ -2,7 +2,7 @@
 
 import { useFeedByID } from '@/app/(social)/_hooks/feed';
 // import Comment, { NewComment } from '@/components/comment';
-import Comment1, {NewComment1} from '@/components/comment/comment1';
+import Comment1, { NewComment1 } from '@/components/comment/comment1';
 import { CommentIcon, ChatIcon } from '@/components/icons';
 import { useLoggedIn, useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { writeCommentRequest } from '@/lib/api/models/feeds/comment';
@@ -10,6 +10,7 @@ import { ratelApi } from '@/lib/api/ratel_api';
 import { useApiCall } from '@/lib/api/use-send';
 import { logger } from '@/lib/logger';
 import { useState } from 'react';
+import RichTextEditor from '@/components/comment/rich-text-editor';
 
 export default function ThreadComment({ post_id }: { post_id: number }) {
   const isLogin = useLoggedIn();
@@ -87,7 +88,14 @@ export default function ThreadComment({ post_id }: { post_id: number }) {
               </button>
             )}
             {expand && (
-              <NewComment1
+              // <NewComment1
+              //   onClose={() => setExpand(false)}
+              //   onSubmit={async (content) =>
+              //     await handleSubmit(post_id, content)
+              //   }
+              // />
+              <RichTextEditor
+                className="min-h-30"
                 onClose={() => setExpand(false)}
                 onSubmit={async (content) =>
                   await handleSubmit(post_id, content)
