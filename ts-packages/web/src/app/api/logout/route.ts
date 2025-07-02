@@ -72,6 +72,23 @@ export async function POST(request: NextRequest) {
       secure: true,
       httpOnly: true,
     });
+
+    response.cookies.set('id', '', {
+      maxAge: 0,
+      path: '/',
+      sameSite: 'none',
+      domain: `api.${host}`,
+      secure: true,
+      httpOnly: true,
+    });
+    response.cookies.set('auth_token', '', {
+      maxAge: 0,
+      path: '/',
+      sameSite: 'none',
+      domain: `api.${host}`,
+      secure: true,
+      httpOnly: true,
+    });
   }
 
   return response;
