@@ -44,17 +44,35 @@ export async function GET(request: NextRequest) {
 
   const commonSuffix =
     protocol === 'https'
-      ? `Path=/; HttpOnly; Secure; SameSite=None; Domain=.${host}; Max-Age=2586226`
+      ? `Path=/; HttpOnly; Secure; SameSite=None; Max-Age=2586226`
       : 'Path=/; SameSite=Lax; Max-Age=2586226';
 
   const cookies: string[] = [];
 
   if (idCookie) {
-    cookies.push(idCookie.split(';')[0] + '; ' + commonSuffix);
+    if (protocol === 'https') {
+      cookies.push(
+        `${idCookie.split(';')[0]}; ${commonSuffix}; Domain=${host}`,
+      );
+      cookies.push(
+        `${idCookie.split(';')[0]}; ${commonSuffix}; Domain=api.${host}`,
+      );
+    } else {
+      cookies.push(`${idCookie.split(';')[0]}; ${commonSuffix}`);
+    }
   }
 
   if (authCookie) {
-    cookies.push(authCookie.split(';')[0] + '; ' + commonSuffix);
+    if (protocol === 'https') {
+      cookies.push(
+        `${authCookie.split(';')[0]}; ${commonSuffix}; Domain=${host}`,
+      );
+      cookies.push(
+        `${authCookie.split(';')[0]}; ${commonSuffix}; Domain=api.${host}`,
+      );
+    } else {
+      cookies.push(`${authCookie.split(';')[0]}; ${commonSuffix}`);
+    }
   }
 
   return new NextResponse(res.body, {
