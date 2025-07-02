@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
 
   const apiBaseUrl: string = config.api_url;
 
-  let targetUrl = `${apiBaseUrl}${ratelApi.users.logout()}`;
+  const targetUrl = `${apiBaseUrl}${ratelApi.users.logout()}`;
   const res = await fetch(targetUrl, {
     method: 'POST',
     headers: {
