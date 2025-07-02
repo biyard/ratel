@@ -16,18 +16,21 @@ import { logger } from '../logger';
 async function getDataFromServer<T>(
   key: (string | number)[],
   url: string,
+  force = false,
 ): Promise<{ key: (string | number)[]; data: T | null }> {
   const queryClient = await getServerQueryClient();
 
-  const data = queryClient.getQueryData<T | null>(key);
-
-  if (data) {
-    logger.debug('getDataFromServer: using cached data', key);
-    return { key, data };
+  if (!force) {
+    const data = queryClient.getQueryData<T | null>(key);
+    if (data) {
+      logger.debug('getDataFromServer: using cached data', key);
+      return { key, data };
+    }
   }
 
   const res = await apiFetch<T | null>(`${config.api_url}${url}`, {
     ignoreError: true,
+    cache: 'no-store',
   });
 
   if (res.data) {
@@ -46,6 +49,7 @@ export function getSpaceById(
   return getDataFromServer<Space>(
     [QK_GET_SPACE_BY_SPACE_ID, id],
     ratelApi.spaces.getSpaceBySpaceId(id),
+    true,
   );
 }
 

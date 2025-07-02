@@ -108,9 +108,11 @@ impl UserControllerV1 {
         Extension(auth): Extension<Option<Authorization>>,
         Query(mut req): Query<UserReadAction>,
     ) -> Result<Json<User>> {
+        tracing::debug!("read_user: {:?}", req);
         let principal = extract_principal(&ctrl.pool, auth).await?;
+        tracing::debug!("principal: {:?}", principal);
 
-        req.validate()?;
+        // req.validate()?;
 
         match req.action {
             Some(UserReadActionType::FindByEmail) => ctrl.find_by_email(req).await,
@@ -337,13 +339,24 @@ impl UserControllerV1 {
         &self,
         UserReadAction { email, .. }: UserReadAction,
     ) -> Result<Json<User>> {
-        let user = User::query_builder()
-            .email_equals(email.ok_or(Error::InvalidEmail)?)
+        tracing::debug!("find user by email: {:?}", email);
+        let original = email.ok_or(Error::InvalidEmail)?;
+        let replaced = original.replace(' ', "+");
+        let user = match User::query_builder()
+            .email_equals(replaced)
             .query()
             .map(User::from)
             .fetch_one(&self.pool)
             .await
-            .map_err(|_| Error::NotFound)?;
+        {
+            Ok(v) => v,
+            Err(e) => {
+                tracing::error!("failed to find user by email: {:?}", e);
+                return Err(Error::NotFound);
+            }
+        };
+
+        tracing::debug!("found user: {:?}", user);
 
         Ok(Json(user))
     }
