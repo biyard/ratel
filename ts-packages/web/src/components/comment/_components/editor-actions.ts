@@ -8,9 +8,8 @@ type UseEditorActionsProps = {
   setUploadedImages: React.Dispatch<React.SetStateAction<any[]>>;
   setLinkUrl: (url: string) => void;
   setShowLinkPopover: (show: boolean) => void;
-  fileInputRef: React.RefObject<HTMLInputElement>;
+  fileInputRef: React.RefObject<HTMLInputElement | null>;
 };
-
 export const useEditorActions = ({
   editor,
   setUploadedImages,

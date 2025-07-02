@@ -27,7 +27,9 @@ export default function RichTextEditor({
   const [linkUrl, setLinkUrl] = useState('');
   const [showLinkPopover, setShowLinkPopover] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
-  const [_uploadedImages, setUploadedImages] = useState<
+
+  /*eslint-disable-next-line @typescript-eslint/no-unused-vars, unused-imports/no-unused-vars*/
+  const [uploadedImages, setUploadedImages] = useState<
     { id: string; src: string; name: string }[]
   >([]);
   const [isLoading, setLoading] = useState(false);
