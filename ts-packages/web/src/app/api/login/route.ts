@@ -50,29 +50,11 @@ export async function GET(request: NextRequest) {
   const cookies: string[] = [];
 
   if (idCookie) {
-    if (protocol === 'https') {
-      cookies.push(
-        `${idCookie.split(';')[0]}; ${commonSuffix}; Domain=${host}`,
-      );
-      cookies.push(
-        `${idCookie.split(';')[0]}; ${commonSuffix}; Domain=api.${host}`,
-      );
-    } else {
-      cookies.push(`${idCookie.split(';')[0]}; ${commonSuffix}`);
-    }
+    cookies.push(`${idCookie.split(';')[0]}; ${commonSuffix}`);
   }
 
   if (authCookie) {
-    if (protocol === 'https') {
-      cookies.push(
-        `${authCookie.split(';')[0]}; ${commonSuffix}; Domain=${host}`,
-      );
-      cookies.push(
-        `${authCookie.split(';')[0]}; ${commonSuffix}; Domain=api.${host}`,
-      );
-    } else {
-      cookies.push(`${authCookie.split(';')[0]}; ${commonSuffix}`);
-    }
+    cookies.push(`${authCookie.split(';')[0]}; ${commonSuffix}`);
   }
 
   return new NextResponse(res.body, {

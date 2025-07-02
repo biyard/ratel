@@ -254,7 +254,12 @@ pub async fn cookie_middleware(
 
             res.headers_mut().append(
                 reqwest::header::SET_COOKIE,
-                format!("auth_token={}; SameSite=Lax; Path=/; Max-Age=2586226; HttpOnly; Secure; Domain=api.{}", token, crate::config::get().signing_domain).parse().unwrap(),
+                format!(
+                    "auth_token={}; SameSite=Lax; Path=/; Max-Age=2586226; HttpOnly; Secure;",
+                    token,
+                )
+                .parse()
+                .unwrap(),
             );
         }
     }

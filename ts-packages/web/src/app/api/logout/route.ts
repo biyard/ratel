@@ -30,7 +30,6 @@ export async function POST(request: NextRequest) {
       maxAge: 0,
       path: '/',
       sameSite: 'none',
-      domain: host,
       secure: true,
       httpOnly: true,
     });
@@ -38,7 +37,6 @@ export async function POST(request: NextRequest) {
       maxAge: 0,
       path: '/',
       sameSite: 'none',
-      domain: host,
       secure: true,
       httpOnly: true,
     });
@@ -56,23 +54,6 @@ export async function POST(request: NextRequest) {
       path: '/',
       sameSite: 'none',
       domain: `.${host}`,
-      secure: true,
-      httpOnly: true,
-    });
-
-    response.cookies.set('id', '', {
-      maxAge: 0,
-      path: '/',
-      sameSite: 'none',
-      domain: `api.${host}`,
-      secure: true,
-      httpOnly: true,
-    });
-    response.cookies.set('auth_token', '', {
-      maxAge: 0,
-      path: '/',
-      sameSite: 'none',
-      domain: `api.${host}`,
       secure: true,
       httpOnly: true,
     });
