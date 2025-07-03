@@ -116,19 +116,13 @@ const rankConfig: Record<
   },
 };
 
-export function Character({
-  jsonPath,
-  rank,
-}: {
-  jsonPath: string;
-  rank: number;
-}) {
+export function Character({ alias, rank }: { alias: string; rank: number }) {
   const spriteRef = useRef<AnimatedSprite>(null);
   const [textures, setTextures] = useState<Texture[]>([]);
   useEffect(() => {
     const loadAssets = async () => {
       try {
-        const sheet = (await Assets.get(jsonPath)) as Spritesheet;
+        const sheet = (await Assets.get(alias)) as Spritesheet;
         logger.debug('Asset Loaded:', Object.values(sheet.textures));
         setTextures(Object.values(sheet.textures));
       } catch (error) {
@@ -137,7 +131,7 @@ export function Character({
     };
 
     loadAssets();
-  }, [jsonPath]);
+  }, [alias]);
 
   useEffect(() => {
     if (spriteRef.current && textures.length > 0) {
