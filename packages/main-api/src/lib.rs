@@ -9,6 +9,7 @@ pub mod controllers {
     }
 }
 
+pub mod api_main;
 pub mod config;
 pub mod models;
 pub mod route;
@@ -17,3 +18,6 @@ pub mod utils;
 
 pub use bdk::prelude::*;
 pub use dto::*;
+
+#[cfg(test)]
+pub mod tests;
