@@ -6,6 +6,17 @@ export function middleware(req: NextRequest) {
   let sessionId = req.cookies.get('nx_session_id')?.value;
   const exists = sessionId !== undefined;
 
+  if (req.method === 'OPTIONS') {
+    return new NextResponse(null, {
+      status: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': '*',
+        'Access-Control-Allow-Headers': '*',
+      },
+    });
+  }
+
   if (!sessionId) {
     sessionId = uuidv4();
     req.cookies.set('nx_session_id', sessionId);

@@ -28,20 +28,20 @@ export async function POST(request: NextRequest) {
   );
 
   if (host.includes('localhost')) {
-    response.cookies.set('id', '', {
+    response.cookies.set(`${config.env}_sid`, '', {
       maxAge: 0,
       path: '/',
       sameSite: 'lax',
       domain: 'localhost',
     });
-    response.cookies.set('auth_token', '', {
+    response.cookies.set(`${config.env}_auth_token`, '', {
       maxAge: 0,
       path: '/',
       sameSite: 'lax',
       domain: 'localhost',
     });
   } else {
-    response.cookies.set('id', '', {
+    response.cookies.set(`${config.env}_sid`, '', {
       maxAge: 0,
       path: '/',
       sameSite: 'none',
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
       secure: true,
       httpOnly: true,
     });
-    response.cookies.set('auth_token', '', {
+    response.cookies.set(`${config.env}_auth_token`, '', {
       maxAge: 0,
       path: '/',
       sameSite: 'none',
