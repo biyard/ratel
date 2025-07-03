@@ -1,5 +1,5 @@
 import { config } from '@/config';
-import { ApolloClient, InMemoryCache, HttpLink } from '@apollo/client';
+import { ApolloClient, InMemoryCache } from '@apollo/client';
 import { cache } from 'react';
 
 export const client = new ApolloClient({
