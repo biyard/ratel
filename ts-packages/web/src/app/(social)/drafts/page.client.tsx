@@ -114,6 +114,10 @@ export default function MyPostsPage() {
         )}
       </div>
 
+      <div className="tablet:hidden fixed bottom-4 right-4 z-50">
+        <CreatePostButton />
+      </div>
+
       <div className="w-80 pl-4 max-tablet:!hidden">
         <CreatePostButton />
       </div>
