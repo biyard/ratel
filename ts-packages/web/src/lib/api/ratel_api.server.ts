@@ -21,36 +21,6 @@ import { Promotion } from './models/promotion';
 import { User } from './models/user';
 import { QueryResponse } from './models/common';
 
-async function getDataFromApollonServer<T>(
-  key: (string | number)[],
-  url: string,
-  force = false,
-): Promise<{ key: (string | number)[]; data: T | null }> {
-  const queryClient = await getServerQueryClient();
-
-  if (!force) {
-    const data = queryClient.getQueryData<T | null>(key);
-    if (data) {
-      logger.debug('getDataFromServer: using cached data', key);
-      return { key, data };
-    }
-  }
-
-  const res = await apiFetch<T | null>(`${config.api_url}${url}`, {
-    ignoreError: true,
-    cache: 'no-store',
-  });
-
-  if (res.data) {
-    queryClient.setQueryData(key, res.data);
-  }
-
-  return {
-    key,
-    data: res.data,
-  };
-}
-
 async function getDataFromServer<T>(
   key: (string | number)[],
   url: string,
