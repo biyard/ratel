@@ -10,15 +10,15 @@ export default function SprintLeaguePage() {
   const user = [
     {
       name: '이준석',
-      jsonPath: '/images/lee-jun.json',
+      alias: 'lee-jun',
     },
     {
       name: '김문수',
-      jsonPath: '/images/kim-moon.json',
+      alias: 'kim-moon',
     },
     {
       name: '이재명',
-      jsonPath: '/images/lee-jae.json',
+      alias: 'lee-jae',
     },
   ];
   return (
@@ -27,7 +27,7 @@ export default function SprintLeaguePage() {
       <Base>
         <Background names={user.map((u) => u.name)} />
         {user.map((user, index) => (
-          <Character key={index} jsonPath={user.jsonPath} rank={index + 1} />
+          <Character key={index} alias={user.alias} rank={index + 1} />
         ))}
       </Base>
     </div>
