@@ -362,14 +362,8 @@ export const PostDraftProvider: React.FC<{ children: React.ReactNode }> = ({
   const resetState = useCallback(() => {
     setDraftId(null);
     setTitle('');
-    setContent('');
     setImage(null);
     setStatus('idle');
-    lastSavedRef.current = {
-      title: '',
-      content: '',
-      image: null,
-    };
   }, []);
 
   const newDraft = useCallback(() => {
@@ -380,25 +374,27 @@ export const PostDraftProvider: React.FC<{ children: React.ReactNode }> = ({
   const loadDraft = useCallback(
     async (id: number) => {
       setStatus('loading');
+
       try {
         const draft: Feed = await get(ratelApi.feeds.getFeedsByFeedId(id));
         const draftTitle = draft.title || '';
         const draftContent = draft.html_contents || '';
         const draftImage =
           draft.url && draft.url_type === UrlType.Image ? draft.url : null;
-
-        setDraftId(draft.id);
-        setTitle(draftTitle);
-        setImage(draftImage);
-        logger.debug('Draft content:', draftContent);
-        setContent(draftContent);
-        lastSavedRef.current = {
-          title: draftTitle,
-          content: draftContent,
-          image: draftImage,
-        };
-        setExpand(true);
-        logger.debug('Draft loaded:', draft);
+        setContent(null);
+        setTimeout(() => {
+          setDraftId(draft.id);
+          setTitle(draftTitle);
+          setImage(draftImage);
+          setContent(draftContent);
+          lastSavedRef.current = {
+            title: draftTitle,
+            content: draftContent,
+            image: draftImage,
+          };
+          setExpand(true);
+          logger.debug('Draft loaded:', draft);
+        }, 10); // (small delay ensures state flush), looks like react state update is not synchronous, so it ignores the previous state update
       } catch (error: unknown) {
         logger.error('LoadDraft error:', error);
         setStatus('error');
@@ -408,6 +404,7 @@ export const PostDraftProvider: React.FC<{ children: React.ReactNode }> = ({
     },
     [get],
   );
+
 
   const saveDraft = useCallback(
     async (
