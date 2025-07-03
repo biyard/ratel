@@ -4,7 +4,7 @@ use by_axum::axum::middleware;
 use by_types::DatabaseConfig;
 use dto::{
     by_axum::{
-        auth::{authorization_middleware, generate_jwt},
+        auth::{authorization_middleware, generate_jwt, set_auth_token_key},
         axum::{extract::Request, http::Response, middleware::Next},
     },
     *,
@@ -152,6 +152,9 @@ pub async fn api_main() -> Result<Router> {
     let conf = config::get();
     by_axum::auth::set_auth_config(conf.auth.clone());
     tracing::debug!("config: {:?}", conf);
+    let auth_token_key = format!("{}_auth_token", conf.env);
+    let auth_token_key = Box::leak(Box::new(auth_token_key));
+    set_auth_token_key(auth_token_key);
 
     let pool = if let DatabaseConfig::Postgres { url, pool_size } = conf.database {
         PgPoolOptions::new()
@@ -175,8 +178,13 @@ pub async fn api_main() -> Result<Router> {
     let is_local = conf.env == "local";
     let session_layer = SessionManagerLayer::new(session_store)
         .with_secure(!is_local)
-        .with_http_only(true)
-        .with_same_site(tower_sessions::cookie::SameSite::Lax)
+        .with_http_only(!is_local)
+        .with_same_site(if is_local {
+            tower_sessions::cookie::SameSite::Lax
+        } else {
+            tower_sessions::cookie::SameSite::None
+        })
+        .with_name(format!("{}_sid", conf.env))
         .with_path("/")
         .with_expiry(tower_sessions::Expiry::AtDateTime(
             OffsetDateTime::now_utc()
@@ -237,7 +245,8 @@ pub async fn cookie_middleware(
             res.headers_mut().append(
                 reqwest::header::SET_COOKIE,
                 format!(
-                    "auth_token={}; SameSite=Lax; Path=/; Max-Age=2586226; HttpOnly; Secure;",
+                    "{}_auth_token={}; SameSite=Lax; Path=/; Max-Age=2586226; HttpOnly; Secure;",
+                    config::get().env,
                     token,
                 )
                 .parse()
