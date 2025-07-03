@@ -100,6 +100,16 @@ export default function DiscussionByIdPage() {
         deviceController,
       );
 
+      const audioElement = new Audio();
+      audioElement.autoplay = true;
+      session.audioVideo.bindAudioElement(audioElement);
+
+      const audioInputs =
+        await session.deviceController.listAudioInputDevices();
+      if (audioInputs.length > 0) {
+        await session.deviceController.startAudioInput(audioInputs[0].deviceId);
+      }
+
       setMeetingSession(session);
     }
 
