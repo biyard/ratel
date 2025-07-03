@@ -22,9 +22,9 @@ validator = { version = "0.20.0", features = ["derive"] }
 lazy_static = "1.5.0"
 regex = "1.11.1"
 
-bdk.workspace = true
-sqlx = { workspace = true,  optional = true }
+bdk = { workspace = true, features = ["be"] }
+sqlx = { workspace = true }
 
 [features]
-web = ["bdk/web"]
-server = ["bdk/server", "sqlx"]
+default = ["server"]
+server = ["bdk/server"]
