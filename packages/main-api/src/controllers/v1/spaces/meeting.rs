@@ -105,6 +105,64 @@ impl SpaceMeetingController {
         let attendee = if v.is_some() {
             v.unwrap()
         } else {
+            let already_exists = DiscussionParticipant::query_builder()
+                .discussion_id_equals(discussion.id)
+                .user_id_equals(user_id)
+                .query()
+                .map(DiscussionParticipant::from)
+                .fetch_optional(&self.pool)
+                .await?;
+
+            if already_exists.is_some() {
+                tracing::warn!("Attendee already exists, skipping re-creation.");
+                let attendee_id = already_exists.unwrap().participant_id;
+                let attendee = client
+                    .get_attendee_info(&meeting_id, &attendee_id)
+                    .await
+                    .unwrap();
+
+                let discussion_participants = DiscussionParticipant::query_builder()
+                    .discussion_id_equals(discussion.id)
+                    .query()
+                    .map(DiscussionParticipant::from)
+                    .fetch_all(&self.pool)
+                    .await?;
+
+                let user_ids: Vec<i64> =
+                    discussion_participants.iter().map(|p| p.user_id).collect();
+
+                let participants = if user_ids.is_empty() {
+                    vec![]
+                } else {
+                    let placeholders = (1..=user_ids.len())
+                        .map(|i| format!("${}", i))
+                        .collect::<Vec<_>>()
+                        .join(", ");
+                    let query = format!("SELECT * FROM users WHERE id IN ({})", placeholders);
+
+                    let mut q = sqlx::query(&query);
+
+                    for id in &user_ids {
+                        q = q.bind(id);
+                    }
+
+                    let rows = q.map(DiscussionUser::from).fetch_all(&self.pool).await?;
+
+                    rows
+                };
+
+                return Ok(MeetingData {
+                    meeting: meeting_info,
+                    attendee: AttendeeInfo {
+                        attendee_id: attendee_id.clone(),
+                        join_token: attendee.join_token.unwrap_or_default(),
+                        external_user_id: attendee.external_user_id.unwrap_or_default(),
+                    },
+                    participants,
+                    record: None,
+                });
+            }
+
             let v = match client
                 .create_attendee(&meeting_info.clone(), user_id.to_string().as_str())
                 .await

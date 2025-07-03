@@ -158,6 +158,7 @@ export default function DiscussionByIdPage() {
     av.realtimeSubscribeToAttendeeIdPresence((attendeeId, present) => {
       if (present) {
         activeAttendeeIds.add(attendeeId);
+        data.refetch();
         av.realtimeSubscribeToVolumeIndicator(
           attendeeId,
           (_attendeeId, _volume, muted) => {
@@ -169,6 +170,7 @@ export default function DiscussionByIdPage() {
         );
       } else {
         activeAttendeeIds.delete(attendeeId);
+        data.refetch();
         setMicStates((prev) => {
           const copy = { ...prev };
           delete copy[attendeeId];
