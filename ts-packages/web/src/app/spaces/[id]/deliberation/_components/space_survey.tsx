@@ -150,6 +150,8 @@ function EditableSurvey({
   const [stableKeys, setStableKeys] = useState<string[]>(() =>
     questions.map(() => uuidv4()),
   );
+  const [startCalendarOpen, setStartCalendarOpen] = useState<boolean>(false);
+  const [endCalendarOpen, setEndCalendarOpen] = useState<boolean>(false);
 
   const handleAdd = () => {
     onadd();
@@ -171,6 +173,10 @@ function EditableSurvey({
           <div className="flex flex-row gap-[10px]">
             <CustomCalendar
               value={startDate * 1000}
+              calendarOpen={startCalendarOpen}
+              setCalendarOpen={(value: boolean) => {
+                setStartCalendarOpen(value);
+              }}
               onChange={(date) => {
                 const newStart = Math.floor(date / 1000);
                 setStartDate(newStart);
@@ -182,6 +188,10 @@ function EditableSurvey({
           <div className="flex flex-row gap-[10px]">
             <CustomCalendar
               value={endDate * 1000}
+              calendarOpen={endCalendarOpen}
+              setCalendarOpen={(value: boolean) => {
+                setEndCalendarOpen(value);
+              }}
               onChange={(date) => {
                 const newEnd = Math.floor(date / 1000);
                 setEndDate(newEnd);
