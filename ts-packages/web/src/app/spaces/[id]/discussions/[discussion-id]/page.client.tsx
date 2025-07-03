@@ -32,6 +32,8 @@ import ContentShareVideo from './_components/content_share_video';
 import RemoteContentShareVideo from './_components/remote_content_share_video';
 
 export default function DiscussionByIdPage() {
+  const tileMapRef = useRef<Record<number, string>>({});
+
   const [isVideoOn, setIsVideoOn] = useState(true);
   const [isSharing, setIsSharing] = useState(false);
   const [isAudioOn, setIsAudioOn] = useState(true);
@@ -124,24 +126,35 @@ export default function DiscussionByIdPage() {
     const observer = {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       videoTileDidUpdate: (tileState: any) => {
+        const { tileId, boundAttendeeId } = tileState;
+        if (!tileId || !boundAttendeeId) return;
+
+        tileMapRef.current[tileId] = boundAttendeeId;
         const attendeeId = tileState.boundAttendeeId;
-        if (!attendeeId) return;
+
+        const isVideoOn =
+          attendeeId !== meetingSession.configuration.credentials?.attendeeId
+            ? true
+            : tileState.boundAttendeeId &&
+              tileState.tileId !== null &&
+              (tileState.active || tileState.boundVideoStream !== null);
 
         setVideoStates((prev) => ({
           ...prev,
-          [attendeeId]: tileState.active,
+          [boundAttendeeId]: isVideoOn,
         }));
       },
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       videoTileWasRemoved: (tileId: any) => {
-        const tile = av.getVideoTile(tileId);
-        const attendeeId = tile?.state().boundAttendeeId;
+        const attendeeId = tileMapRef.current[tileId];
         if (!attendeeId) return;
 
         setVideoStates((prev) => ({
           ...prev,
           [attendeeId]: false,
         }));
+
+        delete tileMapRef.current[tileId];
       },
     };
 
