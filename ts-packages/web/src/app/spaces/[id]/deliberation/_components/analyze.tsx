@@ -1,5 +1,4 @@
 'use client';
-import { ArrowLeft } from 'lucide-react';
 import React from 'react';
 import { useDeliberationSpaceContext } from '../provider.client';
 import ObjectiveResponse from './dashboard/objective_response';
@@ -8,13 +7,8 @@ import { logger } from '@/lib/logger';
 import SummaryReport from './dashboard/summary_report';
 
 export default function AnalyzePage() {
-  const {
-    handleGoBack,
-    handleDownloadExcel,
-    answers,
-    survey,
-    mappedResponses,
-  } = useDeliberationSpaceContext();
+  const { handleDownloadExcel, answers, survey, mappedResponses } =
+    useDeliberationSpaceContext();
 
   logger.debug('mapped responses: ', mappedResponses);
 
@@ -25,15 +19,6 @@ export default function AnalyzePage() {
 
   return (
     <div className="flex flex-col w-full">
-      <div
-        className="cursor-pointer w-fit h-fit mb-[20px]"
-        onClick={() => {
-          handleGoBack();
-        }}
-      >
-        <ArrowLeft width={24} height={24} />
-      </div>
-
       <div className="flex flex-row w-full justify-end mb-[20px]">
         <div className="w-fit">
           <button
