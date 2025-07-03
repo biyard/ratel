@@ -1,6 +1,5 @@
 import { getCookieContext } from '@/app/_providers/CookieProvider';
 import { makeQueryClient } from '@/providers/getQueryClient';
-import { getApolloContext } from '@apollo/client';
 import { QueryClient } from '@tanstack/react-query';
 import { cache } from 'react';
 
