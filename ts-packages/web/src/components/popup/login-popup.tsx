@@ -20,6 +20,7 @@ import { sha3 } from '@/lib/utils';
 import { useApolloClient } from '@apollo/client';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { useNetwork } from '@/app/(social)/_hooks/use-network';
+import { isWebView } from '@/lib/webview-utils';
 
 interface LoginModalProps {
   id?: string;
@@ -230,16 +231,22 @@ export const LoginModal = ({ id = 'login_popup' }: LoginModalProps) => {
           </Button>
         </Row>
       </Col>
-      <div className="rule-with-text align-center text-center font-light">
-        Or
-      </div>
-      <div className="flex flex-col gap-2.5">
-        <LoginBox
-          icon={<GoogleIcon />}
-          label="Continue With Google"
-          onClick={handleGoogleSignIn}
-        />
-      </div>
+      {!isWebView() ? (
+        <>
+          <div className="rule-with-text align-center text-center font-light">
+            Or
+          </div>
+          <div className="flex flex-col gap-2.5">
+            <LoginBox
+              icon={<GoogleIcon />}
+              label="Continue With Google"
+              onClick={handleGoogleSignIn}
+            />
+          </div>
+        </>
+      ) : (
+        <></>
+      )}
 
       <LoginPopupFooter />
     </div>

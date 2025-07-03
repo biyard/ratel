@@ -1,3 +1,5 @@
+import { config } from '@/config';
+import { ratelApi } from '@/lib/api/ratel_api';
 import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -7,26 +9,39 @@ export async function POST(request: NextRequest) {
 
   logger.debug('host', host);
 
+  const apiBaseUrl: string = config.api_url;
+
+  const targetUrl = `${apiBaseUrl}${ratelApi.users.logout()}`;
+  const res = await fetch(targetUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Cookie: request.headers.get('cookie') || '',
+    },
+  });
+
+  logger.debug('response header', res.headers, 'status', res.status);
+
   const response = NextResponse.json(
     { message: 'Logout successful' },
     { status: 200 },
   );
 
   if (host.includes('localhost')) {
-    response.cookies.set('id', '', {
+    response.cookies.set(`${config.env}_sid`, '', {
       maxAge: 0,
       path: '/',
       sameSite: 'lax',
       domain: 'localhost',
     });
-    response.cookies.set('auth_token', '', {
+    response.cookies.set(`${config.env}_auth_token`, '', {
       maxAge: 0,
       path: '/',
       sameSite: 'lax',
       domain: 'localhost',
     });
   } else {
-    response.cookies.set('id', '', {
+    response.cookies.set(`${config.env}_sid`, '', {
       maxAge: 0,
       path: '/',
       sameSite: 'none',
@@ -34,7 +49,7 @@ export async function POST(request: NextRequest) {
       secure: true,
       httpOnly: true,
     });
-    response.cookies.set('auth_token', '', {
+    response.cookies.set(`${config.env}_auth_token`, '', {
       maxAge: 0,
       path: '/',
       sameSite: 'none',
