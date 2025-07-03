@@ -51,7 +51,7 @@ export default function SpaceSurvey({
 }: SpaceSurveyProps) {
   return (
     <div className="flex flex-col w-full">
-      {isEdit ? (
+      {isEdit && status == SpaceStatus.Draft ? (
         <EditableSurvey
           questions={questions}
           startDate={startDate}
@@ -70,6 +70,7 @@ export default function SpaceSurvey({
         />
       ) : (
         <ViewSurvey
+          isEdit={isEdit}
           status={status}
           answer={answer}
           setAnswers={setAnswers}
@@ -84,6 +85,7 @@ export default function SpaceSurvey({
 }
 
 function ViewSurvey({
+  isEdit,
   status,
   answer,
   setAnswers,
@@ -92,6 +94,7 @@ function ViewSurvey({
   endDate,
   onSend,
 }: {
+  isEdit: boolean;
   status: SpaceStatus;
   answer: SurveyAnswer;
   setAnswers: (answer: Answer[]) => void;
@@ -110,6 +113,7 @@ function ViewSurvey({
         </div>
       )}
       <SurveyViewer
+        isEdit={isEdit}
         status={status}
         startDate={startDate}
         endDate={endDate}
