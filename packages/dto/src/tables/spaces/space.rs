@@ -118,6 +118,7 @@ pub enum SpaceType {
     Deliberation = 3,
     Nft = 4,
     Commitee = 5,
+    SprintLeague = 6,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]
