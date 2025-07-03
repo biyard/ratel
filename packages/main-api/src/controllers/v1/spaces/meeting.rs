@@ -150,12 +150,14 @@ impl SpaceMeetingController {
                 .fetch_all(&self.pool)
                 .await?;
 
-            for participant in participants {
+            for participant in participants.clone() {
                 let _ = self
                     .participation_repo
                     .delete_with_tx(&mut *tx, participant.id)
                     .await;
             }
+
+            tracing::debug!("discussion participants: {:?}", participants);
 
             match self
                 .participation_repo
