@@ -34,6 +34,7 @@ a {
   /* Tailwindcss variables */
   --color-background: #1e1e1e;
   --color-primary: #fcb300;
+  --color-primary-50: #e6a200;
   --color-secondary: #777677;
 
   --color-btn-hover: #282828;
@@ -51,6 +52,7 @@ a {
   --color-neutral-600: #525252;
   --color-neutral-700: #404040;
   --color-neutral-800: #262626;
+  --color-neutral-900: #e5e5e5;
   --color-c-c-20: #6eedd8;
   --color-c-p-20: #ff9eee;
   --color-c-p-50: #db2780;

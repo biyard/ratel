@@ -75,7 +75,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="bg-neutral-700 border-neutral-700 text-white hover:bg-[#262626]"
+                    className="bg-neutral-700 border-neutral-700 text-white hover:bg-neutral-800"
                   >
                     + Follow
                   </Button>
