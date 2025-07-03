@@ -191,6 +191,8 @@ export default function DiscussionByIdPage() {
     const av = meetingSession.audioVideo;
 
     const topic = 'chat';
+    const chatSound = new Audio('/sounds/chat.wav');
+    chatSound.volume = 0.5;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const onMessageReceived = (dataMessage: any) => {
@@ -199,6 +201,8 @@ export default function DiscussionByIdPage() {
       const timestamp = Date.now();
 
       setMessages((prev) => [...prev, { senderId, text, timestamp }]);
+
+      chatSound.play();
     };
 
     av.realtimeSubscribeToReceiveDataMessage(topic, onMessageReceived);
