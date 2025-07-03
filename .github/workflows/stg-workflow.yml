@@ -41,6 +41,7 @@ jobs:
           ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           ENV: prod
+          STACK: ratel-main-api-stg-stack
           RUST_LOG: info
           SERVICE: main-api
           DOMAIN: api.stg.ratel.foundation
@@ -71,7 +72,7 @@ jobs:
   create-release-pr:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/dev'
-    needs: [main-api, fetcher]
+    needs: [main-api]
     steps:
       - uses: actions/checkout@v3
         with:
