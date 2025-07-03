@@ -58,7 +58,7 @@ export default function LocalVideo({
       av.stopLocalVideoTile();
       av.stop();
     };
-  }, [meetingSession]);
+  }, [isVideoOn,meetingSession]);
 
   useEffect(() => {
     const av = meetingSession.audioVideo;
@@ -69,7 +69,7 @@ export default function LocalVideo({
     } else {
       av.stopLocalVideoTile();
     }
-  }, [isVideoOn]);
+  }, [isVideoOn, meetingSession.audioVideo, started]);
 
   return (
     <video

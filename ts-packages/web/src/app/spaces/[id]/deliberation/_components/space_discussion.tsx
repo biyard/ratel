@@ -298,7 +298,7 @@ function EditableDiscussion({
 }) {
   const stableKeys = useMemo(
     () => discussions.map(() => uuidv4()),
-    [discussions.length],
+    [discussions],
   );
 
   return (

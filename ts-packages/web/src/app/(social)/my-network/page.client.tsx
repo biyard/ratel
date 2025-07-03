@@ -29,7 +29,7 @@ export default function MyNetwork() {
     }, 0);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [network]);
 
   const handleFollow = async (userId: number) => {
     await post(ratelApi.networks.follow(userId), followRequest());
