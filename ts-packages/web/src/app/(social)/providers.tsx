@@ -13,6 +13,7 @@ import { getServerQueryClient } from '@/lib/query-utils.server';
 export default async function Provider({ children }: { children: ReactNode }) {
   const queryClient = await getServerQueryClient();
   const promotion = await getPromotion();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const data: any[] = [
     await getNetwork(),
     promotion,
