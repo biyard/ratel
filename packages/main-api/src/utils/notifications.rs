@@ -1,5 +1,4 @@
-use bdk::prelude::by_axum::auth::Authorization;
-use bdk::prelude::*;
+use by_axum::auth::Authorization;
 use dto::*;
 
 use crate::utils::users::extract_user_id;
