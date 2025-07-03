@@ -405,7 +405,6 @@ export const PostDraftProvider: React.FC<{ children: React.ReactNode }> = ({
     [get],
   );
 
-
   const saveDraft = useCallback(
     async (
       currentTitle: string,
