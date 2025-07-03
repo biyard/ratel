@@ -32,6 +32,8 @@ import ContentShareVideo from './_components/content_share_video';
 import RemoteContentShareVideo from './_components/remote_content_share_video';
 
 export default function DiscussionByIdPage() {
+  const tileMapRef = useRef<Record<number, string>>({});
+
   const [isVideoOn, setIsVideoOn] = useState(true);
   const [isSharing, setIsSharing] = useState(false);
   const [isAudioOn, setIsAudioOn] = useState(true);
@@ -100,6 +102,16 @@ export default function DiscussionByIdPage() {
         deviceController,
       );
 
+      const audioElement = new Audio();
+      audioElement.autoplay = true;
+      session.audioVideo.bindAudioElement(audioElement);
+
+      const audioInputs =
+        await session.deviceController.listAudioInputDevices();
+      if (audioInputs.length > 0) {
+        await session.deviceController.startAudioInput(audioInputs[0].deviceId);
+      }
+
       setMeetingSession(session);
     }
 
@@ -114,24 +126,35 @@ export default function DiscussionByIdPage() {
     const observer = {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       videoTileDidUpdate: (tileState: any) => {
+        const { tileId, boundAttendeeId } = tileState;
+        if (!tileId || !boundAttendeeId) return;
+
+        tileMapRef.current[tileId] = boundAttendeeId;
         const attendeeId = tileState.boundAttendeeId;
-        if (!attendeeId) return;
+
+        const isVideoOn =
+          attendeeId !== meetingSession.configuration.credentials?.attendeeId
+            ? true
+            : tileState.boundAttendeeId &&
+              tileState.tileId !== null &&
+              (tileState.active || tileState.boundVideoStream !== null);
 
         setVideoStates((prev) => ({
           ...prev,
-          [attendeeId]: tileState.active,
+          [boundAttendeeId]: isVideoOn,
         }));
       },
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       videoTileWasRemoved: (tileId: any) => {
-        const tile = av.getVideoTile(tileId);
-        const attendeeId = tile?.state().boundAttendeeId;
+        const attendeeId = tileMapRef.current[tileId];
         if (!attendeeId) return;
 
         setVideoStates((prev) => ({
           ...prev,
           [attendeeId]: false,
         }));
+
+        delete tileMapRef.current[tileId];
       },
     };
 
@@ -148,6 +171,7 @@ export default function DiscussionByIdPage() {
     av.realtimeSubscribeToAttendeeIdPresence((attendeeId, present) => {
       if (present) {
         activeAttendeeIds.add(attendeeId);
+        data.refetch();
         av.realtimeSubscribeToVolumeIndicator(
           attendeeId,
           (_attendeeId, _volume, muted) => {
@@ -159,6 +183,7 @@ export default function DiscussionByIdPage() {
         );
       } else {
         activeAttendeeIds.delete(attendeeId);
+        data.refetch();
         setMicStates((prev) => {
           const copy = { ...prev };
           delete copy[attendeeId];
@@ -179,6 +204,8 @@ export default function DiscussionByIdPage() {
     const av = meetingSession.audioVideo;
 
     const topic = 'chat';
+    const chatSound = new Audio('/sounds/chat.wav');
+    chatSound.volume = 0.5;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const onMessageReceived = (dataMessage: any) => {
@@ -187,6 +214,8 @@ export default function DiscussionByIdPage() {
       const timestamp = Date.now();
 
       setMessages((prev) => [...prev, { senderId, text, timestamp }]);
+
+      chatSound.play();
     };
 
     av.realtimeSubscribeToReceiveDataMessage(topic, onMessageReceived);

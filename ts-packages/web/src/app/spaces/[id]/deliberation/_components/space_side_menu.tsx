@@ -156,9 +156,9 @@ function EditSplitButton({
   return (
     <div className="relative flex items-center w-full h-[46px] gap-2">
       {/* Left "Edit" Button */}
-      {status != SpaceStatus.InProgress ? (
+      {
         <button
-          className={`flex items-center justify-start flex-row w-full bg-white hover:bg-neutral-300 text-black px-4 py-3 gap-1 rounded-l-[100px] rounded-r-[4px]'}`}
+          className={`flex items-center justify-start flex-row w-full bg-white hover:bg-neutral-300 text-black px-4 py-3 gap-1 ${status === SpaceStatus.Draft ? 'rounded-l-[100px] rounded-r-[4px]' : 'rounded-l-[100px] rounded-r-[100px] w-full'}'}`}
           onClick={() => {
             if (isEdit) {
               onsave();
@@ -172,9 +172,7 @@ function EditSplitButton({
             {isEdit ? 'Save' : 'Edit'}
           </span>
         </button>
-      ) : (
-        <></>
-      )}
+      }
 
       {/* Right Dropdown Toggle */}
       {status != SpaceStatus.InProgress ? (
