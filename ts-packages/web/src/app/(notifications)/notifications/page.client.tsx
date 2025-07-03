@@ -15,25 +15,24 @@ import {
   Heart,
   Clock,
   Forward,
-  Reply
+  Reply,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useState } from 'react';
-import { notifications } from './data';
+import { notifications, suggestedContacts } from './data';
 import { Button } from '@/components/ui/button';
-
 export default function NotificationClientPage() {
   const [activeTab, setActiveTab] = useState<'notification' | 'message'>(
     'notification',
   );
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
 
-  const [showForwardModal, setShowForwardModal] = useState(false)
-  const [showReplyModal, setShowReplyModal] = useState(false)
-  const [selectedContacts, setSelectedContacts] = useState<string[]>([])
-  const [searchQuery, setSearchQuery] = useState("")
-  const [conversations, setConversations] = useState<Record<string, any[]>>({})
+  const [showForwardModal, setShowForwardModal] = useState(false);
+  const [showReplyModal, setShowReplyModal] = useState(false);
+  const [selectedContacts, setSelectedContacts] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [conversations, setConversations] = useState<Record<string, any[]>>({});
 
   const handleUserClick = (userName: string) => {
     setSelectedUser(userName);
@@ -44,106 +43,102 @@ export default function NotificationClientPage() {
   };
 
   const handleForwardClick = () => {
-    setShowForwardModal(true)
-  }
+    setShowForwardModal(true);
+  };
 
   const handleReplyClick = () => {
-    setShowReplyModal(true)
-  }
+    setShowReplyModal(true);
+  };
 
   const handleCloseForwardModal = () => {
-    setShowForwardModal(false)
-    setSelectedContacts([])
-    setSearchQuery("")
-  }
+    setShowForwardModal(false);
+    setSelectedContacts([]);
+    setSearchQuery('');
+  };
 
   const handleCloseReplyModal = () => {
-    setShowReplyModal(false)
-    setSelectedContacts([])
-    setSearchQuery("")
-  }
+    setShowReplyModal(false);
+    setSelectedContacts([]);
+    setSearchQuery('');
+  };
 
   const handleContactSelect = (contactId: string) => {
     setSelectedContacts((prev) =>
-      prev.includes(contactId) ? prev.filter((id) => id !== contactId) : [...prev, contactId],
-    )
-  }
+      prev.includes(contactId)
+        ? prev.filter((id) => id !== contactId)
+        : [...prev, contactId],
+    );
+  };
 
   const handleSendForward = () => {
     if (selectedContacts.length > 0 && selectedUser) {
       // Create the forwarded message object
       const forwardedMessage = {
         id: Date.now(),
-        type: "forwarded",
-        timestamp: new Date().toLocaleString("en-US", {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-          hour: "numeric",
-          minute: "2-digit",
+        type: 'forwarded',
+        timestamp: new Date().toLocaleString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+          hour: 'numeric',
+          minute: '2-digit',
           hour12: true,
         }),
         content: {
-          title: "[Post Title]",
-          author: "Politician name",
-          authorTime: "1w ago",
+          title: '[Post Title]',
+          author: 'Politician name',
+          authorTime: '1w ago',
           text: "Life isn't a straight road, and it's not supposed to be. Some turns teach you patience, some dead ends build your strength. It's not always about moving fast—it's about moving with meaning. Even when you feel lost, you're gathering pieces of yourself along the way. Every mistake, every delay, every unexpected moment is shaping a version of you that's wiser, kinder, and more real. You don't need to have it all figured out. You just need to keep showing up for yourself, one honest step at a time.",
           reply: "It's our place!",
         },
-        forwardedTo: selectedContacts.map((id) => suggestedContacts.find((c) => c.id === id)?.name).filter(Boolean),
-      }
+        forwardedTo: selectedContacts
+          .map((id) => suggestedContacts.find((c) => c.id === id)?.name)
+          .filter(Boolean),
+      };
 
       // Add the message to the current conversation
       setConversations((prev) => ({
         ...prev,
         [selectedUser]: [...(prev[selectedUser] || []), forwardedMessage],
-      }))
+      }));
 
-      console.log("Forwarding to:", selectedContacts)
-      handleCloseForwardModal()
+      console.log('Forwarding to:', selectedContacts);
+      handleCloseForwardModal();
     }
-  }
+  };
 
   const handleSendReply = () => {
     if (selectedContacts.length > 0 && selectedUser) {
       // Create the reply message object
       const replyMessage = {
         id: Date.now(),
-        type: "reply",
-        timestamp: new Date().toLocaleString("en-US", {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-          hour: "numeric",
-          minute: "2-digit",
+        type: 'reply',
+        timestamp: new Date().toLocaleString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+          hour: 'numeric',
+          minute: '2-digit',
           hour12: true,
         }),
         content: {
-          text: "Thanks for sharing this!",
+          text: 'Thanks for sharing this!',
         },
-        repliedTo: selectedContacts.map((id) => suggestedContacts.find((c) => c.id === id)?.name).filter(Boolean),
-      }
+        repliedTo: selectedContacts
+          .map((id) => suggestedContacts.find((c) => c.id === id)?.name)
+          .filter(Boolean),
+      };
 
       // Add the message to the current conversation
       setConversations((prev) => ({
         ...prev,
         [selectedUser]: [...(prev[selectedUser] || []), replyMessage],
-      }))
+      }));
 
-      console.log("Replying to:", selectedContacts)
-      handleCloseReplyModal()
+      console.log('Replying to:', selectedContacts);
+      handleCloseReplyModal();
     }
-  }
-
-  const suggestedContacts = [
-    { id: "group1", name: "[Group name]", handle: "@heythisisyourid, @r3jdwofk @re er...", isGroup: true },
-    { id: "hyejin1", name: "Hyejin Choi", handle: "@heythisisyourid", isGroup: false },
-    { id: "hyejin2", name: "Hyejin Choi", handle: "@heythisisyourid", isGroup: false },
-    { id: "hyejin3", name: "Hyejin Choi", handle: "@heythisisyourid", isGroup: false },
-    { id: "hyejin4", name: "Hyejin Choi", handle: "@heythisisyourid", isGroup: false },
-    { id: "hyejin5", name: "Hyejin Choi", handle: "@heythisisyourid", isGroup: false },
-  ]
-
+  };
 
   return (
     <div className="col-span-2 space-y-4">
@@ -153,10 +148,11 @@ export default function NotificationClientPage() {
           <div className="flex justify-center">
             <button
               onClick={() => setActiveTab('notification')}
-              className={`text-xl font-semibold transition-colors relative ${activeTab === 'notification'
+              className={`text-xl font-semibold transition-colors relative ${
+                activeTab === 'notification'
                   ? 'text-white'
                   : 'text-neutral-500 hover:text-white'
-                }`}
+              }`}
             >
               Notification
               {activeTab === 'notification' && (
@@ -167,10 +163,11 @@ export default function NotificationClientPage() {
           <div className="flex justify-center">
             <button
               onClick={() => setActiveTab('message')}
-              className={`text-xl font-semibold transition-colors relative ${activeTab === 'message'
+              className={`text-xl font-semibold transition-colors relative ${
+                activeTab === 'message'
                   ? 'text-white'
                   : 'text-neutral-500 hover:text-white'
-                }`}
+              }`}
             >
               Message
               {activeTab === 'message' && (
@@ -354,33 +351,47 @@ export default function NotificationClientPage() {
                     {/* Post Content */}
                     <div className="bg-neutral-700 rounded-lg p-4 space-y-4">
                       <div className="flex items-center justify-between">
-                        <h3 className="font-semibold text-white">[Post Title]</h3>
+                        <h3 className="font-semibold text-white">
+                          [Post Title]
+                        </h3>
                         <span className="text-neutral-500 text-xs">1w ago</span>
                       </div>
 
                       <div className="flex items-center gap-2">
                         <Avatar className="w-6 h-6">
-                          <AvatarFallback className="bg-primary text-black text-xs">P</AvatarFallback>
+                          <AvatarFallback className="bg-primary text-black text-xs">
+                            P
+                          </AvatarFallback>
                         </Avatar>
-                        <span className="text-sm text-white">Politician name</span>
+                        <span className="text-sm text-white">
+                          Politician name
+                        </span>
                         <Star className="w-4 h-4 text-primary fill-current" />
                       </div>
 
                       <p className="text-neutral-900 text-sm leading-relaxed">
-                        Life isn't a straight road, and it's not supposed to be. Some turns teach you patience, some
-                        dead ends build your strength. It's not always about moving fast—it's about moving with
-                        meaning. Even when you feel lost, you're gathering pieces of yourself along the way. Every
-                        mistake, every delay, every unexpected moment is shaping a version of you that's wiser,
-                        kinder, and more real. You don't need to have it all figured out. You just need to keep
-                        showing up for yourself, one honest step at a time.
+                        Life isn't a straight road, and it's not supposed to be.
+                        Some turns teach you patience, some dead ends build your
+                        strength. It's not always about moving fast—it's about
+                        moving with meaning. Even when you feel lost, you're
+                        gathering pieces of yourself along the way. Every
+                        mistake, every delay, every unexpected moment is shaping
+                        a version of you that's wiser, kinder, and more real.
+                        You don't need to have it all figured out. You just need
+                        to keep showing up for yourself, one honest step at a
+                        time.
                       </p>
 
                       <div className="flex items-center gap-4">
                         <div className="flex items-center gap-2">
                           <Avatar className="w-6 h-6">
-                            <AvatarFallback className="bg-primary text-black text-xs">R</AvatarFallback>
+                            <AvatarFallback className="bg-primary text-black text-xs">
+                              R
+                            </AvatarFallback>
                           </Avatar>
-                          <span className="text-sm text-white">It's our place!</span>
+                          <span className="text-sm text-white">
+                            It's our place!
+                          </span>
                         </div>
                         <div className="flex items-center gap-3 ml-auto">
                           <button className="flex items-center gap-1 text-neutral-500 hover:text-red-500 transition-colors">
@@ -400,28 +411,41 @@ export default function NotificationClientPage() {
                       </div>
                     </div>
 
-                    <div className="text-center text-neutral-500 text-sm">Mar 10, 2025, 2:14 PM</div>
+                    <div className="text-center text-neutral-500 text-sm">
+                      Mar 10, 2025, 2:14 PM
+                    </div>
 
                     {/* Reply Section */}
                     <div className="space-y-2">
-                      <p className="text-neutral-500 text-sm">[user name] replied to you</p>
+                      <p className="text-neutral-500 text-sm">
+                        [user name] replied to you
+                      </p>
                       <div className="bg-neutral-700 rounded-lg p-4 space-y-3">
                         <div className="flex items-center justify-between">
-                          <h4 className="font-semibold text-white">[Post Title]</h4>
-                          <span className="text-neutral-500 text-xs">1w ago</span>
+                          <h4 className="font-semibold text-white">
+                            [Post Title]
+                          </h4>
+                          <span className="text-neutral-500 text-xs">
+                            1w ago
+                          </span>
                         </div>
 
                         <div className="flex items-center gap-2">
                           <Avatar className="w-6 h-6">
-                            <AvatarFallback className="bg-primary text-black text-xs">P</AvatarFallback>
+                            <AvatarFallback className="bg-primary text-black text-xs">
+                              P
+                            </AvatarFallback>
                           </Avatar>
-                          <span className="text-sm text-white">Politician name</span>
+                          <span className="text-sm text-white">
+                            Politician name
+                          </span>
                           <Star className="w-4 h-4 text-primary fill-current" />
                         </div>
 
                         <p className="text-neutral-900 text-sm leading-relaxed">
-                          Life isn't a straight road, and it's not supposed to be. Some turns teach you patience, some
-                          dead ends build your strength. It's not always about moving...
+                          Life isn't a straight road, and it's not supposed to
+                          be. Some turns teach you patience, some dead ends
+                          build your strength. It's not always about moving...
                         </p>
 
                         {/* Added Reply Button */}
@@ -438,32 +462,50 @@ export default function NotificationClientPage() {
 
                     {/* Forwarded Messages */}
                     {conversations[selectedUser]?.map((message) =>
-                      message.type === "forwarded" ? (
+                      message.type === 'forwarded' ? (
                         <div key={message.id} className="space-y-2">
-                          <div className="text-center text-neutral-500 text-sm">{message.timestamp}</div>
-                          <div className="text-neutral-500 text-sm">You forwarded a message</div>
+                          <div className="text-center text-neutral-500 text-sm">
+                            {message.timestamp}
+                          </div>
+                          <div className="text-neutral-500 text-sm">
+                            You forwarded a message
+                          </div>
                           <div className="bg-neutral-700 rounded-lg p-4 space-y-4 border-l-4 border-primary">
                             <div className="flex items-center justify-between">
-                              <h3 className="font-semibold text-white">{message.content.title}</h3>
-                              <span className="text-neutral-500 text-xs">{message.content.authorTime}</span>
+                              <h3 className="font-semibold text-white">
+                                {message.content.title}
+                              </h3>
+                              <span className="text-neutral-500 text-xs">
+                                {message.content.authorTime}
+                              </span>
                             </div>
 
                             <div className="flex items-center gap-2">
                               <Avatar className="w-6 h-6">
-                                <AvatarFallback className="bg-primary text-black text-xs">P</AvatarFallback>
+                                <AvatarFallback className="bg-primary text-black text-xs">
+                                  P
+                                </AvatarFallback>
                               </Avatar>
-                              <span className="text-sm text-white">{message.content.author}</span>
+                              <span className="text-sm text-white">
+                                {message.content.author}
+                              </span>
                               <Star className="w-4 h-4 text-primary fill-current" />
                             </div>
 
-                            <p className="text-neutral-900 text-sm leading-relaxed">{message.content.text}</p>
+                            <p className="text-neutral-900 text-sm leading-relaxed">
+                              {message.content.text}
+                            </p>
 
                             <div className="flex items-center gap-4">
                               <div className="flex items-center gap-2">
                                 <Avatar className="w-6 h-6">
-                                  <AvatarFallback className="bg-primary text-black text-xs">R</AvatarFallback>
+                                  <AvatarFallback className="bg-primary text-black text-xs">
+                                    R
+                                  </AvatarFallback>
                                 </Avatar>
-                                <span className="text-sm text-white">{message.content.reply}</span>
+                                <span className="text-sm text-white">
+                                  {message.content.reply}
+                                </span>
                               </div>
                               <div className="flex items-center gap-3 ml-auto">
                                 <button className="flex items-center gap-1 text-neutral-500 hover:text-red-500 transition-colors">
@@ -507,115 +549,136 @@ export default function NotificationClientPage() {
       )}
 
       {/* Forward Modal */}
-            {showForwardModal && (
-              <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-                <div className="bg rounded-lg w-full max-w-md mx-4">
-                  {/* Modal Header */}
-                  <div className="flex items-center justify-between p-4 border-b border-neutral-700">
-                    <h2 className="text-xl font-semibold text-white">Forward</h2>
-                    <button onClick={handleCloseForwardModal} className="text-neutral-500 hover:text-white transition-colors">
-                      <X className="w-5 h-5" />
-                    </button>
-                  </div>
-      
-                  {/* Modal Content */}
-                  <div className="p-4 space-y-4">
-                    {/* To Field with Tags */}
-                    <div>
-                      <label className="text-white text-sm font-medium mb-2 block">To:</label>
-                      <div className="min-h-[40px] bg-neutral-800 border border-neutral-700 rounded-md p-2 flex flex-wrap gap-2 items-center">
-                        {/* Selected Contact Tags */}
-                        {selectedContacts.map((contactId) => {
-                          const contact = suggestedContacts.find((c) => c.id === contactId)
-                          return contact ? (
-                            <div
-                              key={contactId}
-                              className="bg-primary text-black px-3 py-1 rounded-full text-sm font-medium flex items-center gap-2"
-                            >
-                              <span>{contact.name}</span>
-                              <button
-                                onClick={() => handleContactSelect(contactId)}
-                                className="hover:bg-black/20 rounded-full p-0.5 transition-colors"
-                              >
-                                <X className="w-3 h-3" />
-                              </button>
-                            </div>
-                          ) : null
-                        })}
-      
-                        {/* Search Input */}
-                        <div className="flex-1 min-w-[100px]">
-                          <input
-                            type="text"
-                            placeholder="Search..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full bg-transparent text-white placeholder-neutral-500 outline-none text-sm"
-                          />
-                        </div>
+      {showForwardModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg rounded-lg w-full max-w-md mx-4">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-4 border-b border-neutral-700">
+              <h2 className="text-xl font-semibold text-white">Forward</h2>
+              <button
+                onClick={handleCloseForwardModal}
+                className="text-neutral-500 hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-4 space-y-4">
+              {/* To Field with Tags */}
+              <div>
+                <label className="text-white text-sm font-medium mb-2 block">
+                  To:
+                </label>
+                <div className="min-h-[40px] bg-neutral-800 border border-neutral-700 rounded-md p-2 flex flex-wrap gap-2 items-center">
+                  {/* Selected Contact Tags */}
+                  {selectedContacts.map((contactId) => {
+                    const contact = suggestedContacts.find(
+                      (c) => c.id === contactId,
+                    );
+                    return contact ? (
+                      <div
+                        key={contactId}
+                        className="bg-primary text-black px-3 py-1 rounded-full text-sm font-medium flex items-center gap-2"
+                      >
+                        <span>{contact.name}</span>
+                        <button
+                          onClick={() => handleContactSelect(contactId)}
+                          className="hover:bg-black/20 rounded-full p-0.5 transition-colors"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
                       </div>
-                    </div>
-      
-                    {/* Suggested Section */}
-                    <div>
-                      <h3 className="text-white text-sm font-medium mb-3">Suggested</h3>
-                      <div className="space-y-3 max-h-64 overflow-y-auto custom-scrollbar">
-                        {suggestedContacts
-                          .filter(
-                            (contact) =>
-                              searchQuery === "" ||
-                              contact.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                              contact.handle.toLowerCase().includes(searchQuery.toLowerCase()),
-                          )
-                          .map((contact) => (
-                            <div
-                              key={contact.id}
-                              className="flex items-center gap-3 p-2 hover:bg-neutral-800 rounded-lg transition-colors cursor-pointer"
-                              onClick={() => handleContactSelect(contact.id)}
-                            >
-                              <Avatar className="w-10 h-10">
-                                <AvatarFallback className="bg-neutral-700 text-white text-sm">
-                                  {contact.isGroup ? "G" : contact.name.charAt(0)}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div className="flex-1 min-w-0">
-                                <p className="font-medium text-white text-sm">{contact.name}</p>
-                                <p className="text-neutral-500 text-xs truncate">{contact.handle}</p>
-                              </div>
-                              <div className="w-6 h-6 rounded-full border-2 border-neutral-500 flex items-center justify-center">
-                                {selectedContacts.includes(contact.id) ? (
-                                  <div className="w-4 h-4 rounded-full bg-primary flex items-center justify-center">
-                                    <svg className="w-2.5 h-2.5 text-black" fill="currentColor" viewBox="0 0 20 20">
-                                      <path
-                                        fillRule="evenodd"
-                                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                        clipRule="evenodd"
-                                      />
-                                    </svg>
-                                  </div>
-                                ) : (
-                                  <div className="w-4 h-4 rounded-full border border-neutral-500"></div>
-                                )}
-                              </div>
-                            </div>
-                          ))}
-                      </div>
-                    </div>
-                  </div>
-      
-                  {/* Modal Footer */}
-                  <div className="p-4 border-t border-neutral-700">
-                    <Button
-                      onClick={handleSendForward}
-                      disabled={selectedContacts.length === 0}
-                      className="w-full bg-primary text-black hover:bg-primary-50 font-medium py-3 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Send
-                    </Button>
+                    ) : null;
+                  })}
+
+                  {/* Search Input */}
+                  <div className="flex-1 min-w-[100px]">
+                    <input
+                      type="text"
+                      placeholder="Search..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full bg-transparent text-white placeholder-neutral-500 outline-none text-sm"
+                    />
                   </div>
                 </div>
               </div>
-            )}
+
+              {/* Suggested Section */}
+              <div>
+                <h3 className="text-white text-sm font-medium mb-3">
+                  Suggested
+                </h3>
+                <div className="space-y-3 max-h-64 overflow-y-auto custom-scrollbar">
+                  {suggestedContacts
+                    .filter(
+                      (contact) =>
+                        searchQuery === '' ||
+                        contact.name
+                          .toLowerCase()
+                          .includes(searchQuery.toLowerCase()) ||
+                        contact.handle
+                          .toLowerCase()
+                          .includes(searchQuery.toLowerCase()),
+                    )
+                    .map((contact) => (
+                      <div
+                        key={contact.id}
+                        className="flex items-center gap-3 p-2 hover:bg-neutral-800 rounded-lg transition-colors cursor-pointer"
+                        onClick={() => handleContactSelect(contact.id)}
+                      >
+                        <Avatar className="w-10 h-10">
+                          <AvatarFallback className="bg-neutral-700 text-white text-sm">
+                            {contact.isGroup ? 'G' : contact.name.charAt(0)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-white text-sm">
+                            {contact.name}
+                          </p>
+                          <p className="text-neutral-500 text-xs truncate">
+                            {contact.handle}
+                          </p>
+                        </div>
+                        <div className="w-6 h-6 rounded-full border-2 border-neutral-500 flex items-center justify-center">
+                          {selectedContacts.includes(contact.id) ? (
+                            <div className="w-4 h-4 rounded-full bg-primary flex items-center justify-center">
+                              <svg
+                                className="w-2.5 h-2.5 text-black"
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                              >
+                                <path
+                                  fillRule="evenodd"
+                                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                  clipRule="evenodd"
+                                />
+                              </svg>
+                            </div>
+                          ) : (
+                            <div className="w-4 h-4 rounded-full border border-neutral-500"></div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 border-t border-neutral-700">
+              <Button
+                onClick={handleSendForward}
+                disabled={selectedContacts.length === 0}
+                className="w-full bg-primary text-black hover:bg-primary-50 font-medium py-3 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Send
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

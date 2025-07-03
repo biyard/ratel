@@ -138,3 +138,42 @@ export const articles: Article[] = [
     description: `RATEL is the world's first decentralized legislative DAO platform empowering communities to propose and monitor...`,
   },
 ];
+
+export const suggestedContacts = [
+  {
+    id: 'group1',
+    name: '[Group name]',
+    handle: '@heythisisyourid, @r3jdwofk @re er...',
+    isGroup: true,
+  },
+  {
+    id: 'hyejin1',
+    name: 'Hyejin Choi',
+    handle: '@heythisisyourid',
+    isGroup: false,
+  },
+  {
+    id: 'hyejin2',
+    name: 'Hyejin Choi',
+    handle: '@heythisisyourid',
+    isGroup: false,
+  },
+  {
+    id: 'hyejin3',
+    name: 'Hyejin Choi',
+    handle: '@heythisisyourid',
+    isGroup: false,
+  },
+  {
+    id: 'hyejin4',
+    name: 'Hyejin Choi',
+    handle: '@heythisisyourid',
+    isGroup: false,
+  },
+  {
+    id: 'hyejin5',
+    name: 'Hyejin Choi',
+    handle: '@heythisisyourid',
+    isGroup: false,
+  },
+];
