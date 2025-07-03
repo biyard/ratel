@@ -82,6 +82,7 @@ pub async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         Onboard,
         Mynetwork,
         Verification,
+        Notification,
     );
 
     if Industry::query_builder()
