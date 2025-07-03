@@ -379,6 +379,12 @@ function EditableDiscussionInfo({
   const [title, setTitle] = useState<string>(name);
   const [desc, setDesc] = useState<string>(description);
   const [users, setUsers] = useState<TotalUser[]>(participants);
+  const [startTimeDropdownOpen, setStartTimeDropdownOpen] =
+    useState<boolean>(false);
+  const [endTimeDropdownOpen, setEndTimeDropdownOpen] =
+    useState<boolean>(false);
+  const [startCalendarOpen, setStartCalendarOpen] = useState<boolean>(false);
+  const [endCalendarOpen, setEndCalendarOpen] = useState<boolean>(false);
 
   useEffect(() => {
     setUsers(participants);
@@ -450,6 +456,11 @@ function EditableDiscussionInfo({
           <div className="flex flex-row gap-[10px]">
             <CustomCalendar
               value={startTime * 1000}
+              calendarOpen={startCalendarOpen}
+              setCalendarOpen={(value: boolean) => {
+                setStartCalendarOpen(value);
+                setStartTimeDropdownOpen(false);
+              }}
               onChange={(date) => {
                 const newStart = Math.floor(date / 1000);
                 setStartTime(newStart);
@@ -458,10 +469,16 @@ function EditableDiscussionInfo({
             />
             <TimeDropdown
               value={startTime * 1000}
+              timeDropdownOpen={startTimeDropdownOpen}
+              setTimeDropdownOpen={(value: boolean) => {
+                setStartTimeDropdownOpen(value);
+                setStartCalendarOpen(false);
+              }}
               onChange={(timestamp) => {
                 const newStart = Math.floor(timestamp / 1000);
                 setStartTime(newStart);
                 update(newStart, endTime, title, desc, users);
+                setStartTimeDropdownOpen(false);
               }}
             />
           </div>
@@ -469,6 +486,11 @@ function EditableDiscussionInfo({
           <div className="flex flex-row gap-[10px]">
             <CustomCalendar
               value={endTime * 1000}
+              calendarOpen={endCalendarOpen}
+              setCalendarOpen={(value: boolean) => {
+                setEndCalendarOpen(value);
+                setEndTimeDropdownOpen(false);
+              }}
               onChange={(date) => {
                 const newEnd = Math.floor(date / 1000);
                 setEndTime(newEnd);
@@ -477,10 +499,16 @@ function EditableDiscussionInfo({
             />
             <TimeDropdown
               value={endTime * 1000}
+              timeDropdownOpen={endTimeDropdownOpen}
+              setTimeDropdownOpen={(value: boolean) => {
+                setEndTimeDropdownOpen(value);
+                setEndCalendarOpen(false);
+              }}
               onChange={(timestamp) => {
                 const newEnd = Math.floor(timestamp / 1000);
                 setEndTime(newEnd);
                 update(startTime, newEnd, title, desc, users);
+                setEndTimeDropdownOpen(false);
               }}
             />
           </div>
