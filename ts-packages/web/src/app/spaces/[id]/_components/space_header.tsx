@@ -1,5 +1,4 @@
 import React from 'react';
-import ArrowLeft from '@/assets/icons/left.svg';
 // import Shared from '@/assets/icons/share.svg';
 // import Extra from '@/assets/icons/extra.svg';
 // import Bookmark from '@/assets/icons/bookmark.svg';
@@ -32,27 +31,10 @@ export default function SpaceHeader({
   proposerName,
   createdAt,
   isEdit = false,
-  onback = () => {},
   setTitle = () => {},
 }: SpaceHeaderProps) {
   return (
     <div className="flex flex-col w-full gap-2.5">
-      <div className="flex flex-row w-full justify-between items-center">
-        <div
-          className="cursor-pointer w-fit h-fit"
-          onClick={() => {
-            onback();
-          }}
-        >
-          <ArrowLeft width={24} height={24} />
-        </div>
-
-        {/* <div className="flex flex-row w-fit h-fit items-center gap-5">
-          <Shared width={24} height={24} />
-          <Extra width={24} height={24} />
-        </div> */}
-      </div>
-
       <div className="flex flex-col gap-2.5">
         <div className="flex flex-row w-full justify-start items-center gap-2.5">
           <SpaceType />
