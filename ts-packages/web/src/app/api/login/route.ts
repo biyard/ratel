@@ -39,8 +39,10 @@ export async function GET(request: NextRequest) {
   const setCookies: string[] = res.headers.getSetCookie();
   logger.debug('raw set-cookie headers:', setCookies);
 
-  const idCookie = setCookies.find((c) => c.startsWith('id='));
-  const authCookie = setCookies.find((c) => c.startsWith('auth_token='));
+  const idCookie = setCookies.find((c) => c.startsWith(`${config.env}_sid=`));
+  const authCookie = setCookies.find((c) =>
+    c.startsWith(`${config.env}_auth_token=`),
+  );
 
   const commonSuffix =
     protocol === 'https'
@@ -50,11 +52,11 @@ export async function GET(request: NextRequest) {
   const cookies: string[] = [];
 
   if (idCookie) {
-    cookies.push(idCookie.split(';')[0] + '; ' + commonSuffix);
+    cookies.push(`${idCookie.split(';')[0]}; ${commonSuffix}`);
   }
 
   if (authCookie) {
-    cookies.push(authCookie.split(';')[0] + '; ' + commonSuffix);
+    cookies.push(`${authCookie.split(';')[0]}; ${commonSuffix}`);
   }
 
   return new NextResponse(res.body, {
@@ -65,17 +67,6 @@ export async function GET(request: NextRequest) {
       'Access-Control-Allow-Headers': 'Content-Type, Authorization',
       'Access-Control-Allow-Credentials': 'true',
       'Set-Cookie': cookies.join(', '),
-    },
-  });
-}
-
-export async function OPTIONS() {
-  return new NextResponse(null, {
-    status: 200,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': '*',
-      'Access-Control-Allow-Headers': '*',
     },
   });
 }

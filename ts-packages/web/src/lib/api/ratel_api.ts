@@ -55,6 +55,7 @@ export function useFeedById(id: number): UseSuspenseQueryResult<Feed> {
 export const ratelApi = {
   users: {
     login: () => '/v1/users?action=login',
+    logout: () => '/v2/users/logout',
     loginWithPassword: (email: string, password: string) =>
       `/v1/users?action=login-by-password&email=${encodeURIComponent(email)}&password=${password}`,
     getTotalInfo: (page: number, size: number) =>
