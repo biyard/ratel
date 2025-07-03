@@ -29,7 +29,7 @@ export default function NotificationClientPage() {
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
 
   const [showForwardModal, setShowForwardModal] = useState(false);
-  const [showReplyModal, setShowReplyModal] = useState(false);
+  const [_showReplyModal, setShowReplyModal] = useState(false);
   const [selectedContacts, setSelectedContacts] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [conversations, setConversations] = useState<Record<string, any[]>>({});
@@ -104,39 +104,6 @@ export default function NotificationClientPage() {
 
       console.log('Forwarding to:', selectedContacts);
       handleCloseForwardModal();
-    }
-  };
-
-  const handleSendReply = () => {
-    if (selectedContacts.length > 0 && selectedUser) {
-      // Create the reply message object
-      const replyMessage = {
-        id: Date.now(),
-        type: 'reply',
-        timestamp: new Date().toLocaleString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric',
-          hour: 'numeric',
-          minute: '2-digit',
-          hour12: true,
-        }),
-        content: {
-          text: 'Thanks for sharing this!',
-        },
-        repliedTo: selectedContacts
-          .map((id) => suggestedContacts.find((c) => c.id === id)?.name)
-          .filter(Boolean),
-      };
-
-      // Add the message to the current conversation
-      setConversations((prev) => ({
-        ...prev,
-        [selectedUser]: [...(prev[selectedUser] || []), replyMessage],
-      }));
-
-      console.log('Replying to:', selectedContacts);
-      handleCloseReplyModal();
     }
   };
 
