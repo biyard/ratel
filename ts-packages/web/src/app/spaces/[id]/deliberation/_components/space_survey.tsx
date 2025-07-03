@@ -51,7 +51,7 @@ export default function SpaceSurvey({
 }: SpaceSurveyProps) {
   return (
     <div className="flex flex-col w-full">
-      {isEdit ? (
+      {isEdit && status == SpaceStatus.Draft ? (
         <EditableSurvey
           questions={questions}
           startDate={startDate}
@@ -70,6 +70,7 @@ export default function SpaceSurvey({
         />
       ) : (
         <ViewSurvey
+          isEdit={isEdit}
           status={status}
           answer={answer}
           setAnswers={setAnswers}
@@ -84,6 +85,7 @@ export default function SpaceSurvey({
 }
 
 function ViewSurvey({
+  isEdit,
   status,
   answer,
   setAnswers,
@@ -92,6 +94,7 @@ function ViewSurvey({
   endDate,
   onSend,
 }: {
+  isEdit: boolean;
   status: SpaceStatus;
   answer: SurveyAnswer;
   setAnswers: (answer: Answer[]) => void;
@@ -110,6 +113,7 @@ function ViewSurvey({
         </div>
       )}
       <SurveyViewer
+        isEdit={isEdit}
         status={status}
         startDate={startDate}
         endDate={endDate}
@@ -150,6 +154,8 @@ function EditableSurvey({
   const [stableKeys, setStableKeys] = useState<string[]>(() =>
     questions.map(() => uuidv4()),
   );
+  const [startCalendarOpen, setStartCalendarOpen] = useState<boolean>(false);
+  const [endCalendarOpen, setEndCalendarOpen] = useState<boolean>(false);
 
   const handleAdd = () => {
     onadd();
@@ -171,6 +177,10 @@ function EditableSurvey({
           <div className="flex flex-row gap-[10px]">
             <CustomCalendar
               value={startDate * 1000}
+              calendarOpen={startCalendarOpen}
+              setCalendarOpen={(value: boolean) => {
+                setStartCalendarOpen(value);
+              }}
               onChange={(date) => {
                 const newStart = Math.floor(date / 1000);
                 setStartDate(newStart);
@@ -182,6 +192,10 @@ function EditableSurvey({
           <div className="flex flex-row gap-[10px]">
             <CustomCalendar
               value={endDate * 1000}
+              calendarOpen={endCalendarOpen}
+              setCalendarOpen={(value: boolean) => {
+                setEndCalendarOpen(value);
+              }}
               onChange={(date) => {
                 const newEnd = Math.floor(date / 1000);
                 setEndDate(newEnd);

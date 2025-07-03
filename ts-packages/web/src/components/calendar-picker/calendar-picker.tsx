@@ -8,15 +8,18 @@ import { Calendar } from 'lucide-react';
 
 interface CustomCalendarProps {
   value: number;
+  calendarOpen: boolean;
+  setCalendarOpen: (open: boolean) => void;
   onChange: (date: number) => void;
 }
 
 export default function CustomCalendar({
   value,
+  calendarOpen,
+  setCalendarOpen,
   onChange,
 }: CustomCalendarProps) {
   const [selected, setSelected] = useState<Date>();
-  const [clicked, onClicked] = useState(false);
 
   useEffect(() => {
     if (value) setSelected(new Date(value));
@@ -27,20 +30,20 @@ export default function CustomCalendar({
       <button
         className="flex flex-row items-center border border-input px-6 py-[10px] rounded-md font-semibold text-sm text-neutral-300 bg-transparent gap-[20px]"
         onClick={() => {
-          onClicked(!clicked);
+          setCalendarOpen(!calendarOpen);
         }}
       >
         {selected ? format(selected, 'yyyy/MM/dd') : 'Selected Date'}
         <Calendar className="w-6 h-6 stroke-input" />
       </button>
 
-      {clicked && (
+      {calendarOpen && (
         <div className="absolute mt-2 z-10 bg-white text-black rounded-xl shadow-xl p-4">
           <CalendarDayPicker
             value={value}
             onChange={(date) => {
               if (date) onChange(date.getTime());
-              onClicked(false);
+              setCalendarOpen(false);
             }}
           />
         </div>
