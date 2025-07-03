@@ -316,6 +316,20 @@ impl SpaceController {
 
             let discussion_id = discussion.id;
 
+            if !participants.contains(&user_id) {
+                let _ = match self
+                    .discussion_member_repo
+                    .insert_with_tx(&mut *tx, discussion_id, user_id)
+                    .await
+                {
+                    Ok(_) => {}
+                    Err(e) => {
+                        tx.rollback().await?;
+                        return Err(e);
+                    }
+                };
+            }
+
             for participant_id in participants {
                 let _ = match self
                     .discussion_member_repo
