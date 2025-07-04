@@ -333,12 +333,12 @@ export default function DiscussionByIdPage() {
     }
   };
 
-  // const focusedUser = users.find((u) => u.participant_id === focusedAttendeeId);
-  // const focusedParticipant = participants.find(
-  //   (p) => p.id === focusedUser?.user_id,
-  // );
-  // const focusedNickname =
-  //   focusedParticipant?.nickname ?? focusedParticipant?.username ?? '';
+  const focusedUser = users.find((u) => u.participant_id === focusedAttendeeId);
+  const focusedParticipant = participants.find(
+    (p) => p.id === focusedUser?.user_id,
+  );
+  const focusedNickname =
+    focusedParticipant?.nickname ?? focusedParticipant?.username ?? '';
 
   return (
     <div className="w-screen h-screen bg-black flex flex-col">
@@ -414,6 +414,10 @@ export default function DiscussionByIdPage() {
                   autoPlay
                   muted={false}
                 />
+
+                <div className="absolute bottom-2 right-2 z-50 w-fit max-w-[100px] h-fit px-[10px] py-[5px] bg-neutral-800 text-white text-sm rounded-lg overflow-hidden text-ellipsis whitespace-nowrap">
+                  {focusedNickname}
+                </div>
               </div>
             )}
 
