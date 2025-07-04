@@ -11,14 +11,20 @@ export function Header({
   onclose: () => void;
 }) {
   return (
-    <div className="flex justify-between items-center bg-neutral-900 text-white px-6 py-3 text-sm font-semibold border-b border-neutral-800">
-      <Logo width={32} height={32} />
-      <span>{name}</span>
-      <Clear
-        className="cursor-pointer w-[24px] h-[24px] [&>path]:stroke-neutral-500"
-        onClick={onclose}
-        fill="white"
-      />
+    <div className="flex flex-row items-center bg-neutral-900 text-white px-6 py-3 text-sm font-semibold border-b border-neutral-800">
+      <div className="flex flex-row flex-1 justify-start">
+        <Logo width={32} height={32} />
+      </div>
+      <div className="flex flex-row flex-1 justify-center">
+        <span>{name}</span>
+      </div>
+      <div className="flex flex-row flex-1 justify-end">
+        <Clear
+          className="cursor-pointer w-[24px] h-[24px] [&>path]:stroke-neutral-500"
+          onClick={onclose}
+          fill="white"
+        />
+      </div>
     </div>
   );
 }
