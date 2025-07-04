@@ -106,3 +106,66 @@ a {
   border-top: 1px solid var(--color-c-wg-80);
   margin: 0 1rem;
 }
+
+
+
+
+
+.ProseMirror {
+  outline: none;
+}
+
+.ProseMirror p.is-editor-empty:first-child::before {
+  color: #6b7280;
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+/* Custom scrollbar for dark theme */
+.ProseMirror::-webkit-scrollbar {
+  width: 8px;
+}
+
+.ProseMirror::-webkit-scrollbar-track {
+  background: #374151;
+}
+
+.ProseMirror::-webkit-scrollbar-thumb {
+  background: #6b7280;
+  border-radius: 4px;
+}
+
+.ProseMirror::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* Image styles for the rich text editor */
+.ProseMirror img {
+  max-width: 120px !important;
+  max-height: 80px !important;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid #4b5563;
+  margin: 2px 4px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.ProseMirror img:hover {
+  border-color: #fbbf24;
+  cursor: pointer;
+}
+
+.ProseMirror img:selected {
+  border-color: #fbbf24;
+  box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.3);
+}
+
+
+.ProseMirror a {
+  color: #60a5fa;
+  text-decoration: underline;
+  cursor: pointer;
+}

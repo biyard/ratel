@@ -2,7 +2,7 @@
 
 import { useFeedByID } from '@/app/(social)/_hooks/feed';
 // import Comment, { NewComment } from '@/components/comment';
-import Comment1 from '@/components/comment/comment1';
+import Comment from '@/components/comment';
 import { ChatIcon } from '@/components/icons';
 import { useLoggedIn, useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { writeCommentRequest } from '@/lib/api/models/feeds/comment';
@@ -106,7 +106,7 @@ export default function ThreadComment({ post_id }: { post_id: number }) {
         )}
       </div>
       {(feed?.comment_list ?? []).map((comment) => (
-        <Comment1
+        <Comment
           key={comment.id}
           comment={comment}
           onSubmit={handleSubmit}

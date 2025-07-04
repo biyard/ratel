@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import { EditorContent } from '@tiptap/react';
 import { useEditorActions } from './_components/editor-actions';
 import { useRichTextEditor } from './_components/editor-setup';
@@ -6,11 +6,9 @@ import { EditorToolbar } from './_components/editor-toolbar';
 import { CommentIcon } from '../icons';
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useEffect } from 'react';
 import { ChevronDoubleDownIcon } from '@heroicons/react/20/solid';
 
 interface RichTextEditorProps {
-  /* eslint-disable-next-line @typescript-eslint/no-explicit-any*/
   onSubmit: (content: string) => Promise<any>;
   onClose?: () => void;
   validateString?: (content: string) => boolean;
@@ -27,16 +25,14 @@ export default function RichTextEditor({
   const [linkUrl, setLinkUrl] = useState('');
   const [showLinkPopover, setShowLinkPopover] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
-
   /*eslint-disable-next-line @typescript-eslint/no-unused-vars, unused-imports/no-unused-vars*/
   const [uploadedImages, setUploadedImages] = useState<
     { id: string; src: string; name: string }[]
   >([]);
   const [isLoading, setLoading] = useState(false);
-
   const [disabled, setDisabled] = useState(true);
 
-  const handleImageFile = (file: File) => {
+  const handleImageFile = useCallback((file: File) => {
     const reader = new FileReader();
     reader.onloadend = () => {
       const src = reader.result as string;
@@ -44,9 +40,11 @@ export default function RichTextEditor({
       setUploadedImages((prev) => [...prev, { id, src, name: file.name }]);
     };
     reader.readAsDataURL(file);
-  };
+  }, []);
 
-  const editor = useRichTextEditor(handleImageFile);
+  const editor = useRichTextEditor({
+    handleImageFile
+  });
 
   const {
     handleLinkClick,
@@ -55,9 +53,12 @@ export default function RichTextEditor({
     setColor,
     addImage,
     handleImageUpload,
+    removeImage,
+    insertImageFromPreview,
   } = useEditorActions({
     editor,
     setUploadedImages,
+    linkUrl,
     setLinkUrl,
     setShowLinkPopover,
     fileInputRef,
@@ -83,6 +84,7 @@ export default function RichTextEditor({
         editor.commands.clearContent();
         setLinkUrl('');
         setShowLinkPopover(false);
+        setUploadedImages([]);
         onClose?.();
       } catch (error) {
         console.error('Submit error:', error);
@@ -105,7 +107,6 @@ export default function RichTextEditor({
           <ChevronDoubleDownIcon width={24} height={24} />
         </button>
 
-        {/* Editor Content */}
         <div className="min-h-[140px] pt-4">
           <EditorContent editor={editor} />
           {editor.isEmpty && (
@@ -116,7 +117,6 @@ export default function RichTextEditor({
           )}
         </div>
 
-        {/* Toolbar + Submit */}
         <div className="flex items-center justify-between bg-neutral-900 p-2">
           <EditorToolbar
             editor={editor}
@@ -135,10 +135,10 @@ export default function RichTextEditor({
 
           <button
             onClick={handleSubmit}
-            disabled={disabled}
+            disabled={disabled || isLoading}
             className={cn(
               'flex items-center gap-2 p-2 rounded-full font-medium text-sm transition-all',
-              !disabled
+              !disabled && !isLoading
                 ? 'bg-primary text-black hover:bg-primary/50'
                 : 'bg-neutral-700 text-neutral-500 cursor-not-allowed',
             )}

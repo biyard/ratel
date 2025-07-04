@@ -6,8 +6,14 @@ import Color from '@tiptap/extension-color';
 import Link from '@tiptap/extension-link';
 import Image from '@tiptap/extension-image';
 
-export const useRichTextEditor = (handleImageFile: (file: File) => void) =>
-  useEditor({
+interface UseRichTextEditorOptions {
+  handleImageFile?: (file: File) => void;
+}
+
+export const useRichTextEditor = (options?: UseRichTextEditorOptions) => {
+  const handleImageFile = options?.handleImageFile;
+
+  return useEditor({
     extensions: [
       StarterKit,
       Underline,
@@ -18,7 +24,7 @@ export const useRichTextEditor = (handleImageFile: (file: File) => void) =>
         HTMLAttributes: {
           class: 'text-blue-400 underline cursor-pointer hover:text-blue-300',
         },
-        validate: (href) => /^https?:\/\//.test(href),
+        validate: (href) => true,
       }),
       Image.configure({
         HTMLAttributes: {
@@ -36,27 +42,32 @@ export const useRichTextEditor = (handleImageFile: (file: File) => void) =>
         placeholder:
           'Type here. Use Markdown, BB code, or HTML to format. Drag or paste images.',
       },
-      handleDrop(view, event) {
-        const file = event.dataTransfer?.files?.[0];
-        if (file?.type?.startsWith('image/')) {
-          event.preventDefault();
-          handleImageFile(file);
-          return true;
-        }
-        return false;
-      },
-      handlePaste(view, event) {
-        const items = event.clipboardData?.items;
-        if (!items) return false;
-        for (let i = 0; i < items.length; i++) {
-          const file = items[i]?.getAsFile?.();
-          if (file?.type.startsWith('image/')) {
-            event.preventDefault();
-            handleImageFile(file);
-            return true;
+      handleDrop: handleImageFile
+        ? (view, event) => {
+            const file = event.dataTransfer?.files?.[0];
+            if (file?.type?.startsWith('image/')) {
+              event.preventDefault();
+              handleImageFile(file);
+              return true;
+            }
+            return false;
           }
-        }
-        return false;
-      },
+        : undefined,
+      handlePaste: handleImageFile
+        ? (view, event) => {
+            const items = event.clipboardData?.items;
+            if (!items) return false;
+            for (let i = 0; i < items.length; i++) {
+              const file = items[i]?.getAsFile?.();
+              if (file?.type.startsWith('image/')) {
+                event.preventDefault();
+                handleImageFile(file);
+                return true;
+              }
+            }
+            return false;
+          }
+        : undefined,
     },
   });
+};

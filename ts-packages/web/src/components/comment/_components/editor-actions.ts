@@ -1,3 +1,111 @@
+// // components/editor/useEditorActions.ts
+// import { useCallback } from 'react';
+
+// type UseEditorActionsProps = {
+//   /* eslint-disable-next-line @typescript-eslint/no-explicit-any*/
+//   editor: any;
+//   /* eslint-disable-next-line @typescript-eslint/no-explicit-any*/
+//   setUploadedImages: React.Dispatch<React.SetStateAction<any[]>>;
+//   setLinkUrl: (url: string) => void;
+//   setShowLinkPopover: (show: boolean) => void;
+//   fileInputRef: React.RefObject<HTMLInputElement | null>;
+// };
+// export const useEditorActions = ({
+//   editor,
+//   setUploadedImages,
+//   setLinkUrl,
+//   setShowLinkPopover,
+//   fileInputRef,
+// }: UseEditorActionsProps) => {
+//   const handleLinkClick = useCallback(() => {
+//     const previousUrl = editor.getAttributes('link').href;
+//     setLinkUrl(previousUrl || '');
+//     setShowLinkPopover(true);
+//   }, [editor]);
+
+//   // const addLink = useCallback(() => {
+//   //   const url = editor.getAttributes('link').href;
+//   //   if (url) {
+//   //     editor
+//   //       .chain()
+//   //       .focus()
+//   //       .extendMarkRange('link')
+//   //       .setLink({ href: url })
+//   //       .run();
+//   //   } else {
+//   //     editor.chain().focus().unsetLink().run();
+//   //   }
+//   //   setShowLinkPopover(false);
+//   //   setLinkUrl('');
+//   // }, [editor]);
+
+//   const addLink = useCallback(() => {
+//     if (linkUrl) {
+//       // Use the linkUrl from props/state
+//       editor
+//         .chain()
+//         .focus()
+//         .extendMarkRange('link')
+//         .setLink({ href: linkUrl })
+//         .run();
+//     } else {
+//       editor.chain().focus().unsetLink().run();
+//     }
+//     setShowLinkPopover(false);
+//     setLinkUrl('');
+//   }, [editor, linkUrl]);
+
+//   const removeLink = useCallback(() => {
+//     editor.chain().focus().unsetLink().run();
+//     setShowLinkPopover(false);
+//     setLinkUrl('');
+//   }, [editor]);
+
+//   const setColor = useCallback(
+//     (color: string) => {
+//       editor.chain().focus().setColor(color).run();
+//       setShowLinkPopover(false);
+//     },
+//     [editor],
+//   );
+
+//   const addImage = () => {
+//     fileInputRef.current?.click();
+//   };
+
+//   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+//     const file = e.target.files?.[0];
+//     if (!file) return;
+//     const reader = new FileReader();
+//     reader.onloadend = () => {
+//       const src = reader.result as string;
+//       const id = Date.now().toString();
+//       setUploadedImages((prev) => [...prev, { id, src, name: file.name }]);
+//       editor.chain().focus().setImage({ src }).run();
+//     };
+//     reader.readAsDataURL(file);
+//   };
+
+//   const removeImage = (id: string) => {
+//     setUploadedImages((prev) => prev.filter((img) => img.id !== id));
+//   };
+
+//   const insertImageFromPreview = (src: string) => {
+//     editor.chain().focus().setImage({ src }).run();
+//   };
+
+//   return {
+//     handleLinkClick,
+//     addLink,
+//     removeLink,
+//     setColor,
+//     addImage,
+//     handleImageUpload,
+//     removeImage,
+//     insertImageFromPreview,
+//   };
+// };
+
 // components/editor/useEditorActions.ts
 import { useCallback } from 'react';
 
@@ -6,13 +114,16 @@ type UseEditorActionsProps = {
   editor: any;
   /* eslint-disable-next-line @typescript-eslint/no-explicit-any*/
   setUploadedImages: React.Dispatch<React.SetStateAction<any[]>>;
+  linkUrl: string;
   setLinkUrl: (url: string) => void;
   setShowLinkPopover: (show: boolean) => void;
   fileInputRef: React.RefObject<HTMLInputElement | null>;
 };
+
 export const useEditorActions = ({
   editor,
   setUploadedImages,
+  linkUrl,
   setLinkUrl,
   setShowLinkPopover,
   fileInputRef,
@@ -21,62 +132,107 @@ export const useEditorActions = ({
     const previousUrl = editor.getAttributes('link').href;
     setLinkUrl(previousUrl || '');
     setShowLinkPopover(true);
-  }, [editor]);
+  }, [editor, setLinkUrl, setShowLinkPopover]);
+
+  // const addLink = useCallback(() => {
+  //   // Add https:// if not present and not empty
+  //   const processedUrl = linkUrl
+  //     ? !linkUrl.startsWith('http') && !linkUrl.startsWith('mailto:')
+  //       ? `https://${linkUrl}`
+  //       : linkUrl
+  //     : '';
+
+  //   if (processedUrl) {
+  //     editor
+  //       .chain()
+  //       .focus()
+  //       .extendMarkRange('link')
+  //       .setLink({ href: processedUrl })
+  //       .run();
+  //   } else {
+  //     editor.chain().focus().unsetLink().run();
+  //   }
+  //   setShowLinkPopover(false);
+  //   setLinkUrl('');
+  // }, [editor, linkUrl, setLinkUrl, setShowLinkPopover]);
 
   const addLink = useCallback(() => {
-    const url = editor.getAttributes('link').href;
-    if (url) {
+    if (!editor || !linkUrl.trim()) return;
+
+    // Automatically add https:// if missing
+    const processedUrl = linkUrl.includes('://')
+      ? linkUrl
+      : `https://${linkUrl}`;
+
+    // Case 1: If text is selected, convert it to a link
+    if (editor.state.selection.empty === false) {
       editor
         .chain()
         .focus()
         .extendMarkRange('link')
-        .setLink({ href: url })
+        .setLink({ href: processedUrl })
         .run();
-    } else {
-      editor.chain().focus().unsetLink().run();
     }
+    // Case 2: If no text selected, insert the URL as a clickable link
+    else {
+      editor
+        .chain()
+        .focus()
+        .insertContent(`<a href="${processedUrl}">${linkUrl}</a>`)
+        .run();
+    }
+
     setShowLinkPopover(false);
     setLinkUrl('');
-  }, [editor]);
+  }, [editor, linkUrl]);
 
   const removeLink = useCallback(() => {
     editor.chain().focus().unsetLink().run();
     setShowLinkPopover(false);
     setLinkUrl('');
-  }, [editor]);
+  }, [editor, setLinkUrl, setShowLinkPopover]);
 
   const setColor = useCallback(
     (color: string) => {
       editor.chain().focus().setColor(color).run();
       setShowLinkPopover(false);
     },
-    [editor],
+    [editor, setShowLinkPopover],
   );
 
-  const addImage = () => {
+  const addImage = useCallback(() => {
     fileInputRef.current?.click();
-  };
+  }, [fileInputRef]);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const src = reader.result as string;
-      const id = Date.now().toString();
-      setUploadedImages((prev) => [...prev, { id, src, name: file.name }]);
+  const handleImageUpload = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const src = reader.result as string;
+        const id = Date.now().toString();
+        setUploadedImages((prev) => [...prev, { id, src, name: file.name }]);
+        editor.chain().focus().setImage({ src }).run();
+      };
+      reader.readAsDataURL(file);
+    },
+    [editor, setUploadedImages],
+  );
+
+  const removeImage = useCallback(
+    (id: string) => {
+      setUploadedImages((prev) => prev.filter((img) => img.id !== id));
+    },
+    [setUploadedImages],
+  );
+
+  const insertImageFromPreview = useCallback(
+    (src: string) => {
       editor.chain().focus().setImage({ src }).run();
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const removeImage = (id: string) => {
-    setUploadedImages((prev) => prev.filter((img) => img.id !== id));
-  };
-
-  const insertImageFromPreview = (src: string) => {
-    editor.chain().focus().setImage({ src }).run();
-  };
+    },
+    [editor],
+  );
 
   return {
     handleLinkClick,
