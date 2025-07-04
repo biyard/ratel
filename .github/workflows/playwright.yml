@@ -7,7 +7,7 @@ on:
       - completed
 
   pull_request:
-    branches: [ dev ]
+    branches: [dev]
 
 jobs:
   test:

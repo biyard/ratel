@@ -81,8 +81,6 @@ article.my-profile > ol > li {
   text-indent: -1.5em;
 }
 
-
-
 article#advocacy-campaign-details > h2 {
   font-weight: 700;
   font-size: 24px;
@@ -95,21 +93,20 @@ article#advocacy-campaign-details > h2 {
 }
 
 article#advocacy-campaign-details > p {
-    font-weight: 500;
-    font-size: 16px;
-    line-height: 22px;
-    letter-spacing: 0%;
-    color: var(--color-neutral-400);
-    margin-bottom: 20px;
-    z-index: 50;
-  }
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 22px;
+  letter-spacing: 0%;
+  color: var(--color-neutral-400);
+  margin-bottom: 20px;
+  z-index: 50;
+}
 
 @media (max-width: 1024px) {
   article#advocacy-campaign-details > p {
     font-size: 14px;
     z-index: 50;
   }
-
 }
 @media (max-width: 1024px) {
   article#advocacy-campaign-details > h2 {

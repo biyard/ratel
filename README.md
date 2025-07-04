@@ -7,7 +7,6 @@
 [![Unlicense License][license-shield]][license-url]
 [![LinkedIn][linkedin-shield]][linkedin-url]
 
-
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
@@ -30,8 +29,6 @@
     <a href="https://github.com/biyard/ratel/issues/new?labels=enhancement&template=feature-request---.md">Request Feature</a>
   </p>
 </div>
-
-
 
 <!-- TABLE OF CONTENTS -->
 <details>
@@ -59,9 +56,8 @@
   </ol>
 </details>
 
-
-
 <!-- ABOUT THE PROJECT -->
+
 ## About The Project
 
 [![Main Page][product-screenshot]](https://ratel.foundation)
@@ -80,19 +76,16 @@ Our ultimate goal is to create a **fair, transparent, and innovation-friendly cr
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
-
 ### Built With
 
-* ![Dioxus](https://img.shields.io/badge/dioxus-0.6.3-blue)
-* ![Axum](https://img.shields.io/badge/axum-0.8.2-blue)
-* ![Tailwindcss](https://img.shields.io/badge/tailwindcss-v4.0-blue)
+- ![Dioxus](https://img.shields.io/badge/dioxus-0.6.3-blue)
+- ![Axum](https://img.shields.io/badge/axum-0.8.2-blue)
+- ![Tailwindcss](https://img.shields.io/badge/tailwindcss-v4.0-blue)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
-
 <!-- GETTING STARTED -->
+
 ## Getting Started
 
 This is an example of how you may give instructions on setting up your project locally.
@@ -101,14 +94,16 @@ To get a local copy up and running follow these simple example steps.
 ### Prerequisites
 
 This is an example of how to list things you need to use the software and how to install them.
-* rust
+
+- rust
+
   ```sh
   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
   ```
 
-* Dioxus
+- Dioxus
   - Refer to [Dioxus getting started](https://dioxuslabs.com/learn/0.6/getting_started/#install-cargo-binstall)
-  ``` sh
+  ```sh
   cargo install cargo-binstall
   cargo binstall dioxus-cli
   ```
@@ -119,58 +114,47 @@ Coming soon
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
-
 <!-- USAGE EXAMPLES -->
+
 ## Usage
 
 Coming soon
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
-
 <!-- ROADMAP -->
+
 ## Roadmap
 
 🚀 **Q1 2025 – Platform Launch & Community Building**
 
-
-
-* Launch the official Ratel website & social media presence.
-* Introduce $RATEL governance token.
-* Begin beta testing of the platform, focusing on **lawmakers’ stance tracking** and **community engagement**.
+- Launch the official Ratel website & social media presence.
+- Introduce $RATEL governance token.
+- Begin beta testing of the platform, focusing on **lawmakers’ stance tracking** and **community engagement**.
 
 🗳️ **Q2 2025 – DAO Governance & Legislative Participation**
 
-
-
-* Enable **DAO-based proposal and voting system** for policy discussions.
-* Launch **transparency dashboard** to track **crypto-related bills and policies**.
-* Conduct **awareness campaigns** to encourage participation in decentralized governance.
-* Launch the **airdrop feature** for $RATEL
+- Enable **DAO-based proposal and voting system** for policy discussions.
+- Launch **transparency dashboard** to track **crypto-related bills and policies**.
+- Conduct **awareness campaigns** to encourage participation in decentralized governance.
+- Launch the **airdrop feature** for $RATEL
 
 🏛️ **Q3 2025 – Policy Advocacy & Expansion**
 
-
-
-* Host **public forums, policy discussions, and community events** to increase engagement.
-* Collaborate with **crypto-friendly lawmakers and industry leaders** to influence policy decisions.
-* Begin developing **AI-assisted legislative drafting tools**.
+- Host **public forums, policy discussions, and community events** to increase engagement.
+- Collaborate with **crypto-friendly lawmakers and industry leaders** to influence policy decisions.
+- Begin developing **AI-assisted legislative drafting tools**.
 
 🌍 **2026 & Beyond – Global Expansion & Institutional Adoption**
 
-
-
-* Expand the Ratel model to **other policy categories (AI governance, digital rights, etc.)**.
-* Extend the platform to **global markets**, creating a **multi-national decentralized governance ecosystem**.
-* Pursue **institutional partnerships and regulatory collaborations** for greater policy impact.
+- Expand the Ratel model to **other policy categories (AI governance, digital rights, etc.)**.
+- Extend the platform to **global markets**, creating a **multi-national decentralized governance ecosystem**.
+- Pursue **institutional partnerships and regulatory collaborations** for greater policy impact.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
-
 <!-- CONTRIBUTING -->
+
 ## Contributing
 
 Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
@@ -192,9 +176,8 @@ Don't forget to give the project a star! Thanks again!
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
-
 <!-- LICENSE -->
+
 ## License
 
 Distributed under the Unlicense License. See `LICENSE.txt` for more information.
@@ -202,19 +185,21 @@ Distributed under the Unlicense License. See `LICENSE.txt` for more information.
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- ACKNOWLEDGMENTS -->
+
 ## Acknowledgments
 
 Use this space to list resources you find helpful and would like to give credit to. I've included a few of my favorites to kick things off!
 
-* [Rust](https://www.rust-lang.org/)
-* [Dioxus](https://dioxuslabs.com/)
-* [Axum](https://github.com/tokio-rs/axum)
-* [Tailwindcss](https://tailwindcss.com/)
+- [Rust](https://www.rust-lang.org/)
+- [Dioxus](https://dioxuslabs.com/)
+- [Axum](https://github.com/tokio-rs/axum)
+- [Tailwindcss](https://tailwindcss.com/)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
+
 [contributors-shield]: https://img.shields.io/github/contributors/biyard/ratel.svg?style=for-the-badge
 [contributors-url]: https://github.com/biyard/ratel/graphs/contributors
 [forks-shield]: https://img.shields.io/github/forks/biyard/ratel.svg?style=for-the-badge

@@ -33,7 +33,7 @@ describe(contractName, function () {
       await expect(tx)
         .to.be.revertedWithCustomError(
           nftSpaceData,
-          "OwnableUnauthorizedAccount"
+          "OwnableUnauthorizedAccount",
         )
         .withArgs(util.feepayer);
     });
@@ -50,12 +50,12 @@ describe(contractName, function () {
       const tx = util.executeFeePayer(
         nftSpaceData,
         "setSymbol",
-        "New NFT Space"
+        "New NFT Space",
       );
       await expect(tx)
         .to.be.revertedWithCustomError(
           nftSpaceData,
-          "OwnableUnauthorizedAccount"
+          "OwnableUnauthorizedAccount",
         )
         .withArgs(util.feepayer);
     });
@@ -72,12 +72,12 @@ describe(contractName, function () {
       const tx = util.executeFeePayer(
         nftSpaceData,
         "setURI",
-        "https://example.com/metadata_2.json"
+        "https://example.com/metadata_2.json",
       );
       await expect(tx)
         .to.be.revertedWithCustomError(
           nftSpaceData,
-          "OwnableUnauthorizedAccount"
+          "OwnableUnauthorizedAccount",
         )
         .withArgs(util.feepayer);
     });
@@ -86,7 +86,7 @@ describe(contractName, function () {
       await util.executeOwner(
         nftSpaceData,
         "setURI",
-        "https://example.com/metadata_2.json"
+        "https://example.com/metadata_2.json",
       );
       const uri = await nftSpaceData.uri(1);
       expect(uri).to.equal("https://example.com/metadata_2.json");
@@ -99,12 +99,12 @@ describe(contractName, function () {
         nftSpaceData,
         "setTokenURI",
         1,
-        "https://example.com/metadata_3.json"
+        "https://example.com/metadata_3.json",
       );
       await expect(tx)
         .to.be.revertedWithCustomError(
           nftSpaceData,
-          "OwnableUnauthorizedAccount"
+          "OwnableUnauthorizedAccount",
         )
         .withArgs(util.feepayer);
     });
@@ -114,7 +114,7 @@ describe(contractName, function () {
         nftSpaceData,
         "setTokenURI",
         1,
-        "https://example.com/metadata_3.json"
+        "https://example.com/metadata_3.json",
       );
       const uri = await nftSpaceData.uri(1);
       expect(uri).to.equal("https://example.com/metadata_3.json");

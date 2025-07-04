@@ -3,10 +3,10 @@
 }
 
 .btn.disabled {
-  @apply hover:!text-c-wg-50
+  @apply hover:!text-c-wg-50;
 }
 
-.btn.primary  {
+.btn.primary {
   @apply font-bold gap-10 flex items-center justify-center text-base rounded-[10px] bg-btn-p hover:bg-btn-p-hover text-btn-p-text hover:text-btn-p-hover-text cursor-pointer px-40 py-20 flex flex-row gap-10 items-center justify-center;
 }
 
@@ -19,17 +19,17 @@
 }
 
 .heading1 {
-  @apply text-[32px] font-bold text-white
+  @apply text-[32px] font-bold text-white;
 }
 
 .social-menu-item {
-  @apply flex flex-col w-fit justify-center items-center p-10 font-medium text-neutral-500 text-[15px]/18
+  @apply flex flex-col w-fit justify-center items-center p-10 font-medium text-neutral-500 text-[15px]/18;
 }
 
 .create-space-button {
-  @apply flex flex-row w-fit h-fit justify-start items-center bg-white px-14 py-8 rounded-[100px] gap-4 font-bold text-[#18181B] text-sm/16
+  @apply flex flex-row w-fit h-fit justify-start items-center bg-white px-14 py-8 rounded-[100px] gap-4 font-bold text-[#18181B] text-sm/16;
 }
 
 .create-space-small-button {
-  @apply flex flex-row w-fit h-fit justify-start items-center bg-white px-12 py-4 rounded-[100px] gap-4 font-bold text-[#18181B] text-xs/16
+  @apply flex flex-row w-fit h-fit justify-start items-center bg-white px-12 py-4 rounded-[100px] gap-4 font-bold text-[#18181B] text-xs/16;
 }

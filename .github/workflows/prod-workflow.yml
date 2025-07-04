@@ -155,16 +155,16 @@ jobs:
   #       run: |
   #         cargo binstall dioxus-cli --force
   #         cargo binstall toml-cli --force
-      
+
   #     - name: Install Tauri CLI
   #       run: cargo install tauri-cli
-      
+
   #     - name: Decode keystore
   #       run: |
   #         echo "$KEYSTORE_BASE64" | base64 -d > release.keystore
   #       env:
   #         KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
-          
+
   #     - name: Create .env for signing
   #       run: |
   #         KEYSTORE_FILE=../../../../../../release.keystore
