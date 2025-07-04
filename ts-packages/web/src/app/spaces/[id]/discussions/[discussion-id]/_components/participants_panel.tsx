@@ -51,7 +51,7 @@ export default function ParticipantsPanel({
 
   return (
     <div
-      className={`fixed top-0 right-0 h-full w-[280px] z-30 bg-[#2d2d2d] shadow-lg border-l border-neutral-800 transform transition-all duration-300 z-200 ${
+      className={`h-full w-[320px] z-200 bg-[#2d2d2d] shadow-lg border-l border-neutral-800 transform transition-all duration-300 z-200 ${
         visible ? 'translate-x-0' : 'translate-x-full'
       }`}
     >
