@@ -30,6 +30,7 @@ import { Header } from './_components/header';
 import LocalVideo from './_components/local_video';
 import ContentShareVideo from './_components/content_share_video';
 import RemoteContentShareVideo from './_components/remote_content_share_video';
+import RemoteGalleryView from './_components/remote_gallery_view';
 
 export default function DiscussionByIdPage() {
   const tileMapRef = useRef<Record<number, string>>({});
@@ -38,6 +39,10 @@ export default function DiscussionByIdPage() {
   const [isSharing, setIsSharing] = useState(false);
   const [isAudioOn, setIsAudioOn] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+
+  const [videoTiles, setVideoTiles] = useState<
+    { tileId: number; attendeeId: string }[]
+  >([]);
 
   const [meetingSession, setMeetingSession] =
     useState<DefaultMeetingSession | null>(null);
@@ -147,6 +152,19 @@ export default function DiscussionByIdPage() {
               tileState.tileId !== null &&
               (tileState.active || tileState.boundVideoStream !== null);
 
+        if (!tileState.isContent && tileState.tileId && boundAttendeeId) {
+          setVideoTiles((prev) => {
+            const exists = prev.some(
+              (tile) => tile.tileId === tileState.tileId,
+            );
+            if (exists) return prev;
+            return [
+              ...prev,
+              { tileId: tileState.tileId, attendeeId: boundAttendeeId },
+            ];
+          });
+        }
+
         setVideoStates((prev) => ({
           ...prev,
           [boundAttendeeId]: isVideoOn,
@@ -161,6 +179,8 @@ export default function DiscussionByIdPage() {
           ...prev,
           [attendeeId]: false,
         }));
+
+        setVideoTiles((prev) => prev.filter((tile) => tile.tileId !== tileId));
 
         delete tileMapRef.current[tileId];
       },
@@ -324,48 +344,61 @@ export default function DiscussionByIdPage() {
         }}
       />
 
-      <div className="relative w-full h-full">
-        <>
-          {meetingSession && (
-            <RemoteContentShareVideo
-              meetingSession={meetingSession}
-              onRemoteContentTileUpdate={(tileState) => {
-                if (!tileState) {
-                  setRemoteContentTileOwner(null);
-                  return;
-                }
+      {meetingSession && (
+        <RemoteGalleryView
+          meetingSession={meetingSession}
+          videoTiles={videoTiles}
+          participants={participants}
+          users={users}
+        />
+      )}
 
-                const attendeeId = tileState.boundAttendeeId;
-                if (
-                  attendeeId &&
-                  attendeeId !==
-                    meetingSession.configuration.credentials?.attendeeId
-                ) {
-                  setRemoteContentTileOwner(attendeeId);
-                } else {
-                  setRemoteContentTileOwner(null);
-                }
-              }}
-            />
-          )}
-          {meetingSession && isSharing && (
-            <ContentShareVideo meetingSession={meetingSession} />
-          )}
-          {meetingSession && (
-            <div
-              className={
-                isSharing || remoteContentTileOwner
-                  ? 'absolute bottom-4 right-4 w-[180px] h-[130px] z-10'
-                  : 'w-full h-full'
-              }
-            >
-              <LocalVideo
+      <div className="relative w-full h-full">
+        <div className="flex flex-col w-full justify-start items-start">
+          <>
+            {meetingSession && (
+              <RemoteContentShareVideo
                 meetingSession={meetingSession}
-                isVideoOn={isVideoOn}
+                onRemoteContentTileUpdate={(tileState) => {
+                  if (!tileState) {
+                    setRemoteContentTileOwner(null);
+                    return;
+                  }
+
+                  const attendeeId = tileState.boundAttendeeId;
+                  if (
+                    attendeeId &&
+                    attendeeId !==
+                      meetingSession.configuration.credentials?.attendeeId
+                  ) {
+                    setRemoteContentTileOwner(attendeeId);
+                  } else {
+                    setRemoteContentTileOwner(null);
+                  }
+                }}
               />
-            </div>
-          )}
-        </>
+            )}
+
+            {meetingSession && isSharing && (
+              <ContentShareVideo meetingSession={meetingSession} />
+            )}
+
+            {meetingSession && (
+              <div
+                className={
+                  isSharing || remoteContentTileOwner
+                    ? 'absolute bottom-4 right-4 w-[180px] h-[130px] z-10'
+                    : 'w-full h-full'
+                }
+              >
+                <LocalVideo
+                  meetingSession={meetingSession}
+                  isVideoOn={isVideoOn}
+                />
+              </div>
+            )}
+          </>
+        </div>
       </div>
 
       <Bottom
