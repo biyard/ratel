@@ -11,11 +11,15 @@ export default function RemoteGalleryView({
   videoTiles,
   participants,
   users,
+  focusedAttendeeId,
+  setFocusedAttendeeId,
 }: {
   meetingSession: DefaultMeetingSession;
   videoTiles: { tileId: number; attendeeId: string }[];
   participants: Participant[];
   users: DiscussionParticipant[];
+  focusedAttendeeId: string | null;
+  setFocusedAttendeeId: React.Dispatch<React.SetStateAction<string | null>>;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [scrollIndex, setScrollIndex] = useState(0);
@@ -126,9 +130,26 @@ export default function RemoteGalleryView({
                 key={p.id}
                 className="w-[220px] h-[130px] shrink-0 flex items-center justify-center relative"
               >
-                <div className="w-[200px] h-[130px] bg-neutral-700 rounded-md overflow-hidden relative">
+                <div className="w-[200px] h-[130px] bg-neutral-700 rounded-md overflow-hidden relative ring-2 ring-transparent">
                   {hasVideo ? (
                     <video
+                      onClick={() => {
+                        if (
+                          typeof window !== 'undefined' &&
+                          window.innerWidth <= 768
+                        ) {
+                          setFocusedAttendeeId(
+                            focusedAttendeeId === attendeeId
+                              ? null
+                              : attendeeId,
+                          );
+                        }
+                      }}
+                      onDoubleClick={() =>
+                        setFocusedAttendeeId(
+                          focusedAttendeeId === attendeeId ? null : attendeeId,
+                        )
+                      }
                       ref={(el) => {
                         if (el) {
                           videoRefs.current.set(attendeeId, el);
