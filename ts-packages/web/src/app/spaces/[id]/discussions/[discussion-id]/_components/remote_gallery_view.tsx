@@ -20,8 +20,12 @@ export default function RemoteGalleryView({
   const containerRef = useRef<HTMLDivElement>(null);
   const [scrollIndex, setScrollIndex] = useState(0);
   const tileWidth = 220;
-
   const [visibleCount, setVisibleCount] = useState(1);
+
+  const selfAttendeeId = meetingSession.configuration.credentials?.attendeeId;
+  const selfUser = users.find((u) => u.participant_id === selfAttendeeId);
+  const selfUserId = selfUser?.user_id;
+
   const maxIndex = useMemo(() => {
     return Math.max(0, Math.ceil(users.length / visibleCount) - 1);
   }, [users.length, visibleCount]);
@@ -31,6 +35,8 @@ export default function RemoteGalleryView({
       videoTiles.map(({ attendeeId, tileId }) => [attendeeId, tileId]),
     );
   }, [videoTiles]);
+
+  const videoRefs = useRef<Map<string, HTMLVideoElement>>(new Map());
 
   useEffect(() => {
     const updateVisibleCount = () => {
@@ -60,17 +66,29 @@ export default function RemoteGalleryView({
     scrollTo(scrollIndex);
   }, [users.length, visibleCount]);
 
-  const selfAttendeeId = meetingSession.configuration.credentials?.attendeeId;
-
-  const selfUser = users.find((u) => u.participant_id === selfAttendeeId);
-  const selfUserId = selfUser?.user_id;
-
   const sortedParticipants = useMemo(() => {
     if (!selfUserId) return participants;
     const self = participants.find((p) => p.id === selfUserId);
     const others = participants.filter((p) => p.id !== selfUserId);
     return self ? [self, ...others] : others;
   }, [participants, selfUserId]);
+
+  useEffect(() => {
+    videoTiles.forEach(({ attendeeId, tileId }) => {
+      if (attendeeId === selfAttendeeId) return;
+
+      const el = videoRefs.current.get(attendeeId);
+      if (el) {
+        meetingSession.audioVideo.bindVideoElement(tileId, el);
+      }
+    });
+
+    return () => {
+      videoTiles.forEach(({ tileId }) => {
+        meetingSession.audioVideo.unbindVideoElement(tileId);
+      });
+    };
+  }, [videoTiles]);
 
   return (
     <div className="flex flex-row w-full items-center justify-center bg-neutral-800 px-6 py-4">
@@ -97,10 +115,10 @@ export default function RemoteGalleryView({
             const user = users.find((u) => u.user_id === p.id);
             const attendeeId = user?.participant_id;
 
-            const tileId = attendeeId
-              ? attendeeTileMap.get(attendeeId)
-              : undefined;
-            const hasVideo = attendeeId && tileId !== undefined;
+            if (!attendeeId || attendeeId === selfAttendeeId) return null;
+
+            const tileId = attendeeTileMap.get(attendeeId);
+            const hasVideo = tileId !== undefined;
             const nickname = p.nickname ?? p.username;
 
             return (
@@ -112,23 +130,15 @@ export default function RemoteGalleryView({
                   {hasVideo ? (
                     <video
                       ref={(el) => {
-                        if (el && tileId !== undefined) {
-                          meetingSession.audioVideo.bindVideoElement(
-                            tileId,
-                            el,
-                          );
+                        if (el) {
+                          videoRefs.current.set(attendeeId, el);
                         }
                       }}
                       autoPlay
-                      muted={
-                        meetingSession.configuration.credentials?.attendeeId ===
-                        attendeeId
-                      }
+                      muted={false}
                       className="w-full h-full object-cover rounded-md bg-neutral-700"
                     />
-                  ) : (
-                    <></>
-                  )}
+                  ) : null}
                   <div className="absolute bottom-2 left-2 text-sm text-white w-fit max-w-[100px] h-fit px-[10px] py-[5px] bg-neutral-800 rounded-lg overflow-hidden text-ellipsis whitespace-nowrap">
                     {nickname}
                   </div>
