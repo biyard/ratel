@@ -9,6 +9,7 @@ import Image from 'next/image';
 import { Input } from '@/components/ui/input';
 import { SpaceStatus } from '@/lib/api/models/spaces';
 import { Play } from 'lucide-react';
+import StatsBar from './stats-bar';
 
 export interface SpaceHeaderProps {
   title: string;
@@ -79,6 +80,8 @@ export default function SpaceHeader({
         <div className="font-light text-white text-sm/[14px]">
           {getTimeAgo(createdAt)}
         </div>
+
+        <StatsBar/>
       </div>
     </div>
   );

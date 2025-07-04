@@ -47,6 +47,7 @@ export default function ThreadPage() {
               });
             }}
           />
+        
           <SpaceFiles
             isEdit={isEdit}
             files={thread.files}
