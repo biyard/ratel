@@ -78,6 +78,48 @@ export default function DiscussionByIdPage() {
   const users = discussion.participants;
 
   useEffect(() => {
+    const handleBeforeUnload = async () => {
+      try {
+        console.log('close button clicked');
+        await post(
+          ratelApi.discussions.actDiscussionById(spaceId, discussionId),
+          exitMeetingRequest(),
+        );
+        setRemoteContentTileOwner(null);
+      } catch (err) {
+        console.error('[EXIT] Failed to update participants:', err);
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handlePopState = async () => {
+      try {
+        console.log('back button clicked');
+        await post(
+          ratelApi.discussions.actDiscussionById(spaceId, discussionId),
+          exitMeetingRequest(),
+        );
+        setRemoteContentTileOwner(null);
+      } catch (err) {
+        console.error('[EXIT] Failed to update participants:', err);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []);
+
+  useEffect(() => {
     async function startChime() {
       await post(
         ratelApi.discussions.actDiscussionById(spaceId, discussionId),
@@ -349,6 +391,7 @@ export default function DiscussionByIdPage() {
             ratelApi.discussions.actDiscussionById(spaceId, discussionId),
             exitMeetingRequest(),
           );
+          setRemoteContentTileOwner(null);
           router.replace(route.deliberationSpaceById(discussion.space_id));
         }}
       />
@@ -449,6 +492,7 @@ export default function DiscussionByIdPage() {
             ratelApi.discussions.actDiscussionById(spaceId, discussionId),
             exitMeetingRequest(),
           );
+          setRemoteContentTileOwner(null);
           router.replace(route.deliberationSpaceById(discussion.space_id));
         }}
         onRecordClick={async () => {
