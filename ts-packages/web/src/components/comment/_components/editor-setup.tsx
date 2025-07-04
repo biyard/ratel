@@ -24,6 +24,8 @@ export const useRichTextEditor = (options?: UseRichTextEditorOptions) => {
         HTMLAttributes: {
           class: 'text-blue-400 underline cursor-pointer hover:text-blue-300',
         },
+
+        /*eslint-disable-next-line @typescript-eslint/no-unused-vars*/
         validate: (href) => true,
       }),
       Image.configure({

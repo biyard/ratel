@@ -224,4 +224,3 @@ export default function Comment({ comment, onSubmit, onLike }: CommentProps) {
     </div>
   );
 }
-

@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 import { ChevronDoubleDownIcon } from '@heroicons/react/20/solid';
 
 interface RichTextEditorProps {
+  /*eslint-disable-next-line @typescript-eslint/no-explicit-any*/
   onSubmit: (content: string) => Promise<any>;
   onClose?: () => void;
   validateString?: (content: string) => boolean;
@@ -43,7 +44,7 @@ export default function RichTextEditor({
   }, []);
 
   const editor = useRichTextEditor({
-    handleImageFile
+    handleImageFile,
   });
 
   const {
@@ -53,8 +54,8 @@ export default function RichTextEditor({
     setColor,
     addImage,
     handleImageUpload,
-    removeImage,
-    insertImageFromPreview,
+    // removeImage,
+    // insertImageFromPreview,
   } = useEditorActions({
     editor,
     setUploadedImages,

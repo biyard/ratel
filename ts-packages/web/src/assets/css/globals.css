@@ -107,10 +107,6 @@ a {
   margin: 0 1rem;
 }
 
-
-
-
-
 .ProseMirror {
   outline: none;
 }
@@ -162,7 +158,6 @@ a {
   border-color: #fbbf24;
   box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.3);
 }
-
 
 .ProseMirror a {
   color: #60a5fa;
