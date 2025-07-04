@@ -1,18 +1,61 @@
 // components/StatsBar.tsx
-import { ThumbsUp, MessageCircle, Eye, RefreshCcw, Lock, Globe } from 'lucide-react';
+import {
+  ThumbsUp,
+  MessageCircle,
+  Eye,
+  RefreshCcw,
+  Lock,
+  Globe,
+} from 'lucide-react';
 
-export default function StatsBar() {
+import {
+  Edit1,
+  ThumbUp,
+  Rewards,
+  Shares,
+  Extra,
+  UnlockIcon,
+  LockIcon,
+} from '@/components/icons';
+
+interface StatsProps {
+  handleEdit: () => void;
+  handlePublic: () => void;
+  handleMenu: () => void;
+}
+
+export default function StatsBar({
+  handleEdit,
+  handlePublic,
+  handleMenu,
+}: StatsProps) {
   return (
-    <div className="bg-black text-white px-4 py-2 flex items-center justify-between border-t border-gray-800">
-      
+    <div className="bg-background text-white px-4 py-2 space-y-4 flex flex-col items-center justify-between">
+      {/* Actions - buttons */}
+      <div className="flex items-center gap-2">
+        <button className="bg-white text-[#18181B] text-[16px] px-3 py-1.5 rounded-md hover:bg-gray-200 font-medium">
+          <Edit1 />
+          Edit
+        </button>
+        <button className="bg-white text-[#18181B] text-[16px] px-3 py-1.5 rounded-md  border border-gray-600 flex items-center gap-1">
+          <UnlockIcon />
+          Make Public
+        </button>
+
+        <button className="p-2 bg-neutral-700 rounded-md">
+          <Extra />
+        </button>
+      </div>
+
       {/* Left side - stats */}
       <div className="flex items-center gap-6 text-sm text-gray-300">
         <div className="flex items-center gap-1">
-          <ThumbsUp size={16} className="text-gray-400" />
+          {/* <ThumbsUp size={16} className="text-gray-400" /> */}
+          <ThumbUp />
           <span>201</span>
         </div>
         <div className="flex items-center gap-1">
-          <MessageCircle size={16} className="text-gray-400" />
+          <Shares />
           <span>201</span>
         </div>
         <div className="flex items-center gap-1">
@@ -20,24 +63,13 @@ export default function StatsBar() {
           <span>221K</span>
         </div>
         <div className="flex items-center gap-1">
-          <RefreshCcw size={16} className="text-gray-400" />
+          <Rewards />
           <span>403</span>
         </div>
         <div className="flex items-center gap-1">
-          <Lock size={16} className="text-gray-400" />
+          <LockIcon />
           <span>Private</span>
         </div>
-      </div>
-
-      {/* Right side - buttons */}
-      <div className="flex items-center gap-2">
-        <button className="bg-white text-black text-sm px-3 py-1.5 rounded-md hover:bg-gray-200 font-medium">
-          Edit
-        </button>
-        <button className="bg-gray-800 text-white text-sm px-3 py-1.5 rounded-md hover:bg-gray-700 border border-gray-600 flex items-center gap-1">
-          <Globe size={14} />
-          Make Public
-        </button>
       </div>
     </div>
   );
