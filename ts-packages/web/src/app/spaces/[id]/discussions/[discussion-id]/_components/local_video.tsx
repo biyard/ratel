@@ -75,7 +75,7 @@ export default function LocalVideo({
     <video
       ref={videoRef}
       id="local-video-element"
-      className="absolute top-0 left-0 w-full h-full bg-black object-cover"
+      className="absolute top-0 left-0 w-full h-full bg-black object-cover z-50"
       autoPlay
       muted
       onLoadedMetadata={() => console.log('Video metadata loaded')}
