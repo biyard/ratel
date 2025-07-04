@@ -10,6 +10,12 @@ import { Input } from '@/components/ui/input';
 import { SpaceStatus } from '@/lib/api/models/spaces';
 import { Play } from 'lucide-react';
 import StatsBar from './stats-bar';
+import { useDeliberationSpaceContext } from '../deliberation/provider.client';
+import { ratelApi } from '@/lib/api/ratel_api';
+import { useApiCall } from '@/lib/api/use-send';
+import { logger } from '@/lib/logger';
+import { apiFetch } from '@/lib/api/apiFetch';
+import { config } from '@/config';
 
 export interface SpaceHeaderProps {
   title: string;
@@ -34,6 +40,65 @@ export default function SpaceHeader({
   isEdit = false,
   setTitle = () => {},
 }: SpaceHeaderProps) {
+  const { setIsEdit, thread } = useDeliberationSpaceContext();
+
+  const handleEdit = () => {
+    setIsEdit(true);
+    // set  isEdit to true
+    // and update it on the backend with the current value
+  };
+
+  const handlePublic = () => {
+    // logic for setting the space to publc
+  };
+
+  const handleMenu = () => {
+    // logic for showing a popup that contain ablout five items vertically stacked together at the just right beside the the   (Extra icon)
+  };
+
+  const handleSave = async () => {
+    try {
+      // Example POST request – replace with your actual API
+      const res = await apiFetch(
+        `${config.api_url}${ratelApi.feeds.updateDraft}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            update_draft: {
+              title,
+              html_contents: thread.html_contents,
+              files: thread.files,
+            },
+          }),
+        },
+      );
+
+      if (res.data) {
+        logger.debug('Space Post updated successfully')
+      }
+
+      // const response = await fetch(`/v1/spaces/${id}`, {
+      //   method: 'PUT',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({
+      //     title,
+      //     html_contents: thread.html_contents,
+      //     files: thread.files,
+      //   }),
+      // });
+
+      // if (!response.ok) throw new Error('Failed to update');
+
+      setIsEdit(false); // exit edit mode on success
+    } catch (error) {
+      console.error('Save failed:', error);
+      logger.error('Save failed for post space', error);
+    }
+  };
+
   return (
     <div className="flex flex-col w-full gap-2.5">
       <div className="flex flex-col gap-2.5">
@@ -54,6 +119,7 @@ export default function SpaceHeader({
               {title}
             </div>
           )}
+
           {/* <Bookmark width={20} height={20} /> */}
         </div>
       </div>
@@ -81,7 +147,12 @@ export default function SpaceHeader({
           {getTimeAgo(createdAt)}
         </div>
 
-        <StatsBar/>
+        <StatsBar
+          handleSave={handleSave}
+          handleEdit={handleEdit}
+          handlePublic={handlePublic}
+          handleMenu={handleMenu}
+        />
       </div>
     </div>
   );

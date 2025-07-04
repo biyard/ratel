@@ -37,6 +37,7 @@ function Page() {
       ) : (
         <AnalyzePage />
       )}
+
       <SpaceSideMenu />
     </div>
   );
