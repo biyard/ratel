@@ -6,6 +6,7 @@ import SpaceContents from '../../_components/space_contents';
 import SpaceFiles from './space_files';
 import { FileInfo } from '@/lib/api/models/feeds';
 import { useDeliberationSpaceContext } from '../provider.client';
+import SpaceSideMenu from './space_side_menu';
 
 export default function ThreadPage() {
   const {
@@ -37,17 +38,22 @@ export default function ThreadPage() {
           setTitle={setTitle}
         />
         <div className="flex flex-col w-full mt-7.5 gap-2.5">
-          <SpaceContents
-            isEdit={isEdit}
-            htmlContents={thread.html_contents}
-            setContents={(html_contents: string) => {
-              setThread({
-                ...thread,
-                html_contents,
-              });
-            }}
-          />
-        
+          <div className="flex flex-row w-full space-x-4 ">
+            <div className="md:min-w-[70vw]">
+              <SpaceContents
+                isEdit={isEdit}
+                htmlContents={thread.html_contents}
+                setContents={(html_contents: string) => {
+                  setThread({
+                    ...thread,
+                    html_contents,
+                  });
+                }}
+              />
+            </div>
+            <SpaceSideMenu />
+          </div>
+
           <SpaceFiles
             isEdit={isEdit}
             files={thread.files}

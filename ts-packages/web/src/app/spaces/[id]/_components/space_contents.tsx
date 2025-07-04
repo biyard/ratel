@@ -44,7 +44,7 @@ export default function SpaceContents({
   const html = (
     <BlackBox>
       <div
-        className="rich-content"
+        className="rich-content "
         dangerouslySetInnerHTML={{ __html: htmlContents }}
       />
       <style jsx global>{`
@@ -93,6 +93,8 @@ export default function SpaceContents({
         }
       `}</style>
     </BlackBox>
+
+    
   );
 
   const editorConfig = {

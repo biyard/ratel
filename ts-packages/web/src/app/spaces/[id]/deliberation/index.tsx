@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import SpaceSideMenu from './_components/space_side_menu';
+// import SpaceSideMenu from './_components/space_side_menu';
 import ThreadPage from './_components/thread';
 import DeliberationPage from './_components/deliberation';
 import PollPage from './_components/poll';
@@ -38,7 +38,7 @@ function Page() {
         <AnalyzePage />
       )}
 
-      <SpaceSideMenu />
+      {/* <SpaceSideMenu /> */}
     </div>
   );
 }
