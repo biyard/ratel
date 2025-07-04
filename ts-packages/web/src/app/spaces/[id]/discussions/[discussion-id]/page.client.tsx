@@ -60,7 +60,9 @@ export default function DiscussionByIdPage() {
   >();
   const [participants, setParticipants] = useState<Participant[]>([]);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [_, setFocusedAttendeeId] = useState<string | null>(null);
+  const [focusedAttendeeId, setFocusedAttendeeId] = useState<string | null>(
+    null,
+  );
 
   const { post, get } = useApiCall();
   const router = useRouter();
@@ -331,6 +333,13 @@ export default function DiscussionByIdPage() {
     }
   };
 
+  // const focusedUser = users.find((u) => u.participant_id === focusedAttendeeId);
+  // const focusedParticipant = participants.find(
+  //   (p) => p.id === focusedUser?.user_id,
+  // );
+  // const focusedNickname =
+  //   focusedParticipant?.nickname ?? focusedParticipant?.username ?? '';
+
   return (
     <div className="w-screen h-screen bg-black flex flex-col">
       <Header
@@ -350,6 +359,8 @@ export default function DiscussionByIdPage() {
           videoTiles={videoTiles}
           participants={participants}
           users={users}
+          focusedAttendeeId={focusedAttendeeId}
+          setFocusedAttendeeId={setFocusedAttendeeId}
         />
       )}
 
@@ -381,6 +392,29 @@ export default function DiscussionByIdPage() {
 
             {meetingSession && isSharing && (
               <ContentShareVideo meetingSession={meetingSession} />
+            )}
+
+            {focusedAttendeeId && meetingSession && (
+              <div className="w-full h-full z-100 bg-black border-4 border-white rounded-xl ">
+                <video
+                  className="absolute top-0 left-0 w-full h-full bg-black object-cover z-50"
+                  ref={(el) => {
+                    if (el) {
+                      const tile = videoTiles.find(
+                        (t) => t.attendeeId === focusedAttendeeId,
+                      );
+                      if (tile) {
+                        meetingSession.audioVideo.bindVideoElement(
+                          tile.tileId,
+                          el,
+                        );
+                      }
+                    }
+                  }}
+                  autoPlay
+                  muted={false}
+                />
+              </div>
             )}
 
             {meetingSession && (
@@ -437,6 +471,7 @@ export default function DiscussionByIdPage() {
         }}
         onVideoToggle={() => {
           setIsVideoOn((prev) => !prev);
+          setFocusedAttendeeId(null);
         }}
         onShareToggle={async () => {
           if (!meetingSession) return;
