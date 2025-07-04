@@ -33,9 +33,9 @@ impl NotificationController {
     ) -> Result<QueryResponse<NotificationSummary>> {
         let mut total_count = 0;
         let user_id = extract_user_id(&self.pool, auth).await?;
-        
+
         let items: Vec<NotificationSummary> = Notification::query_builder()
-            .target_user_id_equals(user_id)
+            .user_id_equals(user_id)
             .limit(param.size() as i32)
             .page(param.page())
             .order_by_created_at_desc()
@@ -73,7 +73,7 @@ impl NotificationController {
 
         let user_id = extract_user_id(&self.pool, auth).await?;
 
-        if user_id != notification.target_user_id.unwrap() {
+        if user_id != notification.user_id {
             return Err(Error::Unauthorized);
         }
 
@@ -107,7 +107,7 @@ impl NotificationController {
 
         let user_id = extract_user_id(&self.pool, auth).await?;
 
-        if user_id != notification.target_user_id.unwrap() {
+        if user_id != notification.user_id {
             return Err(Error::Unauthorized);
         }
 
@@ -193,7 +193,7 @@ impl NotificationController {
 mod tests {
     use super::*;
     use crate::tests::{TestContext, setup, setup_jwt_token, setup_test_user};
-    use crate::utils::notifications::{send_notification, RatelNotification};
+    use crate::utils::notifications::send_notification;
 
     async fn test_setup(pool: &sqlx::Pool<sqlx::Postgres>) -> (User, User) {
         let id1 = uuid::Uuid::new_v4().to_string();
@@ -212,9 +212,10 @@ mod tests {
         title: String,
         _content: String,
     ) -> Result<Notification> {
-        let test_notification = RatelNotification::ConnectNetwork {
-            display_name: title,
-            profile_url: "https://example.com/profile.jpg".to_string(),
+        let test_notification = NotificationData::ConnectNetwork {
+            requester_id: user_id,
+            image_url: "https://example.com/profile.jpg".to_string(),
+            description: title,
         };
         send_notification(pool, auth, user_id, test_notification).await
     }
