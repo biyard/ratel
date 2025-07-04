@@ -90,7 +90,10 @@ export default function ParticipantsPanel({
                     className="w-[30px] h-[30px] object-cover rounded-full"
                   />
                 ) : (
-                  <div className="w-8 h-8 bg-neutral-500 rounded-full" />
+                  <div
+                    className="w-8 h-8 bg-neutral-500 rounded-full"
+                    style={{ flexShrink: 0 }}
+                  />
                 )}
                 <div className="font-medium text-white text-sm">
                   {participant.username}
