@@ -34,9 +34,9 @@ import RemoteContentShareVideo from './_components/remote_content_share_video';
 export default function DiscussionByIdPage() {
   const tileMapRef = useRef<Record<number, string>>({});
 
-  const [isVideoOn, setIsVideoOn] = useState(true);
+  const [isVideoOn, setIsVideoOn] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
-  const [isAudioOn, setIsAudioOn] = useState(true);
+  const [isAudioOn, setIsAudioOn] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
 
   const [meetingSession, setMeetingSession] =
@@ -110,6 +110,14 @@ export default function DiscussionByIdPage() {
         await session.deviceController.listAudioInputDevices();
       if (audioInputs.length > 0) {
         await session.deviceController.startAudioInput(audioInputs[0].deviceId);
+        session.audioVideo.realtimeMuteLocalAudio();
+        const selfAttendeeId = configuration.credentials?.attendeeId;
+        if (selfAttendeeId) {
+          setMicStates((prev) => ({
+            ...prev,
+            [selfAttendeeId]: false,
+          }));
+        }
       }
 
       setMeetingSession(session);
@@ -175,10 +183,13 @@ export default function DiscussionByIdPage() {
         av.realtimeSubscribeToVolumeIndicator(
           attendeeId,
           (_attendeeId, _volume, muted) => {
-            setMicStates((prev) => ({
-              ...prev,
-              [attendeeId]: !muted,
-            }));
+            setMicStates((prev) => {
+              if (typeof muted !== 'boolean') return prev;
+              return {
+                ...prev,
+                [attendeeId]: !muted,
+              };
+            });
           },
         );
       } else {
