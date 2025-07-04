@@ -78,48 +78,6 @@ export default function DiscussionByIdPage() {
   const users = discussion.participants;
 
   useEffect(() => {
-    const handleBeforeUnload = async () => {
-      try {
-        console.log('close button clicked');
-        await post(
-          ratelApi.discussions.actDiscussionById(spaceId, discussionId),
-          exitMeetingRequest(),
-        );
-        setRemoteContentTileOwner(null);
-      } catch (err) {
-        console.error('[EXIT] Failed to update participants:', err);
-      }
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
-  }, []);
-
-  useEffect(() => {
-    const handlePopState = async () => {
-      try {
-        console.log('back button clicked');
-        await post(
-          ratelApi.discussions.actDiscussionById(spaceId, discussionId),
-          exitMeetingRequest(),
-        );
-        setRemoteContentTileOwner(null);
-      } catch (err) {
-        console.error('[EXIT] Failed to update participants:', err);
-      }
-    };
-
-    window.addEventListener('popstate', handlePopState);
-
-    return () => {
-      window.removeEventListener('popstate', handlePopState);
-    };
-  }, []);
-
-  useEffect(() => {
     async function startChime() {
       await post(
         ratelApi.discussions.actDiscussionById(spaceId, discussionId),
@@ -383,176 +341,180 @@ export default function DiscussionByIdPage() {
     focusedParticipant?.nickname ?? focusedParticipant?.username ?? '';
 
   return (
-    <div className="w-screen h-screen bg-black flex flex-col">
-      <Header
-        name={discussion.name}
-        onclose={async () => {
-          await post(
-            ratelApi.discussions.actDiscussionById(spaceId, discussionId),
-            exitMeetingRequest(),
-          );
-          setRemoteContentTileOwner(null);
-          router.replace(route.deliberationSpaceById(discussion.space_id));
-        }}
-      />
+    <div className="fixed top-0 left-0 flex flex-row w-full h-full">
+      <div className="flex flex-1 h-full justify-center items-center">
+        <div className="flex flex-1 bg-black h-full w-full max-w-[1300px] flex-col justify-center items-center">
+          <Header
+            name={discussion.name}
+            onclose={async () => {
+              await post(
+                ratelApi.discussions.actDiscussionById(spaceId, discussionId),
+                exitMeetingRequest(),
+              );
+              setRemoteContentTileOwner(null);
+              router.replace(route.deliberationSpaceById(discussion.space_id));
+            }}
+          />
 
-      {meetingSession && (
-        <RemoteGalleryView
-          meetingSession={meetingSession}
-          videoTiles={videoTiles}
-          participants={participants}
-          users={users}
-          focusedAttendeeId={focusedAttendeeId}
-          setFocusedAttendeeId={setFocusedAttendeeId}
-        />
-      )}
+          {meetingSession && (
+            <RemoteGalleryView
+              meetingSession={meetingSession}
+              videoTiles={videoTiles}
+              participants={participants}
+              users={users}
+              focusedAttendeeId={focusedAttendeeId}
+              setFocusedAttendeeId={setFocusedAttendeeId}
+            />
+          )}
 
-      <div className="relative w-full h-full">
-        <div className="flex flex-col w-full justify-start items-start">
-          <>
-            {meetingSession && (
-              <RemoteContentShareVideo
-                meetingSession={meetingSession}
-                onRemoteContentTileUpdate={(tileState) => {
-                  if (!tileState) {
-                    setRemoteContentTileOwner(null);
-                    return;
-                  }
-
-                  const attendeeId = tileState.boundAttendeeId;
-                  if (
-                    attendeeId &&
-                    attendeeId !==
-                      meetingSession.configuration.credentials?.attendeeId
-                  ) {
-                    setRemoteContentTileOwner(attendeeId);
-                  } else {
-                    setRemoteContentTileOwner(null);
-                  }
-                }}
-              />
-            )}
-
-            {meetingSession && isSharing && (
-              <ContentShareVideo meetingSession={meetingSession} />
-            )}
-
-            {focusedAttendeeId && meetingSession && (
-              <div className="w-full h-full z-100 bg-black border-4 border-white rounded-xl ">
-                <video
-                  className="absolute top-0 left-0 w-full h-full bg-black object-cover z-50"
-                  ref={(el) => {
-                    if (el) {
-                      const tile = videoTiles.find(
-                        (t) => t.attendeeId === focusedAttendeeId,
-                      );
-                      if (tile) {
-                        meetingSession.audioVideo.bindVideoElement(
-                          tile.tileId,
-                          el,
-                        );
+          <div className="relative w-full h-full">
+            <div className="flex flex-col w-full justify-start items-start">
+              <>
+                {meetingSession && (
+                  <RemoteContentShareVideo
+                    meetingSession={meetingSession}
+                    onRemoteContentTileUpdate={(tileState) => {
+                      if (!tileState) {
+                        setRemoteContentTileOwner(null);
+                        return;
                       }
+
+                      const attendeeId = tileState.boundAttendeeId;
+                      if (
+                        attendeeId &&
+                        attendeeId !==
+                          meetingSession.configuration.credentials?.attendeeId
+                      ) {
+                        setRemoteContentTileOwner(attendeeId);
+                      } else {
+                        setRemoteContentTileOwner(null);
+                      }
+                    }}
+                  />
+                )}
+
+                {meetingSession && isSharing && (
+                  <ContentShareVideo meetingSession={meetingSession} />
+                )}
+
+                {focusedAttendeeId && meetingSession && (
+                  <div className="w-full h-full z-100 bg-black border-4 border-white rounded-xl ">
+                    <video
+                      className="absolute top-0 left-0 w-full h-full bg-black object-cover z-50"
+                      ref={(el) => {
+                        if (el) {
+                          const tile = videoTiles.find(
+                            (t) => t.attendeeId === focusedAttendeeId,
+                          );
+                          if (tile) {
+                            meetingSession.audioVideo.bindVideoElement(
+                              tile.tileId,
+                              el,
+                            );
+                          }
+                        }
+                      }}
+                      autoPlay
+                      muted={false}
+                    />
+
+                    <div className="absolute bottom-2 right-2 z-50 w-fit max-w-[100px] h-fit px-[10px] py-[5px] bg-neutral-800 text-white text-sm rounded-lg overflow-hidden text-ellipsis whitespace-nowrap">
+                      {focusedNickname}
+                    </div>
+                  </div>
+                )}
+
+                {meetingSession && (
+                  <div
+                    className={
+                      isSharing || remoteContentTileOwner
+                        ? 'absolute bottom-4 right-4 w-[180px] h-[130px] z-10'
+                        : 'w-full h-full'
                     }
-                  }}
-                  autoPlay
-                  muted={false}
-                />
+                  >
+                    <LocalVideo
+                      meetingSession={meetingSession}
+                      isVideoOn={isVideoOn}
+                    />
+                  </div>
+                )}
+              </>
+            </div>
+          </div>
 
-                <div className="absolute bottom-2 right-2 z-50 w-fit max-w-[100px] h-fit px-[10px] py-[5px] bg-neutral-800 text-white text-sm rounded-lg overflow-hidden text-ellipsis whitespace-nowrap">
-                  {focusedNickname}
-                </div>
-              </div>
-            )}
+          <Bottom
+            isVideoOn={isVideoOn}
+            isAudioOn={isAudioOn}
+            isSharing={isSharing}
+            isRecording={isRecording}
+            onclose={async () => {
+              await post(
+                ratelApi.discussions.actDiscussionById(spaceId, discussionId),
+                exitMeetingRequest(),
+              );
+              setRemoteContentTileOwner(null);
+              router.replace(route.deliberationSpaceById(discussion.space_id));
+            }}
+            onRecordClick={async () => {
+              if (!isRecording) {
+                await post(
+                  ratelApi.discussions.actDiscussionById(spaceId, discussionId),
+                  startRecordingRequest(),
+                );
+              } else {
+                await post(
+                  ratelApi.discussions.actDiscussionById(spaceId, discussionId),
+                  endRecordingRequest(),
+                );
+              }
+              setIsRecording(!isRecording);
+            }}
+            onParticipantsClick={() => {
+              setActivePanel((prev) =>
+                prev === 'participants' ? null : 'participants',
+              );
+            }}
+            onChatClick={() => {
+              setActivePanel((prev) => (prev === 'chat' ? null : 'chat'));
+            }}
+            onVideoToggle={() => {
+              setIsVideoOn((prev) => !prev);
+              setFocusedAttendeeId(null);
+            }}
+            onShareToggle={async () => {
+              if (!meetingSession) return;
 
-            {meetingSession && (
-              <div
-                className={
-                  isSharing || remoteContentTileOwner
-                    ? 'absolute bottom-4 right-4 w-[180px] h-[130px] z-10'
-                    : 'w-full h-full'
+              const av = meetingSession.audioVideo;
+
+              if (!isSharing) {
+                try {
+                  await av.startContentShareFromScreenCapture();
+
+                  setIsSharing(true);
+                } catch (err) {
+                  logger.error('Failed to share video with error: ', err);
                 }
-              >
-                <LocalVideo
-                  meetingSession={meetingSession}
-                  isVideoOn={isVideoOn}
-                />
-              </div>
-            )}
-          </>
+              } else {
+                av.stopContentShare();
+                setIsSharing(false);
+              }
+            }}
+            onAudioToggle={() => {
+              if (!meetingSession) return;
+
+              const av = meetingSession.audioVideo;
+
+              if (isAudioOn) {
+                av.realtimeMuteLocalAudio();
+              } else {
+                av.realtimeUnmuteLocalAudio();
+              }
+
+              setIsAudioOn((prev) => !prev);
+            }}
+          />
         </div>
       </div>
-
-      <Bottom
-        isVideoOn={isVideoOn}
-        isAudioOn={isAudioOn}
-        isSharing={isSharing}
-        isRecording={isRecording}
-        onclose={async () => {
-          await post(
-            ratelApi.discussions.actDiscussionById(spaceId, discussionId),
-            exitMeetingRequest(),
-          );
-          setRemoteContentTileOwner(null);
-          router.replace(route.deliberationSpaceById(discussion.space_id));
-        }}
-        onRecordClick={async () => {
-          if (!isRecording) {
-            await post(
-              ratelApi.discussions.actDiscussionById(spaceId, discussionId),
-              startRecordingRequest(),
-            );
-          } else {
-            await post(
-              ratelApi.discussions.actDiscussionById(spaceId, discussionId),
-              endRecordingRequest(),
-            );
-          }
-          setIsRecording(!isRecording);
-        }}
-        onParticipantsClick={() => {
-          setActivePanel((prev) =>
-            prev === 'participants' ? null : 'participants',
-          );
-        }}
-        onChatClick={() => {
-          setActivePanel((prev) => (prev === 'chat' ? null : 'chat'));
-        }}
-        onVideoToggle={() => {
-          setIsVideoOn((prev) => !prev);
-          setFocusedAttendeeId(null);
-        }}
-        onShareToggle={async () => {
-          if (!meetingSession) return;
-
-          const av = meetingSession.audioVideo;
-
-          if (!isSharing) {
-            try {
-              await av.startContentShareFromScreenCapture();
-
-              setIsSharing(true);
-            } catch (err) {
-              logger.error('Failed to share video with error: ', err);
-            }
-          } else {
-            av.stopContentShare();
-            setIsSharing(false);
-          }
-        }}
-        onAudioToggle={() => {
-          if (!meetingSession) return;
-
-          const av = meetingSession.audioVideo;
-
-          if (isAudioOn) {
-            av.realtimeMuteLocalAudio();
-          } else {
-            av.realtimeUnmuteLocalAudio();
-          }
-
-          setIsAudioOn((prev) => !prev);
-        }}
-      />
 
       {activePanel === 'participants' && (
         <ParticipantsPanel
