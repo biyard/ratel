@@ -79,7 +79,7 @@ export default function RemoteContentShareVideo({
     return () => {
       av.removeObserver(observer);
     };
-  }, [meetingSession]);
+  }, [meetingSession, onRemoteContentTileUpdate]);
 
   return (
     <video
