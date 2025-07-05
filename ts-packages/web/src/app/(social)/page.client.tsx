@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { useInView } from 'react-intersection-observer';
@@ -26,7 +24,7 @@ import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import { useApiCall } from '@/lib/api/use-send';
 import { followRequest } from '@/lib/api/models/networks/follow';
 import { logger } from '@/lib/logger';
-
+import { Feed } from '@/lib/api/models/feeds';
 import FeedEmptyState from './_components/feed-empty-state';
 import FeedEndMessage from './_components/feed-end-message';
 import SuggestionItem from './_components/suggestions-items';
@@ -75,8 +73,7 @@ export default function Home() {
   const { data: postData, error: postError, isLoading } = usePost(page, SIZE);
 
   // Processing and deduplication of feed data
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const processFeedData = useCallback((items: any[]): Post[] => {
+  const processFeedData = useCallback((items: Feed[]): Post[] => {
     if (!items) return [];
 
     return items.map((item) => ({

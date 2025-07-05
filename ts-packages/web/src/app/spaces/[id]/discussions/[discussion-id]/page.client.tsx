@@ -104,7 +104,7 @@ export default function DiscussionByIdPage() {
     }
 
     startChime();
-  }, []);
+  }, [spaceId, discussionId, post, get]);
 
   useEffect(() => {
     if (!meetingSession) return;
@@ -194,7 +194,7 @@ export default function DiscussionByIdPage() {
     return () => {
       av.realtimeUnsubscribeFromReceiveDataMessage(topic);
     };
-  }, [meetingSession]);
+  }, [meetingSession, users]);
 
   const exitedAttendeesRef = useRef<Set<string>>(new Set());
 
@@ -246,7 +246,7 @@ export default function DiscussionByIdPage() {
     return () => {
       av.realtimeUnsubscribeToAttendeeIdPresence(handlePresenceChange);
     };
-  }, [meetingSession, users]);
+  }, [meetingSession, users, get, spaceId, discussionId]);
 
   const sendMessage = (text: string) => {
     if (!meetingSession || !text.trim()) return;

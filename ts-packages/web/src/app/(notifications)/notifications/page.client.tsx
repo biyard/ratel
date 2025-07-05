@@ -22,17 +22,35 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useState } from 'react';
 import { notifications, suggestedContacts } from './data';
 import { Button } from '@/components/ui/button';
+
+interface ForwardedMessageContent {
+  title: string;
+  author: string;
+  authorTime: string;
+  text: string;
+  reply: string;
+}
+
+interface ForwardedMessage {
+  id: number;
+  type: 'forwarded';
+  timestamp: string;
+  content: ForwardedMessageContent;
+  forwardedTo: string[];
+}
+
+type Conversations = Record<string, ForwardedMessage[]>;
+
 export default function NotificationClientPage() {
   const [activeTab, setActiveTab] = useState<'notification' | 'message'>(
     'notification',
   );
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
-
   const [showForwardModal, setShowForwardModal] = useState(false);
-  const [_showReplyModal, setShowReplyModal] = useState(false);
+  const [showReplyModal, setShowReplyModal] = useState(false);
   const [selectedContacts, setSelectedContacts] = useState<string[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [conversations, setConversations] = useState<Record<string, any[]>>({});
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [conversations, setConversations] = useState<Conversations>({});
 
   const handleUserClick = (userName: string) => {
     setSelectedUser(userName);
@@ -48,6 +66,7 @@ export default function NotificationClientPage() {
 
   const handleReplyClick = () => {
     setShowReplyModal(true);
+    console.log({ showReplyModal });
   };
 
   const handleCloseForwardModal = () => {
@@ -56,14 +75,8 @@ export default function NotificationClientPage() {
     setSearchQuery('');
   };
 
-  const handleCloseReplyModal = () => {
-    setShowReplyModal(false);
-    setSelectedContacts([]);
-    setSearchQuery('');
-  };
-
   const handleContactSelect = (contactId: string) => {
-    setSelectedContacts((prev) =>
+    setSelectedContacts((prev: string[]) =>
       prev.includes(contactId)
         ? prev.filter((id) => id !== contactId)
         : [...prev, contactId],
@@ -71,40 +84,36 @@ export default function NotificationClientPage() {
   };
 
   const handleSendForward = () => {
-    if (selectedContacts.length > 0 && selectedUser) {
-      // Create the forwarded message object
-      const forwardedMessage = {
-        id: Date.now(),
-        type: 'forwarded',
-        timestamp: new Date().toLocaleString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric',
-          hour: 'numeric',
-          minute: '2-digit',
-          hour12: true,
-        }),
-        content: {
-          title: '[Post Title]',
-          author: 'Politician name',
-          authorTime: '1w ago',
-          text: "Life isn't a straight road, and it's not supposed to be. Some turns teach you patience, some dead ends build your strength. It's not always about moving fast—it's about moving with meaning. Even when you feel lost, you're gathering pieces of yourself along the way. Every mistake, every delay, every unexpected moment is shaping a version of you that's wiser, kinder, and more real. You don't need to have it all figured out. You just need to keep showing up for yourself, one honest step at a time.",
-          reply: "It's our place!",
-        },
-        forwardedTo: selectedContacts
-          .map((id) => suggestedContacts.find((c) => c.id === id)?.name)
-          .filter(Boolean),
-      };
+    if (selectedContacts.length === 0 || !selectedUser) return;
 
-      // Add the message to the current conversation
-      setConversations((prev) => ({
-        ...prev,
-        [selectedUser]: [...(prev[selectedUser] || []), forwardedMessage],
-      }));
+    const forwardedMessage: ForwardedMessage = {
+      id: Date.now(),
+      type: 'forwarded',
+      timestamp: new Date().toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: '2 digit',
+        hour12: true,
+      }),
+      content: {
+        title: '[Post Title]',
+        author: 'Politician name',
+        authorTime: '1w ago',
+        text: 'Life isnt a straight road, and its not supposed to be. Some turns teach you patience, some dead ends build your strength. Its not always about moving fast—its about moving with meaning. Even when you feel lost, you re gathering pieces of yourself along the way. Every mistake, every delay, every unexpected moment is shaping a version of you thats wiser, kinder, and more real. You dont need to have it all figured out. You just need to keep showing up for yourself, one honest step at a time.',
+        reply: 'Its our place!',
+      },
+      forwardedTo: selectedContacts
+        .map((id) => suggestedContacts.find((c) => c.id === id)?.name ?? '')
+        .filter(Boolean),
+    };
 
-      console.log('Forwarding to:', selectedContacts);
-      handleCloseForwardModal();
-    }
+    setConversations((prev) => ({
+      ...prev,
+      [selectedUser]: [...(prev[selectedUser] ?? []), forwardedMessage],
+    }));
+    handleCloseForwardModal();
   };
 
   return (
