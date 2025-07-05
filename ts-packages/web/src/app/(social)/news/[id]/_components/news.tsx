@@ -15,12 +15,12 @@ export default function News({ news_id }: { news_id: number }) {
           <LexicalHtmlViewer htmlString={news?.html_content || ''} />
           {news?.user_id && (
             <div className="relative w-full h-72 rounded-[10px] overflow-hidden">
-              <Image
+              {/* <Image
                 fill
                 className="object-cover"
                 src={''}
                 alt={news.title || 'Post Image'}
-              />
+              /> */}
             </div>
           )}
         </div>
