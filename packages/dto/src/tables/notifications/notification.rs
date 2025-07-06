@@ -22,7 +22,7 @@ pub struct Notification {
     #[serde(default)]
     pub notification_type: NotificationType,
 
-    #[api_model(version = v0.1, summary)]
+    #[api_model(summary, version = v0.1)]
     pub read: bool,
 }
 

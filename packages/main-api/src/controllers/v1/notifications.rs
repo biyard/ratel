@@ -33,18 +33,17 @@ impl NotificationController {
     ) -> Result<QueryResponse<NotificationSummary>> {
         let mut total_count = 0;
         let user_id = extract_user_id(&self.pool, auth).await?;
-
+        
         let items: Vec<NotificationSummary> = Notification::query_builder()
             .user_id_equals(user_id)
             .limit(param.size() as i32)
             .page(param.page())
             .order_by_created_at_desc()
+            .with_count()
             .query()
             .map(|row: PgRow| {
                 use sqlx::Row;
-                if total_count == 0 {
-                    total_count = row.try_get("total_count").unwrap_or_default();
-                }
+                total_count = row.try_get("total_count").unwrap_or_default();
                 NotificationSummary::from(row)
             })
             .fetch_all(&self.pool)

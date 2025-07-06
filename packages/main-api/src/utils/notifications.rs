@@ -29,7 +29,7 @@ pub async fn send_notification(
         NotificationData::ConnectNetwork { .. } => NotificationType::ConnectNetwork,
         NotificationData::InviteDiscussion { .. } => NotificationType::InviteDiscussion,
         NotificationData::InviteTeam { .. } => NotificationType::InviteTeam,
-        _ => NotificationType::Unknown,
+        NotificationData::None => NotificationType::Unknown,
     };
 
 
