@@ -55,10 +55,3 @@ pub enum NotificationData {
     BoostingSpace { space_id: i64, image_url: Option<String>, description: String },
     ConnectNetwork { requester_id: i64, image_url: String, description: String },
 }
-
-// #[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]
-// #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
-// pub enum test {
-//     #[default]
-//     Test =,
-// }
