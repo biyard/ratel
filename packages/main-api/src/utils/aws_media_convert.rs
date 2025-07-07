@@ -38,52 +38,130 @@ pub async fn merge_recording_chunks(
     let destination_arn = format!("arn:aws:s3:::{}", bucket_name);
 
     if let Some(record) = record {
-        if record.contains("video") {
+        if !record.contains("video") {
+            let trimmed = record
+                .trim_start_matches("https://")
+                .trim_start_matches("http://");
+
+            let parts: Vec<&str> = trimmed.split('/').collect();
+
+            tracing::debug!("record parts: {:?}", parts);
+
+            let media_pipeline_id = match parts.get(1) {
+                Some(id) => *id,
+                None => {
+                    tracing::warn!("Invalid record format: {}", record);
+                    return None;
+                }
+            };
+
+            let prefix = format!("{}/video/", media_pipeline_id);
+            let prefix_audio = format!("{}/audio/", media_pipeline_id);
+
+            let s3 = aws_sdk_s3::Client::new(&aws_config);
+            let resp = s3
+                .list_objects_v2()
+                .bucket(&bucket_name)
+                .prefix(&prefix)
+                .send()
+                .await
+                .unwrap();
+            let resp_audio = s3
+                .list_objects_v2()
+                .bucket(&bucket_name)
+                .prefix(&prefix_audio)
+                .send()
+                .await
+                .unwrap();
+
+            let contents = resp.contents();
+            let contents_audio = resp_audio.contents();
+
+            if let Some(object) = contents
+                .iter()
+                .find(|obj| obj.key().map(|k| k.ends_with(".mp4")).unwrap_or(false))
+            {
+                let file_key = object.key().unwrap();
+                let filename = file_key.split('/').last().unwrap_or("video.mp4");
+
+                let new_key = format!("{}/{}/video/{}", config.env, media_pipeline_id, filename);
+
+                s3.copy_object()
+                    .copy_source(format!("{}/{}", bucket_name, file_key))
+                    .bucket(&bucket_name)
+                    .key(&new_key)
+                    .send()
+                    .await
+                    .map_err(|e| {
+                        tracing::error!("S3 copy error: {:?}", e);
+                        e
+                    })
+                    .ok()?;
+
+                if let Some(object) = contents_audio
+                    .iter()
+                    .find(|obj| obj.key().map(|k| k.ends_with(".mp4")).unwrap_or(false))
+                {
+                    let file_key = object.key().unwrap();
+                    let filename = file_key.split('/').last().unwrap_or("audio.mp4");
+
+                    let new_key =
+                        format!("{}/{}/audio/{}", config.env, media_pipeline_id, filename);
+
+                    s3.copy_object()
+                        .copy_source(format!("{}/{}", bucket_name, file_key))
+                        .bucket(&bucket_name)
+                        .key(&new_key)
+                        .send()
+                        .await
+                        .map_err(|e| {
+                            tracing::error!("S3 copy error: {:?}", e);
+                            e
+                        })
+                        .ok()?;
+                }
+
+                let new_url = format!("https://{}/{}", bucket_name, new_key);
+
+                let cleanup_prefix = format!("{}/", media_pipeline_id);
+                let list_resp = s3
+                    .list_objects_v2()
+                    .bucket(&bucket_name)
+                    .prefix(&cleanup_prefix)
+                    .send()
+                    .await
+                    .ok();
+
+                if let Some(objects) = list_resp.and_then(|r| r.contents) {
+                    for obj in objects {
+                        if let Some(key) = obj.key {
+                            let _ = s3
+                                .delete_object()
+                                .bucket(&bucket_name)
+                                .key(&key)
+                                .send()
+                                .await;
+                        }
+                    }
+                    tracing::info!(
+                        "Cleaned up media_pipeline_id directory: {}",
+                        media_pipeline_id
+                    );
+                } else {
+                    tracing::warn!(
+                        "No objects found under media_pipeline_id prefix: {}",
+                        cleanup_prefix
+                    );
+                }
+
+                return Some(new_url);
+            }
+
+            tracing::warn!("No mp4 file found in {}/video/", media_pipeline_id);
+            return None;
+        } else {
             return Some(record);
         }
-
-        let trimmed = record
-            .trim_start_matches("https://")
-            .trim_start_matches("http://");
-
-        let parts: Vec<&str> = trimmed.split('/').collect();
-
-        tracing::debug!("record parts: {:?}", parts);
-
-        let media_pipeline_id = match parts.get(1) {
-            Some(id) => *id,
-            None => {
-                tracing::warn!("Invalid record format: {}", record);
-                return None;
-            }
-        };
-
-        let prefix = format!("{}/video/", media_pipeline_id);
-
-        let s3 = aws_sdk_s3::Client::new(&aws_config);
-        let resp = s3
-            .list_objects_v2()
-            .bucket(&bucket_name)
-            .prefix(&prefix)
-            .send()
-            .await
-            .unwrap();
-
-        let contents = resp.contents();
-
-        if let Some(object) = contents
-            .iter()
-            .find(|obj| obj.key().map(|k| k.ends_with(".mp4")).unwrap_or(false))
-        {
-            let file_key = object.key().unwrap();
-
-            let video_url = format!("https://{}/{}", bucket_name, file_key);
-
-            return Some(video_url);
-        }
-
-        tracing::warn!("No mp4 file found in {}/video/", media_pipeline_id);
-        return None;
     }
 
     let client = ChimePipelinesClient::new(&aws_config);
