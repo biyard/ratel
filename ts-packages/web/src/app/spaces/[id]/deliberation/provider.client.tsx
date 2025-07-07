@@ -123,6 +123,7 @@ export default function ClientProviders({
       ended_at: disc.ended_at,
       name: disc.name,
       description: disc.description,
+      discussion_id: disc.id,
       participants: disc.members.map((member) => ({
         id: member.id,
         created_at: member.created_at,
@@ -369,6 +370,7 @@ export default function ClientProviders({
       name: disc.name,
       description: disc.description,
       participants: disc.participants.map((member) => member.id),
+      discussion_id: disc.discussion_id,
     }));
 
     logger.debug('discussions: ', discussions);
