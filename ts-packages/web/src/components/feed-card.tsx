@@ -15,6 +15,10 @@ import Image from 'next/image';
 import { route } from '@/route';
 import { SpaceType } from '@/lib/api/models/spaces';
 
+// testing repost functiionality
+import CreatePostButton from '@/app/(social)/_components/create-post-button';
+import { usePostDraft } from '@/app/(social)/_components/create-post';
+
 export interface FeedCardProps {
   id: number;
   industry: string;
@@ -238,6 +242,10 @@ export function FeedFooter({
   is_liked,
   onLikeClick,
 }: FeedCardProps) {
+  const handleRepost = () => {}; // handl repost functin going to be passed aas prop the userepost hook
+
+  const {newDraft} = usePostDraft()
+
   return (
     <Row className="items-center justify-around border-t w-full border-neutral-800">
       <IconText
@@ -264,7 +272,13 @@ export function FeedFooter({
         {convertNumberToString(rewards)}
       </IconText>
       <IconText>
-        <Shares />
+        <button onClick={(e) => {
+          e.stopPropagation(); 
+          newDraft();
+        }}>
+          <Shares />
+        </button>
+
         {convertNumberToString(shares)}
       </IconText>
     </Row>
