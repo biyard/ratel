@@ -3,12 +3,12 @@ import React from 'react';
 // import Extra from '@/assets/icons/extra.svg';
 // import Bookmark from '@/assets/icons/bookmark.svg';
 import Badge from '@/assets/icons/badge.svg';
-import { getTimeAgo } from '@/lib/time-utils';
 import { UserType } from '@/lib/api/models/user';
 import Image from 'next/image';
 import { Input } from '@/components/ui/input';
 import { SpaceStatus } from '@/lib/api/models/spaces';
 import { Play } from 'lucide-react';
+import TimeAgo from './time_ago';
 
 export interface SpaceHeaderProps {
   title: string;
@@ -76,9 +76,7 @@ export default function SpaceHeader({
           <Badge />
         </div>
 
-        <div className="font-light text-white text-sm/[14px]">
-          {getTimeAgo(createdAt)}
-        </div>
+        <TimeAgo timestamp={createdAt} />
       </div>
     </div>
   );
