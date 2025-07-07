@@ -71,6 +71,7 @@ export default function SpaceDiscussion({
               name,
               description,
               participants: [],
+              discussion_id: undefined,
             });
           }}
           onupdate={(index: number, discussion: DiscussionInfo) => {
@@ -352,6 +353,7 @@ function EditableDiscussion({
           <EditableDiscussionInfo
             key={stableKeys[index]}
             index={index}
+            discussionId={discussion.discussion_id}
             startedAt={discussion.started_at}
             endedAt={discussion.ended_at}
             name={discussion.name}
@@ -396,6 +398,7 @@ function AddDiscussion({ onadd }: { onadd: () => void }) {
 
 function EditableDiscussionInfo({
   index,
+  discussionId,
   startedAt,
   endedAt,
   name,
@@ -405,6 +408,7 @@ function EditableDiscussionInfo({
   onremove,
 }: {
   index: number;
+  discussionId?: number;
   startedAt: number;
   endedAt: number;
   name: string;
@@ -443,6 +447,8 @@ function EditableDiscussionInfo({
       name: newTitle,
       description: newDesc,
       participants: newParticipants,
+
+      discussion_id: discussionId,
     });
   };
 

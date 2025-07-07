@@ -56,8 +56,10 @@ impl SpaceDiscussionController {
             name,
             description,
             participants,
+            discussion_id,
         }: DiscussionCreateRequest,
     ) -> Result<Discussion> {
+        let _discussion_id = discussion_id;
         let user = extract_user_with_allowing_anonymous(&self.pool, auth).await?;
 
         let mut tx = self.pool.begin().await?;
