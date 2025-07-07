@@ -99,9 +99,6 @@ impl GroupController {
 
         let mut tx = self.pool.begin().await?;
 
-        // Clone auth for use in notifications within the loop
-        let auth_for_notifications = auth.clone();
-
         // Get team and group information for notifications
         let team = Team::query_builder()
             .id_equals(team_id)
@@ -162,10 +159,11 @@ impl GroupController {
                 description: format!("You have been invited to join {} in {}", group.name, team.nickname),
             };
 
-            // Send notification outside of the transaction to avoid potential deadlocks
-            if let Err(e) = send_notification(&self.pool, auth_for_notifications.clone(), user_id, notification_data).await {
+            // Send notification within the transaction to ensure consistency
+            if let Err(e) = send_notification(&self.pool, &mut tx, user_id, notification_data).await {
                 tracing::error!("Failed to send notification to user {}: {:?}", user_id, e);
-                // Don't fail the entire operation if notification fails
+                // Don't fail the entire operation if notification fails - just log the error
+                // The transaction will still commit the main operation
             }
         }
 

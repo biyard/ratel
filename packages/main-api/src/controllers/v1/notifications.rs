@@ -192,7 +192,6 @@ impl NotificationController {
 mod tests {
     use super::*;
     use crate::tests::{TestContext, setup, setup_jwt_token, setup_test_user};
-    use crate::utils::notifications::send_notification;
 
     async fn test_setup(pool: &sqlx::Pool<sqlx::Postgres>) -> (User, User) {
         let id1 = uuid::Uuid::new_v4().to_string();
@@ -206,17 +205,19 @@ mod tests {
 
     async fn create_test_notification(
         pool: &sqlx::Pool<sqlx::Postgres>,
-        auth: Option<Authorization>,
         user_id: i64,
         title: String,
         _content: String,
     ) -> Result<Notification> {
+        let mut tx = pool.begin().await?;
         let test_notification = NotificationData::ConnectNetwork {
             requester_id: user_id,
             image_url: "https://example.com/profile.jpg".to_string(),
             description: title,
         };
-        send_notification(pool, auth, user_id, test_notification).await
+        let result = crate::utils::notifications::send_notification(pool, &mut tx, user_id, test_notification).await?;
+        tx.commit().await?;
+        Ok(result)
     }
 
 
@@ -230,7 +231,7 @@ mod tests {
         let auth = Some(Authorization::Bearer { claims });
 
         // Create a test notification
-        let notification = create_test_notification(&pool, auth.clone(), user1.id, format!("Test {}", now), "Test message".to_string()).await.unwrap();
+        let notification = create_test_notification(&pool, user1.id, format!("Test {}", now), "Test message".to_string()).await.unwrap();
         
         assert_eq!(notification.read, false);
 
@@ -253,7 +254,7 @@ mod tests {
         let auth = Some(Authorization::Bearer { claims });
 
         // Create notification for user1
-        let notification = create_test_notification(&pool, Some(Authorization::Bearer { claims: setup_jwt_token(user1.clone()).0 }), user1.id, format!("Test {}", now), "Test message".to_string()).await.unwrap();
+        let notification = create_test_notification(&pool, user1.id, format!("Test {}", now), "Test message".to_string()).await.unwrap();
 
         // Try to update with user2 credentials (should fail)
         let result = ctrl.update_status_to_read(notification.id, auth).await;
@@ -288,7 +289,7 @@ mod tests {
         let auth = Some(Authorization::Bearer { claims });
 
         // Create a test notification
-        let notification = create_test_notification(&pool, auth.clone(), user1.id, format!("Test {}", now), "Test message".to_string()).await.unwrap();
+        let notification = create_test_notification(&pool, user1.id, format!("Test {}", now), "Test message".to_string()).await.unwrap();
 
         // Dismiss the notification
         let result = ctrl.dismiss_notification(notification.id, auth).await;
@@ -317,7 +318,7 @@ mod tests {
         let auth = Some(Authorization::Bearer { claims });
 
         // Create notification for user1
-        let notification = create_test_notification(&pool, Some(Authorization::Bearer { claims: setup_jwt_token(user1.clone()).0 }), user1.id, format!("Test {}", now), "Test message".to_string()).await.unwrap();
+        let notification = create_test_notification(&pool, user1.id, format!("Test {}", now), "Test message".to_string()).await.unwrap();
 
         // Try to dismiss with user2 credentials (should fail)
         let result = ctrl.dismiss_notification(notification.id, auth).await;
@@ -350,7 +351,7 @@ mod tests {
         let (user1, _) = test_setup(&pool).await;
 
         // Create a test notification
-        let notification = create_test_notification(&pool, Some(Authorization::Bearer { claims: setup_jwt_token(user1.clone()).0 }), user1.id, format!("Test {}", now), "Test message".to_string()).await.unwrap();
+        let notification = create_test_notification(&pool, user1.id, format!("Test {}", now), "Test message".to_string()).await.unwrap();
 
         // Try to dismiss without authentication
         let result = ctrl.dismiss_notification(notification.id, None).await;
