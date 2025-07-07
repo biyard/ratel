@@ -71,7 +71,7 @@ type ContextType = {
   setDraft: StateSetter<FinalConsensus>;
   handleGoBack: () => void;
   handleDownloadExcel: () => void;
-  handleViewRecord: (discussionId: number, record: string) => void;
+  handleViewRecord: (discussionId: number, record: string) => Promise<void>;
 
   userType: UserType;
   proposerImage: string;
