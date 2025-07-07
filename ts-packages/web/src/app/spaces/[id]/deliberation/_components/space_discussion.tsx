@@ -33,6 +33,7 @@ export interface SpaceDiscussionProps {
   onremove?: (index: number) => void;
   onupdate?: (index: number, discussion: DiscussionInfo) => void;
   onadd?: (discussion: DiscussionInfo) => void;
+  viewRecord?: (discussionId: number, record: string) => void;
 }
 
 export default function SpaceDiscussion({
@@ -43,6 +44,7 @@ export default function SpaceDiscussion({
   onadd = () => {},
   onremove = () => {},
   onupdate = () => {},
+  viewRecord = () => {},
 }: SpaceDiscussionProps) {
   const router = useRouter();
   const { data: userInfo } = useSuspenseUserInfo();
@@ -84,6 +86,7 @@ export default function SpaceDiscussion({
           discussions={discussionRaws}
           status={status}
           moveDiscussion={moveDiscussion}
+          viewRecord={viewRecord}
         />
       )}
     </div>
@@ -95,11 +98,13 @@ function ViewDiscussion({
   discussions,
   status,
   moveDiscussion,
+  viewRecord,
 }: {
   userId: number;
   discussions: Discussion[];
   status: SpaceStatus;
   moveDiscussion: (spaceId: number, discussionId: number) => void;
+  viewRecord: (discussionId: number, record: string) => void;
 }) {
   return (
     <div className="flex flex-col w-full gap-2.5">
@@ -108,6 +113,7 @@ function ViewDiscussion({
         discussions={discussions}
         status={status}
         moveDiscussion={moveDiscussion}
+        viewRecord={viewRecord}
       />
     </div>
   );
@@ -118,11 +124,13 @@ function DiscussionSchedules({
   discussions,
   status,
   moveDiscussion,
+  viewRecord,
 }: {
   userId: number;
   discussions: Discussion[];
   status: SpaceStatus;
   moveDiscussion: (spaceId: number, discussionId: number) => void;
+  viewRecord: (discussionId: number, record: string) => void;
 }) {
   return (
     <div className="flex flex-col gap-2.5">
@@ -166,8 +174,12 @@ function DiscussionSchedules({
                   title={discussion.name}
                   description={discussion.description}
                   members={discussion.members}
+                  record={discussion.record}
                   onclick={() => {
                     moveDiscussion(discussion.space_id, discussion.id);
+                  }}
+                  viewRecordClick={() => {
+                    viewRecord(discussion.id, discussion.record ?? '');
                   }}
                 />
                 {index !== discussions.length - 1 ? (
@@ -192,7 +204,9 @@ export function DiscussionRoom({
   title,
   description,
   members,
+  record,
   onclick,
+  viewRecordClick,
 }: {
   userId: number;
   status: SpaceStatus;
@@ -200,9 +214,11 @@ export function DiscussionRoom({
   endDate: number;
   title: string;
   description: string;
+  record?: string;
   members: Member[];
 
   onclick: () => void;
+  viewRecordClick: () => void;
 }) {
   const now = Math.floor(Date.now() / 1000);
 
@@ -266,7 +282,31 @@ export function DiscussionRoom({
             />
           </div>
         )}
+
+        {isFinished && isMember && record && (
+          <div className="flex flex-row w-full justify-end items-end">
+            <ViewRecord
+              onClick={() => {
+                viewRecordClick();
+              }}
+            />
+          </div>
+        )}
       </div>
+    </div>
+  );
+}
+
+function ViewRecord({ onClick }: { onClick: () => void }) {
+  return (
+    <div
+      className="cursor-pointer flex flex-row items-center w-fit h-fit px-5 py-2.5 gap-2.5 bg-white hover:bg-neutral-300 rounded-lg"
+      onClick={() => {
+        onClick();
+      }}
+    >
+      <div className="font-bold text-[#000203] text-sm">View Record</div>
+      <ArrowRight className="stroke-black stroke-3 w-[15px] h-[15px]" />
     </div>
   );
 }

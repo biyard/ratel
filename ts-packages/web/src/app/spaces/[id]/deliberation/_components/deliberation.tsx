@@ -20,6 +20,7 @@ export default function DeliberationPage() {
     setTitle,
     deliberation,
     setDeliberation,
+    handleViewRecord,
     handleGoBack,
     status,
     proposerImage,
@@ -50,6 +51,9 @@ export default function DeliberationPage() {
           status={status}
           discussions={deliberation.discussions}
           discussionRaws={discussions}
+          viewRecord={async (discussionId: number, record: string) => {
+            await handleViewRecord(discussionId, record);
+          }}
           onadd={(discussion: DiscussionInfo) => {
             setDeliberation({
               ...deliberation,
