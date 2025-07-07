@@ -6,6 +6,7 @@ mod redeem_codes;
 mod responses;
 
 use crate::security::check_perm;
+use crate::utils::aws_media_convert::merge_recording_chunks;
 use crate::utils::users::extract_user_id_with_no_error;
 use crate::{by_axum::axum::extract::Query, utils::users::extract_user_id};
 use bdk::prelude::*;
@@ -73,36 +74,49 @@ impl SpaceController {
             .fetch_all(&self.pool)
             .await?;
 
+        let discussions = space.discussions;
+
+        let mut updated_discussions = Vec::with_capacity(discussions.len());
+        let mut tx = self.pool.begin().await?;
+
+        for mut discussion in discussions {
+            let meeting_id = discussion.meeting_id.clone().unwrap_or_default();
+            let pipeline_arn = discussion.media_pipeline_arn.clone().unwrap_or_default();
+            let record = discussion.record.clone();
+
+            let record = merge_recording_chunks(&meeting_id, pipeline_arn, record).await;
+
+            if record.is_some() {
+                match self
+                    .discussion_repo
+                    .update_with_tx(
+                        &mut *tx,
+                        discussion.id,
+                        DiscussionRepositoryUpdateRequest {
+                            record: record.clone(),
+                            ..Default::default()
+                        },
+                    )
+                    .await
+                {
+                    Ok(v) => tracing::debug!("success to update discussion record: {:?}", v),
+                    Err(e) => {
+                        tracing::error!("failed to update discussion record with error: {:?}", e)
+                    }
+                };
+
+                discussion.record = record;
+            }
+
+            updated_discussions.push(discussion);
+        }
+
+        tx.commit().await?;
+
         space.user_responses = user_response;
         space.responses = responses;
-        // if let Ok(user) = user {
-        //     let redeem_codes = RedeemCode::query_builder()
-        //         .user_id_equals(user.id)
-        //         .meta_id_equals(id)
-        //         .query()
-        //         .map(RedeemCode::from)
-        //         .fetch_optional(&mut *tx)
-        //         .await?;
-        //     if redeem_codes.is_some() {
-        //         space.codes = vec![redeem_codes.unwrap()];
-        //     } else {
-        //         let redeem_code_repo = RedeemCode::get_repository(self.pool.clone());
-        //         let mut codes = vec![];
-        //         for _ in 0..space.num_of_redeem_codes {
-        //             let id = Uuid::new_v4().to_string();
-        //             codes.push(id);
-        //         }
-        //         let res = redeem_code_repo
-        //             .insert_with_tx(&mut *tx, user.id, id, codes, vec![])
-        //             .await?;
-        //         if res.is_none() {
-        //             tracing::error!("failed to insert redeem codes for space {id}");
-        //             return Err(Error::RedeemCodeCreationFailure);
-        //         } else {
-        //             space.codes = vec![res.unwrap()];
-        //         }
-        //     }
-        // }
+        space.discussions = updated_discussions;
+
         Ok(space)
     }
 
