@@ -71,6 +71,7 @@ type ContextType = {
   setDraft: StateSetter<FinalConsensus>;
   handleGoBack: () => void;
   handleDownloadExcel: () => void;
+  handleViewRecord: (discussionId: number, record: string) => void;
 
   userType: UserType;
   proposerImage: string;
@@ -234,6 +235,24 @@ export default function ClientProviders({
 
   const handleEdit = () => {
     setIsEdit(true);
+  };
+
+  const handleViewRecord = async (discussionId: number, record: string) => {
+    const response = await fetch(record);
+    if (!response.ok) throw new Error('파일 다운로드 실패');
+
+    const blob = await response.blob();
+    const blobUrl = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = `recording-${discussionId}.mp4`;
+    document.body.appendChild(a);
+    a.click();
+
+    // 클린업
+    document.body.removeChild(a);
+    URL.revokeObjectURL(blobUrl);
   };
 
   const handleDownloadExcel = () => {
@@ -423,6 +442,7 @@ export default function ClientProviders({
         handlePostingSpace,
         handleEdit,
         handleSave,
+        handleViewRecord,
       }}
     >
       {children}
