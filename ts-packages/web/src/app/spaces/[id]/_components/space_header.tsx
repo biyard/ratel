@@ -1,7 +1,4 @@
 import React from 'react';
-// import Shared from '@/assets/icons/share.svg';
-// import Extra from '@/assets/icons/extra.svg';
-// import Bookmark from '@/assets/icons/bookmark.svg';
 import Badge from '@/assets/icons/badge.svg';
 import { getTimeAgo } from '@/lib/time-utils';
 import { UserType } from '@/lib/api/models/user';
@@ -44,21 +41,17 @@ export default function SpaceHeader({
 
   const handleEdit = () => {
     setIsEdit(true);
-    // set  isEdit to true
-    // and update it on the backend with the current value
   };
 
   const handlePublic = () => {
-    // logic for setting the space to publc
+   // logic for handling public to be implemented later
   };
 
-  const handleMenu = () => {
-    // logic for showing a popup that contain ablout five items vertically stacked together at the just right beside the the   (Extra icon)
-  };
-
+ 
   const handleSave = async () => {
     try {
-      // Example POST request – replace with your actual API
+      
+      // Not sure of the endpont.. just using this for testing purpose
       const res = await apiFetch(
         `${config.api_url}${ratelApi.feeds.updateDraft}`,
         {
@@ -80,19 +73,7 @@ export default function SpaceHeader({
         logger.debug('Space Post updated successfully')
       }
 
-      // const response = await fetch(`/v1/spaces/${id}`, {
-      //   method: 'PUT',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({
-      //     title,
-      //     html_contents: thread.html_contents,
-      //     files: thread.files,
-      //   }),
-      // });
-
-      // if (!response.ok) throw new Error('Failed to update');
-
-      setIsEdit(false); // exit edit mode on success
+      setIsEdit(false);
     } catch (error) {
       console.error('Save failed:', error);
       logger.error('Save failed for post space', error);
@@ -120,12 +101,11 @@ export default function SpaceHeader({
             </div>
           )}
 
-          {/* <Bookmark width={20} height={20} /> */}
         </div>
       </div>
 
       <div className="flex flex-row w-full justify-between items-center">
-        <div className="flex flex-row w-fit gap-2 justify-between items-center">
+        <div className="flex flex-row w-fit gap-2 md:justify-between items-center">
           <Image
             src={proposerImage || '/default-profile.png'}
             alt={proposerName}
@@ -151,7 +131,6 @@ export default function SpaceHeader({
           handleSave={handleSave}
           handleEdit={handleEdit}
           handlePublic={handlePublic}
-          handleMenu={handleMenu}
         />
       </div>
     </div>

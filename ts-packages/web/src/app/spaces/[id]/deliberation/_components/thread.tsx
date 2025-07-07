@@ -39,7 +39,7 @@ export default function ThreadPage() {
         />
         <div className="flex flex-col w-full mt-7.5 gap-2.5">
           <div className="flex flex-row w-full space-x-4 ">
-            <div className="md:min-w-[70vw]">
+            <div className="space-y-4 md:min-w-[70vw]">
               <SpaceContents
                 isEdit={isEdit}
                 htmlContents={thread.html_contents}
@@ -50,11 +50,30 @@ export default function ThreadPage() {
                   });
                 }}
               />
+
+              <SpaceFiles
+                isEdit={isEdit}
+                files={thread.files}
+                onremove={(index: number) => {
+                  const newFiles = [...thread.files];
+                  newFiles.splice(index, 1);
+                  setThread({
+                    ...thread,
+                    files: newFiles,
+                  });
+                }}
+                onadd={(file: FileInfo) => {
+                  setThread({
+                    ...thread,
+                    files: [...thread.files, file],
+                  });
+                }}
+              />
             </div>
             <SpaceSideMenu />
           </div>
 
-          <SpaceFiles
+          {/* <SpaceFiles
             isEdit={isEdit}
             files={thread.files}
             onremove={(index: number) => {
@@ -71,7 +90,7 @@ export default function ThreadPage() {
                 files: [...thread.files, file],
               });
             }}
-          />
+          /> */}
         </div>
       </div>
     </div>
