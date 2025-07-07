@@ -14,6 +14,7 @@ export interface Discussion {
 
   meeting_id?: string;
   pipeline_id: string;
+  record?: string;
 
   participants: DiscussionParticipant[];
   members: Member[];

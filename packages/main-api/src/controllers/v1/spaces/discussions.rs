@@ -75,6 +75,7 @@ impl SpaceDiscussionController {
                 None,
                 "".to_string(),
                 None,
+                None,
             )
             .await?;
 

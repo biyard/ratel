@@ -303,6 +303,7 @@ impl SpaceController {
                     None,
                     "".to_string(),
                     None,
+                    None,
                 )
                 .await
             {
