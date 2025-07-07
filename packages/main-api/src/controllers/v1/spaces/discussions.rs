@@ -438,7 +438,12 @@ impl SpaceDiscussionController {
             return Err(Error::PipelineNotFound);
         }
 
-        let _ = client.end_pipeline(&discussion.pipeline_id).await?;
+        let _ = client
+            .end_pipeline(
+                &discussion.pipeline_id,
+                &discussion.clone().meeting_id.unwrap_or_default(),
+            )
+            .await?;
 
         //FIXME: store s3 mp4 file to db
 
