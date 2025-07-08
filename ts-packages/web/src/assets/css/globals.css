@@ -106,3 +106,13 @@ a {
   border-top: 1px solid var(--color-c-wg-80);
   margin: 0 1rem;
 }
+
+:root {
+  --header-height: 88px;
+}
+
+@media (max-width: 500px) {
+  :root {
+    --header-height: 54px;
+  }
+}

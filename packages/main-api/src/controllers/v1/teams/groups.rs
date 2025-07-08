@@ -13,6 +13,7 @@ use dto::*;
 use sqlx::postgres::PgRow;
 
 use crate::security::check_perm;
+use crate::utils::notifications::send_notification;
 
 #[derive(
     Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
@@ -90,13 +91,36 @@ impl GroupController {
     ) -> Result<Group> {
         check_perm(
             &self.pool,
-            auth,
+            auth.clone(),
             RatelResource::Team { team_id },
             GroupPermission::InviteMember,
         )
         .await?;
 
         let mut tx = self.pool.begin().await?;
+
+        // Get team and group information for notifications
+        let team = Team::query_builder()
+            .id_equals(team_id)
+            .query()
+            .map(Team::from)
+            .fetch_one(&self.pool)
+            .await
+            .map_err(|e| {
+                tracing::error!("Failed to fetch team: {:?}", e);
+                Error::NotFound
+            })?;
+
+        let group = Group::query_builder()
+            .id_equals(id)
+            .query()
+            .map(Group::from)
+            .fetch_one(&self.pool)
+            .await
+            .map_err(|e| {
+                tracing::error!("Failed to fetch group: {:?}", e);
+                Error::NotFound
+            })?;
 
         for user_id in user_ids {
             // let _ = match User::query_builder()
@@ -126,6 +150,21 @@ impl GroupController {
             let _ = GroupMember::get_repository(self.pool.clone())
                 .insert_with_tx(&mut *tx, user_id, id)
                 .await?;
+
+            // Send invitation notification to the user
+            let notification_data = NotificationData::InviteTeam {
+                team_id,
+                group_id: id,
+                image_url: Some(team.profile_url.clone()),
+                description: format!("You have been invited to join {} in {}", group.name, team.nickname),
+            };
+
+            // Send notification within the transaction to ensure consistency
+            if let Err(e) = send_notification(&self.pool, &mut tx, user_id, notification_data).await {
+                tracing::error!("Failed to send notification to user {}: {:?}", user_id, e);
+                // Don't fail the entire operation if notification fails - just log the error
+                // The transaction will still commit the main operation
+            }
         }
 
         tx.commit().await?;
