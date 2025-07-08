@@ -2,7 +2,7 @@
 
 import BlackBox from '@/app/(social)/_components/black-box';
 import { getTimeWithFormat } from '@/lib/time-utils';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import Clock from '@/assets/icons/clock.svg';
 import { BottomTriangle, Discuss, Edit1, PieChart1 } from '@/components/icons';
 import { File, Vote, CheckCircle } from 'lucide-react';
@@ -13,6 +13,7 @@ import {
   useDeliberationSpaceContext,
 } from '../provider.client';
 import { useUserInfo } from '@/app/(social)/_hooks/user';
+import { TeamContext } from '@/lib/contexts/team-context';
 
 export default function SpaceSideMenu() {
   const {
@@ -25,14 +26,23 @@ export default function SpaceSideMenu() {
     handleSave: onsave,
   } = useDeliberationSpaceContext();
   const space = useDeliberationSpace();
+  const { teams } = useContext(TeamContext);
+  const [selectedTeam, setSelectedTeam] = useState<boolean>(false);
 
   const { data: userInfo } = useUserInfo();
   const userId = userInfo ? userInfo.id : 0;
   const created_at = space.created_at;
 
+  const authorId = space?.author[0].id;
+
+  useEffect(() => {
+    const index = teams.findIndex((t) => t.id === authorId);
+    setSelectedTeam(index !== -1);
+  }, [teams]);
+
   return (
     <div className="flex flex-col max-w-[250px] max-tablet:!hidden w-full gap-[10px]">
-      {space.author.some((a) => a.id === userId) && (
+      {(authorId == userId || selectedTeam) && (
         <EditSplitButton
           status={status}
           isEdit={isEdit}

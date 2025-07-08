@@ -5,7 +5,10 @@ mod meeting;
 mod redeem_codes;
 mod responses;
 
+use std::collections::{HashMap, HashSet};
+
 use crate::security::check_perm;
+use crate::utils::aws_media_convert::merge_recording_chunks;
 use crate::utils::users::extract_user_id_with_no_error;
 use crate::{by_axum::axum::extract::Query, utils::users::extract_user_id};
 use bdk::prelude::*;
@@ -73,36 +76,49 @@ impl SpaceController {
             .fetch_all(&self.pool)
             .await?;
 
+        let discussions = space.discussions;
+
+        let mut updated_discussions = Vec::with_capacity(discussions.len());
+        let mut tx = self.pool.begin().await?;
+
+        for mut discussion in discussions {
+            let meeting_id = discussion.meeting_id.clone().unwrap_or_default();
+            let pipeline_arn = discussion.media_pipeline_arn.clone().unwrap_or_default();
+            let record = discussion.record.clone();
+
+            let record = merge_recording_chunks(&meeting_id, pipeline_arn, record).await;
+
+            if record.is_some() {
+                match self
+                    .discussion_repo
+                    .update_with_tx(
+                        &mut *tx,
+                        discussion.id,
+                        DiscussionRepositoryUpdateRequest {
+                            record: record.clone(),
+                            ..Default::default()
+                        },
+                    )
+                    .await
+                {
+                    Ok(v) => tracing::debug!("success to update discussion record: {:?}", v),
+                    Err(e) => {
+                        tracing::error!("failed to update discussion record with error: {:?}", e)
+                    }
+                };
+
+                discussion.record = record;
+            }
+
+            updated_discussions.push(discussion);
+        }
+
+        tx.commit().await?;
+
         space.user_responses = user_response;
         space.responses = responses;
-        // if let Ok(user) = user {
-        //     let redeem_codes = RedeemCode::query_builder()
-        //         .user_id_equals(user.id)
-        //         .meta_id_equals(id)
-        //         .query()
-        //         .map(RedeemCode::from)
-        //         .fetch_optional(&mut *tx)
-        //         .await?;
-        //     if redeem_codes.is_some() {
-        //         space.codes = vec![redeem_codes.unwrap()];
-        //     } else {
-        //         let redeem_code_repo = RedeemCode::get_repository(self.pool.clone());
-        //         let mut codes = vec![];
-        //         for _ in 0..space.num_of_redeem_codes {
-        //             let id = Uuid::new_v4().to_string();
-        //             codes.push(id);
-        //         }
-        //         let res = redeem_code_repo
-        //             .insert_with_tx(&mut *tx, user.id, id, codes, vec![])
-        //             .await?;
-        //         if res.is_none() {
-        //             tracing::error!("failed to insert redeem codes for space {id}");
-        //             return Err(Error::RedeemCodeCreationFailure);
-        //         } else {
-        //             space.codes = vec![res.unwrap()];
-        //         }
-        //     }
-        // }
+        space.discussions = updated_discussions;
+
         Ok(space)
     }
 
@@ -270,56 +286,39 @@ impl SpaceController {
             )
             .await?;
 
-        let discs = Discussion::query_builder()
+        // discussion
+        let existing_discs = Discussion::query_builder()
             .space_id_equals(space_id)
             .query()
             .map(Discussion::from)
             .fetch_all(&self.pool.clone())
             .await?;
 
-        for disc in discs {
-            match self.discussion_repo.delete_with_tx(&mut *tx, disc.id).await {
-                Ok(_) => {}
-                Err(e) => {
-                    tx.rollback().await?;
-                    return Err(e);
-                }
-            }
+        let mut existing_map: HashMap<i64, Discussion> = HashMap::new();
+        for disc in &existing_discs {
+            existing_map.insert(disc.id, disc.clone());
         }
 
-        for discussion in discussions {
-            let participants = discussion.participants;
+        let mut received_ids = HashSet::new();
 
-            let discussion = match self
-                .discussion_repo
-                .insert_with_tx(
-                    &mut *tx,
-                    space_id,
-                    user_id,
-                    discussion.started_at,
-                    discussion.ended_at,
-                    discussion.name,
-                    discussion.description,
-                    None,
-                    "".to_string(),
-                    None,
-                )
-                .await
-            {
-                Ok(v) => v,
-                Err(e) => {
-                    tx.rollback().await?;
-                    return Err(e);
-                }
-            }
-            .unwrap_or_default();
+        for new_disc in discussions {
+            let participants = new_disc.participants;
+            if let Some(id) = new_disc.discussion_id {
+                received_ids.insert(id);
 
-            let discussion_id = discussion.id;
-
-            if !participants.contains(&user_id) {
                 let _ = match self
-                    .discussion_member_repo
-                    .insert_with_tx(&mut *tx, discussion_id, user_id)
+                    .discussion_repo
+                    .update_with_tx(
+                        &mut *tx,
+                        id,
+                        DiscussionRepositoryUpdateRequest {
+                            name: Some(new_disc.name),
+                            description: Some(new_disc.description),
+                            started_at: Some(new_disc.started_at),
+                            ended_at: Some(new_disc.ended_at),
+                            ..Default::default()
+                        },
+                    )
                     .await
                 {
                     Ok(_) => {}
@@ -328,22 +327,63 @@ impl SpaceController {
                         return Err(e);
                     }
                 };
-            }
 
-            for participant_id in participants {
-                let _ = match self
-                    .discussion_member_repo
-                    .insert_with_tx(&mut *tx, discussion_id, participant_id)
-                    .await
-                {
-                    Ok(_) => {}
-                    Err(e) => {
-                        tx.rollback().await?;
-                        return Err(e);
-                    }
-                };
+                let ps = DiscussionParticipant::query_builder()
+                    .discussion_id_equals(id)
+                    .query()
+                    .map(DiscussionParticipant::from)
+                    .fetch_all(&self.pool.clone())
+                    .await?;
+
+                for p in ps {
+                    self.discussion_member_repo
+                        .delete_with_tx(&mut *tx, p.id)
+                        .await?;
+                }
+
+                for pid in participants {
+                    self.discussion_member_repo
+                        .insert_with_tx(&mut *tx, id, pid)
+                        .await?;
+                }
+            } else {
+                let inserted = self
+                    .discussion_repo
+                    .insert_with_tx(
+                        &mut *tx,
+                        space_id,
+                        user_id,
+                        new_disc.started_at,
+                        new_disc.ended_at,
+                        new_disc.name,
+                        new_disc.description,
+                        None,
+                        "".to_string(),
+                        None,
+                        None,
+                    )
+                    .await?
+                    .unwrap_or_default();
+
+                let new_id = inserted.id;
+
+                for pid in participants {
+                    self.discussion_member_repo
+                        .insert_with_tx(&mut *tx, new_id, pid)
+                        .await?;
+                }
             }
         }
+
+        for old_disc in existing_discs {
+            if !received_ids.contains(&old_disc.id) {
+                self.discussion_repo
+                    .delete_with_tx(&mut *tx, old_disc.id)
+                    .await?;
+            }
+        }
+
+        //
 
         let es = Elearning::query_builder()
             .space_id_equals(space_id)
@@ -523,7 +563,25 @@ impl SpaceController {
             GroupPermission::WritePosts,
         )
         .await?;
+
+        let feed_user = User::query_builder()
+            .id_equals(feed.user_id)
+            .query()
+            .map(User::from)
+            .fetch_one(&self.pool)
+            .await
+            .map_err(|e| {
+                tracing::error!("failed to get user: {:?}", e);
+                Error::InvalidUser
+            })?;
+
         let mut tx = self.pool.begin().await?;
+
+        let author_id = match feed_user.user_type {
+            UserType::Individual => user.id,
+            UserType::Team => feed.author[0].id,
+            _ => 0,
+        };
 
         let res = self
             .repo
@@ -532,7 +590,7 @@ impl SpaceController {
                 feed.title,
                 feed.html_contents,
                 space_type,
-                user.id,
+                author_id,
                 feed.industry_id,
                 None,
                 None,
