@@ -28,17 +28,17 @@ export default function CustomCalendar({
   return (
     <div className="relative w-fit">
       <button
-        className="flex flex-row items-center border border-input px-6 py-[10px] rounded-md font-semibold text-sm text-neutral-300 bg-transparent gap-[20px]"
+        className="flex flex-row items-center border border-c-wg-70 px-[20px] py-[10.5px] rounded-lg font-medium text-[15px]/[22.5px] text-neutral-600 bg-transparent gap-[10px] z-100"
         onClick={() => {
           setCalendarOpen(!calendarOpen);
         }}
       >
         {selected ? format(selected, 'yyyy/MM/dd') : 'Selected Date'}
-        <Calendar className="w-6 h-6 stroke-input" />
+        <Calendar className="w-5 h-5 stroke-neutral-500" />
       </button>
 
       {calendarOpen && (
-        <div className="absolute mt-2 z-10 bg-white text-black rounded-xl shadow-xl p-4">
+        <div className="absolute mt-2 z-100 bg-white text-black rounded-xl shadow-xl p-4">
           <CalendarDayPicker
             value={value}
             onChange={(date) => {
