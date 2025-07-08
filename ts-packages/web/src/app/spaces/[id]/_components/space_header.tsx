@@ -1,6 +1,5 @@
 import React from 'react';
 import Badge from '@/assets/icons/badge.svg';
-import { getTimeAgo } from '@/lib/time-utils';
 import { UserType } from '@/lib/api/models/user';
 import Image from 'next/image';
 import { Input } from '@/components/ui/input';
