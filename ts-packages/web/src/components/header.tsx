@@ -110,7 +110,7 @@ function Header({ mobileExtends, setMobileExtends }: HeaderProps) {
   };
 
   return (
-    <header className="border-b border-neutral-800 px-2.5 py-2.5 flex items-center justify-center bg-bg">
+    <header className="border-b border-neutral-800 px-2.5 py-2.5 flex items-center justify-center bg-bg h-[var(--header-height)]">
       <nav className="flex items-center justify-between w-full max-w-desktop mx-2.5 gap-8">
         <Link
           href={route.home()}

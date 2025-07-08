@@ -3,8 +3,9 @@ use validator::Validate;
 
 use crate::*;
 
+//NOTE: discussion_id: need to use optional variables to check whether the action I am taking is creation, deletion, or update.
 #[derive(Validate)]
-#[api_model(base = "/v1/spaces/:space-id/discussions", table = discussions, action = [create(participants = Vec<i64>)], action_by_id = [start_meeting, participant_meeting, exit_meeting, start_recording, end_recording, delete])]
+#[api_model(base = "/v1/spaces/:space-id/discussions", table = discussions, action = [create(participants = Vec<i64>, discussion_id = Option<i64>)], action_by_id = [start_meeting, participant_meeting, exit_meeting, start_recording, end_recording, delete])]
 pub struct Discussion {
     #[api_model(summary, primary_key)]
     pub id: i64,
@@ -38,6 +39,9 @@ pub struct Discussion {
     #[api_model(summary, action_by_id = update, nullable, version = v0.2)]
     #[serde(default)]
     pub media_pipeline_arn: Option<String>,
+    #[api_model(summary, action_by_id = update, nullable, version = v0.3)]
+    #[serde(default)]
+    pub record: Option<String>,
 
     #[api_model(summary, many_to_many = discussion_members, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = discussion_id)]
     #[serde(default)]

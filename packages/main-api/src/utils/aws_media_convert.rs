@@ -4,6 +4,7 @@ use dto::*;
 pub async fn merge_recording_chunks(
     meeting_id: &str,
     media_pipeline_arn: String,
+    record: Option<String>,
 ) -> Option<String> {
     use aws_config::{BehaviorVersion, Region, defaults};
     use aws_sdk_chimesdkmediapipelines::Client as ChimePipelinesClient;
@@ -35,6 +36,133 @@ pub async fn merge_recording_chunks(
 
     let bucket_name = config.chime_bucket_name.to_string();
     let destination_arn = format!("arn:aws:s3:::{}", bucket_name);
+
+    if let Some(record) = record {
+        if !record.contains("video") {
+            let trimmed = record
+                .trim_start_matches("https://")
+                .trim_start_matches("http://");
+
+            let parts: Vec<&str> = trimmed.split('/').collect();
+
+            tracing::debug!("record parts: {:?}", parts);
+
+            let media_pipeline_id = match parts.get(1) {
+                Some(id) => *id,
+                None => {
+                    tracing::warn!("Invalid record format: {}", record);
+                    return None;
+                }
+            };
+
+            let prefix = format!("{}/video/", media_pipeline_id);
+            let prefix_audio = format!("{}/audio/", media_pipeline_id);
+
+            let s3 = aws_sdk_s3::Client::new(&aws_config);
+            let resp = s3
+                .list_objects_v2()
+                .bucket(&bucket_name)
+                .prefix(&prefix)
+                .send()
+                .await
+                .unwrap();
+            let resp_audio = s3
+                .list_objects_v2()
+                .bucket(&bucket_name)
+                .prefix(&prefix_audio)
+                .send()
+                .await
+                .unwrap();
+
+            let contents = resp.contents();
+            let contents_audio = resp_audio.contents();
+
+            if let Some(object) = contents
+                .iter()
+                .find(|obj| obj.key().map(|k| k.ends_with(".mp4")).unwrap_or(false))
+            {
+                let file_key = object.key().unwrap();
+                let filename = file_key.split('/').last().unwrap_or("video.mp4");
+
+                let new_key = format!("{}/{}/video/{}", config.env, media_pipeline_id, filename);
+
+                s3.copy_object()
+                    .copy_source(format!("{}/{}", bucket_name, file_key))
+                    .bucket(&bucket_name)
+                    .key(&new_key)
+                    .send()
+                    .await
+                    .map_err(|e| {
+                        tracing::error!("S3 copy error: {:?}", e);
+                        e
+                    })
+                    .ok()?;
+
+                if let Some(object) = contents_audio
+                    .iter()
+                    .find(|obj| obj.key().map(|k| k.ends_with(".mp4")).unwrap_or(false))
+                {
+                    let file_key = object.key().unwrap();
+                    let filename = file_key.split('/').last().unwrap_or("audio.mp4");
+
+                    let new_key =
+                        format!("{}/{}/audio/{}", config.env, media_pipeline_id, filename);
+
+                    s3.copy_object()
+                        .copy_source(format!("{}/{}", bucket_name, file_key))
+                        .bucket(&bucket_name)
+                        .key(&new_key)
+                        .send()
+                        .await
+                        .map_err(|e| {
+                            tracing::error!("S3 copy error: {:?}", e);
+                            e
+                        })
+                        .ok()?;
+                }
+
+                let new_url = format!("https://{}/{}", bucket_name, new_key);
+
+                let cleanup_prefix = format!("{}/", media_pipeline_id);
+                let list_resp = s3
+                    .list_objects_v2()
+                    .bucket(&bucket_name)
+                    .prefix(&cleanup_prefix)
+                    .send()
+                    .await
+                    .ok();
+
+                if let Some(objects) = list_resp.and_then(|r| r.contents) {
+                    for obj in objects {
+                        if let Some(key) = obj.key {
+                            let _ = s3
+                                .delete_object()
+                                .bucket(&bucket_name)
+                                .key(&key)
+                                .send()
+                                .await;
+                        }
+                    }
+                    tracing::info!(
+                        "Cleaned up media_pipeline_id directory: {}",
+                        media_pipeline_id
+                    );
+                } else {
+                    tracing::error!(
+                        "No objects found under media_pipeline_id prefix: {}",
+                        cleanup_prefix
+                    );
+                }
+
+                return Some(new_url);
+            }
+
+            tracing::error!("No mp4 file found in {}/video/", media_pipeline_id);
+            return None;
+        } else {
+            return Some(record);
+        }
+    }
 
     let client = ChimePipelinesClient::new(&aws_config);
 
@@ -118,7 +246,15 @@ pub async fn merge_recording_chunks(
     match request.send().await {
         Ok(resp) => {
             tracing::info!("Concatenation pipeline started: {:?}", resp);
-            return Some(format!("s3://{}/concatenated/{}/", bucket_name, meeting_id));
+
+            if resp.media_concatenation_pipeline.is_none() {
+                return None;
+            }
+
+            match resp.media_concatenation_pipeline.unwrap().media_pipeline_id {
+                Some(v) => Some(format!("https://{}/{}", bucket_name, v)),
+                None => None,
+            }
         }
         Err(err) => {
             tracing::error!("Failed to start concatenation pipeline: {:?}", err);

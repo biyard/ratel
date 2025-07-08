@@ -1,5 +1,5 @@
 #![allow(dead_code)]
-use crate::Error;
+use crate::{Error, models::folder_type::folder_type::FolderType};
 use aws_config::{BehaviorVersion, load_defaults};
 use aws_sdk_chimesdkmediapipelines::{
     Client as MediaPipelinesClient,
@@ -11,6 +11,7 @@ use aws_sdk_chimesdkmeetings::{
 };
 use aws_sdk_s3::Client as S3Client;
 use dto::*;
+use tokio::time::{Duration, sleep};
 
 #[derive(Debug)]
 pub struct AttendeeInfo {
@@ -241,57 +242,134 @@ impl ChimeMeetingService {
             .and_then(|p| Some((p.media_pipeline_id.clone(), p.media_pipeline_arn.clone())))
             .unwrap_or_default();
 
-        // let object_key = format!("{}.mp4", pipeline_id);
-        // let destination_key = format!("chime/{}", object_key);
-
-        // self.s3
-        //     .copy_object()
-        //     .copy_source(format!("{}/{}", bucket_name, object_key))
-        //     .bucket(&bucket_name)
-        //     .key(&destination_key)
-        //     .send()
-        //     .await
-        //     .map_err(|e| {
-        //         tracing::error!("failed to copy Chime artifact to chime/ folder: {:?}", e);
-        //         Error::AwsS3Error(e.to_string())
-        //     })?;
-
-        // self.s3
-        //     .delete_object()
-        //     .bucket(&bucket_name)
-        //     .key(&object_key)
-        //     .send()
-        //     .await
-        //     .map_err(|e| {
-        //         tracing::warn!(
-        //             "failed to delete original Chime artifact after copy: {:?}",
-        //             e
-        //         );
-        //         Error::AwsS3Error(e.to_string())
-        //     })?;
-
         Ok((
             pipeline_id.unwrap_or_default(),
             pipeline_arn.unwrap_or_default(),
         ))
     }
 
-    pub async fn end_pipeline(&self, pipeline_id: &str) -> Result<()> {
-        let resp = match self
+    pub async fn end_pipeline(&self, pipeline_id: &str, _meeting_id: &str) -> Result<()> {
+        let _bucket_name = crate::config::get().chime_bucket_name.to_string();
+
+        let resp = self
             .pipeline
             .delete_media_capture_pipeline()
             .media_pipeline_id(pipeline_id)
             .send()
             .await
-        {
-            Ok(v) => v,
-            Err(e) => {
+            .map_err(|e| {
                 tracing::error!("delete_media_capture_pipeline error: {:?}", e);
-                return Err(Error::AwsChimeError(e.to_string()));
-            }
-        };
+                Error::AwsChimeError(e.to_string())
+            })?;
 
         tracing::debug!("delete_media_capture_pipeline response: {:?}", resp);
+
+        Ok(())
+    }
+
+    pub async fn move_meeting_artifacts_with_retry(
+        &self,
+        bucket_name: &str,
+        meeting_id: &str,
+    ) -> Result<()> {
+        let prefix = format!("{}/", meeting_id);
+        let mut attempt = 0;
+        let max_attempts = 10;
+        let delay = Duration::from_secs(2);
+
+        loop {
+            attempt += 1;
+
+            let list_result = self
+                .s3
+                .list_objects_v2()
+                .bucket(bucket_name)
+                .prefix(&prefix)
+                .send()
+                .await
+                .map_err(|e| {
+                    tracing::error!("S3 list_objects_v2 failed on attempt {}: {:?}", attempt, e);
+                    Error::AwsS3Error(e.to_string())
+                })?;
+
+            if let Some(objects) = list_result.contents {
+                if !objects.is_empty() {
+                    tracing::info!("S3 artifacts found after {} attempt(s)", attempt);
+                    return self.move_meeting_artifacts(bucket_name, meeting_id).await;
+                }
+            }
+
+            if attempt >= max_attempts {
+                tracing::warn!(
+                    "No artifacts found after {} attempts (~{}s). Skipping move.",
+                    attempt,
+                    attempt * delay.as_secs()
+                );
+                return Ok(());
+            }
+
+            tracing::debug!(
+                "Waiting for artifacts... attempt {}/{}. Retrying in {}s",
+                attempt,
+                max_attempts,
+                delay.as_secs()
+            );
+            sleep(delay).await;
+        }
+    }
+
+    pub async fn move_meeting_artifacts(&self, bucket_name: &str, meeting_id: &str) -> Result<()> {
+        let conf = crate::config::get();
+
+        let list_result = self
+            .s3
+            .list_objects_v2()
+            .bucket(bucket_name)
+            .prefix(format!("{}/", meeting_id))
+            .send()
+            .await
+            .map_err(|e| {
+                tracing::error!("S3 list_objects error: {:?}", e);
+                Error::AwsS3Error(e.to_string())
+            })?;
+
+        if let Some(objects) = list_result.contents {
+            for obj in objects {
+                if let Some(key) = obj.key {
+                    let filename = key.split('/').last().unwrap_or("artifact");
+
+                    let folder: FolderType = key.parse().unwrap_or(FolderType::Etc);
+
+                    let destination_key =
+                        format!("{}/{}/{}/{}", conf.env, meeting_id, folder, filename);
+
+                    tracing::debug!("Copying from {} to {}", key, destination_key);
+
+                    self.s3
+                        .copy_object()
+                        .copy_source(format!("{}/{}", bucket_name, key))
+                        .bucket(bucket_name)
+                        .key(&destination_key)
+                        .send()
+                        .await
+                        .map_err(|e| {
+                            tracing::error!("S3 copy error for {}: {:?}", key, e);
+                            Error::AwsS3Error(e.to_string())
+                        })?;
+
+                    self.s3
+                        .delete_object()
+                        .bucket(bucket_name)
+                        .key(&key)
+                        .send()
+                        .await
+                        .map_err(|e| {
+                            tracing::warn!("S3 delete error for {}: {:?}", key, e);
+                            Error::AwsS3Error(e.to_string())
+                        })?;
+                }
+            }
+        }
 
         Ok(())
     }
