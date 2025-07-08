@@ -96,7 +96,7 @@ export const RepostProvider: React.FC<{ children: React.ReactNode }> = ({
           repostContent,
           1,
           repostTitle,
-          originalPost.id, // Pass original post ID as parent_id or reference
+          originalPost.id, //original post ID as parent_id or reference
           [],
           originalPost.url || '',
           originalPost.url ? UrlType.Image : UrlType.None
@@ -108,12 +108,12 @@ export const RepostProvider: React.FC<{ children: React.ReactNode }> = ({
         publish: {},
       });
 
-      // Update the original post's share count
-      // Note: This might need a specific API endpoint for incrementing shares
-      // For now, we'll use the like endpoint pattern but for shares
+      // Update for original post's share count
+      // This needs a specific API endpoint for incrementing shares
+      // For now, I w'll use the like endpoint pattern but for shares
       try {
         await post(ratelApi.feeds.likePost(originalPost.id), {
-          share: { value: true }, // This might need to be adjusted based on your API
+          share: { value: true }, // This might need to be adjusted based on our API
         });
       } catch (error) {
         logger.warn('Failed to update share count:', error);
@@ -124,7 +124,7 @@ export const RepostProvider: React.FC<{ children: React.ReactNode }> = ({
       // Navigate to the new repost
       router.push(route.threadByFeedId(draftData.id));
       
-      // Invalidate relevant queries
+      // Invalidated relevant queries
       queryClient.invalidateQueries({ queryKey: ['feeds'] });
       
       cancelRepost();

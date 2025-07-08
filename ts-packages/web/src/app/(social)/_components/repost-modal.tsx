@@ -33,7 +33,7 @@ export function RepostModal() {
 
         {/* Content */}
         <div className="p-4">
-          {/* Add your comment section */}
+          {/*  Additional for repost users comment section */}
           <div className="mb-4">
             <textarea
               value={repostComment}
