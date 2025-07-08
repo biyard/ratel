@@ -1,5 +1,9 @@
-import { useRepost } from "./repost-feeds";
 
+"use client"
+import { useRepost } from "./repost-feeds";
+import Image from "next/image";
+import {X, Loader2, User} from "lucide-react";
+import { cn } from "@/lib/utils";                                                                                                         
 export function RepostModal() {
   const {
     showRepostModal,

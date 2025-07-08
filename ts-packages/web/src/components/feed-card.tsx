@@ -16,8 +16,7 @@ import { route } from '@/route';
 import { SpaceType } from '@/lib/api/models/spaces';
 
 // testing repost functiionality
-import CreatePostButton from '@/app/(social)/_components/create-post-button';
-import { usePostDraft } from '@/app/(social)/_components/create-post';
+import { useRepost } from '@/app/(social)/_components/repost-feeds';
 
 export interface FeedCardProps {
   id: number;
@@ -49,6 +48,8 @@ export interface FeedCardProps {
 export default function FeedCard(props: FeedCardProps) {
   const router = useRouter();
   const { post } = useApiCall();
+
+  
 
   const handleLike = async (value: boolean) => {
     const res = await post(ratelApi.feeds.likePost(props.id), {
@@ -274,7 +275,7 @@ export function OnboradingTag() {
 //       <IconText>
 //         {/* for repost functionality */}
 //         <button onClick={(e) => {
-//           e.stopPropagation(); 
+//           e.stopPropagation();
 //           newDraft();
 //         }}>
 //           <Shares />
@@ -285,7 +286,6 @@ export function OnboradingTag() {
 //     </Row>
 //   );
 // }
-
 
 export function FeedFooter({
   id,
