@@ -17,6 +17,7 @@ interface Question {
 }
 
 interface SurveyViewerProps {
+  isEdit: boolean;
   status: SpaceStatus;
   startDate: number;
   endDate: number;
@@ -27,6 +28,7 @@ interface SurveyViewerProps {
 }
 
 export default function SurveyViewer({
+  isEdit,
   status,
   startDate,
   endDate,
@@ -207,7 +209,7 @@ export default function SurveyViewer({
       })}
 
       <div
-        className={`flex flex-row w-full justify-end ${is_completed || status != SpaceStatus.InProgress || !isLive || questions.length == 0 ? 'hidden' : ''}`}
+        className={`flex flex-row w-full justify-end ${is_completed || status != SpaceStatus.InProgress || isEdit || !isLive || questions.length == 0 ? 'hidden' : ''}`}
       >
         <div
           className="cursor-pointer flex flex-row w-[180px] h-fit py-[14px] px-[40px] justify-center items-center bg-primary hover:opacity-70 rounded-lg font-bold text-[15px] text-[#000203]"

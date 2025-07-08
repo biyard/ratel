@@ -39,6 +39,7 @@ export interface DiscussionInfo {
   ended_at: number;
   name: string;
   description: string;
+  discussion_id?: number;
 
   participants: TotalUser[];
 }

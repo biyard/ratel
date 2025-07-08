@@ -5,6 +5,8 @@ import React, { useEffect, useState } from 'react';
 
 interface TimeDropdownProps {
   value: number;
+  timeDropdownOpen: boolean;
+  setTimeDropdownOpen: (open: boolean) => void;
   onChange: (newTimestamp: number) => void;
 }
 
@@ -22,9 +24,13 @@ const formatAMPM = (timestamp: number): string => {
   return `${h.toString().padStart(2, '0')}:00 ${suffix}`;
 };
 
-export default function TimeDropdown({ value, onChange }: TimeDropdownProps) {
+export default function TimeDropdown({
+  value,
+  timeDropdownOpen,
+  setTimeDropdownOpen,
+  onChange,
+}: TimeDropdownProps) {
   const [selectedTime, setSelectedTime] = useState(formatAMPM(value));
-  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     setSelectedTime(formatAMPM(value));
@@ -32,7 +38,7 @@ export default function TimeDropdown({ value, onChange }: TimeDropdownProps) {
 
   const handleSelect = (time: string) => {
     setSelectedTime(time);
-    setOpen(false);
+    setTimeDropdownOpen(false);
 
     const [hourStr, period] = time.split(' ');
     let hour = parseInt(hourStr.split(':')[0], 10);
@@ -62,13 +68,13 @@ export default function TimeDropdown({ value, onChange }: TimeDropdownProps) {
     <div className="relative w-fit">
       <button
         className="flex justify-between items-center w-full border border-input rounded-md px-6 py-[10px] font-medium text-neutral-300 text-sm text-left shadow-sm focus:outline-none gap-[20px]"
-        onClick={() => setOpen(!open)}
+        onClick={() => setTimeDropdownOpen(!timeDropdownOpen)}
       >
         {selectedTime}
         <Clock className="w-6 h-6 stroke-input" />
       </button>
 
-      {open && (
+      {timeDropdownOpen && (
         <div className="absolute z-10 mt-1 w-full rounded-md shadow-lg bg-white max-h-60 overflow-auto border border-gray-200 text-black">
           {timeOptions.map((time) => (
             <div

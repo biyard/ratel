@@ -51,7 +51,7 @@ export default function ParticipantsPanel({
 
   return (
     <div
-      className={`fixed top-0 right-0 h-full w-[280px] z-30 bg-[#2d2d2d] shadow-lg border-l border-neutral-800 transform transition-all duration-300 ${
+      className={`h-full w-[320px] z-200 bg-[#2d2d2d] shadow-lg border-l border-neutral-800 transform transition-all duration-300 z-200 ${
         visible ? 'translate-x-0' : 'translate-x-full'
       }`}
     >
@@ -90,7 +90,10 @@ export default function ParticipantsPanel({
                     className="w-[30px] h-[30px] object-cover rounded-full"
                   />
                 ) : (
-                  <div className="w-8 h-8 bg-neutral-500 rounded-full" />
+                  <div
+                    className="w-8 h-8 bg-neutral-500 rounded-full"
+                    style={{ flexShrink: 0 }}
+                  />
                 )}
                 <div className="font-medium text-white text-sm">
                   {participant.username}

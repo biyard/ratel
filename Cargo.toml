@@ -1,5 +1,5 @@
 [workspace]
-members = ["packages/main-ui", "packages/dto", "packages/main-api", "packages/fetcher", "packages/mobile", "packages/mobile/src-tauri", "packages/telegram-bot", "packages/racing-space"]
+members = ["packages/*"]
 resolver = "2"
 exclude = ["deps"]
 
