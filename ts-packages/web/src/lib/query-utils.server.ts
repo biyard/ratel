@@ -3,7 +3,7 @@ import { makeQueryClient } from '@/providers/getQueryClient';
 import { QueryClient } from '@tanstack/react-query';
 import { cache } from 'react';
 
-const queryClient = cache(() => makeQueryClient())();
+const getQueryClient = cache(() => makeQueryClient());
 
 export async function getServerQueryClient(): Promise<QueryClient> {
   const { nextSession } = await getCookieContext();
@@ -11,5 +11,5 @@ export async function getServerQueryClient(): Promise<QueryClient> {
     throw new Error('No session found in cookies');
   }
 
-  return queryClient;
+  return getQueryClient();
 }

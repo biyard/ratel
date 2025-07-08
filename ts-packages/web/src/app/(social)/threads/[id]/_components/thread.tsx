@@ -12,13 +12,13 @@ export default function Thread({ post_id }: { post_id: number }) {
   return (
     <div className="flex flex-col w-full gap-2.5">
       <BlackBox>
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-5 w-full">
           <LexicalHtmlViewer htmlString={post?.html_contents || ''} />
           {post?.url && (
-            <div className="relative w-full h-72 rounded-[10px] overflow-hidden">
+            <div className="relative h-72 w-full rounded-[10px]">
               <Image
                 fill
-                className="object-cover"
+                className="object-contain"
                 src={post.url}
                 alt={post.title || 'Post Image'}
               />
