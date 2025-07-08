@@ -109,7 +109,7 @@ export default function SurveyViewer({
   };
 
   return (
-    <div className="flex flex-col gap-5 w-full">
+    <div className="flex flex-col gap-[10px] w-full">
       {questions.map((q, index) => {
         const selected = answers[index];
         const selectedIndexes =
