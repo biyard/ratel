@@ -1,4 +1,4 @@
-use crate::DiscussionUser;
+use crate::{DiscussionUser, utils::aws_media_convert::merge_recording_chunks};
 use by_axum::{
     aide,
     auth::Authorization,
@@ -10,7 +10,6 @@ use by_axum::{
 };
 use dto::*;
 
-// use crate::utils::aws_media_convert::merge_recording_chunks;
 use crate::utils::users::extract_user_with_allowing_anonymous;
 
 #[derive(
@@ -27,6 +26,7 @@ pub struct SpaceMeetingController {
     pool: sqlx::Pool<sqlx::Postgres>,
     repo: DiscussionRepository,
     participation_repo: DiscussionParticipantRepository,
+    discussion_repo: DiscussionRepository,
 }
 
 impl SpaceMeetingController {
@@ -49,7 +49,8 @@ impl SpaceMeetingController {
             .ok_or(Error::DiscussionNotFound)?;
 
         let meeting_id = discussion.meeting_id.unwrap_or_default();
-        let _pipeline_arn = discussion.media_pipeline_arn.unwrap_or_default();
+        let pipeline_arn = discussion.media_pipeline_arn.unwrap_or_default();
+        let record = discussion.record;
 
         let participant = DiscussionParticipant::query_builder()
             .discussion_id_equals(discussion.id)
@@ -187,8 +188,6 @@ impl SpaceMeetingController {
             external_user_id: attendee.external_user_id.unwrap_or_default(),
         };
 
-        // let record = merge_recording_chunks(&meeting_id).await;
-
         let discussion_participants = DiscussionParticipant::query_builder()
             .discussion_id_equals(discussion.id)
             .query()
@@ -218,14 +217,34 @@ impl SpaceMeetingController {
             rows
         };
 
-        // FIXME: remove comment when recording chunk testing
-        // let record = merge_recording_chunks(&meeting_id, pipeline_arn).await;
+        let record = merge_recording_chunks(&meeting_id, pipeline_arn, record).await;
+
+        if record.is_some() {
+            let _ = match self
+                .discussion_repo
+                .update(
+                    discussion_id,
+                    DiscussionRepositoryUpdateRequest {
+                        record: record.clone(),
+                        ..Default::default()
+                    },
+                )
+                .await
+            {
+                Ok(v) => {
+                    tracing::debug!("success to update discussion record: {:?}", v);
+                }
+                Err(e) => {
+                    tracing::error!("failed to update discussion record with error: {:?}", e);
+                }
+            };
+        }
 
         Ok(MeetingData {
             meeting: meeting_info,
             attendee,
             participants,
-            record: None,
+            record,
         })
     }
 }
@@ -234,10 +253,12 @@ impl SpaceMeetingController {
     pub async fn new(pool: sqlx::Pool<sqlx::Postgres>) -> Self {
         let repo = Discussion::get_repository(pool.clone());
         let participation_repo = DiscussionParticipant::get_repository(pool.clone());
+        let discussion_repo = Discussion::get_repository(pool.clone());
         Self {
             pool,
             repo,
             participation_repo,
+            discussion_repo,
         }
     }
 
