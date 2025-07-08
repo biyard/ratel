@@ -71,3 +71,4 @@ export { default as ShapeArrowDown } from '@/assets/icons/shape-arrow-down.svg';
 export { default as DialPad } from '@/assets/icons/dial-pad.svg';
 export { default as DialPad2 } from '@/assets/icons/dial-pad-2.svg';
 export { default as Extra2 } from '@/assets/icons/extra-2.svg';
+export { default as CircleClose } from '@/assets/icons/circle-close.svg';
