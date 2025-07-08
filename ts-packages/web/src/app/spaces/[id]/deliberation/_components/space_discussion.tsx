@@ -2,12 +2,7 @@
 
 import Image from 'next/image';
 import BlackBox from '@/app/(social)/_components/black-box';
-import CustomCalendar from '@/components/calendar-picker/calendar-picker';
-import TimeDropdown from '@/components/time-dropdown/time-dropdown';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Trash2 } from 'lucide-react';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { format } from 'date-fns';
 
 import { v4 as uuidv4 } from 'uuid';
@@ -18,12 +13,13 @@ import { SpaceStatus } from '@/lib/api/models/spaces';
 import { ArrowRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { route } from '@/route';
-import { UserGroup } from '@/components/icons';
-import { usePopup } from '@/lib/contexts/popup-service';
-import InviteMemberPopup from './invite_member';
+import { Extra2 } from '@/components/icons';
 import { DiscussionInfo } from '../types';
 import { TotalUser } from '@/lib/api/models/user';
 import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
+import { usePopup } from '@/lib/contexts/popup-service';
+import NewDiscussion from './modal/new_discussion';
+import { useDeliberationSpaceContext } from '../provider.client';
 
 export interface SpaceDiscussionProps {
   isEdit?: boolean;
@@ -135,30 +131,6 @@ function DiscussionSchedules({
 }) {
   return (
     <div className="flex flex-col gap-2.5">
-      {/* <BlackBox>
-        <div className="flex flex-col gap-3">
-          <div className="font-bold text-white text-[15px]/[20px]">
-            Schedule
-          </div>
-          <div className="flex flex-col gap-5">
-            <div className="font-normal text-neutral-300 text-[15px]/[24px]">
-              In order to improve feasibility of Digital asset basic act, we
-              have scheduled a discussion and a lecture on it.
-            </div>
-
-            {discussions.map((discussion, index) => (
-              <DiscussionTable
-                key={index}
-                startDate={discussion.started_at}
-                endDate={discussion.ended_at}
-                title={discussion.name}
-                description={discussion.description}
-              />
-            ))}
-          </div>
-        </div>
-      </BlackBox> */}
-
       <BlackBox>
         <div className="flex flex-col w-full gap-5">
           <div className="font-bold text-white text-[15px]/[20px]">
@@ -329,7 +301,6 @@ function JoinButton({ onClick }: { onClick: () => void }) {
 function EditableDiscussion({
   discussions,
   onremove,
-  onadd,
   onupdate,
 }: {
   discussions: DiscussionInfo[];
@@ -337,16 +308,45 @@ function EditableDiscussion({
   onadd: () => void;
   onupdate: (index: number, discussion: DiscussionInfo) => void;
 }) {
+  const { deliberation, setDeliberation } = useDeliberationSpaceContext();
+  const popup = usePopup();
   const stableKeys = useMemo(
     () => discussions.map(() => uuidv4()),
     [discussions.length],
   );
-
   return (
     <BlackBox>
       <div className="flex flex-col w-full gap-5">
-        <div className="font-bold text-white text-[15px]/[20px]">
-          Discussion
+        <div className="flex flex-row w-full justify-between items-center">
+          <div className="font-bold text-white text-[15px]/[20px]">
+            Discussion
+          </div>
+
+          <AddDiscussion
+            onadd={() => {
+              popup
+                .open(
+                  <NewDiscussion
+                    discussion={{
+                      started_at: Math.floor(Date.now()),
+                      ended_at: Math.floor(Date.now()),
+                      name: '',
+                      description: '',
+                      participants: [],
+                    }}
+                    onadd={(discussion: DiscussionInfo) => {
+                      setDeliberation({
+                        ...deliberation,
+                        discussions: [...deliberation.discussions, discussion],
+                      });
+                    }}
+                  />,
+                )
+                .withTitle('New Discussion')
+                .overflow(true)
+                .withoutBackdropClose();
+            }}
+          />
         </div>
 
         {discussions.map((discussion, index) => (
@@ -367,12 +367,6 @@ function EditableDiscussion({
             }}
           />
         ))}
-
-        <AddDiscussion
-          onadd={() => {
-            onadd();
-          }}
-        />
       </div>
     </BlackBox>
   );
@@ -384,21 +378,16 @@ function AddDiscussion({ onadd }: { onadd: () => void }) {
       onClick={() => {
         onadd();
       }}
-      className="bg-transparent border-2 border-dashed border-neutral-700 rounded-md h-50 flex flex-col items-center justify-center cursor-pointer hover:bg-neutral-800 transition gap-[10px]"
+      className="cursor-pointer flex flex-row w-fit px-[14px] py-[8px] gap-1 bg-white rounded-[6px] hover:bg-neutral-300"
     >
-      <div className="flex flex-row w-[45px] h-[45px] justify-center items-center rounded-full border border-neutral-500">
-        <Add className="w-5 h-5 stroke-neutral-500 text-neutral-500" />
-      </div>
-      <span className=" text-neutral-500 font-medium text-base">
-        Add Discussion
-      </span>
+      <Add className="w-5 h-5 stroke-neutral-500 text-neutral-500" />
+      <span className=" text-[#000203] font-bold text-sm">Add Discussion</span>
     </div>
   );
 }
 
 function EditableDiscussionInfo({
   index,
-  discussionId,
   startedAt,
   endedAt,
   name,
@@ -417,159 +406,132 @@ function EditableDiscussionInfo({
   onupdate: (index: number, discussion: DiscussionInfo) => void;
   onremove: (index: number) => void;
 }) {
+  const now = Math.floor(Date.now() / 1000);
+
   const popup = usePopup();
   const [startTime, setStartTime] = useState<number>(startedAt);
   const [endTime, setEndTime] = useState<number>(endedAt);
   const [title, setTitle] = useState<string>(name);
   const [desc, setDesc] = useState<string>(description);
   const [users, setUsers] = useState<TotalUser[]>(participants);
-  const [startTimeDropdownOpen, setStartTimeDropdownOpen] =
-    useState<boolean>(false);
-  const [endTimeDropdownOpen, setEndTimeDropdownOpen] =
-    useState<boolean>(false);
-  const [startCalendarOpen, setStartCalendarOpen] = useState<boolean>(false);
-  const [endCalendarOpen, setEndCalendarOpen] = useState<boolean>(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  const isLive = now >= startTime && now <= endTime;
+  const isUpcoming = now < startTime;
+  const isFinished = now > endTime;
+
+  const formattedDate = `${format(new Date(startTime * 1000), 'dd MMM, yyyy HH:mm')} - ${format(new Date(endTime * 1000), 'dd MMM, yyyy HH:mm')}`;
+
+  const statusLabel = isUpcoming
+    ? 'Upcoming discussion'
+    : isFinished
+      ? 'Finished discussion'
+      : 'On-going';
 
   useEffect(() => {
-    setUsers(participants);
-  }, [participants]);
+    setTitle(name);
+    setDesc(description);
+    setStartTime(startedAt);
+    setEndTime(endedAt);
+    setUsers(users);
+  }, [name, description, startedAt, endedAt, users]);
 
-  const update = (
-    newStart: number,
-    newEnd: number,
-    newTitle: string,
-    newDesc: string,
-    newParticipants: TotalUser[],
-  ) => {
-    onupdate(index, {
-      started_at: newStart,
-      ended_at: newEnd,
-      name: newTitle,
-      description: newDesc,
-      participants: newParticipants,
-
-      discussion_id: discussionId,
-    });
-  };
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   return (
-    <div className="flex flex-col gap-5 border border-neutral-700 rounded-md p-4">
-      <div className="flex flex-row w-full justify-end items-center gap-[10px]">
-        <div
-          className="cursor-pointer flex flex-row items-center px-[20px] py-[10px] bg-white hover:bg-neutral-300 rounded-lg gap-[10px]"
-          onClick={() => {
-            popup
-              .open(
-                <InviteMemberPopup
-                  users={users}
-                  onclick={(users: TotalUser[]) => {
-                    update(startTime, endTime, title, desc, users);
-                    popup.close();
-                  }}
-                />,
-              )
-              .withTitle('Invite to Discussion');
-          }}
-        >
-          <UserGroup className="w-[18px] h-[18px] stroke-neutral-500" />
-          <div className="font-bold text-sm text-[#000203]">Invite Member</div>
+    <div className="w-full flex flex-col gap-4 relative">
+      <div className="flex flex-row w-full items-start justify-between gap-5">
+        <div className="relative w-[240px] h-[150px] rounded-lg overflow-hidden">
+          <Image
+            src={discussionImg}
+            alt="Discussion Thumbnail"
+            fill
+            className="object-cover"
+          />
+          {isLive && (
+            <div className="absolute top-[12px] left-[12px] bg-[rgba(255,0,0,0.5)] rounded-sm font-semibold text-sm text-white p-1">
+              LIVE
+            </div>
+          )}
         </div>
-        <div
-          className="cursor-pointer w-fit h-fit"
-          onClick={() => {
-            onremove(index);
-          }}
-        >
-          <Trash2 className="stroke-white w-[18px] h-[18px]" />
-        </div>
-      </div>
-      <div className="flex flex-col w-full justify-start items-start gap-[10px]">
-        <div className="font-medium text-neutral-300 text-[15px] w-[80px]">
-          Title
-        </div>
-        <Input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          onBlur={() => update(startTime, endTime, title, desc, users)}
-        />
-      </div>
 
-      <div className="flex flex-wrap w-full justify-between items-center gap-[10px]">
-        <div className="font-medium text-neutral-300 text-[15px] w-[80px]">
-          Period
-        </div>
-        <div className="flex flex-row gap-[10px] items-center flex-wrap">
-          <div className="flex flex-row gap-[10px]">
-            <CustomCalendar
-              value={startTime * 1000}
-              calendarOpen={startCalendarOpen}
-              setCalendarOpen={(value: boolean) => {
-                setStartCalendarOpen(value);
-                setStartTimeDropdownOpen(false);
+        <div className="flex flex-col flex-1 h-full justify-between items-start">
+          <div className="flex flex-col flex-1 gap-1">
+            <div className="text-sm text-neutral-400 font-normal">
+              {statusLabel}
+            </div>
+            <div className="text-lg text-white font-bold">{title}</div>
+            <div className="text-sm text-[#6d6d6d] font-normal">
+              {formattedDate}
+            </div>
+            <div
+              className="text-sm text-neutral-400 font-normal overflow-hidden text-ellipsis"
+              style={{
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
               }}
-              onChange={(date) => {
-                const newStart = Math.floor(date / 1000);
-                setStartTime(newStart);
-                update(newStart, endTime, title, desc, users);
-              }}
-            />
-            <TimeDropdown
-              value={startTime * 1000}
-              timeDropdownOpen={startTimeDropdownOpen}
-              setTimeDropdownOpen={(value: boolean) => {
-                setStartTimeDropdownOpen(value);
-                setStartCalendarOpen(false);
-              }}
-              onChange={(timestamp) => {
-                const newStart = Math.floor(timestamp / 1000);
-                setStartTime(newStart);
-                update(newStart, endTime, title, desc, users);
-                setStartTimeDropdownOpen(false);
-              }}
-            />
-          </div>
-          <div className="w-[20px] h-[1px] bg-neutral-500" />
-          <div className="flex flex-row gap-[10px]">
-            <CustomCalendar
-              value={endTime * 1000}
-              calendarOpen={endCalendarOpen}
-              setCalendarOpen={(value: boolean) => {
-                setEndCalendarOpen(value);
-                setEndTimeDropdownOpen(false);
-              }}
-              onChange={(date) => {
-                const newEnd = Math.floor(date / 1000);
-                setEndTime(newEnd);
-                update(startTime, newEnd, title, desc, users);
-              }}
-            />
-            <TimeDropdown
-              value={endTime * 1000}
-              timeDropdownOpen={endTimeDropdownOpen}
-              setTimeDropdownOpen={(value: boolean) => {
-                setEndTimeDropdownOpen(value);
-                setEndCalendarOpen(false);
-              }}
-              onChange={(timestamp) => {
-                const newEnd = Math.floor(timestamp / 1000);
-                setEndTime(newEnd);
-                update(startTime, newEnd, title, desc, users);
-                setEndTimeDropdownOpen(false);
-              }}
-            />
+            >
+              {desc}
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="flex flex-col w-full justify-start items-start gap-[10px]">
-        <div className="font-medium text-neutral-300 text-[15px] w-[80px]">
-          Description
+        <div className="relative w-fit h-fit" ref={menuRef}>
+          <Extra2
+            className="cursor-pointer w-6 h-6"
+            onClick={() => setMenuOpen(!menuOpen)}
+          />
+          {menuOpen && (
+            <div className="absolute right-0 mt-2 w-[100px] bg-white text-black rounded shadow-lg text-sm z-50 overflow-hidden">
+              <div
+                className="px-4 py-2 hover:bg-neutral-200 cursor-pointer whitespace-nowrap"
+                onClick={() => {
+                  popup
+                    .open(
+                      <NewDiscussion
+                        discussion={{
+                          started_at: Math.floor(startedAt * 1000),
+                          ended_at: Math.floor(endedAt * 1000),
+                          name,
+                          description,
+                          participants: users,
+                        }}
+                        onadd={(discussion: DiscussionInfo) => {
+                          console.log('discussion: ', discussion);
+                          onupdate(index, discussion);
+                        }}
+                      />,
+                    )
+                    .withTitle('New Discussion')
+                    .overflow(true)
+                    .withoutBackdropClose();
+                  setMenuOpen(false);
+                }}
+              >
+                Update
+              </div>
+              <div
+                className="px-4 py-2 hover:bg-neutral-200 cursor-pointer whitespace-nowrap"
+                onClick={() => {
+                  onremove(index);
+                  setMenuOpen(false);
+                }}
+              >
+                Delete
+              </div>
+            </div>
+          )}
         </div>
-        <Textarea
-          value={desc}
-          onChange={(e) => setDesc(e.target.value)}
-          onBlur={() => update(startTime, endTime, title, desc, users)}
-        />
       </div>
     </div>
   );
