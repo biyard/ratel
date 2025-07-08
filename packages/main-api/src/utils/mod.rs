@@ -7,3 +7,4 @@ pub mod middlewares;
 pub mod openapi;
 pub mod users;
 pub mod wallets;
+pub mod notifications;
