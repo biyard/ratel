@@ -6,12 +6,16 @@ import { ratelApi } from '@/lib/api/ratel_api';
 import { useUserInfo } from '../_hooks/user';
 import { Feed, FeedType } from '@/lib/api/models/feeds';
 import { createDraftRequest } from '@/lib/api/models/feeds/create-draft';
-import { updateDraftRequest, UrlType } from '@/lib/api/models/feeds/update-draft-request';
+import {
+  updateDraftRequest,
+  UrlType,
+} from '@/lib/api/models/feeds/update-draft-request';
 import { useQueryClient } from '@tanstack/react-query';
 import { logger } from '@/lib/logger';
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import { useRouter } from 'next/navigation';
 import { route } from '@/route';
+import Image from 'next/image';
 
 export interface OriginalPost {
   id: number;
@@ -75,7 +79,7 @@ export const RepostProvider: React.FC<{ children: React.ReactNode }> = ({
       // Create a new draft for the repost
       const draftData: Feed = await post(
         ratelApi.feeds.createDraft(),
-        createDraftRequest(FeedType.Post, user.id)
+        createDraftRequest(FeedType.Post, user.id),
       );
 
       // Prepare repost content
@@ -85,6 +89,11 @@ export const RepostProvider: React.FC<{ children: React.ReactNode }> = ({
         <div style="border-left: 3px solid #ccc; padding-left: 15px; margin: 10px 0;">
           <h3>${originalPost.title}</h3>
           <p>${originalPost.contents}</p>
+          ${
+            originalPost.url
+              ? `<img src="${originalPost.url}" alt="Uploaded image" style="width: 100%; border-radius: 8px; object-fit: cover;" />`
+              : ''
+          }
           <small>Originally posted by ${originalPost.author_name}</small>
         </div>
       `;
@@ -99,8 +108,8 @@ export const RepostProvider: React.FC<{ children: React.ReactNode }> = ({
           originalPost.id, //original post ID as parent_id or reference
           [],
           originalPost.url || '',
-          originalPost.url ? UrlType.Image : UrlType.None
-        )
+          originalPost.url ? UrlType.Image : UrlType.None,
+        ),
       );
 
       // Publish the repost
@@ -120,13 +129,13 @@ export const RepostProvider: React.FC<{ children: React.ReactNode }> = ({
       }
 
       showSuccessToast('Post reposted successfully!');
-      
+
       // Navigate to the new repost
       router.push(route.threadByFeedId(draftData.id));
-      
+
       // Invalidated relevant queries
       queryClient.invalidateQueries({ queryKey: ['feeds'] });
-      
+
       cancelRepost();
     } catch (error) {
       logger.error('Repost error:', error);
@@ -134,7 +143,15 @@ export const RepostProvider: React.FC<{ children: React.ReactNode }> = ({
     } finally {
       setIsSubmitting(false);
     }
-  }, [originalPost, user, repostComment, post, router, queryClient, cancelRepost]);
+  }, [
+    originalPost,
+    user,
+    repostComment,
+    post,
+    router,
+    queryClient,
+    cancelRepost,
+  ]);
 
   const contextValue = {
     isReposting,

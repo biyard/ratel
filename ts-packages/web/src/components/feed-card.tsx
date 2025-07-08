@@ -235,57 +235,7 @@ export function OnboradingTag() {
   );
 }
 
-// export function FeedFooter({
-//   likes,
-//   comments,
-//   rewards,
-//   shares,
-//   is_liked,
-//   onLikeClick,
-// }: FeedCardProps) {
-//   const handleRepost = () => {}; // handl repost functin going to be passed aas prop the userepost hook
 
-//   const {newDraft} = usePostDraft()
-
-//   return (
-//     <Row className="items-center justify-around border-t w-full border-neutral-800">
-//       <IconText
-//         onClick={(evt) => {
-//           evt.stopPropagation();
-//           onLikeClick?.(!is_liked);
-//         }}
-//       >
-//         <ThumbUp
-//           className={
-//             is_liked
-//               ? '[&>path]:fill-primary [&>path]:stroke-primary'
-//               : undefined
-//           }
-//         />
-//         {convertNumberToString(likes)}
-//       </IconText>
-//       <IconText>
-//         <CommentIcon />
-//         {convertNumberToString(comments)}
-//       </IconText>
-//       <IconText>
-//         <Rewards />
-//         {convertNumberToString(rewards)}
-//       </IconText>
-//       <IconText>
-//         {/* for repost functionality */}
-//         <button onClick={(e) => {
-//           e.stopPropagation();
-//           newDraft();
-//         }}>
-//           <Shares />
-//         </button>
-
-//         {convertNumberToString(shares)}
-//       </IconText>
-//     </Row>
-//   );
-// }
 
 export function FeedFooter({
   id,
