@@ -17,6 +17,8 @@ import Pptx from '@/assets/icons/files/pptx.svg';
 import Excel from '@/assets/icons/files/xlsx.svg';
 import Clear from '@/assets/icons/clear.svg';
 import FileUploaderMetadata from '@/components/file-uploader-metadata';
+import { Upload } from 'lucide-react';
+import { CircleClose } from '@/components/icons';
 
 export interface SpaceFilesProps {
   isEdit?: boolean;
@@ -40,13 +42,30 @@ export default function SpaceFiles({
   return (
     <BlackBox>
       <div className="flex flex-col w-full gap-5">
-        <div className="font-bold text-white text-[15px]/[20px]">
-          Attached Files
+        <div className="flex flex-row w-full justify-between items-start ">
+          <div className="font-bold text-white text-[15px]/[20px]">
+            Attached Files
+          </div>
+
+          {isEdit ? (
+            <FileUploaderMetadata
+              isImage={false}
+              onUploadSuccess={(file) => {
+                onadd(file);
+              }}
+            >
+              <div className="cursor-pointer flex flex-row w-fit gap-1 items-center bg-white rounded-[6px] px-[14px] py-[8px]">
+                <Upload className="w-5 h-5 stroke-neutral-500" />
+                <div className="font-bold text-sm text-[#000203]">Upload</div>
+              </div>
+            </FileUploaderMetadata>
+          ) : (
+            <></>
+          )}
         </div>
 
         {isEdit ? (
           <div className="flex flex-col w-full gap-[10px]">
-            <AddImage onadd={onadd} />
             <div className="flex flex-col w-full gap-2.5">
               {files
                 ?.filter((file) => !checkString(file.name))
@@ -76,21 +95,6 @@ export default function SpaceFiles({
         )}
       </div>
     </BlackBox>
-  );
-}
-
-function AddImage({ onadd }: { onadd: (file: FileInfo) => void }) {
-  return (
-    <FileUploaderMetadata
-      isImage={false}
-      onUploadSuccess={(file) => {
-        onadd(file);
-      }}
-    >
-      <div className="cursor-pointer flex flex-row w-fit h-fit px-[10px] py-[5px] rounded-[8px] bg-neutral-700 hover:bg-neutral-600 font-medium text-white text-sm">
-        Add File
-      </div>
-    </FileUploaderMetadata>
   );
 }
 
@@ -129,10 +133,7 @@ function EditableFile({
         </div>
       </div>
       <div className="w-fit h-fit cursor-pointer" onClick={onclick}>
-        <Clear
-          className="w-[24px] h-[24px] [&>path]:stroke-neutral-500"
-          fill="white"
-        />
+        <CircleClose className="w-[18px] h-[18px]" />
       </div>
     </div>
   );
