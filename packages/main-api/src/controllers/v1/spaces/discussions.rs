@@ -56,8 +56,10 @@ impl SpaceDiscussionController {
             name,
             description,
             participants,
+            discussion_id,
         }: DiscussionCreateRequest,
     ) -> Result<Discussion> {
+        let _discussion_id = discussion_id;
         let user = extract_user_with_allowing_anonymous(&self.pool, auth).await?;
 
         let mut tx = self.pool.begin().await?;
@@ -74,6 +76,7 @@ impl SpaceDiscussionController {
                 description,
                 None,
                 "".to_string(),
+                None,
                 None,
             )
             .await?;
@@ -282,6 +285,20 @@ impl SpaceDiscussionController {
             }
         };
 
+        let participants = DiscussionParticipant::query_builder()
+            .discussion_id_equals(discussion.id)
+            .user_id_equals(user_id)
+            .query()
+            .map(DiscussionParticipant::from)
+            .fetch_all(&self.pool)
+            .await?;
+
+        for participant in participants.clone() {
+            let _ = self.participation_repo.delete(participant.id).await;
+        }
+
+        tracing::debug!("meeting participants: {:?}", participants);
+
         match pr.insert(id, user_id, participant.attendee_id).await {
             Ok(d) => d,
             Err(e) => {
@@ -323,21 +340,17 @@ impl SpaceDiscussionController {
             return Err(Error::AwsChimeError("Not Found Meeting ID".to_string()));
         }
 
-        let participant = DiscussionParticipant::query_builder()
+        let participants = DiscussionParticipant::query_builder()
             .discussion_id_equals(discussion.id)
             .user_id_equals(user_id)
             .query()
             .map(DiscussionParticipant::from)
-            .fetch_optional(&self.pool)
+            .fetch_all(&self.pool)
             .await?;
 
-        if participant.is_none() {
-            return Err(Error::NotFound);
+        for participant in participants {
+            let _ = self.participation_repo.delete(participant.id).await?;
         }
-
-        let participant = participant.unwrap();
-
-        let _ = self.participation_repo.delete(participant.id).await?;
 
         Ok(discussion)
     }
@@ -425,7 +438,12 @@ impl SpaceDiscussionController {
             return Err(Error::PipelineNotFound);
         }
 
-        let _ = client.end_pipeline(&discussion.pipeline_id).await?;
+        let _ = client
+            .end_pipeline(
+                &discussion.pipeline_id,
+                &discussion.clone().meeting_id.unwrap_or_default(),
+            )
+            .await?;
 
         //FIXME: store s3 mp4 file to db
 

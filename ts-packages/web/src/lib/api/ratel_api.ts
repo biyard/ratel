@@ -4,6 +4,8 @@ import { gql } from '@apollo/client';
 import { Space } from './models/spaces';
 import {
   QK_GET_FEED_BY_FEED_ID,
+  QK_GET_NETWORK,
+  QK_GET_PROMOTION,
   QK_GET_REDEEM_CODE,
   QK_GET_SPACE_BY_SPACE_ID,
 } from '@/constants';
@@ -13,6 +15,8 @@ import {
 } from '@tanstack/react-query';
 import { useApiCall } from './use-send';
 import { RedeemCode } from './models/redeem-code';
+import { NetworkData } from './models/network';
+import { Promotion } from './models/promotion';
 
 export function useSpaceById(id: number): UseSuspenseQueryResult<Space> {
   const { get } = useApiCall();
@@ -52,9 +56,34 @@ export function useFeedById(id: number): UseSuspenseQueryResult<Feed> {
   return query;
 }
 
+export function useNetwork(): UseSuspenseQueryResult<NetworkData> {
+  const { get } = useApiCall();
+
+  const query = useSuspenseQuery({
+    queryKey: [QK_GET_NETWORK],
+    queryFn: () => get(ratelApi.networks.getNetworks()),
+    refetchOnWindowFocus: false,
+  });
+
+  return query;
+}
+
+export function usePromotion(): UseSuspenseQueryResult<Promotion> {
+  const { get } = useApiCall();
+
+  const query = useSuspenseQuery({
+    queryKey: [QK_GET_PROMOTION],
+    queryFn: () => get(ratelApi.promotions.get_promotions()),
+    refetchOnWindowFocus: false,
+  });
+
+  return query;
+}
+
 export const ratelApi = {
   users: {
     login: () => '/v1/users?action=login',
+    logout: () => '/v2/users/logout',
     loginWithPassword: (email: string, password: string) =>
       `/v1/users?action=login-by-password&email=${encodeURIComponent(email)}&password=${password}`,
     getTotalInfo: (page: number, size: number) =>
