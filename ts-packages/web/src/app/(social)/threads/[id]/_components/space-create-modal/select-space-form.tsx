@@ -1,7 +1,7 @@
 'use client';
 import { Space, SpaceType } from '@/lib/api/models/spaces';
 
-import { Discuss } from '@/components/icons';
+import { Discuss, Palace } from '@/components/icons';
 import { useState } from 'react';
 import { LoadablePrimaryButton } from '@/components/button/primary-button';
 import { apiFetch } from '@/lib/api/apiFetch';
@@ -18,6 +18,7 @@ interface SpaceFormProps {
   label: string;
   description: string;
   disabled?: boolean;
+  experiment?: boolean;
 }
 
 const SpaceForms: SpaceFormProps[] = [
@@ -41,6 +42,15 @@ const SpaceForms: SpaceFormProps[] = [
     label: 'Deliberation',
     description: 'Share perspectives and engage in in-depth discussion.',
   },
+  {
+    type: SpaceType.SprintLeague,
+    Icon: <Palace />,
+    label: 'Sprint League',
+    description:
+      'Mini social game where three runners compete in a race, and their speed is determined by community voting',
+    experiment: true,
+  },
+
   // {
   //   type: SpaceType.Nft,
   //   Icon: <Cube />,
@@ -117,11 +127,12 @@ function SpaceForm({
   selected: boolean;
   onClick: () => void;
 }) {
+  const disabled = form.disabled || (form.experiment && !config.experiment);
   return (
     <div
-      className={`flex flex-row gap-2.5 justify-center items-center w-full p-5 border rounded-[10px] ${selected ? 'border-primary' : 'border-neutral-800'} ${form.disabled ? 'opacity-50 cursor-not-allowed' : ''}} `}
+      className={`flex flex-row gap-2.5 justify-center items-center w-full p-5 border rounded-[10px] ${selected ? 'border-primary' : 'border-neutral-800'} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}} `}
       onClick={() => {
-        if (!form.disabled) {
+        if (!disabled) {
           onClick();
         }
       }}
