@@ -56,8 +56,10 @@ impl SpaceDiscussionController {
             name,
             description,
             participants,
+            discussion_id,
         }: DiscussionCreateRequest,
     ) -> Result<Discussion> {
+        let _discussion_id = discussion_id;
         let user = extract_user_with_allowing_anonymous(&self.pool, auth).await?;
 
         let mut tx = self.pool.begin().await?;
@@ -74,6 +76,7 @@ impl SpaceDiscussionController {
                 description,
                 None,
                 "".to_string(),
+                None,
                 None,
             )
             .await?;
@@ -435,7 +438,12 @@ impl SpaceDiscussionController {
             return Err(Error::PipelineNotFound);
         }
 
-        let _ = client.end_pipeline(&discussion.pipeline_id).await?;
+        let _ = client
+            .end_pipeline(
+                &discussion.pipeline_id,
+                &discussion.clone().meeting_id.unwrap_or_default(),
+            )
+            .await?;
 
         //FIXME: store s3 mp4 file to db
 

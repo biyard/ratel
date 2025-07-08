@@ -14,6 +14,7 @@ export interface Discussion {
 
   meeting_id?: string;
   pipeline_id: string;
+  record?: string;
 
   participants: DiscussionParticipant[];
   members: Member[];
@@ -36,6 +37,7 @@ export interface DiscussionCreateRequest {
   ended_at: number;
   name: string;
   description: string;
+  discussion_id?: number;
 
   participants: number[];
 }
