@@ -148,7 +148,7 @@ pub async fn merge_recording_chunks(
                         media_pipeline_id
                     );
                 } else {
-                    tracing::warn!(
+                    tracing::error!(
                         "No objects found under media_pipeline_id prefix: {}",
                         cleanup_prefix
                     );
@@ -157,7 +157,7 @@ pub async fn merge_recording_chunks(
                 return Some(new_url);
             }
 
-            tracing::warn!("No mp4 file found in {}/video/", media_pipeline_id);
+            tracing::error!("No mp4 file found in {}/video/", media_pipeline_id);
             return None;
         } else {
             return Some(record);

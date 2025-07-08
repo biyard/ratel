@@ -240,7 +240,7 @@ export default function ClientProviders({
 
   const handleViewRecord = async (discussionId: number, record: string) => {
     const response = await fetch(record);
-    if (!response.ok) throw new Error('파일 다운로드 실패');
+    if (!response.ok) throw new Error('failed to download files');
 
     const blob = await response.blob();
     const blobUrl = URL.createObjectURL(blob);

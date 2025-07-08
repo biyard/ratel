@@ -332,7 +332,7 @@ impl SpaceController {
                     .discussion_id_equals(id)
                     .query()
                     .map(DiscussionParticipant::from)
-                    .fetch_all(&mut *tx)
+                    .fetch_all(&self.pool.clone())
                     .await?;
 
                 for p in ps {
