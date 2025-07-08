@@ -227,18 +227,22 @@ function EditableSurvey({
           </div>
         );
       })}
-      <div
-        onClick={() => {
-          handleAdd();
-        }}
-        className="bg-transparent border-2 border-dashed border-neutral-700 rounded-md h-50 flex flex-col items-center justify-center cursor-pointer hover:bg-neutral-800 transition gap-[10px]"
-      >
-        <div className="flex flex-row w-[45px] h-[45px] justify-center items-center rounded-full border border-neutral-500">
-          <Add className="w-5 h-5 stroke-neutral-500 text-neutral-500" />
+      <div className="relative flex items-center justify-center w-full py-6">
+        <div
+          className="absolute top-1/2 w-full h-[1px]"
+          style={{
+            borderTop: '1px dashed transparent',
+            borderImage:
+              'repeating-linear-gradient(to right, #525252 0 8px, transparent 8px 16px) 1',
+          }}
+        />
+
+        <div
+          className="cursor-pointer z-10 bg-[#1e1e1e] flex items-center justify-center w-fit h-fit p-[13px] border border-neutral-500 rounded-full"
+          onClick={handleAdd}
+        >
+          <Add className="w-4 h-4 stroke-neutral-500 text-neutral-500" />
         </div>
-        <span className=" text-neutral-500 font-medium text-base">
-          Add New Question
-        </span>
       </div>
     </div>
   );
