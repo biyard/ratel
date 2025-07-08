@@ -7,6 +7,13 @@ const Base = dynamic(() => import('./components/sprint-league'), {
   ssr: false,
 });
 export default function SprintLeaguePage() {
+  /*
+    TODO: Fetch users from API or accept as props
+    const { data: users } = useSprintLeagueUsers(); // hypothetical hook
+    if (!users?.length) {
+      return <div>Loading users...</div>;
+    }  
+  */
   const user = [
     {
       name: '이준석',
@@ -22,12 +29,11 @@ export default function SprintLeaguePage() {
     },
   ];
   return (
-    //FIXME: Use height value, not fixed header height
-    <div className="w-full h-[calc(100vh-120px)] flex justify-center items-center">
+    <div className="w-full h-[calc(100vh-var(--header-height))] flex justify-center items-center">
       <Base>
         <Background names={user.map((u) => u.name)} />
         {user.map((user, index) => (
-          <Character key={index} alias={user.alias} rank={index + 1} />
+          <Character key={user.alias} alias={user.alias} rank={index + 1} />
         ))}
       </Base>
     </div>

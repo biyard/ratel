@@ -91,7 +91,20 @@ export function Background({
     </pixiContainer>
   );
 }
+/*
+  FIXME:
+  Speed ​​will be based on the percentage of votes.
+  If 100 people voted,
+  and the first place got 90 votes, and the total speed is 1, the first place will be 0.9.
 
+  If it's less than 10%, you can show an image that fell to 0.
+
+  The overall image composition will be as follows.
+
+  Running image
+  Victory image (when you get votes or when the space ends, the final winner)
+  Loss image (when you get less than 10% of votes or when the space ends, you lose)
+*/
 const rankConfig: Record<
   number,
   { x: number; y: number; speed: number; scale: number }
