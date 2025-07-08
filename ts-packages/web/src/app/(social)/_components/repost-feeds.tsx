@@ -1,5 +1,4 @@
 'use client';
-
 import { createContext, useContext, useState, useCallback } from 'react';
 import { useApiCall } from '@/lib/api/use-send';
 import { ratelApi } from '@/lib/api/ratel_api';
@@ -15,7 +14,6 @@ import { logger } from '@/lib/logger';
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import { useRouter } from 'next/navigation';
 import { route } from '@/route';
-import Image from 'next/image';
 
 export interface OriginalPost {
   id: number;
@@ -105,7 +103,7 @@ export const RepostProvider: React.FC<{ children: React.ReactNode }> = ({
           repostContent,
           1,
           repostTitle,
-          originalPost.id, 
+          originalPost.id,
           [],
           originalPost.url || '',
           originalPost.url ? UrlType.Image : UrlType.None,

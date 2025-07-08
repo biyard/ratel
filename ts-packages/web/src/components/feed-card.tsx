@@ -49,8 +49,6 @@ export default function FeedCard(props: FeedCardProps) {
   const router = useRouter();
   const { post } = useApiCall();
 
-  
-
   const handleLike = async (value: boolean) => {
     const res = await post(ratelApi.feeds.likePost(props.id), {
       like: {
@@ -234,8 +232,6 @@ export function OnboradingTag() {
     </span>
   );
 }
-
-
 
 export function FeedFooter({
   id,

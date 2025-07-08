@@ -1,9 +1,8 @@
-
-"use client"
-import { useRepost } from "./repost-feeds";
-import Image from "next/image";
-import {X, Loader2, User} from "lucide-react";
-import { cn } from "@/lib/utils";                                                                                                         
+'use client';
+import { useRepost } from './repost-feeds';
+import Image from 'next/image';
+import { X, Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 export function RepostModal() {
   const {
     showRepostModal,
@@ -58,16 +57,16 @@ export function RepostModal() {
                 {originalPost.author_name}
               </span>
             </div>
-            
+
             <h3 className="font-semibold text-white mb-2">
               {originalPost.title}
             </h3>
-            
-            <div 
+
+            <div
               className="text-neutral-300 text-sm line-clamp-3"
               dangerouslySetInnerHTML={{ __html: originalPost.contents }}
             />
-            
+
             {originalPost.url && (
               <div className="mt-2">
                 <Image
@@ -97,7 +96,7 @@ export function RepostModal() {
               'px-6 py-2 rounded-lg font-medium transition-all',
               isSubmitting
                 ? 'bg-neutral-700 text-neutral-500 cursor-not-allowed'
-                : 'bg-primary text-black hover:bg-primary/90'
+                : 'bg-primary text-black hover:bg-primary/90',
             )}
           >
             {isSubmitting ? (
