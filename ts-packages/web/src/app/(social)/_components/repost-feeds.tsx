@@ -105,14 +105,14 @@ export const RepostProvider: React.FC<{ children: React.ReactNode }> = ({
           repostContent,
           1,
           repostTitle,
-          originalPost.id, //original post ID as parent_id or reference
+          originalPost.id, 
           [],
           originalPost.url || '',
           originalPost.url ? UrlType.Image : UrlType.None,
         ),
       );
 
-      // Publish the repost
+      // Publish for the repost
       await post(ratelApi.feeds.publishDraft(draftData.id), {
         publish: {},
       });
