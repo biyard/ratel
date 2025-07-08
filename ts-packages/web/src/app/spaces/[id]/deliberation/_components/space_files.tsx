@@ -15,7 +15,6 @@ import Zip from '@/assets/icons/files/zip.svg';
 import Word from '@/assets/icons/files/docx.svg';
 import Pptx from '@/assets/icons/files/pptx.svg';
 import Excel from '@/assets/icons/files/xlsx.svg';
-import Clear from '@/assets/icons/clear.svg';
 import FileUploaderMetadata from '@/components/file-uploader-metadata';
 import { Upload } from 'lucide-react';
 import { CircleClose } from '@/components/icons';
@@ -54,7 +53,7 @@ export default function SpaceFiles({
                 onadd(file);
               }}
             >
-              <div className="cursor-pointer flex flex-row w-fit gap-1 items-center bg-white rounded-[6px] px-[14px] py-[8px]">
+              <div className="cursor-pointer flex flex-row w-fit gap-1 items-center bg-white rounded-[6px] px-[14px] py-[8px] hover:bg-neutral-300">
                 <Upload className="w-5 h-5 stroke-neutral-500" />
                 <div className="font-bold text-sm text-[#000203]">Upload</div>
               </div>
