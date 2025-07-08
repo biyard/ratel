@@ -51,9 +51,7 @@ export default function DeliberationPage() {
           status={status}
           discussions={deliberation.discussions}
           discussionRaws={discussions}
-          viewRecord={async (discussionId: number, record: string) => {
-            await handleViewRecord(discussionId, record);
-          }}
+          viewRecord={handleViewRecord}
           onadd={(discussion: DiscussionInfo) => {
             setDeliberation({
               ...deliberation,

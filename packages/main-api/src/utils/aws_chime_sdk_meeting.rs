@@ -1,5 +1,5 @@
 #![allow(dead_code)]
-use crate::Error;
+use crate::{Error, models::folder_type::folder_type::FolderType};
 use aws_config::{BehaviorVersion, load_defaults};
 use aws_sdk_chimesdkmediapipelines::{
     Client as MediaPipelinesClient,
@@ -338,15 +338,7 @@ impl ChimeMeetingService {
                 if let Some(key) = obj.key {
                     let filename = key.split('/').last().unwrap_or("artifact");
 
-                    let folder = if key.contains("/video/") {
-                        "video"
-                    } else if key.contains("/audio/") {
-                        "audio"
-                    } else if key.contains("/meeting-events/") {
-                        "meeting-events"
-                    } else {
-                        "etc"
-                    };
+                    let folder: FolderType = key.parse().unwrap_or(FolderType::Etc);
 
                     let destination_key =
                         format!("{}/{}/{}/{}", conf.env, meeting_id, folder, filename);
