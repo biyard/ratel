@@ -55,6 +55,9 @@
   --color-component-bg: #191919;
   --color-error: #eb5757;
   --color-blue-500: #51a2ff;
+  --color-bg-green: #05df72;
+  --color-bg-green-1: #00d492;
+  --color-zinc-900: #181818;
   --breakpoint-desktop: 1177px;
   --breakpoint-tablet: 900px;
   --breakpoint-mobile: 500px;

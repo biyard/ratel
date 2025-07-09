@@ -12,6 +12,9 @@ import ClientProviders, {
 } from './provider.client';
 import { DeliberationTab } from './types';
 import AnalyzePage from './_components/analyze';
+import SpaceHeader from './_components/space_header';
+import { usePopup } from '@/lib/contexts/popup-service';
+import GoPublicPopup from './_components/modal/go_public';
 
 export default function DeliberationSpacePage() {
   return (
@@ -22,24 +25,73 @@ export default function DeliberationSpacePage() {
 }
 
 function Page() {
-  const { selectedType } = useDeliberationSpaceContext();
+  const popup = usePopup();
+  const {
+    selectedType,
+    isEdit,
+    title,
+    status,
+    userType,
+    proposerImage,
+    proposerName,
+    createdAt,
+    handleGoBack,
+    handleSave,
+    handleEdit,
+    handlePostingSpace,
+    setTitle,
+  } = useDeliberationSpaceContext();
+
+  const handlePost = () => {
+    popup
+      .open(
+        <GoPublicPopup
+          onclose={() => {
+            popup.close();
+          }}
+          onpublic={async () => {
+            await handlePostingSpace();
+            popup.close();
+          }}
+        />,
+      )
+      .withoutBackdropClose();
+  };
 
   return (
-    <div className="flex flex-row w-full h-full gap-5">
-      <div className="flex-1 flex w-full">
-        <div className="flex flex-row w-full gap-5">
-          {selectedType == DeliberationTab.SUMMARY ? (
-            <ThreadPage />
-          ) : selectedType == DeliberationTab.DELIBERATION ? (
-            <DeliberationPage />
-          ) : selectedType == DeliberationTab.POLL ? (
-            <PollPage />
-          ) : selectedType == DeliberationTab.RECOMMANDATION ? (
-            <FinalConsensusPage />
-          ) : (
-            <AnalyzePage />
-          )}
-          <SpaceSideMenu />
+    <div className="flex flex-col w-full gap-6.25">
+      <div className="flex flex-row w-full">
+        <SpaceHeader
+          isEdit={isEdit}
+          title={title}
+          status={status}
+          userType={userType}
+          proposerImage={proposerImage}
+          proposerName={proposerName}
+          createdAt={createdAt}
+          onback={handleGoBack}
+          onsave={handleSave}
+          onedit={handleEdit}
+          onpost={handlePost}
+          setTitle={setTitle}
+        />
+      </div>
+      <div className="flex flex-row w-full h-full gap-5">
+        <div className="flex-1 flex w-full">
+          <div className="flex flex-row w-full gap-5">
+            {selectedType == DeliberationTab.SUMMARY ? (
+              <ThreadPage />
+            ) : selectedType == DeliberationTab.DELIBERATION ? (
+              <DeliberationPage />
+            ) : selectedType == DeliberationTab.POLL ? (
+              <PollPage />
+            ) : selectedType == DeliberationTab.RECOMMANDATION ? (
+              <FinalConsensusPage />
+            ) : (
+              <AnalyzePage />
+            )}
+            <SpaceSideMenu />
+          </div>
         </div>
       </div>
     </div>

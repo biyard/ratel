@@ -3,7 +3,6 @@
 // import CalendarPicker from '@/components/calendar-picker/calendar-picker';
 // import TimeDropdown from '@/components/time-dropdown/time-dropdown';
 import React from 'react';
-import SpaceHeader from '../../_components/space_header';
 import { DiscussionInfo } from '../types';
 import SpaceDiscussion from './space_discussion';
 import SpaceElearning from './space_elearning';
@@ -14,37 +13,12 @@ import {
 } from '../provider.client';
 
 export default function DeliberationPage() {
-  const {
-    isEdit,
-    title,
-    setTitle,
-    deliberation,
-    setDeliberation,
-    handleViewRecord,
-    handleGoBack,
-    status,
-    proposerImage,
-    proposerName,
-    createdAt,
-    userType,
-  } = useDeliberationSpaceContext();
+  const { isEdit, deliberation, setDeliberation, handleViewRecord, status } =
+    useDeliberationSpaceContext();
   const discussions = useDeliberationSpace().discussions;
 
   return (
     <div className="flex flex-col w-full">
-      <SpaceHeader
-        isEdit={isEdit}
-        title={title}
-        status={status}
-        userType={userType}
-        proposerImage={proposerImage}
-        proposerName={proposerName}
-        createdAt={createdAt}
-        onback={handleGoBack}
-        setTitle={(title: string) => {
-          setTitle(title);
-        }}
-      />
       <div className="flex flex-col mt-[25px] gap-2.5">
         <SpaceDiscussion
           isEdit={isEdit}
