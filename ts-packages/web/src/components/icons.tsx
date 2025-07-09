@@ -16,6 +16,7 @@ export { default as Search } from '@/assets/icons/search.svg';
 export { default as Settings } from '@/assets/icons/settings.svg';
 export { default as UserGroup } from '@/assets/icons/user-group.svg';
 export { default as Post } from '@/assets/icons/post.svg';
+export { default as Draft } from '@/assets/icons/draft.svg';
 export { default as ThumbUp } from '@/assets/icons/thumb-up.svg';
 export { default as CommentIcon } from '@/assets/icons/comment.svg';
 export { default as Rewards } from '@/assets/icons/rewards.svg';
