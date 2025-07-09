@@ -74,3 +74,11 @@ export { default as Extra2 } from '@/assets/icons/extra-2.svg';
 export { default as CircleClose } from '@/assets/icons/circle-close.svg';
 export { default as Lock } from '@/assets/icons/lock.svg';
 export { default as Unlock2 } from '@/assets/icons/unlock-2.svg';
+
+export { default as Bold1 } from '@/assets/icons/richtext/bold.svg';
+export { default as Image1 } from '@/assets/icons/richtext/image.svg';
+export { default as Italic1 } from '@/assets/icons/richtext/italic.svg';
+export { default as StrikeThrough1 } from '@/assets/icons/richtext/strike-through.svg';
+export { default as Underline1 } from '@/assets/icons/richtext/underline.svg';
+export { default as Bullet1 } from '@/assets/icons/richtext/bullet.svg';
+export { default as Ordered1 } from '@/assets/icons/richtext/ordered.svg';
