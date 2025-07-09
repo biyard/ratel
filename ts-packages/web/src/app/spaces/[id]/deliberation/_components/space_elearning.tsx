@@ -48,7 +48,7 @@ export default function SpaceElearning({
             >
               <div className="cursor-pointer flex flex-row w-fit gap-1 items-center bg-white rounded-[6px] px-[14px] py-[8px] hover:bg-neutral-300">
                 <Upload className="w-5 h-5 stroke-neutral-500" />
-                <div className="font-bold text-sm text-[#000203]">Upload</div>
+                <div className="font-bold text-sm text-black">Upload</div>
               </div>
             </FileUploaderMetadata>
           ) : (
@@ -57,22 +57,24 @@ export default function SpaceElearning({
         </div>
 
         {isEdit ? (
-          <div className="flex flex-col w-full gap-[10px]">
+          <div className="flex flex-col w-full gap-2.5">
             <div className="flex flex-col w-full gap-2.5">
               {elearnings
                 ?.filter((file) => !checkString(file.files[0].name))
                 .map((file, index) => (
-                  <div className="flex flex-col w-full" key={index}>
+                  <div
+                    className="flex flex-col w-full"
+                    key={file.files[0].name}
+                  >
                     <EditableFile
-                      key={index}
                       file={file.files[0]}
                       onclick={() => {
                         onremove(index);
                       }}
                     />
 
-                    {index != elearnings.length - 1 ? (
-                      <div className="flex flex-row w-full h-[1px] bg-neutral-800" />
+                    {index !== elearnings.length - 1 ? (
+                      <div className="flex flex-row w-full h-0.25 bg-neutral-800" />
                     ) : (
                       <></>
                     )}
@@ -81,7 +83,7 @@ export default function SpaceElearning({
             </div>
           </div>
         ) : (
-          <div className="flex flex-col w-full gap-[10px]">
+          <div className="flex flex-col w-full gap-2.5">
             {elearnings
               ?.filter((file) => !checkString(file.files[0].name))
               .map((file, index) => (
@@ -101,7 +103,7 @@ export default function SpaceElearning({
 //FIXME: implement pdf reader
 function EBook({ file, onClick }: { file: FileInfo; onClick: () => void }) {
   return (
-    <div className="flex flex-row justify-between items-center pb-[10px] border-b border-b-neutral-800">
+    <div className="flex flex-row justify-between items-center pb-2.5 border-b border-b-neutral-800">
       <div className="flex flex-col gap-1">
         <div className="font-normal text-neutral-400 text-sm">eBook</div>
         <div className="font-bold text-white text-lg">
@@ -135,13 +137,13 @@ function EditableFile({
   onclick: () => void;
 }) {
   return (
-    <div className="cursor-pointer flex flex-row justify-start items-center w-full py-[20px] gap-2 bg-transparent rounded-[8px] mt-[10px]">
+    <div className="cursor-pointer flex flex-row justify-start items-center w-full py-5 gap-2 bg-transparent rounded-[8px] mt-[10px]">
       <div className="flex flex-col w-full justify-start items-start gap-1">
         <div className="font-normal text-sm text-neutral-400">eBook</div>
         <div className="font-bold text-lg text-neutral-300">{file.name}</div>
       </div>
       <div className="w-fit h-fit cursor-pointer" onClick={onclick}>
-        <CircleClose className="w-[18px] h-[18px]" fill="white" />
+        <CircleClose className="w-4.5 h-4.5" fill="white" />
       </div>
     </div>
   );

@@ -33,12 +33,12 @@ export default function NewDiscussion({
 
   return (
     <div className="max-w-[900px] w-full">
-      <div className="flex flex-col py-[10px] gap-[5px]">
+      <div className="flex flex-col py-2.5 gap-[5px]">
         <label className="flex flex-row justify-start items-center text-[15px]/[28px] text-neutral-400 font-bold  gap-1">
-          Title <span className="text-[#eb5757]">*</span>
+          Title <span className="text-error">*</span>
         </label>
         <Input
-          className="px-[20px] py-[10.5px] bg-transparent border border-[#464646] font-medium text-[15px]/[22.5px] placeholder:text-neutral-600 text-white"
+          className="px-5 py-[10.5px] bg-transparent border border-btn-o font-medium text-[15px]/[22.5px] placeholder:text-neutral-600 text-white"
           placeholder="Input your discussion name."
           value={title}
           onChange={(e) => setTitle(e.target.value)}
@@ -49,12 +49,12 @@ export default function NewDiscussion({
         </div>
       </div>
 
-      <div className="flex flex-col py-[10px] gap-[5px]">
+      <div className="flex flex-col py-2.5 gap-[5px]">
         <label className="text-[15px]/[28px] text-neutral-400 font-bold">
           Description
         </label>
         <Textarea
-          className="px-[20px] py-[10.5px] bg-transparent border border-[#464646] font-normal text-sm placeholder:text-neutral-600 text-white max-h-[100px] overflow-y-auto"
+          className="px-5 py-[10.5px] bg-transparent border border-btn-o font-normal text-sm placeholder:text-neutral-600 text-white max-h-[100px] overflow-y-auto"
           placeholder="What is the purpose of your discussion?"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
@@ -65,11 +65,11 @@ export default function NewDiscussion({
         </div>
       </div>
 
-      <div className="flex flex-col py-[10px] gap-[5px]">
+      <div className="flex flex-col py-2.5 gap-[5px]">
         <label className="flex flex-row justify-start items-center text-[15px]/[28px] text-neutral-400 font-bold  gap-1">
-          Date <span className="text-[#eb5757]">*</span>
+          Date <span className="text-error">*</span>
         </label>
-        <div className="flex flex-row gap-[10px] items-center">
+        <div className="flex flex-row gap-2.5 items-center">
           <CustomCalendar
             value={startTime}
             calendarOpen={startCalendarOpen}
@@ -96,7 +96,7 @@ export default function NewDiscussion({
               setStartTimeDropdownOpen(false);
             }}
           />
-          <div className="w-[15px] h-[1px] bg-neutral-600" />
+          <div className="w-[15px] h-0.25 bg-neutral-600" />
           <CustomCalendar
             value={endTime}
             calendarOpen={endCalendarOpen}
@@ -123,7 +123,7 @@ export default function NewDiscussion({
               setEndTimeDropdownOpen(false);
             }}
           />
-          <div className="flex flex-row items-center w-fit border border-c-wg-70 rounded-lg px-[20px] py-[10.5px] gap-[10px]">
+          <div className="flex flex-row items-center w-fit border border-c-wg-70 rounded-lg px-5 py-[10.5px] gap-2.5">
             <div className="font-medium text-[15px]/[22.5px] text-neutral-600">
               Pacific Time
             </div>
@@ -136,7 +136,7 @@ export default function NewDiscussion({
         </div>
       </div>
 
-      <div className="flex flex-row w-full py-[20px] items-start gap-[10px]">
+      <div className="flex flex-row w-full py-5 items-start gap-2.5">
         <CustomCheckbox
           checked={reminderEnabled}
           onChange={() => setReminderEnabled(!reminderEnabled)}
@@ -152,7 +152,7 @@ export default function NewDiscussion({
 
       <div className="flex justify-end">
         <button
-          className="w-fit px-10 py-[14.5px] rounded-[10px] bg-primary hover:bg-[#ca8f00] text-[#000203] text-bold text-base hover:text-black cursor-pointer"
+          className="w-fit px-10 py-[14.5px] rounded-[10px] bg-primary hover:bg-hover text-black text-bold text-base hover:text-black cursor-pointer"
           onClick={() => {
             popup
               .open(

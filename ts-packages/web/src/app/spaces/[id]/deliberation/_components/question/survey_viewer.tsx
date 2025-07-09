@@ -109,7 +109,7 @@ export default function SurveyViewer({
   };
 
   return (
-    <div className="flex flex-col gap-[10px] w-full">
+    <div className="flex flex-col gap-2.5 w-full">
       {questions.map((q, index) => {
         const selected = answers[index];
         const selectedIndexes =
@@ -120,12 +120,12 @@ export default function SurveyViewer({
 
         return (
           <BlackBox key={index}>
-            <div className="flex flex-col w-full gap-[10px]">
+            <div className="flex flex-col w-full gap-2.5">
               {(q.answer_type === 'single_choice' ||
                 q.answer_type === 'multiple_choice') && (
                 <>
-                  <div className="flex flex-row w-full mt-[7px] mb-[15px] font-semibold text-base/[22.5px] text-white gap-[4px]">
-                    <div className="text-[#51a2ff]">
+                  <div className="flex flex-row w-full mt-[7px] mb-[15px] font-semibold text-base/[22.5px] text-white gap-1">
+                    <div className="text-blue-500">
                       {q.answer_type === 'single_choice'
                         ? '[Single Choice]'
                         : '[Multiple Choice]'}
@@ -142,9 +142,9 @@ export default function SurveyViewer({
                       return (
                         <div
                           key={`${q.answer_type}-${index}-${idx}`}
-                          className="flex flex-row w-full h-fit justify-start items-center gap-[12px]"
+                          className="flex flex-row w-full h-fit justify-start items-center gap-3"
                         >
-                          <div className="w-[18px] h-[18px]">
+                          <div className="w-4.5 h-4.5">
                             <CustomCheckbox
                               checked={isChecked}
                               onChange={() =>

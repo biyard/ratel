@@ -169,12 +169,12 @@ function EditableSurvey({
 
   return (
     <div className="flex flex-col w-full gap-2.5">
-      <div className="flex flex-wrap w-full justify-between items-center gap-[10px] mb-[10px]">
-        <div className="font-medium text-neutral-300 text-[15px] w-[80px]">
+      <div className="flex flex-wrap w-full justify-between items-center gap-2.5 mb-2.5">
+        <div className="font-medium text-neutral-300 text-[15px] w-20">
           Period
         </div>
-        <div className="flex flex-row gap-[10px] items-center flex-wrap">
-          <div className="flex flex-row gap-[10px]">
+        <div className="flex flex-row gap-2.5 items-center flex-wrap">
+          <div className="flex flex-row gap-2.5">
             <CustomCalendar
               value={startDate * 1000}
               calendarOpen={startCalendarOpen}
@@ -188,8 +188,8 @@ function EditableSurvey({
               }}
             />
           </div>
-          <div className="w-[20px] h-[1px] bg-neutral-500" />
-          <div className="flex flex-row gap-[10px]">
+          <div className="w-5 h-0.25 bg-neutral-500" />
+          <div className="flex flex-row gap-2.5">
             <CustomCalendar
               value={endDate * 1000}
               calendarOpen={endCalendarOpen}
@@ -229,7 +229,7 @@ function EditableSurvey({
       })}
       <div className="relative flex items-center justify-center w-full py-6">
         <div
-          className="absolute top-1/2 w-full h-[1px]"
+          className="absolute top-1/2 w-full h-0.25"
           style={{
             borderTop: '1px dashed transparent',
             borderImage:
@@ -238,7 +238,7 @@ function EditableSurvey({
         />
 
         <div
-          className="cursor-pointer z-10 bg-[#1e1e1e] flex items-center justify-center w-fit h-fit p-[13px] border border-neutral-500 rounded-full"
+          className="cursor-pointer z-10 bg-background flex items-center justify-center w-fit h-fit p-[13px] border border-neutral-500 rounded-full"
           onClick={handleAdd}
         >
           <Add className="w-4 h-4 stroke-neutral-500 text-neutral-500" />

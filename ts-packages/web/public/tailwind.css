@@ -53,6 +53,8 @@
   --color-mission-title: #dee1e6;
   --color-tag: #dee1e6;
   --color-component-bg: #191919;
+  --color-error: #eb5757;
+  --color-blue-500: #51a2ff;
   --breakpoint-desktop: 1177px;
   --breakpoint-tablet: 900px;
   --breakpoint-mobile: 500px;
