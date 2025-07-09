@@ -251,7 +251,6 @@ export default function ClientProviders({
     document.body.appendChild(a);
     a.click();
 
-    // 클린업
     document.body.removeChild(a);
     URL.revokeObjectURL(blobUrl);
   };

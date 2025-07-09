@@ -16,6 +16,7 @@ export { default as Search } from '@/assets/icons/search.svg';
 export { default as Settings } from '@/assets/icons/settings.svg';
 export { default as UserGroup } from '@/assets/icons/user-group.svg';
 export { default as Post } from '@/assets/icons/post.svg';
+export { default as Draft } from '@/assets/icons/draft.svg';
 export { default as ThumbUp } from '@/assets/icons/thumb-up.svg';
 export { default as CommentIcon } from '@/assets/icons/comment.svg';
 export { default as Rewards } from '@/assets/icons/rewards.svg';
@@ -64,3 +65,11 @@ export { default as ZoomRecord } from '@/assets/icons/record.svg';
 export { default as ZoomClose } from '@/assets/icons/zoom-close.svg';
 
 export { default as PieChart1 } from '@/assets/icons/pie-chart-1.svg';
+
+export { default as Save } from '@/assets/icons/save.svg';
+export { default as Unlock } from '@/assets/icons/unlock.svg';
+export { default as ShapeArrowDown } from '@/assets/icons/shape-arrow-down.svg';
+export { default as DialPad } from '@/assets/icons/dial-pad.svg';
+export { default as DialPad2 } from '@/assets/icons/dial-pad-2.svg';
+export { default as Extra2 } from '@/assets/icons/extra-2.svg';
+export { default as CircleClose } from '@/assets/icons/circle-close.svg';
