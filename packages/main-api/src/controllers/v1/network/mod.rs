@@ -352,8 +352,9 @@ mod tests {
         // Create some test data first
         let user_id = context.user.id;
         
-        // Create a test team
-        let team_user = crate::tests::setup_test_user("team_test", &context.pool).await.unwrap();
+        // Create a test team with unique identifier
+        let unique_id = uuid::Uuid::new_v4().to_string();
+        let team_user = crate::tests::setup_test_user(&format!("team_test_{}", unique_id), &context.pool).await.unwrap();
         sqlx::query("UPDATE users SET user_type = $1 WHERE id = $2")
             .bind(UserType::Team as i32)
             .bind(team_user.id)
@@ -361,8 +362,8 @@ mod tests {
             .await
             .unwrap();
         
-        // Create another test user
-        let another_user = crate::tests::setup_test_user("another_test", &context.pool).await.unwrap();
+        // Create another test user with unique identifier
+        let another_user = crate::tests::setup_test_user(&format!("another_test_{}", unique_id), &context.pool).await.unwrap();
         
         // Create some test relationships
         sqlx::query("INSERT INTO my_networks (follower_id, following_id, created_at) VALUES ($1, $2, $3)")

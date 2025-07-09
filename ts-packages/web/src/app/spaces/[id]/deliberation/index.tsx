@@ -25,20 +25,23 @@ function Page() {
   const { selectedType } = useDeliberationSpaceContext();
 
   return (
-    <div className="flex flex-row w-full gap-5">
-      {selectedType == DeliberationTab.SUMMARY ? (
-        <ThreadPage />
-      ) : selectedType == DeliberationTab.DELIBERATION ? (
-        <DeliberationPage />
-      ) : selectedType == DeliberationTab.POLL ? (
-        <PollPage />
-      ) : selectedType == DeliberationTab.RECOMMANDATION ? (
-        <FinalConsensusPage />
-      ) : (
-        <AnalyzePage />
-      )}
-
-      {/* <SpaceSideMenu /> */}
+    <div className="flex flex-row w-full h-full gap-5">
+      <div className="flex-1 flex w-full">
+        <div className="flex flex-row w-full gap-5">
+          {selectedType == DeliberationTab.SUMMARY ? (
+            <ThreadPage />
+          ) : selectedType == DeliberationTab.DELIBERATION ? (
+            <DeliberationPage />
+          ) : selectedType == DeliberationTab.POLL ? (
+            <PollPage />
+          ) : selectedType == DeliberationTab.RECOMMANDATION ? (
+            <FinalConsensusPage />
+          ) : (
+            <AnalyzePage />
+          )}
+          <SpaceSideMenu />
+        </div>
+      </div>
     </div>
   );
 }
