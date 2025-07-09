@@ -12,6 +12,7 @@ import { useApiCall } from '@/lib/api/use-send';
 import { logger } from '@/lib/logger';
 import { apiFetch } from '@/lib/api/apiFetch';
 import { config } from '@/config';
+import { getTimeAgo } from '@/lib/time-utils';
 
 export interface SpaceHeaderProps {
   title: string;
@@ -36,54 +37,63 @@ export default function SpaceHeader({
   isEdit = false,
   setTitle = () => {},
 }: SpaceHeaderProps) {
-  const { setIsEdit, thread } = useDeliberationSpaceContext();
+  const { setIsEdit, thread, handleSave } = useDeliberationSpaceContext();
 
   const handleEdit = () => {
     setIsEdit(true);
   };
 
   const handlePublic = () => {
-   // logic for handling public to be implemented later
+    // logic for handling public to be implemented later
   };
 
- 
-  const handleSave = async () => {
-    try {
-      
-      // Not sure of the endpont.. just using this for testing purpose
-      const res = await apiFetch(
-        `${config.api_url}${ratelApi.feeds.updateDraft}`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            update_draft: {
-              title,
-              html_contents: thread.html_contents,
-              files: thread.files,
-            },
-          }),
-        },
-      );
+  // const handleSave = async () => {
+  //   try {
 
-      if (res.data) {
-        logger.debug('Space Post updated successfully')
-      }
+  //     // Not sure of the endpont.. just using this for testing purpose
+  //     const res = await apiFetch(
+  //       `${config.api_url}${ratelApi.feeds.updateDraft}`,
+  //       {
+  //         method: 'PUT',
+  //         headers: {
+  //           'Content-Type': 'application/json',
+  //         },
+  //         body: JSON.stringify({
+  //           update_draft: {
+  //             title,
+  //             html_contents: thread.html_contents,
+  //             files: thread.files,
+  //           },
+  //         }),
+  //       },
+  //     );
 
-      setIsEdit(false);
-    } catch (error) {
-      console.error('Save failed:', error);
-      logger.error('Save failed for post space', error);
-    }
-  };
+  //     if (res.data) {
+  //       logger.debug('Space Post updated successfully')
+  //     }
+
+  //     setIsEdit(false);
+  //   } catch (error) {
+  //     console.error('Save failed:', error);
+  //     logger.error('Save failed for post space', error);
+  //   }
+  // };
 
   return (
     <div className="flex flex-col w-full gap-2.5">
       <div className="flex flex-col gap-2.5">
-        <div className="flex flex-row w-full justify-start items-center gap-2.5">
+        <div className="flex flex-row w-full   gap-2.5">
           <SpaceType />
+
+          {/* stats sectoin */}
+          <div className='flex flex-col justify-center md:justify-end md:ml-auto'>
+            <StatsBar
+              handleSave={handleSave}
+              handleEdit={handleEdit}
+              handlePublic={handlePublic}
+            />
+          </div>
+
           {status == SpaceStatus.InProgress ? <Onboard /> : <></>}
         </div>
         <div className="flex flex-row w-full justify-between items-center">
@@ -99,7 +109,6 @@ export default function SpaceHeader({
               {title}
             </div>
           )}
-
         </div>
       </div>
 
@@ -122,15 +131,9 @@ export default function SpaceHeader({
           <Badge />
         </div>
 
-        <div className="font-light text-white text-sm/[14px]">
+        {/* <div className="font-light text-white text-sm/[14px]">
           {getTimeAgo(createdAt)}
-        </div>
-
-        <StatsBar
-          handleSave={handleSave}
-          handleEdit={handleEdit}
-          handlePublic={handlePublic}
-        />
+        </div> */}
       </div>
     </div>
   );

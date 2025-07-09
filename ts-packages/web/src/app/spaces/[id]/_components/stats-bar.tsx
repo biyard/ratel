@@ -103,11 +103,13 @@ import { useState, useRef, useEffect } from 'react';
 import {
   Edit1,
   ThumbUp,
+  Folder,
   Rewards,
   Shares,
   Extra,
   UnlockIcon,
   LockIcon,
+  Upload
 } from '@/components/icons';
 import { Eye } from 'lucide-react';
 
@@ -152,7 +154,7 @@ export default function StatsBar({
       
          {isEdit ? (
           <button onClick={handleSave} className="flex bg-white text-[#18181B] text-[16px] px-3 py-1.5 rounded-md hover:bg-gray-200 font-medium items-center">
-            <Edit1 />
+            <Upload/>
             Save
           </button>
         ) : (
@@ -176,7 +178,7 @@ export default function StatsBar({
         <div className="relative" ref={menuRef}>
           <button
             onClick={() => setShowMenu((prev) => !prev)}
-            className="p-2 bg-neutral-700 rounded-md"
+            className="p-2 bg-neutral-800 rounded-md"
           >
             <Extra />
           </button>
