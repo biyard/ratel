@@ -492,7 +492,7 @@ function EditableDiscussionInfo({
             onClick={() => setMenuOpen(!menuOpen)}
           />
           {menuOpen && (
-            <div className="absolute right-0 mt-2 w-[100px] bg-white text-black rounded shadow-lg text-sm z-50 overflow-hidden">
+            <div className="absolute right-0 mt-2 w-25 bg-white text-black rounded shadow-lg text-sm z-50 overflow-hidden">
               <div
                 className="px-4 py-2 hover:bg-neutral-200 cursor-pointer whitespace-nowrap"
                 onClick={() => {

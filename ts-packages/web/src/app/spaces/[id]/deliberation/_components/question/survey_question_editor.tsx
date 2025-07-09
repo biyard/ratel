@@ -90,15 +90,15 @@ export default function SurveyQuestionEditor({
   };
 
   return (
-    <div className="flex flex-col w-full bg-[#191919] rounded-[10px] px-[16px] pb-[20px] pt-[4px]">
-      <div className="flex flex-row w-full justify-center items-center mb-[10px]">
+    <div className="flex flex-col w-full bg-component-bg rounded-[10px] px-4 pb-5 pt-1">
+      <div className="flex flex-row w-full justify-center items-center mb-2.5">
         <DialPad className="w-6 h-6" />
       </div>
       <div className="flex flex-col w-full gap-2.5">
         <div className="flex gap-2 max-tablet:flex-col">
           <AnswerTypeSelect value={questionType} onChange={handleTypeChange} />
           <Input
-            className="bg-neutral-800 border border-neutral-700 rounded-lg w-full px-[16px] !py-[22px] font-medium text-[15px]/[22.5px] text-white placeholder:text-neutral-600 "
+            className="bg-neutral-800 border border-neutral-700 rounded-lg w-full px-4 !py-5.5 font-medium text-[15px]/[22.5px] text-white placeholder:text-neutral-600 "
             type="text"
             placeholder="Title"
             value={questionTitle}
@@ -106,14 +106,14 @@ export default function SurveyQuestionEditor({
           />
         </div>
 
-        <div className="flex flex-col mt-[10px] gap-[10px]">
+        <div className="flex flex-col mt-2.5 gap-2.5">
           {(questionType === 'single_choice' ||
             questionType === 'multiple_choice') && (
             <div className="flex flex-col gap-2">
               {questionOptions.map((opt, idx) => (
                 <div
                   key={`option-${index}-${idx}`}
-                  className="flex gap-[10px] items-center"
+                  className="flex gap-2.5 items-center"
                 >
                   <DialPad2 className="w-6 h-6" />
                   <Input
