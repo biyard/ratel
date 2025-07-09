@@ -21,7 +21,7 @@ export default function FinalConsensusPage() {
   return (
     <div className="flex flex-row w-full gap-5">
       <div className="flex flex-col w-full">
-        <div className="flex flex-col w-full mt-7.5 gap-2.5">
+        <div className="flex flex-col w-full gap-2.5">
           <SpaceContents
             isEdit={isEdit}
             htmlContents={contents.html_contents}

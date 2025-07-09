@@ -26,7 +26,7 @@ export default function PollPage() {
     survey.surveys.length != 0 ? survey.surveys[0].questions : [];
   return (
     <div className="flex flex-col w-full">
-      <div className="flex flex-col mt-[25px] gap-2.5">
+      <div className="flex flex-col gap-2.5">
         <SpaceSurvey
           isEdit={isEdit}
           status={status}
