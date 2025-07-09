@@ -13,6 +13,7 @@ type PopupConfig = {
   content: ReactNode;
   closable?: boolean;
   backdropClosable?: boolean;
+  overflow?: boolean;
 };
 
 type PopupServiceType = {
@@ -22,6 +23,7 @@ type PopupServiceType = {
   withTitle: (title: string) => PopupServiceType;
   withoutClose: () => PopupServiceType;
   withoutBackdropClose: () => PopupServiceType;
+  overflow: (overflow: boolean) => PopupServiceType;
   close: () => void;
 };
 
@@ -66,6 +68,14 @@ export const PopupProvider = ({ children }: { children: ReactNode }) => {
     withoutBackdropClose: () => {
       if (popupRef.current) {
         popupRef.current = { ...popupRef.current, backdropClosable: false };
+        setPopup({ ...popupRef.current });
+      }
+      return service;
+    },
+
+    overflow: (overflow: boolean) => {
+      if (popupRef.current) {
+        popupRef.current = { ...popupRef.current, overflow };
         setPopup({ ...popupRef.current });
       }
       return service;

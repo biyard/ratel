@@ -65,3 +65,11 @@ export { default as ZoomRecord } from '@/assets/icons/record.svg';
 export { default as ZoomClose } from '@/assets/icons/zoom-close.svg';
 
 export { default as PieChart1 } from '@/assets/icons/pie-chart-1.svg';
+
+export { default as Save } from '@/assets/icons/save.svg';
+export { default as Unlock } from '@/assets/icons/unlock.svg';
+export { default as ShapeArrowDown } from '@/assets/icons/shape-arrow-down.svg';
+export { default as DialPad } from '@/assets/icons/dial-pad.svg';
+export { default as DialPad2 } from '@/assets/icons/dial-pad-2.svg';
+export { default as Extra2 } from '@/assets/icons/extra-2.svg';
+export { default as CircleClose } from '@/assets/icons/circle-close.svg';
