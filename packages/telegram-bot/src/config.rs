@@ -1,8 +1,10 @@
+use dto::by_types::config::DatabaseConfig;
 #[derive(Debug)]
 pub struct Config {
     pub env: &'static str,
     pub log_level: &'static str,
     pub telegram_token: &'static str,
+    pub database: DatabaseConfig,
 }
 
 impl Default for Config {
@@ -11,6 +13,7 @@ impl Default for Config {
             env: option_env!("ENV").expect("You must set ENV"),
             telegram_token: option_env!("TELEGRAM_TOKEN").expect("You must set TELEGRAM_TOKEN"),
             log_level: option_env!("RUST_LOG").unwrap_or("info"),
+            database: DatabaseConfig::default(),
         }
     }
 }
