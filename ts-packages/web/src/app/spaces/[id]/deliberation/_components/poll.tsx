@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import SpaceHeader from '../../_components/space_header';
 import SpaceSurvey from './space_survey';
 import { Question } from '@/lib/api/models/survey';
 import { AnswerType } from './question/answer_type_select';
@@ -11,19 +10,12 @@ import { useDeliberationSpaceContext } from '../provider.client';
 export default function PollPage() {
   const {
     isEdit,
-    title,
-    setTitle,
     startedAt: startDate,
     endedAt: endDate,
     survey,
     setSurvey,
     answer,
     status,
-    userType,
-    proposerImage,
-    proposerName,
-    createdAt,
-    handleGoBack,
     handleSetAnswers: setAnswers,
     handleSetEndDate: setEndDate,
     handleSetStartDate: setStartDate,
@@ -34,20 +26,6 @@ export default function PollPage() {
     survey.surveys.length != 0 ? survey.surveys[0].questions : [];
   return (
     <div className="flex flex-col w-full">
-      <SpaceHeader
-        isEdit={isEdit}
-        title={title}
-        status={status}
-        userType={userType}
-        proposerImage={proposerImage}
-        proposerName={proposerName}
-        createdAt={createdAt}
-        onback={handleGoBack}
-        setTitle={(title: string) => {
-          setTitle(title);
-        }}
-      />
-
       <div className="flex flex-col mt-[25px] gap-2.5">
         <SpaceSurvey
           isEdit={isEdit}
