@@ -67,11 +67,11 @@ export default function TimeDropdown({
   return (
     <div className="relative w-fit">
       <button
-        className="flex justify-between items-center w-full border border-input rounded-md px-6 py-[10px] font-medium text-neutral-300 text-sm text-left shadow-sm focus:outline-none gap-[20px]"
+        className="flex justify-between items-center w-full border border-c-wg-70 rounded-lg px-[20px] py-[10.5px] font-medium text-neutral-600 text-[15px]/[22.5px] text-left shadow-sm focus:outline-none gap-[10px]"
         onClick={() => setTimeDropdownOpen(!timeDropdownOpen)}
       >
         {selectedTime}
-        <Clock className="w-6 h-6 stroke-input" />
+        <Clock className="w-5 h-5 stroke-neutral-500" />
       </button>
 
       {timeDropdownOpen && (
