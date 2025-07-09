@@ -86,7 +86,7 @@ export default function SpaceHeader({
           <SpaceType />
 
           {/* stats sectoin */}
-          <div className='flex flex-col justify-center md:justify-end md:ml-auto'>
+          <div className='flex flex-col justify-center items-center md:justify-end md:ml-auto'>
             <StatsBar
               handleSave={handleSave}
               handleEdit={handleEdit}

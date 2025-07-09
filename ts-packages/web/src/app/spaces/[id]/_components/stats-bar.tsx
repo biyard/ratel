@@ -93,30 +93,29 @@
 //   );
 // }
 
-
-
-
-
 'use client';
-import { useDeliberationSpace, useDeliberationSpaceContext } from '../deliberation/provider.client';
+import {
+  useDeliberationSpace,
+  useDeliberationSpaceContext,
+} from '../deliberation/provider.client';
 import { useState, useRef, useEffect } from 'react';
 import {
   Edit1,
   ThumbUp,
-  Folder,
   Rewards,
   Shares,
   Extra,
   UnlockIcon,
   LockIcon,
-  Upload
+  Upload,
 } from '@/components/icons';
+import { SpaceConfirmModal } from '@/components/popup/space-confirm-popup';
 import { Eye } from 'lucide-react';
 
 export default function StatsBar({
   handleEdit,
   handlePublic,
-  handleSave
+  handleSave,
 }: {
   handleEdit: () => void;
   handlePublic: () => void;
@@ -124,7 +123,12 @@ export default function StatsBar({
 }) {
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  const {isEdit} = useDeliberationSpaceContext()
+  const { isEdit } = useDeliberationSpaceContext();
+  const [publish, setPublish] = useState(false);
+
+  const handlepublish = () => {
+    setPublish(true);
+  };
 
   // Close menu on outside click
   useEffect(() => {
@@ -151,10 +155,12 @@ export default function StatsBar({
     <div className="bg-background text-white px-0 md:px-4 py-2 space-y-4 flex flex-col items-center justify-between relative">
       {/* Actions - buttons */}
       <div className="flex flex-col md:flex-row justify-end ml-auto gap-2 relative">
-      
-         {isEdit ? (
-          <button onClick={handleSave} className="flex bg-white text-[#18181B] text-[16px] px-3 py-1.5 rounded-md hover:bg-gray-200 font-medium items-center">
-            <Upload/>
+        {isEdit ? (
+          <button
+            onClick={handleSave}
+            className="flex bg-white text-[#18181B] text-[16px] px-3 py-1.5 rounded-md hover:bg-gray-200 font-medium items-center"
+          >
+            <Upload />
             Save
           </button>
         ) : (
@@ -167,12 +173,42 @@ export default function StatsBar({
           </button>
         )}
         <button
-          onClick={handlePublic}
+          onClick={handlepublish}
           className="bg-white text-[#18181B] text-[16px] px-3 py-1.5 rounded-md border hover:bg-gray-200 border-gray-600 flex items-center gap-1"
         >
           <UnlockIcon />
           Make Public
         </button>
+
+        {publish ? (
+          <SpaceConfirmModal
+            show={publish}
+            onClose={() => setPublish(false)}
+            onConfirm={() => {
+              alert('Public!');
+              setPublish(false);
+            }}
+            title="You’re About to Go Public"
+            description="Once made public, this Sprint will be visible to everyone and"
+            emphasisText="cannot be made private again."
+            confirmText="Make Public"
+            cancelText="Cancel"
+          />
+        ) : (
+          <SpaceConfirmModal
+            show={publish}
+            onClose={() => setPublish(false)}
+            onConfirm={() => {
+              alert('Public!');
+              setPublish(false);
+            }}
+            title="You’re About to Go Public"
+            description="Once made public, this Sprint will be visible to everyone and"
+            emphasisText="cannot be made private again."
+            confirmText="Make Public"
+            cancelText="Cancel"
+          />
+        )}
 
         {/* Extra Button */}
         <div className="relative" ref={menuRef}>
@@ -229,4 +265,3 @@ export default function StatsBar({
     </div>
   );
 }
-

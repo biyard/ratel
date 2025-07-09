@@ -15,7 +15,7 @@ interface ConfirmModalProps {
   onConfirm: () => void;
 }
 
-export const ConfirmModal = ({
+export const SpaceConfirmModal = ({
   title,
   description,
   emphasisText,
