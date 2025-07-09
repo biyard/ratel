@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 // import Shared from '@/assets/icons/share.svg';
 // import Extra from '@/assets/icons/extra.svg';
 // import Bookmark from '@/assets/icons/bookmark.svg';
@@ -8,8 +8,9 @@ import Image from 'next/image';
 import { Input } from '@/components/ui/input';
 import { SpaceStatus } from '@/lib/api/models/spaces';
 import { ArrowLeft, Play, Save } from 'lucide-react';
-import TimeAgo from '@/components/time-ago';
 import { Edit1, Unlock2, Lock } from '@/components/icons';
+import { TeamContext } from '@/lib/contexts/team-context';
+import { useUserInfo } from '@/app/(social)/_hooks/user';
 
 export interface SpaceHeaderProps {
   title: string;
@@ -18,6 +19,7 @@ export interface SpaceHeaderProps {
   proposerImage: string;
   proposerName: string;
   createdAt: number;
+  authorId: number;
 
   isEdit?: boolean;
   onback: () => void;
@@ -33,7 +35,7 @@ export default function SpaceHeader({
   userType,
   proposerImage,
   proposerName,
-  createdAt,
+  authorId,
   isEdit = false,
   setTitle = () => {},
   onback = () => {},
@@ -41,6 +43,16 @@ export default function SpaceHeader({
   onedit = () => {},
   onpost = () => {},
 }: SpaceHeaderProps) {
+  const [selectedTeam, setSelectedTeam] = useState<boolean>(false);
+  const { data: userInfo } = useUserInfo();
+  const userId = userInfo ? userInfo.id : 0;
+  const { teams } = useContext(TeamContext);
+
+  useEffect(() => {
+    const index = teams.findIndex((t) => t.id === authorId);
+    setSelectedTeam(index !== -1);
+  }, [teams]);
+
   return (
     <div className="flex flex-col w-full gap-2.5 mb-10">
       <div className="flex flex-row justify-between items-center w-full">
@@ -54,36 +66,39 @@ export default function SpaceHeader({
           )}
         </div>
 
-        <div className="flex flex-row items-center gap-2 text-sm text-white">
-          {isEdit ? (
-            <button
-              className="flex flex-row w-fit px-3.5 py-2 rounded-md bg-white gap-1"
-              onClick={onsave}
-            >
-              <Save className="stroke-neutral-500 [&>path]:stroke-2  w-5 h-5" />
-              <div className="font-bold text-zinc-900 text-sm">Save</div>
-            </button>
-          ) : (
-            <button
-              className="flex flex-row w-fit px-3.5 py-2 rounded-md bg-white gap-1"
-              onClick={onedit}
-            >
-              <Edit1 className="stroke-neutral-500 [&>path]:stroke-2 w-5 h-5" />
-              <div className="font-bold text-zinc-900 text-sm">Edit</div>
-            </button>
-          )}
-          {status == SpaceStatus.Draft ? (
-            <button
-              className="flex flex-row w-fit px-3.5 py-2 rounded-md bg-white gap-1"
-              onClick={onpost}
-            >
-              <Unlock2 className="stroke-neutral-500 [&>path]:stroke-2  w-5 h-5" />
-              <div className="font-bold text-zinc-900 text-sm">Make Public</div>
-            </button>
-          ) : (
-            <></>
-          )}
-        </div>
+        {(authorId === userId || selectedTeam) && (
+          <div className="flex flex-row items-center gap-2 text-sm text-white">
+            {isEdit ? (
+              <button
+                className="flex flex-row w-fit px-3.5 py-2 rounded-md bg-white gap-1"
+                onClick={onsave}
+              >
+                <Save className="stroke-neutral-500 [&>path]:stroke-2 w-5 h-5" />
+                <div className="font-bold text-zinc-900 text-sm">Save</div>
+              </button>
+            ) : (
+              <button
+                className="flex flex-row w-fit px-3.5 py-2 rounded-md bg-white gap-1"
+                onClick={onedit}
+              >
+                <Edit1 className="stroke-neutral-500 [&>path]:stroke-2 w-5 h-5" />
+                <div className="font-bold text-zinc-900 text-sm">Edit</div>
+              </button>
+            )}
+
+            {status === SpaceStatus.Draft && (
+              <button
+                className="flex flex-row w-fit px-3.5 py-2 rounded-md bg-white gap-1"
+                onClick={onpost}
+              >
+                <Unlock2 className="stroke-neutral-500 [&>path]:stroke-2 w-5 h-5" />
+                <div className="font-bold text-zinc-900 text-sm">
+                  Make Public
+                </div>
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="flex flex-row w-full justify-between items-center">
@@ -136,8 +151,6 @@ export default function SpaceHeader({
           <span className="text-white font-medium">{proposerName}</span>
           <Badge />
         </div>
-
-        {!isEdit && <TimeAgo timestamp={createdAt} />}
       </div>
     </div>
   );

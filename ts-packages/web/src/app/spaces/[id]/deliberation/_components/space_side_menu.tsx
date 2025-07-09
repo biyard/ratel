@@ -5,7 +5,7 @@ import { getTimeWithFormat } from '@/lib/time-utils';
 import React, { useContext, useEffect, useState } from 'react';
 import Clock from '@/assets/icons/clock.svg';
 import { Discuss, PieChart1 } from '@/components/icons';
-import { File, Vote, CheckCircle } from 'lucide-react';
+import { File, Vote, CheckCircle, Settings } from 'lucide-react';
 import { DeliberationTab } from '../types';
 import { SpaceStatus } from '@/lib/api/models/spaces';
 import {
@@ -14,17 +14,30 @@ import {
 } from '../provider.client';
 import { useUserInfo } from '@/app/(social)/_hooks/user';
 import { TeamContext } from '@/lib/contexts/team-context';
+import { usePopup } from '@/lib/contexts/popup-service';
+import SetSchedulePopup from './modal/set_schedule';
 
 export default function SpaceSideMenu() {
-  const { selectedType, setSelectedType, status } =
-    useDeliberationSpaceContext();
+  const popup = usePopup();
+  const {
+    isEdit,
+    selectedType,
+    setSelectedType,
+    startedAt,
+    endedAt,
+    status,
+    handleSetEndDate: setEndDate,
+    handleSetStartDate: setStartDate,
+  } = useDeliberationSpaceContext();
   const space = useDeliberationSpace();
   const { teams } = useContext(TeamContext);
   const [, setSelectedTeam] = useState<boolean>(false);
+  const [startDate, setStartDateState] = useState(space.started_at);
+  const [endDate, setEndDateState] = useState(space.ended_at);
 
   const { data: userInfo } = useUserInfo();
   const userId = userInfo ? userInfo.id : 0;
-  const created_at = space.created_at;
+  const createdAt = space.created_at;
 
   const authorId = space?.author[0].id;
 
@@ -32,6 +45,11 @@ export default function SpaceSideMenu() {
     const index = teams.findIndex((t) => t.id === authorId);
     setSelectedTeam(index !== -1);
   }, [teams]);
+
+  useEffect(() => {
+    setStartDateState(startedAt);
+    setEndDateState(endedAt);
+  }, [startedAt, endedAt]);
 
   return (
     <div className="flex flex-col max-w-[250px] max-tablet:!hidden w-full gap-[10px]">
@@ -105,18 +123,61 @@ export default function SpaceSideMenu() {
         </div>
       </BlackBox>
       <BlackBox>
-        <div className="flex flex-col gap-5 w-full">
-          <div className="flex flex-row gap-1 items-center">
-            <Clock width={20} height={20} />
-            <div className="font-bold text-neutral-500 text-sm/[14px]">
-              Created
+        <div className="w-full text-sm text-white">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-1 text-neutral-400 font-semibold text-[14px]">
+              <Clock width={20} height={20} />
+              Timeline
             </div>
+            {isEdit ? (
+              <div
+                className="cursor-pointer w-fit h-fit"
+                onClick={() => {
+                  popup
+                    .open(
+                      <SetSchedulePopup
+                        startedAt={startedAt}
+                        endedAt={endedAt}
+                        onconfirm={(startDate: number, endDate: number) => {
+                          setStartDate(Math.floor(startDate / 1000));
+                          setEndDate(Math.floor(endDate / 1000));
+                          popup.close();
+                        }}
+                      />,
+                    )
+                    .overflow(true);
+                }}
+              >
+                <Settings
+                  width={20}
+                  height={20}
+                  className="text-neutral-500 w-5 h-5"
+                />
+              </div>
+            ) : (
+              <></>
+            )}
           </div>
 
-          <div className="flex flex-col w-full gap-[6px]">
-            <div className="font-medium text-neutral-80 text-xs/[12px]">
-              {getTimeWithFormat(created_at)}
-            </div>
+          <div className="flex flex-col pl-3.25 gap-5">
+            {[
+              { label: 'Created', date: createdAt },
+              // { label: 'Start', date: created_at },
+              // { label: 'Deliberation', date: created_at },
+              { label: 'Poll Open', date: startDate },
+              { label: 'Poll Close', date: endDate },
+              // { label: 'End', date: created_at },
+            ].map((item) => (
+              <div className="flex flex-col gap-1" key={item.label}>
+                <div className="font-medium text-white text-[15px]/[12px]">
+                  {item.label}
+                </div>
+
+                <div className="font-medium text-neutral-80 text-xs/[12px]">
+                  {getTimeWithFormat(item.date ?? 0)}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </BlackBox>
