@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import SpaceSideMenu from './_components/space_side_menu';
 import ThreadPage from './_components/thread';
 import DeliberationPage from './_components/deliberation';
@@ -16,6 +16,9 @@ import AnalyzePage from './_components/analyze';
 import SpaceHeader from './_components/space_header';
 import { usePopup } from '@/lib/contexts/popup-service';
 import GoPublicPopup from './_components/modal/go_public';
+import { TeamContext } from '@/lib/contexts/team-context';
+import { SpaceStatus } from '@/lib/api/models/spaces';
+import { useUserInfo } from '@/app/(social)/_hooks/user';
 
 export default function DeliberationSpacePage() {
   return (
@@ -43,6 +46,26 @@ function Page() {
     handlePostingSpace,
     setTitle,
   } = useDeliberationSpaceContext();
+
+  const { teams } = useContext(TeamContext);
+  const [selectedTeam, setSelectedTeam] = useState<boolean>(false);
+  const { data: userInfo } = useUserInfo();
+
+  const authorId = space?.author[0].id;
+  const userId = userInfo ? userInfo.id : 0;
+
+  useEffect(() => {
+    const index = teams.findIndex((t) => t.id === authorId);
+    setSelectedTeam(index !== -1);
+  }, [teams]);
+
+  if (
+    space.status === SpaceStatus.Draft &&
+    !space.author.some((a) => a.id === userId) &&
+    !selectedTeam
+  ) {
+    return <div>No Authorized User</div>;
+  }
 
   const handlePost = () => {
     popup

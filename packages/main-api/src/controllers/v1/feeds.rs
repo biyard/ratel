@@ -56,6 +56,7 @@ impl FeedController {
         };
         let items: Vec<FeedSummary> = FeedSummary::query_builder(user_id)
             .feed_type_equals(feed_type)
+            .spaces_builder(Space::query_builder())
             .status_equals(status)
             .limit(param.size())
             .page(param.page())
