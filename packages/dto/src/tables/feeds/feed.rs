@@ -4,7 +4,7 @@ use validator::Validate;
 use crate::*;
 
 #[derive(Validate)]
-#[api_model(base = "/v1/feeds", table = feeds,  action_by_id = [delete, publish, like(value = bool)])]
+#[api_model(base = "/v1/feeds", table = feeds,  action_by_id = [delete, publish, like(value = bool), unrepost])]
 pub struct Feed {
     #[api_model(summary, primary_key)]
     pub id: i64,
@@ -69,8 +69,7 @@ pub struct Feed {
     #[api_model(version = v0.1, summary)]
     #[serde(default)]
     pub rewards: i64,
-    #[api_model(version = v0.1, summary)]
-    #[serde(default)]
+    #[api_model(summary, many_to_many = feed_shares, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = feed_id, aggregator = count, unique)]
     pub shares: i64,
 
     #[api_model(version = v0.1, summary, type = INTEGER, queryable)]
