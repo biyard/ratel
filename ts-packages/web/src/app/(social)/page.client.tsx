@@ -153,7 +153,7 @@ export default function Home() {
       checkString(d.contents) ||
       checkString(d.author_name);
 
-    return !hasInvalidString && !isExternalDraft;
+    return !hasInvalidString && (d.spaces.length == 0 || !isExternalDraft);
   });
 
   return (
