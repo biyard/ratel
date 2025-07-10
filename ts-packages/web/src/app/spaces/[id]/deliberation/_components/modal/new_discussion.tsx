@@ -7,8 +7,8 @@ import { usePopup } from '@/lib/contexts/popup-service';
 import React, { useState } from 'react';
 import InviteMemberPopup from './invite_member';
 import { DiscussionInfo } from '../../types';
-import CustomCalendar from '@/components/calendar-picker';
 import TimeDropdown from '@/components/time-dropdown';
+import CalendarDropdown from '@/components/calendar-dropdown';
 
 export default function NewDiscussion({
   discussion,
@@ -70,7 +70,7 @@ export default function NewDiscussion({
           Date <span className="text-error">*</span>
         </label>
         <div className="flex flex-row gap-2.5 items-center">
-          <CustomCalendar
+          <CalendarDropdown
             value={startTime}
             calendarOpen={startCalendarOpen}
             setCalendarOpen={(value: boolean) => {
@@ -97,7 +97,7 @@ export default function NewDiscussion({
             }}
           />
           <div className="w-[15px] h-0.25 bg-neutral-600" />
-          <CustomCalendar
+          <CalendarDropdown
             value={endTime}
             calendarOpen={endCalendarOpen}
             setCalendarOpen={(value: boolean) => {

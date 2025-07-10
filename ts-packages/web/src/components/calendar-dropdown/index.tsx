@@ -11,19 +11,19 @@ import {
   DropdownMenuTrigger,
 } from '@radix-ui/react-dropdown-menu';
 
-interface CustomCalendarProps {
+interface CalendarDropdownProps {
   value: number;
   calendarOpen: boolean;
   setCalendarOpen: (open: boolean) => void;
   onChange: (date: number) => void;
 }
 
-export default function CustomCalendar({
+export default function CalendarDropdown({
   value,
   calendarOpen,
   setCalendarOpen,
   onChange,
-}: CustomCalendarProps) {
+}: CalendarDropdownProps) {
   const [selected, setSelected] = useState<Date>();
 
   useEffect(() => {

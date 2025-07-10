@@ -4,8 +4,8 @@ import React, { useState } from 'react';
 import CustomCheckbox from '@/components/checkbox/custom-checkbox';
 import { Internet } from '@/components/icons';
 import { showErrorToast } from '@/lib/toast';
-import CustomCalendar from '@/components/calendar-picker';
 import TimeDropdown from '@/components/time-dropdown';
+import CalendarDropdown from '@/components/calendar-dropdown';
 
 export default function SetSchedulePopup({
   startedAt,
@@ -83,7 +83,7 @@ export default function SetSchedulePopup({
           </div>
 
           <div className="flex flex-row gap-2.5 items-center">
-            <CustomCalendar
+            <CalendarDropdown
               value={session.start}
               calendarOpen={calendarStates[index].start}
               setCalendarOpen={(v) => {
@@ -112,7 +112,7 @@ export default function SetSchedulePopup({
 
             <div className="w-[15px] h-0.25 bg-neutral-600" />
 
-            <CustomCalendar
+            <CalendarDropdown
               value={session.end}
               calendarOpen={calendarStates[index].end}
               setCalendarOpen={(v) => {
