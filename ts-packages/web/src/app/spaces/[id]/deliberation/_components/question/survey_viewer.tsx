@@ -136,9 +136,9 @@ export default function SurveyViewer({
                   </div>
                   {q.image_url ? (
                     <Image
-                      width={300}
-                      height={300}
-                      className="object-contain max-w-75"
+                      width={700}
+                      height={280}
+                      className="object-contain max-h-70 w-fit rounded-lg"
                       src={q.image_url}
                       alt={q.title || 'Question Title'}
                     />
