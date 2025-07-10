@@ -35,6 +35,7 @@ import RemoteGalleryView from './_components/remote_gallery_view';
 export default function DiscussionByIdPage() {
   const tileMapRef = useRef<Record<number, string>>({});
 
+  const [isFirstClicked, setIsFirstClicked] = useState(false);
   const [isVideoOn, setIsVideoOn] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
   const [isAudioOn, setIsAudioOn] = useState(false);
@@ -76,6 +77,74 @@ export default function DiscussionByIdPage() {
   logger.debug('discussion: ', discussion);
 
   const users = discussion.participants;
+
+  useEffect(() => {
+    if (!isFirstClicked) {
+      setIsFirstClicked(true);
+      history.pushState(null, '', location.href);
+    }
+  }, [isFirstClicked]);
+
+  useEffect(() => {
+    const cleanupMeetingSession = async () => {
+      if (meetingSession) {
+        const av = meetingSession.audioVideo;
+        const dc = meetingSession.deviceController;
+
+        av.stopLocalVideoTile();
+        av.stop();
+
+        try {
+          const videoDevices = await dc.listVideoInputDevices();
+          for (const device of videoDevices) {
+            const stream = await navigator.mediaDevices.getUserMedia({
+              video: { deviceId: { exact: device.deviceId } },
+            });
+            stream.getTracks().forEach((track) => track.stop());
+          }
+        } catch (err) {
+          console.warn('[CLEANUP] Failed to stop video input stream', err);
+        }
+
+        dc.destroy?.();
+      }
+
+      try {
+        await post(
+          ratelApi.discussions.actDiscussionById(spaceId, discussionId),
+          exitMeetingRequest(),
+        );
+      } catch (err) {
+        console.error('[EXIT] Failed to send exit request', err);
+      }
+
+      setRemoteContentTileOwner(null);
+    };
+
+    const handlePopState = async () => {
+      await cleanupMeetingSession();
+      router.replace(route.deliberationSpaceById(spaceId));
+    };
+
+    const handleBeforeUnload = async (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      await cleanupMeetingSession();
+    };
+
+    const handleUnload = async () => {
+      await cleanupMeetingSession();
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('unload', handleUnload);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('unload', handleUnload);
+    };
+  }, [spaceId, discussionId]);
 
   useEffect(() => {
     async function startChime() {
