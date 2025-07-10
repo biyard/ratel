@@ -4,8 +4,8 @@ import BlackBox from '@/app/(social)/_components/black-box';
 import { getTimeWithFormat } from '@/lib/time-utils';
 import React, { useContext, useEffect, useState } from 'react';
 import Clock from '@/assets/icons/clock.svg';
-import { Discuss, PieChart1 } from '@/components/icons';
-import { File, Vote, CheckCircle, Settings } from 'lucide-react';
+import { Discuss, PieChart1, File, Vote } from '@/components/icons';
+import { CheckCircle, Settings } from 'lucide-react';
 import { DeliberationTab } from '../types';
 import { SpaceStatus } from '@/lib/api/models/spaces';
 import {
