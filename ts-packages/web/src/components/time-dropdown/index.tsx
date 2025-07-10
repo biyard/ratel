@@ -1,13 +1,12 @@
 'use client';
 
+import { useState } from 'react';
 import { Clock } from 'lucide-react';
-import React, { useState } from 'react';
 import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-} from '@radix-ui/react-dropdown-menu';
-
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@radix-ui/react-popover';
 interface TimeDropdownProps {
   value: number;
   onChange: (newTimestamp: number) => void;
@@ -28,19 +27,15 @@ const formatAMPM = (timestamp: number): string => {
 };
 
 export default function TimeDropdown({ value, onChange }: TimeDropdownProps) {
-  const [timeDropdownOpen, setTimeDropdownOpen] = useState<boolean>(false);
-  let selectedTime = value ? formatAMPM(value) : null;
+  const [open, setOpen] = useState(false);
+  const selectedTime = value ? formatAMPM(value) : null;
 
   const handleSelect = (time: string) => {
-    selectedTime = time;
-    setTimeDropdownOpen(false);
-
     const [hourStr, period] = time.split(' ');
     let hour = parseInt(hourStr.split(':')[0], 10);
-
     if (period === 'AM') {
       if (hour === 12) hour = 0;
-    } else if (period === 'PM') {
+    } else {
       if (hour !== 12) hour += 12;
     }
 
@@ -56,19 +51,20 @@ export default function TimeDropdown({ value, onChange }: TimeDropdownProps) {
     );
 
     onChange(newDate.getTime());
+    setOpen(false);
   };
 
   return (
-    <DropdownMenu open={timeDropdownOpen} onOpenChange={setTimeDropdownOpen}>
-      <DropdownMenuTrigger asChild>
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
         <button className="flex justify-between items-center w-[150px] border border-c-wg-70 rounded-lg px-[20px] py-[10.5px] font-medium text-neutral-600 text-[15px]/[22.5px] text-left shadow-sm focus:outline-none gap-[10px]">
-          {selectedTime}
+          {selectedTime || 'Select'}
           <Clock className="w-5 h-5 stroke-neutral-500" />
         </button>
-      </DropdownMenuTrigger>
+      </PopoverTrigger>
 
-      <DropdownMenuContent
-        className="mt-1 w-[150px] rounded-md shadow-lg bg-white max-h-60 overflow-auto border border-gray-200"
+      <PopoverContent
+        className="mt-1 w-[150px] rounded-md shadow-lg bg-white max-h-60 overflow-auto border border-gray-200 z-[999]"
         align="start"
         sideOffset={4}
       >
@@ -83,7 +79,7 @@ export default function TimeDropdown({ value, onChange }: TimeDropdownProps) {
             {time}
           </div>
         ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+      </PopoverContent>
+    </Popover>
   );
 }

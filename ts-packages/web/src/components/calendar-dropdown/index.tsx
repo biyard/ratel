@@ -6,10 +6,10 @@ import React, { useState } from 'react';
 import { Calendar } from 'lucide-react';
 import CalendarDayPicker from '../calendar-day-picker';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from '@radix-ui/react-dropdown-menu';
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@radix-ui/react-popover';
 
 interface CalendarDropdownProps {
   value: number;
@@ -24,29 +24,27 @@ export default function CalendarDropdown({
   const selectedDate = value ? new Date(value) : null;
 
   return (
-    <DropdownMenu open={calendarOpen} onOpenChange={setCalendarOpen}>
-      <DropdownMenuTrigger asChild>
+    <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+      <PopoverTrigger asChild>
         <button className="flex flex-row items-center justify-between w-[150px] border border-c-wg-70 px-[20px] py-[10.5px] rounded-lg font-medium text-[15px]/[22.5px] text-neutral-600 bg-transparent shadow-sm focus:outline-none gap-[10px]">
           {selectedDate ? format(selectedDate, 'yyyy/MM/dd') : 'Selected Date'}
           <Calendar className="w-5 h-5 stroke-neutral-500" />
         </button>
-      </DropdownMenuTrigger>
+      </PopoverTrigger>
 
-      <DropdownMenuContent
-        className="mt-1 bg-white text-black rounded-xl shadow-xl p-4"
+      <PopoverContent
+        className="mt-1 bg-white text-black rounded-xl shadow-xl p-4 w-[350px]"
         align="start"
         sideOffset={4}
       >
-        <div className="w-full">
-          <CalendarDayPicker
-            value={value}
-            onChange={(date) => {
-              if (date) onChange(date.getTime());
-              setCalendarOpen(false);
-            }}
-          />
-        </div>
-      </DropdownMenuContent>
-    </DropdownMenu>
+        <CalendarDayPicker
+          value={value}
+          onChange={(date) => {
+            if (date) onChange(date.getTime());
+            setCalendarOpen(false);
+          }}
+        />
+      </PopoverContent>
+    </Popover>
   );
 }
