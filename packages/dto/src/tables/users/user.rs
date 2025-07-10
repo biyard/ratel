@@ -42,11 +42,11 @@ pub struct User {
     #[serde(default)]
     pub username: String,
 
-    #[api_model(many_to_many = my_networks, foreign_table_name = users, foreign_primary_key = follower_id, foreign_reference_key = following_id, aggregator = count)]
+    #[api_model(many_to_many = my_networks, foreign_table_name = users, foreign_primary_key = follower_id, foreign_reference_key = following_id, aggregator = count, unique)]
     #[serde(default)]
     pub followers_count: i64,
 
-    #[api_model(many_to_many = my_networks, foreign_table_name = users, foreign_primary_key = following_id, foreign_reference_key = follower_id, aggregator = count)]
+    #[api_model(many_to_many = my_networks, foreign_table_name = users, foreign_primary_key = following_id, foreign_reference_key = follower_id, aggregator = count, unique)]
     #[serde(default)]
     pub followings_count: i64,
 
