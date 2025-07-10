@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
-import CustomCalendar from '@/components/calendar-picker/calendar-picker';
-import TimeDropdown from '@/components/time-dropdown/time-dropdown';
 import CustomCheckbox from '@/components/checkbox/custom-checkbox';
 import { Internet } from '@/components/icons';
 import { showErrorToast } from '@/lib/toast';
+import CustomCalendar from '@/components/calendar-picker';
+import TimeDropdown from '@/components/time-dropdown';
 
 export default function SetSchedulePopup({
   startedAt,

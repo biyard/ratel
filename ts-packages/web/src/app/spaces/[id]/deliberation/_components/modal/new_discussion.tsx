@@ -1,14 +1,14 @@
 'use client';
-import CustomCalendar from '@/components/calendar-picker/calendar-picker';
 import CustomCheckbox from '@/components/checkbox/custom-checkbox';
 import { Internet } from '@/components/icons';
-import TimeDropdown from '@/components/time-dropdown/time-dropdown';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { usePopup } from '@/lib/contexts/popup-service';
 import React, { useState } from 'react';
 import InviteMemberPopup from './invite_member';
 import { DiscussionInfo } from '../../types';
+import CustomCalendar from '@/components/calendar-picker';
+import TimeDropdown from '@/components/time-dropdown';
 
 export default function NewDiscussion({
   discussion,
