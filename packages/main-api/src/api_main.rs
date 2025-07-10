@@ -51,6 +51,7 @@ pub async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         Industry,
         Feed,
         FeedUser,
+        FeedShare,
         RedeemCode,
         Space,
         Survey,
