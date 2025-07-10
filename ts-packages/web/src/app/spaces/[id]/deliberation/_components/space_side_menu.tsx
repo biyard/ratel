@@ -31,7 +31,7 @@ export default function SpaceSideMenu() {
   } = useDeliberationSpaceContext();
   const space = useDeliberationSpace();
   const { teams } = useContext(TeamContext);
-  const [, setSelectedTeam] = useState<boolean>(false);
+  const [selectedTeam, setSelectedTeam] = useState<boolean>(false);
   const [startDate, setStartDateState] = useState(space.started_at);
   const [endDate, setEndDateState] = useState(space.ended_at);
 
@@ -104,7 +104,7 @@ export default function SpaceSideMenu() {
             <div className="font-bold text-white text-sm">Recommendation</div>
           </div>
 
-          {space.author.some((a) => a.id === userId) &&
+          {(space.author.some((a) => a.id === userId) || selectedTeam) &&
             status == SpaceStatus.InProgress && (
               <div
                 className={`cursor-pointer flex flex-row gap-1 items-center px-1 py-2 rounded-sm ${

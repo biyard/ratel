@@ -76,6 +76,8 @@ export { default as CircleClose } from '@/assets/icons/circle-close.svg';
 export { default as Lock } from '@/assets/icons/lock.svg';
 export { default as Unlock2 } from '@/assets/icons/unlock-2.svg';
 
+export { default as Expand } from '@/assets/icons/expand.svg';
+
 export { default as Bold1 } from '@/assets/icons/richtext/bold.svg';
 export { default as Image1 } from '@/assets/icons/richtext/image.svg';
 export { default as Italic1 } from '@/assets/icons/richtext/italic.svg';

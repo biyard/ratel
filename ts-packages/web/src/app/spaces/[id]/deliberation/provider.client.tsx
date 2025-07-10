@@ -108,10 +108,10 @@ export default function ClientProviders({
   const [isEdit, setIsEdit] = useState(false);
   const [title, setTitle] = useState(space.title ?? '');
   const [startedAt, setStartedAt] = useState(
-    changeStartedAt(space.started_at ?? Date.now()),
+    changeStartedAt(space.started_at ?? Date.now() / 1000),
   );
   const [endedAt, setEndedAt] = useState(
-    changeEndedAt(space.ended_at ?? Date.now()),
+    changeEndedAt(space.ended_at ?? Date.now() / 1000),
   );
 
   useEffect(() => {
