@@ -44,7 +44,7 @@ impl SpaceController {
         tracing::debug!("user id: {:?}", user_id);
         // tracing::debug!("user: {:?}", user);
 
-        let mut space = Space::query_builder()
+        let mut space = Space::query_builder(user_id)
             .id_equals(id)
             .discussions_builder(Discussion::query_builder())
             .comments_builder(SpaceComment::query_builder())
@@ -122,12 +122,33 @@ impl SpaceController {
         Ok(space)
     }
 
+    async fn like_space(&self, id: i64, auth: Option<Authorization>, value: bool) -> Result<Space> {
+        let user_id = extract_user_id(&self.pool, auth).await?;
+        let repo = SpaceLikeUser::get_repository(self.pool.clone());
+        if !value {
+            let space_user = SpaceLikeUser::query_builder()
+                .space_id_equals(id)
+                .user_id_equals(user_id)
+                .query()
+                .map(SpaceLikeUser::from)
+                .fetch_optional(&self.pool)
+                .await?;
+            if let Some(space_user) = space_user {
+                repo.delete(space_user.id).await?;
+            }
+        } else {
+            repo.insert(id, user_id).await?;
+        }
+
+        Ok(Space::default())
+    }
+
     async fn posting_space(&self, space_id: i64, auth: Option<Authorization>) -> Result<Space> {
         let user_id = extract_user_id(&self.pool, auth.clone())
             .await
             .unwrap_or_default();
 
-        let space = Space::query_builder()
+        let space = Space::query_builder(user_id)
             .id_equals(space_id)
             .query()
             .map(Space::from)
@@ -236,7 +257,7 @@ impl SpaceController {
             .await
             .unwrap_or_default();
 
-        let space = Space::query_builder()
+        let space = Space::query_builder(user_id)
             .id_equals(space_id)
             .query()
             .map(Space::from)
@@ -726,6 +747,7 @@ impl SpaceController {
         let feed = match body {
             SpaceByIdAction::UpdateSpace(param) => ctrl.update_space(id, auth, param).await?,
             SpaceByIdAction::PostingSpace(_) => ctrl.posting_space(id, auth).await?,
+            SpaceByIdAction::Like(req) => ctrl.like_space(id, auth, req.value).await?,
         };
 
         Ok(Json(feed))

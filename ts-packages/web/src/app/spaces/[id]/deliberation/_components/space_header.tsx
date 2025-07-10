@@ -8,7 +8,7 @@ import Image from 'next/image';
 import { Input } from '@/components/ui/input';
 import { SpaceStatus } from '@/lib/api/models/spaces';
 import { ArrowLeft, Play, Save } from 'lucide-react';
-import { Edit1, Unlock2, Lock, Expand } from '@/components/icons';
+import { Edit1, Unlock2, Lock, Expand, ThumbUp } from '@/components/icons';
 import { TeamContext } from '@/lib/contexts/team-context';
 import { useUserInfo } from '@/app/(social)/_hooks/user';
 import { showInfoToast } from '@/lib/toast';
@@ -22,12 +22,14 @@ export interface SpaceHeaderProps {
   proposerName: string;
   createdAt: number;
   authorId: number;
-
+  likes: number;
+  isLiked?: boolean;
   isEdit?: boolean;
   onback: () => void;
   onsave: () => void;
   onedit: () => void;
   onpost: () => void;
+  onlike: () => void;
   setTitle?: (title: string) => void;
 }
 
@@ -39,8 +41,11 @@ export default function SpaceHeader({
   proposerName,
   createdAt,
   authorId,
+  likes,
+  isLiked = false,
   isEdit = false,
   setTitle = () => {},
+  onlike = () => {},
   onback = () => {},
   onsave = () => {},
   onedit = () => {},
@@ -110,17 +115,36 @@ export default function SpaceHeader({
           {status == SpaceStatus.InProgress ? <Onboard /> : <></>}
         </div>
 
-        {status == SpaceStatus.InProgress ? (
-          <div className="flex flex-row w-fit gap-1 items-center">
-            <Unlock2 className="w-5 h-5" />
-            <div className="font-normal text-white text-[15px]">Public</div>
+        <div className="flex flex-row w-fit gap-5">
+          <div
+            className="cursor-pointer flex flex-row w-fit gap-1 items-center"
+            onClick={onlike}
+          >
+            <ThumbUp
+              width={20}
+              height={20}
+              className={
+                isLiked
+                  ? '[&>path]:fill-primary [&>path]:stroke-primary'
+                  : undefined
+              }
+            />
+            <div className="font-medium text-[15px] text-white">
+              {likes ?? 0}
+            </div>
           </div>
-        ) : (
-          <div className="flex flex-row w-fit gap-1 items-center">
-            <Lock className="w-5 h-5" />
-            <div className="font-normal text-white text-[15px]">Private</div>
-          </div>
-        )}
+          {status == SpaceStatus.InProgress ? (
+            <div className="flex flex-row w-fit gap-1 items-center">
+              <Unlock2 className="w-5 h-5" />
+              <div className="font-normal text-white text-[15px]">Public</div>
+            </div>
+          ) : (
+            <div className="flex flex-row w-fit gap-1 items-center">
+              <Lock className="w-5 h-5" />
+              <div className="font-normal text-white text-[15px]">Private</div>
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="w-full">

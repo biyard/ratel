@@ -79,6 +79,7 @@ type ContextType = {
   createdAt: number;
   status: SpaceStatus;
 
+  handleLike: () => void;
   handleSetAnswers: (answers: Answer[]) => void;
   handleSetStartDate: (startDate: number) => void;
   handleSetEndDate: (endDate: number) => void;
@@ -179,6 +180,26 @@ export default function ClientProviders({
   );
 
   const router = useRouter();
+
+  const handleLike = async () => {
+    const space_id = space.id;
+    const value = !space.is_liked;
+    try {
+      const res = await post(ratelApi.spaces.likeSpace(space_id), {
+        like: {
+          value,
+        },
+      });
+      if (res) {
+        data.refetch();
+      }
+    } catch (error) {
+      logger.error('Failed to like user with error: ', error);
+      showErrorToast(
+        'Unable to register your like at this time. Please try again later.',
+      );
+    }
+  };
 
   const handleGoBack = () => {
     if (isEdit) {
@@ -459,6 +480,7 @@ export default function ClientProviders({
         handlePostingSpace,
         handleEdit,
         handleSave,
+        handleLike,
         handleViewRecord,
       }}
     >
