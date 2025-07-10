@@ -9,10 +9,12 @@ import { usePopup } from '@/lib/contexts/popup-service';
 import CheckPopup from './check_popup';
 import { SpaceStatus } from '@/lib/api/models/spaces';
 import { logger } from '@/lib/logger';
+import Image from 'next/image';
 
 interface Question {
   title: string;
   answer_type: Answer['answer_type'];
+  image_url?: string;
   options?: string[];
 }
 
@@ -132,6 +134,17 @@ export default function SurveyViewer({
                     </div>
                     <div>{q.title}</div>
                   </div>
+                  {q.image_url ? (
+                    <Image
+                      width={300}
+                      height={300}
+                      className="object-contain max-w-75"
+                      src={q.image_url}
+                      alt={q.title || 'Question Title'}
+                    />
+                  ) : (
+                    <></>
+                  )}
                   <div className="flex flex-col gap-2">
                     {q.options?.map((opt, idx) => {
                       const isChecked =
