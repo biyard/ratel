@@ -4,7 +4,7 @@ use validator::Validate;
 use crate::*;
 
 #[derive(Validate)]
-#[api_model(base = "/v1/feeds", table = feeds,  action_by_id = [delete, publish, like(value = bool)])]
+#[api_model(base = "/v1/feeds", table = feeds,  action_by_id = [delete, publish, like(value = bool), unrepost])]
 pub struct Feed {
     #[api_model(summary, primary_key)]
     pub id: i64,
@@ -51,7 +51,7 @@ pub struct Feed {
     #[api_model(summary, one_to_many = spaces, foreign_key = feed_id)]
     pub spaces: Vec<Space>,
 
-    #[api_model(summary, many_to_many = feed_users, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = feed_id, aggregator = count, unique)]
+    #[api_model(summary, many_to_many = feed_users, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = feed_id, aggregator = count)]
     pub likes: i64,
 
     #[api_model(summary, many_to_many = feed_users, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = feed_id, aggregator = exist)]
@@ -69,8 +69,7 @@ pub struct Feed {
     #[api_model(version = v0.1, summary)]
     #[serde(default)]
     pub rewards: i64,
-    #[api_model(version = v0.1, summary)]
-    #[serde(default)]
+    #[api_model(summary, many_to_many = feed_shares, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = feed_id, aggregator = count)]
     pub shares: i64,
 
     #[api_model(version = v0.1, summary, type = INTEGER, queryable)]
