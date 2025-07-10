@@ -4,6 +4,8 @@ use teloxide::{
     types::{InlineKeyboardButton, InlineKeyboardMarkup, MessageEntityKind},
 };
 
+use crate::config;
+
 // pub  async fn set_command(bot: Bot) {
 //     let command_ko = vec![
 //         BotCommand::new("help", "도움말"),
@@ -37,12 +39,19 @@ pub async fn telegram_handler(
     pool: PgPool,
 ) -> std::result::Result<(), teloxide::RequestError> {
     tracing::debug!("Received message: {:?}", msg);
+
+    let conf = config::get();
+
     let me = bot.get_me().await?;
     let bot_username = me.user.username.as_deref().unwrap_or_default();
     let chat_id = msg.chat.id;
     let lang = msg.from.clone().and_then(|user| user.language_code);
 
-    if let Some(_) = msg.new_chat_members() {
+    if let Some(new_members) = msg.new_chat_members() {
+        if new_members.iter().any(|user| user.id == me.user.id) {
+            tracing::debug!("Bot itself joined the chat, skipping subscription.");
+            return Ok(());
+        }
         let res = TelegramSubscribe::get_repository(pool.clone())
             .insert(chat_id.0, lang.clone())
             .await;
@@ -163,13 +172,16 @@ pub async fn telegram_handler(
     if let Some(entities) = msg.entities() {
         for entity in entities {
             if let MessageEntityKind::Mention = entity.kind {
-                let mention_text =
-                    &msg.text().unwrap_or_default()[entity.offset..(entity.offset + entity.length)];
+                let text = msg.text().unwrap_or_default();
+                let mention_text = text
+                    .chars()
+                    .skip(entity.offset)
+                    .take(entity.length)
+                    .collect::<String>();
+
                 if mention_text == format!("@{}", bot_username) {
                     tracing::debug!("Bot was mentioned in the message");
-                    let url = "https://t.me/crypto_ratel_bot/spaces?startapp"
-                        .parse()
-                        .unwrap();
+                    let url = conf.telegram_mini_app_uri.parse().unwrap();
                     let text = match lang.as_deref() {
                         Some("ko") => ("🧩 미니앱 실행", "여기를 눌러 미니앱을 실행하세요 🧩"),
                         _ => ("🧩 Start Mini App", "Click here to run the mini app 🧩"),
