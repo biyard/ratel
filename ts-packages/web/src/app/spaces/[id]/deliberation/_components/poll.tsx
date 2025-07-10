@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import SpaceHeader from '../../_components/space_header';
 import SpaceSurvey from './space_survey';
 import { Question } from '@/lib/api/models/survey';
 import { AnswerType } from './question/answer_type_select';
@@ -12,19 +11,12 @@ import SpaceSideMenu from './space_side_menu';
 export default function PollPage() {
   const {
     isEdit,
-    title,
-    setTitle,
     startedAt: startDate,
     endedAt: endDate,
     survey,
     setSurvey,
     answer,
     status,
-    userType,
-    proposerImage,
-    proposerName,
-    createdAt,
-    handleGoBack,
     handleSetAnswers: setAnswers,
     handleSetEndDate: setEndDate,
     handleSetStartDate: setStartDate,

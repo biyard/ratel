@@ -50,7 +50,6 @@ export default function TimeDropdown({
     }
 
     const old = new Date(value);
-
     const newDate = new Date(
       old.getFullYear(),
       old.getMonth(),
@@ -65,7 +64,7 @@ export default function TimeDropdown({
   };
 
   return (
-    <div className="relative w-fit">
+    <div className="relative w-[150px]">
       <button
         className="flex justify-between items-center w-full border border-c-wg-70 rounded-lg px-[20px] py-[10.5px] font-medium text-neutral-600 text-[15px]/[22.5px] text-left shadow-sm focus:outline-none gap-[10px]"
         onClick={() => setTimeDropdownOpen(!timeDropdownOpen)}
@@ -75,7 +74,7 @@ export default function TimeDropdown({
       </button>
 
       {timeDropdownOpen && (
-        <div className="absolute z-10 mt-1 w-full rounded-md shadow-lg bg-white max-h-60 overflow-auto border border-gray-200 text-black">
+        <div className="absolute top-full left-0 z-[999] mt-1 w-full rounded-md shadow-lg bg-white max-h-60 overflow-auto border border-gray-200 text-black">
           {timeOptions.map((time) => (
             <div
               key={time}

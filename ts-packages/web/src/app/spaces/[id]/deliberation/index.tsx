@@ -8,10 +8,14 @@ import PollPage from './_components/poll';
 import FinalConsensusPage from './_components/final_consensus';
 
 import ClientProviders, {
+  useDeliberationSpace,
   useDeliberationSpaceContext,
 } from './provider.client';
 import { DeliberationTab } from './types';
 import AnalyzePage from './_components/analyze';
+import SpaceHeader from './_components/space_header';
+import { usePopup } from '@/lib/contexts/popup-service';
+import GoPublicPopup from './_components/modal/go_public';
 
 export default function DeliberationSpacePage() {
   return (
@@ -22,7 +26,39 @@ export default function DeliberationSpacePage() {
 }
 
 function Page() {
-  const { selectedType } = useDeliberationSpaceContext();
+  const popup = usePopup();
+  const space = useDeliberationSpace();
+  const {
+    selectedType,
+    isEdit,
+    title,
+    status,
+    userType,
+    proposerImage,
+    proposerName,
+    createdAt,
+    handleGoBack,
+    handleSave,
+    handleEdit,
+    handlePostingSpace,
+    setTitle,
+  } = useDeliberationSpaceContext();
+
+  const handlePost = () => {
+    popup
+      .open(
+        <GoPublicPopup
+          onclose={() => {
+            popup.close();
+          }}
+          onpublic={async () => {
+            await handlePostingSpace();
+            popup.close();
+          }}
+        />,
+      )
+      .withoutBackdropClose();
+  };
 
   return (
     <div className="flex flex-row w-full h-full gap-5">

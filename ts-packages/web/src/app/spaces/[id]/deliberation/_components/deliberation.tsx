@@ -3,7 +3,6 @@
 // import CalendarPicker from '@/components/calendar-picker/calendar-picker';
 // import TimeDropdown from '@/components/time-dropdown/time-dropdown';
 import React from 'react';
-import SpaceHeader from '../../_components/space_header';
 import { DiscussionInfo } from '../types';
 import SpaceDiscussion from './space_discussion';
 import SpaceElearning from './space_elearning';
@@ -15,20 +14,8 @@ import {
 import SpaceSideMenu from './space_side_menu';
 
 export default function DeliberationPage() {
-  const {
-    isEdit,
-    title,
-    setTitle,
-    deliberation,
-    setDeliberation,
-    handleViewRecord,
-    handleGoBack,
-    status,
-    proposerImage,
-    proposerName,
-    createdAt,
-    userType,
-  } = useDeliberationSpaceContext();
+  const { isEdit, deliberation, setDeliberation, handleViewRecord, status } =
+    useDeliberationSpaceContext();
   const discussions = useDeliberationSpace().discussions;
 
   return (

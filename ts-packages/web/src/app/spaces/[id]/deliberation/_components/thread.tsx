@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import SpaceHeader from '../../_components/space_header';
 import SpaceContents from '../../_components/space_contents';
 import SpaceFiles from './space_files';
 import { FileInfo } from '@/lib/api/models/feeds';
@@ -9,24 +8,12 @@ import { useDeliberationSpaceContext } from '../provider.client';
 import SpaceSideMenu from './space_side_menu';
 
 export default function ThreadPage() {
-  const {
-    isEdit,
-    title,
-    setTitle,
-    thread,
-    setThread,
-    handleGoBack,
-    userType,
-    proposerImage,
-    proposerName,
-    createdAt,
-    status,
-  } = useDeliberationSpaceContext();
+  const { isEdit, thread, setThread } = useDeliberationSpaceContext();
 
   return (
     <div className="flex flex-row w-full gap-5">
       <div className="flex flex-col w-full">
-        <SpaceHeader
+        {/* <SpaceHeader
           isEdit={isEdit}
           title={title}
           status={status}

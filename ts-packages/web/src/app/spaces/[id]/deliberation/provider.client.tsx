@@ -115,11 +115,21 @@ export default function ClientProviders({
   const [isSave, setIsSave] = useState(false);
 
   const [startedAt, setStartedAt] = useState(
-    changeStartedAt(Math.floor(space.started_at ?? Date.now() / 1000)),
+    changeStartedAt(space.started_at ?? Date.now()),
   );
   const [endedAt, setEndedAt] = useState(
-    changeEndedAt(Math.floor(space.ended_at ?? Date.now() / 1000)),
+    changeEndedAt(space.ended_at ?? Date.now()),
   );
+
+  useEffect(() => {
+    if (space.started_at) {
+      setStartedAt(changeStartedAt(space.started_at));
+    }
+    if (space.ended_at) {
+      setEndedAt(changeEndedAt(space.ended_at));
+    }
+  }, [space.started_at, space.ended_at]);
+
   const [thread, setThread] = useState<Thread>({
     html_contents: space.html_contents ?? '',
     files: space.files ?? [],
@@ -382,6 +392,12 @@ export default function ClientProviders({
     logger.debug('discussions: ', discussions);
     logger.debug('surveys', survey.surveys);
 
+    const surveys = survey.surveys.map((survey) => ({
+      started_at: startedAt,
+      ended_at: endedAt,
+      questions: survey.questions,
+    }));
+
     try {
       await handleUpdate(
         title,
@@ -391,7 +407,7 @@ export default function ClientProviders({
         thread.files,
         discussions,
         deliberation.elearnings,
-        survey.surveys,
+        surveys,
         draft.drafts,
       );
 
@@ -500,14 +516,14 @@ function mapResponses(
 
 function changeStartedAt(timestamp: number) {
   const date = new Date(timestamp * 1000);
-  date.setUTCHours(0, 0, 0, 0);
+  // date.setUTCHours(0, 0, 0, 0);
   const newDate = Math.floor(date.getTime() / 1000);
   return newDate;
 }
 
 function changeEndedAt(timestamp: number) {
   const date = new Date(timestamp * 1000);
-  date.setUTCHours(23, 59, 59, 0);
+  // date.setUTCHours(23, 59, 59, 0);
   const newDate = Math.floor(date.getTime() / 1000);
   return newDate;
 }

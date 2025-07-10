@@ -102,6 +102,15 @@ article#advocacy-campaign-details > p {
   z-index: 50;
 }
 
+.tiptap [contenteditable='true']:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.ProseMirror:focus {
+  outline: none;
+}
+
 @media (max-width: 1024px) {
   article#advocacy-campaign-details > p {
     font-size: 14px;

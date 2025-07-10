@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import SpaceHeader from '../../_components/space_header';
 import SpaceContents from '../../_components/space_contents';
 import SpaceFiles from './space_files';
 import { FileInfo } from '@/lib/api/models/feeds';
@@ -9,19 +8,7 @@ import { useDeliberationSpaceContext } from '../provider.client';
 import SpaceSideMenu from './space_side_menu';
 
 export default function FinalConsensusPage() {
-  const {
-    draft,
-    setDraft,
-    isEdit,
-    title,
-    setTitle,
-    status,
-    userType,
-    proposerImage,
-    proposerName,
-    createdAt,
-    handleGoBack: onback,
-  } = useDeliberationSpaceContext();
+  const { draft, setDraft, isEdit } = useDeliberationSpaceContext();
 
   const contents =
     draft.drafts && draft.drafts.length != 0
