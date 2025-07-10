@@ -13,7 +13,7 @@ use teloxide::{
     types::{ChatId, InlineKeyboardButton, InlineKeyboardMarkup, ParseMode},
 };
 
-use crate::AppState;
+use crate::{AppState, config};
 
 pub async fn notify_handler(
     State(state): State<Arc<AppState>>,
@@ -57,7 +57,6 @@ pub async fn notify_handler(
         .collect()
         .await;
 
-    // 결과 통계
     let (success_count, error_count) =
         results
             .iter()
@@ -76,8 +75,10 @@ pub async fn notify_handler(
 }
 
 fn format_timestamp(timestamp: i64) -> String {
-    let dt = Utc.timestamp_opt(timestamp, 0).unwrap();
-    dt.format("%Y-%m-%d %H:%M:%S").to_string()
+    match Utc.timestamp_opt(timestamp, 0).single() {
+        Some(dt) => dt.format("%Y-%m-%d %H:%M:%S").to_string(),
+        None => "Invalid timestamp".to_string(),
+    }
 }
 
 #[derive(Clone)]
@@ -150,14 +151,21 @@ fn prepare_templates(payload: &TelegramNotificationPayload) -> MessageTemplates 
 }
 
 fn prepare_keyboards(payload: &TelegramNotificationPayload) -> MessageKeyboards {
+    let url: dto::reqwest::Url = match payload.url.parse() {
+        Ok(url) => url,
+        Err(e) => {
+            tracing::error!("Invalid URL: {}", e);
+            config::get().telegram_mini_app_uri.parse().unwrap()
+        }
+    };
     let keyboard = InlineKeyboardMarkup::new(vec![vec![InlineKeyboardButton::url(
         "🔗 Participate Now!".to_string(),
-        payload.url.parse().unwrap(),
+        url.clone(),
     )]]);
 
     let keyboard_ko = InlineKeyboardMarkup::new(vec![vec![InlineKeyboardButton::url(
         "🔗 지금 참여하기!".to_string(),
-        payload.url.parse().unwrap(),
+        url,
     )]]);
 
     MessageKeyboards {
