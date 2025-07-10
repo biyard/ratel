@@ -24,38 +24,10 @@ export default function SetSchedulePopup({
     { label: 'Poll', start: startedAt * 1000, end: endedAt * 1000 },
   ]);
 
-  const [calendarStates, setCalendarStates] = useState(
-    sessions.map(() => ({ start: false, end: false })),
-  );
-
-  const [dropdownStates, setDropdownStates] = useState(
-    sessions.map(() => ({ start: false, end: false })),
-  );
-
   const handleChange = (index: number, key: 'start' | 'end', value: number) => {
     const updated = [...sessions];
     updated[index][key] = value;
     setSessions(updated);
-  };
-
-  const setCalendarOpenAt = (
-    index: number,
-    key: 'start' | 'end',
-    open: boolean,
-  ) => {
-    const updated = [...calendarStates];
-    updated[index][key] = open;
-    setCalendarStates(updated);
-  };
-
-  const setDropdownOpenAt = (
-    index: number,
-    key: 'start' | 'end',
-    open: boolean,
-  ) => {
-    const updated = [...dropdownStates];
-    updated[index][key] = open;
-    setDropdownStates(updated);
   };
 
   const handleConfirm = () => {
@@ -85,28 +57,14 @@ export default function SetSchedulePopup({
           <div className="flex flex-row gap-2.5 items-center">
             <CalendarDropdown
               value={session.start}
-              calendarOpen={calendarStates[index].start}
-              setCalendarOpen={(v) => {
-                setCalendarOpenAt(index, 'start', v);
-                setDropdownOpenAt(index, 'start', false);
-              }}
               onChange={(v) => {
                 handleChange(index, 'start', Math.floor(v));
-                setCalendarOpenAt(index, 'start', false);
-                setDropdownOpenAt(index, 'start', false);
               }}
             />
             <TimeDropdown
               value={session.start}
-              timeDropdownOpen={dropdownStates[index].start}
-              setTimeDropdownOpen={(v) => {
-                setDropdownOpenAt(index, 'start', v);
-                setCalendarOpenAt(index, 'start', false);
-              }}
               onChange={(v) => {
                 handleChange(index, 'start', Math.floor(v));
-                setDropdownOpenAt(index, 'start', false);
-                setCalendarOpenAt(index, 'start', false);
               }}
             />
 
@@ -114,28 +72,14 @@ export default function SetSchedulePopup({
 
             <CalendarDropdown
               value={session.end}
-              calendarOpen={calendarStates[index].end}
-              setCalendarOpen={(v) => {
-                setCalendarOpenAt(index, 'end', v);
-                setDropdownOpenAt(index, 'end', false);
-              }}
               onChange={(v) => {
                 handleChange(index, 'end', Math.floor(v));
-                setCalendarOpenAt(index, 'end', false);
-                setDropdownOpenAt(index, 'end', false);
               }}
             />
             <TimeDropdown
               value={session.end}
-              timeDropdownOpen={dropdownStates[index].end}
-              setTimeDropdownOpen={(v) => {
-                setDropdownOpenAt(index, 'end', v);
-                setCalendarOpenAt(index, 'end', false);
-              }}
               onChange={(v) => {
                 handleChange(index, 'end', Math.floor(v));
-                setDropdownOpenAt(index, 'end', false);
-                setCalendarOpenAt(index, 'end', false);
               }}
             />
 
