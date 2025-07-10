@@ -1,14 +1,14 @@
 'use client';
-import CustomCalendar from '@/components/calendar-picker/calendar-picker';
 import CustomCheckbox from '@/components/checkbox/custom-checkbox';
 import { Internet } from '@/components/icons';
-import TimeDropdown from '@/components/time-dropdown/time-dropdown';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { usePopup } from '@/lib/contexts/popup-service';
 import React, { useState } from 'react';
 import InviteMemberPopup from './invite_member';
 import { DiscussionInfo } from '../../types';
+import TimeDropdown from '@/components/time-dropdown';
+import CalendarDropdown from '@/components/calendar-dropdown';
 
 export default function NewDiscussion({
   discussion,
@@ -24,13 +24,6 @@ export default function NewDiscussion({
 
   const [startTime, setStartTime] = useState<number>(discussion.started_at);
   const [endTime, setEndTime] = useState<number>(discussion.ended_at);
-  const [startTimeDropdownOpen, setStartTimeDropdownOpen] =
-    useState<boolean>(false);
-  const [endTimeDropdownOpen, setEndTimeDropdownOpen] =
-    useState<boolean>(false);
-  const [startCalendarOpen, setStartCalendarOpen] = useState<boolean>(false);
-  const [endCalendarOpen, setEndCalendarOpen] = useState<boolean>(false);
-
   return (
     <div className="max-w-[900px] w-full">
       <div className="flex flex-col py-2.5 gap-[5px]">
@@ -70,57 +63,33 @@ export default function NewDiscussion({
           Date <span className="text-error">*</span>
         </label>
         <div className="flex flex-row gap-2.5 items-center">
-          <CustomCalendar
+          <CalendarDropdown
             value={startTime}
-            calendarOpen={startCalendarOpen}
-            setCalendarOpen={(value: boolean) => {
-              setStartCalendarOpen(value);
-              setStartTimeDropdownOpen(false);
-            }}
             onChange={(date) => {
               const newStart = Math.floor(date);
               setStartTime(newStart);
-              setStartCalendarOpen(false);
             }}
           />
           <TimeDropdown
             value={startTime}
-            timeDropdownOpen={startTimeDropdownOpen}
-            setTimeDropdownOpen={(value: boolean) => {
-              setStartTimeDropdownOpen(value);
-              setStartCalendarOpen(false);
-            }}
             onChange={(timestamp) => {
               const newStart = Math.floor(timestamp);
               setStartTime(newStart);
-              setStartTimeDropdownOpen(false);
             }}
           />
           <div className="w-[15px] h-0.25 bg-neutral-600" />
-          <CustomCalendar
+          <CalendarDropdown
             value={endTime}
-            calendarOpen={endCalendarOpen}
-            setCalendarOpen={(value: boolean) => {
-              setEndCalendarOpen(value);
-              setEndTimeDropdownOpen(false);
-            }}
             onChange={(date) => {
               const newEnd = Math.floor(date);
               setEndTime(newEnd);
-              setEndCalendarOpen(false);
             }}
           />
           <TimeDropdown
             value={endTime}
-            timeDropdownOpen={endTimeDropdownOpen}
-            setTimeDropdownOpen={(value: boolean) => {
-              setEndTimeDropdownOpen(value);
-              setEndCalendarOpen(false);
-            }}
             onChange={(timestamp) => {
               const newEnd = Math.floor(timestamp);
               setEndTime(newEnd);
-              setEndTimeDropdownOpen(false);
             }}
           />
           <div className="flex flex-row items-center w-fit border border-c-wg-70 rounded-lg px-5 py-[10.5px] gap-2.5">
