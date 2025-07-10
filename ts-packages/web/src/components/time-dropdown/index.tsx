@@ -2,6 +2,11 @@
 
 import { Clock } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+} from '@radix-ui/react-dropdown-menu';
 
 interface TimeDropdownProps {
   value: number;
@@ -64,30 +69,31 @@ export default function TimeDropdown({
   };
 
   return (
-    <div className="relative w-[150px]">
-      <button
-        className="flex justify-between items-center w-full border border-c-wg-70 rounded-lg px-[20px] py-[10.5px] font-medium text-neutral-600 text-[15px]/[22.5px] text-left shadow-sm focus:outline-none gap-[10px]"
-        onClick={() => setTimeDropdownOpen(!timeDropdownOpen)}
-      >
-        {selectedTime}
-        <Clock className="w-5 h-5 stroke-neutral-500" />
-      </button>
+    <DropdownMenu open={timeDropdownOpen} onOpenChange={setTimeDropdownOpen}>
+      <DropdownMenuTrigger asChild>
+        <button className="flex justify-between items-center w-[150px] border border-c-wg-70 rounded-lg px-[20px] py-[10.5px] font-medium text-neutral-600 text-[15px]/[22.5px] text-left shadow-sm focus:outline-none gap-[10px]">
+          {selectedTime}
+          <Clock className="w-5 h-5 stroke-neutral-500" />
+        </button>
+      </DropdownMenuTrigger>
 
-      {timeDropdownOpen && (
-        <div className="absolute top-full left-0 z-[999] mt-1 w-full rounded-md shadow-lg bg-white max-h-60 overflow-auto border border-gray-200 text-black">
-          {timeOptions.map((time) => (
-            <div
-              key={time}
-              className={`px-4 py-2 cursor-pointer text-sm hover:bg-gray-100 ${
-                time === selectedTime ? 'font-bold' : ''
-              }`}
-              onClick={() => handleSelect(time)}
-            >
-              {time}
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
+      <DropdownMenuContent
+        className="mt-1 w-[150px] rounded-md shadow-lg bg-white max-h-60 overflow-auto border border-gray-200"
+        align="start"
+        sideOffset={4}
+      >
+        {timeOptions.map((time) => (
+          <div
+            key={time}
+            onClick={() => handleSelect(time)}
+            className={`px-4 py-2 cursor-pointer text-sm text-black hover:bg-gray-100 ${
+              time === selectedTime ? 'font-bold' : ''
+            }`}
+          >
+            {time}
+          </div>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
