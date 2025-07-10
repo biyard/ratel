@@ -143,6 +143,25 @@ impl SpaceController {
         Ok(Space::default())
     }
 
+    async fn share_space(&self, id: i64, auth: Option<Authorization>) -> Result<Space> {
+        let user_id = extract_user_id(&self.pool, auth).await?;
+        let repo = SpaceShareUser::get_repository(self.pool.clone());
+
+        let space_user = SpaceShareUser::query_builder()
+            .space_id_equals(id)
+            .user_id_equals(user_id)
+            .query()
+            .map(SpaceShareUser::from)
+            .fetch_optional(&self.pool)
+            .await?;
+
+        if space_user.is_none() {
+            repo.insert(id, user_id).await?;
+        }
+
+        Ok(Space::default())
+    }
+
     async fn posting_space(&self, space_id: i64, auth: Option<Authorization>) -> Result<Space> {
         let user_id = extract_user_id(&self.pool, auth.clone())
             .await
@@ -748,6 +767,7 @@ impl SpaceController {
             SpaceByIdAction::UpdateSpace(param) => ctrl.update_space(id, auth, param).await?,
             SpaceByIdAction::PostingSpace(_) => ctrl.posting_space(id, auth).await?,
             SpaceByIdAction::Like(req) => ctrl.like_space(id, auth, req.value).await?,
+            SpaceByIdAction::Share(_) => ctrl.share_space(id, auth).await?,
         };
 
         Ok(Json(feed))

@@ -44,6 +44,7 @@ function Page() {
     handleSave,
     handleEdit,
     handleLike,
+    handleShare,
     handlePostingSpace,
     setTitle,
   } = useDeliberationSpaceContext();
@@ -97,12 +98,14 @@ function Page() {
           createdAt={createdAt}
           authorId={space?.author[0].id}
           likes={space?.likes}
+          shares={space?.shares}
           isLiked={space?.is_liked}
           onback={handleGoBack}
           onsave={handleSave}
           onedit={handleEdit}
           onpost={handlePost}
           onlike={handleLike}
+          onshare={handleShare}
           setTitle={setTitle}
         />
       </div>

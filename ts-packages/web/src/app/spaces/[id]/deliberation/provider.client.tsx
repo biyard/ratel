@@ -30,7 +30,7 @@ import {
   surveyResponseCreateRequest,
 } from '@/lib/api/models/response';
 import { useApiCall } from '@/lib/api/use-send';
-import { showErrorToast, showSuccessToast } from '@/lib/toast';
+import { showErrorToast, showInfoToast, showSuccessToast } from '@/lib/toast';
 import { checkString } from '@/lib/string-filter-utils';
 import { FileInfo } from '@/lib/api/models/feeds';
 import { DiscussionCreateRequest } from '@/lib/api/models/discussion';
@@ -80,6 +80,7 @@ type ContextType = {
   status: SpaceStatus;
 
   handleLike: () => void;
+  handleShare: () => void;
   handleSetAnswers: (answers: Answer[]) => void;
   handleSetStartDate: (startDate: number) => void;
   handleSetEndDate: (endDate: number) => void;
@@ -180,6 +181,26 @@ export default function ClientProviders({
   );
 
   const router = useRouter();
+
+  const handleShare = async () => {
+    const space_id = space.id;
+    navigator.clipboard.writeText(window.location.href).then(async () => {
+      try {
+        const res = await post(ratelApi.spaces.shareSpace(space_id), {
+          share: {},
+        });
+        if (res) {
+          showInfoToast('The space URL has been copied to your clipboard.');
+          data.refetch();
+        }
+      } catch (error) {
+        logger.error('Failed to share space with error: ', error);
+        showErrorToast(
+          'Unable to share space at this time. Please try again later.',
+        );
+      }
+    });
+  };
 
   const handleLike = async () => {
     const space_id = space.id;
@@ -481,6 +502,7 @@ export default function ClientProviders({
         handleEdit,
         handleSave,
         handleLike,
+        handleShare,
         handleViewRecord,
       }}
     >
