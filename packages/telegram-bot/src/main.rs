@@ -96,9 +96,18 @@ async fn main() {
         .build();
     let teloxide_dispatcher = binding.dispatch();
 
-    let (_, axum_result) = tokio::join!(teloxide_dispatcher, axum_server);
-
-    if let Err(e) = axum_result {
-        tracing::error!("Axum server has failed: {}", e);
+    tokio::select! {
+        result = teloxide_dispatcher => {
+            tracing::info!("Teloxide dispatcher finished: {:?}", result);
+        }
+        result = axum_server => {
+            if let Err(e) = result {
+                tracing::error!("Axum server has failed: {}", e);
+            } else {
+                tracing::info!("Axum server finished successfully");
+            }
+        }
     }
+
+    tracing::info!("Application shutting down...");
 }
