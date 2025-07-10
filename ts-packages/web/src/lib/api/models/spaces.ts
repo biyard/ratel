@@ -34,6 +34,7 @@ export interface Space {
   drafts: SpaceDraft[];
 
   likes: number;
+  shares: number;
   is_liked: boolean;
 }
 

@@ -78,6 +78,7 @@ export { default as Unlock2 } from '@/assets/icons/unlock-2.svg';
 
 export { default as Expand } from '@/assets/icons/expand.svg';
 export { default as Image2 } from '@/assets/icons/image.svg';
+export { default as Share2 } from '@/assets/icons/share-2.svg';
 
 export { default as Bold1 } from '@/assets/icons/richtext/bold.svg';
 export { default as Image1 } from '@/assets/icons/richtext/image.svg';

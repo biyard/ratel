@@ -8,10 +8,16 @@ import Image from 'next/image';
 import { Input } from '@/components/ui/input';
 import { SpaceStatus } from '@/lib/api/models/spaces';
 import { ArrowLeft, Play, Save } from 'lucide-react';
-import { Edit1, Unlock2, Lock, Expand, ThumbUp } from '@/components/icons';
+import {
+  Edit1,
+  Unlock2,
+  Lock,
+  Expand,
+  ThumbUp,
+  Share2,
+} from '@/components/icons';
 import { TeamContext } from '@/lib/contexts/team-context';
 import { useUserInfo } from '@/app/(social)/_hooks/user';
-import { showInfoToast } from '@/lib/toast';
 import { getTimeAgo } from '@/lib/time-utils';
 
 export interface SpaceHeaderProps {
@@ -23,6 +29,7 @@ export interface SpaceHeaderProps {
   createdAt: number;
   authorId: number;
   likes: number;
+  shares: number;
   isLiked?: boolean;
   isEdit?: boolean;
   onback: () => void;
@@ -30,6 +37,7 @@ export interface SpaceHeaderProps {
   onedit: () => void;
   onpost: () => void;
   onlike: () => void;
+  onshare: () => void;
   setTitle?: (title: string) => void;
 }
 
@@ -42,10 +50,12 @@ export default function SpaceHeader({
   createdAt,
   authorId,
   likes,
+  shares,
   isLiked = false,
   isEdit = false,
   setTitle = () => {},
   onlike = () => {},
+  onshare = () => {},
   onback = () => {},
   onsave = () => {},
   onedit = () => {},
@@ -133,6 +143,17 @@ export default function SpaceHeader({
               {likes ?? 0}
             </div>
           </div>
+
+          <div
+            className="cursor-pointer flex flex-row w-fit gap-1 items-center"
+            onClick={onshare}
+          >
+            <Share2 width={20} height={20} />
+            <div className="font-medium text-[15px] text-white">
+              {shares ?? 0}
+            </div>
+          </div>
+
           {status == SpaceStatus.InProgress ? (
             <div className="flex flex-row w-fit gap-1 items-center">
               <Unlock2 className="w-5 h-5" />
@@ -166,11 +187,7 @@ export default function SpaceHeader({
             <div
               className="cursor-pointer w-fit h-fit"
               onClick={() => {
-                navigator.clipboard.writeText(window.location.href).then(() => {
-                  showInfoToast(
-                    'The space URL has been copied to your clipboard.',
-                  );
-                });
+                onshare();
               }}
             >
               <Expand />

@@ -8,6 +8,7 @@ mod onboards;
 mod redeem_codes;
 mod space_badges;
 mod space_like_users;
+mod space_share_users;
 mod space_users;
 mod team_members;
 mod user_badges;
@@ -19,6 +20,7 @@ pub use feed_users::*;
 pub use group_member::*;
 pub use my_networks::*;
 pub use space_like_users::*;
+pub use space_share_users::*;
 pub use space_users::*;
 pub use team_members::*;
 

@@ -54,6 +54,7 @@ pub async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         RedeemCode,
         Space,
         SpaceLikeUser,
+        SpaceShareUser,
         Survey,
         SurveyResponse,
         SpaceDraft,
