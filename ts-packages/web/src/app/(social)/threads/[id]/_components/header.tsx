@@ -1,8 +1,8 @@
 'use client';
 
 import { useFeedByID } from '@/app/(social)/_hooks/feed';
-import { ArrowLeft, Palace } from '@/components/icons';
-import { Palette } from 'lucide-react'
+import { ArrowLeft } from '@/components/icons';
+import { Palette } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { UserType } from '@/lib/api/models/user';
@@ -71,12 +71,21 @@ export default function Header({ post_id }: { post_id: number }) {
         </div>
         {space_id ? (
           <Link href={target ?? ''}>
-            <Button className='bg-[#fcb300] hover:bg-white' variant="rounded_secondary">Join Space</Button>
+            <Button
+              className="bg-[#fcb300] hover:bg-white"
+              variant="rounded_secondary"
+            >
+              Join Space
+            </Button>
           </Link>
         ) : author_id == user_id || selectedTeam ? (
-          <Button className='bg-[#fcb300] hover:bg-white' variant="rounded_secondary" onClick={handleCreateSpace}>
+          <Button
+            className="bg-[#fcb300] hover:bg-white"
+            variant="rounded_secondary"
+            onClick={handleCreateSpace}
+          >
             {/* <Palace className="w-8 h-8 font-bold" /> */}
-            <Palette className="w-4 h-4 -mr-2" />
+            <Palette className="w-4 h-4 -mr-1.5" />
             Create Space
           </Button>
         ) : (
