@@ -8,9 +8,11 @@ import Image from 'next/image';
 import { Input } from '@/components/ui/input';
 import { SpaceStatus } from '@/lib/api/models/spaces';
 import { ArrowLeft, Play, Save } from 'lucide-react';
-import { Edit1, Unlock2, Lock } from '@/components/icons';
+import { Edit1, Unlock2, Lock, Expand } from '@/components/icons';
 import { TeamContext } from '@/lib/contexts/team-context';
 import { useUserInfo } from '@/app/(social)/_hooks/user';
+import { showInfoToast } from '@/lib/toast';
+import { getTimeAgo } from '@/lib/time-utils';
 
 export interface SpaceHeaderProps {
   title: string;
@@ -35,6 +37,7 @@ export default function SpaceHeader({
   userType,
   proposerImage,
   proposerName,
+  createdAt,
   authorId,
   isEdit = false,
   setTitle = () => {},
@@ -131,7 +134,24 @@ export default function SpaceHeader({
             />
           </>
         ) : (
-          <div className="font-bold text-white text-[20px]/[30px]">{title}</div>
+          <div className="flex flex-row w-full justify-between items-center">
+            <div className="font-bold text-white text-[20px]/[30px]">
+              {title}
+            </div>
+
+            <div
+              className="cursor-pointer w-fit h-fit"
+              onClick={() => {
+                navigator.clipboard.writeText(window.location.href).then(() => {
+                  showInfoToast(
+                    'The space URL has been copied to your clipboard.',
+                  );
+                });
+              }}
+            >
+              <Expand />
+            </div>
+          </div>
         )}
       </div>
 
@@ -150,6 +170,10 @@ export default function SpaceHeader({
           />
           <span className="text-white font-medium">{proposerName}</span>
           <Badge />
+        </div>
+
+        <div className="font-light text-white text-sm">
+          {getTimeAgo(createdAt)}
         </div>
       </div>
     </div>
