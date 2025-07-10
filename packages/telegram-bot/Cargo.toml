@@ -8,7 +8,12 @@ repository.workspace = true
 license.workspace = true
 
 [dependencies]
-teloxide = "0.16.0"
+chrono = "0.4.41"
+dto = { workspace = true, features = ["server"] }
+futures = "0.3.31"
+teloxide = { version = "0.16.0", features = ["macros"] }
+# bdk = { workspace = true, features = ["be"] }
+
 tokio.workspace = true
 tracing.workspace = true
 tracing-subscriber.workspace = true

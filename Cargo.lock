@@ -6973,6 +6973,9 @@ checksum = "55937e1799185b12863d447f42597ed69d9928686b8d88a1df17376a097d8369"
 name = "telegram-bot"
 version = "0.1.0"
 dependencies = [
+ "chrono",
+ "dto",
+ "futures",
  "teloxide",
  "tokio",
  "tracing",
@@ -6997,6 +7000,7 @@ dependencies = [
  "serde",
  "serde_json",
  "teloxide-core",
+ "teloxide-macros",
  "thiserror 2.0.12",
  "tokio",
  "tokio-stream",
@@ -7034,6 +7038,18 @@ dependencies = [
  "tokio-util",
  "url",
  "uuid 1.17.0",
+]
+
+[[package]]
+name = "teloxide-macros"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "300fadcaf0c182f19b5ca10bf23a45dc9a48925f00c704405fd90ee2c03942f9"
+dependencies = [
+ "heck",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.103",
 ]
 
 [[package]]
