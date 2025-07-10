@@ -63,11 +63,11 @@ pub struct User {
     #[serde(default)]
     pub html_contents: String,
 
-    #[api_model(many_to_many = my_networks, foreign_table_name = users, foreign_primary_key = follower_id, foreign_reference_key = following_id)]
+    #[api_model(many_to_many = my_networks, foreign_table_name = users, foreign_primary_key = follower_id, foreign_reference_key = following_id, unique)]
     #[serde(default)]
     pub followers: Vec<Follower>,
 
-    #[api_model(many_to_many = my_networks, foreign_table_name = users, foreign_primary_key = following_id, foreign_reference_key = follower_id)]
+    #[api_model(many_to_many = my_networks, foreign_table_name = users, foreign_primary_key = following_id, foreign_reference_key = follower_id, unique)]
     #[serde(default)]
     pub followings: Vec<Follower>,
 
