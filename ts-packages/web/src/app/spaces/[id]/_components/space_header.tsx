@@ -37,64 +37,26 @@ export default function SpaceHeader({
   isEdit = false,
   setTitle = () => {},
 }: SpaceHeaderProps) {
-  const { setIsEdit, thread, handleSave } = useDeliberationSpaceContext();
-
-  const handleEdit = () => {
-    setIsEdit(true);
-  };
-
-  const handlePublic = () => {
-    // logic for handling public to be implemented later
-  };
-
-  // const handleSave = async () => {
-  //   try {
-
-  //     // Not sure of the endpont.. just using this for testing purpose
-  //     const res = await apiFetch(
-  //       `${config.api_url}${ratelApi.feeds.updateDraft}`,
-  //       {
-  //         method: 'PUT',
-  //         headers: {
-  //           'Content-Type': 'application/json',
-  //         },
-  //         body: JSON.stringify({
-  //           update_draft: {
-  //             title,
-  //             html_contents: thread.html_contents,
-  //             files: thread.files,
-  //           },
-  //         }),
-  //       },
-  //     );
-
-  //     if (res.data) {
-  //       logger.debug('Space Post updated successfully')
-  //     }
-
-  //     setIsEdit(false);
-  //   } catch (error) {
-  //     console.error('Save failed:', error);
-  //     logger.error('Save failed for post space', error);
-  //   }
-  // };
+  const { setIsEdit, handleEdit, thread, handleSave, isSave } =
+    useDeliberationSpaceContext();
 
   return (
     <div className="flex flex-col w-full gap-2.5">
       <div className="flex flex-col gap-2.5">
-        <div className="flex flex-row w-full   gap-2.5">
+        <div className="flex flex-col md:flex-row w-full gap-2.5 md:items-center">
           <SpaceType />
 
+          {status == SpaceStatus.InProgress ? <Onboard /> : <></>}
+
           {/* stats sectoin */}
-          <div className='flex flex-col justify-center items-center md:justify-end md:ml-auto'>
+          <div className="flex flex-col justify-center items-center md:justify-end md:ml-auto">
             <StatsBar
+              isEdit={isEdit}
+              isSave={isSave}
               handleSave={handleSave}
               handleEdit={handleEdit}
-              handlePublic={handlePublic}
             />
           </div>
-
-          {status == SpaceStatus.InProgress ? <Onboard /> : <></>}
         </div>
         <div className="flex flex-row w-full justify-between items-center">
           {isEdit ? (
@@ -141,7 +103,7 @@ export default function SpaceHeader({
 
 function Onboard() {
   return (
-    <div className="flex flex-row items-center w-fit px-2 gap-1 border border-[#05df72] opacity-50 rounded-sm">
+    <div className="flex flex-row items-center w-fit h-fit px-2 gap-1 border border-[#05df72] opacity-50 rounded-sm">
       <Play className="w-[10px] h-[10px] stroke-[#00d492] fill-[#00d492]" />
       <div className="font-semibold text-sm/[25px] text-[#00d492]">ONBOARD</div>
     </div>
