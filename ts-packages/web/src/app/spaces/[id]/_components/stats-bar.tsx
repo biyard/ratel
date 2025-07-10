@@ -1,4 +1,3 @@
-
 'use client';
 import { useState, useRef, useEffect } from 'react';
 import {
@@ -19,7 +18,6 @@ import { showSuccessToast } from '@/lib/toast';
 import { useParams } from 'next/navigation';
 import { DeleteConfirmModal } from '@/components/popup/delete-confirm-popup';
 
-
 export default function StatsBar({
   handleEdit,
   handleSave,
@@ -34,7 +32,7 @@ export default function StatsBar({
   const [showMenu, setShowMenu] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  const {id} = useParams()
+  const { id } = useParams();
 
   const menuRef = useRef<HTMLDivElement>(null);
   const [publish, setPublish] = useState(false);
@@ -79,7 +77,7 @@ export default function StatsBar({
     },
     {
       name: 'Delete',
-      action: () =>  setShowDeleteModal(true),
+      action: () => setShowDeleteModal(true),
     },
   ];
 
@@ -162,7 +160,7 @@ export default function StatsBar({
           )}
         </div>
       </div>
-       
+
       {/* Delete confirm modal */}
       <DeleteConfirmModal
         show={showDeleteModal}
@@ -171,7 +169,7 @@ export default function StatsBar({
           //  delete logic here
           console.log('Item deleted');
           setShowDeleteModal(false);
-          showSuccessToast("Space deleted successfully!")
+          showSuccessToast('Space deleted successfully!');
         }}
         title="Confirm Deletion"
         description="Are you absolutely sure you want to delete this item?"

@@ -99,7 +99,7 @@ export default function DeliberationPage() {
           />
         </div>
 
-        <div className='mt-[25px]'>
+        <div className="mt-[25px]">
           <SpaceSideMenu />
         </div>
       </div>

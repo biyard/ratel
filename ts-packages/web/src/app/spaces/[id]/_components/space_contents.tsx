@@ -93,8 +93,6 @@ export default function SpaceContents({
         }
       `}</style>
     </BlackBox>
-
-    
   );
 
   const editorConfig = {

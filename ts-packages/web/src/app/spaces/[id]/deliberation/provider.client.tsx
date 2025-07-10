@@ -52,8 +52,8 @@ type ContextType = {
   isEdit: boolean;
 
   setIsEdit: StateSetter<boolean>;
-  isSave:boolean;
-  setIsSave:StateSetter<boolean>;
+  isSave: boolean;
+  setIsSave: StateSetter<boolean>;
 
   title: string;
   setTitle: StateSetter<string>;
@@ -112,7 +112,7 @@ export default function ClientProviders({
   const [isEdit, setIsEdit] = useState(false);
   const [title, setTitle] = useState(space.title ?? '');
 
-  const [isSave, setIsSave] = useState(false)
+  const [isSave, setIsSave] = useState(false);
 
   const [startedAt, setStartedAt] = useState(
     changeStartedAt(Math.floor(space.started_at ?? Date.now() / 1000)),
@@ -402,8 +402,8 @@ export default function ClientProviders({
       data.refetch();
 
       showSuccessToast('Space has been updated successfully.');
-      setIsSave(true)
-      
+      setIsSave(true);
+
       setIsEdit(false);
     } catch (err) {
       showErrorToast('Failed to update the space. Please try again.');

@@ -96,11 +96,9 @@ export default function FinalConsensusPage() {
             />
           </div>
 
-          <div className='mt-7.5'>
-              <SpaceSideMenu/>
-
+          <div className="mt-7.5">
+            <SpaceSideMenu />
           </div>
-        
         </div>
       </div>
     </div>

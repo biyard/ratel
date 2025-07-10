@@ -27,9 +27,9 @@ export { default as Clear } from '@/assets/icons/clear.svg';
 export { default as Folder } from '@/assets/icons/folder.svg';
 export { default as Delete2 } from '@/assets/icons/delete_2.svg';
 export { default as BadgeIcon } from '@/assets/icons/badge.svg';
-export {default as LockIcon} from '@/assets/icons/lock.svg';
-export {default as Extra} from '@/assets/icons/extra.svg'
-export {default as UnlockIcon} from '@/assets/icons/unlock.svg';
+export { default as LockIcon } from '@/assets/icons/lock.svg';
+export { default as Extra } from '@/assets/icons/extra.svg';
+export { default as UnlockIcon } from '@/assets/icons/unlock.svg';
 export { default as Jpg } from '@/assets/icons/files/jpg.svg';
 export { default as Png } from '@/assets/icons/files/png.svg';
 export { default as Pdf } from '@/assets/icons/files/pdf.svg';
@@ -75,4 +75,4 @@ export { default as DialPad } from '@/assets/icons/dial-pad.svg';
 export { default as DialPad2 } from '@/assets/icons/dial-pad-2.svg';
 export { default as Extra2 } from '@/assets/icons/extra-2.svg';
 export { default as CircleClose } from '@/assets/icons/circle-close.svg';
-export {default as SaveIcon} from "@/assets/icons/save.svg"
+export { default as SaveIcon } from '@/assets/icons/save.svg';

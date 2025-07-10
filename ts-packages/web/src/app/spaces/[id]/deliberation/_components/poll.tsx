@@ -134,7 +134,7 @@ export default function PollPage() {
           </div>
         </div>
 
-        <div className='md:mt-[30px]'>
+        <div className="md:mt-[30px]">
           <SpaceSideMenu />
         </div>
       </div>
