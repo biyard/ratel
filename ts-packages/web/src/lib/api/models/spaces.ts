@@ -32,6 +32,9 @@ export interface Space {
   user_responses: SurveyResponse[];
   responses: SurveyResponse[];
   drafts: SpaceDraft[];
+
+  likes: number;
+  is_liked: boolean;
 }
 
 export interface PostingSpaceRequest {

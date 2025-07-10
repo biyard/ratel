@@ -6,7 +6,7 @@ use validator::Validate;
 
 //TODO: action(like, comments, find_by_id, create_space), query_action
 #[derive(Validate)]
-#[api_model(base = "/v1/spaces", table = spaces, action = [create_space(user_ids = Vec<i64>)], action_by_id = [posting_space, update_space(discussions = Vec<DiscussionCreateRequest>, elearnings = Vec<ElearningCreateRequest>, surveys = Vec<SurveyCreateRequest>, drafts = Vec<SpaceDraftCreateRequest>)])]
+#[api_model(base = "/v1/spaces", table = spaces, action = [create_space(user_ids = Vec<i64>)], action_by_id = [posting_space, update_space(discussions = Vec<DiscussionCreateRequest>, elearnings = Vec<ElearningCreateRequest>, surveys = Vec<SurveyCreateRequest>, drafts = Vec<SpaceDraftCreateRequest>), like(value = bool)])]
 pub struct Space {
     #[api_model(summary, primary_key, read_action = [find_by_id])]
     pub id: i64,
@@ -98,6 +98,12 @@ pub struct Space {
     #[api_model(summary, one_to_many = space_drafts, foreign_key = space_id)]
     #[serde(default)]
     pub drafts: Vec<SpaceDraft>,
+    #[api_model(summary, many_to_many = space_like_users, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = space_id, aggregator = count)]
+    #[serde(default)]
+    pub likes: i64,
+    #[api_model(summary, many_to_many = space_like_users, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = space_id, aggregator = exist)]
+    #[serde(default)]
+    pub is_liked: bool,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]
