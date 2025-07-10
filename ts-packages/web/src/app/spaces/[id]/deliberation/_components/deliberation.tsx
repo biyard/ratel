@@ -12,6 +12,7 @@ import {
   useDeliberationSpace,
   useDeliberationSpaceContext,
 } from '../provider.client';
+import SpaceSideMenu from './space_side_menu';
 
 export default function DeliberationPage() {
   const {
@@ -45,56 +46,62 @@ export default function DeliberationPage() {
           setTitle(title);
         }}
       />
-      <div className="flex flex-col mt-[25px] gap-2.5">
-        <SpaceDiscussion
-          isEdit={isEdit}
-          status={status}
-          discussions={deliberation.discussions}
-          discussionRaws={discussions}
-          viewRecord={handleViewRecord}
-          onadd={(discussion: DiscussionInfo) => {
-            setDeliberation({
-              ...deliberation,
-              discussions: [...deliberation.discussions, discussion],
-            });
-          }}
-          onupdate={(index: number, discussion: DiscussionInfo) => {
-            const updated = [...deliberation.discussions];
-            updated[index] = discussion;
-            setDeliberation({
-              ...deliberation,
-              discussions: updated,
-            });
-          }}
-          onremove={(index: number) => {
-            const updated = deliberation.discussions.filter(
-              (_, i) => i !== index,
-            );
-            setDeliberation({
-              ...deliberation,
-              discussions: updated,
-            });
-          }}
-        />
-        <SpaceElearning
-          isEdit={isEdit}
-          elearnings={deliberation.elearnings}
-          onremove={(index: number) => {
-            const updated = deliberation.elearnings.filter(
-              (_, i) => i !== index,
-            );
-            setDeliberation({
-              ...deliberation,
-              elearnings: updated,
-            });
-          }}
-          onadd={(file: FileInfo) => {
-            setDeliberation({
-              ...deliberation,
-              elearnings: [...deliberation.elearnings, { files: [file] }],
-            });
-          }}
-        />
+      <div className="flex flex-col md:flex-row space-x-4">
+        <div className="flex flex-col mt-[25px] gap-2.5 md:min-w-[70vw]">
+          <SpaceDiscussion
+            isEdit={isEdit}
+            status={status}
+            discussions={deliberation.discussions}
+            discussionRaws={discussions}
+            viewRecord={handleViewRecord}
+            onadd={(discussion: DiscussionInfo) => {
+              setDeliberation({
+                ...deliberation,
+                discussions: [...deliberation.discussions, discussion],
+              });
+            }}
+            onupdate={(index: number, discussion: DiscussionInfo) => {
+              const updated = [...deliberation.discussions];
+              updated[index] = discussion;
+              setDeliberation({
+                ...deliberation,
+                discussions: updated,
+              });
+            }}
+            onremove={(index: number) => {
+              const updated = deliberation.discussions.filter(
+                (_, i) => i !== index,
+              );
+              setDeliberation({
+                ...deliberation,
+                discussions: updated,
+              });
+            }}
+          />
+          <SpaceElearning
+            isEdit={isEdit}
+            elearnings={deliberation.elearnings}
+            onremove={(index: number) => {
+              const updated = deliberation.elearnings.filter(
+                (_, i) => i !== index,
+              );
+              setDeliberation({
+                ...deliberation,
+                elearnings: updated,
+              });
+            }}
+            onadd={(file: FileInfo) => {
+              setDeliberation({
+                ...deliberation,
+                elearnings: [...deliberation.elearnings, { files: [file] }],
+              });
+            }}
+          />
+        </div>
+
+        <div className='mt-[25px]'>
+          <SpaceSideMenu />
+        </div>
       </div>
       {/* <CalendarPicker
         value={1750321970 * 1000}

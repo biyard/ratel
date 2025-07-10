@@ -38,7 +38,7 @@ export default function ThreadPage() {
           setTitle={setTitle}
         />
         <div className="flex flex-col w-full mt-7.5 gap-2.5">
-          <div className="flex flex-row w-full space-x-4 ">
+          <div className="flex flex-col md:flex-row w-full space-x-4 ">
             <div className="space-y-4 md:min-w-[70vw]">
               <SpaceContents
                 isEdit={isEdit}

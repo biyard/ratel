@@ -5,6 +5,7 @@ import ObjectiveResponse from './dashboard/objective_response';
 import SubjectiveResponse from './dashboard/subjective_response';
 import { logger } from '@/lib/logger';
 import SummaryReport from './dashboard/summary_report';
+import SpaceSideMenu from './space_side_menu';
 
 export default function AnalyzePage() {
   const { handleDownloadExcel, answers, survey, mappedResponses } =
