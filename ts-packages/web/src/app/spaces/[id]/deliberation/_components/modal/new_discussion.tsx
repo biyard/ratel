@@ -142,12 +142,12 @@ export default function NewDiscussion({
           onChange={() => setReminderEnabled(!reminderEnabled)}
           disabled={false}
         />
-        <div className="text-[15px]/[24px]">
+        {/* <div className="text-[15px]/[24px]">
           <div className="font-medium text-white">Reminder Notification</div>
           <div className="font-normal text-neutral-300">
             A reminder email will be sent 10 minutes prior to the discussion.
           </div>
-        </div>
+        </div> */}
       </div>
 
       <div className="flex justify-end">
