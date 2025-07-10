@@ -1,7 +1,7 @@
 'use client';
 
 import { Clock } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -10,8 +10,6 @@ import {
 
 interface TimeDropdownProps {
   value: number;
-  timeDropdownOpen: boolean;
-  setTimeDropdownOpen: (open: boolean) => void;
   onChange: (newTimestamp: number) => void;
 }
 
@@ -29,20 +27,12 @@ const formatAMPM = (timestamp: number): string => {
   return `${h.toString().padStart(2, '0')}:00 ${suffix}`;
 };
 
-export default function TimeDropdown({
-  value,
-  timeDropdownOpen,
-  setTimeDropdownOpen,
-  onChange,
-}: TimeDropdownProps) {
-  const [selectedTime, setSelectedTime] = useState(formatAMPM(value));
-
-  useEffect(() => {
-    setSelectedTime(formatAMPM(value));
-  }, [value]);
+export default function TimeDropdown({ value, onChange }: TimeDropdownProps) {
+  const [timeDropdownOpen, setTimeDropdownOpen] = useState<boolean>(false);
+  let selectedTime = value ? formatAMPM(value) : null;
 
   const handleSelect = (time: string) => {
-    setSelectedTime(time);
+    selectedTime = time;
     setTimeDropdownOpen(false);
 
     const [hourStr, period] = time.split(' ');
