@@ -6,9 +6,7 @@ import SurveyQuestionEditor from './question/survey_question_editor';
 import { AnswerType } from './question/answer_type_select';
 import { v4 as uuidv4 } from 'uuid';
 import SurveyViewer from './question/survey_viewer';
-import { format } from 'date-fns';
 import { Add } from './add';
-import CustomCalendar from '@/components/calendar-picker/calendar-picker';
 import { SurveyAnswer } from '../types';
 import { Answer } from '@/lib/api/models/response';
 import { SpaceStatus } from '@/lib/api/models/spaces';
@@ -103,15 +101,8 @@ function ViewSurvey({
   endDate: number;
   onSend: () => void;
 }) {
-  const formattedDate = `${format(new Date(startDate * 1000), 'dd MMM, yyyy')} - ${format(new Date(endDate * 1000), 'dd MMM, yyyy')}`;
   return (
     <div className="flex flex-col w-full gap-[10px]">
-      {questions.length !== 0 && (
-        <div className="flex flex-row w-full justify-between items-center">
-          <div className="text-base text-white font-semibold">Period</div>
-          <div className="text-sm text-white font-normal">{formattedDate}</div>
-        </div>
-      )}
       <SurveyViewer
         isEdit={isEdit}
         status={status}
@@ -128,11 +119,6 @@ function ViewSurvey({
 
 function EditableSurvey({
   questions,
-  startDate,
-  endDate,
-
-  setStartDate,
-  setEndDate,
   onadd,
   onupdate,
   onremove,
@@ -154,9 +140,6 @@ function EditableSurvey({
   const [stableKeys, setStableKeys] = useState<string[]>(() =>
     questions.map(() => uuidv4()),
   );
-  const [startCalendarOpen, setStartCalendarOpen] = useState<boolean>(false);
-  const [endCalendarOpen, setEndCalendarOpen] = useState<boolean>(false);
-
   const handleAdd = () => {
     onadd();
     setStableKeys((prev) => [...prev, uuidv4()]);
@@ -169,42 +152,6 @@ function EditableSurvey({
 
   return (
     <div className="flex flex-col w-full gap-2.5">
-      <div className="flex flex-wrap w-full justify-between items-center gap-2.5 mb-2.5">
-        <div className="font-medium text-neutral-300 text-[15px] w-20">
-          Period
-        </div>
-        <div className="flex flex-row gap-2.5 items-center flex-wrap">
-          <div className="flex flex-row gap-2.5">
-            <CustomCalendar
-              value={startDate * 1000}
-              calendarOpen={startCalendarOpen}
-              setCalendarOpen={(value: boolean) => {
-                setStartCalendarOpen(value);
-              }}
-              onChange={(date) => {
-                const newStart = Math.floor(date / 1000);
-                setStartDate(newStart);
-                // update(newStart, endTime, title, desc);
-              }}
-            />
-          </div>
-          <div className="w-5 h-0.25 bg-neutral-500" />
-          <div className="flex flex-row gap-2.5">
-            <CustomCalendar
-              value={endDate * 1000}
-              calendarOpen={endCalendarOpen}
-              setCalendarOpen={(value: boolean) => {
-                setEndCalendarOpen(value);
-              }}
-              onChange={(date) => {
-                const newEnd = Math.floor(date / 1000);
-                setEndDate(newEnd);
-                // update(startTime, newEnd, title, desc);
-              }}
-            />
-          </div>
-        </div>
-      </div>
       {questions.map((question, index) => {
         return (
           <div key={stableKeys[index]}>
