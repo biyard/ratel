@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import CustomCheckbox from '@/components/checkbox/custom-checkbox';
+// import CustomCheckbox from '@/components/checkbox/custom-checkbox';
 import { Internet } from '@/components/icons';
 import { showErrorToast } from '@/lib/toast';
 import TimeDropdown from '@/components/time-dropdown';
@@ -16,7 +16,7 @@ export default function SetSchedulePopup({
   endedAt: number;
   onconfirm: (startDate: number, endDate: number) => void;
 }) {
-  const [autoSchedule, setAutoSchedule] = useState(true);
+  // const [autoSchedule, setAutoSchedule] = useState(true);
 
   // const initialDate = Math.floor(Date.now());
 
@@ -97,7 +97,7 @@ export default function SetSchedulePopup({
         </div>
       ))}
 
-      <div className="mt-6 border-t border-neutral-700 pt-5">
+      {/* <div className="mt-6 border-t border-neutral-700 pt-5">
         <div className="flex flex-row w-full items-start gap-2.5">
           <CustomCheckbox
             checked={autoSchedule}
@@ -112,7 +112,7 @@ export default function SetSchedulePopup({
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
 
       <div className="flex justify-end mt-6">
         <button

@@ -2,10 +2,10 @@
 
 import BlackBox from '@/app/(social)/_components/black-box';
 import { getTimeWithFormat } from '@/lib/time-utils';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext } from 'react';
 import Clock from '@/assets/icons/clock.svg';
-import { Discuss, PieChart1 } from '@/components/icons';
-import { File, Vote, CheckCircle, Settings } from 'lucide-react';
+import { Discuss, PieChart1, File, Vote } from '@/components/icons';
+import { CheckCircle, Settings } from 'lucide-react';
 import { DeliberationTab } from '../types';
 import { SpaceStatus } from '@/lib/api/models/spaces';
 import {
@@ -21,6 +21,7 @@ export default function SpaceSideMenu() {
   const popup = usePopup();
   const {
     isEdit,
+    deliberation,
     selectedType,
     setSelectedType,
     startedAt,
@@ -31,37 +32,24 @@ export default function SpaceSideMenu() {
   } = useDeliberationSpaceContext();
   const space = useDeliberationSpace();
   const { teams } = useContext(TeamContext);
-  const [, setSelectedTeam] = useState<boolean>(false);
-  const [startDate, setStartDateState] = useState(space.started_at);
-  const [endDate, setEndDateState] = useState(space.ended_at);
+  const authorId = space?.author[0].id;
+  const discussions = deliberation.discussions;
+
+  const deliberationEndedAt =
+    discussions.length !== 0
+      ? discussions
+          .map((t) => t.ended_at)
+          .reduce((latest, current) => (current > latest ? current : latest))
+      : 0;
+
+  const selectedTeam = teams.some((t) => t.id === authorId);
 
   const { data: userInfo } = useUserInfo();
   const userId = userInfo ? userInfo.id : 0;
   const createdAt = space.created_at;
 
-  const authorId = space?.author[0].id;
-
-  useEffect(() => {
-    const index = teams.findIndex((t) => t.id === authorId);
-    setSelectedTeam(index !== -1);
-  }, [teams]);
-
-  useEffect(() => {
-    setStartDateState(startedAt);
-    setEndDateState(endedAt);
-  }, [startedAt, endedAt]);
-
   return (
     <div className="flex flex-col max-w-[250px] max-tablet:!hidden w-full gap-[10px]">
-      {/* {(authorId == userId || selectedTeam) && (
-        <EditSplitButton
-          status={status}
-          isEdit={isEdit}
-          postingSpace={handlePostingSpace}
-          onedit={onedit}
-          onsave={onsave}
-        />
-      )} */}
       <BlackBox>
         <div className="flex flex-col gap-2.5 w-full">
           <div
@@ -104,7 +92,7 @@ export default function SpaceSideMenu() {
             <div className="font-bold text-white text-sm">Recommendation</div>
           </div>
 
-          {space.author.some((a) => a.id === userId) &&
+          {(space.author.some((a) => a.id === userId) || selectedTeam) &&
             status == SpaceStatus.InProgress && (
               <div
                 className={`cursor-pointer flex flex-row gap-1 items-center px-1 py-2 rounded-sm ${
@@ -162,22 +150,26 @@ export default function SpaceSideMenu() {
           <div className="flex flex-col pl-3.25 gap-5">
             {[
               { label: 'Created', date: createdAt },
-              // { label: 'Start', date: created_at },
-              // { label: 'Deliberation', date: created_at },
-              { label: 'Poll Open', date: startDate },
-              { label: 'Poll Close', date: endDate },
-              // { label: 'End', date: created_at },
-            ].map((item) => (
-              <div className="flex flex-col gap-1" key={item.label}>
-                <div className="font-medium text-white text-[15px]/[12px]">
-                  {item.label}
+              deliberationEndedAt
+                ? { label: 'Deliberation', date: deliberationEndedAt }
+                : null,
+              { label: 'Poll Open', date: startedAt },
+              { label: 'Poll Close', date: endedAt },
+            ]
+              .filter(
+                (item): item is { label: string; date: number } =>
+                  item !== null,
+              )
+              .map((item) => (
+                <div className="flex flex-col gap-1" key={item.label}>
+                  <div className="font-medium text-white text-[15px]/[12px]">
+                    {item.label}
+                  </div>
+                  <div className="font-medium text-neutral-80 text-xs/[12px]">
+                    {getTimeWithFormat(item.date ?? 0)}
+                  </div>
                 </div>
-
-                <div className="font-medium text-neutral-80 text-xs/[12px]">
-                  {getTimeWithFormat(item.date ?? 0)}
-                </div>
-              </div>
-            ))}
+              ))}
           </div>
         </div>
       </BlackBox>

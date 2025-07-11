@@ -67,6 +67,7 @@ export default function PollPage() {
             index: number,
             updated: {
               answerType: AnswerType;
+              image_url?: string;
               title: string;
               options?: string[];
             },
@@ -83,6 +84,7 @@ export default function PollPage() {
               newQuestion = {
                 answer_type: updated.answerType,
                 title: updated.title,
+                image_url: updated.image_url,
                 options: updated.options || [],
               };
             } else {
