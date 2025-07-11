@@ -31,20 +31,15 @@ export default function SpaceSideMenu() {
   } = useDeliberationSpaceContext();
   const space = useDeliberationSpace();
   const { teams } = useContext(TeamContext);
-  const [selectedTeam, setSelectedTeam] = useState<boolean>(false);
+  const authorId = space?.author[0].id;
+
+  const selectedTeam = teams.some((t) => t.id === authorId);
   const [startDate, setStartDateState] = useState(space.started_at);
   const [endDate, setEndDateState] = useState(space.ended_at);
 
   const { data: userInfo } = useUserInfo();
   const userId = userInfo ? userInfo.id : 0;
   const createdAt = space.created_at;
-
-  const authorId = space?.author[0].id;
-
-  useEffect(() => {
-    const index = teams.findIndex((t) => t.id === authorId);
-    setSelectedTeam(index !== -1);
-  }, [teams]);
 
   useEffect(() => {
     setStartDateState(startedAt);
