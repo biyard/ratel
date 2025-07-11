@@ -45,7 +45,7 @@ export class TestingUtils {
 
   loadContract = async (
     contractName: string,
-    addr: string
+    addr: string,
   ): Promise<e.Contract> => {
     return ethers.getContractAt(contractName, addr);
   };
@@ -149,7 +149,7 @@ export class Utils {
 
   loadContract = async (
     contractName: string,
-    addr: string
+    addr: string,
   ): Promise<e.Contract> => {
     return ethers.getContractAt(contractName, addr);
   };
