@@ -37,6 +37,23 @@ impl MynetworkController {
             return Err(Error::BadRequest);
         }
 
+        let existing_follower = Mynetwork::query_builder()
+            .follower_id_equals(follower_id)
+            .following_id_equals(to_be_followed)
+            .query()
+            .map(Mynetwork::from)
+            .fetch_optional(&self.pool)
+            .await
+            .map_err(|e| {
+                tracing::error!("failed to check existing follower: {:?}", e);
+
+                Error::DatabaseException(e.to_string())
+            })?;
+
+        if existing_follower.is_some() {
+            return Err(Error::AlreadyFollowing);
+        }
+
         // Start a transaction for atomic operation
         let mut tx = self.pool.begin().await?;
 
@@ -229,9 +246,9 @@ mod tests {
 
         if let Err(error) = follow_again_result {
             match error {
-                Error::DatabaseException(_) => {} // This is the expected error
+                Error::AlreadyFollowing => {} // This is the expected error
 
-                _ => panic!("Expected Database level error, got: {:?}", error),
+                _ => panic!("Expected AlreadyFollowing error, got: {:?}", error),
             }
         }
     }
