@@ -2,7 +2,7 @@
 
 import BlackBox from '@/app/(social)/_components/black-box';
 import { getTimeWithFormat } from '@/lib/time-utils';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext } from 'react';
 import Clock from '@/assets/icons/clock.svg';
 import { Discuss, PieChart1, File, Vote } from '@/components/icons';
 import { CheckCircle, Settings } from 'lucide-react';
@@ -34,29 +34,13 @@ export default function SpaceSideMenu() {
   const authorId = space?.author[0].id;
 
   const selectedTeam = teams.some((t) => t.id === authorId);
-  const [startDate, setStartDateState] = useState(space.started_at);
-  const [endDate, setEndDateState] = useState(space.ended_at);
 
   const { data: userInfo } = useUserInfo();
   const userId = userInfo ? userInfo.id : 0;
   const createdAt = space.created_at;
 
-  useEffect(() => {
-    setStartDateState(startedAt);
-    setEndDateState(endedAt);
-  }, [startedAt, endedAt]);
-
   return (
     <div className="flex flex-col max-w-[250px] max-tablet:!hidden w-full gap-[10px]">
-      {/* {(authorId == userId || selectedTeam) && (
-        <EditSplitButton
-          status={status}
-          isEdit={isEdit}
-          postingSpace={handlePostingSpace}
-          onedit={onedit}
-          onsave={onsave}
-        />
-      )} */}
       <BlackBox>
         <div className="flex flex-col gap-2.5 w-full">
           <div
@@ -159,8 +143,8 @@ export default function SpaceSideMenu() {
               { label: 'Created', date: createdAt },
               // { label: 'Start', date: created_at },
               // { label: 'Deliberation', date: created_at },
-              { label: 'Poll Open', date: startDate },
-              { label: 'Poll Close', date: endDate },
+              { label: 'Poll Open', date: startedAt },
+              { label: 'Poll Close', date: endedAt },
               // { label: 'End', date: created_at },
             ].map((item) => (
               <div className="flex flex-col gap-1" key={item.label}>
