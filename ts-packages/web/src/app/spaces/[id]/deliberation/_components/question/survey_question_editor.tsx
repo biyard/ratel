@@ -3,11 +3,14 @@ import React, { useState } from 'react';
 import AnswerTypeSelect, { AnswerType } from './answer_type_select';
 import { Input } from '@/components/ui/input';
 import { Trash2 } from 'lucide-react';
-import { DialPad, DialPad2, Remove } from '@/components/icons';
+import { DialPad, DialPad2, Remove, Image2 } from '@/components/icons';
+import FileUploader from '@/components/file-uploader';
+import Image from 'next/image';
 
 export default function SurveyQuestionEditor({
   index,
   answerType,
+  imageUrl,
   title,
   options,
   onupdate,
@@ -16,10 +19,12 @@ export default function SurveyQuestionEditor({
   index: number;
   answerType: AnswerType;
   title: string;
+  imageUrl?: string;
   options?: string[];
   onupdate?: (updated: {
     answerType: AnswerType;
     title: string;
+    image_url?: string;
     options?: string[];
   }) => void;
   onremove?: (index: number) => void;
@@ -29,6 +34,7 @@ export default function SurveyQuestionEditor({
   const [questionOptions, setQuestionOptions] = useState<string[]>(
     options || [''],
   );
+  const [questionImage, setQuestionImage] = useState(imageUrl);
 
   const handleOptionChange = (idx: number, value: string) => {
     const newOptions = [...questionOptions];
@@ -38,7 +44,20 @@ export default function SurveyQuestionEditor({
       onupdate({
         answerType: questionType,
         title: questionTitle,
+        image_url: questionImage,
         options: questionType.includes('choice') ? newOptions : undefined,
+      });
+    }
+  };
+
+  const handleImageChange = (value: string) => {
+    setQuestionImage(value);
+    if (onupdate) {
+      onupdate({
+        answerType: questionType,
+        title: questionTitle,
+        image_url: value,
+        options: questionType.includes('choice') ? questionOptions : undefined,
       });
     }
   };
@@ -49,6 +68,7 @@ export default function SurveyQuestionEditor({
       onupdate({
         answerType: questionType,
         title: value,
+        image_url: questionImage,
         options: questionType.includes('choice') ? questionOptions : undefined,
       });
     }
@@ -60,6 +80,7 @@ export default function SurveyQuestionEditor({
       onupdate({
         answerType: val,
         title: questionTitle,
+        image_url: questionImage,
         options: val.includes('choice') ? questionOptions : undefined,
       });
     }
@@ -72,6 +93,7 @@ export default function SurveyQuestionEditor({
       onupdate({
         answerType: questionType,
         title: questionTitle,
+        image_url: questionImage,
         options: newOptions,
       });
     }
@@ -84,6 +106,7 @@ export default function SurveyQuestionEditor({
       onupdate({
         answerType: questionType,
         title: questionTitle,
+        image_url: questionImage,
         options: questionType.includes('choice') ? newOptions : undefined,
       });
     }
@@ -104,7 +127,29 @@ export default function SurveyQuestionEditor({
             value={questionTitle}
             onChange={(e) => handleTitleChange(e.target.value)}
           />
+          {questionType == 'single_choice' ||
+          questionType == 'multiple_choice' ? (
+            <FileUploader onUploadSuccess={handleImageChange}>
+              <div className="cursor-pointer flex flex-row w-fit h-fit p-[10.59px] bg-white rounded-lg">
+                <Image2 className="w-[22.81px] h-[22.81px] " />
+              </div>
+            </FileUploader>
+          ) : (
+            <></>
+          )}
         </div>
+
+        {imageUrl ? (
+          <Image
+            width={300}
+            height={300}
+            className="object-contain max-w-75"
+            src={imageUrl}
+            alt={title || 'Question Title'}
+          />
+        ) : (
+          <></>
+        )}
 
         <div className="flex flex-col mt-2.5 gap-2.5">
           {(questionType === 'single_choice' ||
