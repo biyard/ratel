@@ -21,6 +21,7 @@ export default function SpaceSideMenu() {
   const popup = usePopup();
   const {
     isEdit,
+    deliberation,
     selectedType,
     setSelectedType,
     startedAt,
@@ -32,6 +33,14 @@ export default function SpaceSideMenu() {
   const space = useDeliberationSpace();
   const { teams } = useContext(TeamContext);
   const authorId = space?.author[0].id;
+  const discussions = deliberation.discussions;
+
+  const deliberationEndedAt =
+    discussions.length !== 0
+      ? discussions
+          .map((t) => t.ended_at)
+          .reduce((latest, current) => (current > latest ? current : latest))
+      : 0;
 
   const selectedTeam = teams.some((t) => t.id === authorId);
 
@@ -141,22 +150,26 @@ export default function SpaceSideMenu() {
           <div className="flex flex-col pl-3.25 gap-5">
             {[
               { label: 'Created', date: createdAt },
-              // { label: 'Start', date: created_at },
-              // { label: 'Deliberation', date: created_at },
+              deliberationEndedAt
+                ? { label: 'Deliberation', date: deliberationEndedAt }
+                : null,
               { label: 'Poll Open', date: startedAt },
               { label: 'Poll Close', date: endedAt },
-              // { label: 'End', date: created_at },
-            ].map((item) => (
-              <div className="flex flex-col gap-1" key={item.label}>
-                <div className="font-medium text-white text-[15px]/[12px]">
-                  {item.label}
+            ]
+              .filter(
+                (item): item is { label: string; date: number } =>
+                  item !== null,
+              )
+              .map((item) => (
+                <div className="flex flex-col gap-1" key={item.label}>
+                  <div className="font-medium text-white text-[15px]/[12px]">
+                    {item.label}
+                  </div>
+                  <div className="font-medium text-neutral-80 text-xs/[12px]">
+                    {getTimeWithFormat(item.date ?? 0)}
+                  </div>
                 </div>
-
-                <div className="font-medium text-neutral-80 text-xs/[12px]">
-                  {getTimeWithFormat(item.date ?? 0)}
-                </div>
-              </div>
-            ))}
+              ))}
           </div>
         </div>
       </BlackBox>
