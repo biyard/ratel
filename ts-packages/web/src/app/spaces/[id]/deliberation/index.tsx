@@ -8,6 +8,7 @@ import PollPage from './_components/poll';
 import FinalConsensusPage from './_components/final_consensus';
 
 import ClientProviders, {
+  useDeliberationFeed,
   useDeliberationSpace,
   useDeliberationSpaceContext,
 } from './provider.client';
@@ -31,6 +32,7 @@ export default function DeliberationSpacePage() {
 function Page() {
   const popup = usePopup();
   const space = useDeliberationSpace();
+  const feed = useDeliberationFeed(space.feed_id);
   const {
     selectedType,
     isEdit,
@@ -92,8 +94,10 @@ function Page() {
           proposerName={proposerName}
           createdAt={createdAt}
           authorId={space?.author[0].id}
-          likes={space?.likes}
-          shares={space?.shares}
+          rewards={feed.rewards}
+          likes={feed.likes}
+          shares={feed.shares}
+          comments={feed.comments}
           isLiked={space?.is_liked}
           onback={handleGoBack}
           onsave={handleSave}
