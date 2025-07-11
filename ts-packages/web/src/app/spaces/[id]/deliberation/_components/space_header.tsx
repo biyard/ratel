@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext } from 'react';
 // import Shared from '@/assets/icons/share.svg';
 // import Extra from '@/assets/icons/extra.svg';
 // import Bookmark from '@/assets/icons/bookmark.svg';
@@ -61,15 +61,10 @@ export default function SpaceHeader({
   onedit = () => {},
   onpost = () => {},
 }: SpaceHeaderProps) {
-  const [selectedTeam, setSelectedTeam] = useState<boolean>(false);
   const { data: userInfo } = useUserInfo();
   const userId = userInfo ? userInfo.id : 0;
   const { teams } = useContext(TeamContext);
-
-  useEffect(() => {
-    const index = teams.findIndex((t) => t.id === authorId);
-    setSelectedTeam(index !== -1);
-  }, [teams]);
+  const selectedTeam = teams.some((t) => t.id === authorId);
 
   return (
     <div className="flex flex-col w-full gap-2.5 mb-10">

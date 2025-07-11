@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext } from 'react';
 import SpaceSideMenu from './_components/space_side_menu';
 import ThreadPage from './_components/thread';
 import DeliberationPage from './_components/deliberation';
@@ -50,16 +50,11 @@ function Page() {
   } = useDeliberationSpaceContext();
 
   const { teams } = useContext(TeamContext);
-  const [selectedTeam, setSelectedTeam] = useState<boolean>(false);
+  const authorId = space?.author[0].id;
+  const selectedTeam = teams.some((t) => t.id === authorId);
   const { data: userInfo } = useUserInfo();
 
-  const authorId = space?.author[0].id;
   const userId = userInfo ? userInfo.id : 0;
-
-  useEffect(() => {
-    const index = teams.findIndex((t) => t.id === authorId);
-    setSelectedTeam(index !== -1);
-  }, [teams]);
 
   if (
     space.status === SpaceStatus.Draft &&
