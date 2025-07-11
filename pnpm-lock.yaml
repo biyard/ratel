@@ -6,35 +6,7 @@ settings:
 
 importers:
 
-  .:
-    dependencies:
-      '@tiptap/extension-collaboration':
-        specifier: ^2.25.0
-        version: 2.25.0(@tiptap/core@2.25.0(@tiptap/pm@2.25.0))(@tiptap/pm@2.25.0)(y-prosemirror@1.3.7(prosemirror-model@1.25.1)(prosemirror-state@1.4.3)(prosemirror-view@1.40.0)(y-protocols@1.0.6(yjs@13.6.27))(yjs@13.6.27))
-      '@tiptap/extension-highlight':
-        specifier: ^2.25.0
-        version: 2.25.0(@tiptap/core@2.25.0(@tiptap/pm@2.25.0))
-      '@tiptap/extension-link':
-        specifier: ^2.25.0
-        version: 2.25.0(@tiptap/core@2.25.0(@tiptap/pm@2.25.0))(@tiptap/pm@2.25.0)
-      '@tiptap/extension-placeholder':
-        specifier: ^2.25.0
-        version: 2.25.0(@tiptap/core@2.25.0(@tiptap/pm@2.25.0))(@tiptap/pm@2.25.0)
-      '@tiptap/extension-underline':
-        specifier: ^2.25.0
-        version: 2.25.0(@tiptap/core@2.25.0(@tiptap/pm@2.25.0))
-      '@tiptap/react':
-        specifier: ^2.25.0
-        version: 2.25.0(@tiptap/core@2.25.0(@tiptap/pm@2.25.0))(@tiptap/pm@2.25.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      '@tiptap/starter-kit':
-        specifier: ^2.25.0
-        version: 2.25.0
-      tiptap:
-        specifier: ^1.32.2
-        version: 1.32.2(vue-template-compiler@2.7.16)(vue@2.7.16)
-      yjs:
-        specifier: ^13.6.27
-        version: 13.6.27
+  .: {}
 
   ts-packages/web:
     dependencies:
@@ -71,6 +43,9 @@ importers:
       '@radix-ui/react-dropdown-menu':
         specifier: ^2.1.15
         version: 2.1.15(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@radix-ui/react-popover':
+        specifier: ^1.1.14
+        version: 1.1.14(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@radix-ui/react-separator':
         specifier: ^1.1.7
         version: 1.1.7(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -80,6 +55,9 @@ importers:
       '@tanstack/react-query':
         specifier: ^5.79.0
         version: 5.81.5(react@19.1.0)
+      '@tiptap/extension-collaboration':
+        specifier: ^2.25.0
+        version: 2.25.0(@tiptap/core@2.25.0(@tiptap/pm@2.25.0))(@tiptap/pm@2.25.0)(y-prosemirror@1.3.7(prosemirror-model@1.25.1)(prosemirror-state@1.4.3)(prosemirror-view@1.40.0)(y-protocols@1.0.6(yjs@13.6.27))(yjs@13.6.27))
       '@tiptap/extension-color':
         specifier: ^2.25.0
         version: 2.25.0(@tiptap/core@2.25.0(@tiptap/pm@2.25.0))(@tiptap/extension-text-style@2.25.0(@tiptap/core@2.25.0(@tiptap/pm@2.25.0)))
@@ -92,6 +70,9 @@ importers:
       '@tiptap/extension-link':
         specifier: ^2.25.0
         version: 2.25.0(@tiptap/core@2.25.0(@tiptap/pm@2.25.0))(@tiptap/pm@2.25.0)
+      '@tiptap/extension-placeholder':
+        specifier: ^2.25.0
+        version: 2.25.0(@tiptap/core@2.25.0(@tiptap/pm@2.25.0))(@tiptap/pm@2.25.0)
       '@tiptap/extension-text-align':
         specifier: ^2.25.0
         version: 2.25.0(@tiptap/core@2.25.0(@tiptap/pm@2.25.0))
@@ -101,6 +82,12 @@ importers:
       '@tiptap/extension-underline':
         specifier: ^2.25.0
         version: 2.25.0(@tiptap/core@2.25.0(@tiptap/pm@2.25.0))
+      '@tiptap/react':
+        specifier: ^2.25.0
+        version: 2.25.0(@tiptap/core@2.25.0(@tiptap/pm@2.25.0))(@tiptap/pm@2.25.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@tiptap/starter-kit':
+        specifier: ^2.25.0
+        version: 2.25.0
       amazon-chime-sdk-component-library-react:
         specifier: ^3.11.0
         version: 3.11.0(amazon-chime-sdk-js@3.27.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(styled-components@6.1.19(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(styled-system@5.1.5)
@@ -179,6 +166,9 @@ importers:
       xlsx:
         specifier: ^0.18.5
         version: 0.18.5
+      yjs:
+        specifier: ^13.6.27
+        version: 13.6.27
     devDependencies:
       '@eslint/eslintrc':
         specifier: ^3
@@ -2004,6 +1994,19 @@ packages:
       '@types/react-dom':
         optional: true
 
+  '@radix-ui/react-popover@1.1.14':
+    resolution: {integrity: sha512-ODz16+1iIbGUfFEfKx2HTPKizg2MN39uIOV8MXeHnmdd3i/N9Wt7vU46wbHsqA0xoaQyXVcs0KIlBdOA2Y95bw==}
+    peerDependencies:
+      '@types/react': '*'
+      '@types/react-dom': '*'
+      react: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
+      react-dom: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      '@types/react-dom':
+        optional: true
+
   '@radix-ui/react-popper@1.2.7':
     resolution: {integrity: sha512-IUFAccz1JyKcf/RjB552PlWwxjeCJB8/4KxT7EhBHOJM+mN7LdW+B3kacJXILm32xawcMMjb2i0cIZpo+f9kiQ==}
     peerDependencies:
@@ -3181,9 +3184,6 @@ packages:
   '@vitest/utils@3.2.4':
     resolution: {integrity: sha512-fB2V0JFrQSMsCo9HiSq3Ezpdv4iYaXRG1Sx8edX3MwxfyNn83mKiGzOcH+Fkxt4MHxr3y42fQi1oeAInqgX2QA==}
 
-  '@vue/compiler-sfc@2.7.16':
-    resolution: {integrity: sha512-KWhJ9k5nXuNtygPU7+t1rX6baZeqOYLEforUPjgNDBnLicfHCoi48H87Q8XyLZOrNNsmhuwKqtpDQWjEFe6Ekg==}
-
   '@webassemblyjs/ast@1.14.1':
     resolution: {integrity: sha512-nuBEDgQfm1ccRp/8bCQrx1frohyufl4JlbMMZ4P1wpeOfDhF6FQkxZJ1b/e+PLwr6X1Nhw6OLme5usuBWYBvuQ==}
 
@@ -3876,9 +3876,6 @@ packages:
 
   dayjs@1.11.13:
     resolution: {integrity: sha512-oaMBel6gjolK862uaPQOVTA7q3TZhuSvuMQAAglQDOWYO9A91IrAOUJEyKVlqJlHE0vq5p5UXxzdPfMH/x6xNg==}
-
-  de-indent@1.0.2:
-    resolution: {integrity: sha512-e/1zu3xH5MQryN2zdVaF0OrdNLUbvWxzMbi+iNA6Bky7l1RoP8a2fIbRocyHclXt/arDrrR6lL3TqFD9pMQTsg==}
 
   debug@3.2.7:
     resolution: {integrity: sha512-CFjzYYAi4ThfiQvizrFQevTTXHtnCqWfe7x1AhgEscTz6ZbLbfoLRLPugTQyBth6f8ZERVUSyWHFD/7Wu4t1XQ==}
@@ -5437,11 +5434,6 @@ packages:
     resolution: {integrity: sha512-GbK2cP9nraSSUF9N2XwUwqfzlAFlMNYYl+ShE/V+H8a9uNl/oUqB1w2EL54Jh0OlyRSd8RfWYJ3coVS4TROP2w==}
     engines: {node: '>=6.0.0'}
 
-  prettier@2.8.8:
-    resolution: {integrity: sha512-tdN8qQGvNjw4CHbY+XXk0JgCXn9QiF21a55rBe5LJAU+kDyC4WQn4+awm2Xfk2lQMk5fKup9XgzTZtGkjBdP9Q==}
-    engines: {node: '>=10.13.0'}
-    hasBin: true
-
   prettier@3.6.2:
     resolution: {integrity: sha512-I7AIg5boAr5R0FFtJ6rCfD+LFsWHp81dolrFD8S79U9tb8Az2nGrJncnMSnys+bpQJfRUzqs9hnA81OAA3hCuQ==}
     engines: {node: '>=14'}
@@ -6196,18 +6188,6 @@ packages:
   tippy.js@6.3.7:
     resolution: {integrity: sha512-E1d3oP2emgJ9dRQZdf3Kkn0qJgI6ZLpyS5z6ZkY1DF3kaQaBsGZsndEpHwx+eC+tYM41HaSNvNtLx8tU57FzTQ==}
 
-  tiptap-commands@1.17.1:
-    resolution: {integrity: sha512-CyGvMD/c6fNer5LThWGtrVMXHAqHn93ivGQpqJ58x3HNZFuoIiF9QTWXAiWbY/4QrG0ANYHKCSe9n5afickTqw==}
-
-  tiptap-utils@1.13.1:
-    resolution: {integrity: sha512-RoCvMfkdu7fp9u7nsRr1OgsYU8RFjoHKHEKpx075rJ9X0t+j5Vxah9n6QzTTr4yjvcavq22WO2flFacm36zYtA==}
-
-  tiptap@1.32.2:
-    resolution: {integrity: sha512-5IwVj8nGo8y5V3jbdtoEd7xNUsi8Q0N6WV2Nfs70olqz3fldXkiImBrDhZJ4Anx8vhyP6PIBttrg0prFVmwIvw==}
-    peerDependencies:
-      vue: ^2.5.17
-      vue-template-compiler: ^2.5.17
-
   to-buffer@1.2.1:
     resolution: {integrity: sha512-tB82LpAIWjhLYbqjx3X4zEeHN6M8CiuOEy2JY8SEQVdYRe3CCHOFaqrBW1doLDrfpWhplcW7BL+bO3/6S3pcDQ==}
     engines: {node: '>= 0.4'}
@@ -6400,13 +6380,6 @@ packages:
 
   vm-browserify@1.1.2:
     resolution: {integrity: sha512-2ham8XPWTONajOR0ohOKOHXkm3+gaBmGut3SRuu75xLd/RRaY6vqgh8NBYYk7+RW3u5AtzPQZG8F10LHkl0lAQ==}
-
-  vue-template-compiler@2.7.16:
-    resolution: {integrity: sha512-AYbUWAJHLGGQM7+cNTELw+KsOG9nl2CnSv467WobS5Cv9uk3wFcnr1Etsz2sEIHEZvw1U+o9mRlEO6QbZvUPGQ==}
-
-  vue@2.7.16:
-    resolution: {integrity: sha512-4gCtFXaAA3zYZdTp5s4Hl2sozuySsgz4jy1EnpBHNfpMa9dK1ZCG7viqBPCwXtmgc8nHqUsAu3G4gtmXkkY3Sw==}
-    deprecated: Vue 2 has reached EOL and is no longer actively maintained. See https://v2.vuejs.org/eol/ for more details.
 
   w3c-keyname@2.2.8:
     resolution: {integrity: sha512-dpojBhNsCNN7T82Tm7k26A6G9ML3NkhDsnw9n/eoxSRlVBB4CEtIQ/KTCLI2Fwf3ataSXRhYFkQi3SlnFwPvPQ==}
@@ -6631,7 +6604,7 @@ snapshots:
       '@aws-sdk/types': 3.821.0
       '@aws-sdk/util-locate-window': 3.804.0
       '@smithy/util-utf8': 2.3.0
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@aws-crypto/sha256-js@2.0.2':
     dependencies:
@@ -6643,11 +6616,11 @@ snapshots:
     dependencies:
       '@aws-crypto/util': 5.2.0
       '@aws-sdk/types': 3.821.0
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@aws-crypto/supports-web-crypto@5.2.0':
     dependencies:
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@aws-crypto/util@2.0.2':
     dependencies:
@@ -6659,7 +6632,7 @@ snapshots:
     dependencies:
       '@aws-sdk/types': 3.821.0
       '@smithy/util-utf8': 2.3.0
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@aws-sdk/client-chime-sdk-messaging@3.839.0':
     dependencies:
@@ -6746,7 +6719,7 @@ snapshots:
       '@smithy/util-middleware': 4.0.4
       '@smithy/util-retry': 4.0.6
       '@smithy/util-utf8': 4.0.0
-      tslib: 2.7.0
+      tslib: 2.8.1
     transitivePeerDependencies:
       - aws-crt
 
@@ -6766,7 +6739,7 @@ snapshots:
       '@smithy/util-middleware': 4.0.4
       '@smithy/util-utf8': 4.0.0
       fast-xml-parser: 4.4.1
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@aws-sdk/credential-provider-env@3.839.0':
     dependencies:
@@ -6774,7 +6747,7 @@ snapshots:
       '@aws-sdk/types': 3.821.0
       '@smithy/property-provider': 4.0.4
       '@smithy/types': 4.3.1
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@aws-sdk/credential-provider-http@3.839.0':
     dependencies:
@@ -6787,7 +6760,7 @@ snapshots:
       '@smithy/smithy-client': 4.4.5
       '@smithy/types': 4.3.1
       '@smithy/util-stream': 4.2.2
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@aws-sdk/credential-provider-ini@3.839.0':
     dependencies:
@@ -6803,7 +6776,7 @@ snapshots:
       '@smithy/property-provider': 4.0.4
       '@smithy/shared-ini-file-loader': 4.0.4
       '@smithy/types': 4.3.1
-      tslib: 2.7.0
+      tslib: 2.8.1
     transitivePeerDependencies:
       - aws-crt
 
@@ -6820,7 +6793,7 @@ snapshots:
       '@smithy/property-provider': 4.0.4
       '@smithy/shared-ini-file-loader': 4.0.4
       '@smithy/types': 4.3.1
-      tslib: 2.7.0
+      tslib: 2.8.1
     transitivePeerDependencies:
       - aws-crt
 
@@ -6831,7 +6804,7 @@ snapshots:
       '@smithy/property-provider': 4.0.4
       '@smithy/shared-ini-file-loader': 4.0.4
       '@smithy/types': 4.3.1
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@aws-sdk/credential-provider-sso@3.839.0':
     dependencies:
@@ -6842,7 +6815,7 @@ snapshots:
       '@smithy/property-provider': 4.0.4
       '@smithy/shared-ini-file-loader': 4.0.4
       '@smithy/types': 4.3.1
-      tslib: 2.7.0
+      tslib: 2.8.1
     transitivePeerDependencies:
       - aws-crt
 
@@ -6853,7 +6826,7 @@ snapshots:
       '@aws-sdk/types': 3.821.0
       '@smithy/property-provider': 4.0.4
       '@smithy/types': 4.3.1
-      tslib: 2.7.0
+      tslib: 2.8.1
     transitivePeerDependencies:
       - aws-crt
 
@@ -6862,20 +6835,20 @@ snapshots:
       '@aws-sdk/types': 3.821.0
       '@smithy/protocol-http': 5.1.2
       '@smithy/types': 4.3.1
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@aws-sdk/middleware-logger@3.821.0':
     dependencies:
       '@aws-sdk/types': 3.821.0
       '@smithy/types': 4.3.1
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@aws-sdk/middleware-recursion-detection@3.821.0':
     dependencies:
       '@aws-sdk/types': 3.821.0
       '@smithy/protocol-http': 5.1.2
       '@smithy/types': 4.3.1
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@aws-sdk/middleware-user-agent@3.839.0':
     dependencies:
@@ -6885,7 +6858,7 @@ snapshots:
       '@smithy/core': 3.6.0
       '@smithy/protocol-http': 5.1.2
       '@smithy/types': 4.3.1
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@aws-sdk/nested-clients@3.839.0':
     dependencies:
@@ -6926,7 +6899,7 @@ snapshots:
       '@smithy/util-middleware': 4.0.4
       '@smithy/util-retry': 4.0.6
       '@smithy/util-utf8': 4.0.0
-      tslib: 2.7.0
+      tslib: 2.8.1
     transitivePeerDependencies:
       - aws-crt
 
@@ -6937,7 +6910,7 @@ snapshots:
       '@smithy/types': 4.3.1
       '@smithy/util-config-provider': 4.0.0
       '@smithy/util-middleware': 4.0.4
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@aws-sdk/token-providers@3.839.0':
     dependencies:
@@ -6947,21 +6920,21 @@ snapshots:
       '@smithy/property-provider': 4.0.4
       '@smithy/shared-ini-file-loader': 4.0.4
       '@smithy/types': 4.3.1
-      tslib: 2.7.0
+      tslib: 2.8.1
     transitivePeerDependencies:
       - aws-crt
 
   '@aws-sdk/types@3.821.0':
     dependencies:
       '@smithy/types': 4.3.1
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@aws-sdk/util-endpoints@3.828.0':
     dependencies:
       '@aws-sdk/types': 3.821.0
       '@smithy/types': 4.3.1
       '@smithy/util-endpoints': 3.0.6
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@aws-sdk/util-hex-encoding@3.374.0':
     dependencies:
@@ -6970,14 +6943,14 @@ snapshots:
 
   '@aws-sdk/util-locate-window@3.804.0':
     dependencies:
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@aws-sdk/util-user-agent-browser@3.821.0':
     dependencies:
       '@aws-sdk/types': 3.821.0
       '@smithy/types': 4.3.1
       bowser: 2.11.0
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@aws-sdk/util-user-agent-node@3.839.0':
     dependencies:
@@ -6985,16 +6958,16 @@ snapshots:
       '@aws-sdk/types': 3.821.0
       '@smithy/node-config-provider': 4.1.3
       '@smithy/types': 4.3.1
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@aws-sdk/util-utf8-browser@3.259.0':
     dependencies:
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@aws-sdk/xml-builder@3.821.0':
     dependencies:
       '@smithy/types': 4.3.1
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@babel/code-frame@7.27.1':
     dependencies:
@@ -7771,17 +7744,17 @@ snapshots:
   '@emnapi/core@1.4.3':
     dependencies:
       '@emnapi/wasi-threads': 1.0.2
-      tslib: 2.7.0
+      tslib: 2.8.1
     optional: true
 
   '@emnapi/runtime@1.4.3':
     dependencies:
-      tslib: 2.7.0
+      tslib: 2.8.1
     optional: true
 
   '@emnapi/wasi-threads@1.0.2':
     dependencies:
-      tslib: 2.7.0
+      tslib: 2.8.1
     optional: true
 
   '@emotion/is-prop-valid@1.2.2':
@@ -8020,7 +7993,7 @@ snapshots:
   '@firebase/component@0.6.17':
     dependencies:
       '@firebase/util': 1.12.0
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@firebase/data-connect@0.3.9(@firebase/app@0.13.1)':
     dependencies:
@@ -8132,7 +8105,7 @@ snapshots:
 
   '@firebase/logger@0.4.4':
     dependencies:
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@firebase/messaging-compat@0.2.21(@firebase/app-compat@0.4.1)(@firebase/app@0.13.1)':
     dependencies:
@@ -8813,6 +8786,29 @@ snapshots:
       '@types/react': 19.1.8
       '@types/react-dom': 19.1.6(@types/react@19.1.8)
 
+  '@radix-ui/react-popover@1.1.14(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
+    dependencies:
+      '@radix-ui/primitive': 1.1.2
+      '@radix-ui/react-compose-refs': 1.1.2(@types/react@19.1.8)(react@19.1.0)
+      '@radix-ui/react-context': 1.1.2(@types/react@19.1.8)(react@19.1.0)
+      '@radix-ui/react-dismissable-layer': 1.1.10(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@radix-ui/react-focus-guards': 1.1.2(@types/react@19.1.8)(react@19.1.0)
+      '@radix-ui/react-focus-scope': 1.1.7(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@radix-ui/react-id': 1.1.1(@types/react@19.1.8)(react@19.1.0)
+      '@radix-ui/react-popper': 1.2.7(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@radix-ui/react-portal': 1.1.9(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@radix-ui/react-presence': 1.1.4(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@radix-ui/react-primitive': 2.1.3(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@radix-ui/react-slot': 1.2.3(@types/react@19.1.8)(react@19.1.0)
+      '@radix-ui/react-use-controllable-state': 1.2.2(@types/react@19.1.8)(react@19.1.0)
+      aria-hidden: 1.2.6
+      react: 19.1.0
+      react-dom: 19.1.0(react@19.1.0)
+      react-remove-scroll: 2.7.1(@types/react@19.1.8)(react@19.1.0)
+    optionalDependencies:
+      '@types/react': 19.1.8
+      '@types/react-dom': 19.1.6(@types/react@19.1.8)
+
   '@radix-ui/react-popper@1.2.7(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
     dependencies:
       '@floating-ui/react-dom': 2.1.4(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -8971,7 +8967,7 @@ snapshots:
   '@smithy/abort-controller@4.0.4':
     dependencies:
       '@smithy/types': 4.3.1
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@smithy/config-resolver@4.1.4':
     dependencies:
@@ -8979,7 +8975,7 @@ snapshots:
       '@smithy/types': 4.3.1
       '@smithy/util-config-provider': 4.0.0
       '@smithy/util-middleware': 4.0.4
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@smithy/core@3.6.0':
     dependencies:
@@ -8991,7 +8987,7 @@ snapshots:
       '@smithy/util-middleware': 4.0.4
       '@smithy/util-stream': 4.2.2
       '@smithy/util-utf8': 4.0.0
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@smithy/credential-provider-imds@4.0.6':
     dependencies:
@@ -8999,7 +8995,7 @@ snapshots:
       '@smithy/property-provider': 4.0.4
       '@smithy/types': 4.3.1
       '@smithy/url-parser': 4.0.4
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@smithy/fetch-http-handler@5.0.4':
     dependencies:
@@ -9007,33 +9003,33 @@ snapshots:
       '@smithy/querystring-builder': 4.0.4
       '@smithy/types': 4.3.1
       '@smithy/util-base64': 4.0.0
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@smithy/hash-node@4.0.4':
     dependencies:
       '@smithy/types': 4.3.1
       '@smithy/util-buffer-from': 4.0.0
       '@smithy/util-utf8': 4.0.0
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@smithy/invalid-dependency@4.0.4':
     dependencies:
       '@smithy/types': 4.3.1
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@smithy/is-array-buffer@2.2.0':
     dependencies:
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@smithy/is-array-buffer@4.0.0':
     dependencies:
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@smithy/middleware-content-length@4.0.4':
     dependencies:
       '@smithy/protocol-http': 5.1.2
       '@smithy/types': 4.3.1
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@smithy/middleware-endpoint@4.1.13':
     dependencies:
@@ -9044,7 +9040,7 @@ snapshots:
       '@smithy/types': 4.3.1
       '@smithy/url-parser': 4.0.4
       '@smithy/util-middleware': 4.0.4
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@smithy/middleware-retry@4.1.14':
     dependencies:
@@ -9055,26 +9051,26 @@ snapshots:
       '@smithy/types': 4.3.1
       '@smithy/util-middleware': 4.0.4
       '@smithy/util-retry': 4.0.6
-      tslib: 2.7.0
+      tslib: 2.8.1
       uuid: 9.0.1
 
   '@smithy/middleware-serde@4.0.8':
     dependencies:
       '@smithy/protocol-http': 5.1.2
       '@smithy/types': 4.3.1
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@smithy/middleware-stack@4.0.4':
     dependencies:
       '@smithy/types': 4.3.1
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@smithy/node-config-provider@4.1.3':
     dependencies:
       '@smithy/property-provider': 4.0.4
       '@smithy/shared-ini-file-loader': 4.0.4
       '@smithy/types': 4.3.1
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@smithy/node-http-handler@4.0.6':
     dependencies:
@@ -9082,28 +9078,28 @@ snapshots:
       '@smithy/protocol-http': 5.1.2
       '@smithy/querystring-builder': 4.0.4
       '@smithy/types': 4.3.1
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@smithy/property-provider@4.0.4':
     dependencies:
       '@smithy/types': 4.3.1
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@smithy/protocol-http@5.1.2':
     dependencies:
       '@smithy/types': 4.3.1
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@smithy/querystring-builder@4.0.4':
     dependencies:
       '@smithy/types': 4.3.1
       '@smithy/util-uri-escape': 4.0.0
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@smithy/querystring-parser@4.0.4':
     dependencies:
       '@smithy/types': 4.3.1
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@smithy/service-error-classification@4.0.6':
     dependencies:
@@ -9112,7 +9108,7 @@ snapshots:
   '@smithy/shared-ini-file-loader@4.0.4':
     dependencies:
       '@smithy/types': 4.3.1
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@smithy/signature-v4@5.1.2':
     dependencies:
@@ -9123,7 +9119,7 @@ snapshots:
       '@smithy/util-middleware': 4.0.4
       '@smithy/util-uri-escape': 4.0.0
       '@smithy/util-utf8': 4.0.0
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@smithy/smithy-client@4.4.5':
     dependencies:
@@ -9133,45 +9129,45 @@ snapshots:
       '@smithy/protocol-http': 5.1.2
       '@smithy/types': 4.3.1
       '@smithy/util-stream': 4.2.2
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@smithy/types@4.3.1':
     dependencies:
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@smithy/url-parser@4.0.4':
     dependencies:
       '@smithy/querystring-parser': 4.0.4
       '@smithy/types': 4.3.1
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@smithy/util-base64@4.0.0':
     dependencies:
       '@smithy/util-buffer-from': 4.0.0
       '@smithy/util-utf8': 4.0.0
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@smithy/util-body-length-browser@4.0.0':
     dependencies:
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@smithy/util-body-length-node@4.0.0':
     dependencies:
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@smithy/util-buffer-from@2.2.0':
     dependencies:
       '@smithy/is-array-buffer': 2.2.0
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@smithy/util-buffer-from@4.0.0':
     dependencies:
       '@smithy/is-array-buffer': 4.0.0
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@smithy/util-config-provider@4.0.0':
     dependencies:
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@smithy/util-defaults-mode-browser@4.0.21':
     dependencies:
@@ -9179,7 +9175,7 @@ snapshots:
       '@smithy/smithy-client': 4.4.5
       '@smithy/types': 4.3.1
       bowser: 2.11.0
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@smithy/util-defaults-mode-node@4.0.21':
     dependencies:
@@ -9189,32 +9185,32 @@ snapshots:
       '@smithy/property-provider': 4.0.4
       '@smithy/smithy-client': 4.4.5
       '@smithy/types': 4.3.1
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@smithy/util-endpoints@3.0.6':
     dependencies:
       '@smithy/node-config-provider': 4.1.3
       '@smithy/types': 4.3.1
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@smithy/util-hex-encoding@1.1.0':
     dependencies:
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@smithy/util-hex-encoding@4.0.0':
     dependencies:
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@smithy/util-middleware@4.0.4':
     dependencies:
       '@smithy/types': 4.3.1
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@smithy/util-retry@4.0.6':
     dependencies:
       '@smithy/service-error-classification': 4.0.6
       '@smithy/types': 4.3.1
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@smithy/util-stream@4.2.2':
     dependencies:
@@ -9225,21 +9221,21 @@ snapshots:
       '@smithy/util-buffer-from': 4.0.0
       '@smithy/util-hex-encoding': 4.0.0
       '@smithy/util-utf8': 4.0.0
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@smithy/util-uri-escape@4.0.0':
     dependencies:
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@smithy/util-utf8@2.3.0':
     dependencies:
       '@smithy/util-buffer-from': 2.2.0
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@smithy/util-utf8@4.0.0':
     dependencies:
       '@smithy/util-buffer-from': 4.0.0
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@standard-schema/spec@1.0.0': {}
 
@@ -9881,7 +9877,7 @@ snapshots:
 
   '@tybys/wasm-util@0.9.0':
     dependencies:
-      tslib: 2.7.0
+      tslib: 2.8.1
     optional: true
 
   '@types/aria-query@5.0.4': {}
@@ -10182,14 +10178,6 @@ snapshots:
       loupe: 3.1.4
       tinyrainbow: 2.0.0
 
-  '@vue/compiler-sfc@2.7.16':
-    dependencies:
-      '@babel/parser': 7.27.7
-      postcss: 8.5.6
-      source-map: 0.6.1
-    optionalDependencies:
-      prettier: 2.8.8
-
   '@webassemblyjs/ast@1.14.1':
     dependencies:
       '@webassemblyjs/helper-numbers': 1.13.2
@@ -10274,7 +10262,7 @@ snapshots:
 
   '@wry/context@0.7.4':
     dependencies:
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   '@wry/equality@0.5.7':
     dependencies:
@@ -10385,7 +10373,7 @@ snapshots:
 
   aria-hidden@1.2.6:
     dependencies:
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   aria-query@5.3.0:
     dependencies:
@@ -10676,7 +10664,7 @@ snapshots:
   camel-case@4.1.2:
     dependencies:
       pascal-case: 3.1.2
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   camelcase@6.3.0: {}
 
@@ -11009,8 +10997,6 @@ snapshots:
 
   dayjs@1.11.13: {}
 
-  de-indent@1.0.2: {}
-
   debug@3.2.7:
     dependencies:
       ms: 2.1.3
@@ -11125,7 +11111,7 @@ snapshots:
   dot-case@3.0.4:
     dependencies:
       no-case: 3.0.4
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   dunder-proto@1.0.1:
     dependencies:
@@ -12311,7 +12297,7 @@ snapshots:
 
   lower-case@2.0.2:
     dependencies:
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   lru-cache@5.1.1:
     dependencies:
@@ -12441,7 +12427,7 @@ snapshots:
   no-case@3.0.4:
     dependencies:
       lower-case: 2.0.2
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   node-abort-controller@3.1.1: {}
 
@@ -12600,7 +12586,7 @@ snapshots:
   param-case@3.0.4:
     dependencies:
       dot-case: 3.0.4
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   parent-module@1.0.1:
     dependencies:
@@ -12627,7 +12613,7 @@ snapshots:
   pascal-case@3.1.2:
     dependencies:
       no-case: 3.0.4
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   path-browserify@1.0.1: {}
 
@@ -12755,9 +12741,6 @@ snapshots:
   prettier-linter-helpers@1.0.0:
     dependencies:
       fast-diff: 1.3.0
-
-  prettier@2.8.8:
-    optional: true
 
   prettier@3.6.2: {}
 
@@ -13022,7 +13005,7 @@ snapshots:
     dependencies:
       react: 19.1.0
       react-style-singleton: 2.2.3(@types/react@19.1.8)(react@19.1.0)
-      tslib: 2.7.0
+      tslib: 2.8.1
     optionalDependencies:
       '@types/react': 19.1.8
 
@@ -13031,7 +13014,7 @@ snapshots:
       react: 19.1.0
       react-remove-scroll-bar: 2.3.8(@types/react@19.1.8)(react@19.1.0)
       react-style-singleton: 2.2.3(@types/react@19.1.8)(react@19.1.0)
-      tslib: 2.7.0
+      tslib: 2.8.1
       use-callback-ref: 1.3.3(@types/react@19.1.8)(react@19.1.0)
       use-sidecar: 1.1.3(@types/react@19.1.8)(react@19.1.0)
     optionalDependencies:
@@ -13041,7 +13024,7 @@ snapshots:
     dependencies:
       get-nonce: 1.0.1
       react: 19.1.0
-      tslib: 2.7.0
+      tslib: 2.8.1
     optionalDependencies:
       '@types/react': 19.1.8
 
@@ -13669,37 +13652,6 @@ snapshots:
     dependencies:
       '@popperjs/core': 2.11.8
 
-  tiptap-commands@1.17.1:
-    dependencies:
-      prosemirror-commands: 1.7.1
-      prosemirror-inputrules: 1.5.0
-      prosemirror-model: 1.25.1
-      prosemirror-schema-list: 1.5.1
-      prosemirror-state: 1.4.3
-      prosemirror-tables: 1.7.1
-      tiptap-utils: 1.13.1
-
-  tiptap-utils@1.13.1:
-    dependencies:
-      prosemirror-model: 1.25.1
-      prosemirror-state: 1.4.3
-      prosemirror-tables: 1.7.1
-
-  tiptap@1.32.2(vue-template-compiler@2.7.16)(vue@2.7.16):
-    dependencies:
-      prosemirror-commands: 1.7.1
-      prosemirror-dropcursor: 1.8.2
-      prosemirror-gapcursor: 1.3.2
-      prosemirror-inputrules: 1.5.0
-      prosemirror-keymap: 1.2.3
-      prosemirror-model: 1.25.1
-      prosemirror-state: 1.4.3
-      prosemirror-view: 1.40.0
-      tiptap-commands: 1.17.1
-      tiptap-utils: 1.13.1
-      vue: 2.7.16
-      vue-template-compiler: 2.7.16
-
   to-buffer@1.2.1:
     dependencies:
       isarray: 2.0.5
@@ -13870,7 +13822,7 @@ snapshots:
   use-callback-ref@1.3.3(@types/react@19.1.8)(react@19.1.0):
     dependencies:
       react: 19.1.0
-      tslib: 2.7.0
+      tslib: 2.8.1
     optionalDependencies:
       '@types/react': 19.1.8
 
@@ -13878,7 +13830,7 @@ snapshots:
     dependencies:
       detect-node-es: 1.1.0
       react: 19.1.0
-      tslib: 2.7.0
+      tslib: 2.8.1
     optionalDependencies:
       '@types/react': 19.1.8
 
@@ -13922,16 +13874,6 @@ snapshots:
       d3-timer: 3.0.1
 
   vm-browserify@1.1.2: {}
-
-  vue-template-compiler@2.7.16:
-    dependencies:
-      de-indent: 1.0.2
-      he: 1.2.0
-
-  vue@2.7.16:
-    dependencies:
-      '@vue/compiler-sfc': 2.7.16
-      csstype: 3.1.3
 
   w3c-keyname@2.2.8: {}
 
