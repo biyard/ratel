@@ -15,6 +15,8 @@ import {
   Expand,
   ThumbUp,
   Share2,
+  CommentIcon,
+  Rewards,
 } from '@/components/icons';
 import { TeamContext } from '@/lib/contexts/team-context';
 import { useUserInfo } from '@/app/(social)/_hooks/user';
@@ -28,8 +30,10 @@ export interface SpaceHeaderProps {
   proposerName: string;
   createdAt: number;
   authorId: number;
+  rewards: number;
   likes: number;
   shares: number;
+  comments: number;
   isLiked?: boolean;
   isEdit?: boolean;
   onback: () => void;
@@ -50,11 +54,11 @@ export default function SpaceHeader({
   createdAt,
   authorId,
   likes,
+  rewards,
   shares,
-  isLiked = false,
+  comments,
   isEdit = false,
   setTitle = () => {},
-  onlike = () => {},
   onshare = () => {},
   onback = () => {},
   onsave = () => {},
@@ -121,28 +125,28 @@ export default function SpaceHeader({
         </div>
 
         <div className="flex flex-row w-fit gap-5">
-          <div
-            className="cursor-pointer flex flex-row w-fit gap-1 items-center"
-            onClick={onlike}
-          >
-            <ThumbUp
-              width={20}
-              height={20}
-              className={
-                isLiked
-                  ? '[&>path]:fill-primary [&>path]:stroke-primary'
-                  : undefined
-              }
-            />
+          <div className="flex flex-row w-fit gap-1 items-center">
+            <ThumbUp width={20} height={20} />
             <div className="font-medium text-[15px] text-white">
               {likes ?? 0}
             </div>
           </div>
 
-          <div
-            className="cursor-pointer flex flex-row w-fit gap-1 items-center"
-            onClick={onshare}
-          >
+          <div className="flex flex-row w-fit gap-1 items-center">
+            <CommentIcon width={20} height={20} />
+            <div className="font-medium text-[15px] text-white">
+              {comments ?? 0}
+            </div>
+          </div>
+
+          <div className="flex flex-row w-fit gap-1 items-center">
+            <Rewards width={20} height={20} />
+            <div className="font-medium text-[15px] text-white">
+              {rewards ?? 0}
+            </div>
+          </div>
+
+          <div className="flex flex-row w-fit gap-1 items-center">
             <Share2 width={20} height={20} />
             <div className="font-medium text-[15px] text-white">
               {shares ?? 0}

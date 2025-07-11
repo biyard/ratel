@@ -32,13 +32,14 @@ import {
 import { useApiCall } from '@/lib/api/use-send';
 import { showErrorToast, showInfoToast, showSuccessToast } from '@/lib/toast';
 import { checkString } from '@/lib/string-filter-utils';
-import { FileInfo } from '@/lib/api/models/feeds';
+import { Feed, FileInfo } from '@/lib/api/models/feeds';
 import { DiscussionCreateRequest } from '@/lib/api/models/discussion';
 import { ElearningCreateRequest } from '@/lib/api/models/elearning';
 import { Question, SurveyCreateRequest } from '@/lib/api/models/survey';
 import { SpaceDraftCreateRequest } from '@/lib/api/models/space_draft';
 import { useQueryClient } from '@tanstack/react-query';
 import { QK_GET_SPACE_BY_SPACE_ID } from '@/constants';
+import { useFeedByID } from '@/app/(social)/_hooks/feed';
 
 export interface MappedResponse {
   question: Question;
@@ -529,6 +530,16 @@ export function useDeliberationSpace(): Space {
   }
 
   return space;
+}
+
+export function useDeliberationFeed(feedId: number): Feed {
+  const { data: feed } = useFeedByID(feedId);
+
+  if (!feed) {
+    throw new Error('Feed data is not available');
+  }
+
+  return feed;
 }
 
 function mapResponses(
