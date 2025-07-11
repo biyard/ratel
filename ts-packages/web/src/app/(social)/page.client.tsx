@@ -24,6 +24,7 @@ import FeedEndMessage from './_components/feed-end-message';
 import PromotionCard from './_components/promotion-card';
 import Loading from '@/app/loading';
 import Suggestions from './_components/suggestions';
+import { Space } from '@/lib/api/models/spaces';
 
 const FEED_RESET_TIMEOUT_MS = 10000;
 export const SIZE = 10;
@@ -47,6 +48,8 @@ export interface Post {
   shares: number;
   created_at: number;
   onboard: boolean;
+
+  spaces: Space[];
 }
 
 export default function Home() {
@@ -88,6 +91,8 @@ export default function Home() {
       shares: item.shares,
       created_at: item.created_at,
       onboard: item.onboard ?? false,
+
+      spaces: item.spaces ?? [],
     }));
   }, []);
 
@@ -131,14 +136,14 @@ export default function Home() {
     }
   }, [inView, hasMore, isLoading]);
 
-  const filteredFeeds = feeds.filter(
-    (d) =>
-      !(
-        checkString(d.title) ||
-        checkString(d.contents) ||
-        checkString(d.author_name)
-      ),
-  );
+  const filteredFeeds = feeds.filter((d) => {
+    const hasInvalidString =
+      checkString(d.title) ||
+      checkString(d.contents) ||
+      checkString(d.author_name);
+
+    return !hasInvalidString;
+  });
 
   return (
     <div className="flex-1 flex relative">

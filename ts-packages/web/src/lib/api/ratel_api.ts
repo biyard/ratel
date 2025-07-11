@@ -164,6 +164,8 @@ export const ratelApi = {
   },
   spaces: {
     createSpace: () => '/v1/spaces',
+    likeSpace: (id: number) => `/v1/spaces/${id}`,
+    shareSpace: (id: number) => `/v1/spaces/${id}`,
     getSpaceBySpaceId: (id: number) => `/v1/spaces/${id}`,
     getSpaceRedeemCodes: (space_id: number) =>
       `/v1/spaces/${space_id}/redeem-codes`,

@@ -1,5 +1,4 @@
 'use client';
-import CustomCheckbox from '@/components/checkbox/custom-checkbox';
 import { Internet } from '@/components/icons';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -20,7 +19,7 @@ export default function NewDiscussion({
   const popup = usePopup();
   const [title, setTitle] = useState(discussion.name);
   const [description, setDescription] = useState(discussion.description);
-  const [reminderEnabled, setReminderEnabled] = useState(false);
+  const [reminderEnabled] = useState(false);
 
   const [startTime, setStartTime] = useState<number>(discussion.started_at);
   const [endTime, setEndTime] = useState<number>(discussion.ended_at);
@@ -105,7 +104,7 @@ export default function NewDiscussion({
         </div>
       </div>
 
-      <div className="flex flex-row w-full py-5 items-start gap-2.5">
+      {/* <div className="flex flex-row w-full py-5 items-start gap-2.5">
         <CustomCheckbox
           checked={reminderEnabled}
           onChange={() => setReminderEnabled(!reminderEnabled)}
@@ -117,9 +116,9 @@ export default function NewDiscussion({
             A reminder email will be sent 10 minutes prior to the discussion.
           </div>
         </div>
-      </div>
+      </div> */}
 
-      <div className="flex justify-end">
+      <div className="flex justify-end mt-2.5">
         <button
           className="w-fit px-10 py-[14.5px] rounded-[10px] bg-primary hover:bg-hover text-black text-bold text-base hover:text-black cursor-pointer"
           onClick={() => {
