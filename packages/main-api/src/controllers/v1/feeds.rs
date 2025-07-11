@@ -12,7 +12,10 @@ use by_types::QueryResponse;
 use dto::*;
 use sqlx::postgres::PgRow;
 
-use crate::{security::check_perm, utils::users::extract_user_id};
+use crate::{
+    security::check_perm,
+    utils::users::{extract_user_id, extract_user_with_options},
+};
 
 #[derive(
     Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
@@ -34,9 +37,11 @@ impl FeedController {
         param: FeedQuery,
     ) -> Result<QueryResponse<FeedSummary>> {
         let mut total_count = 0;
-        let user_id = extract_user_id(&self.pool, auth.clone())
+        let user = extract_user_with_options(&self.pool, auth.clone(), false)
             .await
             .unwrap_or_default();
+        let user_id = user.id;
+        let teams = user.teams;
         let feed_type = param.feed_type.unwrap_or(FeedType::Post);
         let status = if let Some(status) = param.status {
             if status == FeedStatus::Draft {
@@ -54,7 +59,7 @@ impl FeedController {
         } else {
             FeedStatus::Published
         };
-        let items: Vec<FeedSummary> = FeedSummary::query_builder(user_id)
+        let feeds: Vec<FeedSummary> = FeedSummary::query_builder(user_id)
             .feed_type_equals(feed_type)
             .spaces_builder(Space::query_builder(user_id))
             .status_equals(status)
@@ -70,7 +75,34 @@ impl FeedController {
             })
             .fetch_all(&self.pool)
             .await?;
-        tracing::debug!("query feed items: {:?}", items);
+        tracing::debug!("query feed items: {:?}", feeds);
+
+        let mut items = vec![];
+
+        for f in feeds {
+            let mut feed = f.clone();
+
+            if let Some(space) = f.spaces.first().cloned() {
+                if let Some(author) = space.author.last() {
+                    let should_filter = space.status == SpaceStatus::Draft
+                        && author.id != user_id
+                        && !teams.iter().any(|t| t.id == author.id);
+
+                    if !should_filter {
+                        feed.spaces = vec![space];
+                    } else {
+                        feed.spaces = vec![];
+                    }
+                } else {
+                    feed.spaces = vec![];
+                }
+            } else {
+                feed.spaces = vec![];
+            }
+
+            items.push(feed);
+        }
+
         Ok(QueryResponse { total_count, items })
     }
 

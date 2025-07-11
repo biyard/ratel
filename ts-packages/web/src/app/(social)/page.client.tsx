@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 'use client';
-import { useState, useEffect, useCallback, useContext } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useInView } from 'react-intersection-observer';
 
 import FeedCard from '@/components/feed-card';
@@ -24,8 +24,7 @@ import FeedEndMessage from './_components/feed-end-message';
 import PromotionCard from './_components/promotion-card';
 import Loading from '@/app/loading';
 import Suggestions from './_components/suggestions';
-import { TeamContext } from '@/lib/contexts/team-context';
-import { Space, SpaceStatus } from '@/lib/api/models/spaces';
+import { Space } from '@/lib/api/models/spaces';
 
 const FEED_RESET_TIMEOUT_MS = 10000;
 export const SIZE = 10;
@@ -54,7 +53,6 @@ export interface Post {
 }
 
 export default function Home() {
-  const { teams } = useContext(TeamContext);
   const { data: promotion } = usePromotion();
   const { data: feed } = useFeedByID(promotion.feed_id);
   const { data: userInfo } = useSuspenseUserInfo();
@@ -139,21 +137,12 @@ export default function Home() {
   }, [inView, hasMore, isLoading]);
 
   const filteredFeeds = feeds.filter((d) => {
-    const space = d.spaces[0];
-    const status = space?.status ?? SpaceStatus.Draft;
-    const authorId = space?.author?.[0]?.id ?? 0;
-
-    const isExternalDraft =
-      status === SpaceStatus.Draft &&
-      authorId !== userId &&
-      !teams.some((t) => t.id === authorId);
-
     const hasInvalidString =
       checkString(d.title) ||
       checkString(d.contents) ||
       checkString(d.author_name);
 
-    return !hasInvalidString && (d.spaces.length == 0 || !isExternalDraft);
+    return !hasInvalidString;
   });
 
   return (
