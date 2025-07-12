@@ -177,6 +177,11 @@ export default function Home() {
       </Col>
 
       {/* Right Sidebar */}
+
+      <div className="tablet:hidden fixed bottom-4 right-4 z-50">
+        <CreatePostButton />
+      </div>
+
       <aside className="w-70 pl-4 max-tablet:!hidden" aria-label="Sidebar">
         <CreatePostButton />
 
