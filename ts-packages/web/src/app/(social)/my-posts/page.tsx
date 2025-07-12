@@ -67,7 +67,9 @@ export default function MyPostsPage() {
         )}
       </div>
 
-      <div className="w-80 pl-4 max-tablet:!hidden">
+      <div
+        className={`z-50 max-tablet:fixed max-tablet:bottom-4 max-tablet:right-4 tablet:w-80 tablet:pl-4 tablet:static`}
+      >
         <CreatePostButton />
       </div>
     </div>
