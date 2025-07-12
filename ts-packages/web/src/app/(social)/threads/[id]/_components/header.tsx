@@ -83,7 +83,7 @@ export default function Header({ post_id }: { post_id: number }) {
             variant="rounded_secondary"
             onClick={handleCreateSpace}
           >
-            <Palace2 className="w-4 h-4 -mr-1.5" />
+            <Palace2 className="size-5" />
             Create Space
           </Button>
         ) : (
