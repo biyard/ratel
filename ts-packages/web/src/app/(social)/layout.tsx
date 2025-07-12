@@ -3,6 +3,8 @@ import UserSidemenu from './_components/user-sidemenu';
 import Loading from '../loading';
 import { CreatePost, PostDraftProvider } from './_components/create-post';
 import Provider from './providers';
+import { RepostProvider } from './_components/repost-feeds';
+import { RepostModal } from './_components/repost-modal';
 
 export default function SocialLayout({
   children,
@@ -21,15 +23,18 @@ export default function SocialLayout({
               </div>
             }
           >
-            <PostDraftProvider>
-              {children}
+            <RepostProvider>
+              <PostDraftProvider>
+                {children}
 
-              <div className="fixed bottom-0 left-0 right-0 z-10 flex flex-row items-center justify-center">
-                <div className="max-w-desktop w-full">
-                  <CreatePost />
+                <div className="fixed bottom-0 left-0 right-0 z-10 flex flex-row items-center justify-center">
+                  <div className="max-w-desktop w-full">
+                    <CreatePost />
+                  </div>
                 </div>
-              </div>
-            </PostDraftProvider>
+                <RepostModal />
+              </PostDraftProvider>
+            </RepostProvider>
           </Suspense>
         </div>
       </div>

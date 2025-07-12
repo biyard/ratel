@@ -15,6 +15,9 @@ import Image from 'next/image';
 import { route } from '@/route';
 import { SpaceType } from '@/lib/api/models/spaces';
 
+// testing repost functiionality
+import { useRepost } from '@/app/(social)/_components/repost-feeds';
+
 export interface FeedCardProps {
   id: number;
   industry: string;
@@ -231,6 +234,15 @@ export function OnboradingTag() {
 }
 
 export function FeedFooter({
+  id,
+  title,
+  contents,
+  author_name,
+  author_profile_url,
+  author_id,
+  created_at,
+  url,
+  industry,
   likes,
   comments,
   rewards,
@@ -238,6 +250,23 @@ export function FeedFooter({
   is_liked,
   onLikeClick,
 }: FeedCardProps) {
+  const { startRepost } = useRepost();
+
+  const handleRepost = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    startRepost({
+      id,
+      title,
+      contents,
+      author_name,
+      author_profile_url,
+      author_id,
+      created_at,
+      url,
+      industry,
+    });
+  };
+
   return (
     <Row className="items-center justify-around border-t w-full border-neutral-800">
       <IconText
@@ -263,7 +292,7 @@ export function FeedFooter({
         <Rewards />
         {convertNumberToString(rewards)}
       </IconText>
-      <IconText>
+      <IconText onClick={handleRepost}>
         <Shares />
         {convertNumberToString(shares)}
       </IconText>
