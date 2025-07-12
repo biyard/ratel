@@ -60,7 +60,7 @@ export default function DiscussionByIdPage() {
     'participants' | 'chat' | null
   >();
   const [participants, setParticipants] = useState<Participant[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
   const [focusedAttendeeId, setFocusedAttendeeId] = useState<string | null>(
     null,
   );

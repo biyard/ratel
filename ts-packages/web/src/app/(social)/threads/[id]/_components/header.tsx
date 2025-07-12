@@ -1,12 +1,11 @@
 'use client';
 
 import { useFeedByID } from '@/app/(social)/_hooks/feed';
-import { ArrowLeft } from '@/components/icons';
+import { ArrowLeft, Palace2 } from '@/components/icons';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { UserType } from '@/lib/api/models/user';
 import { getTimeAgo } from '@/lib/time-utils';
-import { Plus } from 'lucide-react';
 import Image from 'next/image';
 import { BadgeIcon } from '@/components/icons';
 import Link from 'next/link';
@@ -67,11 +66,20 @@ export default function Header({ post_id }: { post_id: number }) {
         </div>
         {space_id ? (
           <Link href={target ?? ''}>
-            <Button variant="rounded_secondary">Join Space</Button>
+            <Button
+              className="bg-[#fcb300] hover:bg-white"
+              variant="rounded_secondary"
+            >
+              Join Space
+            </Button>
           </Link>
         ) : author_id == user_id || selectedTeam ? (
-          <Button variant="rounded_secondary" onClick={handleCreateSpace}>
-            <Plus className="size-5" />
+          <Button
+            className="bg-[#fcb300] hover:bg-white"
+            variant="rounded_secondary"
+            onClick={handleCreateSpace}
+          >
+            <Palace2 className="size-5" />
             Create Space
           </Button>
         ) : (
