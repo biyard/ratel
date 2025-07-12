@@ -16,17 +16,21 @@ import SpaceCreateModal from './space-create-modal';
 import { SpaceType } from '@/lib/api/models/spaces';
 import { useRouter } from 'next/navigation';
 import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
+import { useContext } from 'react';
+import { TeamContext } from '@/lib/contexts/team-context';
 
 export default function Header({ post_id }: { post_id: number }) {
   const { data: post } = useFeedByID(post_id);
   const popup = usePopup();
   const router = useRouter();
+  const { teams } = useContext(TeamContext);
   const user = useSuspenseUserInfo();
-  const space_id = post?.spaces[0]?.id;
-
-  console.log('post author: ', post?.author);
 
   const author_id = post?.author[0].id;
+  const selectedTeam = teams.some((t) => t.id === author_id);
+
+  const space_id = post?.spaces[0]?.id;
+
   const user_id = user.data ? user.data.id : 0;
 
   let target;
@@ -65,7 +69,7 @@ export default function Header({ post_id }: { post_id: number }) {
           <Link href={target ?? ''}>
             <Button variant="rounded_secondary">Join Space</Button>
           </Link>
-        ) : author_id == user_id ? (
+        ) : author_id == user_id || selectedTeam ? (
           <Button variant="rounded_secondary" onClick={handleCreateSpace}>
             <Plus className="size-5" />
             Create Space
