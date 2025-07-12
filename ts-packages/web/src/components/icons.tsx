@@ -43,6 +43,7 @@ export { default as ChevronRight } from '@/assets/icons/chevron-right.svg';
 export { default as BendArrowRight } from '@/assets/icons/bend-arrow-right.svg';
 
 export { default as Palace } from '@/assets/icons/palace.svg';
+export { default as Palace2 } from '@/assets/icons/palace2.svg';
 export { default as Cube } from '@/assets/icons/cube.svg';
 export { default as CheckCircle } from '@/assets/icons/check-circle.svg';
 export { default as Discuss } from '@/assets/icons/discuss.svg';

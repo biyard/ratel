@@ -1,8 +1,7 @@
 'use client';
 
 import { useFeedByID } from '@/app/(social)/_hooks/feed';
-import { ArrowLeft } from '@/components/icons';
-import { Palette } from 'lucide-react';
+import { ArrowLeft, Palace2 } from '@/components/icons';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { UserType } from '@/lib/api/models/user';
@@ -84,8 +83,7 @@ export default function Header({ post_id }: { post_id: number }) {
             variant="rounded_secondary"
             onClick={handleCreateSpace}
           >
-            {/* <Palace className="w-8 h-8 font-bold" /> */}
-            <Palette className="w-4 h-4 -mr-1.5" />
+            <Palace2 className="w-4 h-4 -mr-1.5" />
             Create Space
           </Button>
         ) : (
