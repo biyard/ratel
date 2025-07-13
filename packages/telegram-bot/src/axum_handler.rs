@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use chrono::{TimeZone, Utc};
 use dto::{
-    Result, TelegramNotificationPayload, TelegramSubscribe,
+    Result, SprintLeaguePayload, TelegramNotificationPayload, TelegramSubscribe,
     by_axum::axum::{Json, extract::State},
 };
 use futures::{StreamExt, stream};
@@ -39,37 +39,39 @@ pub async fn notify_handler(
         {}  : ░░░░░░░░░░ 0%
     </pre>
        */
-
     let bot = state.bot.clone();
-    let templates = prepare_templates(&payload);
-    let keyboards = prepare_keyboards(&payload);
+    match payload {
+        TelegramNotificationPayload::SprintLeague(sprint_league) => {
+            let templates = sprint_league_templates(&sprint_league);
+            let keyboards = sprint_league_keyboards(&sprint_league);
 
-    // 병렬로 메시지 전송 (최대 10개씩 동시 처리)
-    let results: Vec<_> = stream::iter(subscribers)
-        .map(|sub| {
-            let bot = bot.clone();
-            let templates = templates.clone();
-            let keyboards = keyboards.clone();
+            let results: Vec<_> = stream::iter(subscribers)
+                .map(|sub| {
+                    let bot = bot.clone();
+                    let templates = templates.clone();
+                    let keyboards = keyboards.clone();
 
-            async move { send_message_to_subscriber(bot, sub, templates, keyboards).await }
-        })
-        .buffer_unordered(10) // 최대 10개 동시 처리
-        .collect()
-        .await;
+                    async move { send_message_to_subscriber(bot, sub, templates, keyboards).await }
+                })
+                .buffer_unordered(10)
+                .collect()
+                .await;
 
-    let (success_count, error_count) =
-        results
-            .iter()
-            .fold((0, 0), |(success, error), result| match result {
-                Ok(_) => (success + 1, error),
-                Err(_) => (success, error + 1),
-            });
+            let (success_count, error_count) =
+                results
+                    .iter()
+                    .fold((0, 0), |(success, error), result| match result {
+                        Ok(_) => (success + 1, error),
+                        Err(_) => (success, error + 1),
+                    });
 
-    tracing::info!(
-        "Message sending completed: {} success, {} errors",
-        success_count,
-        error_count
-    );
+            tracing::info!(
+                "Message sending completed: {} success, {} errors",
+                success_count,
+                error_count
+            );
+        }
+    }
 
     Ok(())
 }
@@ -93,7 +95,7 @@ struct MessageKeyboards {
     keyboard_ko: InlineKeyboardMarkup,
 }
 
-fn prepare_templates(payload: &TelegramNotificationPayload) -> MessageTemplates {
+fn sprint_league_templates(payload: &SprintLeaguePayload) -> MessageTemplates {
     let html_template = format!(
         r#"
 <b>🏁 {}</b>
@@ -150,14 +152,15 @@ fn prepare_templates(payload: &TelegramNotificationPayload) -> MessageTemplates 
     }
 }
 
-fn prepare_keyboards(payload: &TelegramNotificationPayload) -> MessageKeyboards {
-    let url: dto::reqwest::Url = match payload.url.parse() {
-        Ok(url) => url,
-        Err(e) => {
-            tracing::error!("Invalid URL: {}", e);
-            config::get().telegram_mini_app_uri.parse().unwrap()
-        }
-    };
+fn sprint_league_keyboards(payload: &SprintLeaguePayload) -> MessageKeyboards {
+    let url: dto::reqwest::Url = format!(
+        "{}?type=sprint_league&space_id={}",
+        config::get().telegram_mini_app_uri,
+        payload.id,
+    )
+    .parse()
+    .unwrap();
+
     let keyboard = InlineKeyboardMarkup::new(vec![vec![InlineKeyboardButton::url(
         "🔗 Participate Now!".to_string(),
         url.clone(),

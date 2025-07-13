@@ -18,14 +18,16 @@ pub struct TelegramSubscribe {
 }
 
 #[derive(Deserialize, Debug, Serialize, schemars::JsonSchema, aide::OperationIo)]
-pub struct TelegramNotificationPayload {
+pub enum TelegramNotificationPayload {
+    SprintLeague(SprintLeaguePayload),
+}
+
+#[derive(Deserialize, Debug, Serialize, schemars::JsonSchema, aide::OperationIo)]
+pub struct SprintLeaguePayload {
+    pub id: i64,
     pub title: String,
     pub description: String,
-
     pub start_at: i64,
     pub end_at: i64,
-
-    pub participants: [String; 3],
-
-    pub url: String,
+    pub participants: Vec<String>,
 }

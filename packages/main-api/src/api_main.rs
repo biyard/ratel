@@ -1,4 +1,4 @@
-use crate::{config, controllers, route::route, utils::referal_code::generate_referral_code};
+use crate::{config, controllers, route::route};
 use bdk::prelude::{by_axum::axum::Router, *};
 use by_axum::axum::middleware;
 use by_types::DatabaseConfig;
@@ -125,7 +125,8 @@ pub async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
                 "0x000".to_string(),
                 "password".to_string(),
                 Membership::Free,
-                generate_referral_code(),
+                "".to_string(),
+                None,
             )
             .await?;
     }

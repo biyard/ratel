@@ -3,6 +3,8 @@ mod verification;
 use crate::by_axum::axum::extract::Path;
 use crate::by_axum::axum::routing::post;
 use crate::utils::referal_code::generate_referral_code;
+use crate::utils::telegram::validate_telegram_raw;
+use base64::{Engine as _, engine::general_purpose};
 use bdk::prelude::*;
 use by_axum::auth::Authorization;
 use by_axum::axum::{
@@ -98,6 +100,7 @@ impl UserControllerV1 {
         match body {
             UserAction::Signup(req) => ctrl.signup(req, principal).await,
             UserAction::UpdateEvmAddress(req) => ctrl.update_evm_address(req, principal).await,
+            UserAction::UpdateTelegramId(req) => ctrl.update_telegram_id(req, principal).await,
             UserAction::EmailSignup(req) => ctrl.email_signup(req, principal).await,
         }
     }
@@ -129,6 +132,9 @@ impl UserControllerV1 {
             Some(UserReadActionType::LoginByPassword) => {
                 tracing::debug!("login with password: {:?}", req);
                 ctrl.login_with_password(req, session).await
+            }
+            Some(UserReadActionType::LoginByTelegram) => {
+                ctrl.login_with_telegram(req, session).await
             }
             None | Some(UserReadActionType::ByPrincipal) => Err(Error::BadRequest)?,
         }
@@ -181,6 +187,40 @@ impl UserControllerV1 {
         Ok(Json(user))
     }
 
+    pub async fn login_with_telegram(
+        &self,
+        req: UserReadAction,
+        session: Session,
+    ) -> Result<Json<User>> {
+        tracing::debug!("login with telegram raw: {:?}", req);
+
+        if req.telegram_raw.is_none() {
+            return Err(Error::BadRequest);
+        }
+        tracing::debug!("telegram raw: {:?}", req.telegram_raw);
+        let raw = general_purpose::STANDARD
+            .decode(req.telegram_raw.as_ref().unwrap())
+            .map_err(|_| Error::BadRequest)?;
+        let decoded_string = String::from_utf8(raw).map_err(|_| Error::BadRequest)?;
+        let telegram_id = validate_telegram_raw(&Some(decoded_string));
+        if telegram_id.is_none() {
+            return Err(Error::Unauthorized);
+        }
+        let user = User::query_builder()
+            .telegram_id_equals(telegram_id.unwrap())
+            .query()
+            .map(User::from)
+            .fetch_one(&self.pool)
+            .await?;
+        let user_session = UserSession {
+            user_id: user.id,
+            principal: user.principal.clone(),
+            email: user.email.clone(),
+        };
+        session.insert("user_session", &user_session).await?;
+        Ok(Json(user))
+    }
+
     #[instrument]
     pub async fn update_evm_address(
         &self,
@@ -206,11 +246,39 @@ impl UserControllerV1 {
     }
 
     #[instrument]
+    pub async fn update_telegram_id(
+        &self,
+        req: UserUpdateTelegramIdRequest,
+        principal: String,
+    ) -> Result<Json<User>> {
+        tracing::debug!("update_telegram_id: {:?} {:?}", req, principal);
+        let user = User::query_builder()
+            .principal_equals(principal)
+            .query()
+            .map(User::from)
+            .fetch_one(&self.pool)
+            .await?;
+        let telegram_id = validate_telegram_raw(&req.telegram_raw);
+        if telegram_id.is_none() {
+            return Err(Error::BadRequest);
+        }
+        let user = self
+            .users
+            .update(
+                user.id,
+                UserRepositoryUpdateRequest::new().with_telegram_id(telegram_id.unwrap()),
+            )
+            .await?;
+
+        Ok(Json(user))
+    }
+
+    #[instrument]
     pub async fn signup(&self, req: UserSignupRequest, principal: String) -> Result<Json<User>> {
         if req.term_agreed == false {
             return Err(Error::BadRequest);
         }
-
+        let telegram_id = validate_telegram_raw(&req.telegram_raw);
         if let Ok(user) = User::query_builder()
             .principal_equals(principal.clone())
             .user_type_equals(UserType::Anonymous)
@@ -255,6 +323,7 @@ impl UserControllerV1 {
                 "".to_string(),
                 Membership::Free,
                 generate_referral_code(),
+                telegram_id,
             )
             .await?;
 
@@ -269,7 +338,7 @@ impl UserControllerV1 {
         if req.term_agreed == false {
             return Err(Error::BadRequest);
         }
-
+        let telegram_id = validate_telegram_raw(&req.telegram_raw);
         if let Ok(user) = User::query_builder()
             .principal_equals(principal.clone())
             .user_type_equals(UserType::Anonymous)
@@ -314,6 +383,7 @@ impl UserControllerV1 {
                 req.password,
                 Membership::Free,
                 generate_referral_code(),
+                telegram_id,
             )
             .await?;
 
