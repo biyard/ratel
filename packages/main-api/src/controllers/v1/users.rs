@@ -2,6 +2,7 @@ mod verification;
 
 use crate::by_axum::axum::extract::Path;
 use crate::by_axum::axum::routing::post;
+use crate::utils::referal_code::generate_referral_code;
 use bdk::prelude::*;
 use by_axum::auth::Authorization;
 use by_axum::axum::{
@@ -253,6 +254,7 @@ impl UserControllerV1 {
                 req.evm_address,
                 "".to_string(),
                 Membership::Free,
+                generate_referral_code(),
             )
             .await?;
 
@@ -311,6 +313,7 @@ impl UserControllerV1 {
                 "".to_string(),
                 req.password,
                 Membership::Free,
+                generate_referral_code(),
             )
             .await?;
 

@@ -86,6 +86,9 @@ pub struct User {
     #[api_model(version = v0.5, type = INTEGER)]
     #[serde(default)]
     pub membership: Membership,
+    #[api_model(version = v0.6, unique, indexed)]
+    #[serde(default)]
+    pub referral_code: String,
 }
 
 impl User {
