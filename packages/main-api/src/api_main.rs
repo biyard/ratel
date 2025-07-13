@@ -78,6 +78,7 @@ pub async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         EventLog,
         Badge,
         UserBadge,
+        UserPoint,
         SpaceBadge,
         Onboard,
         Mynetwork,

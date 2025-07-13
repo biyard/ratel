@@ -98,6 +98,11 @@ pub struct Space {
     #[api_model(summary, one_to_many = space_drafts, foreign_key = space_id)]
     #[serde(default)]
     pub drafts: Vec<SpaceDraft>,
+
+    #[api_model(one_to_many = sprint_leagues, reference_key = space_id)]
+    #[serde(default)]
+    // Vec length should be 0 or 1.
+    pub sprint_leagues: Vec<SprintLeague>,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]
