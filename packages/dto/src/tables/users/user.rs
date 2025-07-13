@@ -86,6 +86,10 @@ pub struct User {
     #[api_model(version = v0.5, type = INTEGER)]
     #[serde(default)]
     pub membership: Membership,
+
+    #[api_model(one_to_many = user_points, foreign_key = user_id, aggregator = sum(amount))]
+    pub points: i64,
+
     #[api_model(version = v0.6, unique, indexed)]
     #[serde(default)]
     pub referral_code: String,
