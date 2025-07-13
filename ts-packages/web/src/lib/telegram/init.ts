@@ -3,10 +3,6 @@ import {
   mountBackButton,
   restoreInitData,
   init as initSDK,
-  mountMiniAppSync,
-  bindThemeParamsCssVars,
-  mountViewport,
-  bindViewportCssVars,
   mockTelegramEnv,
   type ThemeParams,
   themeParamsState,
@@ -31,7 +27,10 @@ export async function init(options: {
   options.eruda &&
     void import('eruda').then(({ default: eruda }) => {
       eruda.init();
-      eruda.position({ x: window.innerWidth - 50, y: 0 });
+      eruda.position({
+        x: window.innerWidth - 50,
+        y: window.innerHeight - 100,
+      });
     });
 
   // Telegram for macOS has a ton of bugs, including cases, when the client doesn't
@@ -70,14 +69,14 @@ export async function init(options: {
   mountBackButton.ifAvailable();
   restoreInitData();
 
-  if (mountMiniAppSync.isAvailable()) {
-    mountMiniAppSync();
-    bindThemeParamsCssVars();
-  }
+  // if (mountMiniAppSync.isAvailable()) {
+  //   mountMiniAppSync();
+  //   bindThemeParamsCssVars();
+  // }
 
-  if (mountViewport.isAvailable()) {
-    mountViewport().then(() => {
-      bindViewportCssVars();
-    });
-  }
+  // if (mountViewport.isAvailable()) {
+  //   mountViewport().then(() => {
+  //     bindViewportCssVars();
+  //   });
+  // }
 }

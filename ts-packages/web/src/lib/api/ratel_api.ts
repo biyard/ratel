@@ -79,21 +79,32 @@ export function usePromotion(): UseSuspenseQueryResult<Promotion> {
 
   return query;
 }
-
+export const proxy = {
+  login: {
+    loginWithTelegram: (telegram_raw: string) =>
+      `/api/login?telegram-raw=${btoa(telegram_raw)}`,
+  },
+};
 export const ratelApi = {
   users: {
     login: () => '/v1/users?action=login',
     logout: () => '/v2/users/logout',
     loginWithPassword: (email: string, password: string) =>
       `/v1/users?action=login-by-password&email=${encodeURIComponent(email)}&password=${password}`,
+    loginWithTelegram: (raw: string) =>
+      `/v1/users?action=login-by-telegram&telegram_raw=${raw}`,
     getTotalInfo: (page: number, size: number) =>
       `/v1/totals?param-type=query&bookmark=${page}&size=${size}`,
     getUserInfo: () => '/v1/users?action=user-info',
     getUserByEmail: (email: string) =>
       `/v1/users?param-type=read&action=find-by-email&email=${email}`,
+
     signup: () => '/v1/users?action=signup',
     editProfile: (user_id: number) => `/v1/users/${user_id}`,
     updateEvmAddress: () => '/v1/users',
+
+    updateTelegramId: () => '/v1/users',
+
     sendVerificationCode: () => '/v1/users/verifications',
   },
   assets: {

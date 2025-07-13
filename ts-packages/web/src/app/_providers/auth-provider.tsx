@@ -29,6 +29,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [evmWallet, setEvmWallet] = useState<HDNodeWallet | undefined>(
     undefined,
   );
+  const [telegramRaw, setRaw] = useState<string | undefined>(undefined);
 
   const queryClient = useQueryClient();
   useEffect(() => {
@@ -154,6 +155,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     localStorage.setItem(SK_ANONYMOUS_IDENTITY_KEY, encoded_identity);
   };
 
+  const setTelegramRaw = (raw: string) => {
+    setRaw(raw);
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -163,6 +168,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         login,
         logout: logoutUser,
         evmWallet,
+        telegramRaw,
+        setTelegramRaw,
       }}
     >
       {children}

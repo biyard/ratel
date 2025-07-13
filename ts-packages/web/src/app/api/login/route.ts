@@ -7,12 +7,17 @@ export async function GET(request: NextRequest) {
   logger.debug('[GET /api/login] incoming');
   const password = request.nextUrl.searchParams.get('password');
   const email = request.nextUrl.searchParams.get('email');
-
+  const telegramRaw = request.nextUrl.searchParams.get('telegram-raw');
   const apiBaseUrl: string = config.api_url;
 
   let targetUrl = `${apiBaseUrl}${ratelApi.users.login()}`;
   if (email && password && password !== '') {
     const path = ratelApi.users.loginWithPassword(email, password);
+    targetUrl = `${apiBaseUrl}${path}`;
+  }
+
+  if (telegramRaw) {
+    const path = ratelApi.users.loginWithTelegram(telegramRaw);
     targetUrl = `${apiBaseUrl}${path}`;
   }
 
@@ -27,7 +32,8 @@ export async function GET(request: NextRequest) {
   });
 
   const protocol = request.headers.get('x-forwarded-proto') || 'http';
-  const host = request.headers.get('host') || 'localhost';
+  // const host = request.headers.get('host') || 'localhost';
+  const host = 'ggernaut.com';
   const port = request.headers.get('x-forwarded-port') || '8080';
   let origin = `${protocol}://${host}`;
 

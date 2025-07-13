@@ -21,6 +21,8 @@ import { useApolloClient } from '@apollo/client';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { useNetwork } from '@/app/(social)/_hooks/use-network';
 import { isWebView } from '@/lib/webview-utils';
+import { TelegramIcon } from '../icons';
+import { type User as TelegramUser } from '@telegram-apps/sdk-react';
 
 interface LoginModalProps {
   id?: string;
@@ -39,13 +41,32 @@ export const LoginModal = ({ id = 'login_popup' }: LoginModalProps) => {
   const queryClient = useQueryClient();
   const cli = useApolloClient();
 
-  const { login, ed25519KeyPair } = useAuth();
+  const { login, ed25519KeyPair, telegramRaw } = useAuth();
   const [email, setEmail] = useState('');
   const [warning, setWarning] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [passwordWarning, setPasswordWarning] = useState('');
 
+  const updateTelegramId = async () => {
+    if (telegramRaw) {
+      await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}${ratelApi.users.updateTelegramId()}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            update_telegram_id: {
+              telegram_raw: telegramRaw,
+            },
+          }),
+        },
+      );
+    }
+  };
   const validatePassword = (pw: string) => {
     const regex =
       /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[!@#$%^&*()_+{}\[\]:;<>,.?~\\/-]).{8,}$/;
@@ -72,6 +93,7 @@ export const LoginModal = ({ id = 'login_popup' }: LoginModalProps) => {
 
     if (info) {
       refetchUserInfo(queryClient);
+      await updateTelegramId();
       network.refetch();
     }
 
@@ -148,6 +170,7 @@ export const LoginModal = ({ id = 'login_popup' }: LoginModalProps) => {
       } else if (user?.event == EventType.Login) {
         refetchUserInfo(queryClient);
         network.refetch();
+        await updateTelegramId();
         loader.close();
       }
     } catch (err) {
@@ -159,9 +182,67 @@ export const LoginModal = ({ id = 'login_popup' }: LoginModalProps) => {
           description="Google authentication failed"
           msg="Try again later."
           serviceName="Google"
+          onRetry={handleGoogleSignIn}
         />,
       );
       logger.debug('failed to google sign in with error: ', err);
+    }
+  };
+
+  const handleTelegramSignIn = async () => {
+    const loader = popup.open(
+      <LoaderPopup
+        title="Sign in"
+        description="Signing you in..."
+        logo={<TelegramIcon width="50" height="50" />}
+        logoOrigin={<TelegramIcon width={24} height={24} />}
+        msg="Continue with Telegram"
+        serviceName="Telegram"
+      />,
+    );
+
+    try {
+      const info = await send(anonKeyPair, '/api/login', '');
+      console.info('User info from API:', info);
+      if (!info && telegramRaw) {
+        const params = new URLSearchParams(telegramRaw);
+        const userJson = params.get('user');
+        if (!userJson) {
+          throw new Error('Telegram user data not found');
+        }
+        const user: TelegramUser = JSON.parse(userJson);
+        console.info('Telegram user data:', user);
+        popup
+          .open(
+            <UserSetupPopup
+              id="telegram_user_setup"
+              email=""
+              nickname={user.username ?? ''}
+              username={`${user.first_name} ${user.last_name ?? ''}`.trim()}
+              profileUrl={user.photo_url ?? ''}
+              principal={anonKeyPair.getPrincipal().toText()}
+            />,
+          )
+          .withoutBackdropClose();
+      } else {
+        console.info('User info from API:', info);
+        refetchUserInfo(queryClient);
+        network.refetch();
+        loader.close();
+      }
+    } catch (err) {
+      popup.open(
+        <LoginFailurePopup
+          logo={<TelegramIcon width={24} height={24} />}
+          logoOrigin={<TelegramIcon width={24} height={24} />}
+          title="Login failed"
+          description="Telegram authentication failed"
+          msg="Try again later."
+          serviceName="Telegram"
+          onRetry={handleTelegramSignIn}
+        />,
+      );
+      logger.debug('failed to telegram sign in with error: ', err);
     }
   };
 
@@ -231,6 +312,7 @@ export const LoginModal = ({ id = 'login_popup' }: LoginModalProps) => {
           </Button>
         </Row>
       </Col>
+      {/* FIXME: In Telegram MiniApp, google login not working for now.  */}
       {!isWebView() ? (
         <>
           <div className="rule-with-text align-center text-center font-light">
@@ -246,6 +328,16 @@ export const LoginModal = ({ id = 'login_popup' }: LoginModalProps) => {
         </>
       ) : (
         <></>
+      )}
+
+      {!!telegramRaw && (
+        <div className="flex flex-col gap-2.5">
+          <LoginBox
+            icon={<TelegramIcon width={24} height={24} />}
+            label="Continue With Telegram"
+            onClick={handleTelegramSignIn}
+          />
+        </div>
       )}
 
       <LoginPopupFooter />
