@@ -64,3 +64,5 @@ export { default as ZoomRecord } from '@/assets/icons/record.svg';
 export { default as ZoomClose } from '@/assets/icons/zoom-close.svg';
 
 export { default as PieChart1 } from '@/assets/icons/pie-chart-1.svg';
+
+export { default as TelegramIcon } from '@/assets/icons/telegram_logo.svg';
