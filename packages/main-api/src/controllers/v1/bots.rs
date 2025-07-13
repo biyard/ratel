@@ -101,6 +101,7 @@ impl BotController {
                 "".to_string(),
                 user.membership,
                 generate_referral_code(),
+                None,
             )
             .await?;
 

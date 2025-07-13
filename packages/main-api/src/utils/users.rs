@@ -1,9 +1,6 @@
 use bdk::prelude::by_axum::auth::Authorization;
 use bdk::prelude::*;
 use dto::*;
-
-use crate::utils::referal_code::generate_referral_code;
-
 pub async fn extract_user_with_allowing_anonymous(
     pool: &sqlx::Pool<sqlx::Postgres>,
     auth: Option<Authorization>,
@@ -38,7 +35,8 @@ pub async fn extract_user_with_allowing_anonymous(
                             principal.clone(),
                             "".to_string(),
                             Membership::Free,
-                            generate_referral_code(),
+                            "".to_string(),
+                            None,
                         )
                         .await?
                 }

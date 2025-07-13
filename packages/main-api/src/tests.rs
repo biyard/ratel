@@ -4,7 +4,7 @@ use dto::{
 };
 use std::{collections::HashMap, time::SystemTime};
 
-use crate::{api_main::migration, utils::referal_code::generate_referral_code};
+use crate::api_main::migration;
 
 use super::*;
 use rest_api::ApiService;
@@ -47,7 +47,8 @@ pub async fn setup_test_admin(id: &str, pool: &sqlx::Pool<sqlx::Postgres>) -> Re
             format!("0x{}", id),
             "".to_string(), // password
             Membership::Free,
-            generate_referral_code(),
+            "".to_string(),
+            None,
         )
         .await?
         .unwrap();
@@ -85,7 +86,8 @@ pub async fn setup_test_user(id: &str, pool: &sqlx::Pool<sqlx::Postgres>) -> Res
             format!("0x{}", id),
             "".to_string(), // password
             Membership::Free,
-            generate_referral_code(),
+            "".to_string(),
+            None,
         )
         .await?;
 
