@@ -420,7 +420,7 @@ impl FeedController {
             .await
             .map_err(|e| {
                 tracing::error!("failed to get a feed {id}: {e}");
-                Error::FeedInvalidParentId
+                Error::NotFound
             })?;
         check_perm(
             &self.pool,
@@ -459,7 +459,7 @@ impl FeedController {
             .await
             .map_err(|e| {
                 tracing::error!("failed to get a feed {id}: {e}");
-                Error::FeedInvalidParentId
+                Error::NotFound
             })?;
         check_perm(
             &self.pool,

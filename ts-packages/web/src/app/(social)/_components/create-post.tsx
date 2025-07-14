@@ -607,11 +607,29 @@ export const PostDraftProvider: React.FC<{ children: React.ReactNode }> = ({
 
     try {
       await saveDraft(title, content, image);
-      window.location.reload();
+
+      // Invalidate the specific feed query to refetch updated data
+      queryClient.invalidateQueries({
+        queryKey: ['get-feeds-by-feed-id', draftId],
+      });
+
+      // Close the editor and reset state
+      setExpand(false);
+      resetState();
     } catch (error: unknown) {
       logger.error('Failed to save post changes:', error);
     }
-  }, [draftId, title, content, image, status, saveDraft]);
+  }, [
+    draftId,
+    title,
+    content,
+    image,
+    status,
+    saveDraft,
+    queryClient,
+    setExpand,
+    resetState,
+  ]);
 
   const contextValue = {
     expand,

@@ -66,60 +66,18 @@ export default function FeedCard(props: FeedCardProps) {
     setLocalLikes((prev) => (value ? prev + 1 : prev - 1));
 
     try {
-      // Start the API call but don't await it immediately
-      const apiCallPromise = post(ratelApi.feeds.likePost(props.id), {
+      await post(ratelApi.feeds.likePost(props.id), {
         like: { value },
       });
 
-      // Wait for 1 second minimum
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Check if API call completed
-      const res = await Promise.race([
-        apiCallPromise,
-        new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('timeout')), 100),
-        ),
-      ]);
-
-      if (res) {
-        // Success - keep the optimistic update
-        props.onLikeClick?.(value);
-        props.refetch?.();
-      } else {
-        // API call failed - revert optimistic update
-        setLocalIsLiked(props.is_liked);
-        setLocalLikes(props.likes);
-      }
-    } catch {
-      // If timeout or error, wait additional 5 seconds
-      try {
-        const apiCallPromise = post(ratelApi.feeds.likePost(props.id), {
-          like: { value },
-        });
-
-        await new Promise((resolve) => setTimeout(resolve, 5000));
-
-        const res = await Promise.race([
-          apiCallPromise,
-          new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('final_timeout')), 100),
-          ),
-        ]);
-
-        if (res) {
-          props.onLikeClick?.(value);
-          props.refetch?.();
-        } else {
-          // Final failure - revert
-          setLocalIsLiked(props.is_liked);
-          setLocalLikes(props.likes);
-        }
-      } catch {
-        // Final timeout - revert optimistic update
-        setLocalIsLiked(props.is_liked);
-        setLocalLikes(props.likes);
-      }
+      // Success - trigger callbacks
+      props.onLikeClick?.(value);
+      props.refetch?.();
+    } catch (error) {
+      // Revert optimistic update on error
+      setLocalIsLiked(props.is_liked);
+      setLocalLikes(props.likes);
+      console.error('Failed to update like:', error);
     } finally {
       setIsProcessing(false);
     }
