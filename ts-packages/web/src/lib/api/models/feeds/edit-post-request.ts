@@ -18,7 +18,7 @@ export function editPostRequest(
   industry_id: number,
   title: string,
   quote_feed_id: number | null,
-  files: FileInfo[],
+  files: FileInfo[] | null,
   url: string | null,
   url_type: UrlType = UrlType.None,
 ): editPostRequest {
@@ -28,7 +28,7 @@ export function editPostRequest(
       industry_id,
       title,
       quote_feed_id,
-      files,
+      files: files && files.length > 0 ? files : null,
       url,
       url_type,
     },
