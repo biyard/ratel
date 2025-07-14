@@ -18,6 +18,7 @@ pub struct TelegramSubscribe {
 }
 
 #[derive(Deserialize, Debug, Serialize, schemars::JsonSchema, aide::OperationIo)]
+#[serde(rename_all = "snake_case")]
 pub enum TelegramNotificationPayload {
     SprintLeague(SprintLeaguePayload),
 }
@@ -27,7 +28,7 @@ pub struct SprintLeaguePayload {
     pub id: i64,
     pub title: String,
     pub description: String,
-    pub start_at: i64,
-    pub end_at: i64,
-    pub participants: Vec<String>,
+    pub started_at: i64,
+    pub ended_at: i64,
+    pub player_names: Vec<String>,
 }
