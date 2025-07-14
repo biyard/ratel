@@ -1,5 +1,5 @@
 'use client';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Col } from './ui/col';
 import { Row } from './ui/row';
 import { CommentIcon, Rewards, Shares, ThumbUp } from './icons';
@@ -40,21 +40,88 @@ export interface FeedCardProps {
 
   onLikeClick?: (value: boolean) => void;
   refetch?: () => void;
+  isLikeProcessing?: boolean;
 }
 
 export default function FeedCard(props: FeedCardProps) {
   const router = useRouter();
   const { post } = useApiCall();
 
+  const [localLikes, setLocalLikes] = useState(props.likes);
+  const [localIsLiked, setLocalIsLiked] = useState(props.is_liked);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  // Sync with props when they change
+  useEffect(() => {
+    setLocalLikes(props.likes);
+    setLocalIsLiked(props.is_liked);
+  }, [props.likes, props.is_liked]);
+
   const handleLike = async (value: boolean) => {
-    const res = await post(ratelApi.feeds.likePost(props.id), {
-      like: {
-        value,
-      },
-    });
-    if (res) {
-      props.onLikeClick?.(value);
-      props.refetch?.();
+    if (isProcessing) return; // Prevent multiple clicks
+
+    // Set processing state and optimistic update
+    setIsProcessing(true);
+    setLocalIsLiked(value);
+    setLocalLikes((prev) => (value ? prev + 1 : prev - 1));
+
+    try {
+      // Start the API call but don't await it immediately
+      const apiCallPromise = post(ratelApi.feeds.likePost(props.id), {
+        like: { value },
+      });
+
+      // Wait for 1 second minimum
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      // Check if API call completed
+      const res = await Promise.race([
+        apiCallPromise,
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('timeout')), 100),
+        ),
+      ]);
+
+      if (res) {
+        // Success - keep the optimistic update
+        props.onLikeClick?.(value);
+        props.refetch?.();
+      } else {
+        // API call failed - revert optimistic update
+        setLocalIsLiked(props.is_liked);
+        setLocalLikes(props.likes);
+      }
+    } catch {
+      // If timeout or error, wait additional 5 seconds
+      try {
+        const apiCallPromise = post(ratelApi.feeds.likePost(props.id), {
+          like: { value },
+        });
+
+        await new Promise((resolve) => setTimeout(resolve, 5000));
+
+        const res = await Promise.race([
+          apiCallPromise,
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('final_timeout')), 100),
+          ),
+        ]);
+
+        if (res) {
+          props.onLikeClick?.(value);
+          props.refetch?.();
+        } else {
+          // Final failure - revert
+          setLocalIsLiked(props.is_liked);
+          setLocalLikes(props.likes);
+        }
+      } catch {
+        // Final timeout - revert optimistic update
+        setLocalIsLiked(props.is_liked);
+        setLocalLikes(props.likes);
+      }
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -66,7 +133,13 @@ export default function FeedCard(props: FeedCardProps) {
       }}
     >
       <FeedBody {...props} />
-      <FeedFooter {...props} onLikeClick={handleLike} />
+      <FeedFooter
+        {...props}
+        likes={localLikes}
+        is_liked={localIsLiked}
+        isLikeProcessing={isProcessing}
+        onLikeClick={handleLike}
+      />
     </Col>
   );
 }
@@ -175,11 +248,12 @@ export function FeedContents({
 
 export function IconText({
   children,
+  className,
   ...props
 }: React.HTMLAttributes<HTMLDivElement> & { children: React.ReactNode }) {
   return (
     <Row
-      className="justify-center items-center gap-1.25 text-white font-normal text-[15px] px-4 py-5"
+      className={`justify-center items-center gap-1.25 text-white font-normal text-[15px] px-4 py-5 ${className || ''}`}
       {...props}
     >
       {children}
@@ -237,14 +311,20 @@ export function FeedFooter({
   shares,
   is_liked,
   onLikeClick,
+  isLikeProcessing,
 }: FeedCardProps) {
   return (
     <Row className="items-center justify-around border-t w-full border-neutral-800">
       <IconText
         onClick={(evt) => {
           evt.stopPropagation();
-          onLikeClick?.(!is_liked);
+          if (!isLikeProcessing) {
+            onLikeClick?.(!is_liked);
+          }
         }}
+        className={
+          isLikeProcessing ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
+        }
       >
         <ThumbUp
           className={

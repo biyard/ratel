@@ -445,6 +445,45 @@ impl FeedController {
         Ok(res)
     }
 
+    pub async fn edit(
+        &self,
+        id: i64,
+        auth: Option<Authorization>,
+        param: FeedEditRequest,
+    ) -> Result<Feed> {
+        let feed = Feed::query_builder(0)
+            .id_equals(id)
+            .query()
+            .map(Feed::from)
+            .fetch_one(&self.pool)
+            .await
+            .map_err(|e| {
+                tracing::error!("failed to get a feed {id}: {e}");
+                Error::FeedInvalidParentId
+            })?;
+        check_perm(
+            &self.pool,
+            auth,
+            match feed.feed_type {
+                FeedType::Post => RatelResource::Post {
+                    team_id: feed.user_id,
+                },
+                _ => RatelResource::Reply {
+                    team_id: feed.user_id,
+                },
+            },
+            match feed.feed_type {
+                FeedType::Post => GroupPermission::EditPosts,
+                _ => GroupPermission::WriteReplies,
+            },
+        )
+        .await?;
+
+        let res = self.repo.update(id, param.into()).await?;
+
+        Ok(res)
+    }
+
     async fn delete(&self, id: i64, auth: Option<Authorization>) -> Result<Feed> {
         if auth.is_none() {
             return Err(Error::Unauthorized);
@@ -659,6 +698,10 @@ impl FeedController {
         match body {
             FeedByIdAction::Update(param) => {
                 let res = ctrl.update(id, auth, param).await?;
+                Ok(Json(res))
+            }
+            FeedByIdAction::Edit(param) => {
+                let res = ctrl.edit(id, auth, param).await?;
                 Ok(Json(res))
             }
             FeedByIdAction::Delete(_) => {
