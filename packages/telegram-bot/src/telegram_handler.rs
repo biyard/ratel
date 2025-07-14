@@ -47,11 +47,7 @@ pub async fn telegram_handler(
     let chat_id = msg.chat.id;
     let lang = msg.from.clone().and_then(|user| user.language_code);
 
-    if let Some(new_members) = msg.new_chat_members() {
-        if new_members.iter().any(|user| user.id == me.user.id) {
-            tracing::debug!("Bot itself joined the chat, skipping subscription.");
-            return Ok(());
-        }
+    if let Some(_) = msg.new_chat_members() {
         let res = TelegramSubscribe::get_repository(pool.clone())
             .insert(chat_id.0, lang.clone())
             .await;

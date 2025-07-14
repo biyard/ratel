@@ -1,3 +1,8 @@
+/*
+ FIXME: Refactor this codes.
+ a. Separate HTML Templates and Functions.
+ b. Create format_time with LocalTimeZone.
+*/
 use std::sync::Arc;
 
 use chrono::{TimeZone, Utc};
@@ -14,6 +19,8 @@ use teloxide::{
 };
 
 use crate::{AppState, config};
+use base64::{Engine as _, engine::general_purpose};
+use serde::Serialize;
 
 pub async fn notify_handler(
     State(state): State<Arc<AppState>>,
@@ -31,14 +38,6 @@ pub async fn notify_handler(
             return Err(e.into());
         }
     };
-    /*
-    <b>📊 Voting Status</b>
-    <pre>
-        {}  : ██████░░░░ 60%
-        {}  : ██░░░░░░░░ 20%
-        {}  : ░░░░░░░░░░ 0%
-    </pre>
-       */
     let bot = state.bot.clone();
     match payload {
         TelegramNotificationPayload::SprintLeague(sprint_league) => {
@@ -109,16 +108,14 @@ fn sprint_league_templates(payload: &SprintLeaguePayload) -> MessageTemplates {
 - {}
 - {}
 
-👇 <a href="{}"><b>Participate Now!</b></a>
     "#,
         payload.title,
         payload.description,
-        format_timestamp(payload.start_at),
-        format_timestamp(payload.end_at),
-        payload.participants[0],
-        payload.participants[1],
-        payload.participants[2],
-        payload.url,
+        format_timestamp(payload.started_at),
+        format_timestamp(payload.ended_at),
+        payload.player_names[0],
+        payload.player_names[1],
+        payload.player_names[2],
     );
 
     let html_template_ko = format!(
@@ -134,16 +131,14 @@ fn sprint_league_templates(payload: &SprintLeaguePayload) -> MessageTemplates {
 - {}
 - {}
 
-👇 <a href="{}"><b>지금 참여하기!</b></a>
         "#,
         payload.title,
         payload.description,
-        format_timestamp(payload.start_at),
-        format_timestamp(payload.end_at),
-        payload.participants[0],
-        payload.participants[1],
-        payload.participants[2],
-        payload.url,
+        format_timestamp(payload.started_at),
+        format_timestamp(payload.ended_at),
+        payload.player_names[0],
+        payload.player_names[1],
+        payload.player_names[2],
     );
 
     MessageTemplates {
@@ -151,15 +146,22 @@ fn sprint_league_templates(payload: &SprintLeaguePayload) -> MessageTemplates {
         html_ko: html_template_ko,
     }
 }
-
+#[derive(Serialize)]
+pub struct TgWebParams {
+    pub space_id: String,
+    pub type_: String,
+}
 fn sprint_league_keyboards(payload: &SprintLeaguePayload) -> MessageKeyboards {
-    let url: dto::reqwest::Url = format!(
-        "{}?type=sprint_league&space_id={}",
-        config::get().telegram_mini_app_uri,
-        payload.id,
-    )
-    .parse()
-    .unwrap();
+    let params = TgWebParams {
+        space_id: payload.id.to_string(),
+        type_: "sprint_league".to_string(),
+    };
+    let json_string = serde_json::to_string(&params).unwrap();
+    let b64_string = general_purpose::STANDARD.encode(json_string);
+
+    let url: dto::reqwest::Url = format!("{}={}", config::get().telegram_mini_app_uri, b64_string,)
+        .parse()
+        .unwrap();
 
     let keyboard = InlineKeyboardMarkup::new(vec![vec![InlineKeyboardButton::url(
         "🔗 Participate Now!".to_string(),
