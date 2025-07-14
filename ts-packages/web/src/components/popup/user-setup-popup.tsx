@@ -22,7 +22,7 @@ import Image from 'next/image';
 import { emailSignupRequest } from '@/lib/api/models/users/email-signup-request';
 import { signupRequest } from '@/lib/api/models/users/signup-request';
 
-interface UserSetupPopupProps {
+export interface UserSetupPopupProps {
   id?: string;
   nickname?: string;
   username?: string;
