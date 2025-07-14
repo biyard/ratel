@@ -43,6 +43,7 @@ export { default as ChevronRight } from '@/assets/icons/chevron-right.svg';
 export { default as BendArrowRight } from '@/assets/icons/bend-arrow-right.svg';
 
 export { default as Palace } from '@/assets/icons/palace.svg';
+export { default as PalaceSvgrepo } from '@/assets/icons/palace-svgrepo.svg';
 export { default as Cube } from '@/assets/icons/cube.svg';
 export { default as CheckCircle } from '@/assets/icons/check-circle.svg';
 export { default as Discuss } from '@/assets/icons/discuss.svg';
@@ -71,6 +72,7 @@ export { default as Unlock } from '@/assets/icons/unlock.svg';
 export { default as ShapeArrowDown } from '@/assets/icons/shape-arrow-down.svg';
 export { default as DialPad } from '@/assets/icons/dial-pad.svg';
 export { default as DialPad2 } from '@/assets/icons/dial-pad-2.svg';
+export { default as Extra } from '@/assets/icons/extra.svg';
 export { default as Extra2 } from '@/assets/icons/extra-2.svg';
 export { default as CircleClose } from '@/assets/icons/circle-close.svg';
 export { default as Lock } from '@/assets/icons/lock.svg';
