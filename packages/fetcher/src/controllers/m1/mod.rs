@@ -4,6 +4,7 @@ mod ch;
 mod eu;
 mod hk;
 mod log;
+mod spaces;
 mod us;
 
 use bdk::prelude::*;
@@ -58,6 +59,10 @@ pub async fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Ro
             eu::bills::EUBillWriterController::new(pool.clone())
                 .await
                 .route()?,
+        )
+        .nest(
+            "/spaces",
+            spaces::SpaceController::new(pool.clone()).await.route()?,
         )
         .layer(middleware::from_fn(authorize_router)))
 }
