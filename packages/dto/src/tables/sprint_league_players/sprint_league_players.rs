@@ -8,16 +8,16 @@ pub struct SprintLeaguePlayer {
     #[api_model(many_to_one = sprint_leagues, action = create)]
     pub sprint_league_id: i64,
 
-    #[api_model(action = create)]
+    #[api_model(action = [create, update])]
     pub name: String,
 
-    #[api_model(action = create)]
+    #[api_model(action = [create, update])]
     pub description: String,
 
-    #[api_model(action = create, type= JSONB)]
+    #[api_model(action = [create, update], type= JSONB)]
     pub player_images: PlayerImages,
 
-    #[api_model(one_to_many = sprint_league_votes, foreign_key = sprint_league_id, aggregator = sum(amount))]
+    #[api_model(one_to_many = sprint_league_votes, foreign_key = player_id, aggregator = sum(amount))]
     pub total_votes: i64,
 }
 
