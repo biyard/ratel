@@ -1,6 +1,6 @@
 use bdk::prelude::*;
 
-#[api_model(base = "/", table = sprint_leagues_votes)]
+#[api_model(base = "/", table = sprint_league_votes)]
 pub struct SprintLeagueVote {
     #[api_model(summary, primary_key)]
     pub id: i64,

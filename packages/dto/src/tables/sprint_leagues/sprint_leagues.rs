@@ -14,7 +14,6 @@ pub struct SprintLeague {
     pub updated_at: i64,
 
     #[api_model(many_to_one = spaces)]
-    #[serde(default)]
     pub space_id: i64,
 
     #[api_model(one_to_many = sprint_league_players, foreign_key = sprint_league_id, nested)]
@@ -23,6 +22,12 @@ pub struct SprintLeague {
     #[api_model(skip)]
     #[serde(default)]
     pub winner_id: Option<i64>,
+
+    #[api_model(one_to_many = sprint_league_votes, foreign_key = sprint_league_id, aggregator = count)]
+    pub votes: i64,
+
+    #[api_model(summary, many_to_many = sprint_league_votes, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = sprint_league_id, aggregator = exist)]
+    pub is_voted: bool,
 
     #[api_model(action = create)]
     #[serde(default)]

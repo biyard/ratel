@@ -17,8 +17,8 @@ pub struct SprintLeaguePlayer {
     #[api_model(action = [create, update], type= JSONB)]
     pub player_images: PlayerImages,
 
-    #[api_model(one_to_many = sprint_league_votes, foreign_key = player_id, aggregator = sum(amount))]
-    pub total_votes: i64,
+    #[api_model(one_to_many = sprint_league_votes, foreign_key = player_id, aggregator = count)]
+    pub votes: i64,
 }
 
 #[derive(Debug, Default, serde::Serialize, serde::Deserialize, Clone, PartialEq, Eq)]

@@ -207,10 +207,14 @@ impl SprintLeagueController {
             GroupPermission::ManageSpace,
         )
         .await?;
+        let user_id = extract_user_id(&self.pool, auth.clone())
+            .await
+            .unwrap_or_default();
 
         let space = Space::query_builder()
             .sprint_leagues_builder(
-                SprintLeague::query_builder().players_builder(SprintLeaguePlayer::query_builder()),
+                SprintLeague::query_builder(user_id)
+                    .players_builder(SprintLeaguePlayer::query_builder()),
             )
             .id_equals(space_id)
             .query()
