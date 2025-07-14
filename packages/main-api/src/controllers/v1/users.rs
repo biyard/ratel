@@ -449,6 +449,18 @@ impl UserControllerV1 {
             .await
             .map_err(|_| Error::NotFound)?;
 
+        let user = if user.referral_code.is_empty() {
+            let referral_code = generate_referral_code();
+            self.users
+                .update(
+                    user.id,
+                    UserRepositoryUpdateRequest::new().with_referral_code(referral_code),
+                )
+                .await?
+        } else {
+            user
+        };
+
         Ok(Json(user))
     }
 
