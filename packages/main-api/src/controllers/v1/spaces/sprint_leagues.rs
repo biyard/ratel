@@ -47,8 +47,8 @@ impl SprintLeagueController {
     pub fn route(&self) -> by_axum::axum::Router {
         by_axum::axum::Router::new()
             .route("/", post(Self::act))
-            .route("/:sprint_league_id", post(Self::act_by_id))
-            .route("/:sprint_league_id/players", post(Self::act_player))
+            .route("/:sprint-league-id", post(Self::act_by_id))
+            .route("/:sprint-league-id/players", post(Self::act_player))
             .with_state(self.clone())
     }
 
@@ -225,8 +225,8 @@ impl SprintLeagueController {
         let sprint_league = space.sprint_leagues.first().ok_or(Error::NotFound)?;
         let now = chrono::Utc::now().timestamp();
         if space.status != SpaceStatus::InProgress
-            && space.started_at.unwrap() <= now
-            && now < space.ended_at.unwrap()
+            && space.started_at.unwrap_or_default() <= now
+            && now < space.ended_at.unwrap_or_default()
             && sprint_league.id != sprint_league_id
         {
             return Err(Error::BadRequest);
