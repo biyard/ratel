@@ -4,28 +4,23 @@ import Image from 'next/image';
 import { X, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-export function RepostModal({ onRepostClick }: { onRepostClick?: () => void }) {
+export function UnrepostModal() {
   const {
-    showRepostModal,
+    showUnrepostModal,
     originalPost,
     cancelRepost,
-    submitRepost,
+    confirmUnrepost,
     isSubmitting,
   } = useRepost();
 
-  const handleSubmit = async () => {
-    await submitRepost();
-    onRepostClick?.(); // Trigger parent update only after success
-  };
-
-  if (!showRepostModal || !originalPost) return null;
+  if (!showUnrepostModal || !originalPost) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
       <div className="bg-neutral-900 border border-neutral-700 rounded-lg w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-neutral-700">
-          <h2 className="text-lg font-semibold text-white">Repost</h2>
+          <h2 className="text-lg font-semibold text-white">Remove Repost?</h2>
           <button
             onClick={cancelRepost}
             className="text-neutral-400 hover:text-white transition-colors"
@@ -36,6 +31,10 @@ export function RepostModal({ onRepostClick }: { onRepostClick?: () => void }) {
 
         {/* Content */}
         <div className="p-4">
+          <p className="text-sm text-neutral-400 mb-4">
+            Are you sure you want to remove your repost of this post?
+          </p>
+
           {/* Original post preview */}
           <div className="border-l-4 border-neutral-600 pl-4 bg-neutral-800 rounded-r-lg p-4">
             <div className="flex items-center gap-2 mb-2">
@@ -83,22 +82,22 @@ export function RepostModal({ onRepostClick }: { onRepostClick?: () => void }) {
             Cancel
           </button>
           <button
-            onClick={handleSubmit}
+            onClick={confirmUnrepost}
             disabled={isSubmitting}
             className={cn(
               'px-6 py-2 rounded-lg font-medium transition-all',
               isSubmitting
                 ? 'bg-neutral-700 text-neutral-500 cursor-not-allowed'
-                : 'bg-primary text-black hover:bg-primary/90',
+                : 'bg-red-600 text-white hover:bg-red-500',
             )}
           >
             {isSubmitting ? (
               <>
                 <Loader2 className="animate-spin inline mr-2" size={16} />
-                Reposting...
+                Removing...
               </>
             ) : (
-              'Repost'
+              'Remove Repost'
             )}
           </button>
         </div>

@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { useInView } from 'react-intersection-observer';
@@ -18,6 +17,8 @@ import { checkString } from '@/lib/string-filter-utils';
 import { UserType } from '@/lib/api/models/user';
 import { showErrorToast } from '@/lib/toast';
 import { logger } from '@/lib/logger';
+import { useApiCall } from '@/lib/api/use-send';
+import { ratelApi } from '@/lib/api/ratel_api';
 
 import FeedEmptyState from './_components/feed-empty-state';
 import FeedEndMessage from './_components/feed-end-message';
@@ -45,6 +46,8 @@ export interface Post {
   comments: number;
   rewards: number;
   shares: number;
+  is_reposted?: boolean;
+  reposts?: { user_id: number; id: number }[];
   created_at: number;
   onboard: boolean;
 }
@@ -54,6 +57,9 @@ export default function Home() {
   const { data: feed } = useFeedByID(promotion.feed_id);
   const { data: userInfo } = useSuspenseUserInfo();
   const userId = userInfo?.id || 0;
+  const { post } = useApiCall();
+
+  console.log('Feed data', feed);
 
   const [page, setPage] = useState(1);
   const [feeds, setFeeds] = useState<Post[]>([]);
@@ -64,32 +70,51 @@ export default function Home() {
 
   const { data: postData, error: postError, isLoading } = usePost(page, SIZE);
 
-  // Processing and deduplication of feed data
+  const processFeedData = useCallback(
+    (items: any[]): Post[] => {
+      if (!items) return [];
 
-  const processFeedData = useCallback((items: any[]): Post[] => {
-    if (!items) return [];
+      return items.map((item) => ({
+        id: item.id,
+        industry: item.industry?.[0]?.name || '',
+        title: item.title!,
+        contents: item.html_contents,
+        url: item.url,
+        author_id: item.author?.[0]?.id || 0,
+        author_profile_url: item.author?.[0]?.profile_url || '',
+        author_name: item.author?.[0]?.nickname || '',
+        author_type: item.author?.[0]?.user_type || UserType.Anonymous,
+        space_id: item.spaces?.[0]?.id || 0,
+        space_type: item.spaces?.[0]?.space_type || 0,
+        likes: item.likes,
+        is_liked: item.is_liked,
+        comments: item.comments,
+        rewards: item.rewards,
+        shares: item.shares,
+        // is_reposted: (item.reposts || []).some((r) => r.user_id === userId),
+        reposts: item.reposts || [],
+        created_at: item.created_at,
+        onboard: item.onboard ?? false,
+      }));
+    },
+    [userId],
+  );
 
-    return items.map((item) => ({
-      id: item.id,
-      industry: item.industry?.[0]?.name || '',
-      title: item.title!,
-      contents: item.html_contents,
-      url: item.url,
-      author_id: item.author?.[0]?.id || 0,
-      author_profile_url: item.author?.[0]?.profile_url || '',
-      author_name: item.author?.[0]?.nickname || '',
-      author_type: item.author?.[0]?.user_type || UserType.Anonymous,
-      space_id: item.spaces?.[0]?.id || 0,
-      space_type: item.spaces?.[0]?.space_type || 0,
-      likes: item.likes,
-      is_liked: item.is_liked,
-      comments: item.comments,
-      rewards: item.rewards,
-      shares: item.shares,
-      created_at: item.created_at,
-      onboard: item.onboard ?? false,
-    }));
-  }, []);
+  const handleLike = useCallback(
+    async (feedId: number, value: boolean) => {
+      try {
+        await post(ratelApi.feeds.likePost(feedId), {
+          like: {
+            value,
+          },
+        });
+      } catch (error) {
+        logger.error('Like error:', error);
+        showErrorToast('Failed to update like status');
+      }
+    },
+    [post],
+  );
 
   useEffect(() => {
     if (postError) {
@@ -149,19 +174,18 @@ export default function Home() {
               <FeedCard
                 key={`feed-${props.id}`}
                 user_id={userId}
-                refetch={() => {}}
+                onLikeClick={(value) => handleLike(props.id, value)}
+                refetch={() => setPage(1)}
                 {...props}
               />
             ))}
 
-            {/* Loading state */}
             {isLoading && (
               <div className="flex justify-center my-4">
                 <Loading />
               </div>
             )}
 
-            {/* Load more sentinel */}
             {hasMore && !isLoading && <div ref={ref} className="h-10" />}
 
             {showEndMessage && <FeedEndMessage />}
@@ -171,7 +195,6 @@ export default function Home() {
         )}
       </Col>
 
-      {/* Right Sidebar */}
       <aside className="w-70 pl-4 max-tablet:!hidden" aria-label="Sidebar">
         <CreatePostButton />
 

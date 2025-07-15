@@ -5,7 +5,7 @@ import { CreatePost, PostDraftProvider } from './_components/create-post';
 import Provider from './providers';
 import { RepostProvider } from './_components/repost-feeds';
 import { RepostModal } from './_components/repost-modal';
-
+import { UnrepostModal } from './_components/unrepost-modal';
 export default function SocialLayout({
   children,
 }: Readonly<{
@@ -32,6 +32,7 @@ export default function SocialLayout({
                     <CreatePost />
                   </div>
                 </div>
+                <UnrepostModal />
                 <RepostModal />
               </PostDraftProvider>
             </RepostProvider>
