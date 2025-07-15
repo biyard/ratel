@@ -8,7 +8,7 @@ pub struct SpacePermissionVerifier {
 
 impl SpacePermissionVerifier {
     pub async fn new(user_id: i64, space_id: i64, pool: &sqlx::Pool<sqlx::Postgres>) -> Self {
-        let space = Space::query_builder()
+        let space = Space::query_builder(user_id)
             .id_equals(space_id)
             .owner_id_equals(user_id)
             .query()

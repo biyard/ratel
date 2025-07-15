@@ -55,6 +55,7 @@ pub struct SubjectiveQuestion {
 pub struct ChoiceQuestion {
     pub title: String,
     pub description: Option<String>,
+    pub image_url: Option<String>,
     pub options: Vec<String>,
 }
 
