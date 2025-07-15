@@ -25,10 +25,10 @@ pub struct SprintLeaguePlayer {
 #[derive(Debug, Default, serde::Serialize, serde::Deserialize, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct PlayerImages {
-    select: SpriteSheet,
-    run: SpriteSheet,
-    win: String,
-    lose: String,
+    pub select: SpriteSheet,
+    pub run: SpriteSheet,
+    pub win: String,
+    pub lose: String,
 }
 
 #[derive(Debug, Default, serde::Serialize, serde::Deserialize, Clone, PartialEq, Eq)]

@@ -211,7 +211,7 @@ impl SprintLeagueController {
             .await
             .unwrap_or_default();
 
-        let space = Space::query_builder()
+        let space = Space::query_builder(user_id)
             .sprint_leagues_builder(
                 SprintLeague::query_builder(user_id)
                     .players_builder(SprintLeaguePlayer::query_builder()),
@@ -225,9 +225,9 @@ impl SprintLeagueController {
         let sprint_league = space.sprint_leagues.first().ok_or(Error::NotFound)?;
         let now = chrono::Utc::now().timestamp();
         if space.status != SpaceStatus::InProgress
-            && space.started_at.unwrap_or_default() <= now
-            && now < space.ended_at.unwrap_or_default()
-            && sprint_league.id != sprint_league_id
+            || space.started_at.unwrap_or_default() > now
+            || now >= space.ended_at.unwrap_or_default()
+            || sprint_league.id != sprint_league_id
         {
             return Err(Error::BadRequest);
         }
@@ -265,7 +265,7 @@ impl SprintLeagueController {
         // Is this the best way to check if the space is in draft status?
         // It might be better to change permission level after vote start...
 
-        let space = Space::query_builder()
+        let space = Space::query_builder(0)
             .id_equals(space_id)
             .query()
             .map(Space::from)

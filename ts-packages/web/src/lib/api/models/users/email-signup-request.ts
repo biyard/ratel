@@ -6,7 +6,7 @@ export interface EmailSignupRequest {
     term_agreed: boolean;
     informed_agreed: boolean;
     username: string;
-    password?: string;
+    password: string;
     telegram_raw?: string;
   };
 }

@@ -51,10 +51,17 @@ function TelegramMiniAppMain() {
 
         const tgWebAppStartParam = searchParams.get('tgWebAppStartParam');
         if (tgWebAppStartParam) {
-          const decodedParams = decode_base64(tgWebAppStartParam);
-          const decodedParamsStr = new TextDecoder().decode(decodedParams);
-          const jsonParams = JSON.parse(decodedParamsStr);
-          router.replace(`${route.telegramSprintLeague(jsonParams.space_id)}`);
+          try {
+            const decodedParams = decode_base64(tgWebAppStartParam);
+            const decodedParamsStr = new TextDecoder().decode(decodedParams);
+            const jsonParams = JSON.parse(decodedParamsStr);
+            router.replace(
+              `${route.telegramSprintLeague(jsonParams.space_id)}`,
+            );
+          } catch (error) {
+            console.error('Failed to decode Telegram start parameter:', error);
+            // Could redirect to error page or show error message
+          }
         }
       } catch (error) {
         console.error('Error occurred while logging in:', error);
