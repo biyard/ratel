@@ -48,7 +48,7 @@ pub struct Feed {
     // Reply
 
     // Repost
-    #[api_model(summary, one_to_many = spaces, foreign_key = feed_id)]
+    #[api_model(summary, one_to_many = spaces, foreign_key = feed_id, nested)]
     pub spaces: Vec<Space>,
 
     #[api_model(summary, many_to_many = feed_users, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = feed_id, aggregator = count)]
