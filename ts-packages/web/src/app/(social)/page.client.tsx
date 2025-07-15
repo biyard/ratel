@@ -87,6 +87,7 @@ export default function Home() {
         author_profile_url: item.author?.[0]?.profile_url || '',
         author_name: item.author?.[0]?.nickname || '',
         author_type: item.author?.[0]?.user_type || UserType.Anonymous,
+        spaces: item.spaces || [],
         space_id: item.spaces?.[0]?.id || 0,
         space_type: item.spaces?.[0]?.space_type || 0,
         likes: item.likes,

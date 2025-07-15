@@ -31,7 +31,6 @@ export default function Header({ post_id }: { post_id: number }) {
 
   const space_id = post?.spaces[0]?.id;
 
-  const author_id = post?.author[0].id;
   const user_id = user.data ? user.data.id : 0;
 
   let target;
