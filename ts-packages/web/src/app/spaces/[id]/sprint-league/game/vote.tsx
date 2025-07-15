@@ -28,7 +28,7 @@ export default function VotePlayer({
               align: 'center',
               fontWeight: '900',
             }}
-            text={players.find((p) => p.id === selectedPlayerId)?.name}
+            text={players.find((p) => p.id === selectedPlayerId)?.name || ''}
           />
         )}
         <pixiContainer x={75 * SCALE} y={220 * SCALE}>
@@ -73,7 +73,10 @@ export default function VotePlayer({
                 wordWrap: true,
                 wordWrapWidth: 300 * SCALE,
               }}
-              text={players.find((p) => p.id === selectedPlayerId)?.description}
+              text={
+                players.find((p) => p.id === selectedPlayerId)?.description ||
+                ''
+              }
             />
           )}
         </pixiContainer>
@@ -108,11 +111,25 @@ function Vote({
     sprite.position.y += (targetY - sprite.position.y) * 0.1 * ticker.deltaTime;
   });
 
-  let texture = Assets.get('vote-default');
-  if (selected === true) {
-    texture = Assets.get('vote-selected');
-  } else if (selected === false) {
-    texture = Assets.get('vote-unselected');
+  const getTexture = () => {
+    let textureName = 'vote-default';
+    if (selected === true) {
+      textureName = 'vote-selected';
+    } else if (selected === false) {
+      textureName = 'vote-unselected';
+    }
+
+    const texture = Assets.get(textureName);
+    if (!texture) {
+      console.warn(`Texture ${textureName} not found`);
+      return Assets.get('vote-default') || null;
+    }
+    return texture;
+  };
+
+  const texture = getTexture();
+  if (!texture) {
+    return null;
   }
 
   return (

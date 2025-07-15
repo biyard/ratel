@@ -10,9 +10,9 @@ import {
   TilingSprite,
   Spritesheet,
 } from 'pixi.js';
-import { extend, useApplication, useTick } from '@pixi/react';
+import { extend, useTick } from '@pixi/react';
 import { useEffect, useRef, useState } from 'react';
-import { SCALE } from './base';
+import { HEIGHT, SCALE, WIDTH } from './base';
 
 extend({
   Container,
@@ -48,7 +48,6 @@ const ScrollingLayer = ({
   scale?: number;
 }) => {
   const spriteRef = useRef<TilingSprite>(null);
-  const { app } = useApplication();
 
   useTick((ticker) => {
     if (spriteRef.current) {
@@ -62,18 +61,17 @@ const ScrollingLayer = ({
       texture={texture}
       y={y}
       scale={scale}
-      width={app.renderer?.width}
+      width={WIDTH}
       height={texture.height}
     />
   );
 };
 export function Dim() {
-  const { app } = useApplication();
   return (
     <pixiSprite
       texture={Assets.get('foreground_ground')}
-      width={app.renderer?.width}
-      height={app.renderer?.height}
+      width={WIDTH}
+      height={HEIGHT}
     />
   );
 }

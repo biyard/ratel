@@ -23,8 +23,7 @@ export async function init(options: {
   initSDK();
 
   // Add Eruda if needed.
-  // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-  options.eruda &&
+  if (options.eruda) {
     void import('eruda').then(({ default: eruda }) => {
       eruda.init();
       eruda.position({
@@ -32,6 +31,7 @@ export async function init(options: {
         y: window.innerHeight - 100,
       });
     });
+  }
 
   // Telegram for macOS has a ton of bugs, including cases, when the client doesn't
   // even response to the "web_app_request_theme" method. It also generates an incorrect
@@ -46,7 +46,7 @@ export async function init(options: {
             tp = themeParamsState();
           } else {
             firstThemeSent = true;
-            tp ||= retrieveLaunchParams().tgWebAppThemeParams;
+            tp = retrieveLaunchParams().tgWebAppThemeParams;
           }
           return emitEvent('theme_changed', { theme_params: tp });
         }

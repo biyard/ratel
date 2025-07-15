@@ -20,7 +20,12 @@ pub fn validate_telegram_raw(telegram_raw: &Option<String>) -> Option<i64> {
         let received_hash = params
             .iter()
             .position(|(key, _)| key == "hash")
-            .map(|index| params.remove(index).1)?;
+            .map(|index| params.remove(index).1)
+            .ok_or_else(|| {
+                tracing::warn!("Missing hash parameter in Telegram raw data");
+                ()
+            })
+            .ok()?;
 
         params.sort_by(|a, b| a.0.cmp(&b.0));
 

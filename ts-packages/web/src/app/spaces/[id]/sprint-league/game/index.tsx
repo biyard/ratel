@@ -9,7 +9,7 @@ const Base = dynamic(() => import('./base'), {
 import Background, { Dim } from './background';
 import { Banner, PlayerNameOverlay, VoteBanner } from './banner';
 import Character from './character';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { RepostButton, StartButton, VoteBackButton } from './button';
 import VotePlayer from './vote';
 import { logger } from '@/lib/logger';
@@ -110,6 +110,17 @@ export default function SprintLeagueGame({
   const [status, setStatus] = useState(initStatus);
   const [selectedPlayerId, setSelectedPlayerId] = useState<number | null>(null);
   const [voted, setVoted] = useState(initStatus === Status.AFTER_VOTE);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    const timeout = timeoutRef.current;
+    return () => {
+      if (timeout) {
+        clearTimeout(timeout);
+      }
+    };
+  }, []);
+
   const handleStartVote = () => {
     setStatus(Status.VOTING);
   };
@@ -143,8 +154,9 @@ export default function SprintLeagueGame({
       setBaseSpeed(SPEED);
       setStatus(Status.AFTER_VOTE);
       setVoted(true);
-      setTimeout(() => {
+      timeoutRef.current = setTimeout(() => {
         setVoted(false);
+        timeoutRef.current = null;
       }, 5000);
     } catch (error) {
       logger.error('Vote failed:', error);

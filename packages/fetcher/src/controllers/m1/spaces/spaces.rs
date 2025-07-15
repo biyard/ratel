@@ -56,7 +56,7 @@ impl SpaceController {
 
         // Finish Space
         // Now - 60 seconds
-        let spaces = Space::query_builder()
+        let spaces = Space::query_builder(0)
             .ended_at_between(now - 60, now)
             .status_equals(SpaceStatus::InProgress)
             .query()
@@ -105,7 +105,7 @@ impl SpaceController {
 
         // Start Space
         // Now - 60 seconds
-        let spaces = Space::query_builder()
+        let spaces = Space::query_builder(0)
             .started_at_between(now - 60, now)
             .status_equals(SpaceStatus::Draft)
             .query()
@@ -154,13 +154,13 @@ pub struct SprintLeagueController {
 }
 impl SprintLeagueController {
     pub async fn notify(&self, space_id: i64) -> Result<()> {
-        let space = Space::query_builder()
+        let space = Space::query_builder(0)
             .id_equals(space_id)
             .query()
             .map(Space::from)
             .fetch_one(&self.pool)
             .await?;
-        let sprint_league = SprintLeague::query_builder()
+        let sprint_league = SprintLeague::query_builder(0)
             .space_id_equals(space.id)
             .query()
             .map(SprintLeague::from)
@@ -183,9 +183,9 @@ impl SprintLeagueController {
         Ok(())
     }
     pub async fn reward(&self, space_id: i64) -> Result<()> {
-        let space = Space::query_builder()
+        let space = Space::query_builder(0)
             .sprint_leagues_builder(
-                SprintLeague::query_builder().players_builder(SprintLeaguePlayer::query_builder()),
+                SprintLeague::query_builder(0).players_builder(SprintLeaguePlayer::query_builder()),
             )
             .id_equals(space_id)
             .query()
@@ -194,12 +194,26 @@ impl SprintLeagueController {
             .await?;
         let sprint_league = space.sprint_leagues.first().ok_or(Error::NotFound)?;
         // TODO: If the number of votes is the same, who will be the winner?
-        let winner = sprint_league
+        let max_votes = sprint_league
             .players
             .iter()
-            .max_by_key(|p| p.total_votes)
-            .unwrap()
-            .id;
+            .map(|p| p.total_votes)
+            .max()
+            .unwrap_or(0);
+        let winners: Vec<_> = sprint_league
+            .players
+            .iter()
+            .filter(|p| p.total_votes == max_votes)
+            .collect();
+
+        let winner = if winners.len() == 1 {
+            winners[0].id
+        } else {
+            // TODO: Implement tie-breaking logic: earliest vote, random selection, etc.
+            // For now, use the first player (deterministic)
+            winners[0].id
+        };
+
         let amount = sprint_league.reward_amount;
         let voters = SprintLeagueVote::query_builder()
             .sprint_league_id_equals(sprint_league.id)
