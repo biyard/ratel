@@ -6,9 +6,7 @@ import SurveyQuestionEditor from './question/survey_question_editor';
 import { AnswerType } from './question/answer_type_select';
 import { v4 as uuidv4 } from 'uuid';
 import SurveyViewer from './question/survey_viewer';
-import { format } from 'date-fns';
 import { Add } from './add';
-import CustomCalendar from '@/components/calendar-picker/calendar-picker';
 import { SurveyAnswer } from '../types';
 import { Answer } from '@/lib/api/models/response';
 import { SpaceStatus } from '@/lib/api/models/spaces';
@@ -27,7 +25,12 @@ export interface SpaceSurveyProps {
   onadd: (question: Question) => void;
   onupdate: (
     index: number,
-    updated: { answerType: AnswerType; title: string; options?: string[] },
+    updated: {
+      answerType: AnswerType;
+      image_url?: string;
+      title: string;
+      options?: string[];
+    },
   ) => void;
   onremove: (index: number) => void;
   onsend: () => void;
@@ -103,15 +106,8 @@ function ViewSurvey({
   endDate: number;
   onSend: () => void;
 }) {
-  const formattedDate = `${format(new Date(startDate * 1000), 'dd MMM, yyyy')} - ${format(new Date(endDate * 1000), 'dd MMM, yyyy')}`;
   return (
     <div className="flex flex-col w-full gap-[10px]">
-      {questions.length !== 0 && (
-        <div className="flex flex-row w-full justify-between items-center">
-          <div className="text-base text-white font-semibold">Period</div>
-          <div className="text-sm text-white font-normal">{formattedDate}</div>
-        </div>
-      )}
       <SurveyViewer
         isEdit={isEdit}
         status={status}
@@ -128,11 +124,6 @@ function ViewSurvey({
 
 function EditableSurvey({
   questions,
-  startDate,
-  endDate,
-
-  setStartDate,
-  setEndDate,
   onadd,
   onupdate,
   onremove,
@@ -147,16 +138,18 @@ function EditableSurvey({
   onadd: () => void;
   onupdate: (
     index: number,
-    updated: { answerType: AnswerType; title: string; options?: string[] },
+    updated: {
+      answerType: AnswerType;
+      title: string;
+      image_url?: string;
+      options?: string[];
+    },
   ) => void;
   onremove: (index: number) => void;
 }) {
   const [stableKeys, setStableKeys] = useState<string[]>(() =>
     questions.map(() => uuidv4()),
   );
-  const [startCalendarOpen, setStartCalendarOpen] = useState<boolean>(false);
-  const [endCalendarOpen, setEndCalendarOpen] = useState<boolean>(false);
-
   const handleAdd = () => {
     onadd();
     setStableKeys((prev) => [...prev, uuidv4()]);
@@ -169,42 +162,6 @@ function EditableSurvey({
 
   return (
     <div className="flex flex-col w-full gap-2.5">
-      <div className="flex flex-wrap w-full justify-between items-center gap-[10px] mb-[10px]">
-        <div className="font-medium text-neutral-300 text-[15px] w-[80px]">
-          Period
-        </div>
-        <div className="flex flex-row gap-[10px] items-center flex-wrap">
-          <div className="flex flex-row gap-[10px]">
-            <CustomCalendar
-              value={startDate * 1000}
-              calendarOpen={startCalendarOpen}
-              setCalendarOpen={(value: boolean) => {
-                setStartCalendarOpen(value);
-              }}
-              onChange={(date) => {
-                const newStart = Math.floor(date / 1000);
-                setStartDate(newStart);
-                // update(newStart, endTime, title, desc);
-              }}
-            />
-          </div>
-          <div className="w-[20px] h-[1px] bg-neutral-500" />
-          <div className="flex flex-row gap-[10px]">
-            <CustomCalendar
-              value={endDate * 1000}
-              calendarOpen={endCalendarOpen}
-              setCalendarOpen={(value: boolean) => {
-                setEndCalendarOpen(value);
-              }}
-              onChange={(date) => {
-                const newEnd = Math.floor(date / 1000);
-                setEndDate(newEnd);
-                // update(startTime, newEnd, title, desc);
-              }}
-            />
-          </div>
-        </div>
-      </div>
       {questions.map((question, index) => {
         return (
           <div key={stableKeys[index]}>
@@ -212,11 +169,13 @@ function EditableSurvey({
               index={index}
               answerType={question.answer_type}
               title={question.title}
+              imageUrl={'image_url' in question ? question.image_url : ''}
               options={'options' in question ? question.options : []}
               onupdate={(updated) => {
                 onupdate(index, {
                   answerType: updated.answerType,
                   title: updated.title,
+                  image_url: updated.image_url,
                   options: updated.options ?? [],
                 });
               }}
@@ -227,18 +186,22 @@ function EditableSurvey({
           </div>
         );
       })}
-      <div
-        onClick={() => {
-          handleAdd();
-        }}
-        className="bg-transparent border-2 border-dashed border-neutral-700 rounded-md h-50 flex flex-col items-center justify-center cursor-pointer hover:bg-neutral-800 transition gap-[10px]"
-      >
-        <div className="flex flex-row w-[45px] h-[45px] justify-center items-center rounded-full border border-neutral-500">
-          <Add className="w-5 h-5 stroke-neutral-500 text-neutral-500" />
+      <div className="relative flex items-center justify-center w-full py-6">
+        <div
+          className="absolute top-1/2 w-full h-0.25"
+          style={{
+            borderTop: '1px dashed transparent',
+            borderImage:
+              'repeating-linear-gradient(to right, #525252 0 8px, transparent 8px 16px) 1',
+          }}
+        />
+
+        <div
+          className="cursor-pointer z-10 bg-background flex items-center justify-center w-fit h-fit p-[13px] border border-neutral-500 rounded-full"
+          onClick={handleAdd}
+        >
+          <Add className="w-4 h-4 stroke-neutral-500 text-neutral-500" />
         </div>
-        <span className=" text-neutral-500 font-medium text-base">
-          Add New Question
-        </span>
       </div>
     </div>
   );

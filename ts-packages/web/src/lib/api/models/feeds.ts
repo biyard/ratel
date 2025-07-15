@@ -33,6 +33,7 @@ export interface Feed {
 
   url?: string;
   url_type: UrlType;
+  status: FeedStatus;
 
   author: [User];
   industry: [Industry];
