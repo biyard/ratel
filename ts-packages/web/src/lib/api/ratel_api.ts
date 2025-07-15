@@ -182,6 +182,10 @@ export const ratelApi = {
       `/v1/spaces/${space_id}/badges?param-type=query&bookmark=${page}&size=${size}`,
     claimBadge: (space_id: number) => `/v1/spaces/${space_id}/badges`,
   },
+  sprint_league: {
+    voteSprintLeague: (space_id: number, sprint_league_id: number) =>
+      `/v1/spaces/${space_id}/sprint-leagues/${sprint_league_id}`,
+  },
   graphql: {
     listNews: (size: number) => {
       return {

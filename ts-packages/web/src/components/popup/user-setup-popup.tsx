@@ -22,7 +22,7 @@ import Image from 'next/image';
 import { emailSignupRequest } from '@/lib/api/models/users/email-signup-request';
 import { signupRequest } from '@/lib/api/models/users/signup-request';
 
-interface UserSetupPopupProps {
+export interface UserSetupPopupProps {
   id?: string;
   nickname?: string;
   username?: string;
@@ -72,9 +72,7 @@ const UserSetupPopup = ({
   const handleProfileUrl = (url: string) => {
     setProfileUrlState(url);
   };
-  useEffect(() => {
-    console.log('UserSetupPopup mounted');
-  }, []);
+
   const handleSubmit = async () => {
     if (checkString(displayName) || checkString(userName)) {
       showErrorToast('Please remove the test keyword');

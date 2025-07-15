@@ -32,8 +32,7 @@ export async function GET(request: NextRequest) {
   });
 
   const protocol = request.headers.get('x-forwarded-proto') || 'http';
-  // const host = request.headers.get('host') || 'localhost';
-  const host = 'ggernaut.com';
+  const host = request.headers.get('host') || 'localhost';
   const port = request.headers.get('x-forwarded-port') || '8080';
   let origin = `${protocol}://${host}`;
 

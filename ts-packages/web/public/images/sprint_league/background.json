@@ -1,0 +1,108 @@
+{
+  "frames": {
+    "sky_gradient": {
+      "frame": { "x": 0, "y": 0, "w": 2880, "h": 640 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 360, "h": 640 },
+      "sourceSize": { "w": 2880, "h": 640 }
+    },
+    "sunset_clouds": {
+      "frame": { "x": 0, "y": 640, "w": 2880, "h": 640 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 360, "h": 640 },
+      "sourceSize": { "w": 2880, "h": 640 }
+    },
+    "distant_clouds": {
+      "frame": { "x": 0, "y": 1280, "w": 2880, "h": 640 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 360, "h": 640 },
+      "sourceSize": { "w": 2880, "h": 640 }
+    },
+    "ground_strip_1": {
+      "frame": { "x": 0, "y": 1920, "w": 2880, "h": 640 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 360, "h": 640 },
+      "sourceSize": { "w": 2880, "h": 640 }
+    },
+    "far_hills": {
+      "frame": { "x": 0, "y": 2560, "w": 2880, "h": 640 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 360, "h": 640 },
+      "sourceSize": { "w": 2880, "h": 640 }
+    },
+    "mid_hills": {
+      "frame": { "x": 0, "y": 3200, "w": 2880, "h": 640 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 360, "h": 640 },
+      "sourceSize": { "w": 2880, "h": 640 }
+    },
+    "green_line": {
+      "frame": { "x": 0, "y": 3840, "w": 2880, "h": 640 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 360, "h": 640 },
+      "sourceSize": { "w": 2880, "h": 640 }
+    },
+    "yellow_line": {
+      "frame": { "x": 0, "y": 4480, "w": 2880, "h": 640 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 360, "h": 640 },
+      "sourceSize": { "w": 2880, "h": 640 }
+    },
+    "trees_row_1": {
+      "frame": { "x": 0, "y": 5120, "w": 2880, "h": 640 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 360, "h": 640 },
+      "sourceSize": { "w": 2880, "h": 640 }
+    },
+    "trees_row_2": {
+      "frame": { "x": 0, "y": 5760, "w": 2880, "h": 640 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 360, "h": 640 },
+      "sourceSize": { "w": 2880, "h": 640 }
+    },
+    "grass_texture_1": {
+      "frame": { "x": 0, "y": 6400, "w": 2880, "h": 640 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 360, "h": 640 },
+      "sourceSize": { "w": 2880, "h": 640 }
+    },
+    "grass_texture_2": {
+      "frame": { "x": 0, "y": 7050, "w": 2880, "h": 640 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 360, "h": 640 },
+      "sourceSize": { "w": 2880, "h": 640 }
+    },
+    "grass_texture_3": {
+      "frame": { "x": 0, "y": 7680, "w": 2880, "h": 640 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 360, "h": 640 },
+      "sourceSize": { "w": 2880, "h": 640 }
+    },
+    "foreground_ground": {
+      "frame": { "x": 0, "y": 8320, "w": 2880, "h": 640 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 360, "h": 640 },
+      "sourceSize": { "w": 2880, "h": 640 }
+    }
+  },
+  "meta": {
+    "image": "background.png",
+    "format": "RGBA8888",
+    "size": { "w": 2880, "h": 8960 },
+    "scale": "1"
+  }
+}

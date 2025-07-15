@@ -27,4 +27,7 @@ export const route = {
   },
   discussionById: (spaceId: number, discussionId: number) =>
     `/spaces/${spaceId}/discussions/${discussionId}`,
+
+  telegramSprintLeague: (space_id: number) =>
+    `/telegram/sprint-league/${space_id}`,
 };
