@@ -5,20 +5,21 @@ import { Assets, Sprite } from 'pixi.js';
 import { useEffect, useRef } from 'react';
 import Character from './character';
 import { SCALE } from './base';
+import { SprintLeaguePlayer } from '@/lib/api/models/sprint_league';
 
 export default function VotePlayer({
   players = [],
-  selectedIndex,
+  selectedPlayerId,
   onSelect,
 }: {
-  players: { id: number; name: string; description: string }[];
-  selectedIndex: number | null;
+  players: SprintLeaguePlayer[];
+  selectedPlayerId: number | null;
   onSelect: (index: number) => void;
 }) {
   return (
     <>
       <pixiContainer>
-        {selectedIndex !== null && (
+        {selectedPlayerId !== null && (
           <pixiText
             position={{ x: 180 * SCALE, y: 50 * SCALE }}
             anchor={{ x: 0.5, y: 0.5 }}
@@ -27,23 +28,27 @@ export default function VotePlayer({
               align: 'center',
               fontWeight: '900',
             }}
-            text={players[selectedIndex]?.name}
+            text={players.find((p) => p.id === selectedPlayerId)?.name}
           />
         )}
         <pixiContainer x={75 * SCALE} y={220 * SCALE}>
           {players.slice(0, 3).map((player, index) => (
             <Vote
-              index={index}
+              playerId={player.id}
               key={player.id}
               x={index * 105 * SCALE}
-              selected={selectedIndex === null ? null : selectedIndex === index}
-              onClick={() => onSelect(index)}
+              selected={
+                selectedPlayerId === null
+                  ? null
+                  : selectedPlayerId === player.id
+              }
+              onClick={() => onSelect(player.id)}
             />
           ))}
         </pixiContainer>
 
         <pixiContainer y={370 * SCALE}>
-          {selectedIndex === null && (
+          {selectedPlayerId === null && (
             <pixiText
               position={{ x: 180 * SCALE, y: 0 }}
               anchor={{ x: 0.5, y: 0.5 }}
@@ -56,7 +61,7 @@ export default function VotePlayer({
               text="SELECT YOUR PLAYER"
             />
           )}
-          {selectedIndex !== null && (
+          {selectedPlayerId !== null && (
             <pixiText
               position={{ x: 180 * SCALE, y: 0 }}
               anchor={{ x: 0.5, y: 0.5 }}
@@ -68,7 +73,7 @@ export default function VotePlayer({
                 wordWrap: true,
                 wordWrapWidth: 300 * SCALE,
               }}
-              text={players[selectedIndex].description}
+              text={players.find((p) => p.id === selectedPlayerId)?.description}
             />
           )}
         </pixiContainer>
@@ -78,13 +83,13 @@ export default function VotePlayer({
 }
 
 function Vote({
-  index,
+  playerId,
   selected,
   onClick,
   x,
   y = 0,
 }: {
-  index: number;
+  playerId: number;
   selected: boolean | null;
   onClick: () => void;
   x: number;
@@ -121,7 +126,7 @@ function Vote({
       onPointerTap={onClick}
     >
       <pixiSprite texture={texture} anchor={{ x: 0.5, y: 0.5 }} scale={SCALE} />
-      <Character index={index} speed={0} x={-50} y={50} />
+      <Character playerId={playerId} speed={0} x={-50} y={50} />
     </pixiContainer>
   );
 }

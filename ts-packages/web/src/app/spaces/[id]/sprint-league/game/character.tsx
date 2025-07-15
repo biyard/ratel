@@ -4,14 +4,14 @@ import { useEffect, useRef, useState } from 'react';
 import { SCALE } from './base';
 
 export default function Character({
-  index,
+  playerId,
   x = 0,
   y = 0,
   speed = 1,
   scale = 1,
   selected = false,
 }: {
-  index: number;
+  playerId: number;
   x?: number;
   y?: number;
   speed?: number;
@@ -23,9 +23,9 @@ export default function Character({
   useEffect(() => {
     const loadAssets = async () => {
       try {
-        let jsonName = `user_${index}_run`;
+        let jsonName = `player-${playerId}-run`;
         if (selected) {
-          jsonName = `user_${index}_select`;
+          jsonName = `player-${playerId}-select`;
         }
         console.log('Loading character assets:', jsonName);
         const sheet = (await Assets.get(jsonName)) as Spritesheet;
@@ -37,7 +37,7 @@ export default function Character({
     };
 
     loadAssets();
-  }, [index, selected]);
+  }, [playerId, selected]);
 
   useEffect(() => {
     if (spriteRef.current && textures.length > 0) {

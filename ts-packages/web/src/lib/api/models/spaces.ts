@@ -34,7 +34,7 @@ export interface Space {
   responses: SurveyResponse[];
   drafts: SpaceDraft[];
 
-  sprint_league?: SprintLeague[];
+  sprint_leagues?: SprintLeague[];
 }
 
 export interface PostingSpaceRequest {
