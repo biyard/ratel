@@ -16,6 +16,7 @@ import UserCircleIcon from '@/assets/icons/user-circle.svg';
 import Certified from '@/assets/icons/certified.svg';
 import { cn } from '@/lib/utils';
 import { useUserInfo } from '@/lib/api/hooks/users';
+import { Button } from '@/components/ui/button';
 
 import { LexicalComposer } from '@lexical/react/LexicalComposer';
 import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin';
@@ -49,6 +50,7 @@ import { showErrorToast } from '@/lib/toast';
 import ToolbarPlugin from '@/components/toolbar/toolbar';
 import { useRouter } from 'next/navigation';
 import { route } from '@/route';
+import { QK_GET_FEED_BY_FEED_ID } from '@/constants';
 
 export const editorTheme = {
   ltr: 'text-left',
@@ -181,7 +183,7 @@ export function CreatePost() {
 
   return (
     <LexicalComposer initialConfig={editorConfig}>
-      <div className="w-full bg-neutral-900 border-t-6 border-x border-b border-primary rounded-t-lg overflow-hidden">
+      <div className="w-full bg-component-bg border-t-6 border-x border-b border-primary rounded-t-lg overflow-hidden">
         {/* Header */}
         <div className="flex items-center p-4 justify-between">
           <div className="flex items-center gap-3">
@@ -256,7 +258,7 @@ export function CreatePost() {
                   />
                   <button
                     onClick={removeImage}
-                    className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-600 rounded-full flex items-center justify-center text-white text-xs hover:bg-red-700 border-2 border-neutral-900"
+                    className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-600 rounded-full flex items-center justify-center text-white text-xs hover:bg-red-700 border-2 border-component-bg"
                     aria-label={`Remove uploaded image`}
                   >
                     <X size={12} />
@@ -284,40 +286,34 @@ export function CreatePost() {
 
               {isPublishedPost ? (
                 // Save button for published posts
-                <button
+                <Button
+                  variant="rounded_primary"
+                  size="default"
                   onClick={savePost}
                   disabled={!title.trim() || status !== 'idle'}
-                  className={cn(
-                    'flex items-center gap-2 p-3 rounded-full font-medium text-sm transition-all',
-                    !title.trim() || status !== 'idle'
-                      ? 'bg-neutral-700 text-neutral-500 cursor-not-allowed'
-                      : 'bg-primary text-black hover:bg-primary/50',
-                  )}
+                  className="gap-2"
                 >
                   {status === 'saving' ? (
                     <Loader2 className="animate-spin" />
                   ) : (
                     <UserCircleIcon />
                   )}
-                </button>
+                </Button>
               ) : (
                 // Publish button for drafts
-                <button
+                <Button
+                  variant="rounded_primary"
+                  size="default"
                   onClick={publishPost}
                   disabled={isSubmitDisabled}
-                  className={cn(
-                    'flex items-center gap-2 p-3 rounded-full font-medium text-sm transition-all',
-                    !isSubmitDisabled
-                      ? 'bg-primary text-black hover:bg-primary/50'
-                      : 'bg-neutral-700 text-neutral-500 cursor-not-allowed',
-                  )}
+                  className="gap-2"
                 >
                   {status === 'publishing' ? (
                     <Loader2 className="animate-spin" />
                   ) : (
                     <UserCircleIcon />
                   )}
-                </button>
+                </Button>
               )}
             </div>
           </div>
@@ -411,25 +407,26 @@ export const PostDraftProvider: React.FC<{ children: React.ReactNode }> = ({
           draft.url && draft.url_type === UrlType.Image ? draft.url : null;
         const isPublished = draft.status === FeedStatus.Published;
 
+        // Reset content first to clear the editor
         setContent(null);
 
-        // Small delay to ensure React state updates are properly sequenced
-        const STATE_SYNC_DELAY = 10; // ms
-        setTimeout(() => {
-          setDraftId(draft.id);
-          setTitle(draftTitle);
-          setImage(draftImage);
-          setContent(draftContent);
-          setIsPublishedPost(isPublished);
+        // React 18+ automatically batches these state updates
+        setDraftId(draft.id);
+        setTitle(draftTitle);
+        setImage(draftImage);
+        setIsPublishedPost(isPublished);
 
-          lastSavedRef.current = {
-            title: draftTitle,
-            content: draftContent,
-            image: draftImage,
-          };
+        // Update the ref immediately since it doesn't trigger re-renders
+        lastSavedRef.current = {
+          title: draftTitle,
+          content: draftContent,
+          image: draftImage,
+        };
 
-          setExpand(true);
-        }, STATE_SYNC_DELAY);
+        // Set content after other state is set - this will trigger the useEffect
+        // that handles editor content updates
+        setContent(draftContent);
+        setExpand(true);
       } catch (error: unknown) {
         logger.error('Failed to load draft:', error);
         setStatus('error');
@@ -610,7 +607,7 @@ export const PostDraftProvider: React.FC<{ children: React.ReactNode }> = ({
 
       // Invalidate the specific feed query to refetch updated data
       queryClient.invalidateQueries({
-        queryKey: ['get-feeds-by-feed-id', draftId],
+        queryKey: [QK_GET_FEED_BY_FEED_ID, draftId],
       });
 
       // Close the editor and reset state
