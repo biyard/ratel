@@ -4,7 +4,7 @@ import { logger } from '@/lib/logger';
 import React from 'react';
 import DeliberationSpacePage from './deliberation';
 import CommitteeSpacePage from './committee/page.client';
-import SprintLeaguePage from './sprint/page.client';
+import SprintLeaguePage from './sprint-league';
 import { config } from '@/config';
 
 export default async function Page({

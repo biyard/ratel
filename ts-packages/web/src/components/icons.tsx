@@ -67,6 +67,8 @@ export { default as ZoomClose } from '@/assets/icons/zoom-close.svg';
 
 export { default as PieChart1 } from '@/assets/icons/pie-chart-1.svg';
 
+export { default as TelegramIcon } from '@/assets/icons/telegram_logo.svg';
+
 export { default as Save } from '@/assets/icons/save.svg';
 export { default as Unlock } from '@/assets/icons/unlock.svg';
 export { default as ShapeArrowDown } from '@/assets/icons/shape-arrow-down.svg';

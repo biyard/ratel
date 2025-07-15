@@ -4,6 +4,7 @@ mod discussions;
 mod meeting;
 mod redeem_codes;
 mod responses;
+mod sprint_leagues;
 
 use std::collections::{HashMap, HashSet};
 
@@ -49,6 +50,10 @@ impl SpaceController {
             .discussions_builder(Discussion::query_builder())
             .comments_builder(SpaceComment::query_builder())
             .feed_comments_builder(SpaceComment::query_builder())
+            .sprint_leagues_builder(
+                SprintLeague::query_builder(user_id)
+                    .players_builder(SprintLeaguePlayer::query_builder()),
+            )
             .query()
             .map(Space::from)
             .fetch_one(&self.pool)
@@ -727,6 +732,10 @@ impl SpaceController {
             .nest(
                 "/:space-id/redeem-codes",
                 redeem_codes::SpaceRedeemCodeController::new(self.pool.clone()).route(),
+            )
+            .nest(
+                "/:space-id/sprint-leagues",
+                sprint_leagues::SprintLeagueController::new(self.pool.clone()).route(),
             ))
     }
 

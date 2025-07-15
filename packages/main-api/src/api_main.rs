@@ -68,6 +68,9 @@ pub async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         SpaceHolder,
         SpaceGroup,
         SpaceMember,
+        SprintLeague,
+        SprintLeaguePlayer,
+        SprintLeagueVote,
         TeamMember,
         News,
         Quiz,
@@ -81,6 +84,7 @@ pub async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         EventLog,
         Badge,
         UserBadge,
+        UserPoint,
         SpaceBadge,
         Onboard,
         Mynetwork,
@@ -124,6 +128,8 @@ pub async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
                 "0x000".to_string(),
                 "password".to_string(),
                 Membership::Free,
+                "".to_string(),
+                None,
             )
             .await?;
     }

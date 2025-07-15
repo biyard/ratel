@@ -4332,11 +4332,13 @@ dependencies = [
  "aws-sdk-mediaconvert",
  "aws-sdk-s3",
  "aws-sdk-sesv2",
+ "base64 0.22.1",
  "bdk",
  "chrono",
  "dto",
  "ethers",
  "hex",
+ "hmac",
  "rand 0.9.1",
  "rest-api",
  "rlp",
@@ -4350,6 +4352,7 @@ dependencies = [
  "tower-sessions-sqlx-store",
  "tracing",
  "tracing-subscriber",
+ "url",
  "uuid 1.17.0",
  "validator",
 ]
@@ -6973,9 +6976,12 @@ checksum = "55937e1799185b12863d447f42597ed69d9928686b8d88a1df17376a097d8369"
 name = "telegram-bot"
 version = "0.1.0"
 dependencies = [
+ "base64 0.22.1",
  "chrono",
  "dto",
  "futures",
+ "serde",
+ "serde_json",
  "teloxide",
  "tokio",
  "tracing",

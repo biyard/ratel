@@ -7,12 +7,17 @@ export async function GET(request: NextRequest) {
   logger.debug('[GET /api/login] incoming');
   const password = request.nextUrl.searchParams.get('password');
   const email = request.nextUrl.searchParams.get('email');
-
+  const telegramRaw = request.nextUrl.searchParams.get('telegram-raw');
   const apiBaseUrl: string = config.api_url;
 
   let targetUrl = `${apiBaseUrl}${ratelApi.users.login()}`;
   if (email && password && password !== '') {
     const path = ratelApi.users.loginWithPassword(email, password);
+    targetUrl = `${apiBaseUrl}${path}`;
+  }
+
+  if (telegramRaw) {
+    const path = ratelApi.users.loginWithTelegram(telegramRaw);
     targetUrl = `${apiBaseUrl}${path}`;
   }
 

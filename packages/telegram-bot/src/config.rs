@@ -15,7 +15,7 @@ impl Default for Config {
             telegram_token: option_env!("TELEGRAM_TOKEN").expect("You must set TELEGRAM_TOKEN"),
             log_level: option_env!("RUST_LOG").unwrap_or("info"),
             telegram_mini_app_uri: option_env!("TELEGRAM_MINI_APP_URI")
-                .unwrap_or("https://t.me/crypto_ratel_bot/spaces?startapp"),
+                .unwrap_or("https://t.me/crypto_ratel_bot?startapp"),
             database: DatabaseConfig::default(),
         }
     }

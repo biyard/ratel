@@ -1,6 +1,6 @@
 {
   "frames": {
-    "lee_jun_frame_0": {
+    "lee_jun_selected_frame_0": {
       "frame": {
         "x": 1,
         "y": 1,
@@ -21,7 +21,7 @@
       },
       "duration": 100
     },
-    "lee_jun_frame_1": {
+    "lee_jun_selected_frame_1": {
       "frame": {
         "x": 278,
         "y": 1,
@@ -42,7 +42,7 @@
       },
       "duration": 100
     },
-    "lee_jun_frame_2": {
+    "lee_jun_selected_frame_2": {
       "frame": {
         "x": 555,
         "y": 1,
@@ -63,7 +63,7 @@
       },
       "duration": 100
     },
-    "lee_jun_frame_3": {
+    "lee_jun_selected_frame_3": {
       "frame": {
         "x": 832,
         "y": 1,
@@ -84,7 +84,7 @@
       },
       "duration": 100
     },
-    "lee_jun_frame_4": {
+    "lee_jun_selected_frame_4": {
       "frame": {
         "x": 1,
         "y": 278,
@@ -105,7 +105,7 @@
       },
       "duration": 100
     },
-    "lee_jun_frame_5": {
+    "lee_jun_selected_frame_5": {
       "frame": {
         "x": 278,
         "y": 278,
@@ -126,7 +126,7 @@
       },
       "duration": 100
     },
-    "lee_jun_frame_6": {
+    "lee_jun_selected_frame_6": {
       "frame": {
         "x": 555,
         "y": 278,
@@ -147,7 +147,7 @@
       },
       "duration": 100
     },
-    "lee_jun_frame_7": {
+    "lee_jun_selected_frame_7": {
       "frame": {
         "x": 832,
         "y": 278,
@@ -170,7 +170,7 @@
     }
   },
   "meta": {
-    "image": "/lee-jun.webp",
+    "image": "/lee_jun_selected.webp",
     "version": "1.0",
     "size": {
       "w": 1109,
