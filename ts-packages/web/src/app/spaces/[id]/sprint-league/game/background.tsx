@@ -90,7 +90,6 @@ export default function Background({
     const loadAssets = async () => {
       try {
         const sheet = (await Assets.get(alias)) as Spritesheet;
-        // Convert textures to Record<string, Texture[]>
         const texturesObj: Record<string, Texture[]> = {};
         Object.entries(sheet.textures).forEach(([key, tex]) => {
           texturesObj[key] = [tex];

@@ -13,6 +13,7 @@ import { useState } from 'react';
 import { RepostButton, StartButton, VoteBackButton } from './button';
 import VotePlayer from './vote';
 import { logger } from '@/lib/logger';
+import { SprintLeaguePlayer } from '@/lib/api/models/sprint_league';
 const backgroundBundle = [
   {
     alias: 'rank-banner',
@@ -62,95 +63,85 @@ const voteBundle = [
   },
 ];
 
-const userBundle0 = [
-  {
-    alias: 'user_0_run',
-    src: '/images/sprint_league/lee_jun_run.json',
-  },
-  {
-    alias: 'user_0_select',
-    src: '/images/sprint_league/lee_jun_selected.json',
-  },
-  {
-    alias: 'user_0_win',
-    src: '/images/sprint_league/lee_jun_win.png',
-  },
-  {
-    alias: 'user_0_lose',
-    src: '/images/sprint_league/lee_jun_lose.png',
-  },
-];
-
-const userBundle1 = [
-  {
-    alias: 'user_1_run',
-    src: '/images/sprint_league/kim_moon_run.json',
-  },
-  {
-    alias: 'user_1_select',
-    src: '/images/sprint_league/kim_moon_selected.json',
-  },
-  {
-    alias: 'user_1_win',
-    src: '/images/sprint_league/kim_moon_win.png',
-  },
-  {
-    alias: 'user_1_lose',
-    src: '/images/sprint_league/kim_moon_lose.png',
-  },
-];
-
-const userBundle2 = [
-  {
-    alias: 'user_2_run',
-    src: '/images/sprint_league/lee_jae_run.json',
-  },
-  {
-    alias: 'user_2_select',
-    src: '/images/sprint_league/lee_jae_selected.json',
-  },
-  {
-    alias: 'user_2_win',
-    src: '/images/sprint_league/lee_jae_win.png',
-  },
-  {
-    alias: 'user_2_lose',
-    src: '/images/sprint_league/lee_jae_lose.png',
-  },
-];
-
-interface Player {
+export interface Player {
   id: number;
   name: string;
   description: string;
   vote_ratio: number;
 }
+
+export enum Status {
+  BEFORE_VOTE,
+  VOTING,
+  AFTER_VOTE,
+}
+
+const SPEED = 1.4;
+
+// const RANK_POSITION = [
+//   { x: 80, y: 430, scale: 3, speed: 0.3 },
+//   { x: 50, y: 520, scale: 2, speed: 0.2 },
+//   { x: 0, y: 600, scale: 1.5, speed: 0.1 },
+// ];
+
+const POSITION = [
+  { x: 0, y: 430, scale: 1.5 },
+  { x: 0, y: 520, scale: 1.5 },
+  { x: 0, y: 610, scale: 1.5 },
+];
+
 export default function SprintLeagueGame({
   players,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars, unused-imports/no-unused-vars
+  votes = 0,
   initStatus = Status.BEFORE_VOTE,
   onVote,
   onRepost,
 }: {
   initStatus: Status;
-  players: Player[];
+  votes: number;
+  players: SprintLeaguePlayer[];
   onVote: (playerId: number) => Promise<void>;
-  onRepost: () => Promise<void>;
+  onRepost: () => void;
 }) {
   const [baseSpeed, setBaseSpeed] = useState(
-    initStatus === Status.BEFORE_VOTE ? 0 : 1.4,
+    initStatus === Status.BEFORE_VOTE ? 0 : SPEED,
   );
   const [status, setStatus] = useState(initStatus);
-  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-  const [voted, setVoted] = useState(false);
+  const [selectedPlayerId, setSelectedPlayerId] = useState<number | null>(null);
+  const [voted, setVoted] = useState(initStatus === Status.AFTER_VOTE);
   const handleStartVote = () => {
     setStatus(Status.VOTING);
   };
-  const players_sorted = players.sort((a, b) => a.vote_ratio - b.vote_ratio);
+  console.log('SprintLeagueGame', players);
 
-  const handleVote = async (selectedPlayer: number) => {
+  const player_bundles = players
+    .map((player) => {
+      return [
+        {
+          alias: `player-${player.id}-run`,
+          src: player.player_images.run.json,
+        },
+        {
+          alias: `player-${player.id}-select`,
+          src: player.player_images.select.json,
+        },
+        {
+          alias: `player-${player.id}-win`,
+          src: player.player_images.win,
+        },
+        {
+          alias: `player-${player.id}-lose`,
+          src: player.player_images.lose,
+        },
+      ];
+    })
+    .flat();
+
+  const handleVote = async (playerId: number) => {
     try {
-      await onVote(players_sorted[selectedPlayer].id);
-      setBaseSpeed(1.4);
+      await onVote(playerId);
+      setBaseSpeed(SPEED);
       setStatus(Status.AFTER_VOTE);
       setVoted(true);
       setTimeout(() => {
@@ -173,8 +164,8 @@ export default function SprintLeagueGame({
     }
   };
 
-  const handleSelectPlayer = (index: number) => {
-    setSelectedIndex((prev) => (prev === index ? null : index));
+  const handleSelectPlayer = (id: number) => {
+    setSelectedPlayerId((prev) => (prev === id ? null : id));
   };
 
   return (
@@ -190,35 +181,22 @@ export default function SprintLeagueGame({
         },
         {
           name: 'characters',
-          assets: [...userBundle0, ...userBundle1, ...userBundle2],
+          assets: player_bundles,
         },
       ]}
     >
       <Background alias="background" baseSpeed={baseSpeed} />
-      <Character
-        selected={voted && selectedIndex === 0}
-        index={0}
-        x={80}
-        y={430}
-        speed={baseSpeed * 0.3}
-        scale={3}
-      />
-      <Character
-        selected={voted && selectedIndex === 1}
-        index={1}
-        x={50}
-        y={520}
-        speed={baseSpeed * 0.2}
-        scale={2}
-      />
-      <Character
-        selected={voted && selectedIndex === 2}
-        index={2}
-        x={0}
-        y={600}
-        speed={baseSpeed * 0.1}
-        scale={1.5}
-      />
+      {players.map((player, index) => (
+        <Character
+          key={player.id}
+          playerId={player.id}
+          selected={voted && selectedPlayerId === player.id}
+          x={POSITION[index].x}
+          y={POSITION[index].y}
+          scale={POSITION[index].scale}
+          speed={baseSpeed * 0.3}
+        />
+      ))}
       {status === Status.BEFORE_VOTE && (
         <>
           <Banner />
@@ -229,16 +207,16 @@ export default function SprintLeagueGame({
       {status === Status.VOTING && (
         <>
           <Dim />
-          {selectedIndex === null && <VoteBanner />}
+          {selectedPlayerId === null && <VoteBanner />}
           <VotePlayer
             players={players}
-            selectedIndex={selectedIndex}
+            selectedPlayerId={selectedPlayerId}
             onSelect={handleSelectPlayer}
           />
           <VoteBackButton
             onVote={() => {
-              if (selectedIndex !== null) {
-                handleVote(selectedIndex);
+              if (selectedPlayerId !== null) {
+                handleVote(selectedPlayerId);
               }
             }}
             onBack={handleBack}
@@ -250,10 +228,4 @@ export default function SprintLeagueGame({
       )}
     </Base>
   );
-}
-
-export enum Status {
-  BEFORE_VOTE,
-  VOTING,
-  AFTER_VOTE,
 }
