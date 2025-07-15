@@ -30,7 +30,7 @@ export default function PromotionCard({ promotion, feed }: PromotionCardProps) {
       <h3 className="font-bold text-white text-[15px]/[20px]">Hot Promotion</h3>
       <Link
         href={getHref()}
-        className="flex items-center gap-2.5 hover:bg-btn-hover rounded p-2 transition-colors"
+        className="flex items-center gap-2.5 hover:bg-btn-hover rounded px-3 py-2 transition-colors"
         aria-label={`View ${promotion.name} promotion`}
       >
         <Image
@@ -38,10 +38,10 @@ export default function PromotionCard({ promotion, feed }: PromotionCardProps) {
           alt={promotion.name}
           width={60}
           height={60}
-          className="rounded object-cover cursor-pointer"
+          className="rounded object-cover flex-shrink-0"
           priority
         />
-        <div>
+        <div className="flex-1">
           <div className="font-medium text-white text-base/[25px]">
             {promotion.name}
           </div>
