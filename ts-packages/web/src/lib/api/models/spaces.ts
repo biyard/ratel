@@ -35,6 +35,10 @@ export interface Space {
   drafts: SpaceDraft[];
 
   sprint_leagues?: SprintLeague[];
+
+  likes: number;
+  shares: number;
+  is_liked: boolean;
 }
 
 export interface PostingSpaceRequest {

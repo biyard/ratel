@@ -30,15 +30,16 @@ import {
   surveyResponseCreateRequest,
 } from '@/lib/api/models/response';
 import { useApiCall } from '@/lib/api/use-send';
-import { showErrorToast, showSuccessToast } from '@/lib/toast';
+import { showErrorToast, showInfoToast, showSuccessToast } from '@/lib/toast';
 import { checkString } from '@/lib/string-filter-utils';
-import { FileInfo } from '@/lib/api/models/feeds';
+import { Feed, FileInfo } from '@/lib/api/models/feeds';
 import { DiscussionCreateRequest } from '@/lib/api/models/discussion';
 import { ElearningCreateRequest } from '@/lib/api/models/elearning';
 import { Question, SurveyCreateRequest } from '@/lib/api/models/survey';
 import { SpaceDraftCreateRequest } from '@/lib/api/models/space_draft';
 import { useQueryClient } from '@tanstack/react-query';
 import { QK_GET_SPACE_BY_SPACE_ID } from '@/constants';
+import { useFeedByID } from '@/app/(social)/_hooks/feed';
 
 export interface MappedResponse {
   question: Question;
@@ -79,6 +80,8 @@ type ContextType = {
   createdAt: number;
   status: SpaceStatus;
 
+  handleLike: () => void;
+  handleShare: () => void;
   handleSetAnswers: (answers: Answer[]) => void;
   handleSetStartDate: (startDate: number) => void;
   handleSetEndDate: (endDate: number) => void;
@@ -108,11 +111,21 @@ export default function ClientProviders({
   const [isEdit, setIsEdit] = useState(false);
   const [title, setTitle] = useState(space.title ?? '');
   const [startedAt, setStartedAt] = useState(
-    changeStartedAt(Math.floor(space.started_at ?? Date.now() / 1000)),
+    changeStartedAt(space.started_at ?? Date.now() / 1000),
   );
   const [endedAt, setEndedAt] = useState(
-    changeEndedAt(Math.floor(space.ended_at ?? Date.now() / 1000)),
+    changeEndedAt(space.ended_at ?? Date.now() / 1000),
   );
+
+  useEffect(() => {
+    if (space.started_at) {
+      setStartedAt(changeStartedAt(space.started_at));
+    }
+    if (space.ended_at) {
+      setEndedAt(changeEndedAt(space.ended_at));
+    }
+  }, [space.started_at, space.ended_at]);
+
   const [thread, setThread] = useState<Thread>({
     html_contents: space.html_contents ?? '',
     files: space.files ?? [],
@@ -169,6 +182,46 @@ export default function ClientProviders({
   );
 
   const router = useRouter();
+
+  const handleShare = async () => {
+    const space_id = space.id;
+    navigator.clipboard.writeText(window.location.href).then(async () => {
+      try {
+        const res = await post(ratelApi.spaces.shareSpace(space_id), {
+          share: {},
+        });
+        if (res) {
+          showInfoToast('The space URL has been copied to your clipboard.');
+          data.refetch();
+        }
+      } catch (error) {
+        logger.error('Failed to share space with error: ', error);
+        showErrorToast(
+          'Unable to share space at this time. Please try again later.',
+        );
+      }
+    });
+  };
+
+  const handleLike = async () => {
+    const space_id = space.id;
+    const value = !space.is_liked;
+    try {
+      const res = await post(ratelApi.spaces.likeSpace(space_id), {
+        like: {
+          value,
+        },
+      });
+      if (res) {
+        data.refetch();
+      }
+    } catch (error) {
+      logger.error('Failed to like user with error: ', error);
+      showErrorToast(
+        'Unable to register your like at this time. Please try again later.',
+      );
+    }
+  };
 
   const handleGoBack = () => {
     if (isEdit) {
@@ -251,7 +304,6 @@ export default function ClientProviders({
     document.body.appendChild(a);
     a.click();
 
-    // 클린업
     document.body.removeChild(a);
     URL.revokeObjectURL(blobUrl);
   };
@@ -376,6 +428,12 @@ export default function ClientProviders({
     logger.debug('discussions: ', discussions);
     logger.debug('surveys', survey.surveys);
 
+    const surveys = survey.surveys.map((survey) => ({
+      started_at: startedAt,
+      ended_at: endedAt,
+      questions: survey.questions,
+    }));
+
     try {
       await handleUpdate(
         title,
@@ -385,7 +443,7 @@ export default function ClientProviders({
         thread.files,
         discussions,
         deliberation.elearnings,
-        survey.surveys,
+        surveys,
         draft.drafts,
       );
 
@@ -444,6 +502,8 @@ export default function ClientProviders({
         handlePostingSpace,
         handleEdit,
         handleSave,
+        handleLike,
+        handleShare,
         handleViewRecord,
       }}
     >
@@ -472,6 +532,16 @@ export function useDeliberationSpace(): Space {
   return space;
 }
 
+export function useDeliberationFeed(feedId: number): Feed {
+  const { data: feed } = useFeedByID(feedId);
+
+  if (!feed) {
+    throw new Error('Feed data is not available');
+  }
+
+  return feed;
+}
+
 function mapResponses(
   questions: Question[],
   responses: SurveyResponse[],
@@ -490,14 +560,14 @@ function mapResponses(
 
 function changeStartedAt(timestamp: number) {
   const date = new Date(timestamp * 1000);
-  date.setUTCHours(0, 0, 0, 0);
+  // date.setUTCHours(0, 0, 0, 0);
   const newDate = Math.floor(date.getTime() / 1000);
   return newDate;
 }
 
 function changeEndedAt(timestamp: number) {
   const date = new Date(timestamp * 1000);
-  date.setUTCHours(23, 59, 59, 0);
+  // date.setUTCHours(23, 59, 59, 0);
   const newDate = Math.floor(date.getTime() / 1000);
   return newDate;
 }

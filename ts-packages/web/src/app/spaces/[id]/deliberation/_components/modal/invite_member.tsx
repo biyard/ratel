@@ -11,13 +11,23 @@ import clsx from 'clsx';
 import { logger } from '@/lib/logger';
 import { checkString } from '@/lib/string-filter-utils';
 import { showErrorToast } from '@/lib/toast';
+import { DiscussionInfo } from '../../types';
 
 export default function InviteMemberPopup({
+  title,
+  description,
+  startTime,
+  endTime,
   users,
-  onclick,
+  onadd,
 }: {
+  title: string;
+  description: string;
+  startTime: number;
+  endTime: number;
+  reminderEnabled: boolean;
   users: TotalUser[];
-  onclick: (users: TotalUser[]) => void;
+  onadd: (discussion: DiscussionInfo) => void;
 }) {
   const { get } = useApiCall();
 
@@ -116,7 +126,13 @@ export default function InviteMemberPopup({
       <InviteMemberButton
         isError={errorCount != 0}
         onclick={() => {
-          onclick(selectedUsers);
+          onadd({
+            started_at: Math.floor(startTime),
+            ended_at: Math.floor(endTime),
+            name: title,
+            description,
+            participants: selectedUsers,
+          });
         }}
       />
     </div>
