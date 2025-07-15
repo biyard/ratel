@@ -19,26 +19,26 @@ pub struct Feed {
     #[api_model(summary, many_to_one = users, action = [create_draft, repost], query_action = posts_by_user_id)]
     pub user_id: i64,
 
-    #[api_model(summary, many_to_one = industries, action_by_id = [update])]
+    #[api_model(summary, many_to_one = industries, action_by_id = [update, edit])]
     pub industry_id: i64,
 
     // parent feed ID
-    #[api_model(summary, nullable, indexed, action = [comment, repost], action_by_id = [update])]
+    #[api_model(summary, nullable, indexed, action = [comment, repost], action_by_id = [update, edit])]
     pub parent_id: Option<i64>,
 
-    #[api_model(summary, nullable, indexed, action = [repost], action_by_id = [update])]
+    #[api_model(summary, nullable, indexed, action = [repost], action_by_id = [update, edit])]
     pub quote_feed_id: Option<i64>,
 
     // Post
-    #[api_model(summary, nullable, action_by_id = [update])]
+    #[api_model(summary, nullable, action_by_id = [update, edit])]
     pub title: Option<String>,
 
-    #[api_model(summary, action = [comment, repost], action_by_id = [update])]
+    #[api_model(summary, action = [comment, repost], action_by_id = [update, edit])]
     pub html_contents: String,
 
-    #[api_model(version = v0.2, summary, action_by_id = [update])]
+    #[api_model(version = v0.2, summary, action_by_id = [update, edit])]
     pub url: Option<String>,
-    #[api_model(version = v0.2, summary, type = INTEGER, action_by_id = [update])]
+    #[api_model(version = v0.2, summary, type = INTEGER, action_by_id = [update, edit])]
     #[serde(default)]
     pub url_type: UrlType,
 
