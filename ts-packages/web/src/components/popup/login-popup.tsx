@@ -1,11 +1,11 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import GoogleIcon from '@/assets/icons/google.svg';
 import { LoginPopupFooter } from './login-popup-footer';
 import { LoaderPopup } from './loader-popup';
 import { usePopup } from '@/lib/contexts/popup-service';
 import { LoginFailurePopup } from './login-failure-popup';
-import UserSetupPopup from './user-setup-popup';
+import UserSetupPopup, { type UserSetupPopupProps } from './user-setup-popup';
 import { logger } from '@/lib/logger';
 import { useAuth, useEd25519KeyPair } from '@/lib/contexts/auth-context';
 import { AuthUserInfo, EventType } from '@/lib/service/firebase-service';
@@ -26,6 +26,7 @@ import { type User as TelegramUser } from '@telegram-apps/sdk-react';
 
 interface LoginModalProps {
   id?: string;
+  disableClose?: boolean;
 }
 
 interface LoginBoxProps {
@@ -34,7 +35,10 @@ interface LoginBoxProps {
   onClick: () => void;
 }
 
-export const LoginModal = ({ id = 'login_popup' }: LoginModalProps) => {
+export const LoginModal = ({
+  id = 'login_popup',
+  disableClose = false,
+}: LoginModalProps) => {
   const popup = usePopup();
   const network = useNetwork();
   const anonKeyPair = useEd25519KeyPair();
@@ -50,23 +54,45 @@ export const LoginModal = ({ id = 'login_popup' }: LoginModalProps) => {
 
   const updateTelegramId = async () => {
     if (telegramRaw) {
-      await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}${ratelApi.users.updateTelegramId()}`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-          body: JSON.stringify({
-            update_telegram_id: {
-              telegram_raw: telegramRaw,
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}${ratelApi.users.updateTelegramId()}`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
             },
-          }),
-        },
-      );
+            credentials: 'include',
+            body: JSON.stringify({
+              update_telegram_id: {
+                telegram_raw: telegramRaw,
+              },
+            }),
+          },
+        );
+        if (!response.ok) {
+          logger.error('Failed to update Telegram ID:', response.status);
+        }
+      } catch (error) {
+        logger.error('Error updating Telegram ID:', error);
+      }
     }
   };
+
+  const openUserSetupPopup = useCallback(
+    (props: UserSetupPopupProps) => {
+      if (disableClose) {
+        popup
+          .open(<UserSetupPopup {...props} />)
+          .withoutClose()
+          .withoutBackdropClose();
+      } else {
+        popup.open(<UserSetupPopup {...props} />).withoutBackdropClose();
+      }
+    },
+    [popup, disableClose],
+  );
+
   const validatePassword = (pw: string) => {
     const regex =
       /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[!@#$%^&*()_+{}\[\]:;<>,.?~\\/-]).{8,}$/;
@@ -157,16 +183,12 @@ export const LoginModal = ({ id = 'login_popup' }: LoginModalProps) => {
       }
 
       if (user?.event == EventType.SignUp) {
-        popup
-          .open(
-            <UserSetupPopup
-              email={user.email ?? ''}
-              nickname={user.displayName ?? ''}
-              profileUrl={user.photoURL ?? ''}
-              principal={user.principal ?? ''}
-            />,
-          )
-          .withoutBackdropClose();
+        openUserSetupPopup({
+          email: user.email ?? '',
+          nickname: user.displayName ?? undefined,
+          profileUrl: user.photoURL ?? undefined,
+          principal: user.principal ?? undefined,
+        });
       } else if (user?.event == EventType.Login) {
         refetchUserInfo(queryClient);
         network.refetch();
@@ -203,7 +225,6 @@ export const LoginModal = ({ id = 'login_popup' }: LoginModalProps) => {
 
     try {
       const info = await send(anonKeyPair, '/api/login', '');
-      console.info('User info from API:', info);
       if (!info && telegramRaw) {
         const params = new URLSearchParams(telegramRaw);
         const userJson = params.get('user');
@@ -211,21 +232,15 @@ export const LoginModal = ({ id = 'login_popup' }: LoginModalProps) => {
           throw new Error('Telegram user data not found');
         }
         const user: TelegramUser = JSON.parse(userJson);
-        console.info('Telegram user data:', user);
-        popup
-          .open(
-            <UserSetupPopup
-              id="telegram_user_setup"
-              email=""
-              nickname={user.username ?? ''}
-              username={`${user.first_name} ${user.last_name ?? ''}`.trim()}
-              profileUrl={user.photo_url ?? ''}
-              principal={anonKeyPair.getPrincipal().toText()}
-            />,
-          )
-          .withoutBackdropClose();
+        openUserSetupPopup({
+          id: 'telegram_user_setup',
+          email: '',
+          nickname: user.username ?? '',
+          username: `${user.first_name} ${user.last_name ?? ''}`.trim(),
+          profileUrl: user.photo_url ?? '',
+          principal: anonKeyPair.getPrincipal().toText(),
+        });
       } else {
-        console.info('User info from API:', info);
         refetchUserInfo(queryClient);
         network.refetch();
         loader.close();

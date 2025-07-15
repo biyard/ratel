@@ -10,6 +10,8 @@ import { usePopup } from '@/lib/contexts/popup-service';
 import { useUserInfo } from '../(social)/_hooks/user';
 import Loading from '../loading';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { decode_base64 } from '@/lib/base64';
+import { route } from '@/route';
 
 function useDidMount(): boolean {
   const [didMount, setDidMount] = useState<boolean>(false);
@@ -24,72 +26,53 @@ function useDidMount(): boolean {
 export default function HomePage() {
   const didMount = useDidMount();
 
-  return (
-    <div className="absolute w-screen h-screen left-0 top-0 bg-bg">
-      {didMount && <TelegramMiniAppMain />}
-    </div>
-  );
+  return <>{didMount && <TelegramMiniAppMain />}</>;
 }
 
 function TelegramMiniAppMain() {
-  const [isLoading, setLoading] = useState(true);
-  const router = useRouter();
-  const searchParams = useSearchParams();
+  const [isLoading, setIsLoading] = useState(true);
   const raw = useRawInitData();
   const popup = usePopup();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { setTelegramRaw } = useAuth();
   const anonKeyPair = useEd25519KeyPair();
   const { refetch } = useUserInfo();
   useEffect(() => {
     const loginWithTelegram = async (raw: string) => {
-      console.debug('Telegram raw init data:', raw);
-
+      setTelegramRaw(raw);
       const url = proxy.login.loginWithTelegram(raw);
       try {
         const info = await send(anonKeyPair, url, '');
-        if (info) {
-          console.log('Login successful:', info);
-          refetch();
-          const redirectUrl = searchParams.get('redirectURL');
+        if (!info) {
+          throw new Error('Login failed, no info returned');
+        }
+        refetch();
 
-          if (redirectUrl) {
-            const newParams = new URLSearchParams(searchParams.toString());
-            newParams.delete('redirectURL');
-            const remainingParams = newParams.toString();
-            const finalUrl = remainingParams
-              ? `${redirectUrl}?${remainingParams}`
-              : redirectUrl;
-
-            router.replace(finalUrl);
-            return;
-          }
-        } else {
-          setLoading(false);
-          popup
-            .open(<LoginModal />)
-            .withTitle('Join the Movement')
-            .withoutClose()
-            .withoutBackdropClose();
+        const tgWebAppStartParam = searchParams.get('tgWebAppStartParam');
+        if (tgWebAppStartParam) {
+          const decodedParams = decode_base64(tgWebAppStartParam);
+          const decodedParamsStr = new TextDecoder().decode(decodedParams);
+          const jsonParams = JSON.parse(decodedParamsStr);
+          router.replace(`${route.telegramSprintLeague(jsonParams.space_id)}`);
         }
       } catch (error) {
         console.error('Error occurred while logging in:', error);
+        setIsLoading(false);
+        // FIXME: When Server is not available, this popup cause infinite loop
+        popup
+          .open(<LoginModal disableClose />)
+          .withTitle('Join the Movement')
+          .withoutClose()
+          .withoutBackdropClose();
       }
     };
 
-    if (raw && popup && isLoading) {
-      setTelegramRaw(raw);
+    if (!!raw) {
       loginWithTelegram(raw);
     }
-  }, [
-    raw,
-    setTelegramRaw,
-    anonKeyPair,
-    popup,
-    isLoading,
-    refetch,
-    router,
-    searchParams,
-  ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [raw]);
 
   return <>{isLoading ? <Loading /> : <></>}</>;
 }
