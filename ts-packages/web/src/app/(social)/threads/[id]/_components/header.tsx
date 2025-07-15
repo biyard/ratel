@@ -16,7 +16,7 @@ import SpaceCreateModal from './space-create-modal';
 import { SpaceType } from '@/lib/api/models/spaces';
 import { useRouter } from 'next/navigation';
 import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
-import { useContext, useEffect, useState } from 'react';
+import { useContext } from 'react';
 import { TeamContext } from '@/lib/contexts/team-context';
 
 export default function Header({ post_id }: { post_id: number }) {
@@ -25,17 +25,14 @@ export default function Header({ post_id }: { post_id: number }) {
   const router = useRouter();
   const { teams } = useContext(TeamContext);
   const user = useSuspenseUserInfo();
-  const [selectedTeam, setSelectedTeam] = useState<boolean>(false);
+
+  const author_id = post?.author[0].id;
+  const selectedTeam = teams.some((t) => t.id === author_id);
 
   const space_id = post?.spaces[0]?.id;
 
   const author_id = post?.author[0].id;
   const user_id = user.data ? user.data.id : 0;
-
-  useEffect(() => {
-    const index = teams.findIndex((t) => t.id === author_id);
-    setSelectedTeam(index !== -1);
-  }, [teams]);
 
   let target;
   if (space_id) {

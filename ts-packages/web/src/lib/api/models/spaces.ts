@@ -32,6 +32,10 @@ export interface Space {
   user_responses: SurveyResponse[];
   responses: SurveyResponse[];
   drafts: SpaceDraft[];
+
+  likes: number;
+  shares: number;
+  is_liked: boolean;
 }
 
 export interface PostingSpaceRequest {
@@ -100,6 +104,7 @@ export enum SpaceType {
   Deliberation = 3,
   Nft = 4,
   Committee = 5,
+  SprintLeague = 6,
 }
 
 export enum SpaceStatus {

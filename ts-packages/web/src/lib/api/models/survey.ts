@@ -26,6 +26,7 @@ export interface SingleChoiceQuestion {
   answer_type: 'single_choice';
   title: string;
   description?: string;
+  image_url?: string;
   options: string[];
 }
 
