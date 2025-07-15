@@ -177,7 +177,7 @@ pub async fn telegram_handler(
 
                 if mention_text == format!("@{}", bot_username) {
                     tracing::debug!("Bot was mentioned in the message");
-                    let url = format!("{}?value=1&value=2", conf.telegram_mini_app_uri);
+                    let url = format!("{}", conf.telegram_mini_app_uri);
                     let url = url.parse().unwrap();
                     let text = match lang.as_deref() {
                         Some("ko") => ("🧩 미니앱 실행", "여기를 눌러 미니앱을 실행하세요 🧩"),

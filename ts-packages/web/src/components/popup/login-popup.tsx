@@ -54,21 +54,28 @@ export const LoginModal = ({
 
   const updateTelegramId = async () => {
     if (telegramRaw) {
-      await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}${ratelApi.users.updateTelegramId()}`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-          body: JSON.stringify({
-            update_telegram_id: {
-              telegram_raw: telegramRaw,
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}${ratelApi.users.updateTelegramId()}`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
             },
-          }),
-        },
-      );
+            credentials: 'include',
+            body: JSON.stringify({
+              update_telegram_id: {
+                telegram_raw: telegramRaw,
+              },
+            }),
+          },
+        );
+        if (!response.ok) {
+          logger.error('Failed to update Telegram ID:', response.status);
+        }
+      } catch (error) {
+        logger.error('Error updating Telegram ID:', error);
+      }
     }
   };
 
@@ -218,7 +225,6 @@ export const LoginModal = ({
 
     try {
       const info = await send(anonKeyPair, '/api/login', '');
-      console.info('User info from API:', info);
       if (!info && telegramRaw) {
         const params = new URLSearchParams(telegramRaw);
         const userJson = params.get('user');
@@ -226,7 +232,6 @@ export const LoginModal = ({
           throw new Error('Telegram user data not found');
         }
         const user: TelegramUser = JSON.parse(userJson);
-        console.info('Telegram user data:', user);
         openUserSetupPopup({
           id: 'telegram_user_setup',
           email: '',
@@ -236,7 +241,6 @@ export const LoginModal = ({
           principal: anonKeyPair.getPrincipal().toText(),
         });
       } else {
-        console.info('User info from API:', info);
         refetchUserInfo(queryClient);
         network.refetch();
         loader.close();
