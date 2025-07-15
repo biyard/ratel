@@ -27,7 +27,6 @@ export default function Character({
         if (selected) {
           jsonName = `player-${playerId}-select`;
         }
-        console.log('Loading character assets:', jsonName);
         const sheet = (await Assets.get(jsonName)) as Spritesheet;
 
         setTextures(Object.values(sheet.textures));

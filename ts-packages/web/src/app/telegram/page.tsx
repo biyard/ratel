@@ -47,16 +47,13 @@ function TelegramMiniAppMain() {
         if (!info) {
           throw new Error('Login failed, no info returned');
         }
-        console.log('Login successful:', info);
         refetch();
 
         const tgWebAppStartParam = searchParams.get('tgWebAppStartParam');
         if (tgWebAppStartParam) {
           const decodedParams = decode_base64(tgWebAppStartParam);
-          console.log('Decoded params:', decodedParams);
           const decodedParamsStr = new TextDecoder().decode(decodedParams);
           const jsonParams = JSON.parse(decodedParamsStr);
-          console.log('Parsed JSON params:', jsonParams.space_id);
           router.replace(`${route.telegramSprintLeague(jsonParams.space_id)}`);
         }
       } catch (error) {

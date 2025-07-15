@@ -113,7 +113,6 @@ export default function SprintLeagueGame({
   const handleStartVote = () => {
     setStatus(Status.VOTING);
   };
-  console.log('SprintLeagueGame', players);
 
   const player_bundles = players
     .map((player) => {

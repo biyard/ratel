@@ -72,9 +72,7 @@ const UserSetupPopup = ({
   const handleProfileUrl = (url: string) => {
     setProfileUrlState(url);
   };
-  useEffect(() => {
-    console.log('UserSetupPopup mounted');
-  }, []);
+
   const handleSubmit = async () => {
     if (checkString(displayName) || checkString(userName)) {
       showErrorToast('Please remove the test keyword');

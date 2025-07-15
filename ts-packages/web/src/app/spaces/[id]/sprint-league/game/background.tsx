@@ -94,7 +94,6 @@ export default function Background({
         Object.entries(sheet.textures).forEach(([key, tex]) => {
           texturesObj[key] = [tex];
         });
-        console.log('Asset Loaded:', texturesObj);
         // Set the textures state
         setTextures(texturesObj);
       } catch (error) {
