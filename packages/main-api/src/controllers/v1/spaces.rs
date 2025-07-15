@@ -50,6 +50,10 @@ impl SpaceController {
             .discussions_builder(Discussion::query_builder())
             .comments_builder(SpaceComment::query_builder())
             .feed_comments_builder(SpaceComment::query_builder())
+            .sprint_leagues_builder(
+                SprintLeague::query_builder(user_id)
+                    .players_builder(SprintLeaguePlayer::query_builder()),
+            )
             .query()
             .map(Space::from)
             .fetch_one(&self.pool)
