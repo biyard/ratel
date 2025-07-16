@@ -1,14 +1,14 @@
 'use client';
 
 import { useFeedByID } from '@/app/(social)/_hooks/feed';
-import { ArrowLeft } from '@/components/icons';
+import { ArrowLeft, Palace } from '@/components/icons';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { UserType } from '@/lib/api/models/user';
 import { getTimeAgo } from '@/lib/time-utils';
-import { Trash2, Edit, Unlock, Plus } from 'lucide-react';
+import { Trash2, Edit } from 'lucide-react';
 import Image from 'next/image';
-import { BadgeIcon, Extra, PalaceSvgrepo } from '@/components/icons';
+import { BadgeIcon, Extra, UnlockPublic } from '@/components/icons';
 import Link from 'next/link';
 import { route } from '@/route';
 import { usePopup } from '@/lib/contexts/popup-service';
@@ -94,7 +94,7 @@ export default function Header({ post_id }: { post_id: number }) {
         <button onClick={router.back}>
           <ArrowLeft />
         </button>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2.5">
           {space_id ? (
             <Link href={target ?? ''}>
               <Button variant="rounded_secondary" className="max-tablet:hidden">
@@ -105,26 +105,26 @@ export default function Header({ post_id }: { post_id: number }) {
             <>
               <Button
                 variant="default"
-                className="rounded-md max-tablet:hidden"
+                className="rounded-md max-tablet:hidden text-lg px-3 py-1.5"
                 onClick={handleEditPost}
               >
-                <Edit className="size-4" />
+                <Edit className="size-6" />
                 Edit
               </Button>
               <Button
                 variant="default"
-                className="rounded-md max-tablet:hidden"
+                className="rounded-md max-tablet:hidden text-lg px-3 py-1.5"
               >
-                <Unlock className="size-4" />
+                <UnlockPublic className="size-6 [&>path]:stroke-black" />
                 Make Public
               </Button>
               <Button
                 variant="rounded_secondary"
                 onClick={handleCreateSpace}
-                className="max-tablet:hidden bg-[#FCB300] hover:bg-[#FCB300]/80"
+                className="max-tablet:hidden bg-[#FCB300] hover:bg-[#FCB300]/80 text-lg px-3 py-1.5"
               >
-                <PalaceSvgrepo className="size-5" />
-                Create Space
+                <Palace className="size-6" />
+                Create a Space
               </Button>
             </>
           ) : (
@@ -140,7 +140,7 @@ export default function Header({ post_id }: { post_id: number }) {
                   aria-haspopup="true"
                   aria-label="Post options"
                 >
-                  <Extra className="w-6 h-6 text-gray-400" />
+                  <Extra className="size-6 text-gray-400" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
@@ -164,8 +164,8 @@ export default function Header({ post_id }: { post_id: number }) {
                           onClick={handleCreateSpace}
                           className="flex items-center w-full px-4 py-2 text-sm text-white hover:bg-gray-700 cursor-pointer"
                         >
-                          <Plus className="w-4 h-4" />
-                          Create Space
+                          <Palace className="w-4 h-4 [&>path]:stroke-white" />
+                          Create a Space
                         </button>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
@@ -179,7 +179,7 @@ export default function Header({ post_id }: { post_id: number }) {
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
                         <button className="flex items-center w-full px-4 py-2 text-sm text-white hover:bg-gray-700 cursor-pointer">
-                          <Unlock className="w-4 h-4" />
+                          <UnlockPublic className="w-4 h-4 [&>path]:stroke-white" />
                           Make Public
                         </button>
                       </DropdownMenuItem>
