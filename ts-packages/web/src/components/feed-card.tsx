@@ -18,7 +18,7 @@ import { SpaceType } from '@/lib/api/models/spaces';
 export interface FeedCardProps {
   id: number;
   industry: string;
-  title: string;
+  title: string | null;
   contents: string;
   author_profile_url: string;
   author_name: string;
@@ -153,9 +153,11 @@ export function FeedBody({
           <div />
         )}
       </Row>
-      <h2 className="w-full line-clamp-2 font-bold text-xl/[25px] tracking-[0.5px] align-middle text-white px-5">
-        {title}
-      </h2>
+      {title && (
+        <h2 className="w-full line-clamp-2 font-bold text-xl/[25px] tracking-[0.5px] align-middle text-white px-5">
+          {title}
+        </h2>
+      )}
       <Row className="justify-between items-center px-5">
         <UserBadge
           profile_url={author_profile_url}

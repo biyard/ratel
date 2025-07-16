@@ -2,18 +2,16 @@ import { QK_GET_PROMOTION } from '@/constants';
 import { Promotion } from '@/lib/api/models/promotion';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { useApiCall } from '@/lib/api/use-send';
-import {
-  useSuspenseQuery,
-  UseSuspenseQueryResult,
-} from '@tanstack/react-query';
+import { useQuery, UseQueryResult } from '@tanstack/react-query';
 
-export function usePromotion(): UseSuspenseQueryResult<Promotion> {
+export function usePromotion(): UseQueryResult<Promotion> {
   const { get } = useApiCall();
 
-  const query = useSuspenseQuery({
+  const query = useQuery({
     queryKey: [QK_GET_PROMOTION],
     queryFn: () => get(ratelApi.promotions.get_promotions()),
     refetchOnWindowFocus: false,
+    retry: false, // Don't retry on failure
   });
 
   return query;

@@ -8,7 +8,16 @@ import { UserType } from '@/lib/api/models/user';
 import { getTimeAgo } from '@/lib/time-utils';
 import { Trash2, Edit } from 'lucide-react';
 import Image from 'next/image';
-import { BadgeIcon, Extra, UnlockPublic } from '@/components/icons';
+import {
+  BadgeIcon,
+  Extra,
+  UnlockPublic,
+  ThumbUp,
+  CommentIcon,
+  Rewards,
+  Shares,
+  Lock,
+} from '@/components/icons';
 import Link from 'next/link';
 import { route } from '@/route';
 import { usePopup } from '@/lib/contexts/popup-service';
@@ -28,6 +37,7 @@ import { useApiCall } from '@/lib/api/use-send';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { showSuccessToast, showErrorToast } from '@/lib/toast';
 import { usePostDraft } from '@/app/(social)/_components/create-post';
+import { convertNumberToString } from '@/lib/number-utils';
 
 export default function Header({ post_id }: { post_id: number }) {
   const { data: post } = useFeedByID(post_id);
@@ -83,6 +93,43 @@ export default function Header({ post_id }: { post_id: number }) {
     } catch (error) {
       console.error('Failed to load draft for editing:', error);
       showErrorToast('Failed to load post for editing. Please try again.');
+    }
+  };
+
+  // Like functionality state and handlers
+  const [localLikes, setLocalLikes] = useState(post?.likes || 0);
+  const [localIsLiked, setLocalIsLiked] = useState(post?.is_liked || false);
+  const [isLikeProcessing, setIsLikeProcessing] = useState(false);
+
+  useEffect(() => {
+    setLocalLikes(post?.likes || 0);
+    setLocalIsLiked(post?.is_liked || false);
+  }, [post?.likes, post?.is_liked]);
+
+  const handleLike = async () => {
+    if (isLikeProcessing || !post) return; // Prevent multiple clicks
+
+    const newValue = !localIsLiked;
+
+    // Set processing state and optimistic update
+    setIsLikeProcessing(true);
+    setLocalIsLiked(newValue);
+    setLocalLikes((prev) => (newValue ? prev + 1 : prev - 1));
+
+    try {
+      await apiPost(ratelApi.feeds.likePost(post.id), {
+        like: { value: newValue },
+      });
+
+      // Success - no notification needed, visual feedback is enough
+    } catch (error) {
+      // Revert optimistic update on error
+      setLocalIsLiked(post.is_liked || false);
+      setLocalLikes(post.likes || 0);
+      console.error('Failed to update like:', error);
+      showErrorToast('Failed to update like. Please try again.');
+    } finally {
+      setIsLikeProcessing(false);
     }
   };
 
@@ -216,6 +263,51 @@ export default function Header({ post_id }: { post_id: number }) {
               {industry.name}
             </Badge>
           ))}
+        </div>
+        <div className="flex items-center gap-4">
+          {/* Feed Stats */}
+          <button
+            onClick={handleLike}
+            disabled={isLikeProcessing}
+            className={`flex items-center gap-1 transition-colors ${
+              isLikeProcessing
+                ? 'cursor-not-allowed opacity-50'
+                : 'cursor-pointer'
+            }`}
+          >
+            <ThumbUp
+              className={
+                localIsLiked
+                  ? 'size-7 [&>path]:fill-primary [&>path]:stroke-primary'
+                  : 'size-7 text-gray-400'
+              }
+            />
+            <span className="text-base text-white">
+              {convertNumberToString(localLikes)}
+            </span>
+          </button>
+          <div className="flex items-center gap-1">
+            <CommentIcon className="size-7 text-gray-400" />
+            <span className="text-base text-white">
+              {convertNumberToString(post?.comments || 0)}
+            </span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Rewards className="size-7 text-gray-400" />
+            <span className="text-base text-white">
+              {convertNumberToString(post?.rewards || 0)}
+            </span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Shares className="size-7 text-gray-400" />
+            <span className="text-base text-white">
+              {convertNumberToString(post?.shares || 0)}
+            </span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Lock className="size-7 text-gray-400" />
+            <span className="text-base text-white">Private</span>
+          </div>
         </div>
       </div>
 

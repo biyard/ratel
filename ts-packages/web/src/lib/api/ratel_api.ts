@@ -5,7 +5,6 @@ import { Space } from './models/spaces';
 import {
   QK_GET_FEED_BY_FEED_ID,
   QK_GET_NETWORK,
-  QK_GET_PROMOTION,
   QK_GET_REDEEM_CODE,
   QK_GET_SPACE_BY_SPACE_ID,
 } from '@/constants';
@@ -16,7 +15,6 @@ import {
 import { useApiCall } from './use-send';
 import { RedeemCode } from './models/redeem-code';
 import { NetworkData } from './models/network';
-import { Promotion } from './models/promotion';
 
 export function useSpaceById(id: number): UseSuspenseQueryResult<Space> {
   const { get } = useApiCall();
@@ -62,18 +60,6 @@ export function useNetwork(): UseSuspenseQueryResult<NetworkData> {
   const query = useSuspenseQuery({
     queryKey: [QK_GET_NETWORK],
     queryFn: () => get(ratelApi.networks.getNetworks()),
-    refetchOnWindowFocus: false,
-  });
-
-  return query;
-}
-
-export function usePromotion(): UseSuspenseQueryResult<Promotion> {
-  const { get } = useApiCall();
-
-  const query = useSuspenseQuery({
-    queryKey: [QK_GET_PROMOTION],
-    queryFn: () => get(ratelApi.promotions.get_promotions()),
     refetchOnWindowFocus: false,
   });
 
@@ -139,6 +125,7 @@ export const ratelApi = {
     publishDraft: (post_id: number) => `/v1/feeds/${post_id}`,
     removeDraft: (post_id: number) => `/v1/feeds/${post_id}?action=delete`,
     likePost: (post_id: number) => `/v1/feeds/${post_id}`,
+    repost: () => '/v1/feeds',
     getPostsByUserId: (
       user_id: number,
       page: number,

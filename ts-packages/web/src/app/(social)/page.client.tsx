@@ -16,6 +16,7 @@ import { useFeedByID } from './_hooks/use-feed';
 
 import { checkString } from '@/lib/string-filter-utils';
 import { UserType } from '@/lib/api/models/user';
+import { FeedType } from '@/lib/api/models/feeds';
 import { showErrorToast } from '@/lib/toast';
 import { logger } from '@/lib/logger';
 
@@ -32,7 +33,7 @@ export const SIZE = 10;
 export interface Post {
   id: number;
   industry: string;
-  title: string;
+  title: string | null;
   contents: string;
   url?: string;
   author_id: number;
@@ -48,13 +49,20 @@ export interface Post {
   shares: number;
   created_at: number;
   onboard: boolean;
+  feed_type: FeedType;
+  parent_id?: number | null;
 
   spaces: Space[];
 }
 
 export default function Home() {
   const { data: promotion } = usePromotion();
-  const { data: feed } = useFeedByID(promotion.feed_id);
+  const feedId = promotion?.feed_id;
+
+  // Only fetch feed if we have a valid promotion with feed_id
+  const feedQuery = useFeedByID(feedId || 0);
+  const feed = feedId ? feedQuery.data : null;
+
   const { data: userInfo } = useSuspenseUserInfo();
   const userId = userInfo?.id || 0;
 
@@ -75,7 +83,7 @@ export default function Home() {
     return items.map((item) => ({
       id: item.id,
       industry: item.industry?.[0]?.name || '',
-      title: item.title!,
+      title: item.title || null,
       contents: item.html_contents,
       url: item.url,
       author_id: item.author?.[0]?.id || 0,
@@ -91,6 +99,8 @@ export default function Home() {
       shares: item.shares,
       created_at: item.created_at,
       onboard: item.onboard ?? false,
+      feed_type: item.feed_type || FeedType.Post,
+      parent_id: item.parent_id || null,
 
       spaces: item.spaces ?? [],
     }));
@@ -186,7 +196,9 @@ export default function Home() {
         <CreatePostButton />
 
         <BlackBox>
-          <PromotionCard promotion={promotion} feed={feed} />
+          {promotion && feed && (
+            <PromotionCard promotion={promotion} feed={feed} />
+          )}
         </BlackBox>
 
         <News />
