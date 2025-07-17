@@ -34,6 +34,7 @@ export default function MyPostsPage() {
     shares: item.shares,
     created_at: item.created_at,
     onboard: item.onboard || false,
+    feed_type: item.feed_type,
     spaces: item.spaces ?? [],
   }));
 
