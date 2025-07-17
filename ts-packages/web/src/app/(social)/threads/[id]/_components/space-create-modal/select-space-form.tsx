@@ -44,7 +44,7 @@ const SpaceForms: SpaceFormProps[] = [
   },
   {
     type: SpaceType.SprintLeague,
-    Icon: <Palace />,
+    Icon: <Palace className="[&>path]:stroke-[var(--color-neutral-500)]" />,
     label: 'Sprint League',
     description:
       'Mini social game where three runners compete in a race, and their speed is determined by community voting',

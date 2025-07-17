@@ -161,14 +161,14 @@ export default function Header({ post_id }: { post_id: number }) {
                 className="rounded-md max-tablet:hidden text-lg px-3 py-1.5"
                 onClick={handleEditPost}
               >
-                <Edit className="size-6" />
+                <Edit className="size-6 [&>path]:stroke-[var(--color-neutral-500)]" />
                 Edit
               </Button>
               <Button
                 variant="default"
                 className="rounded-md max-tablet:hidden text-lg px-3 py-1.5"
               >
-                <UnlockPublic className="size-6 [&>path]:stroke-black" />
+                <UnlockPublic className="size-6" />
                 Make Public
               </Button>
               <Button
@@ -176,7 +176,7 @@ export default function Header({ post_id }: { post_id: number }) {
                 onClick={handleCreateSpace}
                 className="max-tablet:hidden bg-[#FCB300] hover:bg-[#FCB300]/80 text-lg px-3 py-1.5"
               >
-                <Palace className="size-6" />
+                <Palace className="size-6 [&>path]:stroke-black" />
                 Create a Space
               </Button>
             </>
