@@ -44,6 +44,8 @@ pub enum GroupPermission {
     WritePosts = 1,
     #[translate(en = "Delete posts")]
     DeletePosts = 2,
+    #[translate(en = "Edit posts")]
+    EditPosts = 13,
     #[translate(en = "Write pending posts")]
     WritePendingPosts = 3,
     #[translate(en = "Read post drafts")]
@@ -86,6 +88,7 @@ impl Default for GroupPermissions {
         Self(vec![
             GroupPermission::ReadPosts,
             GroupPermission::WritePosts,
+            GroupPermission::EditPosts,
             GroupPermission::DeletePosts,
             GroupPermission::WritePendingPosts,
             GroupPermission::ReadPostDrafts,
