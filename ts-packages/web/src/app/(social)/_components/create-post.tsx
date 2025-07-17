@@ -16,6 +16,7 @@ import UserCircleIcon from '@/assets/icons/user-circle.svg';
 import Certified from '@/assets/icons/certified.svg';
 import { cn } from '@/lib/utils';
 import { useUserInfo } from '@/lib/api/hooks/users';
+import { Button } from '@/components/ui/button';
 
 import { LexicalComposer } from '@lexical/react/LexicalComposer';
 import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin';
@@ -38,6 +39,7 @@ import {
   updateDraftRequest,
   UrlType,
 } from '@/lib/api/models/feeds/update-draft-request';
+import { editPostRequest } from '@/lib/api/models/feeds/edit-post-request';
 import { Feed, FeedStatus, FeedType } from '@/lib/api/models/feeds';
 import Image from 'next/image';
 import { createDraftRequest } from '@/lib/api/models/feeds/create-draft';
@@ -48,6 +50,7 @@ import { showErrorToast } from '@/lib/toast';
 import ToolbarPlugin from '@/components/toolbar/toolbar';
 import { useRouter } from 'next/navigation';
 import { route } from '@/route';
+import { QK_GET_FEED_BY_FEED_ID } from '@/constants';
 
 export const editorTheme = {
   ltr: 'text-left',
@@ -87,7 +90,9 @@ export function CreatePost() {
     image,
     setImage,
     publishPost,
+    savePost,
     status,
+    isPublishedPost,
   } = usePostDraft();
 
   const { data: userInfo, isLoading } = useUserInfo();
@@ -178,7 +183,7 @@ export function CreatePost() {
 
   return (
     <LexicalComposer initialConfig={editorConfig}>
-      <div className="w-full bg-neutral-900 border-t-6 border-x border-b border-primary rounded-t-lg overflow-hidden">
+      <div className="w-full bg-component-bg border-t-6 border-x border-b border-primary rounded-t-lg overflow-hidden">
         {/* Header */}
         <div className="flex items-center p-4 justify-between">
           <div className="flex items-center gap-3">
@@ -253,7 +258,7 @@ export function CreatePost() {
                   />
                   <button
                     onClick={removeImage}
-                    className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-600 rounded-full flex items-center justify-center text-white text-xs hover:bg-red-700 border-2 border-neutral-900"
+                    className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-600 rounded-full flex items-center justify-center text-white text-xs hover:bg-red-700 border-2 border-component-bg"
                     aria-label={`Remove uploaded image`}
                   >
                     <X size={12} />
@@ -268,7 +273,7 @@ export function CreatePost() {
             <ToolbarPlugin onImageUpload={(url) => setImage(url)} />
 
             <div className="flex items-center gap-4">
-              {/* 상태 표시 */}
+              {/* Status indicator */}
               {status === 'saving' && (
                 <div className="flex items-center gap-2 text-sm text-neutral-400">
                   <Loader2 className="animate-spin" size={16} />
@@ -276,25 +281,40 @@ export function CreatePost() {
                 </div>
               )}
               {status === 'error' && (
-                <span className="text-sm text-red-500">Error saving!</span>
+                <span className="text-sm text-red-500">Save failed</span>
               )}
 
-              <button
-                onClick={publishPost}
-                disabled={isSubmitDisabled}
-                className={cn(
-                  'flex items-center gap-2 p-3 rounded-full font-medium text-sm transition-all',
-                  !isSubmitDisabled
-                    ? 'bg-primary text-black hover:bg-primary/50'
-                    : 'bg-neutral-700 text-neutral-500 cursor-not-allowed',
-                )}
-              >
-                {status === 'publishing' ? (
-                  <Loader2 className="animate-spin" />
-                ) : (
-                  <UserCircleIcon />
-                )}
-              </button>
+              {isPublishedPost ? (
+                // Save button for published posts
+                <Button
+                  variant="rounded_primary"
+                  size="default"
+                  onClick={savePost}
+                  disabled={!title.trim() || status !== 'idle'}
+                  className="gap-2"
+                >
+                  {status === 'saving' ? (
+                    <Loader2 className="animate-spin" />
+                  ) : (
+                    <UserCircleIcon />
+                  )}
+                </Button>
+              ) : (
+                // Publish button for drafts
+                <Button
+                  variant="rounded_primary"
+                  size="default"
+                  onClick={publishPost}
+                  disabled={isSubmitDisabled}
+                  className="gap-2"
+                >
+                  {status === 'publishing' ? (
+                    <Loader2 className="animate-spin" />
+                  ) : (
+                    <UserCircleIcon />
+                  )}
+                </Button>
+              )}
             </div>
           </div>
         </>
@@ -323,8 +343,10 @@ export interface PostDraftContextType {
   setImage: (image: string | null) => void;
   status: DraftStatus;
   publishPost: () => Promise<void>;
+  savePost: () => Promise<void>;
   loadDraft: (id: number) => Promise<void>;
   newDraft: () => void;
+  isPublishedPost: boolean;
 }
 
 export const PostDraftContext = createContext<PostDraftContextType | undefined>(
@@ -341,6 +363,7 @@ export const PostDraftProvider: React.FC<{ children: React.ReactNode }> = ({
   const [content, setContent] = useState<string | null>(null);
   const [image, setImage] = useState<string | null>(null);
   const [status, setStatus] = useState<DraftStatus>('idle');
+  const [isPublishedPost, setIsPublishedPost] = useState(false);
 
   const lastSavedRef = useRef({
     title: '',
@@ -364,6 +387,7 @@ export const PostDraftProvider: React.FC<{ children: React.ReactNode }> = ({
     setTitle('');
     setImage(null);
     setStatus('idle');
+    setIsPublishedPost(false);
   }, []);
 
   const newDraft = useCallback(() => {
@@ -381,22 +405,30 @@ export const PostDraftProvider: React.FC<{ children: React.ReactNode }> = ({
         const draftContent = draft.html_contents || '';
         const draftImage =
           draft.url && draft.url_type === UrlType.Image ? draft.url : null;
+        const isPublished = draft.status === FeedStatus.Published;
+
+        // Reset content first to clear the editor
         setContent(null);
-        setTimeout(() => {
-          setDraftId(draft.id);
-          setTitle(draftTitle);
-          setImage(draftImage);
-          setContent(draftContent);
-          lastSavedRef.current = {
-            title: draftTitle,
-            content: draftContent,
-            image: draftImage,
-          };
-          setExpand(true);
-          logger.debug('Draft loaded:', draft);
-        }, 10); // (small delay ensures state flush), looks like react state update is not synchronous, so it ignores the previous state update
+
+        // React 18+ automatically batches these state updates
+        setDraftId(draft.id);
+        setTitle(draftTitle);
+        setImage(draftImage);
+        setIsPublishedPost(isPublished);
+
+        // Update the ref immediately since it doesn't trigger re-renders
+        lastSavedRef.current = {
+          title: draftTitle,
+          content: draftContent,
+          image: draftImage,
+        };
+
+        // Set content after other state is set - this will trigger the useEffect
+        // that handles editor content updates
+        setContent(draftContent);
+        setExpand(true);
       } catch (error: unknown) {
-        logger.error('LoadDraft error:', error);
+        logger.error('Failed to load draft:', error);
         setStatus('error');
       } finally {
         setStatus('idle');
@@ -416,19 +448,19 @@ export const PostDraftProvider: React.FC<{ children: React.ReactNode }> = ({
       if (!currentTitle.trim()) return;
 
       const lastSaved = lastSavedRef.current;
-      if (
-        currentTitle === lastSaved.title &&
-        currentContent === lastSaved.content &&
-        currentImage === lastSaved.image
-      ) {
-        return;
-      }
+      const hasChanges =
+        currentTitle !== lastSaved.title ||
+        currentContent !== lastSaved.content ||
+        currentImage !== lastSaved.image;
+
+      if (!hasChanges) return;
 
       const isCreating = !draftId;
       setStatus(isCreating ? 'creating' : 'saving');
 
       try {
         let currentDraftId = draftId;
+
         if (checkString(currentTitle) || checkString(currentContent)) {
           showErrorToast('Please remove the test keyword');
           return;
@@ -450,59 +482,73 @@ export const PostDraftProvider: React.FC<{ children: React.ReactNode }> = ({
             url = currentImage;
             url_type = UrlType.Image;
           }
-          await post(
-            ratelApi.feeds.updateDraft(currentDraftId),
-            updateDraftRequest(
-              currentContent,
-              1,
-              currentTitle,
-              0,
-              [],
-              url,
-              url_type,
-            ),
-          );
 
-          // 성공적으로 저장된 값들을 기록
+          if (isPublishedPost) {
+            await post(
+              ratelApi.feeds.editPost(currentDraftId),
+              editPostRequest(
+                currentContent,
+                1,
+                currentTitle,
+                0,
+                [],
+                url,
+                url_type,
+              ),
+            );
+          } else {
+            await post(
+              ratelApi.feeds.updateDraft(currentDraftId),
+              updateDraftRequest(
+                currentContent,
+                1,
+                currentTitle,
+                0,
+                [],
+                url,
+                url_type,
+              ),
+            );
+          }
+
           lastSavedRef.current = {
             title: currentTitle,
             content: currentContent,
             image: currentImage,
           };
         }
+
         refetchDrafts();
       } catch (error: unknown) {
-        logger.error('Save draft error:', error);
+        logger.error('Failed to save draft:', error);
         setStatus('error');
       } finally {
         setStatus('idle');
       }
     },
-    [draftId, user, post, refetchDrafts, status],
+    [draftId, user, post, refetchDrafts, status, isPublishedPost],
   );
 
   useEffect(() => {
+    // Only auto-save for drafts, not published posts
     if (!title.trim() && !content?.trim()) return;
-    if (status !== 'idle') return;
+    if (status !== 'idle' || isPublishedPost) return;
 
     const lastSaved = lastSavedRef.current;
-    if (
-      (title === lastSaved.title &&
-        content === lastSaved.content &&
-        image === lastSaved.image) ||
-      content === null
-    ) {
-      return;
-    }
+    const hasChanges =
+      title !== lastSaved.title ||
+      content !== lastSaved.content ||
+      image !== lastSaved.image;
 
-    const handler = setTimeout(() => {
+    if (!hasChanges || content === null) return;
+
+    const AUTO_SAVE_DELAY = 1500; // ms
+    const timeoutId = setTimeout(() => {
       saveDraft(title, content, image);
-    }, 1500);
+    }, AUTO_SAVE_DELAY);
 
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [title, content, image, status, saveDraft]);
+    return () => clearTimeout(timeoutId);
+  }, [title, content, image, status, saveDraft, isPublishedPost]);
 
   const publishPost = useCallback(async () => {
     if (checkString(title) || checkString(content ?? '')) {
@@ -510,10 +556,12 @@ export const PostDraftProvider: React.FC<{ children: React.ReactNode }> = ({
       return;
     }
 
-    if (!draftId || !title.trim() || status !== 'idle' || content == null)
+    if (!draftId || !title.trim() || status !== 'idle' || content == null) {
       return;
+    }
 
     setStatus('publishing');
+
     try {
       await saveDraft(title, content, image);
 
@@ -522,12 +570,11 @@ export const PostDraftProvider: React.FC<{ children: React.ReactNode }> = ({
       });
 
       router.push(route.threadByFeedId(draftId));
-
       resetState();
       setExpand(false);
       refetchDrafts();
     } catch (error: unknown) {
-      logger.error('Publish error:', error);
+      logger.error('Failed to publish post:', error);
       setStatus('error');
     } finally {
       setStatus('idle');
@@ -545,6 +592,42 @@ export const PostDraftProvider: React.FC<{ children: React.ReactNode }> = ({
     router,
   ]);
 
+  const savePost = useCallback(async () => {
+    if (checkString(title) || checkString(content ?? '')) {
+      showErrorToast('Please remove the test keyword');
+      return;
+    }
+
+    if (!draftId || !title.trim() || status !== 'idle' || content == null) {
+      return;
+    }
+
+    try {
+      await saveDraft(title, content, image);
+
+      // Invalidate the specific feed query to refetch updated data
+      queryClient.invalidateQueries({
+        queryKey: [QK_GET_FEED_BY_FEED_ID, draftId],
+      });
+
+      // Close the editor and reset state
+      setExpand(false);
+      resetState();
+    } catch (error: unknown) {
+      logger.error('Failed to save post changes:', error);
+    }
+  }, [
+    draftId,
+    title,
+    content,
+    image,
+    status,
+    saveDraft,
+    queryClient,
+    setExpand,
+    resetState,
+  ]);
+
   const contextValue = {
     expand,
     setExpand,
@@ -557,8 +640,10 @@ export const PostDraftProvider: React.FC<{ children: React.ReactNode }> = ({
     setImage,
     status,
     publishPost,
+    savePost,
     loadDraft,
     newDraft,
+    isPublishedPost,
   };
 
   return (
