@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext } from 'react';
 // import Shared from '@/assets/icons/share.svg';
 // import Extra from '@/assets/icons/extra.svg';
 // import Bookmark from '@/assets/icons/bookmark.svg';
@@ -8,9 +8,19 @@ import Image from 'next/image';
 import { Input } from '@/components/ui/input';
 import { SpaceStatus } from '@/lib/api/models/spaces';
 import { ArrowLeft, Play, Save } from 'lucide-react';
-import { Edit1, Unlock2, Lock } from '@/components/icons';
+import {
+  Edit1,
+  Unlock2,
+  Lock,
+  Expand,
+  ThumbUp,
+  Share2,
+  CommentIcon,
+  Rewards,
+} from '@/components/icons';
 import { TeamContext } from '@/lib/contexts/team-context';
 import { useUserInfo } from '@/app/(social)/_hooks/user';
+import { getTimeAgo } from '@/lib/time-utils';
 
 export interface SpaceHeaderProps {
   title: string;
@@ -20,12 +30,18 @@ export interface SpaceHeaderProps {
   proposerName: string;
   createdAt: number;
   authorId: number;
-
+  rewards: number;
+  likes: number;
+  shares: number;
+  comments: number;
+  isLiked?: boolean;
   isEdit?: boolean;
   onback: () => void;
   onsave: () => void;
   onedit: () => void;
   onpost: () => void;
+  onlike: () => void;
+  onshare: () => void;
   setTitle?: (title: string) => void;
 }
 
@@ -35,23 +51,24 @@ export default function SpaceHeader({
   userType,
   proposerImage,
   proposerName,
+  createdAt,
   authorId,
+  likes,
+  rewards,
+  shares,
+  comments,
   isEdit = false,
   setTitle = () => {},
+  onshare = () => {},
   onback = () => {},
   onsave = () => {},
   onedit = () => {},
   onpost = () => {},
 }: SpaceHeaderProps) {
-  const [selectedTeam, setSelectedTeam] = useState<boolean>(false);
   const { data: userInfo } = useUserInfo();
   const userId = userInfo ? userInfo.id : 0;
   const { teams } = useContext(TeamContext);
-
-  useEffect(() => {
-    const index = teams.findIndex((t) => t.id === authorId);
-    setSelectedTeam(index !== -1);
-  }, [teams]);
+  const selectedTeam = teams.some((t) => t.id === authorId);
 
   return (
     <div className="flex flex-col w-full gap-2.5 mb-10">
@@ -107,17 +124,47 @@ export default function SpaceHeader({
           {status == SpaceStatus.InProgress ? <Onboard /> : <></>}
         </div>
 
-        {status == SpaceStatus.InProgress ? (
+        <div className="flex flex-row w-fit gap-5">
           <div className="flex flex-row w-fit gap-1 items-center">
-            <Unlock2 className="w-5 h-5" />
-            <div className="font-normal text-white text-[15px]">Public</div>
+            <ThumbUp width={20} height={20} />
+            <div className="font-medium text-[15px] text-white">
+              {likes ?? 0}
+            </div>
           </div>
-        ) : (
+
           <div className="flex flex-row w-fit gap-1 items-center">
-            <Lock className="w-5 h-5" />
-            <div className="font-normal text-white text-[15px]">Private</div>
+            <CommentIcon width={20} height={20} />
+            <div className="font-medium text-[15px] text-white">
+              {comments ?? 0}
+            </div>
           </div>
-        )}
+
+          <div className="flex flex-row w-fit gap-1 items-center">
+            <Rewards width={20} height={20} />
+            <div className="font-medium text-[15px] text-white">
+              {rewards ?? 0}
+            </div>
+          </div>
+
+          <div className="flex flex-row w-fit gap-1 items-center">
+            <Share2 width={20} height={20} />
+            <div className="font-medium text-[15px] text-white">
+              {shares ?? 0}
+            </div>
+          </div>
+
+          {status == SpaceStatus.InProgress ? (
+            <div className="flex flex-row w-fit gap-1 items-center">
+              <Unlock2 className="w-5 h-5" />
+              <div className="font-normal text-white text-[15px]">Public</div>
+            </div>
+          ) : (
+            <div className="flex flex-row w-fit gap-1 items-center">
+              <Lock className="w-5 h-5" />
+              <div className="font-normal text-white text-[15px]">Private</div>
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="w-full">
@@ -131,7 +178,20 @@ export default function SpaceHeader({
             />
           </>
         ) : (
-          <div className="font-bold text-white text-[20px]/[30px]">{title}</div>
+          <div className="flex flex-row w-full justify-between items-center">
+            <div className="font-bold text-white text-[20px]/[30px]">
+              {title}
+            </div>
+
+            <div
+              className="cursor-pointer w-fit h-fit"
+              onClick={() => {
+                onshare();
+              }}
+            >
+              <Expand />
+            </div>
+          </div>
         )}
       </div>
 
@@ -150,6 +210,10 @@ export default function SpaceHeader({
           />
           <span className="text-white font-medium">{proposerName}</span>
           <Badge />
+        </div>
+
+        <div className="font-light text-white text-sm">
+          {getTimeAgo(createdAt)}
         </div>
       </div>
     </div>

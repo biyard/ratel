@@ -25,7 +25,12 @@ export interface SpaceSurveyProps {
   onadd: (question: Question) => void;
   onupdate: (
     index: number,
-    updated: { answerType: AnswerType; title: string; options?: string[] },
+    updated: {
+      answerType: AnswerType;
+      image_url?: string;
+      title: string;
+      options?: string[];
+    },
   ) => void;
   onremove: (index: number) => void;
   onsend: () => void;
@@ -133,7 +138,12 @@ function EditableSurvey({
   onadd: () => void;
   onupdate: (
     index: number,
-    updated: { answerType: AnswerType; title: string; options?: string[] },
+    updated: {
+      answerType: AnswerType;
+      title: string;
+      image_url?: string;
+      options?: string[];
+    },
   ) => void;
   onremove: (index: number) => void;
 }) {
@@ -159,11 +169,13 @@ function EditableSurvey({
               index={index}
               answerType={question.answer_type}
               title={question.title}
+              imageUrl={'image_url' in question ? question.image_url : ''}
               options={'options' in question ? question.options : []}
               onupdate={(updated) => {
                 onupdate(index, {
                   answerType: updated.answerType,
                   title: updated.title,
+                  image_url: updated.image_url,
                   options: updated.options ?? [],
                 });
               }}

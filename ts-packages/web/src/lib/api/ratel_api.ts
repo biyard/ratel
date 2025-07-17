@@ -135,6 +135,7 @@ export const ratelApi = {
     writePost: () => '/v1/feeds',
     createDraft: () => '/v1/feeds',
     updateDraft: (post_id: number) => `/v1/feeds/${post_id}`,
+    editPost: (post_id: number) => `/v1/feeds/${post_id}`,
     publishDraft: (post_id: number) => `/v1/feeds/${post_id}`,
     removeDraft: (post_id: number) => `/v1/feeds/${post_id}?action=delete`,
     likePost: (post_id: number) => `/v1/feeds/${post_id}`,
@@ -164,6 +165,8 @@ export const ratelApi = {
   },
   spaces: {
     createSpace: () => '/v1/spaces',
+    likeSpace: (id: number) => `/v1/spaces/${id}`,
+    shareSpace: (id: number) => `/v1/spaces/${id}`,
     getSpaceBySpaceId: (id: number) => `/v1/spaces/${id}`,
     getSpaceRedeemCodes: (space_id: number) =>
       `/v1/spaces/${space_id}/redeem-codes`,
