@@ -1,5 +1,5 @@
 'use client';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Col } from './ui/col';
 import { Row } from './ui/row';
 import { CommentIcon, Rewards, Shares, ThumbUp } from './icons';
@@ -44,19 +44,46 @@ export interface FeedCardProps {
 
   onLikeClick?: (value: boolean) => void;
   refetch?: () => void;
+  isLikeProcessing?: boolean;
 }
 
 export default function FeedCard(props: FeedCardProps) {
   const router = useRouter();
   const { post } = useApiCall();
 
+  const [localLikes, setLocalLikes] = useState(props.likes);
+  const [localIsLiked, setLocalIsLiked] = useState(props.is_liked);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  // Sync with props when they change
+  useEffect(() => {
+    setLocalLikes(props.likes);
+    setLocalIsLiked(props.is_liked);
+  }, [props.likes, props.is_liked]);
+
   const handleLike = async (value: boolean) => {
-    const res = await post(ratelApi.feeds.likePost(props.id), {
-      like: { value },
-    });
-    if (res) {
+    if (isProcessing) return; // Prevent multiple clicks
+
+    // Set processing state and optimistic update
+    setIsProcessing(true);
+    setLocalIsLiked(value);
+    setLocalLikes((prev) => (value ? prev + 1 : prev - 1));
+
+    try {
+      await post(ratelApi.feeds.likePost(props.id), {
+        like: { value },
+      });
+
+      // Success - trigger callbacks
       props.onLikeClick?.(value);
       props.refetch?.();
+    } catch (error) {
+      // Revert optimistic update on error
+      setLocalIsLiked(props.is_liked);
+      setLocalLikes(props.likes);
+      console.error('Failed to update like:', error);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -66,7 +93,13 @@ export default function FeedCard(props: FeedCardProps) {
       onClick={() => router.push(route.threadByFeedId(props.id))}
     >
       <FeedBody {...props} />
-      <FeedFooter {...props} onLikeClick={handleLike} />
+      <FeedFooter
+        {...props}
+        likes={localLikes}
+        is_liked={localIsLiked}
+        isLikeProcessing={isProcessing}
+        onLikeClick={handleLike}
+      />
     </Col>
   );
 }
@@ -162,11 +195,12 @@ export function FeedContents({
 
 export function IconText({
   children,
+  className,
   ...props
 }: React.HTMLAttributes<HTMLDivElement> & { children: React.ReactNode }) {
   return (
     <Row
-      className="justify-center items-center gap-1.25 text-white font-normal text-[15px] px-4 py-5"
+      className={`justify-center items-center gap-1.25 text-white font-normal text-[15px] px-4 py-5 ${className || ''}`}
       {...props}
     >
       {children}
@@ -234,6 +268,7 @@ export function FeedFooter({
   is_liked,
   reposts,
   onLikeClick,
+  isLikeProcessing,
 }: FeedCardProps) {
   const { startRepost, checkIfReposted } = useRepost();
   const { data: feedData } = useFeedById(id);
@@ -275,8 +310,13 @@ export function FeedFooter({
       <IconText
         onClick={(evt) => {
           evt.stopPropagation();
-          onLikeClick?.(!is_liked);
+          if (!isLikeProcessing) {
+            onLikeClick?.(!is_liked);
+          }
         }}
+        className={
+          isLikeProcessing ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
+        }
       >
         <ThumbUp
           className={
