@@ -80,8 +80,11 @@ export default function Header({ post_id }: { post_id: number }) {
       await apiPost(ratelApi.feeds.removeDraft(post_id), { delete: {} });
       showSuccessToast('Post deleted successfully');
       router.push('/'); // Navigate to homepage after successful deletion
-    } catch (error) {
-      console.error('Failed to delete post:', error);
+    } catch (deletePostError) {
+      console.error(
+        'POST_DELETE_ERROR: Failed to delete post:',
+        deletePostError,
+      );
       showErrorToast('Failed to delete post. Please try again.');
       // Remain on the feed page on failure
     }
@@ -90,8 +93,11 @@ export default function Header({ post_id }: { post_id: number }) {
   const handleEditPost = async () => {
     try {
       await loadDraft(post_id);
-    } catch (error) {
-      console.error('Failed to load draft for editing:', error);
+    } catch (editPostError) {
+      console.error(
+        'POST_EDIT_LOAD_ERROR: Failed to load draft for editing:',
+        editPostError,
+      );
       showErrorToast('Failed to load post for editing. Please try again.');
     }
   };
@@ -122,11 +128,11 @@ export default function Header({ post_id }: { post_id: number }) {
       });
 
       // Success - no notification needed, visual feedback is enough
-    } catch (error) {
+    } catch (likeError) {
       // Revert optimistic update on error
       setLocalIsLiked(post.is_liked || false);
       setLocalLikes(post.likes || 0);
-      console.error('Failed to update like:', error);
+      console.error('POST_LIKE_ERROR: Failed to update like:', likeError);
       showErrorToast('Failed to update like. Please try again.');
     } finally {
       setIsLikeProcessing(false);

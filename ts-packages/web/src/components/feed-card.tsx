@@ -14,6 +14,7 @@ import { UserType } from '@/lib/api/models/user';
 import Image from 'next/image';
 import { route } from '@/route';
 import { SpaceType } from '@/lib/api/models/spaces';
+import { showErrorToast } from '@/lib/toast';
 
 export interface FeedCardProps {
   id: number;
@@ -78,6 +79,7 @@ export default function FeedCard(props: FeedCardProps) {
       setLocalIsLiked(props.is_liked);
       setLocalLikes(props.likes);
       console.error('Failed to update like:', error);
+      showErrorToast('Failed to update like. Please try again.');
     } finally {
       setIsProcessing(false);
     }
