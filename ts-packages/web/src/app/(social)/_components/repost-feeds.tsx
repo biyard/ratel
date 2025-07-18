@@ -61,8 +61,6 @@ export const RepostProvider: React.FC<{ children: React.ReactNode }> = ({
   const checkIfReposted = useCallback(
     (post: OriginalPost): boolean => {
       if (!user || !post.reposts) return false;
-
-      console.log('User Id..', user.id);
       return post.reposts.some((repost) => repost.user_id === user.id);
     },
     [user],

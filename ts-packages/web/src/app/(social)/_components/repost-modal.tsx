@@ -15,7 +15,7 @@ export function RepostModal({ onRepostClick }: { onRepostClick?: () => void }) {
 
   const handleSubmit = async () => {
     await submitRepost();
-    onRepostClick?.(); // Trigger parent update only after success
+    onRepostClick?.(); // To parent update only after success
   };
 
   if (!showRepostModal || !originalPost) return null;
