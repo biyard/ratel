@@ -191,57 +191,32 @@ jobs:
           npm i -g aws-cdk
           make deploy
 
-  # mobile-android:
-  #   runs-on: ubuntu-22.04
+  nextjs-web:
+    runs-on: ubuntu-latest
 
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #       with:
-  #         submodules: recursive
-  #         ssh-key: ${{ secrets.PULL_KEY_REPO }}
+    defaults:
+      run:
+        working-directory: ts-packages/web
 
-  #     - uses: actions-rust-lang/setup-rust-toolchain@v1
-  #       with:
-  #         components: clippy, rustfmt
-  #         target: wasm32-unknown-unknown
-  #         toolchain: stable
+    steps:
+      - uses: actions/checkout@v4
 
-  #     - uses: cargo-bins/cargo-binstall@main
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
 
-  #     - name: Install dioxus-cli
-  #       run: |
-  #         cargo binstall dioxus-cli --force
-  #         cargo binstall toml-cli --force
-      
-  #     - name: Install Tauri CLI
-  #       run: cargo install tauri-cli
-      
-  #     - name: Decode keystore
-  #       run: |
-  #         echo "$KEYSTORE_BASE64" | base64 -d > release.keystore
-  #       env:
-  #         KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
-          
-  #     - name: Create .env for signing
-  #       run: |
-  #         KEYSTORE_FILE=../../../../../../release.keystore
-  #         KEYSTORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}
-  #         KEY_ALIAS=${{ secrets.KEY_ALIAS }}
-  #         KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 10
+          run_install: true
 
-  #     - name: Install Fastlane
-  #       run: npm install fastlane
+      - name: Run ESLint
+        run: pnpm lint
 
-  #     - name: Restore service account json
-  #       run: |
-  #         echo "$GOOGLE_PLAY_JSON" | base64 --decode > packages/mobile/src-tauri/gen/android/ratel-mobile.json
-  #       env:
-  #         GOOGLE_PLAY_JSON: ${{ secrets.GOOGLE_PLAY_JSON }}
-
-  #     - name: Build & deploy to Play Store via Fastlane
-  #       run: |
-  #         cd packages/mobile/src-tauri/gen/android
-  #         fastlane deploy
+      - name: Build
+        run: make build
 
   create-release-pr:
     runs-on: ubuntu-latest
