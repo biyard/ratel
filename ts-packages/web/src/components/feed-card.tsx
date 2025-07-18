@@ -14,6 +14,8 @@ import { UserType } from '@/lib/api/models/user';
 import Image from 'next/image';
 import { route } from '@/route';
 import { SpaceType } from '@/lib/api/models/spaces';
+import { useFeedById } from '@/lib/api/ratel_api';
+import { useRepost } from '@/app/(social)/_components/repost-feeds';
 
 export interface FeedCardProps {
   id: number;
@@ -31,6 +33,8 @@ export interface FeedCardProps {
   comments: number;
   rewards: number;
   shares: number;
+  is_reposted?: boolean;
+  reposts?: { user_id: number; id: number }[];
 
   space_id?: number;
   space_type?: SpaceType;
@@ -86,9 +90,7 @@ export default function FeedCard(props: FeedCardProps) {
   return (
     <Col
       className="cursor-pointer bg-component-bg rounded-[10px]"
-      onClick={() => {
-        router.push(route.threadByFeedId(props.id));
-      }}
+      onClick={() => router.push(route.threadByFeedId(props.id))}
     >
       <FeedBody {...props} />
       <FeedFooter
@@ -111,8 +113,6 @@ export function FeedBody({
   url,
   created_at,
   author_type,
-  // user_id,
-  // author_id,
   space_type,
   space_id,
   onboard,
@@ -125,15 +125,6 @@ export function FeedBody({
           <IndustryTag industry={industry} />
           {onboard && <OnboradingTag />}
         </Row>
-        {/* {user_id === author_id && !space_id && (
-          <Button
-            variant="rounded_primary"
-            className="text-[10px] font-semibold align-middle uppercase py-1 px-3"
-          >
-            Create a Space
-          </Button>
-        )} */}
-
         {space_id && space_type ? (
           <Button
             variant="rounded_primary"
@@ -179,14 +170,12 @@ export function FeedContents({
 }) {
   const c =
     typeof window !== 'undefined' ? DOMPurify.sanitize(contents) : contents;
-
   return (
     <Col className="text-white">
       <p
         className="feed-content font-normal text-[15px]/[24px] align-middle tracking-[0.5px] text-c-wg-30 px-5"
         dangerouslySetInnerHTML={{ __html: c }}
       ></p>
-
       {url && (
         <div className="px-5">
           <div className="relative w-full max-h-80 aspect-video">
@@ -236,7 +225,7 @@ export function UserBadge({
         width={24}
         height={24}
         className={
-          author_type == UserType.Team
+          author_type === UserType.Team
             ? 'w-6 h-6 rounded-sm object-cover'
             : 'w-6 h-6 rounded-full object-cover'
         }
@@ -263,14 +252,59 @@ export function OnboradingTag() {
 }
 
 export function FeedFooter({
+  id,
+  title,
+  contents,
+  author_name,
+  author_profile_url,
+  author_id,
+  created_at,
+  url,
+  industry,
   likes,
   comments,
   rewards,
   shares,
   is_liked,
+  reposts,
   onLikeClick,
   isLikeProcessing,
 }: FeedCardProps) {
+  const { startRepost, checkIfReposted } = useRepost();
+  const { data: feedData } = useFeedById(id);
+
+  const currentReposts = /*feedData?.reposts ||*/ reposts || [];
+  const shareCount = feedData?.shares ?? shares;
+
+  const hasReposted = checkIfReposted({
+    id,
+    title,
+    contents,
+    author_name,
+    author_profile_url,
+    author_id,
+    created_at,
+    url,
+    industry,
+    reposts: currentReposts,
+  });
+
+  const handleRepost = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    startRepost({
+      id,
+      title,
+      contents,
+      author_name,
+      author_profile_url,
+      author_id,
+      created_at,
+      url,
+      industry,
+      reposts: currentReposts,
+    });
+  };
+
   return (
     <Row className="items-center justify-around border-t w-full border-neutral-800">
       <IconText
@@ -293,17 +327,26 @@ export function FeedFooter({
         />
         {convertNumberToString(likes)}
       </IconText>
+
       <IconText>
         <CommentIcon />
         {convertNumberToString(comments)}
       </IconText>
+
       <IconText>
         <Rewards />
         {convertNumberToString(rewards)}
       </IconText>
-      <IconText>
-        <Shares />
-        {convertNumberToString(shares)}
+
+      <IconText onClick={handleRepost}>
+        <Shares
+          className={
+            hasReposted
+              ? '[&>path]:fill-primary [&>path]:stroke-primary'
+              : undefined
+          }
+        />
+        {convertNumberToString(shareCount)}
       </IconText>
     </Row>
   );
