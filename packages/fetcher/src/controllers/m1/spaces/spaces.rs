@@ -197,13 +197,13 @@ impl SprintLeagueController {
         let max_votes = sprint_league
             .players
             .iter()
-            .map(|p| p.total_votes)
+            .map(|p| p.votes)
             .max()
             .unwrap_or(0);
         let winners: Vec<_> = sprint_league
             .players
             .iter()
-            .filter(|p| p.total_votes == max_votes)
+            .filter(|p| p.votes == max_votes)
             .collect();
 
         let winner = if winners.len() == 1 {
