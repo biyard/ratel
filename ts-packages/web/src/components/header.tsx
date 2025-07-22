@@ -110,7 +110,7 @@ function Header(props: HeaderProps) {
               props.setMobileExtends(false);
             }}
           >
-            <Logo width="54" height="54" />
+            <Logo className="mobile:size-12 size-13.5" />
           </Link>
         </div>
 

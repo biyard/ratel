@@ -19,10 +19,13 @@ import { Button } from '../ui/button';
 import { sha3 } from '@/lib/utils';
 import FileUploader from '../file-uploader';
 import Image from 'next/image';
+import { emailSignupRequest } from '@/lib/api/models/users/email-signup-request';
+import { signupRequest } from '@/lib/api/models/users/signup-request';
 
-interface UserSetupPopupProps {
+export interface UserSetupPopupProps {
   id?: string;
   nickname?: string;
+  username?: string;
   profileUrl?: string;
   email: string;
   principal?: string;
@@ -41,13 +44,15 @@ const UserSetupPopup = ({
   id = 'user_setup_popup',
   email = '',
   profileUrl = 'https://metadata.ratel.foundation/ratel/default-profile.png',
+  username = '',
+  nickname = '',
 }: UserSetupPopupProps) => {
   const { post } = useApiCall();
   const client = useApolloClient();
 
   const popup = usePopup();
-  const [displayName, setDisplayName] = useState('');
-  const [userName, setUserName] = useState('');
+  const [displayName, setDisplayName] = useState(nickname);
+  const [userName, setUserName] = useState(username);
   const [agreed, setAgreed] = useState(false);
   const [announcementAgreed, setAnnouncementAgree] = useState(false);
   const [isUserNameValid, setIsUserNameValid] = useState(false);
@@ -88,31 +93,29 @@ const UserSetupPopup = ({
     }
 
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let req: any = {
-        signup: {
-          nickname: displayName,
-          email: emailState,
-          profile_url: profileUrlState,
-          term_agreed: agreed,
-          informed_agreed: announcementAgreed,
-          username: userName,
-          evm_address: auth.evmWallet!.address,
-        },
-      };
-
+      let req;
       if (email === '') {
-        req = {
-          email_signup: {
-            nickname: displayName,
-            email: emailState,
-            profile_url: profileUrlState,
-            term_agreed: agreed,
-            informed_agreed: announcementAgreed,
-            username: userName,
-            password: sha3(password),
-          },
-        };
+        req = emailSignupRequest(
+          displayName,
+          emailState,
+          profileUrlState,
+          agreed,
+          announcementAgreed,
+          userName,
+          sha3(password),
+          auth.telegramRaw,
+        );
+      } else {
+        req = signupRequest(
+          displayName,
+          emailState,
+          profileUrlState,
+          agreed,
+          announcementAgreed,
+          userName,
+          auth.evmWallet!.address,
+          auth.telegramRaw,
+        );
       }
 
       if (await post(ratelApi.users.signup(), req)) {
@@ -161,197 +164,204 @@ const UserSetupPopup = ({
   return (
     <div
       id={id}
-      className="flex flex-col w-100 max-w-100 mx-4.25 max-mobile:!w-full max-mobile:!max-w-full gap-8.75 mt-8.75"
+      className="h-150 tablet:h-full max-h-screen overflow-y-scroll w-full mt-8.75 scrollbar-hide"
     >
-      <FileUploader onUploadSuccess={handleProfileUrl}>
-        <div className="group relative flex items-center justify-center w-40 h-40 mx-auto">
-          <Image
-            src={profileUrlState}
-            width={160}
-            height={160}
-            alt="Team Logo"
-            className="w-40 h-40 rounded-full object-cover cursor-pointer relative group"
-          />
-
-          <div className="absolute w-40 h-40 inset-0 bg-component-bg/50 flex items-center justify-center text-center rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-white font-semibold">
-            Click to change profile image
-          </div>
-        </div>
-      </FileUploader>
-
-      <div className="flex flex-col items-start justify-start w-full gap-1.25">
-        <div className="w-full flex flex-col gap-[5px]">
-          <div className="flex flex-row items-start">
-            <span className="text-c-cg-30 font-bold text-base/7">
-              {'Email'}
-            </span>
-          </div>
-
-          <Row>
-            <input
-              className="w-full outline-none px-5 h-11 text-white text-base placeholder-gray-500 font-medium border rounded-lg border-gray-600"
-              disabled={email !== '' || isValidEmail}
-              name="username"
-              autoComplete="email"
-              value={emailState}
-              onChange={(e) => {
-                setEmailState(e.target.value);
-              }}
+      <div className="flex flex-col max-w-100 w-full gap-4 tablet:gap-8.75 overflow-y-scroll">
+        <FileUploader onUploadSuccess={handleProfileUrl}>
+          <div className="group relative flex items-center justify-center size-40 max-mobile:size-20 mx-auto">
+            <Image
+              src={profileUrlState}
+              width={160}
+              height={160}
+              alt="Team Logo"
+              className="w-40 h-40 rounded-full object-cover cursor-pointer relative group max-mobile:size-20"
             />
-            {email === '' && (
-              <Button
-                variant={'rounded_secondary'}
-                className="rounded-sm"
-                onClick={handleSendCode}
-              >
-                Send
-              </Button>
-            )}
-          </Row>
 
-          <Row
-            className="aria-hidden:hidden"
-            aria-hidden={!sentCode || isValidEmail}
-          >
-            <input
-              className="w-full outline-none px-5 h-11 text-white text-base placeholder-gray-500 font-medium border rounded-lg border-gray-600"
-              value={authCode}
-              onChange={(e) => {
-                setAuthCode(e.target.value);
-              }}
-            />
-            <Button
-              variant={'rounded_secondary'}
-              className="rounded-sm"
-              onClick={handleVerify}
-            >
-              Verify
-            </Button>
-          </Row>
-        </div>
-        {email === '' && (
+            <div className="absolute w-40 h-40 inset-0 bg-component-bg/50 flex items-center justify-center text-center rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-white font-semibold">
+              Click to change profile image
+            </div>
+          </div>
+        </FileUploader>
+
+        <div className="flex flex-col items-start justify-start w-full gap-1.25">
           <div className="w-full flex flex-col gap-[5px]">
             <div className="flex flex-row items-start">
               <span className="text-c-cg-30 font-bold text-base/7">
-                Password
+                {'Email'}
               </span>
             </div>
-            <input
-              className="w-full outline-none px-5 h-11 text-white text-base placeholder-gray-500 font-medium border rounded-lg border-gray-600"
-              type="password"
-              value={password}
-              onChange={(e) => {
-                const val = e.target.value;
-                setPassword(val);
-                setIsValid(validatePassword(val));
+
+            <Row>
+              <input
+                className="w-full outline-none px-5 h-11 text-white text-base placeholder-gray-500 font-medium border rounded-lg border-gray-600"
+                disabled={email !== '' || isValidEmail}
+                name="username"
+                autoComplete="email"
+                value={emailState}
+                onChange={(e) => {
+                  setEmailState(e.target.value);
+                }}
+              />
+              {email === '' && (
+                <Button
+                  variant={'rounded_secondary'}
+                  className="rounded-sm"
+                  onClick={handleSendCode}
+                >
+                  Send
+                </Button>
+              )}
+            </Row>
+
+            <Row
+              className="aria-hidden:hidden"
+              aria-hidden={!sentCode || isValidEmail}
+            >
+              <input
+                className="w-full outline-none px-5 h-11 text-white text-base placeholder-gray-500 font-medium border rounded-lg border-gray-600"
+                value={authCode}
+                onChange={(e) => {
+                  setAuthCode(e.target.value);
+                }}
+              />
+              <Button
+                variant={'rounded_secondary'}
+                className="rounded-sm"
+                onClick={handleVerify}
+              >
+                Verify
+              </Button>
+            </Row>
+          </div>
+          {email === '' && (
+            <div className="w-full flex flex-col gap-[5px]">
+              <div className="flex flex-row items-start">
+                <span className="text-c-cg-30 font-bold text-base/7">
+                  Password
+                </span>
+              </div>
+              <input
+                className="w-full outline-none px-5 h-11 text-white text-base placeholder-gray-500 font-medium border rounded-lg border-gray-600"
+                type="password"
+                value={password}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setPassword(val);
+                  setIsValid(validatePassword(val));
+                }}
+              />
+
+              {!isValid && password.length > 7 && (
+                <p className="text-red-500 text-sm mt-1">
+                  Password must contain letters, numbers, and special characters
+                  (min 8 chars).
+                </p>
+              )}
+            </div>
+          )}
+
+          <div className="flex flex-col gap-5 w-full mt-2.25">
+            <LabeledInput
+              labelName={'Display Name'}
+              placeholder={'Display Name'}
+              value={displayName}
+              onInput={(value: string) => {
+                setDisplayName(value);
+
+                if (checkString(value)) {
+                  setWarningDisplayname(
+                    'Please remove the test keyword from your display name.',
+                  );
+                  setIsValidDisplayName(false);
+                  return;
+                } else {
+                  setWarningDisplayname('');
+                  setIsValidDisplayName(true);
+                }
               }}
+              warning={warningDisplayName}
             />
 
-            {!isValid && password.length > 7 && (
-              <p className="text-red-500 text-sm mt-1">
-                Password must contain letters, numbers, and special characters
-                (min 8 chars).
-              </p>
-            )}
+            <LabeledInput
+              labelName={'User Name'}
+              placeholder={'User Name'}
+              value={userName}
+              onInput={async (value: string) => {
+                setUserName(value);
+                if (value.length === 0) {
+                  setWarning('');
+                  setIsUserNameValid(true);
+                  return;
+                }
+
+                if (!isValidUsername(value)) {
+                  setWarning(
+                    'Only numbers, lowercase letters, -, _ and more than one character can be entered.',
+                  );
+                  setIsUserNameValid(false);
+                  return;
+                } else if (checkString(value)) {
+                  setWarning(
+                    'Please remove the test keyword from your username.',
+                  );
+                  setIsUserNameValid(false);
+                  return;
+                } else {
+                  setWarning('');
+                  setIsUserNameValid(true);
+                }
+                const {
+                  data: { users },
+                } = await client.query(
+                  ratelApi.graphql.getUserByUsername(value),
+                );
+
+                if (users.length > 0) {
+                  setWarning('This username is already taken.');
+                  setIsUserNameValid(false);
+                } else {
+                  setWarning('');
+                  setIsUserNameValid(true);
+                }
+              }}
+              warning={warning}
+            />
           </div>
-        )}
 
-        <div className="flex flex-col gap-5 w-full mt-2.25">
-          <LabeledInput
-            labelName={'Display Name'}
-            placeholder={'Display Name'}
-            value={displayName}
-            onInput={(value: string) => {
-              setDisplayName(value);
+          <div className="flex flex-col gap-2.25 items-start mb-5 mt-5">
+            <Checkbox id="agree_checkbox" onChange={setAgreed}>
+              <span className="text-sm text-gray-400">
+                <strong>[Required]</strong> I have read and accept the{' '}
+                <strong>Terms of Service</strong>
+              </span>
+            </Checkbox>
 
-              if (checkString(value)) {
-                setWarningDisplayname(
-                  'Please remove the test keyword from your display name.',
-                );
-                setIsValidDisplayName(false);
-                return;
-              } else {
-                setWarningDisplayname('');
-                setIsValidDisplayName(true);
-              }
-            }}
-            warning={warningDisplayName}
-          />
+            <Checkbox
+              id="announcement_checkbox"
+              onChange={setAnnouncementAgree}
+            >
+              <span className="text-sm text-gray-400">
+                I want to receive announcements and news from Ratel.
+              </span>
+            </Checkbox>
+          </div>
 
-          <LabeledInput
-            labelName={'User Name'}
-            placeholder={'User Name'}
-            value={userName}
-            onInput={async (value: string) => {
-              setUserName(value);
-              if (value.length === 0) {
-                setWarning('');
-                setIsUserNameValid(true);
-                return;
-              }
-
-              if (!isValidUsername(value)) {
-                setWarning(
-                  'Only numbers, lowercase letters, -, _ and more than one character can be entered.',
-                );
-                setIsUserNameValid(false);
-                return;
-              } else if (checkString(value)) {
-                setWarning(
-                  'Please remove the test keyword from your username.',
-                );
-                setIsUserNameValid(false);
-                return;
-              } else {
-                setWarning('');
-                setIsUserNameValid(true);
-              }
-              const {
-                data: { users },
-              } = await client.query(ratelApi.graphql.getUserByUsername(value));
-
-              if (users.length > 0) {
-                setWarning('This username is already taken.');
-                setIsUserNameValid(false);
-              } else {
-                setWarning('');
-                setIsUserNameValid(true);
-              }
-            }}
-            warning={warning}
-          />
+          <PrimaryButton
+            disabled={
+              !agreed ||
+              !isUserNameValid ||
+              !isValidDisplayName ||
+              checkString(displayName) ||
+              checkString(userName)
+            }
+            onClick={handleSubmit}
+          >
+            {'Finished Sign-up'}
+          </PrimaryButton>
         </div>
 
-        <div className="flex flex-col gap-2.25 items-start mb-5 mt-5">
-          <Checkbox id="agree_checkbox" onChange={setAgreed}>
-            <span className="text-sm text-gray-400">
-              <strong>[Required]</strong> I have read and accept the{' '}
-              <strong>Terms of Service</strong>
-            </span>
-          </Checkbox>
-
-          <Checkbox id="announcement_checkbox" onChange={setAnnouncementAgree}>
-            <span className="text-sm text-gray-400">
-              I want to receive announcements and news from Ratel.
-            </span>
-          </Checkbox>
-        </div>
-
-        <PrimaryButton
-          disabled={
-            !agreed ||
-            !isUserNameValid ||
-            !isValidDisplayName ||
-            checkString(displayName) ||
-            checkString(userName)
-          }
-          onClick={handleSubmit}
-        >
-          {'Finished Sign-up'}
-        </PrimaryButton>
+        <LoginPopupFooter />
       </div>
-
-      <LoginPopupFooter />
     </div>
   );
 };

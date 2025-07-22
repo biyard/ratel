@@ -9,7 +9,6 @@ import { ToastContainer } from 'react-toastify';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import 'react-toastify/dist/ReactToastify.css';
 import { prefetchUserInfo } from './(social)/_hooks/user';
-import Script from 'next/script';
 import { getServerQueryClient } from '@/lib/query-utils.server';
 
 const raleway = Raleway({
@@ -32,7 +31,6 @@ export default async function RootLayout({
     <html lang="en">
       <head>
         <link rel="icon" href="/logos/favicon.ico" />
-        <Script src="https://telegram.org/js/telegram-web-app.js?57" />
       </head>
       <body className={`${raleway.variable} antialiased bg-bg`}>
         <CookieProvider>

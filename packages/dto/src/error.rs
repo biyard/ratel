@@ -216,6 +216,22 @@ pub enum Error {
     SESServiceError(String),
     #[translate(ko = "인증코드가 잘못되었습니다.", en = "Invalid verification code.")]
     InvalidVerificationCode,
+
+    ServerError(String),
+
+    #[translate(en = "Invalid Payload")]
+    InvalidPayload,
+
+    #[translate(
+        en = "Failed to create sprint league",
+        ko = "스프린트 리그 생성에 실패했습니다."
+    )]
+    SprintLeagueCreationFailed,
+    #[translate(
+        en = "Failed to update sprint league",
+        ko = "스프린트 리그 업데이트에 실패했습니다."
+    )]
+    SprintLeagueUpdateFailed,
 }
 
 impl<E: StdError + 'static> From<E> for Error {
