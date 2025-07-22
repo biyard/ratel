@@ -21,6 +21,7 @@ pub struct Config {
     pub slack_channel_monitor: &'static str,
     pub kaia: KaiaConfig,
     pub from_email: &'static str,
+    pub telegram_token: &'static str,
 }
 
 #[derive(Debug)]
@@ -80,6 +81,7 @@ impl Default for Config {
                 .expect("SLACK_CHANNEL_ABUSING is required"),
             slack_channel_monitor: option_env!("SLACK_CHANNEL_MONITOR")
                 .expect("SLACK_CHANNEL_MONITOR is required"),
+            telegram_token: option_env!("TELEGRAM_TOKEN").unwrap_or("TEMPORARY_TOKEN"),
         }
     }
 }

@@ -107,6 +107,11 @@ pub struct Space {
     #[api_model(summary, many_to_many = space_like_users, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = space_id, aggregator = exist)]
     #[serde(default)]
     pub is_liked: bool,
+
+    #[api_model(one_to_many = sprint_leagues, foreign_key = space_id, nested)]
+    #[serde(default)]
+    // Vec length should be 0 or 1.
+    pub sprint_leagues: Vec<SprintLeague>,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]

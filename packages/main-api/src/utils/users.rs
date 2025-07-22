@@ -1,7 +1,6 @@
 use bdk::prelude::by_axum::auth::Authorization;
 use bdk::prelude::*;
 use dto::*;
-
 pub async fn extract_user_with_allowing_anonymous(
     pool: &sqlx::Pool<sqlx::Postgres>,
     auth: Option<Authorization>,
@@ -36,6 +35,8 @@ pub async fn extract_user_with_allowing_anonymous(
                             principal.clone(),
                             "".to_string(),
                             Membership::Free,
+                            "".to_string(),
+                            None,
                         )
                         .await?
                 }
