@@ -9,7 +9,7 @@ use super::Team;
 use crate::GroupRepositoryQueryBuilder;
 
 #[derive(validator::Validate)]
-#[api_model(base = "/v1/users", read_action = user_info, table = users, iter_type=QueryResponse)]
+#[api_model(base = "/v1/users", read_action = user_info, table = users, action = [signup(telegram_raw = Option<String>), email_signup(telegram_raw = Option<String>), update_telegram_id(telegram_raw = Option<String>)], iter_type=QueryResponse)]
 pub struct User {
     #[api_model(primary_key)]
     pub id: i64,
@@ -86,6 +86,21 @@ pub struct User {
     #[api_model(version = v0.5, type = INTEGER)]
     #[serde(default)]
     pub membership: Membership,
+
+    #[api_model(one_to_many = user_points, foreign_key = user_id, aggregator = sum(amount))]
+    pub points: i64,
+
+    #[api_model(version = v0.6, unique, indexed)]
+    #[serde(default)]
+    pub referral_code: String,
+
+    #[api_model(version = v0.8, unique)]
+    #[serde(default)]
+    pub telegram_id: Option<i64>,
+
+    #[api_model(read_action = login_by_telegram, skip)]
+    #[serde(default)]
+    pub telegram_raw: String,
 }
 
 impl User {
