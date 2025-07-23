@@ -539,11 +539,11 @@ export function useDeliberationSpace(): Space {
   return space;
 }
 
-export function useDeliberationFeed(feedId: number): Feed {
+export function useDeliberationFeed(feedId: number): Feed | null {
   const { data: feed } = useFeedByID(feedId);
 
   if (!feed) {
-    throw new Error('Feed data is not available');
+    return null;
   }
 
   return feed;

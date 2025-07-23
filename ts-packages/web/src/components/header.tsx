@@ -16,9 +16,9 @@ import { usePopup } from '@/lib/contexts/popup-service';
 import { logger } from '@/lib/logger';
 import { route } from '@/route';
 import { config } from '@/config';
-import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { UserType } from '@/lib/api/models/user';
 import LoginIcon from '@/assets/icons/login.svg';
+import { useUserInfo } from '@/app/(social)/_hooks/user';
 export interface HeaderProps {
   mobileExtends: boolean;
   setMobileExtends: (extend: boolean) => void;
@@ -27,7 +27,7 @@ export interface HeaderProps {
 function Header(props: HeaderProps) {
   const popup = usePopup();
 
-  const { data } = useSuspenseUserInfo();
+  const { data, isLoading } = useUserInfo();
   const loggedIn = data && data.user_type !== UserType.Individual;
 
   logger.debug('Header data:', data);
@@ -99,6 +99,8 @@ function Header(props: HeaderProps) {
       authorized: true,
     },
   ];
+
+  if (isLoading) return null;
 
   return (
     <header className="border-b border-neutral-800 px-2.5 py-2.5 flex items-center justify-center !bg-bg h-[var(--header-height)]">

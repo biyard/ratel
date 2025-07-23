@@ -33,6 +33,7 @@ function Page() {
   const popup = usePopup();
   const space = useDeliberationSpace();
   const feed = useDeliberationFeed(space.feed_id);
+
   const {
     selectedType,
     isEdit,
@@ -94,10 +95,10 @@ function Page() {
           proposerName={proposerName}
           createdAt={createdAt}
           authorId={space?.author[0].id}
-          rewards={feed.rewards}
-          likes={feed.likes}
-          shares={feed.shares}
-          comments={feed.comments}
+          rewards={feed ? feed.rewards : 0}
+          likes={feed ? feed.likes : 0}
+          shares={feed ? feed.shares : 0}
+          comments={feed ? feed.comments : 0}
           isLiked={space?.is_liked}
           onback={handleGoBack}
           onsave={handleSave}

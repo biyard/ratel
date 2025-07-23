@@ -1,20 +1,16 @@
 import { QK_GET_FEED_BY_FEED_ID } from '@/constants';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { apiFetch, FetchResponse } from '@/lib/api/apiFetch';
-import { QueryClient } from '@tanstack/react-query';
+import { QueryClient, useQuery, UseQueryResult } from '@tanstack/react-query';
 import { Feed } from '@/lib/api/models/feeds';
 import { config } from '@/config';
-import {
-  useSuspenseQuery,
-  UseSuspenseQueryResult,
-} from '@tanstack/react-query';
 
 export function getKey(id: number): [string, number] {
   return [QK_GET_FEED_BY_FEED_ID, id];
 }
 
-export function useFeedByID(id: number): UseSuspenseQueryResult<Feed | null> {
-  const query = useSuspenseQuery({
+export function useFeedByID(id: number): UseQueryResult<Feed | null> {
+  const query = useQuery({
     queryKey: getKey(id),
     queryFn: async () => {
       const { data } = await requestFeedByID(id);
