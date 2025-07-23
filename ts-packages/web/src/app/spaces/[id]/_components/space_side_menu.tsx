@@ -16,8 +16,8 @@ export default function SpaceSideMenu({ spaceId }: { spaceId: number }) {
   return (
     <div className="flex flex-col max-w-[250px] max-tablet:!hidden w-full gap-[10px]">
       <Image
-        src={feed.url ?? '/default-profile.png'}
-        alt={feed.title ?? ''}
+        src={feed?.url ?? '/default-profile.png'}
+        alt={feed?.title ?? ''}
         width={250}
         height={127}
         className="rounded-[10px] object-cover object-top"
