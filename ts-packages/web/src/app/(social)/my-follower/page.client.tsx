@@ -3,7 +3,6 @@ import { Add, ArrowLeft } from '@/components/icons';
 import { Follower } from '@/lib/api/models/network';
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
-import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { UserType } from '@/lib/api/models/user';
 import Image from 'next/image';
 import { usePopup } from '@/lib/contexts/popup-service';
@@ -17,6 +16,7 @@ import {
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import { logger } from '@/lib/logger';
 import { RelationType } from '@/types/relation-type';
+import { useUserInfo } from '../_hooks/user';
 
 const FollowTab = {
   FOLLOWERS: 'Followers',
@@ -28,7 +28,7 @@ type FollowTabType = (typeof FollowTab)[keyof typeof FollowTab];
 export default function MyFollower({ type }: { type: RelationType }) {
   const { post } = useApiCall();
   const popup = usePopup();
-  const data = useSuspenseUserInfo();
+  const data = useUserInfo();
   const router = useRouter();
   let initTab: FollowTabType = FollowTab.FOLLOWERS;
 
@@ -39,8 +39,8 @@ export default function MyFollower({ type }: { type: RelationType }) {
 
   const userInfo = data.data;
 
-  const followers = userInfo.followers;
-  const followings = userInfo.followings;
+  const followers = userInfo?.followers ?? [];
+  const followings = userInfo?.followings ?? [];
   const handleUnFollow = async (userId: number) => {
     await post(ratelApi.networks.unfollow(userId), unfollowRequest());
   };

@@ -93,7 +93,7 @@ export default function TeamSelector({ onSelect, team }: TeamSelectorProps) {
                 </Link>
               </DropdownMenuItem>
             ) : (
-              <></>
+              <div key={`team-select-menu-${team.id}`}></div>
             );
           })}
         </DropdownMenuGroup>

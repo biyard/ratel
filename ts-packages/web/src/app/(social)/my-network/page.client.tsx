@@ -11,14 +11,14 @@ import { useApiCall } from '@/lib/api/use-send';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { followRequest } from '@/lib/api/models/networks/follow';
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
-import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { checkString } from '@/lib/string-filter-utils';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useUserInfo } from '../_hooks/user';
 
 export default function MyNetwork() {
   const { post } = useApiCall();
 
-  const data = useSuspenseUserInfo();
+  const data = useUserInfo();
 
   const network = useNetwork();
   const networkData = network.data;
