@@ -41,6 +41,39 @@ pub enum Question {
     MultipleChoice(ChoiceQuestion),
     ShortAnswer(SubjectiveQuestion),
     Subjective(SubjectiveQuestion),
+    Checkbox(CheckboxQuestion),
+    Dropdown(DropdownQuestion),
+    LinearScale(LinearScaleQuestion),
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct LinearScaleQuestion {
+    pub title: String,
+    pub description: String,
+    pub image_url: Option<String>,
+    pub min_value: i64,
+    pub max_value: i64,
+    pub min_label: String,
+    pub max_label: String,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct DropdownQuestion {
+    pub title: String,
+    pub description: String,
+    pub image_url: Option<String>,
+    pub options: Vec<String>,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct CheckboxQuestion {
+    pub title: String,
+    pub description: String,
+    pub image_url: Option<String>,
+    pub options: Vec<String>,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, Default)]
