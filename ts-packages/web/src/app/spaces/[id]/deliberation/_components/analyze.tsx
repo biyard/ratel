@@ -43,7 +43,8 @@ export default function AnalyzePage() {
         )}
         {mappedResponses.map((res, index) => {
           return res.question.answer_type === 'multiple_choice' ||
-            res.question.answer_type === 'single_choice' ? (
+            res.question.answer_type === 'single_choice' ||
+            res.question.answer_type === 'checkbox' ? (
             <ObjectiveResponse
               key={`objective-question-${index}`}
               question={res.question}

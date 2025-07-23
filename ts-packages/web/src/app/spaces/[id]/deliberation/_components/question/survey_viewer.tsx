@@ -15,6 +15,7 @@ interface Question {
   title: string;
   answer_type: Answer['answer_type'];
   image_url?: string;
+  is_multi?: boolean;
   options?: string[];
 }
 
@@ -68,6 +69,31 @@ export default function SurveyViewer({
         answer_type: 'single_choice',
         answer: optionIdx,
       } satisfies Answer;
+    } else if (type === 'checkbox') {
+      if (questions[qIdx].is_multi) {
+        const existing =
+          answers[qIdx]?.answer_type === 'checkbox'
+            ? [
+                ...(
+                  answers[qIdx] as Extract<Answer, { answer_type: 'checkbox' }>
+                ).answer,
+              ]
+            : [];
+        const exists = existing.includes(optionIdx);
+        const newAnswer = exists
+          ? existing.filter((v) => v !== optionIdx)
+          : [...existing, optionIdx];
+
+        updated[qIdx] = {
+          answer_type: 'checkbox',
+          answer: newAnswer,
+        } satisfies Answer;
+      } else {
+        updated[qIdx] = {
+          answer_type: 'checkbox',
+          answer: [optionIdx],
+        } satisfies Answer;
+      }
     } else if (type === 'multiple_choice') {
       const existing =
         answers[qIdx]?.answer_type === 'multiple_choice'
@@ -114,21 +140,31 @@ export default function SurveyViewer({
     <div className="flex flex-col gap-2.5 w-full">
       {questions.map((q, index) => {
         const selected = answers[index];
-        const selectedIndexes =
-          q.answer_type === 'multiple_choice' &&
-          selected?.answer_type === 'multiple_choice'
+
+        let selectedIndexes =
+          q.answer_type === 'checkbox' && selected?.answer_type === 'checkbox'
             ? selected.answer
             : [];
+
+        if (selectedIndexes.length === 0) {
+          selectedIndexes =
+            q.answer_type === 'multiple_choice' &&
+            selected?.answer_type === 'multiple_choice'
+              ? selected.answer
+              : [];
+        }
 
         return (
           <BlackBox key={index}>
             <div className="flex flex-col w-full gap-2.5">
               {(q.answer_type === 'single_choice' ||
-                q.answer_type === 'multiple_choice') && (
+                q.answer_type === 'multiple_choice' ||
+                q.answer_type == 'checkbox') && (
                 <>
                   <div className="flex flex-row w-full mt-[7px] mb-[15px] font-semibold text-base/[22.5px] text-white gap-1">
                     <div className="text-blue-500">
-                      {q.answer_type === 'single_choice'
+                      {q.answer_type === 'single_choice' ||
+                      (q.answer_type === 'checkbox' && !q.is_multi)
                         ? '[Single Choice]'
                         : '[Multiple Choice]'}
                     </div>
@@ -147,10 +183,14 @@ export default function SurveyViewer({
                   )}
                   <div className="flex flex-col gap-2">
                     {q.options?.map((opt, idx) => {
-                      const isChecked =
-                        q.answer_type === 'single_choice'
-                          ? selected?.answer === idx
-                          : selectedIndexes.includes(idx);
+                      let isChecked = selectedIndexes.includes(idx);
+
+                      if (!isChecked) {
+                        isChecked =
+                          q.answer_type === 'single_choice'
+                            ? selected?.answer === idx
+                            : selectedIndexes.includes(idx);
+                      }
 
                       return (
                         <div

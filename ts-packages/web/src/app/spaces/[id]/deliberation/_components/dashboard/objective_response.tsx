@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  CheckboxQuestion,
   MultipleChoiceQuestion,
   SingleChoiceQuestion,
 } from '@/lib/api/models/survey';
@@ -10,7 +11,7 @@ import BarChartResponse from '../charts/bar_chart_response';
 import PieChartResponse from '../charts/pie_chart_response';
 
 function parseObjectiveAnswers(
-  question: SingleChoiceQuestion | MultipleChoiceQuestion,
+  question: SingleChoiceQuestion | MultipleChoiceQuestion | CheckboxQuestion,
   answers: Answer[],
 ) {
   const optionCount = question.options.length;
@@ -23,7 +24,10 @@ function parseObjectiveAnswers(
   filtered.forEach((a) => {
     if (a.answer_type === 'single_choice') {
       if (typeof a.answer === 'number') counts[a.answer]++;
-    } else if (a.answer_type === 'multiple_choice') {
+    } else if (
+      a.answer_type === 'multiple_choice' ||
+      a.answer_type === 'checkbox'
+    ) {
       a.answer.forEach((i) => counts[i]++);
     }
   });
@@ -46,7 +50,7 @@ export default function ObjectiveResponse({
   question,
   answers,
 }: {
-  question: SingleChoiceQuestion | MultipleChoiceQuestion;
+  question: SingleChoiceQuestion | MultipleChoiceQuestion | CheckboxQuestion;
   answers: Answer[];
 }) {
   const parsed = parseObjectiveAnswers(question, answers);

@@ -6,6 +6,7 @@ import { Trash2 } from 'lucide-react';
 import { DialPad, DialPad2, Remove, Image2 } from '@/components/icons';
 import FileUploader from '@/components/file-uploader';
 import Image from 'next/image';
+import MultiSelectionButton from './_component/multi_selection_button';
 
 export default function SurveyQuestionEditor({
   index,
@@ -13,6 +14,7 @@ export default function SurveyQuestionEditor({
   imageUrl,
   title,
   options,
+  isMulti,
   onupdate,
   onremove,
 }: {
@@ -21,11 +23,13 @@ export default function SurveyQuestionEditor({
   title: string;
   imageUrl?: string;
   options?: string[];
+  isMulti?: boolean;
   onupdate?: (updated: {
     answerType: AnswerType;
     title: string;
     image_url?: string;
     options?: string[];
+    is_multi?: boolean;
   }) => void;
   onremove?: (index: number) => void;
 }) {
@@ -35,6 +39,7 @@ export default function SurveyQuestionEditor({
     options || [''],
   );
   const [questionImage, setQuestionImage] = useState(imageUrl);
+  const [questionMulti, setQuestionMulti] = useState(isMulti);
 
   const handleOptionChange = (idx: number, value: string) => {
     const newOptions = [...questionOptions];
@@ -45,7 +50,27 @@ export default function SurveyQuestionEditor({
         answerType: questionType,
         title: questionTitle,
         image_url: questionImage,
-        options: questionType.includes('choice') ? newOptions : undefined,
+        is_multi: questionMulti,
+        options:
+          questionType.includes('choice') || questionType.includes('checkbox')
+            ? newOptions
+            : undefined,
+      });
+    }
+  };
+
+  const handleMultiChange = (value: boolean) => {
+    setQuestionMulti(value);
+    if (onupdate) {
+      onupdate({
+        answerType: questionType,
+        title: questionTitle,
+        image_url: questionImage,
+        is_multi: value,
+        options:
+          questionType.includes('choice') || questionType.includes('checkbox')
+            ? questionOptions
+            : undefined,
       });
     }
   };
@@ -57,7 +82,11 @@ export default function SurveyQuestionEditor({
         answerType: questionType,
         title: questionTitle,
         image_url: value,
-        options: questionType.includes('choice') ? questionOptions : undefined,
+        is_multi: questionMulti,
+        options:
+          questionType.includes('choice') || questionType.includes('checkbox')
+            ? questionOptions
+            : undefined,
       });
     }
   };
@@ -69,7 +98,11 @@ export default function SurveyQuestionEditor({
         answerType: questionType,
         title: value,
         image_url: questionImage,
-        options: questionType.includes('choice') ? questionOptions : undefined,
+        is_multi: questionMulti,
+        options:
+          questionType.includes('choice') || questionType.includes('checkbox')
+            ? questionOptions
+            : undefined,
       });
     }
   };
@@ -81,7 +114,11 @@ export default function SurveyQuestionEditor({
         answerType: val,
         title: questionTitle,
         image_url: questionImage,
-        options: val.includes('choice') ? questionOptions : undefined,
+        is_multi: questionMulti,
+        options:
+          questionType.includes('choice') || questionType.includes('checkbox')
+            ? questionOptions
+            : undefined,
       });
     }
   };
@@ -94,6 +131,7 @@ export default function SurveyQuestionEditor({
         answerType: questionType,
         title: questionTitle,
         image_url: questionImage,
+        is_multi: questionMulti,
         options: newOptions,
       });
     }
@@ -107,7 +145,11 @@ export default function SurveyQuestionEditor({
         answerType: questionType,
         title: questionTitle,
         image_url: questionImage,
-        options: questionType.includes('choice') ? newOptions : undefined,
+        is_multi: questionMulti,
+        options:
+          questionType.includes('choice') || questionType.includes('checkbox')
+            ? questionOptions
+            : undefined,
       });
     }
   };
@@ -127,8 +169,9 @@ export default function SurveyQuestionEditor({
             value={questionTitle}
             onChange={(e) => handleTitleChange(e.target.value)}
           />
-          {questionType == 'single_choice' ||
-          questionType == 'multiple_choice' ? (
+          {questionType == 'checkbox' ||
+          questionType === 'single_choice' ||
+          questionType === 'multiple_choice' ? (
             <FileUploader onUploadSuccess={handleImageChange}>
               <div className="cursor-pointer flex flex-row w-fit h-fit p-[10.59px] bg-white rounded-lg">
                 <Image2 className="w-[22.81px] h-[22.81px] " />
@@ -152,7 +195,8 @@ export default function SurveyQuestionEditor({
         )}
 
         <div className="flex flex-col mt-2.5 gap-2.5">
-          {(questionType === 'single_choice' ||
+          {(questionType === 'checkbox' ||
+            questionType === 'single_choice' ||
             questionType === 'multiple_choice') && (
             <div className="flex flex-col gap-2">
               {questionOptions.map((opt, idx) => (
@@ -161,6 +205,11 @@ export default function SurveyQuestionEditor({
                   className="flex gap-2.5 items-center"
                 >
                   <DialPad2 className="w-6 h-6" />
+
+                  {questionType == 'checkbox' && (
+                    <div className="w-6 h-6 rounded-sm border border-c-wg-50" />
+                  )}
+
                   <Input
                     className="border-b border-transparent !border-b-white focus:!border-transparent focus:rounded-md font-normal text-base/[24px] placeholder:text-neutral-600 text-neutral-300 rounded-none"
                     type="text"
@@ -185,14 +234,22 @@ export default function SurveyQuestionEditor({
         </div>
 
         <div className="flex flex-row w-full justify-end items-center">
-          <div
-            className="cursor-pointer flex flex-row w-fit gap-[5px] items-center"
-            onClick={() => onremove?.(index)}
-          >
-            <div className="text-[15px] text-neutral-500 font-medium cursor-pointer">
-              Delete
+          <div className="flex flex-row w-fit gap-10">
+            {questionType == 'checkbox' && (
+              <MultiSelectionButton
+                value={isMulti ?? false}
+                onChange={handleMultiChange}
+              />
+            )}
+            <div
+              className="cursor-pointer flex flex-row w-fit gap-1.25 items-center"
+              onClick={() => onremove?.(index)}
+            >
+              <div className="text-[15px] text-neutral-500 font-medium cursor-pointer">
+                Delete
+              </div>
+              <Trash2 className="w-[18px] h-[18px] stroke-neutral-500 cursor-pointer" />
             </div>
-            <Trash2 className="w-[18px] h-[18px] stroke-neutral-500 cursor-pointer" />
           </div>
         </div>
       </div>
