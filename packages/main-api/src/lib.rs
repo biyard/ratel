@@ -7,6 +7,13 @@ pub mod controllers {
             pub mod logout;
         }
     }
+    pub mod m2 {
+        pub mod noncelab {
+            pub mod users {
+                pub mod register_users;
+            }
+        }
+    }
 }
 
 pub mod api_main;
