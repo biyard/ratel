@@ -451,9 +451,9 @@ export const PostDraftProvider: React.FC<{
 
   const refetchDrafts = useCallback(() => {
     queryClient.invalidateQueries({
-      queryKey: postByUserIdQk(team.id, 1, 20, FeedStatus.Draft),
+      queryKey: postByUserIdQk(team?.id ?? 0, 1, 20, FeedStatus.Draft),
     });
-  }, [queryClient, team.id]);
+  }, [queryClient, team?.id]);
 
   const resetState = useCallback(() => {
     setDraftId(null);

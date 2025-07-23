@@ -3,6 +3,8 @@ import { Team } from '@/lib/api/models/team';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { useApiCall } from '@/lib/api/use-send';
 import {
+  useQuery,
+  UseQueryResult,
   useSuspenseQuery,
   UseSuspenseQueryResult,
 } from '@tanstack/react-query';
@@ -19,12 +21,10 @@ export function useTeamById(id: number): UseSuspenseQueryResult<Team> {
   return query;
 }
 
-export function useTeamByUsername(
-  username: string,
-): UseSuspenseQueryResult<Team> {
+export function useTeamByUsername(username: string): UseQueryResult<Team> {
   const { get } = useApiCall();
 
-  const query = useSuspenseQuery({
+  const query = useQuery({
     queryKey: [QK_GET_TEAM_BY_USERNAME, username],
     queryFn: () => get(ratelApi.teams.getTeamByUsername(username)),
     refetchOnWindowFocus: false,

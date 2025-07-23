@@ -2,12 +2,7 @@ import { ratelApi } from '@/lib/api/ratel_api';
 import { QueryResponse } from '@/lib/api/models/common';
 import { Feed, FeedStatus } from '@/lib/api/models/feeds';
 import { useApiCall } from '@/lib/api/use-send';
-import {
-  useQuery,
-  UseQueryResult,
-  useSuspenseQuery,
-  UseSuspenseQueryResult,
-} from '@tanstack/react-query';
+import { useQuery, UseQueryResult } from '@tanstack/react-query';
 import {
   QK_GET_FEED_BY_FEED_ID,
   QK_GET_POSTS,
@@ -29,10 +24,10 @@ export function usePost(
   return query;
 }
 
-export function usePostByFeedId(feed_id: number): UseSuspenseQueryResult<Feed> {
+export function usePostByFeedId(feed_id: number): UseQueryResult<Feed> {
   const { get } = useApiCall();
 
-  const query = useSuspenseQuery({
+  const query = useQuery({
     queryKey: [QK_GET_FEED_BY_FEED_ID, feed_id],
     queryFn: () => get(ratelApi.feeds.getFeedsByFeedId(feed_id)),
     refetchOnWindowFocus: false,
@@ -54,10 +49,10 @@ export function usePostByUserId(
   size: number,
   status: FeedStatus = FeedStatus.Published,
   initialData?: QueryResponse<Feed>,
-): UseSuspenseQueryResult<QueryResponse<Feed>> {
+): UseQueryResult<QueryResponse<Feed>> {
   const { get } = useApiCall();
 
-  const query = useSuspenseQuery({
+  const query = useQuery({
     queryKey: postByUserIdQk(user_id, page, size, status),
     queryFn: () =>
       get(ratelApi.feeds.getPostsByUserId(user_id, page, size, status)),

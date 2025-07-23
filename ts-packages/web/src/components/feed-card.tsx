@@ -5,7 +5,6 @@ import { Row } from './ui/row';
 import { CommentIcon, Rewards, Shares, ThumbUp } from './icons';
 import { convertNumberToString } from '@/lib/number-utils';
 import TimeAgo from './time-ago';
-import DOMPurify from 'dompurify';
 import { Button } from './ui/button';
 import { useRouter } from 'next/navigation';
 import { useApiCall } from '@/lib/api/use-send';
@@ -177,16 +176,19 @@ export function FeedContents({
   contents: string;
   url?: string;
 }) {
-  const c =
-    typeof window !== 'undefined' ? DOMPurify.sanitize(contents) : contents;
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
+
+  if (!hydrated) return null;
 
   return (
     <Col className="text-white">
       <p
         className="feed-content font-normal text-[15px]/[24px] align-middle tracking-[0.5px] text-c-wg-30 px-5"
-        dangerouslySetInnerHTML={{ __html: c }}
-      ></p>
-
+        dangerouslySetInnerHTML={{ __html: contents }}
+      />
       {url && (
         <div className="px-5">
           <div className="relative w-full max-h-80 aspect-video">
