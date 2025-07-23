@@ -55,7 +55,7 @@ export default function TeamMembers({ username }: { username: string }) {
             {member.groups
               .filter(
                 (group) =>
-                  group.creator_id === team.id && !checkString(group.name),
+                  group.creator_id === team?.id && !checkString(group.name),
               )
               .map((group) => (
                 <div

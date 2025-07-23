@@ -21,7 +21,7 @@ export default function TeamPostsPage({ username }: { username: string }) {
   const { post } = useApiCall();
   const query = useTeamByUsername(username);
   const team = query.data;
-  const posts = usePostByUserId(team.id, 1, 20, FeedStatus.Draft);
+  const posts = usePostByUserId(team?.id ?? 0, 1, 20, FeedStatus.Draft);
   const data = posts.data;
   logger.debug('query response of posts', data);
   const { setExpand, loadDraft } = usePostDraft();
@@ -55,7 +55,7 @@ export default function TeamPostsPage({ username }: { username: string }) {
                   !(
                     checkString(d.title) ||
                     checkString(d.contents) ||
-                    checkString(team.nickname)
+                    checkString(team?.nickname ?? '')
                   ),
               )
               .map((props) => (
@@ -97,8 +97,8 @@ export default function TeamPostsPage({ username }: { username: string }) {
                   </div>
                   <Row className="justify-between items-center px-5">
                     <UserBadge
-                      profile_url={team.profile_url ?? ''}
-                      name={team.nickname}
+                      profile_url={team?.profile_url ?? ''}
+                      name={team?.nickname ?? ''}
                       author_type={UserType.Team}
                     />
                     <TimeAgo timestamp={props.updated_at} />

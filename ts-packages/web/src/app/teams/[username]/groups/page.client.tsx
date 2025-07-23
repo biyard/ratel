@@ -38,12 +38,15 @@ export default function TeamGroups({ username }: { username: string }) {
               popup
                 .open(
                   <InviteMemberPopup
-                    team_id={team.id}
+                    team_id={team?.id ?? 0}
                     groups={groups}
                     onclick={async (group_id, users) => {
                       try {
                         await post(
-                          ratelApi.groups.invite_member(team.id, group_id),
+                          ratelApi.groups.invite_member(
+                            team?.id ?? 0,
+                            group_id,
+                          ),
                           inviteMemberRequest(users),
                         );
                         query.refetch();
@@ -71,7 +74,7 @@ export default function TeamGroups({ username }: { username: string }) {
                   ) => {
                     try {
                       await post(
-                        ratelApi.groups.create_group(team.id),
+                        ratelApi.groups.create_group(team?.id ?? 0),
                         createGroupRequest(
                           groupName,
                           groupDescription,
