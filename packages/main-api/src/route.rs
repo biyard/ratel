@@ -8,11 +8,31 @@ use crate::controllers::{
     v2::users::logout::logout_handler,
 };
 
-use dto::{
-    Result,
-    aide::axum::routing::post_with,
-    by_axum::axum::{Json, native_routing::post as npost},
-};
+use by_axum::axum;
+use dto::Result;
+
+use axum::native_routing::post as npost;
+
+macro_rules! post_api {
+    (
+        $handler:expr,
+        $success_ty:ty,
+        $summary:expr,
+        $description:expr,
+    ) => {
+        aide::axum::routing::post_with($handler, |op| {
+            op.summary($summary)
+                .description($description)
+                .response_with::<200, axum::Json<$success_ty>, _>(|res| {
+                    res.description("Success response")
+                })
+                .response_with::<400, axum::Json<dto::Error>, _>(|res| {
+                    res.description("Incorrect or invalid requests")
+                        .example(dto::Error::UserAlreadyExists)
+                })
+        })
+    };
+}
 
 pub async fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Router> {
     Ok(
@@ -26,17 +46,12 @@ pub async fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Ro
             // Admin APIs
             .route(
                 "/m2/noncelab/users",
-                post_with(register_users_by_noncelab_handler, |op| {
-                    op.response_with::<200, Json<RegisterUserResponse>, _>(|res| {
-                        res.description("Success response")
-                    })
-                    .response_range_with::<4, Json<dto::Error>, _>(|res| {
-                        res.description("Incorrect or invalid requests")
-                            .example(dto::Error::UserAlreadyExists)
-                    })
-                    .summary("Register users by Noncelab")
-                    .description("This endpoint allows you to register users by Noncelab.")
-                }),
+                post_api!(
+                    register_users_by_noncelab_handler,
+                    RegisterUserResponse,
+                    "Register users by Noncelab",
+                    "This endpoint allows you to register users by Noncelab.",
+                ),
             ), // End of APIs
     )
 }
