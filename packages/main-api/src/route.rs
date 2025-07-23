@@ -13,14 +13,15 @@ use dto::Result;
 
 use axum::native_routing::post as npost;
 
-macro_rules! post_api {
+macro_rules! wrap_api {
     (
+        $method:expr,
         $handler:expr,
         $success_ty:ty,
         $summary:expr,
         $description:expr,
     ) => {
-        aide::axum::routing::post_with($handler, |op| {
+        $method($handler, |op| {
             op.summary($summary)
                 .description($description)
                 .response_with::<200, axum::Json<$success_ty>, _>(|res| {
@@ -31,6 +32,23 @@ macro_rules! post_api {
                         .example(dto::Error::UserAlreadyExists)
                 })
         })
+    };
+}
+
+macro_rules! post_api {
+    (
+        $handler:expr,
+        $success_ty:ty,
+        $summary:expr,
+        $description:expr,
+    ) => {
+        wrap_api!(
+            axum::routing::post_with,
+            $handler,
+            $success_ty,
+            $summary,
+            $description,
+        )
     };
 }
 
