@@ -109,71 +109,78 @@ export default function ClientProviders({
     DeliberationTab.SUMMARY,
   );
   const [isEdit, setIsEdit] = useState(false);
-  const [title, setTitle] = useState(space.title ?? '');
+  const [title, setTitle] = useState(space?.title ?? '');
   const [startedAt, setStartedAt] = useState(
-    changeStartedAt(space.started_at ?? Date.now() / 1000),
+    changeStartedAt(space?.started_at ?? Date.now() / 1000),
   );
   const [endedAt, setEndedAt] = useState(
-    changeEndedAt(space.ended_at ?? Date.now() / 1000),
+    changeEndedAt(space?.ended_at ?? Date.now() / 1000),
   );
 
   useEffect(() => {
-    if (space.started_at) {
+    if (space?.started_at) {
       setStartedAt(changeStartedAt(space.started_at));
     }
-    if (space.ended_at) {
+    if (space?.ended_at) {
       setEndedAt(changeEndedAt(space.ended_at));
     }
-  }, [space.started_at, space.ended_at]);
+  }, [space?.started_at, space?.ended_at]);
 
   const [thread, setThread] = useState<Thread>({
-    html_contents: space.html_contents ?? '',
-    files: space.files ?? [],
+    html_contents: space?.html_contents ?? '',
+    files: space?.files ?? [],
   });
   const [deliberation, setDeliberation] = useState<Deliberation>({
-    discussions: space.discussions.map((disc) => ({
-      started_at: disc.started_at,
-      ended_at: disc.ended_at,
-      name: disc.name,
-      description: disc.description,
-      discussion_id: disc.id,
-      participants: disc.members.map((member) => ({
-        id: member.id,
-        created_at: member.created_at,
-        updated_at: member.updated_at,
-        nickname: member.nickname,
-        username: member.username,
-        email: member.email,
-        profile_url: member.profile_url ?? '',
-        user_type: UserType.Individual,
-      })),
-    })),
+    discussions:
+      space?.discussions.map((disc) => ({
+        started_at: disc.started_at,
+        ended_at: disc.ended_at,
+        name: disc.name,
+        description: disc.description,
+        discussion_id: disc.id,
+        participants: disc.members.map((member) => ({
+          id: member.id,
+          created_at: member.created_at,
+          updated_at: member.updated_at,
+          nickname: member.nickname,
+          username: member.username,
+          email: member.email,
+          profile_url: member.profile_url ?? '',
+          user_type: UserType.Individual,
+        })),
+      })) ?? [],
 
-    elearnings: space.elearnings.map((elearning) => ({
-      files: elearning.files,
-    })),
+    elearnings:
+      space?.elearnings.map((elearning) => ({
+        files: elearning.files,
+      })) ?? [],
   });
   const [survey, setSurvey] = useState<Poll>({
-    surveys: space.surveys.map((survey) => ({
-      started_at: changeStartedAt(survey.started_at),
-      ended_at: changeEndedAt(survey.ended_at),
-      questions: survey.questions,
-    })),
+    surveys:
+      space?.surveys.map((survey) => ({
+        started_at: changeStartedAt(survey.started_at),
+        ended_at: changeEndedAt(survey.ended_at),
+        questions: survey.questions,
+      })) ?? [],
   });
 
-  const [answers] = useState<SurveyResponse[]>(space.responses ?? []);
+  const [answers] = useState<SurveyResponse[]>(space?.responses ?? []);
   const [answer, setAnswer] = useState<SurveyAnswer>({
-    answers:
-      space.user_responses.length != 0 ? space.user_responses[0].answers : [],
-    is_completed: space.user_responses.length != 0,
+    answers: space
+      ? space?.user_responses.length != 0
+        ? space?.user_responses[0].answers
+        : []
+      : [],
+    is_completed: space?.user_responses.length != 0,
   });
 
   const [draft, setDraft] = useState<FinalConsensus>({
-    drafts: space.drafts.map((draft) => ({
-      title: draft.title,
-      html_contents: draft.html_contents,
-      files: draft.files,
-    })),
+    drafts:
+      space?.drafts.map((draft) => ({
+        title: draft.title,
+        html_contents: draft.html_contents,
+        files: draft.files,
+      })) ?? [],
   });
 
   const mappedResponses = mapResponses(
@@ -184,7 +191,7 @@ export default function ClientProviders({
   const router = useRouter();
 
   const handleShare = async () => {
-    const space_id = space.id;
+    const space_id = space?.id ?? 0;
     navigator.clipboard.writeText(window.location.href).then(async () => {
       try {
         const res = await post(ratelApi.spaces.shareSpace(space_id), {
@@ -204,8 +211,8 @@ export default function ClientProviders({
   };
 
   const handleLike = async () => {
-    const space_id = space.id;
-    const value = !space.is_liked;
+    const space_id = space?.id ?? 0;
+    const value = space ? !space.is_liked : false;
     try {
       const res = await post(ratelApi.spaces.likeSpace(space_id), {
         like: {
@@ -357,26 +364,26 @@ export default function ClientProviders({
 
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Survey Responses');
-    XLSX.writeFile(workbook, `${space.id}.xlsx`);
+    XLSX.writeFile(workbook, `${space?.id}.xlsx`);
   };
 
-  const userType = space.author[0].user_type;
-  const proposerImage = space.author[0].profile_url;
-  const proposerName = space.author[0].nickname;
-  const createdAt = space.created_at;
-  const status = space.status;
+  const userType = space?.author[0].user_type;
+  const proposerImage = space?.author[0].profile_url;
+  const proposerName = space?.author[0].nickname;
+  const createdAt = space?.created_at;
+  const status = space?.status;
 
   logger.debug('startedAt: ', startedAt, 'endedAt: ', endedAt);
   logger.debug('deliberation: ', deliberation);
 
   useEffect(() => {
-    if (space.user_responses && space.user_responses.length > 0) {
+    if (space?.user_responses && space.user_responses.length > 0) {
       setAnswer({
         answers: space.user_responses[0].answers,
         is_completed: true,
       });
     }
-  }, [space.user_responses]);
+  }, [space?.user_responses]);
 
   const handleUpdate = async (
     title: string,
@@ -489,11 +496,11 @@ export default function ClientProviders({
         setDraft,
         handleGoBack,
         handleDownloadExcel,
-        userType,
-        proposerImage,
-        proposerName,
-        createdAt,
-        status,
+        userType: userType ?? UserType.Anonymous,
+        proposerImage: proposerImage ?? '',
+        proposerName: proposerName ?? '',
+        createdAt: createdAt ?? 0,
+        status: status ?? SpaceStatus.Draft,
         mappedResponses,
         handleSetAnswers,
         handleSetStartDate,

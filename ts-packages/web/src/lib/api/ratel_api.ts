@@ -10,6 +10,8 @@ import {
   QK_GET_SPACE_BY_SPACE_ID,
 } from '@/constants';
 import {
+  useQuery,
+  UseQueryResult,
   useSuspenseQuery,
   UseSuspenseQueryResult,
 } from '@tanstack/react-query';
@@ -30,12 +32,10 @@ export function useSpaceById(id: number): UseSuspenseQueryResult<Space> {
   return query;
 }
 
-export function useRedeemCode(
-  meta_id: number,
-): UseSuspenseQueryResult<RedeemCode> {
+export function useRedeemCode(meta_id: number): UseQueryResult<RedeemCode> {
   const { get } = useApiCall();
 
-  const query = useSuspenseQuery({
+  const query = useQuery({
     queryKey: [QK_GET_REDEEM_CODE, meta_id],
     queryFn: () => get(ratelApi.spaces.getSpaceRedeemCodes(meta_id)),
     refetchOnWindowFocus: false,
@@ -56,10 +56,10 @@ export function useFeedById(id: number): UseSuspenseQueryResult<Feed> {
   return query;
 }
 
-export function useNetwork(): UseSuspenseQueryResult<NetworkData> {
+export function useNetwork(): UseQueryResult<NetworkData> {
   const { get } = useApiCall();
 
-  const query = useSuspenseQuery({
+  const query = useQuery({
     queryKey: [QK_GET_NETWORK],
     queryFn: () => get(ratelApi.networks.getNetworks()),
     refetchOnWindowFocus: false,
@@ -68,10 +68,10 @@ export function useNetwork(): UseSuspenseQueryResult<NetworkData> {
   return query;
 }
 
-export function usePromotion(): UseSuspenseQueryResult<Promotion> {
+export function usePromotion(): UseQueryResult<Promotion> {
   const { get } = useApiCall();
 
-  const query = useSuspenseQuery({
+  const query = useQuery({
     queryKey: [QK_GET_PROMOTION],
     queryFn: () => get(ratelApi.promotions.get_promotions()),
     refetchOnWindowFocus: false,

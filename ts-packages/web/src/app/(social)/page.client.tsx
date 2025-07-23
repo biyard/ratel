@@ -10,7 +10,7 @@ import News from './_components/News';
 import BlackBox from './_components/black-box';
 import CreatePostButton from './_components/create-post-button';
 import { usePost } from './_hooks/use-posts';
-import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
+import { useUserInfo } from '@/lib/api/hooks/users';
 import { usePromotion } from './_hooks/use_promotion';
 import { useFeedByID } from './_hooks/use-feed';
 
@@ -54,8 +54,8 @@ export interface Post {
 
 export default function Home() {
   const { data: promotion } = usePromotion();
-  const { data: feed } = useFeedByID(promotion.feed_id);
-  const { data: userInfo } = useSuspenseUserInfo();
+  const { data: feed } = useFeedByID(promotion?.feed_id);
+  const { data: userInfo } = useUserInfo();
   const userId = userInfo?.id || 0;
 
   const [page, setPage] = useState(1);
@@ -186,7 +186,9 @@ export default function Home() {
         <CreatePostButton />
 
         <BlackBox>
-          <PromotionCard promotion={promotion} feed={feed} />
+          {promotion != null && feed != null ? (
+            <PromotionCard promotion={promotion} feed={feed} />
+          ) : null}
         </BlackBox>
 
         <News />

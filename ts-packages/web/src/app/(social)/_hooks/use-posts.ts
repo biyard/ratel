@@ -3,6 +3,8 @@ import { QueryResponse } from '@/lib/api/models/common';
 import { Feed, FeedStatus } from '@/lib/api/models/feeds';
 import { useApiCall } from '@/lib/api/use-send';
 import {
+  useQuery,
+  UseQueryResult,
   useSuspenseQuery,
   UseSuspenseQueryResult,
 } from '@tanstack/react-query';
@@ -15,10 +17,10 @@ import {
 export function usePost(
   page: number,
   size: number,
-): UseSuspenseQueryResult<QueryResponse<Feed>> {
+): UseQueryResult<QueryResponse<Feed>> {
   const { get } = useApiCall();
 
-  const query = useSuspenseQuery({
+  const query = useQuery({
     queryKey: [QK_GET_POSTS, page, size],
     queryFn: () => get(ratelApi.feeds.getPosts(page, size)),
     refetchOnWindowFocus: false,
