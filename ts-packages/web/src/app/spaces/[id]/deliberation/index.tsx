@@ -32,7 +32,7 @@ export default function DeliberationSpacePage() {
 function Page() {
   const popup = usePopup();
   const space = useDeliberationSpace();
-  const feed = useDeliberationFeed(space.feed_id);
+  const feed = useDeliberationFeed(space?.feed_id ?? 0);
 
   const {
     selectedType,
@@ -60,7 +60,7 @@ function Page() {
   const userId = userInfo ? userInfo.id : 0;
 
   if (
-    space.status === SpaceStatus.Draft &&
+    space?.status === SpaceStatus.Draft &&
     !space.author.some((a) => a.id === userId) &&
     !selectedTeam
   ) {
@@ -94,7 +94,7 @@ function Page() {
           proposerImage={proposerImage}
           proposerName={proposerName}
           createdAt={createdAt}
-          authorId={space?.author[0].id}
+          authorId={space?.author[0].id ?? 0}
           rewards={feed ? feed.rewards : 0}
           likes={feed ? feed.likes : 0}
           shares={feed ? feed.shares : 0}

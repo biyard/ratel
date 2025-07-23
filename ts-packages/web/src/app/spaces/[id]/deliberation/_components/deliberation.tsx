@@ -15,7 +15,8 @@ import {
 export default function DeliberationPage() {
   const { isEdit, deliberation, setDeliberation, handleViewRecord, status } =
     useDeliberationSpaceContext();
-  const discussions = useDeliberationSpace().discussions;
+  const space = useDeliberationSpace();
+  const discussions = space?.discussions ?? [];
 
   return (
     <div className="flex flex-col w-full">

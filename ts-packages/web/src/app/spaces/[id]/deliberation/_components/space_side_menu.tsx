@@ -46,7 +46,7 @@ export default function SpaceSideMenu() {
 
   const { data: userInfo } = useUserInfo();
   const userId = userInfo ? userInfo.id : 0;
-  const createdAt = space.created_at;
+  const createdAt = space?.created_at ?? 0;
 
   return (
     <div className="flex flex-col max-w-[250px] max-tablet:!hidden w-full gap-[10px]">
@@ -92,7 +92,7 @@ export default function SpaceSideMenu() {
             <div className="font-bold text-white text-sm">Recommendation</div>
           </div>
 
-          {(space.author.some((a) => a.id === userId) || selectedTeam) &&
+          {(space?.author.some((a) => a.id === userId) || selectedTeam) &&
             status == SpaceStatus.InProgress && (
               <div
                 className={`cursor-pointer flex flex-row gap-1 items-center px-1 py-2 rounded-sm ${

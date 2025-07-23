@@ -20,10 +20,10 @@ import { RedeemCode } from './models/redeem-code';
 import { NetworkData } from './models/network';
 import { Promotion } from './models/promotion';
 
-export function useSpaceById(id: number): UseSuspenseQueryResult<Space> {
+export function useSpaceById(id: number): UseQueryResult<Space> {
   const { get } = useApiCall();
 
-  const query = useSuspenseQuery({
+  const query = useQuery({
     queryKey: [QK_GET_SPACE_BY_SPACE_ID, id],
     queryFn: () => get(ratelApi.spaces.getSpaceBySpaceId(id)),
     refetchOnWindowFocus: false,

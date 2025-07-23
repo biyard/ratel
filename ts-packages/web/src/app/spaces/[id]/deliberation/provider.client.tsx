@@ -117,15 +117,6 @@ export default function ClientProviders({
     changeEndedAt(space?.ended_at ?? Date.now() / 1000),
   );
 
-  useEffect(() => {
-    if (space?.started_at) {
-      setStartedAt(changeStartedAt(space.started_at));
-    }
-    if (space?.ended_at) {
-      setEndedAt(changeEndedAt(space.ended_at));
-    }
-  }, [space?.started_at, space?.ended_at]);
-
   const [thread, setThread] = useState<Thread>({
     html_contents: space?.html_contents ?? '',
     files: space?.files ?? [],
@@ -182,6 +173,75 @@ export default function ClientProviders({
         files: draft.files,
       })) ?? [],
   });
+
+  useEffect(() => {
+    if (!space) return;
+
+    setTitle(space.title ?? '');
+    setStartedAt(changeStartedAt(space.started_at ?? 0));
+    setEndedAt(changeEndedAt(space.ended_at ?? 0));
+    setDeliberation({
+      discussions:
+        space?.discussions.map((disc) => ({
+          started_at: disc.started_at,
+          ended_at: disc.ended_at,
+          name: disc.name,
+          description: disc.description,
+          discussion_id: disc.id,
+          participants: disc.members.map((member) => ({
+            id: member.id,
+            created_at: member.created_at,
+            updated_at: member.updated_at,
+            nickname: member.nickname,
+            username: member.username,
+            email: member.email,
+            profile_url: member.profile_url ?? '',
+            user_type: UserType.Individual,
+          })),
+        })) ?? [],
+
+      elearnings:
+        space?.elearnings.map((elearning) => ({
+          files: elearning.files,
+        })) ?? [],
+    });
+    setSurvey({
+      surveys:
+        space?.surveys.map((survey) => ({
+          started_at: changeStartedAt(survey.started_at),
+          ended_at: changeEndedAt(survey.ended_at),
+          questions: survey.questions,
+        })) ?? [],
+    });
+    setThread({
+      html_contents: space.html_contents ?? '',
+      files: space.files ?? [],
+    });
+    setDraft({
+      drafts:
+        space?.drafts.map((draft) => ({
+          title: draft.title,
+          html_contents: draft.html_contents,
+          files: draft.files,
+        })) ?? [],
+    });
+
+    if (space.user_responses && space.user_responses.length > 0) {
+      setAnswer({
+        answers: space.user_responses[0].answers,
+        is_completed: true,
+      });
+    }
+  }, [space]);
+
+  useEffect(() => {
+    if (space?.started_at) {
+      setStartedAt(changeStartedAt(space.started_at));
+    }
+    if (space?.ended_at) {
+      setEndedAt(changeEndedAt(space.ended_at));
+    }
+  }, [space?.started_at, space?.ended_at]);
 
   const mappedResponses = mapResponses(
     survey.surveys?.[0]?.questions ?? [],
@@ -528,12 +588,12 @@ export function useDeliberationSpaceContext() {
   return context;
 }
 
-export function useDeliberationSpace(): Space {
+export function useDeliberationSpace(): Space | null {
   const { spaceId } = useSpaceByIdContext();
   const { data: space } = useSpaceById(spaceId);
 
   if (!space) {
-    throw new Error('Space data is not available');
+    return null;
   }
 
   return space;
