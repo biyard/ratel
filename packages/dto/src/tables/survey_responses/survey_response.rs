@@ -43,4 +43,7 @@ pub enum Answer {
     MultipleChoice { answer: Vec<i32> },
     ShortAnswer { answer: String },
     Subjective { answer: String },
+    Checkbox { answer: Vec<i32> },
+    Dropdown { answer: Option<i32> },
+    LinearScale { answer: Option<i32> },
 }
