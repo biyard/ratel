@@ -10,10 +10,12 @@ import { HDNodeWallet } from 'ethers';
 interface AuthContextType {
   ed25519KeyPair: Ed25519KeyIdentity | null;
   evmWallet?: HDNodeWallet;
+  telegramRaw?: string;
   user?: User;
   authUser?: AuthUserInfo;
   login: (keyPair: Ed25519KeyIdentity) => Promise<AuthUserInfo>;
   logout: () => Promise<void>;
+  setTelegramRaw: (raw: string) => void;
 }
 
 const dummyAuthUserInfo: AuthUserInfo = {
@@ -30,6 +32,7 @@ export const AuthContext = createContext<AuthContextType>({
   ed25519KeyPair: null,
   login: async () => dummyAuthUserInfo,
   logout: async () => {},
+  setTelegramRaw: () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);

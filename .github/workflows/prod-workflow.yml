@@ -58,7 +58,7 @@ jobs:
           SLACK_CHANNEL_SPONSOR: ${{ secrets.SLACK_CHANNEL_SPONSOR }}
           US_CONGRESS_KEY: ${{ secrets.US_CONGRESS_KEY }}
           SLACK_CHANNEL_ABUSING: ${{ secrets.SLACK_CHANNEL_ABUSING }}
-
+          TELEGRAM_NOTIFICATION_URL: https://telegram-bot.ratel.foundation
           KAIA_FEEPAYER_KEY: ${{ secrets.PROD_KAIA_FEEPAYER_KEY }}
           KAIA_FEEPAYER_ADDR: ${{ secrets.PROD_KAIA_FEEPAYER_ADDR }}
           KAIA_OWNER_KEY: ${{ secrets.PROD_KAIA_OWNER_KEY }}
@@ -122,6 +122,65 @@ jobs:
           US_CONGRESS_KEY: ${{ secrets.US_CONGRESS_KEY }}
           RPC_ENDPOINT: https://public-en.node.kaia.io
 
+          MIGRATE: false
+          ENABLE_S3: false
+          ENABLE_FARGATE: true
+          ENABLE_LAMBDA: false
+        run: |
+          npm i -g aws-cdk
+          make deploy
+
+  telegram-bot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          ssh-key: ${{ secrets.PULL_KEY_REPO }}
+
+      - uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          components: clippy, rustfmt
+          target: wasm32-unknown-unknown
+          toolchain: stable
+
+      - uses: cargo-bins/cargo-binstall@main
+      - name: Install dependencies
+        run: |
+          cargo binstall toml-cli
+
+      - name: Cache builder
+        id: telegram-bot-build-cache
+        uses: actions/cache@v3
+        with:
+          key: telegram-bot-build-cache
+          path: |
+            packages/telegram-bot/target
+
+      - name: Deploy APIs
+        env:
+          REGION: ap-northeast-2
+          ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          ENV: prod
+          RUST_LOG: info
+          SERVICE: telegram-bot
+          DOMAIN: telegram-bot.ratel.foundation
+          DATABASE_TYPE: postgres
+
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_MINI_APP_URI: https://t.me/crypto_ratel_bot?startapp
+          BASE_DOMAIN: ratel.foundation
+          REPO_NAME: ratel/telegram-bot
+          
           MIGRATE: false
           ENABLE_S3: false
           ENABLE_FARGATE: true
