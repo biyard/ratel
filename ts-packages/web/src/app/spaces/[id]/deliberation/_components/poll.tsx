@@ -70,6 +70,7 @@ export default function PollPage() {
               image_url?: string;
               title: string;
               options?: string[];
+              is_multi: boolean;
             },
           ) => {
             const updatedSurvey = [...survey.surveys];
@@ -87,6 +88,14 @@ export default function PollPage() {
                 image_url: updated.image_url,
                 options: updated.options || [],
               };
+            } else if (updated.answerType === 'checkbox') {
+              newQuestion = {
+                answer_type: updated.answerType,
+                title: updated.title,
+                image_url: updated.image_url,
+                options: updated.options || [],
+                is_multi: updated.is_multi || false,
+              };
             } else {
               newQuestion = {
                 answer_type: updated.answerType,
@@ -96,7 +105,9 @@ export default function PollPage() {
             }
 
             updatedQuestions[index] = newQuestion;
+
             updatedSurvey[0].questions = updatedQuestions;
+
             setSurvey({ ...survey, surveys: updatedSurvey });
           }}
           onremove={(index: number) => {

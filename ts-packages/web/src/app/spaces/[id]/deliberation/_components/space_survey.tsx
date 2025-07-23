@@ -30,6 +30,7 @@ export interface SpaceSurveyProps {
       image_url?: string;
       title: string;
       options?: string[];
+      is_multi: boolean;
     },
   ) => void;
   onremove: (index: number) => void;
@@ -143,6 +144,7 @@ function EditableSurvey({
       title: string;
       image_url?: string;
       options?: string[];
+      is_multi: boolean;
     },
   ) => void;
   onremove: (index: number) => void;
@@ -171,12 +173,14 @@ function EditableSurvey({
               title={question.title}
               imageUrl={'image_url' in question ? question.image_url : ''}
               options={'options' in question ? question.options : []}
+              isMulti={'is_multi' in question ? question.is_multi : false}
               onupdate={(updated) => {
                 onupdate(index, {
                   answerType: updated.answerType,
                   title: updated.title,
                   image_url: updated.image_url,
                   options: updated.options ?? [],
+                  is_multi: updated.is_multi ?? false,
                 });
               }}
               onremove={(index: number) => {

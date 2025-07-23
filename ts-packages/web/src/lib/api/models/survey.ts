@@ -20,8 +20,17 @@ export type Question =
   | SingleChoiceQuestion
   | MultipleChoiceQuestion
   | ShortAnswerQuestion
-  | SubjectiveQuestion;
+  | SubjectiveQuestion
+  | CheckboxQuestion;
 
+export interface CheckboxQuestion {
+  answer_type: 'checkbox';
+  title: string;
+  description?: string;
+  image_url?: string;
+  options: string[];
+  is_multi?: boolean;
+}
 export interface SingleChoiceQuestion {
   answer_type: 'single_choice';
   title: string;

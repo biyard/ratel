@@ -2,6 +2,7 @@
 
 import React from 'react';
 import {
+  CheckboxQuestion,
   MultipleChoiceQuestion,
   SingleChoiceQuestion,
 } from '@/lib/api/models/survey';
@@ -13,7 +14,7 @@ type ParsedOption = {
 };
 
 type ParsedResult = {
-  question: SingleChoiceQuestion | MultipleChoiceQuestion;
+  question: SingleChoiceQuestion | MultipleChoiceQuestion | CheckboxQuestion;
   totalParticipants: number;
   options: ParsedOption[];
 };
