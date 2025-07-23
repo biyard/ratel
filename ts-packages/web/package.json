@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "predev": "./setup-env.sh",
-    "dev": "NODE_ENV=development next dev -p 3000 -H 0.0.0.0",
+    "dev": "NODE_ENV=development next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
