@@ -44,7 +44,9 @@ pub struct RegisterUserRequest {
     JsonSchema,
 )]
 pub struct RegisterUserResponse {
+    #[schemars(description = "User ID in Ratel")]
     pub user_id: i64,
+    #[schemars(description = "Principal of ICP (Internet Computer Protocol)")]
     pub principal: String,
 }
 
