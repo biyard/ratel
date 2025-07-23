@@ -81,7 +81,7 @@ impl Default for Config {
                 .expect("SLACK_CHANNEL_ABUSING is required"),
             slack_channel_monitor: option_env!("SLACK_CHANNEL_MONITOR")
                 .expect("SLACK_CHANNEL_MONITOR is required"),
-            telegram_token: option_env!("TELEGRAM_TOKEN").unwrap_or("TEMPORARY_TOKEN"),
+            telegram_token: option_env!("TELEGRAM_TOKEN").expect("You must set TELEGRAM_TOKEN"),
         }
     }
 }
