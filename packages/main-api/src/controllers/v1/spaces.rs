@@ -30,6 +30,7 @@ pub struct SpacePath {
 #[derive(Clone, Debug)]
 pub struct SpaceController {
     repo: SpaceRepository,
+    feed_repo: FeedRepository,
     space_member_repo: SpaceMemberRepository,
     discussion_repo: DiscussionRepository,
     discussion_member_repo: DiscussionMemberRepository,
@@ -321,11 +322,26 @@ impl SpaceController {
                 &mut *tx,
                 space_id,
                 SpaceRepositoryUpdateRequest {
-                    title: title,
-                    html_contents: Some(html_contents),
+                    title: title.clone(),
+                    html_contents: Some(html_contents.clone()),
                     files: Some(files),
                     started_at,
                     ended_at,
+                    ..Default::default()
+                },
+            )
+            .await?;
+
+        let feed_id = res.clone().unwrap_or_default().feed_id;
+
+        let _ = self
+            .feed_repo
+            .update_with_tx(
+                &mut *tx,
+                feed_id,
+                FeedRepositoryUpdateRequest {
+                    title: title,
+                    html_contents: Some(html_contents),
                     ..Default::default()
                 },
             )
@@ -676,6 +692,7 @@ impl SpaceController {
 impl SpaceController {
     pub fn new(pool: sqlx::Pool<sqlx::Postgres>) -> Self {
         let repo = Space::get_repository(pool.clone());
+        let feed_repo = Feed::get_repository(pool.clone());
         let space_member_repo = SpaceMember::get_repository(pool.clone());
         let space_draft_repo = SpaceDraft::get_repository(pool.clone());
         let discussion_repo = Discussion::get_repository(pool.clone());
@@ -685,6 +702,7 @@ impl SpaceController {
 
         Self {
             repo,
+            feed_repo,
             pool,
             discussion_repo,
             discussion_member_repo,
