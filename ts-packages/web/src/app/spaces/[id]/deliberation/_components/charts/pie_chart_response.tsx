@@ -5,6 +5,7 @@ import React from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import {
   CheckboxQuestion,
+  DropdownQuestion,
   MultipleChoiceQuestion,
   SingleChoiceQuestion,
 } from '@/lib/api/models/survey';
@@ -16,7 +17,11 @@ type ParsedOption = {
 };
 
 type ParsedResult = {
-  question: SingleChoiceQuestion | MultipleChoiceQuestion | CheckboxQuestion;
+  question:
+    | SingleChoiceQuestion
+    | MultipleChoiceQuestion
+    | CheckboxQuestion
+    | DropdownQuestion;
   totalParticipants: number;
   options: ParsedOption[];
 };

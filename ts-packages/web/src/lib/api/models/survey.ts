@@ -21,7 +21,16 @@ export type Question =
   | MultipleChoiceQuestion
   | ShortAnswerQuestion
   | SubjectiveQuestion
-  | CheckboxQuestion;
+  | CheckboxQuestion
+  | DropdownQuestion;
+
+export interface DropdownQuestion {
+  answer_type: 'dropdown';
+  title: string;
+  description?: string;
+  image_url?: string;
+  options: string[];
+}
 
 export interface CheckboxQuestion {
   answer_type: 'checkbox';

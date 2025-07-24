@@ -96,6 +96,13 @@ export default function PollPage() {
                 options: updated.options || [],
                 is_multi: updated.is_multi || false,
               };
+            } else if (updated.answerType === 'dropdown') {
+              newQuestion = {
+                answer_type: updated.answerType,
+                title: updated.title,
+                image_url: updated.image_url,
+                options: updated.options || [],
+              };
             } else {
               newQuestion = {
                 answer_type: updated.answerType,
