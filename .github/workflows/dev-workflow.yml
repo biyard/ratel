@@ -175,7 +175,7 @@ jobs:
           DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
 
           TELEGRAM_TOKEN: ${{ secrets.DEV_TELEGRAM_TOKEN }}
-          TELEGRAM_MINI_APP_URI: https://t.me/crypto_ratel_bot?startapp
+          TELEGRAM_MINI_APP_URI: https://t.me/crypto_ratel_dev_bot?startapp
           BASE_DOMAIN: ratel.foundation
           REPO_NAME: ratel/telegram-bot
           
@@ -282,7 +282,7 @@ jobs:
   create-release-pr:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/dev'
-    needs: [main-api, fetcher, nextjs-web]
+    needs: [main-api, fetcher, nextjs-web, telegram-bot]
     steps:
       - uses: actions/checkout@v3
         with:
