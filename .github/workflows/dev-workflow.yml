@@ -174,7 +174,7 @@ jobs:
           
           DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
 
-          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_TOKEN: ${{ secrets.DEV_TELEGRAM_TOKEN }}
           TELEGRAM_MINI_APP_URI: https://t.me/crypto_ratel_bot?startapp
           BASE_DOMAIN: ratel.foundation
           REPO_NAME: ratel/telegram-bot
@@ -237,7 +237,8 @@ jobs:
           JWT_SECRET_KEY: ${{ secrets.DEV_JWT_SECRET_KEY }}
           SERVER_KEY: ${{ secrets.DEV_AUTH_SECRET_KEY }}
           SLACK_CHANNEL_BILL: ${{ secrets.DEV_SLACK }}
-          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_TOKEN: ${{ secrets.DEV_TELEGRAM_TOKEN }}
+          TELEGRAM_NOTIFICATION_URL: https://telegram-bot.dev.ratel.foundation
           BASE_DOMAIN: ratel.foundation
           REPO_NAME: ratel/fetcher
           US_CONGRESS_KEY: ${{ secrets.US_CONGRESS_KEY }}
