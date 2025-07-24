@@ -1,14 +1,17 @@
 import { apiFetch } from './apiFetch';
-import { Feed } from './models/feeds';
+import { Feed, FeedStatus } from './models/feeds';
 import { Space } from './models/spaces';
 import { config } from '@/config';
 import {
   QK_GET_FEED_BY_FEED_ID,
   QK_GET_NETWORK,
   QK_GET_POSTS,
+  QK_GET_POSTS_BY_USER_ID,
   QK_GET_PROMOTION,
   QK_GET_REDEEM_CODE,
   QK_GET_SPACE_BY_SPACE_ID,
+  QK_GET_TEAM_BY_ID,
+  QK_GET_TEAM_BY_USERNAME,
   QK_USERS_GET_INFO,
 } from '@/constants';
 
@@ -20,6 +23,7 @@ import { NetworkData } from './models/network';
 import { Promotion } from './models/promotion';
 import { User } from './models/user';
 import { QueryResponse } from './models/common';
+import { Team } from './models/team';
 
 async function getDataFromServer<T>(
   key: (string | number)[],
@@ -49,6 +53,32 @@ async function getDataFromServer<T>(
     key,
     data: res.data,
   };
+}
+
+export function getTeamByUsername(username: string) {
+  return getDataFromServer<Team>(
+    [QK_GET_TEAM_BY_USERNAME, username],
+    ratelApi.teams.getTeamByUsername(username),
+  );
+}
+
+export function getTeamById(user_id: number) {
+  return getDataFromServer<Team>(
+    [QK_GET_TEAM_BY_ID, user_id],
+    ratelApi.teams.getTeamById(user_id),
+  );
+}
+
+export function getPostByUserId(
+  user_id: number,
+  page: number,
+  size: number,
+  status: FeedStatus = FeedStatus.Published,
+) {
+  return getDataFromServer<Feed>(
+    [QK_GET_POSTS_BY_USER_ID, user_id, page, size, status],
+    ratelApi.feeds.getPostsByUserId(user_id, page, size, status),
+  );
 }
 
 export function getSpaceById(
