@@ -1,7 +1,11 @@
 import { ReactNode } from 'react';
 import ClientProviders from './providers.client';
 import { initData } from '@/providers/getQueryClient';
-import { getFeedById, getSpaceById } from '@/lib/api/ratel_api.server';
+import {
+  getFeedById,
+  getRedeemCode,
+  getSpaceById,
+} from '@/lib/api/ratel_api.server';
 import { getServerQueryClient } from '@/lib/query-utils.server';
 import { dehydrate } from '@tanstack/react-query';
 
@@ -18,10 +22,11 @@ export default async function Provider({
   const feedId = space.data?.feed_id ?? 0;
 
   const feed = await getFeedById(feedId);
+  const redeemCode = await getRedeemCode(spaceId);
 
   try {
     // Initialize the query client with the space data
-    initData(queryClient, [space, feed]);
+    initData(queryClient, [space, feed, redeemCode]);
   } catch (error) {
     console.error('Failed to fetch data', error);
     throw error;
