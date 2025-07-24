@@ -41,7 +41,9 @@ export default function News() {
             </h4>
             <p
               className="text-sm/[20px] align-middle font-light line-clamp-2 whitespace-normal"
-              dangerouslySetInnerHTML={{ __html: item.html_content }}
+              dangerouslySetInnerHTML={{
+                __html: item.html_content || '<p></p>',
+              }}
             ></p>
           </Col>
         ))}
