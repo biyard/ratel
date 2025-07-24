@@ -115,6 +115,11 @@ export default function SurveyViewer({
         answer_type: 'multiple_choice',
         answer: newAnswer,
       } satisfies Answer;
+    } else if (type === 'dropdown') {
+      updated[qIdx] = {
+        answer_type: 'dropdown',
+        answer: optionIdx,
+      } satisfies Answer;
     }
 
     setAnswers(updated);
@@ -214,6 +219,40 @@ export default function SurveyViewer({
                     })}
                   </div>
                 </>
+              )}
+
+              {q.answer_type === 'dropdown' && (
+                <div className="flex flex-col w-full gap-[10px]">
+                  <div className="flex flex-row w-full mt-[7px] mb-[15px] font-semibold text-base/[22.5px] text-white gap-[4px]">
+                    <div className="text-[#ff6467]">[Dropdown]</div>
+                    <div>{q.title}</div>
+                  </div>
+                  <select
+                    disabled={is_completed}
+                    className="bg-neutral-800 border border-neutral-700 text-white text-base rounded-lg px-4 py-3 focus:outline-none focus:border-yellow-500"
+                    value={
+                      selected?.answer_type === 'dropdown'
+                        ? (selected.answer ?? '')
+                        : ''
+                    }
+                    onChange={(e) =>
+                      handleSelect(
+                        index,
+                        parseInt(e.target.value, 10),
+                        'dropdown',
+                      )
+                    }
+                  >
+                    <option value="" disabled>
+                      Choose
+                    </option>
+                    {q.options?.map((opt, idx) => (
+                      <option key={`dropdown-${index}-${idx}`} value={idx}>
+                        {opt}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               )}
 
               {(q.answer_type === 'short_answer' ||

@@ -52,7 +52,9 @@ export default function SurveyQuestionEditor({
         image_url: questionImage,
         is_multi: questionMulti,
         options:
-          questionType.includes('choice') || questionType.includes('checkbox')
+          questionType.includes('choice') ||
+          questionType.includes('checkbox') ||
+          questionType.includes('dropdown')
             ? newOptions
             : undefined,
       });
@@ -68,7 +70,9 @@ export default function SurveyQuestionEditor({
         image_url: questionImage,
         is_multi: value,
         options:
-          questionType.includes('choice') || questionType.includes('checkbox')
+          questionType.includes('choice') ||
+          questionType.includes('checkbox') ||
+          questionType.includes('dropdown')
             ? questionOptions
             : undefined,
       });
@@ -84,7 +88,9 @@ export default function SurveyQuestionEditor({
         image_url: value,
         is_multi: questionMulti,
         options:
-          questionType.includes('choice') || questionType.includes('checkbox')
+          questionType.includes('choice') ||
+          questionType.includes('checkbox') ||
+          questionType.includes('dropdown')
             ? questionOptions
             : undefined,
       });
@@ -100,7 +106,9 @@ export default function SurveyQuestionEditor({
         image_url: questionImage,
         is_multi: questionMulti,
         options:
-          questionType.includes('choice') || questionType.includes('checkbox')
+          questionType.includes('choice') ||
+          questionType.includes('checkbox') ||
+          questionType.includes('dropdown')
             ? questionOptions
             : undefined,
       });
@@ -116,7 +124,9 @@ export default function SurveyQuestionEditor({
         image_url: questionImage,
         is_multi: questionMulti,
         options:
-          questionType.includes('choice') || questionType.includes('checkbox')
+          questionType.includes('choice') ||
+          questionType.includes('checkbox') ||
+          questionType.includes('dropdown')
             ? questionOptions
             : undefined,
       });
@@ -147,7 +157,9 @@ export default function SurveyQuestionEditor({
         image_url: questionImage,
         is_multi: questionMulti,
         options:
-          questionType.includes('choice') || questionType.includes('checkbox')
+          questionType.includes('choice') ||
+          questionType.includes('checkbox') ||
+          questionType.includes('dropdown')
             ? questionOptions
             : undefined,
       });
@@ -170,6 +182,7 @@ export default function SurveyQuestionEditor({
             onChange={(e) => handleTitleChange(e.target.value)}
           />
           {questionType == 'checkbox' ||
+          questionType === 'dropdown' ||
           questionType === 'single_choice' ||
           questionType === 'multiple_choice' ? (
             <FileUploader onUploadSuccess={handleImageChange}>
@@ -196,6 +209,7 @@ export default function SurveyQuestionEditor({
 
         <div className="flex flex-col mt-2.5 gap-2.5">
           {(questionType === 'checkbox' ||
+            questionType === 'dropdown' ||
             questionType === 'single_choice' ||
             questionType === 'multiple_choice') && (
             <div className="flex flex-col gap-2">

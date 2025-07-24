@@ -7,7 +7,8 @@ export type AnswerType =
   | 'multiple_choice'
   | 'short_answer'
   | 'subjective'
-  | 'checkbox';
+  | 'checkbox'
+  | 'dropdown';
 
 export const AnswerTypeLabels: Record<AnswerType, string> = {
   single_choice: 'Single Choice Question',
@@ -15,6 +16,7 @@ export const AnswerTypeLabels: Record<AnswerType, string> = {
   short_answer: 'Short Answer Question',
   subjective: 'Subjective Answer Question',
   checkbox: 'Check box',
+  dropdown: 'Drop down',
 };
 
 export default function AnswerTypeSelect({
