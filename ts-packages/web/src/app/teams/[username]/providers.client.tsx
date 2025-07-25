@@ -25,7 +25,7 @@ export default function ClientProviders({
   );
 }
 
-export function useSpaceByIdContext() {
+export function useTeamsContext() {
   const context = useContext(Context);
 
   if (!context)
