@@ -1,11 +1,6 @@
 'use client';
 
-import { getQueryClient } from '@/providers/getQueryClient';
-import {
-  DehydratedState,
-  HydrationBoundary,
-  QueryClientProvider,
-} from '@tanstack/react-query';
+import { DehydratedState, HydrationBoundary } from '@tanstack/react-query';
 import React, { createContext, useContext } from 'react';
 
 type ContextType = {
@@ -23,14 +18,10 @@ export default function ClientProviders({
   dehydratedState: DehydratedState;
   userId: number;
 }) {
-  const queryClient = getQueryClient();
-
   return (
-    <QueryClientProvider client={queryClient}>
-      <HydrationBoundary state={dehydratedState}>
-        <Context.Provider value={{ userId }}>{children}</Context.Provider>
-      </HydrationBoundary>
-    </QueryClientProvider>
+    <HydrationBoundary state={dehydratedState}>
+      <Context.Provider value={{ userId }}>{children}</Context.Provider>
+    </HydrationBoundary>
   );
 }
 
