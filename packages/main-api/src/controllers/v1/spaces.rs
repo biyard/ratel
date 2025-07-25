@@ -615,34 +615,9 @@ impl SpaceController {
                 Error::FeedInvalidQuoteId
             })?;
 
-        let user = check_perm(
-            &self.pool,
-            auth,
-            RatelResource::Post {
-                team_id: feed.user_id,
-            },
-            GroupPermission::WritePosts,
-        )
-        .await?;
-
-        let feed_user = User::query_builder()
-            .id_equals(feed.user_id)
-            .query()
-            .map(User::from)
-            .fetch_one(&self.pool)
-            .await
-            .map_err(|e| {
-                tracing::error!("failed to get user: {:?}", e);
-                Error::InvalidUser
-            })?;
-
         let mut tx = self.pool.begin().await?;
 
-        let author_id = match feed_user.user_type {
-            UserType::Individual => user.id,
-            UserType::Team => feed.author[0].id,
-            _ => 0,
-        };
+        let author_id = feed.author[0].id;
 
         let res = self
             .repo

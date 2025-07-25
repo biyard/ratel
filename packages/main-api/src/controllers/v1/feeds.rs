@@ -61,6 +61,7 @@ impl FeedController {
         };
         let feeds: Vec<FeedSummary> = FeedSummary::query_builder(user_id)
             .feed_type_equals(feed_type)
+            .spaces_builder(Space::query_builder(user_id))
             .status_equals(status)
             .limit(param.size())
             .page(param.page())
@@ -81,7 +82,6 @@ impl FeedController {
         for f in feeds {
             let mut feed = f.clone();
 
-            //FIXME: fix to feed query builder
             let space = Space::query_builder(user_id)
                 .feed_id_equals(f.id)
                 .query()
@@ -731,7 +731,7 @@ impl FeedController {
         let user_id = user.id;
         let teams = user.teams;
 
-        let mut f = Feed::query_builder(user_id)
+        let mut feed = Feed::query_builder(user_id)
             .comment_list_builder(
                 Comment::query_builder(user_id).replies_builder(Reply::query_builder()),
             )
@@ -741,10 +741,10 @@ impl FeedController {
             .fetch_one(&ctrl.pool)
             .await?;
 
-        if let Some(space) = f.spaces.first().cloned() {
-            let mut feed = f.clone();
-
-            if let Some(author) = space.author.last() {
+        if !feed.author.is_empty() {
+            let author = feed.author[0].clone();
+            if !feed.spaces.is_empty() {
+                let space = feed.spaces[0].clone();
                 let should_filter = space.status == SpaceStatus::Draft
                     && author.id != user_id
                     && !teams.iter().any(|t| t.id == author.id);
@@ -754,14 +754,10 @@ impl FeedController {
                 } else {
                     feed.spaces = vec![];
                 }
-            } else {
-                feed.spaces = vec![space];
             }
-
-            f = feed;
         }
 
-        if f.status == FeedStatus::Draft {
+        if feed.status == FeedStatus::Draft {
             check_perm(
                 &ctrl.pool,
                 auth,
@@ -770,7 +766,7 @@ impl FeedController {
             )
             .await?;
         }
-        Ok(Json(f))
+        Ok(Json(feed))
     }
 
     pub async fn get_feed(
