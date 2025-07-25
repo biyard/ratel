@@ -177,23 +177,15 @@ export function FeedContents({
   contents: string;
   url?: string;
 }) {
-  const [html, setHtml] = useState<string | null>(null);
-
-  useEffect(() => {
-    // 클라이언트에서만 DOMPurify 작동
-    setHtml(DOMPurify.sanitize(contents));
-  }, [contents]);
+  const html =
+    typeof window !== 'undefined' ? DOMPurify.sanitize(contents) : contents;
 
   return (
     <Col className="text-white">
-      {html ? (
-        <p
-          className="feed-content font-normal text-[15px]/[24px] align-middle tracking-[0.5px] text-c-wg-30 px-5"
-          dangerouslySetInnerHTML={{ __html: html }}
-        />
-      ) : (
-        <p className="feed-content font-normal text-[15px]/[24px] text-c-wg-30 px-5"></p>
-      )}
+      <div
+        className="feed-content font-normal text-[15px]/[24px] align-middle tracking-[0.5px] text-c-wg-30 px-5"
+        dangerouslySetInnerHTML={{ __html: html }}
+      />
 
       {url && (
         <div className="px-5">
