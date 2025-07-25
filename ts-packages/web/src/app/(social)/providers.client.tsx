@@ -1,7 +1,7 @@
 'use client';
 
-import { initializeApollo } from '@/lib/apollo-client';
-import { ApolloProvider } from '@apollo/client';
+import { makeClient } from '@/lib/apollo-client';
+import { ApolloNextAppProvider } from '@apollo/client-integration-nextjs';
 import { HydrationBoundary, DehydratedState } from '@tanstack/react-query';
 import React, { ReactNode, createContext, useContext } from 'react';
 
@@ -18,11 +18,13 @@ export default function ClientProviders({
   dehydratedState: DehydratedState;
   apolloCache: string;
 }) {
-  const apolloClient = initializeApollo(JSON.parse(apolloCache));
-
   return (
     <HydrationBoundary state={dehydratedState}>
-      <ApolloProvider client={apolloClient}>{children}</ApolloProvider>
+      <ApolloNextAppProvider
+        makeClient={() => makeClient(JSON.parse(apolloCache))}
+      >
+        {children}
+      </ApolloNextAppProvider>
     </HydrationBoundary>
   );
 }

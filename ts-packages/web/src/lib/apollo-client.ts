@@ -1,31 +1,18 @@
-import {
-  ApolloClient,
-  InMemoryCache,
-  NormalizedCacheObject,
-} from '@apollo/client';
+import { HttpLink, NormalizedCacheObject } from '@apollo/client';
 
-let apolloClient: ApolloClient<NormalizedCacheObject> | null = null;
+import { ApolloClient, InMemoryCache } from '@apollo/client-integration-nextjs';
 
-function createApolloClient() {
-  return new ApolloClient({
-    uri: process.env.NEXT_PUBLIC_GRAPHQL_URL!,
-    ssrMode: true,
-    cache: new InMemoryCache(),
-  });
-}
-
-export function initializeApollo(
-  initialState: NormalizedCacheObject | null = null,
-): ApolloClient<NormalizedCacheObject> {
-  const _apolloClient = apolloClient ?? createApolloClient();
-
-  if (initialState) {
-    _apolloClient.cache.restore(initialState);
+export function makeClient(initialCache?: NormalizedCacheObject) {
+  const cache = new InMemoryCache();
+  if (initialCache) {
+    cache.restore(initialCache);
   }
 
-  if (typeof window === 'undefined') return _apolloClient;
-
-  if (!apolloClient) apolloClient = _apolloClient;
-
-  return _apolloClient;
+  return new ApolloClient({
+    cache,
+    link: new HttpLink({
+      uri: process.env.NEXT_PUBLIC_GRAPHQL_URL,
+      credentials: 'include',
+    }),
+  });
 }
