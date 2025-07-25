@@ -39,10 +39,12 @@ export default function News() {
             <h4 className="text-base/[25px] tracking-[0.5px] align-middle font-medium">
               {item.title}
             </h4>
-            <p
+            <div
               className="text-sm/[20px] align-middle font-light line-clamp-2 whitespace-normal"
-              dangerouslySetInnerHTML={{ __html: item.html_content }}
-            ></p>
+              dangerouslySetInnerHTML={{
+                __html: item.html_content || '',
+              }}
+            ></div>
           </Col>
         ))}
       </Col>
