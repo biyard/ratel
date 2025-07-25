@@ -171,7 +171,7 @@ export async function prefetchPostInfinite(pageSize: number) {
   const infiniteData: InfiniteData<QueryResponse<Feed>> = {
     pages: [
       {
-        ...res.data,
+        ...(res.data ?? {}),
         items,
         total_count,
       },
