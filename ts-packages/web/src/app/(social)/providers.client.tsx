@@ -6,16 +6,11 @@ import React, {
   ReactNode,
   createContext,
   useContext,
-  useMemo,
   useState,
   useEffect,
 } from 'react';
-import { Follower } from '@/lib/api/models/network';
-import { useNetwork } from '@/lib/api/ratel_api';
 
-type ContextType = {
-  suggestions: Follower[];
-};
+type ContextType = object;
 
 export const Context = createContext<ContextType | undefined>(undefined);
 
@@ -48,25 +43,8 @@ export default function ClientProviders({
 
   return (
     <HydrationBoundary state={dehydratedState}>
-      <ApolloProvider client={apolloClient}>
-        <NetworkContextWrapper>{children}</NetworkContextWrapper>
-      </ApolloProvider>
+      <ApolloProvider client={apolloClient}>{children}</ApolloProvider>
     </HydrationBoundary>
-  );
-}
-
-function NetworkContextWrapper({ children }: { children: ReactNode }) {
-  const { data } = useNetwork();
-
-  const suggestions = useMemo(() => {
-    return [
-      ...(data?.suggested_teams.slice(0, 3) || []),
-      ...(data?.suggested_users.slice(0, 3) || []),
-    ].slice(0, 3);
-  }, [data]);
-
-  return (
-    <Context.Provider value={{ suggestions }}>{children}</Context.Provider>
   );
 }
 

@@ -1,7 +1,6 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import SuggestionItem from './suggestions-items';
 import BlackBox from './black-box';
-import { useHomeContext } from '../providers.client';
 import Link from 'next/link';
 import { route } from '@/route';
 import { ChevronRight } from 'lucide-react';
@@ -12,9 +11,23 @@ import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import { logger } from '@/lib/logger';
 
 export default function Suggestions() {
-  const { suggestions } = useHomeContext();
   const { post } = useApiCall();
   const network = useNetwork();
+
+  const suggestions = useMemo(() => {
+    const items = [
+      ...(network.data.suggested_teams.slice(0, 3) || []),
+      ...(network.data.suggested_users.slice(0, 3) || []),
+    ];
+
+    for (let i = items.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [items[i], items[j]] = [items[j], items[i]];
+    }
+
+    return items.slice(0, 3);
+  }, [network.data]);
+
   const handleFollow = useCallback(
     async (userId: number) => {
       try {
