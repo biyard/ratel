@@ -61,7 +61,7 @@ export function getQueryClient(): QueryClient {
   }
 }
 
-interface InitDataOptions<TData = unknown> {
+export interface InitDataOptions<TData = unknown> {
   key: unknown[];
 
   data: TData;

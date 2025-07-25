@@ -177,15 +177,15 @@ export function FeedContents({
   contents: string;
   url?: string;
 }) {
-  const c =
+  const html =
     typeof window !== 'undefined' ? DOMPurify.sanitize(contents) : contents;
 
   return (
     <Col className="text-white">
-      <p
+      <div
         className="feed-content font-normal text-[15px]/[24px] align-middle tracking-[0.5px] text-c-wg-30 px-5"
-        dangerouslySetInnerHTML={{ __html: c }}
-      ></p>
+        dangerouslySetInnerHTML={{ __html: html }}
+      />
 
       {url && (
         <div className="px-5">
