@@ -1,8 +1,4 @@
 {
   "name": "ratel",
-  "private": true,
-  "packageManager": "pnpm@10.12.4",
-  "dependencies": {
-    "@apollo/client-integration-nextjs": "^0.12.2"
-  }
+  "private": true
 }
