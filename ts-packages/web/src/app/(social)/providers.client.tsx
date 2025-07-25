@@ -1,11 +1,7 @@
 'use client';
 
 import { ApolloClient, ApolloProvider, InMemoryCache } from '@apollo/client';
-import {
-  QueryClientProvider,
-  HydrationBoundary,
-  DehydratedState,
-} from '@tanstack/react-query';
+import { HydrationBoundary, DehydratedState } from '@tanstack/react-query';
 import React, {
   ReactNode,
   createContext,
@@ -14,7 +10,6 @@ import React, {
   useState,
   useEffect,
 } from 'react';
-import { getQueryClient } from '@/providers/getQueryClient';
 import { Follower } from '@/lib/api/models/network';
 import { useNetwork } from '@/lib/api/ratel_api';
 
@@ -33,8 +28,6 @@ export default function ClientProviders({
   dehydratedState: DehydratedState;
   apolloCache: string;
 }) {
-  const queryClient = getQueryClient();
-
   const [apolloClient] = useState(() => {
     const cache = new InMemoryCache();
     cache.restore(JSON.parse(apolloCache));
@@ -54,13 +47,11 @@ export default function ClientProviders({
   if (!isApolloReady) return null;
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <HydrationBoundary state={dehydratedState}>
-        <ApolloProvider client={apolloClient}>
-          <NetworkContextWrapper>{children}</NetworkContextWrapper>
-        </ApolloProvider>
-      </HydrationBoundary>
-    </QueryClientProvider>
+    <HydrationBoundary state={dehydratedState}>
+      <ApolloProvider client={apolloClient}>
+        <NetworkContextWrapper>{children}</NetworkContextWrapper>
+      </ApolloProvider>
+    </HydrationBoundary>
   );
 }
 
