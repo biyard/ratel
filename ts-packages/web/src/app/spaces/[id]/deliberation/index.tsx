@@ -20,6 +20,7 @@ import GoPublicPopup from './_components/modal/go_public';
 import { TeamContext } from '@/lib/contexts/team-context';
 import { SpaceStatus } from '@/lib/api/models/spaces';
 import { useUserInfo } from '@/app/(social)/_hooks/user';
+import DropdownMenu from './_components/dropdown/drop-down-menu';
 
 export default function DeliberationSpacePage() {
   return (
@@ -48,6 +49,7 @@ function Page() {
     handleLike,
     handleShare,
     handlePostingSpace,
+    handleDelete,
     setTitle,
   } = useDeliberationSpaceContext();
 
@@ -82,6 +84,19 @@ function Page() {
       .withoutBackdropClose();
   };
 
+  const handleDropdown = () => {
+
+    // popup.open(
+    //   <DropdownMenu onclose={() => {
+    //     popup.close()
+    //   }} onDelete={async () => {
+    //     await handleDelete();
+    //     popup.close
+    //   }}/>
+    // )
+    
+  }
+
   return (
     <div className="flex flex-col w-full gap-6.25">
       <div className="flex flex-row w-full">
@@ -106,6 +121,8 @@ function Page() {
           onlike={handleLike}
           onshare={handleShare}
           setTitle={setTitle}
+          ondelete={handleDelete}
+          ondropdown={handleDropdown}
         />
       </div>
       <div className="flex flex-row w-full h-full gap-5">
