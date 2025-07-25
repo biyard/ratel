@@ -61,7 +61,6 @@ impl FeedController {
         };
         let feeds: Vec<FeedSummary> = FeedSummary::query_builder(user_id)
             .feed_type_equals(feed_type)
-            .spaces_builder(Space::query_builder(user_id))
             .status_equals(status)
             .limit(param.size())
             .page(param.page())
@@ -82,7 +81,15 @@ impl FeedController {
         for f in feeds {
             let mut feed = f.clone();
 
-            if let Some(space) = f.spaces.first().cloned() {
+            //FIXME: fix to feed query builder
+            let space = Space::query_builder(user_id)
+                .feed_id_equals(f.id)
+                .query()
+                .map(Space::from)
+                .fetch_optional(&self.pool)
+                .await?;
+
+            if let Some(space) = space {
                 if let Some(author) = space.author.last() {
                     let should_filter = space.status == SpaceStatus::Draft
                         && author.id != user_id
@@ -329,8 +336,6 @@ impl FeedController {
             Error::FeedInvalidParentId
         })?;
 
-        
-
         let feed = Feed::query_builder(0)
             .id_equals(parent_id)
             .status_not_equals(FeedStatus::Draft)
@@ -358,7 +363,7 @@ impl FeedController {
         }
 
         let mut tx = self.pool.begin().await?;
-        
+
         let res = self
             .repo
             .insert_with_tx(
@@ -386,13 +391,8 @@ impl FeedController {
                 Error::DatabaseException("Insert operation failed".to_string())
             })?;
 
-
         FeedShare::get_repository(self.pool.clone())
-            .insert_with_tx(
-                tx.as_mut(),
-                parent_id,
-                user_id,
-            )
+            .insert_with_tx(tx.as_mut(), parent_id, user_id)
             .await
             .map_err(|e| {
                 tracing::error!("failed to insert feed share: {:?}", e);
@@ -400,7 +400,6 @@ impl FeedController {
             })?;
 
         tx.commit().await?;
-        
 
         Ok(res)
     }
@@ -489,13 +488,14 @@ impl FeedController {
             return Err(Error::Unauthorized);
         }
         let mut tx = self.pool.begin().await?;
-        
-        let res = self.repo.delete_with_tx(tx.as_mut(), id)
+
+        let res = self
+            .repo
+            .delete_with_tx(tx.as_mut(), id)
             .await
             .map_err(|e| {
                 tracing::error!("failed to delete feed: {:?}", e);
                 Error::DatabaseException("Delete operation failed".to_string())
-
             })?
             .ok_or_else(|| {
                 tracing::error!("Delete operation returned None");
@@ -514,17 +514,16 @@ impl FeedController {
                     tracing::error!("Delete operation returned None");
                     Error::DatabaseException("Delete operation failed".to_string())
                 })?;
-                
+
             FeedShare::get_repository(self.pool.clone())
                 .delete_with_tx(tx.as_mut(), share.id)
                 .await
                 .map_err(|e| {
                     tracing::error!("failed to delete feed share: {:?}", e);
                     Error::DatabaseException(e.to_string())
-                })?;   
+                })?;
         }
         tx.commit().await?;
-
 
         Ok(res)
     }
@@ -548,15 +547,14 @@ impl FeedController {
                 tracing::error!("Delete operation returned None");
                 Error::DatabaseException("Delete operation failed".to_string())
             })?;
-            
+
         FeedShare::get_repository(self.pool.clone())
             .delete_with_tx(tx.as_mut(), share.id)
             .await
             .map_err(|e| {
                 tracing::error!("failed to delete feed share: {:?}", e);
                 Error::DatabaseException(e.to_string())
-            })?;   
-
+            })?;
 
         let feed = Feed::query_builder(user_id)
             .parent_id_equals(id)
@@ -571,12 +569,13 @@ impl FeedController {
                 tracing::error!("failed to get a feed {id}: {e}");
                 Error::FeedInvalidParentId
             })?;
-        let res = self.repo.delete_with_tx(tx.as_mut(), feed.id)
+        let res = self
+            .repo
+            .delete_with_tx(tx.as_mut(), feed.id)
             .await
             .map_err(|e| {
                 tracing::error!("failed to delete feed: {:?}", e);
                 Error::DatabaseException("Delete operation failed".to_string())
-
             })?
             .ok_or_else(|| {
                 tracing::error!("Delete operation returned None");
@@ -584,12 +583,9 @@ impl FeedController {
             })?;
 
         tx.commit().await?;
-        
 
         Ok(res)
     }
-
-
 
     pub async fn like(&self, id: i64, auth: Option<Authorization>, value: bool) -> Result<Feed> {
         let user_id = extract_user_id(&self.pool, auth).await?;
@@ -729,11 +725,13 @@ impl FeedController {
         Path(FeedPath { id }): Path<FeedPath>,
     ) -> Result<Json<Feed>> {
         tracing::debug!("get_feed {:?}", id);
-        let user_id = extract_user_id(&ctrl.pool, auth.clone())
+        let user = extract_user_with_options(&ctrl.pool, auth.clone(), false)
             .await
             .unwrap_or_default();
+        let user_id = user.id;
+        let teams = user.teams;
 
-        let res = Feed::query_builder(user_id)
+        let mut f = Feed::query_builder(user_id)
             .comment_list_builder(
                 Comment::query_builder(user_id).replies_builder(Reply::query_builder()),
             )
@@ -742,7 +740,28 @@ impl FeedController {
             .map(Feed::from)
             .fetch_one(&ctrl.pool)
             .await?;
-        if res.status == FeedStatus::Draft {
+
+        if let Some(space) = f.spaces.first().cloned() {
+            let mut feed = f.clone();
+
+            if let Some(author) = space.author.last() {
+                let should_filter = space.status == SpaceStatus::Draft
+                    && author.id != user_id
+                    && !teams.iter().any(|t| t.id == author.id);
+
+                if !should_filter {
+                    feed.spaces = vec![space];
+                } else {
+                    feed.spaces = vec![];
+                }
+            } else {
+                feed.spaces = vec![space];
+            }
+
+            f = feed;
+        }
+
+        if f.status == FeedStatus::Draft {
             check_perm(
                 &ctrl.pool,
                 auth,
@@ -751,7 +770,7 @@ impl FeedController {
             )
             .await?;
         }
-        Ok(Json(res))
+        Ok(Json(f))
     }
 
     pub async fn get_feed(
@@ -1364,9 +1383,7 @@ mod tests {
         assert_eq!(updated_parent.shares, 1);
 
         // Delete the repost
-        let res = Feed::get_client(&endpoint)
-            .delete(repost.id)
-            .await;
+        let res = Feed::get_client(&endpoint).delete(repost.id).await;
 
         assert!(res.is_ok(), "res: {:?}", res);
 
@@ -1441,9 +1458,7 @@ mod tests {
         assert_eq!(updated_parent.shares, 1);
 
         // Unrepost using the unrepost endpoint
-        let res = Feed::get_client(&endpoint)
-            .unrepost(parent_post.id)
-            .await;
+        let res = Feed::get_client(&endpoint).unrepost(parent_post.id).await;
 
         assert!(res.is_ok(), "res: {:?}", res);
 
@@ -1551,9 +1566,7 @@ mod tests {
         assert_eq!(updated_parent.shares, 1);
 
         // Delete the repost
-        let res = Feed::get_client(&endpoint)
-            .delete(repost.id)
-            .await;
+        let res = Feed::get_client(&endpoint).delete(repost.id).await;
 
         assert!(res.is_ok(), "res: {:?}", res);
 
