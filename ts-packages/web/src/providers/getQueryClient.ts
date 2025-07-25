@@ -1,6 +1,7 @@
 import { logger } from '@/lib/logger';
 import {
   defaultShouldDehydrateQuery,
+  InfiniteData,
   isServer,
   QueryClient,
 } from '@tanstack/react-query';
@@ -69,6 +70,18 @@ export interface InitDataOptions<TData = unknown> {
 
 export function initData(cli: QueryClient, options: InitDataOptions[]) {
   for (const { key, data } of options) {
-    cli.setQueryData(key, data);
+    if (!key || !data) continue;
+
+    const isInfiniteData =
+      typeof data === 'object' &&
+      data !== null &&
+      'pages' in data &&
+      'pageParams' in data;
+
+    if (isInfiniteData) {
+      cli.setQueryData(key, data as InfiniteData<unknown>);
+    } else {
+      cli.setQueryData(key, data);
+    }
   }
 }
