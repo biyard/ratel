@@ -1,14 +1,9 @@
 'use client';
 
-import { ApolloClient, ApolloProvider, InMemoryCache } from '@apollo/client';
+import { initializeApollo } from '@/lib/apollo-client';
+import { ApolloProvider } from '@apollo/client';
 import { HydrationBoundary, DehydratedState } from '@tanstack/react-query';
-import React, {
-  ReactNode,
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-} from 'react';
+import React, { ReactNode, createContext, useContext } from 'react';
 
 type ContextType = object;
 
@@ -23,23 +18,7 @@ export default function ClientProviders({
   dehydratedState: DehydratedState;
   apolloCache: string;
 }) {
-  const [apolloClient] = useState(() => {
-    const cache = new InMemoryCache();
-    cache.restore(JSON.parse(apolloCache));
-    return new ApolloClient({
-      uri: process.env.NEXT_PUBLIC_GRAPHQL_URL!,
-      ssrMode: true,
-      cache,
-    });
-  });
-
-  const [isApolloReady, setApolloReady] = useState(false);
-
-  useEffect(() => {
-    setApolloReady(true);
-  }, []);
-
-  if (!isApolloReady) return null;
+  const apolloClient = initializeApollo(JSON.parse(apolloCache));
 
   return (
     <HydrationBoundary state={dehydratedState}>

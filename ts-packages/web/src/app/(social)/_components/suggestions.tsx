@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import SuggestionItem from './suggestions-items';
 import BlackBox from './black-box';
 import Link from 'next/link';
@@ -9,15 +9,26 @@ import { ratelApi, useNetwork } from '@/lib/api/ratel_api';
 import { followRequest } from '@/lib/api/models/networks/follow';
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import { logger } from '@/lib/logger';
+import { Follower } from '@/lib/api/models/network';
 
 export default function Suggestions() {
   const { post } = useApiCall();
   const network = useNetwork();
 
-  const suggestions = useMemo(() => {
+  const [suggestions, setSuggestions] = useState<Follower[]>([]);
+
+  useEffect(() => {
+    if (
+      !network.data ||
+      !Array.isArray(network.data.suggested_teams) ||
+      !Array.isArray(network.data.suggested_users)
+    ) {
+      return;
+    }
+
     const items = [
-      ...(network.data.suggested_teams.slice(0, 3) || []),
-      ...(network.data.suggested_users.slice(0, 3) || []),
+      ...network.data.suggested_teams.slice(0, 3),
+      ...network.data.suggested_users.slice(0, 3),
     ];
 
     for (let i = items.length - 1; i > 0; i--) {
@@ -25,7 +36,7 @@ export default function Suggestions() {
       [items[i], items[j]] = [items[j], items[i]];
     }
 
-    return items.slice(0, 3);
+    setSuggestions(items.slice(0, 3));
   }, [network.data]);
 
   const handleFollow = useCallback(
