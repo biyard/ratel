@@ -24,6 +24,7 @@ import { Promotion } from './models/promotion';
 import { User } from './models/user';
 import { QueryResponse } from './models/common';
 import { Team } from './models/team';
+import { InfiniteData } from '@tanstack/react-query';
 
 async function getDataFromServer<T>(
   key: (string | number)[],
@@ -150,4 +151,41 @@ export async function getPosts(
     [QK_GET_POSTS, page, size],
     ratelApi.feeds.getPosts(page, size),
   );
+}
+
+export async function prefetchPostInfinite(pageSize: number) {
+  const queryClient = await getServerQueryClient();
+
+  const page = 1;
+  const res = await apiFetch<QueryResponse<Feed> | null>(
+    `${config.api_url}${ratelApi.feeds.getPosts(page, pageSize)}`,
+    {
+      ignoreError: true,
+      cache: 'no-store',
+    },
+  );
+
+  const items = res.data?.items ?? [];
+  const total_count = res.data?.total_count ?? 0;
+
+  const infiniteData: InfiniteData<QueryResponse<Feed>> = {
+    pages: [
+      {
+        ...res.data,
+        items,
+        total_count,
+      },
+    ],
+    pageParams: [1],
+  };
+
+  queryClient.setQueryData<InfiniteData<QueryResponse<Feed>>>(
+    [QK_GET_POSTS],
+    infiniteData,
+  );
+
+  return {
+    key: [QK_GET_POSTS],
+    data: infiniteData,
+  };
 }

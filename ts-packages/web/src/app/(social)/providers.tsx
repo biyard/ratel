@@ -4,9 +4,9 @@ import {
   getFeedById,
   getNetwork,
   getPostByUserId,
-  getPosts,
   getPromotion,
   getUserInfo,
+  prefetchPostInfinite,
 } from '@/lib/api/ratel_api.server';
 import ClientProviders from './providers.client';
 import { getServerQueryClient } from '@/lib/query-utils.server';
@@ -20,7 +20,7 @@ export default async function Provider({ children }: { children: ReactNode }) {
   const network = await getNetwork();
   const promotion = await getPromotion();
   const user = await getUserInfo();
-  const post = await getPosts(1, 10);
+  const post = await prefetchPostInfinite(10);
 
   const myPosts = await getPostByUserId(user.data?.id ?? 0, 1, 20);
   const myDraftPosts = await getPostByUserId(
