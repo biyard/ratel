@@ -16,8 +16,13 @@ use bdk::prelude::*;
 use by_axum::{
     aide,
     auth::Authorization,
-    axum::{Extension, Json, extract::State, routing::post},
+    axum::{
+        Extension, Json,
+        extract::State,
+        routing::{get, post},
+    },
 };
+
 use dto::{by_axum::axum::extract::Path, *};
 
 #[derive(
@@ -671,6 +676,188 @@ impl SpaceController {
 
         Ok(res)
     }
+
+    async fn delete_space(&self, space_id: i64, _auth: Option<Authorization>) -> Result<()> {
+        // let user_id = extract_user_id(&self.pool, auth.clone()).await?;
+
+        // Get the space to verify existence and fetch feed ID
+        // let space = self.get_space_by_id(None, space_id).await?;
+
+        // let feed = Feed::query_builder(user_id)
+        //     .id_equals(space.feed_id)
+        //     .query()
+        //     .map(Feed::from)
+        //     .fetch_one(&self.pool)
+        //     .await?;
+
+        // Check permissions
+        // check_perm(
+        //     &self.pool,
+        //     auth,
+        //     RatelResource::Post {
+        //         team_id: feed.user_id,
+        //     },
+        //     GroupPermission::WritePosts,
+        // )
+        // .await?;
+
+        let mut tx = self.pool.begin().await?;
+
+        // === DELETE DISCUSSIONS + MEMBERS ===
+        let discussions = Discussion::query_builder()
+            .space_id_equals(space_id)
+            .query()
+            .map(Discussion::from)
+            .fetch_all(&self.pool)
+            .await?;
+
+        for discussion in discussions {
+            let participants = DiscussionParticipant::query_builder()
+                .discussion_id_equals(discussion.id)
+                .query()
+                .map(DiscussionParticipant::from)
+                .fetch_all(&self.pool)
+                .await?;
+
+            for participant in participants {
+                self.discussion_member_repo
+                    .delete_with_tx(&mut *tx, participant.id)
+                    .await?;
+            }
+
+            self.discussion_repo
+                .delete_with_tx(&mut *tx, discussion.id)
+                .await?;
+        }
+
+        // === DELETE SURVEYS ===
+        let surveys = Survey::query_builder()
+            .space_id_equals(space_id)
+            .query()
+            .map(Survey::from)
+            .fetch_all(&self.pool)
+            .await?;
+
+        for survey in surveys {
+            self.survey_repo.delete_with_tx(&mut *tx, survey.id).await?;
+        }
+
+        // === DELETE ELEARNING ===
+        let elearnings = Elearning::query_builder()
+            .space_id_equals(space_id)
+            .query()
+            .map(Elearning::from)
+            .fetch_all(&self.pool)
+            .await?;
+
+        for elearning in elearnings {
+            self.elearning_repo
+                .delete_with_tx(&mut *tx, elearning.id)
+                .await?;
+        }
+
+        // === DELETE SPACE MEMBERS ===
+        let members = SpaceMember::query_builder()
+            .space_id_equals(space_id)
+            .query()
+            .map(SpaceMember::from)
+            .fetch_all(&self.pool)
+            .await?;
+
+        for member in members {
+            self.space_member_repo
+                .delete_with_tx(&mut *tx, member.id)
+                .await?;
+        }
+
+        // === DELETE SPACE DRAFT ===
+        let drafts = SpaceDraft::query_builder()
+            .space_id_equals(space_id)
+            .query()
+            .map(SpaceDraft::from)
+            .fetch_all(&self.pool)
+            .await?;
+
+        for draft in drafts {
+            self.space_draft_repo
+                .delete_with_tx(&mut *tx, draft.id)
+                .await?;
+        }
+
+        // === OPTIONAL: DELETE SpaceLikeUser / SpaceShareUser etc. ===
+        let like_repo = SpaceLikeUser::get_repository(self.pool.clone());
+        let share_repo = SpaceShareUser::get_repository(self.pool.clone());
+
+        let likes = SpaceLikeUser::query_builder()
+            .space_id_equals(space_id)
+            .query()
+            .map(SpaceLikeUser::from)
+            .fetch_all(&self.pool)
+            .await?;
+
+        for like in likes {
+            like_repo.delete_with_tx(&mut *tx, like.id).await?;
+        }
+
+        let shares = SpaceShareUser::query_builder()
+            .space_id_equals(space_id)
+            .query()
+            .map(SpaceShareUser::from)
+            .fetch_all(&self.pool)
+            .await?;
+
+        for share in shares {
+            share_repo.delete_with_tx(&mut *tx, share.id).await?;
+        }
+
+        // === FINALLY: DELETE THE SPACE ITSELF ===
+        self.repo.delete_with_tx(&mut *tx, space_id).await?;
+
+        tx.commit().await?;
+        Ok(())
+    }
+
+    // async fn delete_space(&self, id: i64, auth: Option<Authorization>) -> Result<()> {
+    //     // let user_id = extract_user_id(&self.pool, auth).await?;
+
+    //     let user_id = extract_user_id(&self.pool, auth.clone()).await?;
+
+    //     // Check permissions
+    //     let space = self.get_space_by_id(None, id).await?;
+    //     let feed = Feed::query_builder(user_id)
+    //         .id_equals(space.feed_id)
+    //         .query()
+    //         .map(Feed::from)
+    //         .fetch_one(&self.pool)
+    //         .await?;
+
+    //     check_perm(
+    //         &self.pool,
+    //         auth,
+    //         RatelResource::Post {
+    //             team_id: feed.user_id,
+    //         },
+    //         GroupPermission::WritePosts,
+    //     )
+    //     .await?;
+
+    //     let mut tx = self.pool.begin().await?;
+
+    //     // Delete dependent records first (following foreign key constraints)
+    //     self.discussion_member_repo
+    //         .delete_with_tx(&mut *tx, id)
+    //         .await?;
+    //     self.discussion_repo.delete_with_tx(&mut *tx, id).await?;
+    //     self.survey_repo.delete_with_tx(&mut *tx, id).await?;
+    //     self.elearning_repo.delete_with_tx(&mut *tx, id).await?;
+    //     self.space_member_repo.delete_with_tx(&mut *tx, id).await?;
+
+    //     //  delete the space itself
+    //     self.repo.delete_with_tx(&mut *tx, id).await?;
+
+    //     tx.commit().await?;
+    //     Ok(())
+    // }
 }
 
 impl SpaceController {
@@ -699,7 +886,13 @@ impl SpaceController {
         Ok(by_axum::axum::Router::new()
             .route("/", post(Self::act_space).get(Self::get_space))
             .with_state(self.clone())
-            .route("/:id", post(Self::act_space_by_id).get(Self::get_by_id))
+            // .route("/:id", post(Self::act_space_by_id).get(Self::get_by_id))
+            .route(
+                "/:id",
+                get(Self::get_by_id)
+                    .post(Self::act_space_by_id)
+                    .delete(Self::delete_space_handler),
+            )
             .with_state(self.clone())
             .nest(
                 "/:space-id/comments",
@@ -793,5 +986,17 @@ impl SpaceController {
         };
 
         Ok(Json(feed))
+    }
+
+    // Delete Handler function
+    pub async fn delete_space_handler(
+        State(ctrl): State<SpaceController>,
+        // Extension(auth): Extension<Option<Authorization>>,
+        Path(SpacePath { id }): Path<SpacePath>,
+    ) -> Result<Json<()>> {
+        // ctrl.delete_space(id, auth).await?;
+        // Ok(Json(()))
+        ctrl.delete_space(id, None).await?;
+        Ok(Json(()))
     }
 }
