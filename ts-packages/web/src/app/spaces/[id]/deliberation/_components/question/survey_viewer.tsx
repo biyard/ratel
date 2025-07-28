@@ -1,16 +1,15 @@
 import React from 'react';
 import BlackBox from '@/app/(social)/_components/black-box';
-import CustomCheckbox from '@/components/checkbox/custom-checkbox';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { SurveyAnswer } from '../../types';
 import { Answer } from '@/lib/api/models/response';
 import { usePopup } from '@/lib/contexts/popup-service';
 import CheckPopup from './check_popup';
 import { SpaceStatus } from '@/lib/api/models/spaces';
 import { logger } from '@/lib/logger';
-import Image from 'next/image';
-import { ShapeArrowDown } from '@/components/icons';
+import ObjectiveViewer from './_component/viewer/objective_viewer';
+import SubjectiveViewer from './_component/viewer/subjective_viewer';
+import DropdownViewer from './_component/viewer/dropdown_viewer';
+import LinearScaleViewer from './_component/viewer/linear_scale_viewer';
 
 interface Question {
   title: string;
@@ -170,193 +169,56 @@ export default function SurveyViewer({
               {(q.answer_type === 'single_choice' ||
                 q.answer_type === 'multiple_choice' ||
                 q.answer_type == 'checkbox') && (
-                <>
-                  <div className="flex flex-row w-full mt-[7px] mb-[15px] font-semibold text-base/[22.5px] text-white gap-1">
-                    <div className="text-blue-500">
-                      {q.answer_type === 'single_choice' ||
-                      (q.answer_type === 'checkbox' && !q.is_multi)
-                        ? '[Single Choice]'
-                        : '[Multiple Choice]'}
-                    </div>
-                    <div>{q.title}</div>
-                  </div>
-                  {q.image_url ? (
-                    <Image
-                      width={700}
-                      height={280}
-                      className="object-contain max-h-70 w-fit rounded-lg"
-                      src={q.image_url}
-                      alt={q.title || 'Question Title'}
-                    />
-                  ) : (
-                    <></>
-                  )}
-                  <div className="flex flex-col gap-2">
-                    {q.options?.map((opt, idx) => {
-                      let isChecked = selectedIndexes.includes(idx);
-
-                      if (!isChecked) {
-                        isChecked =
-                          q.answer_type === 'single_choice'
-                            ? selected?.answer === idx
-                            : selectedIndexes.includes(idx);
-                      }
-
-                      return (
-                        <div
-                          key={`${q.answer_type}-${index}-${idx}`}
-                          className="flex flex-row w-full h-fit justify-start items-center gap-3"
-                        >
-                          <div className="w-4.5 h-4.5">
-                            <CustomCheckbox
-                              checked={isChecked}
-                              onChange={() =>
-                                handleSelect(index, idx, q.answer_type)
-                              }
-                              disabled={is_completed}
-                            />
-                          </div>
-                          <div className="font-normal text-neutral-300 text-[15px]/[22.5px]">
-                            {opt}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </>
+                <ObjectiveViewer
+                  answerType={q.answer_type}
+                  isMulti={q.is_multi}
+                  title={q.title}
+                  imageUrl={q.image_url}
+                  options={q.options}
+                  selected={selected}
+                  selectedIndexes={selectedIndexes}
+                  index={index}
+                  isCompleted={is_completed}
+                  handleSelect={handleSelect}
+                />
               )}
 
               {q.answer_type === 'linear_scale' && (
-                <div className="flex flex-col w-full gap-4">
-                  <div className="flex flex-row w-full mt-1.5 mb-3 font-semibold text-base/[22.5px] text-white gap-1">
-                    <div className="text-[#ff6467]">[Linear Scale]</div>
-                    <div>{q.title}</div>
-                  </div>
-
-                  <div className="flex flex-row justify-start gap-5 px-2 items-center">
-                    <div className="w-10 text-left font-medium text-sm text-neutral-400 break-words">
-                      {q.min_label ?? ''}
-                    </div>
-
-                    {Array.from(
-                      { length: (q.max_value ?? 0) - (q.min_value ?? 0) + 1 },
-                      (_, i) => {
-                        const val = (q.min_value ?? 0) + i;
-                        const isChecked =
-                          selected?.answer_type === 'linear_scale' &&
-                          selected.answer &&
-                          selected.answer + 1 === val;
-
-                        return (
-                          <div
-                            key={`scale-${val}`}
-                            className="flex flex-col items-center gap-1 w-8"
-                          >
-                            <div className="text-sm text-neutral-400 font-medium">
-                              {val}
-                            </div>
-                            <RadioButton
-                              selected={isChecked ? isChecked : false}
-                              onClick={() =>
-                                !is_completed &&
-                                handleSelect(index, val - 1, 'linear_scale')
-                              }
-                            />
-                          </div>
-                        );
-                      },
-                    )}
-
-                    <div className="w-10 text-right font-medium text-sm text-neutral-400 break-words">
-                      {q.max_label ?? ''}
-                    </div>
-                  </div>
-                </div>
+                <LinearScaleViewer
+                  answerType={q.answer_type}
+                  title={q.title}
+                  minLabel={q.min_label}
+                  minValue={q.min_value}
+                  maxLabel={q.max_label}
+                  maxValue={q.max_value}
+                  selected={selected}
+                  isCompleted={is_completed}
+                  index={index}
+                  handleSelect={handleSelect}
+                />
               )}
 
               {q.answer_type === 'dropdown' && (
-                <div className="flex flex-col w-full gap-2.5">
-                  <div className="flex flex-row w-full mt-1.75 mb-3.75 font-semibold text-base/[22.5px] text-white gap-1">
-                    <div className="text-[#ff6467]">[Dropdown]</div>
-                    <div>{q.title}</div>
-                  </div>
-                  <div className="relative w-65">
-                    <select
-                      disabled={is_completed}
-                      value={
-                        selected?.answer_type === 'dropdown'
-                          ? (selected.answer ?? '')
-                          : ''
-                      }
-                      onChange={(e) =>
-                        handleSelect(
-                          index,
-                          parseInt(e.target.value, 10),
-                          'dropdown',
-                        )
-                      }
-                      className="w-full appearance-none border border-btn-o focus:border-primary px-5 py-[10.5px] pr-10 font-medium text-[15px]/[22.5px] text-neutral-600 rounded-lg truncate bg-transparent"
-                    >
-                      <option className="truncate" value="" disabled>
-                        Choose
-                      </option>
-                      {q.options?.map((opt, idx) => (
-                        <option
-                          key={`dropdown-${index}-${idx}`}
-                          value={idx}
-                          className="truncate"
-                        >
-                          {opt}
-                        </option>
-                      ))}
-                    </select>
-
-                    <div className="pointer-events-none absolute right-4 top-1/2 transform -translate-y-1/2 text-neutral-500">
-                      <ShapeArrowDown className="w-4 h-4" />
-                    </div>
-                  </div>
-                </div>
+                <DropdownViewer
+                  title={q.title}
+                  isCompleted={is_completed}
+                  selected={selected}
+                  index={index}
+                  options={q.options ?? []}
+                  handleSelect={handleSelect}
+                />
               )}
 
               {(q.answer_type === 'short_answer' ||
                 q.answer_type === 'subjective') && (
-                <div className="flex flex-col w-full gap-[10px]">
-                  <div className="flex flex-row w-full mt-[7px] mb-[15px] font-semibold text-base/[22.5px] text-white gap-[4px]">
-                    <div className="text-[#ff6467]">[Required]</div>
-                    <div>{q.title}</div>
-                  </div>
-                  {q.answer_type === 'short_answer' ? (
-                    <Input
-                      type="text"
-                      placeholder="Please share your opinion."
-                      className="bg-neutral-800 border border-neutral-700 text-base text-white placeholder:text-neutral-600 px-4 py-3 rounded-lg focus:outline-none focus:border-yellow-500"
-                      value={
-                        selected?.answer_type === 'short_answer'
-                          ? selected.answer
-                          : ''
-                      }
-                      onChange={(e) =>
-                        handleInput(index, e.target.value, 'short_answer')
-                      }
-                      disabled={is_completed}
-                    />
-                  ) : (
-                    <Textarea
-                      rows={7}
-                      placeholder="Please share your opinion."
-                      className="bg-neutral-800 min-h-[185px] border border-neutral-700 text-base text-white placeholder:text-neutral-600 px-4 py-3 rounded-lg focus:outline-none focus:border-yellow-500"
-                      value={
-                        selected?.answer_type === 'subjective'
-                          ? selected.answer
-                          : ''
-                      }
-                      onChange={(e) =>
-                        handleInput(index, e.target.value, 'subjective')
-                      }
-                      disabled={is_completed}
-                    />
-                  )}
-                </div>
+                <SubjectiveViewer
+                  answerType={q.answer_type}
+                  title={q.title}
+                  selected={selected}
+                  index={index}
+                  isCompleted={is_completed}
+                  handleInput={handleInput}
+                />
               )}
             </div>
           </BlackBox>
@@ -387,41 +249,6 @@ export default function SurveyViewer({
           Save
         </div>
       </div>
-    </div>
-  );
-}
-
-function RadioButton({
-  onClick,
-  selected,
-}: {
-  onClick: () => void;
-  selected: boolean;
-}) {
-  return (
-    <div className="flex items-center">
-      <button
-        onClick={onClick}
-        className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors ${
-          selected
-            ? 'bg-[#fcb300] hover:bg-[#fcb300]/90'
-            : 'border-2 border-[#6b6b6b] hover:border-white'
-        }`}
-      >
-        {selected && (
-          <svg
-            className="w-3 h-3 text-black"
-            fill="currentColor"
-            viewBox="0 0 20 20"
-          >
-            <path
-              fillRule="evenodd"
-              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-              clipRule="evenodd"
-            />
-          </svg>
-        )}
-      </button>
     </div>
   );
 }
