@@ -10,6 +10,7 @@ import CheckPopup from './check_popup';
 import { SpaceStatus } from '@/lib/api/models/spaces';
 import { logger } from '@/lib/logger';
 import Image from 'next/image';
+import { ShapeArrowDown } from '@/components/icons';
 
 interface Question {
   title: string;
@@ -222,36 +223,46 @@ export default function SurveyViewer({
               )}
 
               {q.answer_type === 'dropdown' && (
-                <div className="flex flex-col w-full gap-[10px]">
-                  <div className="flex flex-row w-full mt-[7px] mb-[15px] font-semibold text-base/[22.5px] text-white gap-[4px]">
+                <div className="flex flex-col w-full gap-2.5">
+                  <div className="flex flex-row w-full mt-1.75 mb-3.75 font-semibold text-base/[22.5px] text-white gap-1">
                     <div className="text-[#ff6467]">[Dropdown]</div>
                     <div>{q.title}</div>
                   </div>
-                  <select
-                    disabled={is_completed}
-                    className="bg-neutral-800 border border-neutral-700 text-white text-base rounded-lg px-4 py-3 focus:outline-none focus:border-yellow-500"
-                    value={
-                      selected?.answer_type === 'dropdown'
-                        ? (selected.answer ?? '')
-                        : ''
-                    }
-                    onChange={(e) =>
-                      handleSelect(
-                        index,
-                        parseInt(e.target.value, 10),
-                        'dropdown',
-                      )
-                    }
-                  >
-                    <option value="" disabled>
-                      Choose
-                    </option>
-                    {q.options?.map((opt, idx) => (
-                      <option key={`dropdown-${index}-${idx}`} value={idx}>
-                        {opt}
+                  <div className="relative w-65">
+                    <select
+                      disabled={is_completed}
+                      value={
+                        selected?.answer_type === 'dropdown'
+                          ? (selected.answer ?? '')
+                          : ''
+                      }
+                      onChange={(e) =>
+                        handleSelect(
+                          index,
+                          parseInt(e.target.value, 10),
+                          'dropdown',
+                        )
+                      }
+                      className="w-full appearance-none border border-btn-o focus:border-primary px-5 py-[10.5px] pr-10 font-medium text-[15px]/[22.5px] text-neutral-600 rounded-lg truncate bg-transparent"
+                    >
+                      <option className="truncate" value="" disabled>
+                        Choose
                       </option>
-                    ))}
-                  </select>
+                      {q.options?.map((opt, idx) => (
+                        <option
+                          key={`dropdown-${index}-${idx}`}
+                          value={idx}
+                          className="truncate"
+                        >
+                          {opt}
+                        </option>
+                      ))}
+                    </select>
+
+                    <div className="pointer-events-none absolute right-4 top-1/2 transform -translate-y-1/2 text-neutral-500">
+                      <ShapeArrowDown className="w-4 h-4" />
+                    </div>
+                  </div>
                 </div>
               )}
 
