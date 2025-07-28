@@ -8,7 +8,7 @@ import Image from 'next/image';
 import { Input } from '@/components/ui/input';
 import { SpaceStatus } from '@/lib/api/models/spaces';
 import { ArrowLeft, Play, Save } from 'lucide-react';
-import DropdownMenu from './dropdown/drop-down-menu';
+import DropdownMenu from './dropdown/dropdown-menu';
 import {
   Edit1,
   Unlock2,
@@ -24,7 +24,7 @@ import { useUserInfo } from '@/app/(social)/_hooks/user';
 import { getTimeAgo } from '@/lib/time-utils';
 import { Extra } from '@/components/icons';
 
-import { useDropdown } from './dropdown/drop-down-service';
+import { useDropdown } from './dropdown/dropdown-service';
 
 export interface SpaceHeaderProps {
   title: string;
@@ -46,7 +46,6 @@ export interface SpaceHeaderProps {
   onpost: () => void;
   onlike: () => void;
   onshare: () => void;
-  ondropdown: () => void;
   ondelete: () => void;
   setTitle?: (title: string) => void;
 }

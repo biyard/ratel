@@ -20,8 +20,8 @@ use by_axum::{
     axum::{
         Extension, Json,
         extract::State,
-        http::StatusCode,
-        response::{IntoResponse, Response},
+        // http::StatusCode,
+        // response::{IntoResponse, Response},
         routing::{get, post},
     },
 };
@@ -813,7 +813,7 @@ impl SpaceController {
             share_repo.delete_with_tx(&mut *tx, share.id).await?;
         }
 
-        // === FINALLY: DELETE THE SPACE ITSELF ===
+        // ===  DELETE THE SPACE ITSELF ===
         self.repo.delete_with_tx(&mut *tx, space_id).await?;
 
         tx.commit().await?;
@@ -913,14 +913,34 @@ impl SpaceController {
         }
     }
 
-    
+    // pub async fn act_space_by_id(
+    //     State(ctrl): State<SpaceController>,
+    //     Extension(auth): Extension<Option<Authorization>>,
+    //     Path(SpacePath { id }): Path<SpacePath>,
+    //     Json(body): Json<SpaceByIdAction>,
+    // ) -> Result<Response> {
+    //     tracing::debug!("act_space_by_id {:?} {:?}", id, body);
+
+    //     let space = match body {
+    //         SpaceByIdAction::UpdateSpace(param) => ctrl.update_space(id, auth, param).await?,
+    //         SpaceByIdAction::PostingSpace(_) => ctrl.posting_space(id, auth).await?,
+    //         SpaceByIdAction::Like(req) => ctrl.like_space(id, auth, req.value).await?,
+    //         SpaceByIdAction::Share(_) => ctrl.share_space(id, auth).await?,
+    //         SpaceByIdAction::Delete(_) => {
+    //             ctrl.delete_space(id, auth).await?;
+    //             return Ok(StatusCode::NO_CONTENT.into_response()); // DELETE returns 204
+    //         }
+    //     };
+
+    //     Ok(Json(space).into_response())
+    // }
 
     pub async fn act_space_by_id(
         State(ctrl): State<SpaceController>,
         Extension(auth): Extension<Option<Authorization>>,
         Path(SpacePath { id }): Path<SpacePath>,
         Json(body): Json<SpaceByIdAction>,
-    ) -> Result<Response> {
+    ) -> Result<Json<Space>> {
         tracing::debug!("act_space_by_id {:?} {:?}", id, body);
 
         let space = match body {
@@ -930,11 +950,11 @@ impl SpaceController {
             SpaceByIdAction::Share(_) => ctrl.share_space(id, auth).await?,
             SpaceByIdAction::Delete(_) => {
                 ctrl.delete_space(id, auth).await?;
-                return Ok(StatusCode::NO_CONTENT.into_response()); // DELETE returns 204
+                Space::default() // return a default (empty) Space object as JSON
             }
         };
 
-        Ok(Json(space).into_response())
+        Ok(Json(space))
     }
 
     pub async fn act_space(

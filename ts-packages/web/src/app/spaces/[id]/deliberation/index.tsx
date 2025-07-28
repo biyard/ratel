@@ -83,16 +83,6 @@ function Page() {
       .withoutBackdropClose();
   };
 
-  const handleDropdown = () => {
-    // popup.open(
-    //   <DropdownMenu onclose={() => {
-    //     popup.close()
-    //   }} onDelete={async () => {
-    //     await handleDelete();
-    //     popup.close
-    //   }}/>
-    // )
-  };
 
   return (
     <div className="flex flex-col w-full gap-6.25">
@@ -119,7 +109,6 @@ function Page() {
           onshare={handleShare}
           setTitle={setTitle}
           ondelete={handleDelete}
-          ondropdown={handleDropdown}
         />
       </div>
       <div className="flex flex-row w-full h-full gap-5">
