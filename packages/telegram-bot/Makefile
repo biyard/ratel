@@ -17,10 +17,10 @@ REPO_NAME ?= $(PROJECT)/$(SERVICE)
 ECR_NAME ?= $(shell aws ecr describe-repositories --repository-names $(REPO_NAME)  --query "repositories[0].repositoryUri" --output text)
 
 
-BUILD_ENVS = ENV=$(ENV) RUST_LOG=$(RUST_LOG) TELEGRAM_TOKEN=$(TELEGRAM_TOKEN) AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) AWS_SECRET_ACCESS_KEY=$(AWS_SECRET_ACCESS_KEY) AWS_REGION=$(AWS_REGION) DATABASE_TYPE=$(DATABASE_TYPE) DATABASE_URL=$(DATABASE_URL) AWS_ACCOUNT_ID=$(AWS_ACCOUNT_ID) RUSTFLAGS="$(RUSTFLAGS)" API_MODEL_ARTIFACT_DIR=$(API_MODEL_ARTIFACT_DIR) CARGO_TARGET_DIR=$(CARGO_TARGET_DIR) MIGRATE=$(MIGRATE)
+BUILD_ENV ?= ENV=$(ENV) RUST_LOG=$(RUST_LOG) TELEGRAM_TOKEN=$(TELEGRAM_TOKEN) AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) AWS_SECRET_ACCESS_KEY=$(AWS_SECRET_ACCESS_KEY) AWS_REGION=$(AWS_REGION) DATABASE_TYPE=$(DATABASE_TYPE) DATABASE_URL=$(DATABASE_URL) AWS_ACCOUNT_ID=$(AWS_ACCOUNT_ID) RUSTFLAGS="$(RUSTFLAGS)" API_MODEL_ARTIFACT_DIR=$(API_MODEL_ARTIFACT_DIR) CARGO_TARGET_DIR=$(CARGO_TARGET_DIR) MIGRATE=$(MIGRATE)
 
 run:
-	$(BUILD_ENVS) cargo watch -x run -w src -w $(PWD)/../dto -w $(PWD)/../../deps/rust-sdk
+	$(BUILD_ENV) cargo watch -x run -w src -w $(PWD)/../dto -w $(PWD)/../../deps/rust-sdk
 
 build: docker.login docker.build docker.push
 
@@ -35,4 +35,4 @@ docker.login:
 
 docker.build:
 	docker run --rm --name $(SERVICE) -v $(PWD)/../..:/app -w /app/packages/$(SERVICE) rust:slim-bookworm sh -c 'apt-get update && apt-get install -y libssl-dev pkg-config ca-certificates && $(BUILD_ENV) CARGO_TARGET_DIR=/app/packages/$(SERVICE)/target cargo build --release'
-	docker build -t $(ECR_NAME):$(COMMIT) --no-cache -f Dockerfile $(PWD)/target/release
+	docker build --platform linux/amd64 -t $(ECR_NAME):$(COMMIT) --no-cache -f Dockerfile $(PWD)/target/release
