@@ -81,7 +81,7 @@ async fn main() {
         .route("/notify", post(notify_handler))
         .with_state(state);
 
-    let port = option_env!("PORT").unwrap_or("4000");
+    let port = option_env!("PORT").unwrap_or("3000");
     let listener = TcpListener::bind(format!("0.0.0.0:{}", port))
         .await
         .unwrap();
