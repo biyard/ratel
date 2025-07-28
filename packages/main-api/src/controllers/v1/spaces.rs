@@ -12,6 +12,7 @@ use crate::security::check_perm;
 use crate::utils::aws_media_convert::merge_recording_chunks;
 use crate::utils::users::extract_user_id_with_no_error;
 use crate::{by_axum::axum::extract::Query, utils::users::extract_user_id};
+
 use bdk::prelude::*;
 use by_axum::{
     aide,
@@ -19,6 +20,8 @@ use by_axum::{
     axum::{
         Extension, Json,
         extract::State,
+        http::StatusCode,
+        response::{IntoResponse, Response},
         routing::{get, post},
     },
 };
@@ -677,29 +680,29 @@ impl SpaceController {
         Ok(res)
     }
 
-    async fn delete_space(&self, space_id: i64, _auth: Option<Authorization>) -> Result<()> {
-        // let user_id = extract_user_id(&self.pool, auth.clone()).await?;
+    async fn delete_space(&self, space_id: i64, auth: Option<Authorization>) -> Result<()> {
+        let user_id = extract_user_id(&self.pool, auth.clone()).await?;
 
         // Get the space to verify existence and fetch feed ID
-        // let space = self.get_space_by_id(None, space_id).await?;
+        let space = self.get_space_by_id(None, space_id).await?;
 
-        // let feed = Feed::query_builder(user_id)
-        //     .id_equals(space.feed_id)
-        //     .query()
-        //     .map(Feed::from)
-        //     .fetch_one(&self.pool)
-        //     .await?;
+        let feed = Feed::query_builder(user_id)
+            .id_equals(space.feed_id)
+            .query()
+            .map(Feed::from)
+            .fetch_one(&self.pool)
+            .await?;
 
         // Check permissions
-        // check_perm(
-        //     &self.pool,
-        //     auth,
-        //     RatelResource::Post {
-        //         team_id: feed.user_id,
-        //     },
-        //     GroupPermission::WritePosts,
-        // )
-        // .await?;
+        check_perm(
+            &self.pool,
+            auth,
+            RatelResource::Post {
+                team_id: feed.user_id,
+            },
+            GroupPermission::WritePosts,
+        )
+        .await?;
 
         let mut tx = self.pool.begin().await?;
 
@@ -784,7 +787,7 @@ impl SpaceController {
                 .await?;
         }
 
-        // === OPTIONAL: DELETE SpaceLikeUser / SpaceShareUser etc. ===
+        // ===  DELETE SpaceLikeUser / SpaceShareUser  ===
         let like_repo = SpaceLikeUser::get_repository(self.pool.clone());
         let share_repo = SpaceShareUser::get_repository(self.pool.clone());
 
@@ -816,48 +819,6 @@ impl SpaceController {
         tx.commit().await?;
         Ok(())
     }
-
-    // async fn delete_space(&self, id: i64, auth: Option<Authorization>) -> Result<()> {
-    //     // let user_id = extract_user_id(&self.pool, auth).await?;
-
-    //     let user_id = extract_user_id(&self.pool, auth.clone()).await?;
-
-    //     // Check permissions
-    //     let space = self.get_space_by_id(None, id).await?;
-    //     let feed = Feed::query_builder(user_id)
-    //         .id_equals(space.feed_id)
-    //         .query()
-    //         .map(Feed::from)
-    //         .fetch_one(&self.pool)
-    //         .await?;
-
-    //     check_perm(
-    //         &self.pool,
-    //         auth,
-    //         RatelResource::Post {
-    //             team_id: feed.user_id,
-    //         },
-    //         GroupPermission::WritePosts,
-    //     )
-    //     .await?;
-
-    //     let mut tx = self.pool.begin().await?;
-
-    //     // Delete dependent records first (following foreign key constraints)
-    //     self.discussion_member_repo
-    //         .delete_with_tx(&mut *tx, id)
-    //         .await?;
-    //     self.discussion_repo.delete_with_tx(&mut *tx, id).await?;
-    //     self.survey_repo.delete_with_tx(&mut *tx, id).await?;
-    //     self.elearning_repo.delete_with_tx(&mut *tx, id).await?;
-    //     self.space_member_repo.delete_with_tx(&mut *tx, id).await?;
-
-    //     //  delete the space itself
-    //     self.repo.delete_with_tx(&mut *tx, id).await?;
-
-    //     tx.commit().await?;
-    //     Ok(())
-    // }
 }
 
 impl SpaceController {
@@ -886,13 +847,7 @@ impl SpaceController {
         Ok(by_axum::axum::Router::new()
             .route("/", post(Self::act_space).get(Self::get_space))
             .with_state(self.clone())
-            // .route("/:id", post(Self::act_space_by_id).get(Self::get_by_id))
-            .route(
-                "/:id",
-                get(Self::get_by_id)
-                    .post(Self::act_space_by_id)
-                    .delete(Self::delete_space_handler),
-            )
+            .route("/:id", get(Self::get_by_id).post(Self::act_space_by_id))
             .with_state(self.clone())
             .nest(
                 "/:space-id/comments",
@@ -958,21 +913,28 @@ impl SpaceController {
         }
     }
 
+    
+
     pub async fn act_space_by_id(
         State(ctrl): State<SpaceController>,
         Extension(auth): Extension<Option<Authorization>>,
         Path(SpacePath { id }): Path<SpacePath>,
         Json(body): Json<SpaceByIdAction>,
-    ) -> Result<Json<Space>> {
+    ) -> Result<Response> {
         tracing::debug!("act_space_by_id {:?} {:?}", id, body);
-        let feed = match body {
+
+        let space = match body {
             SpaceByIdAction::UpdateSpace(param) => ctrl.update_space(id, auth, param).await?,
             SpaceByIdAction::PostingSpace(_) => ctrl.posting_space(id, auth).await?,
             SpaceByIdAction::Like(req) => ctrl.like_space(id, auth, req.value).await?,
             SpaceByIdAction::Share(_) => ctrl.share_space(id, auth).await?,
+            SpaceByIdAction::Delete(_) => {
+                ctrl.delete_space(id, auth).await?;
+                return Ok(StatusCode::NO_CONTENT.into_response()); // DELETE returns 204
+            }
         };
 
-        Ok(Json(feed))
+        Ok(Json(space).into_response())
     }
 
     pub async fn act_space(
@@ -986,17 +948,5 @@ impl SpaceController {
         };
 
         Ok(Json(feed))
-    }
-
-    // Delete Handler function
-    pub async fn delete_space_handler(
-        State(ctrl): State<SpaceController>,
-        // Extension(auth): Extension<Option<Authorization>>,
-        Path(SpacePath { id }): Path<SpacePath>,
-    ) -> Result<Json<()>> {
-        // ctrl.delete_space(id, auth).await?;
-        // Ok(Json(()))
-        ctrl.delete_space(id, None).await?;
-        Ok(Json(()))
     }
 }
