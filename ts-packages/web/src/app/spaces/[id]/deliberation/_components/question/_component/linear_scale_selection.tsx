@@ -11,7 +11,6 @@ export default function LinearScaleSelection({
   setLabels,
 }: {
   minValue: number;
-  setMinValue: (val: number) => void;
   maxValue: number;
   setMaxValue: (val: number) => void;
   labels: Record<number, string>;
