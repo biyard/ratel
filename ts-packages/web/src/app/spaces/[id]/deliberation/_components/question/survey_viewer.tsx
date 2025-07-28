@@ -15,6 +15,10 @@ import { ShapeArrowDown } from '@/components/icons';
 interface Question {
   title: string;
   answer_type: Answer['answer_type'];
+  min_value?: number;
+  max_value?: number;
+  min_label?: string;
+  max_label?: string;
   image_url?: string;
   is_multi?: boolean;
   options?: string[];
@@ -65,9 +69,9 @@ export default function SurveyViewer({
 
     const updated = [...answers];
 
-    if (type === 'single_choice') {
+    if (type === 'single_choice' || type === 'linear_scale') {
       updated[qIdx] = {
-        answer_type: 'single_choice',
+        answer_type: type,
         answer: optionIdx,
       } satisfies Answer;
     } else if (type === 'checkbox') {
@@ -222,6 +226,54 @@ export default function SurveyViewer({
                 </>
               )}
 
+              {q.answer_type === 'linear_scale' && (
+                <div className="flex flex-col w-full gap-4">
+                  <div className="flex flex-row w-full mt-1.5 mb-3 font-semibold text-base/[22.5px] text-white gap-1">
+                    <div className="text-[#ff6467]">[Linear Scale]</div>
+                    <div>{q.title}</div>
+                  </div>
+
+                  <div className="flex flex-row justify-start gap-5 px-2 items-center">
+                    <div className="w-10 text-left font-medium text-sm text-neutral-400 break-words">
+                      {q.min_label ?? ''}
+                    </div>
+
+                    {Array.from(
+                      { length: (q.max_value ?? 0) - (q.min_value ?? 0) + 1 },
+                      (_, i) => {
+                        const val = (q.min_value ?? 0) + i;
+                        const isChecked =
+                          selected?.answer_type === 'linear_scale' &&
+                          selected.answer &&
+                          selected.answer + 1 === val;
+
+                        return (
+                          <div
+                            key={`scale-${val}`}
+                            className="flex flex-col items-center gap-1 w-8"
+                          >
+                            <div className="text-sm text-neutral-400 font-medium">
+                              {val}
+                            </div>
+                            <RadioButton
+                              selected={isChecked ? isChecked : false}
+                              onClick={() =>
+                                !is_completed &&
+                                handleSelect(index, val - 1, 'linear_scale')
+                              }
+                            />
+                          </div>
+                        );
+                      },
+                    )}
+
+                    <div className="w-10 text-right font-medium text-sm text-neutral-400 break-words">
+                      {q.max_label ?? ''}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {q.answer_type === 'dropdown' && (
                 <div className="flex flex-col w-full gap-2.5">
                   <div className="flex flex-row w-full mt-1.75 mb-3.75 font-semibold text-base/[22.5px] text-white gap-1">
@@ -335,6 +387,41 @@ export default function SurveyViewer({
           Save
         </div>
       </div>
+    </div>
+  );
+}
+
+function RadioButton({
+  onClick,
+  selected,
+}: {
+  onClick: () => void;
+  selected: boolean;
+}) {
+  return (
+    <div className="flex items-center">
+      <button
+        onClick={onClick}
+        className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors ${
+          selected
+            ? 'bg-[#fcb300] hover:bg-[#fcb300]/90'
+            : 'border-2 border-[#6b6b6b] hover:border-white'
+        }`}
+      >
+        {selected && (
+          <svg
+            className="w-3 h-3 text-black"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
+            <path
+              fillRule="evenodd"
+              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+              clipRule="evenodd"
+            />
+          </svg>
+        )}
+      </button>
     </div>
   );
 }

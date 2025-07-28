@@ -55,13 +55,17 @@ function parseObjectiveAnswers(
           count: counts[idx],
           ratio: total > 0 ? (counts[idx] / total) * 100 : 0,
         }))
-      : [...Array(question.max_value - 1 + 1)].map((number, idx) => {
-          return {
-            label: String(number),
-            count: counts[idx],
-            ratio: total > 0 ? (counts[idx] / total) * 100 : 0,
-          };
-        });
+      : Array.from(
+          { length: (question.max_value ?? 0) - (question.min_value ?? 0) + 1 },
+          (_, idx) => {
+            const number = (question.min_value ?? 0) + idx;
+            return {
+              label: 'option ' + String(number),
+              count: counts[idx],
+              ratio: total > 0 ? (counts[idx] / total) * 100 : 0,
+            };
+          },
+        );
 
   return {
     totalParticipants: total,
