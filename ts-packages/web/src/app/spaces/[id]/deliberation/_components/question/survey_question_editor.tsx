@@ -262,7 +262,7 @@ export default function SurveyQuestionEditor({
               <div className="text-[15px] text-neutral-500 font-medium cursor-pointer">
                 Delete
               </div>
-              <Trash2 className="w-[18px] h-[18px] stroke-neutral-500 cursor-pointer" />
+              <Trash2 className="w-4.5 h-4.5 stroke-neutral-500 cursor-pointer" />
             </div>
           </div>
         </div>
