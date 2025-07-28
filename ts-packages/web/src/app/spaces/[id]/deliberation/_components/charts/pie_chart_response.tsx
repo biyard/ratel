@@ -6,6 +6,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import {
   CheckboxQuestion,
   DropdownQuestion,
+  LinearScaleQuestion,
   MultipleChoiceQuestion,
   SingleChoiceQuestion,
 } from '@/lib/api/models/survey';
@@ -21,7 +22,8 @@ type ParsedResult = {
     | SingleChoiceQuestion
     | MultipleChoiceQuestion
     | CheckboxQuestion
-    | DropdownQuestion;
+    | DropdownQuestion
+    | LinearScaleQuestion;
   totalParticipants: number;
   options: ParsedOption[];
 };

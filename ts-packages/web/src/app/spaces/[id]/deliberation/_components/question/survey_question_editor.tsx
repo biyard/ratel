@@ -3,10 +3,12 @@ import React, { useState } from 'react';
 import AnswerTypeSelect, { AnswerType } from './answer_type_select';
 import { Input } from '@/components/ui/input';
 import { Trash2 } from 'lucide-react';
-import { DialPad, DialPad2, Remove, Image2 } from '@/components/icons';
+import { DialPad, Image2 } from '@/components/icons';
 import FileUploader from '@/components/file-uploader';
 import Image from 'next/image';
 import MultiSelectionButton from './_component/multi_selection_button';
+import LinearScaleSelection from './_component/linear_scale_selection';
+import ObjectiveOption from './_component/objective_option';
 
 export default function SurveyQuestionEditor({
   index,
@@ -15,6 +17,10 @@ export default function SurveyQuestionEditor({
   title,
   options,
   isMulti,
+  min,
+  max,
+  minLabel,
+  maxLabel,
   onupdate,
   onremove,
 }: {
@@ -24,11 +30,19 @@ export default function SurveyQuestionEditor({
   imageUrl?: string;
   options?: string[];
   isMulti?: boolean;
+  min?: number;
+  max?: number;
+  minLabel?: string;
+  maxLabel?: string;
   onupdate?: (updated: {
     answerType: AnswerType;
     title: string;
     image_url?: string;
     options?: string[];
+    min_label?: string;
+    max_label?: string;
+    min_value?: number;
+    max_value?: number;
     is_multi?: boolean;
   }) => void;
   onremove?: (index: number) => void;
@@ -40,130 +54,102 @@ export default function SurveyQuestionEditor({
   );
   const [questionImage, setQuestionImage] = useState(imageUrl);
   const [questionMulti, setQuestionMulti] = useState(isMulti);
+  const [minValue, setMinValue] = useState<number>(min ?? 1);
+  const [maxValue, setMaxValue] = useState<number>(max ?? 10);
+
+  const [labels, setLabels] = useState<Record<number, string>>(() => ({
+    ...(min !== undefined && minLabel !== undefined ? { [min]: minLabel } : {}),
+    ...(max !== undefined && maxLabel !== undefined ? { [max]: maxLabel } : {}),
+  }));
+
+  const updateQuestion = (
+    overrides: Partial<Parameters<NonNullable<typeof onupdate>>[0]>,
+  ) => {
+    if (!onupdate) return;
+    onupdate({
+      answerType: questionType,
+      title: questionTitle,
+      image_url: questionImage,
+      is_multi: questionMulti,
+      options:
+        questionType.includes('choice') ||
+        questionType.includes('checkbox') ||
+        questionType.includes('dropdown')
+          ? questionOptions
+          : undefined,
+      min_value: minValue,
+      max_value: maxValue,
+      min_label: labels[minValue],
+      max_label: labels[maxValue],
+      ...overrides,
+    });
+  };
+
+  const handleMinValueChange = (val: number) => {
+    setMinValue(val);
+    updateQuestion({
+      min_value: val,
+      min_label: labels[val],
+    });
+  };
+
+  const handleMaxValueChange = (val: number) => {
+    setMaxValue(val);
+    updateQuestion({
+      max_value: val,
+      max_label: labels[val],
+    });
+  };
+
+  const handleLabelChange = (targetValue: number, label: string) => {
+    const updatedLabels = {
+      ...labels,
+      [targetValue]: label,
+    };
+    setLabels(updatedLabels);
+    updateQuestion({
+      min_label: updatedLabels[minValue],
+      max_label: updatedLabels[maxValue],
+    });
+  };
 
   const handleOptionChange = (idx: number, value: string) => {
     const newOptions = [...questionOptions];
     newOptions[idx] = value;
     setQuestionOptions(newOptions);
-    if (onupdate) {
-      onupdate({
-        answerType: questionType,
-        title: questionTitle,
-        image_url: questionImage,
-        is_multi: questionMulti,
-        options:
-          questionType.includes('choice') ||
-          questionType.includes('checkbox') ||
-          questionType.includes('dropdown')
-            ? newOptions
-            : undefined,
-      });
-    }
+    updateQuestion({ options: newOptions });
   };
 
   const handleMultiChange = (value: boolean) => {
     setQuestionMulti(value);
-    if (onupdate) {
-      onupdate({
-        answerType: questionType,
-        title: questionTitle,
-        image_url: questionImage,
-        is_multi: value,
-        options:
-          questionType.includes('choice') ||
-          questionType.includes('checkbox') ||
-          questionType.includes('dropdown')
-            ? questionOptions
-            : undefined,
-      });
-    }
+    updateQuestion({ is_multi: value });
   };
 
   const handleImageChange = (value: string) => {
     setQuestionImage(value);
-    if (onupdate) {
-      onupdate({
-        answerType: questionType,
-        title: questionTitle,
-        image_url: value,
-        is_multi: questionMulti,
-        options:
-          questionType.includes('choice') ||
-          questionType.includes('checkbox') ||
-          questionType.includes('dropdown')
-            ? questionOptions
-            : undefined,
-      });
-    }
+    updateQuestion({ image_url: value });
   };
 
   const handleTitleChange = (value: string) => {
     setQuestionTitle(value);
-    if (onupdate) {
-      onupdate({
-        answerType: questionType,
-        title: value,
-        image_url: questionImage,
-        is_multi: questionMulti,
-        options:
-          questionType.includes('choice') ||
-          questionType.includes('checkbox') ||
-          questionType.includes('dropdown')
-            ? questionOptions
-            : undefined,
-      });
-    }
+    updateQuestion({ title: value });
   };
 
   const handleTypeChange = (val: AnswerType) => {
     setQuestionType(val);
-    if (onupdate) {
-      onupdate({
-        answerType: val,
-        title: questionTitle,
-        image_url: questionImage,
-        is_multi: questionMulti,
-        options:
-          questionType.includes('choice') ||
-          questionType.includes('checkbox') ||
-          questionType.includes('dropdown')
-            ? questionOptions
-            : undefined,
-      });
-    }
+    updateQuestion({ answerType: val });
   };
 
   const addOption = () => {
     const newOptions = [...questionOptions, ''];
     setQuestionOptions(newOptions);
-    if (onupdate) {
-      onupdate({
-        answerType: questionType,
-        title: questionTitle,
-        image_url: questionImage,
-        is_multi: questionMulti,
-        options: newOptions,
-      });
-    }
+    updateQuestion({ options: newOptions });
   };
 
   const handleRemoveOption = (optIdx: number) => {
     const newOptions = questionOptions.filter((_, idx) => idx !== optIdx);
     setQuestionOptions(newOptions);
-    if (onupdate) {
-      onupdate({
-        answerType: questionType,
-        title: questionTitle,
-        image_url: questionImage,
-        is_multi: questionMulti,
-        options:
-          questionType.includes('choice') ||
-          questionType.includes('checkbox') ||
-          questionType.includes('dropdown')
-            ? questionOptions
-            : undefined,
-      });
-    }
+    updateQuestion({ options: newOptions });
   };
 
   return (
@@ -184,7 +170,8 @@ export default function SurveyQuestionEditor({
           {questionType == 'checkbox' ||
           questionType === 'dropdown' ||
           questionType === 'single_choice' ||
-          questionType === 'multiple_choice' ? (
+          questionType === 'multiple_choice' ||
+          questionType === 'linear_scale' ? (
             <FileUploader onUploadSuccess={handleImageChange}>
               <div className="cursor-pointer flex flex-row w-fit h-fit p-[10.59px] bg-white rounded-lg">
                 <Image2 className="w-[22.81px] h-[22.81px] " />
@@ -194,7 +181,6 @@ export default function SurveyQuestionEditor({
             <></>
           )}
         </div>
-
         {imageUrl ? (
           <Image
             width={300}
@@ -206,47 +192,31 @@ export default function SurveyQuestionEditor({
         ) : (
           <></>
         )}
-
         <div className="flex flex-col mt-2.5 gap-2.5">
           {(questionType === 'checkbox' ||
             questionType === 'dropdown' ||
             questionType === 'single_choice' ||
             questionType === 'multiple_choice') && (
-            <div className="flex flex-col gap-2">
-              {questionOptions.map((opt, idx) => (
-                <div
-                  key={`option-${index}-${idx}`}
-                  className="flex gap-2.5 items-center"
-                >
-                  <DialPad2 className="w-6 h-6" />
-
-                  {questionType == 'checkbox' && (
-                    <div className="w-6 h-6 rounded-sm border border-c-wg-50" />
-                  )}
-
-                  <Input
-                    className="border-b border-transparent !border-b-white focus:!border-transparent focus:rounded-md font-normal text-base/[24px] placeholder:text-neutral-600 text-neutral-300 rounded-none"
-                    type="text"
-                    placeholder={`Type something...`}
-                    value={opt}
-                    onChange={(e) => handleOptionChange(idx, e.target.value)}
-                  />
-                  <Remove
-                    className="cursor-pointer w-5 h-5 stroke-neutral-400 text-neutral-400"
-                    onClick={() => handleRemoveOption(idx)}
-                  />
-                </div>
-              ))}
-              <button
-                onClick={addOption}
-                className="cursor-pointer text-sm text-neutral-500 font-semibold text-left mt-2"
-              >
-                + Add Option
-              </button>
-            </div>
+            <ObjectiveOption
+              questionOptions={questionOptions}
+              index={index}
+              questionType={questionType}
+              handleOptionChange={handleOptionChange}
+              handleRemoveOption={handleRemoveOption}
+              addOption={addOption}
+            />
+          )}
+          {questionType === 'linear_scale' && (
+            <LinearScaleSelection
+              minValue={minValue}
+              setMinValue={handleMinValueChange}
+              maxValue={maxValue}
+              setMaxValue={handleMaxValueChange}
+              labels={labels}
+              setLabels={handleLabelChange}
+            />
           )}
         </div>
-
         <div className="flex flex-row w-full justify-end items-center">
           <div className="flex flex-row w-fit gap-10">
             {questionType == 'checkbox' && (

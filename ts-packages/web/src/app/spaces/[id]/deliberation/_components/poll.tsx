@@ -70,6 +70,10 @@ export default function PollPage() {
               image_url?: string;
               title: string;
               options?: string[];
+              min_label?: string;
+              max_label?: string;
+              min_value?: number;
+              max_value?: number;
               is_multi: boolean;
             },
           ) => {
@@ -102,6 +106,16 @@ export default function PollPage() {
                 title: updated.title,
                 image_url: updated.image_url,
                 options: updated.options || [],
+              };
+            } else if (updated.answerType === 'linear_scale') {
+              newQuestion = {
+                answer_type: updated.answerType,
+                title: updated.title,
+                image_url: updated.image_url,
+                min_label: updated.min_label ?? '',
+                min_value: updated.min_value ?? 0,
+                max_label: updated.max_label ?? '',
+                max_value: updated.max_value ?? 0,
               };
             } else {
               newQuestion = {
