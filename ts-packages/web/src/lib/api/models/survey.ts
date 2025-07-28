@@ -34,6 +34,7 @@ export interface LinearScaleQuestion {
   max_value: number;
   min_label: string;
   max_label: string;
+  is_required?: boolean;
 }
 
 export interface DropdownQuestion {
@@ -42,6 +43,7 @@ export interface DropdownQuestion {
   description?: string;
   image_url?: string;
   options: string[];
+  is_required?: boolean;
 }
 
 export interface CheckboxQuestion {
@@ -51,6 +53,7 @@ export interface CheckboxQuestion {
   image_url?: string;
   options: string[];
   is_multi?: boolean;
+  is_required?: boolean;
 }
 export interface SingleChoiceQuestion {
   answer_type: 'single_choice';
@@ -58,6 +61,7 @@ export interface SingleChoiceQuestion {
   description?: string;
   image_url?: string;
   options: string[];
+  is_required?: boolean;
 }
 
 export interface MultipleChoiceQuestion {
@@ -65,16 +69,19 @@ export interface MultipleChoiceQuestion {
   title: string;
   description?: string;
   options: string[];
+  is_required?: boolean;
 }
 
 export interface ShortAnswerQuestion {
   answer_type: 'short_answer';
   title: string;
   description: string;
+  is_required?: boolean;
 }
 
 export interface SubjectiveQuestion {
   answer_type: 'subjective';
   title: string;
   description: string;
+  is_required?: boolean;
 }

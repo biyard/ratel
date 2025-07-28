@@ -35,6 +35,7 @@ export interface SpaceSurveyProps {
       min_value?: number;
       max_value?: number;
       is_multi: boolean;
+      is_required?: boolean;
     },
   ) => void;
   onremove: (index: number) => void;
@@ -153,6 +154,7 @@ function EditableSurvey({
       min_value?: number;
       max_value?: number;
       is_multi: boolean;
+      is_required?: boolean;
     },
   ) => void;
   onremove: (index: number) => void;
@@ -182,6 +184,9 @@ function EditableSurvey({
               imageUrl={'image_url' in question ? question.image_url : ''}
               options={'options' in question ? question.options : []}
               isMulti={'is_multi' in question ? question.is_multi : false}
+              isRequired={
+                'is_required' in question ? question.is_required : false
+              }
               min={'min_value' in question ? question.min_value : 1}
               max={'max_value' in question ? question.max_value : 10}
               minLabel={'min_label' in question ? question.min_label : ''}
@@ -197,6 +202,7 @@ function EditableSurvey({
                   max_label: updated.max_label ?? '',
                   max_value: updated.max_value ?? 0,
                   is_multi: updated.is_multi ?? false,
+                  is_required: updated.is_required ?? false,
                 });
               }}
               onremove={(index: number) => {

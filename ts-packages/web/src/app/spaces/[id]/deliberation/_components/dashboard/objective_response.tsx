@@ -42,7 +42,9 @@ function parseObjectiveAnswers(
       a.answer_type === 'multiple_choice' ||
       a.answer_type === 'checkbox'
     ) {
-      a.answer.forEach((i) => counts[i]++);
+      if (a.answer) {
+        a.answer.forEach((i) => counts[i]++);
+      }
     }
   });
 
@@ -87,7 +89,7 @@ export default function ObjectiveResponse({
 }) {
   const parsed = parseObjectiveAnswers(question, answers);
   const validAnswers = answers
-    .filter((a) => a.answer_type === question.answer_type)
+    .filter((a) => a.answer_type === question.answer_type && a.answer != null)
     .map((a) => a.answer);
 
   return (
@@ -100,10 +102,12 @@ export default function ObjectiveResponse({
           {validAnswers.length} Responses
         </div>
       </div>
-      <div className="flex flex-col gap-3">
-        <BarChartResponse parsed={{ question, ...parsed }} />
-        <PieChartResponse parsed={{ question, ...parsed }} />
-      </div>
+      {validAnswers.length != 0 && (
+        <div className="flex flex-col gap-3">
+          <BarChartResponse parsed={{ question, ...parsed }} />
+          <PieChartResponse parsed={{ question, ...parsed }} />
+        </div>
+      )}
     </div>
   );
 }

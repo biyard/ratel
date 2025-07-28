@@ -75,6 +75,7 @@ export default function PollPage() {
               min_value?: number;
               max_value?: number;
               is_multi: boolean;
+              is_required?: boolean;
             },
           ) => {
             const updatedSurvey = [...survey.surveys];
@@ -91,6 +92,7 @@ export default function PollPage() {
                 title: updated.title,
                 image_url: updated.image_url,
                 options: updated.options || [],
+                is_required: updated.is_required || false,
               };
             } else if (updated.answerType === 'checkbox') {
               newQuestion = {
@@ -99,6 +101,7 @@ export default function PollPage() {
                 image_url: updated.image_url,
                 options: updated.options || [],
                 is_multi: updated.is_multi || false,
+                is_required: updated.is_required || false,
               };
             } else if (updated.answerType === 'dropdown') {
               newQuestion = {
@@ -106,6 +109,7 @@ export default function PollPage() {
                 title: updated.title,
                 image_url: updated.image_url,
                 options: updated.options || [],
+                is_required: updated.is_required || false,
               };
             } else if (updated.answerType === 'linear_scale') {
               newQuestion = {
@@ -116,12 +120,14 @@ export default function PollPage() {
                 min_value: updated.min_value ?? 0,
                 max_label: updated.max_label ?? '',
                 max_value: updated.max_value ?? 0,
+                is_required: updated.is_required || false,
               };
             } else {
               newQuestion = {
                 answer_type: updated.answerType,
                 title: updated.title,
                 description: '',
+                is_required: updated.is_required || false,
               };
             }
 
