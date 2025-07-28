@@ -30,6 +30,7 @@ pub struct SpacePath {
 #[derive(Clone, Debug)]
 pub struct SpaceController {
     repo: SpaceRepository,
+    feed_repo: FeedRepository,
     space_member_repo: SpaceMemberRepository,
     discussion_repo: DiscussionRepository,
     discussion_member_repo: DiscussionMemberRepository,
@@ -321,11 +322,26 @@ impl SpaceController {
                 &mut *tx,
                 space_id,
                 SpaceRepositoryUpdateRequest {
-                    title: title,
-                    html_contents: Some(html_contents),
+                    title: title.clone(),
+                    html_contents: Some(html_contents.clone()),
                     files: Some(files),
                     started_at,
                     ended_at,
+                    ..Default::default()
+                },
+            )
+            .await?;
+
+        let feed_id = res.clone().unwrap_or_default().feed_id;
+
+        let _ = self
+            .feed_repo
+            .update_with_tx(
+                &mut *tx,
+                feed_id,
+                FeedRepositoryUpdateRequest {
+                    title: title,
+                    html_contents: Some(html_contents),
                     ..Default::default()
                 },
             )
@@ -599,34 +615,9 @@ impl SpaceController {
                 Error::FeedInvalidQuoteId
             })?;
 
-        let user = check_perm(
-            &self.pool,
-            auth,
-            RatelResource::Post {
-                team_id: feed.user_id,
-            },
-            GroupPermission::WritePosts,
-        )
-        .await?;
-
-        let feed_user = User::query_builder()
-            .id_equals(feed.user_id)
-            .query()
-            .map(User::from)
-            .fetch_one(&self.pool)
-            .await
-            .map_err(|e| {
-                tracing::error!("failed to get user: {:?}", e);
-                Error::InvalidUser
-            })?;
-
         let mut tx = self.pool.begin().await?;
 
-        let author_id = match feed_user.user_type {
-            UserType::Individual => user.id,
-            UserType::Team => feed.author[0].id,
-            _ => 0,
-        };
+        let author_id = feed.author[0].id;
 
         let res = self
             .repo
@@ -676,6 +667,7 @@ impl SpaceController {
 impl SpaceController {
     pub fn new(pool: sqlx::Pool<sqlx::Postgres>) -> Self {
         let repo = Space::get_repository(pool.clone());
+        let feed_repo = Feed::get_repository(pool.clone());
         let space_member_repo = SpaceMember::get_repository(pool.clone());
         let space_draft_repo = SpaceDraft::get_repository(pool.clone());
         let discussion_repo = Discussion::get_repository(pool.clone());
@@ -685,6 +677,7 @@ impl SpaceController {
 
         Self {
             repo,
+            feed_repo,
             pool,
             discussion_repo,
             discussion_member_repo,
