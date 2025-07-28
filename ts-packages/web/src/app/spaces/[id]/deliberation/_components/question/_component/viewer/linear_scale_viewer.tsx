@@ -38,7 +38,7 @@ export default function LinearScaleViewer({
       </div>
 
       <div className="flex flex-row justify-start gap-5 px-2 items-center">
-        <div className="w-10 text-left font-medium text-sm text-neutral-400 break-words">
+        <div className="w-10 text-center font-medium text-sm text-neutral-400 break-words">
           {minLabel ?? ''}
         </div>
 
@@ -73,7 +73,7 @@ export default function LinearScaleViewer({
           },
         )}
 
-        <div className="w-10 text-right font-medium text-sm text-neutral-400 break-words">
+        <div className="w-10 text-center font-medium text-sm text-neutral-400 break-words">
           {maxLabel ?? ''}
         </div>
       </div>
