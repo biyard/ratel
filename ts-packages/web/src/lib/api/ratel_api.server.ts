@@ -176,7 +176,7 @@ export async function prefetchPostInfinite(pageSize: number) {
         total_count,
       },
     ],
-    pageParams: [1],
+    pageParams: [page],
   };
 
   queryClient.setQueryData<InfiniteData<QueryResponse<Feed>>>(
