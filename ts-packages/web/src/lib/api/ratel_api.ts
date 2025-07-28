@@ -179,6 +179,9 @@ export const ratelApi = {
     likeSpace: (id: number) => `/v1/spaces/${id}`,
     shareSpace: (id: number) => `/v1/spaces/${id}`,
     getSpaceBySpaceId: (id: number) => `/v1/spaces/${id}`,
+
+    deleteSpaceById:(id:number) => `/v1/spaces/${id}?action=delete`,
+
     getSpaceRedeemCodes: (space_id: number) =>
       `/v1/spaces/${space_id}/redeem-codes`,
     getUserBadge: (space_id: number, page: number, size: number) =>

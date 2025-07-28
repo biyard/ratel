@@ -40,9 +40,7 @@ import { SpaceDraftCreateRequest } from '@/lib/api/models/space_draft';
 import { useQueryClient } from '@tanstack/react-query';
 import { QK_GET_SPACE_BY_SPACE_ID } from '@/constants';
 import { useFeedByID } from '@/app/(social)/_hooks/feed';
-
 import { usePopup } from '@/lib/contexts/popup-service';
-import DropdownMenu from './_components/dropdown/drop-down-menu';
 
 export interface MappedResponse {
   question: Question;
@@ -92,7 +90,7 @@ type ContextType = {
   handlePostingSpace: () => Promise<void>;
   handleEdit: () => void;
   handleSave: () => Promise<void>;
-  handleDelete: () => Promise<void>
+  handleDelete: () => Promise<void>;
 };
 
 export const Context = createContext<ContextType | undefined>(undefined);
@@ -106,7 +104,7 @@ export default function ClientProviders({
   const { spaceId } = useSpaceByIdContext();
   const data = useSpaceById(spaceId);
   const space = data.data;
-  const {popup} = usePopup()
+  const { popup } = usePopup();
 
   logger.debug('spaces: ', space);
 
@@ -416,15 +414,17 @@ export default function ClientProviders({
 
   const handleDelete = async () => {
     try {
-
-      showSuccessToast("Space deleted successful")
-      
+      await post(ratelApi.spaces.deleteSpaceById(spaceId), { delete: {} });
+      router.push('/');
+      showSuccessToast('Space deleted successful');
     } catch (error) {
-
-
-      
+      logger.debug('Error deleting space', error);
+      logger.error('Error deleting space:', error);
+      showErrorToast(
+        'Error Deleting space! Ensure you are authorized to perform this operation.',
+      );
     }
-  }
+  };
 
   const handleSave = async () => {
     if (checkString(title) || checkString(thread.html_contents)) {

@@ -115,3 +115,11 @@ export enum SpaceStatus {
   InProgress = 2,
   Finish = 3,
 }
+export interface deleteSpaceRequest {
+  delete:object;
+}
+export function deleteSpaceRequest():deleteSpaceRequest {
+  return {
+    delete: {},
+  }
+}
