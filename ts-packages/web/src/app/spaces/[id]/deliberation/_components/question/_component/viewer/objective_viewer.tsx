@@ -34,7 +34,7 @@ export default function ObjectiveViewer({
 }) {
   return (
     <>
-      <div className="flex flex-row w-full mt-[7px] mb-[15px] font-semibold text-base/[22.5px] text-white gap-1">
+      <div className="flex flex-row w-full mt-1.75 mb-3.75 font-semibold text-base/[22.5px] text-white gap-1">
         <div className="text-blue-500">
           {answerType === 'single_choice' ||
           (answerType === 'checkbox' && !isMulti)
