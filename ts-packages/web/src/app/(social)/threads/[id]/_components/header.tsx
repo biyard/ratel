@@ -1,7 +1,7 @@
 'use client';
 
 import { useFeedByID } from '@/app/(social)/_hooks/feed';
-import { ArrowLeft, Palace2, PalaceSvgrepo } from '@/components/icons';
+import { ArrowLeft, PalaceSvgrepo } from '@/components/icons';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { UserType } from '@/lib/api/models/user';
