@@ -26,6 +26,7 @@ pub struct FeedPath {
 
 #[derive(Clone, Debug)]
 pub struct FeedController {
+    space_repo: SpaceRepository,
     repo: FeedRepository,
     pool: sqlx::Pool<sqlx::Postgres>,
 }
@@ -439,8 +440,34 @@ impl FeedController {
         )
         .await?;
 
-        let res = self.repo.update(id, param.into()).await?;
+        let mut tx = self.pool.begin().await?;
 
+        let res = self
+            .repo
+            .update_with_tx(&mut *tx, id, param.clone().into())
+            .await?
+            .unwrap_or_default();
+
+        let spaces = res.spaces.clone();
+
+        if !spaces.is_empty() {
+            let space = spaces[0].clone();
+
+            let _ = self
+                .space_repo
+                .update_with_tx(
+                    &mut *tx,
+                    space.id,
+                    SpaceRepositoryUpdateRequest {
+                        title: param.title,
+                        html_contents: Some(param.html_contents.clone()),
+                        ..Default::default()
+                    },
+                )
+                .await?;
+        }
+
+        tx.commit().await?;
         Ok(res)
     }
 
@@ -655,8 +682,13 @@ impl FeedController {
 impl FeedController {
     pub fn new(pool: sqlx::Pool<sqlx::Postgres>) -> Self {
         let repo = Feed::get_repository(pool.clone());
+        let space_repo = Space::get_repository(pool.clone());
 
-        Self { repo, pool }
+        Self {
+            repo,
+            space_repo,
+            pool,
+        }
     }
 
     pub fn route(&self) -> Result<by_axum::axum::Router> {
