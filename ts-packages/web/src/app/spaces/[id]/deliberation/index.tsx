@@ -85,7 +85,6 @@ function Page() {
   };
 
   const handleDropdown = () => {
-
     // popup.open(
     //   <DropdownMenu onclose={() => {
     //     popup.close()
@@ -94,8 +93,7 @@ function Page() {
     //     popup.close
     //   }}/>
     // )
-    
-  }
+  };
 
   return (
     <div className="flex flex-col w-full gap-6.25">

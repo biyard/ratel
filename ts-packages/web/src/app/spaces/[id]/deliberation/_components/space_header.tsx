@@ -132,7 +132,6 @@ export default function SpaceHeader({
               >
                 <Extra />
               </button>
-
               {isOpen && (
                 <div className="absolute top-full mt-2 right-0 z-50">
                   <DropdownMenu onclose={close} ondelete={ondelete} />

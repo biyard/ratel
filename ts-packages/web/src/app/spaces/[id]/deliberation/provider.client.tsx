@@ -104,7 +104,6 @@ export default function ClientProviders({
   const { spaceId } = useSpaceByIdContext();
   const data = useSpaceById(spaceId);
   const space = data.data;
-  const { popup } = usePopup();
 
   logger.debug('spaces: ', space);
 

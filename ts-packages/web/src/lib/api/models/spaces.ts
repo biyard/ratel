@@ -116,10 +116,10 @@ export enum SpaceStatus {
   Finish = 3,
 }
 export interface deleteSpaceRequest {
-  delete:object;
+  delete: object;
 }
-export function deleteSpaceRequest():deleteSpaceRequest {
+export function deleteSpaceRequest(): deleteSpaceRequest {
   return {
     delete: {},
-  }
+  };
 }

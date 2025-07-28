@@ -46,7 +46,12 @@ export function PublishModal({ onClose }: { onClose: () => void }) {
             Just Publish
           </button> */}
 
-          <Button onClick={onClose} className='bg-primary font-bold text-[16px] py-2 rounded-md px-4'>Save & Publish</Button>
+          <Button
+            onClick={onClose}
+            className="bg-primary font-bold text-[16px] py-2 rounded-md px-4"
+          >
+            Save & Publish
+          </Button>
           {/* <button className="bg-[#FFD02F] text-black text-sm font-medium px-4 py-2 rounded-md hover:bg-yellow-400">
             Save & Publish
           </button> */}
