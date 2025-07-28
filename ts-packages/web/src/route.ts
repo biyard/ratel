@@ -19,6 +19,7 @@ export const route = {
   teamMembers: (username: string) => `/teams/${username}/members`,
   teamSettings: (username: string) => `/teams/${username}/settings`,
   teamDrafts: (username: string) => `/teams/${username}/drafts`,
+  space: (spaceId: number) => `/spaces/${spaceId}`,
   commiteeSpaceById: (spaceId: number) => `/spaces/${spaceId}`,
   deliberationSpaceById: (spaceId: number) => `/spaces/${spaceId}`,
   threadByFeedId: (feedId: number) => {
@@ -26,4 +27,7 @@ export const route = {
   },
   discussionById: (spaceId: number, discussionId: number) =>
     `/spaces/${spaceId}/discussions/${discussionId}`,
+
+  telegramSprintLeague: (space_id: number) =>
+    `/telegram/sprint-league/${space_id}`,
 };

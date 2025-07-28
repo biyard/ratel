@@ -65,6 +65,9 @@ jobs:
           KAIA_OWNER_KEY: ${{ secrets.PROD_KAIA_OWNER_KEY }}
           KAIA_OWNER_ADDR: ${{ secrets.PROD_KAIA_OWNER_KEY_ADDR }}
           KAIA_ENDPOINT: https://public-en.node.kaia.io
+
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+
         run: |
           npm i -g aws-cdk
           make deploy

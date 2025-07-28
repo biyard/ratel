@@ -79,21 +79,32 @@ export function usePromotion(): UseSuspenseQueryResult<Promotion> {
 
   return query;
 }
-
+export const proxy = {
+  login: {
+    loginWithTelegram: (telegram_raw: string) =>
+      `/api/login?telegram-raw=${btoa(telegram_raw)}`,
+  },
+};
 export const ratelApi = {
   users: {
     login: () => '/v1/users?action=login',
     logout: () => '/v2/users/logout',
     loginWithPassword: (email: string, password: string) =>
       `/v1/users?action=login-by-password&email=${encodeURIComponent(email)}&password=${password}`,
+    loginWithTelegram: (raw: string) =>
+      `/v1/users?action=login-by-telegram&telegram_raw=${raw}`,
     getTotalInfo: (page: number, size: number) =>
       `/v1/totals?param-type=query&bookmark=${page}&size=${size}`,
     getUserInfo: () => '/v1/users?action=user-info',
     getUserByEmail: (email: string) =>
       `/v1/users?param-type=read&action=find-by-email&email=${email}`,
+
     signup: () => '/v1/users?action=signup',
     editProfile: (user_id: number) => `/v1/users/${user_id}`,
     updateEvmAddress: () => '/v1/users',
+
+    updateTelegramId: () => '/v1/users',
+
     sendVerificationCode: () => '/v1/users/verifications',
   },
   assets: {
@@ -135,6 +146,7 @@ export const ratelApi = {
     writePost: () => '/v1/feeds',
     createDraft: () => '/v1/feeds',
     updateDraft: (post_id: number) => `/v1/feeds/${post_id}`,
+    editPost: (post_id: number) => `/v1/feeds/${post_id}`,
     publishDraft: (post_id: number) => `/v1/feeds/${post_id}`,
     removeDraft: (post_id: number) => `/v1/feeds/${post_id}?action=delete`,
     likePost: (post_id: number) => `/v1/feeds/${post_id}`,
@@ -164,12 +176,18 @@ export const ratelApi = {
   },
   spaces: {
     createSpace: () => '/v1/spaces',
+    likeSpace: (id: number) => `/v1/spaces/${id}`,
+    shareSpace: (id: number) => `/v1/spaces/${id}`,
     getSpaceBySpaceId: (id: number) => `/v1/spaces/${id}`,
     getSpaceRedeemCodes: (space_id: number) =>
       `/v1/spaces/${space_id}/redeem-codes`,
     getUserBadge: (space_id: number, page: number, size: number) =>
       `/v1/spaces/${space_id}/badges?param-type=query&bookmark=${page}&size=${size}`,
     claimBadge: (space_id: number) => `/v1/spaces/${space_id}/badges`,
+  },
+  sprint_league: {
+    voteSprintLeague: (space_id: number, sprint_league_id: number) =>
+      `/v1/spaces/${space_id}/sprint-leagues/${sprint_league_id}`,
   },
   graphql: {
     listNews: (size: number) => {

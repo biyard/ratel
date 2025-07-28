@@ -43,7 +43,7 @@ export { default as ChevronRight } from '@/assets/icons/chevron-right.svg';
 export { default as BendArrowRight } from '@/assets/icons/bend-arrow-right.svg';
 
 export { default as Palace } from '@/assets/icons/palace.svg';
-export { default as Palace2 } from '@/assets/icons/palace2.svg';
+export { default as PalaceSvgrepo } from '@/assets/icons/palace-svgrepo.svg';
 export { default as Cube } from '@/assets/icons/cube.svg';
 export { default as CheckCircle } from '@/assets/icons/check-circle.svg';
 export { default as Discuss } from '@/assets/icons/discuss.svg';
@@ -67,15 +67,22 @@ export { default as ZoomClose } from '@/assets/icons/zoom-close.svg';
 
 export { default as PieChart1 } from '@/assets/icons/pie-chart-1.svg';
 
+export { default as TelegramIcon } from '@/assets/icons/telegram_logo.svg';
+
 export { default as Save } from '@/assets/icons/save.svg';
 export { default as Unlock } from '@/assets/icons/unlock.svg';
 export { default as ShapeArrowDown } from '@/assets/icons/shape-arrow-down.svg';
 export { default as DialPad } from '@/assets/icons/dial-pad.svg';
 export { default as DialPad2 } from '@/assets/icons/dial-pad-2.svg';
+export { default as Extra } from '@/assets/icons/extra.svg';
 export { default as Extra2 } from '@/assets/icons/extra-2.svg';
 export { default as CircleClose } from '@/assets/icons/circle-close.svg';
 export { default as Lock } from '@/assets/icons/lock.svg';
 export { default as Unlock2 } from '@/assets/icons/unlock-2.svg';
+
+export { default as Expand } from '@/assets/icons/expand.svg';
+export { default as Image2 } from '@/assets/icons/image.svg';
+export { default as Share2 } from '@/assets/icons/share-2.svg';
 
 export { default as Bold1 } from '@/assets/icons/richtext/bold.svg';
 export { default as Image1 } from '@/assets/icons/richtext/image.svg';

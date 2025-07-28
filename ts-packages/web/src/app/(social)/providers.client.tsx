@@ -1,28 +1,31 @@
 'use client';
 
-import { Follower } from '@/lib/api/models/network';
-import { useNetwork } from '@/lib/api/ratel_api';
-import React, { createContext, useContext } from 'react';
+import { makeClient } from '@/lib/apollo-client';
+import { ApolloNextAppProvider } from '@apollo/client-integration-nextjs';
+import { HydrationBoundary, DehydratedState } from '@tanstack/react-query';
+import React, { ReactNode, createContext, useContext } from 'react';
 
-type ContextType = {
-  suggestions: Follower[];
-};
+type ContextType = object;
 
 export const Context = createContext<ContextType | undefined>(undefined);
 
 export default function ClientProviders({
   children,
+  dehydratedState,
+  apolloCache,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
+  dehydratedState: DehydratedState;
+  apolloCache: string;
 }) {
-  const { data } = useNetwork();
-  const suggestions = [
-    ...(data?.suggested_teams.slice(0, 3) || []),
-    ...(data?.suggested_users.slice(0, 3) || []),
-  ].slice(0, 3);
-
   return (
-    <Context.Provider value={{ suggestions }}>{children}</Context.Provider>
+    <HydrationBoundary state={dehydratedState}>
+      <ApolloNextAppProvider
+        makeClient={() => makeClient(JSON.parse(apolloCache))}
+      >
+        {children}
+      </ApolloNextAppProvider>
+    </HydrationBoundary>
   );
 }
 

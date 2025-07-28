@@ -6,7 +6,7 @@ use validator::Validate;
 
 //TODO: action(like, comments, find_by_id, create_space), query_action
 #[derive(Validate)]
-#[api_model(base = "/v1/spaces", table = spaces, action = [create_space(user_ids = Vec<i64>)], action_by_id = [posting_space, update_space(discussions = Vec<DiscussionCreateRequest>, elearnings = Vec<ElearningCreateRequest>, surveys = Vec<SurveyCreateRequest>, drafts = Vec<SpaceDraftCreateRequest>)])]
+#[api_model(base = "/v1/spaces", table = spaces, action = [create_space(user_ids = Vec<i64>)], action_by_id = [posting_space, update_space(discussions = Vec<DiscussionCreateRequest>, elearnings = Vec<ElearningCreateRequest>, surveys = Vec<SurveyCreateRequest>, drafts = Vec<SpaceDraftCreateRequest>), like(value = bool), share()])]
 pub struct Space {
     #[api_model(summary, primary_key, read_action = [find_by_id])]
     pub id: i64,
@@ -15,8 +15,10 @@ pub struct Space {
     #[api_model(summary, auto = [insert, update])]
     pub updated_at: i64,
 
+    //FIXME: remove this field when unused
     #[api_model(summary, nullable, action_by_id = [update_space])]
     pub title: Option<String>,
+    //FIXME: remove this field when unused
     #[api_model(summary, action_by_id = [update_space])]
     pub html_contents: String,
     #[api_model(summary, type = INTEGER, action = [create_space])]
@@ -98,6 +100,20 @@ pub struct Space {
     #[api_model(summary, one_to_many = space_drafts, foreign_key = space_id)]
     #[serde(default)]
     pub drafts: Vec<SpaceDraft>,
+    #[api_model(summary, many_to_many = space_like_users, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = space_id, aggregator = count)]
+    #[serde(default)]
+    pub likes: i64,
+    #[api_model(summary, many_to_many = space_share_users, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = space_id, aggregator = count)]
+    #[serde(default)]
+    pub shares: i64,
+    #[api_model(summary, many_to_many = space_like_users, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = space_id, aggregator = exist)]
+    #[serde(default)]
+    pub is_liked: bool,
+
+    #[api_model(one_to_many = sprint_leagues, foreign_key = space_id, nested)]
+    #[serde(default)]
+    // Vec length should be 0 or 1.
+    pub sprint_leagues: Vec<SprintLeague>,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]

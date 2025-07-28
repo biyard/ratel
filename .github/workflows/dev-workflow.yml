@@ -128,6 +128,64 @@ jobs:
           npm i -g aws-cdk
           make deploy
 
+  telegram-bot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          ssh-key: ${{ secrets.PULL_KEY_REPO }}
+
+      - uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          components: clippy, rustfmt
+          target: wasm32-unknown-unknown
+          toolchain: stable
+
+      - uses: cargo-bins/cargo-binstall@main
+      - name: Install dependencies
+        run: |
+          cargo binstall toml-cli
+
+      - name: Cache builder
+        id: telegram-bot-build-cache
+        uses: actions/cache@v3
+        with:
+          key: telegram-bot-build-cache
+          path: |
+            packages/telegram-bot/target
+
+      - name: Deploy APIs
+        env:
+          REGION: ap-northeast-2
+          ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          ENV: dev
+          RUST_LOG: info
+          SERVICE: telegram-bot
+          DOMAIN: telegram-bot.dev.ratel.foundation
+          DATABASE_TYPE: postgres
+          
+          DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
+
+          TELEGRAM_TOKEN: ${{ secrets.DEV_TELEGRAM_TOKEN }}
+          TELEGRAM_MINI_APP_URI: https://t.me/crypto_ratel_dev_bot?startapp
+          BASE_DOMAIN: ratel.foundation
+          REPO_NAME: ratel/telegram-bot
+          
+          MIGRATE: false
+          ENABLE_S3: false
+          ENABLE_FARGATE: true
+          ENABLE_LAMBDA: false
+        run: |
+          npm i -g aws-cdk
+          make deploy
   fetcher:
     runs-on: ubuntu-latest
     steps:
@@ -171,6 +229,7 @@ jobs:
           SERVICE: fetcher
           DOMAIN: fetcher-api.dev.ratel.foundation
           AUTH_DOMAIN: dev.ratel.foundation
+          
           DATABASE_TYPE: postgres
           DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
           OPENAPI_KEY: ${{ secrets.OPENAPI_KEY }}
@@ -178,6 +237,8 @@ jobs:
           JWT_SECRET_KEY: ${{ secrets.DEV_JWT_SECRET_KEY }}
           SERVER_KEY: ${{ secrets.DEV_AUTH_SECRET_KEY }}
           SLACK_CHANNEL_BILL: ${{ secrets.DEV_SLACK }}
+          TELEGRAM_TOKEN: ${{ secrets.DEV_TELEGRAM_TOKEN }}
+          TELEGRAM_NOTIFICATION_URL: https://telegram-bot.dev.ratel.foundation
           BASE_DOMAIN: ratel.foundation
           REPO_NAME: ratel/fetcher
           US_CONGRESS_KEY: ${{ secrets.US_CONGRESS_KEY }}
@@ -221,7 +282,7 @@ jobs:
   create-release-pr:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/dev'
-    needs: [main-api, fetcher, nextjs-web]
+    needs: [main-api, fetcher, nextjs-web, telegram-bot]
     steps:
       - uses: actions/checkout@v3
         with:

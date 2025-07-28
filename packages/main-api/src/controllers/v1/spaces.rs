@@ -4,6 +4,7 @@ mod discussions;
 mod meeting;
 mod redeem_codes;
 mod responses;
+mod sprint_leagues;
 
 use std::collections::{HashMap, HashSet};
 
@@ -29,6 +30,7 @@ pub struct SpacePath {
 #[derive(Clone, Debug)]
 pub struct SpaceController {
     repo: SpaceRepository,
+    feed_repo: FeedRepository,
     space_member_repo: SpaceMemberRepository,
     discussion_repo: DiscussionRepository,
     discussion_member_repo: DiscussionMemberRepository,
@@ -44,11 +46,15 @@ impl SpaceController {
         tracing::debug!("user id: {:?}", user_id);
         // tracing::debug!("user: {:?}", user);
 
-        let mut space = Space::query_builder()
+        let mut space = Space::query_builder(user_id)
             .id_equals(id)
             .discussions_builder(Discussion::query_builder())
             .comments_builder(SpaceComment::query_builder())
             .feed_comments_builder(SpaceComment::query_builder())
+            .sprint_leagues_builder(
+                SprintLeague::query_builder(user_id)
+                    .players_builder(SprintLeaguePlayer::query_builder()),
+            )
             .query()
             .map(Space::from)
             .fetch_one(&self.pool)
@@ -122,12 +128,52 @@ impl SpaceController {
         Ok(space)
     }
 
+    async fn like_space(&self, id: i64, auth: Option<Authorization>, value: bool) -> Result<Space> {
+        let user_id = extract_user_id(&self.pool, auth).await?;
+        let repo = SpaceLikeUser::get_repository(self.pool.clone());
+        if !value {
+            let space_user = SpaceLikeUser::query_builder()
+                .space_id_equals(id)
+                .user_id_equals(user_id)
+                .query()
+                .map(SpaceLikeUser::from)
+                .fetch_optional(&self.pool)
+                .await?;
+            if let Some(space_user) = space_user {
+                repo.delete(space_user.id).await?;
+            }
+        } else {
+            repo.insert(id, user_id).await?;
+        }
+
+        Ok(Space::default())
+    }
+
+    async fn share_space(&self, id: i64, auth: Option<Authorization>) -> Result<Space> {
+        let user_id = extract_user_id(&self.pool, auth).await?;
+        let repo = SpaceShareUser::get_repository(self.pool.clone());
+
+        let space_user = SpaceShareUser::query_builder()
+            .space_id_equals(id)
+            .user_id_equals(user_id)
+            .query()
+            .map(SpaceShareUser::from)
+            .fetch_optional(&self.pool)
+            .await?;
+
+        if space_user.is_none() {
+            repo.insert(id, user_id).await?;
+        }
+
+        Ok(Space::default())
+    }
+
     async fn posting_space(&self, space_id: i64, auth: Option<Authorization>) -> Result<Space> {
         let user_id = extract_user_id(&self.pool, auth.clone())
             .await
             .unwrap_or_default();
 
-        let space = Space::query_builder()
+        let space = Space::query_builder(user_id)
             .id_equals(space_id)
             .query()
             .map(Space::from)
@@ -236,7 +282,7 @@ impl SpaceController {
             .await
             .unwrap_or_default();
 
-        let space = Space::query_builder()
+        let space = Space::query_builder(user_id)
             .id_equals(space_id)
             .query()
             .map(Space::from)
@@ -276,11 +322,26 @@ impl SpaceController {
                 &mut *tx,
                 space_id,
                 SpaceRepositoryUpdateRequest {
-                    title: title,
-                    html_contents: Some(html_contents),
+                    title: title.clone(),
+                    html_contents: Some(html_contents.clone()),
                     files: Some(files),
                     started_at,
                     ended_at,
+                    ..Default::default()
+                },
+            )
+            .await?;
+
+        let feed_id = res.clone().unwrap_or_default().feed_id;
+
+        let _ = self
+            .feed_repo
+            .update_with_tx(
+                &mut *tx,
+                feed_id,
+                FeedRepositoryUpdateRequest {
+                    title: title,
+                    html_contents: Some(html_contents),
                     ..Default::default()
                 },
             )
@@ -554,34 +615,9 @@ impl SpaceController {
                 Error::FeedInvalidQuoteId
             })?;
 
-        let user = check_perm(
-            &self.pool,
-            auth,
-            RatelResource::Post {
-                team_id: feed.user_id,
-            },
-            GroupPermission::WritePosts,
-        )
-        .await?;
-
-        let feed_user = User::query_builder()
-            .id_equals(feed.user_id)
-            .query()
-            .map(User::from)
-            .fetch_one(&self.pool)
-            .await
-            .map_err(|e| {
-                tracing::error!("failed to get user: {:?}", e);
-                Error::InvalidUser
-            })?;
-
         let mut tx = self.pool.begin().await?;
 
-        let author_id = match feed_user.user_type {
-            UserType::Individual => user.id,
-            UserType::Team => feed.author[0].id,
-            _ => 0,
-        };
+        let author_id = feed.author[0].id;
 
         let res = self
             .repo
@@ -631,6 +667,7 @@ impl SpaceController {
 impl SpaceController {
     pub fn new(pool: sqlx::Pool<sqlx::Postgres>) -> Self {
         let repo = Space::get_repository(pool.clone());
+        let feed_repo = Feed::get_repository(pool.clone());
         let space_member_repo = SpaceMember::get_repository(pool.clone());
         let space_draft_repo = SpaceDraft::get_repository(pool.clone());
         let discussion_repo = Discussion::get_repository(pool.clone());
@@ -640,6 +677,7 @@ impl SpaceController {
 
         Self {
             repo,
+            feed_repo,
             pool,
             discussion_repo,
             discussion_member_repo,
@@ -687,6 +725,10 @@ impl SpaceController {
             .nest(
                 "/:space-id/redeem-codes",
                 redeem_codes::SpaceRedeemCodeController::new(self.pool.clone()).route(),
+            )
+            .nest(
+                "/:space-id/sprint-leagues",
+                sprint_leagues::SprintLeagueController::new(self.pool.clone()).route(),
             ))
     }
 
@@ -726,6 +768,8 @@ impl SpaceController {
         let feed = match body {
             SpaceByIdAction::UpdateSpace(param) => ctrl.update_space(id, auth, param).await?,
             SpaceByIdAction::PostingSpace(_) => ctrl.posting_space(id, auth).await?,
+            SpaceByIdAction::Like(req) => ctrl.like_space(id, auth, req.value).await?,
+            SpaceByIdAction::Share(_) => ctrl.share_space(id, auth).await?,
         };
 
         Ok(Json(feed))

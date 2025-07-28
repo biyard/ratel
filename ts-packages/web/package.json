@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "predev": "./setup-env.sh",
-    "dev": "NODE_ENV=development next dev",
+    "dev": "NODE_ENV=development next dev -H 0.0.0.0",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@apollo/client": "^3.13.8",
+    "@apollo/client-integration-nextjs": "^0.12.2",
     "@dfinity/agent": "^2.4.1",
     "@dfinity/identity": "^2.4.1",
     "@heroicons/react": "^2.2.0",
@@ -27,6 +28,7 @@
     "@radix-ui/react-separator": "^1.1.7",
     "@radix-ui/react-slot": "^1.2.3",
     "@tanstack/react-query": "^5.79.0",
+    "@telegram-apps/sdk-react": "^3.3.6",
     "@tiptap/extension-collaboration": "^2.25.0",
     "@tiptap/extension-color": "^2.25.0",
     "@tiptap/extension-highlight": "^2.25.0",
@@ -46,6 +48,7 @@
     "date-fns": "^4.1.0",
     "dayjs": "^1.11.13",
     "dompurify": "^3.2.6",
+    "eruda": "^3.4.3",
     "ethers": "^6.14.3",
     "firebase": "^11.8.1",
     "graphql": "^16.11.0",

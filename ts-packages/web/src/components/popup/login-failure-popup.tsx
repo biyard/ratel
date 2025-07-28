@@ -2,13 +2,7 @@
 
 import React from 'react';
 import AlertCircle from '@/assets/icons/alert-circle.svg';
-import { usePopup } from '@/lib/contexts/popup-service';
-import { LoaderPopup } from './loader-popup';
 import { LoginPopupFooter } from './login-popup-footer';
-import { EventType, loginWithGoogle } from '@/lib/service/firebase-service';
-import UserSetupPopup from './user-setup-popup';
-import { logger } from '@/lib/logger';
-import { useEd25519KeyPair } from '@/lib/contexts/auth-context';
 
 interface LoginFailurePopupProps {
   id?: string;
@@ -18,19 +12,17 @@ interface LoginFailurePopupProps {
   description: string;
   msg: string;
   serviceName: string;
+  onRetry: () => Promise<void>;
 }
 
 export const LoginFailurePopup = ({
   id = 'login_failure_popup',
-  logo,
   logoOrigin,
-  title,
-  description,
   msg,
   serviceName,
+  onRetry,
 }: LoginFailurePopupProps) => {
-  const popup = usePopup();
-  const keyPair = useEd25519KeyPair();
+  // const keyPair = useEd25519KeyPair();
   const failureMsg = `Failed to connect to ${serviceName}.\nWould you like to try again?`;
 
   return (
@@ -38,52 +30,7 @@ export const LoginFailurePopup = ({
       <div className="flex flex-col gap-[8px] mb-[8px]">
         <div
           className="w-full flex flex-row pl-5 py-5.5 bg-black border-[1px] rounded-[10px] justify-start items-center gap-4.25 cursor-pointer border-c-p-50"
-          onClick={async () => {
-            logger.debug('Google login button clicked');
-            const loader = popup.open(
-              <LoaderPopup
-                title={title}
-                description={description}
-                logo={logo}
-                logoOrigin={logoOrigin}
-                msg={msg}
-                serviceName={serviceName}
-              />,
-            );
-
-            try {
-              const user = await loginWithGoogle(keyPair);
-              loader.close();
-              logger.debug('user info: ', user);
-
-              if (user.eventType == EventType.SignUp) {
-                popup
-                  .open(
-                    <UserSetupPopup
-                      email={user.email ?? ''}
-                      nickname={user.displayName ?? ''}
-                      profileUrl={user.photoURL ?? ''}
-                      principal={user.principal ?? ''}
-                    />,
-                  )
-                  .withoutBackdropClose();
-              } else if (user.eventType == EventType.Login) {
-                popup.close();
-              }
-            } catch (err) {
-              popup.open(
-                <LoginFailurePopup
-                  title={title}
-                  description={description}
-                  logo={logo}
-                  logoOrigin={logoOrigin}
-                  msg={msg}
-                  serviceName={serviceName}
-                />,
-              );
-              logger.debug('failed to google sign in with error: ', err);
-            }
-          }}
+          onClick={onRetry}
         >
           {logoOrigin}
           <div className="flex flex-col gap-[3px]">

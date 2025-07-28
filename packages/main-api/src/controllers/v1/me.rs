@@ -64,7 +64,10 @@ mod tests {
     use bdk::prelude::sqlx::{Pool, Postgres};
 
     use super::*;
-    use crate::tests::{TestContext, setup};
+    use crate::{
+        tests::{TestContext, setup},
+        utils::referal_code::generate_referral_code,
+    };
 
     async fn test_setup(user: &User, admin: &User, pool: Pool<Postgres>, now: i64) -> (User, User) {
         let repo = User::get_repository(pool.clone());
@@ -89,8 +92,10 @@ mod tests {
                 username,
                 "".to_string(),
                 format!("0x{:40x}", now + 2), // unique evm_address
-                "".to_string(), // password
+                "".to_string(),               // password
                 Membership::Free,
+                generate_referral_code(),
+                None,
             )
             .await
             .unwrap()
@@ -116,8 +121,10 @@ mod tests {
                 username,
                 "".to_string(),
                 format!("0x{:40x}2", now + 2), // unique evm_address
-                "".to_string(), // password
+                "".to_string(),                // password
                 Membership::Free,
+                generate_referral_code(),
+                None,
             )
             .await
             .unwrap()
@@ -149,8 +156,10 @@ mod tests {
                 username,
                 "".to_string(),
                 format!("0x{:40x}3", now + 3), // unique evm_address
-                "".to_string(), // password
+                "".to_string(),                // password
                 Membership::Free,
+                generate_referral_code(),
+                None,
             )
             .await
             .unwrap()
