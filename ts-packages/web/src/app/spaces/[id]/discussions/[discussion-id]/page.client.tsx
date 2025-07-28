@@ -70,7 +70,7 @@ function Page() {
   return (
     <div className="fixed top-0 left-0 flex flex-row w-full h-full">
       <div className="flex flex-1 h-full justify-center items-center">
-        <div className="flex flex-1 bg-black h-full w-full max-w-[1300px] flex-col justify-center items-center">
+        <div className="flex flex-1 bg-black h-full w-full max-w-full flex-col justify-center items-center">
           <Header
             name={discussion.name}
             onclose={async () => {
@@ -83,7 +83,7 @@ function Page() {
             }}
           />
 
-          {meetingSession && (
+          {meetingSession && !isSharing && (
             <RemoteGalleryView
               meetingSession={meetingSession}
               videoTiles={videoTiles}
