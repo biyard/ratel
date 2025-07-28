@@ -35,4 +35,4 @@ docker.login:
 
 docker.build:
 	docker run --rm --name $(SERVICE) -v $(PWD)/../..:/app -w /app/packages/$(SERVICE) rust:slim-bookworm sh -c 'apt-get update && apt-get install -y libssl-dev pkg-config ca-certificates && $(BUILD_ENV) CARGO_TARGET_DIR=/app/packages/$(SERVICE)/target cargo build --release'
-	docker build --platform linux/amd64 -t $(ECR_NAME):$(COMMIT) --no-cache -f Dockerfile $(PWD)/target/release
+	docker build -t $(ECR_NAME):$(COMMIT) --no-cache -f Dockerfile $(PWD)/target/release
