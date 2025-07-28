@@ -62,26 +62,16 @@ export function getQueryClient(): QueryClient {
   }
 }
 
-export interface InitDataOptions<TData = unknown> {
+export interface InitDataOptions {
   key: unknown[];
 
-  data: TData;
+  data: unknown | InfiniteData<unknown>;
 }
 
 export function initData(cli: QueryClient, options: InitDataOptions[]) {
   for (const { key, data } of options) {
     if (!key || !data) continue;
 
-    const isInfiniteData =
-      typeof data === 'object' &&
-      data !== null &&
-      'pages' in data &&
-      'pageParams' in data;
-
-    if (isInfiniteData) {
-      cli.setQueryData(key, data as InfiniteData<unknown>);
-    } else {
-      cli.setQueryData(key, data);
-    }
+    cli.setQueryData(key, data);
   }
 }
