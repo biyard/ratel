@@ -1,7 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 'use client';
-import { useState, useEffect, useCallback } from 'react';
+import { useEffect } from 'react';
 import { useInView } from 'react-intersection-observer';
 
 import FeedCard from '@/components/feed-card';
@@ -9,15 +7,13 @@ import { Col } from '@/components/ui/col';
 import News from './_components/News';
 import BlackBox from './_components/black-box';
 import CreatePostButton from './_components/create-post-button';
-import { usePost } from './_hooks/use-posts';
+import { usePostInfinite } from './_hooks/use-posts';
 import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { usePromotion } from './_hooks/use_promotion';
 import { useFeedByID } from './_hooks/use-feed';
 
 import { checkString } from '@/lib/string-filter-utils';
 import { UserType } from '@/lib/api/models/user';
-import { showErrorToast } from '@/lib/toast';
-import { logger } from '@/lib/logger';
 
 import FeedEmptyState from './_components/feed-empty-state';
 import FeedEndMessage from './_components/feed-end-message';
@@ -26,7 +22,6 @@ import Loading from '@/app/loading';
 import Suggestions from './_components/suggestions';
 import { Space } from '@/lib/api/models/spaces';
 
-const FEED_RESET_TIMEOUT_MS = 10000;
 export const SIZE = 10;
 
 export interface Post {
@@ -58,21 +53,15 @@ export default function Home() {
   const { data: userInfo } = useSuspenseUserInfo();
   const userId = userInfo?.id || 0;
 
-  const [page, setPage] = useState(1);
-  const [feeds, setFeeds] = useState<Post[]>([]);
-  const [hasMore, setHasMore] = useState(true);
-  const [showEndMessage, setShowEndMessage] = useState(false);
-
   const { ref, inView } = useInView({ threshold: 0.5 });
 
-  const { data: postData, error: postError, isLoading } = usePost(page, SIZE);
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
+    usePostInfinite(SIZE);
 
-  // Processing and deduplication of feed data
+  const posts = data?.pages.flatMap((page) => page.items) || [];
 
-  const processFeedData = useCallback((items: any[]): Post[] => {
-    if (!items) return [];
-
-    return items.map((item) => ({
+  const filteredFeeds = posts
+    .map((item) => ({
       id: item.id,
       industry: item.industry?.[0]?.name || '',
       title: item.title!,
@@ -91,59 +80,21 @@ export default function Home() {
       shares: item.shares,
       created_at: item.created_at,
       onboard: item.onboard ?? false,
-
       spaces: item.spaces ?? [],
-    }));
-  }, []);
-
-  useEffect(() => {
-    if (postError) {
-      showErrorToast('Failed to load posts');
-      logger.error('Failed to load posts:', postError);
-      return;
-    }
-
-    if (!postData?.items) return;
-
-    const newFeeds = processFeedData(postData.items);
-
-    if (newFeeds.length === 0) {
-      setHasMore(false);
-      setShowEndMessage(true);
-
-      const timeout = setTimeout(() => {
-        setFeeds([]);
-        setPage(1);
-        setHasMore(true);
-        setShowEndMessage(false);
-      }, FEED_RESET_TIMEOUT_MS);
-
-      return () => clearTimeout(timeout);
-    }
-
-    setFeeds((prevFeeds) => {
-      const uniqueMap = new Map<number, Post>();
-      [...prevFeeds, ...newFeeds].forEach((feed) =>
-        uniqueMap.set(feed.id, feed),
-      );
-      return Array.from(uniqueMap.values());
+    }))
+    .filter((d) => {
+      const hasInvalidString =
+        checkString(d.title) ||
+        checkString(d.contents) ||
+        checkString(d.author_name);
+      return !hasInvalidString;
     });
-  }, [postData, postError, processFeedData]);
 
   useEffect(() => {
-    if (inView && hasMore && !isLoading) {
-      setPage((prev) => prev + 1);
+    if (inView && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
     }
-  }, [inView, hasMore, isLoading]);
-
-  const filteredFeeds = feeds.filter((d) => {
-    const hasInvalidString =
-      checkString(d.title) ||
-      checkString(d.contents) ||
-      checkString(d.author_name);
-
-    return !hasInvalidString;
-  });
+  }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   return (
     <div className="flex-1 flex relative">
@@ -159,24 +110,22 @@ export default function Home() {
               />
             ))}
 
-            {/* Loading state */}
-            {isLoading && (
+            {(isLoading || isFetchingNextPage) && (
               <div className="flex justify-center my-4">
                 <Loading />
               </div>
             )}
 
-            {/* Load more sentinel */}
-            {hasMore && !isLoading && <div ref={ref} className="h-10" />}
+            {hasNextPage && !isLoading && !isFetchingNextPage && (
+              <div ref={ref} className="h-10" />
+            )}
 
-            {showEndMessage && <FeedEndMessage />}
+            {!hasNextPage && <FeedEndMessage />}
           </Col>
         ) : (
           <FeedEmptyState />
         )}
       </Col>
-
-      {/* Right Sidebar */}
 
       <div className="tablet:hidden fixed bottom-4 right-4 z-50">
         <CreatePostButton />
@@ -190,7 +139,6 @@ export default function Home() {
         </BlackBox>
 
         <News />
-
         <div className="mt-[10px]">
           <Suggestions />
         </div>
