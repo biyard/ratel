@@ -4,7 +4,7 @@ import Loading from '../loading';
 import { CreatePost, PostDraftProvider } from './_components/create-post';
 import Provider from './providers';
 
-export default function SocialLayout({
+export default async function SocialLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
