@@ -52,6 +52,7 @@ export default function LinearScaleViewer({
           { length: (maxValue ?? 0) - (minValue ?? 0) + 1 },
           (_, i) => {
             const val = (minValue ?? 0) + i;
+
             const answer =
               selected && selected.answer
                 ? Number(selected?.answer) + 1
