@@ -22,7 +22,19 @@ export type Question =
   | ShortAnswerQuestion
   | SubjectiveQuestion
   | CheckboxQuestion
-  | DropdownQuestion;
+  | DropdownQuestion
+  | LinearScaleQuestion;
+
+export interface LinearScaleQuestion {
+  answer_type: 'linear_scale';
+  title: string;
+  description?: string;
+  image_url?: string;
+  min_value: number;
+  max_value: number;
+  min_label: string;
+  max_label: string;
+}
 
 export interface DropdownQuestion {
   answer_type: 'dropdown';

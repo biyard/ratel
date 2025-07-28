@@ -4,7 +4,8 @@ export type Answer =
   | { answer_type: 'short_answer'; answer: string }
   | { answer_type: 'subjective'; answer: string }
   | { answer_type: 'checkbox'; answer: number[] }
-  | { answer_type: 'dropdown'; answer: number | null };
+  | { answer_type: 'dropdown'; answer: number | null }
+  | { answer_type: 'linear_scale'; answer: number | null };
 
 type SurveyType = 1 | 2;
 

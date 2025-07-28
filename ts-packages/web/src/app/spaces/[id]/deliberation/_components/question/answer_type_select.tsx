@@ -8,7 +8,8 @@ export type AnswerType =
   | 'short_answer'
   | 'subjective'
   | 'checkbox'
-  | 'dropdown';
+  | 'dropdown'
+  | 'linear_scale';
 
 export const AnswerTypeLabels: Record<AnswerType, string> = {
   single_choice: 'Single Choice Question',
@@ -17,6 +18,7 @@ export const AnswerTypeLabels: Record<AnswerType, string> = {
   subjective: 'Subjective Answer Question',
   checkbox: 'Check box',
   dropdown: 'Drop down',
+  linear_scale: 'Linear Scale',
 };
 
 export default function AnswerTypeSelect({
@@ -27,7 +29,7 @@ export default function AnswerTypeSelect({
   onChange: (val: AnswerType) => void;
 }) {
   return (
-    <div className="relative w-[300px]">
+    <div className="relative w-75">
       <select
         value={value}
         onChange={(e) => onChange(e.target.value as AnswerType)}

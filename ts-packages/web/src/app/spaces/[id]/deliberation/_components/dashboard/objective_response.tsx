@@ -3,6 +3,7 @@
 import {
   CheckboxQuestion,
   DropdownQuestion,
+  LinearScaleQuestion,
   MultipleChoiceQuestion,
   SingleChoiceQuestion,
 } from '@/lib/api/models/survey';
@@ -16,10 +17,14 @@ function parseObjectiveAnswers(
     | SingleChoiceQuestion
     | MultipleChoiceQuestion
     | CheckboxQuestion
+    | LinearScaleQuestion
     | DropdownQuestion,
   answers: Answer[],
 ) {
-  const optionCount = question.options.length;
+  const optionCount =
+    question.answer_type !== 'linear_scale'
+      ? question.options.length
+      : question.max_value;
   const counts = new Array(optionCount).fill(0);
 
   const filtered = answers.filter(
@@ -27,7 +32,11 @@ function parseObjectiveAnswers(
   );
 
   filtered.forEach((a) => {
-    if (a.answer_type === 'single_choice' || a.answer_type === 'dropdown') {
+    if (
+      a.answer_type === 'single_choice' ||
+      a.answer_type === 'dropdown' ||
+      a.answer_type === 'linear_scale'
+    ) {
       if (typeof a.answer === 'number') counts[a.answer]++;
     } else if (
       a.answer_type === 'multiple_choice' ||
@@ -39,11 +48,20 @@ function parseObjectiveAnswers(
 
   const total = filtered.length;
 
-  const options = question.options.map((label, idx) => ({
-    label,
-    count: counts[idx],
-    ratio: total > 0 ? (counts[idx] / total) * 100 : 0,
-  }));
+  const options =
+    question.answer_type !== 'linear_scale'
+      ? question.options.map((label, idx) => ({
+          label,
+          count: counts[idx],
+          ratio: total > 0 ? (counts[idx] / total) * 100 : 0,
+        }))
+      : [...Array(question.max_value - 1 + 1)].map((number, idx) => {
+          return {
+            label: String(number),
+            count: counts[idx],
+            ratio: total > 0 ? (counts[idx] / total) * 100 : 0,
+          };
+        });
 
   return {
     totalParticipants: total,
@@ -59,7 +77,8 @@ export default function ObjectiveResponse({
     | SingleChoiceQuestion
     | MultipleChoiceQuestion
     | CheckboxQuestion
-    | DropdownQuestion;
+    | DropdownQuestion
+    | LinearScaleQuestion;
   answers: Answer[];
 }) {
   const parsed = parseObjectiveAnswers(question, answers);
