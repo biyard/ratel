@@ -1,6 +1,7 @@
 import { logger } from '@/lib/logger';
 import {
   defaultShouldDehydrateQuery,
+  InfiniteData,
   isServer,
   QueryClient,
 } from '@tanstack/react-query';
@@ -61,14 +62,16 @@ export function getQueryClient(): QueryClient {
   }
 }
 
-export interface InitDataOptions<TData = unknown> {
+export interface InitDataOptions {
   key: unknown[];
 
-  data: TData;
+  data: unknown | InfiniteData<unknown>;
 }
 
 export function initData(cli: QueryClient, options: InitDataOptions[]) {
   for (const { key, data } of options) {
+    if (!key || !data) continue;
+
     cli.setQueryData(key, data);
   }
 }
