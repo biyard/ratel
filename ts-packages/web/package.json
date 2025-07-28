@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@apollo/client": "^3.13.8",
+    "@apollo/client-integration-nextjs": "^0.12.2",
     "@dfinity/agent": "^2.4.1",
     "@dfinity/identity": "^2.4.1",
     "@heroicons/react": "^2.2.0",
