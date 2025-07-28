@@ -14,10 +14,12 @@ export default function ObjectiveViewer({
   selected,
   selectedIndexes,
   index,
+  isRequired,
   isCompleted,
   handleSelect,
 }: {
   answerType: Answer['answer_type'];
+  isRequired: boolean;
   isMulti?: boolean;
   title: string;
   imageUrl?: string;
@@ -25,6 +27,7 @@ export default function ObjectiveViewer({
   selected: Answer;
   selectedIndexes: number[];
   index: number;
+
   isCompleted: boolean;
   handleSelect: (
     qIdx: number,
@@ -35,6 +38,11 @@ export default function ObjectiveViewer({
   return (
     <>
       <div className="flex flex-row w-full mt-1.75 mb-3.75 font-semibold text-base/[22.5px] text-white gap-1">
+        {isRequired ? (
+          <div className="text-[#ff6467]">[Required]</div>
+        ) : (
+          <div className="text-blue-500">[Optional]</div>
+        )}
         <div className="text-blue-500">
           {answerType === 'single_choice' ||
           (answerType === 'checkbox' && !isMulti)

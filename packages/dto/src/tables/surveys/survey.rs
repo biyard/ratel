@@ -56,6 +56,7 @@ pub struct LinearScaleQuestion {
     pub max_value: i64,
     pub min_label: String,
     pub max_label: String,
+    pub is_required: Option<bool>,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, Default)]
@@ -65,6 +66,7 @@ pub struct DropdownQuestion {
     pub description: Option<String>,
     pub image_url: Option<String>,
     pub options: Vec<String>,
+    pub is_required: Option<bool>,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, Default)]
@@ -75,6 +77,7 @@ pub struct CheckboxQuestion {
     pub image_url: Option<String>,
     pub options: Vec<String>,
     pub is_multi: bool,
+    pub is_required: Option<bool>,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, Default)]
@@ -82,6 +85,7 @@ pub struct CheckboxQuestion {
 pub struct SubjectiveQuestion {
     pub title: String,
     pub description: String,
+    pub is_required: Option<bool>,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, Default)]
@@ -91,6 +95,7 @@ pub struct ChoiceQuestion {
     pub description: Option<String>,
     pub image_url: Option<String>,
     pub options: Vec<String>,
+    pub is_required: Option<bool>,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]

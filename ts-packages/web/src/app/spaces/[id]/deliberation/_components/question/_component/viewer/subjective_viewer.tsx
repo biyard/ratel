@@ -6,6 +6,7 @@ import React from 'react';
 
 export default function SubjectiveViewer({
   title,
+  isRequired,
   answerType,
   selected,
   index,
@@ -14,6 +15,7 @@ export default function SubjectiveViewer({
   handleInput,
 }: {
   title: string;
+  isRequired: boolean;
   answerType: Answer['answer_type'];
   selected: Answer;
   index: number;
@@ -28,7 +30,11 @@ export default function SubjectiveViewer({
   return (
     <div className="flex flex-col w-full gap-[10px]">
       <div className="flex flex-row w-full mt-1.75 mb-3.75 font-semibold text-base/[22.5px] text-white gap-[4px]">
-        <div className="text-[#ff6467]">[Required]</div>
+        {isRequired ? (
+          <div className="text-[#ff6467]">[Required]</div>
+        ) : (
+          <div className="text-blue-500">[Optional]</div>
+        )}
         <div>{title}</div>
       </div>
       {answerType === 'short_answer' ? (
@@ -37,7 +43,9 @@ export default function SubjectiveViewer({
           placeholder="Please share your opinion."
           className="bg-neutral-800 border border-neutral-700 text-base text-white placeholder:text-neutral-600 px-4 py-3 rounded-lg focus:outline-none focus:border-yellow-500"
           value={
-            selected?.answer_type === 'short_answer' ? selected.answer : ''
+            selected?.answer_type === 'short_answer'
+              ? (selected.answer ?? '')
+              : ''
           }
           onChange={(e) => handleInput(index, e.target.value, 'short_answer')}
           disabled={isCompleted}
@@ -47,7 +55,11 @@ export default function SubjectiveViewer({
           rows={7}
           placeholder="Please share your opinion."
           className="bg-neutral-800 min-h-[185px] border border-neutral-700 text-base text-white placeholder:text-neutral-600 px-4 py-3 rounded-lg focus:outline-none focus:border-yellow-500"
-          value={selected?.answer_type === 'subjective' ? selected.answer : ''}
+          value={
+            selected?.answer_type === 'subjective'
+              ? (selected.answer ?? '')
+              : ''
+          }
           onChange={(e) => handleInput(index, e.target.value, 'subjective')}
           disabled={isCompleted}
         />

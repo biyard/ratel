@@ -6,6 +6,7 @@ import React from 'react';
 
 export default function DropdownViewer({
   title,
+  isRequired,
   isCompleted,
   selected,
   index,
@@ -13,6 +14,7 @@ export default function DropdownViewer({
   handleSelect,
 }: {
   title: string;
+  isRequired: boolean;
   isCompleted: boolean;
   selected: Answer;
   index: number;
@@ -26,7 +28,11 @@ export default function DropdownViewer({
   return (
     <div className="flex flex-col w-full gap-2.5">
       <div className="flex flex-row w-full mt-1.75 mb-3.75 font-semibold text-base/[22.5px] text-white gap-1">
-        <div className="text-[#ff6467]">[Dropdown]</div>
+        {isRequired ? (
+          <div className="text-[#ff6467]">[Required]</div>
+        ) : (
+          <div className="text-blue-500">[Optional]</div>
+        )}
         <div>{title}</div>
       </div>
       <div className="relative w-65">

@@ -19,6 +19,7 @@ interface Question {
   min_label?: string;
   max_label?: string;
   image_url?: string;
+  is_required?: boolean;
   is_multi?: boolean;
   options?: string[];
 }
@@ -78,9 +79,9 @@ export default function SurveyViewer({
         const existing =
           answers[qIdx]?.answer_type === 'checkbox'
             ? [
-                ...(
+                ...((
                   answers[qIdx] as Extract<Answer, { answer_type: 'checkbox' }>
-                ).answer,
+                ).answer ?? []),
               ]
             : [];
         const exists = existing.includes(optionIdx);
@@ -102,12 +103,12 @@ export default function SurveyViewer({
       const existing =
         answers[qIdx]?.answer_type === 'multiple_choice'
           ? [
-              ...(
+              ...((
                 answers[qIdx] as Extract<
                   Answer,
                   { answer_type: 'multiple_choice' }
                 >
-              ).answer,
+              ).answer ?? []),
             ]
           : [];
       const exists = existing.includes(optionIdx);
@@ -155,7 +156,7 @@ export default function SurveyViewer({
             ? selected.answer
             : [];
 
-        if (selectedIndexes.length === 0) {
+        if (selectedIndexes && selectedIndexes.length === 0) {
           selectedIndexes =
             q.answer_type === 'multiple_choice' &&
             selected?.answer_type === 'multiple_choice'
@@ -171,12 +172,13 @@ export default function SurveyViewer({
                 q.answer_type == 'checkbox') && (
                 <ObjectiveViewer
                   answerType={q.answer_type}
+                  isRequired={q.is_required ?? false}
                   isMulti={q.is_multi}
                   title={q.title}
                   imageUrl={q.image_url}
                   options={q.options}
                   selected={selected}
-                  selectedIndexes={selectedIndexes}
+                  selectedIndexes={selectedIndexes ?? []}
                   index={index}
                   isCompleted={is_completed}
                   handleSelect={handleSelect}
@@ -186,6 +188,7 @@ export default function SurveyViewer({
               {q.answer_type === 'linear_scale' && (
                 <LinearScaleViewer
                   answerType={q.answer_type}
+                  isRequired={q.is_required ?? false}
                   title={q.title}
                   minLabel={q.min_label}
                   minValue={q.min_value}
@@ -201,6 +204,7 @@ export default function SurveyViewer({
               {q.answer_type === 'dropdown' && (
                 <DropdownViewer
                   title={q.title}
+                  isRequired={q.is_required ?? false}
                   isCompleted={is_completed}
                   selected={selected}
                   index={index}
@@ -213,6 +217,7 @@ export default function SurveyViewer({
                 q.answer_type === 'subjective') && (
                 <SubjectiveViewer
                   answerType={q.answer_type}
+                  isRequired={q.is_required ?? false}
                   title={q.title}
                   selected={selected}
                   index={index}

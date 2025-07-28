@@ -9,6 +9,7 @@ import Image from 'next/image';
 import MultiSelectionButton from './_component/multi_selection_button';
 import LinearScaleSelection from './_component/linear_scale_selection';
 import ObjectiveOption from './_component/objective_option';
+import RequiredButton from './_component/required_button';
 
 export default function SurveyQuestionEditor({
   index,
@@ -17,6 +18,7 @@ export default function SurveyQuestionEditor({
   title,
   options,
   isMulti,
+  isRequired,
   min,
   max,
   minLabel,
@@ -30,6 +32,7 @@ export default function SurveyQuestionEditor({
   imageUrl?: string;
   options?: string[];
   isMulti?: boolean;
+  isRequired?: boolean;
   min?: number;
   max?: number;
   minLabel?: string;
@@ -44,6 +47,7 @@ export default function SurveyQuestionEditor({
     min_value?: number;
     max_value?: number;
     is_multi?: boolean;
+    is_required?: boolean;
   }) => void;
   onremove?: (index: number) => void;
 }) {
@@ -54,6 +58,7 @@ export default function SurveyQuestionEditor({
   );
   const [questionImage, setQuestionImage] = useState(imageUrl);
   const [questionMulti, setQuestionMulti] = useState(isMulti);
+  const [questionRequired, setQuestionRequired] = useState(isRequired);
   const [minValue, setMinValue] = useState<number>(min ?? 1);
   const [maxValue, setMaxValue] = useState<number>(max ?? 10);
 
@@ -71,6 +76,7 @@ export default function SurveyQuestionEditor({
       title: questionTitle,
       image_url: questionImage,
       is_multi: questionMulti,
+      is_required: questionRequired,
       options:
         questionType.includes('choice') ||
         questionType.includes('checkbox') ||
@@ -118,6 +124,11 @@ export default function SurveyQuestionEditor({
     newOptions[idx] = value;
     setQuestionOptions(newOptions);
     updateQuestion({ options: newOptions });
+  };
+
+  const handleRequiredChange = (value: boolean) => {
+    setQuestionRequired(value);
+    updateQuestion({ is_required: value });
   };
 
   const handleMultiChange = (value: boolean) => {
@@ -225,6 +236,10 @@ export default function SurveyQuestionEditor({
                 onChange={handleMultiChange}
               />
             )}
+            <RequiredButton
+              value={isRequired ?? false}
+              onChange={handleRequiredChange}
+            />
             <div
               className="cursor-pointer flex flex-row w-fit gap-1.25 items-center"
               onClick={() => onremove?.(index)}

@@ -11,12 +11,14 @@ export default function LinearScaleViewer({
   maxLabel,
   maxValue,
   selected,
+  isRequired,
   isCompleted,
   index,
   handleSelect,
 }: {
   answerType: Answer['answer_type'];
   title: string;
+  isRequired: boolean;
   minLabel?: string;
   minValue?: number;
   maxLabel?: string;
@@ -33,7 +35,11 @@ export default function LinearScaleViewer({
   return (
     <div className="flex flex-col w-full gap-4">
       <div className="flex flex-row w-full mt-1.5 mb-3 font-semibold text-base/[22.5px] text-white gap-1">
-        <div className="text-[#ff6467]">[Linear Scale]</div>
+        {isRequired ? (
+          <div className="text-[#ff6467]">[Required]</div>
+        ) : (
+          <div className="text-blue-500">[Optional]</div>
+        )}
         <div>{title}</div>
       </div>
 
@@ -47,12 +53,13 @@ export default function LinearScaleViewer({
           (_, i) => {
             const val = (minValue ?? 0) + i;
             const answer =
-              selected && selected.answer ? Number(selected?.answer) + 1 : 0;
+              selected && selected.answer
+                ? Number(selected?.answer) + 1
+                : selected && selected.answer === 0
+                  ? 1
+                  : 0;
             const isChecked =
-              answerType === 'linear_scale' &&
-              selected &&
-              selected.answer &&
-              answer === val;
+              answerType === 'linear_scale' && selected && answer === val;
 
             return (
               <div
