@@ -88,7 +88,7 @@ function Page() {
               meetingSession={meetingSession}
               videoTiles={videoTiles}
               participants={participants}
-              users={users}
+              u={users}
               focusedAttendeeId={focusedAttendeeId}
               setFocusedAttendeeId={setFocusedAttendeeId}
             />
