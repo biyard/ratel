@@ -20,7 +20,6 @@ import GoPublicPopup from './_components/modal/go_public';
 import { TeamContext } from '@/lib/contexts/team-context';
 import { SpaceStatus } from '@/lib/api/models/spaces';
 import { useUserInfo } from '@/app/(social)/_hooks/user';
-import DropdownMenu from './_components/dropdown/drop-down-menu';
 
 export default function DeliberationSpacePage() {
   return (

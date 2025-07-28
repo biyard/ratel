@@ -71,7 +71,6 @@ export default function SpaceHeader({
   onedit = () => {},
   onpost = () => {},
   ondelete = () => {},
-  ondropdown = () => {},
 }: SpaceHeaderProps) {
   const { data: userInfo } = useUserInfo();
   const userId = userInfo ? userInfo.id : 0;

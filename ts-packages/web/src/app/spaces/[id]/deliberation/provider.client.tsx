@@ -40,7 +40,6 @@ import { SpaceDraftCreateRequest } from '@/lib/api/models/space_draft';
 import { useQueryClient } from '@tanstack/react-query';
 import { QK_GET_SPACE_BY_SPACE_ID } from '@/constants';
 import { useFeedByID } from '@/app/(social)/_hooks/feed';
-import { usePopup } from '@/lib/contexts/popup-service';
 
 export interface MappedResponse {
   question: Question;
