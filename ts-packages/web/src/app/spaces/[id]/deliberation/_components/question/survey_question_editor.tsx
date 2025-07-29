@@ -59,7 +59,7 @@ export default function SurveyQuestionEditor({
   const [questionImage, setQuestionImage] = useState(imageUrl);
   const [questionMulti, setQuestionMulti] = useState(isMulti);
   const [questionRequired, setQuestionRequired] = useState(isRequired);
-  const [minValue, setMinValue] = useState<number>(min ?? 1);
+  const [minValue] = useState<number>(min ?? 1);
   const [maxValue, setMaxValue] = useState<number>(max ?? 10);
 
   const [labels, setLabels] = useState<Record<number, string>>(() => ({
@@ -88,14 +88,6 @@ export default function SurveyQuestionEditor({
       min_label: labels[minValue],
       max_label: labels[maxValue],
       ...overrides,
-    });
-  };
-
-  const handleMinValueChange = (val: number) => {
-    setMinValue(val);
-    updateQuestion({
-      min_value: val,
-      min_label: labels[val],
     });
   };
 
@@ -220,7 +212,6 @@ export default function SurveyQuestionEditor({
           {questionType === 'linear_scale' && (
             <LinearScaleSelection
               minValue={minValue}
-              setMinValue={handleMinValueChange}
               maxValue={maxValue}
               setMaxValue={handleMaxValueChange}
               labels={labels}
