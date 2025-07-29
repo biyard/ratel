@@ -1,30 +1,7 @@
 'use client';
 
 import React from 'react';
-import {
-  CheckboxQuestion,
-  DropdownQuestion,
-  LinearScaleQuestion,
-  MultipleChoiceQuestion,
-  SingleChoiceQuestion,
-} from '@/lib/api/models/survey';
-
-type ParsedOption = {
-  label: string;
-  count: number;
-  ratio: number;
-};
-
-type ParsedResult = {
-  question:
-    | SingleChoiceQuestion
-    | MultipleChoiceQuestion
-    | CheckboxQuestion
-    | DropdownQuestion
-    | LinearScaleQuestion;
-  totalParticipants: number;
-  options: ParsedOption[];
-};
+import { ParsedResult } from './models/parsed';
 
 export default function BarChartResponse({ parsed }: { parsed: ParsedResult }) {
   const { options } = parsed;

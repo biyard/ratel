@@ -6,6 +6,16 @@ import SubjectiveResponse from './dashboard/subjective_response';
 import { logger } from '@/lib/logger';
 import SummaryReport from './dashboard/summary_report';
 
+enum AnswerType {
+  SingleChoice = 'single_choice',
+  MultipleChoice = 'multiple_choice',
+  ShortAnswer = 'short_answer',
+  Subjective = 'subjective',
+  Checkbox = 'checkbox',
+  Dropdown = 'dropdown',
+  LinearScale = 'linear_scale',
+}
+
 export default function AnalyzePage() {
   const { handleDownloadExcel, answers, survey, mappedResponses } =
     useDeliberationSpaceContext();
@@ -42,11 +52,12 @@ export default function AnalyzePage() {
           />
         )}
         {mappedResponses.map((res, index) => {
-          return res.question.answer_type === 'multiple_choice' ||
-            res.question.answer_type === 'single_choice' ||
-            res.question.answer_type === 'checkbox' ||
-            res.question.answer_type === 'dropdown' ||
-            res.question.answer_type === 'linear_scale' ? (
+          const type = res.question.answer_type;
+          return type === AnswerType.MultipleChoice ||
+            type === AnswerType.SingleChoice ||
+            type === AnswerType.Checkbox ||
+            type === AnswerType.Dropdown ||
+            type === AnswerType.LinearScale ? (
             <ObjectiveResponse
               key={`objective-question-${index}`}
               question={res.question}

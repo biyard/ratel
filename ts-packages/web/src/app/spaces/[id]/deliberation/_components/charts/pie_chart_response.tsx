@@ -3,30 +3,7 @@
 
 import React from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
-import {
-  CheckboxQuestion,
-  DropdownQuestion,
-  LinearScaleQuestion,
-  MultipleChoiceQuestion,
-  SingleChoiceQuestion,
-} from '@/lib/api/models/survey';
-
-type ParsedOption = {
-  label: string;
-  count: number;
-  ratio: number;
-};
-
-type ParsedResult = {
-  question:
-    | SingleChoiceQuestion
-    | MultipleChoiceQuestion
-    | CheckboxQuestion
-    | DropdownQuestion
-    | LinearScaleQuestion;
-  totalParticipants: number;
-  options: ParsedOption[];
-};
+import { ParsedResult } from './models/parsed';
 
 const COLORS = ['#a1a1a1', '#737373'];
 
