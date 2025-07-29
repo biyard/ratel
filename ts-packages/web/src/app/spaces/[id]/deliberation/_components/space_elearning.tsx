@@ -8,22 +8,14 @@ import { checkString } from '@/lib/string-filter-utils';
 import React from 'react';
 import { ArrowRight, Upload } from 'lucide-react';
 import { downloadPdfFromUrl } from '@/lib/pdf-utils';
-import { ElearningCreateRequest } from '@/lib/api/models/elearning';
 import { CircleClose } from '@/components/icons';
+import { useDeliberationSpaceContext } from '../provider.client';
 
-export interface SpaceElearningProps {
-  isEdit?: boolean;
-  elearnings: ElearningCreateRequest[];
-  onremove?: (index: number) => void;
-  onadd?: (index: FileInfo) => void;
-}
+export default function SpaceElearning() {
+  const { isEdit, deliberation, handleUpdateDeliberation } =
+    useDeliberationSpaceContext();
+  const elearnings = deliberation.elearnings;
 
-export default function SpaceElearning({
-  isEdit = false,
-  elearnings,
-  onremove = () => {},
-  onadd = () => {},
-}: SpaceElearningProps) {
   const handlePdfDownload = async (file: FileInfo) => {
     await downloadPdfFromUrl({
       url: file.url ?? '',
@@ -43,7 +35,10 @@ export default function SpaceElearning({
             <FileUploaderMetadata
               isImage={false}
               onUploadSuccess={(file) => {
-                onadd(file);
+                handleUpdateDeliberation({
+                  ...deliberation,
+                  elearnings: [...deliberation.elearnings, { files: [file] }],
+                });
               }}
             >
               <div className="cursor-pointer flex flex-row w-fit gap-1 items-center bg-white rounded-[6px] px-[14px] py-[8px] hover:bg-neutral-300">
@@ -69,7 +64,13 @@ export default function SpaceElearning({
                     <EditableFile
                       file={file.files[0]}
                       onclick={() => {
-                        onremove(index);
+                        const updated = deliberation.elearnings.filter(
+                          (_, i) => i !== index,
+                        );
+                        handleUpdateDeliberation({
+                          ...deliberation,
+                          elearnings: updated,
+                        });
                       }}
                     />
 

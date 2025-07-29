@@ -1,6 +1,5 @@
 import React from 'react';
 import BlackBox from '@/app/(social)/_components/black-box';
-import { SurveyAnswer } from '../../types';
 import { Answer } from '@/lib/api/models/response';
 import { usePopup } from '@/lib/contexts/popup-service';
 import CheckPopup from './check_popup';
@@ -10,6 +9,7 @@ import ObjectiveViewer from './_component/viewer/objective_viewer';
 import SubjectiveViewer from './_component/viewer/subjective_viewer';
 import DropdownViewer from './_component/viewer/dropdown_viewer';
 import LinearScaleViewer from './_component/viewer/linear_scale_viewer';
+import { useDeliberationSpaceContext } from '../../provider.client';
 
 interface Question {
   title: string;
@@ -24,27 +24,21 @@ interface Question {
   options?: string[];
 }
 
-interface SurveyViewerProps {
-  isEdit: boolean;
-  status: SpaceStatus;
-  startDate: number;
-  endDate: number;
-  questions: Question[];
-  answer: SurveyAnswer;
-  setAnswers: (answer: Answer[]) => void;
-  onConfirm: () => void;
-}
+export default function SurveyViewer() {
+  const {
+    isEdit,
+    startedAt: startDate,
+    endedAt: endDate,
+    survey,
+    answer,
+    status,
+    handleSetAnswers,
+    handleSend,
+  } = useDeliberationSpaceContext();
 
-export default function SurveyViewer({
-  isEdit,
-  status,
-  startDate,
-  endDate,
-  questions,
-  answer,
-  setAnswers,
-  onConfirm,
-}: SurveyViewerProps) {
+  const questions: Question[] =
+    survey.surveys.length != 0 ? survey.surveys[0].questions : [];
+
   const now = Math.floor(Date.now() / 1000);
   const isLive = startDate <= now && now <= endDate;
   const popup = usePopup();
@@ -127,7 +121,7 @@ export default function SurveyViewer({
       } satisfies Answer;
     }
 
-    setAnswers(updated);
+    handleSetAnswers(updated);
   };
 
   const handleInput = (
@@ -143,7 +137,7 @@ export default function SurveyViewer({
       answer: value,
     } satisfies Answer;
 
-    setAnswers(updated);
+    handleSetAnswers(updated);
   };
 
   return (
@@ -240,7 +234,7 @@ export default function SurveyViewer({
               .open(
                 <CheckPopup
                   onContinue={() => {
-                    onConfirm();
+                    handleSend();
                     popup.close();
                   }}
                   onClose={() => {

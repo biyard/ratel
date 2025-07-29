@@ -1,153 +1,88 @@
 'use client';
 
-import { Question } from '@/lib/api/models/survey';
+import { Question, ShortAnswerQuestion } from '@/lib/api/models/survey';
 import React, { useState } from 'react';
 import SurveyQuestionEditor from './question/survey_question_editor';
 import { AnswerType } from './question/answer_type_select';
 import { v4 as uuidv4 } from 'uuid';
 import SurveyViewer from './question/survey_viewer';
 import { Add } from './add';
-import { SurveyAnswer } from '../types';
-import { Answer } from '@/lib/api/models/response';
 import { SpaceStatus } from '@/lib/api/models/spaces';
+import { useDeliberationSpaceContext } from '../provider.client';
 
-export interface SpaceSurveyProps {
-  isEdit?: boolean;
-  status: SpaceStatus;
-  questions: Question[];
-  startDate: number;
-  endDate: number;
-  answer: SurveyAnswer;
+export default function SpaceSurvey() {
+  const { isEdit, status } = useDeliberationSpaceContext();
 
-  setAnswers: (answers: Answer[]) => void;
-  setStartDate: (startDate: number) => void;
-  setEndDate: (endDate: number) => void;
-  onadd: (question: Question) => void;
-  onupdate: (
-    index: number,
-    updated: {
-      answerType: AnswerType;
-      image_url?: string;
-      title: string;
-      options?: string[];
-      min_label?: string;
-      max_label?: string;
-      min_value?: number;
-      max_value?: number;
-      is_multi: boolean;
-      is_required?: boolean;
-    },
-  ) => void;
-  onremove: (index: number) => void;
-  onsend: () => void;
-}
-
-export default function SpaceSurvey({
-  isEdit = false,
-  status,
-  questions,
-  startDate,
-  endDate,
-  answer,
-
-  setAnswers,
-  setStartDate,
-  setEndDate,
-  onadd,
-  onupdate,
-  onremove,
-  onsend,
-}: SpaceSurveyProps) {
   return (
     <div className="flex flex-col w-full">
       {isEdit && status == SpaceStatus.Draft ? (
-        <EditableSurvey
-          questions={questions}
-          startDate={startDate}
-          endDate={endDate}
-          setStartDate={setStartDate}
-          setEndDate={setEndDate}
-          onadd={() => {
-            onadd({
-              answer_type: 'short_answer',
-              title: '',
-              description: '',
-            });
-          }}
-          onupdate={onupdate}
-          onremove={onremove}
-        />
+        <EditableSurvey />
       ) : (
-        <ViewSurvey
-          isEdit={isEdit}
-          status={status}
-          answer={answer}
-          setAnswers={setAnswers}
-          questions={questions}
-          startDate={startDate}
-          endDate={endDate}
-          onSend={onsend}
-        />
+        <ViewSurvey />
       )}
     </div>
   );
 }
 
-function ViewSurvey({
-  isEdit,
-  status,
-  answer,
-  setAnswers,
-  questions,
-  startDate,
-  endDate,
-  onSend,
-}: {
-  isEdit: boolean;
-  status: SpaceStatus;
-  answer: SurveyAnswer;
-  setAnswers: (answer: Answer[]) => void;
-  questions: Question[];
-  startDate: number;
-  endDate: number;
-  onSend: () => void;
-}) {
+function ViewSurvey() {
   return (
     <div className="flex flex-col w-full gap-[10px]">
-      <SurveyViewer
-        isEdit={isEdit}
-        status={status}
-        startDate={startDate}
-        endDate={endDate}
-        questions={questions}
-        answer={answer}
-        setAnswers={setAnswers}
-        onConfirm={onSend}
-      />
+      <SurveyViewer />
     </div>
   );
 }
 
-function EditableSurvey({
-  questions,
-  onadd,
-  onupdate,
-  onremove,
-}: {
-  questions: Question[];
+function EditableSurvey() {
+  const { survey, handleUpdateSurvey } = useDeliberationSpaceContext();
+  const questions =
+    survey.surveys.length != 0 ? survey.surveys[0].questions : [];
 
-  startDate: number;
-  endDate: number;
+  const [stableKeys, setStableKeys] = useState<string[]>(() =>
+    questions.map(() => uuidv4()),
+  );
 
-  setStartDate: (startDate: number) => void;
-  setEndDate: (endDate: number) => void;
-  onadd: () => void;
-  onupdate: (
+  const handleAddQuestion = () => {
+    const question: ShortAnswerQuestion = {
+      answer_type: 'short_answer',
+      title: '',
+      description: '',
+    };
+
+    const existingSurvey = survey.surveys[0] ?? {
+      started_at: 0,
+      ended_at: 10000000000,
+      questions: [],
+    };
+
+    const updatedSurvey = {
+      ...existingSurvey,
+      questions: [...existingSurvey.questions, question],
+    };
+
+    handleUpdateSurvey({
+      ...survey,
+      surveys: [updatedSurvey],
+    });
+
+    setStableKeys((prev) => [...prev, uuidv4()]);
+  };
+
+  const handleRemoveQuestion = (index: number) => {
+    const updatedSurvey = [...survey.surveys];
+    const updatedQuestions = updatedSurvey[0].questions.filter(
+      (_, i) => i !== index,
+    );
+    updatedSurvey[0].questions = updatedQuestions;
+    handleUpdateSurvey({ ...survey, surveys: updatedSurvey });
+    setStableKeys((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleUpdateQuestion = (
     index: number,
     updated: {
       answerType: AnswerType;
-      title: string;
       image_url?: string;
+      title: string;
       options?: string[];
       min_label?: string;
       max_label?: string;
@@ -156,20 +91,65 @@ function EditableSurvey({
       is_multi: boolean;
       is_required?: boolean;
     },
-  ) => void;
-  onremove: (index: number) => void;
-}) {
-  const [stableKeys, setStableKeys] = useState<string[]>(() =>
-    questions.map(() => uuidv4()),
-  );
-  const handleAdd = () => {
-    onadd();
-    setStableKeys((prev) => [...prev, uuidv4()]);
-  };
+  ) => {
+    const updatedSurvey = [...survey.surveys];
+    const updatedQuestions = [...updatedSurvey[0].questions];
 
-  const handleRemove = (index: number) => {
-    onremove(index);
-    setStableKeys((prev) => prev.filter((_, i) => i !== index));
+    let newQuestion: Question;
+
+    if (
+      updated.answerType === 'single_choice' ||
+      updated.answerType === 'multiple_choice'
+    ) {
+      newQuestion = {
+        answer_type: updated.answerType,
+        title: updated.title,
+        image_url: updated.image_url,
+        options: updated.options || [],
+        is_required: updated.is_required || false,
+      };
+    } else if (updated.answerType === 'checkbox') {
+      newQuestion = {
+        answer_type: updated.answerType,
+        title: updated.title,
+        image_url: updated.image_url,
+        options: updated.options || [],
+        is_multi: updated.is_multi || false,
+        is_required: updated.is_required || false,
+      };
+    } else if (updated.answerType === 'dropdown') {
+      newQuestion = {
+        answer_type: updated.answerType,
+        title: updated.title,
+        image_url: updated.image_url,
+        options: updated.options || [],
+        is_required: updated.is_required || false,
+      };
+    } else if (updated.answerType === 'linear_scale') {
+      newQuestion = {
+        answer_type: updated.answerType,
+        title: updated.title,
+        image_url: updated.image_url,
+        min_label: updated.min_label ?? '',
+        min_value: updated.min_value ?? 0,
+        max_label: updated.max_label ?? '',
+        max_value: updated.max_value ?? 0,
+        is_required: updated.is_required || false,
+      };
+    } else {
+      newQuestion = {
+        answer_type: updated.answerType,
+        title: updated.title,
+        description: '',
+        is_required: updated.is_required || false,
+      };
+    }
+
+    updatedQuestions[index] = newQuestion;
+
+    updatedSurvey[0].questions = updatedQuestions;
+
+    handleUpdateSurvey({ ...survey, surveys: updatedSurvey });
   };
 
   return (
@@ -192,7 +172,7 @@ function EditableSurvey({
               minLabel={'min_label' in question ? question.min_label : ''}
               maxLabel={'max_label' in question ? question.max_label : ''}
               onupdate={(updated) => {
-                onupdate(index, {
+                handleUpdateQuestion(index, {
                   answerType: updated.answerType,
                   title: updated.title,
                   image_url: updated.image_url,
@@ -206,7 +186,7 @@ function EditableSurvey({
                 });
               }}
               onremove={(index: number) => {
-                handleRemove(index);
+                handleRemoveQuestion(index);
               }}
             />
           </div>
@@ -224,7 +204,7 @@ function EditableSurvey({
 
         <div
           className="cursor-pointer z-10 bg-background flex items-center justify-center w-fit h-fit p-[13px] border border-neutral-500 rounded-full"
-          onClick={handleAdd}
+          onClick={handleAddQuestion}
         >
           <Add className="w-4 h-4 stroke-neutral-500 text-neutral-500" />
         </div>
