@@ -3,6 +3,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Answer } from '@/lib/api/models/response';
 import React from 'react';
+import Wrapper from './_components/wrapper';
 
 export default function SubjectiveViewer({
   title,
@@ -29,6 +30,12 @@ export default function SubjectiveViewer({
 }) {
   return (
     <div className="flex flex-col w-full gap-[10px]">
+      <Wrapper
+        isRequired={isRequired}
+        answerType={selected?.answer_type}
+        isMulti={false}
+        title={title}
+      />
       <div className="flex flex-row w-full mt-1.75 mb-3.75 font-semibold text-base/[22.5px] text-white gap-[4px]">
         {isRequired ? (
           <div className="text-[#ff6467]">[Required]</div>

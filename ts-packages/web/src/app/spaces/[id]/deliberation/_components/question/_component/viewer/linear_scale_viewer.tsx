@@ -1,7 +1,9 @@
 'use client';
+import RadioButton from '@/components/radio-button/radio-button';
 import { Answer } from '@/lib/api/models/response';
 import { Question } from '@/lib/api/models/survey';
 import React from 'react';
+import Wrapper from './_components/wrapper';
 
 export default function LinearScaleViewer({
   answerType,
@@ -34,14 +36,12 @@ export default function LinearScaleViewer({
 }) {
   return (
     <div className="flex flex-col w-full gap-4">
-      <div className="flex flex-row w-full mt-1.5 mb-3 font-semibold text-base/[22.5px] text-white gap-1">
-        {isRequired ? (
-          <div className="text-[#ff6467]">[Required]</div>
-        ) : (
-          <div className="text-blue-500">[Optional]</div>
-        )}
-        <div>{title}</div>
-      </div>
+      <Wrapper
+        isRequired={isRequired}
+        answerType={'linear_scale'}
+        isMulti={false}
+        title={title}
+      />
 
       <div className="flex flex-row justify-start gap-5 px-2 items-center">
         <div className="w-10 text-center font-medium text-sm text-neutral-400 break-words">
@@ -85,41 +85,6 @@ export default function LinearScaleViewer({
           {maxLabel ?? ''}
         </div>
       </div>
-    </div>
-  );
-}
-
-function RadioButton({
-  onClick,
-  selected,
-}: {
-  onClick: () => void;
-  selected: boolean;
-}) {
-  return (
-    <div className="flex items-center">
-      <button
-        onClick={onClick}
-        className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors ${
-          selected
-            ? 'bg-[#fcb300] hover:bg-[#fcb300]/90'
-            : 'border-2 border-[#6b6b6b] hover:border-white'
-        }`}
-      >
-        {selected && (
-          <svg
-            className="w-3 h-3 text-black"
-            fill="currentColor"
-            viewBox="0 0 20 20"
-          >
-            <path
-              fillRule="evenodd"
-              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-              clipRule="evenodd"
-            />
-          </svg>
-        )}
-      </button>
     </div>
   );
 }

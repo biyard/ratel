@@ -3,6 +3,7 @@ import { ShapeArrowDown } from '@/components/icons';
 import { Answer } from '@/lib/api/models/response';
 import { Question } from '@/lib/api/models/survey';
 import React from 'react';
+import Wrapper from './_components/wrapper';
 
 export default function DropdownViewer({
   title,
@@ -27,14 +28,12 @@ export default function DropdownViewer({
 }) {
   return (
     <div className="flex flex-col w-full gap-2.5">
-      <div className="flex flex-row w-full mt-1.75 mb-3.75 font-semibold text-base/[22.5px] text-white gap-1">
-        {isRequired ? (
-          <div className="text-[#ff6467]">[Required]</div>
-        ) : (
-          <div className="text-blue-500">[Optional]</div>
-        )}
-        <div>{title}</div>
-      </div>
+      <Wrapper
+        isRequired={isRequired}
+        answerType={'dropdown'}
+        isMulti={false}
+        title={title}
+      />
       <div className="relative w-65">
         <select
           disabled={isCompleted}
