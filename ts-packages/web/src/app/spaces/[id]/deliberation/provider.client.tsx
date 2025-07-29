@@ -482,6 +482,33 @@ export default function ClientProviders({
       return;
     }
 
+    for (let i = 0; i < survey.surveys.length; i++) {
+      const question = survey.surveys[i].questions;
+
+      for (let j = 0; j < question.length; j++) {
+        const q = question[j];
+
+        if (q.title === '') {
+          showErrorToast('Please fill in the question title.');
+          return;
+        }
+
+        if (q.answer_type === 'checkbox' || q.answer_type === 'dropdown') {
+          if (q.options.length < 2) {
+            showErrorToast('questions must have at least two options.');
+            return;
+          }
+        }
+
+        if (q.answer_type === 'linear_scale') {
+          if (q.max_label === '' || q.min_label === '') {
+            showErrorToast('Please fill in the labels for the linear scale.');
+            return;
+          }
+        }
+      }
+    }
+
     const discussions = deliberation.discussions.map((disc) => ({
       started_at: disc.started_at,
       ended_at: disc.ended_at,
