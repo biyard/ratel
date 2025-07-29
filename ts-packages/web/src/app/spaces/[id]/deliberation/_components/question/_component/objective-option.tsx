@@ -2,7 +2,7 @@
 import { DialPad2, Remove } from '@/components/icons';
 import { Input } from '@/components/ui/input';
 import React from 'react';
-import { AnswerType } from '../answer_type_select';
+import { AnswerType } from '../answer-type-select';
 
 export default function ObjectiveOption({
   questionOptions,

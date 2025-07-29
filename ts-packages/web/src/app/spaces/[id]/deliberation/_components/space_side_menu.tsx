@@ -15,7 +15,7 @@ import {
 import { useUserInfo } from '@/app/(social)/_hooks/user';
 import { TeamContext } from '@/lib/contexts/team-context';
 import { usePopup } from '@/lib/contexts/popup-service';
-import SetSchedulePopup from './modal/set_schedule';
+import SetSchedulePopup from './modal/set-schedule';
 
 export default function SpaceSideMenu() {
   const popup = usePopup();

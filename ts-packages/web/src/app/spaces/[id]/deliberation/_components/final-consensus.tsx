@@ -2,7 +2,7 @@
 
 import React from 'react';
 import SpaceContents from '../../_components/space_contents';
-import SpaceFiles from './space_files';
+import SpaceFiles from './space-files';
 import { FileInfo } from '@/lib/api/models/feeds';
 import { useDeliberationSpaceContext } from '../provider.client';
 

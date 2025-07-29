@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import SpaceSurvey from './space_survey';
+import SpaceSurvey from './space-survey';
 // import { Poll } from '../page.client';
 
 export default function PollPage() {
