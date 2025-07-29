@@ -15,7 +15,7 @@ import {
 import { useUserInfo } from '@/app/(social)/_hooks/user';
 import { TeamContext } from '@/lib/contexts/team-context';
 import { usePopup } from '@/lib/contexts/popup-service';
-import SetSchedulePopup from './modal/set_schedule';
+import SetSchedulePopup from './modal/set-schedule';
 
 export default function SpaceSideMenu() {
   const popup = usePopup();
@@ -23,12 +23,12 @@ export default function SpaceSideMenu() {
     isEdit,
     deliberation,
     selectedType,
-    setSelectedType,
+    handleUpdateSelectedType,
     startedAt,
     endedAt,
     status,
-    handleSetEndDate: setEndDate,
-    handleSetStartDate: setStartDate,
+    handleUpdateEndDate,
+    handleUpdateStartDate,
   } = useDeliberationSpaceContext();
   const space = useDeliberationSpace();
   const { teams } = useContext(TeamContext);
@@ -55,7 +55,7 @@ export default function SpaceSideMenu() {
           <div
             className={`cursor-pointer flex flex-row w-full gap-1 items-center px-1 py-2 rounded-sm ${selectedType == DeliberationTab.SUMMARY ? 'bg-neutral-800' : ''}`}
             onClick={() => {
-              setSelectedType(DeliberationTab.SUMMARY);
+              handleUpdateSelectedType(DeliberationTab.SUMMARY);
             }}
           >
             <File className="[&>path]:stroke-neutral-80 w-5 h-5" />
@@ -65,7 +65,7 @@ export default function SpaceSideMenu() {
           <div
             className={`cursor-pointer flex flex-row gap-1 items-center px-1 py-2 rounded-sm ${selectedType == DeliberationTab.DELIBERATION ? 'bg-neutral-800' : ''}`}
             onClick={() => {
-              setSelectedType(DeliberationTab.DELIBERATION);
+              handleUpdateSelectedType(DeliberationTab.DELIBERATION);
             }}
           >
             <Discuss className="w-5 h-5" />
@@ -75,7 +75,7 @@ export default function SpaceSideMenu() {
           <div
             className={`cursor-pointer flex flex-row gap-1 items-center px-1 py-2 rounded-sm ${selectedType == DeliberationTab.POLL ? 'bg-neutral-800' : ''}`}
             onClick={() => {
-              setSelectedType(DeliberationTab.POLL);
+              handleUpdateSelectedType(DeliberationTab.POLL);
             }}
           >
             <Vote className="[&>path]:stroke-neutral-80 w-5 h-5" />
@@ -85,7 +85,7 @@ export default function SpaceSideMenu() {
           <div
             className={`cursor-pointer flex flex-row gap-1 items-center px-1 py-2 rounded-sm ${selectedType == DeliberationTab.RECOMMANDATION ? 'bg-neutral-800' : ''}`}
             onClick={() => {
-              setSelectedType(DeliberationTab.RECOMMANDATION);
+              handleUpdateSelectedType(DeliberationTab.RECOMMANDATION);
             }}
           >
             <CheckCircle className="[&>path]:stroke-neutral-80 w-5 h-5" />
@@ -101,7 +101,7 @@ export default function SpaceSideMenu() {
                     : ''
                 }`}
                 onClick={() => {
-                  setSelectedType(DeliberationTab.ANALYZE);
+                  handleUpdateSelectedType(DeliberationTab.ANALYZE);
                 }}
               >
                 <PieChart1 className="[&>path]:stroke-neutral-80 w-5 h-5" />
@@ -127,8 +127,8 @@ export default function SpaceSideMenu() {
                         startedAt={startedAt}
                         endedAt={endedAt}
                         onconfirm={(startDate: number, endDate: number) => {
-                          setStartDate(Math.floor(startDate / 1000));
-                          setEndDate(Math.floor(endDate / 1000));
+                          handleUpdateStartDate(Math.floor(startDate / 1000));
+                          handleUpdateEndDate(Math.floor(endDate / 1000));
                           popup.close();
                         }}
                       />,
