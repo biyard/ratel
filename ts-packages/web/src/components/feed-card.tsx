@@ -16,9 +16,6 @@ import { route } from '@/route';
 import { SpaceType } from '@/lib/api/models/spaces';
 import { Extra } from './icons';
 import { Trash2 } from 'lucide-react';
-
-
-
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -49,8 +46,6 @@ export interface FeedCardProps {
   author_id: number;
   user_id: number;
   onboard: boolean;
-  
-
   onLikeClick?: (value: boolean) => void;
   refetch?: () => void;
   isLikeProcessing?: boolean;
@@ -213,8 +208,6 @@ export function FeedBody({
           </DropdownMenu>
         )}
       </Row>
-
-
       <h2 className="w-full line-clamp-2 font-bold text-xl/[25px] tracking-[0.5px] align-middle text-white px-5">
         {title}
       </h2>
