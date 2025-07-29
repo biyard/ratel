@@ -1,5 +1,5 @@
 'use client';
-import RadioButton from '@/components/radio-button/radio-button';
+import RadioButton from '@/components/radio-button';
 import { Answer } from '@/lib/api/models/response';
 import { Question } from '@/lib/api/models/survey';
 import React from 'react';

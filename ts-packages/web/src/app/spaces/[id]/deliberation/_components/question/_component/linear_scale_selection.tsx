@@ -2,7 +2,7 @@
 import { Input } from '@/components/ui/input';
 import React from 'react';
 import { ShapeArrowDown } from '@/components/icons';
-import Select from '@/components/select/select';
+import Select from '@/components/select';
 
 export default function LinearScaleSelection({
   minValue,
