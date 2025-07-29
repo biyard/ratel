@@ -249,10 +249,47 @@ export default function ClientProviders({
   const { post } = useApiCall();
 
   const handleSend = async () => {
+    const questions =
+      survey.surveys.length != 0 ? survey.surveys[0].questions : [];
+
+    let answers = answer.answers;
+
+    let isCheck = true;
+
+    answers = [
+      ...answers,
+      ...Array(questions.length - answers.length).fill(undefined),
+    ];
+
+    for (let i = 0; i < questions.length; i++) {
+      const required = questions[i].is_required;
+      const ans = answers[i];
+
+      if (!required) {
+        if (!ans) {
+          answers[i] = {
+            answer_type: questions[i].answer_type,
+            answer: null,
+          };
+        }
+        continue;
+      }
+
+      if (!ans) {
+        isCheck = false;
+        break;
+      }
+    }
+
+    if (!isCheck) {
+      showErrorToast('Please fill in all required values.');
+      return;
+    }
+
     try {
       await post(
         ratelApi.responses.respond_answer(spaceId),
-        surveyResponseCreateRequest(answer.answers),
+        surveyResponseCreateRequest(answers),
       );
       data.refetch();
       queryClient.invalidateQueries({
