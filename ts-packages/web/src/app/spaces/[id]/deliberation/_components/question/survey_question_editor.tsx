@@ -6,10 +6,9 @@ import { Trash2 } from 'lucide-react';
 import { DialPad, Image2 } from '@/components/icons';
 import FileUploader from '@/components/file-uploader';
 import Image from 'next/image';
-import MultiSelectionButton from './_component/multi_selection_button';
 import LinearScaleSelection from './_component/linear_scale_selection';
 import ObjectiveOption from './_component/objective_option';
-import RequiredButton from './_component/required_button';
+import LabelSwitchButton from './_component/label-switch-button';
 
 export default function SurveyQuestionEditor({
   index,
@@ -222,12 +221,18 @@ export default function SurveyQuestionEditor({
         <div className="flex flex-row w-full justify-end items-center">
           <div className="flex flex-row w-fit gap-10">
             {questionType == 'checkbox' && (
-              <MultiSelectionButton
+              <LabelSwitchButton
+                bgColor="bg-blue-500"
+                textColor="text-blue-500"
+                label="Multiple selection"
                 value={isMulti ?? false}
                 onChange={handleMultiChange}
               />
             )}
-            <RequiredButton
+            <LabelSwitchButton
+              bgColor="bg-red-500"
+              textColor="text-red-500"
+              label="Required"
               value={isRequired ?? false}
               onChange={handleRequiredChange}
             />
