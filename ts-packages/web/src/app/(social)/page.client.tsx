@@ -21,6 +21,7 @@ import PromotionCard from './_components/promotion-card';
 import Loading from '@/app/loading';
 import Suggestions from './_components/suggestions';
 import { Space } from '@/lib/api/models/spaces';
+import { id } from 'ethers';
 
 export const SIZE = 10;
 
@@ -105,6 +106,7 @@ export default function Home() {
               <FeedCard
                 key={`feed-${props.id}`}
                 user_id={userId}
+                
                 refetch={() => {}}
                 {...props}
               />
