@@ -14,6 +14,7 @@ import { UserType } from '@/lib/api/models/user';
 import Image from 'next/image';
 import { route } from '@/route';
 import { SpaceType } from '@/lib/api/models/spaces';
+import { Extra } from './icons';
 
 export interface FeedCardProps {
   id: number;
@@ -111,8 +112,8 @@ export function FeedBody({
   url,
   created_at,
   author_type,
-  // user_id,
-  // author_id,
+  user_id,
+  author_id,
   space_type,
   space_id,
   onboard,
@@ -133,6 +134,10 @@ export function FeedBody({
             Create a Space
           </Button>
         )} */}
+
+        {author_id && user_id ? (
+          <Extra/>
+        ): '' }
 
         {space_id && space_type ? (
           <Button
