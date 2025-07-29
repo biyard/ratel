@@ -11,7 +11,7 @@ import { route } from '@/route';
 import { useRouter } from 'next/navigation';
 import { usePopup } from '@/lib/contexts/popup-service';
 import { logger } from '@/lib/logger';
-import RadioButton from '@/components/radio-button/radio-button';
+import RadioButton from '@/components/radio-button';
 
 interface SpaceFormProps {
   type: SpaceType;
