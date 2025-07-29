@@ -18,7 +18,7 @@ import { DiscussionInfo } from '../types';
 import { TotalUser } from '@/lib/api/models/user';
 import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { usePopup } from '@/lib/contexts/popup-service';
-import NewDiscussion from './modal/new_discussion';
+import NewDiscussion from './modal/new-discussion';
 import {
   useDeliberationSpace,
   useDeliberationSpaceContext,

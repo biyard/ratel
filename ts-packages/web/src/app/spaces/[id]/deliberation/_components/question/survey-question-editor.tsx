@@ -1,13 +1,13 @@
 'use client';
 import React, { useState } from 'react';
-import AnswerTypeSelect, { AnswerType } from './answer_type_select';
+import AnswerTypeSelect, { AnswerType } from './answer-type-select';
 import { Input } from '@/components/ui/input';
 import { Trash2 } from 'lucide-react';
 import { DialPad, Image2 } from '@/components/icons';
 import FileUploader from '@/components/file-uploader';
 import Image from 'next/image';
-import LinearScaleSelection from './_component/linear_scale_selection';
-import ObjectiveOption from './_component/objective_option';
+import LinearScaleSelection from './_component/linear-scale-selection';
+import ObjectiveOption from './_component/objective-option';
 import LabelSwitchButton from './_component/label-switch-button';
 
 export default function SurveyQuestionEditor({

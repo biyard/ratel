@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import SpaceHeader from '../_components/space_header';
+import SpaceHeader from '../_components/space-header';
 import SpaceCouponProgress from '../_components/coupon-progress';
 import SpaceContents from '../_components/space_contents';
 import SpaceFiles from '../_components/space_files';

@@ -5,7 +5,7 @@ import SpaceSideMenu from './_components/space_side_menu';
 import ThreadPage from './_components/thread';
 import DeliberationPage from './_components/deliberation';
 import PollPage from './_components/poll';
-import FinalConsensusPage from './_components/final_consensus';
+import FinalConsensusPage from './_components/final-consensus';
 
 import ClientProviders, {
   useDeliberationSpace,
@@ -13,7 +13,7 @@ import ClientProviders, {
 } from './provider.client';
 import { DeliberationTab } from './types';
 import AnalyzePage from './_components/analyze';
-import SpaceHeader from './_components/space_header';
+import SpaceHeader from './_components/space-header';
 import { TeamContext } from '@/lib/contexts/team-context';
 import { SpaceStatus } from '@/lib/api/models/spaces';
 import { useUserInfo } from '@/app/(social)/_hooks/user';

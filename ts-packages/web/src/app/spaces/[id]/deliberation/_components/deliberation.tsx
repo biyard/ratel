@@ -3,8 +3,8 @@
 // import CalendarPicker from '@/components/calendar-picker/calendar-picker';
 // import TimeDropdown from '@/components/time-dropdown/time-dropdown';
 import React from 'react';
-import SpaceDiscussion from './space_discussion';
-import SpaceElearning from './space_elearning';
+import SpaceDiscussion from './space-discussion';
+import SpaceElearning from './space-elearning';
 
 export default function DeliberationPage() {
   return (

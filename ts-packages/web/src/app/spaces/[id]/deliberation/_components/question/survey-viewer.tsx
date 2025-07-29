@@ -2,13 +2,13 @@ import React from 'react';
 import BlackBox from '@/app/(social)/_components/black-box';
 import { Answer } from '@/lib/api/models/response';
 import { usePopup } from '@/lib/contexts/popup-service';
-import CheckPopup from './check_popup';
+import CheckPopup from './check-popup';
 import { SpaceStatus } from '@/lib/api/models/spaces';
 import { logger } from '@/lib/logger';
-import ObjectiveViewer from './_component/viewer/objective_viewer';
-import SubjectiveViewer from './_component/viewer/subjective_viewer';
-import DropdownViewer from './_component/viewer/dropdown_viewer';
-import LinearScaleViewer from './_component/viewer/linear_scale_viewer';
+import ObjectiveViewer from './_component/viewer/objective-viewer';
+import SubjectiveViewer from './_component/viewer/subjective-viewer';
+import DropdownViewer from './_component/viewer/dropdown-viewer';
+import LinearScaleViewer from './_component/viewer/linear-scale-viewer';
 import { useDeliberationSpaceContext } from '../../provider.client';
 
 interface Question {
