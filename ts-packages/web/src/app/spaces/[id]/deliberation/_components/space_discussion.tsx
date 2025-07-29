@@ -329,7 +329,7 @@ function EditableDiscussion({
                   <NewDiscussion
                     discussion={{
                       started_at: Math.floor(Date.now()),
-                      ended_at: Math.floor(Date.now()),
+                      ended_at: Math.floor(Date.now() + 3600 * 1000),
                       name: '',
                       description: '',
                       participants: [],
