@@ -15,7 +15,6 @@ import {
   Thread,
 } from './types';
 import { UserType } from '@/lib/api/models/user';
-import { StateSetter } from '@/types';
 import { logger } from '@/lib/logger';
 import {
   postingSpaceRequest,
@@ -49,30 +48,17 @@ export interface MappedResponse {
 type ContextType = {
   spaceId: number;
   selectedType: DeliberationTabType;
-  setSelectedType: StateSetter<DeliberationTabType>;
   isEdit: boolean;
-  setIsEdit: StateSetter<boolean>;
   title: string;
-  setTitle: StateSetter<string>;
   startedAt: number;
-  setStartedAt: StateSetter<number>;
   endedAt: number;
-  setEndedAt: StateSetter<number>;
   thread: Thread;
-  setThread: StateSetter<Thread>;
   deliberation: Deliberation;
-  setDeliberation: StateSetter<Deliberation>;
   survey: Poll;
-  setSurvey: StateSetter<Poll>;
   answers: SurveyResponse[];
   mappedResponses: MappedResponse[];
   answer: SurveyAnswer;
-  setAnswer: StateSetter<SurveyAnswer>;
   draft: FinalConsensus;
-  setDraft: StateSetter<FinalConsensus>;
-  handleGoBack: () => void;
-  handleDownloadExcel: () => void;
-  handleViewRecord: (discussionId: number, record: string) => Promise<void>;
 
   userType: UserType;
   proposerImage: string;
@@ -80,6 +66,17 @@ type ContextType = {
   createdAt: number;
   status: SpaceStatus;
 
+  handleGoBack: () => void;
+  handleDownloadExcel: () => void;
+  handleViewRecord: (discussionId: number, record: string) => Promise<void>;
+  handleUpdateSelectedType: (type: DeliberationTabType) => void;
+  handleUpdateStartDate: (startDate: number) => void;
+  handleUpdateEndDate: (endDate: number) => void;
+  handleUpdateTitle: (title: string) => void;
+  handleUpdateThread: (thread: Thread) => void;
+  handleUpdateDeliberation: (deliberation: Deliberation) => void;
+  handleUpdateSurvey: (survey: Poll) => void;
+  handleUpdateDraft: (draft: FinalConsensus) => void;
   handleLike: () => void;
   handleShare: () => void;
   handleSetAnswers: (answers: Answer[]) => void;
@@ -232,11 +229,8 @@ export default function ClientProviders({
     }
   };
 
-  const handleSetAnswers = (answers: Answer[]) => {
-    setAnswer((prev) => ({
-      ...prev,
-      answers,
-    }));
+  const handleUpdateTitle = (title: string) => {
+    setTitle(title);
   };
 
   const handleSetStartDate = (startDate: number) => {
@@ -446,11 +440,73 @@ export default function ClientProviders({
     router.refresh();
   };
 
+  const handleUpdateThread = (thread: Thread) => {
+    setThread(thread);
+  };
+
+  const handleUpdateDeliberation = (deliberation: Deliberation) => {
+    setDeliberation(deliberation);
+  };
+
+  const handleUpdateSurvey = (survey: Poll) => {
+    setSurvey(survey);
+  };
+
+  const handleUpdateDraft = (draft: FinalConsensus) => {
+    setDraft(draft);
+  };
+
+  const handleSetAnswers = (answers: Answer[]) => {
+    setAnswer((prev) => ({
+      ...prev,
+      answers,
+    }));
+  };
+
+  const handleUpdateStartDate = (startDate: number) => {
+    setStartedAt(Math.floor(startDate));
+  };
+
+  const handleUpdateEndDate = (endDate: number) => {
+    setEndedAt(Math.floor(endDate));
+  };
+
+  const handleUpdateSelectedType = (type: DeliberationTabType) => {
+    setSelectedType(type);
+  };
+
   const handleSave = async () => {
     if (checkString(title) || checkString(thread.html_contents)) {
       showErrorToast('Please remove any test-related keywords before saving.');
       setIsEdit(false);
       return;
+    }
+
+    for (let i = 0; i < survey.surveys.length; i++) {
+      const question = survey.surveys[i].questions;
+
+      for (let j = 0; j < question.length; j++) {
+        const q = question[j];
+
+        if (q.title === '') {
+          showErrorToast('Please fill in the question title.');
+          return;
+        }
+
+        if (q.answer_type === 'checkbox' || q.answer_type === 'dropdown') {
+          if (q.options.length < 2) {
+            showErrorToast('questions must have at least two options.');
+            return;
+          }
+        }
+
+        if (q.answer_type === 'linear_scale') {
+          if (q.max_label === '' || q.min_label === '') {
+            showErrorToast('Please fill in the labels for the linear scale.');
+            return;
+          }
+        }
+      }
     }
 
     const discussions = deliberation.discussions.map((disc) => ({
@@ -504,26 +560,16 @@ export default function ClientProviders({
       value={{
         spaceId,
         selectedType,
-        setSelectedType,
         isEdit,
-        setIsEdit,
         title,
-        setTitle,
         startedAt,
-        setStartedAt,
         endedAt,
-        setEndedAt,
         thread,
-        setThread,
         deliberation,
-        setDeliberation,
         survey,
-        setSurvey,
         answers,
         answer,
-        setAnswer,
         draft,
-        setDraft,
         handleGoBack,
         handleDownloadExcel,
         userType,
@@ -532,6 +578,14 @@ export default function ClientProviders({
         createdAt,
         status,
         mappedResponses,
+        handleUpdateSelectedType,
+        handleUpdateStartDate,
+        handleUpdateEndDate,
+        handleUpdateTitle,
+        handleUpdateThread,
+        handleUpdateDeliberation,
+        handleUpdateSurvey,
+        handleUpdateDraft,
         handleSetAnswers,
         handleSetStartDate,
         handleSetEndDate,

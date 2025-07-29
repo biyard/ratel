@@ -8,6 +8,7 @@ import InviteMemberPopup from './invite_member';
 import { DiscussionInfo } from '../../types';
 import TimeDropdown from '@/components/time-dropdown';
 import CalendarDropdown from '@/components/calendar-dropdown';
+import { showErrorToast } from '@/lib/toast';
 
 export default function NewDiscussion({
   discussion,
@@ -23,6 +24,10 @@ export default function NewDiscussion({
 
   const [startTime, setStartTime] = useState<number>(discussion.started_at);
   const [endTime, setEndTime] = useState<number>(discussion.ended_at);
+
+  const [diff, setDiff] = useState<number>(
+    discussion.ended_at - discussion.started_at,
+  );
   return (
     <div className="max-w-[900px] w-full">
       <div className="flex flex-col py-2.5 gap-[5px]">
@@ -65,22 +70,52 @@ export default function NewDiscussion({
           <CalendarDropdown
             value={startTime}
             onChange={(date) => {
-              const newStart = Math.floor(date);
+              const selected = new Date(date);
+              const current = new Date(startTime);
+
+              selected.setHours(current.getHours());
+              selected.setMinutes(current.getMinutes());
+              selected.setSeconds(0);
+              selected.setMilliseconds(0);
+
+              const newStart = Math.floor(selected.getTime());
+
               setStartTime(newStart);
+              setEndTime(newStart + diff);
             }}
           />
           <TimeDropdown
             value={startTime}
             onChange={(timestamp) => {
               const newStart = Math.floor(timestamp);
+
               setStartTime(newStart);
+              setEndTime(newStart + diff);
             }}
           />
           <div className="w-[15px] h-0.25 bg-neutral-600" />
           <CalendarDropdown
             value={endTime}
             onChange={(date) => {
-              const newEnd = Math.floor(date);
+              const selected = new Date(date);
+              const current = new Date(endTime);
+
+              selected.setHours(current.getHours());
+              selected.setMinutes(current.getMinutes());
+              selected.setSeconds(0);
+              selected.setMilliseconds(0);
+
+              const newEnd = Math.floor(selected.getTime());
+              const diff = newEnd - startTime;
+
+              if (newEnd < startTime) {
+                showErrorToast(
+                  'The end date must be later than the start date.',
+                );
+                return;
+              }
+
+              setDiff(diff);
               setEndTime(newEnd);
             }}
           />
@@ -88,6 +123,16 @@ export default function NewDiscussion({
             value={endTime}
             onChange={(timestamp) => {
               const newEnd = Math.floor(timestamp);
+              const diff = newEnd - startTime;
+
+              if (newEnd < startTime) {
+                showErrorToast(
+                  'The end date must be later than the start date.',
+                );
+                return;
+              }
+
+              setDiff(diff);
               setEndTime(newEnd);
             }}
           />
@@ -122,6 +167,11 @@ export default function NewDiscussion({
         <button
           className="w-fit px-10 py-[14.5px] rounded-[10px] bg-primary hover:bg-hover text-black text-bold text-base hover:text-black cursor-pointer"
           onClick={() => {
+            if (title === '') {
+              showErrorToast('Please enter a title.');
+              return;
+            }
+
             popup
               .open(
                 <InviteMemberPopup
