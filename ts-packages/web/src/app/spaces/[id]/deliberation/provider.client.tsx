@@ -286,8 +286,6 @@ export default function ClientProviders({
       return;
     }
 
-    console.log('answer: ', answers);
-
     try {
       await post(
         ratelApi.responses.respond_answer(spaceId),
