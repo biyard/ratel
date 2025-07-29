@@ -507,7 +507,6 @@ function EditableDiscussionInfo({
                           participants: users,
                         }}
                         onadd={(discussion: DiscussionInfo) => {
-                          console.log('discussion: ', discussion);
                           onupdate(index, discussion);
                         }}
                       />,
