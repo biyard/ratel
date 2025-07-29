@@ -30,6 +30,12 @@ export interface SpaceSurveyProps {
       image_url?: string;
       title: string;
       options?: string[];
+      min_label?: string;
+      max_label?: string;
+      min_value?: number;
+      max_value?: number;
+      is_multi: boolean;
+      is_required?: boolean;
     },
   ) => void;
   onremove: (index: number) => void;
@@ -143,6 +149,12 @@ function EditableSurvey({
       title: string;
       image_url?: string;
       options?: string[];
+      min_label?: string;
+      max_label?: string;
+      min_value?: number;
+      max_value?: number;
+      is_multi: boolean;
+      is_required?: boolean;
     },
   ) => void;
   onremove: (index: number) => void;
@@ -171,12 +183,26 @@ function EditableSurvey({
               title={question.title}
               imageUrl={'image_url' in question ? question.image_url : ''}
               options={'options' in question ? question.options : []}
+              isMulti={'is_multi' in question ? question.is_multi : false}
+              isRequired={
+                'is_required' in question ? question.is_required : false
+              }
+              min={'min_value' in question ? question.min_value : 1}
+              max={'max_value' in question ? question.max_value : 10}
+              minLabel={'min_label' in question ? question.min_label : ''}
+              maxLabel={'max_label' in question ? question.max_label : ''}
               onupdate={(updated) => {
                 onupdate(index, {
                   answerType: updated.answerType,
                   title: updated.title,
                   image_url: updated.image_url,
                   options: updated.options ?? [],
+                  min_label: updated.min_label ?? '',
+                  min_value: updated.min_value ?? 0,
+                  max_label: updated.max_label ?? '',
+                  max_value: updated.max_value ?? 0,
+                  is_multi: updated.is_multi ?? false,
+                  is_required: updated.is_required ?? false,
                 });
               }}
               onremove={(index: number) => {

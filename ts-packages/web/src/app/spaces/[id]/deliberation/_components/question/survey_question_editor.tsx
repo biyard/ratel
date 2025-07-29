@@ -3,9 +3,12 @@ import React, { useState } from 'react';
 import AnswerTypeSelect, { AnswerType } from './answer_type_select';
 import { Input } from '@/components/ui/input';
 import { Trash2 } from 'lucide-react';
-import { DialPad, DialPad2, Remove, Image2 } from '@/components/icons';
+import { DialPad, Image2 } from '@/components/icons';
 import FileUploader from '@/components/file-uploader';
 import Image from 'next/image';
+import LinearScaleSelection from './_component/linear_scale_selection';
+import ObjectiveOption from './_component/objective_option';
+import LabelSwitchButton from './_component/label-switch-button';
 
 export default function SurveyQuestionEditor({
   index,
@@ -13,6 +16,12 @@ export default function SurveyQuestionEditor({
   imageUrl,
   title,
   options,
+  isMulti,
+  isRequired,
+  min,
+  max,
+  minLabel,
+  maxLabel,
   onupdate,
   onremove,
 }: {
@@ -21,11 +30,23 @@ export default function SurveyQuestionEditor({
   title: string;
   imageUrl?: string;
   options?: string[];
+  isMulti?: boolean;
+  isRequired?: boolean;
+  min?: number;
+  max?: number;
+  minLabel?: string;
+  maxLabel?: string;
   onupdate?: (updated: {
     answerType: AnswerType;
     title: string;
     image_url?: string;
     options?: string[];
+    min_label?: string;
+    max_label?: string;
+    min_value?: number;
+    max_value?: number;
+    is_multi?: boolean;
+    is_required?: boolean;
   }) => void;
   onremove?: (index: number) => void;
 }) {
@@ -35,81 +56,102 @@ export default function SurveyQuestionEditor({
     options || [''],
   );
   const [questionImage, setQuestionImage] = useState(imageUrl);
+  const [questionMulti, setQuestionMulti] = useState(isMulti);
+  const [questionRequired, setQuestionRequired] = useState(isRequired);
+  const [minValue] = useState<number>(min ?? 1);
+  const [maxValue, setMaxValue] = useState<number>(max ?? 10);
+
+  const [labels, setLabels] = useState<Record<number, string>>(() => ({
+    ...(min !== undefined && minLabel !== undefined ? { [min]: minLabel } : {}),
+    ...(max !== undefined && maxLabel !== undefined ? { [max]: maxLabel } : {}),
+  }));
+
+  const updateQuestion = (
+    overrides: Partial<Parameters<NonNullable<typeof onupdate>>[0]>,
+  ) => {
+    if (!onupdate) return;
+    onupdate({
+      answerType: questionType,
+      title: questionTitle,
+      image_url: questionImage,
+      is_multi: questionMulti,
+      is_required: questionRequired,
+      options:
+        questionType.includes('choice') ||
+        questionType.includes('checkbox') ||
+        questionType.includes('dropdown')
+          ? questionOptions
+          : undefined,
+      min_value: minValue,
+      max_value: maxValue,
+      min_label: labels[minValue],
+      max_label: labels[maxValue],
+      ...overrides,
+    });
+  };
+
+  const handleMaxValueChange = (val: number) => {
+    setMaxValue(val);
+    updateQuestion({
+      max_value: val,
+      max_label: labels[val],
+    });
+  };
+
+  const handleLabelChange = (targetValue: number, label: string) => {
+    const updatedLabels = {
+      ...labels,
+      [targetValue]: label,
+    };
+    setLabels(updatedLabels);
+    updateQuestion({
+      min_label: updatedLabels[minValue],
+      max_label: updatedLabels[maxValue],
+    });
+  };
 
   const handleOptionChange = (idx: number, value: string) => {
     const newOptions = [...questionOptions];
     newOptions[idx] = value;
     setQuestionOptions(newOptions);
-    if (onupdate) {
-      onupdate({
-        answerType: questionType,
-        title: questionTitle,
-        image_url: questionImage,
-        options: questionType.includes('choice') ? newOptions : undefined,
-      });
-    }
+    updateQuestion({ options: newOptions });
+  };
+
+  const handleRequiredChange = (value: boolean) => {
+    setQuestionRequired(value);
+    updateQuestion({ is_required: value });
+  };
+
+  const handleMultiChange = (value: boolean) => {
+    setQuestionMulti(value);
+    updateQuestion({ is_multi: value });
   };
 
   const handleImageChange = (value: string) => {
     setQuestionImage(value);
-    if (onupdate) {
-      onupdate({
-        answerType: questionType,
-        title: questionTitle,
-        image_url: value,
-        options: questionType.includes('choice') ? questionOptions : undefined,
-      });
-    }
+    updateQuestion({ image_url: value });
   };
 
   const handleTitleChange = (value: string) => {
     setQuestionTitle(value);
-    if (onupdate) {
-      onupdate({
-        answerType: questionType,
-        title: value,
-        image_url: questionImage,
-        options: questionType.includes('choice') ? questionOptions : undefined,
-      });
-    }
+    updateQuestion({ title: value });
   };
 
   const handleTypeChange = (val: AnswerType) => {
     setQuestionType(val);
-    if (onupdate) {
-      onupdate({
-        answerType: val,
-        title: questionTitle,
-        image_url: questionImage,
-        options: val.includes('choice') ? questionOptions : undefined,
-      });
-    }
+    updateQuestion({ answerType: val });
   };
 
   const addOption = () => {
     const newOptions = [...questionOptions, ''];
     setQuestionOptions(newOptions);
-    if (onupdate) {
-      onupdate({
-        answerType: questionType,
-        title: questionTitle,
-        image_url: questionImage,
-        options: newOptions,
-      });
-    }
+    updateQuestion({ options: newOptions });
   };
 
   const handleRemoveOption = (optIdx: number) => {
     const newOptions = questionOptions.filter((_, idx) => idx !== optIdx);
     setQuestionOptions(newOptions);
-    if (onupdate) {
-      onupdate({
-        answerType: questionType,
-        title: questionTitle,
-        image_url: questionImage,
-        options: questionType.includes('choice') ? newOptions : undefined,
-      });
-    }
+    updateQuestion({ options: newOptions });
   };
 
   return (
@@ -127,8 +169,11 @@ export default function SurveyQuestionEditor({
             value={questionTitle}
             onChange={(e) => handleTitleChange(e.target.value)}
           />
-          {questionType == 'single_choice' ||
-          questionType == 'multiple_choice' ? (
+          {questionType == 'checkbox' ||
+          questionType === 'dropdown' ||
+          questionType === 'single_choice' ||
+          questionType === 'multiple_choice' ||
+          questionType === 'linear_scale' ? (
             <FileUploader onUploadSuccess={handleImageChange}>
               <div className="cursor-pointer flex flex-row w-fit h-fit p-[10.59px] bg-white rounded-lg">
                 <Image2 className="w-[22.81px] h-[22.81px] " />
@@ -138,7 +183,6 @@ export default function SurveyQuestionEditor({
             <></>
           )}
         </div>
-
         {imageUrl ? (
           <Image
             width={300}
@@ -150,49 +194,57 @@ export default function SurveyQuestionEditor({
         ) : (
           <></>
         )}
-
         <div className="flex flex-col mt-2.5 gap-2.5">
-          {(questionType === 'single_choice' ||
+          {(questionType === 'checkbox' ||
+            questionType === 'dropdown' ||
+            questionType === 'single_choice' ||
             questionType === 'multiple_choice') && (
-            <div className="flex flex-col gap-2">
-              {questionOptions.map((opt, idx) => (
-                <div
-                  key={`option-${index}-${idx}`}
-                  className="flex gap-2.5 items-center"
-                >
-                  <DialPad2 className="w-6 h-6" />
-                  <Input
-                    className="border-b border-transparent !border-b-white focus:!border-transparent focus:rounded-md font-normal text-base/[24px] placeholder:text-neutral-600 text-neutral-300 rounded-none"
-                    type="text"
-                    placeholder={`Type something...`}
-                    value={opt}
-                    onChange={(e) => handleOptionChange(idx, e.target.value)}
-                  />
-                  <Remove
-                    className="cursor-pointer w-5 h-5 stroke-neutral-400 text-neutral-400"
-                    onClick={() => handleRemoveOption(idx)}
-                  />
-                </div>
-              ))}
-              <button
-                onClick={addOption}
-                className="cursor-pointer text-sm text-neutral-500 font-semibold text-left mt-2"
-              >
-                + Add Option
-              </button>
-            </div>
+            <ObjectiveOption
+              questionOptions={questionOptions}
+              index={index}
+              questionType={questionType}
+              handleOptionChange={handleOptionChange}
+              handleRemoveOption={handleRemoveOption}
+              addOption={addOption}
+            />
+          )}
+          {questionType === 'linear_scale' && (
+            <LinearScaleSelection
+              minValue={minValue}
+              maxValue={maxValue}
+              setMaxValue={handleMaxValueChange}
+              labels={labels}
+              setLabels={handleLabelChange}
+            />
           )}
         </div>
-
         <div className="flex flex-row w-full justify-end items-center">
-          <div
-            className="cursor-pointer flex flex-row w-fit gap-[5px] items-center"
-            onClick={() => onremove?.(index)}
-          >
-            <div className="text-[15px] text-neutral-500 font-medium cursor-pointer">
-              Delete
+          <div className="flex flex-row w-fit gap-10">
+            {questionType == 'checkbox' && (
+              <LabelSwitchButton
+                bgColor="bg-blue-500"
+                textColor="text-blue-500"
+                label="Multiple selection"
+                value={isMulti ?? false}
+                onChange={handleMultiChange}
+              />
+            )}
+            <LabelSwitchButton
+              bgColor="bg-red-500"
+              textColor="text-red-500"
+              label="Required"
+              value={isRequired ?? false}
+              onChange={handleRequiredChange}
+            />
+            <div
+              className="cursor-pointer flex flex-row w-fit gap-1.25 items-center"
+              onClick={() => onremove?.(index)}
+            >
+              <div className="text-[15px] text-neutral-500 font-medium cursor-pointer">
+                Delete
+              </div>
+              <Trash2 className="w-4.5 h-4.5 stroke-neutral-500 cursor-pointer" />
             </div>
-            <Trash2 className="w-[18px] h-[18px] stroke-neutral-500 cursor-pointer" />
           </div>
         </div>
       </div>
