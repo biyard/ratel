@@ -15,8 +15,10 @@ pub struct Space {
     #[api_model(summary, auto = [insert, update])]
     pub updated_at: i64,
 
+    //FIXME: remove this field when unused
     #[api_model(summary, nullable, action_by_id = [update_space])]
     pub title: Option<String>,
+    //FIXME: remove this field when unused
     #[api_model(summary, action_by_id = [update_space])]
     pub html_contents: String,
     #[api_model(summary, type = INTEGER, action = [create_space])]

@@ -4,7 +4,7 @@ import { DehydratedState, HydrationBoundary } from '@tanstack/react-query';
 import React, { createContext, useContext } from 'react';
 
 type ContextType = {
-  spaceId: number;
+  userId: number;
 };
 
 export const Context = createContext<ContextType | undefined>(undefined);
@@ -12,20 +12,20 @@ export const Context = createContext<ContextType | undefined>(undefined);
 export default function ClientProviders({
   children,
   dehydratedState,
-  spaceId,
+  userId,
 }: {
   children: React.ReactNode;
   dehydratedState: DehydratedState;
-  spaceId: number;
+  userId: number;
 }) {
   return (
     <HydrationBoundary state={dehydratedState}>
-      <Context.Provider value={{ spaceId }}>{children}</Context.Provider>
+      <Context.Provider value={{ userId }}>{children}</Context.Provider>
     </HydrationBoundary>
   );
 }
 
-export function useSpaceByIdContext() {
+export function useTeamsContext() {
   const context = useContext(Context);
 
   if (!context)

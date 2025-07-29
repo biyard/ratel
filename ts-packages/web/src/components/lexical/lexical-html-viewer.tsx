@@ -61,11 +61,7 @@ export default function LexicalHtmlViewer({
         contentEditable={
           <ContentEditable className="lexical-content-editable outline-none cursor-default select-text whitespace-pre-wrap break-words" />
         }
-        placeholder={
-          <div className="absolute top-4 left-4 text-gray-400 select-none pointer-events-none">
-            {'No Content Available'}
-          </div>
-        }
+        placeholder={<></>}
         ErrorBoundary={LexicalErrorBoundary}
       />
       <HtmlContentLoader htmlString={htmlString} />
