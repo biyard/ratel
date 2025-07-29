@@ -4,6 +4,7 @@ import Image from 'next/image';
 import CustomCheckbox from '@/components/checkbox/custom-checkbox';
 import { Answer } from '@/lib/api/models/response';
 import { Question } from '@/lib/api/models/survey';
+import Wrapper from './_components/wrapper';
 
 export default function ObjectiveViewer({
   answerType,
@@ -37,20 +38,12 @@ export default function ObjectiveViewer({
 }) {
   return (
     <>
-      <div className="flex flex-row w-full mt-1.75 mb-3.75 font-semibold text-base/[22.5px] text-white gap-1">
-        {isRequired ? (
-          <div className="text-[#ff6467]">[Required]</div>
-        ) : (
-          <div className="text-blue-500">[Optional]</div>
-        )}
-        <div className="text-blue-500">
-          {answerType === 'single_choice' ||
-          (answerType === 'checkbox' && !isMulti)
-            ? '[Single Choice]'
-            : '[Multiple Choice]'}
-        </div>
-        <div>{title}</div>
-      </div>
+      <Wrapper
+        isRequired={isRequired}
+        answerType={answerType}
+        isMulti={isMulti}
+        title={title}
+      />
       {imageUrl ? (
         <Image
           width={700}
