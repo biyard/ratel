@@ -7,7 +7,7 @@ import { FileInfo } from '@/lib/api/models/feeds';
 import { useDeliberationSpaceContext } from '../provider.client';
 
 export default function ThreadPage() {
-  const { isEdit, thread, setThread } = useDeliberationSpaceContext();
+  const { isEdit, thread, handleUpdateThread } = useDeliberationSpaceContext();
 
   return (
     <div className="flex flex-row w-full gap-5">
@@ -28,7 +28,7 @@ export default function ThreadPage() {
             isEdit={isEdit}
             htmlContents={thread.html_contents}
             setContents={(html_contents: string) => {
-              setThread({
+              handleUpdateThread({
                 ...thread,
                 html_contents,
               });
@@ -40,13 +40,13 @@ export default function ThreadPage() {
             onremove={(index: number) => {
               const newFiles = [...thread.files];
               newFiles.splice(index, 1);
-              setThread({
+              handleUpdateThread({
                 ...thread,
                 files: newFiles,
               });
             }}
             onadd={(file: FileInfo) => {
-              setThread({
+              handleUpdateThread({
                 ...thread,
                 files: [...thread.files, file],
               });

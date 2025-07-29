@@ -7,7 +7,7 @@ import { format } from 'date-fns';
 
 import { v4 as uuidv4 } from 'uuid';
 import discussionImg from '@/assets/images/discussion.png';
-import { Discussion, Member } from '@/lib/api/models/discussion';
+import { Member } from '@/lib/api/models/discussion';
 import { Add } from './add';
 import { SpaceStatus } from '@/lib/api/models/spaces';
 import { ArrowRight } from 'lucide-react';
@@ -19,116 +19,42 @@ import { TotalUser } from '@/lib/api/models/user';
 import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { usePopup } from '@/lib/contexts/popup-service';
 import NewDiscussion from './modal/new_discussion';
-import { useDeliberationSpaceContext } from '../provider.client';
+import {
+  useDeliberationSpace,
+  useDeliberationSpaceContext,
+} from '../provider.client';
 
-export interface SpaceDiscussionProps {
-  isEdit?: boolean;
-  status: SpaceStatus;
-  discussions: DiscussionInfo[];
-  discussionRaws: Discussion[];
-  onremove?: (index: number) => void;
-  onupdate?: (index: number, discussion: DiscussionInfo) => void;
-  onadd?: (discussion: DiscussionInfo) => void;
-  viewRecord?: (discussionId: number, record: string) => void;
-}
-
-export default function SpaceDiscussion({
-  isEdit = false,
-  status,
-  discussions,
-  discussionRaws,
-  onadd = () => {},
-  onremove = () => {},
-  onupdate = () => {},
-  viewRecord = () => {},
-}: SpaceDiscussionProps) {
-  const router = useRouter();
-  const { data: userInfo } = useSuspenseUserInfo();
-  const userId = userInfo?.id || 0;
-
-  const moveDiscussion = (spaceId: number, discussionId: number) => {
-    router.push(route.discussionById(spaceId, discussionId));
-  };
+export default function SpaceDiscussion() {
+  const { isEdit } = useDeliberationSpaceContext();
 
   return (
     <div className="flex flex-col w-full">
-      {isEdit ? (
-        <EditableDiscussion
-          discussions={discussions}
-          onadd={() => {
-            const started_at = Math.floor(Date.now() / 1000);
-            const ended_at = Math.floor(Date.now() / 1000);
-            const name = '';
-            const description = '';
-
-            onadd({
-              started_at,
-              ended_at,
-              name,
-              description,
-              participants: [],
-              discussion_id: undefined,
-            });
-          }}
-          onupdate={(index: number, discussion: DiscussionInfo) => {
-            onupdate(index, discussion);
-          }}
-          onremove={(index: number) => {
-            onremove(index);
-          }}
-        />
-      ) : (
-        <ViewDiscussion
-          userId={userId}
-          discussions={discussionRaws}
-          status={status}
-          moveDiscussion={moveDiscussion}
-          viewRecord={viewRecord}
-        />
-      )}
+      {isEdit ? <EditableDiscussion /> : <ViewDiscussion />}
     </div>
   );
 }
 
-function ViewDiscussion({
-  userId,
-  discussions,
-  status,
-  moveDiscussion,
-  viewRecord,
-}: {
-  userId: number;
-  discussions: Discussion[];
-  status: SpaceStatus;
-  moveDiscussion: (spaceId: number, discussionId: number) => void;
-  viewRecord: (discussionId: number, record: string) => void;
-}) {
+function ViewDiscussion() {
   return (
     <div className="flex flex-col w-full gap-2.5">
-      <DiscussionSchedules
-        userId={userId}
-        discussions={discussions}
-        status={status}
-        moveDiscussion={moveDiscussion}
-        viewRecord={viewRecord}
-      />
+      <DiscussionSchedules />
     </div>
   );
 }
 
-function DiscussionSchedules({
-  userId,
-  discussions,
-  status,
-  moveDiscussion,
-  viewRecord,
-}: {
-  userId: number;
-  discussions: Discussion[];
-  status: SpaceStatus;
-  moveDiscussion: (spaceId: number, discussionId: number) => void;
-  viewRecord: (discussionId: number, record: string) => void;
-}) {
+function DiscussionSchedules() {
+  const { status, handleViewRecord } = useDeliberationSpaceContext();
+  const { data: userInfo } = useSuspenseUserInfo();
+  const userId = userInfo?.id || 0;
+
+  const discussions = useDeliberationSpace().discussions;
+
+  const router = useRouter();
+
+  const handleMoveDiscussion = (spaceId: number, discussionId: number) => {
+    router.push(route.discussionById(spaceId, discussionId));
+  };
+
   return (
     <div className="flex flex-col gap-2.5">
       <BlackBox>
@@ -149,10 +75,10 @@ function DiscussionSchedules({
                   members={discussion.members}
                   record={discussion.record}
                   onclick={() => {
-                    moveDiscussion(discussion.space_id, discussion.id);
+                    handleMoveDiscussion(discussion.space_id, discussion.id);
                   }}
                   viewRecordClick={() => {
-                    viewRecord(discussion.id, discussion.record ?? '');
+                    handleViewRecord(discussion.id, discussion.record ?? '');
                   }}
                 />
                 {index !== discussions.length - 1 ? (
@@ -298,22 +224,45 @@ function JoinButton({ onClick }: { onClick: () => void }) {
   );
 }
 
-function EditableDiscussion({
-  discussions,
-  onremove,
-  onupdate,
-}: {
-  discussions: DiscussionInfo[];
-  onremove: (index: number) => void;
-  onadd: () => void;
-  onupdate: (index: number, discussion: DiscussionInfo) => void;
-}) {
-  const { deliberation, setDeliberation } = useDeliberationSpaceContext();
+function EditableDiscussion() {
+  const { deliberation, handleUpdateDeliberation } =
+    useDeliberationSpaceContext();
+  const discussions = deliberation.discussions;
   const popup = usePopup();
   const stableKeys = useMemo(
     () => discussions.map(() => uuidv4()),
     [discussions.length],
   );
+
+  const handleAddDiscussion = (discussion: DiscussionInfo) => {
+    handleUpdateDeliberation({
+      ...deliberation,
+      discussions: [...deliberation.discussions, discussion],
+    });
+  };
+
+  const handleRemoveDiscussion = (index: number) => {
+    const updated = deliberation.discussions.filter((_, i) => i !== index);
+
+    handleUpdateDeliberation({
+      ...deliberation,
+      discussions: updated,
+    });
+  };
+
+  const handleUpdateDiscussion = (
+    index: number,
+    discussion: DiscussionInfo,
+  ) => {
+    const updated = [...deliberation.discussions];
+    updated[index] = discussion;
+
+    handleUpdateDeliberation({
+      ...deliberation,
+      discussions: updated,
+    });
+  };
+
   return (
     <BlackBox>
       <div className="flex flex-col w-full gap-5">
@@ -335,10 +284,7 @@ function EditableDiscussion({
                       participants: [],
                     }}
                     onadd={(discussion: DiscussionInfo) => {
-                      setDeliberation({
-                        ...deliberation,
-                        discussions: [...deliberation.discussions, discussion],
-                      });
+                      handleAddDiscussion(discussion);
                     }}
                   />,
                 )
@@ -360,10 +306,10 @@ function EditableDiscussion({
             description={discussion.description}
             participants={discussion.participants}
             onupdate={(index: number, discussion: DiscussionInfo) => {
-              onupdate(index, discussion);
+              handleUpdateDiscussion(index, discussion);
             }}
             onremove={(index: number) => {
-              onremove(index);
+              handleRemoveDiscussion(index);
             }}
           />
         ))}
