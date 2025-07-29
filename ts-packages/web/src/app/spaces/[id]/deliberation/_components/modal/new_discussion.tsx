@@ -23,6 +23,10 @@ export default function NewDiscussion({
 
   const [startTime, setStartTime] = useState<number>(discussion.started_at);
   const [endTime, setEndTime] = useState<number>(discussion.ended_at);
+
+  const [diff, setDiff] = useState<number>(
+    discussion.ended_at - discussion.started_at,
+  );
   return (
     <div className="max-w-[900px] w-full">
       <div className="flex flex-col py-2.5 gap-[5px]">
@@ -67,6 +71,7 @@ export default function NewDiscussion({
             onChange={(date) => {
               const newStart = Math.floor(date);
               setStartTime(newStart);
+              setEndTime(newStart + diff);
             }}
           />
           <TimeDropdown
@@ -74,6 +79,7 @@ export default function NewDiscussion({
             onChange={(timestamp) => {
               const newStart = Math.floor(timestamp);
               setStartTime(newStart);
+              setEndTime(newStart + diff);
             }}
           />
           <div className="w-[15px] h-0.25 bg-neutral-600" />
@@ -81,6 +87,8 @@ export default function NewDiscussion({
             value={endTime}
             onChange={(date) => {
               const newEnd = Math.floor(date);
+              const diff = newEnd - startTime;
+              setDiff(diff);
               setEndTime(newEnd);
             }}
           />
@@ -88,6 +96,8 @@ export default function NewDiscussion({
             value={endTime}
             onChange={(timestamp) => {
               const newEnd = Math.floor(timestamp);
+              const diff = newEnd - startTime;
+              setDiff(diff);
               setEndTime(newEnd);
             }}
           />
