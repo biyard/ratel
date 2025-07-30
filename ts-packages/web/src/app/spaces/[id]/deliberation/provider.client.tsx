@@ -476,7 +476,7 @@ export default function ClientProviders({
     setSelectedType(type);
   };
 
-    const handleDelete = async () => {
+  const handleDelete = async () => {
     try {
       await post(ratelApi.spaces.deleteSpaceById(spaceId), { delete: {} });
       router.push('/');
