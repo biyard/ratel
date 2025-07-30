@@ -19,7 +19,7 @@ export default function RemoteGalleryView({
   participants: Participant[];
   u: DiscussionParticipant[];
   focusedAttendeeId: string | null;
-  setFocusedAttendeeId: React.Dispatch<React.SetStateAction<string | null>>;
+  setFocusedAttendeeId: (attendeeId: string | null) => void;
 }) {
   const users = u.filter(
     (user, index, self) =>
