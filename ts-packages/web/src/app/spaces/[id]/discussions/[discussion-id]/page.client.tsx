@@ -83,7 +83,7 @@ function Page() {
             }}
           />
 
-          {meetingSession && !isSharing && (
+          {meetingSession && !isSharing && !remoteContentTileOwner && (
             <RemoteGalleryView
               meetingSession={meetingSession}
               videoTiles={videoTiles}
