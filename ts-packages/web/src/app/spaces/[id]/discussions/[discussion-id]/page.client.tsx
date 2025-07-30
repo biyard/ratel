@@ -183,15 +183,29 @@ function Page() {
               router.replace(route.deliberationSpaceById(discussion.space_id));
             }}
             onRecordClick={async () => {
+              if (!meetingSession) return;
+              const av = meetingSession.audioVideo;
+
               if (!isRecording) {
                 await post(
                   ratelApi.discussions.actDiscussionById(spaceId, discussionId),
                   startRecordingRequest(),
                 );
+
+                av.realtimeSendDataMessage(
+                  'recording-status',
+                  new TextEncoder().encode('start'),
+                  10000,
+                );
               } else {
                 await post(
                   ratelApi.discussions.actDiscussionById(spaceId, discussionId),
                   endRecordingRequest(),
+                );
+                av.realtimeSendDataMessage(
+                  'recording-status',
+                  new TextEncoder().encode('stop'),
+                  10000,
                 );
               }
               changeIsRecording(!isRecording);
