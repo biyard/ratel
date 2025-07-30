@@ -13,7 +13,6 @@ import { ratelApi } from '@/lib/api/ratel_api';
 import { useApiCall } from '@/lib/api/use-send';
 import { logger } from '@/lib/logger';
 import { route } from '@/route';
-import { StateSetter } from '@/types';
 import { UseSuspenseQueryResult } from '@tanstack/react-query';
 import {
   ConsoleLogger,
@@ -38,35 +37,37 @@ type ContextType = {
   tileMapRef: React.RefObject<Record<number, string>>;
 
   isFirstClicked: boolean;
-  setIsFirstClicked: StateSetter<boolean>;
+  changeIsFirstClicked: (clicked: boolean) => void;
   isVideoOn: boolean;
-  setIsVideoOn: StateSetter<boolean>;
+  changeIsVideoOn: (videoOn: boolean) => void;
   isSharing: boolean;
-  setIsSharing: StateSetter<boolean>;
+  changeIsSharing: (sharing: boolean) => void;
   isAudioOn: boolean;
-  setIsAudioOn: StateSetter<boolean>;
+  changeIsAudioOn: (audioOn: boolean) => void;
   isRecording: boolean;
-  setIsRecording: StateSetter<boolean>;
+  changeIsRecording: (recording: boolean) => void;
   videoTiles: { tileId: number; attendeeId: string }[];
-  setVideoTiles: StateSetter<{ tileId: number; attendeeId: string }[]>;
+  changeVideoTiles: (tiles: { tileId: number; attendeeId: string }[]) => void;
   meetingSession: DefaultMeetingSession | null;
-  setMeetingSession: StateSetter<DefaultMeetingSession | null>;
+  changeMeetingSession: (session: DefaultMeetingSession | null) => void;
   remoteContentTileOwner: string | null;
-  setRemoteContentTileOwner: StateSetter<string | null>;
+  changeRemoteContentTileOwner: (owner: string | null) => void;
   micStates: Record<string, boolean>;
-  setMicStates: StateSetter<Record<string, boolean>>;
+  changeMicStates: (states: Record<string, boolean>) => void;
   videoStates: Record<string, boolean>;
-  setVideoStates: StateSetter<Record<string, boolean>>;
+  changeVideoStates: (states: Record<string, boolean>) => void;
   messages: { senderId: string; text: string; timestamp: number }[];
-  setMessages: StateSetter<
-    { senderId: string; text: string; timestamp: number }[]
-  >;
+  changeMessages: (
+    msgs: { senderId: string; text: string; timestamp: number }[],
+  ) => void;
   activePanel: 'participants' | 'chat' | null | undefined;
-  setActivePanel: StateSetter<'participants' | 'chat' | null | undefined>;
+  changeActivePanel: (
+    panel: 'participants' | 'chat' | null | undefined,
+  ) => void;
   participants: Participant[];
-  setParticipants: StateSetter<Participant[]>;
+  changeParticipants: (newParticipants: Participant[]) => void;
   focusedAttendeeId: string | null;
-  setFocusedAttendeeId: StateSetter<string | null>;
+  changeFocusedAttendeeId: (attendeeId: string | null) => void;
 
   data: UseSuspenseQueryResult<Discussion>;
   discussion: Discussion;
@@ -462,6 +463,68 @@ export default function ClientProviders({
   const focusedNickname =
     focusedParticipant?.nickname ?? focusedParticipant?.username ?? '';
 
+  const changeIsFirstClicked = (clicked: boolean) => {
+    setIsFirstClicked(clicked);
+  };
+
+  const changeIsVideoOn = (videoOn: boolean) => {
+    setIsVideoOn(videoOn);
+  };
+
+  const changeIsSharing = (sharing: boolean) => {
+    setIsSharing(sharing);
+  };
+
+  const changeIsAudioOn = (audioOn: boolean) => {
+    setIsAudioOn(audioOn);
+  };
+
+  const changeIsRecording = (recording: boolean) => {
+    setIsRecording(recording);
+  };
+
+  const changeVideoTiles = (
+    tiles: { tileId: number; attendeeId: string }[],
+  ) => {
+    setVideoTiles(tiles);
+  };
+
+  const changeMeetingSession = (session: DefaultMeetingSession | null) => {
+    setMeetingSession(session);
+  };
+
+  const changeRemoteContentTileOwner = (owner: string | null) => {
+    setRemoteContentTileOwner(owner);
+  };
+
+  const changeMicStates = (states: Record<string, boolean>) => {
+    setMicStates(states);
+  };
+
+  const changeVideoStates = (states: Record<string, boolean>) => {
+    setVideoStates(states);
+  };
+
+  const changeMessages = (
+    msgs: { senderId: string; text: string; timestamp: number }[],
+  ) => {
+    setMessages(msgs);
+  };
+
+  const changeActivePanel = (
+    panel: 'participants' | 'chat' | null | undefined,
+  ) => {
+    setActivePanel(panel);
+  };
+
+  const changeParticipants = (newParticipants: Participant[]) => {
+    setParticipants(newParticipants);
+  };
+
+  const changeFocusedAttendeeId = (attendeeId: string | null) => {
+    setFocusedAttendeeId(attendeeId);
+  };
+
   return (
     <Context.Provider
       value={{
@@ -469,33 +532,33 @@ export default function ClientProviders({
         discussionId,
         tileMapRef,
         isFirstClicked,
-        setIsFirstClicked,
+        changeIsFirstClicked,
         isVideoOn,
-        setIsVideoOn,
+        changeIsVideoOn,
         isSharing,
-        setIsSharing,
+        changeIsSharing,
         isAudioOn,
-        setIsAudioOn,
+        changeIsAudioOn,
         isRecording,
-        setIsRecording,
+        changeIsRecording,
         videoTiles,
-        setVideoTiles,
+        changeVideoTiles,
         meetingSession,
-        setMeetingSession,
+        changeMeetingSession,
         remoteContentTileOwner,
-        setRemoteContentTileOwner,
+        changeRemoteContentTileOwner,
         micStates,
-        setMicStates,
+        changeMicStates,
         videoStates,
-        setVideoStates,
+        changeVideoStates,
         messages,
-        setMessages,
+        changeMessages,
         activePanel,
-        setActivePanel,
+        changeActivePanel,
         participants,
-        setParticipants,
+        changeParticipants,
         focusedAttendeeId,
-        setFocusedAttendeeId,
+        changeFocusedAttendeeId,
         data,
         discussion,
         users,
