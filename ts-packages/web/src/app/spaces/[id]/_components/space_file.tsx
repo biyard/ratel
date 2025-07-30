@@ -1,13 +1,16 @@
 import { FileInfo } from '@/lib/api/models/feeds';
 import React from 'react';
-import Jpg from '@/assets/icons/files/jpg.svg';
-import Png from '@/assets/icons/files/png.svg';
-import Pdf from '@/assets/icons/files/pdf.svg';
-import Zip from '@/assets/icons/files/zip.svg';
-import Word from '@/assets/icons/files/docx.svg';
-import Pptx from '@/assets/icons/files/pptx.svg';
-import Excel from '@/assets/icons/files/xlsx.svg';
-import Upload from '@/assets/icons/upload.svg';
+import {
+  Excel,
+  Jpg,
+  MP4,
+  Pdf,
+  Png,
+  Pptx,
+  Word,
+  Zip,
+  Upload,
+} from '@/components/icons';
 
 export default function SpaceFile({
   file,
@@ -34,6 +37,8 @@ export default function SpaceFile({
           <Word />
         ) : file.ext === 'PPTX' ? (
           <Pptx />
+        ) : file.ext === 'MP4' ? (
+          <MP4 />
         ) : (
           <Excel />
         )}

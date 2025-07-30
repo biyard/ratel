@@ -5,18 +5,21 @@ import { ratelApi } from '@/lib/api/ratel_api';
 import { useApiCall } from '@/lib/api/use-send';
 import { getFileType, toContentType } from '@/lib/file-utils';
 import { logger } from '@/lib/logger';
+import { showErrorToast } from '@/lib/toast';
 import { cn } from '@/lib/utils';
 import React, { useRef } from 'react';
 
 export interface FileUploaderMetadataProps {
   onUploadSuccess?: (fileInfo: FileInfo) => void;
   isImage?: boolean; // true: image only / false: PDF only
+  isMedia?: boolean;
 }
 
 export default function FileUploaderMetadata({
   children,
   onUploadSuccess,
   isImage = true,
+  isMedia = false,
   ...props
 }: React.ComponentProps<'div'> & FileUploaderMetadataProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -33,21 +36,32 @@ export default function FileUploaderMetadata({
       return;
     }
 
-    if (isImage && !file.type.startsWith('image/')) {
-      alert('Only image files are supported.');
+    const fileType = file.type;
+    const fileName = file.name;
+
+    const isImageFile = fileType.startsWith('image/');
+    const isVideoFile = fileType.startsWith('video/');
+    const isPdfFile = fileType === 'application/pdf';
+    const isZipFile =
+      fileType === 'application/zip' || fileName.endsWith('.zip');
+
+    const fileTypeKey = getFileType(file);
+    logger.debug('FileType:', fileTypeKey);
+
+    const isValidFile = (() => {
+      if (isImage && isMedia) return isImageFile || isVideoFile;
+      if (isImage && !isMedia) return isImageFile;
+      if (!isImage && isMedia) return isVideoFile || isPdfFile || isZipFile;
+      return isPdfFile;
+    })();
+
+    if (!isValidFile) {
+      showErrorToast('Unsupported file type selected.');
       return;
     }
-
-    if (!isImage && file.type !== 'application/pdf') {
-      alert('Only PDF files are supported.');
-      return;
-    }
-
-    const fileType = getFileType(file);
-    logger.debug('FileType:', fileType);
 
     const res: AssetPresignedUris = await get(
-      ratelApi.assets.getPresignedUrl(fileType),
+      ratelApi.assets.getPresignedUrl(fileTypeKey),
     );
     logger.debug('Presigned URL response:', res);
 
@@ -63,30 +77,32 @@ export default function FileUploaderMetadata({
       const uploadResponse = await fetch(presignedUrl, {
         method: 'PUT',
         headers: {
-          'Content-Type': toContentType(fileType),
+          'Content-Type': toContentType(fileTypeKey),
         },
         body: file,
       });
 
-      if (!uploadResponse.ok) {
-        throw new Error('File upload failed');
-      }
-
+      if (!uploadResponse.ok) throw new Error('File upload failed');
       logger.debug('File uploaded successfully:', file.name);
 
-      if (onUploadSuccess) {
-        const fileInfo: FileInfo = {
-          name: file.name,
-          size: `${(file.size / 1024).toFixed(1)} KB`,
-          ext: fileType.toUpperCase(),
-          url: publicUrl,
-        };
-        onUploadSuccess(fileInfo);
-      }
+      onUploadSuccess?.({
+        name: file.name,
+        size: `${(file.size / 1024).toFixed(1)} KB`,
+        ext: fileTypeKey.toUpperCase(),
+        url: publicUrl,
+      });
     } catch (error) {
       logger.error('Error uploading file:', error);
     }
   };
+
+  const accept = (() => {
+    if (isImage && isMedia) return 'image/*,video/*';
+    if (isImage && !isMedia) return 'image/*';
+    if (!isImage && isMedia)
+      return 'video/*,application/pdf,application/zip,.zip';
+    return 'application/pdf';
+  })();
 
   return (
     <div
@@ -97,7 +113,7 @@ export default function FileUploaderMetadata({
       <input
         ref={inputRef}
         type="file"
-        accept={isImage ? 'image/*' : 'application/pdf'}
+        accept={accept}
         className="hidden"
         onChange={handleFileChange}
       />
