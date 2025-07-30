@@ -176,150 +176,149 @@ export function CreatePost() {
       );
     }
   }, [editorRef, content, createEditorStateFromHTML]);
-
-  if (isLoading || !expand) {
-    return <Fragment />;
-  }
-
   return (
-    <LexicalComposer initialConfig={editorConfig}>
-      <div className="w-full bg-component-bg border-t-6 border-x border-b border-primary rounded-t-lg overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center p-4 justify-between">
-          <div className="flex items-center gap-3">
-            <div className="size-6 rounded-full">
-              <Image
-                width={40}
-                height={40}
-                src={userInfo?.profile_url || '/default-profile.png'}
-                alt="Profile"
-                className="w-full h-full object-cover"
+    <div
+      className={`flex flex-col w-full ${isLoading || !expand ? 'hidden' : 'block'}`}
+    >
+      <LexicalComposer initialConfig={editorConfig}>
+        <div className="w-full bg-component-bg border-t-6 border-x border-b border-primary rounded-t-lg overflow-hidden">
+          {/* Header */}
+          <div className="flex items-center p-4 justify-between">
+            <div className="flex items-center gap-3">
+              <div className="size-6 rounded-full">
+                <Image
+                  width={40}
+                  height={40}
+                  src={userInfo?.profile_url || '/default-profile.png'}
+                  alt="Profile"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-white font-medium text-lg">
+                  {userInfo?.nickname || 'Anonymous'}
+                </span>
+              </div>
+              <Certified className="size-5" />
+            </div>
+            <div
+              className={cn('cursor-pointer')}
+              onClick={() => setExpand(!expand)}
+            >
+              <DoubleArrowDown />
+            </div>
+          </div>
+
+          <>
+            {/* Title input */}
+            <div className="px-4 pt-4">
+              <input
+                type="text"
+                placeholder="Write a title..."
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="w-full bg-transparent text-white text-xl font-semibold placeholder-neutral-500 outline-none border-none"
               />
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-white font-medium text-lg">
-                {userInfo?.nickname || 'Anonymous'}
-              </span>
+
+            {/* Lexical Content Area */}
+            <div className="px-4 pt-2 min-h-[80px] relative text-neutral-300 text-[15px] leading-relaxed">
+              <RichTextPlugin
+                contentEditable={
+                  <ContentEditable className="outline-none resize-none w-full min-h-[60px]" />
+                }
+                placeholder={
+                  <div className="absolute top-0 text-neutral-500 pointer-events-none select-none">
+                    Type here, Use Markdown, BB code, or HTML to format.
+                  </div>
+                }
+                ErrorBoundary={LexicalErrorBoundary}
+              />
+              <OnChangePlugin onChange={handleLexicalChange} />
+
+              <HistoryPlugin />
+              <EditorRefPlugin
+                setEditorRef={(editor) => (editorRef.current = editor)}
+              />
             </div>
-            <Certified className="size-5" />
-          </div>
-          <div
-            className={cn('cursor-pointer')}
-            onClick={() => setExpand(!expand)}
-          >
-            <DoubleArrowDown />
-          </div>
-        </div>
 
-        <>
-          {/* Title input */}
-          <div className="px-4 pt-4">
-            <input
-              type="text"
-              placeholder="Write a title..."
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="w-full bg-transparent text-white text-xl font-semibold placeholder-neutral-500 outline-none border-none"
-            />
-          </div>
-
-          {/* Lexical Content Area */}
-          <div className="px-4 pt-2 min-h-[80px] relative text-neutral-300 text-[15px] leading-relaxed">
-            <RichTextPlugin
-              contentEditable={
-                <ContentEditable className="outline-none resize-none w-full min-h-[60px]" />
-              }
-              placeholder={
-                <div className="absolute top-0 text-neutral-500 pointer-events-none select-none">
-                  Type here, Use Markdown, BB code, or HTML to format.
-                </div>
-              }
-              ErrorBoundary={LexicalErrorBoundary}
-            />
-            <OnChangePlugin onChange={handleLexicalChange} />
-
-            <HistoryPlugin />
-            <EditorRefPlugin
-              setEditorRef={(editor) => (editorRef.current = editor)}
-            />
-          </div>
-
-          {/* Image previews */}
-          {image && (
-            <div className="px-4 pt-2">
-              <div className="flex flex-wrap gap-2">
-                <div className="relative size-16">
-                  <Image
-                    width={64}
-                    height={64}
-                    src={image}
-                    alt={`Uploaded image`}
-                    className="object-cover rounded-lg border border-neutral-600"
-                  />
-                  <button
-                    onClick={removeImage}
-                    className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-600 rounded-full flex items-center justify-center text-white text-xs hover:bg-red-700 border-2 border-component-bg"
-                    aria-label={`Remove uploaded image`}
-                  >
-                    <X size={12} />
-                  </button>
+            {/* Image previews */}
+            {image && (
+              <div className="px-4 pt-2">
+                <div className="flex flex-wrap gap-2">
+                  <div className="relative size-16">
+                    <Image
+                      width={64}
+                      height={64}
+                      src={image}
+                      alt={`Uploaded image`}
+                      className="object-cover rounded-lg border border-neutral-600"
+                    />
+                    <button
+                      onClick={removeImage}
+                      className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-600 rounded-full flex items-center justify-center text-white text-xs hover:bg-red-700 border-2 border-component-bg"
+                      aria-label={`Remove uploaded image`}
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
                 </div>
               </div>
+            )}
+
+            {/* Bottom toolbar */}
+            <div className="flex items-center justify-between p-4 text-neutral-400">
+              <ToolbarPlugin onImageUpload={(url) => setImage(url)} />
+
+              <div className="flex items-center gap-4">
+                {/* Status indicator */}
+                {status === 'saving' && (
+                  <div className="flex items-center gap-2 text-sm text-neutral-400">
+                    <Loader2 className="animate-spin" size={16} />
+                    <span>Saving...</span>
+                  </div>
+                )}
+                {status === 'error' && (
+                  <span className="text-sm text-red-500">Save failed</span>
+                )}
+
+                {isPublishedPost ? (
+                  // Save button for published posts
+                  <Button
+                    variant="rounded_primary"
+                    size="default"
+                    onClick={savePost}
+                    disabled={!title.trim() || status !== 'idle'}
+                    className="gap-2"
+                  >
+                    {status === 'saving' ? (
+                      <Loader2 className="animate-spin" />
+                    ) : (
+                      <UserCircleIcon />
+                    )}
+                  </Button>
+                ) : (
+                  // Publish button for drafts
+                  <Button
+                    variant="rounded_primary"
+                    size="default"
+                    onClick={publishPost}
+                    disabled={isSubmitDisabled}
+                    className="gap-2"
+                  >
+                    {status === 'publishing' ? (
+                      <Loader2 className="animate-spin" />
+                    ) : (
+                      <UserCircleIcon />
+                    )}
+                  </Button>
+                )}
+              </div>
             </div>
-          )}
-
-          {/* Bottom toolbar */}
-          <div className="flex items-center justify-between p-4 text-neutral-400">
-            <ToolbarPlugin onImageUpload={(url) => setImage(url)} />
-
-            <div className="flex items-center gap-4">
-              {/* Status indicator */}
-              {status === 'saving' && (
-                <div className="flex items-center gap-2 text-sm text-neutral-400">
-                  <Loader2 className="animate-spin" size={16} />
-                  <span>Saving...</span>
-                </div>
-              )}
-              {status === 'error' && (
-                <span className="text-sm text-red-500">Save failed</span>
-              )}
-
-              {isPublishedPost ? (
-                // Save button for published posts
-                <Button
-                  variant="rounded_primary"
-                  size="default"
-                  onClick={savePost}
-                  disabled={!title.trim() || status !== 'idle'}
-                  className="gap-2"
-                >
-                  {status === 'saving' ? (
-                    <Loader2 className="animate-spin" />
-                  ) : (
-                    <UserCircleIcon />
-                  )}
-                </Button>
-              ) : (
-                // Publish button for drafts
-                <Button
-                  variant="rounded_primary"
-                  size="default"
-                  onClick={publishPost}
-                  disabled={isSubmitDisabled}
-                  className="gap-2"
-                >
-                  {status === 'publishing' ? (
-                    <Loader2 className="animate-spin" />
-                  ) : (
-                    <UserCircleIcon />
-                  )}
-                </Button>
-              )}
-            </div>
-          </div>
-        </>
-      </div>
-    </LexicalComposer>
+          </>
+        </div>
+      </LexicalComposer>
+    </div>
   );
 }
 

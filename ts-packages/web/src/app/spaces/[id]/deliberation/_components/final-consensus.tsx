@@ -2,12 +2,12 @@
 
 import React from 'react';
 import SpaceContents from '../../_components/space_contents';
-import SpaceFiles from './space_files';
+import SpaceFiles from './space-files';
 import { FileInfo } from '@/lib/api/models/feeds';
 import { useDeliberationSpaceContext } from '../provider.client';
 
 export default function FinalConsensusPage() {
-  const { draft, setDraft, isEdit } = useDeliberationSpaceContext();
+  const { draft, handleUpdateDraft, isEdit } = useDeliberationSpaceContext();
 
   const contents =
     draft.drafts && draft.drafts.length != 0
@@ -26,7 +26,7 @@ export default function FinalConsensusPage() {
             isEdit={isEdit}
             htmlContents={contents.html_contents}
             setContents={(html_contents: string) => {
-              setDraft({
+              handleUpdateDraft({
                 ...draft,
                 drafts: [
                   {
@@ -43,7 +43,7 @@ export default function FinalConsensusPage() {
             onremove={(index: number) => {
               const newFiles = [...contents.files];
               newFiles.splice(index, 1);
-              setDraft({
+              handleUpdateDraft({
                 ...draft,
                 drafts: [
                   {
@@ -54,7 +54,7 @@ export default function FinalConsensusPage() {
               });
             }}
             onadd={(file: FileInfo) => {
-              setDraft({
+              handleUpdateDraft({
                 ...draft,
                 drafts: [
                   {

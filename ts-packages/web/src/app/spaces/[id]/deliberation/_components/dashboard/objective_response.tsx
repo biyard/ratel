@@ -1,6 +1,9 @@
 'use client';
 
 import {
+  CheckboxQuestion,
+  DropdownQuestion,
+  LinearScaleQuestion,
   MultipleChoiceQuestion,
   SingleChoiceQuestion,
 } from '@/lib/api/models/survey';
@@ -10,10 +13,18 @@ import BarChartResponse from '../charts/bar_chart_response';
 import PieChartResponse from '../charts/pie_chart_response';
 
 function parseObjectiveAnswers(
-  question: SingleChoiceQuestion | MultipleChoiceQuestion,
+  question:
+    | SingleChoiceQuestion
+    | MultipleChoiceQuestion
+    | CheckboxQuestion
+    | LinearScaleQuestion
+    | DropdownQuestion,
   answers: Answer[],
 ) {
-  const optionCount = question.options.length;
+  const optionCount =
+    question.answer_type !== 'linear_scale'
+      ? question.options.length
+      : question.max_value;
   const counts = new Array(optionCount).fill(0);
 
   const filtered = answers.filter(
@@ -21,20 +32,42 @@ function parseObjectiveAnswers(
   );
 
   filtered.forEach((a) => {
-    if (a.answer_type === 'single_choice') {
+    if (
+      a.answer_type === 'single_choice' ||
+      a.answer_type === 'dropdown' ||
+      a.answer_type === 'linear_scale'
+    ) {
       if (typeof a.answer === 'number') counts[a.answer]++;
-    } else if (a.answer_type === 'multiple_choice') {
-      a.answer.forEach((i) => counts[i]++);
+    } else if (
+      a.answer_type === 'multiple_choice' ||
+      a.answer_type === 'checkbox'
+    ) {
+      if (a.answer) {
+        a.answer.forEach((i) => counts[i]++);
+      }
     }
   });
 
   const total = filtered.length;
 
-  const options = question.options.map((label, idx) => ({
-    label,
-    count: counts[idx],
-    ratio: total > 0 ? (counts[idx] / total) * 100 : 0,
-  }));
+  const options =
+    question.answer_type !== 'linear_scale'
+      ? question.options.map((label, idx) => ({
+          label,
+          count: counts[idx],
+          ratio: total > 0 ? (counts[idx] / total) * 100 : 0,
+        }))
+      : Array.from(
+          { length: (question.max_value ?? 0) - (question.min_value ?? 0) + 1 },
+          (_, idx) => {
+            const number = (question.min_value ?? 0) + idx;
+            return {
+              label: 'option ' + String(number),
+              count: counts[idx],
+              ratio: total > 0 ? (counts[idx] / total) * 100 : 0,
+            };
+          },
+        );
 
   return {
     totalParticipants: total,
@@ -46,12 +79,17 @@ export default function ObjectiveResponse({
   question,
   answers,
 }: {
-  question: SingleChoiceQuestion | MultipleChoiceQuestion;
+  question:
+    | SingleChoiceQuestion
+    | MultipleChoiceQuestion
+    | CheckboxQuestion
+    | DropdownQuestion
+    | LinearScaleQuestion;
   answers: Answer[];
 }) {
   const parsed = parseObjectiveAnswers(question, answers);
   const validAnswers = answers
-    .filter((a) => a.answer_type === question.answer_type)
+    .filter((a) => a.answer_type === question.answer_type && a.answer != null)
     .map((a) => a.answer);
 
   return (
@@ -64,10 +102,12 @@ export default function ObjectiveResponse({
           {validAnswers.length} Responses
         </div>
       </div>
-      <div className="flex flex-col gap-3">
-        <BarChartResponse parsed={{ question, ...parsed }} />
-        <PieChartResponse parsed={{ question, ...parsed }} />
-      </div>
+      {validAnswers.length != 0 && (
+        <div className="flex flex-col gap-3">
+          <BarChartResponse parsed={{ question, ...parsed }} />
+          <PieChartResponse parsed={{ question, ...parsed }} />
+        </div>
+      )}
     </div>
   );
 }

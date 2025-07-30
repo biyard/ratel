@@ -13,7 +13,10 @@ export default function SubjectiveResponse({
   answers: Answer[];
 }) {
   const validAnswers = answers
-    .filter((a) => a.answer_type === question.answer_type && a.answer !== '')
+    .filter(
+      (a) =>
+        a.answer_type === question.answer_type && a.answer !== '' && a.answer,
+    )
     .map((a) => a.answer as string);
 
   return (

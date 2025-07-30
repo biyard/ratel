@@ -10,17 +10,21 @@ export default function RemoteGalleryView({
   meetingSession,
   videoTiles,
   participants,
-  users,
+  u,
   focusedAttendeeId,
   setFocusedAttendeeId,
 }: {
   meetingSession: DefaultMeetingSession;
   videoTiles: { tileId: number; attendeeId: string }[];
   participants: Participant[];
-  users: DiscussionParticipant[];
+  u: DiscussionParticipant[];
   focusedAttendeeId: string | null;
   setFocusedAttendeeId: React.Dispatch<React.SetStateAction<string | null>>;
 }) {
+  const users = u.filter(
+    (user, index, self) =>
+      index === self.findIndex((u) => u.participant_id === user.participant_id),
+  );
   const containerRef = useRef<HTMLDivElement>(null);
   const [scrollIndex, setScrollIndex] = useState(0);
   const tileWidth = 220;
@@ -31,7 +35,11 @@ export default function RemoteGalleryView({
   const selfUserId = selfUser?.user_id;
 
   const maxIndex = useMemo(() => {
-    return Math.max(0, Math.ceil(users.length / visibleCount) - 1);
+    const index =
+      users.length < visibleCount
+        ? 0
+        : Math.max(0, Math.ceil(users.length / visibleCount) - 1) + 1;
+    return index;
   }, [users.length, visibleCount]);
 
   const attendeeTileMap = useMemo(() => {
@@ -47,7 +55,8 @@ export default function RemoteGalleryView({
       if (containerRef.current) {
         const containerWidth = containerRef.current.offsetWidth;
         const count = Math.floor(containerWidth / tileWidth);
-        setVisibleCount(Math.max(1, count));
+        const newVisibleCount = Math.max(1, count);
+        setVisibleCount(newVisibleCount);
       }
     };
     updateVisibleCount();
@@ -72,8 +81,10 @@ export default function RemoteGalleryView({
 
   const sortedParticipants = useMemo(() => {
     if (!selfUserId) return participants;
+
     const self = participants.find((p) => p.id === selfUserId);
     const others = participants.filter((p) => p.id !== selfUserId);
+
     return self ? [self, ...others] : others;
   }, [participants, selfUserId]);
 
