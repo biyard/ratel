@@ -25,6 +25,7 @@ export { default as Edit1 } from '@/assets/icons/edit_1.svg';
 export { default as User } from '@/assets/icons/user.svg';
 export { default as Clear } from '@/assets/icons/clear.svg';
 export { default as Folder } from '@/assets/icons/folder.svg';
+export { default as EditContent } from '@/assets/icons/edit-content.svg';
 export { default as Delete2 } from '@/assets/icons/delete_2.svg';
 export { default as BadgeIcon } from '@/assets/icons/badge.svg';
 
