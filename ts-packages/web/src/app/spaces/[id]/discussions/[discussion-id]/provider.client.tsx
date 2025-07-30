@@ -433,6 +433,31 @@ export default function ClientProviders({
     };
   }, [meetingSession, users]);
 
+  useEffect(() => {
+    if (!meetingSession) return;
+
+    const av = meetingSession.audioVideo;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const onRecordingMessage = (dataMessage: any) => {
+      const text = new TextDecoder().decode(dataMessage.data);
+      if (text === 'start') {
+        changeIsRecording(true);
+      } else if (text === 'stop') {
+        changeIsRecording(false);
+      }
+    };
+
+    av.realtimeSubscribeToReceiveDataMessage(
+      'recording-status',
+      onRecordingMessage,
+    );
+
+    return () => {
+      av.realtimeUnsubscribeFromReceiveDataMessage('recording-status');
+    };
+  }, [meetingSession]);
+
   const sendMessage = (text: string) => {
     if (!meetingSession || !text.trim()) return;
 
