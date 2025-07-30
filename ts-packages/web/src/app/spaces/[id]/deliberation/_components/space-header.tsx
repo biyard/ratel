@@ -1,7 +1,4 @@
 import React, { useContext } from 'react';
-// import Shared from '@/assets/icons/share.svg';
-// import Extra from '@/assets/icons/extra.svg';
-// import Bookmark from '@/assets/icons/bookmark.svg';
 import Badge from '@/assets/icons/badge.svg';
 import { UserType } from '@/lib/api/models/user';
 import Image from 'next/image';
@@ -21,50 +18,56 @@ import {
 import { TeamContext } from '@/lib/contexts/team-context';
 import { useUserInfo } from '@/app/(social)/_hooks/user';
 import { getTimeAgo } from '@/lib/time-utils';
+import {
+  useDeliberationFeed,
+  useDeliberationSpace,
+  useDeliberationSpaceContext,
+} from '../provider.client';
+import { usePopup } from '@/lib/contexts/popup-service';
+import GoPublicPopup from './modal/go_public';
 
-export interface SpaceHeaderProps {
-  title: string;
-  status: SpaceStatus;
-  userType: UserType;
-  proposerImage: string;
-  proposerName: string;
-  createdAt: number;
-  authorId: number;
-  rewards: number;
-  likes: number;
-  shares: number;
-  comments: number;
-  isLiked?: boolean;
-  isEdit?: boolean;
-  onback: () => void;
-  onsave: () => void;
-  onedit: () => void;
-  onpost: () => void;
-  onlike: () => void;
-  onshare: () => void;
-  setTitle?: (title: string) => void;
-}
+export default function SpaceHeader() {
+  const popup = usePopup();
+  const space = useDeliberationSpace();
+  const feed = useDeliberationFeed(space.feed_id);
+  const {
+    isEdit,
+    title,
+    status,
+    userType,
+    proposerImage,
+    proposerName,
+    createdAt,
+    handleGoBack,
+    handleSave,
+    handleEdit,
+    handleShare,
+    handlePostingSpace,
+    handleUpdateTitle,
+  } = useDeliberationSpaceContext();
 
-export default function SpaceHeader({
-  title,
-  status,
-  userType,
-  proposerImage,
-  proposerName,
-  createdAt,
-  authorId,
-  likes,
-  rewards,
-  shares,
-  comments,
-  isEdit = false,
-  setTitle = () => {},
-  onshare = () => {},
-  onback = () => {},
-  onsave = () => {},
-  onedit = () => {},
-  onpost = () => {},
-}: SpaceHeaderProps) {
+  const handlePost = () => {
+    popup
+      .open(
+        <GoPublicPopup
+          onclose={() => {
+            popup.close();
+          }}
+          onpublic={async () => {
+            await handlePostingSpace();
+            popup.close();
+          }}
+        />,
+      )
+      .withoutBackdropClose();
+  };
+
+  const authorId = space?.author[0].id;
+  const likes = feed.likes;
+  const shares = feed.shares;
+  const comments = feed.comments;
+  const rewards = feed.rewards;
+
   const { data: userInfo } = useUserInfo();
   const userId = userInfo ? userInfo.id : 0;
   const { teams } = useContext(TeamContext);
@@ -75,7 +78,7 @@ export default function SpaceHeader({
       <div className="flex flex-row justify-between items-center w-full">
         <div className="flex flex-row items-center gap-1 text-sm text-c-wg-50 cursor-pointer">
           {isEdit ? (
-            <div className="cursor-pointer w-fit h-fit" onClick={onback}>
+            <div className="cursor-pointer w-fit h-fit" onClick={handleGoBack}>
               <ArrowLeft size={24} className="w-6 h-6 stroke-white" />
             </div>
           ) : (
@@ -88,7 +91,7 @@ export default function SpaceHeader({
             {isEdit ? (
               <button
                 className="flex flex-row w-fit px-3.5 py-2 rounded-md bg-white gap-1"
-                onClick={onsave}
+                onClick={handleSave}
               >
                 <Save className="stroke-neutral-500 [&>path]:stroke-2 w-5 h-5" />
                 <div className="font-bold text-zinc-900 text-sm">Save</div>
@@ -96,7 +99,7 @@ export default function SpaceHeader({
             ) : (
               <button
                 className="flex flex-row w-fit px-3.5 py-2 rounded-md bg-white gap-1"
-                onClick={onedit}
+                onClick={handleEdit}
               >
                 <Edit1 className="stroke-neutral-500 [&>path]:stroke-2 w-5 h-5" />
                 <div className="font-bold text-zinc-900 text-sm">Edit</div>
@@ -106,7 +109,7 @@ export default function SpaceHeader({
             {status === SpaceStatus.Draft && (
               <button
                 className="flex flex-row w-fit px-3.5 py-2 rounded-md bg-white gap-1"
-                onClick={onpost}
+                onClick={handlePost}
               >
                 <Unlock2 className="stroke-neutral-500 [&>path]:stroke-2 w-5 h-5" />
                 <div className="font-bold text-zinc-900 text-sm">
@@ -173,7 +176,7 @@ export default function SpaceHeader({
             <Input
               className="border-b border-transparent !border-b-white focus:!border-transparent focus:rounded-md font-bold text-white text-[24px]/[30px] placeholder:text-neutral-300 placeholder:font-medium rounded-none"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => handleUpdateTitle(e.target.value)}
               placeholder="Input title."
             />
           </>
@@ -183,12 +186,7 @@ export default function SpaceHeader({
               {title}
             </div>
 
-            <div
-              className="cursor-pointer w-fit h-fit"
-              onClick={() => {
-                onshare();
-              }}
-            >
+            <div className="cursor-pointer w-fit h-fit" onClick={handleShare}>
               <Expand />
             </div>
           </div>
