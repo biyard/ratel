@@ -33,7 +33,7 @@ export default function SetSchedulePopup({
   const handleConfirm = () => {
     for (const s of sessions) {
       if (s.start >= s.end) {
-        showErrorToast('Start date must be earlier than end date.');
+        showErrorToast('The start date must be earlier than the end date.');
         return;
       }
     }
@@ -58,12 +58,25 @@ export default function SetSchedulePopup({
             <CalendarDropdown
               value={session.start}
               onChange={(v) => {
+                if (v > session.end) {
+                  showErrorToast(
+                    'The start date must be earlier than the end date.',
+                  );
+                  return;
+                }
                 handleChange(index, 'start', Math.floor(v));
               }}
             />
             <TimeDropdown
               value={session.start}
               onChange={(v) => {
+                if (v > session.end) {
+                  showErrorToast(
+                    'The start date must be earlier than the end date.',
+                  );
+                  return;
+                }
+
                 handleChange(index, 'start', Math.floor(v));
               }}
             />
@@ -73,12 +86,26 @@ export default function SetSchedulePopup({
             <CalendarDropdown
               value={session.end}
               onChange={(v) => {
+                if (v < session.start) {
+                  showErrorToast(
+                    'The end date must be later than the start date.',
+                  );
+                  return;
+                }
+
                 handleChange(index, 'end', Math.floor(v));
               }}
             />
             <TimeDropdown
               value={session.end}
               onChange={(v) => {
+                if (v < session.start) {
+                  showErrorToast(
+                    'The end date must be later than the start date.',
+                  );
+                  return;
+                }
+
                 handleChange(index, 'end', Math.floor(v));
               }}
             />

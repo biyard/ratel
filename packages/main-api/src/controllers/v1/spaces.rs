@@ -402,9 +402,15 @@ impl SpaceController {
                         .await?;
                 }
 
-                for pid in participants {
+                for pid in participants.clone() {
                     self.discussion_member_repo
                         .insert_with_tx(&mut *tx, id, pid)
+                        .await?;
+                }
+
+                if !participants.contains(&user_id) {
+                    self.discussion_member_repo
+                        .insert_with_tx(&mut *tx, id, user_id)
                         .await?;
                 }
             } else {
@@ -428,9 +434,15 @@ impl SpaceController {
 
                 let new_id = inserted.id;
 
-                for pid in participants {
+                for pid in participants.clone() {
                     self.discussion_member_repo
                         .insert_with_tx(&mut *tx, new_id, pid)
+                        .await?;
+                }
+
+                if !participants.contains(&user_id) {
+                    self.discussion_member_repo
+                        .insert_with_tx(&mut *tx, new_id, user_id)
                         .await?;
                 }
             }

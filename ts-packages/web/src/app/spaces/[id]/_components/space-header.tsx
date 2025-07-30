@@ -8,7 +8,7 @@ import Image from 'next/image';
 import { Input } from '@/components/ui/input';
 import { SpaceStatus } from '@/lib/api/models/spaces';
 import { Play } from 'lucide-react';
-import TimeAgo from './time_ago';
+import TimeAgo from './time-ago-wrapper';
 
 export interface SpaceHeaderProps {
   title: string;
