@@ -2,15 +2,44 @@ use bdk::prelude::*;
 
 use crate::Error;
 
+// #[api_model(base = "/v1/assets", database = skip)]
+// pub struct AssetPresignedUris {
+//     pub presigned_uris: Vec<String>,
+//     pub uris: Vec<String>,
+//     #[api_model(read_action = get_presigned_uris)]
+//     pub total_count: usize,
+
+//     #[api_model(read_action = get_presigned_uris)]
+//     pub file_type: FileType,
+// }
+
 #[api_model(base = "/v1/assets", database = skip)]
 pub struct AssetPresignedUris {
     pub presigned_uris: Vec<String>,
     pub uris: Vec<String>,
+
     #[api_model(read_action = get_presigned_uris)]
     pub total_count: usize,
 
     #[api_model(read_action = get_presigned_uris)]
     pub file_type: FileType,
+
+    pub upload_id: Option<String>,
+    pub key: Option<String>,
+}
+
+#[api_model(base = "/v1/assets/complete", database = skip)]
+pub struct CompleteMultipartUploadRequest {
+    pub upload_id: String,
+    pub key: String,
+    pub parts: Vec<UploadedPart>,
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Default, PartialEq)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct UploadedPart {
+    pub part_number: i32,
+    pub etag: String,
 }
 
 #[derive(

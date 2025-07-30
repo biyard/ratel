@@ -3,7 +3,7 @@ import { AssetPresignedUris } from '@/lib/api/models/asset-presigned-uris';
 import { FileInfo } from '@/lib/api/models/feeds';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { useApiCall } from '@/lib/api/use-send';
-import { getFileType, toContentType } from '@/lib/file-utils';
+import { getFileType } from '@/lib/file-utils';
 import { logger } from '@/lib/logger';
 import { showErrorToast } from '@/lib/toast';
 import { cn } from '@/lib/utils';
@@ -23,7 +23,7 @@ export default function FileUploaderMetadata({
   ...props
 }: React.ComponentProps<'div'> & FileUploaderMetadataProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const { get } = useApiCall();
+  const { get, post } = useApiCall();
 
   const handleUpload = async () => {
     inputRef.current?.click();
@@ -60,39 +60,67 @@ export default function FileUploaderMetadata({
       return;
     }
 
+    const partSize = 5 * 1024 * 1024;
+    const totalParts = Math.ceil(file.size / partSize);
+
     const res: AssetPresignedUris = await get(
-      ratelApi.assets.getPresignedUrl(fileTypeKey),
+      ratelApi.assets.getPresignedUrl(fileTypeKey, totalParts),
     );
+
     logger.debug('Presigned URL response:', res);
 
-    if (!res.presigned_uris?.length || !res.uris?.length) {
-      logger.error('No presigned URL received');
+    const { presigned_uris, uris, upload_id, key } = res;
+
+    if (!presigned_uris?.length || !uris?.length || !upload_id || !key) {
+      logger.error('Missing presigned upload metadata');
       return;
     }
 
-    const presignedUrl = res.presigned_uris[0];
-    const publicUrl = res.uris[0];
+    const etags: { ETag: string; PartNumber: number }[] = [];
 
     try {
-      const uploadResponse = await fetch(presignedUrl, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': toContentType(fileTypeKey),
-        },
-        body: file,
+      for (let partNumber = 0; partNumber < totalParts; partNumber++) {
+        const start = partNumber * partSize;
+        const end = Math.min(start + partSize, file.size);
+        const chunk = file.slice(start, end);
+        const url = presigned_uris[partNumber];
+
+        const uploadResp = await fetch(url, {
+          method: 'PUT',
+          body: chunk,
+          credentials: 'same-origin',
+        });
+
+        if (!uploadResp.ok) {
+          throw new Error(`Upload failed at part ${partNumber + 1}`);
+        }
+
+        const etag = uploadResp.headers.get('Etag');
+        if (!etag) throw new Error('Missing ETag in part response');
+
+        etags.push({
+          ETag: etag.replaceAll('"', ''),
+          PartNumber: partNumber + 1,
+        });
+      }
+
+      await post(ratelApi.assets.createMultipartUpload(), {
+        upload_id,
+        key,
+        parts: etags,
       });
 
-      if (!uploadResponse.ok) throw new Error('File upload failed');
-      logger.debug('File uploaded successfully:', file.name);
+      logger.debug('Multipart upload completed successfully.');
 
       onUploadSuccess?.({
         name: file.name,
         size: `${(file.size / 1024).toFixed(1)} KB`,
         ext: fileTypeKey.toUpperCase(),
-        url: publicUrl,
+        url: uris[0],
       });
     } catch (error) {
-      logger.error('Error uploading file:', error);
+      logger.error('Multipart upload error:', error);
+      showErrorToast('Failed to upload file. Please try again.');
     }
   };
 
