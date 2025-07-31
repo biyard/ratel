@@ -75,6 +75,7 @@ impl SpaceController {
                 let response: Vec<SurveyResponse> = SurveyResponse::query_builder()
                     .space_id_equals(id)
                     .user_id_equals(user_id)
+                    .order_by_created_at_desc()
                     .survey_type_equals(SurveyType::Sample)
                     .query()
                     .map(Into::into)
