@@ -6,7 +6,7 @@ use validator::Validate;
 
 //TODO: action(like, comments, find_by_id, create_space), query_action
 #[derive(Validate)]
-#[api_model(base = "/v1/spaces", table = spaces, action = [create_space(user_ids = Vec<i64>)], action_by_id = [posting_space, update_space(discussions = Vec<DiscussionCreateRequest>, elearnings = Vec<ElearningCreateRequest>, surveys = Vec<SurveyCreateRequest>, drafts = Vec<SpaceDraftCreateRequest>), like(value = bool), share()])]
+#[api_model(base = "/v1/spaces", table = spaces, action = [create_space(user_ids = Vec<i64>)], action_by_id = [posting_space, update_space(discussions = Vec<DiscussionCreateRequest>, elearnings = Vec<ElearningCreateRequest>, surveys = Vec<SurveyCreateRequest>, drafts = Vec<SpaceDraftCreateRequest>, quiz = Option<Vec<NoticeQuestionWithAnswer>>), like(value = bool), share()])]
 pub struct Space {
     #[api_model(summary, primary_key, read_action = [find_by_id])]
     pub id: i64,
@@ -28,10 +28,10 @@ pub struct Space {
     pub owner_id: i64,
     #[api_model(summary, many_to_one = industries)]
     pub industry_id: i64,
-    #[api_model(summary, action_by_id = [update_space], version = v0.2)]
+    #[api_model(summary, action_by_id = [update_space], action = [create_space], version = v0.2)]
     #[serde(default)]
     pub started_at: Option<i64>,
-    #[api_model(summary, action_by_id = [update_space], version = v0.2)]
+    #[api_model(summary, action_by_id = [update_space], action = [create_space], version = v0.2)]
     #[serde(default)]
     pub ended_at: Option<i64>,
 
@@ -114,6 +114,20 @@ pub struct Space {
     #[serde(default)]
     // Vec length should be 0 or 1.
     pub sprint_leagues: Vec<SprintLeague>,
+
+    #[api_model(summary, type=JSONB, nullable,)]
+    #[serde(default)]
+    pub notice_quiz: Vec<NoticeQuestion>,
+
+    // Notice Type
+    #[api_model(summary, version = v0.1, type = INTEGER, action = [create_space], nullable)]
+    #[serde(default)]
+    pub booster_type: Option<BoosterType>,
+    
+    // The publishing scope of the space (Private or Public)
+    #[api_model(summary, version = v0.1, type = INTEGER, action_by_id = [update_space])]
+    #[serde(default)]
+    pub publishing_scope: PublishingScope,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]
@@ -135,6 +149,17 @@ pub enum SpaceType {
     Nft = 4,
     Commitee = 5,
     SprintLeague = 6,
+    Notice = 7,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub enum PublishingScope {
+    #[translate(ko = "Private", en = "Private")]
+    #[default]
+    Private = 1,
+    #[translate(ko = "Public", en = "Public")]
+    Public = 2,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]
@@ -156,6 +181,22 @@ pub struct File {
     pub url: Option<String>,
 }
 
+#[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub enum BoosterType {
+    #[translate(ko = "No Boost", en = "No Boost")]
+    #[default]
+    NoBoost = 1,
+
+    #[translate(ko = "X2", en = "X2")]
+    X2 = 2,
+    #[translate(ko = "X10", en = "X10")]
+    X10 = 3,
+    #[translate(ko = "X100", en = "X100")]
+    X100 = 4,
+}
+
+
 #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq, Eq, Translate)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub enum FileExtension {
@@ -173,4 +214,34 @@ pub enum FileExtension {
     PPTX = 6,
     #[translate(ko = "EXCEL", en = "EXCEL")]
     EXCEL = 7,
+}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq, Eq, Validate)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct NoticeQuestion {
+    pub title: String,
+    #[validate(custom(function = "validate_image_files"))]
+    pub images: Vec<File>,
+    pub options: Vec<NoticeOption>,
+}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct NoticeOption {
+    pub content: String,
+}
+
+// Validation function to ensure only JPG and PNG files are allowed for images
+fn validate_image_files(files: &[File]) -> std::result::Result<(), validator::ValidationError> {
+    for file in files {
+        match file.ext {
+            FileExtension::JPG | FileExtension::PNG => continue,
+            _ => {
+                let mut error = validator::ValidationError::new("invalid_image_extension");
+                error.message = Some("Only JPG and PNG files are allowed for images".into());
+                return Err(error);
+            }
+        }
+    }
+    Ok(())
 }

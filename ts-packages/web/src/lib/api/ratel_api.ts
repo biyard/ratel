@@ -3,15 +3,25 @@ import { FileType } from './models/file-type';
 import { gql } from '@apollo/client';
 import { Space } from './models/spaces';
 import {
+  QuizAttempt,
+  QuizAttemptsResponse,
+  NoticeQuizAnswer,
+} from './models/notice';
+import {
   QK_GET_FEED_BY_FEED_ID,
   QK_GET_NETWORK,
   QK_GET_PROMOTION,
   QK_GET_REDEEM_CODE,
   QK_GET_SPACE_BY_SPACE_ID,
+  QK_LATEST_QUIZ_ATTEMPT,
+  QK_QUIZ_ATTEMPTS,
+  QK_QUIZ_ANSWERS,
 } from '@/constants';
 import {
   useSuspenseQuery,
   UseSuspenseQueryResult,
+  useQuery,
+  UseQueryResult,
 } from '@tanstack/react-query';
 import { useApiCall } from './use-send';
 import { RedeemCode } from './models/redeem-code';
@@ -79,6 +89,78 @@ export function usePromotion(): UseSuspenseQueryResult<Promotion> {
 
   return query;
 }
+
+export function useQuizAttempts(
+  spaceId: number,
+  enabled = true,
+): UseQueryResult<QuizAttemptsResponse> {
+  const { get } = useApiCall();
+
+  return useQuery({
+    queryKey: [QK_QUIZ_ATTEMPTS, spaceId],
+    queryFn: async () => {
+      if (!spaceId) {
+        throw new Error('Space ID is required');
+      }
+
+      const response: QuizAttemptsResponse = await get(
+        ratelApi.notice_quiz.getQuizAttempts(spaceId),
+      );
+      return response;
+    },
+    enabled: enabled && spaceId > 0,
+  });
+}
+
+export function useLatestQuizAttempt(
+  spaceId: number,
+): UseQueryResult<QuizAttempt | null> {
+  const { get } = useApiCall();
+
+  const query = useQuery({
+    queryKey: [QK_LATEST_QUIZ_ATTEMPT, spaceId],
+    queryFn: async () => {
+      const response: QuizAttemptsResponse = await get(
+        ratelApi.notice_quiz.getLatestQuizAttempt(spaceId),
+      );
+      // Return the latest attempt (first item since it's ordered by created_at desc)
+      return response.items.length > 0 ? response.items[0] : null;
+    },
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    refetchOnReconnect: true,
+    staleTime: 0, // Always consider data stale to ensure fresh fetches
+    gcTime: 0, // Don't cache the data (formerly cacheTime)
+    enabled: spaceId > 0,
+    retry: 3, // Retry failed requests up to 3 times
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
+  });
+
+  return query;
+}
+
+export function useQuizAnswers(
+  spaceId: number,
+  enabled = true,
+): UseQueryResult<NoticeQuizAnswer> {
+  const { get } = useApiCall();
+
+  return useQuery({
+    queryKey: [QK_QUIZ_ANSWERS, spaceId],
+    queryFn: async () => {
+      if (!spaceId) {
+        throw new Error('Space ID is required');
+      }
+
+      const response: NoticeQuizAnswer = await get(
+        ratelApi.notice_quiz.getQuizAnswers(spaceId),
+      );
+      return response;
+    },
+    enabled: enabled && spaceId > 0,
+  });
+}
+
 export const proxy = {
   login: {
     loginWithTelegram: (telegram_raw: string) =>
@@ -184,6 +266,16 @@ export const ratelApi = {
     getUserBadge: (space_id: number, page: number, size: number) =>
       `/v1/spaces/${space_id}/badges?param-type=query&bookmark=${page}&size=${size}`,
     claimBadge: (space_id: number) => `/v1/spaces/${space_id}/badges`,
+  },
+  notice_quiz: {
+    submitQuizAnswers: (id: number) =>
+      `/v1/spaces/${id}/notice-quiz-attempts/submit`,
+    getQuizAttempts: (spaceId: number) =>
+      `/v1/spaces/${spaceId}/notice-quiz-attempts`,
+    getLatestQuizAttempt: (spaceId: number) =>
+      `/v1/spaces/${spaceId}/notice-quiz-attempts`,
+    getQuizAnswers: (spaceId: number) =>
+      `/v1/spaces/${spaceId}/notice-quiz-answers`,
   },
   sprint_league: {
     voteSprintLeague: (space_id: number, sprint_league_id: number) =>
