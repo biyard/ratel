@@ -35,7 +35,6 @@ const SpaceForms: SpaceFormProps[] = [
     Icon: <Vote />,
     label: 'Poll',
     description: 'Collect quick opinions or preferences.',
-    experiment: true,
   },
   {
     type: SpaceType.Deliberation,
