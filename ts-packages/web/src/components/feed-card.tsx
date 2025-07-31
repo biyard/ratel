@@ -14,15 +14,7 @@ import { UserType } from '@/lib/api/models/user';
 import Image from 'next/image';
 import { route } from '@/route';
 import { SpaceType } from '@/lib/api/models/spaces';
-import { Extra } from './icons';
-import { Trash2 } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { showSuccessToast, showErrorToast } from '@/lib/toast';
+import DeletePostDropdown from '@/app/(social)/_components/delete-postdropdown';
 
 export interface FeedCardProps {
   id: number;
@@ -124,20 +116,8 @@ export function FeedBody({
   space_type,
   space_id,
   onboard,
-  id,
+  id
 }: FeedCardProps) {
-  const { post: apiPost } = useApiCall();
-
-  const handleDeletePost = async () => {
-    try {
-      await apiPost(ratelApi.feeds.removeDraft(id), { delete: {} });
-      router.refresh();
-      showSuccessToast('Post deleted successfully');
-    } catch (error) {
-      console.error('Failed to delete post:', error);
-      showErrorToast('Failed to delete post. Please try again.');
-    }
-  };
   const router = useRouter();
   return (
     <Col className="pt-5 pb-2.5">
@@ -154,7 +134,6 @@ export function FeedBody({
             Create a Space
           </Button>
         )} */}
-
         {space_id && space_type ? (
           <Button
             variant="rounded_primary"
@@ -173,40 +152,8 @@ export function FeedBody({
         ) : (
           <div />
         )}
-
         {/* Delete functionality in main feed for post authors */}
-        {author_id === user_id && (
-          <DropdownMenu modal={false}>
-            <DropdownMenuTrigger>
-              <button
-                onClick={(e) => e.stopPropagation()}
-                className="p-1 hover:bg-gray-700 rounded-full focus:outline-none transition-colors"
-                aria-haspopup="true"
-                aria-label="Post options"
-              >
-                <Extra className="w-6 h-6 text-gray-400" />
-              </button>
-            </DropdownMenuTrigger>
-
-            <DropdownMenuContent
-              align="end"
-              className="w-40 bg-[#404040] border-gray-700 transition ease-out duration-100"
-            >
-              <DropdownMenuItem asChild>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDeletePost();
-                  }}
-                  className="flex items-center w-full px-4 py-2 text-sm text-red-400 hover:bg-gray-700 cursor-pointer"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  Delete
-                </button>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
+        <DeletePostDropdown postId={id} userId={user_id} authorId={author_id} />
       </Row>
       <h2 className="w-full line-clamp-2 font-bold text-xl/[25px] tracking-[0.5px] align-middle text-white px-5">
         {title}
