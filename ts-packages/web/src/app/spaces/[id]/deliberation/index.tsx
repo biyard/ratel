@@ -62,7 +62,7 @@ function Page() {
             ) : selectedType == DeliberationTab.DELIBERATION ? (
               <DeliberationPage />
             ) : selectedType == DeliberationTab.POLL ? (
-              <PollPage context={context} />
+              <PollPage context={context} space={space} />
             ) : selectedType == DeliberationTab.RECOMMANDATION ? (
               <FinalConsensusPage />
             ) : (

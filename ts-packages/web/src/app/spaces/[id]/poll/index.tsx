@@ -54,7 +54,7 @@ function Page() {
         <div className="flex-1 flex w-full">
           <div className="flex flex-row w-full gap-5">
             {selectedType == PollTab.POLL ? (
-              <PollPage context={context} />
+              <PollPage context={context} space={space} />
             ) : (
               <AnalyzePage context={context} />
             )}

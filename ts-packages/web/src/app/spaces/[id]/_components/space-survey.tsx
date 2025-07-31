@@ -3,7 +3,7 @@
 import { Question, ShortAnswerQuestion } from '@/lib/api/models/survey';
 import React, { useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { SpaceStatus } from '@/lib/api/models/spaces';
+import { Space, SpaceStatus } from '@/lib/api/models/spaces';
 import { SpaceContextType } from '../type';
 import { AnswerType } from './question/answer-type-select';
 import SurveyQuestionEditor from './question/survey-question-editor';
@@ -12,8 +12,10 @@ import { Add } from '../deliberation/_components/add';
 
 export default function SpaceSurvey({
   context,
+  space,
 }: {
   context: SpaceContextType;
+  space: Space;
 }) {
   const { isEdit, status } = context;
 
@@ -22,16 +24,22 @@ export default function SpaceSurvey({
       {isEdit && status == SpaceStatus.Draft ? (
         <EditableSurvey context={context} />
       ) : (
-        <ViewSurvey context={context} />
+        <ViewSurvey context={context} space={space} />
       )}
     </div>
   );
 }
 
-function ViewSurvey({ context }: { context: SpaceContextType }) {
+function ViewSurvey({
+  context,
+  space,
+}: {
+  context: SpaceContextType;
+  space: Space;
+}) {
   return (
     <div className="flex flex-col w-full gap-[10px]">
-      <SurveyViewer context={context} />
+      <SurveyViewer context={context} space={space} />
     </div>
   );
 }

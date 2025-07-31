@@ -3,7 +3,7 @@ import BlackBox from '@/app/(social)/_components/black-box';
 import { Answer } from '@/lib/api/models/response';
 import { usePopup } from '@/lib/contexts/popup-service';
 import CheckPopup from './check-popup';
-import { SpaceStatus } from '@/lib/api/models/spaces';
+import { Space, SpaceStatus, SpaceType } from '@/lib/api/models/spaces';
 import { logger } from '@/lib/logger';
 import ObjectiveViewer from './_component/viewer/objective-viewer';
 import SubjectiveViewer from './_component/viewer/subjective-viewer';
@@ -26,9 +26,12 @@ interface Question {
 
 export default function SurveyViewer({
   context,
+  space,
 }: {
   context: SpaceContextType;
+  space: Space;
 }) {
+  const spaceType = space.space_type;
   const {
     isEdit,
     startedAt: startDate,
@@ -234,19 +237,23 @@ export default function SurveyViewer({
         <div
           className="cursor-pointer flex flex-row w-[180px] h-fit py-[14px] px-[40px] justify-center items-center bg-primary hover:opacity-70 rounded-lg font-bold text-[15px] text-[#000203]"
           onClick={() => {
-            popup
-              .open(
-                <CheckPopup
-                  onContinue={() => {
-                    handleSend();
-                    popup.close();
-                  }}
-                  onClose={() => {
-                    popup.close();
-                  }}
-                />,
-              )
-              .withTitle('Please check again before voting.');
+            if (spaceType === SpaceType.Deliberation) {
+              popup
+                .open(
+                  <CheckPopup
+                    onContinue={() => {
+                      handleSend();
+                      popup.close();
+                    }}
+                    onClose={() => {
+                      popup.close();
+                    }}
+                  />,
+                )
+                .withTitle('Please check again before voting.');
+            } else {
+              handleSend();
+            }
           }}
         >
           Save
