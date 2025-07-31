@@ -1,7 +1,7 @@
 'use client';
 import { Space, SpaceType } from '@/lib/api/models/spaces';
 
-import { Discuss, Palace } from '@/components/icons';
+import { Discuss, Palace, Vote } from '@/components/icons';
 import { useState } from 'react';
 import { LoadablePrimaryButton } from '@/components/button/primary-button';
 import { apiFetch } from '@/lib/api/apiFetch';
@@ -30,13 +30,13 @@ const SpaceForms: SpaceFormProps[] = [
   //   description: 'Propose and decide on new rules or policies.',
   //   disabled: true,
   // },
-  // {
-  //   type: SpaceType.Poll,
-  //   Icon: <Vote />,
-  //   label: 'Poll',
-  //   description: 'Collect quick opinions or preferences.',
-  //   disabled: true,
-  // },
+  {
+    type: SpaceType.Poll,
+    Icon: <Vote />,
+    label: 'Poll',
+    description: 'Collect quick opinions or preferences.',
+    experiment: true,
+  },
   {
     type: SpaceType.Deliberation,
     Icon: <Discuss />,
