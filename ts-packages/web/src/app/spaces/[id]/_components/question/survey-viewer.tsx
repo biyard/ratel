@@ -10,6 +10,7 @@ import SubjectiveViewer from './_component/viewer/subjective-viewer';
 import DropdownViewer from './_component/viewer/dropdown-viewer';
 import LinearScaleViewer from './_component/viewer/linear-scale-viewer';
 import { SpaceContextType } from '../../type';
+import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 
 interface Question {
   title: string;
@@ -31,6 +32,13 @@ export default function SurveyViewer({
   context: SpaceContextType;
   space: Space;
 }) {
+  const { data: userInfo } = useSuspenseUserInfo();
+  const userId = userInfo?.id || 0;
+  const members = space.discussions.flatMap((discussion) => discussion.members);
+  const isMember = members.some((member) => member.id === userId);
+
+  console.log('members: ', members);
+
   const spaceType = space.space_type;
   const {
     isEdit,
@@ -232,7 +240,7 @@ export default function SurveyViewer({
       })}
 
       <div
-        className={`flex flex-row w-full justify-end ${is_completed || status != SpaceStatus.InProgress || isEdit || !isLive || questions.length == 0 ? 'hidden' : ''}`}
+        className={`flex flex-row w-full justify-end ${is_completed || status != SpaceStatus.InProgress || isEdit || !isLive || questions.length == 0 || (!isMember && spaceType === SpaceType.Deliberation) ? 'hidden' : ''}`}
       >
         <div
           className="cursor-pointer flex flex-row w-[180px] h-fit py-[14px] px-[40px] justify-center items-center bg-primary hover:opacity-70 rounded-lg font-bold text-[15px] text-[#000203]"
