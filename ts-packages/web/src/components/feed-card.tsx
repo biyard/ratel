@@ -116,7 +116,7 @@ export function FeedBody({
   space_type,
   space_id,
   onboard,
-  id
+  id,
 }: FeedCardProps) {
   const router = useRouter();
   return (
