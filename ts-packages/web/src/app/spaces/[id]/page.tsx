@@ -26,7 +26,7 @@ export default async function Page({
     config.experiment
   ) {
     return <SprintLeaguePage />;
-  } else if (space.data?.space_type === SpaceType.Poll && config.experiment) {
+  } else if (space.data?.space_type === SpaceType.Poll) {
     return <PollSpacePage />;
   }
 
