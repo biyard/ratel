@@ -117,7 +117,12 @@ export default function ClientProviders({
   const [answer, setAnswer] = useState<SurveyAnswer>({
     answers:
       space.user_responses.length != 0 ? space.user_responses[0].answers : [],
-    is_completed: space.user_responses.length != 0,
+    is_completed:
+      space.user_responses.length !== 0
+        ? space.user_responses[0].survey_type === 1
+          ? false
+          : true
+        : false,
   });
 
   const mappedResponses = mapResponses(
@@ -333,7 +338,7 @@ export default function ClientProviders({
     if (space.user_responses && space.user_responses.length > 0) {
       setAnswer({
         answers: space.user_responses[0].answers,
-        is_completed: true,
+        is_completed: space.user_responses[0].survey_type === 1 ? false : true,
       });
     }
   }, [space.user_responses]);
