@@ -144,7 +144,7 @@ export default function ClientProviders({
 
   // Quiz state
   const [quizQuestions, setQuizQuestions] = useState<Question[]>([]);
-  
+
   // Track if quiz has been initialized for owners to prevent overwriting
   const quizInitialized = React.useRef(false);
 

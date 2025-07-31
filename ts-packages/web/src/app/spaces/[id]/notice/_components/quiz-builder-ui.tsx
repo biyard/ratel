@@ -265,7 +265,7 @@ export default function QuizBuilderUI({
       !hasLoadedQuizAnswers.current
     ) {
       console.log('Loading quiz answers for owner:', quizAnswers.notice_quiz);
-      
+
       // Convert NoticeQuestionWithAnswer[] to Question[] with correct answers
       const questionsWithAnswers: Question[] = quizAnswers.notice_quiz.map(
         (backendQuestion, questionIndex) => ({
@@ -284,7 +284,7 @@ export default function QuizBuilderUI({
       hasLoadedQuizAnswers.current = true;
       onQuestionsChange(questionsWithAnswers);
     }
-  }, [quizAnswers, isOwner]); // Removed onQuestionsChange from dependencies to prevent infinite loop
+  }, [quizAnswers, isOwner, onQuestionsChange]);
 
   // Reset the loaded flag when switching modes or spaces
   React.useEffect(() => {
@@ -295,15 +295,6 @@ export default function QuizBuilderUI({
   const validateAllQuestionsAnswered = (): boolean => {
     return questions.every((question) =>
       question.options.some((option) => option.isSelected),
-    );
-  };
-
-  // Validation function to check if quiz has correct answers set (for owner in edit mode)
-  const validateQuizHasCorrectAnswers = (): boolean => {
-    if (!isEditMode || !isOwner) return true; // Only validate for owner in edit mode
-    
-    return questions.every((question) =>
-      question.options.some((option) => option.isCorrect),
     );
   };
 
@@ -326,9 +317,11 @@ export default function QuizBuilderUI({
     const hasCorrectAnswers = questions.every((question) =>
       question.options.some((option) => option.isCorrect),
     );
-    
+
     if (!hasCorrectAnswers) {
-      showErrorToast('Quiz is not ready for submission. Please contact the space owner.');
+      showErrorToast(
+        'Quiz is not ready for submission. Please contact the space owner.',
+      );
       return;
     }
 
@@ -357,7 +350,7 @@ export default function QuizBuilderUI({
   // Handler for adding a new question
   const handleAddQuestion = useCallback(() => {
     if (isQuizEditingDisabled) return; // Block editing when space is InProgress
-    
+
     const newQuestion: Question = {
       id: `question-${Date.now()}`,
       title: '',
@@ -866,12 +859,12 @@ function QuestionCard({
             />
             <FileUploader
               onUploadSuccess={onImageUploadSuccess}
-              disabled={isQuizEditingDisabled}
               style={{
                 border: '1px solid var(--color-neutral-700)',
                 height: '40px',
                 width: '40px',
                 opacity: isQuizEditingDisabled ? 0.5 : 1,
+                pointerEvents: isQuizEditingDisabled ? 'none' : 'auto',
               }}
               className="rounded-md flex items-center justify-center focus:outline-none focus:ring-1 focus:ring-white/50"
             >
@@ -949,10 +942,10 @@ function QuestionCard({
               onClick={onAddOption}
               disabled={isQuizEditingDisabled}
               className="flex items-center text-sm"
-              style={{ 
+              style={{
                 color: 'var(--color-neutral-500)',
                 opacity: isQuizEditingDisabled ? 0.3 : 1,
-                cursor: isQuizEditingDisabled ? 'not-allowed' : 'pointer'
+                cursor: isQuizEditingDisabled ? 'not-allowed' : 'pointer',
               }}
             >
               <div className="mr-1.5">
@@ -970,10 +963,10 @@ function QuestionCard({
             onClick={onRemove}
             disabled={isQuizEditingDisabled}
             className="flex items-center text-sm"
-            style={{ 
+            style={{
               color: 'var(--color-neutral-500)',
               opacity: isQuizEditingDisabled ? 0.3 : 1,
-              cursor: isQuizEditingDisabled ? 'not-allowed' : 'pointer'
+              cursor: isQuizEditingDisabled ? 'not-allowed' : 'pointer',
             }}
           >
             Delete
@@ -1050,7 +1043,9 @@ function OptionItem({
       {/* Checkbox for correct answer in edit mode, or user selection in read mode */}
       <div
         className={`w-5 h-5 flex-shrink-0 border rounded flex items-center justify-center ${
-          isQuizEditingDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
+          isQuizEditingDisabled
+            ? 'cursor-not-allowed opacity-50'
+            : 'cursor-pointer'
         } ${
           isEditMode
             ? option.isCorrect
@@ -1060,7 +1055,13 @@ function OptionItem({
               ? 'bg-[var(--color-primary)] border-[var(--color-primary)]'
               : 'border-white/30 hover:border-white/50'
         }`}
-        onClick={isQuizEditingDisabled ? undefined : (isEditMode ? onToggleCorrect : onToggleSelected)}
+        onClick={
+          isQuizEditingDisabled
+            ? undefined
+            : isEditMode
+              ? onToggleCorrect
+              : onToggleSelected
+        }
         role="button"
         tabIndex={isQuizEditingDisabled ? -1 : 0}
         aria-label={
