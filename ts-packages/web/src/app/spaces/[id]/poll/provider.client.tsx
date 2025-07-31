@@ -230,7 +230,7 @@ export default function ClientProviders({
     try {
       await post(
         ratelApi.responses.respond_answer(spaceId),
-        surveyResponseCreateRequest(answers),
+        surveyResponseCreateRequest(answers, 1),
       );
       data.refetch();
       queryClient.invalidateQueries({

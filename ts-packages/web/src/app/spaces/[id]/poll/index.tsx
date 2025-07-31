@@ -14,6 +14,7 @@ import SpaceHeader from '../_components/header';
 import SpaceSideMenu from './_components/space-side-menu';
 import PollPage from '../_components/page/poll';
 import { PollTab } from './types';
+import AnalyzePage from '../_components/page/analyze';
 
 export default function PollSpacePage() {
   return (
@@ -55,8 +56,7 @@ function Page() {
             {selectedType == PollTab.POLL ? (
               <PollPage context={context} />
             ) : (
-              <></>
-              //   <AnalyzePage />
+              <AnalyzePage context={context} />
             )}
             <SpaceSideMenu />
           </div>

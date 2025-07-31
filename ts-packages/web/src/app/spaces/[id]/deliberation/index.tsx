@@ -13,12 +13,12 @@ import ClientProviders, {
   useDeliberationSpaceContext,
 } from './provider.client';
 import { DeliberationTab } from './types';
-import AnalyzePage from './_components/analyze';
 import { TeamContext } from '@/lib/contexts/team-context';
 import { SpaceStatus } from '@/lib/api/models/spaces';
 import { useUserInfo } from '@/app/(social)/_hooks/user';
 import SpaceHeader from '../_components/header';
 import PollPage from '../_components/page/poll';
+import AnalyzePage from '../_components/page/analyze';
 
 export default function DeliberationSpacePage() {
   return (
@@ -66,7 +66,7 @@ function Page() {
             ) : selectedType == DeliberationTab.RECOMMANDATION ? (
               <FinalConsensusPage />
             ) : (
-              <AnalyzePage />
+              <AnalyzePage context={context} />
             )}
             <SpaceSideMenu />
           </div>

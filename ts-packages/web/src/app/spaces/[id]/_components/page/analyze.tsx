@@ -1,10 +1,10 @@
 'use client';
 import React from 'react';
-import { useDeliberationSpaceContext } from '../provider.client';
-import ObjectiveResponse from './dashboard/objective_response';
-import SubjectiveResponse from './dashboard/subjective_response';
+import { SpaceContextType } from '../../type';
 import { logger } from '@/lib/logger';
-import SummaryReport from './dashboard/summary_report';
+import SummaryReport from '../dashboard/summary-report';
+import ObjectiveResponse from '../dashboard/objective-response';
+import SubjectiveResponse from '../dashboard/subjective-response';
 
 enum AnswerType {
   SingleChoice = 'single_choice',
@@ -16,9 +16,12 @@ enum AnswerType {
   LinearScale = 'linear_scale',
 }
 
-export default function AnalyzePage() {
-  const { handleDownloadExcel, answers, survey, mappedResponses } =
-    useDeliberationSpaceContext();
+export default function AnalyzePage({
+  context,
+}: {
+  context: SpaceContextType;
+}) {
+  const { handleDownloadExcel, answers, survey, mappedResponses } = context;
 
   logger.debug('mapped responses: ', mappedResponses);
 
