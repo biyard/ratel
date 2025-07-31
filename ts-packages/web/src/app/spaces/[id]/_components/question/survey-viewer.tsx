@@ -9,7 +9,7 @@ import ObjectiveViewer from './_component/viewer/objective-viewer';
 import SubjectiveViewer from './_component/viewer/subjective-viewer';
 import DropdownViewer from './_component/viewer/dropdown-viewer';
 import LinearScaleViewer from './_component/viewer/linear-scale-viewer';
-import { useDeliberationSpaceContext } from '../../provider.client';
+import { SpaceContextType } from '../../type';
 
 interface Question {
   title: string;
@@ -24,7 +24,11 @@ interface Question {
   options?: string[];
 }
 
-export default function SurveyViewer() {
+export default function SurveyViewer({
+  context,
+}: {
+  context: SpaceContextType;
+}) {
   const {
     isEdit,
     startedAt: startDate,
@@ -34,7 +38,7 @@ export default function SurveyViewer() {
     status,
     handleSetAnswers,
     handleSend,
-  } = useDeliberationSpaceContext();
+  } = context;
 
   const questions: Question[] =
     survey.surveys.length != 0 ? survey.surveys[0].questions : [];

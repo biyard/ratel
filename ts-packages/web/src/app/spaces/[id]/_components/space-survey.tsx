@@ -2,38 +2,42 @@
 
 import { Question, ShortAnswerQuestion } from '@/lib/api/models/survey';
 import React, { useState } from 'react';
-import SurveyQuestionEditor from './question/survey-question-editor';
-import { AnswerType } from './question/answer-type-select';
 import { v4 as uuidv4 } from 'uuid';
-import SurveyViewer from './question/survey-viewer';
-import { Add } from './add';
 import { SpaceStatus } from '@/lib/api/models/spaces';
-import { useDeliberationSpaceContext } from '../provider.client';
+import { SpaceContextType } from '../type';
+import { AnswerType } from './question/answer-type-select';
+import SurveyQuestionEditor from './question/survey-question-editor';
+import SurveyViewer from './question/survey-viewer';
+import { Add } from '../deliberation/_components/add';
 
-export default function SpaceSurvey() {
-  const { isEdit, status } = useDeliberationSpaceContext();
+export default function SpaceSurvey({
+  context,
+}: {
+  context: SpaceContextType;
+}) {
+  const { isEdit, status } = context;
 
   return (
     <div className="flex flex-col w-full">
       {isEdit && status == SpaceStatus.Draft ? (
-        <EditableSurvey />
+        <EditableSurvey context={context} />
       ) : (
-        <ViewSurvey />
+        <ViewSurvey context={context} />
       )}
     </div>
   );
 }
 
-function ViewSurvey() {
+function ViewSurvey({ context }: { context: SpaceContextType }) {
   return (
     <div className="flex flex-col w-full gap-[10px]">
-      <SurveyViewer />
+      <SurveyViewer context={context} />
     </div>
   );
 }
 
-function EditableSurvey() {
-  const { survey, handleUpdateSurvey } = useDeliberationSpaceContext();
+function EditableSurvey({ context }: { context: SpaceContextType }) {
+  const { survey, handleUpdateSurvey } = context;
   const questions =
     survey.surveys.length != 0 ? survey.surveys[0].questions : [];
 
