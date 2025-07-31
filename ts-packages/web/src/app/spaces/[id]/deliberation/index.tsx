@@ -4,7 +4,7 @@ import React, { useContext } from 'react';
 import SpaceSideMenu from './_components/space-side-menu';
 import ThreadPage from './_components/thread';
 import DeliberationPage from './_components/deliberation';
-import PollPage from './_components/poll';
+
 import FinalConsensusPage from './_components/final-consensus';
 
 import ClientProviders, {
@@ -18,6 +18,7 @@ import { TeamContext } from '@/lib/contexts/team-context';
 import { SpaceStatus } from '@/lib/api/models/spaces';
 import { useUserInfo } from '@/app/(social)/_hooks/user';
 import SpaceHeader from '../_components/header';
+import PollPage from '../_components/page/poll';
 
 export default function DeliberationSpacePage() {
   return (
@@ -61,7 +62,7 @@ function Page() {
             ) : selectedType == DeliberationTab.DELIBERATION ? (
               <DeliberationPage />
             ) : selectedType == DeliberationTab.POLL ? (
-              <PollPage />
+              <PollPage context={context} />
             ) : selectedType == DeliberationTab.RECOMMANDATION ? (
               <FinalConsensusPage />
             ) : (

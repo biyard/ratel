@@ -12,6 +12,8 @@ import { SpaceStatus } from '@/lib/api/models/spaces';
 import { useUserInfo } from '@/app/(social)/_hooks/user';
 import SpaceHeader from '../_components/header';
 import SpaceSideMenu from './_components/space-side-menu';
+import PollPage from '../_components/page/poll';
+import { PollTab } from './types';
 
 export default function PollSpacePage() {
   return (
@@ -25,7 +27,7 @@ function Page() {
   const space = useDeliberationSpace();
   const feed = useDeliberationFeed(space.feed_id);
   const context = usePollSpaceContext();
-  //   const { selectedType } = context;
+  const { selectedType } = context;
 
   const { teams } = useContext(TeamContext);
   const authorId = space?.author[0].id;
@@ -50,17 +52,12 @@ function Page() {
       <div className="flex flex-row w-full h-full gap-5">
         <div className="flex-1 flex w-full">
           <div className="flex flex-row w-full gap-5">
-            {/* {selectedType == DeliberationTab.SUMMARY ? (
-              <ThreadPage />
-            ) : selectedType == DeliberationTab.DELIBERATION ? (
-              <DeliberationPage />
-            ) : selectedType == DeliberationTab.POLL ? (
-              <PollPage />
-            ) : selectedType == DeliberationTab.RECOMMANDATION ? (
-              <FinalConsensusPage />
+            {selectedType == PollTab.POLL ? (
+              <PollPage context={context} />
             ) : (
-              <AnalyzePage />
-            )} */}
+              <></>
+              //   <AnalyzePage />
+            )}
             <SpaceSideMenu />
           </div>
         </div>
