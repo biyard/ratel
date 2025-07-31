@@ -1,7 +1,11 @@
 'use client';
-import React from 'react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import {  Trash2 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Trash2 } from 'lucide-react';
 import { Extra } from '@/components/icons';
 import { useRouter } from 'next/navigation';
 import { useApiCall } from '@/lib/api/use-send';
