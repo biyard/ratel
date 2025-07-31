@@ -61,7 +61,7 @@ impl SpaceController {
             .await?;
 
         let user_response = if user_id != 0 {
-            SurveyResponse::query_builder()
+            let mut res: Vec<SurveyResponse> = SurveyResponse::query_builder()
                 .space_id_equals(id)
                 .user_id_equals(user_id)
                 .survey_type_equals(SurveyType::Survey)
@@ -69,18 +69,54 @@ impl SpaceController {
                 .map(Into::into)
                 .fetch_optional(&self.pool)
                 .await?
-                .map_or_else(Vec::new, |res| vec![res])
+                .map_or_else(Vec::new, |res| vec![res]);
+
+            if res.is_empty() {
+                let response: Vec<SurveyResponse> = SurveyResponse::query_builder()
+                    .space_id_equals(id)
+                    .user_id_equals(user_id)
+                    .survey_type_equals(SurveyType::Sample)
+                    .query()
+                    .map(Into::into)
+                    .fetch_optional(&self.pool)
+                    .await?
+                    .map_or_else(Vec::new, |res| vec![res]);
+
+                if !response.is_empty() {
+                    res = vec![response[0].clone()];
+                }
+            }
+
+            res
         } else {
             Vec::new()
         };
 
-        let responses = SurveyResponse::query_builder()
+        let mut responses = SurveyResponse::query_builder()
             .space_id_equals(id)
             .survey_type_equals(SurveyType::Survey)
             .query()
             .map(Into::into)
             .fetch_all(&self.pool)
             .await?;
+
+        if responses.is_empty() {
+            let sql = r#"
+            SELECT DISTINCT ON (user_id) *
+            FROM survey_responses
+            WHERE space_id = $1 AND survey_type = $2
+            ORDER BY user_id, created_at DESC
+        "#;
+
+            let response: Vec<SurveyResponse> = sqlx::query(sql)
+                .bind(id)
+                .bind(SurveyType::Sample)
+                .map(SurveyResponse::from)
+                .fetch_all(&self.pool)
+                .await?;
+
+            responses = response;
+        }
 
         let discussions = space.discussions;
 
