@@ -2,11 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import { Col } from './ui/col';
 import { Row } from './ui/row';
-import { CommentIcon, Rewards, Shares, ThumbUp } from './icons';
+import { CommentIcon, Palace, Rewards, Shares, ThumbUp } from './icons';
 import { convertNumberToString } from '@/lib/number-utils';
 import TimeAgo from './time-ago';
 import DOMPurify from 'dompurify';
-import { Button } from './ui/button';
 import { useRouter } from 'next/navigation';
 import { useApiCall } from '@/lib/api/use-send';
 import { ratelApi } from '@/lib/api/ratel_api';
@@ -14,6 +13,7 @@ import { UserType } from '@/lib/api/models/user';
 import Image from 'next/image';
 import { route } from '@/route';
 import { SpaceType } from '@/lib/api/models/spaces';
+import { Button } from './ui/button';
 
 export interface FeedCardProps {
   id: number;
@@ -85,7 +85,7 @@ export default function FeedCard(props: FeedCardProps) {
 
   return (
     <Col
-      className="cursor-pointer bg-component-bg rounded-[10px]"
+      className={`cursor-pointer border rounded-[10px] ${props.space_id && props.space_type ? 'border-primary bg-primary/10' : 'border-neutral-700'}`}
       onClick={() => {
         router.push(route.threadByFeedId(props.id));
       }}
@@ -111,20 +111,18 @@ export function FeedBody({
   url,
   created_at,
   author_type,
-  // user_id,
-  // author_id,
-  space_type,
   space_id,
+  space_type,
   onboard,
 }: FeedCardProps) {
-  const router = useRouter();
   return (
     <Col className="pt-5 pb-2.5">
       <Row className="justify-between px-5">
-        <Row>
+        <div className="flex flex-row justify-start items-center gap-2.5">
+          {space_id && space_type ? <SpaceTag /> : <></>}
           <IndustryTag industry={industry} />
           {onboard && <OnboradingTag />}
-        </Row>
+        </div>
         {/* {user_id === author_id && !space_id && (
           <Button
             variant="rounded_primary"
@@ -134,7 +132,7 @@ export function FeedBody({
           </Button>
         )} */}
 
-        {space_id && space_type ? (
+        {/* {space_id && space_type ? (
           <Button
             variant="rounded_primary"
             className="text-[10px] font-semibold align-middle uppercase py-1 px-3"
@@ -151,7 +149,7 @@ export function FeedBody({
           </Button>
         ) : (
           <div />
-        )}
+        )} */}
       </Row>
       <h2 className="w-full line-clamp-2 font-bold text-xl/[25px] tracking-[0.5px] align-middle text-white px-5">
         {title}
@@ -177,15 +175,15 @@ export function FeedContents({
   contents: string;
   url?: string;
 }) {
-  const html =
+  const c =
     typeof window !== 'undefined' ? DOMPurify.sanitize(contents) : contents;
 
   return (
     <Col className="text-white">
-      <div
+      <p
         className="feed-content font-normal text-[15px]/[24px] align-middle tracking-[0.5px] text-c-wg-30 px-5"
-        dangerouslySetInnerHTML={{ __html: html }}
-      />
+        dangerouslySetInnerHTML={{ __html: c }}
+      ></p>
 
       {url && (
         <div className="px-5">
@@ -246,6 +244,15 @@ export function UserBadge({
   );
 }
 
+export function SpaceTag() {
+  return (
+    <span className="flex flex-row justify-start items-center px-2 border border-primary/50 bg-transparent gap-1 rounded-sm">
+      <Palace className="w-3.5 h-3.5 [&_g>path:nth-child(n+2)]:stroke-primary" />
+      <div className="font-semibold text-xs/[25px] text-primary">SPACE</div>
+    </span>
+  );
+}
+
 export function IndustryTag({ industry }: { industry: string }) {
   return (
     <span className="rounded-sm border border-c-wg-70 px-2 text-xs/[25px] font-semibold align-middle uppercase">
@@ -262,7 +269,25 @@ export function OnboradingTag() {
   );
 }
 
+export function JoinNowButton({ onClick }: { onClick: () => void }) {
+  return (
+    <Button
+      variant="rounded_primary"
+      className="cursor-pointer flex flex-row w-fit px-5 py-3 bg-primary rounded-[10px] font-bold text-[#000203] text-[15px]"
+      onClick={(e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        onClick();
+      }}
+    >
+      Join Now
+    </Button>
+  );
+}
+
 export function FeedFooter({
+  space_id,
+  space_type,
   likes,
   comments,
   rewards,
@@ -271,40 +296,62 @@ export function FeedFooter({
   onLikeClick,
   isLikeProcessing,
 }: FeedCardProps) {
+  const router = useRouter();
   return (
-    <Row className="items-center justify-around border-t w-full border-neutral-800">
-      <IconText
-        onClick={(evt) => {
-          evt.stopPropagation();
-          if (!isLikeProcessing) {
-            onLikeClick?.(!is_liked);
-          }
-        }}
-        className={
-          isLikeProcessing ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
-        }
-      >
-        <ThumbUp
-          className={
-            is_liked
-              ? '[&>path]:fill-primary [&>path]:stroke-primary'
-              : undefined
-          }
+    <Row
+      className={`items-center justify-between border-t w-full px-5 ${space_id && space_type ? 'border-primary/10' : 'border-neutral-800'} `}
+    >
+      {space_id && space_type ? (
+        <JoinNowButton
+          onClick={() => {
+            if (space_type === SpaceType.Committee) {
+              router.push(route.commiteeSpaceById(space_id ?? 0));
+            } else {
+              router.push(route.deliberationSpaceById(space_id ?? 0));
+            }
+          }}
         />
-        {convertNumberToString(likes)}
-      </IconText>
-      <IconText>
-        <CommentIcon />
-        {convertNumberToString(comments)}
-      </IconText>
-      <IconText>
-        <Rewards />
-        {convertNumberToString(rewards)}
-      </IconText>
-      <IconText>
-        <Shares />
-        {convertNumberToString(shares)}
-      </IconText>
+      ) : (
+        <div></div>
+      )}
+      <div
+        className={`flex flex-row ${space_id && space_type ? 'w-fit items-center' : 'w-full justify-between items-center'}`}
+      >
+        <IconText
+          onClick={(evt) => {
+            evt.stopPropagation();
+            if (!isLikeProcessing) {
+              onLikeClick?.(!is_liked);
+            }
+          }}
+          className={
+            isLikeProcessing
+              ? 'cursor-not-allowed opacity-50'
+              : 'cursor-pointer'
+          }
+        >
+          <ThumbUp
+            className={
+              is_liked
+                ? '[&>path]:fill-primary [&>path]:stroke-primary'
+                : undefined
+            }
+          />
+          {convertNumberToString(likes)}
+        </IconText>
+        <IconText>
+          <CommentIcon />
+          {convertNumberToString(comments)}
+        </IconText>
+        <IconText>
+          <Rewards />
+          {convertNumberToString(rewards)}
+        </IconText>
+        <IconText>
+          <Shares />
+          {convertNumberToString(shares)}
+        </IconText>
+      </div>
     </Row>
   );
 }
