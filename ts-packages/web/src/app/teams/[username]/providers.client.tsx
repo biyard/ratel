@@ -1,6 +1,5 @@
 'use client';
 
-import { DehydratedState, HydrationBoundary } from '@tanstack/react-query';
 import React, { createContext, useContext } from 'react';
 
 type ContextType = {
@@ -11,18 +10,12 @@ export const Context = createContext<ContextType | undefined>(undefined);
 
 export default function ClientProviders({
   children,
-  dehydratedState,
   userId,
 }: {
   children: React.ReactNode;
-  dehydratedState: DehydratedState;
   userId: number;
 }) {
-  return (
-    <HydrationBoundary state={dehydratedState}>
-      <Context.Provider value={{ userId }}>{children}</Context.Provider>
-    </HydrationBoundary>
-  );
+  return <Context.Provider value={{ userId }}>{children}</Context.Provider>;
 }
 
 export function useTeamsContext() {
