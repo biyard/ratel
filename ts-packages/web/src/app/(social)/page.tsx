@@ -7,7 +7,7 @@
 //   writePostRequest,
 // } from '@/lib/api/models/feeds/write-post-request';
 import { Metadata } from 'next';
-import Home from './page.client';
+import Home from './_components/pages/home';
 
 export const metadata: Metadata = {
   title: 'Ratel',

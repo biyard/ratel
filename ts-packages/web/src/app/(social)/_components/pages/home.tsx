@@ -4,23 +4,23 @@ import { useInView } from 'react-intersection-observer';
 
 import FeedCard from '@/components/feed-card';
 import { Col } from '@/components/ui/col';
-import News from './_components/News';
-import BlackBox from './_components/black-box';
-import CreatePostButton from './_components/create-post-button';
-import { usePostInfinite } from './_hooks/use-posts';
 import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
-import { usePromotion } from './_hooks/use_promotion';
-import { useFeedByID } from './_hooks/use-feed';
 
 import { checkString } from '@/lib/string-filter-utils';
 import { UserType } from '@/lib/api/models/user';
 
-import FeedEmptyState from './_components/feed-empty-state';
-import FeedEndMessage from './_components/feed-end-message';
-import PromotionCard from './_components/promotion-card';
 import Loading from '@/app/loading';
-import Suggestions from './_components/suggestions';
 import { Space } from '@/lib/api/models/spaces';
+import { usePromotion } from '@/lib/api/ratel_api';
+import { useFeedByID } from '../../_hooks/use-feed';
+import { usePostInfinite } from '../../_hooks/use-posts';
+import FeedEndMessage from '../feed-end-message';
+import FeedEmptyState from '../feed-empty-state';
+import CreatePostButton from '../create-post-button';
+import BlackBox from '../black-box';
+import PromotionCard from '../promotion-card';
+import News from '../News';
+import Suggestions from '../suggestions';
 
 export const SIZE = 10;
 
