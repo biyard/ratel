@@ -3,7 +3,7 @@ import Badge from '@/assets/icons/badge.svg';
 import { UserType } from '@/lib/api/models/user';
 import Image from 'next/image';
 import { Input } from '@/components/ui/input';
-import { SpaceStatus } from '@/lib/api/models/spaces';
+import { Space, SpaceStatus } from '@/lib/api/models/spaces';
 import { ArrowLeft, Play, Save } from 'lucide-react';
 import {
   Edit1,
@@ -18,18 +18,21 @@ import {
 import { TeamContext } from '@/lib/contexts/team-context';
 import { useUserInfo } from '@/app/(social)/_hooks/user';
 import { getTimeAgo } from '@/lib/time-utils';
-import {
-  useDeliberationFeed,
-  useDeliberationSpace,
-  useDeliberationSpaceContext,
-} from '../provider.client';
 import { usePopup } from '@/lib/contexts/popup-service';
-import GoPublicPopup from './modal/go_public';
+import GoPublicPopup from './modal/go-public';
+import { Feed } from '@/lib/api/models/feeds';
+import { SpaceContextType } from '../type';
 
-export default function SpaceHeader() {
+export default function SpaceHeader({
+  space,
+  feed,
+  context,
+}: {
+  space: Space;
+  feed: Feed;
+  context: SpaceContextType;
+}) {
   const popup = usePopup();
-  const space = useDeliberationSpace();
-  const feed = useDeliberationFeed(space.feed_id);
   const {
     isEdit,
     title,
@@ -44,7 +47,7 @@ export default function SpaceHeader() {
     handleShare,
     handlePostingSpace,
     handleUpdateTitle,
-  } = useDeliberationSpaceContext();
+  } = context;
 
   const handlePost = () => {
     popup
