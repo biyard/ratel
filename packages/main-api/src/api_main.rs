@@ -90,6 +90,8 @@ pub async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         Mynetwork,
         Verification,
         Notification,
+        NoticeQuizAnswer,
+        NoticeQuizAttempt,
     );
 
     if Industry::query_builder()

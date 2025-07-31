@@ -8,6 +8,12 @@ import { SpaceDraft, SpaceDraftCreateRequest } from './space_draft';
 import { SprintLeague } from './sprint_league';
 import { Survey, SurveyCreateRequest } from './survey';
 import { UserType } from './user';
+import {
+  QuizQuestion,
+  BoosterType,
+  PublishingScope,
+  NoticeQuestionWithAnswer,
+} from './notice';
 
 export interface Space {
   id: number;
@@ -39,6 +45,12 @@ export interface Space {
   likes: number;
   shares: number;
   is_liked: boolean;
+
+  // Quiz
+  notice_quiz: QuizQuestion[];
+  booster_type?: BoosterType;
+  // Publishing scope
+  publishing_scope: PublishingScope;
 }
 
 export interface PostingSpaceRequest {
@@ -62,6 +74,8 @@ export interface SpaceUpdateRequest {
     elearnings: ElearningCreateRequest[];
     surveys: SurveyCreateRequest[];
     drafts: SpaceDraftCreateRequest[];
+    publishing_scope: PublishingScope;
+    quiz?: NoticeQuestionWithAnswer[] | null;
   };
 }
 
@@ -75,6 +89,8 @@ export function spaceUpdateRequest(
   title?: string,
   started_at?: number,
   ended_at?: number,
+  publishing_scope: PublishingScope = PublishingScope.Private,
+  quiz?: NoticeQuestionWithAnswer[] | null,
 ): SpaceUpdateRequest {
   return {
     update_space: {
@@ -87,6 +103,8 @@ export function spaceUpdateRequest(
       elearnings,
       surveys,
       drafts,
+      publishing_scope,
+      quiz,
     },
   };
 }
@@ -108,6 +126,7 @@ export enum SpaceType {
   Nft = 4,
   Committee = 5,
   SprintLeague = 6,
+  Notice = 7,
 }
 
 export enum SpaceStatus {
