@@ -14,6 +14,7 @@ import { UserType } from '@/lib/api/models/user';
 import Image from 'next/image';
 import { route } from '@/route';
 import { SpaceType } from '@/lib/api/models/spaces';
+import DeletePostDropdown from '@/app/(social)/_components/delete-postdropdown';
 
 export interface FeedCardProps {
   id: number;
@@ -37,7 +38,6 @@ export interface FeedCardProps {
   author_id: number;
   user_id: number;
   onboard: boolean;
-
   onLikeClick?: (value: boolean) => void;
   refetch?: () => void;
   isLikeProcessing?: boolean;
@@ -111,11 +111,12 @@ export function FeedBody({
   url,
   created_at,
   author_type,
-  // user_id,
-  // author_id,
+  user_id,
+  author_id,
   space_type,
   space_id,
   onboard,
+  id,
 }: FeedCardProps) {
   const router = useRouter();
   return (
@@ -133,7 +134,6 @@ export function FeedBody({
             Create a Space
           </Button>
         )} */}
-
         {space_id && space_type ? (
           <Button
             variant="rounded_primary"
@@ -152,6 +152,8 @@ export function FeedBody({
         ) : (
           <div />
         )}
+        {/* Delete functionality in main feed for post authors */}
+        <DeletePostDropdown postId={id} userId={user_id} authorId={author_id} />
       </Row>
       <h2 className="w-full line-clamp-2 font-bold text-xl/[25px] tracking-[0.5px] align-middle text-white px-5">
         {title}
