@@ -38,6 +38,7 @@ export default function SpaceFile({
         ) : file.ext === 'PPTX' ? (
           <Pptx />
         ) : file.ext === 'MP4' || file.ext === 'MOV' ? (
+          //FIXME: fix to mov image
           <MP4 />
         ) : (
           <Excel />
