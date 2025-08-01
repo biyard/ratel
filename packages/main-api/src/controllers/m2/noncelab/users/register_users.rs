@@ -50,7 +50,7 @@ pub async fn register_users_by_noncelab_handler(
         .insert(
             req.display_name,
             req.principal.clone(),
-            req.email,
+            req.phone_number,
             req.profile_url.unwrap_or_default(),
             true,
             true,
@@ -93,7 +93,7 @@ pub struct RegisterUserRequest {
     pub principal: String,
 
     #[schemars(description = "unique email (can not be null)")]
-    pub email: String,
+    pub phone_number: String,
 
     #[schemars(description = "Optional profile url (can be null)")]
     pub profile_url: Option<String>,
