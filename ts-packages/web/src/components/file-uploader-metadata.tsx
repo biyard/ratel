@@ -76,7 +76,7 @@ export default function FileUploaderMetadata({
       return;
     }
 
-    const etags: { ETag: string; PartNumber: number }[] = [];
+    const etags: { etag: string; part_number: number }[] = [];
 
     try {
       for (let partNumber = 0; partNumber < totalParts; partNumber++) {
@@ -85,22 +85,15 @@ export default function FileUploaderMetadata({
         const chunk = file.slice(start, end);
         const url = presigned_uris[partNumber];
 
-        const uploadResp = await fetch(url, {
-          method: 'PUT',
-          body: chunk,
-          credentials: 'same-origin',
-        });
-
-        if (!uploadResp.ok) {
-          throw new Error(`Upload failed at part ${partNumber + 1}`);
-        }
-
-        const etag = uploadResp.headers.get('Etag');
-        if (!etag) throw new Error('Missing ETag in part response');
+        const { etag, partNumber: realPart } = await fetchWithETag(
+          url,
+          chunk,
+          partNumber,
+        );
 
         etags.push({
-          ETag: etag.replaceAll('"', ''),
-          PartNumber: partNumber + 1,
+          etag: etag,
+          part_number: realPart,
         });
       }
 
@@ -122,6 +115,45 @@ export default function FileUploaderMetadata({
       logger.error('Multipart upload error:', error);
       showErrorToast('Failed to upload file. Please try again.');
     }
+  };
+
+  const fetchWithETag = async (
+    url: string,
+    chunk: Blob,
+    partNumber: number,
+  ): Promise<{ etag: string; partNumber: number }> => {
+    for (let attempt = 1; attempt <= 5; attempt++) {
+      const resp = await fetch(url, {
+        method: 'PUT',
+        body: chunk,
+        credentials: 'omit',
+      });
+
+      if (!resp.ok) {
+        throw new Error(`Upload failed at part ${partNumber + 1}`);
+      }
+
+      let etag: string | null = null;
+      for (const [key, value] of resp.headers.entries()) {
+        if (key.toLowerCase() === 'etag') {
+          etag = value;
+          break;
+        }
+      }
+
+      if (etag) {
+        return {
+          etag: etag.replaceAll('"', ''),
+          partNumber: partNumber + 1,
+        };
+      }
+
+      console.warn(
+        `Retrying upload for part ${partNumber + 1}, attempt ${attempt}`,
+      );
+    }
+
+    throw new Error(`Missing ETag for part ${partNumber + 1}`);
   };
 
   const accept = (() => {

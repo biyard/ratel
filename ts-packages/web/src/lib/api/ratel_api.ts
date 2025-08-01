@@ -109,7 +109,7 @@ export const ratelApi = {
   },
   assets: {
     getPresignedUrl: (file_type: FileType, total_count = 1) =>
-      `/v1/assets?action=get-presigned-uris&file-type=${file_type}&total-count=${total_count}`,
+      `/v1/assets?action=get-presigned-uris&file_type=${file_type}&total_count=${total_count}`,
     createMultipartUpload: () => `/v1/assets/complete`,
   },
   teams: {

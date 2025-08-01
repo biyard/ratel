@@ -56,6 +56,13 @@ impl AssetController {
         use aws_sdk_s3::types::CompletedMultipartUpload;
         use aws_sdk_s3::{Client, config::Credentials};
 
+        tracing::debug!(
+            "multipart req: {} {} {}",
+            req.key,
+            req.upload_id,
+            req.parts.len()
+        );
+
         let config = defaults(BehaviorVersion::latest())
             .region(Region::new(ctrl.config.region))
             .credentials_provider(Credentials::new(
@@ -110,6 +117,12 @@ impl AssetController {
         use std::time::Duration;
         use uuid::Uuid;
 
+        tracing::debug!(
+            "req: {} {}",
+            req.file_type.unwrap_or_default(),
+            req.total_count.unwrap_or_default()
+        );
+
         let config = defaults(BehaviorVersion::latest())
             .region(Region::new(ctrl.config.region))
             .credentials_provider(Credentials::new(
@@ -154,7 +167,7 @@ impl AssetController {
                 .bucket(ctrl.bucket_name)
                 .key(&key)
                 .upload_id(&upload_id)
-                .part_number(part_number as i32);
+                .part_number((part_number) as i32);
 
             let presigned = req
                 .presigned(
