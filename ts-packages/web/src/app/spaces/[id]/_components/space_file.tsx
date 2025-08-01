@@ -37,7 +37,7 @@ export default function SpaceFile({
           <Word />
         ) : file.ext === 'PPTX' ? (
           <Pptx />
-        ) : file.ext === 'MP4' ? (
+        ) : file.ext === 'MP4' || file.ext === 'MOV' ? (
           <MP4 />
         ) : (
           <Excel />

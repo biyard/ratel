@@ -108,7 +108,7 @@ function EBook({ file, onClick }: { file: FileInfo; onClick: () => void }) {
     <div className="flex flex-row justify-between items-center pb-2.5 border-b border-b-neutral-800">
       <div className="flex flex-col gap-1">
         <div className="font-normal text-neutral-400 text-sm">
-          {file.ext === 'MP4' ? 'eLearning' : 'eBook'}
+          {file.ext === 'MP4' || file.ext === 'MOV' ? 'eLearning' : 'eBook'}
         </div>
         <div className="font-bold text-white text-lg">
           {file.name.replace(/\.[^/.]+$/, '')}
@@ -144,7 +144,7 @@ function EditableFile({
     <div className="cursor-pointer flex flex-row justify-start items-center w-full py-5 gap-2 bg-transparent rounded-[8px] mt-[10px]">
       <div className="flex flex-col w-full justify-start items-start gap-1">
         <div className="font-normal text-sm text-neutral-400">
-          {file.ext === 'MP4' ? 'eLearning' : 'eBook'}
+          {file.ext === 'MP4' || file.ext === 'MOV' ? 'eLearning' : 'eBook'}
         </div>
         <div className="font-bold text-lg text-neutral-300">{file.name}</div>
       </div>

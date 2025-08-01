@@ -175,4 +175,6 @@ pub enum FileExtension {
     EXCEL = 7,
     #[translate(ko = "MP4", en = "MP4")]
     MP4 = 8,
+    #[translate(ko = "MOV", en = "MOV")]
+    MOV = 9,
 }
