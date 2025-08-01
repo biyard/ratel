@@ -39,25 +39,25 @@ function Page() {
     spaceId,
     discussionId,
     isVideoOn,
-    setIsVideoOn,
+    changeIsVideoOn,
     isSharing,
-    setIsSharing,
+    changeIsSharing,
     isAudioOn,
-    setIsAudioOn,
+    changeIsAudioOn,
     isRecording,
-    setIsRecording,
+    changeIsRecording,
     videoTiles,
     meetingSession,
     remoteContentTileOwner,
-    setRemoteContentTileOwner,
+    changeRemoteContentTileOwner,
     micStates,
     videoStates,
     messages,
     activePanel,
-    setActivePanel,
+    changeActivePanel,
     participants,
     focusedAttendeeId,
-    setFocusedAttendeeId,
+    changeFocusedAttendeeId,
     discussion,
     users,
     sendMessage,
@@ -78,19 +78,19 @@ function Page() {
                 ratelApi.discussions.actDiscussionById(spaceId, discussionId),
                 exitMeetingRequest(),
               );
-              setRemoteContentTileOwner(null);
+              changeRemoteContentTileOwner(null);
               router.replace(route.deliberationSpaceById(discussion.space_id));
             }}
           />
 
-          {meetingSession && !isSharing && (
+          {meetingSession && !isSharing && !remoteContentTileOwner && (
             <RemoteGalleryView
               meetingSession={meetingSession}
               videoTiles={videoTiles}
               participants={participants}
               u={users}
               focusedAttendeeId={focusedAttendeeId}
-              setFocusedAttendeeId={setFocusedAttendeeId}
+              setFocusedAttendeeId={changeFocusedAttendeeId}
             />
           )}
 
@@ -102,7 +102,7 @@ function Page() {
                     meetingSession={meetingSession}
                     onRemoteContentTileUpdate={(tileState) => {
                       if (!tileState) {
-                        setRemoteContentTileOwner(null);
+                        changeRemoteContentTileOwner(null);
                         return;
                       }
 
@@ -112,9 +112,9 @@ function Page() {
                         attendeeId !==
                           meetingSession.configuration.credentials?.attendeeId
                       ) {
-                        setRemoteContentTileOwner(attendeeId);
+                        changeRemoteContentTileOwner(attendeeId);
                       } else {
-                        setRemoteContentTileOwner(null);
+                        changeRemoteContentTileOwner(null);
                       }
                     }}
                   />
@@ -179,34 +179,48 @@ function Page() {
                 ratelApi.discussions.actDiscussionById(spaceId, discussionId),
                 exitMeetingRequest(),
               );
-              setRemoteContentTileOwner(null);
+              changeRemoteContentTileOwner(null);
               router.replace(route.deliberationSpaceById(discussion.space_id));
             }}
             onRecordClick={async () => {
+              if (!meetingSession) return;
+              const av = meetingSession.audioVideo;
+
               if (!isRecording) {
                 await post(
                   ratelApi.discussions.actDiscussionById(spaceId, discussionId),
                   startRecordingRequest(),
+                );
+
+                av.realtimeSendDataMessage(
+                  'recording-status',
+                  new TextEncoder().encode('start'),
+                  10000,
                 );
               } else {
                 await post(
                   ratelApi.discussions.actDiscussionById(spaceId, discussionId),
                   endRecordingRequest(),
                 );
+                av.realtimeSendDataMessage(
+                  'recording-status',
+                  new TextEncoder().encode('stop'),
+                  10000,
+                );
               }
-              setIsRecording(!isRecording);
+              changeIsRecording(!isRecording);
             }}
             onParticipantsClick={() => {
-              setActivePanel((prev) =>
-                prev === 'participants' ? null : 'participants',
+              changeActivePanel(
+                activePanel === 'participants' ? null : 'participants',
               );
             }}
             onChatClick={() => {
-              setActivePanel((prev) => (prev === 'chat' ? null : 'chat'));
+              changeActivePanel(activePanel === 'chat' ? null : 'chat');
             }}
             onVideoToggle={() => {
-              setIsVideoOn((prev) => !prev);
-              setFocusedAttendeeId(null);
+              changeIsVideoOn(!isVideoOn);
+              changeFocusedAttendeeId(null);
             }}
             onShareToggle={async () => {
               if (!meetingSession) return;
@@ -217,13 +231,13 @@ function Page() {
                 try {
                   await av.startContentShareFromScreenCapture();
 
-                  setIsSharing(true);
+                  changeIsSharing(true);
                 } catch (err) {
                   logger.error('Failed to share video with error: ', err);
                 }
               } else {
                 av.stopContentShare();
-                setIsSharing(false);
+                changeIsSharing(false);
               }
             }}
             onAudioToggle={() => {
@@ -237,7 +251,7 @@ function Page() {
                 av.realtimeUnmuteLocalAudio();
               }
 
-              setIsAudioOn((prev) => !prev);
+              changeIsAudioOn(!isAudioOn);
             }}
           />
         </div>
@@ -250,15 +264,15 @@ function Page() {
           users={users}
           participants={participants}
           setFocusedAttendeeId={(attendeeId: string | null) => {
-            setFocusedAttendeeId(attendeeId);
+            changeFocusedAttendeeId(attendeeId);
           }}
           meetingSession={meetingSession!}
-          onClose={() => setActivePanel(null)}
+          onClose={() => changeActivePanel(null)}
         />
       )}
       {activePanel === 'chat' && (
         <ChatPanel
-          onClose={() => setActivePanel(null)}
+          onClose={() => changeActivePanel(null)}
           messages={messages}
           users={users}
           participants={participants}
