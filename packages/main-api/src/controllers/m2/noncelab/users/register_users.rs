@@ -92,7 +92,7 @@ pub struct RegisterUserRequest {
     #[schemars(description = "Principal of ICP (Internet Computer Protocol)")]
     pub principal: String,
 
-    #[schemars(description = "unique email (can not be null)")]
+    #[schemars(description = "unique phone number (can not be null)")]
     pub phone_number: String,
 
     #[schemars(description = "Optional profile url (can be null)")]
