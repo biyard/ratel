@@ -15,7 +15,8 @@ import DoubleArrowDown from '@/assets/icons/double-arrow-down.svg';
 import UserCircleIcon from '@/assets/icons/user-circle.svg';
 import Certified from '@/assets/icons/certified.svg';
 import { cn } from '@/lib/utils';
-import { useUserInfo } from '@/lib/api/hooks/users';
+// import { useUserInfo } from '@/lib/api/hooks/users';
+import { useUserInfo } from '../_hooks/user';
 import { Button } from '@/components/ui/button';
 
 import { LexicalComposer } from '@lexical/react/LexicalComposer';
@@ -51,6 +52,7 @@ import ToolbarPlugin from '@/components/toolbar/toolbar';
 import { useRouter } from 'next/navigation';
 import { route } from '@/route';
 import { QK_GET_FEED_BY_FEED_ID } from '@/constants';
+import { CommentIcon, Folder } from '@/components/icons';
 
 export const editorTheme = {
   ltr: 'text-left',
@@ -295,6 +297,7 @@ export function CreateRePost() {
                       <Loader2 className="animate-spin" />
                     ) : (
                       <UserCircleIcon />
+                   
                     )}
                   </Button>
                 ) : (
@@ -310,6 +313,7 @@ export function CreateRePost() {
                       <Loader2 className="animate-spin" />
                     ) : (
                       <UserCircleIcon />
+                     
                     )}
                   </Button>
                 )}
@@ -348,9 +352,9 @@ export interface RePostDraftContextType {
   isPublishedPost: boolean;
 }
 
-export const RePostDraftContext = createContext<RePostDraftContextType | undefined>(
-  undefined,
-);
+export const RePostDraftContext = createContext<
+  RePostDraftContextType | undefined
+>(undefined);
 
 export const RePostDraftProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -655,7 +659,7 @@ export const RePostDraftProvider: React.FC<{ children: React.ReactNode }> = ({
 export const useRepostDraft = () => {
   const context = useContext(RePostDraftContext);
   if (context === undefined) {
-    throw new Error('usePostDraft must be used within a PostDraftProvider');
+    throw new Error('useRePostDraft must be used within a PostDraftProvider');
   }
   return context;
 };

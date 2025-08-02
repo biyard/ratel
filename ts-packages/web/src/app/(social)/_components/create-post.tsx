@@ -295,6 +295,7 @@ export function CreatePost() {
                       <Loader2 className="animate-spin" />
                     ) : (
                       <UserCircleIcon />
+                    
                     )}
                   </Button>
                 ) : (
@@ -310,6 +311,7 @@ export function CreatePost() {
                       <Loader2 className="animate-spin" />
                     ) : (
                       <UserCircleIcon />
+                 
                     )}
                   </Button>
                 )}
