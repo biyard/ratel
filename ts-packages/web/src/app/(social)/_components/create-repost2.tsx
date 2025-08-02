@@ -338,6 +338,9 @@ import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin';
 import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary';
+import Certified from '@/assets/icons/certified.svg';
+import DoubleArrowDown from '@/assets/icons/double-arrow-down.svg';
+
 import {
   LexicalEditor,
   EditorState,
@@ -359,6 +362,7 @@ import { useRouter } from 'next/navigation';
 import { route } from '@/route';
 import { QK_GET_FEED_BY_FEED_ID } from '@/constants';
 import { Folder, CommentIcon } from '@/components/icons';
+import { useQuery } from '@tanstack/react-query';
 
 export const editorTheme = {
   ltr: 'text-left',
@@ -404,12 +408,13 @@ export function CreateRePost() {
     savePost,
     status,
     isPublishedPost,
+    resetDraft,
+    authorName,
+    authorProfileUrl,
   } = useRepostDraft();
 
   const { data: userInfo } = useUserInfo();
   const editorRef = useRef<LexicalEditor | null>(null);
-
-  const { resetDraft } = useRepostDraft();
 
   const handleLexicalChange = (editorState: EditorState) => {
     editorState.read(() => {
@@ -490,36 +495,60 @@ export function CreateRePost() {
                   {userInfo?.nickname || 'Anonymous'}
                 </span>
               </div>
+              <Certified className="size-5" />
             </div>
-            <button
+
+            {/* <button
               onClick={resetDraft}
               className="text-neutral-400 hover:text-white"
             >
               <X size={20} />
-            </button>
+            </button> */}
+            <div className={cn('cursor-pointer')} onClick={resetDraft}>
+              <DoubleArrowDown />
+            </div>
           </div>
 
           {/* Quoted Content Section */}
+
           {(feedcontent || feedImageUrl) && (
-            <div className="px-4 pt-2 pb-3 border-b border-neutral-700 bg-neutral-900/50">
-              <div className="text-sm text-neutral-400 mb-2">Reposting:</div>
+            <div className="px-4 pt-2 pb-3   bg-neutral-800 rounded-md mx-4 my-4 ">
+              {/* <div className="text-sm text-neutral-400 mb-2">Reposting:</div> */}
+
+              <div className="flex items-center gap-3">
+                <div className="size-6 rounded-full">
+                  <Image
+                    width={40}
+                    height={40}
+                    src={authorProfileUrl || '/default-profile.png'}
+                    alt="Profile"
+                    className="w-full h-full object-cover rounded-full"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-white font-medium text-lg">
+                    {authorName|| 'Anonymous'}
+                  </span>
+                </div>
+                <Certified className="size-5" />
+              </div>
 
               {feedcontent && (
                 <div
-                  className="prose prose-invert text-sm p-3 bg-neutral-800 rounded border-l-2 border-orange-500 mb-3"
+                  className="prose prose-invert text-sm p-3 bg-neutral-800 border-orange-500 mb-3"
                   dangerouslySetInnerHTML={{ __html: feedcontent }}
                 />
               )}
 
               {feedImageUrl && (
                 <div className="relative group">
-                  <div className="relative w-full aspect-video rounded-md overflow-hidden">
+                  <div className="relative w-full aspect-video rounded-md overflow-hidden max-h-40">
                     <Image
                       src={feedImageUrl}
                       alt="Quoted content"
                       fill
                       className="object-cover"
-                      sizes="(max-width: 768px) 100vw, 50vw"
+                      sizes="100vw"
                     />
                   </div>
                   <button
@@ -537,7 +566,7 @@ export function CreateRePost() {
           <div className="px-4 pt-4">
             <input
               type="text"
-              placeholder="Add your thoughts..."
+              placeholder="Here is a title line. What do you think about......."
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className="w-full bg-transparent text-white text-xl font-semibold placeholder-neutral-500 outline-none border-none"
@@ -548,7 +577,7 @@ export function CreateRePost() {
           <div className="px-4 pt-2 min-h-[80px] relative">
             <RichTextPlugin
               contentEditable={
-                <ContentEditable className="outline-none min-h-[150px] text-neutral-300" />
+                <ContentEditable className="outline-none min-h-[100px] text-neutral-300" />
               }
               placeholder={
                 <div className="absolute top-0 text-neutral-500 pointer-events-none">
@@ -611,6 +640,11 @@ interface RePostDraftContextType {
   originalFeedId: number | null;
   setOriginalFeedId: (id: number | null) => void;
 
+  authorName?: string;
+  authorProfileUrl?: string;
+  setAuthorName: (name: string) => void;
+  setAuthorProfileUrl: (url: string) => void;
+
   expand: boolean;
   setExpand: (expand: boolean) => void;
   title: string;
@@ -630,7 +664,6 @@ interface RePostDraftContextType {
   newDraft: () => void;
 
   resetDraft: () => void;
-
 }
 
 const RePostDraftContext = createContext<RePostDraftContextType | undefined>(
@@ -641,6 +674,11 @@ export const RePostDraftProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [originalFeedId, setOriginalFeedId] = useState<number | null>(null);
+
+  const [authorName, setAuthorName] = useState<string | undefined>();
+  const [authorProfileUrl, setAuthorProfileUrl] = useState<
+    string | undefined
+  >();
 
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -775,6 +813,11 @@ export const RePostDraftProvider: React.FC<{ children: React.ReactNode }> = ({
     savePost,
     newDraft,
     resetDraft, // <-- Add this
+
+    authorName,
+    authorProfileUrl,
+    setAuthorName,
+    setAuthorProfileUrl,
   };
 
   return (

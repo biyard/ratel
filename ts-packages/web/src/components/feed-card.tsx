@@ -460,8 +460,17 @@ export default function FeedCard(props: FeedCardProps) {
   const [localIsLiked, setLocalIsLiked] = useState(props.is_liked);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const { setFeedContent, setFeedImageUrl, newDraft, setOriginalFeedId, setTitle, setContent,publishPost,  } =
-    useRepostDraft();
+  const {
+    setFeedContent,
+    setFeedImageUrl,
+    newDraft,
+    setOriginalFeedId,
+    setTitle,
+    setContent,
+    publishPost,
+    setAuthorName,
+    setAuthorProfileUrl,
+  } = useRepostDraft();
 
   // Sync with props when they change
   useEffect(() => {
@@ -499,6 +508,8 @@ export default function FeedCard(props: FeedCardProps) {
       setFeedImageUrl(props.url || '');
       setTitle(''); // No thoughts
       setContent(null); // No content
+      setAuthorName(props.author_name);
+      setAuthorProfileUrl(props.author_profile_url);
       publishPost();
     } catch (error) {
       console.error('Repost failed:', error);
@@ -506,6 +517,8 @@ export default function FeedCard(props: FeedCardProps) {
   };
 
   const handleRepostThought = () => {
+    setAuthorName(props.author_name);
+    setAuthorProfileUrl(props.author_profile_url);
     setFeedContent(props.contents);
     setFeedImageUrl(props.url || null);
     setOriginalFeedId(props.id); // ✅ Add this
