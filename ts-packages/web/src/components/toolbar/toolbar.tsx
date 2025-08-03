@@ -89,6 +89,7 @@ export default function ToolbarPlugin({
         className={cn(isUnderline && 'bg-neutral-600 text-white')}
         aria-label="Format text to underlined"
       >
+        
         <Underline />
       </button>
       <button
