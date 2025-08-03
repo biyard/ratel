@@ -357,11 +357,17 @@ import { useQueryClient } from '@tanstack/react-query';
 import { postByUserIdQk } from '../_hooks/use-posts';
 import { checkString } from '@/lib/string-filter-utils';
 import { showErrorToast } from '@/lib/toast';
-import ToolbarPlugin from '@/components/toolbar/toolbar';
+import ToolbarPlugin from '@/components/toolbar/toolbar2';
 import { useRouter } from 'next/navigation';
 import { route } from '@/route';
 import { QK_GET_FEED_BY_FEED_ID } from '@/constants';
-import { Folder, CommentIcon } from '@/components/icons';
+import {
+  Save,
+  CommentIcon,
+  UserCircle,
+  FilterArrow,
+  ShapeArrowDown,
+} from '@/components/icons';
 import { useQuery } from '@tanstack/react-query';
 
 export const editorTheme = {
@@ -410,6 +416,7 @@ export function CreateRePost() {
     isPublishedPost,
     resetDraft,
     authorName,
+    industry,
     authorProfileUrl,
   } = useRepostDraft();
 
@@ -480,7 +487,7 @@ export function CreateRePost() {
         <div className="w-full bg-component-bg border-t-6 border-x border-b border-primary rounded-t-lg overflow-hidden">
           {/* Header */}
           <div className="flex items-center p-4 justify-between">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 relative">
               <div className="size-6 rounded-full">
                 <Image
                   width={40}
@@ -498,24 +505,25 @@ export function CreateRePost() {
               <Certified className="size-5" />
             </div>
 
-            {/* <button
-              onClick={resetDraft}
-              className="text-neutral-400 hover:text-white"
-            >
-              <X size={20} />
-            </button> */}
-            <div className={cn('cursor-pointer')} onClick={resetDraft}>
-              <DoubleArrowDown />
+            {/* space type div and doubledownarrow icon */}
+            <div className="flex items-center space-x-4">
+              <div className="p-4 rounded-lg flex w-[320px] justify-between border border-[0.5px] border-[#262626]">
+                <p className="text-left text-white text-lg">{industry}</p>
+                <ShapeArrowDown />
+              </div>
+
+              <div className={cn('cursor-pointer')} onClick={resetDraft}>
+                <DoubleArrowDown />
+              </div>
             </div>
           </div>
 
           {/* Quoted Content Section */}
-
           {(feedcontent || feedImageUrl) && (
             <div className="px-4 pt-2 pb-3   bg-neutral-800 rounded-md mx-4 my-4 ">
               {/* <div className="text-sm text-neutral-400 mb-2">Reposting:</div> */}
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 relative">
                 <div className="size-6 rounded-full">
                   <Image
                     width={40}
@@ -527,22 +535,26 @@ export function CreateRePost() {
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-white font-medium text-lg">
-                    {authorName|| 'Anonymous'}
+                    {authorName || 'Anonymous'}
                   </span>
                 </div>
                 <Certified className="size-5" />
+
+                <div className="absolute right-0 top-0 ">
+                  <FilterArrow />
+                </div>
               </div>
 
               {feedcontent && (
                 <div
-                  className="prose prose-invert text-sm p-3 bg-neutral-800 border-orange-500 mb-3"
+                  className="prose prose-invert text-sm p-3 bg-neutral-800 text-neutral-300 mb-3 font-light"
                   dangerouslySetInnerHTML={{ __html: feedcontent }}
                 />
               )}
 
               {feedImageUrl && (
                 <div className="relative group">
-                  <div className="relative w-full aspect-video rounded-md overflow-hidden max-h-40">
+                  <div className="relative w-full aspect-video rounded-md overflow-hidden max-h-40 ">
                     <Image
                       src={feedImageUrl}
                       alt="Quoted content"
@@ -614,18 +626,33 @@ export function CreateRePost() {
           )}
 
           {/* Toolbar */}
-          <div className="flex items-center justify-between p-4 border-t border-neutral-700">
+          <div className="flex items-center justify-between p-4">
             <ToolbarPlugin onImageUpload={setImage} />
 
-            <Button
-              onClick={isPublishedPost ? savePost : publishPost}
-              disabled={isSubmitDisabled}
-            >
-              {status === 'publishing' || status === 'saving' ? (
-                <Loader2 className="animate-spin mr-2" />
-              ) : null}
-              {isPublishedPost ? 'Update' : 'Post'}
-            </Button>
+            <div></div>
+            {/* post button and save button */}
+            <div className="flex space-x-2 ">
+              <button
+                onClick={savePost}
+                className="flex items-center font-bold text-white px-4 py-2 gap-x-2"
+              >
+                <Save className=" " />
+                Save
+              </button>
+
+              {/* post button */}
+              <button
+                onClick={isPublishedPost ? savePost : publishPost}
+                disabled={isSubmitDisabled}
+                className="bg-primary text-background rounded-full hover:bg-primary/70 hover:shadow-[inset_0_0_0_1000px_rgba(0,0,0,0.2)] flex px-4 py-2 font-bold gap-x-2 items-center "
+              >
+                <UserCircle />
+                {status === 'publishing' || status === 'saving' ? (
+                  <Loader2 className="animate-spin mr-2" />
+                ) : null}
+                {isPublishedPost ? 'Update' : 'Post'}
+              </button>
+            </div>
           </div>
         </div>
       </LexicalComposer>
@@ -644,6 +671,8 @@ interface RePostDraftContextType {
   authorProfileUrl?: string;
   setAuthorName: (name: string) => void;
   setAuthorProfileUrl: (url: string) => void;
+  industry?:string;
+  setIndustry: (name: string) => void;
 
   expand: boolean;
   setExpand: (expand: boolean) => void;
@@ -676,6 +705,7 @@ export const RePostDraftProvider: React.FC<{ children: React.ReactNode }> = ({
   const [originalFeedId, setOriginalFeedId] = useState<number | null>(null);
 
   const [authorName, setAuthorName] = useState<string | undefined>();
+  const [industry, setIndustry] = useState<string | undefined>();
   const [authorProfileUrl, setAuthorProfileUrl] = useState<
     string | undefined
   >();
@@ -794,6 +824,8 @@ export const RePostDraftProvider: React.FC<{ children: React.ReactNode }> = ({
   const contextValue = {
     originalFeedId,
     setOriginalFeedId,
+    industry,
+    setIndustry,
 
     expand,
     setExpand,

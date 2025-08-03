@@ -470,6 +470,7 @@ export default function FeedCard(props: FeedCardProps) {
     publishPost,
     setAuthorName,
     setAuthorProfileUrl,
+    setIndustry,
   } = useRepostDraft();
 
   // Sync with props when they change
@@ -518,10 +519,11 @@ export default function FeedCard(props: FeedCardProps) {
 
   const handleRepostThought = () => {
     setAuthorName(props.author_name);
+    setIndustry(props.industry)
     setAuthorProfileUrl(props.author_profile_url);
     setFeedContent(props.contents);
     setFeedImageUrl(props.url || null);
-    setOriginalFeedId(props.id); // ✅ Add this
+    setOriginalFeedId(props.id); // Add this
     newDraft();
   };
   return (
