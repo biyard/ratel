@@ -169,14 +169,9 @@ impl SprintLeagueController {
 
         let player_names: Vec<String> = sprint_league.players.into_iter().map(|p| p.name).collect();
         // Notify Telegram
-        let payload = TelegramNotificationPayload::SprintLeague(SprintLeaguePayload {
-            id: space.id,
-            title: space.title.clone().unwrap_or("Space".to_string()),
-            description: space.html_contents.clone(),
-            started_at: space.started_at.unwrap(),
-            ended_at: space.ended_at.unwrap(),
-            player_names,
-        });
+        let payload =
+            TelegramNotificationPayload::SprintLeague(SprintLeaguePayload { space_id: space.id });
+
         if let Err(e) = notify_telegram(payload).await {
             tracing::error!("Failed to notify Telegram: {}", e);
         }
