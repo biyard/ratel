@@ -22,6 +22,7 @@ impl StdError for ServiceException {}
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum Error {
     InvalidAction,
+    InvalidPhoneNumberFormat,
     UpdateNotAllowed,
     Unknown(String),
     Klaytn(String),
