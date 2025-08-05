@@ -6,6 +6,7 @@ use by_axum::axum::Json;
 use dto::Membership;
 use dto::User;
 use dto::{Result, by_axum::axum::extract::State, reqwest::header::HeaderMap};
+use regex::Regex;
 
 pub async fn authorization_noncelab_token(headers: &HeaderMap) -> bool {
     let config = config::get();
@@ -33,6 +34,13 @@ pub async fn register_users_by_noncelab_handler(
     let authorized = authorization_noncelab_token(&headers).await;
     if !authorized {
         return Err(dto::Error::Unauthorized)?;
+    }
+
+    let phone_regex = Regex::new(r"^(01[0|1|6|7|8|9]-\d{3,4}-\d{4}|01[0|1|6|7|8|9]\d{8})$")
+        .map_err(|_| dto::Error::InvalidPhoneNumberFormat)?;
+
+    if !phone_regex.is_match(&req.phone_number.clone()) {
+        return Err(dto::Error::InvalidPhoneNumberFormat)?;
     }
 
     let user = User::query_builder()
@@ -93,7 +101,7 @@ pub struct RegisterUserRequest {
     #[schemars(description = "Principal of ICP (Internet Computer Protocol)")]
     pub principal: String,
 
-    #[schemars(description = "unique phone number (can not be null)")]
+    #[schemars(description = "unique phone number ex)010-1234-5678 (can not be null)")]
     pub phone_number: String,
 
     #[schemars(description = "Optional profile url (can be null)")]
