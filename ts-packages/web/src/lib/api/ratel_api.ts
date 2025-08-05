@@ -129,8 +129,8 @@ export function useLatestQuizAttempt(
     refetchOnWindowFocus: true,
     refetchOnMount: true,
     refetchOnReconnect: true,
-    staleTime: 0, // Always consider data stale to ensure fresh fetches
-    gcTime: 0, // Don't cache the data (formerly cacheTime)
+    staleTime: 5 * 1000, // Consider data fresh for 5 seconds
+    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
     enabled: spaceId > 0,
     retry: 3, // Retry failed requests up to 3 times
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
