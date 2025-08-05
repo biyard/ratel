@@ -48,9 +48,9 @@ pub async fn register_users_by_noncelab_handler(
 
     let user = repo
         .insert(
-            req.display_name,
+            req.display_name.clone(),
             req.principal.clone(),
-            req.phone_number.clone(),
+            req.display_name.clone(),
             req.profile_url.unwrap_or_default(),
             true,
             true,
