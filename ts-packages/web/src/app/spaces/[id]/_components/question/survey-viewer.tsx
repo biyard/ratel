@@ -3,13 +3,14 @@ import BlackBox from '@/app/(social)/_components/black-box';
 import { Answer } from '@/lib/api/models/response';
 import { usePopup } from '@/lib/contexts/popup-service';
 import CheckPopup from './check-popup';
-import { SpaceStatus } from '@/lib/api/models/spaces';
+import { Space, SpaceStatus, SpaceType } from '@/lib/api/models/spaces';
 import { logger } from '@/lib/logger';
 import ObjectiveViewer from './_component/viewer/objective-viewer';
 import SubjectiveViewer from './_component/viewer/subjective-viewer';
 import DropdownViewer from './_component/viewer/dropdown-viewer';
 import LinearScaleViewer from './_component/viewer/linear-scale-viewer';
-import { useDeliberationSpaceContext } from '../../provider.client';
+import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
+import { Poll, SurveyAnswer } from '../../type';
 
 interface Question {
   title: string;
@@ -24,17 +25,33 @@ interface Question {
   options?: string[];
 }
 
-export default function SurveyViewer() {
-  const {
-    isEdit,
-    startedAt: startDate,
-    endedAt: endDate,
-    survey,
-    answer,
-    status,
-    handleSetAnswers,
-    handleSend,
-  } = useDeliberationSpaceContext();
+export default function SurveyViewer({
+  isEdit,
+  startDate,
+  endDate,
+  survey,
+  answer,
+  status,
+  handleSetAnswers,
+  handleSend,
+  space,
+}: {
+  isEdit: boolean;
+  startDate: number;
+  endDate: number;
+  survey: Poll;
+  answer: SurveyAnswer;
+  status: SpaceStatus;
+  handleSetAnswers: (answers: Answer[]) => void;
+  handleSend: () => Promise<void>;
+  space: Space;
+}) {
+  const { data: userInfo } = useSuspenseUserInfo();
+  const userId = userInfo?.id || 0;
+  const members = space.discussions.flatMap((discussion) => discussion.members);
+  const isMember = members.some((member) => member.id === userId);
+
+  const spaceType = space.space_type;
 
   const questions: Question[] =
     survey.surveys.length != 0 ? survey.surveys[0].questions : [];
@@ -225,24 +242,28 @@ export default function SurveyViewer() {
       })}
 
       <div
-        className={`flex flex-row w-full justify-end ${is_completed || status != SpaceStatus.InProgress || isEdit || !isLive || questions.length == 0 ? 'hidden' : ''}`}
+        className={`flex flex-row w-full justify-end ${is_completed || status != SpaceStatus.InProgress || isEdit || !isLive || questions.length == 0 || (!isMember && spaceType === SpaceType.Deliberation) ? 'hidden' : ''}`}
       >
         <div
           className="cursor-pointer flex flex-row w-[180px] h-fit py-[14px] px-[40px] justify-center items-center bg-primary hover:opacity-70 rounded-lg font-bold text-[15px] text-[#000203]"
           onClick={() => {
-            popup
-              .open(
-                <CheckPopup
-                  onContinue={() => {
-                    handleSend();
-                    popup.close();
-                  }}
-                  onClose={() => {
-                    popup.close();
-                  }}
-                />,
-              )
-              .withTitle('Please check again before voting.');
+            if (spaceType === SpaceType.Deliberation) {
+              popup
+                .open(
+                  <CheckPopup
+                    onContinue={() => {
+                      handleSend();
+                      popup.close();
+                    }}
+                    onClose={() => {
+                      popup.close();
+                    }}
+                  />,
+                )
+                .withTitle('Please check again before voting.');
+            } else {
+              handleSend();
+            }
           }}
         >
           Save

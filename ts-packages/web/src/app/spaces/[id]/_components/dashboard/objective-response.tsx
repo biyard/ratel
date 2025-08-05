@@ -9,8 +9,8 @@ import {
 } from '@/lib/api/models/survey';
 import { Answer } from '@/lib/api/models/response';
 import React from 'react';
-import BarChartResponse from '../charts/bar_chart_response';
-import PieChartResponse from '../charts/pie_chart_response';
+import BarChartResponse from '../charts/bar-chart-response';
+import PieChartResponse from '../charts/pie-chart-response';
 
 function parseObjectiveAnswers(
   question:
