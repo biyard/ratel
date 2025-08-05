@@ -175,14 +175,17 @@ export function FeedContents({
   contents: string;
   url?: string;
 }) {
-  const c =
-    typeof window !== 'undefined' ? DOMPurify.sanitize(contents) : contents;
+  const [sanitized, setSanitized] = useState<string>('');
+
+  useEffect(() => {
+    setSanitized(DOMPurify.sanitize(contents));
+  }, [contents]);
 
   return (
-    <Col className="text-white">
+    <div className="text-white">
       <p
         className="feed-content font-normal text-[15px]/[24px] align-middle tracking-[0.5px] text-c-wg-30 px-5"
-        dangerouslySetInnerHTML={{ __html: c }}
+        dangerouslySetInnerHTML={{ __html: sanitized }}
       ></p>
 
       {url && (
@@ -198,10 +201,9 @@ export function FeedContents({
           </div>
         </div>
       )}
-    </Col>
+    </div>
   );
 }
-
 export function IconText({
   children,
   className,
