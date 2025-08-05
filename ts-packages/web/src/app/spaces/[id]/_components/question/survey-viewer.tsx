@@ -9,8 +9,8 @@ import ObjectiveViewer from './_component/viewer/objective-viewer';
 import SubjectiveViewer from './_component/viewer/subjective-viewer';
 import DropdownViewer from './_component/viewer/dropdown-viewer';
 import LinearScaleViewer from './_component/viewer/linear-scale-viewer';
-import { SpaceContextType } from '../../type';
 import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
+import { Poll, SurveyAnswer } from '../../type';
 
 interface Question {
   title: string;
@@ -26,10 +26,24 @@ interface Question {
 }
 
 export default function SurveyViewer({
-  context,
+  isEdit,
+  startDate,
+  endDate,
+  survey,
+  answer,
+  status,
+  handleSetAnswers,
+  handleSend,
   space,
 }: {
-  context: SpaceContextType;
+  isEdit: boolean;
+  startDate: number;
+  endDate: number;
+  survey: Poll;
+  answer: SurveyAnswer;
+  status: SpaceStatus;
+  handleSetAnswers: (answers: Answer[]) => void;
+  handleSend: () => Promise<void>;
   space: Space;
 }) {
   const { data: userInfo } = useSuspenseUserInfo();
@@ -37,19 +51,7 @@ export default function SurveyViewer({
   const members = space.discussions.flatMap((discussion) => discussion.members);
   const isMember = members.some((member) => member.id === userId);
 
-  console.log('members: ', members);
-
   const spaceType = space.space_type;
-  const {
-    isEdit,
-    startedAt: startDate,
-    endedAt: endDate,
-    survey,
-    answer,
-    status,
-    handleSetAnswers,
-    handleSend,
-  } = context;
 
   const questions: Question[] =
     survey.surveys.length != 0 ? survey.surveys[0].questions : [];

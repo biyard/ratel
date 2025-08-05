@@ -19,20 +19,21 @@ import { TeamContext } from '@/lib/contexts/team-context';
 import { useUserInfo } from '@/app/(social)/_hooks/user';
 import { getTimeAgo } from '@/lib/time-utils';
 import { usePopup } from '@/lib/contexts/popup-service';
-import GoPublicPopup from './modal/go-public';
+import GoPublicPopup from '../modal/go-public';
 import { Feed } from '@/lib/api/models/feeds';
-import { SpaceContextType } from '../type';
+import { useSpaceContext } from './provider';
 
 export default function SpaceHeader({
   space,
   feed,
-  context,
 }: {
   space: Space;
   feed: Feed;
-  context: SpaceContextType;
 }) {
-  const popup = usePopup();
+  const context = useSpaceContext();
+  if (!context)
+    throw new Error('SpaceHeader must be used within SpaceHeaderProvider');
+
   const {
     isEdit,
     title,
@@ -49,13 +50,13 @@ export default function SpaceHeader({
     handleUpdateTitle,
   } = context;
 
+  const popup = usePopup();
+
   const handlePost = () => {
     popup
       .open(
         <GoPublicPopup
-          onclose={() => {
-            popup.close();
-          }}
+          onclose={() => popup.close()}
           onpublic={async () => {
             await handlePostingSpace();
             popup.close();
@@ -65,16 +66,16 @@ export default function SpaceHeader({
       .withoutBackdropClose();
   };
 
+  const { data: userInfo } = useUserInfo();
+  const userId = userInfo?.id ?? 0;
+  const { teams } = useContext(TeamContext);
   const authorId = space?.author[0].id;
+  const selectedTeam = teams.some((t) => t.id === authorId);
+
   const likes = feed.likes;
   const shares = feed.shares;
   const comments = feed.comments;
   const rewards = feed.rewards;
-
-  const { data: userInfo } = useUserInfo();
-  const userId = userInfo ? userInfo.id : 0;
-  const { teams } = useContext(TeamContext);
-  const selectedTeam = teams.some((t) => t.id === authorId);
 
   return (
     <div className="flex flex-col w-full gap-2.5 mb-10">

@@ -17,8 +17,9 @@ import { TeamContext } from '@/lib/contexts/team-context';
 import { SpaceStatus } from '@/lib/api/models/spaces';
 import { useUserInfo } from '@/app/(social)/_hooks/user';
 import SpaceHeader from '../_components/header';
-import PollPage from '../_components/page/poll';
-import AnalyzePage from '../_components/page/analyze';
+import { DeliberationAnalyzePage } from '../_components/page/analyze';
+import { SpaceProvider } from '../_components/header/provider';
+import { DeliberationSurveyPage } from '../_components/page/poll';
 
 export default function DeliberationSpacePage() {
   return (
@@ -52,7 +53,9 @@ function Page() {
   return (
     <div className="flex flex-col w-full gap-6.25">
       <div className="flex flex-row w-full">
-        <SpaceHeader context={context} space={space} feed={feed} />
+        <SpaceProvider value={context}>
+          <SpaceHeader space={space} feed={feed} />
+        </SpaceProvider>
       </div>
       <div className="flex flex-row w-full h-full gap-5">
         <div className="flex-1 flex w-full">
@@ -62,11 +65,11 @@ function Page() {
             ) : selectedType == DeliberationTab.DELIBERATION ? (
               <DeliberationPage />
             ) : selectedType == DeliberationTab.POLL ? (
-              <PollPage context={context} space={space} />
+              <DeliberationSurveyPage space={space} />
             ) : selectedType == DeliberationTab.RECOMMANDATION ? (
               <FinalConsensusPage />
             ) : (
-              <AnalyzePage context={context} />
+              <DeliberationAnalyzePage />
             )}
             <SpaceSideMenu />
           </div>
