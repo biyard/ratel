@@ -37,7 +37,7 @@ export default function SuggestionItem({
           <div className="font-medium text-base text-white">
             {user.username}
           </div>
-          <div className="text-xs text-neutral-300">{user.email}</div>
+
           <button
             className="font-bold text-xs text-white rounded-full bg-neutral-700 px-4 py-2 mt-2 hover:bg-neutral-600 transition-colors"
             onClick={() => onFollow(user.id)}
