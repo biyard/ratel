@@ -50,6 +50,7 @@ jobs:
           OPENAPI_KEY: ${{ secrets.OPENAPI_KEY }}
           AUTH_SECRET_KEY: ${{ secrets.AUTH_SECRET_KEY }}
           JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
+
           BASE_DOMAIN: ratel.foundation
           MIGRATE: false
           ENABLE_S3: false
@@ -65,6 +66,7 @@ jobs:
           KAIA_ENDPOINT: https://public-en.node.kaia.io
 
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          NONCELAB_TOKEN: ${{ secrets.NONCELAB_TOKEN }}
         run: |
           npm i -g aws-cdk
           make deploy
@@ -181,7 +183,7 @@ jobs:
           TELEGRAM_MINI_APP_URI: https://t.me/crypto_ratel_bot?startapp
           BASE_DOMAIN: ratel.foundation
           REPO_NAME: ratel/telegram-bot
-          
+
           MIGRATE: false
           ENABLE_S3: false
           ENABLE_FARGATE: true

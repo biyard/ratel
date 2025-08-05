@@ -1,0 +1,15 @@
+export { default as AddNote } from './add-note.svg';
+export { default as CheckClipboard } from './check-clipboard.svg';
+export { default as Clipboard1 } from './clipboard-1.svg';
+export { default as ClipboardOff } from './clipboard-off.svg';
+export { default as Clipboard } from './clipboard.svg';
+export { default as CodeClipboard } from './code-clipboard.svg';
+export { default as Content } from './content.svg';
+export { default as DeleteClipboard } from './delete-clipboard.svg';
+export { default as DeleteNote } from './delete-note.svg';
+export { default as DownloadClipboard } from './download-clipboard.svg';
+export { default as EditClipboard } from './edit-clipboard.svg';
+export { default as ExclamationClipboard } from './exclamation-clipboard.svg';
+export { default as ListClipboard } from './list-clipboard.svg';
+export { default as Note1 } from './note-1.svg';
+export { default as Note } from './note.svg';
