@@ -3,7 +3,7 @@ import { initData, InitDataOptions } from '@/providers/getQueryClient';
 import { getUserInfo } from '@/lib/api/ratel_api.server';
 import ClientProviders from './providers.client';
 import { getServerQueryClient } from '@/lib/query-utils.server';
-import { dehydrate } from '@tanstack/react-query';
+import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
 
 export default async function Provider({ children }: { children: ReactNode }) {
   const queryClient = await getServerQueryClient();
@@ -22,8 +22,8 @@ export default async function Provider({ children }: { children: ReactNode }) {
   const dehydratedState = dehydrate(queryClient);
 
   return (
-    <ClientProviders dehydratedState={dehydratedState}>
-      {children}
+    <ClientProviders>
+      <HydrationBoundary state={dehydratedState}>{children}</HydrationBoundary>
     </ClientProviders>
   );
 }

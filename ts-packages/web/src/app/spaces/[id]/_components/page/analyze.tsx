@@ -1,10 +1,11 @@
 'use client';
 import React from 'react';
-import { useDeliberationSpaceContext } from '../provider.client';
-import ObjectiveResponse from './dashboard/objective_response';
-import SubjectiveResponse from './dashboard/subjective_response';
+import { Poll, MappedResponse } from '../../type';
 import { logger } from '@/lib/logger';
-import SummaryReport from './dashboard/summary_report';
+import SummaryReport from '../dashboard/summary-report';
+import ObjectiveResponse from '../dashboard/objective-response';
+import SubjectiveResponse from '../dashboard/subjective-response';
+import { SurveyResponse } from '@/lib/api/models/response';
 
 enum AnswerType {
   SingleChoice = 'single_choice',
@@ -16,10 +17,17 @@ enum AnswerType {
   LinearScale = 'linear_scale',
 }
 
-export default function AnalyzePage() {
-  const { handleDownloadExcel, answers, survey, mappedResponses } =
-    useDeliberationSpaceContext();
-
+export function AnalyzePage({
+  answers,
+  survey,
+  mappedResponses,
+  handleDownloadExcel,
+}: {
+  survey: Poll;
+  answers: SurveyResponse[];
+  mappedResponses: MappedResponse[];
+  handleDownloadExcel: () => void;
+}) {
   logger.debug('mapped responses: ', mappedResponses);
 
   const responseCount = answers.length;
