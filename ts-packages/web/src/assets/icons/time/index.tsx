@@ -1,0 +1,9 @@
+export { default as Alarm } from './alarm.svg';
+export { default as Clock } from './clock.svg';
+export { default as History } from './history.svg';
+export { default as HourglassOff } from './hourglass-off.svg';
+export { default as Hourglass } from './hourglass.svg';
+export { default as TimerOff } from './timer-off.svg';
+export { default as Timer } from './timer.svg';
+export { default as Update } from './update.svg';
+export { default as Watch } from './watch.svg';

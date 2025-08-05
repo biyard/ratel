@@ -1,0 +1,11 @@
+export { default as ArrowDown } from './arrow-down.svg';
+export { default as ArrowUp } from './arrow-up.svg';
+export { default as Controller } from './controller.svg';
+export { default as Fire } from './fire.svg';
+export { default as HexDown } from './hex-down.svg';
+export { default as HexUp } from './hex-up.svg';
+export { default as Plant } from './plant.svg';
+export { default as Present } from './present.svg';
+export { default as Rocket } from './rocket.svg';
+export { default as Sword } from './sword.svg';
+export { default as Trophy } from './trophy.svg';

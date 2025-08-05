@@ -78,6 +78,7 @@ pub async fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Ro
                 RegisterUserResponse,
                 "Register users by Noncelab",
                 "This endpoint allows you to register users by Noncelab.",
-            ),
+            )
+            .with_state(pool.clone()),
         ))
 }
