@@ -3,8 +3,8 @@
 import React, { useState, useCallback } from 'react';
 import {
   QuizQuestion,
-  NoticeQuestionWithAnswer,
   spaceSubmitQuizAnswersRequest,
+  NoticeAnswer,
 } from '@/lib/api/models/notice';
 
 // Extended interface for user answers with selected state
@@ -117,20 +117,34 @@ export default function QuizTaker({
     showInfoToast('Submitting your answers...');
 
     try {
-      // Convert user answers back to backend format (with is_correct field for submission)
-      const backendAnswers: NoticeQuestionWithAnswer[] = userAnswers.map(
-        (question) => ({
-          title: question.title,
-          images: question.images,
-          options: question.options.map((option) => ({
-            content: option.content,
-            is_correct: option.is_selected, // Map user selection to is_correct for submission
-          })),
-        }),
-      );
+      // NEW: Convert user answers to HashMap format for O(1) backend validation
+      const answers: { [questionId: string]: string[] } = {};
 
-      // Create the request body matching backend expectations
-      const requestBody = spaceSubmitQuizAnswersRequest(backendAnswers);
+      questions.forEach((backendQuestion, questionIndex) => {
+        const userQuestion = userAnswers[questionIndex];
+        if (userQuestion) {
+          const selectedOptionIds: string[] = [];
+
+          userQuestion.options.forEach((userOption, optionIndex) => {
+            if (userOption.is_selected) {
+              // Map to backend option ID using the same index
+              const backendOption = backendQuestion.options[optionIndex];
+              if (backendOption) {
+                selectedOptionIds.push(backendOption.id);
+              }
+            }
+          });
+
+          if (selectedOptionIds.length > 0) {
+            answers[backendQuestion.id] = selectedOptionIds;
+          }
+        }
+      });
+
+      const noticeAnswer: NoticeAnswer = { answers };
+
+      // Create the request body using new format
+      const requestBody = spaceSubmitQuizAnswersRequest(noticeAnswer);
 
       const response = await post(
         ratelApi.notice_quiz.submitQuizAnswers(spaceId),
@@ -174,6 +188,7 @@ export default function QuizTaker({
     validateAnswers,
     post,
     onSubmitSuccess,
+    questions,
   ]);
 
   if (questions.length === 0) {

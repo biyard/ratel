@@ -21,7 +21,10 @@ import {
   postingSpaceRequest,
   spaceUpdateRequest,
 } from '@/lib/api/models/spaces';
-import { spaceSubmitQuizAnswersRequest } from '@/lib/api/models/notice';
+import {
+  spaceSubmitQuizAnswersRequest,
+  NoticeAnswer,
+} from '@/lib/api/models/notice';
 
 // Quiz validation function
 const validateQuizQuestions = (questions: Question[]): string | null => {
@@ -76,9 +79,8 @@ const validateQuizQuestions = (questions: Question[]): string | null => {
 };
 import {
   Question,
-  convertQuestionsToNoticeQuestionsWithAnswers,
+  convertQuestionsToNoticeQuizRequest,
   convertQuizQuestionsToQuestions,
-  convertUserAnswersToNoticeQuestionsWithAnswers,
 } from './_components/quiz-builder-ui';
 
 type ContextType = {
@@ -343,11 +345,14 @@ export default function ClientProviders({
       }
 
       // Convert frontend quiz questions to backend format
-      const quizWithAnswers =
-        convertQuestionsToNoticeQuestionsWithAnswers(quizQuestions);
+      // When space is InProgress, pass null to prevent quiz modifications
+      const quizRequest =
+        space.status === SpaceStatus.InProgress
+          ? null
+          : convertQuestionsToNoticeQuizRequest(quizQuestions);
 
-      // Debug log to verify is_correct field is included
-      console.log('Quiz being sent:', JSON.stringify(quizWithAnswers, null, 2));
+      // Debug log to verify the correct structure is being sent
+      console.log('Quiz being sent:', JSON.stringify(quizRequest, null, 2));
 
       const updateRequest = spaceUpdateRequest(
         htmlContent,
@@ -360,7 +365,7 @@ export default function ClientProviders({
         space.started_at,
         space.ended_at,
         space.publishing_scope, // preserve current publishing scope
-        quizWithAnswers, // quiz
+        quizRequest, // quiz
       );
 
       // Debug log the full request payload
@@ -395,13 +400,37 @@ export default function ClientProviders({
     }
 
     try {
-      // Convert frontend quiz questions with user selections to backend format
-      const quizAnswers =
-        convertUserAnswersToNoticeQuestionsWithAnswers(questions);
-      console.log('Converted to quiz answers:', quizAnswers);
+      // Convert user answers to NoticeAnswer format (same as QuizTaker does)
+      const answers: { [questionId: string]: string[] } = {};
 
-      // Create the submit request payload
-      const submitRequest = spaceSubmitQuizAnswersRequest(quizAnswers);
+      // Map frontend questions with selections to backend format
+      if (space.notice_quiz) {
+        space.notice_quiz.forEach((backendQuestion, questionIndex) => {
+          const frontendQuestion = questions[questionIndex];
+          if (frontendQuestion) {
+            const selectedOptionIds: string[] = [];
+
+            frontendQuestion.options.forEach((frontendOption, optionIndex) => {
+              if (frontendOption.isSelected) {
+                // Map to backend option ID using the same index
+                const backendOption = backendQuestion.options[optionIndex];
+                if (backendOption) {
+                  selectedOptionIds.push(backendOption.id);
+                }
+              }
+            });
+
+            if (selectedOptionIds.length > 0) {
+              answers[backendQuestion.id] = selectedOptionIds;
+            }
+          }
+        });
+      }
+
+      const noticeAnswer: NoticeAnswer = { answers };
+
+      // Create the submit request payload using correct format
+      const submitRequest = spaceSubmitQuizAnswersRequest(noticeAnswer);
 
       // Debug log to verify the payload
       console.log(

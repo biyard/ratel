@@ -1,24 +1,40 @@
-// Quiz Types - Read-only versions for display
+// Quiz Types - Read-only versions for display (matches backend NoticeQuestion/NoticeOption)
 export interface QuizQuestion {
+  id: string; // UUID from backend
   title: string;
   images: ImgFile[];
   options: QuizOption[];
 }
 
 export interface QuizOption {
+  id: string; // UUID from backend
   content: string;
 }
 
-// Quiz Types - With answers for creation/submission (matches backend NoticeQuestionWithAnswer)
-export interface NoticeQuestionWithAnswer {
-  title: string;
-  images: ImgFile[];
-  options: NoticeOptionWithAnswer[];
+// Quiz Request Types - For creating/updating quizzes (matches backend NoticeQuizRequest)
+export interface NoticeQuizRequest {
+  questions: NoticeQuestionRequest[];
 }
 
-export interface NoticeOptionWithAnswer {
+export interface NoticeQuestionRequest {
+  title: string;
+  images: string[]; // URLs as strings to match backend Vec<String>
+  options: NoticeOptionRequest[];
+}
+
+export interface NoticeOptionRequest {
   content: string;
   is_correct: boolean;
+}
+
+// Answer Storage Types (matches backend NoticeAnswer)
+export interface NoticeAnswer {
+  answers: { [questionId: string]: string[] }; // question_id -> array of selected option_ids
+}
+
+// Quiz Submission Request
+export interface SpaceSubmitQuizAnswersRequest {
+  answers: NoticeAnswer;
 }
 
 export interface ImgFile {
@@ -40,7 +56,7 @@ export interface QuizAttempt {
   updated_at: number;
   space_id: number;
   user_id: number;
-  user_answers: NoticeQuestionWithAnswer[];
+  user_answers: NoticeAnswer; // Updated to use new format
   is_successful: boolean;
 }
 
@@ -56,17 +72,11 @@ export interface NoticeQuizAnswer {
   created_at: number;
   updated_at: number;
   space_id: number;
-  user_id: number;
-  notice_quiz: NoticeQuestionWithAnswer[];
-}
-
-// Quiz submission interfaces
-export interface SpaceSubmitQuizAnswersRequest {
-  answers: NoticeQuestionWithAnswer[];
+  answers: NoticeAnswer; // HashMap of question_id -> correct option_ids
 }
 
 export function spaceSubmitQuizAnswersRequest(
-  answers: NoticeQuestionWithAnswer[],
+  answers: NoticeAnswer,
 ): SpaceSubmitQuizAnswersRequest {
   return {
     answers,

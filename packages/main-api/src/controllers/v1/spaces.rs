@@ -318,8 +318,8 @@ impl SpaceController {
             .unwrap_or_default();
         // Validate quiz if provided
         if let Some(ref quiz_data) = quiz {
-            if !quiz_data.is_empty() {
-                if let Err(e) = Self::validate_notice_quiz_request(quiz_data) {
+            if !quiz_data.questions.is_empty() {
+                if let Err(e) = Self::validate_notice_quiz_request(&quiz_data.questions) {
                     tracing::error!("Quiz validation failed for space {}: {:?}", space_id, e);
                     return Err(e);
                 }
@@ -381,35 +381,33 @@ impl SpaceController {
 
         // If quiz is provided, save the quiz with answers and convert to read-only version for space
         let notice_quiz_for_space = if let Some(ref quiz_data) = quiz {
-            if !quiz_data.is_empty() {
-                // Check if user already has answers for this space
+            if !quiz_data.questions.is_empty() {
+                // Convert new NoticeQuizRequest format to entities with UUID generation
+                let (converted_quiz, answer_data) = convert_notice_quiz_request(quiz_data);
+
+                // Check if answer already exists for this space
                 let existing_answer = NoticeQuizAnswer::query_builder()
                     .space_id_equals(space_id)
-                    .user_id_equals(user_id)
                     .query()
                     .map(NoticeQuizAnswer::from)
                     .fetch_optional(&self.pool)
                     .await?;
 
-                // Convert to read-only format for storage
-                let converted_quiz = Self::convert_quiz_request_to_quiz(quiz_data);
-
-                // Save or update user's answers
+                // Save or update answers in the notice_quiz_answers table
                 let save_result = if let Some(existing) = existing_answer {
+                    // For update, we need to create a new update request
+                    let update_request = NoticeQuizAnswerRepositoryUpdateRequest {
+                        answers: Some(answer_data.clone()),
+                        ..Default::default()
+                    };
                     self.notice_answer_repo
-                        .update_with_tx(
-                            &mut *tx,
-                            existing.id,
-                            NoticeQuizAnswerRepositoryUpdateRequest {
-                                notice_quiz: Some(quiz_data.clone()),
-                                ..Default::default()
-                            },
-                        )
+                        .update(existing.id, update_request)
                         .await
                         .map(|_| ())
                 } else {
+                    // For insert using manual parameter approach
                     self.notice_answer_repo
-                        .insert_with_tx(&mut *tx, space_id, user_id, quiz_data.clone())
+                        .insert(space_id, answer_data.clone())
                         .await
                         .map(|_| ())
                 };
@@ -417,16 +415,14 @@ impl SpaceController {
                 match save_result {
                     Ok(_) => {
                         tracing::debug!(
-                            "Successfully saved notice quiz answers for space {} and user {}",
-                            space_id,
-                            user_id
+                            "Successfully saved notice quiz answers for space {}",
+                            space_id
                         );
                     }
                     Err(e) => {
                         tracing::error!(
-                            "Failed to save notice quiz answers for space {} and user {}: {}",
+                            "Failed to save notice quiz answers for space {}: {}",
                             space_id,
-                            user_id,
                             e
                         );
                         tx.rollback().await?;
@@ -442,7 +438,6 @@ impl SpaceController {
             }
         } else {
             // No quiz provided, don't update quiz field (keep existing)
-            // We'll use None to indicate no update should be made
             space.notice_quiz
         };
 
@@ -809,27 +804,8 @@ impl SpaceController {
         Ok(res)
     }
 
-
-    /// Helper function to convert NoticeQuestionRequest to NoticeQuestion
-    fn convert_quiz_request_to_quiz(quiz_requests: &[NoticeQuestionWithAnswer]) -> Vec<NoticeQuestion> {
-        quiz_requests
-            .iter()
-            .map(|request| NoticeQuestion {
-                title: request.title.clone(),
-                images: request.images.clone(),
-                options: request
-                    .options
-                    .iter()
-                    .map(|opt_req| NoticeOption {
-                        content: opt_req.content.clone(),
-                    })
-                    .collect(),
-            })
-            .collect()
-    }
-
     /// Helper function to validate quiz requests (with correct answers)
-    fn validate_notice_quiz_request(quiz: &[NoticeQuestionWithAnswer]) -> Result<()> {
+    fn validate_notice_quiz_request(quiz: &[NoticeQuestionRequest]) -> Result<()> {
         for (question_index, question) in quiz.iter().enumerate() {
             // Check if question title is not empty
             let question_title = question.title.trim();

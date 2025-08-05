@@ -1,12 +1,13 @@
 pub use bdk::prelude::*;
 
 use crate::*;
-
+use std::collections::{HashMap, HashSet};
+use uuid::Uuid;
 use validator::Validate;
 
 //TODO: action(like, comments, find_by_id, create_space), query_action
 #[derive(Validate)]
-#[api_model(base = "/v1/spaces", table = spaces, action = [create_space(user_ids = Vec<i64>)], action_by_id = [posting_space, update_space(discussions = Vec<DiscussionCreateRequest>, elearnings = Vec<ElearningCreateRequest>, surveys = Vec<SurveyCreateRequest>, drafts = Vec<SpaceDraftCreateRequest>, quiz = Option<Vec<NoticeQuestionWithAnswer>>), like(value = bool), share()])]
+#[api_model(base = "/v1/spaces", table = spaces, action = [create_space(user_ids = Vec<i64>)], action_by_id = [posting_space, update_space(discussions = Vec<DiscussionCreateRequest>, elearnings = Vec<ElearningCreateRequest>, surveys = Vec<SurveyCreateRequest>, drafts = Vec<SpaceDraftCreateRequest>, quiz = Option<NoticeQuizRequest>), like(value = bool), share()])]
 pub struct Space {
     #[api_model(summary, primary_key, read_action = [find_by_id])]
     pub id: i64,
@@ -115,7 +116,7 @@ pub struct Space {
     // Vec length should be 0 or 1.
     pub sprint_leagues: Vec<SprintLeague>,
 
-    #[api_model(summary, type=JSONB, nullable,)]
+    #[api_model(summary, type=JSONB, nullable)]
     #[serde(default)]
     pub notice_quiz: Vec<NoticeQuestion>,
 
@@ -219,29 +220,130 @@ pub enum FileExtension {
 #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq, Eq, Validate)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct NoticeQuestion {
+    pub id: String, // UUID as string
     pub title: String,
-    #[validate(custom(function = "validate_image_files"))]
-    pub images: Vec<File>,
+    pub images: Vec<String>,
     pub options: Vec<NoticeOption>,
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct NoticeOption {
+    pub id: String, // UUID as string
     pub content: String,
 }
 
-// Validation function to ensure only JPG and PNG files are allowed for images
-fn validate_image_files(files: &[File]) -> std::result::Result<(), validator::ValidationError> {
-    for file in files {
-        match file.ext {
-            FileExtension::JPG | FileExtension::PNG => continue,
-            _ => {
-                let mut error = validator::ValidationError::new("invalid_image_extension");
-                error.message = Some("Only JPG and PNG files are allowed for images".into());
-                return Err(error);
+#[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq, Eq, Validate)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct NoticeQuizRequest {
+    pub questions: Vec<NoticeQuestionRequest>,
+}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq, Eq, Validate)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct NoticeQuestionRequest {
+    pub title: String,
+    pub images: Vec<String>,
+    pub options: Vec<NoticeOptionRequest>,
+}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq, Eq, Validate)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct NoticeOptionRequest {
+    pub content: String,
+    pub is_correct: bool,
+}
+
+// Legacy types for compatibility with existing controllers
+#[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq, Eq, Validate)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct NoticeQuestionWithAnswer {
+    pub title: String,
+    pub images: Vec<String>,
+    pub options: Vec<NoticeOptionWithAnswer>,
+}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct NoticeOptionWithAnswer {
+    pub content: String,
+    pub is_correct: bool,
+}
+
+// Result structure for quiz attempts
+#[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct NoticeResult {
+    pub total_questions: usize,
+    pub correct_answers: usize,
+    pub is_successful: bool,
+    pub questions_results: HashMap<String, bool>, // question_id -> is_correct
+}
+
+// Conversion function from request to entity with UUID generation
+pub fn convert_notice_quiz_request(request: &NoticeQuizRequest) -> (Vec<NoticeQuestion>, NoticeAnswer) {
+    let mut correct_answers = HashMap::new();
+    
+    let questions: Vec<NoticeQuestion> = request.questions.iter().map(|q_req| {
+        let question_id = Uuid::new_v4().to_string();
+        let mut correct_option_ids = HashSet::new();
+        
+        let options: Vec<NoticeOption> = q_req.options.iter().map(|o_req| {
+            let option_id = Uuid::new_v4().to_string();
+            
+            if o_req.is_correct {
+                correct_option_ids.insert(option_id.clone());
             }
+            
+            NoticeOption {
+                id: option_id,
+                content: o_req.content.clone(),
+            }
+        }).collect();
+        
+        correct_answers.insert(question_id.clone(), correct_option_ids);
+        
+        NoticeQuestion {
+            id: question_id,
+            title: q_req.title.clone(),
+            images: vec![], // Empty for now, can be extended
+            options,
         }
-    }
-    Ok(())
+    }).collect();
+    
+    (questions, NoticeAnswer { answers: correct_answers })
+}
+
+// Helper function to convert legacy NoticeQuestionWithAnswer to new structure
+pub fn convert_legacy_quiz_to_new(quiz_requests: &[NoticeQuestionWithAnswer]) -> (Vec<NoticeQuestion>, NoticeAnswer) {
+    let mut correct_answers = HashMap::new();
+    
+    let questions: Vec<NoticeQuestion> = quiz_requests.iter().map(|q_req| {
+        let question_id = Uuid::new_v4().to_string();
+        let mut correct_option_ids = HashSet::new();
+        
+        let options: Vec<NoticeOption> = q_req.options.iter().map(|o_req| {
+            let option_id = Uuid::new_v4().to_string();
+            
+            if o_req.is_correct {
+                correct_option_ids.insert(option_id.clone());
+            }
+            
+            NoticeOption {
+                id: option_id,
+                content: o_req.content.clone(),
+            }
+        }).collect();
+        
+        correct_answers.insert(question_id.clone(), correct_option_ids);
+        
+        NoticeQuestion {
+            id: question_id,
+            title: q_req.title.clone(),
+            images: q_req.images.clone(),
+            options,
+        }
+    }).collect();
+    
+    (questions, NoticeAnswer { answers: correct_answers })
 }
