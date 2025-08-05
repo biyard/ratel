@@ -1,6 +1,6 @@
 'use client';
+import { Post } from '@/app/(social)/_components/pages/home';
 import { usePostByUserId } from '@/app/(social)/_hooks/use-posts';
-import { Post } from '@/app/(social)/page.client';
 import FeedCard from '@/components/feed-card';
 import { Col } from '@/components/ui/col';
 import { QueryResponse } from '@/lib/api/models/common';

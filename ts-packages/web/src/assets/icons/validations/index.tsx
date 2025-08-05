@@ -1,0 +1,16 @@
+export { default as AddCircle } from './add-circle.svg';
+export { default as Add } from './add.svg';
+export { default as Backspace } from './backspace.svg';
+export { default as CheckBox } from './check-box.svg';
+export { default as CheckCircle } from './check-circle.svg';
+export { default as Check } from './check.svg';
+export { default as ClearCircle } from './clear-circle.svg';
+export { default as Clear } from './clear.svg';
+export { default as Extra } from './extra.svg';
+export { default as Filter1 } from './filter-1.svg';
+export { default as Filter } from './filter.svg';
+export { default as Filter2 } from './filter-2.svg';
+export { default as RemoveCircle } from './remove-circle.svg';
+export { default as Remove } from './remove.svg';
+export { default as Sort } from './sort.svg';
+export { default as Warning } from './warning.svg';

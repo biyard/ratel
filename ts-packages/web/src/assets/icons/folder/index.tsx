@@ -1,0 +1,10 @@
+export { default as AddFolder } from './add-folder.svg';
+export { default as CheckFolder } from './check-folder.svg';
+export { default as DeleteFolder } from './delete-folder.svg';
+export { default as DownloadFolder } from './download-folder.svg';
+export { default as ExclamationFolder } from './exclamation-folder.svg';
+export { default as FavoriteFolder } from './favorite-folder.svg';
+export { default as FolderOff } from './folder-off.svg';
+export { default as folder } from './folder.svg';
+export { default as LockFolder } from './lock-folder.svg';
+export { default as RemoveFolder } from './remove-folder.svg';
