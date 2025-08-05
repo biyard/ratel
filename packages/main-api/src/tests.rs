@@ -49,6 +49,7 @@ pub async fn setup_test_admin(id: &str, pool: &sqlx::Pool<sqlx::Postgres>) -> Re
             Membership::Free,
             "".to_string(),
             None,
+            None,
         )
         .await?
         .unwrap();
@@ -87,6 +88,7 @@ pub async fn setup_test_user(id: &str, pool: &sqlx::Pool<sqlx::Postgres>) -> Res
             "".to_string(), // password
             Membership::Free,
             "".to_string(),
+            None,
             None,
         )
         .await?;

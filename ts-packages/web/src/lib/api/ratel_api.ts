@@ -98,6 +98,10 @@ export const ratelApi = {
     getUserInfo: () => '/v1/users?action=user-info',
     getUserByEmail: (email: string) =>
       `/v1/users?param-type=read&action=find-by-email&email=${email}`,
+    getUserByUsername: (username: string) =>
+      `/v1/users?param-type=read&action=find-by-username&username=${username}`,
+    getUserByPhoneNumber: (phoneNumber: string) =>
+      `/v1/users?param-type=read&action=find-by-phone-number&phone=${phoneNumber}`,
 
     signup: () => '/v1/users?action=signup',
     editProfile: (user_id: number) => `/v1/users/${user_id}`,

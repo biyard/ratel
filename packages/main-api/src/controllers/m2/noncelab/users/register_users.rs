@@ -50,7 +50,7 @@ pub async fn register_users_by_noncelab_handler(
         .insert(
             req.display_name,
             req.principal.clone(),
-            req.phone_number,
+            req.phone_number.clone(),
             req.profile_url.unwrap_or_default(),
             true,
             true,
@@ -62,6 +62,7 @@ pub async fn register_users_by_noncelab_handler(
             "".to_string(),
             Membership::Free,
             "".to_string(),
+            Some(req.phone_number),
             None,
         )
         .await?;

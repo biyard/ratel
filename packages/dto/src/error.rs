@@ -47,6 +47,16 @@ pub enum Error {
     )]
     InvalidEmail,
     #[translate(
+        en = "You must pass a valid username",
+        ko = "유효한 유저명을 입력해야 합니다."
+    )]
+    InvalidUsername,
+    #[translate(
+        en = "You must pass a valid phone number",
+        ko = "유효한 폰번호를 입력해야 합니다."
+    )]
+    InvalidPhoneNumber,
+    #[translate(
         en = "You must pass a valid principal",
         ko = "유효한 계정 주소를 입력해야 합니다."
     )]
