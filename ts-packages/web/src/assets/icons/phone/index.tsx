@@ -1,0 +1,9 @@
+export { default as EndPhone } from './end-phone.svg';
+export { default as ForwadedCall } from './forwaded-call.svg';
+export { default as IncomingCall } from './incoming-call.svg';
+export { default as MissedCall } from './missed-call.svg';
+export { default as MobileOff } from './mobile-off.svg';
+export { default as Mobile } from './mobile.svg';
+export { default as PhoneCall } from './phone-call.svg';
+export { default as PhoneOff } from './phone-off.svg';
+export { default as Phone } from './phone.svg';
