@@ -3,16 +3,15 @@ import { FileInfo } from '@/lib/api/models/feeds';
 import { SpaceDraftCreateRequest } from '@/lib/api/models/space_draft';
 import { TotalUser } from '@/lib/api/models/user';
 
-export const DeliberationTab = {
-  SUMMARY: 'Summary',
-  DELIBERATION: 'Deliberation',
-  POLL: 'Poll',
-  RECOMMANDATION: 'Recommendation',
-  ANALYZE: 'Analyze',
-} as const;
+export enum DeliberationTab {
+  SUMMARY = 'Summary',
+  DELIBERATION = 'Deliberation',
+  POLL = 'Poll',
+  RECOMMANDATION = 'Recommendation',
+  ANALYZE = 'Analyze',
+}
 
-export type DeliberationTabType =
-  (typeof DeliberationTab)[keyof typeof DeliberationTab];
+export type DeliberationTabType = DeliberationTab;
 
 export interface Thread {
   html_contents: string;
