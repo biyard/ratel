@@ -1,5 +1,5 @@
 import { toast, ToastOptions } from 'react-toastify';
-
+import CustomToast from '@/components/custom-toast/custom-toast';
 
 const defaultOptions: ToastOptions = {
   position: 'top-right',
@@ -11,9 +11,12 @@ const defaultOptions: ToastOptions = {
   progress: undefined,
 };
 
-export const showSuccessToast = (message: string, options?: ToastOptions) =>
-  toast.success(message, { ...defaultOptions, ...options });
+// export const showSuccessToast = (message: string, options?: ToastOptions) =>
+//   toast.success(message, { ...defaultOptions, ...options });
 
+
+export const showSuccessToast = (message: string, options?: ToastOptions) =>
+  toast(<CustomToast message={message}/>, { ...defaultOptions, ...options });
 
 export const showErrorToast = (message: string, options?: ToastOptions) =>
   toast.error(message, { ...defaultOptions, ...options });
