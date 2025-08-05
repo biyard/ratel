@@ -14,6 +14,7 @@ import {
   CircleClose,
   Excel,
   Jpg,
+  MOV,
   MP4,
   Pdf,
   Png,
@@ -124,9 +125,10 @@ function EditableFile({
           <Word />
         ) : file.ext === 'PPTX' ? (
           <Pptx />
-        ) : file.ext === 'MP4' || file.ext === 'MOV' ? (
-          //FIXME: fix to mov image
+        ) : file.ext === 'MP4' ? (
           <MP4 />
+        ) : file.ext === 'MOV' ? (
+          <MOV />
         ) : (
           <Excel />
         )}

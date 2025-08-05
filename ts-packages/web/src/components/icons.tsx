@@ -37,6 +37,7 @@ export { default as Word } from '@/assets/icons/files/docx.svg';
 export { default as Pptx } from '@/assets/icons/files/pptx.svg';
 export { default as Excel } from '@/assets/icons/files/xlsx.svg';
 export { default as MP4 } from '@/assets/icons/files/mp4.svg';
+export { default as MOV } from '@/assets/icons/files/mov.svg';
 export { default as Upload } from '@/assets/icons/upload.svg';
 export { default as Add } from '@/assets/icons/add.svg';
 export { default as ChevronLeft } from '@/assets/icons/arrow-left.svg';
