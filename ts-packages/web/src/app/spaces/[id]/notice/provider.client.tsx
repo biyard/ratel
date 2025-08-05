@@ -163,9 +163,8 @@ export default function ClientProviders({
 
   const userType = space?.author[0]?.user_type || UserType.Individual;
 
-  // We'll use a simpler approach for the proposer details
-  const proposerImage = ''; // This would need to be properly implemented based on the actual model
-  const proposerName = ''; // This would need to be properly implemented based on the actual model
+  const proposerImage = space?.author[0]?.profile_url || '';
+  const proposerName = space?.author[0]?.nickname || '';
 
   const createdAt = space?.created_at ?? 0;
   const status = space?.status ?? SpaceStatus.Draft;
@@ -450,11 +449,18 @@ export default function ClientProviders({
       // First, invalidate all quiz-related queries
       await invalidateQuizData();
 
-      // Wait a bit to ensure the database has been updated
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      // Force a complete refresh of all quiz data
-      await forceRefreshQuizData();
+      // Poll for updated data with exponential backoff
+      let retries = 0;
+      const maxRetries = 5;
+      while (retries < maxRetries) {
+        await forceRefreshQuizData();
+        // Check if data is updated, if so break
+        // Otherwise wait with exponential backoff
+        await new Promise((resolve) =>
+          setTimeout(resolve, Math.pow(2, retries) * 200),
+        );
+        retries++;
+      }
 
       // Get the latest attempt to show appropriate feedback
       try {

@@ -53,7 +53,7 @@ export interface Option {
 export interface Question {
   id: string;
   title: string;
-  imageUrl: string | null;
+  imageUrls: string[];
   options: Option[];
 }
 
@@ -75,8 +75,9 @@ export function convertQuizQuestionToQuestion(
   return {
     id: quizQuestion.id || id,
     title: quizQuestion.title,
-    imageUrl:
-      quizQuestion.images.length > 0 ? quizQuestion.images[0].url : null,
+    imageUrls: quizQuestion.images
+      .map((img) => img.url)
+      .filter((url): url is string => url !== null),
     options: quizQuestion.options.map((option, index) => ({
       id: option.id || `option-${Date.now()}-${index}`,
       text: option.content,
@@ -92,7 +93,7 @@ export function convertQuestionsToNoticeQuizRequest(
   return {
     questions: questions.map((question) => ({
       title: question.title,
-      images: question.imageUrl ? [question.imageUrl] : [],
+      images: question.imageUrls,
       options: question.options.map((option) => ({
         content: option.text,
         is_correct: option.isCorrect,
@@ -255,7 +256,7 @@ export default function QuizBuilderUI({
     const newQuestion: Question = {
       id: `question-${Date.now()}`,
       title: '',
-      imageUrl: null,
+      imageUrls: [],
       options: [
         {
           id: `option-${Date.now()}-1`,
@@ -293,11 +294,38 @@ export default function QuizBuilderUI({
     [questions, onQuestionsChange, isQuizEditingDisabled],
   );
 
-  const handleUpdateQuestionImage = useCallback(
-    (questionId: string, imageUrl: string | null) => {
+  const handleAddQuestionImage = useCallback(
+    (questionId: string, imageUrl: string) => {
       if (isQuizEditingDisabled) return;
       onQuestionsChange(
-        questions.map((q) => (q.id === questionId ? { ...q, imageUrl } : q)),
+        questions.map((q) => {
+          if (q.id === questionId) {
+            // Limit to maximum 2 images
+            if (q.imageUrls.length >= 2) {
+              showErrorToast('Maximum 2 images allowed per question');
+              return q;
+            }
+            return { ...q, imageUrls: [...q.imageUrls, imageUrl] };
+          }
+          return q;
+        }),
+      );
+    },
+    [questions, onQuestionsChange, isQuizEditingDisabled],
+  );
+
+  const handleRemoveQuestionImage = useCallback(
+    (questionId: string, imageIndex: number) => {
+      if (isQuizEditingDisabled) return;
+      onQuestionsChange(
+        questions.map((q) => {
+          if (q.id === questionId) {
+            const newImageUrls = [...q.imageUrls];
+            newImageUrls.splice(imageIndex, 1);
+            return { ...q, imageUrls: newImageUrls };
+          }
+          return q;
+        }),
       );
     },
     [questions, onQuestionsChange, isQuizEditingDisabled],
@@ -412,7 +440,7 @@ export default function QuizBuilderUI({
   );
 
   const handleImageUploadSuccess = (questionId: string, url: string) => {
-    handleUpdateQuestionImage(questionId, url);
+    handleAddQuestionImage(questionId, url);
   };
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -570,8 +598,8 @@ export default function QuizBuilderUI({
                   onUpdateTitle={(title) =>
                     handleUpdateQuestionTitle(question.id, title)
                   }
-                  onUpdateImage={(url) =>
-                    handleUpdateQuestionImage(question.id, url)
+                  onRemoveImage={(imageIndex) =>
+                    handleRemoveQuestionImage(question.id, imageIndex)
                   }
                   onImageUploadSuccess={(url) =>
                     handleImageUploadSuccess(question.id, url)
@@ -651,7 +679,7 @@ function QuestionCard({
   isQuizEditingDisabled,
   onRemove,
   onUpdateTitle,
-  onUpdateImage,
+  onRemoveImage,
   onImageUploadSuccess,
   onAddOption,
   onRemoveOption,
@@ -664,7 +692,7 @@ function QuestionCard({
   isQuizEditingDisabled: boolean;
   onRemove: () => void;
   onUpdateTitle: (title: string) => void;
-  onUpdateImage: (url: string | null) => void;
+  onRemoveImage: (imageIndex: number) => void;
   onImageUploadSuccess: (url: string) => void;
   onAddOption: () => void;
   onRemoveOption: (optionId: string) => void;
@@ -734,57 +762,74 @@ function QuestionCard({
               placeholder="Title"
               spellCheck={false}
             />
-            <FileUploader
-              onUploadSuccess={onImageUploadSuccess}
-              style={{
-                border: '1px solid var(--color-neutral-700)',
-                height: '40px',
-                width: '40px',
-                opacity: isQuizEditingDisabled ? 0.5 : 1,
-                pointerEvents: isQuizEditingDisabled ? 'none' : 'auto',
-              }}
-              className="rounded-md flex items-center justify-center focus:outline-none focus:ring-1 focus:ring-white/50"
-            >
-              <Image2 className="w-5 h-5 stroke-[var(--color-neutral-500)]" />
-            </FileUploader>
+            <div className="relative">
+              <FileUploader
+                onUploadSuccess={onImageUploadSuccess}
+                style={{
+                  border: '1px solid var(--color-neutral-700)',
+                  height: '40px',
+                  width: '40px',
+                  opacity:
+                    isQuizEditingDisabled || question.imageUrls.length >= 2
+                      ? 0.5
+                      : 1,
+                  pointerEvents:
+                    isQuizEditingDisabled || question.imageUrls.length >= 2
+                      ? 'none'
+                      : 'auto',
+                }}
+                className="rounded-md flex items-center justify-center focus:outline-none focus:ring-1 focus:ring-white/50"
+              >
+                <Image2 className="w-5 h-5 stroke-[var(--color-neutral-500)]" />
+              </FileUploader>
+              {question.imageUrls.length > 0 && (
+                <div className="absolute -top-1 -right-1 bg-primary text-black text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">
+                  {question.imageUrls.length}
+                </div>
+              )}
+            </div>
           </>
         ) : (
           <h3 className="text-lg font-medium w-full">{question.title}</h3>
         )}
       </div>
 
-      {question.imageUrl && (
+      {question.imageUrls && question.imageUrls.length > 0 && (
         <div className="mb-4">
-          <div className="relative">
-            <Image
-              src={question.imageUrl}
-              alt={question.title}
-              width={500}
-              height={300}
-              className="w-full h-auto rounded-md object-contain"
-            />
-            {isEditMode && !isQuizEditingDisabled && (
-              <button
-                onClick={() => onUpdateImage(null)}
-                className="absolute top-2 right-2 bg-black/60 rounded-full p-1 text-white/90 hover:bg-black/80"
-                aria-label="Remove image"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            )}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {question.imageUrls.map((imageUrl, index) => (
+              <div key={`${question.id}-image-${index}`} className="relative">
+                <Image
+                  src={imageUrl}
+                  alt={`${question.title} - Image ${index + 1}`}
+                  width={500}
+                  height={300}
+                  className="w-full h-auto rounded-md object-contain"
+                />
+                {isEditMode && !isQuizEditingDisabled && (
+                  <button
+                    onClick={() => onRemoveImage(index)}
+                    className="absolute top-2 right-2 bg-black/60 rounded-full p-1 text-white/90 hover:bg-black/80"
+                    aria-label={`Remove image ${index + 1}`}
+                  >
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                )}
+              </div>
+            ))}
           </div>
         </div>
       )}
