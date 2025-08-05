@@ -22,6 +22,7 @@ pub struct Config {
     pub kaia: KaiaConfig,
     pub from_email: &'static str,
     pub telegram_token: &'static str,
+    pub noncelab_token: &'static str,
 }
 
 #[derive(Debug)]
@@ -82,6 +83,7 @@ impl Default for Config {
             slack_channel_monitor: option_env!("SLACK_CHANNEL_MONITOR")
                 .expect("SLACK_CHANNEL_MONITOR is required"),
             telegram_token: option_env!("TELEGRAM_TOKEN").expect("You must set TELEGRAM_TOKEN"),
+            noncelab_token: option_env!("NONCELAB_TOKEN").expect("You must set NONCELAB_TOKEN"),
         }
     }
 }
