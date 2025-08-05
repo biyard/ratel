@@ -61,26 +61,65 @@ impl SpaceController {
             .await?;
 
         let user_response = if user_id != 0 {
-            SurveyResponse::query_builder()
-                .space_id_equals(id)
-                .user_id_equals(user_id)
-                .survey_type_equals(SurveyType::Survey)
-                .query()
-                .map(Into::into)
-                .fetch_optional(&self.pool)
-                .await?
-                .map_or_else(Vec::new, |res| vec![res])
+            let mut res: Vec<SurveyResponse> = vec![];
+
+            if space.space_type == SpaceType::Deliberation {
+                res = SurveyResponse::query_builder()
+                    .space_id_equals(id)
+                    .user_id_equals(user_id)
+                    .survey_type_equals(SurveyType::Survey)
+                    .query()
+                    .map(Into::into)
+                    .fetch_optional(&self.pool)
+                    .await?
+                    .map_or_else(Vec::new, |res| vec![res]);
+            } else {
+                let response: Vec<SurveyResponse> = SurveyResponse::query_builder()
+                    .space_id_equals(id)
+                    .user_id_equals(user_id)
+                    .order_by_created_at_desc()
+                    .survey_type_equals(SurveyType::Sample)
+                    .query()
+                    .map(Into::into)
+                    .fetch_optional(&self.pool)
+                    .await?
+                    .map_or_else(Vec::new, |res| vec![res]);
+
+                if !response.is_empty() {
+                    res = vec![response[0].clone()];
+                }
+            }
+
+            res
         } else {
             Vec::new()
         };
 
-        let responses = SurveyResponse::query_builder()
-            .space_id_equals(id)
-            .survey_type_equals(SurveyType::Survey)
-            .query()
-            .map(Into::into)
-            .fetch_all(&self.pool)
-            .await?;
+        let responses: Vec<SurveyResponse> = if space.space_type == SpaceType::Deliberation {
+            SurveyResponse::query_builder()
+                .space_id_equals(id)
+                .survey_type_equals(SurveyType::Survey)
+                .query()
+                .map(Into::into)
+                .fetch_all(&self.pool)
+                .await?
+        } else {
+            let sql = r#"
+                SELECT DISTINCT ON (user_id) *
+                FROM survey_responses
+                WHERE space_id = $1 AND survey_type = $2
+                ORDER BY user_id, created_at DESC
+            "#;
+
+            let response: Vec<SurveyResponse> = sqlx::query(sql)
+                .bind(id)
+                .bind(SurveyType::Sample)
+                .map(SurveyResponse::from)
+                .fetch_all(&self.pool)
+                .await?;
+
+            response
+        };
 
         let discussions = space.discussions;
 

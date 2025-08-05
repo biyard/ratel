@@ -2,38 +2,107 @@
 
 import { Question, ShortAnswerQuestion } from '@/lib/api/models/survey';
 import React, { useState } from 'react';
-import SurveyQuestionEditor from './question/survey-question-editor';
-import { AnswerType } from './question/answer-type-select';
 import { v4 as uuidv4 } from 'uuid';
+import { Space, SpaceStatus } from '@/lib/api/models/spaces';
+import { AnswerType } from './question/answer-type-select';
+import SurveyQuestionEditor from './question/survey-question-editor';
 import SurveyViewer from './question/survey-viewer';
-import { Add } from './add';
-import { SpaceStatus } from '@/lib/api/models/spaces';
-import { useDeliberationSpaceContext } from '../provider.client';
+import { Add } from '../deliberation/_components/add';
+import { Answer } from '@/lib/api/models/response';
+import { Poll, SurveyAnswer } from '../type';
 
-export default function SpaceSurvey() {
-  const { isEdit, status } = useDeliberationSpaceContext();
-
+export default function SpaceSurvey({
+  isEdit,
+  startDate,
+  endDate,
+  survey,
+  answer,
+  status,
+  space,
+  handleSetAnswers,
+  handleSend,
+  handleUpdateSurvey,
+}: {
+  isEdit: boolean;
+  startDate: number;
+  endDate: number;
+  survey: Poll;
+  answer: SurveyAnswer;
+  status: SpaceStatus;
+  space: Space;
+  handleUpdateSurvey: (survey: Poll) => void;
+  handleSetAnswers: (answers: Answer[]) => void;
+  handleSend: () => Promise<void>;
+}) {
   return (
     <div className="flex flex-col w-full">
       {isEdit && status == SpaceStatus.Draft ? (
-        <EditableSurvey />
+        <EditableSurvey
+          survey={survey}
+          handleUpdateSurvey={handleUpdateSurvey}
+        />
       ) : (
-        <ViewSurvey />
+        <ViewSurvey
+          isEdit={isEdit}
+          startDate={startDate}
+          endDate={endDate}
+          survey={survey}
+          answer={answer}
+          status={status}
+          handleSetAnswers={handleSetAnswers}
+          handleSend={handleSend}
+          space={space}
+        />
       )}
     </div>
   );
 }
 
-function ViewSurvey() {
+function ViewSurvey({
+  isEdit,
+  startDate,
+  endDate,
+  survey,
+  answer,
+  status,
+  handleSetAnswers,
+  handleSend,
+  space,
+}: {
+  isEdit: boolean;
+  startDate: number;
+  endDate: number;
+  survey: Poll;
+  answer: SurveyAnswer;
+  status: SpaceStatus;
+  handleSetAnswers: (answers: Answer[]) => void;
+  handleSend: () => Promise<void>;
+  space: Space;
+}) {
   return (
     <div className="flex flex-col w-full gap-[10px]">
-      <SurveyViewer />
+      <SurveyViewer
+        isEdit={isEdit}
+        startDate={startDate}
+        endDate={endDate}
+        survey={survey}
+        answer={answer}
+        status={status}
+        handleSetAnswers={handleSetAnswers}
+        handleSend={handleSend}
+        space={space}
+      />
     </div>
   );
 }
 
-function EditableSurvey() {
-  const { survey, handleUpdateSurvey } = useDeliberationSpaceContext();
+function EditableSurvey({
+  survey,
+  handleUpdateSurvey,
+}: {
+  survey: Poll;
+  handleUpdateSurvey: (survey: Poll) => void;
+}) {
   const questions =
     survey.surveys.length != 0 ? survey.surveys[0].questions : [];
 

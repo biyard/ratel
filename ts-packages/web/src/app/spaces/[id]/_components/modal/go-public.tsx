@@ -15,14 +15,12 @@ export default function GoPublicPopup({
         You’re About to Go Public
       </div>
 
-      {/* 설명 */}
       <div className="text-center font-medium text-neutral-400 text-base">
         Once made public, this Space will be visible to everyone
         <br />
         and <span className="font-bold">cannot be made private again.</span>
       </div>
 
-      {/* 버튼 영역 */}
       <div className="flex flex-row justify-end gap-4 mt-8.75">
         <button
           onClick={onclose}

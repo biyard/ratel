@@ -5,13 +5,6 @@ import * as XLSX from 'xlsx';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useSpaceByIdContext } from '../providers.client';
 import { ratelApi, useSpaceById } from '@/lib/api/ratel_api';
-import {
-  Deliberation,
-  DeliberationTab,
-  DeliberationTabType,
-  FinalConsensus,
-  Thread,
-} from './types';
 import { UserType } from '@/lib/api/models/user';
 import { logger } from '@/lib/logger';
 import {
@@ -28,7 +21,6 @@ import {
 } from '@/lib/api/models/response';
 import { useApiCall } from '@/lib/api/use-send';
 import { showErrorToast, showInfoToast, showSuccessToast } from '@/lib/toast';
-import { checkString } from '@/lib/string-filter-utils';
 import { Feed, FileInfo } from '@/lib/api/models/feeds';
 import { DiscussionCreateRequest } from '@/lib/api/models/discussion';
 import { ElearningCreateRequest } from '@/lib/api/models/elearning';
@@ -37,22 +29,20 @@ import { SpaceDraftCreateRequest } from '@/lib/api/models/space_draft';
 import { useQueryClient } from '@tanstack/react-query';
 import { QK_GET_SPACE_BY_SPACE_ID } from '@/constants';
 import { useFeedByID } from '@/app/(social)/_hooks/feed';
+import { PollTab, PollTabType } from './types';
 import { MappedResponse, Poll, SurveyAnswer } from '../type';
 
 type ContextType = {
   spaceId: number;
-  selectedType: DeliberationTabType;
+  selectedType: PollTabType;
   isEdit: boolean;
   title: string;
   startedAt: number;
   endedAt: number;
-  thread: Thread;
-  deliberation: Deliberation;
   survey: Poll;
   answers: SurveyResponse[];
   mappedResponses: MappedResponse[];
   answer: SurveyAnswer;
-  draft: FinalConsensus;
 
   userType: UserType;
   proposerImage: string;
@@ -62,15 +52,11 @@ type ContextType = {
 
   handleGoBack: () => void;
   handleDownloadExcel: () => void;
-  handleViewRecord: (discussionId: number, record: string) => Promise<void>;
-  handleUpdateSelectedType: (type: DeliberationTabType) => void;
+  handleUpdateSelectedType: (type: PollTabType) => void;
   handleUpdateStartDate: (startDate: number) => void;
   handleUpdateEndDate: (endDate: number) => void;
   handleUpdateTitle: (title: string) => void;
-  handleUpdateThread: (thread: Thread) => void;
-  handleUpdateDeliberation: (deliberation: Deliberation) => void;
   handleUpdateSurvey: (survey: Poll) => void;
-  handleUpdateDraft: (draft: FinalConsensus) => void;
   handleLike: () => void;
   handleShare: () => void;
   handleSetAnswers: (answers: Answer[]) => void;
@@ -96,9 +82,7 @@ export default function ClientProviders({
 
   logger.debug('spaces: ', space);
 
-  const [selectedType, setSelectedType] = useState<DeliberationTabType>(
-    DeliberationTab.SUMMARY,
-  );
+  const [selectedType, setSelectedType] = useState<PollTabType>(PollTab.POLL);
   const [isEdit, setIsEdit] = useState(false);
   const [title, setTitle] = useState(space.title ?? '');
   const [startedAt, setStartedAt] = useState(
@@ -117,33 +101,6 @@ export default function ClientProviders({
     }
   }, [space.started_at, space.ended_at]);
 
-  const [thread, setThread] = useState<Thread>({
-    html_contents: space.html_contents ?? '',
-    files: space.files ?? [],
-  });
-  const [deliberation, setDeliberation] = useState<Deliberation>({
-    discussions: space.discussions.map((disc) => ({
-      started_at: disc.started_at,
-      ended_at: disc.ended_at,
-      name: disc.name,
-      description: disc.description,
-      discussion_id: disc.id,
-      participants: disc.members.map((member) => ({
-        id: member.id,
-        created_at: member.created_at,
-        updated_at: member.updated_at,
-        nickname: member.nickname,
-        username: member.username,
-        email: member.email,
-        profile_url: member.profile_url ?? '',
-        user_type: UserType.Individual,
-      })),
-    })),
-
-    elearnings: space.elearnings.map((elearning) => ({
-      files: elearning.files,
-    })),
-  });
   const [survey, setSurvey] = useState<Poll>({
     surveys: space.surveys.map((survey) => ({
       started_at: changeStartedAt(survey.started_at),
@@ -162,14 +119,6 @@ export default function ClientProviders({
           ? false
           : true
         : false,
-  });
-
-  const [draft, setDraft] = useState<FinalConsensus>({
-    drafts: space.drafts.map((draft) => ({
-      title: draft.title,
-      html_contents: draft.html_contents,
-      files: draft.files,
-    })),
   });
 
   const mappedResponses = mapResponses(
@@ -282,7 +231,7 @@ export default function ClientProviders({
     try {
       await post(
         ratelApi.responses.respond_answer(spaceId),
-        surveyResponseCreateRequest(answers),
+        surveyResponseCreateRequest(answers, 1),
       );
       data.refetch();
       queryClient.invalidateQueries({
@@ -319,23 +268,6 @@ export default function ClientProviders({
 
   const handleEdit = () => {
     setIsEdit(true);
-  };
-
-  const handleViewRecord = async (discussionId: number, record: string) => {
-    const response = await fetch(record);
-    if (!response.ok) throw new Error('failed to download files');
-
-    const blob = await response.blob();
-    const blobUrl = URL.createObjectURL(blob);
-
-    const a = document.createElement('a');
-    a.href = blobUrl;
-    a.download = `recording-${discussionId}.mp4`;
-    document.body.appendChild(a);
-    a.click();
-
-    document.body.removeChild(a);
-    URL.revokeObjectURL(blobUrl);
   };
 
   const handleDownloadExcel = () => {
@@ -397,7 +329,6 @@ export default function ClientProviders({
   const status = space.status;
 
   logger.debug('startedAt: ', startedAt, 'endedAt: ', endedAt);
-  logger.debug('deliberation: ', deliberation);
 
   useEffect(() => {
     if (space.user_responses && space.user_responses.length > 0) {
@@ -439,20 +370,8 @@ export default function ClientProviders({
     router.refresh();
   };
 
-  const handleUpdateThread = (thread: Thread) => {
-    setThread(thread);
-  };
-
-  const handleUpdateDeliberation = (deliberation: Deliberation) => {
-    setDeliberation(deliberation);
-  };
-
   const handleUpdateSurvey = (survey: Poll) => {
     setSurvey(survey);
-  };
-
-  const handleUpdateDraft = (draft: FinalConsensus) => {
-    setDraft(draft);
   };
 
   const handleSetAnswers = (answers: Answer[]) => {
@@ -470,17 +389,11 @@ export default function ClientProviders({
     setEndedAt(Math.floor(endDate));
   };
 
-  const handleUpdateSelectedType = (type: DeliberationTabType) => {
+  const handleUpdateSelectedType = (type: PollTabType) => {
     setSelectedType(type);
   };
 
   const handleSave = async () => {
-    if (checkString(title) || checkString(thread.html_contents)) {
-      showErrorToast('Please remove any test-related keywords before saving.');
-      setIsEdit(false);
-      return;
-    }
-
     for (let i = 0; i < survey.surveys.length; i++) {
       const question = survey.surveys[i].questions;
 
@@ -508,16 +421,6 @@ export default function ClientProviders({
       }
     }
 
-    const discussions = deliberation.discussions.map((disc) => ({
-      started_at: disc.started_at,
-      ended_at: disc.ended_at,
-      name: disc.name,
-      description: disc.description,
-      participants: disc.participants.map((member) => member.id),
-      discussion_id: disc.discussion_id,
-    }));
-
-    logger.debug('discussions: ', discussions);
     logger.debug('surveys', survey.surveys);
 
     const surveys = survey.surveys.map((survey) => ({
@@ -531,12 +434,12 @@ export default function ClientProviders({
         title,
         startedAt,
         endedAt,
-        thread.html_contents,
-        thread.files,
-        discussions,
-        deliberation.elearnings,
+        '',
+        [],
+        [],
+        [],
         surveys,
-        draft.drafts,
+        [],
       );
 
       queryClient.invalidateQueries({
@@ -563,12 +466,9 @@ export default function ClientProviders({
         title,
         startedAt,
         endedAt,
-        thread,
-        deliberation,
         survey,
         answers,
         answer,
-        draft,
         handleGoBack,
         handleDownloadExcel,
         userType,
@@ -581,10 +481,7 @@ export default function ClientProviders({
         handleUpdateStartDate,
         handleUpdateEndDate,
         handleUpdateTitle,
-        handleUpdateThread,
-        handleUpdateDeliberation,
         handleUpdateSurvey,
-        handleUpdateDraft,
         handleSetAnswers,
         handleSetStartDate,
         handleSetEndDate,
@@ -594,7 +491,6 @@ export default function ClientProviders({
         handleSave,
         handleLike,
         handleShare,
-        handleViewRecord,
       }}
     >
       {children}
@@ -602,7 +498,7 @@ export default function ClientProviders({
   );
 }
 
-export function useDeliberationSpaceContext() {
+export function usePollSpaceContext() {
   const context = useContext(Context);
   if (!context)
     throw new Error(

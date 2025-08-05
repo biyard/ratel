@@ -29,11 +29,12 @@ export interface SurveyResponseCreateRequest {
 
 export function surveyResponseCreateRequest(
   answer: Answer[],
+  survey_type: SurveyType = 2,
 ): SurveyResponseCreateRequest {
   return {
     respond_answer: {
       answers: answer,
-      survey_type: 2,
+      survey_type,
     },
   };
 }
