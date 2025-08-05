@@ -1,10 +1,13 @@
 'use client';
 import React from 'react';
-import { SpaceContextType } from '../../type';
+import { Poll, MappedResponse } from '../../type';
 import { logger } from '@/lib/logger';
 import SummaryReport from '../dashboard/summary-report';
 import ObjectiveResponse from '../dashboard/objective-response';
 import SubjectiveResponse from '../dashboard/subjective-response';
+import { SurveyResponse } from '@/lib/api/models/response';
+import { usePollSpaceContext } from '../../poll/provider.client';
+import { useDeliberationSpaceContext } from '../../deliberation/provider.client';
 
 enum AnswerType {
   SingleChoice = 'single_choice',
@@ -16,13 +19,45 @@ enum AnswerType {
   LinearScale = 'linear_scale',
 }
 
-export default function AnalyzePage({
-  context,
-}: {
-  context: SpaceContextType;
-}) {
-  const { handleDownloadExcel, answers, survey, mappedResponses } = context;
+export function DeliberationAnalyzePage() {
+  const { answers, survey, mappedResponses, handleDownloadExcel } =
+    useDeliberationSpaceContext();
 
+  return (
+    <AnalyzePage
+      answers={answers}
+      survey={survey}
+      mappedResponses={mappedResponses}
+      handleDownloadExcel={handleDownloadExcel}
+    />
+  );
+}
+
+export function PollAnalyzePage() {
+  const { answers, survey, mappedResponses, handleDownloadExcel } =
+    usePollSpaceContext();
+
+  return (
+    <AnalyzePage
+      answers={answers}
+      survey={survey}
+      mappedResponses={mappedResponses}
+      handleDownloadExcel={handleDownloadExcel}
+    />
+  );
+}
+
+export function AnalyzePage({
+  answers,
+  survey,
+  mappedResponses,
+  handleDownloadExcel,
+}: {
+  survey: Poll;
+  answers: SurveyResponse[];
+  mappedResponses: MappedResponse[];
+  handleDownloadExcel: () => void;
+}) {
   logger.debug('mapped responses: ', mappedResponses);
 
   const responseCount = answers.length;

@@ -4,48 +4,105 @@ import { Question, ShortAnswerQuestion } from '@/lib/api/models/survey';
 import React, { useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Space, SpaceStatus } from '@/lib/api/models/spaces';
-import { SpaceContextType } from '../type';
 import { AnswerType } from './question/answer-type-select';
 import SurveyQuestionEditor from './question/survey-question-editor';
 import SurveyViewer from './question/survey-viewer';
 import { Add } from '../deliberation/_components/add';
+import { Answer } from '@/lib/api/models/response';
+import { Poll, SurveyAnswer } from '../type';
 
 export default function SpaceSurvey({
-  context,
+  isEdit,
+  startDate,
+  endDate,
+  survey,
+  answer,
+  status,
   space,
+  handleSetAnswers,
+  handleSend,
+  handleUpdateSurvey,
 }: {
-  context: SpaceContextType;
+  isEdit: boolean;
+  startDate: number;
+  endDate: number;
+  survey: Poll;
+  answer: SurveyAnswer;
+  status: SpaceStatus;
   space: Space;
+  handleUpdateSurvey: (survey: Poll) => void;
+  handleSetAnswers: (answers: Answer[]) => void;
+  handleSend: () => Promise<void>;
 }) {
-  const { isEdit, status } = context;
-
   return (
     <div className="flex flex-col w-full">
       {isEdit && status == SpaceStatus.Draft ? (
-        <EditableSurvey context={context} />
+        <EditableSurvey
+          survey={survey}
+          handleUpdateSurvey={handleUpdateSurvey}
+        />
       ) : (
-        <ViewSurvey context={context} space={space} />
+        <ViewSurvey
+          isEdit={isEdit}
+          startDate={startDate}
+          endDate={endDate}
+          survey={survey}
+          answer={answer}
+          status={status}
+          handleSetAnswers={handleSetAnswers}
+          handleSend={handleSend}
+          space={space}
+        />
       )}
     </div>
   );
 }
 
 function ViewSurvey({
-  context,
+  isEdit,
+  startDate,
+  endDate,
+  survey,
+  answer,
+  status,
+  handleSetAnswers,
+  handleSend,
   space,
 }: {
-  context: SpaceContextType;
+  isEdit: boolean;
+  startDate: number;
+  endDate: number;
+  survey: Poll;
+  answer: SurveyAnswer;
+  status: SpaceStatus;
+  handleSetAnswers: (answers: Answer[]) => void;
+  handleSend: () => Promise<void>;
   space: Space;
 }) {
   return (
     <div className="flex flex-col w-full gap-[10px]">
-      <SurveyViewer context={context} space={space} />
+      <SurveyViewer
+        isEdit={isEdit}
+        startDate={startDate}
+        endDate={endDate}
+        survey={survey}
+        answer={answer}
+        status={status}
+        handleSetAnswers={handleSetAnswers}
+        handleSend={handleSend}
+        space={space}
+      />
     </div>
   );
 }
 
-function EditableSurvey({ context }: { context: SpaceContextType }) {
-  const { survey, handleUpdateSurvey } = context;
+function EditableSurvey({
+  survey,
+  handleUpdateSurvey,
+}: {
+  survey: Poll;
+  handleUpdateSurvey: (survey: Poll) => void;
+}) {
   const questions =
     survey.surveys.length != 0 ? survey.surveys[0].questions : [];
 

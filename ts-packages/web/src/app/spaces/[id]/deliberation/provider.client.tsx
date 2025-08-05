@@ -10,8 +10,6 @@ import {
   DeliberationTab,
   DeliberationTabType,
   FinalConsensus,
-  Poll,
-  SurveyAnswer,
   Thread,
 } from './types';
 import { UserType } from '@/lib/api/models/user';
@@ -39,11 +37,7 @@ import { SpaceDraftCreateRequest } from '@/lib/api/models/space_draft';
 import { useQueryClient } from '@tanstack/react-query';
 import { QK_GET_SPACE_BY_SPACE_ID } from '@/constants';
 import { useFeedByID } from '@/app/(social)/_hooks/feed';
-
-export interface MappedResponse {
-  question: Question;
-  answers: Answer[];
-}
+import { MappedResponse, Poll, SurveyAnswer } from '../type';
 
 type ContextType = {
   spaceId: number;
