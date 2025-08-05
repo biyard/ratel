@@ -92,7 +92,6 @@ export interface TotalUser {
 
   nickname: string;
   username: string;
-  email: string;
   profile_url: string;
 
   user_type: UserType;

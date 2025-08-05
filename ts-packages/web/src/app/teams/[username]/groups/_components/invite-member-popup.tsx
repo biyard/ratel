@@ -12,6 +12,7 @@ import { checkEmailRequest } from '@/lib/api/models/group';
 import clsx from 'clsx';
 import { logger } from '@/lib/logger';
 import { checkString } from '@/lib/string-filter-utils';
+import { showErrorToast } from '@/lib/toast';
 
 export default function InviteMemberPopup({
   team_id,
@@ -33,34 +34,52 @@ export default function InviteMemberPopup({
 
   const setValue = async (value: string, isEnter: boolean) => {
     if (value.includes(',') || isEnter) {
-      const emails = value
+      const identifiers = value
         .split(',')
-        .map((email) => email.trim())
-        .filter((email) => email !== '');
+        .map((v) => v.trim())
+        .filter((v) => v !== '');
 
-      for (const email of emails) {
-        const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-        if (checkString(email) || !isValidEmail) {
-          continue;
-        }
+      for (const input of identifiers) {
+        if (checkString(input)) continue;
 
-        const data = await get(ratelApi.users.getUserByEmail(email));
-        const result = await post(
-          ratelApi.groups.check_email(team_id, selectedGroup.id),
-          checkEmailRequest(email),
-        );
+        const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input);
+        const isPhone =
+          /^\d{3}-\d{3,4}-\d{4}$/.test(input) || /^\d{10,11}$/.test(input);
 
-        if (data) {
-          const exists = selectedUsers.some((u) => u.id === data.id);
-          if (!exists) {
-            const value: boolean = !result ? true : false;
-            setSelectedUsers((prev) => [...prev, data]);
-            setIsError((prevErrors) => [...prevErrors, value]);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let data: any = null;
 
-            if (value) {
-              setErrorCount((prev) => Math.max(prev + 1, 0));
-            }
+        try {
+          if (isEmail) {
+            data = await get(ratelApi.users.getUserByEmail(input));
+          } else if (isPhone) {
+            data = await get(ratelApi.users.getUserByPhoneNumber(input));
+          } else {
+            data = await get(ratelApi.users.getUserByUsername(input));
           }
+
+          if (data) {
+            const exists = selectedUsers.some((u) => u.id === data.id);
+            if (!exists) {
+              const result = await post(
+                ratelApi.groups.check_email(team_id, selectedGroup.id),
+                checkEmailRequest(input),
+              );
+
+              const value: boolean = !result && isEmail ? true : false;
+              setSelectedUsers((prev) => [...prev, data]);
+              setIsError((prev) => [...prev, value]);
+
+              if (value) {
+                setErrorCount((prev) => Math.max(prev + 1, 0));
+              }
+            }
+          } else {
+            showErrorToast('Invalid or unregistered input.');
+          }
+        } catch (err) {
+          logger.error('failed to search user with error: ', err);
+          showErrorToast('Failed to search for user.');
         }
       }
 
@@ -87,13 +106,13 @@ export default function InviteMemberPopup({
 
       <div className="flex flex-col w-full">
         <div className="font-bold text-[15px]/[28px] text-neutral-400">
-          Input User Email
+          Email, Username, or Phone Number
         </div>
         <div className="mt-[10px]">
           <SearchInput
             value={searchValue}
             placeholder={
-              'Input the value (ex: example@example.com, example2@example.com, example3@example.com)'
+              'Enter email, username, or phone number (ex: john@example.com or john or 010-1234-5678)'
             }
             setValue={async (value) => {
               setValue(value, false);
