@@ -43,12 +43,11 @@ import {
 } from '@/lib/api/ratel_api';
 import QuizSubmitForm from './modal/quiz-submit-form';
 
-// Define types for our quiz data
 export interface Option {
   id: string;
   text: string;
   isCorrect: boolean;
-  isSelected: boolean; // For user selections in read mode
+  isSelected: boolean;
 }
 
 export interface Question {
@@ -69,26 +68,24 @@ interface QuizBuilderProps {
   spaceStatus?: SpaceStatus;
 }
 
-// Utility functions to convert between frontend and backend formats
 export function convertQuizQuestionToQuestion(
   quizQuestion: QuizQuestion,
   id: string,
 ): Question {
   return {
-    id,
+    id: quizQuestion.id || id,
     title: quizQuestion.title,
     imageUrl:
       quizQuestion.images.length > 0 ? quizQuestion.images[0].url : null,
     options: quizQuestion.options.map((option, index) => ({
-      id: `option-${Date.now()}-${index}`,
+      id: option.id || `option-${Date.now()}-${index}`,
       text: option.content,
-      isCorrect: false, // Read-only version doesn't have correct answers
-      isSelected: false, // Initialize user selection as false
+      isCorrect: false,
+      isSelected: false,
     })),
   };
 }
 
-// Convert to the new backend format (NoticeQuizRequest)
 export function convertQuestionsToNoticeQuizRequest(
   questions: Question[],
 ): NoticeQuizRequest {
@@ -143,89 +140,21 @@ export default function QuizBuilderUI({
   );
 
   // Fetch quiz attempts for non-edit mode
-  const {
-    data: attemptsData,
-    isLoading: attemptsLoading,
-    isFetching: attemptsFetching,
-  } = useQuizAttempts(spaceId || 0);
+  const { data: attemptsData } = useQuizAttempts(spaceId || 0);
 
-  // Fetch latest quiz attempt for non-edit mode (for backward compatibility)
   const { data: latestAttempt } = useLatestQuizAttempt(spaceId || 0);
 
-  // Fetch quiz answers to check ownership and get correct answers
-  // The API returns 200 if user is owner, 401/403 if not
-  const {
-    data: quizAnswers,
-    error: quizAnswersError,
-    isLoading: quizAnswersLoading,
-    isError: quizAnswersIsError,
-  } = useQuizAnswers(
+  const { data: quizAnswers, isError: quizAnswersIsError } = useQuizAnswers(
     spaceId || 0,
-    !!(spaceId && spaceId > 0), // Only fetch if we have a valid spaceId
+    !!(spaceId && spaceId > 0),
   );
 
-  // Determine if user is owner based on API response
-  // If we successfully got data, user is owner. If there's an error, user is not owner.
   const isActualOwner = !!quizAnswers && !quizAnswersIsError;
 
-  // Debug logging for API call
-  React.useEffect(() => {
-    console.log('Quiz Answers API Debug:', {
-      spaceId,
-      enabled: !!(spaceId && spaceId > 0),
-      quizAnswers,
-      quizAnswersError,
-      quizAnswersLoading,
-      quizAnswersIsError,
-      isActualOwner,
-      timestamp: new Date().toISOString(),
-    });
-  }, [
-    spaceId,
-    quizAnswers,
-    quizAnswersError,
-    quizAnswersLoading,
-    quizAnswersIsError,
-    isActualOwner,
-  ]);
-
-  // Track attempts data changes for debugging
-  React.useEffect(() => {
-    const failedCount =
-      attemptsData?.items?.filter((attempt) => !attempt.is_successful)
-        ?.length || 0;
-    console.log('Attempts data updated:', {
-      attemptsData,
-      totalCount: attemptsData?.total_count,
-      itemsLength: attemptsData?.items?.length,
-      failedAttemptsCount: failedCount,
-      isLoading: attemptsLoading,
-      isFetching: attemptsFetching,
-      timestamp: new Date().toISOString(),
-    });
-  }, [attemptsData, attemptsLoading, attemptsFetching]);
-
-  // Calculate next attempt number using failed attempts count only
-  // Only unsuccessful attempts count towards the attempt number
   const failedAttempts =
     attemptsData?.items?.filter((attempt) => !attempt.is_successful) || [];
   const nextAttemptNumber = failedAttempts.length + 1;
 
-  // Debug logging for submit button conditions
-  console.log('Quiz Builder Debug:', {
-    isEditMode,
-    questionsLength: questions.length,
-    hasOnSubmitQuiz: !!onSubmitQuiz,
-    isOwner,
-    latestAttempt,
-    nextAttemptNumber,
-    failedAttemptsCount: failedAttempts.length,
-    totalAttempts: attemptsData?.total_count || 0,
-    showSubmitButton:
-      !isEditMode && questions.length > 0 && onSubmitQuiz && !isOwner,
-  });
-
-  // Add a style tag for placeholder color
   React.useEffect(() => {
     const styleTag = document.createElement('style');
     styleTag.innerHTML = `
@@ -240,25 +169,9 @@ export default function QuizBuilderUI({
     };
   }, []);
 
-  // Track if we've already loaded quiz answers to prevent infinite loops
   const hasLoadedQuizAnswers = React.useRef(false);
 
-  // Load quiz questions with correct answers for owners in edit mode
-  // This merges space.notice_quiz (questions) with quizAnswers.answers (correct answers)
-  // Show correct answers for owners in edit mode regardless of space status
   React.useEffect(() => {
-    console.log('Quiz answer loading effect triggered:', {
-      isActualOwner,
-      isEditMode,
-      questionsLength: questions.length,
-      hasQuizAnswers: !!quizAnswers,
-      quizAnswersStructure: quizAnswers ? Object.keys(quizAnswers) : [],
-      answersStructure: quizAnswers?.answers
-        ? Object.keys(quizAnswers.answers)
-        : [],
-      hasLoadedQuizAnswers: hasLoadedQuizAnswers.current,
-    });
-
     if (
       isActualOwner &&
       isEditMode &&
@@ -266,74 +179,33 @@ export default function QuizBuilderUI({
       quizAnswers?.answers?.answers &&
       !hasLoadedQuizAnswers.current
     ) {
-      console.log('Loading quiz with correct answers for owner in edit mode');
-      console.log('Questions:', questions);
-      console.log('Quiz answers raw:', quizAnswers);
-      console.log('Quiz answers data:', quizAnswers.answers.answers);
-
-      // The backend stores answers as { questionId: [optionIds] }
-      // But we need to match by question/option content since IDs might not match
       const correctAnswersMap = quizAnswers.answers.answers;
 
-      console.log('Correct answers map:', correctAnswersMap);
-      console.log(
-        'Number of questions with answers:',
-        Object.keys(correctAnswersMap).length,
-      );
-
-      // For now, let's try a simpler approach - mark the first option of each question as correct
-      // This is a temporary solution to test if the API call and ownership detection work
       const questionsWithCorrectAnswers: Question[] = questions.map(
-        (question, questionIndex) => {
-          console.log(`Processing question ${questionIndex}:`, question.title);
-
-          // Get all answer entries and try to match by index for now
-          const answerEntries = Object.entries(correctAnswersMap);
-          let correctOptionIds: string[] = [];
-
-          if (answerEntries[questionIndex]) {
-            correctOptionIds = answerEntries[questionIndex][1];
-            console.log(
-              `Found correct option IDs for question ${questionIndex}:`,
-              correctOptionIds,
-            );
-          }
+        (question) => {
+          const questionCorrectOptionIds: string[] =
+            correctAnswersMap[question.id] || [];
 
           const updatedQuestion = {
             ...question,
-            options: question.options.map((option, optionIndex) => {
-              // For testing: mark first option as correct if we have any answers
-              const isCorrect = answerEntries.length > 0 && optionIndex === 0;
-              console.log(
-                `Option ${optionIndex} "${option.text}" isCorrect:`,
-                isCorrect,
-              );
-
-              return {
-                ...option,
-                isCorrect,
-              };
+            options: question.options.map((option) => {
+              const isCorrect = questionCorrectOptionIds.includes(option.id);
+              return { ...option, isCorrect };
             }),
           };
 
-          console.log('Updated question:', updatedQuestion);
           return updatedQuestion;
         },
       );
 
-      console.log(
-        'Final questions with correct answers:',
-        questionsWithCorrectAnswers,
-      );
       hasLoadedQuizAnswers.current = true;
       onQuestionsChange(questionsWithCorrectAnswers);
     }
   }, [quizAnswers, isActualOwner, isEditMode, questions, onQuestionsChange]);
 
-  // Reset the loaded flag when switching modes or spaces
   React.useEffect(() => {
     hasLoadedQuizAnswers.current = false;
-  }, [spaceId, isActualOwner]); // Reset when space or ownership changes
+  }, [spaceId, isActualOwner]);
 
   // Validation function to check if all questions are answered
   const validateAllQuestionsAnswered = (): boolean => {
@@ -344,56 +216,41 @@ export default function QuizBuilderUI({
 
   // Handler for quiz submission
   const handleQuizSubmit = async () => {
-    console.log('handleQuizSubmit called!');
-    if (!onSubmitQuiz) {
-      console.warn('No submit handler provided');
-      return;
-    }
+    if (!onSubmitQuiz) return;
 
-    // For users taking the quiz, validate that all questions are answered
     if (!isOwner && !validateAllQuestionsAnswered()) {
-      console.log('Validation failed - not all questions answered');
       showErrorToast('Please answer all questions before submitting.');
       return;
     }
 
-    // Validate that the quiz has correct answers defined (for any user attempting to submit)
-    const hasCorrectAnswers = questions.every((question) =>
-      question.options.some((option) => option.isCorrect),
-    );
-
-    if (!hasCorrectAnswers) {
-      showErrorToast(
-        'Quiz is not ready for submission. Please contact the space owner.',
-      );
-      return;
-    }
-
-    // For owners, this should not happen as submit should be disabled in edit mode
     if (isOwner && isEditMode) {
+      const hasCorrectAnswers = questions.every((question) =>
+        question.options.some((option) => option.isCorrect),
+      );
+
+      if (!hasCorrectAnswers) {
+        showErrorToast(
+          'Please define correct answers for all questions before submission.',
+        );
+        return;
+      }
+
       showErrorToast(
         'Please save your quiz before submission becomes available.',
       );
       return;
     }
 
-    console.log('Validation passed, calling onSubmitQuiz...');
     try {
       await onSubmitQuiz(questions);
       showSuccessToast('Quiz submitted successfully!');
-      // Manually refresh quiz data after successful submission
-      // You may need to import and use the forceRefreshQuizData or refetchQuizData hook here
-      // Example (if available):
-      // forceRefreshQuizData();
-    } catch (error) {
-      console.error('Failed to submit quiz:', error);
+    } catch {
       showErrorToast('Failed to submit quiz. Please try again.');
     }
   };
 
-  // Handler for adding a new question
   const handleAddQuestion = useCallback(() => {
-    if (isQuizEditingDisabled) return; // Block editing when space is InProgress
+    if (isQuizEditingDisabled) return;
 
     const newQuestion: Question = {
       id: `question-${Date.now()}`,
@@ -418,19 +275,17 @@ export default function QuizBuilderUI({
     onQuestionsChange([...questions, newQuestion]);
   }, [questions, onQuestionsChange, isQuizEditingDisabled]);
 
-  // Handler for removing a question
   const handleRemoveQuestion = useCallback(
     (questionId: string) => {
-      if (isQuizEditingDisabled) return; // Block editing when space is InProgress
+      if (isQuizEditingDisabled) return;
       onQuestionsChange(questions.filter((q) => q.id !== questionId));
     },
     [questions, onQuestionsChange, isQuizEditingDisabled],
   );
 
-  // Handler for updating a question title
   const handleUpdateQuestionTitle = useCallback(
     (questionId: string, title: string) => {
-      if (isQuizEditingDisabled) return; // Block editing when space is InProgress
+      if (isQuizEditingDisabled) return;
       onQuestionsChange(
         questions.map((q) => (q.id === questionId ? { ...q, title } : q)),
       );
@@ -438,10 +293,9 @@ export default function QuizBuilderUI({
     [questions, onQuestionsChange, isQuizEditingDisabled],
   );
 
-  // Handler for updating a question image
   const handleUpdateQuestionImage = useCallback(
     (questionId: string, imageUrl: string | null) => {
-      if (isQuizEditingDisabled) return; // Block editing when space is InProgress
+      if (isQuizEditingDisabled) return;
       onQuestionsChange(
         questions.map((q) => (q.id === questionId ? { ...q, imageUrl } : q)),
       );
@@ -449,14 +303,12 @@ export default function QuizBuilderUI({
     [questions, onQuestionsChange, isQuizEditingDisabled],
   );
 
-  // Handler for adding an option to a question, limited to 4 options
   const handleAddOption = useCallback(
     (questionId: string) => {
-      if (isQuizEditingDisabled) return; // Block editing when space is InProgress
+      if (isQuizEditingDisabled) return;
       onQuestionsChange(
         questions.map((q) => {
           if (q.id === questionId) {
-            // Only add new option if less than 4 options exist
             if (q.options.length >= 4) return q;
 
             return {
@@ -479,10 +331,9 @@ export default function QuizBuilderUI({
     [questions, onQuestionsChange, isQuizEditingDisabled],
   );
 
-  // Handler for toggling option selection in read mode (for user answers)
   const handleToggleSelected = useCallback(
     (questionId: string, optionId: string) => {
-      if (isEditMode) return; // Only allow selection in read mode
+      if (isEditMode) return;
 
       onQuestionsChange(
         questions.map((q) =>
@@ -491,7 +342,7 @@ export default function QuizBuilderUI({
                 ...q,
                 options: q.options.map((o) => ({
                   ...o,
-                  isSelected: o.id === optionId ? !o.isSelected : false, // Single selection per question
+                  isSelected: o.id === optionId ? !o.isSelected : false,
                 })),
               }
             : q,
@@ -501,10 +352,9 @@ export default function QuizBuilderUI({
     [questions, onQuestionsChange, isEditMode],
   );
 
-  // Handler for removing an option from a question
   const handleRemoveOption = useCallback(
     (questionId: string, optionId: string) => {
-      if (isQuizEditingDisabled) return; // Block editing when space is InProgress
+      if (isQuizEditingDisabled) return;
       onQuestionsChange(
         questions.map((q) => {
           if (q.id === questionId) {
@@ -520,10 +370,9 @@ export default function QuizBuilderUI({
     [questions, onQuestionsChange, isQuizEditingDisabled],
   );
 
-  // Handler for updating an option
   const handleUpdateOption = useCallback(
     (questionId: string, optionId: string, text: string) => {
-      if (isQuizEditingDisabled) return; // Block editing when space is InProgress
+      if (isQuizEditingDisabled) return;
       onQuestionsChange(
         questions.map((q) => {
           if (q.id === questionId) {
@@ -541,10 +390,9 @@ export default function QuizBuilderUI({
     [questions, onQuestionsChange, isQuizEditingDisabled],
   );
 
-  // Handler for toggling an option's correctness (only one option can be correct per question)
   const handleToggleCorrect = useCallback(
     (questionId: string, optionId: string) => {
-      if (isQuizEditingDisabled) return; // Block editing when space is InProgress
+      if (isQuizEditingDisabled) return;
       onQuestionsChange(
         questions.map((q) => {
           if (q.id === questionId) {
@@ -552,7 +400,7 @@ export default function QuizBuilderUI({
               ...q,
               options: q.options.map((o) => ({
                 ...o,
-                isCorrect: o.id === optionId ? !o.isCorrect : false, // Only one option can be correct
+                isCorrect: o.id === optionId ? !o.isCorrect : false,
               })),
             };
           }
@@ -563,16 +411,13 @@ export default function QuizBuilderUI({
     [questions, onQuestionsChange, isQuizEditingDisabled],
   );
 
-  // Handler for image upload success from FileUploader
   const handleImageUploadSuccess = (questionId: string, url: string) => {
     handleUpdateQuestionImage(questionId, url);
   };
 
-  // Handle drag start event
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
 
-    // Check if this is an option being dragged
     const idParts = active.id.toString().split('-option-');
     if (idParts.length > 1) {
       const questionId = idParts[0];
@@ -581,12 +426,10 @@ export default function QuizBuilderUI({
     }
   };
 
-  // Handle drag end event for questions and options
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
 
     if (over && active.id !== over.id) {
-      // Handle question reordering
       if (
         typeof active.id === 'string' &&
         typeof over.id === 'string' &&
@@ -606,9 +449,7 @@ export default function QuizBuilderUI({
           newIndex,
         );
         onQuestionsChange(reorderedQuestions);
-      }
-      // Handle option reordering within questions
-      else if (
+      } else if (
         activeOptionId &&
         typeof over.id === 'string' &&
         over.id.includes('-option-')
@@ -618,7 +459,6 @@ export default function QuizBuilderUI({
         if (optionIdParts.length > 1) {
           const overQuestionId = optionIdParts[0];
 
-          // Only reorder if within the same question
           if (questionId === overQuestionId) {
             const currentQuestions = [...questions];
             const questionIndex = currentQuestions.findIndex(
@@ -626,19 +466,29 @@ export default function QuizBuilderUI({
             );
             const question = currentQuestions[questionIndex];
 
-            const activeOptionIdFull = `${questionId}-option-${activeOptionId.optionId.split('option-')[1]}`;
+            const activeOptionIdFull = `${questionId}-option-${
+              activeOptionId.optionId.includes('option-')
+                ? activeOptionId.optionId.split('option-')[1]
+                : activeOptionId.optionId
+            }`;
             const overOptionIdFull = over.id.toString();
 
-            const activeOptionIndex = question.options.findIndex(
-              (opt) =>
-                `${questionId}-option-${opt.id.split('option-')[1]}` ===
-                activeOptionIdFull,
-            );
-            const overOptionIndex = question.options.findIndex(
-              (opt) =>
-                `${questionId}-option-${opt.id.split('option-')[1]}` ===
-                overOptionIdFull,
-            );
+            const activeOptionIndex = question.options.findIndex((opt) => {
+              const optionSuffix = opt.id.includes('option-')
+                ? opt.id.split('option-')[1]
+                : opt.id;
+              return (
+                `${questionId}-option-${optionSuffix}` === activeOptionIdFull
+              );
+            });
+            const overOptionIndex = question.options.findIndex((opt) => {
+              const optionSuffix = opt.id.includes('option-')
+                ? opt.id.split('option-')[1]
+                : opt.id;
+              return (
+                `${questionId}-option-${optionSuffix}` === overOptionIdFull
+              );
+            });
 
             const reorderedOptions = arrayMove(
               question.options,
@@ -661,16 +511,11 @@ export default function QuizBuilderUI({
     setActiveOptionId(null);
   };
 
-  // Handler for opening the submit confirmation
   const handleSubmitClick = () => {
-    console.log('Submit button clicked!');
-    console.log('Questions when submitting:', questions);
-    console.log('All questions answered?', validateAllQuestionsAnswered());
     popup
       .open(
         <QuizSubmitForm
           onSubmit={() => {
-            console.log('Quiz submit form confirmed!');
             handleQuizSubmit();
             popup.close();
           }}
@@ -681,7 +526,6 @@ export default function QuizBuilderUI({
       .withoutBackdropClose();
   };
 
-  // Get the items we're working with (questions)
   const itemIds = questions.map((item) => item.id);
 
   return (
@@ -693,7 +537,6 @@ export default function QuizBuilderUI({
       onDragEnd={handleDragEnd}
     >
       <div className="text-white w-full flex flex-col">
-        {/* Attempt Header - Show in read mode when there are questions, user info is available, and user is not the owner */}
         {!isEditMode &&
           questions.length > 0 &&
           spaceId &&
@@ -711,7 +554,6 @@ export default function QuizBuilderUI({
             </div>
           )}
 
-        {/* Questions List */}
         {questions.length > 0 ? (
           <SortableContext
             items={itemIds}
@@ -758,14 +600,11 @@ export default function QuizBuilderUI({
           </div>
         )}
 
-        {/* Add Question Button */}
         {isEditMode && !isQuizEditingDisabled && (
           <div className="rounded-[10px] p-4">
             <div className="w-full relative flex items-center justify-center">
-              {/* Dotted line across the full width */}
               <div className="absolute w-full border-t border-dashed border-[var(--color-neutral-500)]"></div>
 
-              {/* Circular add button in the middle */}
               <button
                 onClick={handleAddQuestion}
                 className="relative z-10 flex items-center justify-center h-12 w-12 rounded-full border border-[var(--color-neutral-500)] bg-[var(--color-background)] hover:bg-[var(--color-btn-hover)] transition-colors"
@@ -779,21 +618,17 @@ export default function QuizBuilderUI({
           </div>
         )}
 
-        {/* Submit Button or Max Attempts Message - Show in read mode when there are questions and submit handler is available */}
         {!isEditMode && questions.length > 0 && onSubmitQuiz && !isOwner && (
           <div className="flex justify-end mt-4">
             {latestAttempt && latestAttempt.is_successful ? (
-              // Show "Passed" when last attempt was successful - this takes priority over everything else
               <div className="px-6 py-[14.5px] bg-green-600/20 border border-green-500/30 font-semibold text-green-400 text-base rounded-[10px]">
                 ✓ Passed
               </div>
             ) : nextAttemptNumber > 3 ? (
-              // Show max attempts reached only if not passed
               <div className="px-6 py-[14.5px] bg-red-600/20 border border-red-500/30 font-semibold text-red-400 text-base rounded-[10px]">
                 Maximum attempts reached (3/3)
               </div>
             ) : (
-              // Show submit button for new attempts
               <button
                 onClick={handleSubmitClick}
                 className="px-6 py-[14.5px] bg-primary font-bold text-black text-base rounded-[10px] hover:bg-primary/90 transition-colors"
@@ -805,13 +640,11 @@ export default function QuizBuilderUI({
         )}
       </div>
 
-      {/* Drag overlay for showing the item being dragged */}
       <DragOverlay adjustScale={true} />
     </DndContext>
   );
 }
 
-// Question Card Component
 function QuestionCard({
   question,
   isEditMode,
@@ -857,10 +690,12 @@ function QuestionCard({
     opacity: isDragging ? 0.5 : 1,
   };
 
-  // Create sortable context for options
-  const optionIds = question.options.map(
-    (opt) => `${question.id}-option-${opt.id.split('option-')[1]}`,
-  );
+  const optionIds = question.options.map((opt) => {
+    const optionSuffix = opt.id.includes('option-')
+      ? opt.id.split('option-')[1]
+      : opt.id;
+    return `${question.id}-option-${optionSuffix}`;
+  });
 
   return (
     <div
@@ -873,7 +708,6 @@ function QuestionCard({
       {...(isEditMode && !isQuizEditingDisabled ? attributes : {})}
       {...(isEditMode && !isQuizEditingDisabled ? listeners : {})}
     >
-      {/* Drag handle for question - centered above title */}
       {isEditMode && !isQuizEditingDisabled && (
         <div className="flex justify-center mb-2">
           <div className="text-white/50 cursor-move">
@@ -882,7 +716,6 @@ function QuestionCard({
         </div>
       )}
 
-      {/* Question Header */}
       <div className="flex items-center gap-2 mb-4">
         {isEditMode ? (
           <>
@@ -920,7 +753,6 @@ function QuestionCard({
         )}
       </div>
 
-      {/* Image display */}
       {question.imageUrl && (
         <div className="mb-4">
           <div className="relative">
@@ -957,30 +789,34 @@ function QuestionCard({
         </div>
       )}
 
-      {/* Options List */}
       <SortableContext items={optionIds} strategy={verticalListSortingStrategy}>
         <div className="space-y-2">
-          {question.options.map((option) => (
-            <OptionItem
-              key={`${question.id}-option-${option.id.split('option-')[1]}`}
-              id={`${question.id}-option-${option.id.split('option-')[1]}`}
-              questionId={question.id}
-              option={option}
-              isEditMode={isEditMode}
-              isQuizEditingDisabled={isQuizEditingDisabled}
-              onUpdateText={(text) => onUpdateOption(option.id, text)}
-              onToggleCorrect={() => onToggleCorrect(option.id)}
-              onToggleSelected={() => onToggleSelected(option.id)}
-              onRemove={() => onRemoveOption(option.id)}
-            />
-          ))}
+          {question.options.map((option) => {
+            const optionSuffix = option.id.includes('option-')
+              ? option.id.split('option-')[1]
+              : option.id;
+            const keyId = `${question.id}-option-${optionSuffix}`;
+
+            return (
+              <OptionItem
+                key={keyId}
+                id={keyId}
+                questionId={question.id}
+                option={option}
+                isEditMode={isEditMode}
+                isQuizEditingDisabled={isQuizEditingDisabled}
+                onUpdateText={(text) => onUpdateOption(option.id, text)}
+                onToggleCorrect={() => onToggleCorrect(option.id)}
+                onToggleSelected={() => onToggleSelected(option.id)}
+                onRemove={() => onRemoveOption(option.id)}
+              />
+            );
+          })}
         </div>
       </SortableContext>
 
-      {/* Add Option and Delete Buttons on the same line */}
       {isEditMode && (
         <div className="mt-4 flex justify-between items-center">
-          {/* Only show Add Option button if less than 4 options */}
           {question.options.length < 4 ? (
             <button
               onClick={onAddOption}
@@ -1024,7 +860,6 @@ function QuestionCard({
   );
 }
 
-// Option Item Component
 function OptionItem({
   id,
   questionId: _questionId,
@@ -1064,30 +899,27 @@ function OptionItem({
     opacity: isDragging ? 0.5 : 1,
   };
 
-  // Acknowledge unused parameter to satisfy linting rules
   void _questionId;
 
   return (
     <div
-      ref={setNodeRef}
-      style={style}
+      ref={isEditMode && !isQuizEditingDisabled ? setNodeRef : undefined}
+      style={isEditMode && !isQuizEditingDisabled ? style : undefined}
       className={`flex items-center gap-2 p-2 rounded ${
-        isEditMode && !isQuizEditingDisabled ? 'cursor-move' : ''
+        isEditMode && !isQuizEditingDisabled ? 'cursor-move' : 'cursor-default'
       }`}
       {...(isEditMode && !isQuizEditingDisabled ? attributes : {})}
       {...(isEditMode && !isQuizEditingDisabled ? listeners : {})}
     >
-      {/* Drag handle for edit mode */}
       {isEditMode && !isQuizEditingDisabled && (
         <div className="text-white/50 cursor-move mr-1">
           <DialPad2 className="w-4 h-4" />
         </div>
       )}
 
-      {/* Checkbox for correct answer in edit mode, or user selection in read mode */}
       <div
         className={`w-5 h-5 flex-shrink-0 border rounded flex items-center justify-center ${
-          isQuizEditingDisabled
+          isEditMode && isQuizEditingDisabled
             ? 'cursor-not-allowed opacity-50'
             : 'cursor-pointer'
         } ${
@@ -1100,14 +932,19 @@ function OptionItem({
               : 'border-white/30 hover:border-white/50'
         }`}
         onClick={
-          isQuizEditingDisabled
+          isEditMode && isQuizEditingDisabled
             ? undefined
             : isEditMode
               ? onToggleCorrect
               : onToggleSelected
         }
+        onPointerDown={(e) => {
+          if (!isEditMode) {
+            e.stopPropagation();
+          }
+        }}
         role="button"
-        tabIndex={isQuizEditingDisabled ? -1 : 0}
+        tabIndex={isEditMode && isQuizEditingDisabled ? -1 : 0}
         aria-label={
           isEditMode ? 'Mark as correct answer' : 'Select this option'
         }
@@ -1130,7 +967,6 @@ function OptionItem({
         )}
       </div>
 
-      {/* Option text */}
       {isEditMode ? (
         <input
           type="text"
@@ -1142,10 +978,15 @@ function OptionItem({
           placeholder="Option text"
         />
       ) : (
-        <span className="flex-1">{option.text}</span>
+        <span
+          className="flex-1 cursor-pointer"
+          onClick={onToggleSelected}
+          onPointerDown={(e) => e.stopPropagation()}
+        >
+          {option.text}
+        </span>
       )}
 
-      {/* Delete option button */}
       {isEditMode && !isQuizEditingDisabled && (
         <button
           onClick={onRemove}

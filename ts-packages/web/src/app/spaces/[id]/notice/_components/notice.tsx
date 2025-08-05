@@ -20,27 +20,21 @@ export default function NoticePage() {
   const { spaceId } = useSpaceByIdContext();
   const { data: userInfo } = useUserInfo();
 
-  // Check if current user is the space owner
   const isOwner = userInfo?.id === space?.owner_id;
 
-  // Handler for quiz data changes
   const handleQuestionsChange = (updatedQuestions: Question[]) => {
     setQuizQuestions(updatedQuestions);
-    // Note: The questions will be saved when the user saves the space
-    console.log('Quiz data updated:', updatedQuestions);
   };
 
   return (
     <div className="flex flex-col w-full">
       <div className="flex flex-col gap-2">
-        {/* Main Content Area with SpaceContents for editing */}
         <SpaceContents
           isEdit={isEdit}
           htmlContents={htmlContent}
           setContents={(content) => setHtmlContent(content)}
         />
 
-        {/* Quiz Section - Now uses integrated component */}
         <QuizBuilderUI
           isEditMode={isEdit}
           questions={quizQuestions}
