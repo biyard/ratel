@@ -10,6 +10,7 @@ import {
   Word,
   Zip,
   Upload,
+  MOV,
 } from '@/components/icons';
 
 export default function SpaceFile({
@@ -37,9 +38,10 @@ export default function SpaceFile({
           <Word />
         ) : file.ext === 'PPTX' ? (
           <Pptx />
-        ) : file.ext === 'MP4' || file.ext === 'MOV' ? (
-          //FIXME: fix to mov image
+        ) : file.ext === 'MP4' ? (
           <MP4 />
+        ) : file.ext === 'MOV' ? (
+          <MOV />
         ) : (
           <Excel />
         )}
