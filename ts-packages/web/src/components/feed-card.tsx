@@ -424,6 +424,7 @@ import {
 } from './ui/dropdown-menu';
 import { Edit1 } from './icons';
 import { useRepostDraft } from '@/app/(social)/_components/create-repost2';
+import { showSuccessToast, showErrorToast } from './custom-toast/toast';
 
 export interface FeedCardProps {
   id: number;
@@ -519,12 +520,13 @@ export default function FeedCard(props: FeedCardProps) {
 
   const handleRepostThought = () => {
     setAuthorName(props.author_name);
-    setIndustry(props.industry)
+    setIndustry(props.industry);
     setAuthorProfileUrl(props.author_profile_url);
     setFeedContent(props.contents);
     setFeedImageUrl(props.url || null);
-    setOriginalFeedId(props.id); // Add this
+    setOriginalFeedId(props.id);
     newDraft();
+    
   };
   return (
     <Col

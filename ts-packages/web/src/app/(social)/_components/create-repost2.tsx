@@ -338,9 +338,11 @@ import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin';
 import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary';
+import { $getSelection, $isRangeSelection } from 'lexical';
+
 import Certified from '@/assets/icons/certified.svg';
 import DoubleArrowDown from '@/assets/icons/double-arrow-down.svg';
-
+import { logger } from '@/lib/logger';
 import {
   LexicalEditor,
   EditorState,
@@ -356,7 +358,7 @@ import { UrlType } from '@/lib/api/models/feeds/update-draft-request';
 import { useQueryClient } from '@tanstack/react-query';
 import { postByUserIdQk } from '../_hooks/use-posts';
 import { checkString } from '@/lib/string-filter-utils';
-import { showErrorToast } from '@/lib/toast';
+import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import ToolbarPlugin from '@/components/toolbar/toolbar2';
 import { useRouter } from 'next/navigation';
 import { route } from '@/route';
@@ -368,7 +370,8 @@ import {
   FilterArrow,
   ShapeArrowDown,
 } from '@/components/icons';
-import { useQuery } from '@tanstack/react-query';
+import LinkPaste from '@/assets/icons/editor/link-paste.svg';
+import { Check } from 'lucide-react';
 
 export const editorTheme = {
   ltr: 'text-left',
@@ -418,6 +421,10 @@ export function CreateRePost() {
     authorName,
     industry,
     authorProfileUrl,
+    showUrlInput,
+    repostUrl,
+    setShowUrlInput,
+    setRepostUrl,
   } = useRepostDraft();
 
   const { data: userInfo } = useUserInfo();
@@ -474,6 +481,21 @@ export function CreateRePost() {
       });
     }
   }, [editorRef, content, createEditorStateFromHTML]);
+
+  const handleInsertUrl = () => {
+    const url = repostUrl?.trim();
+    if (!url) return;
+
+    editorRef.current?.update(() => {
+      const selection = $getSelection();
+      if ($isRangeSelection(selection)) {
+        selection.insertText(url);
+      }
+    });
+
+    setShowUrlInput(false);
+    setRepostUrl('');
+  };
 
   return (
     <div className={`flex flex-col w-full ${!expand ? 'hidden' : 'block'}`}>
@@ -603,55 +625,99 @@ export function CreateRePost() {
             <EditorRefPlugin
               setEditorRef={(editor) => (editorRef.current = editor)}
             />
-          </div>
 
-          {/* Uploaded Image Preview */}
-          {image && (
-            <div className="px-4 pt-2">
-              <div className="relative w-full aspect-video rounded-lg overflow-hidden">
-                <Image
-                  src={image}
-                  alt="Uploaded content"
-                  fill
-                  className="object-cover"
+            {showUrlInput && (
+              <div className="absolute top-2 left-2 z-20 bg-neutral-800 border border-neutral-600 rounded-md px-3 py-2 flex items-center gap-2 w-[90%]">
+                <LinkPaste />
+
+                <input
+                  autoFocus
+                  value={repostUrl}
+                  onChange={(e) => setRepostUrl(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleInsertUrl();
+                    }
+                  }}
+                  placeholder="Paste or search for the relevant discussion or topic URL"
+                  className="bg-transparent text-white text-sm placeholder-neutral-400 outline-none flex-1"
                 />
+
                 <button
-                  onClick={removeImage}
-                  className="absolute top-2 right-2 bg-black/70 rounded-full p-1.5"
+                  onClick={handleInsertUrl}
+                  className="text-green-400 hover:text-white"
+                  aria-label="Insert URL"
                 >
-                  <X className="w-4 h-4 text-white" />
+                  <Check className="w-4 h-4" />
+                </button>
+
+                <button
+                  onClick={() => {
+                    setShowUrlInput(false);
+                    setRepostUrl('');
+                  }}
+                  className="text-neutral-400 hover:text-white"
+                  aria-label="Cancel"
+                >
+                  <X className="w-4 h-4" />
                 </button>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Toolbar */}
-          <div className="flex items-center justify-between p-4">
-            <ToolbarPlugin onImageUpload={setImage} />
+            {/* Uploaded Image Preview */}
+            {image && (
+              <div className="px-4 pt-2">
+                <div className="relative w-full aspect-video rounded-lg overflow-hidden">
+                  <Image
+                    src={image}
+                    alt="Uploaded content"
+                    fill
+                    className="object-cover"
+                  />
+                  <button
+                    onClick={removeImage}
+                    className="absolute top-2 right-2 bg-black/70 rounded-full p-1.5"
+                  >
+                    <X className="w-4 h-4 text-white" />
+                  </button>
+                </div>
+              </div>
+            )}
 
-            <div></div>
-            {/* post button and save button */}
-            <div className="flex space-x-2 ">
-              <button
-                onClick={savePost}
-                className="flex items-center font-bold text-white px-4 py-2 gap-x-2"
-              >
-                <Save className=" " />
-                Save
-              </button>
+            {/* Toolbar */}
+            <div className="flex items-center justify-between p-4">
+              <ToolbarPlugin
+                onImageUpload={setImage}
+                onTriggerLinkPaste={() => {
+                  setShowUrlInput(true);
+                  setRepostUrl('');
+                }}
+              />
 
-              {/* post button */}
-              <button
-                onClick={isPublishedPost ? savePost : publishPost}
-                disabled={isSubmitDisabled}
-                className="bg-primary text-background rounded-full hover:bg-primary/70 hover:shadow-[inset_0_0_0_1000px_rgba(0,0,0,0.2)] flex px-4 py-2 font-bold gap-x-2 items-center "
-              >
-                <UserCircle />
-                {status === 'publishing' || status === 'saving' ? (
-                  <Loader2 className="animate-spin mr-2" />
-                ) : null}
-                {isPublishedPost ? 'Update' : 'Post'}
-              </button>
+              <div></div>
+              {/* post button and save button */}
+              <div className="flex space-x-2 ">
+                <button
+                  onClick={savePost}
+                  className="flex items-center font-bold text-white px-4 py-2 gap-x-2"
+                >
+                  <Save className=" " />
+                  Save
+                </button>
+
+                {/* post button */}
+                <button
+                  onClick={isPublishedPost ? savePost : publishPost}
+                  disabled={isSubmitDisabled}
+                  className="bg-primary text-background rounded-full hover:bg-primary/70 hover:shadow-[inset_0_0_0_1000px_rgba(0,0,0,0.2)] flex px-4 py-2 font-bold gap-x-2 items-center "
+                >
+                  <UserCircle />
+                  {status === 'publishing' || status === 'saving' ? (
+                    <Loader2 className="animate-spin mr-2" />
+                  ) : null}
+                  {isPublishedPost ? 'Update' : 'Post'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -671,8 +737,14 @@ interface RePostDraftContextType {
   authorProfileUrl?: string;
   setAuthorName: (name: string) => void;
   setAuthorProfileUrl: (url: string) => void;
-  industry?:string;
+  industry?: string;
   setIndustry: (name: string) => void;
+
+  showUrlInput?: boolean;
+  setShowUrlInput: (show: boolean) => void;
+
+  repostUrl?: string;
+  setRepostUrl: (url: string) => void;
 
   expand: boolean;
   setExpand: (expand: boolean) => void;
@@ -709,6 +781,9 @@ export const RePostDraftProvider: React.FC<{ children: React.ReactNode }> = ({
   const [authorProfileUrl, setAuthorProfileUrl] = useState<
     string | undefined
   >();
+
+  const [showUrlInput, setShowUrlInput] = useState(false);
+  const [repostUrl, setRepostUrl] = useState('');
 
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -755,7 +830,7 @@ export const RePostDraftProvider: React.FC<{ children: React.ReactNode }> = ({
         });
       } else {
         const data = await post(ratelApi.feeds.createDraft(), {
-          type: FeedType.Post,
+          type: FeedType.Repost,
           user_id: user?.id,
           html_contents: content,
           title,
@@ -794,11 +869,13 @@ export const RePostDraftProvider: React.FC<{ children: React.ReactNode }> = ({
       await saveDraft();
       await post(ratelApi.feeds.publishDraft(draftId!));
       router.push(route.threadByFeedId(draftId!));
-
       resetDraft();
+      showSuccessToast(' Repost Succeessful');
     } catch (error) {
       console.error('Failed to publish post:', error);
       setStatus('error');
+      showErrorToast(' Error Reposting');
+      logger.debug('');
     } finally {
       setStatus('idle');
     }
@@ -810,6 +887,7 @@ export const RePostDraftProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [saveDraft]);
 
   const resetDraft = () => {
+    setOriginalFeedId(null); // Critical for reposts!
     setTitle('');
     setContent(null);
     setImage(null);
@@ -826,6 +904,11 @@ export const RePostDraftProvider: React.FC<{ children: React.ReactNode }> = ({
     setOriginalFeedId,
     industry,
     setIndustry,
+
+    showUrlInput,
+    setShowUrlInput,
+    repostUrl,
+    setRepostUrl,
 
     expand,
     setExpand,
