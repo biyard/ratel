@@ -25,6 +25,7 @@ export { default as Edit1 } from '@/assets/icons/edit_1.svg';
 export { default as User } from '@/assets/icons/user.svg';
 export { default as Clear } from '@/assets/icons/clear.svg';
 export { default as Folder } from '@/assets/icons/folder.svg';
+export { default as EditContent } from '@/assets/icons/edit-content.svg';
 export { default as Delete2 } from '@/assets/icons/delete_2.svg';
 export { default as BadgeIcon } from '@/assets/icons/badge.svg';
 
@@ -35,6 +36,8 @@ export { default as Zip } from '@/assets/icons/files/zip.svg';
 export { default as Word } from '@/assets/icons/files/docx.svg';
 export { default as Pptx } from '@/assets/icons/files/pptx.svg';
 export { default as Excel } from '@/assets/icons/files/xlsx.svg';
+export { default as MP4 } from '@/assets/icons/files/mp4.svg';
+export { default as MOV } from '@/assets/icons/files/mov.svg';
 export { default as Upload } from '@/assets/icons/upload.svg';
 export { default as Add } from '@/assets/icons/add.svg';
 export { default as ChevronLeft } from '@/assets/icons/arrow-left.svg';

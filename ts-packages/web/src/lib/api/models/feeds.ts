@@ -89,6 +89,8 @@ export enum FileExtension {
   WORD = 5,
   PPTX = 6,
   EXCEL = 7,
+  MP4 = 8,
+  MOV = 9,
 }
 
 export const FileExtensionLabel: Record<
@@ -102,4 +104,6 @@ export const FileExtensionLabel: Record<
   [FileExtension.WORD]: { ko: 'WORD', en: 'WORD' },
   [FileExtension.PPTX]: { ko: 'PPTX', en: 'PPTX' },
   [FileExtension.EXCEL]: { ko: 'EXCEL', en: 'EXCEL' },
+  [FileExtension.MP4]: { ko: 'MP4', en: 'MP4' },
+  [FileExtension.MOV]: { ko: 'MOV', en: 'MOV' },
 };
