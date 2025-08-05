@@ -14,8 +14,8 @@ import SpaceHeader from '../_components/header';
 import SpaceSideMenu from './_components/space-side-menu';
 import { PollTab } from './types';
 import { SpaceProvider } from '../_components/header/provider';
-import { PollSurveyPage } from '../_components/page/poll';
-import { PollAnalyzePage } from '../_components/page/analyze';
+import { PollAnalyzePage } from './_components/analyze-tab';
+import { PollSurveyPage } from './_components/survey-tab';
 
 export default function PollSpacePage() {
   return (

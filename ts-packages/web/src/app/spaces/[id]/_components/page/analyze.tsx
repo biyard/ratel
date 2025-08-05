@@ -6,8 +6,6 @@ import SummaryReport from '../dashboard/summary-report';
 import ObjectiveResponse from '../dashboard/objective-response';
 import SubjectiveResponse from '../dashboard/subjective-response';
 import { SurveyResponse } from '@/lib/api/models/response';
-import { usePollSpaceContext } from '../../poll/provider.client';
-import { useDeliberationSpaceContext } from '../../deliberation/provider.client';
 
 enum AnswerType {
   SingleChoice = 'single_choice',
@@ -17,34 +15,6 @@ enum AnswerType {
   Checkbox = 'checkbox',
   Dropdown = 'dropdown',
   LinearScale = 'linear_scale',
-}
-
-export function DeliberationAnalyzePage() {
-  const { answers, survey, mappedResponses, handleDownloadExcel } =
-    useDeliberationSpaceContext();
-
-  return (
-    <AnalyzePage
-      answers={answers}
-      survey={survey}
-      mappedResponses={mappedResponses}
-      handleDownloadExcel={handleDownloadExcel}
-    />
-  );
-}
-
-export function PollAnalyzePage() {
-  const { answers, survey, mappedResponses, handleDownloadExcel } =
-    usePollSpaceContext();
-
-  return (
-    <AnalyzePage
-      answers={answers}
-      survey={survey}
-      mappedResponses={mappedResponses}
-      handleDownloadExcel={handleDownloadExcel}
-    />
-  );
 }
 
 export function AnalyzePage({

@@ -1,6 +1,6 @@
-export const PollTab = {
-  POLL: 'Poll',
-  ANALYZE: 'Analyze',
-} as const;
+export enum PollTab {
+  POLL = 'Poll',
+  ANALYZE = 'Analyze',
+}
 
-export type PollTabType = (typeof PollTab)[keyof typeof PollTab];
+export type PollTabType = PollTab;
