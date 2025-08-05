@@ -27,6 +27,7 @@ export function getFileType(file: File): FileType {
   if (mime === 'audio/wav' || name.endsWith('.wav')) return FileType.WAV;
 
   if (mime === 'video/mp4' || name.endsWith('.mp4')) return FileType.MP4;
+  if (mime === 'video/mov' || name.endsWith('.mov')) return FileType.MOV;
 
   if (
     mime ===
@@ -66,6 +67,8 @@ export function toContentType(fileType: FileType): string {
       return 'audio/wav';
     case FileType.MP4:
       return 'video/mp4';
+    case FileType.MOV:
+      return 'video/mov';
     case FileType.PPTX:
       return 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
     default:

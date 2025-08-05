@@ -215,6 +215,10 @@ pub enum FileExtension {
     PPTX = 6,
     #[translate(ko = "EXCEL", en = "EXCEL")]
     EXCEL = 7,
+    #[translate(ko = "MP4", en = "MP4")]
+    MP4 = 8,
+    #[translate(ko = "MOV", en = "MOV")]
+    MOV = 9,
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq, Eq, Validate)]

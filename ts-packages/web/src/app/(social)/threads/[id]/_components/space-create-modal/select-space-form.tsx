@@ -3,8 +3,10 @@
 import { Space, SpaceType } from '@/lib/api/models/spaces';
 import { noticeSpaceCreateRequest } from '@/lib/api/models/notice';
 
-import { Discuss, Palace, Mega } from '@/components/icons';
+
+import { Discuss, Palace, Mega, Vote } from '@/components/icons';
 import { useState, useEffect } from 'react';
+
 import { LoadablePrimaryButton } from '@/components/button/primary-button';
 import { apiFetch } from '@/lib/api/apiFetch';
 import { config } from '@/config';
@@ -33,13 +35,12 @@ const SpaceForms: SpaceFormProps[] = [
   //   description: 'Propose and decide on new rules or policies.',
   //   disabled: true,
   // },
-  // {
-  //   type: SpaceType.Poll,
-  //   Icon: <Vote />,
-  //   label: 'Poll',
-  //   description: 'Collect quick opinions or preferences.',
-  //   disabled: true,
-  // },
+  {
+    type: SpaceType.Poll,
+    Icon: <Vote />,
+    label: 'Poll',
+    description: 'Collect quick opinions or preferences.',
+  },
   {
     type: SpaceType.Notice,
     Icon: <Mega />,
