@@ -9,9 +9,8 @@ use by_axum::{
     },
 };
 use by_types::QueryResponse;
-use dto::*;
+use dto::{*};
 use sqlx::postgres::PgRow;
-use std::collections::HashSet;
 
 #[derive(
     Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
@@ -25,7 +24,7 @@ pub struct SpaceIdPath {
     Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
 )]
 pub struct SubmitAnswersRequest {
-    pub answers: Vec<NoticeQuestionWithAnswer>,
+    pub answers: NoticeAnswer, // Use the new HashMap-based structure
 }
 
 #[derive(Clone, Debug)]
@@ -132,7 +131,7 @@ impl SpaceNoticeQuizAttemptController {
         }
 
         // Get the quiz with correct answers from NoticeQuizAnswer table
-        let correct_quiz = NoticeQuizAnswer::query_builder()
+        let correct_quiz_answer = NoticeQuizAnswer::query_builder()
             .space_id_equals(space_id)
             .query()
             .map(NoticeQuizAnswer::from)
@@ -140,63 +139,38 @@ impl SpaceNoticeQuizAttemptController {
             .await?
             .ok_or(Error::NotFound)?;
 
-        // Use HashSet for O(1) lookup of correct answers
-        let mut correct_answers_map: std::collections::HashMap<String, HashSet<String>> =
-            std::collections::HashMap::new();
+        // Use the pre-computed HashMap for O(1) lookup of correct answers
+        let correct_answers_map = &correct_quiz_answer.answers.answers;
 
-        for (idx, question) in correct_quiz.notice_quiz.iter().enumerate() {
-            let mut correct_options = HashSet::new();
-            for option in &question.options {
-                if option.is_correct {
-                    correct_options.insert(option.content.clone());
-                }
-            }
-            correct_answers_map.insert(idx.to_string(), correct_options);
-        }
-
-        // Validate user answers and calculate score
+        // Calculate the result by comparing user answers with correct answers
         let mut correct_count = 0;
-        let total_questions = body.answers.len() as i32;
+        let total_questions = correct_answers_map.len();
 
-        for (idx, user_question) in body.answers.iter().enumerate() {
-            if let Some(correct_options) = correct_answers_map.get(&idx.to_string()) {
-                let user_correct_options: HashSet<String> = user_question
-                    .options
-                    .iter()
-                    .filter(|opt| opt.is_correct)
-                    .map(|opt| opt.content.clone())
-                    .collect();
-
-                if user_correct_options == *correct_options {
+        for (question_id, correct_options) in correct_answers_map {
+            if let Some(user_options) = body.answers.answers.get(question_id) {
+                // Check if user's selected options match exactly with correct options
+                if user_options == correct_options {
                     correct_count += 1;
                 }
             }
         }
 
-        let score = if total_questions > 0 {
-            (correct_count as f64) / (total_questions as f64) * 100.0
-        } else {
-            0.0
-        };
+        let is_successful = correct_count == total_questions;
 
-        let is_successful = score == 100.0; // Assuming 100% is passing
-
-        // Create the attempt record using the repository pattern
-        let repo = NoticeQuizAttempt::get_repository(ctrl.pool.clone());
-        let mut tx = ctrl.pool.begin().await?;
-
-        let attempt = repo
-            .insert_with_tx(
-                &mut *tx,
-                space_id,
-                user_id,
-                body.answers,
-                is_successful,
-            )
+        // Insert the quiz attempt with results using manual parameter approach
+        let attempt_repo = NoticeQuizAttempt::get_repository(ctrl.pool.clone());
+        let quiz_attempt = attempt_repo
+            .insert(space_id, user_id, body.answers, is_successful)
             .await?;
 
-        tx.commit().await?;
+        tracing::info!(
+            "Quiz attempt created for user {} in space {} with result: {} correct out of {} questions",
+            user_id,
+            space_id,
+            correct_count,
+            total_questions
+        );
 
-        Ok(Json(attempt.unwrap_or_default()))
+        Ok(Json(quiz_attempt))
     }
 }

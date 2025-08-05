@@ -12,7 +12,7 @@ import {
   QuizQuestion,
   BoosterType,
   PublishingScope,
-  NoticeQuestionWithAnswer,
+  NoticeQuizRequest,
 } from './notice';
 
 export interface Space {
@@ -75,7 +75,7 @@ export interface SpaceUpdateRequest {
     surveys: SurveyCreateRequest[];
     drafts: SpaceDraftCreateRequest[];
     publishing_scope: PublishingScope;
-    quiz?: NoticeQuestionWithAnswer[] | null;
+    quiz?: NoticeQuizRequest | null; // Updated to use new format
   };
 }
 
@@ -90,7 +90,7 @@ export function spaceUpdateRequest(
   started_at?: number,
   ended_at?: number,
   publishing_scope: PublishingScope = PublishingScope.Private,
-  quiz?: NoticeQuestionWithAnswer[] | null,
+  quiz?: NoticeQuizRequest | null,
 ): SpaceUpdateRequest {
   return {
     update_space: {

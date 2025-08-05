@@ -47,7 +47,6 @@ impl SpaceNoticeQuizAnswersController {
 
         let item = NoticeQuizAnswer::query_builder()
             .space_id_equals(space_id)
-            .user_id_equals(user_id)
             .query()
             .map(NoticeQuizAnswer::from)
             .fetch_one(&self.pool)
