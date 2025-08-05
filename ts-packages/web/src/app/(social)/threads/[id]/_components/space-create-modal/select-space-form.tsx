@@ -3,7 +3,6 @@
 import { Space, SpaceType } from '@/lib/api/models/spaces';
 import { noticeSpaceCreateRequest } from '@/lib/api/models/notice';
 
-
 import { Discuss, Palace, Mega, Vote } from '@/components/icons';
 import { useState, useEffect } from 'react';
 
