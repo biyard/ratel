@@ -417,10 +417,9 @@ impl UserControllerV1 {
         UserReadAction { username, .. }: UserReadAction,
     ) -> Result<Json<User>> {
         tracing::debug!("find user by username: {:?}", username);
-        let original = username.ok_or(Error::InvalidUsername)?;
-        let replaced = original.replace(' ', "+");
+        let username = username.ok_or(Error::InvalidUsername)?;
         let user = match User::query_builder()
-            .username_equals(replaced)
+            .username_equals(username)
             .query()
             .map(User::from)
             .fetch_one(&self.pool)
@@ -444,10 +443,9 @@ impl UserControllerV1 {
         UserReadAction { phone, .. }: UserReadAction,
     ) -> Result<Json<User>> {
         tracing::debug!("find user by phone number: {:?}", phone);
-        let original = phone.ok_or(Error::InvalidPhoneNumber)?;
-        let replaced = original.replace(' ', "+");
+        let phone_number = phone.ok_or(Error::InvalidPhoneNumber)?;
         let user = match User::query_builder()
-            .phone_number_equals(replaced)
+            .phone_number_equals(phone_number)
             .query()
             .map(User::from)
             .fetch_one(&self.pool)
