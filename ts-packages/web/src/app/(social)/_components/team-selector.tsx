@@ -82,13 +82,17 @@ export default function TeamSelector({ onSelect, team }: TeamSelectorProps) {
                     onSelect!(index);
                   }}
                 >
-                  <Image
-                    src={team.profile_url || '/default-profile.png'}
-                    alt={team.nickname}
-                    width={24}
-                    height={24}
-                    className="w-6 h-6 rounded-full object-cover object-top"
-                  />
+                  {team.profile_url && team.profile_url !== '' ? (
+                    <Image
+                      src={team.profile_url || '/default-profile.png'}
+                      alt={team.nickname}
+                      width={24}
+                      height={24}
+                      className="w-6 h-6 rounded-full object-cover object-top"
+                    />
+                  ) : (
+                    <div className="w-6 h-6 rounded-full border border-neutral-500 bg-neutral-600" />
+                  )}
                   <span>{team.nickname}</span>
                 </Link>
               </DropdownMenuItem>
