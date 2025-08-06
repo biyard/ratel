@@ -6,6 +6,9 @@ pub mod controllers {
         pub mod users {
             pub mod logout;
         }
+        pub mod telegram {
+            pub mod subscribe;
+        }
     }
     pub mod m2 {
         pub mod noncelab {

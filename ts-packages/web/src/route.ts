@@ -31,4 +31,7 @@ export const route = {
 
   telegramSprintLeague: (space_id: number) =>
     `/telegram/sprint-league/${space_id}`,
+  telegramSubscribe: (chat_id: number, lang?: string) => {
+    return `/telegram/subscribe?chat_id=${chat_id}${lang ? `&lang=${lang}` : ''}`;
+  },
 };
