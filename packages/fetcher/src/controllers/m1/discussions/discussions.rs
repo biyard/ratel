@@ -3,6 +3,7 @@ use std::{
     time::Duration,
 };
 
+use crate::utils::email::send_email;
 use bdk::prelude::*;
 use dto::{sqlx::PgPool, *};
 use tokio::time::sleep;
@@ -118,7 +119,14 @@ GROUP BY p.id
                 };
 
                 if let Err(e) = self
-                    .send_notification(&self.pool, member.id, notification_data)
+                    .send_notification(
+                        &self.pool,
+                        discussion.space_id,
+                        discussion.id,
+                        member.id,
+                        member.email,
+                        notification_data,
+                    )
                     .await
                 {
                     tracing::error!(
@@ -142,9 +150,16 @@ GROUP BY p.id
     async fn send_notification(
         &self,
         pool: &sqlx::Pool<sqlx::Postgres>,
+        space_id: i64,
+        discussion_id: i64,
         user_id: i64,
+        user_email: String,
         content: NotificationData,
     ) -> Result<Notification> {
+        use aws_sdk_sesv2::types::Content;
+        use regex::Regex;
+        let conf = crate::config::get();
+
         let notification_type = match content {
             NotificationData::BoostingSpace { .. } => NotificationType::BoostingSpace,
             NotificationData::ConnectNetwork { .. } => NotificationType::ConnectNetwork,
@@ -156,7 +171,26 @@ GROUP BY p.id
             NotificationData::None => NotificationType::Unknown,
         };
 
-        //TODO: alert notification to user
+        let email_regex = Regex::new(r"(?i)^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$").unwrap();
+
+        if email_regex.is_match(&user_email) {
+            let _ = send_email(
+                user_email,
+        Content::builder()
+                    .data("Alert Meeting Start")
+                    .build()
+                    .unwrap(),
+            Content::builder()
+                    .data(format!("Your scheduled meeting starts in 10 minutes.\nAccess link: {}/spaces/{}/discussions/{}", conf.base_url, space_id, discussion_id))
+                    .build()
+                    .unwrap(),
+            )
+            .await
+            .map_err(|e| {
+                tracing::error!("Email Send Error: {:?}", e);
+                Error::SESServiceError(e.to_string())
+            })?;
+        }
 
         let repo = Notification::get_repository(pool.clone());
         repo.insert(user_id, content, notification_type, false)

@@ -46,6 +46,7 @@ jobs:
           SERVICE: main-api
           DOMAIN: api.stg.ratel.foundation
           AUTH_DOMAIN: stg.ratel.foundation
+          BASE_URL: https://stg.ratel.foundation
           DATABASE_TYPE: postgres
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           OPENAPI_KEY: ${{ secrets.OPENAPI_KEY }}

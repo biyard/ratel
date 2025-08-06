@@ -2899,6 +2899,8 @@ checksum = "37909eebbb50d72f9059c3b6d82c0463f2ff062c9e95845c43a6c9c0355411be"
 name = "fetcher"
 version = "0.1.0"
 dependencies = [
+ "aws-config",
+ "aws-sdk-sesv2",
  "axum",
  "bdk",
  "chrono",
@@ -2908,6 +2910,7 @@ dependencies = [
  "ethers-core",
  "ethers-middleware",
  "ethers-providers",
+ "regex",
  "scraper",
  "serde",
  "serde_json",

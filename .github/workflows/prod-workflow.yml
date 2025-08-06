@@ -113,6 +113,7 @@ jobs:
           SERVICE: fetcher
           DOMAIN: fetcher-api.ratel.foundation
           AUTH_DOMAIN: ratel.foundation
+          BASE_URL: https://ratel.foundation
           DATABASE_TYPE: postgres
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           OPENAPI_KEY: ${{ secrets.OPENAPI_KEY }}

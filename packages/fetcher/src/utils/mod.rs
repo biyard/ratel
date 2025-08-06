@@ -1,3 +1,5 @@
+pub mod email;
+
 pub fn to_date(date: String) -> i32 {
     if let Ok(res) = date.replace("-", "").parse() {
         res
