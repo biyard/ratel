@@ -167,7 +167,6 @@ impl SprintLeagueController {
             .fetch_one(&self.pool)
             .await?;
 
-        let player_names: Vec<String> = sprint_league.players.into_iter().map(|p| p.name).collect();
         // Notify Telegram
         let payload =
             TelegramNotificationPayload::SprintLeague(SprintLeaguePayload { space_id: space.id });
