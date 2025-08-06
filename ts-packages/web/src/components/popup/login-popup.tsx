@@ -11,7 +11,6 @@ import { useAuth, useEd25519KeyPair } from '@/lib/contexts/auth-context';
 import { AuthUserInfo, EventType } from '@/lib/service/firebase-service';
 import { send } from '@/lib/api/send';
 import { refetchUserInfo } from '@/lib/api/hooks/users';
-import { useQueryClient } from '@tanstack/react-query';
 import { Col } from '../ui/col';
 import { Row } from '../ui/row';
 import { Input } from '../ui/input';
@@ -23,6 +22,7 @@ import { useNetwork } from '@/app/(social)/_hooks/use-network';
 import { isWebView } from '@/lib/webview-utils';
 import { TelegramIcon } from '../icons';
 import { type User as TelegramUser } from '@telegram-apps/sdk-react';
+import { getQueryClient } from '@/providers/getQueryClient';
 
 interface LoginModalProps {
   id?: string;
@@ -42,7 +42,7 @@ export const LoginModal = ({
   const popup = usePopup();
   const network = useNetwork();
   const anonKeyPair = useEd25519KeyPair();
-  const queryClient = useQueryClient();
+  const queryClient = getQueryClient();
   const cli = useApolloClient();
 
   const { login, ed25519KeyPair, telegramRaw } = useAuth();
@@ -175,8 +175,6 @@ export const LoginModal = ({
         ed25519KeyPair?.getPrincipal().toText(),
       );
       const info = await send(user.keyPair!, '/api/login', '');
-
-      logger.debug('User info from API:', info);
 
       if (!info) {
         user.event = EventType.SignUp;
