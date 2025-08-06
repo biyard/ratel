@@ -148,18 +148,6 @@ export default function ClientProviders({
         av.stopLocalVideoTile();
         av.stop();
 
-        try {
-          const videoDevices = await dc.listVideoInputDevices();
-          for (const device of videoDevices) {
-            const stream = await navigator.mediaDevices.getUserMedia({
-              video: { deviceId: { exact: device.deviceId } },
-            });
-            stream.getTracks().forEach((track) => track.stop());
-          }
-        } catch (err) {
-          console.warn('[CLEANUP] Failed to stop video input stream', err);
-        }
-
         dc.destroy?.();
       }
 
