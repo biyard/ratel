@@ -50,7 +50,7 @@ export default function TeamHome({
     })) ?? [];
 
   return (
-    <div className="flex-1 flex max-mobile:px-[10px]">
+    <div className="flex-1 flex max-mobile:px-2.5">
       {feeds.length != 0 ? (
         <Col className="flex-1">
           {feeds.map((props) => (
