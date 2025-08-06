@@ -23,7 +23,10 @@ macro_rules! wrap_api {
     ) => {
         $method($handler, |op| {
             op.summary($summary)
-                .description($description)
+                .description(concat!(
+                    $description,
+                    "\n\n**Authorization header required**\n\n`Authorization: Bearer <token>`"
+                ))
                 .response_with::<200, axum::Json<$success_ty>, _>(|res| {
                     res.description("Success response")
                 })
