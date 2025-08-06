@@ -77,83 +77,140 @@ pub async fn merge_recording_chunks(
             let contents = resp.contents();
             let contents_audio = resp_audio.contents();
 
-            if let Some(object) = contents
-                .iter()
-                .find(|obj| obj.key().map(|k| k.ends_with(".mp4")).unwrap_or(false))
-            {
-                let file_key = object.key().unwrap();
-                let filename = file_key.split('/').last().unwrap_or("video.mp4");
+            if let (Some(video_obj), Some(audio_obj)) = (
+                contents
+                    .iter()
+                    .find(|obj| obj.key().map(|k| k.ends_with(".mp4")).unwrap_or(false)),
+                contents_audio
+                    .iter()
+                    .find(|obj| obj.key().map(|k| k.ends_with(".mp4")).unwrap_or(false)),
+            ) {
+                use aws_sdk_s3::primitives::ByteStream;
+                use std::fs::File;
+                use std::io::Write;
+                use tokio::process::Command;
 
-                let new_key = format!("{}/{}/video/{}", config.env, media_pipeline_id, filename);
+                let video_key = video_obj.key().unwrap();
+                let audio_key = audio_obj.key().unwrap();
+                let media_output_key =
+                    format!("{}/{}/video/merged.mp4", config.env, media_pipeline_id);
 
-                s3.copy_object()
-                    .copy_source(format!("{}/{}", bucket_name, file_key))
+                let local_video_path = format!("/tmp/{}_video.mp4", media_pipeline_id);
+                let local_audio_path = format!("/tmp/{}_audio.mp4", media_pipeline_id);
+                let local_merged_path = format!("/tmp/{}_merged.mp4", media_pipeline_id);
+
+                let video_bytes = match s3
+                    .get_object()
                     .bucket(&bucket_name)
-                    .key(&new_key)
+                    .key(video_key)
+                    .send()
+                    .await
+                {
+                    Ok(resp) => match resp.body.collect().await {
+                        Ok(collected) => collected.into_bytes(),
+                        Err(err) => {
+                            tracing::error!("Failed to collect video body: {:?}", err);
+                            return None;
+                        }
+                    },
+                    Err(err) => {
+                        tracing::error!("Failed to download video object: {:?}", err);
+                        return None;
+                    }
+                };
+
+                let audio_bytes = match s3
+                    .get_object()
+                    .bucket(&bucket_name)
+                    .key(audio_key)
+                    .send()
+                    .await
+                {
+                    Ok(resp) => match resp.body.collect().await {
+                        Ok(collected) => collected.into_bytes(),
+                        Err(err) => {
+                            tracing::error!("Failed to collect audio body: {:?}", err);
+                            return None;
+                        }
+                    },
+                    Err(err) => {
+                        tracing::error!("Failed to download audio object: {:?}", err);
+                        return None;
+                    }
+                };
+
+                if let Err(err) =
+                    File::create(&local_video_path).and_then(|mut f| f.write_all(&video_bytes))
+                {
+                    tracing::error!("Failed to write video file: {:?}", err);
+                    return None;
+                }
+
+                if let Err(err) =
+                    File::create(&local_audio_path).and_then(|mut f| f.write_all(&audio_bytes))
+                {
+                    tracing::error!("Failed to write audio file: {:?}", err);
+                    return None;
+                }
+
+                let ffmpeg_status = match Command::new("ffmpeg")
+                    .args(&[
+                        "-y",
+                        "-i",
+                        &local_video_path,
+                        "-ss",
+                        "10",
+                        "-i",
+                        &local_audio_path,
+                        "-map",
+                        "0:v:0",
+                        "-map",
+                        "1:a:0",
+                        "-c:v",
+                        "libx264",
+                        "-c:a",
+                        "aac",
+                        "-preset",
+                        "fast",
+                        "-crf",
+                        "23",
+                        "-shortest",
+                        &local_merged_path,
+                    ])
+                    .status()
+                    .await
+                {
+                    Ok(status) => status,
+                    Err(err) => {
+                        tracing::error!("Failed to spawn ffmpeg process: {:?}", err);
+                        return None;
+                    }
+                };
+                if !ffmpeg_status.success() {
+                    tracing::error!("ffmpeg process exited with failure");
+                    return None;
+                }
+
+                let merged_bytes = match tokio::fs::read(&local_merged_path).await {
+                    Ok(bytes) => bytes,
+                    Err(err) => {
+                        tracing::error!("Failed to read merged file from disk: {:?}", err);
+                        return None;
+                    }
+                };
+                s3.put_object()
+                    .bucket(&bucket_name)
+                    .key(&media_output_key)
+                    .body(ByteStream::from(merged_bytes))
                     .send()
                     .await
                     .map_err(|e| {
-                        tracing::error!("S3 copy error: {:?}", e);
+                        tracing::error!("Upload merged.mp4 failed: {:?}", e);
                         e
                     })
                     .ok()?;
 
-                if let Some(object) = contents_audio
-                    .iter()
-                    .find(|obj| obj.key().map(|k| k.ends_with(".mp4")).unwrap_or(false))
-                {
-                    let file_key = object.key().unwrap();
-                    let filename = file_key.split('/').last().unwrap_or("audio.mp4");
-
-                    let new_key =
-                        format!("{}/{}/audio/{}", config.env, media_pipeline_id, filename);
-
-                    s3.copy_object()
-                        .copy_source(format!("{}/{}", bucket_name, file_key))
-                        .bucket(&bucket_name)
-                        .key(&new_key)
-                        .send()
-                        .await
-                        .map_err(|e| {
-                            tracing::error!("S3 copy error: {:?}", e);
-                            e
-                        })
-                        .ok()?;
-                }
-
-                let new_url = format!("https://{}/{}", bucket_name, new_key);
-
-                let cleanup_prefix = format!("{}/", media_pipeline_id);
-                let list_resp = s3
-                    .list_objects_v2()
-                    .bucket(&bucket_name)
-                    .prefix(&cleanup_prefix)
-                    .send()
-                    .await
-                    .ok();
-
-                if let Some(objects) = list_resp.and_then(|r| r.contents) {
-                    for obj in objects {
-                        if let Some(key) = obj.key {
-                            let _ = s3
-                                .delete_object()
-                                .bucket(&bucket_name)
-                                .key(&key)
-                                .send()
-                                .await;
-                        }
-                    }
-                    tracing::info!(
-                        "Cleaned up media_pipeline_id directory: {}",
-                        media_pipeline_id
-                    );
-                } else {
-                    tracing::error!(
-                        "No objects found under media_pipeline_id prefix: {}",
-                        cleanup_prefix
-                    );
-                }
-
+                let new_url = format!("https://{}/{}", bucket_name, media_output_key);
                 return Some(new_url);
             }
 
