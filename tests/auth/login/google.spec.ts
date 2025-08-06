@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Google OAuth Login Flow', () => {
-  test('should login via Google and redirect to dashboard', async ({ page, context }) => {
-    await page.goto('/login');
+  test('should login via Google and redirect to home', async ({ page, context }) => {
+    await page.goto('/');
 
     // Click Google login button (assuming button has id="google-login")
     const [popup] = await Promise.all([
@@ -17,20 +17,20 @@ test.describe('Google OAuth Login Flow', () => {
     await popup.waitForLoadState('networkidle');
 
     await popup.close();
-    await page.waitForURL('/dashboard');
-    await expect(page.locator('h1')).toContainText('Dashboard');
+    await page.waitForURL('/home');
+    await expect(page.locator('h1')).toContainText('home');
   });
 
   test('should persist session on reload', async ({ page }) => {
-    await page.goto('/dashboard');
+    await page.goto('/home');
     await page.reload();
 
-    await expect(page).toHaveURL('/dashboard');
-    await expect(page.locator('h1')).toContainText('Dashboard');
+    await expect(page).toHaveURL('/home');
+    await expect(page.locator('h1')).toContainText('home');
   });
 
   test('should redirect to login when logged out', async ({ page }) => {
-    await page.goto('/dashboard');
+    await page.goto('/home');
 
     await page.click('#logout-button');
     await page.waitForURL('/login');

@@ -1,16 +1,14 @@
 name: Playwright Tests
 
 on:
-  workflow_run:
-    workflows: ["Dev deploy"]
-    types:
-      - completed
-
+  push:
+    branches: [ dev ]
   pull_request:
     branches: [ dev ]
 
 jobs:
   test:
+    timeout-minutes: 60
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -21,13 +19,24 @@ jobs:
         run: npm ci
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
+      - name: Decode and restore auth.json
+        run: echo "${{ secrets.RATEL_STORAGE_STATE }}" | base64 --decode > auth.json
       - name: Run Playwright tests (Skip secret-dependent tests on PRs)
         env:
           WAIT_TIMEOUT: 5000
           VISIBLE_TIMEOUT: 10000
           URL_TIMEOUT: 15000
+          GOOGLE_EMAIL: ${{ secrets.TEST_GOOGLE_MAIL }}
+          GOOGLE_PASS: ${{ secrets.TEST_GOOGLE_PASSWORD }}
+          HEADLESS: true
         run: |
-          npx playwright test
+          if [ "$GITHUB_EVENT_NAME" == "pull_request" ]; then
+            echo "Skipping tests that require secrets on pull request."
+            npx playwright test tests/console/deliberations/start_deliberations.spec.ts --grep-invert @secret-required
+          else
+            echo "Running all the tests."
+            npx playwright test --project 'chromium-*'
+          fi
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:

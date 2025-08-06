@@ -34,18 +34,18 @@ test("[Home page] Testing the Ratel White paper link in a PDF DOC", async ({
 
 test.describe('Email/Password Login Flow', () => {
   test('should login with valid credentials', async ({ page }) => {
-    await page.goto('/login');
+    await page.goto('/');
 
     await page.fill('#email', 'testuser@example.com');
     await page.fill('#password', 'correct-password');
     await page.click('button[type="submit"]');
 
-    await expect(page).toHaveURL('/dashboard');
+    await expect(page).toHaveURL('/home');
     await expect(page.locator('h1')).toContainText('Dashboard');
   });
 
   test('should show error on wrong credentials', async ({ page }) => {
-    await page.goto('/login');
+    await page.goto('/');
 
     await page.fill('#email', 'testuser@example.com');
     await page.fill('#password', 'wrong-password');
@@ -55,7 +55,7 @@ test.describe('Email/Password Login Flow', () => {
   });
 
   test('should show validation errors on empty fields', async ({ page }) => {
-    await page.goto('/login');
+    await page.goto('/');
 
     await page.click('button[type="submit"]');
     await expect(page.locator('#email-error')).toHaveText('Email is required');
