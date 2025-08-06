@@ -26,6 +26,8 @@ export default function MyPostsPage() {
     author_profile_url: item.author[0].profile_url!,
     author_name: item.author[0].nickname,
     author_type: item.author[0].user_type,
+    space_id: item.spaces?.[0]?.id || 0,
+    space_type: item.spaces?.[0]?.space_type || 0,
 
     likes: item.likes,
     is_liked: item.is_liked,
@@ -39,7 +41,7 @@ export default function MyPostsPage() {
 
   return (
     <div className="flex-1 flex relative">
-      <div className="flex-1 flex max-mobile:px-[10px]">
+      <div className="flex-1 flex max-mobile:px-2.5">
         {feeds.length != 0 ? (
           <Col className="flex-1 border-gray-800">
             {feeds
