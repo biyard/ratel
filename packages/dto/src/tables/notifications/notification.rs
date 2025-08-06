@@ -41,8 +41,9 @@ pub enum NotificationType {
     BoostingSpace = 3,
     #[translate(en = "Connect Network")]
     ConnectNetwork = 4,
+    #[translate(en = "Participate Discussion")]
+    ParticipateDiscussion = 5,
 }
-
 
 #[derive(Debug, Clone, Eq, PartialEq, Default, serde::Serialize, serde::Deserialize)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
@@ -50,8 +51,32 @@ pub enum NotificationData {
     #[default]
     None,
 
-    InviteTeam { team_id: i64, group_id: i64, image_url: Option<String>, description: String },
-    InviteDiscussion { discussion_id: i64, image_url: Option<String>, description: String },
-    BoostingSpace { space_id: i64, image_url: Option<String>, description: String },
-    ConnectNetwork { requester_id: i64, image_url: String, description: String },
+    InviteTeam {
+        team_id: i64,
+        group_id: i64,
+        image_url: Option<String>,
+        description: String,
+    },
+    InviteDiscussion {
+        discussion_id: i64,
+        image_url: Option<String>,
+        description: String,
+    },
+    BoostingSpace {
+        space_id: i64,
+        image_url: Option<String>,
+        description: String,
+    },
+    ConnectNetwork {
+        requester_id: i64,
+        image_url: String,
+        description: String,
+    },
+
+    ParticipateDiscussion {
+        discussion_id: i64,
+        user_id: i64,
+        image_url: Option<String>,
+        description: String,
+    },
 }

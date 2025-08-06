@@ -11,17 +11,12 @@ pub async fn send_notification(
         NotificationData::ConnectNetwork { .. } => NotificationType::ConnectNetwork,
         NotificationData::InviteDiscussion { .. } => NotificationType::InviteDiscussion,
         NotificationData::InviteTeam { .. } => NotificationType::InviteTeam,
+        NotificationData::ParticipateDiscussion { .. } => NotificationType::ParticipateDiscussion,
         NotificationData::None => NotificationType::Unknown,
     };
 
     let repo = Notification::get_repository(pool.clone());
-    repo.insert_with_tx(
-            &mut **tx,
-            user_id,
-            content,
-            notification_type,
-            false
-        )
+    repo.insert_with_tx(&mut **tx, user_id, content, notification_type, false)
         .await
         .map_err(|e| {
             tracing::error!("Failed to insert notification: {:?}", e);

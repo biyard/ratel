@@ -34,6 +34,10 @@ pub struct Discussion {
     #[api_model(summary, action_by_id = update)]
     pub meeting_id: Option<String>,
 
+    #[api_model(summary, nullable, version = v0.4, type = INTEGER)]
+    #[serde(default)]
+    pub invite_status: Option<DiscussionInviteStatus>,
+
     #[api_model(summary, action_by_id = update)]
     pub pipeline_id: String,
     #[api_model(summary, action_by_id = update, nullable, version = v0.2)]
@@ -49,4 +53,12 @@ pub struct Discussion {
     #[api_model(summary, one_to_many = discussion_participants, foreign_key = discussion_id)]
     #[serde(default)]
     pub participants: Vec<DiscussionParticipant>,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub enum DiscussionInviteStatus {
+    #[default]
+    None = 1,
+    Invited = 2,
 }

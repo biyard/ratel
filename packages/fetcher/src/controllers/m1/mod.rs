@@ -1,6 +1,7 @@
 // mod assembly_members;
 mod bills;
 mod ch;
+mod discussions;
 mod eu;
 mod hk;
 mod log;
@@ -63,6 +64,12 @@ pub async fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Ro
         .nest(
             "/spaces",
             spaces::SpaceController::new(pool.clone()).await.route()?,
+        )
+        .nest(
+            "/discussions",
+            discussions::DiscussionController::new(pool.clone())
+                .await
+                .route()?,
         )
         .layer(middleware::from_fn(authorize_router)))
 }

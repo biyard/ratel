@@ -10,8 +10,8 @@ use by_axum::{
 use by_types::QueryResponse;
 use dto::*;
 
-use crate::utils::users::{extract_user_with_allowing_anonymous, extract_user_with_options};
 use crate::utils::notifications::send_notification;
+use crate::utils::users::{extract_user_with_allowing_anonymous, extract_user_with_options};
 use sqlx::postgres::PgRow;
 
 #[derive(Clone, Debug)]
@@ -76,6 +76,7 @@ impl SpaceDiscussionController {
                 name.clone(),
                 description,
                 None,
+                Some(DiscussionInviteStatus::None),
                 "".to_string(),
                 None,
                 None,
@@ -89,8 +90,8 @@ impl SpaceDiscussionController {
             .query()
             .map(DiscussionMember::from)
             .fetch_all(&mut *tx)
-            .await?;        
-        
+            .await?;
+
         for pt in pts {
             let _ = self.member_repo.delete_with_tx(&mut *tx, pt.id).await;
         }
@@ -100,16 +101,22 @@ impl SpaceDiscussionController {
                 .member_repo
                 .insert_with_tx(&mut *tx, id, participant)
                 .await;
-            
+
             // Send InviteDiscussion notification to the participant
             let notification_data = NotificationData::InviteDiscussion {
                 discussion_id: id,
                 image_url: None,
                 description: format!("You've been invited to join the discussion: {}", &name),
             };
-            
-            if let Err(e) = send_notification(&self.pool, &mut tx, participant, notification_data).await {
-                tracing::error!("Failed to send InviteDiscussion notification to user {}: {:?}", participant, e);
+
+            if let Err(e) =
+                send_notification(&self.pool, &mut tx, participant, notification_data).await
+            {
+                tracing::error!(
+                    "Failed to send InviteDiscussion notification to user {}: {:?}",
+                    participant,
+                    e
+                );
                 // Don't fail the entire operation if notification fails - just log the error
             }
         }

@@ -464,6 +464,7 @@ impl SpaceController {
                         new_disc.name,
                         new_disc.description,
                         None,
+                        Some(DiscussionInviteStatus::None),
                         "".to_string(),
                         None,
                         None,
