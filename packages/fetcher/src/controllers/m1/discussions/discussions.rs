@@ -122,7 +122,6 @@ GROUP BY p.id
                     .send_notification(
                         &self.pool,
                         discussion.space_id,
-                        discussion.id,
                         member.id,
                         member.email,
                         notification_data,
@@ -151,7 +150,6 @@ GROUP BY p.id
         &self,
         pool: &sqlx::Pool<sqlx::Postgres>,
         space_id: i64,
-        discussion_id: i64,
         user_id: i64,
         user_email: String,
         content: NotificationData,
@@ -176,12 +174,15 @@ GROUP BY p.id
         if email_regex.is_match(&user_email) {
             let _ = send_email(
                 user_email,
-        Content::builder()
+                Content::builder()
                     .data("Alert Meeting Start")
                     .build()
                     .unwrap(),
-            Content::builder()
-                    .data(format!("Your scheduled meeting starts in 10 minutes.\nAccess link: {}/spaces/{}/discussions/{}", conf.base_url, space_id, discussion_id))
+                Content::builder()
+                    .data(format!(
+                        "Your scheduled meeting starts in 10 minutes.\nAccess link: {}/spaces/{}",
+                        conf.base_url, space_id
+                    ))
                     .build()
                     .unwrap(),
             )
