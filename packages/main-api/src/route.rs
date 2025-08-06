@@ -23,10 +23,7 @@ macro_rules! wrap_api {
     ) => {
         $method($handler, |op| {
             op.summary($summary)
-                .description(concat!(
-                    $description,
-                    "\n\n**Authorization header required**\n\n`Authorization: Bearer <token>`"
-                ))
+                .description($description)
                 .response_with::<200, axum::Json<$success_ty>, _>(|res| {
                     res.description("Success response")
                 })
@@ -80,7 +77,7 @@ pub async fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Ro
                 register_users_by_noncelab_handler,
                 RegisterUserResponse,
                 "Register users by Noncelab",
-                "This endpoint allows you to register users by Noncelab.",
+                "This endpoint allows you to register users by Noncelab.\n\n**Authorization header required**\n\n`Authorization: Bearer <token>`",
             )
             .with_state(pool.clone()),
         ))
