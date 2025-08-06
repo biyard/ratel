@@ -1,12 +1,13 @@
 pub use bdk::prelude::*;
 
 use crate::*;
-
+use std::collections::{HashMap, HashSet};
+use uuid::Uuid;
 use validator::Validate;
 
 //TODO: action(like, comments, find_by_id, create_space), query_action
 #[derive(Validate)]
-#[api_model(base = "/v1/spaces", table = spaces, action = [create_space(user_ids = Vec<i64>)], action_by_id = [posting_space, update_space(discussions = Vec<DiscussionCreateRequest>, elearnings = Vec<ElearningCreateRequest>, surveys = Vec<SurveyCreateRequest>, drafts = Vec<SpaceDraftCreateRequest>), like(value = bool), share()])]
+#[api_model(base = "/v1/spaces", table = spaces, action = [create_space(user_ids = Vec<i64>)], action_by_id = [posting_space, update_space(discussions = Vec<DiscussionCreateRequest>, elearnings = Vec<ElearningCreateRequest>, surveys = Vec<SurveyCreateRequest>, drafts = Vec<SpaceDraftCreateRequest>, quiz = Option<NoticeQuizRequest>), like(value = bool), share()])]
 pub struct Space {
     #[api_model(summary, primary_key, read_action = [find_by_id])]
     pub id: i64,
@@ -28,10 +29,10 @@ pub struct Space {
     pub owner_id: i64,
     #[api_model(summary, many_to_one = industries)]
     pub industry_id: i64,
-    #[api_model(summary, action_by_id = [update_space], version = v0.2)]
+    #[api_model(summary, action_by_id = [update_space], action = [create_space], version = v0.2)]
     #[serde(default)]
     pub started_at: Option<i64>,
-    #[api_model(summary, action_by_id = [update_space], version = v0.2)]
+    #[api_model(summary, action_by_id = [update_space], action = [create_space], version = v0.2)]
     #[serde(default)]
     pub ended_at: Option<i64>,
 
@@ -114,6 +115,20 @@ pub struct Space {
     #[serde(default)]
     // Vec length should be 0 or 1.
     pub sprint_leagues: Vec<SprintLeague>,
+
+    #[api_model(summary, type=JSONB, nullable)]
+    #[serde(default)]
+    pub notice_quiz: Vec<NoticeQuestion>,
+
+    // Notice Type
+    #[api_model(summary, version = v0.1, type = INTEGER, action = [create_space], nullable)]
+    #[serde(default)]
+    pub booster_type: Option<BoosterType>,
+    
+    // The publishing scope of the space (Private or Public)
+    #[api_model(summary, version = v0.1, type = INTEGER, action_by_id = [update_space])]
+    #[serde(default)]
+    pub publishing_scope: PublishingScope,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]
@@ -135,6 +150,17 @@ pub enum SpaceType {
     Nft = 4,
     Commitee = 5,
     SprintLeague = 6,
+    Notice = 7,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub enum PublishingScope {
+    #[translate(ko = "Private", en = "Private")]
+    #[default]
+    Private = 1,
+    #[translate(ko = "Public", en = "Public")]
+    Public = 2,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]
@@ -155,6 +181,22 @@ pub struct File {
     pub ext: FileExtension,
     pub url: Option<String>,
 }
+
+#[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub enum BoosterType {
+    #[translate(ko = "No Boost", en = "No Boost")]
+    #[default]
+    NoBoost = 1,
+
+    #[translate(ko = "X2", en = "X2")]
+    X2 = 2,
+    #[translate(ko = "X10", en = "X10")]
+    X10 = 3,
+    #[translate(ko = "X100", en = "X100")]
+    X100 = 4,
+}
+
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq, Eq, Translate)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
@@ -177,4 +219,135 @@ pub enum FileExtension {
     MP4 = 8,
     #[translate(ko = "MOV", en = "MOV")]
     MOV = 9,
+}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq, Eq, Validate)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct NoticeQuestion {
+    pub id: String, // UUID as string
+    pub title: String,
+    pub images: Vec<String>,
+    pub options: Vec<NoticeOption>,
+}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct NoticeOption {
+    pub id: String, // UUID as string
+    pub content: String,
+}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq, Eq, Validate)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct NoticeQuizRequest {
+    pub questions: Vec<NoticeQuestionRequest>,
+}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq, Eq, Validate)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct NoticeQuestionRequest {
+    pub title: String,
+    pub images: Vec<String>,
+    pub options: Vec<NoticeOptionRequest>,
+}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq, Eq, Validate)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct NoticeOptionRequest {
+    pub content: String,
+    pub is_correct: bool,
+}
+
+// Legacy types for compatibility with existing controllers
+#[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq, Eq, Validate)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct NoticeQuestionWithAnswer {
+    pub title: String,
+    pub images: Vec<String>,
+    pub options: Vec<NoticeOptionWithAnswer>,
+}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct NoticeOptionWithAnswer {
+    pub content: String,
+    pub is_correct: bool,
+}
+
+// Result structure for quiz attempts
+#[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct NoticeResult {
+    pub total_questions: usize,
+    pub correct_answers: usize,
+    pub is_successful: bool,
+    pub questions_results: HashMap<String, bool>, // question_id -> is_correct
+}
+
+// Conversion function from request to entity with UUID generation
+pub fn convert_notice_quiz_request(request: &NoticeQuizRequest) -> (Vec<NoticeQuestion>, NoticeAnswer) {
+    let mut correct_answers = HashMap::new();
+    
+    let questions: Vec<NoticeQuestion> = request.questions.iter().map(|q_req| {
+        let question_id = Uuid::new_v4().to_string();
+        let mut correct_option_ids = HashSet::new();
+        
+        let options: Vec<NoticeOption> = q_req.options.iter().map(|o_req| {
+            let option_id = Uuid::new_v4().to_string();
+            
+            if o_req.is_correct {
+                correct_option_ids.insert(option_id.clone());
+            }
+            
+            NoticeOption {
+                id: option_id,
+                content: o_req.content.clone(),
+            }
+        }).collect();
+        
+        correct_answers.insert(question_id.clone(), correct_option_ids);
+        
+        NoticeQuestion {
+            id: question_id,
+            title: q_req.title.clone(),
+            images: vec![], // Empty for now, can be extended
+            options,
+        }
+    }).collect();
+    
+    (questions, NoticeAnswer { answers: correct_answers })
+}
+
+// Helper function to convert legacy NoticeQuestionWithAnswer to new structure
+pub fn convert_legacy_quiz_to_new(quiz_requests: &[NoticeQuestionWithAnswer]) -> (Vec<NoticeQuestion>, NoticeAnswer) {
+    let mut correct_answers = HashMap::new();
+    
+    let questions: Vec<NoticeQuestion> = quiz_requests.iter().map(|q_req| {
+        let question_id = Uuid::new_v4().to_string();
+        let mut correct_option_ids = HashSet::new();
+        
+        let options: Vec<NoticeOption> = q_req.options.iter().map(|o_req| {
+            let option_id = Uuid::new_v4().to_string();
+            
+            if o_req.is_correct {
+                correct_option_ids.insert(option_id.clone());
+            }
+            
+            NoticeOption {
+                id: option_id,
+                content: o_req.content.clone(),
+            }
+        }).collect();
+        
+        correct_answers.insert(question_id.clone(), correct_option_ids);
+        
+        NoticeQuestion {
+            id: question_id,
+            title: q_req.title.clone(),
+            images: q_req.images.clone(),
+            options,
+        }
+    }).collect();
+    
+    (questions, NoticeAnswer { answers: correct_answers })
 }

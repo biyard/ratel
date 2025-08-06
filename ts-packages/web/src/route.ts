@@ -22,6 +22,7 @@ export const route = {
   space: (spaceId: number) => `/spaces/${spaceId}`,
   commiteeSpaceById: (spaceId: number) => `/spaces/${spaceId}`,
   deliberationSpaceById: (spaceId: number) => `/spaces/${spaceId}`,
+  noticeSpaceById: (spaceId: number) => `/spaces/${spaceId}`,
   threadByFeedId: (feedId: number) => {
     return `/threads/${feedId}`;
   },
