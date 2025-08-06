@@ -190,6 +190,9 @@ export const ratelApi = {
     voteSprintLeague: (space_id: number, sprint_league_id: number) =>
       `/v1/spaces/${space_id}/sprint-leagues/${sprint_league_id}`,
   },
+  telegram: {
+    subscribe: () => '/v2/telegram/subscribe',
+  },
   graphql: {
     listNews: (size: number) => {
       return {
