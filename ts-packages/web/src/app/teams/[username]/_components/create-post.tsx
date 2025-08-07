@@ -278,15 +278,17 @@ export function CreatePost() {
         {/* Header */}
         <div className="flex items-center p-4 justify-between">
           <div className="flex items-center gap-3">
-            <div className="size-6 rounded-full">
+            {userInfo?.profile_url && userInfo?.profile_url !== '' ? (
               <Image
-                width={40}
-                height={40}
-                src={userInfo?.profile_url || '/default-profile.png'}
+                width={24}
+                height={24}
+                src={userInfo?.profile_url}
                 alt="Profile"
-                className="w-full h-full object-cover"
+                className="w-6 h-6 object-cover"
               />
-            </div>
+            ) : (
+              <div className="w-6 h-6 rounded-full border border-neutral-500 bg-neutral-600" />
+            )}
             <div className="flex items-center gap-2">
               <span className="text-white font-medium text-lg">
                 {userInfo?.nickname || 'Anonymous'}
