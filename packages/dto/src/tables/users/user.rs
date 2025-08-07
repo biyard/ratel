@@ -22,7 +22,7 @@ pub struct User {
     pub nickname: String,
     #[api_model(unique, read_action = by_principal)]
     pub principal: String,
-    #[api_model(action = [signup, email_signup], read_action = [check_email, login, login_by_password, find_by_email], unique)]
+    #[api_model(action = [signup, email_signup], read_action = [check_email, login, login_by_password], unique)]
     #[validate(email)]
     pub email: String,
     #[api_model(action = [signup, email_signup], nullable, action_by_id = edit_profile)]
@@ -38,7 +38,7 @@ pub struct User {
     pub user_type: UserType,
     #[api_model(version = v0.1, indexed)]
     pub parent_id: Option<i64>,
-    #[api_model(action = [signup, email_signup], read_action = [find_by_username], version = v0.1, indexed, unique)]
+    #[api_model(action = [signup, email_signup], version = v0.1, indexed, unique)]
     #[serde(default)]
     pub username: String,
 
@@ -97,10 +97,6 @@ pub struct User {
     #[api_model(version = v0.9, unique)]
     #[serde(default)]
     pub phone_number: Option<String>,
-
-    #[api_model(read_action = find_by_phone_number, skip)]
-    #[serde(default)]
-    pub phone: String,
 
     #[api_model(version = v0.8, unique)]
     #[serde(default)]

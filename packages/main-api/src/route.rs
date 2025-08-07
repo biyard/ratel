@@ -5,12 +5,15 @@ use crate::controllers::{
     m2::noncelab::users::register_users::{
         RegisterUserResponse, register_users_by_noncelab_handler,
     },
-    v2::telegram::subscribe::telegram_subscribe_handler,
-    v2::users::logout::logout_handler,
+    v2::{
+        telegram::subscribe::telegram_subscribe_handler,
+        users::{find_user::find_user_handler, logout::logout_handler},
+    },
 };
 use by_axum::axum;
 use dto::Result;
 
+use axum::native_routing::get as nget;
 use axum::native_routing::post as npost;
 
 macro_rules! wrap_api {
@@ -59,7 +62,10 @@ pub async fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Ro
             "/m1",
             controllers::m1::MenaceController::route(pool.clone())?,
         )
-        .native_route("/v2/users/logout", npost(logout_handler))
+        .native_route("/v2/users/logout", npost(logout_handler))   
+        .native_route(
+            "/v2/users",nget(find_user_handler).with_state(pool.clone()),
+        )
         // Admin APIs
         .route(
             "/v2/telegram/subscribe",

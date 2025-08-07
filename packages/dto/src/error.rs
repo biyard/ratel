@@ -26,6 +26,7 @@ pub enum Error {
     UpdateNotAllowed,
     Unknown(String),
     Klaytn(String),
+    InvalidUserQuery(String),
 
     #[translate(en = "Could not find any resource", ko = "리소스를 찾을 수 없습니다.")]
     NotFound,
