@@ -7,17 +7,16 @@ import { Input } from '@/components/ui/input';
 import { Row } from '@/components/ui/row';
 import { Textarea } from '@/components/ui/textarea';
 import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
-import { userEditProfileRequest } from '@/lib/api/models/user';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { useApiCall } from '@/lib/api/use-send';
 import { checkString } from '@/lib/string-filter-utils';
-import { showErrorToast } from '@/lib/toast';
 import { route } from '@/route';
 import { useRouter } from 'next/navigation';
-import React, { useState } from 'react';
+import React from 'react';
 import WalletSummary from './_components/wallet-summary';
 import Image from 'next/image';
 import { logger } from '@/lib/logger';
+import { useSettingsContext } from './providers.client';
 
 export default function MyProfilePage() {
   const { post } = useApiCall();
@@ -25,36 +24,17 @@ export default function MyProfilePage() {
   const { data: user } = userinfo;
   const router = useRouter();
 
-  const [profileUrl, setProfileUrl] = useState(user?.profile_url || '');
-  const [nickname, setNickname] = useState(user?.nickname);
-  const [htmlContents, setHtmlContents] = useState(user?.html_contents);
-  const [showWalletConnect, setShowWalletConnect] = useState(false);
-
-  const handleContents = (evt: React.FormEvent<HTMLTextAreaElement>) => {
-    setHtmlContents(evt.currentTarget.value);
-  };
-
-  const handleNickname = (evt: React.FormEvent<HTMLInputElement>) => {
-    setNickname(evt.currentTarget.value);
-  };
-
-  const handleProfileUrl = (url: string) => {
-    setProfileUrl(url);
-  };
-
-  const handleSave = async () => {
-    if (checkString(nickname) || checkString(htmlContents)) {
-      showErrorToast('Please remove the test keyword');
-      return;
-    }
-
-    post(
-      ratelApi.users.editProfile(user!.id),
-      userEditProfileRequest(nickname!, htmlContents!, profileUrl),
-    );
-    userinfo.refetch();
-    router.push(route.home());
-  };
+  const {
+    profileUrl,
+    handleProfileUrl,
+    nickname,
+    handleNickname,
+    htmlContents,
+    handleContents,
+    showWalletConnect,
+    handleShowWalletConnect,
+    handleSave,
+  } = useSettingsContext();
 
   return (
     <div className="w-full max-tablet:w-full flex flex-col gap-10 items-center">
@@ -86,7 +66,7 @@ export default function MyProfilePage() {
             <Button
               variant={'rounded_secondary'}
               className="py-0 rounded-sm"
-              onClick={() => setShowWalletConnect(!showWalletConnect)}
+              onClick={() => handleShowWalletConnect(!showWalletConnect)}
             >
               {showWalletConnect ? 'Hide' : 'Change'}
             </Button>
@@ -107,7 +87,7 @@ export default function MyProfilePage() {
               });
 
               userinfo.refetch();
-              setShowWalletConnect(false);
+              handleShowWalletConnect(false);
             }}
           />
         </Row>
@@ -137,7 +117,10 @@ export default function MyProfilePage() {
                 : 'cursor-pointer bg-primary'
             }
             variant={'rounded_primary'}
-            onClick={handleSave}
+            onClick={async () => {
+              await handleSave();
+              router.push(route.home());
+            }}
           >
             Save
           </Button>
