@@ -18,7 +18,8 @@ use by_axum::{
     aide,
     auth::Authorization,
     axum::{
-        Extension, Json,
+        Extension,
+        Json,
         extract::State,
         // http::StatusCode,
         // response::{IntoResponse, Response},
@@ -44,6 +45,7 @@ pub struct SpaceController {
     discussion_member_repo: DiscussionMemberRepository,
     elearning_repo: ElearningRepository,
     survey_repo: SurveyRepository,
+    space_group_repo: SpaceGroupRepository,
     space_draft_repo: SpaceDraftRepository,
     pool: sqlx::Pool<sqlx::Postgres>,
 }
@@ -135,6 +137,7 @@ impl SpaceController {
 
         Ok(space)
     }
+
 
     async fn like_space(&self, id: i64, auth: Option<Authorization>, value: bool) -> Result<Space> {
         let user_id = extract_user_id(&self.pool, auth).await?;
@@ -687,7 +690,7 @@ impl SpaceController {
         let user_id = extract_user_id(&self.pool, auth.clone()).await?;
 
         // Get the space to verify existence and fetch feed ID
-        let space = self.get_space_by_id(None, space_id).await?;
+        let space = self.get_space_by_id(auth.clone(), space_id).await?;
 
         let feed = Feed::query_builder(user_id)
             .id_equals(space.feed_id)
@@ -816,6 +819,44 @@ impl SpaceController {
             share_repo.delete_with_tx(&mut *tx, share.id).await?;
         }
 
+        // === DELETE SPACE GROUPS ===
+        let groups = SpaceGroup::query_builder()
+            .space_id_equals(space_id)
+            .query()
+            .map(SpaceGroup::from)
+            .fetch_all(&self.pool)
+            .await?;
+           for group in groups {
+            self.space_group_repo.delete_with_tx(&mut *tx, group.id).await?; // Changed to use self.space_group_repo
+        }
+
+       
+
+        // === DELETE SURVEY RESPONSES ===
+        let response_repo = SurveyResponse::get_repository(self.pool.clone());
+        let responses = SurveyResponse::query_builder()
+            .space_id_equals(space_id)
+            .query()
+            .map(SurveyResponse::from)
+            .fetch_all(&self.pool)
+            .await?;
+        for resp in responses {
+            response_repo.delete_with_tx(&mut *tx, resp.id).await?;
+        }
+
+        // === DELETE SPACE COMMENTS ===
+        let comment_repo = SpaceComment::get_repository(self.pool.clone());
+        let comments = SpaceComment::query_builder()
+            // .space_id_equals(space_id)
+            .id_equals(space_id) 
+            .query()
+            .map(SpaceComment::from)
+            .fetch_all(&self.pool)
+            .await?;
+        for comment in comments {
+            comment_repo.delete_with_tx(&mut *tx, comment.id).await?;
+        }
+
         // ===  DELETE THE SPACE ITSELF ===
         self.repo.delete_with_tx(&mut *tx, space_id).await?;
 
@@ -834,6 +875,7 @@ impl SpaceController {
         let discussion_member_repo = DiscussionMember::get_repository(pool.clone());
         let elearning_repo = Elearning::get_repository(pool.clone());
         let survey_repo = Survey::get_repository(pool.clone());
+        let space_group_repo = SpaceGroup::get_repository(pool.clone()); 
 
         Self {
             repo,
@@ -845,6 +887,7 @@ impl SpaceController {
             survey_repo,
             space_member_repo,
             space_draft_repo,
+            space_group_repo,
         }
     }
 
