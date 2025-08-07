@@ -47,8 +47,7 @@ export default function InviteMemberPopup({
         if (checkString(input)) continue;
 
         const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input);
-        const isPhone =
-          /^\d{3}-\d{3,4}-\d{4}$/.test(input) || /^\d{10,11}$/.test(input);
+        const isPhone = /^\+?[0-9]\d{7,14}$/.test(input);
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let data: any = null;
@@ -92,7 +91,7 @@ export default function InviteMemberPopup({
           <SearchInput
             value={searchValue}
             placeholder={
-              'Enter email, username, or phone number (ex: john@example.com or john or 010-1234-5678)'
+              'Enter email, username, or phone number (ex: john@example.com or john or 01012345678)'
             }
             setValue={async (value) => {
               setValue(value, false);
