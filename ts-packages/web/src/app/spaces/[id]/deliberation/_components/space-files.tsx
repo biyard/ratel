@@ -8,16 +8,20 @@ import { downloadPdfFromUrl } from '@/lib/pdf-utils';
 import { checkString } from '@/lib/string-filter-utils';
 import SpaceFile from '../../_components/space_file';
 
-import Jpg from '@/assets/icons/files/jpg.svg';
-import Png from '@/assets/icons/files/png.svg';
-import Pdf from '@/assets/icons/files/pdf.svg';
-import Zip from '@/assets/icons/files/zip.svg';
-import Word from '@/assets/icons/files/docx.svg';
-import Pptx from '@/assets/icons/files/pptx.svg';
-import Excel from '@/assets/icons/files/xlsx.svg';
 import FileUploaderMetadata from '@/components/file-uploader-metadata';
 import { Upload } from 'lucide-react';
-import { CircleClose } from '@/components/icons';
+import {
+  CircleClose,
+  Excel,
+  Jpg,
+  MOV,
+  MP4,
+  Pdf,
+  Png,
+  Pptx,
+  Word,
+  Zip,
+} from '@/components/icons';
 
 export interface SpaceFilesProps {
   isEdit?: boolean;
@@ -49,6 +53,7 @@ export default function SpaceFiles({
           {isEdit ? (
             <FileUploaderMetadata
               isImage={false}
+              isMedia={true}
               onUploadSuccess={(file) => {
                 onadd(file);
               }}
@@ -104,6 +109,7 @@ function EditableFile({
   file: FileInfo;
   onclick: () => void;
 }) {
+  console.log('EditableFile:', file);
   return (
     <div className="cursor-pointer flex flex-row justify-start items-center w-full gap-2 p-4 bg-neutral-800 rounded-[8px]">
       <div className="[&>svg]:size-9">
@@ -119,6 +125,10 @@ function EditableFile({
           <Word />
         ) : file.ext === 'PPTX' ? (
           <Pptx />
+        ) : file.ext === 'MP4' ? (
+          <MP4 />
+        ) : file.ext === 'MOV' ? (
+          <MOV />
         ) : (
           <Excel />
         )}

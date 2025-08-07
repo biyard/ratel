@@ -1,22 +1,25 @@
 'use client';
 
 import React, { useContext } from 'react';
-import SpaceSideMenu from './_components/space_side_menu';
+import SpaceSideMenu from './_components/space-side-menu';
 import ThreadPage from './_components/thread';
 import DeliberationPage from './_components/deliberation';
-import PollPage from './_components/poll';
+
 import FinalConsensusPage from './_components/final-consensus';
 
 import ClientProviders, {
+  useDeliberationFeed,
   useDeliberationSpace,
   useDeliberationSpaceContext,
 } from './provider.client';
 import { DeliberationTab } from './types';
-import AnalyzePage from './_components/analyze';
-import SpaceHeader from './_components/space-header';
 import { TeamContext } from '@/lib/contexts/team-context';
 import { SpaceStatus } from '@/lib/api/models/spaces';
 import { useUserInfo } from '@/app/(social)/_hooks/user';
+import SpaceHeader from '../_components/header';
+import { SpaceProvider } from '../_components/header/provider';
+import DeliberationAnalyzePage from './_components/analyze-tab';
+import { DeliberationSurveyPage } from './_components/survey-tab';
 
 export default function DeliberationSpacePage() {
   return (
@@ -28,6 +31,8 @@ export default function DeliberationSpacePage() {
 
 function Page() {
   const space = useDeliberationSpace();
+  const feed = useDeliberationFeed(space.feed_id);
+  const context = useDeliberationSpaceContext();
   const { selectedType } = useDeliberationSpaceContext();
 
   const { teams } = useContext(TeamContext);
@@ -48,7 +53,9 @@ function Page() {
   return (
     <div className="flex flex-col w-full gap-6.25">
       <div className="flex flex-row w-full">
-        <SpaceHeader />
+        <SpaceProvider value={context}>
+          <SpaceHeader space={space} feed={feed} />
+        </SpaceProvider>
       </div>
       <div className="flex flex-row w-full h-full gap-5">
         <div className="flex-1 flex w-full">
@@ -58,11 +65,11 @@ function Page() {
             ) : selectedType == DeliberationTab.DELIBERATION ? (
               <DeliberationPage />
             ) : selectedType == DeliberationTab.POLL ? (
-              <PollPage />
+              <DeliberationSurveyPage space={space} />
             ) : selectedType == DeliberationTab.RECOMMANDATION ? (
               <FinalConsensusPage />
             ) : (
-              <AnalyzePage />
+              <DeliberationAnalyzePage />
             )}
             <SpaceSideMenu />
           </div>

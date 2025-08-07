@@ -10,7 +10,7 @@ import {
 } from '@/lib/api/ratel_api.server';
 import ClientProviders from './providers.client';
 import { getServerQueryClient } from '@/lib/query-utils.server';
-import { dehydrate } from '@tanstack/react-query';
+import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { client } from '@/lib/apollo';
 import { FeedStatus } from '@/lib/api/models/feeds';
@@ -63,11 +63,8 @@ export default async function Provider({ children }: { children: ReactNode }) {
   const apolloCache = JSON.stringify(apolloClient.extract());
 
   return (
-    <ClientProviders
-      dehydratedState={dehydratedState}
-      apolloCache={apolloCache}
-    >
-      {children}
+    <ClientProviders apolloCache={apolloCache}>
+      <HydrationBoundary state={dehydratedState}>{children}</HydrationBoundary>
     </ClientProviders>
   );
 }
