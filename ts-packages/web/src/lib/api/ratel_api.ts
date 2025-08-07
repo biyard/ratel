@@ -178,12 +178,10 @@ export const ratelApi = {
     getTotalInfo: (page: number, size: number) =>
       `/v1/totals?param-type=query&bookmark=${page}&size=${size}`,
     getUserInfo: () => '/v1/users?action=user-info',
-    getUserByEmail: (email: string) =>
-      `/v1/users?param-type=read&action=find-by-email&email=${email}`,
-    getUserByUsername: (username: string) =>
-      `/v1/users?param-type=read&action=find-by-username&username=${username}`,
+    getUserByEmail: (email: string) => `/v2/users?email=${email}`,
+    getUserByUsername: (username: string) => `/v2/users?username=${username}`,
     getUserByPhoneNumber: (phoneNumber: string) =>
-      `/v1/users?param-type=read&action=find-by-phone-number&phone=${phoneNumber}`,
+      `/v2/users?phone-number=${phoneNumber}`,
 
     signup: () => '/v1/users?action=signup',
     editProfile: (user_id: number) => `/v1/users/${user_id}`,
