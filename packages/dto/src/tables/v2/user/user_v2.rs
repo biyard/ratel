@@ -2,15 +2,12 @@ use by_types::QueryResponse;
 
 use bdk::prelude::*;
 
-use crate::{Badge, Group};
-
-use super::Follower;
-use super::Team;
 use crate::GroupRepositoryQueryBuilder;
+use crate::{Badge, Follower, Group, Membership, Team, UserType};
 
 #[derive(validator::Validate)]
-#[api_model(base = "/v1/users", read_action = [user_info], table = users, action = [signup(telegram_raw = Option<String>), email_signup(telegram_raw = Option<String>), update_telegram_id(telegram_raw = Option<String>)], iter_type=QueryResponse)]
-pub struct User {
+#[api_model(base = "/v2/users", table = users, iter_type=QueryResponse)]
+pub struct UserV2 {
     #[api_model(primary_key)]
     pub id: i64,
     #[api_model(auto = insert)]
@@ -18,27 +15,21 @@ pub struct User {
     #[api_model(auto = [insert, update])]
     pub updated_at: i64,
 
-    #[api_model(action = [signup, email_signup], action_by_id = edit_profile)]
     pub nickname: String,
-    #[api_model(unique, read_action = by_principal)]
     pub principal: String,
-    #[api_model(action = [signup, email_signup], read_action = [check_email, login, login_by_password, find_by_email], unique)]
-    #[validate(email)]
+    #[api_model(unique)]
     pub email: String,
-    #[api_model(action = [signup, email_signup], nullable, action_by_id = edit_profile)]
-    #[validate(url)]
+    #[api_model(nullable)]
     pub profile_url: String,
 
-    #[api_model(action = [signup, email_signup])]
     pub term_agreed: bool,
-    #[api_model(action = [signup, email_signup])]
     pub informed_agreed: bool,
 
     #[api_model(type = INTEGER, indexed, version = v0.1)]
     pub user_type: UserType,
     #[api_model(version = v0.1, indexed)]
     pub parent_id: Option<i64>,
-    #[api_model(action = [signup, email_signup], read_action = [find_by_username], version = v0.1, indexed, unique)]
+    #[api_model(version = v0.1, indexed, unique)]
     #[serde(default)]
     pub username: String,
 
@@ -59,7 +50,7 @@ pub struct User {
     pub teams: Vec<Team>,
 
     // profile contents
-    #[api_model(version = v0.2, action_by_id = edit_profile)]
+    #[api_model(version = v0.2)]
     #[serde(default)]
     pub html_contents: String,
 
@@ -75,11 +66,11 @@ pub struct User {
     #[serde(default)]
     pub badges: Vec<Badge>,
 
-    #[api_model(version = v0.3, indexed, unique, action = signup, action = update_evm_address)]
+    #[api_model(version = v0.3, indexed, unique)]
     #[serde(default)]
     pub evm_address: String,
 
-    #[api_model(version = v0.4, action = [email_signup], read_action = login_by_password)]
+    #[api_model(version = v0.4)]
     #[serde(default)]
     pub password: String,
 
@@ -98,49 +89,7 @@ pub struct User {
     #[serde(default)]
     pub phone_number: Option<String>,
 
-    #[api_model(read_action = find_by_phone_number, skip)]
-    #[serde(default)]
-    pub phone: String,
-
     #[api_model(version = v0.8, unique)]
     #[serde(default)]
     pub telegram_id: Option<i64>,
-
-    #[api_model(read_action = login_by_telegram, skip)]
-    #[serde(default)]
-    pub telegram_raw: String,
-}
-
-impl User {
-    pub fn is_admin(&self) -> bool {
-        self.groups
-            .iter()
-            .any(|g| g.permissions == 0xffffffffffffffffu64 as i64)
-    }
-}
-
-#[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
-pub enum UserType {
-    #[default]
-    Individual = 1,
-    Team = 2,
-    Bot = 3,
-    Anonymous = 99,
-}
-
-#[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
-pub enum Membership {
-    #[default]
-    #[translate(en = "Free", ko = "일반")]
-    Free = 1,
-    #[translate(en = "Starter", ko = "스타터")]
-    Paid1 = 2,
-    #[translate(en = "Premium", ko = "프리미엄")]
-    Paid2 = 3,
-    #[translate(en = "VIP", ko = "VIP")]
-    Paid3 = 4,
-    #[translate(en = "Admin", ko = "관리자")]
-    Admin = 99,
 }

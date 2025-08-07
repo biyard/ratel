@@ -1,5 +1,5 @@
 use dto::{
-    Error, Result, User,
+    Error, Result, UserV2,
     by_axum::axum::{
         Json,
         extract::{Query, State},
@@ -24,14 +24,14 @@ pub async fn find_user_handler(
         phone_number,
         email,
     }): Query<UserQuery>,
-) -> Result<Json<User>> {
+) -> Result<Json<UserV2>> {
     if let Some(username) = username {
         debug!("Finding user by username: {:?}", username);
 
-        let user = User::query_builder()
+        let user: UserV2 = UserV2::query_builder()
             .username_equals(username)
             .query()
-            .map(User::from)
+            .map(UserV2::from)
             .fetch_one(&pool)
             .await
             .map_err(|e| {
@@ -45,10 +45,10 @@ pub async fn find_user_handler(
     if let Some(phone_number) = phone_number {
         debug!("Finding user by phone number: {:?}", phone_number);
 
-        let user = User::query_builder()
+        let user = UserV2::query_builder()
             .phone_number_equals(phone_number)
             .query()
-            .map(User::from)
+            .map(UserV2::from)
             .fetch_one(&pool)
             .await
             .map_err(|e| {
@@ -64,10 +64,10 @@ pub async fn find_user_handler(
 
         let cleaned_email = email.replace(' ', "+");
 
-        let user = User::query_builder()
+        let user = UserV2::query_builder()
             .email_equals(cleaned_email)
             .query()
-            .map(User::from)
+            .map(UserV2::from)
             .fetch_one(&pool)
             .await
             .map_err(|e| {
