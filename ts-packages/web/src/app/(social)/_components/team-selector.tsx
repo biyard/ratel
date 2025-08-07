@@ -85,7 +85,7 @@ export default function TeamSelector({ onSelect, team }: TeamSelectorProps) {
                   >
                     {team.profile_url && team.profile_url !== '' ? (
                       <Image
-                        src={team.profile_url || '/default-profile.png'}
+                        src={team.profile_url}
                         alt={team.nickname}
                         width={24}
                         height={24}
