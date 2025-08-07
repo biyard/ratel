@@ -1,10 +1,10 @@
 'use client';
 import React from 'react';
 import { useDeliberationSpaceContext } from '../provider.client';
-import ObjectiveResponse from './dashboard/objective_response';
-import SubjectiveResponse from './dashboard/subjective_response';
+import ObjectiveResponse from '../../_components/dashboard/objective_response';
+import SubjectiveResponse from '../../_components/dashboard/subjective_response';
 import { logger } from '@/lib/logger';
-import SummaryReport from './dashboard/summary_report';
+import SummaryReport from '../../_components/dashboard/summary_report';
 
 enum AnswerType {
   SingleChoice = 'single_choice',

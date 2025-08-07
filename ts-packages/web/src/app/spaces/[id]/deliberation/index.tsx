@@ -9,13 +9,16 @@ import FinalConsensusPage from './_components/final-consensus';
 import ClientProviders, {
   useDeliberationSpace,
   useDeliberationSpaceContext,
+  useDeliberationFeed
 } from './provider.client';
 import { DeliberationTab } from './types';
 import AnalyzePage from './_components/analyze';
-import SpaceHeader from './_components/space-header';
+// import SpaceHeader from './_components/space-header';
 import { TeamContext } from '@/lib/contexts/team-context';
 import { SpaceStatus } from '@/lib/api/models/spaces';
 import { useUserInfo } from '@/app/(social)/_hooks/user';
+import { SpaceProvider } from '../_components/header/provider';
+import SpaceHeader from '../_components/header/indesx';
 
 export default function DeliberationSpacePage() {
   return (
@@ -26,7 +29,27 @@ export default function DeliberationSpacePage() {
 }
 
 function Page() {
+  // const space = useDeliberationSpace();
+  // const { selectedType } = useDeliberationSpaceContext();
+
+  // const { teams } = useContext(TeamContext);
+  // const authorId = space?.author[0].id;
+  // const selectedTeam = teams.some((t) => t.id === authorId);
+  // const { data: userInfo } = useUserInfo();
+
+  // const userId = userInfo ? userInfo.id : 0;
+
+  // if (
+  //   space.status === SpaceStatus.Draft &&
+  //   !space.author.some((a) => a.id === userId) &&
+  //   !selectedTeam
+  // ) {
+  //   return <div>No Authorized User</div>;
+  // }
+
   const space = useDeliberationSpace();
+  const feed = useDeliberationFeed(space.feed_id);
+  const context = useDeliberationSpaceContext();
   const { selectedType } = useDeliberationSpaceContext();
 
   const { teams } = useContext(TeamContext);
@@ -47,7 +70,9 @@ function Page() {
   return (
     <div className="flex flex-col w-full gap-6.25">
       <div className="flex flex-row w-full">
-        <SpaceHeader />
+        <SpaceProvider value={context}>
+          <SpaceHeader space={space} feed={feed} />
+        </SpaceProvider>
       </div>
       <div className="flex flex-row w-full h-full gap-5">
         <div className="flex-1 flex w-full">

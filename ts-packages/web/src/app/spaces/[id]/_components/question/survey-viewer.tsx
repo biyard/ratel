@@ -9,7 +9,7 @@ import ObjectiveViewer from './_component/viewer/objective-viewer';
 import SubjectiveViewer from './_component/viewer/subjective-viewer';
 import DropdownViewer from './_component/viewer/dropdown-viewer';
 import LinearScaleViewer from './_component/viewer/linear-scale-viewer';
-import { useDeliberationSpaceContext } from '../../provider.client';
+import { useDeliberationSpaceContext } from '../../deliberation/provider.client';
 
 interface Question {
   title: string;

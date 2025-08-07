@@ -2,10 +2,10 @@
 
 import { Question, ShortAnswerQuestion } from '@/lib/api/models/survey';
 import React, { useState } from 'react';
-import SurveyQuestionEditor from './question/survey-question-editor';
-import { AnswerType } from './question/answer-type-select';
+import SurveyQuestionEditor from '../../_components/question/survey-question-editor';
+import { AnswerType } from '../../_components/question/answer-type-select';
 import { v4 as uuidv4 } from 'uuid';
-import SurveyViewer from './question/survey-viewer';
+import SurveyViewer from '../../_components/question/survey-viewer';
 import { Add } from './add';
 import { SpaceStatus } from '@/lib/api/models/spaces';
 import { useDeliberationSpaceContext } from '../provider.client';
