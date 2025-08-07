@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
-
 import * as XLSX from 'xlsx';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useSpaceByIdContext } from '../providers.client';
@@ -480,13 +479,11 @@ export default function ClientProviders({
     try {
       await post(ratelApi.spaces.deleteSpaceById(spaceId), { delete: {} });
       router.push('/');
-      showSuccessToast('Space deleted successful');
+      showSuccessToast('Space deleted successfully');
     } catch (error) {
-      logger.debug('Error deleting space', error);
+      logger.debug('Failed to delete space:', error);
       logger.error('Error deleting space:', error);
-      showErrorToast(
-        'Error Deleting space! Ensure you are authorized to perform this operation.',
-      );
+      showErrorToast('Failed to delete space. Please try again later.');
     }
   };
 

@@ -124,15 +124,44 @@ export default function SpaceHeader() {
             )}
 
             <div className="relative" ref={dropdownRef}>
-              {' '}
               <button
                 onClick={toggle}
+                aria-expanded={isOpen}
+                aria-label="Space options menu"
+                aria-haspopup="menu"
                 className="w-fit p-2 rounded-md bg-neutral-800"
+                onKeyDown={(e) => {
+                  if (
+                    e.key === 'Enter' ||
+                    e.key === ' ' ||
+                    e.key === 'ArrowDown'
+                  ) {
+                    e.preventDefault();
+                    toggle();
+                    if (!isOpen) {
+                      setTimeout(() => {
+                        const firstMenuItem =
+                          dropdownRef.current?.querySelector(
+                            '[role="menuitem"]:not([aria-disabled="true"])',
+                          );
+                        (firstMenuItem as HTMLElement)?.focus();
+                      }, 0);
+                    }
+                  }
+                }}
               >
                 <Extra />
               </button>
               {isOpen && (
-                <div className="absolute top-full mt-2 right-0 z-50">
+                <div
+                  role="menu"
+                  className="absolute top-full mt-2 right-0 z-50"
+                  onBlur={(e) => {
+                    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                      close();
+                    }
+                  }}
+                >
                   <DropdownMenu onclose={close} ondelete={handleDelete} />
                 </div>
               )}
