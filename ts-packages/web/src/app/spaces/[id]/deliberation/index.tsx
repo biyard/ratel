@@ -18,7 +18,7 @@ import { TeamContext } from '@/lib/contexts/team-context';
 import { SpaceStatus } from '@/lib/api/models/spaces';
 import { useUserInfo } from '@/app/(social)/_hooks/user';
 import { SpaceProvider } from '../_components/header/provider';
-import SpaceHeader from '../_components/header/indesx';
+import SpaceHeader from '../_components/header';
 
 export default function DeliberationSpacePage() {
   return (
