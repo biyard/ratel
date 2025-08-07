@@ -17,6 +17,7 @@ export interface SpaceContextType {
   handleShare: () => void;
   handlePostingSpace: () => Promise<void>;
   handleUpdateTitle: (value: string) => void;
+  handleDelete: () => Promise<void>;
 }
 
 export const Context = createContext<SpaceContextType | undefined>(undefined);
