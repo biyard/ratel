@@ -47,7 +47,7 @@ export function ProposerProfile({
     <div className="flex flex-row w-fit gap-2 justify-between items-center">
       {profileUrl && profileUrl !== '' ? (
         <Image
-          src={profileUrl || '/default-profile.png'}
+          src={profileUrl}
           alt={proposerName}
           width={20}
           height={20}
