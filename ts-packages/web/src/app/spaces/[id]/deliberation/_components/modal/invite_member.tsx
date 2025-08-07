@@ -211,7 +211,7 @@ function SelectedUserInfo({
       <Clear
         width={24}
         height={24}
-        className="w-6 h-6 cursor-pointer"
+        className="w-6 h-6 cursor-pointer [&>path]:stroke-neutral-800"
         onClick={onremove}
       />
     </div>

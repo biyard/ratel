@@ -249,7 +249,7 @@ export function UserBadge({
 export function SpaceTag() {
   return (
     <span className="flex flex-row justify-start items-center px-2 border border-primary/50 bg-transparent gap-1 rounded-sm">
-      <Palace className="w-3.5 h-3.5 [&_g>path:nth-child(n+2)]:stroke-primary" />
+      <Palace className="w-3.5 h-3.5 [&>path]:stroke-primary [&_g>path:nth-child(n+2)]:stroke-primary" />
       <div className="font-semibold text-xs/[25px] text-primary">SPACE</div>
     </span>
   );
