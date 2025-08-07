@@ -66,6 +66,7 @@ type ContextType = {
   handlePostingSpace: () => Promise<void>;
   handleEdit: () => void;
   handleSave: () => Promise<void>;
+  handleDelete: () => Promise<void>;
 };
 
 export const Context = createContext<ContextType | undefined>(undefined);
@@ -393,6 +394,18 @@ export default function ClientProviders({
     setSelectedType(type);
   };
 
+  const handleDelete = async () => {
+    try {
+      await post(ratelApi.spaces.deleteSpaceById(spaceId), { delete: {} });
+      router.push('/');
+      showSuccessToast('Space deleted successfully');
+    } catch (error) {
+      logger.debug('Failed to delete space:', error);
+      logger.error('Error deleting space:', error);
+      showErrorToast('Failed to delete space. Please try again later.');
+    }
+  };
+
   const handleSave = async () => {
     for (let i = 0; i < survey.surveys.length; i++) {
       const question = survey.surveys[i].questions;
@@ -491,6 +504,7 @@ export default function ClientProviders({
         handleSave,
         handleLike,
         handleShare,
+        handleDelete,
       }}
     >
       {children}
