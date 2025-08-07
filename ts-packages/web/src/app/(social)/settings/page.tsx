@@ -1,8 +1,6 @@
-'use client';
-
 import React from 'react';
-import MyInfo from './_components/tab/my-info';
+import SettingPage from './_components/setting';
 
 export default function MyProfilePage() {
-  return <MyInfo />;
+  return <SettingPage />;
 }

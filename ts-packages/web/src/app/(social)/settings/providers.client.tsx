@@ -1,5 +1,6 @@
 'use client';
 
+import { config } from '@/config';
 import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { userEditProfileRequest } from '@/lib/api/models/user';
 import { ratelApi } from '@/lib/api/ratel_api';
@@ -7,6 +8,16 @@ import { useApiCall } from '@/lib/api/use-send';
 import { checkString } from '@/lib/string-filter-utils';
 import { showErrorToast } from '@/lib/toast';
 import React, { createContext, useContext, useState } from 'react';
+
+type TabKey = 'info' | 'inventory' | 'setting';
+
+const tabItems: { label: string; key: TabKey }[] = [
+  { label: 'My Info', key: 'info' },
+  // { label: 'My Inventory', key: 'inventory' },
+  ...(config.experiment
+    ? ([{ label: 'Setting', key: 'setting' }] as const)
+    : []),
+];
 
 type ContextType = {
   profileUrl: string;
@@ -17,6 +28,9 @@ type ContextType = {
   handleContents: (evt: React.FormEvent<HTMLTextAreaElement>) => void;
   showWalletConnect: boolean;
   handleShowWalletConnect: (walletConnect: boolean) => void;
+  activeTab: TabKey;
+  handleActiveTab: (tab: TabKey) => void;
+  tabItems: { label: string; key: TabKey }[];
   handleSave: () => void;
 };
 
@@ -34,6 +48,12 @@ export default function ClientProviders({
   const [nickname, setNickname] = useState(user?.nickname);
   const [htmlContents, setHtmlContents] = useState(user?.html_contents);
   const [showWalletConnect, setShowWalletConnect] = useState(false);
+  const [activeTab, setActiveTab] = useState<TabKey>('info');
+
+  const handleActiveTab = (tab: TabKey) => {
+    setActiveTab(tab);
+  };
+
   const handleContents = (evt: React.FormEvent<HTMLTextAreaElement>) => {
     setHtmlContents(evt.currentTarget.value);
   };
@@ -73,6 +93,9 @@ export default function ClientProviders({
         handleContents,
         showWalletConnect,
         handleShowWalletConnect,
+        activeTab,
+        handleActiveTab,
+        tabItems,
         handleSave,
       }}
     >

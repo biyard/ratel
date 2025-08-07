@@ -10,6 +10,7 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import 'react-toastify/dist/ReactToastify.css';
 import { prefetchUserInfo } from './(social)/_hooks/user';
 import { getServerQueryClient } from '@/lib/query-utils.server';
+import { ThemeProvider } from './_providers/ThemeProvider';
 
 const raleway = Raleway({
   variable: '--font-raleway',
@@ -34,13 +35,15 @@ export default async function RootLayout({
       </head>
       <body className={`${raleway.variable} antialiased bg-bg`}>
         <CookieProvider>
-          <Providers dehydratedState={dehydratedState}>
-            <HydrationBoundary state={dehydratedState}>
-              <ClientLayout>{children}</ClientLayout>
-              <PopupZone />
-            </HydrationBoundary>
-            <ReactQueryDevtools initialIsOpen={false} />
-          </Providers>
+          <ThemeProvider>
+            <Providers dehydratedState={dehydratedState}>
+              <HydrationBoundary state={dehydratedState}>
+                <ClientLayout>{children}</ClientLayout>
+                <PopupZone />
+              </HydrationBoundary>
+              <ReactQueryDevtools initialIsOpen={false} />
+            </Providers>
+          </ThemeProvider>
         </CookieProvider>
         <ToastContainer />
       </body>
