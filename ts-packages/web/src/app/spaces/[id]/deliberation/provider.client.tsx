@@ -10,8 +10,6 @@ import {
   DeliberationTab,
   DeliberationTabType,
   FinalConsensus,
-  Poll,
-  SurveyAnswer,
   Thread,
 } from './types';
 import { UserType } from '@/lib/api/models/user';
@@ -39,11 +37,7 @@ import { SpaceDraftCreateRequest } from '@/lib/api/models/space_draft';
 import { useQueryClient } from '@tanstack/react-query';
 import { QK_GET_SPACE_BY_SPACE_ID } from '@/constants';
 import { useFeedByID } from '@/app/(social)/_hooks/feed';
-
-export interface MappedResponse {
-  question: Question;
-  answers: Answer[];
-}
+import { MappedResponse, Poll, SurveyAnswer } from '../type';
 
 type ContextType = {
   spaceId: number;
@@ -162,7 +156,12 @@ export default function ClientProviders({
   const [answer, setAnswer] = useState<SurveyAnswer>({
     answers:
       space.user_responses.length != 0 ? space.user_responses[0].answers : [],
-    is_completed: space.user_responses.length != 0,
+    is_completed:
+      space.user_responses.length !== 0
+        ? space.user_responses[0].survey_type === 1
+          ? false
+          : true
+        : false,
   });
 
   const [draft, setDraft] = useState<FinalConsensus>({
@@ -404,7 +403,7 @@ export default function ClientProviders({
     if (space.user_responses && space.user_responses.length > 0) {
       setAnswer({
         answers: space.user_responses[0].answers,
-        is_completed: true,
+        is_completed: space.user_responses[0].survey_type === 1 ? false : true,
       });
     }
   }, [space.user_responses]);

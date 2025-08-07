@@ -7,7 +7,7 @@ import {
   getSpaceById,
 } from '@/lib/api/ratel_api.server';
 import { getServerQueryClient } from '@/lib/query-utils.server';
-import { dehydrate } from '@tanstack/react-query';
+import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
 
 export default async function Provider({
   children,
@@ -35,8 +35,8 @@ export default async function Provider({
   const dehydratedState = dehydrate(queryClient);
 
   return (
-    <ClientProviders spaceId={spaceId} dehydratedState={dehydratedState}>
-      {children}
+    <ClientProviders spaceId={spaceId}>
+      <HydrationBoundary state={dehydratedState}>{children}</HydrationBoundary>
     </ClientProviders>
   );
 }
