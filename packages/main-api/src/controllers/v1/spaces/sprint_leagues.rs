@@ -48,7 +48,10 @@ impl SprintLeagueController {
         by_axum::axum::Router::new()
             .route("/", post(Self::act))
             .route("/:sprint-league-id", post(Self::act_by_id))
-            .route("/:sprint-league-id/players", post(Self::act_player))
+            .route(
+                "/:sprint-league-id/players/:player-id",
+                post(Self::act_player),
+            )
             .with_state(self.clone())
     }
 
@@ -253,6 +256,13 @@ impl SprintLeagueController {
         auth: Option<Authorization>,
         param: SprintLeaguePlayerUpdateRequest,
     ) -> Result<SprintLeaguePlayer> {
+        tracing::debug!(
+            "Updating player: space_id={}, sprint_league_id={}, player_id={} param={:?}",
+            space_id,
+            sprint_league_id,
+            player_id,
+            param
+        );
         check_perm(
             &self.pool,
             auth.clone(),
@@ -287,7 +297,7 @@ impl SprintLeagueController {
         let repo = SprintLeaguePlayer::get_repository(self.pool.clone());
         let mut tx = self.pool.begin().await?;
         let player = repo
-            .update_with_tx(&mut *tx, sprint_league_id, {
+            .update_with_tx(&mut *tx, player_id, {
                 SprintLeaguePlayerRepositoryUpdateRequest {
                     name: Some(param.name),
                     description: Some(param.description),
