@@ -102,18 +102,18 @@ export default function TeamGroups({ username }: { username: string }) {
 
 function ListGroups({ groups }: { groups: Group[] }) {
   return (
-    <div className="flex flex-col w-full px-4 py-5 gap-[10px] bg-[#191919] rounded-lg">
+    <div className="flex flex-col w-full px-4 py-5 gap-[10px] bg-[#191919] rounded-lg border border-transparent light:bg-white light:border-neutral-200">
       {groups
         .filter((d) => !checkString(d.name))
         .map((group) => (
           <div
             key={group.id}
-            className="flex flex-row w-full h-fit gap-[15px] bg-transparent rounded-sm border border-neutral-800 p-5"
+            className="flex flex-row w-full h-fit gap-[15px] bg-transparent rounded-sm border border-neutral-800 p-5 light:border-neutral-200"
           >
             <Folder className="w-12 h-12 stroke-neutral-400" />
 
             <div className="flex flex-col justify-between items-start">
-              <div className="font-bold text-white text-base/[20px]">
+              <div className="font-bold text-white text-base/[20px] light:text-neutral-700">
                 {group.name}
               </div>
               <div className="font-semibold text-neutral-400 text-sm/[20px]">
@@ -143,7 +143,7 @@ function InviteMemberButton({ onClick }: { onClick: () => void }) {
 function CreateGroupButton({ onClick }: { onClick: () => void }) {
   return (
     <div
-      className="cursor-pointer flex flex-row w-fit justify-start items-center px-4 py-3 bg-white rounded-[100px] gap-1"
+      className="cursor-pointer flex flex-row w-fit justify-start items-center px-4 py-3 bg-white rounded-[100px] gap-1 border border-transparent light:border-neutral-200"
       onClick={onClick}
     >
       <Edit1 className="w-4 h-4" />

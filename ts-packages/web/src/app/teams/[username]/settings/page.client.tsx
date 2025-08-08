@@ -82,14 +82,14 @@ export default function SettingsPage({ username }: { username: string }) {
             className="w-40 h-40 rounded-full object-cover cursor-pointer"
           />
         ) : (
-          <button className="w-40 h-40 rounded-full bg-c-wg-80 text-sm font-semibold flex items-center justify-center text-c-wg-50">
+          <button className="w-40 h-40 rounded-full bg-c-wg-80 light:bg-neutral-500 text-sm font-semibold flex items-center justify-center text-c-wg-50 light:text-white">
             Upload logo
           </button>
         )}
       </FileUploader>
 
-      <Col className="w-full gap-2.5">
-        <Row className="max-tablet:flex-col">
+      <Col className="w-full gap-2.5 light:text-neutral-800">
+        <Row className="max-tablet:flex-col ">
           <label className="w-40 font-bold">Username</label>
           <Input type="text" disabled value={`@${team?.username}`} />
         </Row>

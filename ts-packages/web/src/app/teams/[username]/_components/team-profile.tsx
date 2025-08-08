@@ -38,7 +38,7 @@ export default function TeamProfile({ team }: TeamProfileProps) {
   };
 
   return (
-    <div className="flex flex-col gap-5 px-4 py-5 rounded-[10px] bg-component-bg">
+    <div className="flex flex-col gap-5 px-4 py-5 rounded-[10px] bg-component-bg border border-transparent light:bg-neutral-50 light:border-neutral-200">
       <TeamSelector team={team} />
       <div className="relative">
         {team.profile_url && team.profile_url !== '' ? (
@@ -54,7 +54,9 @@ export default function TeamProfile({ team }: TeamProfileProps) {
         )}
       </div>
 
-      <div className="font-medium">{team.nickname}</div>
+      <div className="font-medium text-white light:text-neutral-800">
+        {team.nickname}
+      </div>
 
       <div
         id="user-profile-description"
