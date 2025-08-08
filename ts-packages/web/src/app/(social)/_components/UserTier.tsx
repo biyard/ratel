@@ -1,14 +1,25 @@
+'use client';
+import { useTheme } from '@/app/_providers/ThemeProvider';
 import { config } from '@/config';
 import { Star } from 'lucide-react';
 import React from 'react';
 
 export default function UserTier() {
+  const { theme } = useTheme();
   return (
     <div className="mt-4 aria-hidden:hidden" aria-hidden={!config.experiment}>
       <div className="flex justify-between items-center">
-        <span className="text-sm">Tier</span>
+        <span
+          className={`text-sm ${theme === 'light' ? 'text-neutral-800' : 'text-white'}`}
+        >
+          Tier
+        </span>
         <div className="flex items-center gap-1">
-          <span className="text-sm">Diamond</span>
+          <span
+            className={`text-sm ${theme === 'light' ? 'text-neutral-800' : 'text-white'}`}
+          >
+            Diamond
+          </span>
           <div className="w-4 h-4 rounded-full bg-[#fcb300] flex items-center justify-center">
             <Star size={10} className="text-black" />
           </div>

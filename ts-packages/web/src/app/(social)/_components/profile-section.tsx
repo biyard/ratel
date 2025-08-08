@@ -7,8 +7,10 @@ import UserBadges from './user-badges';
 import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { TeamContext } from '@/lib/contexts/team-context';
 import UserFollows from './user-follows';
+import { useTheme } from '@/app/_providers/ThemeProvider';
 
 export default function ProfileSection() {
+  const { theme } = useTheme();
   const { data } = useSuspenseUserInfo();
   const user = data!;
 
@@ -24,7 +26,9 @@ export default function ProfileSection() {
   };
 
   return (
-    <div className="flex flex-col gap-5 px-4 py-5 rounded-[10px] bg-component-bg">
+    <div
+      className={`flex flex-col gap-5 px-4 py-5 rounded-[10px] ${theme === 'light' ? 'bg-neutral-50 border border-neutral-200' : 'bg-component-bg'}`}
+    >
       <TeamSelector onSelect={handleTeamSelect} team={team} />
 
       <div className="relative">
@@ -41,7 +45,11 @@ export default function ProfileSection() {
         )}
       </div>
 
-      <div className="font-medium">{user.nickname}</div>
+      <div
+        className={`font-medium ${theme === 'light' ? 'text-neutral-800' : 'text-white'}`}
+      >
+        {user.nickname}
+      </div>
 
       <div
         id="user-profile-description"

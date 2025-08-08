@@ -13,6 +13,7 @@ import { UserType } from '@/lib/api/models/user';
 import Image from 'next/image';
 import { route } from '@/route';
 import { SpaceType } from '@/lib/api/models/spaces';
+import { useTheme } from '@/app/_providers/ThemeProvider';
 import { Button } from './ui/button';
 
 export interface FeedCardProps {
@@ -44,6 +45,7 @@ export interface FeedCardProps {
 }
 
 export default function FeedCard(props: FeedCardProps) {
+  const { theme } = useTheme();
   const router = useRouter();
   const { post } = useApiCall();
 
@@ -85,7 +87,7 @@ export default function FeedCard(props: FeedCardProps) {
 
   return (
     <Col
-      className={`cursor-pointer border rounded-[10px] ${props.space_id && props.space_type ? 'border-primary bg-primary/10' : 'border-neutral-700'}`}
+      className={`cursor-pointer border rounded-[10px] ${props.space_id && props.space_type ? 'border-primary bg-primary/10' : theme === 'light' ? 'border-neutral-200 bg-white' : 'border-neutral-700'}`}
       onClick={() => {
         router.push(route.threadByFeedId(props.id));
       }}
@@ -115,6 +117,7 @@ export function FeedBody({
   space_type,
   onboard,
 }: FeedCardProps) {
+  const { theme } = useTheme();
   return (
     <Col className="pt-5 pb-2.5">
       <Row className="justify-between px-5">
@@ -151,7 +154,9 @@ export function FeedBody({
           <div />
         )} */}
       </Row>
-      <h2 className="w-full line-clamp-2 font-bold text-xl/[25px] tracking-[0.5px] align-middle text-white px-5">
+      <h2
+        className={`w-full line-clamp-2 font-bold text-xl/[25px] tracking-[0.5px] align-middle px-5 ${theme === 'light' ? 'text-neutral-800' : 'text-white'}`}
+      >
         {title}
       </h2>
       <Row className="justify-between items-center px-5">
@@ -175,13 +180,14 @@ export function FeedContents({
   contents: string;
   url?: string;
 }) {
+  const { theme } = useTheme();
   const c =
     typeof window !== 'undefined' ? DOMPurify.sanitize(contents) : contents;
 
   return (
     <Col className="text-white">
       <p
-        className="feed-content font-normal text-[15px]/[24px] align-middle tracking-[0.5px] text-c-wg-30 px-5"
+        className={`feed-content font-normal text-[15px]/[24px] align-middle tracking-[0.5px] px-5 ${theme === 'light' ? 'text-neutral-600' : 'text-c-wg-30'}`}
         dangerouslySetInnerHTML={{ __html: c }}
       ></p>
 
@@ -207,9 +213,10 @@ export function IconText({
   className,
   ...props
 }: React.HTMLAttributes<HTMLDivElement> & { children: React.ReactNode }) {
+  const { theme } = useTheme();
   return (
     <Row
-      className={`justify-center items-center gap-1.25 text-white font-normal text-[15px] px-4 py-5 ${className || ''}`}
+      className={`justify-center items-center gap-1.25 font-normal text-[15px] px-4 py-5 ${className || ''} ${theme === 'light' ? 'text-neutral-700' : 'text-white'}`}
       {...props}
     >
       {children}
@@ -226,8 +233,11 @@ export function UserBadge({
   profile_url: string;
   name: string;
 }) {
+  const { theme } = useTheme();
   return (
-    <Row className="w-fit items-center med-16 text-white">
+    <Row
+      className={`w-fit items-center med-16 ${theme === 'light' ? 'text-neutral-800' : 'text-white'}`}
+    >
       <Image
         src={profile_url}
         alt="User Profile"
@@ -245,25 +255,40 @@ export function UserBadge({
 }
 
 export function SpaceTag() {
+  const { theme } = useTheme();
   return (
-    <span className="flex flex-row justify-start items-center px-2 border border-primary/50 bg-transparent gap-1 rounded-sm">
-      <Palace className="w-3.5 h-3.5 [&_g>path:nth-child(n+2)]:stroke-primary" />
-      <div className="font-semibold text-xs/[25px] text-primary">SPACE</div>
+    <span
+      className={`flex flex-row justify-start items-center px-2 border gap-1 rounded-sm ${theme === 'light' ? 'border-none bg-primary' : 'border-primary/50 bg-transparent'}`}
+    >
+      <Palace
+        className={`w-3.5 h-3.5 ${theme === 'light' ? '[&>path]:stroke-white' : '[&>path]:stroke-primary'}`}
+      />
+      <div
+        className={`font-semibold text-xs/[25px] ${theme === 'light' ? 'text-white' : 'text-primary'}`}
+      >
+        SPACE
+      </div>
     </span>
   );
 }
 
 export function IndustryTag({ industry }: { industry: string }) {
+  const { theme } = useTheme();
   return (
-    <span className="rounded-sm border border-c-wg-70 px-2 text-xs/[25px] font-semibold align-middle uppercase">
+    <span
+      className={`rounded-sm border px-2 text-xs/[25px] font-semibold align-middle uppercase ${theme === 'light' ? 'border-neutral-700 text-neutral-700' : 'border-[#464646] text-[#464646]'}`}
+    >
       {industry}
     </span>
   );
 }
 
 export function OnboradingTag() {
+  const { theme } = useTheme();
   return (
-    <span className="rounded-sm bg-primary text-white px-2 text-xs/[25px] font-semibold align-middle uppercase">
+    <span
+      className={`rounded-sm  text-white px-2 text-xs/[25px] font-semibold align-middle uppercase ${theme === 'light' ? 'border-none bg-primary' : 'border-primary/50 bg-transparent'}`}
+    >
       Onboard
     </span>
   );
@@ -296,10 +321,11 @@ export function FeedFooter({
   onLikeClick,
   isLikeProcessing,
 }: FeedCardProps) {
+  const { theme } = useTheme();
   const router = useRouter();
   return (
     <Row
-      className={`items-center justify-between border-t w-full px-5 ${space_id && space_type ? 'border-primary/10' : 'border-neutral-800'} `}
+      className={`items-center justify-between border-t w-full px-5 ${space_id && space_type ? (theme === 'light' ? 'border-primary/30' : 'border-primary/10') : theme === 'light' ? 'border-neutral-200' : 'border-neutral-800'} `}
     >
       {space_id && space_type ? (
         <JoinNowButton

@@ -1,16 +1,29 @@
+'use client';
+import { useTheme } from '@/app/_providers/ThemeProvider';
 import { config } from '@/config';
 import { Building, ChevronDown, ChevronRight } from 'lucide-react';
 import React from 'react';
 
 export default function Spaces() {
+  const { theme } = useTheme();
   return (
     <div className="mt-6 px-4" hidden={!config.experiment}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1">
-          <Building size={14} />
-          <h3 className="text-sm font-medium">Spaces</h3>
+          <Building
+            size={14}
+            className={`${theme === 'light' ? '[&>path]:stroke-gray-400 [&>rect]:stroke-gray-400' : '[&>path]:stroke-white'}`}
+          />
+          <h3
+            className={`text-sm font-medium ${theme === 'light' ? 'text-gray-400' : 'text-white'}`}
+          >
+            Spaces
+          </h3>
         </div>
-        <ChevronDown size={14} />
+        <ChevronDown
+          size={14}
+          className={`${theme === 'light' ? '[&>path]:stroke-gray-400' : '[&>path]:stroke-white'}`}
+        />
       </div>
       <div className="mt-2 text-xs text-gray-400">
         <div className="py-1">Crypto/DAO Treasury Transpare...</div>
@@ -18,7 +31,10 @@ export default function Spaces() {
         <div className="py-1">Crypto/DAO Welcome to Protec...</div>
         <div className="mt-1 flex items-center">
           <span>View all</span>
-          <ChevronRight size={14} />
+          <ChevronRight
+            size={14}
+            className={`${theme === 'light' ? '[&>path]:stroke-gray-400' : '[&>path]:stroke-white'}`}
+          />
         </div>
       </div>
     </div>

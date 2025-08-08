@@ -11,6 +11,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { prefetchUserInfo } from './(social)/_hooks/user';
 import { getServerQueryClient } from '@/lib/query-utils.server';
 import { ThemeProvider } from './_providers/ThemeProvider';
+import ThemeWrapper from './theme-wrapper';
 
 const raleway = Raleway({
   variable: '--font-raleway',
@@ -24,7 +25,6 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const queryClient = await getServerQueryClient();
-
   await prefetchUserInfo(queryClient);
   const dehydratedState = dehydrate(queryClient);
 
@@ -33,16 +33,18 @@ export default async function RootLayout({
       <head>
         <link rel="icon" href="/logos/favicon.ico" />
       </head>
-      <body className={`${raleway.variable} antialiased bg-bg`}>
+      <body className={`${raleway.variable} antialiased`}>
         <CookieProvider>
           <ThemeProvider>
-            <Providers dehydratedState={dehydratedState}>
-              <HydrationBoundary state={dehydratedState}>
-                <ClientLayout>{children}</ClientLayout>
-                <PopupZone />
-              </HydrationBoundary>
-              <ReactQueryDevtools initialIsOpen={false} />
-            </Providers>
+            <ThemeWrapper>
+              <Providers dehydratedState={dehydratedState}>
+                <HydrationBoundary state={dehydratedState}>
+                  <ClientLayout>{children}</ClientLayout>
+                  <PopupZone />
+                </HydrationBoundary>
+                <ReactQueryDevtools initialIsOpen={false} />
+              </Providers>
+            </ThemeWrapper>
           </ThemeProvider>
         </CookieProvider>
         <ToastContainer />
