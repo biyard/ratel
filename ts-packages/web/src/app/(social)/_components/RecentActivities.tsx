@@ -1,22 +1,17 @@
-'use client';
-import { useTheme } from '@/app/_providers/ThemeProvider';
 import { config } from '@/config';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import React from 'react';
 
 export default function RecentActivities() {
-  const { theme } = useTheme();
   return (
     <div className="mt-6 px-4" hidden={!config.experiment}>
       <div className="flex items-center justify-between">
-        <h3
-          className={`text-sm font-medium ${theme === 'light' ? 'text-gray-400' : 'text-white'}`}
-        >
+        <h3 className={`text-sm font-medium text-white light:text-gray-400`}>
           Recent
         </h3>
         <ChevronDown
           size={14}
-          className={`${theme === 'light' ? '[&>path]:stroke-gray-400' : '[&>path]:stroke-white'}`}
+          className={`[&>path]:stroke-white light:[&>path]:stroke-gray-400`}
         />
       </div>
       <div className="mt-2 text-xs text-gray-400">
@@ -27,7 +22,7 @@ export default function RecentActivities() {
           <span>View all</span>
           <ChevronRight
             size={14}
-            className={`${theme === 'light' ? '[&>path]:stroke-gray-400' : '[&>path]:stroke-white'}`}
+            className={`[&>path]:stroke-white light:[&>path]:stroke-gray-400`}
           />
         </div>
       </div>

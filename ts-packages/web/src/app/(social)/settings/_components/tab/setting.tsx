@@ -3,36 +3,32 @@
 import SwitchButton from '@/components/switch-button';
 import BlackBox from '../black-box';
 import ContentBox from '../content-box';
-import { useTheme } from '@/app/_providers/ThemeProvider';
+import { useTheme } from 'next-themes';
 
 export default function Setting() {
-  const { isToggled, toggleTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
+
   return (
-    <div className="flex flex-col w-full justify-start gap-6.25">
-      <BlackBox title={'Appearance'}>
-        {/* <ContentBox canClicked={false} onClick={() => {}}>
-          <div className="flex flex-row w-full justify-start items-center py-[16.5px]">
-            <div className="font-bold text-white text-base/[20px]">
-              Language
-            </div>
-          </div>
-        </ContentBox> */}
+    <div className="flex flex-col w-full justify-start gap-6">
+      <BlackBox title="Appearance">
         <ContentBox canClicked={false} onClick={() => {}}>
-          <div className="flex flex-row w-full justify-between items-center py-[16.5px]">
-            <div className="font-bold text-white text-base/[20px]">
+          <div className="flex flex-row w-full justify-between items-center py-4">
+            <div
+              className={`font-bold text-base ${theme === 'dark' ? 'text-white' : 'text-neutral-600'}`}
+            >
               Dark Theme
             </div>
 
             <div className="flex flex-row w-fit justify-start items-center gap-2.5">
-              <div className="font-semibold text-sm/[20px] text-primary">
-                {isToggled ? 'On' : 'Off'}
+              <div className="font-semibold text-sm text-primary">
+                {theme === 'dark' ? 'On' : 'Off'}
               </div>
               <SwitchButton
-                value={isToggled}
+                value={theme === 'dark'}
                 onChange={() => {
-                  toggleTheme();
+                  setTheme(theme === 'dark' ? 'light' : 'dark');
                 }}
-                color={'bg-[#1890ff]'}
+                color="bg-[#1890ff]"
               />
             </div>
           </div>

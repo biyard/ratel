@@ -21,7 +21,6 @@ import { route } from '@/route';
 import { useAuth } from '@/lib/contexts/auth-context';
 import { TeamContext } from '@/lib/contexts/team-context';
 import Image from 'next/image';
-import { useTheme } from '@/app/_providers/ThemeProvider';
 
 export interface TeamSelectorProps {
   onSelect?: (index: number) => void;
@@ -29,7 +28,6 @@ export interface TeamSelectorProps {
 }
 
 export default function TeamSelector({ onSelect, team }: TeamSelectorProps) {
-  const { theme } = useTheme();
   const popup = usePopup();
   const { logout } = useAuth();
   const { teams, selectedIndex, setSelectedTeam } = useContext(TeamContext);
@@ -56,26 +54,26 @@ export default function TeamSelector({ onSelect, team }: TeamSelectorProps) {
       <DropdownMenuTrigger asChild>
         <button className="w-full flex items-center justify-between px-2 py-2 focus:outline-none">
           <span
-            className={`font-bold text-[18px] ${theme === 'light' ? 'text-neutral-800' : 'text-white'}`}
+            className={`font-bold text-[18px] text-white light:text-neutral-800`}
           >
             {teams[selectedIndex].nickname}
           </span>
           <ChevronDown
             size={16}
-            className={`${theme === 'light' ? '[&>path]:stroke-neutral-800' : '[&>path]:stroke-neutral-500'}`}
+            className={`[&>path]:stroke-neutral-500 light:[&>path]:stroke-neutral-800`}
           />
         </button>
       </DropdownMenuTrigger>
 
       <DropdownMenuContent
-        className={`w-[var(--radix-dropdown-menu-trigger-width)] ${theme === 'light' ? 'bg-neutral-50 border border-neutral-200' : 'bg-bg'}`}
+        className={`w-[var(--radix-dropdown-menu-trigger-width)] bg-bg border border-transparent light:bg-neutral-50 light:border-neutral-200`}
       >
         <DropdownMenuLabel>Teams</DropdownMenuLabel>
         <DropdownMenuGroup>
           {teams.map((team, index) => {
             return team.nickname != '' ? (
               <DropdownMenuItem
-                className={`focus:bg-accent focus:text-accent-foreground data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 dark:data-[variant=destructive]:focus:bg-destructive/20 data-[variant=destructive]:focus:text-destructive data-[variant=destructive]:*:[svg]:!text-destructive [&_svg:not([class*='text-'])]:text-muted-foreground relative flex cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[inset]:pl-8 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 w-full flex flex-row items-center gap-2 px-2 py-2  cursor-pointer ${theme === 'light' ? 'hover:bg-neutral-300' : 'hover:bg-neutral-800'}`}
+                className={`focus:bg-accent focus:text-accent-foreground data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 dark:data-[variant=destructive]:focus:bg-destructive/20 data-[variant=destructive]:focus:text-destructive data-[variant=destructive]:*:[svg]:!text-destructive [&_svg:not([class*='text-'])]:text-muted-foreground relative flex cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[inset]:pl-8 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 w-full flex flex-row items-center gap-2 px-2 py-2  cursor-pointer hover:bg-neutral-800 light:hover:bg-neutral-300`}
                 key={`team-select-menu-${team.id}`}
                 asChild
               >

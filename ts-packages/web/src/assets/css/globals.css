@@ -1,6 +1,8 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
+@custom-variant light (&:where([data-theme=light], [data-theme=light] *));
+
 html {
   background-color: var(--color-background);
   color: var(--color-neutral-400);

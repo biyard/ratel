@@ -29,7 +29,9 @@ export default function SettingPage() {
             >
               <span
                 className={`font-bold text-sm/[20px] ${
-                  activeTab === tab.key ? 'text-white' : 'text-neutral-400'
+                  activeTab === tab.key
+                    ? 'text-white light:text-neutral-300'
+                    : 'text-neutral-400'
                 }`}
               >
                 {tab.label}

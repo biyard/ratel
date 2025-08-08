@@ -1,6 +1,5 @@
 import Image from 'next/image';
 import { UserType } from '@/lib/api/models/user';
-import { useTheme } from '@/app/_providers/ThemeProvider';
 
 type SuggestionItemProps = {
   user: {
@@ -17,8 +16,6 @@ export default function SuggestionItem({
   user,
   onFollow,
 }: SuggestionItemProps) {
-  const { theme } = useTheme();
-
   const isTeam = user.user_type === UserType.Team;
   const imageClass = isTeam ? 'rounded-lg' : 'rounded-full';
 
@@ -38,13 +35,11 @@ export default function SuggestionItem({
         )}
         <div className="flex-1">
           <div
-            className={`font-medium text-base ${theme === 'light' ? 'text-neutral-800' : 'text-white'}`}
+            className={`font-medium text-base text-white light:text-neutral-800`}
           >
             {user.username}
           </div>
-          <div
-            className={`text-xs ${theme === 'light' ? 'text-neutral-800' : 'text-neutral-300'}`}
-          >
+          <div className={`text-xs text-neutral-300 light:text-neutral-800`}>
             {user.email}
           </div>
           <button

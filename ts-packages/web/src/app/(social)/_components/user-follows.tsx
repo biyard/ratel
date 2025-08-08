@@ -2,7 +2,6 @@ import React from 'react';
 import Link from 'next/link';
 import { route } from '@/route';
 import { RelationType } from '@/types/relation-type';
-import { useTheme } from '@/app/_providers/ThemeProvider';
 
 export interface UserFollowsProps {
   followers_count: number;
@@ -13,11 +12,10 @@ export default function UserFollows({
   followers_count,
   followings_count,
 }: UserFollowsProps) {
-  const { theme } = useTheme();
   return (
     <div className="flex flex-row w-full justify-around items-center gap-[20px] max-tablet:gap-[10px]">
       <Link
-        className={`flex flex-col w-fit justify-start items-center gap-[2px] text-c-wg-50 ${theme === 'light' ? 'hover:text-neutral-300' : 'hover:text-white'}`}
+        className={`flex flex-col w-fit justify-start items-center gap-[2px] text-c-wg-50 hover:text-white light:hover:text-neutral-300`}
         href={route.myFollower(RelationType.FOLLOWER)}
       >
         <div className="font-bold text-sm">
@@ -27,7 +25,7 @@ export default function UserFollows({
       </Link>
 
       <Link
-        className={`flex flex-col w-fit justify-start items-center gap-[2px] text-c-wg-50 ${theme === 'light' ? 'hover:text-neutral-300' : 'hover:text-white'}`}
+        className={`flex flex-col w-fit justify-start items-center gap-[2px] text-c-wg-50 hover:text-white light:hover:text-neutral-300`}
         href={route.myFollower(RelationType.FOLLOWING)}
       >
         <div className="font-bold text-sm">

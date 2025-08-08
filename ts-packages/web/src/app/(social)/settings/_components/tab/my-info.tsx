@@ -56,11 +56,15 @@ export default function MyInfo() {
 
       <Col className="w-full gap-2.5">
         <Row className="max-tablet:flex-col">
-          <label className="w-40 font-bold">Username</label>
+          <label className={`w-40 font-bold text-white light:text-neutral-800`}>
+            Username
+          </label>
           <Input type="text" disabled value={`@${user?.username}`} />
         </Row>
         <Row className="max-tablet:flex-col">
-          <label className="w-40 font-bold">EVM Address</label>
+          <label className={`w-40 font-bold text-white light:text-neutral-800`}>
+            EVM Address
+          </label>
           <Row>
             <Input type="text" disabled value={`${user?.evm_address}`} />
             <Button
@@ -93,7 +97,9 @@ export default function MyInfo() {
         </Row>
 
         <Row className="max-tablet:flex-col">
-          <label className="w-40 font-bold">Display name</label>
+          <label className={`w-40 font-bold text-white light:text-neutral-800`}>
+            Display name
+          </label>
           <Input
             type="text"
             placeholder="Team display name"
@@ -102,7 +108,9 @@ export default function MyInfo() {
           />
         </Row>
         <Col>
-          <label className="w-40 font-bold">Description</label>
+          <label className={`w-40 font-bold text-white light:text-neutral-800`}>
+            Description
+          </label>
           <Textarea
             placeholder="Please type description of your team."
             value={htmlContents}

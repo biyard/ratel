@@ -10,10 +10,8 @@ import { followRequest } from '@/lib/api/models/networks/follow';
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import { logger } from '@/lib/logger';
 import { Follower } from '@/lib/api/models/network';
-import { useTheme } from '@/app/_providers/ThemeProvider';
 
 export default function Suggestions() {
-  const { theme } = useTheme();
   const { post } = useApiCall();
   const network = useNetwork();
 
@@ -61,9 +59,7 @@ export default function Suggestions() {
 
   return (
     <BlackBox>
-      <h3
-        className={`font-medium mb-3 ${theme === 'light' ? 'text-neutral-800' : 'text-white'}`}
-      >
+      <h3 className={`font-medium mb-3 text-white light:text-neutral-800`}>
         Suggested
       </h3>
       <div className="flex flex-col gap-[35px]">

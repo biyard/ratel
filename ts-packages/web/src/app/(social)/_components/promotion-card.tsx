@@ -1,7 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { route } from '@/route';
-import { useTheme } from '@/app/_providers/ThemeProvider';
 
 type PromotionCardProps = {
   promotion: {
@@ -18,7 +17,6 @@ type PromotionCardProps = {
 };
 
 export default function PromotionCard({ promotion, feed }: PromotionCardProps) {
-  const { theme } = useTheme();
   const getHref = () => {
     if (!feed?.spaces?.length) return route.threadByFeedId(feed?.id || 0);
 
@@ -30,13 +28,13 @@ export default function PromotionCard({ promotion, feed }: PromotionCardProps) {
   return (
     <div className="flex flex-col gap-2.5">
       <h3
-        className={`font-bold text-[15px]/[20px] ${theme === 'light' ? 'text-neutral-800' : 'text-white'}`}
+        className={`font-bold text-[15px]/[20px] text-white light:text-neutral-800`}
       >
         Hot Promotion
       </h3>
       <Link
         href={getHref()}
-        className={`flex items-center gap-2.5 rounded p-2 transition-colors ${theme === 'light' ? 'hover:bg-neutral-200' : 'hover:bg-btn-hover'}`}
+        className={`flex items-center gap-2.5 rounded p-2 transition-colors hover:bg-btn-hover light:hover:bg-neutral-200`}
         aria-label={`View ${promotion.name} promotion`}
       >
         <Image
@@ -49,7 +47,7 @@ export default function PromotionCard({ promotion, feed }: PromotionCardProps) {
         />
         <div>
           <div
-            className={`font-medium text-base/[25px] ${theme === 'light' ? 'text-neutral-800' : 'text-white'}`}
+            className={`font-medium text-base/[25px] text-white light:text-neutral-800`}
           >
             {promotion.name}
           </div>

@@ -10,7 +10,8 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import 'react-toastify/dist/ReactToastify.css';
 import { prefetchUserInfo } from './(social)/_hooks/user';
 import { getServerQueryClient } from '@/lib/query-utils.server';
-import { ThemeProvider } from './_providers/ThemeProvider';
+import { ThemeProvider } from 'next-themes';
+
 import ThemeWrapper from './theme-wrapper';
 
 const raleway = Raleway({
@@ -29,13 +30,17 @@ export default async function RootLayout({
   const dehydratedState = dehydrate(queryClient);
 
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="icon" href="/logos/favicon.ico" />
       </head>
       <body className={`${raleway.variable} antialiased`}>
         <CookieProvider>
-          <ThemeProvider>
+          <ThemeProvider
+            defaultTheme="dark"
+            enableSystem
+            attribute="data-theme"
+          >
             <ThemeWrapper>
               <Providers dehydratedState={dehydratedState}>
                 <HydrationBoundary state={dehydratedState}>

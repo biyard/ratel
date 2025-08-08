@@ -19,14 +19,12 @@ import { config } from '@/config';
 import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { UserType } from '@/lib/api/models/user';
 import LoginIcon from '@/assets/icons/login.svg';
-import { useTheme } from '@/app/_providers/ThemeProvider';
 export interface HeaderProps {
   mobileExtends: boolean;
   setMobileExtends: (extend: boolean) => void;
 }
 
 function Header(props: HeaderProps) {
-  const { theme } = useTheme();
   const popup = usePopup();
 
   const { data } = useSuspenseUserInfo();
@@ -39,7 +37,7 @@ function Header(props: HeaderProps) {
       name: 'Home',
       icon: (
         <HomeIcon
-          className={`${theme === 'light' ? 'group-hover:[&>path]:stroke-neutral-200' : 'group-hover:[&>path]:stroke-white'} transition-all`}
+          className={`group-hover:[&>path]:stroke-white light:group-hover:[&>path]:stroke-neutral-200 transition-all`}
           width="24"
           height="24"
         />
@@ -104,7 +102,7 @@ function Header(props: HeaderProps) {
 
   return (
     <header
-      className={`border-b  px-2.5 py-2.5 flex items-center justify-center h-[var(--header-height)] ${theme === 'light' ? '!bg-light-bg border-neutral-200' : '!bg-bg border-neutral-800'}`}
+      className={`border-b  px-2.5 py-2.5 flex items-center justify-center h-[var(--header-height)] !bg-bg border-neutral-800 light:!bg-light-bg light:border-neutral-200`}
     >
       <nav className="flex items-center justify-between mx-2.5 gap-12.5 w-full max-w-desktop">
         <div className="flex items-center gap-5">
@@ -128,7 +126,7 @@ function Header(props: HeaderProps) {
             >
               {item.icon}
               <span
-                className={`whitespace-nowrap text-neutral-500 text-[15px] font-medium transition-all ${theme === 'light' ? 'group-hover:text-neutral-200' : 'group-hover:text-white'}`}
+                className={`whitespace-nowrap text-neutral-500 text-[15px] font-medium transition-all group-hover:text-white light:group-hover:text-neutral-200`}
               >
                 {' '}
                 {item.name}{' '}
@@ -151,10 +149,10 @@ function Header(props: HeaderProps) {
               }}
             >
               <LoginIcon
-                className={`size-6 ${theme === 'light' ? 'group-hover:[&>path]:stroke-neutral-200' : 'group-hover:[&>path]:stroke-white'}`}
+                className={`size-6 group-hover:[&>path]:stroke-white light:group-hover:[&>path]:stroke-neutral-200`}
               />
               <span
-                className={`whitespace-nowrap text-neutral-500  text-[15px] font-medium transition-all ${theme === 'light' ? 'group-hover:text-neutral-200' : 'group-hover:text-white'}`}
+                className={`whitespace-nowrap text-neutral-500  text-[15px] font-medium transition-all group-hover:text-white light:group-hover:text-neutral-200`}
               >
                 Sign In
               </span>
