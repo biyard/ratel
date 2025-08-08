@@ -56,7 +56,7 @@ export default function Profile({ profileUrl, name }: ProfileProps) {
               <div className="w-6 h-6 bg-neutral-500 rounded-full" />
             )}
 
-            <span className="text-neutral-500 group-hover:text-white text-[15px] font-medium transition-colors">
+            <span className="text-neutral-500 group-hover:text-white text-[15px] font-medium transition-colors light:group-hover:text-neutral-200">
               {name || 'Unknown User'}
             </span>
           </div>
@@ -65,7 +65,7 @@ export default function Profile({ profileUrl, name }: ProfileProps) {
 
       <DropdownMenuContent
         align="end"
-        className="w-[250px] h-fit rounded-lg border border-primary p-[10px] bg-bg z-20"
+        className="w-[250px] h-fit rounded-lg border border-primary p-[10px] bg-bg z-20 light:bg-white light:border-neutral-200"
       >
         <DropdownMenuLabel className="text-xs text-neutral-400 px-2 py-1">
           Teams
@@ -101,7 +101,7 @@ export default function Profile({ profileUrl, name }: ProfileProps) {
                 ) : (
                   <div className="w-6 h-6 bg-neutral-500 rounded-full" />
                 )}
-                <span className="text-sm text-white truncate">
+                <span className="text-sm text-white truncate light:text-neutral-800">
                   {team.nickname}
                 </span>
               </Link>
@@ -117,7 +117,7 @@ export default function Profile({ profileUrl, name }: ProfileProps) {
               logger.debug('Create team clicked');
               popup.open(<TeamCreationPopup />).withTitle('Create a new team');
             }}
-            className="w-full px-2 py-1.5 hover:bg-transparent rounded-md text-sm text-white cursor-pointer focus-visible:outline-none"
+            className="w-full px-2 py-1.5 hover:bg-transparent rounded-md text-sm text-white cursor-pointer focus-visible:outline-none light:text-neutral-800"
           >
             <span>Create a team</span>
           </DropdownMenuItem>
@@ -127,7 +127,7 @@ export default function Profile({ profileUrl, name }: ProfileProps) {
               logout();
               userInfo.refetch();
             }}
-            className="w-full px-2 py-1.5 hover:bg-transparent rounded-md text-sm text-white cursor-pointer focus-visible:outline-none"
+            className="w-full px-2 py-1.5 hover:bg-transparent rounded-md text-sm text-white cursor-pointer focus-visible:outline-none light:text-neutral-800"
           >
             <span>Log out</span>
           </DropdownMenuItem>

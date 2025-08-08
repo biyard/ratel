@@ -10,9 +10,9 @@ const buttonVariants = cva(
     variants: {
       variant: {
         rounded_primary:
-          'bg-primary text-background rounded-full hover:bg-primary/70 hover:shadow-[inset_0_0_0_1000px_rgba(0,0,0,0.2)]',
+          'bg-primary text-background rounded-full hover:bg-primary/70 hover:shadow-[inset_0_0_0_1000px_rgba(0,0,0,0.2)] light:bg-neutral-300 light:hover:bg-neutral-200',
         rounded_secondary:
-          'bg-white text-background rounded-full hover:bg-white/80 hover:shadow-[inset_0_0_0_1000px_rgba(0,0,0,0.2)]',
+          'bg-white text-background rounded-full hover:bg-white/80 hover:shadow-[inset_0_0_0_1000px_rgba(0,0,0,0.2)] light:bg-neutral-300 light:hover:bg-neutral-200',
         default:
           'bg-white text-black rounded-xl hover:bg-white/80 hover:shadow-[inset_0_0_0_1000px_rgba(0,0,0,0.2)]',
         outline:

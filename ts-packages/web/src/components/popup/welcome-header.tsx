@@ -9,7 +9,9 @@ interface WelcomeHeaderProps {
 export const WelcomeHeader = ({ title, description }: WelcomeHeaderProps) => {
   return (
     <div className="w-full flex flex-col gap-6 items-center justify-center">
-      <p className="text-white font-bold text-2xl">{title}</p>
+      <p className="text-white font-bold text-2xl light:text-neutral-800">
+        {title}
+      </p>
       <CharacterWithCircle width={100} />
       <p className="text-neutral-400 text-center text-base font-medium">
         {description}

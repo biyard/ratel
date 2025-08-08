@@ -38,7 +38,7 @@ export const PopupZone = () => {
       }}
     >
       <div
-        className={`relative rounded-[20px] p-[25px] min-w-[300px] max-mobile:!w-full max-mobile:!mx-[20px] bg-bg ${overflow ? 'overflow-visible' : 'overflow-hidden'}`}
+        className={`relative rounded-[20px] p-[25px] min-w-[300px] max-mobile:!w-full max-mobile:!mx-[20px] bg-bg light:bg-white ${overflow ? 'overflow-visible' : 'overflow-hidden'}`}
         style={{
           boxShadow: '0px 0px 100px rgba(255, 206, 71, 0.25)',
         }}
@@ -58,7 +58,9 @@ export const PopupZone = () => {
           className="flex flex-col items-center justify-center gap-[25px]"
         >
           {title && (
-            <div className="text-[20px] font-bold text-white">{title}</div>
+            <div className="text-[20px] font-bold text-white light:text-neutral-800">
+              {title}
+            </div>
           )}
           {content}
         </div>

@@ -193,7 +193,7 @@ const UserSetupPopup = ({
 
             <Row>
               <input
-                className="w-full outline-none px-5 h-11 text-white text-base placeholder-gray-500 font-medium border rounded-lg border-gray-600"
+                className="w-full outline-none px-5 h-11 text-white text-base placeholder-gray-500 font-medium border rounded-lg border-gray-600 light:text-neutral-800"
                 disabled={email !== '' || isValidEmail}
                 name="username"
                 autoComplete="email"
@@ -218,7 +218,7 @@ const UserSetupPopup = ({
               aria-hidden={!sentCode || isValidEmail}
             >
               <input
-                className="w-full outline-none px-5 h-11 text-white text-base placeholder-gray-500 font-medium border rounded-lg border-gray-600"
+                className="w-full outline-none px-5 h-11 text-white text-base placeholder-gray-500 font-medium border rounded-lg border-gray-600 light:text-neutral-800"
                 value={authCode}
                 onChange={(e) => {
                   setAuthCode(e.target.value);
@@ -241,7 +241,7 @@ const UserSetupPopup = ({
                 </span>
               </div>
               <input
-                className="w-full outline-none px-5 h-11 text-white text-base placeholder-gray-500 font-medium border rounded-lg border-gray-600"
+                className="w-full outline-none px-5 h-11 text-white text-base placeholder-gray-500 font-medium border rounded-lg border-gray-600 light:text-neutral-800"
                 type="password"
                 value={password}
                 onChange={(e) => {
@@ -378,7 +378,7 @@ const LabeledInput = ({
     <div className="text-c-cg-30 font-bold text-base/7">{labelName}</div>
     <input
       type="text"
-      className="w-full outline-none px-5 text-white text-base placeholder-gray-500 font-medium border rounded-lg border-gray-600"
+      className="w-full outline-none px-5 text-white text-base placeholder-gray-500 font-medium border rounded-lg border-gray-600 light:text-neutral-800"
       style={{ height: 50 }}
       placeholder={placeholder}
       value={value}

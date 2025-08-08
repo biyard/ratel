@@ -100,7 +100,7 @@ export default function TeamCreationPopup() {
             className="w-40 h-40 rounded-full object-cover cursor-pointer"
           />
         ) : (
-          <button className="w-40 h-40 rounded-full bg-c-wg-80 text-sm font-semibold flex items-center justify-center text-c-wg-50">
+          <button className="w-40 h-40 rounded-full bg-c-wg-80 text-sm font-semibold flex items-center justify-center text-c-wg-50 light:bg-neutral-300 light:text-white">
             Upload logo
           </button>
         )}
