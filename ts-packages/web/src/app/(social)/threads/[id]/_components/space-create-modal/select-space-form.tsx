@@ -1,6 +1,7 @@
 'use client';
 
 import { Space, SpaceType } from '@/lib/api/models/spaces';
+import { Feed, FeedStatus } from '@/lib/api/models/feeds';
 import { noticeSpaceCreateRequest } from '@/lib/api/models/notice';
 
 import { Discuss, Palace, Mega, Vote } from '@/components/icons';
@@ -14,7 +15,9 @@ import { route } from '@/route';
 import { useRouter } from 'next/navigation';
 import { usePopup } from '@/lib/contexts/popup-service';
 import { logger } from '@/lib/logger';
-import SpaceConfigForm from './space-config-form';
+import NbsConfigForm from './nbs-config-form';
+import InviteCommittee from './invite-committee';
+import NoticeSpaceUnavailableModal from './notice-space-unavailable-modal';
 import RadioButton from '@/components/radio-button';
 
 interface SpaceFormProps {
@@ -72,9 +75,31 @@ const SpaceForms: SpaceFormProps[] = [
 export default function SelectSpaceForm({ feed_id }: { feed_id: number }) {
   const [isLoading, setLoading] = useState(false);
   const [selectedType, setSelectedType] = useState<SpaceType | null>(null);
+  const [showCommitteeForm, setShowCommitteeForm] = useState(false);
   const [showConfigForm, setShowConfigForm] = useState(false);
+  const [showUnavailableModal, setShowUnavailableModal] = useState(false);
+  const [committeeUserIds, setCommitteeUserIds] = useState<number[]>([]);
+  const [feedData, setFeedData] = useState<Feed | null>(null);
   const router = useRouter();
   const popup = usePopup();
+
+  // Fetch feed data to check its status
+  useEffect(() => {
+    const fetchFeedData = async () => {
+      try {
+        const res = await apiFetch<Feed>(
+          `${config.api_url}${ratelApi.feeds.getFeedsByFeedId(feed_id)}`,
+        );
+        if (res.data) {
+          setFeedData(res.data);
+        }
+      } catch (error) {
+        logger.error('Error fetching feed data:', error);
+      }
+    };
+
+    fetchFeedData();
+  }, [feed_id]);
 
   // Update popup title based on current form state
   useEffect(() => {
@@ -84,13 +109,18 @@ export default function SelectSpaceForm({ feed_id }: { feed_id: number }) {
         // Don't set a title for config form - it has its own header
         // Also disable the close button to remove the X icon
         popup.withTitle('').withoutClose();
+      } else if (showCommitteeForm) {
+        popup.withTitle('Invite Committee Members');
+      } else if (showUnavailableModal) {
+        // Don't set a title for unavailable modal - it has its own header
+        popup.withTitle('').withoutClose();
       } else {
         popup.withTitle('Select a Space Type');
       }
     }, 10);
 
     return () => clearTimeout(timeoutId);
-  }, [showConfigForm, popup]);
+  }, [showConfigForm, showCommitteeForm, showUnavailableModal, popup]);
 
   const handleSend = async () => {
     if (!selectedType) return;
@@ -99,10 +129,15 @@ export default function SelectSpaceForm({ feed_id }: { feed_id: number }) {
     // This avoids immediate rendering of complex components like config form
     try {
       if (selectedType === SpaceType.Notice) {
-        // For Notice space, we'll show config form after a small delay
+        // Check if feed is published - if so, show unavailable modal
+        if (feedData?.status === FeedStatus.Published) {
+          setShowUnavailableModal(true);
+          return;
+        }
+        // For Notice space with draft status, first show committee invitation form
         // This prevents the Maximum update depth exceeded error
         setTimeout(() => {
-          setShowConfigForm(true);
+          setShowCommitteeForm(true);
         }, 10);
       } else {
         // For other space types, proceed directly with creation
@@ -161,9 +196,37 @@ export default function SelectSpaceForm({ feed_id }: { feed_id: number }) {
     popup.close();
   };
 
-  const handleBackToSelection = () => {
-    setShowConfigForm(false);
+  const handleCommitteeSend = (user_ids: number[]) => {
+    // Store the user IDs and proceed to config form
+    setCommitteeUserIds(user_ids);
+    setShowCommitteeForm(false);
+    setTimeout(() => {
+      setShowConfigForm(true);
+    }, 10);
   };
+
+  const handleBackToCommittee = () => {
+    setShowConfigForm(false);
+    setShowCommitteeForm(true);
+  };
+
+  // Show unavailable modal for published feeds
+  if (showUnavailableModal) {
+    return (
+      <div className="mobile:w-[420px] max-mobile:w-full">
+        <NoticeSpaceUnavailableModal />
+      </div>
+    );
+  }
+
+  // Show committee invitation form for Notice spaces
+  if (showCommitteeForm && selectedType === SpaceType.Notice) {
+    return (
+      <div className="mobile:w-[400px] max-mobile:w-full">
+        <InviteCommittee onSend={handleCommitteeSend} />
+      </div>
+    );
+  }
 
   // Show configuration form for Notice spaces
   if (showConfigForm && selectedType === SpaceType.Notice) {
@@ -172,11 +235,12 @@ export default function SelectSpaceForm({ feed_id }: { feed_id: number }) {
         {/* Use React.lazy or this conditional rendering pattern to 
             ensure the component only renders after initial render */}
         {showConfigForm && (
-          <SpaceConfigForm
+          <NbsConfigForm
             spaceType={selectedType}
             feedId={feed_id}
-            onBack={handleBackToSelection}
+            onBack={handleBackToCommittee}
             onConfirm={handleConfigConfirm}
+            committeeUserIds={committeeUserIds}
           />
         )}
       </div>

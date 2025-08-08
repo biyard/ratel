@@ -12,14 +12,16 @@ import { config } from '@/config';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { usePopup } from '@/lib/contexts/popup-service';
 import { logger } from '@/lib/logger';
+import { showErrorToast } from '@/lib/toast';
 import { useRouter } from 'next/navigation';
 import { route } from '@/route';
 
-interface SpaceConfigFormProps {
+interface NbsConfigFormProps {
   spaceType: SpaceType;
   feedId: number;
   onBack: () => void;
   onConfirm: () => void;
+  committeeUserIds?: number[];
 }
 
 export interface SpaceConfig {
@@ -32,12 +34,13 @@ export interface SpaceConfig {
   boosterType: BoosterType;
 }
 
-export default function SpaceConfigForm({
+export default function NbsConfigForm({
   spaceType,
   feedId,
   onBack,
   onConfirm,
-}: SpaceConfigFormProps) {
+  committeeUserIds = [],
+}: NbsConfigFormProps) {
   const popup = usePopup();
   const router = useRouter();
   // Initial date setup - 1 hour from now and 2 hours from now
@@ -94,6 +97,12 @@ export default function SpaceConfigForm({
   }, [isBoosterDropdownOpen]);
 
   const handleSubmit = async () => {
+    // Validate that end time is after start time
+    if (endTimestamp <= startTimestamp) {
+      showErrorToast('The end time must be later than the start time.');
+      return;
+    }
+
     setIsLoading(true);
     try {
       // Convert milliseconds to seconds for API
@@ -116,7 +125,7 @@ export default function SpaceConfigForm({
             noticeSpaceCreateRequest(
               spaceType,
               feedId,
-              [],
+              committeeUserIds,
               0,
               startedAt,
               endedAt,
@@ -207,12 +216,24 @@ export default function SpaceConfigForm({
             <CalendarDropdown
               value={startTimestamp}
               onChange={(timestamp) => {
+                if (timestamp >= endTimestamp) {
+                  showErrorToast(
+                    'The start date must be earlier than the end date.',
+                  );
+                  return;
+                }
                 setStartTimestamp(timestamp);
               }}
             />
             <TimeDropdown
               value={startTimestamp}
               onChange={(timestamp) => {
+                if (timestamp >= endTimestamp) {
+                  showErrorToast(
+                    'The start time must be earlier than the end time.',
+                  );
+                  return;
+                }
                 setStartTimestamp(timestamp);
               }}
             />
@@ -229,12 +250,24 @@ export default function SpaceConfigForm({
             <CalendarDropdown
               value={endTimestamp}
               onChange={(timestamp) => {
+                if (timestamp <= startTimestamp) {
+                  showErrorToast(
+                    'The end date must be later than the start date.',
+                  );
+                  return;
+                }
                 setEndTimestamp(timestamp);
               }}
             />
             <TimeDropdown
               value={endTimestamp}
               onChange={(timestamp) => {
+                if (timestamp <= startTimestamp) {
+                  showErrorToast(
+                    'The end time must be later than the start time.',
+                  );
+                  return;
+                }
                 setEndTimestamp(timestamp);
               }}
             />

@@ -258,31 +258,6 @@ pub struct NoticeOptionRequest {
     pub is_correct: bool,
 }
 
-// Legacy types for compatibility with existing controllers
-#[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq, Eq, Validate)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
-pub struct NoticeQuestionWithAnswer {
-    pub title: String,
-    pub images: Vec<String>,
-    pub options: Vec<NoticeOptionWithAnswer>,
-}
-
-#[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq, Eq)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
-pub struct NoticeOptionWithAnswer {
-    pub content: String,
-    pub is_correct: bool,
-}
-
-// Result structure for quiz attempts
-#[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq, Eq)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
-pub struct NoticeResult {
-    pub total_questions: usize,
-    pub correct_answers: usize,
-    pub is_successful: bool,
-    pub questions_results: HashMap<String, bool>, // question_id -> is_correct
-}
 
 // Conversion function from request to entity with UUID generation
 pub fn convert_notice_quiz_request(request: &NoticeQuizRequest) -> (Vec<NoticeQuestion>, NoticeAnswer) {
@@ -311,40 +286,6 @@ pub fn convert_notice_quiz_request(request: &NoticeQuizRequest) -> (Vec<NoticeQu
             id: question_id,
             title: q_req.title.clone(),
             images: vec![], // Empty for now, can be extended
-            options,
-        }
-    }).collect();
-    
-    (questions, NoticeAnswer { answers: correct_answers })
-}
-
-// Helper function to convert legacy NoticeQuestionWithAnswer to new structure
-pub fn convert_legacy_quiz_to_new(quiz_requests: &[NoticeQuestionWithAnswer]) -> (Vec<NoticeQuestion>, NoticeAnswer) {
-    let mut correct_answers = HashMap::new();
-    
-    let questions: Vec<NoticeQuestion> = quiz_requests.iter().map(|q_req| {
-        let question_id = Uuid::new_v4().to_string();
-        let mut correct_option_ids = HashSet::new();
-        
-        let options: Vec<NoticeOption> = q_req.options.iter().map(|o_req| {
-            let option_id = Uuid::new_v4().to_string();
-            
-            if o_req.is_correct {
-                correct_option_ids.insert(option_id.clone());
-            }
-            
-            NoticeOption {
-                id: option_id,
-                content: o_req.content.clone(),
-            }
-        }).collect();
-        
-        correct_answers.insert(question_id.clone(), correct_option_ids);
-        
-        NoticeQuestion {
-            id: question_id,
-            title: q_req.title.clone(),
-            images: q_req.images.clone(),
             options,
         }
     }).collect();

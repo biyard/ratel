@@ -30,12 +30,14 @@ import {
   DialPad,
   DialPad2,
 } from '@/components/icons';
+import Heart from '@/assets/icons/emoji/heart.svg';
+import BrokenHeart from '@/assets/icons/emoji/broken-heart.svg';
 import { QuizQuestion, NoticeQuizRequest } from '@/lib/api/models/notice';
 import { SpaceStatus } from '@/lib/api/models/spaces';
 import Image from 'next/image';
 import FileUploader from '@/components/file-uploader';
 import { usePopup } from '@/lib/contexts/popup-service';
-import { showErrorToast, showSuccessToast } from '@/lib/toast';
+import { showErrorToast } from '@/lib/toast';
 import {
   useLatestQuizAttempt,
   useQuizAttempts,
@@ -150,6 +152,33 @@ export default function QuizBuilderUI({
     !!(spaceId && spaceId > 0),
   );
 
+  // Function to render heart icons based on attempt count (only for non-owners)
+  const renderHeartIcons = (attemptCount: number) => {
+    if (isOwner) return null;
+
+    const heartIcons = [];
+
+    // Add broken hearts for each attempt (max 2)
+    const brokenHeartCount = Math.min(attemptCount, 2);
+    for (let i = 0; i < brokenHeartCount; i++) {
+      heartIcons.push(
+        <BrokenHeart
+          key={`broken-${i}`}
+          width={25}
+          height={25}
+          className="text-neutral-500"
+        />,
+      );
+    }
+
+    // Always add one heart at the end for current attempt
+    heartIcons.push(
+      <Heart key="heart" width={25} height={25} className="text-red-500" />,
+    );
+
+    return <div className="flex items-center gap-1">{heartIcons}</div>;
+  };
+
   const isActualOwner = !!quizAnswers && !quizAnswersIsError;
 
   const failedAttempts =
@@ -244,7 +273,7 @@ export default function QuizBuilderUI({
 
     try {
       await onSubmitQuiz(questions);
-      showSuccessToast('Quiz submitted successfully!');
+      // Success notification is handled by the provider
     } catch {
       showErrorToast('Failed to submit quiz. Please try again.');
     }
@@ -260,13 +289,13 @@ export default function QuizBuilderUI({
       options: [
         {
           id: `option-${Date.now()}-1`,
-          text: 'Option 1',
+          text: '',
           isCorrect: false,
           isSelected: false,
         },
         {
           id: `option-${Date.now()}-2`,
-          text: 'Option 2',
+          text: '',
           isCorrect: false,
           isSelected: false,
         },
@@ -571,13 +600,17 @@ export default function QuizBuilderUI({
           userId &&
           !isOwner && (
             <div className="mb-6 pt-4">
-              <h3 className="text-xl font-semibold text-white">
-                Attempt #{nextAttemptNumber > 3 ? 3 : nextAttemptNumber}
-                {nextAttemptNumber > 3 && (
-                  <span className="text-red-400 text-sm ml-2">
-                    (Max reached)
-                  </span>
-                )}
+              <h3 className="text-xl font-semibold text-white flex items-center justify-between">
+                <div>
+                  Attempt #{nextAttemptNumber > 3 ? 3 : nextAttemptNumber}
+                  {nextAttemptNumber > 3 && (
+                    <span className="text-red-400 text-sm ml-2">
+                      (Max reached)
+                    </span>
+                  )}
+                </div>
+                {/* Heart icons for non-owners - positioned at extreme right */}
+                {attemptsData && renderHeartIcons(attemptsData.total_count)}
               </h3>
             </div>
           )}

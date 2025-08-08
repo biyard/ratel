@@ -6,12 +6,15 @@ import {
   useNoticeSpace,
   useNoticeSpaceContext,
 } from './provider.client';
+import { NoticeNotificationProvider } from './_components/notifications';
 
 import ClientProviders from './provider.client';
 import SpaceHeader from './_components/space_header';
 import SpaceSideMenu from './_components/space_side_menu';
 import NoticePage from './_components/notice';
 import { usePopup } from '@/lib/contexts/popup-service';
+import SaveFirstModal from './_components/modal/save-first-modal';
+import GoPublicModal from './_components/modal/go-public-modal';
 import PublishForm from './_components/modal/publish-form';
 import { SpaceType, SpaceStatus } from '@/lib/api/models/spaces';
 import { PublishingScope } from '@/lib/api/models/notice';
@@ -20,9 +23,11 @@ import { useUserInfo } from '@/app/(social)/_hooks/user';
 
 export default function NoticeSpacePage() {
   return (
-    <ClientProviders>
-      <Page />
-    </ClientProviders>
+    <NoticeNotificationProvider>
+      <ClientProviders>
+        <Page />
+      </ClientProviders>
+    </NoticeNotificationProvider>
   );
 }
 
@@ -32,6 +37,7 @@ function Page() {
   const popup = usePopup();
   const {
     isEdit,
+    setIsEdit,
     title,
     status,
     userType,
@@ -41,6 +47,7 @@ function Page() {
     isPrivatelyPublished,
     handleGoBack,
     handleSave,
+    handleSaveAndPublish,
     handleEdit,
     handleLike,
     handleShare,
@@ -66,17 +73,34 @@ function Page() {
   }
 
   const handlePost = async () => {
-    // For notice spaces, show the publish form modal
-    if (space.space_type === SpaceType.Notice) {
+    // For notice spaces in draft status, show the publish form
+    if (
+      space.space_type === SpaceType.Notice &&
+      space.status === SpaceStatus.Draft
+    ) {
       popup
         .open(
           <PublishForm
-            currentScope={space.publishing_scope}
             onPublish={async (scope: PublishingScope) => {
-              await handlePublishWithScope(scope);
               popup.close();
+              await handlePublishWithScope(scope);
             }}
             onClose={() => popup.close()}
+            currentScope={space.publishing_scope}
+          />,
+        )
+        .withoutClose()
+        .withoutBackdropClose();
+    } else if (space.space_type === SpaceType.Notice) {
+      // For notice spaces that are already in progress (private), show the go public modal
+      popup
+        .open(
+          <GoPublicModal
+            onCancel={() => popup.close()}
+            onGoPublic={async () => {
+              popup.close();
+              await handlePublishWithScope(PublishingScope.Public);
+            }}
           />,
         )
         .withoutClose()
@@ -85,6 +109,30 @@ function Page() {
       // For other space types, use the regular posting
       await handlePublishWithScope(PublishingScope.Private);
     }
+  };
+
+  const handlePublishWhileEditing = () => {
+    // Show the save first modal for notice spaces
+    popup
+      .open(
+        <SaveFirstModal
+          onJustPublish={async () => {
+            // Just publish publicly without saving first
+            popup.close();
+            await handlePublishWithScope(PublishingScope.Public);
+            setIsEdit(false); // Exit edit mode and refresh content
+          }}
+          onSaveAndPublish={async () => {
+            // Save and publish in one request
+            popup.close();
+            await handleSaveAndPublish(PublishingScope.Public);
+            setIsEdit(false); // Exit edit mode and refresh content
+          }}
+          onClose={() => popup.close()}
+        />,
+      )
+      .withoutClose()
+      .withoutBackdropClose();
   };
 
   return (
@@ -111,6 +159,7 @@ function Page() {
           onpost={handlePost}
           onlike={handleLike}
           onshare={handleShare}
+          onpublishwhileediting={handlePublishWhileEditing}
           setTitle={setTitle}
         />
       </div>

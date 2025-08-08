@@ -25,6 +25,7 @@ import {
   spaceSubmitQuizAnswersRequest,
   NoticeAnswer,
 } from '@/lib/api/models/notice';
+import { useNoticeNotification } from './_components/notifications';
 
 // Quiz validation function
 const validateQuizQuestions = (questions: Question[]): string | null => {
@@ -120,6 +121,8 @@ type ContextType = {
   handlePostingSpace: () => Promise<void>;
   handleEdit: () => void;
   handleSave: () => Promise<void>;
+  handleSaveWithoutExitingEditMode: () => Promise<void>;
+  handleSaveAndPublish: (scope: PublishingScope) => Promise<void>;
   handlePublishWithScope: (scope: PublishingScope) => Promise<void>;
   handleSubmitQuiz: (questions: Question[]) => Promise<void>;
 };
@@ -155,6 +158,8 @@ export default function ClientProviders({
   const { invalidateQuizData, forceRefreshQuizData } = useQuizUpdates(
     space?.id || 0,
   );
+  const { showSuccessNotification, showFailedNotification } =
+    useNoticeNotification();
 
   const { post: callPostingSpace } = useApiCall();
   const { post: callUpdateSpace } = useApiCall();
@@ -389,6 +394,151 @@ export default function ClientProviders({
     }
   };
 
+  const handleSaveWithoutExitingEditMode = async () => {
+    if (!space) return;
+    console.log('handleSaveWithoutExitingEditMode called');
+    // Show temporary saving message
+    showInfoToast('Saving changes...');
+
+    if (!validateString(title)) {
+      showErrorToast('Title contains invalid characters');
+      return;
+    }
+
+    if (!title.trim()) {
+      showErrorToast('Title cannot be empty');
+      return;
+    }
+
+    try {
+      // Validate quiz questions before saving
+      if (quizQuestions.length > 0) {
+        const validationError = validateQuizQuestions(quizQuestions);
+        if (validationError) {
+          showErrorToast(validationError);
+          return;
+        }
+      }
+
+      // Convert frontend quiz questions to backend format
+      // When space is InProgress, pass null to prevent quiz modifications
+      const quizRequest =
+        space.status === SpaceStatus.InProgress
+          ? null
+          : convertQuestionsToNoticeQuizRequest(quizQuestions);
+
+      // Debug log to verify the correct structure is being sent
+      console.log('Quiz being sent:', JSON.stringify(quizRequest, null, 2));
+
+      const updateRequest = spaceUpdateRequest(
+        htmlContent,
+        space.files,
+        [], // discussions
+        [], // elearnings
+        [], // surveys
+        [], // drafts
+        title,
+        space.started_at,
+        space.ended_at,
+        space.publishing_scope, // preserve current publishing scope
+        quizRequest, // quiz
+      );
+
+      // Debug log the full request payload
+      console.log(
+        'Full update request payload:',
+        JSON.stringify(updateRequest, null, 2),
+      );
+
+      await callUpdateSpace(
+        ratelApi.spaces.getSpaceBySpaceId(space.id),
+        updateRequest,
+      );
+
+      await queryClient.invalidateQueries({
+        queryKey: [QK_GET_SPACE_BY_SPACE_ID, space.id],
+      });
+      showSuccessToast('Space saved successfully');
+      // Note: Do NOT call setIsEdit(false) here - keep in edit mode
+    } catch (e) {
+      showErrorToast('Failed to save space');
+      logger.error(e);
+    }
+  };
+
+  const handleSaveAndPublish = async (scope: PublishingScope) => {
+    if (!space) return;
+    console.log('handleSaveAndPublish called with scope:', scope);
+
+    // Show temporary saving message
+    showInfoToast('Saving and publishing...');
+
+    if (!validateString(title)) {
+      showErrorToast('Title contains invalid characters');
+      return;
+    }
+
+    if (!title.trim()) {
+      showErrorToast('Title cannot be empty');
+      return;
+    }
+
+    try {
+      // Validate quiz questions before saving
+      if (quizQuestions.length > 0) {
+        const validationError = validateQuizQuestions(quizQuestions);
+        if (validationError) {
+          showErrorToast(validationError);
+          return;
+        }
+      }
+
+      // Convert frontend quiz questions to backend format
+      // When space is InProgress, pass null to prevent quiz modifications
+      const quizRequest =
+        space.status === SpaceStatus.InProgress
+          ? null
+          : convertQuestionsToNoticeQuizRequest(quizQuestions);
+
+      // Create update request with BOTH the content changes AND the publishing scope
+      const updateRequest = spaceUpdateRequest(
+        htmlContent,
+        space.files,
+        [], // discussions
+        [], // elearnings
+        [], // surveys
+        [], // drafts
+        title,
+        space.started_at,
+        space.ended_at,
+        scope, // Use the new publishing scope
+        quizRequest, // quiz
+      );
+
+      // Debug log the full request payload
+      console.log(
+        'Save and publish request payload:',
+        JSON.stringify(updateRequest, null, 2),
+      );
+
+      await callUpdateSpace(
+        ratelApi.spaces.getSpaceBySpaceId(space.id),
+        updateRequest,
+      );
+
+      await queryClient.invalidateQueries({
+        queryKey: [QK_GET_SPACE_BY_SPACE_ID, space.id],
+      });
+
+      showSuccessToast(
+        `Space saved and published ${scope === PublishingScope.Public ? 'publicly' : 'privately'} successfully`,
+      );
+    } catch (e) {
+      showErrorToast('Failed to save and publish space');
+      logger.error(e);
+    }
+  };
+
   const handleSubmitQuiz = async (questions: Question[]) => {
     console.log('Provider handleSubmitQuiz called with questions:', questions);
     console.log('Space:', space);
@@ -479,11 +629,58 @@ export default function ClientProviders({
 
         console.log('Latest attempt after submission:', latestAttempt);
 
-        // Show appropriate toast based on success status
+        // Calculate reward amount based on booster type and penalties
+        const calculateRewardAmount = () => {
+          const baseReward = 10000;
+          let multiplier = 1;
+
+          switch (String(space?.booster_type)) {
+            case '2':
+              multiplier = 2;
+              break;
+            case '3':
+              multiplier = 10;
+              break;
+            case '4':
+              multiplier = 100;
+              break;
+            case '1':
+            default:
+              multiplier = 1;
+              break;
+          }
+
+          const baseValue = baseReward * multiplier;
+
+          // Get attempts data to calculate penalties
+          const attemptsData = queryClient.getQueryData<{
+            items: { is_successful: boolean }[];
+          }>(['quiz-attempts', space.id]);
+          const failedAttempts =
+            attemptsData?.items?.filter((attempt) => !attempt.is_successful) ||
+            [];
+          const penaltyCount = Math.min(failedAttempts.length, 2);
+          const penaltyMultiplier = Math.pow(0.5, penaltyCount);
+
+          // Use the same calculation as the side menu - no Math.floor()
+          return baseValue * penaltyMultiplier;
+        };
+
+        // Show appropriate notification based on success status
         if (latestAttempt && latestAttempt.is_successful) {
-          showSuccessToast('Coin Earned! View it in your profile.');
+          const rewardAmount = calculateRewardAmount();
+          // Get penalty count for notification display
+          const attemptsData = queryClient.getQueryData<{
+            items: { is_successful: boolean }[];
+          }>(['quiz-attempts', space.id]);
+          const failedAttempts =
+            attemptsData?.items?.filter((attempt) => !attempt.is_successful) ||
+            [];
+          const penaltyCount = Math.min(failedAttempts.length, 2);
+
+          showSuccessNotification(rewardAmount, penaltyCount);
         } else {
-          showErrorToast('Each wrong answer cuts your reward in half!');
+          showFailedNotification();
         }
 
         // Trigger one final refresh to ensure all components update
@@ -497,8 +694,25 @@ export default function ClientProviders({
         console.error('Failed to fetch attempt data:', attemptError);
         // Still refresh queries even if fetch failed
         await forceRefreshQuizData();
-        // Fallback to generic success message
-        showSuccessToast('Quiz submitted successfully!');
+        // Fallback to generic success notification with base reward
+        const baseReward = 10000;
+        let multiplier = 1;
+        switch (String(space?.booster_type)) {
+          case '2':
+            multiplier = 2;
+            break;
+          case '3':
+            multiplier = 10;
+            break;
+          case '4':
+            multiplier = 100;
+            break;
+          case '1':
+          default:
+            multiplier = 1;
+            break;
+        }
+        showSuccessNotification(baseReward * multiplier, 0);
       }
     } catch (e) {
       console.error('Submit quiz error:', e);
@@ -614,6 +828,8 @@ export default function ClientProviders({
     handlePostingSpace,
     handleEdit,
     handleSave,
+    handleSaveWithoutExitingEditMode,
+    handleSaveAndPublish,
     handlePublishWithScope,
     handleSubmitQuiz,
   };

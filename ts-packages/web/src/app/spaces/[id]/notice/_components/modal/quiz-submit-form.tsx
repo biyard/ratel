@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { Remove } from '@/components/icons';
 
 export interface QuizSubmitFormProps {
   onSubmit: () => void;
@@ -12,14 +13,24 @@ export default function QuizSubmitForm({
   onClose,
 }: QuizSubmitFormProps) {
   return (
-    <div className="w-[500px] flex flex-col mt-6">
+    <div className="w-[500px] flex flex-col mt-2 relative">
+      {/* Close button - top right */}
+      <button
+        onClick={onClose}
+        className="absolute top-0 right-0 p-2 text-neutral-400 hover:text-white transition-colors"
+        aria-label="Close"
+      >
+        <Remove className="w-5 h-5 stroke-[currentColor]" />
+      </button>
+
       <div className="text-center font-bold text-white text-[24px] mb-6">
         Just heads up!
       </div>
 
       {/* Warning Content */}
       <div className="text-center font-medium text-neutral-400 text-base">
-        Wrong answers will reduce your reward by 50%
+        Wrong answers will reduce your reward by{' '}
+        <span className="text-red-500 font-bold">50%</span>
         <br />
         You can test again, but remember — the{' '}
         <span className="font-bold">
