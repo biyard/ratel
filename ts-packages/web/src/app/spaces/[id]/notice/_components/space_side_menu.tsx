@@ -18,6 +18,12 @@ import { Settings } from 'lucide-react';
 import { useNoticeSpace, useNoticeSpaceContext } from '../provider.client';
 import { useSpaceByIdContext } from '../../providers.client';
 import { useLatestQuizAttempt, useQuizAttempts } from '@/lib/api/ratel_api';
+import {
+  calculateBaseReward,
+  calculateRewardWithPenalties,
+  formatRewardAmount,
+  getBoosterMultiplier,
+} from '../_utils/reward-calculator';
 import { usePopup } from '@/lib/contexts/popup-service';
 import SetSchedulePopup from './modal/set_schedule';
 import { useQuizDataRefresh } from '@/hooks/use-quiz-updates';
@@ -44,44 +50,16 @@ export default function SpaceSideMenu() {
   // Auto-refresh quiz data when component mounts or user changes
   useQuizDataRefresh(spaceId || 0);
 
-  // Function to calculate reward amount based on booster type
+  // Function to calculate reward amount based on booster type (using shared utility)
   const getRewardAmount = (boosterType?: string | number): string => {
-    const baseReward = 10000;
-    let multiplier = 1;
-
-    switch (String(boosterType)) {
-      case '2':
-        multiplier = 2;
-        break;
-      case '3':
-        multiplier = 10;
-        break;
-      case '4':
-        multiplier = 100;
-        break;
-      case '1':
-      default:
-        multiplier = 1;
-        break;
-    }
-
-    const rewardAmount = baseReward * multiplier;
-    return `+${rewardAmount.toLocaleString()} P`;
+    const rewardAmount = calculateBaseReward(boosterType);
+    return formatRewardAmount(rewardAmount);
   };
 
   // Function to get booster text based on booster type
   const getBoosterText = (boosterType?: string | number): string => {
-    switch (String(boosterType)) {
-      case '2':
-        return 'x2';
-      case '3':
-        return 'x10';
-      case '4':
-        return 'x100';
-      case '1':
-      default:
-        return 'x1';
-    }
+    const multiplier = getBoosterMultiplier(boosterType);
+    return multiplier === 0 ? 'None' : `x${multiplier}`;
   };
 
   return (
@@ -130,14 +108,16 @@ export default function SpaceSideMenu() {
             ))}
           </div>
 
-          {/* Booster reward line - only show if booster type is not 'none' */}
+          {/* Booster reward line - only show if booster type provides actual boost */}
           {(() => {
             const boosterType = currentSpace?.booster_type || 'none';
-            if (boosterType === 'none') return null;
+            const multiplier = getBoosterMultiplier(boosterType);
+
+            // Don't show booster section if there's no boost (multiplier is 0)
+            if (multiplier === 0) return null;
 
             // Map booster type values to their display names
             const boosterTypeMap: { [key: string]: string } = {
-              '1': 'NoBoost',
               '2': 'X2',
               '3': 'X10',
               '4': 'X100',
@@ -231,37 +211,17 @@ export default function SpaceSideMenu() {
               Total Estimated Value
             </div>
             {(() => {
-              // Calculate total estimated value based on booster type and penalties
-              const baseReward = 10000;
-              let multiplier = 1;
-
-              switch (String(currentSpace?.booster_type)) {
-                case '2':
-                  multiplier = 2;
-                  break;
-                case '3':
-                  multiplier = 10;
-                  break;
-                case '4':
-                  multiplier = 100;
-                  break;
-                case '1':
-                default:
-                  multiplier = 1;
-                  break;
-              }
-
-              const baseValue = baseReward * multiplier;
-
-              // Calculate penalty reduction
+              // Calculate total estimated value using shared utility
               const failedAttempts =
                 attemptsData?.items?.filter(
                   (attempt) => !attempt.is_successful,
                 ) || [];
               const penaltyCount = Math.min(failedAttempts.length, 2);
-              const penaltyMultiplier = Math.pow(0.5, penaltyCount);
 
-              const finalValue = baseValue * penaltyMultiplier;
+              const finalValue = calculateRewardWithPenalties(
+                currentSpace?.booster_type,
+                penaltyCount,
+              );
 
               return (
                 <div className="font-medium text-white text-[18px]/[16px]">

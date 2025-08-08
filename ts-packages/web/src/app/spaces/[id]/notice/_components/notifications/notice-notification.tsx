@@ -54,7 +54,7 @@ export default function NoticeNotification({
           )}
           <span className="text-white font-semibold text-[14px]">
             {notification.type === 'success'
-              ? `${notification.rewardAmount?.toLocaleString()} P`
+              ? `+ ${notification.rewardAmount?.toLocaleString()} P`
               : 'X 0.5 Penalty'}
           </span>
         </div>

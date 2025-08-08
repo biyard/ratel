@@ -25,7 +25,6 @@ import {
   spaceSubmitQuizAnswersRequest,
   NoticeAnswer,
 } from '@/lib/api/models/notice';
-import { useNoticeNotification } from './_components/notifications';
 
 // Quiz validation function
 const validateQuizQuestions = (questions: Question[]): string | null => {
@@ -158,8 +157,6 @@ export default function ClientProviders({
   const { invalidateQuizData, forceRefreshQuizData } = useQuizUpdates(
     space?.id || 0,
   );
-  const { showSuccessNotification, showFailedNotification } =
-    useNoticeNotification();
 
   const { post: callPostingSpace } = useApiCall();
   const { post: callUpdateSpace } = useApiCall();
@@ -629,61 +626,7 @@ export default function ClientProviders({
 
         console.log('Latest attempt after submission:', latestAttempt);
 
-        // Calculate reward amount based on booster type and penalties
-        const calculateRewardAmount = () => {
-          const baseReward = 10000;
-          let multiplier = 1;
-
-          switch (String(space?.booster_type)) {
-            case '2':
-              multiplier = 2;
-              break;
-            case '3':
-              multiplier = 10;
-              break;
-            case '4':
-              multiplier = 100;
-              break;
-            case '1':
-            default:
-              multiplier = 1;
-              break;
-          }
-
-          const baseValue = baseReward * multiplier;
-
-          // Get attempts data to calculate penalties
-          const attemptsData = queryClient.getQueryData<{
-            items: { is_successful: boolean }[];
-          }>(['quiz-attempts', space.id]);
-          const failedAttempts =
-            attemptsData?.items?.filter((attempt) => !attempt.is_successful) ||
-            [];
-          const penaltyCount = Math.min(failedAttempts.length, 2);
-          const penaltyMultiplier = Math.pow(0.5, penaltyCount);
-
-          // Use the same calculation as the side menu - no Math.floor()
-          return baseValue * penaltyMultiplier;
-        };
-
-        // Show appropriate notification based on success status
-        if (latestAttempt && latestAttempt.is_successful) {
-          const rewardAmount = calculateRewardAmount();
-          // Get penalty count for notification display
-          const attemptsData = queryClient.getQueryData<{
-            items: { is_successful: boolean }[];
-          }>(['quiz-attempts', space.id]);
-          const failedAttempts =
-            attemptsData?.items?.filter((attempt) => !attempt.is_successful) ||
-            [];
-          const penaltyCount = Math.min(failedAttempts.length, 2);
-
-          showSuccessNotification(rewardAmount, penaltyCount);
-        } else {
-          showFailedNotification();
-        }
-
-        // Trigger one final refresh to ensure all components update
+        // Trigger refresh to update quiz data and UI state
         await forceRefreshQuizData();
 
         // Wait a short moment and refresh again to ensure UI updates
@@ -694,25 +637,6 @@ export default function ClientProviders({
         console.error('Failed to fetch attempt data:', attemptError);
         // Still refresh queries even if fetch failed
         await forceRefreshQuizData();
-        // Fallback to generic success notification with base reward
-        const baseReward = 10000;
-        let multiplier = 1;
-        switch (String(space?.booster_type)) {
-          case '2':
-            multiplier = 2;
-            break;
-          case '3':
-            multiplier = 10;
-            break;
-          case '4':
-            multiplier = 100;
-            break;
-          case '1':
-          default:
-            multiplier = 1;
-            break;
-        }
-        showSuccessNotification(baseReward * multiplier, 0);
       }
     } catch (e) {
       console.error('Submit quiz error:', e);
