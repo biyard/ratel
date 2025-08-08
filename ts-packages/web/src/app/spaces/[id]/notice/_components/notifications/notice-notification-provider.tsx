@@ -1,6 +1,12 @@
 'use client';
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  ReactNode,
+  useCallback,
+} from 'react';
 import NoticeNotification, {
   NoticeNotificationData,
 } from './notice-notification';
@@ -27,34 +33,34 @@ export function NoticeNotificationProvider({
   const [notification, setNotification] =
     useState<NoticeNotificationData | null>(null);
 
-  const showSuccessNotification = (
-    rewardAmount: number,
-    penaltyCount?: number,
-  ) => {
-    const displayText =
-      penaltyCount && penaltyCount > 0
-        ? `Coin Earned! (${penaltyCount}x penalty applied)`
-        : 'Coin Earned! View it in your profile.';
+  const showSuccessNotification = useCallback(
+    (rewardAmount: number, penaltyCount?: number) => {
+      const displayText =
+        penaltyCount && penaltyCount > 0
+          ? `Coin Earned! (${penaltyCount}x penalty applied)`
+          : 'Coin Earned! View it in your profile.';
 
-    setNotification({
-      type: 'success',
-      title: `+ ${rewardAmount.toLocaleString()} P`,
-      body: displayText,
-      rewardAmount,
-    });
-  };
+      setNotification({
+        type: 'success',
+        title: `+ ${rewardAmount.toLocaleString()} P`,
+        body: displayText,
+        rewardAmount,
+      });
+    },
+    [],
+  );
 
-  const showFailedNotification = () => {
+  const showFailedNotification = useCallback(() => {
     setNotification({
       type: 'failed',
       title: 'X 0.5 Penalty',
       body: 'Each wrong answer cuts your reward in half!',
     });
-  };
+  }, []);
 
-  const closeNotification = () => {
+  const closeNotification = useCallback(() => {
     setNotification(null);
-  };
+  }, []);
 
   return (
     <NoticeNotificationContext.Provider

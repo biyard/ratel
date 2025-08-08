@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect, useRef } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -44,6 +44,9 @@ import {
   useQuizAnswers,
 } from '@/lib/api/ratel_api';
 import QuizSubmitForm from './modal/quiz-submit-form';
+import { useNoticeNotification } from './notifications';
+import { calculateRewardWithPenalties } from '../_utils/reward-calculator';
+import { useNoticeSpace } from '../provider.client';
 
 export interface Option {
   id: string;
@@ -147,10 +150,58 @@ export default function QuizBuilderUI({
 
   const { data: latestAttempt } = useLatestQuizAttempt(spaceId || 0);
 
+  // Get current space data for booster type
+  const currentSpace = useNoticeSpace();
+
   const { data: quizAnswers, isError: quizAnswersIsError } = useQuizAnswers(
     spaceId || 0,
     !!(spaceId && spaceId > 0),
   );
+
+  // Get notification functions
+  const { showSuccessNotification, showFailedNotification } =
+    useNoticeNotification();
+
+  // Calculate failed attempts for penalty calculation
+  const failedAttempts =
+    attemptsData?.items?.filter((attempt) => !attempt.is_successful) || [];
+  const nextAttemptNumber = failedAttempts.length + 1;
+
+  // Track last notified attempt to prevent duplicate notifications
+  const lastNotifiedAttemptRef = useRef<string | null>(null);
+
+  // Watch for quiz attempt results and show notifications
+  useEffect(() => {
+    if (!latestAttempt || isEditMode) return;
+
+    // Prevent duplicate notifications for the same attempt
+    const attemptId = `${latestAttempt.created_at}-${latestAttempt.is_successful}`;
+    if (lastNotifiedAttemptRef.current === attemptId) return;
+
+    lastNotifiedAttemptRef.current = attemptId;
+
+    // Show appropriate notification based on quiz result
+    if (latestAttempt.is_successful) {
+      // Calculate reward amount for successful attempt using actual booster type
+      const boosterType = currentSpace?.booster_type || 'none';
+      const penaltyCount = failedAttempts.length;
+      const rewardAmount = calculateRewardWithPenalties(
+        boosterType,
+        penaltyCount,
+      );
+      showSuccessNotification(rewardAmount, penaltyCount);
+    } else {
+      // Show failure notification
+      showFailedNotification();
+    }
+  }, [
+    latestAttempt,
+    failedAttempts.length,
+    currentSpace?.booster_type,
+    isEditMode,
+    showSuccessNotification,
+    showFailedNotification,
+  ]);
 
   // Function to render heart icons based on attempt count (only for non-owners)
   const renderHeartIcons = (attemptCount: number) => {
@@ -180,10 +231,6 @@ export default function QuizBuilderUI({
   };
 
   const isActualOwner = !!quizAnswers && !quizAnswersIsError;
-
-  const failedAttempts =
-    attemptsData?.items?.filter((attempt) => !attempt.is_successful) || [];
-  const nextAttemptNumber = failedAttempts.length + 1;
 
   React.useEffect(() => {
     const styleTag = document.createElement('style');
