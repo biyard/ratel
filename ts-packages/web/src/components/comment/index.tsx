@@ -41,7 +41,7 @@ export default function Comment({ comment, onSubmit, onLike }: CommentProps) {
         )}
 
         <div className="flex flex-col gap-[2px]">
-          <div className="font-semibold text-neutral-300 text-[15px]/[15px]">
+          <div className="font-semibold text-neutral-300 text-[15px]/[15px] light:text-neutral-500">
             {comment.author[0].nickname ?? ''}
           </div>
           <div className="font-semibold text-xs/[20px] text-[#6d6d6d]">
@@ -110,9 +110,13 @@ export default function Comment({ comment, onSubmit, onLike }: CommentProps) {
                 setExpand((prev) => !prev);
                 setShowReplies(true);
               }}
-              className="flex gap-2 cursor-pointer justify-center items-center"
+              className="flex gap-2 cursor-pointer justify-center items-center text-custom-white"
             >
-              <BendArrowRight width={24} height={24} />
+              <BendArrowRight
+                width={24}
+                height={24}
+                className="[&>path]:stroke-[#d4d4d4] light:[&>path]:stroke-custom-white"
+              />
               Reply
             </div>
           </div>
@@ -144,7 +148,7 @@ export default function Comment({ comment, onSubmit, onLike }: CommentProps) {
             {comment.replies.map((reply) => (
               <div
                 key={reply.id}
-                className="flex flex-col gap-2 p-5 rounded-lg bg-neutral-800"
+                className="flex flex-col gap-2 p-5 rounded-lg bg-component-bg border border-transparent light:border-neutral-200"
               >
                 <div className="flex flex-row gap-2 items-center">
                   {reply.author?.[0]?.profile_url ? (
@@ -160,7 +164,7 @@ export default function Comment({ comment, onSubmit, onLike }: CommentProps) {
                   )}
 
                   <div className="flex flex-col gap-[2px]">
-                    <div className="font-semibold text-neutral-300 text-[15px]/[15px]">
+                    <div className="font-semibold text-neutral-300 text-[15px]/[15px] light:text-neutral-500">
                       {reply.author?.[0]?.nickname ?? ''}
                     </div>
                   </div>
@@ -227,7 +231,7 @@ export function NewComment({
   return (
     <div
       ref={ref}
-      className="flex w-full bg-neutral-900 border rounded-lg border-primary max-w-desktop"
+      className="flex w-full bg-neutral-900 border rounded-lg border-primary max-w-desktop light:border-neutral-200"
     >
       <div className="flex-1">
         <LexicalHtmlEditor
@@ -240,7 +244,11 @@ export function NewComment({
       </div>
       <div className="p-3 flex flex-col justify-between">
         <button className="p-1 flex flex-row justify-center" onClick={onClose}>
-          <ChevronDoubleDownIcon width={24} height={24} />
+          <ChevronDoubleDownIcon
+            width={24}
+            height={24}
+            className="[&>path]:stroke-custom-white"
+          />
         </button>
         <div>
           <button

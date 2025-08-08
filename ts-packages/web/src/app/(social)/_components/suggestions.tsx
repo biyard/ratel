@@ -59,7 +59,7 @@ export default function Suggestions() {
 
   return (
     <BlackBox>
-      <h3 className={`font-medium mb-3 text-white light:text-neutral-800`}>
+      <h3 className={`font-bold mb-3 text-white light:text-neutral-800`}>
         Suggested
       </h3>
       <div className="flex flex-col gap-[35px]">

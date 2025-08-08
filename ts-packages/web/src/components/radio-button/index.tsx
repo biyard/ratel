@@ -16,7 +16,7 @@ export default function RadioButton({
         className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${
           selected
             ? 'bg-[#fcb300] hover:bg-[#fcb300]/90'
-            : 'border-2 border-[#6b6b6b] hover:border-white'
+            : 'border-2 border-[#6b6b6b] hover:border-white light:bg-neutral-200 light:hover:border-neutral-400'
         }`}
       >
         {selected && (

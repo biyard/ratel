@@ -139,7 +139,7 @@ export default function Header({ post_id }: { post_id: number }) {
     <div className="flex flex-col w-full gap-2.5">
       <div className="flex flex-row justify-between items-center">
         <button onClick={router.back}>
-          <ArrowLeft />
+          <ArrowLeft className="[&>path]:stroke-custom-white" />
         </button>
         <div className="flex items-center space-x-2.5">
           {space_id ? (
@@ -152,25 +152,25 @@ export default function Header({ post_id }: { post_id: number }) {
             <>
               <Button
                 variant="rounded_secondary"
-                className="rounded-md max-tablet:hidden text-lg px-3 py-1.5"
+                className="rounded-md max-tablet:hidden text-base px-3 py-1.5 text-custom-white"
                 onClick={handleEditPost}
               >
-                <Edit className="!size-5" />
+                <Edit className="!size-5 [&>path]:stroke-custom-white" />
                 Edit
               </Button>
               <Button
                 variant="rounded_secondary"
-                className="rounded-md max-tablet:hidden text-lg px-3 py-1.5"
+                className="rounded-md max-tablet:hidden text-base px-3 py-1.5 text-custom-white"
               >
-                <UnlockPublic className="!size-5 [&>path]:stroke-black" />
+                <UnlockPublic className="!size-5 [&>path]:stroke-custom-white" />
                 Make Public
               </Button>
               <Button
                 variant="rounded_primary"
                 onClick={handleCreateSpace}
-                className="max-tablet:hidden bg-[#FCB300] hover:bg-[#FCB300]/80 text-lg px-3 py-1.5"
+                className="max-tablet:hidden bg-[#FCB300] hover:bg-[#FCB300]/80 text-base px-3 py-1.5 text-custom-white"
               >
-                <Palace className="!size-5" />
+                <Palace className="!size-5 [&>path]:stroke-custom-white" />
                 Create a Space
               </Button>
             </>
@@ -183,7 +183,7 @@ export default function Header({ post_id }: { post_id: number }) {
             <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild>
                 <button
-                  className="p-1 hover:bg-gray-700 rounded-full focus:outline-none transition-colors"
+                  className="p-1 hover:bg-gray-700 light:hover:bg-neutral-300 rounded-full focus:outline-none transition-colors"
                   aria-haspopup="true"
                   aria-label="Post options"
                 >
@@ -192,7 +192,7 @@ export default function Header({ post_id }: { post_id: number }) {
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="end"
-                className="w-40 bg-[#404040] border-gray-700 transition ease-out duration-100"
+                className="w-40 bg-[#404040] light:bg-neutral-200 light:border-none border-gray-700 transition ease-out duration-100"
               >
                 {/* Mobile-only menu items */}
                 <div className="hidden max-tablet:block">
@@ -257,7 +257,7 @@ export default function Header({ post_id }: { post_id: number }) {
             <Badge
               key={industry.id}
               variant="outline"
-              className="border-c-wg-70 mr-2"
+              className="border-c-wg-70 mr-2 text-custom-white"
               size="lg"
             >
               {industry.name}
@@ -282,37 +282,37 @@ export default function Header({ post_id }: { post_id: number }) {
                   : 'size-7 text-gray-400'
               }
             />
-            <span className="text-base text-white">
+            <span className="text-base text-custom-white">
               {convertNumberToString(localLikes)}
             </span>
           </button>
           <div className="flex items-center gap-1">
             <CommentIcon className="size-7 text-gray-400" />
-            <span className="text-base text-white">
+            <span className="text-base text-custom-white">
               {convertNumberToString(post?.comments || 0)}
             </span>
           </div>
           <div className="flex items-center gap-1">
             <Rewards className="size-7 text-gray-400" />
-            <span className="text-base text-white">
+            <span className="text-base text-custom-white">
               {convertNumberToString(post?.rewards || 0)}
             </span>
           </div>
           <div className="flex items-center gap-1">
             <Shares className="size-7 text-gray-400" />
-            <span className="text-base text-white">
+            <span className="text-base text-custom-white">
               {convertNumberToString(post?.shares || 0)}
             </span>
           </div>
           <div className="flex items-center gap-1">
             <Lock className="size-7 text-gray-400" />
-            <span className="text-base text-white">Private</span>
+            <span className="text-base text-custom-white">Private</span>
           </div>
         </div>
       </div>
 
       <div>
-        <h2 className="text-2xl font-bold">{post?.title}</h2>
+        <h2 className="text-2xl font-bold text-custom-white">{post?.title}</h2>
       </div>
       <div className="flex flex-row justify-between">
         <ProposerProfile
@@ -320,7 +320,7 @@ export default function Header({ post_id }: { post_id: number }) {
           proposerName={post?.author[0]?.nickname ?? ''}
           userType={post?.author[0]?.user_type || UserType.Individual}
         />
-        <div className="font-light text-white text-sm/[14px]">
+        <div className="font-light text-custom-white text-sm/[14px]">
           {post?.created_at !== undefined ? getTimeAgo(post.created_at) : ''}
         </div>
       </div>
@@ -354,7 +354,7 @@ export function ProposerProfile({
       ) : (
         <div className="w-6.25 h-6.25 rounded-full border border-neutral-500 bg-neutral-600" />
       )}
-      <div className="font-semibold text-white text-sm/[20px]">
+      <div className="font-semibold text-custom-white text-sm/[20px]">
         {proposerName}
       </div>
       <BadgeIcon />

@@ -220,7 +220,7 @@ function SpaceForm({
   const disabled = form.disabled || (form.experiment && !config.experiment);
   return (
     <div
-      className={`flex flex-row gap-2.5 justify-center items-center w-full p-5 border rounded-[10px] ${selected ? 'border-primary' : 'border-neutral-800'} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}} `}
+      className={`cursor-pointer flex flex-row gap-2.5 justify-center items-center w-full p-5 border rounded-[10px] ${selected ? 'border-primary light:bg-primary/10' : 'border-neutral-800 light:bg-neutral-50 light:border-neutral-300'} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}} `}
       onClick={() => {
         if (!disabled) {
           onClick();
@@ -229,10 +229,10 @@ function SpaceForm({
     >
       <div className="size-8 [&>svg]:size-8">{form.Icon}</div>
       <div className="flex flex-col flex-1 gap-1">
-        <span className="font-bold text-[15px]/[20px] text-white">
+        <span className="font-bold text-[15px]/[20px] text-custom-white">
           {form.label}
         </span>
-        <span className="font-normal text-[15px]/[24px] text-neutral-300">
+        <span className="font-normal text-[15px]/[24px] text-neutral-300 light:text-neutral-500">
           {form.description}
         </span>
       </div>

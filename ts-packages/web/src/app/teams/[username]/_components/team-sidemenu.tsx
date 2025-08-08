@@ -32,7 +32,7 @@ export default function TeamSidemenu({ username }: TeamSidemenuProps) {
     <div className="w-64 flex flex-col max-mobile:!hidden gap-2.5">
       <TeamProfile team={team} />
 
-      <nav className="py-5 px-3 w-full rounded-[10px] bg-component-bg border border-transparent light:bg-white light:border-neutral-200 light:text-neutral-800">
+      <nav className="py-5 px-3 w-full rounded-[10px] bg-component-bg border border-transparent light:border-neutral-200 light:text-neutral-800">
         <Link
           href={route.teamByUsername(team.username)}
           className="flex flex-row items-center gap-1 px-1 py-2 rounded-md font-bold text-sm hover:bg-gray-600 light:hover:bg-neutral-200"

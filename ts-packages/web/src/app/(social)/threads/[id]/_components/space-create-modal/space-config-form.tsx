@@ -167,7 +167,7 @@ export default function SpaceConfigForm({
           <button onClick={onBack} className="p-1 rounded-md transition-colors">
             <ArrowLeft className="w-7 h-7 text-[var(--color-neutral-500)]" />
           </button>
-          <h2 className="text-xl sm:text-3xl font-semibold text-white">
+          <h2 className="text-xl sm:text-3xl font-semibold text-custom-white">
             Set a Notice Space
           </h2>
         </div>
@@ -180,10 +180,10 @@ export default function SpaceConfigForm({
       </div>
 
       {/* Warning Message */}
-      <div className="text-base text-gray-300">
+      <div className="text-base text-gray-300 light:text-neutral-500">
         <p>
           Once the {getSpaceTypeTitle(spaceType)} Space is created,{' '}
-          <span className="font-semibold text-white">
+          <span className="font-semibold text-custom-white">
             the booster settings cannot be changed.
           </span>
         </p>
@@ -278,29 +278,31 @@ export default function SpaceConfigForm({
           <div className="flex-1">
             <label
               htmlFor="activateBooster"
-              className="text-base font-medium text-white cursor-pointer"
+              className="text-base font-medium text-custom-white cursor-pointer"
             >
               Activate Booster
             </label>
-            <p className="text-base text-neutral-300 mt-0.5">
+            <p className="text-base text-neutral-300 mt-0.5 light:text-neutral-500">
               If a booster is used, only Ratel subscribers will earn boosted
               points based on the multiplier when the sprint ends. If you're
               interested in a subscription, please{' '}
-              <button className="text-neutral-300 underline">contact</button> us
-              for more details.
+              <button className="text-neutral-300 underline light:text-neutral-500">
+                contact
+              </button>{' '}
+              us for more details.
             </p>
           </div>
         </div>
 
         {formConfig.activateBooster && (
           <div className="ml-7 flex flex-col gap-2">
-            <label className="text-base font-medium text-white py-1">
+            <label className="text-base font-medium text-custom-white py-1">
               Booster
             </label>
             <div className="relative">
               <div
                 ref={toggleButtonRef}
-                className="border border-[var(--color-c-wg-70)] bg-transparent text-white pl-14 pr-10 py-3 rounded-md focus:outline-none focus-within:ring-2 focus-within:ring-primary w-full text-base font-medium cursor-pointer"
+                className="border border-[var(--color-c-wg-70)] bg-transparent text-custom-white pl-14 pr-10 py-3 rounded-md focus:outline-none focus-within:ring-2 focus-within:ring-primary w-full text-base font-medium cursor-pointer"
                 onClick={() => setIsBoosterDropdownOpen(!isBoosterDropdownOpen)}
                 tabIndex={0}
               >
@@ -360,10 +362,9 @@ export default function SpaceConfigForm({
                         return (
                           <React.Fragment key={value}>
                             <div
-                              className={`px-4 py-3 hover:bg-black/10 flex items-center w-full ${formConfig.boosterType === value ? 'bg-black/10' : ''}`}
+                              className={`px-4 py-3 hover:bg-black/10 text-custom-white flex items-center w-full ${formConfig.boosterType === value ? 'bg-black/10' : ''}`}
                               style={{
                                 backgroundColor: 'var(--color-background)',
-                                color: '#ffffff',
                               }}
                               onClick={(e) => {
                                 e.stopPropagation();

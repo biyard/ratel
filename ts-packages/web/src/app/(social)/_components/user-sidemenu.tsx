@@ -28,7 +28,7 @@ export default function UserSidemenu() {
 
       {/* Navigation */}
       <nav
-        className={`py-5 px-3 w-full rounded-[10px] bg-component-bg border border-transparent light:bg-neutral-50 light:border-neutral-200`}
+        className={`py-5 px-3 w-full rounded-[10px] bg-component-bg border border-transparent light:border-neutral-200`}
       >
         <Link
           href={route.myPosts()}

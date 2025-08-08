@@ -38,7 +38,7 @@ export default function TeamProfile({ team }: TeamProfileProps) {
   };
 
   return (
-    <div className="flex flex-col gap-5 px-4 py-5 rounded-[10px] bg-component-bg border border-transparent light:bg-neutral-50 light:border-neutral-200">
+    <div className="flex flex-col gap-5 px-4 py-5 rounded-[10px] bg-component-bg border border-transparent light:border-neutral-200">
       <TeamSelector team={team} />
       <div className="relative">
         {team.profile_url && team.profile_url !== '' ? (
@@ -119,7 +119,7 @@ function UnFollowButton({ onClick }: { onClick: () => void }) {
 function FollowButton({ onClick }: { onClick: () => void }) {
   return (
     <div
-      className="cursor-pointer flex flex-row w-fit h-fit px-[10px] py-[5px] bg-white hover:bg-gray-300 rounded-[50px]"
+      className="cursor-pointer flex flex-row w-fit h-fit px-[10px] py-[5px] bg-white hover:bg-gray-300 rounded-[50px] light:bg-neutral-200"
       onClick={() => {
         onClick();
       }}

@@ -49,9 +49,9 @@ export default function ThreadComment({ post_id }: { post_id: number }) {
           <CommentIcon
             width={24}
             height={24}
-            className="[&>path]:stroke-white [&>line]:stroke-white"
+            className="[&>path]:stroke-custom-white [&>line]:stroke-custom-white"
           />
-          <span className="text-base/6 font-medium">
+          <span className="text-base/6 font-medium text-custom-white">
             {(feed?.comments ?? 0).toLocaleString()}{' '}
             {(feed?.comments ?? 0) > 1 ? 'Replies' : 'Reply'}
           </span>
@@ -61,12 +61,12 @@ export default function ThreadComment({ post_id }: { post_id: number }) {
             {!expand && (
               <button
                 onClick={() => setExpand(true)}
-                className="flex flex-row w-full px-3.5 py-2 gap-2 bg-neutral-800 border border-neutral-700 items-center rounded-lg"
+                className="flex flex-row w-full px-3.5 py-2 gap-2 bg-neutral-800 light:bg-white border border-neutral-700 items-center rounded-lg"
               >
                 <CommentIcon
                   width={24}
                   height={24}
-                  className="[&>path]:stroke-neutral-500"
+                  className="[&>path]:stroke-custom-white"
                 />
                 <span className="text-neutral-500 text-[15px]/[24px] font-medium">
                   Share your thoughts...

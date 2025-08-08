@@ -7,7 +7,7 @@ export interface BlackboxProps {
 export default function BlackBox({ children }: BlackboxProps) {
   return (
     <div
-      className={`flex flex-col w-full justify-start items-start  rounded-[10px] px-4 py-5 bg-component-bg border border-transparent light:bg-neutral-50 light:border-neutral-200 `}
+      className={`flex flex-col w-full justify-start items-start bg-component-bg rounded-[10px] px-4 py-5 border border-transparent light:border-neutral-200 `}
     >
       {children}
     </div>

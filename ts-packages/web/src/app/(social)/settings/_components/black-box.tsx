@@ -9,7 +9,7 @@ export default function BlackBox({
 }) {
   return (
     <div
-      className={`flex flex-col w-full justify-start items-start px-4 py-5  rounded-lg gap-5 bg-[#191919] border border-transparent light:bg-neutral-50 light:border-neutral-200`}
+      className={`flex flex-col w-full justify-start items-start px-4 py-5  rounded-lg gap-5 bg-component-bg border border-transparent light:bg-neutral-50 light:border-neutral-200`}
     >
       <div
         className={`font-bold text-[15px]/[20px] text-white light:text-neutral-800`}

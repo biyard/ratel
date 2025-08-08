@@ -25,7 +25,7 @@ export default function ProfileSection() {
 
   return (
     <div
-      className={`flex flex-col gap-5 px-4 py-5 rounded-[10px] bg-component-bg border border-transparent light:bg-neutral-50 light:border-neutral-200`}
+      className={`flex flex-col gap-5 px-4 py-5 rounded-[10px] bg-component-bg border border-transparent light:border-neutral-200`}
     >
       <TeamSelector onSelect={handleTeamSelect} team={team} />
 

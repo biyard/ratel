@@ -85,7 +85,7 @@ export default function FeedCard(props: FeedCardProps) {
 
   return (
     <Col
-      className={`cursor-pointer border rounded-[10px] ${props.space_id && props.space_type ? 'border-primary bg-primary/10' : 'border-neutral-700 light:border-neutral-200 light:bg-white'}`}
+      className={`cursor-pointer border rounded-[10px] ${props.space_id && props.space_type ? 'border-primary bg-primary/10' : 'border-neutral-700 bg-transparent light:border-neutral-200 light:bg-white'}`}
       onClick={() => {
         router.push(route.threadByFeedId(props.id));
       }}
