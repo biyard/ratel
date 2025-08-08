@@ -3,6 +3,14 @@
 
 @custom-variant light (&:where([data-theme=light], [data-theme=light] *));
 
+@theme static {
+  --color-background: #1e1e1e;
+}
+
+[data-theme='light'] {
+  --color-background: #f5f5f5;
+}
+
 html {
   background-color: var(--color-background);
   color: var(--color-neutral-400);
@@ -34,7 +42,7 @@ a {
 
 @theme static {
   /* Tailwindcss variables */
-  --color-background: #1e1e1e;
+
   --color-primary: #fcb300;
   --color-secondary: #777677;
 

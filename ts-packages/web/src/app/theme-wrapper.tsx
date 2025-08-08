@@ -5,5 +5,5 @@ export default function ThemeWrapper({
 }: {
   children: React.ReactNode;
 }) {
-  return <div className={`bg-bg light:bg-light-bg`}>{children}</div>;
+  return <div className="bg-background">{children}</div>;
 }
