@@ -165,9 +165,9 @@ function Header(props: HeaderProps) {
           onClick={() => props.setMobileExtends(!props.mobileExtends)}
         >
           {props.mobileExtends ? (
-            <CloseIcon className="transition-all" />
+            <CloseIcon className="transition-all [&>path]:stroke-custom-white" />
           ) : (
-            <Hamburger className="transition-all" />
+            <Hamburger className="transition-all [&>path]:stroke-custom-white" />
           )}
         </div>
       </nav>
