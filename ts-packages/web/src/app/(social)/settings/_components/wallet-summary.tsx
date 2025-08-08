@@ -27,7 +27,7 @@ export default function WalletSummary({ onUpdate }: WalletSummaryProps) {
     <div className="w-full">
       <Col>
         <div
-          className="flex items-center justify-between p-4 bg-component-bg rounded-lg hover:bg-component-bg/70 transition-colors cursor-pointer"
+          className="flex items-center justify-between p-4 bg-component-bg rounded-lg hover:bg-component-bg/70 transition-colors cursor-pointer border border-transparent light:bg-white light:border-neutral-200 light:hover:bg-neutral-200/70"
           onClick={connectWallet}
         >
           <div className="flex items-center space-x-3">
@@ -38,7 +38,7 @@ export default function WalletSummary({ onUpdate }: WalletSummaryProps) {
               className="w-10 h-10 bg-[#D9D9D9] rounded-full p-2"
               alt="MetaMask"
             />
-            <div className="font-semibold">
+            <div className="font-semibold text-white light:text-neutral-500">
               <div>MetaMask</div>
               <div className="mt-1 flex items-center space-x-2 text-sm text-gray-400">
                 {address ? (
@@ -62,7 +62,11 @@ export default function WalletSummary({ onUpdate }: WalletSummaryProps) {
           </div>
 
           {address && (
-            <Button variant={'default'} onClick={() => onUpdate?.(address)}>
+            <Button
+              variant={'default'}
+              className="bg-white light:bg-neutral-100"
+              onClick={() => onUpdate?.(address)}
+            >
               Save
             </Button>
           )}

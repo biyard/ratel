@@ -94,13 +94,15 @@ export default function MyNetwork() {
 function FollowButton({ onClick }: { onClick: () => void }) {
   return (
     <div
-      className="cursor-pointer flex flex-row w-fit h-fit px-[10px] py-[5px] bg-white hover:bg-gray-300 rounded-[50px]"
+      className="cursor-pointer flex flex-row w-fit h-fit px-[10px] py-[5px] bg-white hover:bg-gray-300 rounded-[50px] light:bg-neutral-700 light:hover:bg-neutral-500"
       onClick={() => {
         onClick();
       }}
     >
-      <Add className="w-[15px] h-[15px]" />
-      <div className="font-bold text-[#000203] text-xs">Follow</div>
+      <Add className="w-[15px] h-[15px] [&>path]:stroke-[#000203] light:[&>path]:stroke-white" />
+      <div className="font-bold text-[#000203] text-xs light:text-white">
+        Follow
+      </div>
     </div>
   );
 }
@@ -115,13 +117,15 @@ function FollowingContents({
   follow: (userId: number) => void;
 }) {
   return (
-    <div className="flex flex-col w-full rounded-lg bg-[#191919] px-4 py-5 gap-2.5">
-      <div className="font-semibold text-white text-base/[20px]">{label}</div>
+    <div className="flex flex-col w-full rounded-lg bg-[#191919] px-4 py-5 gap-2.5 border border-transparent light:bg-white light:border-neutral-200">
+      <div className="font-semibold text-white text-base/[20px] light:text-neutral-800">
+        {label}
+      </div>
       <div className="flex flex-col">
         {users.map((user) => (
           <div
             key={user.id}
-            className="flex flex-col w-full gap-[5px] px-2.5 py-5 border-b border-b-neutral-800"
+            className="flex flex-col w-full gap-[5px] px-2.5 py-5 border-b border-b-neutral-800 light:border-b-neutral-200"
           >
             <div className="flex flex-row w-full justify-between items-start">
               <div className="flex flex-row w-fit gap-2">
@@ -150,10 +154,10 @@ function FollowingContents({
                 )}
 
                 <div className="flex flex-col">
-                  <div className="font-semibold text-white text-sm/[20px]">
+                  <div className="font-semibold text-white text-sm/[20px] light:text-neutral-600">
                     {user.nickname}
                   </div>
-                  <div className="font-medium text-neutral-500 text-[12px]">
+                  <div className="font-medium text-neutral-500 text-[12px] light:text-neutral-600">
                     @{user.username}
                   </div>
                 </div>
@@ -168,7 +172,7 @@ function FollowingContents({
 
             <div
               id="user-profile-description"
-              className="font-medium text-[12px] text-neutral-300 line-clamp-3 overflow-hidden"
+              className="font-medium text-[12px] text-neutral-300 line-clamp-3 overflow-hidden light:text-neutral-500"
               dangerouslySetInnerHTML={{
                 __html: user.html_contents,
               }}
@@ -240,7 +244,7 @@ function IndustryLabel({
 }) {
   return (
     <div
-      className="cursor-pointer flex flex-row w-fit h-fit px-2.5 py-2 rounded-lg font-semibold text-white text-sm/[20px] whitespace-nowrap border border-neutral-700 bg-transparent hover:bg-neutral-700 aria-selected:border-none aria-selected:bg-neutral-700"
+      className="cursor-pointer flex flex-row w-fit h-fit px-2.5 py-2 rounded-lg font-semibold text-white text-sm/[20px] whitespace-nowrap border border-neutral-700 bg-transparent hover:bg-neutral-700 aria-selected:border-none aria-selected:bg-neutral-700 light:text-neutral-800 light:aria-selected:text-white"
       aria-selected={selected}
       onClick={() => {
         setSelectedIndustry(name);

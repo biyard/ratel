@@ -59,7 +59,7 @@ export default function LexicalHtmlViewer({
     <LexicalComposer initialConfig={editorConfig}>
       <RichTextPlugin
         contentEditable={
-          <ContentEditable className="lexical-content-editable outline-none cursor-default select-text whitespace-pre-wrap break-words" />
+          <ContentEditable className="lexical-content-editable outline-none cursor-default select-text whitespace-pre-wrap break-words text-white light:text-neutral-700" />
         }
         placeholder={<></>}
         ErrorBoundary={LexicalErrorBoundary}

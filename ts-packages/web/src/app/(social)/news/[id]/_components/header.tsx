@@ -14,11 +14,13 @@ export default function NewsHeader({ news_id }: { news_id: number }) {
   return (
     <div className="flex flex-col w-full gap-2.5">
       <button onClick={router.back}>
-        <ArrowLeft />
+        <ArrowLeft className="[&>path]:stroke-white light:[&>path]:stroke-neutral-700" />
       </button>
 
       <div>
-        <h2 className="text-2xl font-bold">{news?.title}</h2>
+        <h2 className="text-2xl font-bold text-white light:text-neutral-700">
+          {news?.title}
+        </h2>
       </div>
       <div className="flex flex-row justify-between">
         <ProposerProfile
@@ -26,7 +28,7 @@ export default function NewsHeader({ news_id }: { news_id: number }) {
           proposerName={news?.title ?? ''}
           userType={UserType.Individual}
         />
-        <div className="font-light text-white text-sm/[14px]">
+        <div className="font-light text-white text-sm/[14px] light:text-neutral-700">
           {news?.created_at !== undefined ? getTimeAgo(news.created_at) : ''}
         </div>
       </div>
@@ -60,7 +62,7 @@ export function ProposerProfile({
       ) : (
         <div className="w-6.25 h-6.25 rounded-full border border-neutral-500 bg-neutral-600" />
       )}
-      <div className="font-semibold text-white text-sm/[20px]">
+      <div className="font-semibold text-white text-sm/[20px] light:text-neutral-700">
         {proposerName}
       </div>
       <BadgeIcon />

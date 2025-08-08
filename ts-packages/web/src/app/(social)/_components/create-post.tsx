@@ -181,7 +181,7 @@ export function CreatePost() {
       className={`flex flex-col w-full ${isLoading || !expand ? 'hidden' : 'block'}`}
     >
       <LexicalComposer initialConfig={editorConfig}>
-        <div className="w-full bg-component-bg border-t-6 border-x border-b border-primary rounded-t-lg overflow-hidden">
+        <div className="w-full bg-component-bg border-t-6 border-x border-b border-primary rounded-t-lg overflow-hidden light:bg-white">
           {/* Header */}
           <div className="flex items-center p-4 justify-between">
             <div className="flex items-center gap-3">
@@ -197,7 +197,7 @@ export function CreatePost() {
                 <div className="w-6 h-6 rounded-full border border-neutral-500 bg-neutral-600" />
               )}
               <div className="flex items-center gap-2">
-                <span className="text-white font-medium text-lg">
+                <span className="text-white font-medium text-lg light:text-neutral-800">
                   {userInfo?.nickname || 'Anonymous'}
                 </span>
               </div>
@@ -207,7 +207,7 @@ export function CreatePost() {
               className={cn('cursor-pointer')}
               onClick={() => setExpand(!expand)}
             >
-              <DoubleArrowDown />
+              <DoubleArrowDown className="[&>path]:stroke-white light:[&>path]:stroke-neutral-800" />
             </div>
           </div>
 
@@ -219,12 +219,12 @@ export function CreatePost() {
                 placeholder="Write a title..."
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full bg-transparent text-white text-xl font-semibold placeholder-neutral-500 outline-none border-none"
+                className="w-full bg-transparent text-white text-xl font-semibold placeholder-neutral-500 outline-none border-none light:text-neutral-800"
               />
             </div>
 
             {/* Lexical Content Area */}
-            <div className="px-4 pt-2 min-h-[80px] relative text-neutral-300 text-[15px] leading-relaxed">
+            <div className="px-4 pt-2 min-h-[80px] relative text-neutral-300 text-[15px] leading-relaxed light:text-neutral-600">
               <RichTextPlugin
                 contentEditable={
                   <ContentEditable className="outline-none resize-none w-full min-h-[60px]" />
