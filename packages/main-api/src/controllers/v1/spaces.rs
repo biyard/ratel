@@ -2,8 +2,8 @@ mod badges;
 mod comments;
 mod discussions;
 mod meeting;
-mod notice_quiz_attempts;
 mod notice_quiz_answers;
+mod notice_quiz_attempts;
 mod redeem_codes;
 mod responses;
 mod sprint_leagues;
@@ -63,33 +63,60 @@ impl SpaceController {
             .fetch_one(&self.pool)
             .await?;
 
-        // Access control for draft notice spaces
-        if space.space_type == SpaceType::Notice && space.status == SpaceStatus::Draft {
-            // Check if user is the owner
+        // Access control for notice spaces
+        if space.space_type == SpaceType::Notice {
             let is_owner = user_id == space.owner_id;
-            
-            // Check if user is a space member
-            let is_member = if user_id != 0 {
-                SpaceMember::query_builder()
-                    .space_id_equals(id)
-                    .user_id_equals(user_id)
-                    .query()
-                    .map(SpaceMember::from)
-                    .fetch_optional(&self.pool)
-                    .await?
-                    .is_some()
-            } else {
-                false
-            };
 
-            // If user is neither owner nor member, deny access
-            if !is_owner && !is_member {
-                tracing::warn!(
-                    "Access denied for user {} to draft notice space {} - not owner or member",
-                    user_id,
-                    id
-                );
-                return Err(Error::Unauthorized);
+            match space.status {
+                SpaceStatus::Draft => {
+                    // Draft notice spaces: only owner has access
+                    if !is_owner {
+                        tracing::warn!(
+                            "Access denied for user {} to draft notice space {} - only owner allowed",
+                            user_id,
+                            id
+                        );
+                        return Err(Error::Unauthorized);
+                    }
+                }
+                SpaceStatus::InProgress => {
+                    // InProgress notice spaces: check publishing scope
+                    match space.publishing_scope {
+                        PublishingScope::Private => {
+                            // Private: only space members can access
+                            let is_member = if user_id != 0 {
+                                SpaceMember::query_builder()
+                                    .space_id_equals(id)
+                                    .user_id_equals(user_id)
+                                    .query()
+                                    .map(SpaceMember::from)
+                                    .fetch_optional(&self.pool)
+                                    .await?
+                                    .is_some()
+                            } else {
+                                false
+                            };
+
+                            if !is_owner && !is_member {
+                                tracing::warn!(
+                                    "Access denied for user {} to private notice space {} - not owner or member",
+                                    user_id,
+                                    id
+                                );
+                                return Err(Error::Unauthorized);
+                            }
+                        }
+                        PublishingScope::Public => {
+                            // Public: all users can access (no additional checks needed)
+                            tracing::debug!(
+                                "Allowing access to public notice space {} for user {}",
+                                id,
+                                user_id
+                            );
+                        }
+                    }
+                }
+                _ => {}
             }
         }
 
@@ -378,7 +405,10 @@ impl SpaceController {
 
         // Block quiz editing when space is InProgress
         let quiz = if space.status == SpaceStatus::InProgress {
-            tracing::warn!("Blocking quiz update for space {} - status is InProgress", space_id);
+            tracing::warn!(
+                "Blocking quiz update for space {} - status is InProgress",
+                space_id
+            );
             None
         } else {
             quiz
@@ -418,6 +448,7 @@ impl SpaceController {
 
         let mut tx = self.pool.begin().await?;
 
+        // notice quiz
         // If quiz is provided, save the quiz with answers and convert to read-only version for space
         let notice_quiz_for_space = if let Some(ref quiz_data) = quiz {
             if !quiz_data.questions.is_empty() {
@@ -492,7 +523,11 @@ impl SpaceController {
                     started_at,
                     ended_at,
                     publishing_scope: Some(publishing_scope),
-                    notice_quiz: if quiz.is_some() { Some(notice_quiz_for_space) } else { None },
+                    notice_quiz: if quiz.is_some() {
+                        Some(notice_quiz_for_space)
+                    } else {
+                        None
+                    },
                     ..Default::default()
                 },
             )
@@ -792,6 +827,16 @@ impl SpaceController {
                 Error::FeedInvalidQuoteId
             })?;
 
+        // Validate that notice spaces can only be created from draft feeds
+        if space_type == SpaceType::Notice && feed.status != FeedStatus::Draft {
+            tracing::error!(
+                "Cannot create notice space from feed {} with status {:?} - feed must be in draft status",
+                feed_id,
+                feed.status
+            );
+            return Err(Error::BadRequest);
+        }
+
         let mut tx = self.pool.begin().await?;
 
         let author_id = feed.author[0].id;
@@ -849,10 +894,7 @@ impl SpaceController {
             // Check if question title is not empty
             let question_title = question.title.trim();
             if question_title.is_empty() {
-                tracing::error!(
-                    "Question {} title cannot be empty",
-                    question_index + 1
-                );
+                tracing::error!("Question {} title cannot be empty", question_index + 1);
                 return Err(Error::InvalidInputValue);
             }
 
@@ -881,7 +923,7 @@ impl SpaceController {
             let mut selected_count = 0;
             for (option_index, option) in question.options.iter().enumerate() {
                 let content = option.content.trim();
-                
+
                 // Check for empty content
                 if content.is_empty() {
                     tracing::error!(
@@ -942,7 +984,6 @@ impl SpaceController {
         let survey_repo = Survey::get_repository(pool.clone());
         let notice_answer_repo = NoticeQuizAnswer::get_repository(pool.clone());
 
-
         Self {
             repo,
             feed_repo,
@@ -1001,10 +1042,13 @@ impl SpaceController {
             )
             .nest(
                 "/:space-id/notice-quiz-attempts",
-                notice_quiz_attempts::SpaceNoticeQuizAttemptController::new(self.pool.clone()).route(),
-            ).nest(
+                notice_quiz_attempts::SpaceNoticeQuizAttemptController::new(self.pool.clone())
+                    .route(),
+            )
+            .nest(
                 "/:space-id/notice-quiz-answers",
-                notice_quiz_answers::SpaceNoticeQuizAnswersController::new(self.pool.clone()).route(),
+                notice_quiz_answers::SpaceNoticeQuizAnswersController::new(self.pool.clone())
+                    .route(),
             ))
     }
 
