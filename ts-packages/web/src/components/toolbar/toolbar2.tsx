@@ -259,6 +259,7 @@
 // }
 
 // --- ToolbarPlugin.tsx ---
+
 'use client';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { useCallback, useEffect, useState } from 'react';
@@ -270,6 +271,7 @@ import {
   COMMAND_PRIORITY_LOW,
   SELECTION_CHANGE_COMMAND,
 } from 'lexical';
+
 
 import { cn } from '@/lib/utils';
 import FileUploader from '@/components/file-uploader';

@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 import UserSidemenu from './_components/user-sidemenu';
 import Loading from '../loading';
 import { CreatePost, PostDraftProvider } from './_components/create-post';
-import { CreateRePost, RePostDraftProvider } from './_components/create-repost2';
+import { CreateRePost, RePostDraftProvider } from './_components/create-repost3';
 import Provider from './providers';
 
 export default async function SocialLayout({
