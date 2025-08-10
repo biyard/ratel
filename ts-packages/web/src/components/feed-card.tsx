@@ -21,7 +21,9 @@
 //   DropdownMenuItem,
 // } from './ui/dropdown-menu';
 // import { Edit1 } from './icons';
-// import { useRepostDraft } from '@/app/(social)/_components/create-repost2';
+// import { useRepostDraft } from '@/app/(social)/_components/create-repost3';
+// import { showSuccessToast, showErrorToast } from './custom-toast/toast';
+// import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 
 // export interface FeedCardProps {
 //   id: number;
@@ -33,13 +35,11 @@
 //   author_type: UserType;
 //   url?: string;
 //   created_at: number;
-
 //   likes: number;
 //   is_liked: boolean;
 //   comments: number;
 //   rewards: number;
 //   shares: number;
-
 //   space_id?: number;
 //   space_type?: SpaceType;
 //   author_id: number;
@@ -47,7 +47,6 @@
 //   onboard: boolean;
 //   onRepostThought?: () => void;
 //   onRepost?: () => void;
-
 //   onLikeClick?: (value: boolean) => void;
 //   refetch?: () => void;
 //   isLikeProcessing?: boolean;
@@ -61,9 +60,20 @@
 //   const [localIsLiked, setLocalIsLiked] = useState(props.is_liked);
 //   const [isProcessing, setIsProcessing] = useState(false);
 
-//   const [showRepostModal, setShowRepostModal] = useState(false);
+//   const {data:User} = useSuspenseUserInfo()
 
-//   const { newDraft, setFeedContent } = useRepostDraft();
+//   const {
+//     setFeedContent,
+//     setFeedImageUrl,
+//     newDraft,
+//     setOriginalFeedId,
+//     setTitle,
+//     setContent,
+//     publishPost,
+//     setAuthorName,
+//     setAuthorProfileUrl,
+//     setIndustry,
+//   } = useRepostDraft();
 
 //   // Sync with props when they change
 //   useEffect(() => {
@@ -72,9 +82,8 @@
 //   }, [props.likes, props.is_liked]);
 
 //   const handleLike = async (value: boolean) => {
-//     if (isProcessing) return; // Prevent multiple clicks
+//     if (isProcessing) return;
 
-//     // Set processing state and optimistic update
 //     setIsProcessing(true);
 //     setLocalIsLiked(value);
 //     setLocalLikes((prev) => (value ? prev + 1 : prev - 1));
@@ -83,12 +92,9 @@
 //       await post(ratelApi.feeds.likePost(props.id), {
 //         like: { value },
 //       });
-
-//       // Success - trigger callbacks
 //       props.onLikeClick?.(value);
 //       props.refetch?.();
 //     } catch (error) {
-//       // Revert optimistic update on error
 //       setLocalIsLiked(props.is_liked);
 //       setLocalLikes(props.likes);
 //       console.error('Failed to update like:', error);
@@ -97,34 +103,60 @@
 //     }
 //   };
 
-//   // repost logic
+//   // const handleRepost = async () => {
+//   //   try {
+//   //     // Your repost implementation
+//   //     setOriginalFeedId(props.id);
+//   //     setFeedContent(props.contents || '');
+//   //     setFeedImageUrl(props.url || '');
+//   //     setTitle(''); // No thoughts
+//   //     setContent(null); // No content
+//   //     setAuthorName(props.author_name);
+//   //     setAuthorProfileUrl(props.author_profile_url);
+//   //     publishPost();
+//   //   } catch (error) {
+//   //     console.error('Repost failed:', error);
+//   //   }
+//   // };
 
-//   const handleRepost = async () => {
+//  const handleRepost = async (e: React.MouseEvent) => {
+//     e.stopPropagation();
+//     setIsProcessing(true);
+
 //     try {
-//       // await post(ratelApi.feeds.repost(props.id), {
-//       //   parent_id: props.id,
-//       //   user_id: props.user_id,
-//       //   html_contents: props.contents,
-//       //   quote_feed_id: null,
-//       // });
-//       // props.refetch?.();
-//     } catch (error) {}
+//       await post(ratelApi.feeds.repost(), {
+//         html_contents: "",
+//         quote_feed_id: null,
+//         parent_id: props.id,
+//         user_id: User?.id,
+//       });
+
+//       // setLocalShares(prev => prev + 1);
+//       showSuccessToast('Reposted successfully');
+//       props.refetch?.();
+//     } catch (error) {
+//       console.error('Failed to repost:', error);
+//       showErrorToast('Failed to repost');
+//     } finally {
+//       setIsProcessing(false);
+//     }
 //   };
 
 //   const handleRepostThought = () => {
+//     setAuthorName(props.author_name);
+//     setIndustry(props.industry);
+//     setAuthorProfileUrl(props.author_profile_url);
+//     setFeedContent(props.contents);
+//     setFeedImageUrl(props.url || null);
+//     setOriginalFeedId(props.id);
 //     newDraft();
-//     setFeedContent(props.contents); // Add this line
 //   };
-
 //   return (
 //     <Col
 //       className="cursor-pointer bg-component-bg rounded-[10px]"
-//       onClick={() => {
-//         router.push(route.threadByFeedId(props.id));
-//       }}
+//       onClick={() => router.push(route.threadByFeedId(props.id))}
 //     >
 //       <FeedBody {...props} />
-
 //       <FeedFooter
 //         {...props}
 //         likes={localLikes}
@@ -137,7 +169,7 @@
 //   );
 // }
 
-// export function FeedBody({
+// function FeedBody({
 //   industry,
 //   title,
 //   contents,
@@ -146,8 +178,6 @@
 //   url,
 //   created_at,
 //   author_type,
-//   // user_id,
-//   // author_id,
 //   space_type,
 //   space_id,
 //   onboard,
@@ -160,15 +190,6 @@
 //           <IndustryTag industry={industry} />
 //           {onboard && <OnboradingTag />}
 //         </Row>
-//         {/* {user_id === author_id && !space_id && (
-//           <Button
-//             variant="rounded_primary"
-//             className="text-[10px] font-semibold align-middle uppercase py-1 px-3"
-//           >
-//             Create a Space
-//           </Button>
-//         )} */}
-
 //         {space_id && space_type ? (
 //           <Button
 //             variant="rounded_primary"
@@ -199,19 +220,12 @@
 //         />
 //         <TimeAgo timestamp={created_at} />
 //       </Row>
-//       <Row className="justify-between px-5"></Row>
 //       <FeedContents contents={contents} url={url} />
 //     </Col>
 //   );
 // }
 
-// export function FeedContents({
-//   contents,
-//   url,
-// }: {
-//   contents: string;
-//   url?: string;
-// }) {
+// function FeedContents({ contents, url }: { contents: string; url?: string }) {
 //   const html =
 //     typeof window !== 'undefined' ? DOMPurify.sanitize(contents) : contents;
 
@@ -221,7 +235,6 @@
 //         className="feed-content font-normal text-[15px]/[24px] align-middle tracking-[0.5px] text-c-wg-30 px-5"
 //         dangerouslySetInnerHTML={{ __html: html }}
 //       />
-
 //       {url && (
 //         <div className="px-5">
 //           <div className="relative w-full max-h-80 aspect-video">
@@ -239,7 +252,7 @@
 //   );
 // }
 
-// export function IconText({
+// function IconText({
 //   children,
 //   className,
 //   ...props
@@ -254,7 +267,7 @@
 //   );
 // }
 
-// export function UserBadge({
+// function UserBadge({
 //   author_type,
 //   profile_url,
 //   name,
@@ -281,7 +294,7 @@
 //   );
 // }
 
-// export function IndustryTag({ industry }: { industry: string }) {
+// function IndustryTag({ industry }: { industry: string }) {
 //   return (
 //     <span className="rounded-sm border border-c-wg-70 px-2 text-xs/[25px] font-semibold align-middle uppercase">
 //       {industry}
@@ -289,7 +302,7 @@
 //   );
 // }
 
-// export function OnboradingTag() {
+// function OnboradingTag() {
 //   return (
 //     <span className="rounded-sm bg-primary text-white px-2 text-xs/[25px] font-semibold align-middle uppercase">
 //       Onboard
@@ -297,12 +310,12 @@
 //   );
 // }
 
-// // Modify the FeedFooter component props:
-// interface FeedFooterProps extends FeedCardProps {
-//   setFeedContent?: (content: string) => void;
+// interface FeedFooterProps extends Omit<FeedCardProps, 'onRepostThought'> {
+//   onRepostThought?: () => void;
+//   isLikeProcessing?: boolean;
 // }
 
-// export function FeedFooter({
+// function FeedFooter({
 //   likes,
 //   comments,
 //   rewards,
@@ -310,19 +323,41 @@
 //   is_liked,
 //   onLikeClick,
 //   isLikeProcessing,
-//   onRepostThought,
 //   onRepost,
-//   contents
+//   onRepostThought,
 // }: FeedFooterProps) {
-//   const { newDraft, setFeedContent } = useRepostDraft();
+//   const [isReposting, setIsReposting] = useState(false);
+
+//   const handleRepostWithThoughts = async (e: React.MouseEvent) => {
+//     e.stopPropagation();
+//     setIsReposting(true);
+//     try {
+//       onRepostThought?.();
+//     } catch (error) {
+//       console.error('Failed to repost:', error);
+//     } finally {
+//       setIsReposting(false);
+//     }
+//   };
+
+//   const handleRepost = async (e: React.MouseEvent) => {
+//     e.stopPropagation();
+//     setIsReposting(true);
+
+//     try {
+//       onRepost?.();
+//     } catch (error) {
+//       console.error('Failed to repost:', error);
+//     } finally {
+//       setIsReposting(false);
+//     }
+//   };
 //   return (
 //     <Row className="items-center justify-around border-t w-full border-neutral-800">
 //       <IconText
 //         onClick={(evt) => {
 //           evt.stopPropagation();
-//           if (!isLikeProcessing) {
-//             onLikeClick?.(!is_liked);
-//           }
+//           if (!isLikeProcessing) onLikeClick?.(!is_liked);
 //         }}
 //         className={
 //           isLikeProcessing ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
@@ -337,64 +372,60 @@
 //         />
 //         {convertNumberToString(likes)}
 //       </IconText>
+
 //       <IconText>
 //         <CommentIcon />
 //         {convertNumberToString(comments)}
 //       </IconText>
+
 //       <IconText>
 //         <Rewards />
 //         {convertNumberToString(rewards)}
 //       </IconText>
+
 //       <IconText>
-//         {/* <button>
-//           <Shares />
-//           {convertNumberToString(shares)}
-//         </button> */}
-
-//         {
-//           <DropdownMenu modal={false}>
-//             <DropdownMenuTrigger asChild>
-//               <button onClick={(e) => e.stopPropagation()}>
-//                 <Shares />
-//                 {convertNumberToString(shares)}
+//         <DropdownMenu modal={false}>
+//           <DropdownMenuTrigger asChild>
+//             <button onClick={(e) => e.stopPropagation()}>
+//               <Shares />
+//               {convertNumberToString(shares)}
+//             </button>
+//           </DropdownMenuTrigger>
+//           <DropdownMenuContent
+//             align="end"
+//             className="w-84 border-0 transition ease-out duration-100 py-4 px-2"
+//           >
+//             <DropdownMenuItem asChild>
+//               <button
+//                 onClick={handleRepostWithThoughts}
+//                 disabled={isReposting}
+//                 className="flex items-center gap-3 w-full px-4 py-2 rounded hover:bg-neutral-700 transition-colors text-white text-lg font-semibold"
+//               >
+//                 {isReposting ? (
+//                   <span className="animate-spin">↻</span>
+//                 ) : (
+//                   <Edit1 />
+//                 )}
+//                 Repost with your thoughts
 //               </button>
-//             </DropdownMenuTrigger>
+//             </DropdownMenuItem>
 
-//             <DropdownMenuContent
-//               align="end"
-//               className="w-84 border-0 transition ease-out duration-100 py-4 px-2 "
-//             >
-//               <DropdownMenuItem asChild>
-//                 <button
-//                   onClick={(e) => {
-//                     e.stopPropagation();
-//                     onRepostThought?.();
-//                     // newDraft();
-//                     // setFeedContent?.(contents);
-//                   }}
-//                   className="flex  items-center gap-3 w-full px-4 py-2 rounded hover:bg-neutral-700 transition-colors text-white text-lg font-semibold"
-//                 >
-//                   <Edit1 className="" />
-//                   Repost with your thoughts
-//                 </button>
-//               </DropdownMenuItem>
-
-//               <DropdownMenuItem asChild>
-//                 <button
-//                   onClick={(e) => {
-//                     newDraft();
-//                     e.stopPropagation();
-//                     // onRepost?.();
-//                   }}
-//                   className="flex items-center gap-3 w-full px-4 py-2 rounded hover:bg-neutral-700  text-white text-sm mt-1 font-semibold"
-//                 >
+//             <DropdownMenuItem asChild>
+//               <button
+//                 onClick={handleRepost}
+//                 disabled={isReposting}
+//                 className="flex items-center gap-3 w-full px-4 py-2 rounded hover:bg-neutral-700 transition-colors text-white text-lg font-semibold"
+//               >
+//                 {isReposting ? (
+//                   <span className="animate-spin">↻</span>
+//                 ) : (
 //                   <Shares />
-//                   Repost
-//                 </button>
-//               </DropdownMenuItem>
-//             </DropdownMenuContent>
-//           </DropdownMenu>
-//         }
+//                 )}
+//                 Repost
+//               </button>
+//             </DropdownMenuItem>
+//           </DropdownMenuContent>
+//         </DropdownMenu>
 //       </IconText>
 //     </Row>
 //   );
@@ -425,6 +456,8 @@ import {
 import { Edit1 } from './icons';
 import { useRepostDraft } from '@/app/(social)/_components/create-repost3';
 import { showSuccessToast, showErrorToast } from './custom-toast/toast';
+import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
+import { Loader2 } from 'lucide-react';
 
 export interface FeedCardProps {
   id: number;
@@ -447,7 +480,7 @@ export interface FeedCardProps {
   user_id: number;
   onboard: boolean;
   onRepostThought?: () => void;
-  onRepost?: () => void;
+  onRepost?: (e: React.MouseEvent) => void;
   onLikeClick?: (value: boolean) => void;
   refetch?: () => void;
   isLikeProcessing?: boolean;
@@ -456,29 +489,30 @@ export interface FeedCardProps {
 export default function FeedCard(props: FeedCardProps) {
   const router = useRouter();
   const { post } = useApiCall();
+  const { data: User } = useSuspenseUserInfo();
 
   const [localLikes, setLocalLikes] = useState(props.likes);
   const [localIsLiked, setLocalIsLiked] = useState(props.is_liked);
+  const [localShares, setLocalShares] = useState(props.shares);
   const [isProcessing, setIsProcessing] = useState(false);
 
   const {
+    setAuthorName,
+    setIndustry,
+    setAuthorProfileUrl,
     setFeedContent,
     setFeedImageUrl,
-    newDraft,
     setOriginalFeedId,
-    setTitle,
-    setContent,
-    publishPost,
-    setAuthorName,
-    setAuthorProfileUrl,
-    setIndustry,
+    setExpand,
+    setAuthorId,
   } = useRepostDraft();
 
   // Sync with props when they change
   useEffect(() => {
     setLocalLikes(props.likes);
     setLocalIsLiked(props.is_liked);
-  }, [props.likes, props.is_liked]);
+    setLocalShares(props.shares);
+  }, [props.likes, props.is_liked, props.shares]);
 
   const handleLike = async (value: boolean) => {
     if (isProcessing) return;
@@ -502,32 +536,49 @@ export default function FeedCard(props: FeedCardProps) {
     }
   };
 
-  const handleRepost = async () => {
+  const handleRepost = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsProcessing(true);
+
     try {
-      // Your repost implementation
-      setOriginalFeedId(props.id);
-      setFeedContent(props.contents || '');
-      setFeedImageUrl(props.url || '');
-      setTitle(''); // No thoughts
-      setContent(null); // No content
-      setAuthorName(props.author_name);
-      setAuthorProfileUrl(props.author_profile_url);
-      publishPost();
+      // await post(ratelApi.feeds.repost(), {
+      //   html_contents: "",
+      //   quote_feed_id: null,
+      //   parent_id: props.id,
+      //   user_id: User?.id,
+      // });
+
+      await post(ratelApi.feeds.repost(), {
+        repost: {
+          parent_id: props.id,
+          user_id: User.id,
+          html_contents: '',
+          quote_feed_id: null,
+        },
+      });
+
+      setLocalShares((prev) => prev + 1);
+      showSuccessToast('Reposted successfully');
+      props.refetch?.();
     } catch (error) {
-      console.error('Repost failed:', error);
+      console.error('Failed to repost:', error);
+      showErrorToast('Failed to repost');
+    } finally {
+      setIsProcessing(false);
     }
   };
 
   const handleRepostThought = () => {
+    setAuthorId(props.author_id);
     setAuthorName(props.author_name);
     setIndustry(props.industry);
     setAuthorProfileUrl(props.author_profile_url);
     setFeedContent(props.contents);
     setFeedImageUrl(props.url || null);
     setOriginalFeedId(props.id);
-    newDraft();
-    
+    setExpand(true);
   };
+
   return (
     <Col
       className="cursor-pointer bg-component-bg rounded-[10px]"
@@ -537,6 +588,7 @@ export default function FeedCard(props: FeedCardProps) {
       <FeedFooter
         {...props}
         likes={localLikes}
+        shares={localShares}
         is_liked={localIsLiked}
         isLikeProcessing={isProcessing}
         onRepostThought={handleRepostThought}
@@ -705,7 +757,7 @@ function FeedFooter({
 }: FeedFooterProps) {
   const [isReposting, setIsReposting] = useState(false);
 
-  const handleRepostWithThoughts = async (e: React.MouseEvent) => {
+  const handleRepostWithThoughts = (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsReposting(true);
     try {
@@ -720,15 +772,15 @@ function FeedFooter({
   const handleRepost = async (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsReposting(true);
-
     try {
-      onRepost?.();
+      onRepost?.(e);
     } catch (error) {
       console.error('Failed to repost:', error);
     } finally {
       setIsReposting(false);
     }
   };
+
   return (
     <Row className="items-center justify-around border-t w-full border-neutral-800">
       <IconText
@@ -794,7 +846,8 @@ function FeedFooter({
                 className="flex items-center gap-3 w-full px-4 py-2 rounded hover:bg-neutral-700 transition-colors text-white text-lg font-semibold"
               >
                 {isReposting ? (
-                  <span className="animate-spin">↻</span>
+                  // <span className="animate-spin">↻</span>
+                  <Loader2></Loader2>
                 ) : (
                   <Shares />
                 )}

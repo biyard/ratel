@@ -4,22 +4,27 @@ import CustomToast from '@/components/custom-toast/custom-toast';
 const defaultOptions: ToastOptions = {
   position: 'top-right',
   autoClose: 3000,
-  hideProgressBar: false,
+  hideProgressBar: true,
   closeOnClick: true,
   pauseOnHover: true,
-  draggable: true,
+  draggable: false,
+  closeButton: false, // removes default X button
   progress: undefined,
 };
 
-// export const showSuccessToast = (message: string, options?: ToastOptions) =>
-//   toast.success(message, { ...defaultOptions, ...options });
-
-
 export const showSuccessToast = (message: string, options?: ToastOptions) =>
-  toast(<CustomToast message={message}/>, { ...defaultOptions, ...options });
+  toast(<CustomToast message={message} />, {
+    ...defaultOptions,
+    ...options,
+    className: 'custom-toast-wrapper', 
+  });
 
 export const showErrorToast = (message: string, options?: ToastOptions) =>
-  toast.error(message, { ...defaultOptions, ...options });
+  toast.error(message, {
+    ...defaultOptions,
+    ...options,
+   
+  });
 
 export const showInfoToast = (message: string, options?: ToastOptions) =>
   toast.info(message, { ...defaultOptions, ...options });

@@ -5,12 +5,10 @@
 //   useState,
 //   useCallback,
 //   useEffect,
-//   useRef,
 // } from 'react';
 // import { X, Loader2 } from 'lucide-react';
 // import { cn } from '@/lib/utils';
 // import { useUserInfo } from '../_hooks/user';
-// import { Button } from '@/components/ui/button';
 // import { useEditor, EditorContent } from '@tiptap/react';
 // import StarterKit from '@tiptap/starter-kit';
 // import Underline from '@tiptap/extension-underline';
@@ -19,11 +17,9 @@
 // import Image from 'next/image';
 // import { useApiCall } from '@/lib/api/use-send';
 // import { ratelApi } from '@/lib/api/ratel_api';
-// import { Feed, FeedStatus, FeedType } from '@/lib/api/models/feeds';
+// import { FeedType } from '@/lib/api/models/feeds';
 // import { UrlType } from '@/lib/api/models/feeds/update-draft-request';
 // import { useQueryClient } from '@tanstack/react-query';
-// import { postByUserIdQk } from '../_hooks/use-posts';
-// import { checkString } from '@/lib/string-filter-utils';
 // import { showErrorToast, showSuccessToast } from '@/lib/toast';
 // import ToolbarPlugin from '@/components/toolbar/toolbar3';
 // import { useRouter } from 'next/navigation';
@@ -31,17 +27,24 @@
 // import { QK_GET_FEED_BY_FEED_ID } from '@/constants';
 // import {
 //   Save,
-//   CommentIcon,
 //   UserCircle,
 //   FilterArrow,
 //   ShapeArrowDown,
 // } from '@/components/icons';
-// import LinkPaste from '@/assets/icons/editor/link-paste.svg';
-// import { Check } from 'lucide-react';
+// import LinkPaste from '@/assets/icons/editor/link-paste-white.svg';
+// import CommentPaste from '@/assets/icons/editor/comment-paste-white.svg';
 
+// import { Check } from 'lucide-react';
 // import Certified from '@/assets/icons/certified.svg';
 // import DoubleArrowDown from '@/assets/icons/double-arrow-down.svg';
 // import { logger } from '@/lib/logger';
+// import { Table } from '@tiptap/extension-table';
+// import Highlight from '@tiptap/extension-highlight';
+// import TextStyle from '@tiptap/extension-text-style';
+// import Color from '@tiptap/extension-color';
+// import TableRow from '@tiptap/extension-table-row';
+// import TableHeader from '@tiptap/extension-table-header';
+// import TableCell from '@tiptap/extension-table-cell';
 
 // export function CreateRePost() {
 //   const {
@@ -68,20 +71,53 @@
 //     repostUrl,
 //     setShowUrlInput,
 //     setRepostUrl,
+//     commentUrl,
+//     showCommentUrlInput,
+//     setCommentUrl,
+//     setShowCommentUrlInput,
 //   } = useRepostDraft();
 
 //   const { data: userInfo } = useUserInfo();
-//   const editorRef = useRef<any>(null);
-
 //   const editor = useEditor({
 //     extensions: [
-//       StarterKit,
-//       Underline,
+//       StarterKit.configure({
+//         bulletList: {
+//           HTMLAttributes: { class: 'list-disc pl-4' },
+//         },
+//         orderedList: {
+//           HTMLAttributes: { class: 'list-decimal pl-4' },
+//         },
+//       }),
+//       TextStyle,
+//       Color,
+//       Highlight.configure({ multicolor: true }),
 //       TextAlign.configure({
 //         types: ['heading', 'paragraph'],
 //       }),
-//       Link.configure({
-//         openOnClick: false,
+//       Table.configure({
+//         resizable: true,
+//         HTMLAttributes: {
+//           class: 'tiptap-table',
+//           style: 'border: 1px solid #e0e0e0;', // Light gray border for the table
+//         },
+//       }),
+//       TableRow.configure({
+//         HTMLAttributes: {
+//           class: 'tiptap-table-row',
+//         },
+//       }),
+//       TableHeader.configure({
+//         HTMLAttributes: {
+//           class: 'tiptap-table-header',
+//           style: 'background-color: #f5f5f5;', // Light gray header background
+//         },
+//       }),
+//       TableCell.configure({
+//         HTMLAttributes: {
+//           class: 'tiptap-table-cell',
+//           style:
+//             'background-color: #fcb300; color: #333; border: 1px solid #e0e0e0;', // White cells with dark gray text
+//         },
 //       }),
 //     ],
 //     content: content || '',
@@ -91,20 +127,26 @@
 //     },
 //   });
 
+//   //editor clena up on unmount
+//   useEffect(() => {
+//     return () => {
+//       if (editor) {
+//         editor.destroy();
+//       }
+//     };
+//   }, [editor]);
+
+//   //content Initialization only once when editor is ready
+//   useEffect(() => {
+//     if (editor && !editor.isDestroyed && content && !editor.getHTML()) {
+//       editor.commands.setContent(content);
+//     }
+//   }, [editor?.isEditable]);
+
 //   const removeImage = () => setImage(null);
 //   const removeQuotedImage = () => setFeedImageUrl(null);
 
-//   const isSubmitDisabled =
-//     !title.trim() ||
-//     checkString(title) ||
-//     checkString(content ?? '') ||
-//     status !== 'idle';
-
-//   useEffect(() => {
-//     if (editor && content && editor.getHTML() !== content) {
-//       editor.commands.setContent(content);
-//     }
-//   }, [content, editor]);
+//   const isSubmitDisabled = !title.trim() || status !== 'idle';
 
 //   const handleInsertUrl = () => {
 //     const url = repostUrl?.trim();
@@ -113,6 +155,15 @@
 //     editor.commands.insertContent(url);
 //     setShowUrlInput(false);
 //     setRepostUrl('');
+//   };
+
+//   const handleCommentUrl = () => {
+//     const url = commentUrl?.trim();
+//     if (!url || !editor) return;
+
+//     editor.commands.insertContent(url);
+//     setCommentUrl('');
+//     setShowCommentUrlInput(false);
 //   };
 
 //   if (!editor) {
@@ -227,7 +278,7 @@
 //           />
 
 //           {showUrlInput && (
-//             <div className="absolute top-2 left-2 z-20 bg-neutral-800 border border-neutral-600 rounded-md px-3 py-2 flex items-center gap-2 w-[90%]">
+//             <div className="absolute top-4 left-2 z-20 bg-neutral-800 border border-neutral-600 rounded-md px-3 py-2 flex items-center gap-2 w-[90%]">
 //               <LinkPaste />
 
 //               <input
@@ -264,6 +315,44 @@
 //             </div>
 //           )}
 
+//           {showCommentUrlInput && (
+//             <div className="absolute top-2/5 left-2 z-20 bg-neutral-800 border border-neutral-600 rounded-md px-3 py-2 flex items-center gap-2 w-[90%]">
+//               <CommentPaste className='text-white' />
+
+//               <input
+//                 autoFocus
+//                 value={commentUrl}
+//                 onChange={(e) => setCommentUrl(e.target.value)}
+//                 onKeyDown={(e) => {
+//                   if (e.key === 'Enter') {
+//                     handleCommentUrl();
+//                   }
+//                 }}
+//                 placeholder="Please paste or search for the comment to quote"
+//                 className="bg-transparent text-white text-sm placeholder-neutral-400 outline-none flex-1"
+//               />
+
+//               <button
+//                 onClick={handleCommentUrl}
+//                 className="text-green-400 hover:text-white"
+//                 aria-label="Insert URL"
+//               >
+//                 <Check className="w-4 h-4" />
+//               </button>
+
+//               <button
+//                 onClick={() => {
+//                   setShowCommentUrlInput(false);
+//                   setCommentUrl('');
+//                 }}
+//                 className="text-neutral-400 hover:text-white"
+//                 aria-label="Cancel"
+//               >
+//                 <X className="w-4 h-4" />
+//               </button>
+//             </div>
+//           )}
+
 //           {/* Uploaded Image Preview */}
 //           {image && (
 //             <div className="px-4 pt-2">
@@ -287,14 +376,18 @@
 //           {/* Toolbar */}
 //           <div className="flex items-center justify-between p-4">
 //             <ToolbarPlugin
+//               editor={editor}
 //               onImageUpload={setImage}
 //               onTriggerLinkPaste={() => {
 //                 setShowUrlInput(true);
 //                 setRepostUrl('');
 //               }}
+//               onCommentPaste={() => {
+//                 setShowCommentUrlInput(true);
+//                 setCommentUrl('');
+//               }}
 //             />
 
-//             <div></div>
 //             <div className="flex space-x-2">
 //               <button
 //                 onClick={savePost}
@@ -323,6 +416,239 @@
 //   );
 // }
 
+// // Context Types (remain the same as your original)
+// type DraftStatus = 'idle' | 'saving' | 'publishing' | 'error';
+
+// interface RePostDraftContextType {
+//   originalFeedId: number | null;
+//   setOriginalFeedId: (id: number | null) => void;
+
+//   authorName?: string;
+//   authorProfileUrl?: string;
+//   setAuthorName: (name: string) => void;
+//   setAuthorProfileUrl: (url: string) => void;
+//   industry?: string;
+//   setIndustry: (name: string) => void;
+
+//   showUrlInput?: boolean;
+//   setShowUrlInput: (show: boolean) => void;
+
+//   showCommentUrlInput?: boolean;
+//   setShowCommentUrlInput: (show: boolean) => void;
+
+//   repostUrl?: string;
+//   setRepostUrl: (url: string) => void;
+
+//   commentUrl?: string;
+//   setCommentUrl: (url: string) => void;
+
+//   expand: boolean;
+//   setExpand: (expand: boolean) => void;
+//   title: string;
+//   setTitle: (title: string) => void;
+//   content: string | null;
+//   setContent: (content: string | null) => void;
+//   image: string | null;
+//   setImage: (image: string | null) => void;
+//   feedcontent: string;
+//   setFeedContent: (content: string) => void;
+//   feedImageUrl: string | null;
+//   setFeedImageUrl: (url: string | null) => void;
+//   status: DraftStatus;
+//   isPublishedPost: boolean;
+//   publishPost: () => Promise<void>;
+//   savePost: () => Promise<void>;
+//   newDraft: () => void;
+
+//   resetDraft: () => void;
+// }
+
+// const RePostDraftContext = createContext<RePostDraftContextType | undefined>(
+//   undefined,
+// );
+
+// export const RePostDraftProvider: React.FC<{ children: React.ReactNode }> = ({
+//   children,
+// }) => {
+//   const [originalFeedId, setOriginalFeedId] = useState<number | null>(null);
+
+//   const [authorName, setAuthorName] = useState<string | undefined>();
+//   const [industry, setIndustry] = useState<string | undefined>();
+//   const [authorProfileUrl, setAuthorProfileUrl] = useState<
+//     string | undefined
+//   >();
+
+//   const [showUrlInput, setShowUrlInput] = useState(false);
+//   const [repostUrl, setRepostUrl] = useState('');
+
+//   const [showCommentUrlInput, setShowCommentUrlInput] = useState(false);
+//   const [commentUrl, setCommentUrl] = useState('');
+
+//   const router = useRouter();
+//   const queryClient = useQueryClient();
+//   const { get, post } = useApiCall();
+//   const { data: user } = useUserInfo();
+
+//   const [expand, setExpand] = useState(false);
+//   const [title, setTitle] = useState('');
+//   const [content, setContent] = useState<string | null>(null);
+//   const [image, setImage] = useState<string | null>(null);
+//   const [feedcontent, setFeedContent] = useState('');
+//   const [feedImageUrl, setFeedImageUrl] = useState<string | null>(null);
+//   const [status, setStatus] = useState<DraftStatus>('idle');
+//   const [isPublishedPost, setIsPublishedPost] = useState(false);
+//   const [draftId, setDraftId] = useState<number | null>(null);
+
+//   const newDraft = useCallback(() => {
+//     setTitle('');
+//     setContent(null);
+//     setImage(null);
+//     setIsPublishedPost(false);
+//     setStatus('idle');
+//     setExpand(true);
+//   }, []);
+
+//   const saveDraft = useCallback(async () => {
+//     if (!title.trim() || !content || status !== 'idle') return;
+
+//     setStatus('saving');
+//     try {
+//       const url = image ? image : '';
+//       const urlType = image ? UrlType.Image : UrlType.None;
+
+//       if (isPublishedPost) {
+//         await post(ratelApi.feeds.editPost(draftId!), {
+//           type: FeedType.Repost,
+//           html_contents: content,
+//           title,
+//           url,
+//           url_type: urlType,
+//           original_feed_id: originalFeedId,
+//         });
+//       } else {
+//         const data = await post(ratelApi.feeds.createDraft(), {
+//           type: FeedType.Repost,
+//           user_id: user?.id,
+//           html_contents: content,
+//           title,
+//           url,
+//           url_type: urlType,
+//         });
+//         setDraftId(data.id);
+//       }
+
+//       queryClient.invalidateQueries({
+//         queryKey: [QK_GET_FEED_BY_FEED_ID, draftId],
+//       });
+//     } catch (error) {
+//       console.error('Failed to save draft:', error);
+//       setStatus('error');
+//     } finally {
+//       setStatus('idle');
+//     }
+//   }, [
+//     title,
+//     content,
+//     image,
+//     draftId,
+//     isPublishedPost,
+//     post,
+//     user?.id,
+//     queryClient,
+//     status,
+//     originalFeedId,
+//   ]);
+
+//   const publishPost = useCallback(async () => {
+//     if (!title.trim() || !content || status !== 'idle') return;
+
+//     setStatus('publishing');
+//     try {
+//       await saveDraft();
+//       await post(ratelApi.feeds.publishDraft(draftId!));
+//       router.push(route.threadByFeedId(draftId!));
+//       resetDraft();
+//       showSuccessToast('Repost Successful');
+//     } catch (error) {
+//       console.error('Failed to publish post:', error);
+//       setStatus('error');
+//       showErrorToast('Error Reposting');
+//       logger.debug('');
+//     } finally {
+//       setStatus('idle');
+//     }
+//   }, [title, content, draftId, saveDraft, post, router, status]);
+
+//   const savePost = useCallback(async () => {
+//     await saveDraft();
+//     setExpand(false);
+//   }, [saveDraft]);
+
+//   const resetDraft = () => {
+//     setOriginalFeedId(null);
+//     setTitle('');
+//     setContent(null);
+//     setImage(null);
+//     setFeedContent('');
+//     setFeedImageUrl(null);
+//     setDraftId(null);
+//     setIsPublishedPost(false);
+//     setStatus('idle');
+//     setExpand(false);
+//   };
+
+//   const contextValue = {
+//     originalFeedId,
+//     setOriginalFeedId,
+//     industry,
+//     setIndustry,
+//     showUrlInput,
+//     setShowUrlInput,
+//     repostUrl,
+//     setRepostUrl,
+//     showCommentUrlInput,
+//     setShowCommentUrlInput,
+//     commentUrl,
+//     setCommentUrl,
+//     expand,
+//     setExpand,
+//     title,
+//     setTitle,
+//     content,
+//     setContent,
+//     image,
+//     setImage,
+//     feedcontent,
+//     setFeedContent,
+//     feedImageUrl,
+//     setFeedImageUrl,
+//     status,
+//     isPublishedPost,
+//     publishPost,
+//     savePost,
+//     newDraft,
+//     resetDraft,
+//     authorName,
+//     authorProfileUrl,
+//     setAuthorName,
+//     setAuthorProfileUrl,
+//   };
+
+//   return (
+//     <RePostDraftContext.Provider value={contextValue}>
+//       {children}
+//     </RePostDraftContext.Provider>
+//   );
+// };
+
+// export const useRepostDraft = () => {
+//   const context = useContext(RePostDraftContext);
+//   if (!context) {
+//     throw new Error('useRepostDraft must be used within a RePostDraftProvider');
+//   }
+//   return context;
+// };
+
 'use client';
 import {
   createContext,
@@ -333,6 +659,7 @@ import {
 } from 'react';
 import { X, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { useUserInfo } from '../_hooks/user';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -342,22 +669,8 @@ import Link from '@tiptap/extension-link';
 import Image from 'next/image';
 import { useApiCall } from '@/lib/api/use-send';
 import { ratelApi } from '@/lib/api/ratel_api';
-import { FeedType } from '@/lib/api/models/feeds';
-import { UrlType } from '@/lib/api/models/feeds/update-draft-request';
-import { useQueryClient } from '@tanstack/react-query';
-import { showErrorToast, showSuccessToast } from '@/lib/toast';
-import ToolbarPlugin from '@/components/toolbar/toolbar3';
 import { useRouter } from 'next/navigation';
 import { route } from '@/route';
-import { QK_GET_FEED_BY_FEED_ID } from '@/constants';
-import {
-  Save,
-  CommentIcon,
-  UserCircle,
-  FilterArrow,
-  ShapeArrowDown,
-} from '@/components/icons';
-import LinkPaste from '@/assets/icons/editor/link-paste.svg';
 import { Check } from 'lucide-react';
 import Certified from '@/assets/icons/certified.svg';
 import DoubleArrowDown from '@/assets/icons/double-arrow-down.svg';
@@ -369,6 +682,12 @@ import Color from '@tiptap/extension-color';
 import TableRow from '@tiptap/extension-table-row';
 import TableHeader from '@tiptap/extension-table-header';
 import TableCell from '@tiptap/extension-table-cell';
+import { UserCircle } from '@/components/icons';
+import ToolbarPlugin from '@/components/toolbar/toolbar3';
+import {
+  showErrorToast,
+  showSuccessToast,
+} from '@/components/custom-toast/toast';
 
 export function CreateRePost() {
   const {
@@ -383,68 +702,29 @@ export function CreateRePost() {
     feedcontent,
     feedImageUrl,
     setFeedImageUrl,
-    publishPost,
-    savePost,
-    status,
-    isPublishedPost,
     resetDraft,
     authorName,
     industry,
     authorProfileUrl,
+    originalFeedId,
     showUrlInput,
     repostUrl,
     setShowUrlInput,
     setRepostUrl,
+    commentUrl,
+    showCommentUrlInput,
+    setCommentUrl,
+    setShowCommentUrlInput,
+    authorId,
+    setAuthorId,
   } = useRepostDraft();
 
+  const { data: User } = useSuspenseUserInfo();
   const { data: userInfo } = useUserInfo();
+  const { post } = useApiCall();
+  const router = useRouter();
 
-  // const editor = useEditor({
-  //   extensions: [
-  //     StarterKit,
-  //     Underline,
-
-  //     TextAlign.configure({
-  //       types: ['heading', 'paragraph'],
-  //     }),
-  //     Link.configure({
-  //       openOnClick: false,
-  //     }),
-  //   ],
-  //   content: content || '',
-  //   onUpdate: ({ editor }) => {
-  //     const html = editor.getHTML();
-  //     setContent(html);
-  //   },
-  // });
-
-  // const editor = useEditor({
-  //   extensions: [
-  //     StarterKit.configure({
-  //       bulletList: {
-  //         HTMLAttributes: {
-  //           class: 'list-disc pl-4',
-  //         },
-  //       },
-  //       orderedList: {
-  //         HTMLAttributes: {
-  //           class: 'list-decimal pl-4',
-  //         },
-  //       },
-  //     }),
-  //     TextStyle,
-  //     Color,
-  //     Highlight.configure({ multicolor: true }),
-  //     TextAlign.configure({
-  //       types: ['heading', 'paragraph'],
-  //     }),
-  //     Table.configure({
-  //       resizable: true,
-  //     }),
-  //     // ... other extensions
-  //   ],
-  //   // ... other config
-  // });
+  const [isReposting, setIsReposting] = useState(false);
 
   const editor = useEditor({
     extensions: [
@@ -466,7 +746,7 @@ export function CreateRePost() {
         resizable: true,
         HTMLAttributes: {
           class: 'tiptap-table',
-          style: 'border: 1px solid #e0e0e0;', // Light gray border for the table
+          style: 'border: 1px solid #e0e0e0;',
         },
       }),
       TableRow.configure({
@@ -477,16 +757,20 @@ export function CreateRePost() {
       TableHeader.configure({
         HTMLAttributes: {
           class: 'tiptap-table-header',
-          style: 'background-color: #f5f5f5;', // Light gray header background
+          style: 'background-color: #f5f5f5;',
         },
       }),
       TableCell.configure({
         HTMLAttributes: {
           class: 'tiptap-table-cell',
           style:
-            'background-color: #fcb300; color: #333; border: 1px solid #e0e0e0;', // White cells with dark gray text
+            'background-color: #fcb300; color: #333; border: 1px solid #e0e0e0;',
         },
       }),
+      Link.configure({
+        openOnClick: false,
+      }),
+      Underline,
     ],
     content: content || '',
     onUpdate: ({ editor }) => {
@@ -495,7 +779,6 @@ export function CreateRePost() {
     },
   });
 
-  // Clean up editor on unmount
   useEffect(() => {
     return () => {
       if (editor) {
@@ -504,17 +787,53 @@ export function CreateRePost() {
     };
   }, [editor]);
 
-  // Initialize content only once when editor is ready
   useEffect(() => {
     if (editor && !editor.isDestroyed && content && !editor.getHTML()) {
       editor.commands.setContent(content);
     }
   }, [editor?.isEditable]);
 
+  const handlePublish = async () => {
+    if (!title.trim() || !content || !editor) return;
+
+    setIsReposting(true);
+    const timeout = setTimeout(() => {
+      setIsReposting(false);
+      showErrorToast('Request timed out');
+    }, 10000);
+
+    try {
+      const response = await post(ratelApi.feeds.repost(), {
+        repost: {
+          html_contents: editor.getHTML(),
+          quote_feed_id: originalFeedId,
+          parent_id: authorId,
+          user_id: User?.id,
+        },
+      });
+
+      clearTimeout(timeout);
+
+      console.log('original feedId', originalFeedId);
+      console.log('Author Id', authorId);
+
+      showSuccessToast('Repost Successful!');
+      router.push(route.threadByFeedId(response.id));
+      resetDraft();
+    } catch (error) {
+      setIsReposting(false);
+      console.error('Failed to publish repost:', error);
+      showErrorToast('Failed to publish repost');
+    } finally {
+      clearTimeout(timeout);
+      setIsReposting(false);
+    }
+  };
+
   const removeImage = () => setImage(null);
   const removeQuotedImage = () => setFeedImageUrl(null);
 
-  const isSubmitDisabled = !title.trim() || status !== 'idle';
+  const isSubmitDisabled = !title.trim();
 
   const handleInsertUrl = () => {
     const url = repostUrl?.trim();
@@ -523,6 +842,15 @@ export function CreateRePost() {
     editor.commands.insertContent(url);
     setShowUrlInput(false);
     setRepostUrl('');
+  };
+
+  const handleCommentUrl = () => {
+    const url = commentUrl?.trim();
+    if (!url || !editor) return;
+
+    editor.commands.insertContent(url);
+    setCommentUrl('');
+    setShowCommentUrlInput(false);
   };
 
   if (!editor) {
@@ -541,7 +869,7 @@ export function CreateRePost() {
                 height={40}
                 src={userInfo?.profile_url || '/default-profile.png'}
                 alt="Profile"
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover rounded-full"
               />
             </div>
             <div className="flex items-center gap-2">
@@ -555,7 +883,6 @@ export function CreateRePost() {
           <div className="flex items-center space-x-4">
             <div className="p-4 rounded-lg flex w-[320px] justify-between border border-[0.5px] border-[#262626]">
               <p className="text-left text-white text-lg">{industry}</p>
-              <ShapeArrowDown />
             </div>
 
             <div className={cn('cursor-pointer')} onClick={resetDraft}>
@@ -583,10 +910,6 @@ export function CreateRePost() {
                 </span>
               </div>
               <Certified className="size-5" />
-
-              <div className="absolute right-0 top-0">
-                <FilterArrow />
-              </div>
             </div>
 
             {feedcontent && (
@@ -634,17 +957,10 @@ export function CreateRePost() {
           <EditorContent
             editor={editor}
             className="outline-none min-h-[100px] text-neutral-300"
-            // ref={(ref) => {
-            //   if (ref) {
-            //     ref.editor = editor;
-            //   }
-            // }}
           />
 
           {showUrlInput && (
-            <div className="absolute top-2 left-2 z-20 bg-neutral-800 border border-neutral-600 rounded-md px-3 py-2 flex items-center gap-2 w-[90%]">
-              <LinkPaste />
-
+            <div className="absolute top-4 left-2 z-20 bg-neutral-800 border border-neutral-600 rounded-md px-3 py-2 flex items-center gap-2 w-[90%]">
               <input
                 autoFocus
                 value={repostUrl}
@@ -679,6 +995,42 @@ export function CreateRePost() {
             </div>
           )}
 
+          {showCommentUrlInput && (
+            <div className="absolute top-2/5 left-2 z-20 bg-neutral-800 border border-neutral-600 rounded-md px-3 py-2 flex items-center gap-2 w-[90%]">
+              <input
+                autoFocus
+                value={commentUrl}
+                onChange={(e) => setCommentUrl(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleCommentUrl();
+                  }
+                }}
+                placeholder="Please paste or search for the comment to quote"
+                className="bg-transparent text-white text-sm placeholder-neutral-400 outline-none flex-1"
+              />
+
+              <button
+                onClick={handleCommentUrl}
+                className="text-green-400 hover:text-white"
+                aria-label="Insert URL"
+              >
+                <Check className="w-4 h-4" />
+              </button>
+
+              <button
+                onClick={() => {
+                  setShowCommentUrlInput(false);
+                  setCommentUrl('');
+                }}
+                className="text-neutral-400 hover:text-white"
+                aria-label="Cancel"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
           {/* Uploaded Image Preview */}
           {image && (
             <div className="px-4 pt-2">
@@ -699,38 +1051,33 @@ export function CreateRePost() {
             </div>
           )}
 
-          {/* Toolbar */}
+          {/* Footer */}
           <div className="flex items-center justify-between p-4">
-            <ToolbarPlugin
-              editor={editor}
-              onImageUpload={setImage}
-              onTriggerLinkPaste={() => {
-                setShowUrlInput(true);
-                setRepostUrl('');
-              }}
-            />
-
             <div className="flex space-x-2">
-              <button
-                onClick={savePost}
-                className="flex items-center font-bold text-white px-4 py-2 gap-x-2"
-              >
-                <Save className=" " />
-                Save
-              </button>
-
-              <button
-                onClick={isPublishedPost ? savePost : publishPost}
-                disabled={isSubmitDisabled}
-                className="bg-primary text-background rounded-full hover:bg-primary/70 hover:shadow-[inset_0_0_0_1000px_rgba(0,0,0,0.2)] flex px-4 py-2 font-bold gap-x-2 items-center"
-              >
-                <UserCircle />
-                {status === 'publishing' || status === 'saving' ? (
-                  <Loader2 className="animate-spin mr-2" />
-                ) : null}
-                {isPublishedPost ? 'Update' : 'Post'}
-              </button>
+              {/* Toolbar components would go here */}
+              <ToolbarPlugin
+                editor={editor}
+                onImageUpload={setImage}
+                onTriggerLinkPaste={() => {
+                  setShowUrlInput(true);
+                  setRepostUrl('');
+                }}
+                onCommentPaste={() => {
+                  setShowCommentUrlInput(true);
+                  setCommentUrl('');
+                }}
+              />
             </div>
+
+            <button
+              onClick={handlePublish}
+              disabled={isSubmitDisabled}
+              className="bg-primary text-background rounded-full hover:bg-primary/70 hover:shadow-[inset_0_0_0_1000px_rgba(0,0,0,0.2)] flex px-4 py-2 font-bold gap-x-2 items-center"
+            >
+              {isReposting ? <Loader2 /> : <UserCircle />}
+
+              {isReposting ? '' : 'Post'}
+            </button>
           </div>
         </div>
       </div>
@@ -738,26 +1085,19 @@ export function CreateRePost() {
   );
 }
 
-// Context Types (remain the same as your original)
-type DraftStatus = 'idle' | 'saving' | 'publishing' | 'error';
-
 interface RePostDraftContextType {
   originalFeedId: number | null;
   setOriginalFeedId: (id: number | null) => void;
-
   authorName?: string;
   authorProfileUrl?: string;
   setAuthorName: (name: string) => void;
   setAuthorProfileUrl: (url: string) => void;
+
+  authorId: number | null;
+  setAuthorId: (id: number | null) => void;
+
   industry?: string;
   setIndustry: (name: string) => void;
-
-  showUrlInput?: boolean;
-  setShowUrlInput: (show: boolean) => void;
-
-  repostUrl?: string;
-  setRepostUrl: (url: string) => void;
-
   expand: boolean;
   setExpand: (expand: boolean) => void;
   title: string;
@@ -770,12 +1110,14 @@ interface RePostDraftContextType {
   setFeedContent: (content: string) => void;
   feedImageUrl: string | null;
   setFeedImageUrl: (url: string | null) => void;
-  status: DraftStatus;
-  isPublishedPost: boolean;
-  publishPost: () => Promise<void>;
-  savePost: () => Promise<void>;
-  newDraft: () => void;
-
+  showUrlInput?: boolean;
+  setShowUrlInput: (show: boolean) => void;
+  repostUrl?: string;
+  setRepostUrl: (url: string) => void;
+  showCommentUrlInput?: boolean;
+  setShowCommentUrlInput: (show: boolean) => void;
+  commentUrl?: string;
+  setCommentUrl: (url: string) => void;
   resetDraft: () => void;
 }
 
@@ -787,138 +1129,47 @@ export const RePostDraftProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [originalFeedId, setOriginalFeedId] = useState<number | null>(null);
-
-  const [authorName, setAuthorName] = useState<string | undefined>();
-  const [industry, setIndustry] = useState<string | undefined>();
-  const [authorProfileUrl, setAuthorProfileUrl] = useState<
-    string | undefined
-  >();
-
-  const [showUrlInput, setShowUrlInput] = useState(false);
-  const [repostUrl, setRepostUrl] = useState('');
-
-  const router = useRouter();
-  const queryClient = useQueryClient();
-  const { get, post } = useApiCall();
-  const { data: user } = useUserInfo();
-
+  const [authorId, setAuthorId] = useState<number | null>(null);
+  const [authorName, setAuthorName] = useState<string>();
+  const [authorProfileUrl, setAuthorProfileUrl] = useState<string>();
+  const [industry, setIndustry] = useState<string>();
   const [expand, setExpand] = useState(false);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState<string | null>(null);
   const [image, setImage] = useState<string | null>(null);
   const [feedcontent, setFeedContent] = useState('');
   const [feedImageUrl, setFeedImageUrl] = useState<string | null>(null);
-  const [status, setStatus] = useState<DraftStatus>('idle');
-  const [isPublishedPost, setIsPublishedPost] = useState(false);
-  const [draftId, setDraftId] = useState<number | null>(null);
+  const [showUrlInput, setShowUrlInput] = useState(false);
+  const [repostUrl, setRepostUrl] = useState('');
+  const [showCommentUrlInput, setShowCommentUrlInput] = useState(false);
+  const [commentUrl, setCommentUrl] = useState('');
 
-  const newDraft = useCallback(() => {
-    setTitle('');
-    setContent(null);
-    setImage(null);
-    setIsPublishedPost(false);
-    setStatus('idle');
-    setExpand(true);
-  }, []);
-
-  const saveDraft = useCallback(async () => {
-    if (!title.trim() || !content || status !== 'idle') return;
-
-    setStatus('saving');
-    try {
-      const url = image ? image : '';
-      const urlType = image ? UrlType.Image : UrlType.None;
-
-      if (isPublishedPost) {
-        await post(ratelApi.feeds.editPost(draftId!), {
-          type: FeedType.Repost,
-          html_contents: content,
-          title,
-          url,
-          url_type: urlType,
-          original_feed_id: originalFeedId,
-        });
-      } else {
-        const data = await post(ratelApi.feeds.createDraft(), {
-          type: FeedType.Repost,
-          user_id: user?.id,
-          html_contents: content,
-          title,
-          url,
-          url_type: urlType,
-        });
-        setDraftId(data.id);
-      }
-
-      queryClient.invalidateQueries({
-        queryKey: [QK_GET_FEED_BY_FEED_ID, draftId],
-      });
-    } catch (error) {
-      console.error('Failed to save draft:', error);
-      setStatus('error');
-    } finally {
-      setStatus('idle');
-    }
-  }, [
-    title,
-    content,
-    image,
-    draftId,
-    isPublishedPost,
-    post,
-    user?.id,
-    queryClient,
-    status,
-    originalFeedId,
-  ]);
-
-  const publishPost = useCallback(async () => {
-    if (!title.trim() || !content || status !== 'idle') return;
-
-    setStatus('publishing');
-    try {
-      await saveDraft();
-      await post(ratelApi.feeds.publishDraft(draftId!));
-      router.push(route.threadByFeedId(draftId!));
-      resetDraft();
-      showSuccessToast('Repost Successful');
-    } catch (error) {
-      console.error('Failed to publish post:', error);
-      setStatus('error');
-      showErrorToast('Error Reposting');
-      logger.debug('');
-    } finally {
-      setStatus('idle');
-    }
-  }, [title, content, draftId, saveDraft, post, router, status]);
-
-  const savePost = useCallback(async () => {
-    await saveDraft();
-    setExpand(false);
-  }, [saveDraft]);
-
-  const resetDraft = () => {
+  const resetDraft = useCallback(() => {
     setOriginalFeedId(null);
+    setAuthorId(null);
     setTitle('');
     setContent(null);
     setImage(null);
     setFeedContent('');
     setFeedImageUrl(null);
-    setDraftId(null);
-    setIsPublishedPost(false);
-    setStatus('idle');
+    setShowUrlInput(false);
+    setRepostUrl('');
+    setShowCommentUrlInput(false);
+    setCommentUrl('');
     setExpand(false);
-  };
+  }, []);
 
   const contextValue = {
     originalFeedId,
     setOriginalFeedId,
+    authorId,
+    setAuthorId,
+    authorName,
+    authorProfileUrl,
+    setAuthorName,
+    setAuthorProfileUrl,
     industry,
     setIndustry,
-    showUrlInput,
-    setShowUrlInput,
-    repostUrl,
-    setRepostUrl,
     expand,
     setExpand,
     title,
@@ -931,16 +1182,15 @@ export const RePostDraftProvider: React.FC<{ children: React.ReactNode }> = ({
     setFeedContent,
     feedImageUrl,
     setFeedImageUrl,
-    status,
-    isPublishedPost,
-    publishPost,
-    savePost,
-    newDraft,
+    showUrlInput,
+    setShowUrlInput,
+    repostUrl,
+    setRepostUrl,
+    showCommentUrlInput,
+    setShowCommentUrlInput,
+    commentUrl,
+    setCommentUrl,
     resetDraft,
-    authorName,
-    authorProfileUrl,
-    setAuthorName,
-    setAuthorProfileUrl,
   };
 
   return (
