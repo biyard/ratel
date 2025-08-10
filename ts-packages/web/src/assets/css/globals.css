@@ -167,7 +167,7 @@ a {
   vertical-align: top;
 }
 
-/* Alternating row colors (optional) */
+/* Alternating row colors */
 .tiptap-table-row:nth-child(even) .tiptap-table-cell {
   background-color: #fafafa !important; /* Very light gray for even rows */
 }
@@ -205,4 +205,16 @@ a {
 
 .dark .tiptap-table .selectedCell {
   background-color: #003366 !important; /* Darker blue for selection */
+}
+
+
+/* toast-overrides.css */
+.custom-toast-wrapper {
+  background: transparent !important; 
+  box-shadow: none !important;        
+  padding: 0 !important;              
+}
+
+.custom-toast-body {
+  padding: 0 !important; 
 }

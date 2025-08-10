@@ -88,6 +88,7 @@ export const proxy = {
 export const ratelApi = {
   users: {
     login: () => '/v1/users?action=login',
+
     logout: () => '/v2/users/logout',
     loginWithPassword: (email: string, password: string) =>
       `/v1/users?action=login-by-password&email=${encodeURIComponent(email)}&password=${password}`,
@@ -150,6 +151,9 @@ export const ratelApi = {
     publishDraft: (post_id: number) => `/v1/feeds/${post_id}`,
     removeDraft: (post_id: number) => `/v1/feeds/${post_id}?action=delete`,
     likePost: (post_id: number) => `/v1/feeds/${post_id}`,
+    repost: () => '/v1/feeds',
+    unrepost: (repost_id: number) => `/v1/feeds/${repost_id}?action=unrepost`,
+    
     getPostsByUserId: (
       user_id: number,
       page: number,

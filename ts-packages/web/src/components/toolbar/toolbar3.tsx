@@ -1064,7 +1064,7 @@ import FileUploader from '@/components/file-uploader';
 import { useCallback, useState, useEffect, useRef } from 'react';
 import { HexColorPicker } from 'react-colorful';
 
-// Import icons
+//Icons Import
 import CodesPen from '@/assets/icons/editor/codespen.svg';
 import BoldIcon from '@/assets/icons/editor/bold.svg';
 import Italics from '@/assets/icons/editor/italics.svg';
@@ -1087,6 +1087,7 @@ interface ToolbarPluginProps {
   onImageUpload: (url: string) => void;
   enableImage?: boolean;
   onTriggerLinkPaste?: () => void;
+  onCommentPaste?:() => void;
 }
 
 export default function ToolbarPlugin({
@@ -1094,6 +1095,7 @@ export default function ToolbarPlugin({
   onImageUpload,
   enableImage = true,
   onTriggerLinkPaste,
+  onCommentPaste,
 }: ToolbarPluginProps) {
   // State for color pickers
   const [showTextColorPicker, setShowTextColorPicker] = useState(false);
@@ -1117,7 +1119,7 @@ export default function ToolbarPlugin({
     setShowTextColorPicker(false);
   };
 
-  // Apply background color
+  //  background color
   const applyBgColor = (color: string) => {
     editor?.chain().focus().setHighlight({ color }).run();
     setShowBgColorPicker(false);
@@ -1153,7 +1155,7 @@ export default function ToolbarPlugin({
 
   return (
     <div className="flex items-center gap-4 [&>button]:size-6 [&>button]:rounded [&>button]:hover:bg-neutral-700 ">
-      {/* Basic formatting buttons - unchanged */}
+      {/*  formatting buttons */}
       <button
         onClick={() => editor.chain().focus().toggleCode().run()}
         className={cn(editor.isActive('code') && 'bg-neutral-600')}
@@ -1190,7 +1192,7 @@ export default function ToolbarPlugin({
         <Strike />
       </button>
 
-      {/* Text Color Picker - UPDATED */}
+      {/* Text Color Picker */}
       <div className="relative" ref={textColorPickerRef}>
         <button
           onClick={() => setShowTextColorPicker(!showTextColorPicker)}
@@ -1203,7 +1205,7 @@ export default function ToolbarPlugin({
           <Paint />
         </button>
         {showTextColorPicker && (
-          // CHANGED: Replaced mt-2 with mb-2 and added bottom-full left-0
+          //
           <div className="absolute bottom-full left-0 z-50 mb-2 p-2 bg-white rounded shadow-lg">
             <HexColorPicker color={textColor} onChange={setTextColor} />
             <div className="flex justify-between mt-2">
@@ -1224,7 +1226,7 @@ export default function ToolbarPlugin({
         )}
       </div>
 
-      {/* Background Color Picker - UPDATED */}
+      {/* Background Color Picker */}
       <div className="relative" ref={bgColorPickerRef}>
         <button
           onClick={() => setShowBgColorPicker(!showBgColorPicker)}
@@ -1237,7 +1239,7 @@ export default function ToolbarPlugin({
           <Paint2 />
         </button>
         {showBgColorPicker && (
-          // CHANGED: Replaced mt-2 with mb-2 and added bottom-full left-0
+          // COlor picker
           <div className="absolute bottom-full left-0 z-50 mb-2 p-2 bg-white rounded shadow-lg">
             <HexColorPicker color={bgColor} onChange={setBgColor} />
             <div className="flex justify-between mt-2">
@@ -1267,7 +1269,7 @@ export default function ToolbarPlugin({
         </FileUploader>
       )}
 
-      {/* Link - unchanged */}
+      {/* Link */}
       <button
         onClick={onTriggerLinkPaste}
         className={cn('hover:bg-neutral-600')}
@@ -1276,16 +1278,16 @@ export default function ToolbarPlugin({
         <LinkPaste />
       </button>
 
-      {/* Comment - unchanged */}
+      {/* Comment*/}
       <button
-        onClick={() => {}}
+        onClick={onCommentPaste}
         className={cn('hover:bg-neutral-600')}
         aria-label="Add comment"
       >
         <CommentPaste />
       </button>
 
-      {/* Table Creation - UPDATED */}
+      {/* Table */}
       <div className="relative" ref={tableMenuRef}>
         <button
           onClick={() => setShowTableMenu(!showTableMenu)}
@@ -1298,12 +1300,12 @@ export default function ToolbarPlugin({
           <TableCells />
         </button>
         {showTableMenu && (
-          // CHANGED: Replaced mt-2 with mb-2 and added bottom-full left-0
+          /* TABLE MENU*/
           <div className="absolute bottom-full left-0 z-50 mb-2 p-4 bg-white rounded shadow-lg w-64">
             <h4 className="font-medium mb-2 text-neutral-800">Create Table</h4>
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="block text-sm mb-1 text-neutral-800">Rows</label>
+                <label className="block text-sm mb-1 text-neutral-800 font-bold">Rows</label>
                 <input
                   type="number"
                   min="1"
@@ -1314,7 +1316,7 @@ export default function ToolbarPlugin({
                 />
               </div>
               <div>
-                <label className="block text-sm mb-1 text-neutral-800">Columns</label>
+                <label className="block text-sm mb-1 text-neutral-800 font-bold">Columns</label>
                 <input
                   type="number"
                   min="1"
@@ -1327,7 +1329,7 @@ export default function ToolbarPlugin({
             </div>
             <button
               onClick={insertTable}
-              className="w-full py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+              className="w-full py-1 bg-primary text-white rounded hover:bg-primary/50 text-neutral-800"
             >
               Insert Table
             </button>
@@ -1335,7 +1337,7 @@ export default function ToolbarPlugin({
         )}
       </div>
 
-      {/* Bullet List - unchanged */}
+      {/* Bullet List*/}
       <button
         onClick={() => editor.chain().focus().toggleBulletList().run()}
         className={cn(
@@ -1348,7 +1350,7 @@ export default function ToolbarPlugin({
         <Bullet />
       </button>
 
-      {/* Numbered List - unchanged */}
+      {/* Numbered List */}
       <button
         onClick={() => editor.chain().focus().toggleOrderedList().run()}
         className={cn(
@@ -1361,7 +1363,7 @@ export default function ToolbarPlugin({
         <NumberBullet />
       </button>
 
-      {/* Alignment Buttons - unchanged */}
+      {/* Alignment Buttons */}
       <button
         onClick={() => editor.chain().focus().setTextAlign('left').run()}
         className={cn(
