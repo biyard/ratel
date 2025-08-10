@@ -1,19 +1,26 @@
 import 'package:ratel/exports.dart';
 
 class AppRoutes {
-  static const String mainScreen = '/';
-  static const String explore = "/explore";
-  static const String home = "/home";
-  static const String myNetwork = "/network";
-  static const String message = "/message";
+  static const String mainScreen = '/dashboard';
+  static const String introScreen = '/intro';
+  static const String explore = "/dashboard/explore";
+  static const String home = "/dashboard/home";
+  static const String myNetwork = "/dashboard/network";
+  static const String message = "/dashboard/message";
 
-  static const String notification = "/notification";
+  static const String notification = "/dashboard/notification";
 
   static List<GetPage> pages = [
     GetPage(
       name: mainScreen,
       page: () => MainScreen(),
       binding: MainBinding(),
+      transition: Transition.noTransition,
+    ),
+    GetPage(
+      name: introScreen,
+      page: () => const IntroScreen(),
+      binding: IntroBinding(),
       transition: Transition.noTransition,
     ),
     GetPage(

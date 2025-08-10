@@ -36,6 +36,10 @@ export 'presentations/notification/notification_screen.dart';
 export 'presentations/notification/notification_binding.dart';
 export 'presentations/notification/notification_controller.dart';
 
+export 'presentations/intro/intro_binding.dart';
+export 'presentations/intro/intro_controller.dart';
+export 'presentations/intro/intro_screen.dart';
+
 export 'localization/main_localization.dart';
 
 export 'models/profile.dart';
