@@ -9,7 +9,7 @@ import {
   createSprintLeagueRequest,
   SprintLeague,
 } from '@/lib/api/models/sprint_league';
-import { createSpace } from './use-space';
+import { useSpaceMutation } from './use-space';
 import { getQueryKey as getSpaceByIdQk } from './use-space-by-id';
 
 export async function createSprintLeague(
@@ -28,11 +28,12 @@ export async function createSprintLeague(
 }
 
 export function useSprintLeagueSpaceMutation() {
+  const { create: createSpaceMutation } = useSpaceMutation();
   const queryClient = getQueryClient();
 
   const createMutation = useMutation({
     mutationFn: async ({ spaceReq }: { spaceReq: CreateSpaceRequest }) => {
-      const { data: space } = await createSpace(spaceReq);
+      const space = await createSpaceMutation.mutateAsync(spaceReq);
       if (!space) {
         throw new Error('Create space failed.');
       }
@@ -40,12 +41,11 @@ export function useSprintLeagueSpaceMutation() {
       if (!data) {
         throw new Error('Create sprint league failed.');
       }
-      space.sprint_leagues = [data];
       return space;
     },
     onSuccess: (space) => {
-      const qk = getSpaceByIdQk(space.id);
-      queryClient.setQueryData(qk, space);
+      const queryKey = getSpaceByIdQk(space.id);
+      queryClient.invalidateQueries({ queryKey });
     },
     onError: (error) => {
       showErrorToast(error.message || 'Failed to create space');

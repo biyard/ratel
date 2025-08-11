@@ -33,7 +33,7 @@ import {
   PublishSpaceButton,
   SaveButton,
 } from '@/components/post-header/buttons';
-import { useEditCoordinatorStore } from '../store';
+import { useEditCoordinatorStore } from '../space-store';
 
 function SpaceModifySection({
   spaceId,
@@ -70,11 +70,21 @@ function SpaceModifySection({
   const makeSpacePublic = useMakePublicSpace(spaceId);
 
   const handlePublish = async (type: PublishType) => {
-    await publishSpace.mutateAsync(type);
+    try {
+      await publishSpace.mutateAsync(type);
+      popup.close();
+    } catch (error) {
+      console.error('Failed to publish space:', error);
+    }
   };
 
   const handleMakePublic = async () => {
-    await makeSpacePublic.mutateAsync();
+    try {
+      await makeSpacePublic.mutateAsync();
+      popup.close();
+    } catch (error) {
+      console.error('Failed to make space public:', error);
+    }
   };
 
   const handleMakePublicModal = () => {
@@ -105,10 +115,14 @@ function SpaceModifySection({
 
       {hasEditPermission && (
         <div className="flex flex-row items-center gap-2 text-sm text-white">
-          {isEdit ? (
-            <SaveButton onClick={handleSave} />
+          {isDraft ? (
+            isEdit ? (
+              <SaveButton onClick={handleSave} disabled={!isModified} />
+            ) : (
+              <EditButton onClick={onEdit} />
+            )
           ) : (
-            <EditButton onClick={onEdit} />
+            <></>
           )}
 
           {isDraft && <PublishSpaceButton onClick={handlePublishSpaceModal} />}
@@ -153,7 +167,7 @@ export default function Header() {
           <SpaceModifySection
             isDraft={isDraft}
             isPublic={isPublic}
-            authorId={space.author[0].id}
+            authorId={space.author[0]?.id}
             spaceId={spaceId}
             onEdit={handleStartEdit}
           />

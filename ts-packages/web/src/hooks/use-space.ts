@@ -25,7 +25,7 @@ export async function createSpace(
 
 export const getQueryKey = () => [QK_GET_SPACE];
 
-export function useFeedMutation() {
+export function useSpaceMutation() {
   const queryClient = getQueryClient();
 
   const createMutation = useMutation({
@@ -34,11 +34,12 @@ export function useFeedMutation() {
       if (!data) {
         throw new Error('Create space response did not include data.');
       }
+
       return data;
     },
     onSuccess: (space) => {
-      const qk = getSpaceByIdQk(space.id);
-      queryClient.setQueryData(qk, space);
+      const queryKey = getSpaceByIdQk(space.id);
+      queryClient.invalidateQueries({ queryKey });
     },
     onError: (error) => {
       showErrorToast(error.message || 'Failed to create space');

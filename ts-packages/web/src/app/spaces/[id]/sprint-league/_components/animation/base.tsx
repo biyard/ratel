@@ -1,17 +1,12 @@
 'use client';
+
 import React, { useEffect } from 'react';
 import type { AssetsBundle } from 'pixi.js';
 
-import {
-  Container,
-  AnimatedSprite,
-  Graphics,
-  Sprite,
-  Assets,
-  Text,
-} from 'pixi.js';
+import { Container, AnimatedSprite, Graphics, Sprite, Text } from 'pixi.js';
 import { extend, Application, useApplication } from '@pixi/react';
 import { initDevtools } from '@pixi/devtools';
+import { pixiAssetManager } from './assets';
 
 extend({
   Container,
@@ -20,11 +15,6 @@ extend({
   AnimatedSprite,
   Text,
 });
-
-export const SCALE = 3;
-
-export const WIDTH = SCALE * 360;
-export const HEIGHT = SCALE * 640;
 
 function DevTool() {
   const { app } = useApplication();
@@ -35,25 +25,24 @@ function DevTool() {
 }
 
 export default function Base({
+  ref,
   children,
   bundles,
 }: {
+  ref: React.RefObject<HTMLDivElement | null>;
   children: React.ReactNode;
   bundles: AssetsBundle[];
 }) {
+  // const height = (width * 640) / 360;
   const [initialized, setInitialized] = React.useState(false);
+
   useEffect(() => {
-    const names = bundles.map((bundle) => bundle.name);
     const loadAssets = async () => {
       try {
-        for (const bundle of bundles) {
-          if (!Assets.resolver.hasBundle(bundle.name)) {
-            Assets.addBundle(bundle.name, bundle.assets);
-          }
-        }
-
-        await Assets.loadBundle(names);
-
+        const promises = bundles.map((bundle) =>
+          pixiAssetManager.loadBundle(bundle),
+        );
+        await Promise.all(promises);
         setInitialized(true);
       } catch (error) {
         console.error('Asset Load Failed:', error);
@@ -61,16 +50,15 @@ export default function Base({
     };
     loadAssets();
   }, [bundles]);
+
   return (
-    <div className="w-full h-full flex justify-center">
-      <Application
-        width={WIDTH}
-        height={HEIGHT}
-        defaultTextStyle={{ fill: 0xffcb30, fontFamily: 'Raleway' }}
-      >
-        <DevTool />
-        {initialized && children}
-      </Application>
-    </div>
+    <Application
+      clearBeforeRender
+      resizeTo={ref}
+      defaultTextStyle={{ fill: 0xffcb30, fontFamily: 'Raleway' }}
+    >
+      {process.env.NEXT_ENV === 'development' && <DevTool />}
+      {initialized && children}
+    </Application>
   );
 }

@@ -210,10 +210,14 @@ impl SprintLeagueController {
             GroupPermission::ManageSpace,
         )
         .await?;
-        let user_id = extract_user_id(&self.pool, auth.clone())
-            .await
-            .unwrap_or_default();
-
+        let user_id = extract_user_id(&self.pool, auth).await.unwrap_or_default();
+        tracing::debug!(
+            "Voting in sprint league: space_id={}, sprint_league_id={}, player_id={}, user_id={}",
+            space_id,
+            sprint_league_id,
+            sprint_league_player_id,
+            user_id
+        );
         let space = Space::query_builder(user_id)
             .sprint_leagues_builder(
                 SprintLeague::query_builder(user_id)
@@ -228,13 +232,12 @@ impl SprintLeagueController {
         let sprint_league = space.sprint_leagues.first().ok_or(Error::NotFound)?;
         let now = chrono::Utc::now().timestamp();
         if space.status != SpaceStatus::InProgress
-            || space.started_at.unwrap_or_default() > now
-            || now >= space.ended_at.unwrap_or_default()
+            || sprint_league.is_voted
+            || (space.ended_at.is_some() && now >= space.ended_at.unwrap_or_default())
             || sprint_league.id != sprint_league_id
         {
             return Err(Error::BadRequest);
         }
-        let user_id = extract_user_id(&self.pool, auth).await?;
 
         let repo = SprintLeagueVote::get_repository(self.pool.clone());
         repo.insert(
