@@ -1,5 +1,5 @@
 import { Assets } from 'pixi.js';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 export function StartButton({
   onClick,
@@ -58,17 +58,28 @@ export function VoteBackButton({
   scale: number;
 }) {
   const [isVoteClicked, setIsVoteClicked] = useState(false);
-
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const handleVote = useCallback(() => {
     if (isVoteClicked) return;
 
     setIsVoteClicked(true);
     onVote();
-
-    setTimeout(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    timeoutRef.current = setTimeout(() => {
       setIsVoteClicked(false);
+      timeoutRef.current = null;
     }, 1000);
   }, [isVoteClicked, onVote]);
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
     <pixiContainer y={540 * scale} scale={scale}>
