@@ -160,7 +160,7 @@ impl SprintLeagueController {
             .map(Space::from)
             .fetch_one(&self.pool)
             .await?;
-        let sprint_league = SprintLeague::query_builder(0)
+        let _sprint_league = SprintLeague::query_builder(0)
             .space_id_equals(space.id)
             .query()
             .map(SprintLeague::from)
