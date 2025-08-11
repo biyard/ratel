@@ -16,7 +16,7 @@ export default function TimelineMenu({
   isEditing: boolean;
   handleSetting: () => void;
 }) {
-  const sortedItems = items.sort((a, b) => a.time - b.time);
+  const sortedItems = [...items].sort((a, b) => a.time - b.time);
   return (
     <BlackBox>
       <div className="flex flex-col w-full text-neutral-500 gap-5">
