@@ -1,48 +1,74 @@
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:webview_flutter/webview_flutter.dart';
+// The original content is temporarily commented out to allow generating a self-contained demo - feel free to uncomment later.
+
+import 'dart:ui';
+
+import 'package:firebase_core/firebase_core.dart';
+import 'package:ratel/components/layout/layout_service.dart' as l;
+import 'package:ratel/services/rust/rust_service.dart';
+import 'package:ratel/utils/biyard_navigate_observer/biyard_navigate_observer.dart';
+
+import 'exports.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  // await Firebase.initializeApp();
 
-  runApp(const MyApp());
+  // ByFirebase.init();
+
+  RustService.init();
+  ByFirebase.init();
+  l.LayoutService.init();
+  AnonymousService.init();
+  AuthService.init();
+  SignupService.init();
+  DriveApi.init();
+
+  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]).then((
+    value,
+  ) {
+    initializeLogger(Config.logLevel, false);
+    logger.i('App is starting...');
+
+    runApp(MyApp());
+  });
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
+  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: WebviewScreen(),
+    logger.d(
+      '${Get.deviceLocale?.languageCode}, ${Get.deviceLocale?.countryCode}, ${MainLocalization.appName}',
     );
-  }
-}
 
-class WebviewScreen extends StatefulWidget {
-  const WebviewScreen({super.key});
-
-  @override
-  State<WebviewScreen> createState() => _WebviewScreenState();
-}
-
-class _WebviewScreenState extends State<WebviewScreen> {
-  late final WebViewController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _controller = WebViewController()
-      ..loadRequest(Uri.parse('https://ratel.foundation'))
-      ..setJavaScriptMode(JavaScriptMode.unrestricted);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(child: WebViewWidget(controller: _controller));
+    return GetMaterialApp.router(
+      scrollBehavior: MaterialScrollBehavior().copyWith(
+        dragDevices: {
+          PointerDeviceKind.mouse,
+          PointerDeviceKind.touch,
+          PointerDeviceKind.stylus,
+          PointerDeviceKind.unknown,
+        },
+      ),
+      debugShowCheckedModeBanner: false,
+      theme: theme,
+      routerDelegate: Get.createDelegate(
+        navigatorObservers: [BiyardNavigatorObserver(), l.LayoutObserver()],
+      ),
+      translations: AppLocalization(),
+      locale: const Locale('en', 'US'),
+      fallbackLocale: const Locale('en', 'US'),
+      title: MainLocalization.appName.tr == 'appName'
+          ? 'Ratel'
+          : MainLocalization.appName.tr,
+      initialBinding: InitialBindings(),
+      routeInformationParser: Get.createInformationParser(
+        initialRoute: AppRoutes.introScreen,
+      ),
+      getPages: AppRoutes.pages,
+    );
   }
 }
