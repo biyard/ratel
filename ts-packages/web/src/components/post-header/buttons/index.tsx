@@ -9,9 +9,11 @@ import Link from 'next/link';
 
 function ButtonWithIcon({
   children,
+  disabled = false,
   onClick,
 }: {
   children: React.ReactNode;
+  disabled?: boolean;
   onClick: () => void;
 }) {
   return (
@@ -19,6 +21,7 @@ function ButtonWithIcon({
       variant="default"
       className="font-bold text-zinc-900 text-sm [&_svg]:!size-5"
       onClick={onClick}
+      disabled={disabled}
     >
       {children}
     </Button>
@@ -34,9 +37,15 @@ function EditButton({ onClick }: { onClick: () => void }) {
   );
 }
 
-function SaveButton({ onClick }: { onClick: () => void }) {
+function SaveButton({
+  onClick,
+  disabled,
+}: {
+  onClick: () => void;
+  disabled?: boolean;
+}) {
   return (
-    <ButtonWithIcon onClick={onClick}>
+    <ButtonWithIcon onClick={onClick} disabled={disabled}>
       <Save className="stroke-neutral-500 [&>path]:stroke-2 !size-5" />
       <div>Save</div>
     </ButtonWithIcon>

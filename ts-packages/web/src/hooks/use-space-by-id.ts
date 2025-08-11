@@ -1,6 +1,11 @@
 import { QK_GET_SPACE } from '@/constants';
 import { apiFetch, FetchResponse } from '@/lib/api/apiFetch';
-import { Space, SpaceUpdateRequest } from '@/lib/api/models/spaces';
+import {
+  postingSpaceRequest,
+  Space,
+  spaceUpdateRequest,
+  SpaceUpdateRequest,
+} from '@/lib/api/models/spaces';
 import {
   useMutation,
   useSuspenseQuery,
@@ -13,6 +18,8 @@ import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import { logger } from '@/lib/logger';
 import { PublishingScope } from '@/lib/api/models/notice';
 import { PublishType } from '@/components/post-header/modals/publish-space';
+import { useUserInfo } from '@/app/(social)/_hooks/user';
+import { route } from '@/route';
 
 export async function getSpace(
   space_id: number,
@@ -56,29 +63,59 @@ export async function shareSpace(
   );
 }
 
-async function makePublicSpace(
-  space_id: number,
+async function updateSpaceScope(
+  spaceId: number,
+  prevSpace: Space,
+  scope: PublishingScope = PublishingScope.Private,
 ): Promise<FetchResponse<Space | null>> {
-  throw new Error(`This function is not implemented yet. ${space_id}`);
-}
-
-async function publishSpace(
-  space_id: number,
-  publishingScope: PublishingScope,
-): Promise<FetchResponse<Space | null>> {
-  throw new Error(
-    `This function is not implemented yet. ${space_id} ${publishingScope}`,
+  const req = spaceUpdateRequest(
+    prevSpace.html_contents,
+    [],
+    [],
+    [],
+    [],
+    [],
+    prevSpace.title,
+    undefined,
+    undefined,
+    scope,
+    null,
+  );
+  return apiFetch<Space | null>(
+    `${config.api_url}${ratelApi.spaces.getSpaceBySpaceId(spaceId)}`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(req),
+    },
   );
 }
 
-export const getQueryKey = (space_id: number) => [QK_GET_SPACE, space_id];
+export async function publishSpace(
+  spaceId: number,
+): Promise<FetchResponse<Space | null>> {
+  return apiFetch<null>(
+    `${config.api_url}${ratelApi.spaces.getSpaceBySpaceId(spaceId)}`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(postingSpaceRequest()),
+    },
+  );
+}
 
-export function getOption(space_id: number) {
+export const getQueryKey = (spaceId: number) => [QK_GET_SPACE, spaceId];
+
+export function getOption(spaceId: number) {
   return {
-    queryKey: getQueryKey(space_id),
+    queryKey: getQueryKey(spaceId),
     queryFn: async () => {
-      console.log('Fetching space with ID:', space_id, typeof space_id);
-      const { data } = await getSpace(space_id);
+      console.log('Fetching space with ID:', spaceId, typeof spaceId);
+      const { data } = await getSpace(spaceId);
       if (!data) {
         throw new Error('Space not found');
       }
@@ -95,13 +132,13 @@ export default function useSpaceById(
   return query;
 }
 
-export function useUpdateSpace(space_id: number) {
+export function useUpdateSpace(spaceId: number) {
   const queryClient = getQueryClient();
-  const queryKey = getQueryKey(space_id);
+  const queryKey = getQueryKey(spaceId);
 
   return useMutation({
     mutationFn: async (req: SpaceUpdateRequest) => {
-      const { data } = await updateSpace(space_id, req);
+      const { data } = await updateSpace(spaceId, req);
       if (!data) {
         throw new Error('Update response did not include data.');
       }
@@ -149,6 +186,8 @@ export function useUpdateSpace(space_id: number) {
 }
 
 export function useShareSpace(space_id: number) {
+  const { data: userInfo } = useUserInfo();
+
   const queryClient = getQueryClient();
   const queryKey = getQueryKey(space_id);
 
@@ -162,7 +201,11 @@ export function useShareSpace(space_id: number) {
     },
 
     onMutate: async () => {
-      await navigator.clipboard.writeText(window.location.href);
+      let url = `${window.location.origin}/${route.space(space_id)}`;
+      if (userInfo?.referral_code) {
+        url += `?referral=${userInfo.referral_code}`;
+      }
+      await navigator.clipboard.writeText(url);
       await queryClient.cancelQueries({ queryKey });
 
       const previousData = queryClient.getQueryData<Space>(queryKey);
@@ -189,9 +232,9 @@ export function useShareSpace(space_id: number) {
   });
 }
 
-export function usePublishSpace(space_id: number) {
+export function usePublishSpace(spaceId: number) {
   const queryClient = getQueryClient();
-  const queryKey = getQueryKey(space_id);
+  const queryKey = getQueryKey(spaceId);
 
   return useMutation({
     mutationFn: async (type: PublishType) => {
@@ -199,7 +242,15 @@ export function usePublishSpace(space_id: number) {
         type === PublishType.Public
           ? PublishingScope.Public
           : PublishingScope.Private;
-      const { data } = await publishSpace(space_id, publishingScope);
+
+      const space = getQueryClient().getQueryData<Space>(getQueryKey(spaceId));
+      if (!space) {
+        throw new Error('No space data available for publishing.');
+      }
+
+      await publishSpace(spaceId);
+
+      const { data } = await updateSpaceScope(spaceId, space, publishingScope);
       if (!data) {
         throw new Error('Posting response did not include data.');
       }
@@ -216,8 +267,7 @@ export function usePublishSpace(space_id: number) {
 
     onSuccess: (savedData: Space) => {
       logger.debug('Space posted successfully:', savedData);
-      queryClient.setQueryData(queryKey, savedData);
-
+      queryClient.invalidateQueries({ queryKey });
       showSuccessToast('Space posted successfully');
     },
 
@@ -230,13 +280,21 @@ export function usePublishSpace(space_id: number) {
   });
 }
 
-export function useMakePublicSpace(space_id: number) {
+export function useMakePublicSpace(spaceId: number) {
   const queryClient = getQueryClient();
-  const queryKey = getQueryKey(space_id);
+  const queryKey = getQueryKey(spaceId);
 
   return useMutation({
     mutationFn: async () => {
-      const { data } = await makePublicSpace(space_id);
+      const space = queryClient.getQueryData<Space>(queryKey);
+      if (!space) {
+        throw new Error('No space data available for publishing.');
+      }
+      const { data } = await updateSpaceScope(
+        spaceId,
+        space,
+        PublishingScope.Public,
+      );
       if (!data) {
         throw new Error('Make public response did not include data.');
       }
@@ -248,17 +306,12 @@ export function useMakePublicSpace(space_id: number) {
 
       const previousData = queryClient.getQueryData<Space>(queryKey);
 
-      queryClient.setQueryData<Space>(queryKey, (old) => {
-        if (!old) return undefined;
-        return { ...old, publishing_scope: PublishingScope.Public };
-      });
       return { previousData };
     },
 
     onSuccess: (savedData: Space) => {
       logger.debug('Space made public successfully:', savedData);
-      queryClient.setQueryData(queryKey, savedData);
-
+      queryClient.invalidateQueries({ queryKey });
       showSuccessToast('Space made public successfully');
     },
     onError: (error: Error, _, context) => {

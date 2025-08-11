@@ -41,6 +41,7 @@ export const createSprintLeagueRequest = (reward_amount: number = 10000) => {
           name: '',
           description: '',
           player_images: {
+            alias: '',
             select: { json: '', image: '' },
             run: { json: '', image: '' },
             win: '',
@@ -52,6 +53,7 @@ export const createSprintLeagueRequest = (reward_amount: number = 10000) => {
           name: '',
           description: '',
           player_images: {
+            alias: '',
             select: { json: '', image: '' },
             run: { json: '', image: '' },
             win: '',
@@ -63,6 +65,7 @@ export const createSprintLeagueRequest = (reward_amount: number = 10000) => {
           name: '',
           description: '',
           player_images: {
+            alias: '',
             select: { json: '', image: '' },
             run: { json: '', image: '' },
             win: '',

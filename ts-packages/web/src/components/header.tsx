@@ -30,8 +30,6 @@ function Header(props: HeaderProps) {
   const { data } = useSuspenseUserInfo();
   const loggedIn = data && data.user_type !== UserType.Individual;
 
-  logger.debug('Header data:', data);
-
   const navItems = [
     {
       name: 'Home',

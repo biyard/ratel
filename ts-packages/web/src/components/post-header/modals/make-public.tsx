@@ -42,14 +42,14 @@ export default function MakePublicModal({
         <Button
           variant="outline"
           className="flex-1/3 border-transparent"
-          onClick={makePublic}
+          onClick={onCancel}
         >
           Cancel
         </Button>
         <Button
           variant="default"
           className="flex-2/3 bg-primary"
-          onClick={onCancel}
+          onClick={makePublic}
         >
           Make Public
         </Button>
