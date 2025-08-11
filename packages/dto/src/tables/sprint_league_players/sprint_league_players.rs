@@ -25,6 +25,7 @@ pub struct SprintLeaguePlayer {
 #[derive(Debug, Default, serde::Serialize, serde::Deserialize, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct PlayerImages {
+    pub alias: String, // UUID
     pub select: SpriteSheet,
     pub run: SpriteSheet,
     pub win: String,

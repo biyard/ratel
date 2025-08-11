@@ -34,3 +34,8 @@ export const QK_QUIZ_ATTEMPTS = 'quiz-attempts';
 export const QK_QUIZ_ATTEMPT = 'quiz-attempt';
 export const QK_QUIZ = 'quiz';
 export const QK_QUIZ_ANSWERS = 'quiz-answers';
+
+export const QK_GET_SPACE = 'get-spaces';
+export const QK_GET_FEED = 'get-feeds';
+
+export const QK_GET_SPRINT_LEAGUE = 'get-sprint-leagues';

@@ -32,12 +32,10 @@ export default function SubscribePage() {
       const lang = searchParams.get('lang');
 
       try {
-        console.log('Starting subscription...');
         await post(
           ratelApi.telegram.subscribe(),
           subscribeRequest(chatIdNum, lang ?? undefined),
         );
-        console.log('Subscription completed');
       } catch (error) {
         console.error('Error subscribing to Telegram:', error);
       } finally {

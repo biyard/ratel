@@ -2,20 +2,7 @@ import {
   QueryClient,
   dehydrate,
   HydrationBoundary,
-  QueryKey,
-  QueryFunction,
 } from '@tanstack/react-query';
-
-export async function prefetchQuery<T>(
-  queryClient: QueryClient,
-  queryKey: QueryKey,
-  queryFn: QueryFunction<T>,
-) {
-  await queryClient.prefetchQuery({
-    queryKey,
-    queryFn,
-  });
-}
 
 interface SSRHydrationProps {
   children: React.ReactNode;

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import SpaceContents from '../../_components/space_contents';
+import SpaceContents from '../../_components/space-contents';
 import SpaceFiles from './space-files';
 import { FileInfo } from '@/lib/api/models/feeds';
 import { useDeliberationSpaceContext } from '../provider.client';

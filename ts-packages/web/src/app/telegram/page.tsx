@@ -109,7 +109,6 @@ function TelegramMiniAppMain() {
           const params = parseTelegramStartParam(tgWebAppStartParam);
           if (params) {
             const redirectPath = getRedirectPath(params);
-            console.log('Redirecting to:', redirectPath);
             router.replace(redirectPath);
           }
         } else {

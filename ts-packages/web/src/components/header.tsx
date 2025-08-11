@@ -13,7 +13,6 @@ import Link from 'next/link';
 import Profile from './profile';
 import { LoginModal } from './popup/login-popup';
 import { usePopup } from '@/lib/contexts/popup-service';
-import { logger } from '@/lib/logger';
 import { route } from '@/route';
 import { config } from '@/config';
 import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
@@ -29,8 +28,6 @@ function Header(props: HeaderProps) {
 
   const { data } = useSuspenseUserInfo();
   const loggedIn = data && data.user_type !== UserType.Individual;
-
-  logger.debug('Header data:', data);
 
   const navItems = [
     {
