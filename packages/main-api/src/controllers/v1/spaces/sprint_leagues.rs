@@ -48,7 +48,10 @@ impl SprintLeagueController {
         by_axum::axum::Router::new()
             .route("/", post(Self::act))
             .route("/:sprint-league-id", post(Self::act_by_id))
-            .route("/:sprint-league-id/players", post(Self::act_player))
+            .route(
+                "/:sprint-league-id/players/:player-id",
+                post(Self::act_player),
+            )
             .with_state(self.clone())
     }
 
@@ -207,10 +210,14 @@ impl SprintLeagueController {
             GroupPermission::ManageSpace,
         )
         .await?;
-        let user_id = extract_user_id(&self.pool, auth.clone())
-            .await
-            .unwrap_or_default();
-
+        let user_id = extract_user_id(&self.pool, auth).await.unwrap_or_default();
+        tracing::debug!(
+            "Voting in sprint league: space_id={}, sprint_league_id={}, player_id={}, user_id={}",
+            space_id,
+            sprint_league_id,
+            sprint_league_player_id,
+            user_id
+        );
         let space = Space::query_builder(user_id)
             .sprint_leagues_builder(
                 SprintLeague::query_builder(user_id)
@@ -225,13 +232,12 @@ impl SprintLeagueController {
         let sprint_league = space.sprint_leagues.first().ok_or(Error::NotFound)?;
         let now = chrono::Utc::now().timestamp();
         if space.status != SpaceStatus::InProgress
-            || space.started_at.unwrap_or_default() > now
-            || now >= space.ended_at.unwrap_or_default()
+            || sprint_league.is_voted
+            || (space.ended_at.is_some() && now >= space.ended_at.unwrap_or_default())
             || sprint_league.id != sprint_league_id
         {
             return Err(Error::BadRequest);
         }
-        let user_id = extract_user_id(&self.pool, auth).await?;
 
         let repo = SprintLeagueVote::get_repository(self.pool.clone());
         repo.insert(
@@ -253,6 +259,13 @@ impl SprintLeagueController {
         auth: Option<Authorization>,
         param: SprintLeaguePlayerUpdateRequest,
     ) -> Result<SprintLeaguePlayer> {
+        tracing::debug!(
+            "Updating player: space_id={}, sprint_league_id={}, player_id={} param={:?}",
+            space_id,
+            sprint_league_id,
+            player_id,
+            param
+        );
         check_perm(
             &self.pool,
             auth.clone(),
@@ -287,7 +300,7 @@ impl SprintLeagueController {
         let repo = SprintLeaguePlayer::get_repository(self.pool.clone());
         let mut tx = self.pool.begin().await?;
         let player = repo
-            .update_with_tx(&mut *tx, sprint_league_id, {
+            .update_with_tx(&mut *tx, player_id, {
                 SprintLeaguePlayerRepositoryUpdateRequest {
                     name: Some(param.name),
                     description: Some(param.description),
