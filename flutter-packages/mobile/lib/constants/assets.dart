@@ -19,7 +19,7 @@ abstract class Assets {
   static final backIcon = SvgPicture.asset(back, width: 16, height: 16);
   static final badgeImage = SvgPicture.asset(badge, width: 20, height: 20);
   static final logoImage = Image.asset(logo, width: 40, height: 40);
-  static final googleImage = SvgPicture.asset(google, width: 35, height: 35);
+  static final googleImage = SvgPicture.asset(google, width: 24, height: 24);
   static final bellImage = SvgPicture.asset(
     bell,
     width: 32,

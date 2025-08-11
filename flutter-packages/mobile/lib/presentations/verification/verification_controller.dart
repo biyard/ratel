@@ -1,5 +1,4 @@
 import 'package:ratel/exports.dart';
-import 'package:flutter/services.dart';
 
 class VerificationController extends BaseController {
   final signupService = Get.find<SignupService>();
@@ -11,7 +10,7 @@ class VerificationController extends BaseController {
   final code = List.generate(6, (_) => '').obs;
 
   String get email => signupService.email.value;
-  bool get isComplete => code.join().length == 6 && !code.join().contains('');
+  bool get isComplete => code.length == 6 && code.every((c) => c.isNotEmpty);
 
   final List<TextInputFormatter> codeInputFormatters = [
     FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9]')),
@@ -57,7 +56,7 @@ class VerificationController extends BaseController {
       final pin = code.join();
       logger.d("pin value: ${pin}");
       await Future.delayed(const Duration(milliseconds: 800));
-      Get.offAllNamed(AppRoutes.mainScreen);
+      Get.rootDelegate.offAndToNamed(AppRoutes.welcomeScreen);
     } finally {
       isBusy.value = false;
     }

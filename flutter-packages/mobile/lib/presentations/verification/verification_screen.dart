@@ -6,173 +6,172 @@ class VerificationScreen extends GetWidget<VerificationController> {
   @override
   Widget build(BuildContext context) {
     return Layout<VerificationController>(
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(
-                width: double.infinity,
-                height: 70,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    InkWell(onTap: controller.goBack, child: Assets.backIcon),
-                    10.gap,
-                    const Text(
-                      'Email verification',
-                      style: TextStyle(
-                        fontStyle: FontStyle.normal,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: double.infinity,
+              height: 70,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  InkWell(onTap: controller.goBack, child: Assets.backIcon),
+                  10.gap,
+                  const Text(
+                    'Email verification',
+                    style: TextStyle(
+                      fontStyle: FontStyle.normal,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
+            ),
 
-              SizedBox(
-                width: double.infinity,
-                height: MediaQuery.of(context).size.height - 120,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Check your email',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 36,
-                        fontWeight: FontWeight.w900,
-                        height: 1.22,
-                      ),
+            SizedBox(
+              width: double.infinity,
+              height: MediaQuery.of(context).size.height - 120,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Check your email',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 36,
+                      fontWeight: FontWeight.w900,
+                      height: 1.22,
                     ),
-                    30.vgap,
+                  ),
+                  30.vgap,
 
-                    Obx(
-                      () => RichText(
-                        text: TextSpan(
-                          style: TextStyle(
-                            color: AppColors.neutral300,
-                            fontSize: 12,
-                            height: 1.4,
-                            fontWeight: FontWeight.w400,
-                          ),
-                          children: [
-                            const TextSpan(text: 'Please check your email '),
-                            TextSpan(
-                              text: controller.email,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 12,
-                                height: 1.4,
-                              ),
-                            ),
-                            const TextSpan(
-                              text:
-                                  ' inbox.\nIf you couldn’t find email, it may be inside spam.',
-                            ),
-                          ],
+                  Obx(
+                    () => RichText(
+                      text: TextSpan(
+                        style: TextStyle(
+                          color: AppColors.neutral300,
+                          fontSize: 12,
+                          height: 1.4,
+                          fontWeight: FontWeight.w400,
                         ),
-                      ),
-                    ),
-
-                    30.vgap,
-
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: List.generate(6, (i) {
-                        return _CodeBox(
-                          controller: controller.fields[i],
-                          focusNode: controller.nodes[i],
-                          inputFormatters: controller.codeInputFormatters,
-                          onChanged: (v) => controller.onChanged(i, v),
-                          onKey: (e) => controller.onKey(i, e),
-                        );
-                      }),
-                    ),
-
-                    30.vgap,
-
-                    SizedBox(
-                      width: double.infinity,
-                      child: Obx(
-                        () => ElevatedButton(
-                          onPressed:
-                              controller.isComplete && !controller.isBusy.value
-                              ? controller.verify
-                              : null,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            disabledBackgroundColor: AppColors.primary
-                                .withValues(alpha: 0.6),
-                            foregroundColor: Colors.black,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: controller.isBusy.value
-                              ? const SizedBox(
-                                  height: 22,
-                                  width: 22,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.black,
-                                  ),
-                                )
-                              : const Text(
-                                  'VERIFY',
-                                  style: TextStyle(
-                                    color: AppColors.bg,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                        ),
-                      ),
-                    ),
-
-                    30.vgap,
-
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          "Don't receive verification code?  ",
-                          style: TextStyle(
-                            color: AppColors.neutral300,
-                            fontWeight: FontWeight.w400,
-                            fontSize: 12,
-                          ),
-                        ),
-                        10.gap,
-                        InkWell(
-                          onTap: () => {
-                            showResendModal(context, controller.email),
-                          },
-                          child: const Text(
-                            'Resend',
-                            style: TextStyle(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w400,
+                        children: [
+                          const TextSpan(text: 'Please check your email '),
+                          TextSpan(
+                            text: controller.email,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
                               fontSize: 12,
+                              height: 1.4,
                             ),
                           ),
-                        ),
-                      ],
+                          const TextSpan(
+                            text:
+                                ' inbox.\nIf you couldn’t find email, it may be inside spam.',
+                          ),
+                        ],
+                      ),
                     ),
-                  ],
-                ),
+                  ),
+
+                  30.vgap,
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: List.generate(6, (i) {
+                      return _CodeBox(
+                        controller: controller.fields[i],
+                        focusNode: controller.nodes[i],
+                        inputFormatters: controller.codeInputFormatters,
+                        onChanged: (v) => controller.onChanged(i, v),
+                        onKey: (e) => controller.onKey(i, e),
+                      );
+                    }),
+                  ),
+
+                  30.vgap,
+
+                  SizedBox(
+                    width: double.infinity,
+                    child: Obx(
+                      () => ElevatedButton(
+                        onPressed:
+                            controller.isComplete && !controller.isBusy.value
+                            ? controller.verify
+                            : null,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          disabledBackgroundColor: AppColors.primary.withValues(
+                            alpha: 0.6,
+                          ),
+                          foregroundColor: Colors.black,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: controller.isBusy.value
+                            ? const SizedBox(
+                                height: 22,
+                                width: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.black,
+                                ),
+                              )
+                            : const Text(
+                                'VERIFY',
+                                style: TextStyle(
+                                  color: AppColors.bg,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                      ),
+                    ),
+                  ),
+
+                  30.vgap,
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        "Don't receive verification code?  ",
+                        style: TextStyle(
+                          color: AppColors.neutral300,
+                          fontWeight: FontWeight.w400,
+                          fontSize: 12,
+                        ),
+                      ),
+                      10.gap,
+                      InkWell(
+                        onTap: () => {
+                          showResendModal(context, controller.email),
+                        },
+                        child: const Text(
+                          'Resend',
+                          style: TextStyle(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w400,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
