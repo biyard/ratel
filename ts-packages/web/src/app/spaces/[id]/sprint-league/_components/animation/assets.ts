@@ -29,7 +29,7 @@ class PixiAssetManager {
   }
 
   async loadPlayerAsset(assets: PlayerImages): Promise<void> {
-    this.unloadBundle(`${assets.alias}_bundle`);
+    await this.unloadBundle(`${assets.alias}_bundle`);
     const bundles: AssetsBundle = {
       name: `${assets.alias}_bundle`,
       assets: [
@@ -91,7 +91,7 @@ class PixiAssetManager {
     } catch (error) {
       throw error;
     } finally {
-      this.loadingPromises.delete(cacheKey);
+      this.loadingBundles.delete(cacheKey);
     }
   }
   private async loadAsset<T = Spritesheet>(
@@ -120,11 +120,9 @@ class PixiAssetManager {
     }
   }
 
-  unloadBundle(bundleName: string) {
-    Assets.unloadBundle(bundleName);
-    if (this.loadingBundles.has(bundleName)) {
-      this.loadingBundles.delete(bundleName);
-    }
+  async unloadBundle(bundleName: string) {
+    await Assets.unloadBundle(bundleName);
+    this.loadingBundles.delete(bundleName);
   }
 
   unloadAsset(cacheKey: string) {
@@ -145,6 +143,7 @@ class PixiAssetManager {
 
     this.loadedAssets.clear();
     this.loadingPromises.clear();
+    this.loadingBundles.clear();
   }
 
   isLoading(cacheKey: string): boolean {

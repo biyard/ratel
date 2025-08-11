@@ -9,36 +9,33 @@ export function PlayerNameOverlay({
   scale: number;
   names?: string[];
 }) {
-  const shortedName = names.map((name) => {
-    if (name.length > 6) {
-      return name.slice(0, 6);
-    } else if (name.length < 6) {
-      return name.padEnd(6, ' ');
-    }
-    return name;
+  const normalizedNames = [0, 1, 2].map((i) => {
+    const raw = (names[i] ?? '').slice(0, 6);
+    return raw.padEnd(6, ' ');
   });
+
   return (
     <pixiContainer>
       <pixiContainer>
         <pixiSprite texture={Assets.get('rank-banner')} scale={scale} />
         <pixiText
-          text={shortedName[0]}
+          text={normalizedNames[0]}
           x={110 * scale}
           y={118 * scale}
           style={{ fontSize: 32 * scale, wordWrap: true, wordWrapWidth: 150 }}
         />
       </pixiContainer>
       <pixiText
-        text={shortedName[1]}
-        x={(360 - shortedName[1].length * 18) * scale}
+        text={normalizedNames[1]}
+        x={(360 - normalizedNames[1].length * 18) * scale}
         y={425 * scale}
         style={{
           fontSize: 24 * scale,
         }}
       />
       <pixiText
-        text={shortedName[2]}
-        x={(360 - shortedName[2].length * 18) * scale}
+        text={normalizedNames[2]}
+        x={(360 - normalizedNames[2].length * 18) * scale}
         y={518 * scale}
         style={{
           fontSize: 24 * scale,
