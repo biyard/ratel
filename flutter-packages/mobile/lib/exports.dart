@@ -53,6 +53,10 @@ export 'presentations/verification/verification_binding.dart';
 export 'presentations/verification/verification_controller.dart';
 export 'presentations/verification/verification_screen.dart';
 
+export 'presentations/welcome/welcome_binding.dart';
+export 'presentations/welcome/welcome_controller.dart';
+export 'presentations/welcome/welcome_screen.dart';
+
 export 'localization/main_localization.dart';
 
 export 'models/profile.dart';

@@ -6,6 +6,7 @@ class AppRoutes {
   static const String loginScreen = '/login';
   static const String signupScreen = '/signup';
   static const String verificationScreen = '/verification';
+  static const String welcomeScreen = '/welcome';
   static const String explore = "/dashboard/explore";
   static const String home = "/dashboard/home";
   static const String myNetwork = "/dashboard/network";
@@ -42,6 +43,12 @@ class AppRoutes {
       name: verificationScreen,
       page: () => const VerificationScreen(),
       binding: VerificationBinding(),
+      transition: Transition.noTransition,
+    ),
+    GetPage(
+      name: welcomeScreen,
+      page: () => const WelcomeScreen(),
+      binding: WelcomeBinding(),
       transition: Transition.noTransition,
     ),
     GetPage(
