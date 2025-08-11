@@ -70,9 +70,12 @@ function RewardItem({ amount, text }: RewardProps) {
 function ModifierItem({ icon, multiple, text, color }: ModifierProps) {
   return (
     <div
-      className={`w-full flex flex-row
-        bg-${color}/5 text-${color} text-[15px]/[12px] font-bold
-        justify-between items-center px-2.5 py-2.5 rounded-sm `}
+      className="w-full flex flex-row text-[15px]/[12px] font-bold
+        justify-between items-center px-2.5 py-2.5 rounded-sm"
+      style={{
+        backgroundColor: `${color}0D`,
+        color: color,
+      }}
     >
       <div className="[&>svg]:size-6 flex flex-row items-center justify-center gap-2">
         {icon}
