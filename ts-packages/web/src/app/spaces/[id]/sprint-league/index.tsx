@@ -4,6 +4,7 @@ import { getQueryClient } from '@/providers/getQueryClient';
 import Header from '../_components/common-header';
 import { SSRHydration } from '@/lib/query-utils';
 import { SprintLeagueEditor } from './editor';
+import SpaceSideMenu from './_components/side-menu';
 export default async function SprintLeaguePage({
   space_id,
 }: {
@@ -20,9 +21,12 @@ export default async function SprintLeaguePage({
 
   return (
     <SSRHydration queryClient={queryClient}>
-      <div className="flex flex-col w-full min-h-full gap-6.25">
-        <Header />
-        <SprintLeagueEditor spaceId={space_id} />
+      <div className="flex flex-row w-full gap-5">
+        <div className="flex flex-col w-full min-h-full gap-6.25">
+          <Header />
+          <SprintLeagueEditor spaceId={space_id} />
+        </div>
+        <SpaceSideMenu spaceId={space_id} />
       </div>
     </SSRHydration>
   );
