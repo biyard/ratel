@@ -10,6 +10,7 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import 'react-toastify/dist/ReactToastify.css';
 import { prefetchUserInfo } from './(social)/_hooks/user';
 import { getServerQueryClient } from '@/lib/query-utils.server';
+import ReferralHandler from './_providers/referral-handler';
 
 const raleway = Raleway({
   variable: '--font-raleway',
@@ -36,6 +37,7 @@ export default async function RootLayout({
         <CookieProvider>
           <Providers dehydratedState={dehydratedState}>
             <HydrationBoundary state={dehydratedState}>
+              <ReferralHandler />
               <ClientLayout>{children}</ClientLayout>
               <PopupZone />
             </HydrationBoundary>

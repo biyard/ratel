@@ -31,6 +31,8 @@ export interface User {
 
   followers: Follower[];
   followings: Follower[];
+
+  referral_code?: string;
 }
 
 export enum UserType {

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Space, SpaceType } from '@/lib/api/models/spaces';
+import { createSpaceRequest, Space, SpaceType } from '@/lib/api/models/spaces';
 import { BoosterType, noticeSpaceCreateRequest } from '@/lib/api/models/notice';
 import { LoadablePrimaryButton } from '@/components/button/primary-button';
 import { ArrowLeft, Internet, Fire, Remove } from '@/components/icons';
@@ -12,16 +12,15 @@ import { config } from '@/config';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { usePopup } from '@/lib/contexts/popup-service';
 import { logger } from '@/lib/logger';
-import { showErrorToast } from '@/lib/toast';
 import { useRouter } from 'next/navigation';
 import { route } from '@/route';
+import { useSprintLeagueSpaceMutation } from '@/hooks/use-sprint-league';
 
 interface SpaceConfigFormProps {
   spaceType: SpaceType;
   feedId: number;
   onBack: () => void;
   onConfirm: () => void;
-  committeeUserIds?: number[];
 }
 
 export interface SpaceConfig {
@@ -39,7 +38,6 @@ export default function SpaceConfigForm({
   feedId,
   onBack,
   onConfirm,
-  committeeUserIds = [],
 }: SpaceConfigFormProps) {
   const popup = usePopup();
   const router = useRouter();
@@ -95,14 +93,8 @@ export default function SpaceConfigForm({
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [isBoosterDropdownOpen]);
-
+  const { create } = useSprintLeagueSpaceMutation();
   const handleSubmit = async () => {
-    // Validate that end time is after start time
-    if (endTimestamp <= startTimestamp) {
-      showErrorToast('The end time must be later than the start time.');
-      return;
-    }
-
     setIsLoading(true);
     try {
       // Convert milliseconds to seconds for API
@@ -113,35 +105,49 @@ export default function SpaceConfigForm({
       const boosterType = formConfig.activateBooster
         ? formConfig.boosterType
         : BoosterType.NoBoost;
-
-      const res = await apiFetch<Space>(
-        `${config.api_url}${ratelApi.spaces.createSpace()}`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(
-            noticeSpaceCreateRequest(
-              spaceType,
-              feedId,
-              committeeUserIds,
-              0,
-              startedAt,
-              endedAt,
-              boosterType,
-            ),
+      let data: Space | null = null;
+      if (spaceType === SpaceType.SprintLeague) {
+        data = await create.mutateAsync({
+          spaceReq: createSpaceRequest(
+            spaceType,
+            feedId,
+            [],
+            0,
+            startedAt,
+            endedAt,
+            boosterType,
           ),
-        },
-      );
-
-      if (res.data) {
+        });
+      } else {
+        const res = await apiFetch<Space>(
+          `${config.api_url}${ratelApi.spaces.createSpace()}`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(
+              noticeSpaceCreateRequest(
+                spaceType,
+                feedId,
+                [],
+                0,
+                startedAt,
+                endedAt,
+                boosterType,
+              ),
+            ),
+          },
+        );
+        data = res.data;
+      }
+      if (data) {
         logger.debug(
           `${getSpaceTypeTitle(spaceType)} space created successfully:`,
-          res.data.id,
+          data.id,
         );
         // Navigate to the new notice space page
-        router.push(route.noticeSpaceById(res.data.id));
+        router.push(route.noticeSpaceById(data.id));
         popup.close();
         onConfirm();
       }
@@ -216,24 +222,12 @@ export default function SpaceConfigForm({
             <CalendarDropdown
               value={startTimestamp}
               onChange={(timestamp) => {
-                if (timestamp >= endTimestamp) {
-                  showErrorToast(
-                    'The start date must be earlier than the end date.',
-                  );
-                  return;
-                }
                 setStartTimestamp(timestamp);
               }}
             />
             <TimeDropdown
               value={startTimestamp}
               onChange={(timestamp) => {
-                if (timestamp >= endTimestamp) {
-                  showErrorToast(
-                    'The start time must be earlier than the end time.',
-                  );
-                  return;
-                }
                 setStartTimestamp(timestamp);
               }}
             />
@@ -250,24 +244,12 @@ export default function SpaceConfigForm({
             <CalendarDropdown
               value={endTimestamp}
               onChange={(timestamp) => {
-                if (timestamp <= startTimestamp) {
-                  showErrorToast(
-                    'The end date must be later than the start date.',
-                  );
-                  return;
-                }
                 setEndTimestamp(timestamp);
               }}
             />
             <TimeDropdown
               value={endTimestamp}
               onChange={(timestamp) => {
-                if (timestamp <= startTimestamp) {
-                  showErrorToast(
-                    'The end time must be later than the start time.',
-                  );
-                  return;
-                }
                 setEndTimestamp(timestamp);
               }}
             />
