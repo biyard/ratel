@@ -59,17 +59,21 @@ export default function SpaceHeader({
 
       <div className="flex flex-row w-full justify-between items-center">
         <div className="flex flex-row w-fit gap-2 justify-between items-center">
-          <Image
-            src={proposerImage || '/default-profile.png'}
-            alt={proposerName}
-            width={20}
-            height={20}
-            className={
-              userType == UserType.Team
-                ? 'rounded-[8px] object-cover object-top w-[25px] h-[25px]'
-                : 'rounded-full object-cover object-top w-[25px] h-[25px]'
-            }
-          />
+          {proposerImage && proposerImage !== '' ? (
+            <Image
+              src={proposerImage}
+              alt={proposerName}
+              width={20}
+              height={20}
+              className={
+                userType == UserType.Team
+                  ? 'rounded-lg object-cover object-top w-6.25 h-6.25'
+                  : 'rounded-full object-cover object-top w-6.25 h-6.25'
+              }
+            />
+          ) : (
+            <div className="w-6.25 h-6.25 rounded-full border border-neutral-500 bg-neutral-600" />
+          )}
           <div className="font-semibold text-white text-sm/[20px]">
             {proposerName}
           </div>
