@@ -65,6 +65,10 @@ export 'presentations/select_topic/select_topic_binding.dart';
 export 'presentations/select_topic/select_topic_controller.dart';
 export 'presentations/select_topic/select_topic_screen.dart';
 
+export 'presentations/setup_attribute/setup_attribute_binding.dart';
+export 'presentations/setup_attribute/setup_attribute_controller.dart';
+export 'presentations/setup_attribute/setup_attribute_screen.dart';
+
 export 'presentations/connection/connection_binding.dart';
 export 'presentations/connection/connection_model.dart';
 export 'presentations/connection/connection_controller.dart';

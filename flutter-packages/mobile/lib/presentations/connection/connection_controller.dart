@@ -104,6 +104,6 @@ class ConnectionController extends BaseController {
   }
 
   void goBack() => Get.rootDelegate.offNamed(AppRoutes.selectTopicScreen);
-  void skip() => Get.rootDelegate.offNamed(AppRoutes.welcomeScreen);
-  void next() => Get.rootDelegate.offNamed(AppRoutes.welcomeScreen);
+  void skip() => Get.rootDelegate.offNamed(AppRoutes.setupAttributeScreen);
+  void next() => Get.rootDelegate.offNamed(AppRoutes.setupAttributeScreen);
 }
