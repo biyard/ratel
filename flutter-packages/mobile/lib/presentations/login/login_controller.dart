@@ -20,7 +20,7 @@ class LoginController extends BaseController {
     isBusy.value = true;
     try {
       await Future.delayed(const Duration(milliseconds: 800));
-      Get.offAllNamed(AppRoutes.mainScreen);
+      Get.rootDelegate.offNamed(AppRoutes.mainScreen);
     } finally {
       isBusy.value = false;
     }

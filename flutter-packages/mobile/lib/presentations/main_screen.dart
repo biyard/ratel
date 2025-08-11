@@ -8,7 +8,7 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  int currentIndex = 1;
+  int currentIndex = 0;
 
   final routes = [
     AppRoutes.home,
