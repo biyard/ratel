@@ -23,7 +23,7 @@ export const openModal = (
             await onPublish(t);
             popup.close();
           } catch (error) {
-            console.log('Error publishing space:', error);
+            console.error('Error publishing space:', error);
           }
         }}
       />,

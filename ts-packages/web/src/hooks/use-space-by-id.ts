@@ -114,7 +114,6 @@ export function getOption(spaceId: number) {
   return {
     queryKey: getQueryKey(spaceId),
     queryFn: async () => {
-      console.log('Fetching space with ID:', spaceId, typeof spaceId);
       const { data } = await getSpace(spaceId);
       if (!data) {
         throw new Error('Space not found');

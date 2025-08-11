@@ -237,7 +237,6 @@ function Inner({
     const votes = player.votes || 0;
     return totalVotes > 0 ? (votes / totalVotes) * 100 : 0;
   });
-  console.log('Vote Ratios:', status);
   return (
     <>
       <Background alias="background" baseSpeed={baseSpeed} scale={scale} />

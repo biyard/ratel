@@ -130,10 +130,6 @@ export default function PlayerEdit({ isEdit }: { isEdit: boolean }) {
                   isEdit={isEdit}
                   handleSelect={() => {
                     openCharacterSelectModal(popup, (images: PlayerImages) => {
-                      console.log('Update Player', player.id, {
-                        ...player,
-                        player_images: images,
-                      });
                       updatePlayer(player.id, {
                         ...player,
                         player_images: images,
