@@ -9,6 +9,7 @@ class AppRoutes {
   static const String welcomeScreen = '/welcome';
   static const String setupProfileScreen = '/setup-profile';
   static const String selectTopicScreen = '/select-topic';
+  static const String connectionScreen = '/connection';
   static const String explore = "/dashboard/explore";
   static const String home = "/dashboard/home";
   static const String myNetwork = "/dashboard/network";
@@ -57,6 +58,12 @@ class AppRoutes {
       name: selectTopicScreen,
       page: () => const SelectTopicScreen(),
       binding: SelectTopicBinding(),
+      transition: Transition.noTransition,
+    ),
+    GetPage(
+      name: connectionScreen,
+      page: () => const ConnectionScreen(),
+      binding: ConnectionBinding(),
       transition: Transition.noTransition,
     ),
     GetPage(

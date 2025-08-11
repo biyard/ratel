@@ -4,6 +4,7 @@ abstract class Assets {
   static const String introLogo = 'assets/images/logo.png';
   static const String logoLetter = 'assets/images/logo_letter.png';
   static const String back = 'assets/icons/back.svg';
+  static const String add = 'assets/icons/add.svg';
 
   static const String logo = 'assets/icons/logo.png';
   static const String favicon = 'assets/icons/favicon.svg';
@@ -16,6 +17,7 @@ abstract class Assets {
   static const String badge = 'assets/images/badge.svg';
   static const String google = 'assets/images/google.svg';
 
+  static final addIcon = SvgPicture.asset(add, width: 15, height: 15);
   static final backIcon = SvgPicture.asset(back, width: 16, height: 16);
   static final badgeImage = SvgPicture.asset(badge, width: 20, height: 20);
   static final logoImage = Image.asset(logo, width: 40, height: 40);
