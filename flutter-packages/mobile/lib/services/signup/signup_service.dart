@@ -7,5 +7,7 @@ class SignupService extends GetxService {
 
   Rx<String> email = "".obs;
   Rx<String> password = "".obs;
+  Rx<String> displayName = "".obs;
+  Rx<String> username = "".obs;
   Rx<String> confirm = "".obs;
 }

@@ -57,6 +57,14 @@ export 'presentations/welcome/welcome_binding.dart';
 export 'presentations/welcome/welcome_controller.dart';
 export 'presentations/welcome/welcome_screen.dart';
 
+export 'presentations/setup_profile/setup_profile_binding.dart';
+export 'presentations/setup_profile/setup_profile_controller.dart';
+export 'presentations/setup_profile/setup_profile_screen.dart';
+
+export 'presentations/select_topic/select_topic_binding.dart';
+export 'presentations/select_topic/select_topic_controller.dart';
+export 'presentations/select_topic/select_topic_screen.dart';
+
 export 'localization/main_localization.dart';
 
 export 'models/profile.dart';
@@ -76,6 +84,7 @@ export 'components/header/header.dart';
 export 'components/profile/profile.dart';
 export 'components/round_container/round_container.dart';
 export 'components/text_field/text_field.dart';
+export 'components/custom_checkbox/custom_checkbox.dart';
 
 export 'components/modal/login_modal.dart';
 export 'components/modal/modal_title.dart';
