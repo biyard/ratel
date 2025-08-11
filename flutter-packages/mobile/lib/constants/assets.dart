@@ -5,6 +5,7 @@ abstract class Assets {
   static const String logoLetter = 'assets/images/logo_letter.png';
   static const String back = 'assets/icons/back.svg';
   static const String add = 'assets/icons/add.svg';
+  static const String passport = 'assets/icons/passport.svg';
 
   static const String logo = 'assets/icons/logo.png';
   static const String favicon = 'assets/icons/favicon.svg';

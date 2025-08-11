@@ -8,6 +8,7 @@ class AppTextField extends StatelessWidget {
   final TextInputType keyboardType;
   final double rounded;
   final ValueChanged<String>? onChanged;
+  final bool readOnly;
 
   const AppTextField({
     super.key,
@@ -18,6 +19,7 @@ class AppTextField extends StatelessWidget {
     this.keyboardType = TextInputType.text,
     this.onChanged,
     this.rounded = 8,
+    this.readOnly = false,
   });
 
   @override
@@ -27,9 +29,10 @@ class AppTextField extends StatelessWidget {
       obscureText: obscureText,
       keyboardType: keyboardType,
       onChanged: onChanged,
+      readOnly: readOnly,
       style: TextStyle(
         fontStyle: FontStyle.normal,
-        color: Colors.white,
+        color: (readOnly) ? AppColors.neutral600 : Colors.white,
         fontWeight: FontWeight.w500,
         fontSize: 15,
       ),
