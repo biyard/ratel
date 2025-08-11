@@ -3,6 +3,7 @@ import 'package:ratel/exports.dart';
 class AppRoutes {
   static const String mainScreen = '/dashboard';
   static const String introScreen = '/intro';
+  static const String loginScreen = '/login';
   static const String explore = "/dashboard/explore";
   static const String home = "/dashboard/home";
   static const String myNetwork = "/dashboard/network";
@@ -21,6 +22,12 @@ class AppRoutes {
       name: introScreen,
       page: () => const IntroScreen(),
       binding: IntroBinding(),
+      transition: Transition.noTransition,
+    ),
+    GetPage(
+      name: loginScreen,
+      page: () => const LoginScreen(),
+      binding: LoginBinding(),
       transition: Transition.noTransition,
     ),
     GetPage(

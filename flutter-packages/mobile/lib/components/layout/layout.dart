@@ -24,6 +24,7 @@ class Layout<T extends BaseController> extends GetView {
     T? ctrl = notBuilder ? null : Get.find<T>();
 
     return Scaffold(
+      backgroundColor: style.background,
       body: SafeArea(
         child: Stack(
           alignment: Alignment.topLeft,
