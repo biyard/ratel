@@ -16,7 +16,7 @@ import { showErrorToast } from '@/lib/toast';
 import { useRouter } from 'next/navigation';
 import { route } from '@/route';
 
-interface NbsConfigFormProps {
+interface SpaceConfigFormProps {
   spaceType: SpaceType;
   feedId: number;
   onBack: () => void;
@@ -34,13 +34,13 @@ export interface SpaceConfig {
   boosterType: BoosterType;
 }
 
-export default function NbsConfigForm({
+export default function SpaceConfigForm({
   spaceType,
   feedId,
   onBack,
   onConfirm,
   committeeUserIds = [],
-}: NbsConfigFormProps) {
+}: SpaceConfigFormProps) {
   const popup = usePopup();
   const router = useRouter();
   // Initial date setup - 1 hour from now and 2 hours from now
