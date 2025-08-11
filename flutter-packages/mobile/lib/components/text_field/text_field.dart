@@ -6,6 +6,7 @@ class AppTextField extends StatelessWidget {
   final bool obscureText;
   final Widget? suffixIcon;
   final TextInputType keyboardType;
+  final double rounded;
   final ValueChanged<String>? onChanged;
 
   const AppTextField({
@@ -16,6 +17,7 @@ class AppTextField extends StatelessWidget {
     this.suffixIcon,
     this.keyboardType = TextInputType.text,
     this.onChanged,
+    this.rounded = 8,
   });
 
   @override
@@ -47,11 +49,11 @@ class AppTextField extends StatelessWidget {
           vertical: 10,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(rounded),
           borderSide: BorderSide(color: const Color(0xff2a2a2a)),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(rounded),
           borderSide: const BorderSide(color: AppColors.primary),
         ),
       ),
