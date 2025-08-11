@@ -45,6 +45,10 @@ export 'presentations/login/login_binding.dart';
 export 'presentations/login/login_controller.dart';
 export 'presentations/login/login_screen.dart';
 
+export 'presentations/signup/signup_binding.dart';
+export 'presentations/signup/signup_controller.dart';
+export 'presentations/signup/signup_screen.dart';
+
 export 'localization/main_localization.dart';
 
 export 'models/profile.dart';
@@ -63,6 +67,7 @@ export 'components/biyard/biyard_static.dart';
 export 'components/header/header.dart';
 export 'components/profile/profile.dart';
 export 'components/round_container/round_container.dart';
+export 'components/text_field/text_field.dart';
 
 export 'components/modal/login_modal.dart';
 export 'components/modal/modal_title.dart';
