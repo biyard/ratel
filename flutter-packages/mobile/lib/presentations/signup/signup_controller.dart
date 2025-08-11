@@ -1,6 +1,8 @@
 import 'package:ratel/exports.dart';
 
 class SignupController extends BaseController {
+  final signupService = Get.find<SignupService>();
+
   final emailCtrl = TextEditingController();
   final passwordCtrl = TextEditingController();
   final confirmCtrl = TextEditingController();
@@ -10,9 +12,9 @@ class SignupController extends BaseController {
   final showPassword = false.obs;
   final showConfirm = false.obs;
 
-  final email = ''.obs;
-  final password = ''.obs;
-  final confirm = ''.obs;
+  Rx<String> get email => signupService.email;
+  Rx<String> get password => signupService.password;
+  Rx<String> get confirm => signupService.confirm;
 
   bool get isFormFilled =>
       email.isNotEmpty &&
@@ -28,6 +30,14 @@ class SignupController extends BaseController {
   void toggleShowPassword() => showPassword.toggle();
   void toggleShowConfirm() => showConfirm.toggle();
 
+  @override
+  void onInit() {
+    super.onInit();
+    emailCtrl.text = email.value;
+    passwordCtrl.text = password.value;
+    confirmCtrl.text = confirm.value;
+  }
+
   void goBack() {
     Get.rootDelegate.offNamed(AppRoutes.loginScreen);
   }
@@ -37,7 +47,7 @@ class SignupController extends BaseController {
     isBusy.value = true;
     try {
       await Future.delayed(const Duration(milliseconds: 800));
-      Get.rootDelegate.offAndToNamed(AppRoutes.mainScreen);
+      Get.rootDelegate.offNamed(AppRoutes.verificationScreen);
     } finally {
       isBusy.value = false;
     }
