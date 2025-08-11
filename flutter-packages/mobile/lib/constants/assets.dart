@@ -1,6 +1,8 @@
 import 'package:ratel/exports.dart';
 
 abstract class Assets {
+  static const String introLogo = 'assets/images/logo.png';
+
   static const String logo = 'assets/icons/logo.png';
   static const String favicon = 'assets/icons/favicon.svg';
   static const String home1 = 'assets/images/home_1.svg';
