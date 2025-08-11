@@ -85,7 +85,8 @@ class VerificationScreen extends GetWidget<VerificationController> {
                     30.vgap,
 
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: List.generate(6, (i) {
                         return _CodeBox(
                           controller: controller.fields[i],
@@ -153,7 +154,9 @@ class VerificationScreen extends GetWidget<VerificationController> {
                         ),
                         10.gap,
                         InkWell(
-                          onTap: controller.resend,
+                          onTap: () => {
+                            showResendModal(context, controller.email),
+                          },
                           child: const Text(
                             'Resend',
                             style: TextStyle(
@@ -174,6 +177,118 @@ class VerificationScreen extends GetWidget<VerificationController> {
       ),
     );
   }
+}
+
+void showResendModal(BuildContext ctx, String email) {
+  final controller = Get.find<VerificationController>();
+
+  showDialog(
+    context: ctx,
+    // barrierDismissible: false,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        backgroundColor: AppColors.bg,
+        surfaceTintColor: AppColors.bg,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20.0),
+        ),
+        content: FittedBox(
+          fit: BoxFit.cover,
+          child: SizedBox(
+            width: 350,
+            child: Column(
+              children: [
+                Text(
+                  "Resend email",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 24,
+                    height: 1.33,
+                  ),
+                ),
+                24.vgap,
+                Text(
+                  "It will send verification code to",
+                  style: TextStyle(
+                    color: AppColors.neutral300,
+                    fontWeight: FontWeight.w400,
+                    fontSize: 12,
+                    height: 1.33,
+                  ),
+                ),
+                10.vgap,
+                Text(
+                  email,
+                  style: TextStyle(
+                    color: AppColors.neutral300,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12,
+                    height: 1.33,
+                  ),
+                ),
+                35.vgap,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    InkWell(
+                      onTap: () => Navigator.pop(context),
+                      child: RoundContainer(
+                        width: 95,
+                        height: 50,
+                        color: Colors.transparent,
+                        radius: 10,
+                        child: Padding(
+                          padding: EdgeInsets.fromLTRB(20, 15, 20, 15),
+                          child: Text(
+                            "Cancel",
+                            style: TextStyle(
+                              color: AppColors.neutral300,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    10.gap,
+                    InkWell(
+                      onTap: controller.isBusy.value
+                          ? null
+                          : () async {
+                              await controller.resend();
+                              Navigator.pop(context);
+                            },
+                      child: RoundContainer(
+                        width: 180,
+                        height: 50,
+                        color: AppColors.primary,
+                        radius: 10,
+                        child: Center(
+                          child: Padding(
+                            padding: EdgeInsets.fromLTRB(20, 15, 20, 15),
+                            child: Text(
+                              "Resend",
+                              style: TextStyle(
+                                color: AppColors.bg,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    },
+  );
 }
 
 class _CodeBox extends StatelessWidget {
