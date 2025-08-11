@@ -5,8 +5,6 @@ class IntroScreen extends GetWidget<IntroController> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Layout<IntroController>(
       style: LayoutStyle(background: AppColors.primary),
       child: SafeArea(
