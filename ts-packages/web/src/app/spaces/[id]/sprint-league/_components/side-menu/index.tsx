@@ -8,7 +8,7 @@ import { RewardMenu, TimelineMenu } from '../../../_components/side-menu';
 export default function SpaceSideMenu({ spaceId }: { spaceId: number }) {
   const { data: space } = useSpaceById(spaceId);
 
-  const boosterType = (space.booster_type ??= BoosterType.NoBoost);
+  const boosterType = space.booster_type ?? BoosterType.NoBoost;
   const createdAt = space.created_at;
   const startedAt = space.started_at ?? Date.now();
   const endedAt = space.ended_at ?? Date.now();

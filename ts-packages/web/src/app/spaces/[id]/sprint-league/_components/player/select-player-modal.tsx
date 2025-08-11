@@ -26,13 +26,12 @@ const openCharacterSelectModal = (
         onSelect={(alias) => {
           const selectedPlayer = BasePlayerImages.find(
             (player) => `${player.alias}` === alias,
-          ) ?? {
-            alias: '',
-            run: { json: '', image: '' },
-            win: '',
-            lose: '',
-            select: { json: '', image: '' },
-          };
+          );
+
+          if (!selectedPlayer) {
+            console.error(`Player with alias ${alias} not found`);
+            return;
+          }
 
           handleSelect(selectedPlayer);
 

@@ -58,22 +58,17 @@ export const BasePlayerImages: PlayerImages[] = [
 ];
 
 export default function PlayerEdit({ isEdit }: { isEdit: boolean }) {
-  const { updatePlayer } = useSprintLeagueStore();
-  const storePlayers = useSprintLeagueStore.getState().players;
+  const updatePlayer = useSprintLeagueStore((s) => s.updatePlayer);
+  const storePlayers = useSprintLeagueStore((s) => s.players);
   const popup = usePopup();
   useEffect(() => {
     const preloadAssets = async () => {
-      const loadPromises = BasePlayerImages.map(async (v) => {
-        return [
-          pixiAssetManager.loadSpritesheet(`${v.alias}_run`, v.run.json),
-          pixiAssetManager.loadSpritesheet(
-            `${v.alias}_selected`,
-            v.select.json,
-          ),
-          pixiAssetManager.loadSpritesheet(`${v.alias}_win`, v.win),
-          pixiAssetManager.loadSpritesheet(`${v.alias}_lose`, v.lose),
-        ];
-      }).flat();
+      const loadPromises = BasePlayerImages.flatMap((v) => [
+        pixiAssetManager.loadSpritesheet(`${v.alias}_run`, v.run.json),
+        pixiAssetManager.loadSpritesheet(`${v.alias}_selected`, v.select.json),
+        pixiAssetManager.loadSpritesheet(`${v.alias}_win`, v.win),
+        pixiAssetManager.loadSpritesheet(`${v.alias}_lose`, v.lose),
+      ]);
 
       await Promise.allSettled(loadPromises);
     };
@@ -83,33 +78,29 @@ export default function PlayerEdit({ isEdit }: { isEdit: boolean }) {
 
   useEffect(() => {
     const loadAssets = async () => {
-      const storePlayers = useSprintLeagueStore.getState().players;
       if (!storePlayers) {
         return;
       }
 
-      const loadPromises = Object.values(storePlayers)
-        .map(async ({ player_images }) => {
-          return [
-            pixiAssetManager.loadSpritesheet(
-              `${player_images.alias}_run`,
-              player_images.run.json,
-            ),
-            pixiAssetManager.loadSpritesheet(
-              `${player_images.alias}_selected`,
-              player_images.select.json,
-            ),
-            pixiAssetManager.loadSpritesheet(
-              `${player_images.alias}_win`,
-              player_images.win,
-            ),
-            pixiAssetManager.loadSpritesheet(
-              `${player_images.alias}_lose`,
-              player_images.lose,
-            ),
-          ];
-        })
-        .flat();
+      const loadPromises = Object.values(storePlayers).flatMap((v) => [
+        pixiAssetManager.loadSpritesheet(
+          `${v.player_images.alias}_run`,
+          v.player_images.run.json,
+        ),
+        pixiAssetManager.loadSpritesheet(
+          `${v.player_images.alias}_selected`,
+          v.player_images.select.json,
+        ),
+        pixiAssetManager.loadSpritesheet(
+          `${v.player_images.alias}_win`,
+          v.player_images.win,
+        ),
+        pixiAssetManager.loadSpritesheet(
+          `${v.player_images.alias}_lose`,
+          v.player_images.lose,
+        ),
+      ]);
+
       await Promise.allSettled(loadPromises);
     };
     loadAssets();
