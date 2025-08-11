@@ -45,7 +45,6 @@ export default function Character({
           jsonName = `${alias}_selected`;
         }
         const sheet = await pixiAssetManager.getAsset(jsonName);
-        console.log('Loaded asset:', jsonName, sheet);
         if (!sheet) {
           throw new Error(`Spritesheet not found: ${jsonName}`);
         }
@@ -67,7 +66,6 @@ export default function Character({
   if (isFinished) {
     const v = index === 0 ? `${alias}_win` : `${alias}_lose`;
 
-    console.log('Finished character:', v);
     return (
       <pixiContainer scale={scale}>
         <pixiSprite
