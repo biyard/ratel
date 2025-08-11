@@ -59,7 +59,6 @@ export default function Page() {
       <SprintLeagueGame
         ref={ref}
         players={players}
-        votes={sprintLeague?.votes ?? 0}
         initStatus={
           space.status === SpaceStatus.Finish
             ? GameStatus.GAME_END

@@ -95,7 +95,6 @@ export default function SprintLeague({
   ref,
   players,
   initStatus,
-  votes,
   disabled = false,
   onVote,
   onRepost,
@@ -139,7 +138,6 @@ export default function SprintLeague({
       <Inner
         players={players}
         initStatus={initStatus}
-        votes={votes}
         onVote={onVote}
         onRepost={onRepost}
         disabled={disabled}
@@ -151,7 +149,6 @@ export default function SprintLeague({
 export interface InnerProps {
   players: SprintLeaguePlayer[];
   initStatus?: Status;
-  votes: number;
   onVote: (playerId: number) => Promise<void>;
   onRepost: () => Promise<void>;
   disabled?: boolean;
@@ -228,7 +225,7 @@ function Inner({
   const adjustedWidth = width > height ? (height * 360) / 640 : width;
   const scale = adjustedWidth / 360;
   const totalVotes = players.reduce((acc, player) => acc + player.votes, 0);
-  const sortedPlayers = players.sort((a, b) => {
+  const sortedPlayers = [...players].sort((a, b) => {
     const aVotes = a.votes || 0;
     const bVotes = b.votes || 0;
     return bVotes - aVotes; // Sort by votes in descending order

@@ -27,12 +27,10 @@ export function SprintLeagueEditor({ spaceId }: { spaceId: number }) {
   const sprintLeague = space?.sprint_leagues?.[0];
   const isDraft = space.status === SpaceStatus.Draft;
   const { mutateAsync: updateMutateAsync } = useUpdateSpace(spaceId);
-  const {
-    updatePlayer: { mutateAsync: updatePlayerMutateAsync },
-  } = useSprintLeagueSpaceByIdMutation(spaceId);
 
   const {
     votePlayer: { mutateAsync: votePlayerMutateAsync },
+    updatePlayer: { mutateAsync: updatePlayerMutateAsync },
   } = useSprintLeagueSpaceByIdMutation(spaceId);
 
   const { mutateAsync: shareSpaceMutateAsync } = useShareSpace(space.id);
@@ -48,12 +46,18 @@ export function SprintLeagueEditor({ spaceId }: { spaceId: number }) {
         useSprintLeagueStore.getState().players,
       );
 
+      const sprintLeagueId = space.sprint_leagues?.[0]?.id;
+      if (playersToSave.length > 0 && !sprintLeagueId) {
+        console.warn('Sprint League ID is missing; cannot save players.');
+        return false;
+      }
+
       try {
         await Promise.all([
           ...playersToSave.map((player) =>
             updatePlayerMutateAsync({
               playerId: player.id,
-              sprintLeagueId: space.sprint_leagues?.[0].id ?? 0,
+              sprintLeagueId: sprintLeagueId as number,
               req: {
                 name: player.name,
                 description: player.description,
@@ -151,7 +155,6 @@ export function SprintLeagueEditor({ spaceId }: { spaceId: number }) {
                   : GameStatus.BEFORE_VOTE
             }
             players={Object.values(storedPlayers)}
-            votes={sprintLeague?.votes ?? 0}
             onVote={handleVote}
             onRepost={handleRepost}
           />

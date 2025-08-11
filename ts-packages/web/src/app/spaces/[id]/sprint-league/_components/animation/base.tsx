@@ -57,7 +57,7 @@ export default function Base({
       resizeTo={ref}
       defaultTextStyle={{ fill: 0xffcb30, fontFamily: 'Raleway' }}
     >
-      {process.env.NEXT_ENV === 'development' && <DevTool />}
+      {process.env.NEXT_PUBLIC_ENV === 'development' && <DevTool />}
       {initialized && children}
     </Application>
   );

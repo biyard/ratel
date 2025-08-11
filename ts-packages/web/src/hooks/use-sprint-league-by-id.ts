@@ -17,7 +17,7 @@ export async function voteSprintLeague(
   spaceId: number,
   sprintLeagueId: number,
   playerId: number,
-  referralCode: string | null = null,
+  referralCode: string | undefined = undefined,
 ): Promise<FetchResponse<SprintLeague | null>> {
   return apiFetch<SprintLeague | null>(
     `${config.api_url}${ratelApi.sprint_league.voteSprintLeague(spaceId, sprintLeagueId)}`,

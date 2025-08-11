@@ -16,10 +16,26 @@ export const openModal = (
     .open(
       <MakePublicWithSavingModal
         makePublic={() => {
-          makePublic();
+          void (async () => {
+            try {
+              await makePublic();
+              popup.close();
+            } catch (error) {
+              console.error('Error making public:', error);
+            }
+          })();
         }}
         makePublicWithSave={() => {
-          makePublic().then(() => saveSpace());
+          void (async () => {
+            try {
+              // Save first, then publish
+              await saveSpace();
+              await makePublic();
+              popup.close();
+            } catch (error) {
+              console.error('Error saving & publishing space:', error);
+            }
+          })();
         }}
       />,
     )
@@ -29,8 +45,8 @@ export default function MakePublicWithSavingModal({
   makePublic,
   makePublicWithSave,
 }: {
-  makePublic: () => void;
-  makePublicWithSave: () => void;
+  makePublic: () => void | Promise<void>;
+  makePublicWithSave: () => void | Promise<void>;
 }) {
   return (
     <div className="max-w-125 flex flex-col mt-6 gap-6">

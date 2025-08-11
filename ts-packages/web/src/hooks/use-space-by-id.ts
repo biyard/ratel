@@ -70,14 +70,15 @@ async function updateSpaceScope(
 ): Promise<FetchResponse<Space | null>> {
   const req = spaceUpdateRequest(
     prevSpace.html_contents,
-    [],
+    prevSpace.files,
+    //FIXME: This should be updated to use the correct type for the space
     [],
     [],
     [],
     [],
     prevSpace.title,
-    undefined,
-    undefined,
+    prevSpace.started_at,
+    prevSpace.ended_at,
     scope,
     null,
   );
@@ -153,15 +154,13 @@ export function useUpdateSpace(spaceId: number) {
       const previousData = queryClient.getQueryData<Space>(queryKey);
 
       queryClient.setQueryData<Space>(queryKey, (old) => {
-        if (!old) return undefined;
-        // Only merge fields that are safe and compatible with Space type
-        return {
-          ...old,
-          title,
-          html_contents,
-          started_at,
-          ended_at,
-        };
+        if (!old) return old;
+        const patch: Partial<Space> = {};
+        if (title !== undefined) patch.title = title;
+        if (html_contents !== undefined) patch.html_contents = html_contents;
+        if (started_at !== undefined) patch.started_at = started_at;
+        if (ended_at !== undefined) patch.ended_at = ended_at;
+        return { ...old, ...patch };
       });
 
       return { previousData };
@@ -200,11 +199,17 @@ export function useShareSpace(space_id: number) {
     },
 
     onMutate: async () => {
-      let url = `${window.location.origin}/${route.space(space_id)}`;
+      let url = `${window.location.origin}${route.space(space_id)}`;
       if (userInfo?.referral_code) {
         url += `?referral=${userInfo.referral_code}`;
       }
-      await navigator.clipboard.writeText(url);
+      try {
+        await navigator.clipboard.writeText(url);
+      } catch {
+        logger.debug('Clipboard API unavailable; falling back to prompt');
+        window.prompt('Copy this link', url);
+      }
+
       await queryClient.cancelQueries({ queryKey });
 
       const previousData = queryClient.getQueryData<Space>(queryKey);

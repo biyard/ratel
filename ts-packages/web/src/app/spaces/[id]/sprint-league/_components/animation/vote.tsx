@@ -1,7 +1,7 @@
 'use client';
 
 import { useTick } from '@pixi/react';
-import { Assets, Sprite, Ticker } from 'pixi.js';
+import { Assets, Container, Ticker } from 'pixi.js';
 import { useCallback, useRef } from 'react';
 import Character from './character';
 import { SprintLeaguePlayer } from '@/lib/api/models/sprint_league';
@@ -102,9 +102,8 @@ function Vote({
   y?: number;
   scale: number;
 }) {
-  const ref = useRef<Sprite>(null);
+  const ref = useRef<Container>(null);
 
-  // useEffect(() => {}, [selected]);
   const updateTicker = useCallback(
     (ticker: Ticker) => {
       const sprite = ref.current;
@@ -115,8 +114,7 @@ function Vote({
       sprite.position.y +=
         (targetY - sprite.position.y) * 0.1 * ticker.deltaTime;
     },
-    // eslint-disable-line react-hooks/exhaustive-deps
-    [selected],
+    [scale, selected, y],
   );
 
   useTick((ticker) => {

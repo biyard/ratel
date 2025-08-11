@@ -88,14 +88,18 @@ export function useFeedMutation(feed_id: number) {
       const previousData = queryClient.getQueryData<Feed>(qk);
 
       queryClient.setQueryData<Feed>(qk, (old) => {
-        if (!old) return undefined;
-        if (!old.is_liked && !next) {
-          return { ...old, likes: old.likes - 1, is_liked: next };
-        }
-        if (old.is_liked && next) {
-          return { ...old, likes: old.likes + 1, is_liked: next };
-        }
+        if (!old) return old;
+        const was = old.is_liked;
+        const will = next;
+        if (was === will) return old;
+        const delta = will ? 1 : -1;
+        return {
+          ...old,
+          likes: Math.max(0, old.likes + delta),
+          is_liked: will,
+        };
       });
+
       return { previousData };
     },
     onSuccess: () => {
