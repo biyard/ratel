@@ -23,6 +23,7 @@ export 'presentations/explore/explore_screen.dart';
 export 'presentations/home/home_binding.dart';
 export 'presentations/home/home_controller.dart';
 export 'presentations/home/home_screen.dart';
+export 'presentations/home/home_model.dart';
 
 export 'presentations/message/message_binding.dart';
 export 'presentations/message/message_controller.dart';
