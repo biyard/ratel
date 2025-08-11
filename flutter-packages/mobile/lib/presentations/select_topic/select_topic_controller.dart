@@ -31,6 +31,6 @@ class SelectTopicController extends BaseController {
   void skip() => Get.rootDelegate.offNamed(AppRoutes.welcomeScreen);
   void next() => {
     logger.d("selected: $selected"),
-    // Get.rootDelegate.offNamed(AppRoutes.welcomeScreen)
+    Get.rootDelegate.offNamed(AppRoutes.connectionScreen),
   };
 }

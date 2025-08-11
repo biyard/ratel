@@ -28,37 +28,34 @@ class SelectTopicScreen extends GetWidget<SelectTopicController> {
                 ],
               ),
             ),
+            const Text(
+              'Select topics',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 36,
+                fontWeight: FontWeight.w900,
+                height: 1.22,
+              ),
+            ),
+            30.vgap,
+            AppTextField(
+              hint: 'Search for topics',
+              rounded: 100,
+              suffixIcon: const Padding(
+                padding: EdgeInsets.only(right: 8),
+                child: Icon(Icons.search, color: AppColors.neutral600),
+              ),
+              onChanged: controller.onSearchChanged,
+            ),
+            16.vgap,
             SizedBox(
               width: double.infinity,
-              height: MediaQuery.of(context).size.height - 200,
+              height: MediaQuery.of(context).size.height - 360,
               child: SingleChildScrollView(
                 child: Obx(
                   () => Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Select topics',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 36,
-                          fontWeight: FontWeight.w900,
-                          height: 1.22,
-                        ),
-                      ),
-                      30.vgap,
-                      AppTextField(
-                        hint: 'Search for topics',
-                        rounded: 100,
-                        suffixIcon: const Padding(
-                          padding: EdgeInsets.only(right: 8),
-                          child: Icon(
-                            Icons.search,
-                            color: AppColors.neutral600,
-                          ),
-                        ),
-                        onChanged: controller.onSearchChanged,
-                      ),
-                      16.vgap,
                       Wrap(
                         spacing: 5,
                         runSpacing: 5,
@@ -142,7 +139,7 @@ class SelectTopicScreen extends GetWidget<SelectTopicController> {
                       ),
               ),
             ),
-            24.vgap,
+            25.vgap,
           ],
         ),
       ),
