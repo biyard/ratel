@@ -26,10 +26,14 @@ export default function TimelineMenu({
             Timeline
           </div>
           {isEditing && (
-            <Settings2
-              className="size-5 [&>*]:stroke-neutral-500 cursor-pointer"
+            <button
+              type="button"
+              aria-label="Timeline settings"
               onClick={handleSetting}
-            />
+              className="cursor-pointer"
+            >
+              <Settings2 className="size-5 [&>*]:stroke-neutral-500" />
+            </button>
           )}
         </div>
         <div className="flex flex-col pl-3.25 gap-5">
