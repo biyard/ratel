@@ -56,7 +56,7 @@ class VerificationController extends BaseController {
       final pin = code.join();
       logger.d("pin value: ${pin}");
       await Future.delayed(const Duration(milliseconds: 800));
-      Get.rootDelegate.offAndToNamed(AppRoutes.welcomeScreen);
+      Get.rootDelegate.offAndToNamed(AppRoutes.setupProfileScreen);
     } finally {
       isBusy.value = false;
     }

@@ -44,6 +44,7 @@ abstract class AppColors {
   static const Color btnCCg30 = Color(0xffaeb8b8);
   static const Color footer = Color(0xff191919);
   static const Color copyright = Color(0xff9095a1);
+  static const Color neutral70 = Color(0xffaeaaab);
   static const Color neutral80 = Color(0xff6b6b6b);
   static const Color neutral300 = Color(0xffd4d4d4);
   static const Color neutral400 = Color(0xffa1a1a1);
