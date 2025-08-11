@@ -11,6 +11,7 @@ class AppRoutes {
   static const String selectTopicScreen = '/select-topic';
   static const String connectionScreen = '/connection';
   static const String setupAttributeScreen = '/setup-attribute';
+  static const String mySpaces = '/my-spaces';
   static const String explore = "/dashboard/explore";
   static const String home = "/dashboard/home";
   static const String myNetwork = "/dashboard/network";
@@ -71,6 +72,12 @@ class AppRoutes {
       name: setupAttributeScreen,
       page: () => const SetupAttributeScreen(),
       binding: SetupAttributeBinding(),
+      transition: Transition.noTransition,
+    ),
+    GetPage(
+      name: mySpaces,
+      page: () => const MySpacesScreen(),
+      binding: MySpacesBinding(),
       transition: Transition.noTransition,
     ),
     GetPage(

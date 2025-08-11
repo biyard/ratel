@@ -9,6 +9,8 @@ class AppTextField extends StatelessWidget {
   final double rounded;
   final ValueChanged<String>? onChanged;
   final bool readOnly;
+  final InputBorder? border;
+  final Color? bgColor;
 
   const AppTextField({
     super.key,
@@ -20,6 +22,8 @@ class AppTextField extends StatelessWidget {
     this.onChanged,
     this.rounded = 8,
     this.readOnly = false,
+    this.border,
+    this.bgColor,
   });
 
   @override
@@ -32,7 +36,7 @@ class AppTextField extends StatelessWidget {
       readOnly: readOnly,
       style: TextStyle(
         fontStyle: FontStyle.normal,
-        color: (readOnly) ? AppColors.neutral600 : Colors.white,
+        color: readOnly ? AppColors.neutral600 : Colors.white,
         fontWeight: FontWeight.w500,
         fontSize: 15,
       ),
@@ -45,20 +49,24 @@ class AppTextField extends StatelessWidget {
           fontSize: 15,
         ),
         filled: true,
-        fillColor: AppColors.background,
+        fillColor: bgColor ?? AppColors.background,
         suffixIcon: suffixIcon,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 20,
           vertical: 10,
         ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(rounded),
-          borderSide: BorderSide(color: const Color(0xff2a2a2a)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(rounded),
-          borderSide: const BorderSide(color: AppColors.primary),
-        ),
+        enabledBorder:
+            border ??
+            OutlineInputBorder(
+              borderRadius: BorderRadius.circular(rounded),
+              borderSide: BorderSide.none,
+            ),
+        focusedBorder:
+            border ??
+            OutlineInputBorder(
+              borderRadius: BorderRadius.circular(rounded),
+              borderSide: const BorderSide(color: AppColors.primary),
+            ),
       ),
     );
   }
