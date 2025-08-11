@@ -1,4 +1,3 @@
-// signup_screen.dart
 import 'package:ratel/exports.dart';
 
 class SignupScreen extends GetWidget<SignupController> {

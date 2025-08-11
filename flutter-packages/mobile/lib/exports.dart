@@ -49,6 +49,10 @@ export 'presentations/signup/signup_binding.dart';
 export 'presentations/signup/signup_controller.dart';
 export 'presentations/signup/signup_screen.dart';
 
+export 'presentations/verification/verification_binding.dart';
+export 'presentations/verification/verification_controller.dart';
+export 'presentations/verification/verification_screen.dart';
+
 export 'localization/main_localization.dart';
 
 export 'models/profile.dart';
@@ -76,6 +80,7 @@ export 'services/auth/auth_service.dart';
 export 'services/firebase/firebase.dart';
 export 'services/api/drive_api.dart';
 export 'services/anonymous/anonymous_service.dart';
+export 'services/signup/signup_service.dart';
 
 export 'binding.dart';
 export 'config.dart';
