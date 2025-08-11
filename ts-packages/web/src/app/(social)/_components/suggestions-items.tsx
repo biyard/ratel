@@ -22,11 +22,11 @@ export default function SuggestionItem({
   return (
     <div className="flex flex-col items-start gap-3">
       <div className="flex flex-row gap-2.5">
-        {user.profile_url ? (
+        {user.profile_url && user.profile_url !== '' ? (
           <Image
             width={32}
             height={32}
-            src={user.profile_url || '/default-profile.png'}
+            src={user.profile_url}
             alt={`${user.username}'s profile`}
             className={`w-8 h-8 object-cover ${imageClass}`}
           />

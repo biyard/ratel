@@ -81,17 +81,17 @@ export default function ParticipantsPanel({
               className="flex flex-row w-full justify-between items-center"
             >
               <div className="flex flex-row w-fit items-center gap-1">
-                {participant.profile_url ? (
+                {participant.profile_url && participant.profile_url !== '' ? (
                   <Image
                     width={30}
                     height={30}
-                    src={participant.profile_url || '/default-profile.png'}
+                    src={participant.profile_url}
                     alt={`${participant.username}'s profile`}
-                    className="w-[30px] h-[30px] object-cover rounded-full"
+                    className="w-7.5 h-7.5 object-cover rounded-full"
                   />
                 ) : (
                   <div
-                    className="w-8 h-8 bg-neutral-500 rounded-full"
+                    className="w-7.5 h-7.5 bg-neutral-500 rounded-full"
                     style={{ flexShrink: 0 }}
                   />
                 )}
