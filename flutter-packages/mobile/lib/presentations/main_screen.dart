@@ -11,9 +11,10 @@ class _MainScreenState extends State<MainScreen> {
   int currentIndex = 1;
 
   final routes = [
-    AppRoutes.explore,
     AppRoutes.home,
     AppRoutes.myNetwork,
+    AppRoutes.mySpaces,
+    AppRoutes.notification,
     AppRoutes.message,
   ];
 
@@ -76,57 +77,136 @@ class _MainScreenState extends State<MainScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: AppColors.neutral800,
-        currentIndex: currentIndex,
-        selectedItemColor: Colors.white,
-        unselectedItemColor: AppColors.neutral500,
-        selectedLabelStyle: const TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
-          color: Colors.white,
+      bottomNavigationBar: Container(
+        decoration: const BoxDecoration(
+          border: Border(
+            top: BorderSide(color: AppColors.iconPrimary, width: 0.1),
+          ),
         ),
-        unselectedLabelStyle: const TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
-          color: AppColors.neutral500,
+        child: BottomNavigationBar(
+          type: BottomNavigationBarType.fixed,
+          backgroundColor: AppColors.neutral800,
+          currentIndex: currentIndex,
+          selectedItemColor: Colors.white,
+          unselectedItemColor: AppColors.neutral500,
+          selectedLabelStyle: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: Colors.white,
+          ),
+          unselectedLabelStyle: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: AppColors.neutral500,
+          ),
+          onTap: onTap,
+          items: [
+            BottomNavigationBarItem(
+              icon: SvgPicture.asset(
+                Assets.home,
+                width: 25,
+                height: 25,
+                colorFilter: ColorFilter.mode(
+                  AppColors.iconPrimary,
+                  BlendMode.srcIn,
+                ),
+              ),
+              activeIcon: SvgPicture.asset(
+                Assets.home,
+                width: 25,
+                height: 25,
+                colorFilter: ColorFilter.mode(Colors.white, BlendMode.srcIn),
+              ),
+              label: 'Home',
+            ),
+            BottomNavigationBarItem(
+              icon: SvgPicture.asset(
+                Assets.people,
+                width: 25,
+                height: 25,
+                colorFilter: ColorFilter.mode(
+                  AppColors.iconPrimary,
+                  BlendMode.srcIn,
+                ),
+              ),
+              activeIcon: SvgPicture.asset(
+                Assets.people,
+                width: 25,
+                height: 25,
+                colorFilter: ColorFilter.mode(Colors.white, BlendMode.srcIn),
+              ),
+              label: 'My network',
+            ),
+            BottomNavigationBarItem(
+              icon: SvgPicture.asset(
+                Assets.chat,
+                width: 25,
+                height: 25,
+                colorFilter: ColorFilter.mode(
+                  AppColors.iconPrimary,
+                  BlendMode.srcIn,
+                ),
+              ),
+              activeIcon: SvgPicture.asset(
+                Assets.chat,
+                width: 25,
+                height: 25,
+                colorFilter: ColorFilter.mode(Colors.white, BlendMode.srcIn),
+              ),
+              label: 'My spaces',
+            ),
+            BottomNavigationBarItem(
+              icon: SvgPicture.asset(
+                Assets.notification,
+                width: 25,
+                height: 25,
+                colorFilter: ColorFilter.mode(
+                  AppColors.iconPrimary,
+                  BlendMode.srcIn,
+                ),
+              ),
+              activeIcon: SvgPicture.asset(
+                Assets.notification,
+                width: 25,
+                height: 25,
+                colorFilter: ColorFilter.mode(Colors.white, BlendMode.srcIn),
+              ),
+              label: 'Notification',
+            ),
+            BottomNavigationBarItem(
+              icon: SvgPicture.asset(
+                Assets.mail,
+                width: 25,
+                height: 25,
+                colorFilter: ColorFilter.mode(
+                  AppColors.iconPrimary,
+                  BlendMode.srcIn,
+                ),
+              ),
+              activeIcon: SvgPicture.asset(
+                Assets.mail,
+                width: 25,
+                height: 25,
+                colorFilter: ColorFilter.mode(Colors.white, BlendMode.srcIn),
+              ),
+              label: 'Messages',
+            ),
+          ],
         ),
-        onTap: onTap,
-        items: [
-          BottomNavigationBarItem(
-            icon: Assets.internetImage,
-            activeIcon: Assets.internetActiveImage,
-            label: 'Explore',
-          ),
-          BottomNavigationBarItem(
-            icon: Assets.home1Image,
-            activeIcon: Assets.home1ActiveImage,
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Assets.userGroupImage,
-            activeIcon: Assets.userGroupActiveImage,
-            label: 'My network',
-          ),
-          BottomNavigationBarItem(
-            icon: Assets.roundBubbleImage,
-            activeIcon: Assets.roundBubbleActiveImage,
-            label: 'Message',
-          ),
-        ],
       ),
     );
   }
 
   Widget _routeToPage(String? name) {
     switch (name) {
-      case AppRoutes.explore:
-        return const ExploreScreen();
       case AppRoutes.home:
         return const HomeScreen();
       case AppRoutes.myNetwork:
         return const NetworkScreen();
+      case AppRoutes.mySpaces:
+        return const MySpacesScreen();
+      case AppRoutes.notification:
+        return const NotificationScreen();
       default:
         return const MessageScreen();
     }

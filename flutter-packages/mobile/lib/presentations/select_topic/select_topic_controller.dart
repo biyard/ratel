@@ -28,7 +28,7 @@ class SelectTopicController extends BaseController {
       selected.contains(tag) ? selected.remove(tag) : selected.add(tag);
 
   void goBack() => Get.rootDelegate.offNamed(AppRoutes.setupProfileScreen);
-  void skip() => Get.rootDelegate.offNamed(AppRoutes.setupProfileScreen);
+  void skip() => Get.rootDelegate.offNamed(AppRoutes.connectionScreen);
   void next() => {
     logger.d("selected: $selected"),
     Get.rootDelegate.offNamed(AppRoutes.connectionScreen),

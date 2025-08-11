@@ -36,6 +36,7 @@ abstract class AppColors {
   static const Color btnOText = Color(0xffffffff);
   static const Color btnOHoverText = Color(0xffffffff);
 
+  static const Color iconPrimary = Color(0xff979797);
   static const Color btnHover = Color(0xffcabf00);
   static const Color btnCWg30 = Color(0xffaeaeae);
   static const Color btnCWg50 = Color(0xff777677);

@@ -7,6 +7,14 @@ abstract class Assets {
   static const String add = 'assets/icons/add.svg';
   static const String passport = 'assets/icons/passport.svg';
 
+  static const String filter = 'assets/icons/filter.svg';
+  static const String plus = 'assets/icons/plus.svg';
+  static const String chat = 'assets/icons/chat.svg';
+  static const String home = 'assets/icons/home.svg';
+  static const String mail = 'assets/icons/mail.svg';
+  static const String notification = 'assets/icons/notification.svg';
+  static const String people = 'assets/icons/people.svg';
+
   static const String logo = 'assets/icons/logo.png';
   static const String favicon = 'assets/icons/favicon.svg';
   static const String home1 = 'assets/images/home_1.svg';
