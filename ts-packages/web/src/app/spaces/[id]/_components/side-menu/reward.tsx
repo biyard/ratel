@@ -8,11 +8,15 @@ interface RewardProps {
   text: string;
 }
 
+export const colorStyles: Record<string, string> = {
+  primary: 'bg-primary/5 text-primary',
+};
+
 interface ModifierProps {
   icon: ReactNode;
   multiple: number;
   text: string;
-  color: string;
+  color: keyof typeof colorStyles;
 }
 export default function RewardMenu({
   isEditing,
@@ -34,10 +38,14 @@ export default function RewardMenu({
             Rewards
           </div>
           {isEditing && (
-            <Settings2
-              className="size-5 [&>*]:stroke-neutral-500 cursor-pointer"
+            <button
+              type="button"
+              aria-label="Reward settings"
               onClick={handleSetting}
-            />
+              className="cursor-pointer"
+            >
+              <Settings2 className="size-5 [&>*]:stroke-neutral-500" />
+            </button>
           )}
         </div>
 
@@ -67,15 +75,13 @@ function RewardItem({ amount, text }: RewardProps) {
     </div>
   );
 }
+
 function ModifierItem({ icon, multiple, text, color }: ModifierProps) {
   return (
     <div
-      className="w-full flex flex-row text-[15px]/[12px] font-bold
-        justify-between items-center px-2.5 py-2.5 rounded-sm"
-      style={{
-        backgroundColor: `${color}0D`,
-        color: color,
-      }}
+      className={`w-full flex flex-row text-[15px]/[12px] font-bold
+        justify-between items-center px-2.5 py-2.5 rounded-sm
+        ${colorStyles[color] || 'bg-gray-500/5 text-gray-500'}`}
     >
       <div className="[&>svg]:size-6 flex flex-row items-center justify-center gap-2">
         {icon}
