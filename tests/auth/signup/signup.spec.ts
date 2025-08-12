@@ -2,6 +2,8 @@ import { test, expect } from "@playwright/test";
 import { CONFIGS } from "../../config";
 import { wrap } from "../../utils";
 
+test.describe.configure({ mode: 'serial' });
+
 test.describe("Auth Flow - Create Account", () => {
   test("should show validation and allow account creation steps", async ({ page }, testInfo) => {
     const p = wrap(page, testInfo.project.name, "/");
@@ -14,7 +16,8 @@ test.describe("Auth Flow - Create Account", () => {
 
     await expect(p.locator("text=Please enter a valid email").first()).toBeVisible();
 
-    await p.locator('input[name="username"]').fill(CONFIGS.credentials.newUserEmail);
+    const signupEmail = `biyard-signup-${Date.now()}-${Math.random().toString(36).slice(2)}@example.com`;
+    await p.locator('input[name="username"]').fill(signupEmail);
     await p.getByRole("button", { name: "Send" }).click();
 
     await p.getByRole("textbox", { name: "Verification code" }).fill(CONFIGS.credentials.verificationCode);

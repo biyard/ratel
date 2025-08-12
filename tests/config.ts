@@ -11,12 +11,12 @@ export const CONFIGS ={
         BASE_URL: "https://dev.ratel.foundation"
     },
     credentials: {
-        email: process.env.TEST_EMAIL || "",
-        password: process.env.TEST_PASSWORD || "",  
-        username: process.env.TEST_USERNAME || "",
-        displayName: process.env.TEST_DISPLAY_NAME || "",
-        verificationCode: process.env.TEST_VERIFICATION_CODE || "123456",
-        newUserEmail: process.env.TEST_NEW_USER_EMAIL || "",
+        email: process.env.TEST_EMAIL as string,
+        password: process.env.TEST_PASSWORD as string,  
+        username: process.env.TEST_USERNAME as string,
+        displayName: process.env.TEST_DISPLAY_NAME as string,
+        verificationCode: process.env.TEST_VERIFICATION_CODE as string,
+        newUserEmail: process.env.TEST_NEW_USER_EMAIL as string,
 
     }
 }

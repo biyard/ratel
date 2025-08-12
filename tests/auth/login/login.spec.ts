@@ -2,6 +2,9 @@ import { test, expect } from "@playwright/test";
 import { CONFIGS } from "../../config";
 import { wrap } from "../../utils";
 
+
+test.describe.configure({ mode: 'serial' });
+
 test.describe("Auth Flow - Login", () => {
   test("should show errors and login successfully", async ({ page }, testInfo) => {
     const p = wrap(page, testInfo.project.name, "auth/login");
@@ -12,7 +15,8 @@ test.describe("Auth Flow - Login", () => {
     await p.getByRole("button", { name: "Continue", exact: true }).click();
     await expect(p.locator("text=Please enter a valid email")).toBeVisible();
 
-    await p.getByRole("textbox", { name: "Enter your email address" }).fill(CONFIGS.credentials.newUserEmail);
+    const unregisteredEmail = `biyard-unreg-${Date.now()}-${Math.random().toString(36).slice(2)}@example.com`;
+    await p.getByRole("textbox", { name: "Enter your email address" }).fill(unregisteredEmail);
     await p.getByRole("button", { name: "Continue", exact: true }).click();
     await expect(p.locator("text=This email is not registered.")).toBeVisible();
 
