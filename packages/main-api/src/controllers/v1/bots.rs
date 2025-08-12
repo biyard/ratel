@@ -102,6 +102,7 @@ impl BotController {
                 user.membership,
                 generate_referral_code(),
                 None,
+                None,
             )
             .await?;
 

@@ -96,6 +96,7 @@ mod tests {
                 Membership::Free,
                 generate_referral_code(),
                 None,
+                None,
             )
             .await
             .unwrap()
@@ -124,6 +125,7 @@ mod tests {
                 "".to_string(),                // password
                 Membership::Free,
                 generate_referral_code(),
+                None,
                 None,
             )
             .await
@@ -159,6 +161,7 @@ mod tests {
                 "".to_string(),                // password
                 Membership::Free,
                 generate_referral_code(),
+                None,
                 None,
             )
             .await
