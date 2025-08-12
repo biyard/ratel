@@ -22,9 +22,11 @@ impl StdError for ServiceException {}
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum Error {
     InvalidAction,
+    InvalidPhoneNumberFormat,
     UpdateNotAllowed,
     Unknown(String),
     Klaytn(String),
+    InvalidUserQuery(String),
 
     #[translate(en = "Could not find any resource", ko = "리소스를 찾을 수 없습니다.")]
     NotFound,
@@ -46,6 +48,16 @@ pub enum Error {
         ko = "유효한 이메일을 입력해야 합니다."
     )]
     InvalidEmail,
+    #[translate(
+        en = "You must pass a valid username",
+        ko = "유효한 유저명을 입력해야 합니다."
+    )]
+    InvalidUsername,
+    #[translate(
+        en = "You must pass a valid phone number",
+        ko = "유효한 폰번호를 입력해야 합니다."
+    )]
+    InvalidPhoneNumber,
     #[translate(
         en = "You must pass a valid principal",
         ko = "유효한 계정 주소를 입력해야 합니다."
