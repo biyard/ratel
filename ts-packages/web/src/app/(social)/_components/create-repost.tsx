@@ -150,7 +150,9 @@ export function CreateRePost() {
     if (!title.trim() || !content || !editor) return;
 
     setIsReposting(true);
+    let didTimeout = false;
     const timeout = setTimeout(() => {
+      didTimeout = true;
       setIsReposting(false);
       showErrorToast('Request timed out');
     }, 10000);
@@ -166,9 +168,14 @@ export function CreateRePost() {
       });
 
       clearTimeout(timeout);
+      if (didTimeout) {
+        return; 
+      }
       showSuccessToast('Repost Successful!');
+      editor.commands.clearContent(true);
       router.push(route.threadByFeedId(response.id));
       resetDraft();
+
     } catch (error) {
       setIsReposting(false);
       logger.debug('Failed to publish repost:', error);
