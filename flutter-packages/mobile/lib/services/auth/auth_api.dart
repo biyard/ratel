@@ -12,7 +12,7 @@ class LoginResult {
   LoginResult({this.body, this.sid, this.authToken});
 }
 
-class SignInApi extends GetConnect {
+class AuthApi extends GetConnect {
   final apiEndpoint = Config.apiEndpoint;
   final signDomain = Config.signDomain;
   final env = Config.env;
@@ -26,6 +26,40 @@ class SignInApi extends GetConnect {
   String get _authKeyStorage => '${env}_auth_token';
 
   final Map<String, String> _cookieJar = {};
+
+  Future<dynamic> sendVerificationCode(String email) async {
+    final uri = Uri.parse(apiEndpoint).resolve('/v1/users/verifications');
+
+    final headers = <String, String>{'Content-Type': 'application/json'};
+    final body = {
+      'send_verification_code': {'email': email},
+    };
+
+    final res = await post(uri.toString(), body, headers: headers);
+
+    if (!res.isOk) return null;
+
+    logger.d('response body: ${res.body}');
+
+    return res.isOk;
+  }
+
+  Future<dynamic> verifyCode(String email, String value) async {
+    final uri = Uri.parse(apiEndpoint).resolve('/v1/users/verifications');
+
+    final headers = <String, String>{'Content-Type': 'application/json'};
+    final body = {
+      'verify': {'email': email, 'value': value},
+    };
+
+    final res = await post(uri.toString(), body, headers: headers);
+
+    if (!res.isOk) return null;
+
+    logger.d('response body: ${res.body}');
+
+    return res.body;
+  }
 
   Future<dynamic> loginWithPassword(String email, String password) async {
     final hashed = '0x${sha256Hex(password)}';

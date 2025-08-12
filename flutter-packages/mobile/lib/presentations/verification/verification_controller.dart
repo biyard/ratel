@@ -50,13 +50,23 @@ class VerificationController extends BaseController {
   }
 
   Future<void> verify() async {
+    final auth = AuthApi();
     if (!isComplete || isBusy.value) return;
     isBusy.value = true;
     try {
       final pin = code.join();
       logger.d("pin value: ${pin}");
-      await Future.delayed(const Duration(milliseconds: 800));
-      Get.rootDelegate.offAndToNamed(AppRoutes.setupProfileScreen);
+      final res = await auth.verifyCode(email, pin);
+
+      if (res != null) {
+        logger.d("verification response: ${res}");
+        Get.rootDelegate.offNamed(AppRoutes.setupProfileScreen);
+      } else {
+        Biyard.error(
+          "Failed to verify code",
+          "Please check the response code again.",
+        );
+      }
     } finally {
       isBusy.value = false;
     }

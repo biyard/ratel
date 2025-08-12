@@ -104,7 +104,7 @@ export 'components/modal/login_modal.dart';
 export 'components/modal/modal_title.dart';
 
 export 'services/auth/auth_service.dart';
-export 'services/auth/sign_in_api.dart';
+export 'services/auth/auth_api.dart';
 
 export 'services/firebase/firebase.dart';
 export 'services/api/drive_api.dart';
