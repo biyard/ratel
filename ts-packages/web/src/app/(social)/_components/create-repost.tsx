@@ -41,7 +41,6 @@ import {
 export function CreateRePost() {
   const {
     expand,
-    setExpand,
     title,
     setTitle,
     content,
@@ -65,7 +64,6 @@ export function CreateRePost() {
     setCommentUrl,
     setShowCommentUrlInput,
     authorId,
-    setAuthorId,
   } = useRepostDraft();
 
   const { data: User } = useSuspenseUserInfo();

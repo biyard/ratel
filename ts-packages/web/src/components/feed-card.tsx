@@ -166,7 +166,7 @@ export default function FeedCard(props: FeedCardProps) {
   );
 }
 
-function FeedBody({
+export function FeedBody({
   industry,
   title,
   contents,
@@ -222,7 +222,13 @@ function FeedBody({
   );
 }
 
-function FeedContents({ contents, url }: { contents: string; url?: string }) {
+export function FeedContents({
+  contents,
+  url,
+}: {
+  contents: string;
+  url?: string;
+}) {
   const html =
     typeof window !== 'undefined' ? DOMPurify.sanitize(contents) : contents;
 
@@ -249,7 +255,7 @@ function FeedContents({ contents, url }: { contents: string; url?: string }) {
   );
 }
 
-function IconText({
+export function IconText({
   children,
   className,
   ...props
@@ -264,7 +270,7 @@ function IconText({
   );
 }
 
-function UserBadge({
+export function UserBadge({
   author_type,
   profile_url,
   name,
@@ -291,7 +297,7 @@ function UserBadge({
   );
 }
 
-function IndustryTag({ industry }: { industry: string }) {
+export function IndustryTag({ industry }: { industry: string }) {
   return (
     <span className="rounded-sm border border-c-wg-70 px-2 text-xs/[25px] font-semibold align-middle uppercase">
       {industry}
@@ -299,7 +305,7 @@ function IndustryTag({ industry }: { industry: string }) {
   );
 }
 
-function OnboradingTag() {
+export function OnboradingTag() {
   return (
     <span className="rounded-sm bg-primary text-white px-2 text-xs/[25px] font-semibold align-middle uppercase">
       Onboard
@@ -312,7 +318,7 @@ interface FeedFooterProps extends Omit<FeedCardProps, 'onRepostThought'> {
   isLikeProcessing?: boolean;
 }
 
-function FeedFooter({
+export function FeedFooter({
   likes,
   comments,
   rewards,

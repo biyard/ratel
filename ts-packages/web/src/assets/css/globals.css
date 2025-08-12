@@ -117,6 +117,7 @@ a {
   }
 }
 
+/* Repost Editor toolbar styles */
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
@@ -141,7 +142,7 @@ a {
   width: 100%;
   margin: 1rem 0;
   overflow: hidden;
-  box-shadow: 0 0 0 1px #e0e0e0; /* Outer border */
+  box-shadow: 0 0 0 1px #e0e0e0;
 }
 
 /* Table header */
@@ -170,7 +171,7 @@ a {
 
 /* Selected cell styling */
 .tiptap-table .selectedCell {
-  background-color: #f0f7ff !important; /* Light blue selection */
+  background-color: #f0f7ff !important;
 }
 
 /* Hover effects */
@@ -185,13 +186,13 @@ a {
 
 .dark .tiptap-table-header {
   background-color: #2d2d2d !important; /* Dark gray */
-  color: #f0f0f0 !important; /* Light text */
+  color: #f0f0f0 !important;
   border-color: #444 !important;
 }
 
 .dark .tiptap-table-cell {
-  background-color: #1a1a1a !important; /* Very dark gray */
-  color: #e0e0e0 !important; /* Light text */
+  background-color: #1a1a1a !important;
+  color: #e0e0e0 !important;
   border-color: #444 !important;
 }
 
