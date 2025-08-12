@@ -6,6 +6,10 @@ pub mod controllers {
         pub mod users {
             pub mod logout;
         }
+        pub mod industries {
+            pub mod industry;
+            pub mod select_topic;
+        }
         pub mod telegram {
             pub mod subscribe;
         }

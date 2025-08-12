@@ -65,7 +65,7 @@ class SignupController extends BaseController {
         Get.rootDelegate.offNamed(AppRoutes.verificationScreen);
       } else {
         Biyard.error(
-          "Failed to send authorization",
+          "Failed to send authorization code",
           "Send Authorization code failed. Please try again later.",
         );
       }

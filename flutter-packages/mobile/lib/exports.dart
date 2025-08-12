@@ -110,6 +110,9 @@ export 'services/firebase/firebase.dart';
 export 'services/api/drive_api.dart';
 export 'services/anonymous/anonymous_service.dart';
 export 'services/signup/signup_service.dart';
+export 'services/industry/industry_api.dart';
+export 'services/industry/industry_service.dart';
+export 'services/industry/industry_model.dart';
 
 export 'binding.dart';
 export 'config.dart';
