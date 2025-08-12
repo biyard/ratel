@@ -4,17 +4,14 @@ import React, { useState } from 'react';
 import { PublishingScope } from '@/lib/api/models/notice';
 import Lock from '@/assets/icons/lock.svg';
 import Internet from '@/assets/icons/internet.svg';
-import Clear from '@/assets/icons/clear.svg';
 
 export interface PublishFormProps {
   onPublish: (scope: PublishingScope) => void;
-  onClose: () => void;
   currentScope?: PublishingScope;
 }
 
 export default function PublishForm({
   onPublish,
-  onClose,
   currentScope,
 }: PublishFormProps) {
   const [selectedScope, setSelectedScope] = useState<PublishingScope>(
@@ -33,17 +30,11 @@ export default function PublishForm({
   return (
     <div className="w-[450px] h-[425px] flex flex-col justify-between">
       <div>
-        {/* Header with title and close icon on the same line */}
-        <div className="flex justify-between items-center mb-6">
+        {/* Header */}
+        <div className="mb-6">
           <div className="font-bold text-white text-[24px]">
             Publish this Space
           </div>
-          <button
-            onClick={onClose}
-            className="text-neutral-500 hover:text-gray-300 transition-colors"
-          >
-            <Clear className="w-8 h-8" />
-          </button>
         </div>
 
         {/* Publishing Options */}

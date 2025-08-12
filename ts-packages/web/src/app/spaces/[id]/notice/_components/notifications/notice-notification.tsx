@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import RewardsFlexible from '@/assets/icons/rewards-flexible.svg';
+import Rewards from '@/assets/icons/rewards.svg';
 import HexDown from '@/assets/icons/hex-down.svg';
 
 export interface NoticeNotificationData {
@@ -48,9 +48,13 @@ export default function NoticeNotification({
         {/* Title */}
         <div className="flex items-center gap-2 mb-2">
           {notification.type === 'success' ? (
-            <RewardsFlexible width={20} height={20} className="text-white" />
+            <Rewards
+              width={20}
+              height={20}
+              className="[&>path]:stroke-white [&>circle]:stroke-white"
+            />
           ) : (
-            <HexDown width={20} height={20} className="text-white" />
+            <HexDown width={20} height={20} className="[&>path]:stroke-white" />
           )}
           <span className="text-white font-semibold text-[14px]">
             {notification.type === 'success'

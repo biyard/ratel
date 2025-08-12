@@ -85,11 +85,9 @@ function Page() {
               popup.close();
               await handlePublishWithScope(scope);
             }}
-            onClose={() => popup.close()}
             currentScope={space.publishing_scope}
           />,
         )
-        .withoutClose()
         .withoutBackdropClose();
     } else if (space.space_type === SpaceType.Notice) {
       // For notice spaces that are already in progress (private), show the go public modal
@@ -103,7 +101,6 @@ function Page() {
             }}
           />,
         )
-        .withoutClose()
         .withoutBackdropClose();
     } else {
       // For other space types, use the regular posting
@@ -128,10 +125,8 @@ function Page() {
             await handleSaveAndPublish(PublishingScope.Public);
             setIsEdit(false); // Exit edit mode and refresh content
           }}
-          onClose={() => popup.close()}
         />,
       )
-      .withoutClose()
       .withoutBackdropClose();
   };
 

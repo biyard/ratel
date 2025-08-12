@@ -1,28 +1,17 @@
 'use client';
 
 import React from 'react';
-import { Remove } from '@/components/icons';
+import { usePopup } from '@/lib/contexts/popup-service';
 
 export interface QuizSubmitFormProps {
   onSubmit: () => void;
-  onClose: () => void;
 }
 
-export default function QuizSubmitForm({
-  onSubmit,
-  onClose,
-}: QuizSubmitFormProps) {
-  return (
-    <div className="w-[500px] flex flex-col mt-2 relative">
-      {/* Close button - top right */}
-      <button
-        onClick={onClose}
-        className="absolute top-0 right-0 p-2 text-neutral-400 hover:text-white transition-colors"
-        aria-label="Close"
-      >
-        <Remove className="w-5 h-5 stroke-[currentColor]" />
-      </button>
+export default function QuizSubmitForm({ onSubmit }: QuizSubmitFormProps) {
+  const popup = usePopup();
 
+  return (
+    <div className="w-[500px] flex flex-col mt-2">
       <div className="text-center font-bold text-white text-[24px] mb-6">
         Just heads up!
       </div>
@@ -46,7 +35,7 @@ export default function QuizSubmitForm({
       {/* Action Buttons */}
       <div className="flex flex-row justify-end gap-4 mt-8.75">
         <button
-          onClick={onClose}
+          onClick={() => popup.close()}
           className="px-10 py-[14.5px] bg-transparent font-bold text-base text-neutral-400"
         >
           Cancel

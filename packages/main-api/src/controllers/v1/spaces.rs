@@ -79,8 +79,8 @@ impl SpaceController {
                         return Err(Error::Unauthorized);
                     }
                 }
-                SpaceStatus::InProgress => {
-                    // InProgress notice spaces: check publishing scope
+                _ => {
+                    // published spaces
                     match space.publishing_scope {
                         PublishingScope::Private => {
                             // Private: only space members can access
@@ -116,7 +116,6 @@ impl SpaceController {
                         }
                     }
                 }
-                _ => {}
             }
         }
 
@@ -826,16 +825,6 @@ impl SpaceController {
                 tracing::error!("failed to get a feed {feed_id}: {e}");
                 Error::FeedInvalidQuoteId
             })?;
-
-        // Validate that notice spaces can only be created from draft feeds
-        if space_type == SpaceType::Notice && feed.status != FeedStatus::Draft {
-            tracing::error!(
-                "Cannot create notice space from feed {} with status {:?} - feed must be in draft status",
-                feed_id,
-                feed.status
-            );
-            return Err(Error::BadRequest);
-        }
 
         let mut tx = self.pool.begin().await?;
 
