@@ -16,11 +16,11 @@ class LoginController extends BaseController {
   void toggleShowPassword() => showPassword.toggle();
 
   Future<void> signIn() async {
+    final auth = AuthApi();
     if (isBusy.value || !isFormValid) return;
     isBusy.value = true;
     try {
-      final signIn = SignInApi();
-      final res = await signIn.loginWithPassword(email.value, password.value);
+      final res = await auth.loginWithPassword(email.value, password.value);
 
       if (res != null) {
         Get.rootDelegate.offNamed(AppRoutes.mainScreen);

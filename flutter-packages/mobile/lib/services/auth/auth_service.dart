@@ -21,7 +21,7 @@ class AuthService extends GetxService {
 
   static void init() {
     Get.put<AuthService>(AuthService());
-    Get.put<SignInApi>(SignInApi());
+    Get.put<AuthApi>(AuthApi());
   }
 
   Future connectToGoogle(String redirectUri) async {
