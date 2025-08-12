@@ -104,10 +104,18 @@ export 'components/modal/login_modal.dart';
 export 'components/modal/modal_title.dart';
 
 export 'services/auth/auth_service.dart';
+export 'services/auth/auth_api.dart';
+
 export 'services/firebase/firebase.dart';
 export 'services/api/drive_api.dart';
 export 'services/anonymous/anonymous_service.dart';
 export 'services/signup/signup_service.dart';
+export 'services/industry/industry_api.dart';
+export 'services/industry/industry_service.dart';
+export 'services/industry/industry_model.dart';
+export 'services/network/network_api.dart';
+export 'services/network/network_model.dart';
+export 'services/network/network_service.dart';
 
 export 'binding.dart';
 export 'config.dart';

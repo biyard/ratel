@@ -104,7 +104,7 @@ class SetupProfileScreen extends GetWidget<SetupProfileController> {
                         width: double.infinity,
                         child: ElevatedButton(
                           onPressed: controller.formValid.value
-                              ? controller.goNext
+                              ? controller.next
                               : null,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primary,

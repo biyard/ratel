@@ -21,7 +21,9 @@ Future<void> main() async {
   l.LayoutService.init();
   AnonymousService.init();
   AuthService.init();
+  IndustryService.init();
   SignupService.init();
+  NetworkService.init();
   DriveApi.init();
 
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]).then((

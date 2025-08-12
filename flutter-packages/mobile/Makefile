@@ -1,6 +1,6 @@
 PROJECT ?= ratel
 EMULATOR ?= $(PROJECT)
-ENV ?= local
+ENV ?= dev
 LOG_LEVEL ?= debug
 FIXTURE_CONFIG_FILE=fixtures/config.json
 BUILD_DIR=.build
@@ -11,14 +11,20 @@ PORT ?= 5000
 
 ifeq ("$(ENV)","prod")
 	REDIRECT_URL = https://ratel.foundation
+	API_ENDPOINT = https://api.ratel.foundation
+	SIGN_DOMAIN = ratel.foundation
 endif
 
 ifeq ("$(ENV)","dev")
 	REDIRECT_URL = https://dev.ratel.foundation
+	API_ENDPOINT = https://api.dev.ratel.foundation
+	SIGN_DOMAIN = dev.ratel.foundation
 endif
 
 ifeq ("$(ENV)","local")
 	REDIRECT_URL = https://dev.ratel.foundation
+	API_ENDPOINT = http://10.0.2.2:3000
+	SIGN_DOMAIN = dev.ratel.foundation
 endif
 
 RENDERER ?= canvaskit
@@ -30,6 +36,8 @@ $(BUILD_CONFIG_FILE):
 	@sed -i '' "s/{ENV}/$(ENV)/g" $(BUILD_CONFIG_FILE)
 	@sed -i '' "s/{LOG_LEVEL}/$(LOG_LEVEL)/g" $(BUILD_CONFIG_FILE)
 	@sed -i '' "s|{REDIRECT_URL}|$(REDIRECT_URL)|g" $(BUILD_CONFIG_FILE)
+	@sed -i '' "s|{API_ENDPOINT}|$(API_ENDPOINT)|g" $(BUILD_CONFIG_FILE)
+	@sed -i '' "s|{SIGN_DOMAIN}|$(SIGN_DOMAIN)|g" $(BUILD_CONFIG_FILE)
 
 .PHONY: all
 all: clean run

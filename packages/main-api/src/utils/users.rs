@@ -249,6 +249,7 @@ pub async fn extract_principal(
     pool: &sqlx::Pool<sqlx::Postgres>,
     auth: Option<Authorization>,
 ) -> Result<String> {
+    tracing::debug!("auth: {:?}", auth);
     let principal = match auth {
         Some(Authorization::Session(session)) => session.principal,
         Some(Authorization::UserSig(sig)) => sig.principal().map_err(|e| {
