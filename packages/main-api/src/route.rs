@@ -6,7 +6,11 @@ use crate::controllers::{
         RegisterUserResponse, register_users_by_noncelab_handler,
     },
     v2::{
-        industries::{industry::list_industries, select_topic::select_topics_handler},
+        industries::{industry::list_industries_handler, select_topic::select_topics_handler},
+        networks::{
+            follow::follow_handler, network::list_networks_handler,
+            search::list_networks_by_keyword_handler,
+        },
         telegram::subscribe::telegram_subscribe_handler,
         users::logout::logout_handler,
     },
@@ -70,7 +74,19 @@ pub async fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Ro
         )
         .native_route(
             "/v2/industries",
-            nget(list_industries).with_state(pool.clone()),
+            nget(list_industries_handler).with_state(pool.clone()),
+        )
+        .native_route(
+            "/v2/networks",
+            nget(list_networks_handler).with_state(pool.clone()),
+        )
+        .native_route(
+            "/v2/networks/search",
+            nget(list_networks_by_keyword_handler).with_state(pool.clone()),
+        )
+        .native_route(
+            "/v2/networks/follow",
+            npost(follow_handler).with_state(pool.clone()),
         )
         // Admin APIs
         .route(

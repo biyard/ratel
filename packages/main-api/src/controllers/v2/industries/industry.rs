@@ -6,7 +6,7 @@ use dto::{
     *,
 };
 
-pub async fn list_industries(State(pool): State<PgPool>) -> Result<Json<Vec<Industry>>> {
+pub async fn list_industries_handler(State(pool): State<PgPool>) -> Result<Json<Vec<Industry>>> {
     let industries = Industry::query_builder()
         .query()
         .map(Industry::from)

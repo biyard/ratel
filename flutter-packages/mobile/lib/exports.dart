@@ -113,6 +113,9 @@ export 'services/signup/signup_service.dart';
 export 'services/industry/industry_api.dart';
 export 'services/industry/industry_service.dart';
 export 'services/industry/industry_model.dart';
+export 'services/network/network_api.dart';
+export 'services/network/network_model.dart';
+export 'services/network/network_service.dart';
 
 export 'binding.dart';
 export 'config.dart';
