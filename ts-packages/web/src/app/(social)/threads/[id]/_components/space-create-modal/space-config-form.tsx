@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Space, SpaceType } from '@/lib/api/models/spaces';
+import { createSpaceRequest, Space, SpaceType } from '@/lib/api/models/spaces';
 import { BoosterType, noticeSpaceCreateRequest } from '@/lib/api/models/notice';
 import { LoadablePrimaryButton } from '@/components/button/primary-button';
 import { ArrowLeft, Internet, Fire, Remove } from '@/components/icons';
@@ -14,6 +14,7 @@ import { usePopup } from '@/lib/contexts/popup-service';
 import { logger } from '@/lib/logger';
 import { useRouter } from 'next/navigation';
 import { route } from '@/route';
+import { useSprintLeagueSpaceMutation } from '@/hooks/use-sprint-league';
 
 interface SpaceConfigFormProps {
   spaceType: SpaceType;
@@ -92,7 +93,7 @@ export default function SpaceConfigForm({
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [isBoosterDropdownOpen]);
-
+  const { create } = useSprintLeagueSpaceMutation();
   const handleSubmit = async () => {
     setIsLoading(true);
     try {
@@ -104,35 +105,49 @@ export default function SpaceConfigForm({
       const boosterType = formConfig.activateBooster
         ? formConfig.boosterType
         : BoosterType.NoBoost;
-
-      const res = await apiFetch<Space>(
-        `${config.api_url}${ratelApi.spaces.createSpace()}`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(
-            noticeSpaceCreateRequest(
-              spaceType,
-              feedId,
-              [],
-              0,
-              startedAt,
-              endedAt,
-              boosterType,
-            ),
+      let data: Space | null = null;
+      if (spaceType === SpaceType.SprintLeague) {
+        data = await create.mutateAsync({
+          spaceReq: createSpaceRequest(
+            spaceType,
+            feedId,
+            [],
+            0,
+            startedAt,
+            endedAt,
+            boosterType,
           ),
-        },
-      );
-
-      if (res.data) {
+        });
+      } else {
+        const res = await apiFetch<Space>(
+          `${config.api_url}${ratelApi.spaces.createSpace()}`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(
+              noticeSpaceCreateRequest(
+                spaceType,
+                feedId,
+                [],
+                0,
+                startedAt,
+                endedAt,
+                boosterType,
+              ),
+            ),
+          },
+        );
+        data = res.data;
+      }
+      if (data) {
         logger.debug(
           `${getSpaceTypeTitle(spaceType)} space created successfully:`,
-          res.data.id,
+          data.id,
         );
         // Navigate to the new notice space page
-        router.push(route.noticeSpaceById(res.data.id));
+        router.push(route.noticeSpaceById(data.id));
         popup.close();
         onConfirm();
       }

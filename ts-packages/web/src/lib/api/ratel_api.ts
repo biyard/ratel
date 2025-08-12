@@ -279,8 +279,17 @@ export const ratelApi = {
       `/v1/spaces/${spaceId}/notice-quiz-answers`,
   },
   sprint_league: {
+    createSprintLeague: (space_id: number) =>
+      `/v1/spaces/${space_id}/sprint-leagues`,
     voteSprintLeague: (space_id: number, sprint_league_id: number) =>
       `/v1/spaces/${space_id}/sprint-leagues/${sprint_league_id}`,
+    updateSprintLeaguePlayer: (
+      spaceId: number,
+      sprintLeagueId: number,
+      playerId: number,
+    ) => {
+      return `/v1/spaces/${spaceId}/sprint-leagues/${sprintLeagueId}/players/${playerId}`;
+    },
   },
   telegram: {
     subscribe: () => '/v2/telegram/subscribe',

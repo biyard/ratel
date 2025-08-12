@@ -9,7 +9,7 @@ class NotificationScreen extends GetWidget<NotificationController> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [Text("Notification", style: TextStyle(color: Colors.blue))],
+        children: [Text("Notification", style: TextStyle(color: Colors.white))],
       ),
     );
   }

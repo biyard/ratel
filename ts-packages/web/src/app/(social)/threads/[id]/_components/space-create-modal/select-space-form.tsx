@@ -98,7 +98,10 @@ export default function SelectSpaceForm({ feed_id }: { feed_id: number }) {
     // For all space types, first proceed with direct creation
     // This avoids immediate rendering of complex components like config form
     try {
-      if (selectedType === SpaceType.Notice) {
+      if (
+        selectedType === SpaceType.Notice ||
+        selectedType === SpaceType.SprintLeague
+      ) {
         // For Notice space, we'll show config form after a small delay
         // This prevents the Maximum update depth exceeded error
         setTimeout(() => {
@@ -166,7 +169,7 @@ export default function SelectSpaceForm({ feed_id }: { feed_id: number }) {
   };
 
   // Show configuration form for Notice spaces
-  if (showConfigForm && selectedType === SpaceType.Notice) {
+  if (showConfigForm && !!selectedType) {
     return (
       <div className="mobile:w-[906px] max-mobile:w-full">
         {/* Use React.lazy or this conditional rendering pattern to 
