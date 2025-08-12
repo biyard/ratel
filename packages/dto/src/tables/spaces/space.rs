@@ -124,7 +124,7 @@ pub struct Space {
     #[api_model(summary, version = v0.1, type = INTEGER, action = [create_space], nullable)]
     #[serde(default)]
     pub booster_type: Option<BoosterType>,
-    
+
     // The publishing scope of the space (Private or Public)
     #[api_model(summary, version = v0.1, type = INTEGER, action_by_id = [update_space])]
     #[serde(default)]
@@ -197,7 +197,6 @@ pub enum BoosterType {
     X100 = 4,
 }
 
-
 #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq, Eq, Translate)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub enum FileExtension {
@@ -258,37 +257,51 @@ pub struct NoticeOptionRequest {
     pub is_correct: bool,
 }
 
-
 // Conversion function from request to entity with UUID generation
-pub fn convert_notice_quiz_request(request: &NoticeQuizRequest) -> (Vec<NoticeQuestion>, NoticeAnswer) {
+pub fn convert_notice_quiz_request(
+    request: &NoticeQuizRequest,
+) -> (Vec<NoticeQuestion>, NoticeAnswer) {
     let mut correct_answers = HashMap::new();
-    
-    let questions: Vec<NoticeQuestion> = request.questions.iter().map(|q_req| {
-        let question_id = Uuid::new_v4().to_string();
-        let mut correct_option_ids = HashSet::new();
-        
-        let options: Vec<NoticeOption> = q_req.options.iter().map(|o_req| {
-            let option_id = Uuid::new_v4().to_string();
-            
-            if o_req.is_correct {
-                correct_option_ids.insert(option_id.clone());
+
+    let questions: Vec<NoticeQuestion> = request
+        .questions
+        .iter()
+        .map(|q_req| {
+            let question_id = Uuid::new_v4().to_string();
+            let mut correct_option_ids = HashSet::new();
+
+            let options: Vec<NoticeOption> = q_req
+                .options
+                .iter()
+                .map(|o_req| {
+                    let option_id = Uuid::new_v4().to_string();
+
+                    if o_req.is_correct {
+                        correct_option_ids.insert(option_id.clone());
+                    }
+
+                    NoticeOption {
+                        id: option_id,
+                        content: o_req.content.clone(),
+                    }
+                })
+                .collect();
+
+            correct_answers.insert(question_id.clone(), correct_option_ids);
+
+            NoticeQuestion {
+                id: question_id,
+                title: q_req.title.clone(),
+                images: vec![], // Empty for now, can be extended
+                options,
             }
-            
-            NoticeOption {
-                id: option_id,
-                content: o_req.content.clone(),
-            }
-        }).collect();
-        
-        correct_answers.insert(question_id.clone(), correct_option_ids);
-        
-        NoticeQuestion {
-            id: question_id,
-            title: q_req.title.clone(),
-            images: vec![], // Empty for now, can be extended
-            options,
-        }
-    }).collect();
-    
-    (questions, NoticeAnswer { answers: correct_answers })
+        })
+        .collect();
+
+    (
+        questions,
+        NoticeAnswer {
+            answers: correct_answers,
+        },
+    )
 }
