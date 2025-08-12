@@ -166,10 +166,6 @@ export function CreateRePost() {
       });
 
       clearTimeout(timeout);
-
-      console.log('original feedId', originalFeedId);
-      console.log('Author Id', authorId);
-
       showSuccessToast('Repost Successful!');
       router.push(route.threadByFeedId(response.id));
       resetDraft();
