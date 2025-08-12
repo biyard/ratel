@@ -2,18 +2,10 @@
 // import React, { useEffect, useRef, useState } from 'react';
 // import type { AssetsBundle, Spritesheet, Texture } from 'pixi.js';
 
-import {
-  Container,
-  Assets,
-  Text,
-  Texture,
-  TilingSprite,
-  Spritesheet,
-} from 'pixi.js';
+import { Container, Assets, Text, Texture, TilingSprite } from 'pixi.js';
 import { extend, useTick } from '@pixi/react';
 import { useEffect, useRef, useState } from 'react';
-import { HEIGHT, SCALE, WIDTH } from './base';
-
+import { pixiAssetManager } from './assets';
 extend({
   Container,
   Text,
@@ -40,12 +32,12 @@ const ScrollingLayer = ({
   texture,
   y = 0,
   speed = 0,
-  scale = SCALE,
+  scale,
 }: {
   texture: Texture;
   y?: number;
   speed?: number;
-  scale?: number;
+  scale: number;
 }) => {
   const spriteRef = useRef<TilingSprite>(null);
 
@@ -61,7 +53,7 @@ const ScrollingLayer = ({
       texture={texture}
       y={y}
       scale={scale}
-      width={WIDTH}
+      // width={WIDTH}
       height={texture.height}
     />
   );
@@ -70,24 +62,29 @@ export function Dim() {
   return (
     <pixiSprite
       texture={Assets.get('foreground_ground')}
-      width={WIDTH}
-      height={HEIGHT}
+      // width={WIDTH}
+      // height={HEIGHT}
     />
   );
 }
 export default function Background({
   alias,
   baseSpeed = 1.5,
+  scale,
 }: {
   alias: string;
   baseSpeed?: number;
+  scale: number;
 }) {
   const [textures, setTextures] = useState<Record<string, Texture[]>>({});
 
   useEffect(() => {
     const loadAssets = async () => {
       try {
-        const sheet = (await Assets.get(alias)) as Spritesheet;
+        const sheet = await pixiAssetManager.getAsset(alias);
+        if (!sheet) {
+          throw new Error(`Spritesheet not found: ${alias}`);
+        }
         const texturesObj: Record<string, Texture[]> = {};
         Object.entries(sheet.textures).forEach(([key, tex]) => {
           texturesObj[key] = [tex];
@@ -101,6 +98,7 @@ export default function Background({
 
     loadAssets();
   }, [alias]);
+
   return (
     <pixiContainer>
       {LAYERS_CONFIG.map((layer) => {
@@ -111,6 +109,7 @@ export default function Background({
             key={layer.name}
             texture={texture}
             speed={(layer.speed || 0) * baseSpeed}
+            scale={scale}
           />
         );
       })}

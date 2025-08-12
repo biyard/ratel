@@ -15,7 +15,15 @@ export default function ClientProviders({
   children: React.ReactNode;
   spaceId: number;
 }) {
-  return <Context.Provider value={{ spaceId }}>{children}</Context.Provider>;
+  return (
+    <Context.Provider
+      value={{
+        spaceId,
+      }}
+    >
+      {children}
+    </Context.Provider>
+  );
 }
 
 export function useSpaceByIdContext() {

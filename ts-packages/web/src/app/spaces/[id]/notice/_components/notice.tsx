@@ -4,7 +4,7 @@ import React from 'react';
 import { useNoticeSpaceContext } from '../provider.client';
 import { useSpaceByIdContext } from '../../providers.client';
 import { useUserInfo } from '@/app/(social)/_hooks/user';
-import SpaceContents from '../../_components/space_contents';
+import SpaceContents from '../../_components/space-contents';
 import QuizBuilderUI, { Question } from './quiz-builder-ui';
 
 export default function NoticePage() {

@@ -8,11 +8,12 @@ import Loading from '@/app/loading';
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ id: number }>;
+  params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
+  const spaceId = Number(id);
 
-  const { data } = await getSpaceById(id);
+  const { data } = await getSpaceById(spaceId);
 
   const title = data?.title ?? undefined;
   const description = data ? striptags(data.html_contents) : undefined;
@@ -40,12 +41,12 @@ export default async function Layout({
   params,
 }: {
   children: React.ReactNode;
-  params: Promise<{ id: number }>;
+  params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-
+  const spaceId = Number(id);
   return (
-    <Provider spaceId={id}>
+    <Provider spaceId={spaceId}>
       {/* FIXME: remove `min-h-screen`. This class occurs vertical scroll */}
       <div className="flex flex-col w-full min-h-screen justify-between max-w-desktop mx-auto text-white pt-3 gap-5 max-tablet:px-5 mb-8">
         <Suspense
