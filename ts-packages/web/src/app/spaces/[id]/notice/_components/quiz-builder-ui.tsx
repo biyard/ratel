@@ -217,14 +217,19 @@ export default function QuizBuilderUI({
           key={`broken-${i}`}
           width={25}
           height={25}
-          className="text-neutral-500"
+          className="[&>path]:stroke-neutral-500"
         />,
       );
     }
 
     // Always add one heart at the end for current attempt
     heartIcons.push(
-      <Heart key="heart" width={25} height={25} className="text-red-500" />,
+      <Heart
+        key="heart"
+        width={25}
+        height={25}
+        className="[&>path]:stroke-[#EF4444] [&>path]:fill-[#EF4444]"
+      />,
     );
 
     return <div className="flex items-center gap-1">{heartIcons}</div>;
@@ -623,10 +628,8 @@ export default function QuizBuilderUI({
             handleQuizSubmit();
             popup.close();
           }}
-          onClose={() => popup.close()}
         />,
       )
-      .withoutClose()
       .withoutBackdropClose();
   };
 

@@ -182,7 +182,7 @@ export default function SpaceSideMenu() {
                     <HexDown
                       width={22}
                       height={22}
-                      style={{ color: '#EF4444' }}
+                      className="[&>path]:stroke-[#EF4444]"
                     />
                     <span
                       className="font-bold text-[13px]"

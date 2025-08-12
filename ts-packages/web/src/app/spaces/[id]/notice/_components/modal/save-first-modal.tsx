@@ -1,29 +1,18 @@
 'use client';
 
 import React from 'react';
-import { Remove } from '@/components/icons';
 
 export interface SaveFirstModalProps {
   onJustPublish: () => void;
   onSaveAndPublish: () => void;
-  onClose: () => void;
 }
 
 export default function SaveFirstModal({
   onJustPublish,
   onSaveAndPublish,
-  onClose,
 }: SaveFirstModalProps) {
   return (
-    <div className="w-[500px] flex flex-col relative">
-      {/* Close button - top right */}
-      <button
-        onClick={onClose}
-        className="absolute top-0 right-0 p-2 text-neutral-400 hover:text-white transition-colors"
-      >
-        <Remove className="w-6 h-6" />
-      </button>
-
+    <div className="w-[500px] flex flex-col">
       {/* Header */}
       <div className="text-center font-bold text-white text-[24px] mb-6 mt-2">
         Save first, make public?
