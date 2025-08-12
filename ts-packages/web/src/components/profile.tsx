@@ -44,16 +44,16 @@ export default function Profile({ profileUrl, name }: ProfileProps) {
       <DropdownMenuTrigger asChild className="focus-visible:outline-none">
         <button className="w-full flex items-center justify-between">
           <div className="flex flex-col items-center justify-center p-2.5 group">
-            {profileUrl ? (
+            {profileUrl && profileUrl !== '' ? (
               <Image
-                src={profileUrl || '/default-profile.png'}
+                src={profileUrl}
                 alt="User Profile"
                 width={24}
                 height={24}
-                className="rounded-full object-cover"
+                className="rounded-full object-cover w-6 h-6"
               />
             ) : (
-              <div className="w-[24px] h-[24px] bg-neutral-500 rounded-full" />
+              <div className="w-6 h-6 bg-neutral-500 rounded-full" />
             )}
 
             <span className="text-neutral-500 group-hover:text-white text-[15px] font-medium transition-colors">
@@ -90,13 +90,17 @@ export default function Profile({ profileUrl, name }: ProfileProps) {
                   handleTeamSelect(index);
                 }}
               >
-                <Image
-                  src={team.profile_url || '/default-profile.png'}
-                  alt={team.nickname}
-                  width={24}
-                  height={24}
-                  className="rounded-full object-cover object-top"
-                />
+                {team.profile_url && team.profile_url !== '' ? (
+                  <Image
+                    src={team.profile_url}
+                    alt={team.nickname}
+                    width={24}
+                    height={24}
+                    className="w-6 h-6 rounded-full object-cover object-top"
+                  />
+                ) : (
+                  <div className="w-6 h-6 bg-neutral-500 rounded-full" />
+                )}
                 <span className="text-sm text-white truncate">
                   {team.nickname}
                 </span>

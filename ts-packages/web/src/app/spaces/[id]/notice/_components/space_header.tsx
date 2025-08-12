@@ -240,17 +240,21 @@ export default function SpaceHeader({
 
       <div className="flex flex-row justify-between items-center w-full text-sm text-c-wg-50">
         <div className="flex items-center gap-2">
-          <Image
-            src={proposerImage || '/default-profile.png'}
-            alt={proposerName}
-            width={24}
-            height={24}
-            className={
-              userType === UserType.Team
-                ? 'rounded-lg object-cover object-top w-6 h-6'
-                : 'rounded-full object-cover object-top w-6 h-6'
-            }
-          />
+          {proposerImage && proposerImage !== '' ? (
+            <Image
+              src={proposerImage}
+              alt={proposerName}
+              width={24}
+              height={24}
+              className={
+                userType === UserType.Team
+                  ? 'rounded-lg object-cover object-top w-6 h-6'
+                  : 'rounded-full object-cover object-top w-6 h-6'
+              }
+            />
+          ) : (
+            <div className="w-6 h-6 rounded-full border border-neutral-500 bg-neutral-600" />
+          )}
           <span className="text-white font-medium">{proposerName}</span>
           <Badge />
         </div>

@@ -6,7 +6,7 @@ abstract class AppColors {
 
   static const Color black = Color(0xff000203);
   static const Color primary = Color(0xfffcb300);
-  static const Color secondary = Color(0x00777677);
+  static const Color secondary = Color(0x00d4d4d4);
 
   static const Color textPrimary = Color(0xffffffff);
   static const Color textSecondary = Color(0xffa1a1a1);
@@ -36,6 +36,7 @@ abstract class AppColors {
   static const Color btnOText = Color(0xffffffff);
   static const Color btnOHoverText = Color(0xffffffff);
 
+  static const Color iconPrimary = Color(0xff979797);
   static const Color btnHover = Color(0xffcabf00);
   static const Color btnCWg30 = Color(0xffaeaeae);
   static const Color btnCWg50 = Color(0xff777677);
@@ -44,7 +45,9 @@ abstract class AppColors {
   static const Color btnCCg30 = Color(0xffaeb8b8);
   static const Color footer = Color(0xff191919);
   static const Color copyright = Color(0xff9095a1);
+  static const Color neutral70 = Color(0xffaeaaab);
   static const Color neutral80 = Color(0xff6b6b6b);
+  static const Color neutral300 = Color(0xffd4d4d4);
   static const Color neutral400 = Color(0xffa1a1a1);
   static const Color neutral500 = Color(0xff737373);
   static const Color neutral600 = Color(0xff525252);
