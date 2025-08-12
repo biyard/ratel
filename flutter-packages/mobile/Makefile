@@ -22,8 +22,8 @@ ifeq ("$(ENV)","dev")
 endif
 
 ifeq ("$(ENV)","local")
-	REDIRECT_URL = http://10.0.2.2:3000
-	API_ENDPOINT = https://api.dev.ratel.foundation
+	REDIRECT_URL = https://dev.ratel.foundation
+	API_ENDPOINT = http://10.0.2.2:3000
 	SIGN_DOMAIN = dev.ratel.foundation
 endif
 

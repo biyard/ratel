@@ -26,7 +26,7 @@ pub struct User {
     #[validate(email)]
     pub email: String,
     #[api_model(action = [signup, email_signup], nullable, action_by_id = edit_profile)]
-    #[validate(url)]
+    // #[validate(url)]
     pub profile_url: String,
 
     #[api_model(action = [signup, email_signup])]

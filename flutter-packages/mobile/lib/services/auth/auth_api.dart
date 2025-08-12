@@ -61,6 +61,57 @@ class AuthApi extends GetConnect {
     return res.body;
   }
 
+  Future<dynamic> signup(
+    String email,
+    String password,
+    String displayName,
+    String userName,
+    bool agree,
+  ) async {
+    final hashed = '0x${sha256Hex(password)}';
+
+    final uri = Uri.parse(apiEndpoint)
+        .resolve('/v1/users')
+        .replace(queryParameters: <String, String>{'action': 'signup'});
+
+    logger.d("signup url: $uri");
+
+    final kp = await cg.Ed25519().newKeyPair();
+    final authHeader = await _buildUserSigHeader(kp);
+    final body = {
+      'email_signup': {
+        'nickname': displayName,
+        'email': email,
+        'profile_url': '',
+        'term_agreed': agree,
+        'informed_agreed': false,
+        'username': userName,
+        'password': hashed,
+        'telegram_raw': '',
+      },
+    };
+
+    logger.d("login header: $authHeader");
+
+    final res = await post(
+      uri.toString(),
+      body,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': authHeader,
+      },
+    );
+
+    logger.d("signup response status: ${res.statusCode}");
+    logger.d("signup response body: ${res.body}");
+
+    if (!res.isOk) return null;
+
+    final loginRes = await loginWithPassword(email, password);
+
+    return loginRes;
+  }
+
   Future<dynamic> loginWithPassword(String email, String password) async {
     final hashed = '0x${sha256Hex(password)}';
 
