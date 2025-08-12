@@ -23,6 +23,7 @@ export 'presentations/explore/explore_screen.dart';
 export 'presentations/home/home_binding.dart';
 export 'presentations/home/home_controller.dart';
 export 'presentations/home/home_screen.dart';
+export 'presentations/home/home_model.dart';
 
 export 'presentations/message/message_binding.dart';
 export 'presentations/message/message_controller.dart';
@@ -35,6 +36,48 @@ export 'presentations/network/network_screen.dart';
 export 'presentations/notification/notification_screen.dart';
 export 'presentations/notification/notification_binding.dart';
 export 'presentations/notification/notification_controller.dart';
+
+export 'presentations/intro/intro_binding.dart';
+export 'presentations/intro/intro_controller.dart';
+export 'presentations/intro/intro_screen.dart';
+export 'presentations/intro/intro_model.dart';
+
+export 'presentations/login/login_binding.dart';
+export 'presentations/login/login_controller.dart';
+export 'presentations/login/login_screen.dart';
+
+export 'presentations/signup/signup_binding.dart';
+export 'presentations/signup/signup_controller.dart';
+export 'presentations/signup/signup_screen.dart';
+
+export 'presentations/verification/verification_binding.dart';
+export 'presentations/verification/verification_controller.dart';
+export 'presentations/verification/verification_screen.dart';
+
+export 'presentations/welcome/welcome_binding.dart';
+export 'presentations/welcome/welcome_controller.dart';
+export 'presentations/welcome/welcome_screen.dart';
+
+export 'presentations/setup_profile/setup_profile_binding.dart';
+export 'presentations/setup_profile/setup_profile_controller.dart';
+export 'presentations/setup_profile/setup_profile_screen.dart';
+
+export 'presentations/select_topic/select_topic_binding.dart';
+export 'presentations/select_topic/select_topic_controller.dart';
+export 'presentations/select_topic/select_topic_screen.dart';
+
+export 'presentations/setup_attribute/setup_attribute_binding.dart';
+export 'presentations/setup_attribute/setup_attribute_controller.dart';
+export 'presentations/setup_attribute/setup_attribute_screen.dart';
+
+export 'presentations/my_spaces/my_spaces_binding.dart';
+export 'presentations/my_spaces/my_spaces_controller.dart';
+export 'presentations/my_spaces/my_spaces_screen.dart';
+
+export 'presentations/connection/connection_binding.dart';
+export 'presentations/connection/connection_model.dart';
+export 'presentations/connection/connection_controller.dart';
+export 'presentations/connection/connection_screen.dart';
 
 export 'localization/main_localization.dart';
 
@@ -54,6 +97,8 @@ export 'components/biyard/biyard_static.dart';
 export 'components/header/header.dart';
 export 'components/profile/profile.dart';
 export 'components/round_container/round_container.dart';
+export 'components/text_field/text_field.dart';
+export 'components/custom_checkbox/custom_checkbox.dart';
 
 export 'components/modal/login_modal.dart';
 export 'components/modal/modal_title.dart';
@@ -62,6 +107,7 @@ export 'services/auth/auth_service.dart';
 export 'services/firebase/firebase.dart';
 export 'services/api/drive_api.dart';
 export 'services/anonymous/anonymous_service.dart';
+export 'services/signup/signup_service.dart';
 
 export 'binding.dart';
 export 'config.dart';

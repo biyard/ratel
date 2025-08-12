@@ -8,6 +8,8 @@ import { checkString } from '@/lib/string-filter-utils';
 export default function TeamMembers({ username }: { username: string }) {
   const query = useTeamByUsername(username);
 
+  console.log('query data: ', query.data);
+
   const members: User[] = (query.data?.members ?? [])
     .flat()
     .filter(
@@ -45,10 +47,10 @@ export default function TeamMembers({ username }: { username: string }) {
 
             <div className="flex flex-col justify-between items-start flex-1 min-w-0">
               <div className="font-bold text-white text-base/[20px]">
-                {member.email}
+                {member.username}
               </div>
               <div className="font-semibold text-neutral-400 text-sm/[20px]">
-                {member.username}
+                {member.nickname}
               </div>
             </div>
           </div>
