@@ -73,8 +73,24 @@ class VerificationController extends BaseController {
   }
 
   Future<void> resend() async {
+    final auth = AuthApi();
     if (isBusy.value) return;
-    Get.snackbar('Verification', 'Code resent to $email');
+    isBusy.value = true;
+
+    try {
+      final res = await auth.sendVerificationCode(email);
+
+      if (res != null) {
+        Biyard.info("Success to resend verification code");
+      } else {
+        Biyard.error(
+          "Failed to send authorization code",
+          "Send Authorization code failed. Please try again later.",
+        );
+      }
+    } finally {
+      isBusy.value = false;
+    }
   }
 
   @override
