@@ -16,14 +16,13 @@ export const showSuccessToast = (message: string, options?: ToastOptions) =>
   toast(<CustomToast message={message} />, {
     ...defaultOptions,
     ...options,
-    className: 'custom-toast-wrapper', 
+    className: 'custom-toast-wrapper',
   });
 
 export const showErrorToast = (message: string, options?: ToastOptions) =>
   toast.error(message, {
     ...defaultOptions,
     ...options,
-   
   });
 
 export const showInfoToast = (message: string, options?: ToastOptions) =>
