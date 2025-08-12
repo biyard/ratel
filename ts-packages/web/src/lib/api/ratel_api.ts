@@ -152,7 +152,7 @@ export const ratelApi = {
     removeDraft: (post_id: number) => `/v1/feeds/${post_id}?action=delete`,
     likePost: (post_id: number) => `/v1/feeds/${post_id}`,
     repost: () => '/v1/feeds',
-    unrepost: (repost_id: number) => `/v1/feeds/${repost_id}?action=unrepost`,
+    unrepost: (post_id: number) => `/v1/feeds/${post_id}?action=unrepost`,
 
     getPostsByUserId: (
       user_id: number,

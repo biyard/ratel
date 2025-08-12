@@ -32,11 +32,12 @@ import TableRow from '@tiptap/extension-table-row';
 import TableHeader from '@tiptap/extension-table-header';
 import TableCell from '@tiptap/extension-table-cell';
 import { UserCircle } from '@/components/icons';
-import ToolbarPlugin from '@/components/toolbar/toolbar3';
+import ToolbarPlugin from '@/components/toolbar/toolbar-repost';
 import {
   showErrorToast,
   showSuccessToast,
 } from '@/components/custom-toast/toast';
+import DOMPurify from 'dompurify';
 
 export function CreateRePost() {
   const {
@@ -135,10 +136,15 @@ export function CreateRePost() {
   }, [editor]);
 
   useEffect(() => {
-    if (editor && !editor.isDestroyed && content && !editor.getHTML()) {
+    if (
+      editor &&
+      !editor.isDestroyed &&
+      content &&
+      editor.getHTML() !== content
+    ) {
       editor.commands.setContent(content);
     }
-  }, [editor?.isEditable]);
+  }, [editor, content]);
 
   const handlePublish = async () => {
     if (!title.trim() || !content || !editor) return;
@@ -180,7 +186,7 @@ export function CreateRePost() {
   const removeImage = () => setImage(null);
   const removeQuotedImage = () => setFeedImageUrl(null);
 
-  const isSubmitDisabled = !title.trim();
+  const isSubmitDisabled = !title.trim() || !content?.trim() || isReposting;
 
   const handleInsertUrl = () => {
     const url = repostUrl?.trim();
@@ -262,7 +268,9 @@ export function CreateRePost() {
             {feedcontent && (
               <div
                 className="prose prose-invert text-sm p-3 bg-neutral-800 text-neutral-300 mb-3 font-light"
-                dangerouslySetInnerHTML={{ __html: feedcontent }}
+                dangerouslySetInnerHTML={{
+                  __html: DOMPurify.sanitize(feedcontent),
+                }}
               />
             )}
 
