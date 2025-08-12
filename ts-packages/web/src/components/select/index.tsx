@@ -1,0 +1,35 @@
+'use client';
+
+import React from 'react';
+
+interface SelectProps {
+  value: number | string;
+  onChange: (val: number | string) => void;
+  options: (number | string)[];
+  className?: string;
+}
+
+export default function Select({
+  value,
+  onChange,
+  options,
+  className = '',
+}: SelectProps) {
+  return (
+    <select
+      className={`cursor-pointer appearance-none bg-neutral-800 border border-neutral-600 rounded-md px-3 py-2 text-white text-sm w-full ${className}`}
+      value={value}
+      onChange={(e) => {
+        const val = e.target.value;
+        const parsed = isNaN(Number(val)) ? val : Number(val);
+        onChange(parsed);
+      }}
+    >
+      {options.map((opt) => (
+        <option key={`opt-${opt}`} value={opt}>
+          {opt}
+        </option>
+      ))}
+    </select>
+  );
+}

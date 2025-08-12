@@ -10,8 +10,11 @@ pub struct TelegramSubscribe {
     #[api_model(summary, auto = [insert, update])]
     pub updated_at: i64,
 
-    #[api_model(action = create)]
+    #[api_model(action = create, unique)]
     pub chat_id: i64,
+
+    #[api_model(many_to_one = users, action = create, version = v0.1)]
+    pub user_id: i64,
 
     #[api_model(action = create, nullable, version = v0.1)]
     pub lang: Option<String>,
@@ -25,10 +28,5 @@ pub enum TelegramNotificationPayload {
 
 #[derive(Deserialize, Debug, Serialize, schemars::JsonSchema, aide::OperationIo)]
 pub struct SprintLeaguePayload {
-    pub id: i64,
-    pub title: String,
-    pub description: String,
-    pub started_at: i64,
-    pub ended_at: i64,
-    pub player_names: Vec<String>,
+    pub space_id: i64,
 }

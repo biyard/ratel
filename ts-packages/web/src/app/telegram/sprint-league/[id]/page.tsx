@@ -24,7 +24,6 @@ export default function Page() {
     if (isLoading) {
       return;
     }
-    console.log('Space data:', space);
     if (!space || space.space_type !== SpaceType.SprintLeague) {
       router.replace(route.home());
     }

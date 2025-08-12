@@ -22,6 +22,7 @@ export const route = {
   space: (spaceId: number) => `/spaces/${spaceId}`,
   commiteeSpaceById: (spaceId: number) => `/spaces/${spaceId}`,
   deliberationSpaceById: (spaceId: number) => `/spaces/${spaceId}`,
+  noticeSpaceById: (spaceId: number) => `/spaces/${spaceId}`,
   threadByFeedId: (feedId: number) => {
     return `/threads/${feedId}`;
   },
@@ -30,4 +31,7 @@ export const route = {
 
   telegramSprintLeague: (space_id: number) =>
     `/telegram/sprint-league/${space_id}`,
+  telegramSubscribe: (chat_id: number, lang?: string) => {
+    return `/telegram/subscribe?chat_id=${chat_id}${lang ? `&lang=${lang}` : ''}`;
+  },
 };

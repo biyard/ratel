@@ -111,6 +111,7 @@ jobs:
           OPENAPI_KEY: ${{ secrets.OPENAPI_KEY }}
           AUTH_SECRET_KEY: ${{ secrets.DEV_AUTH_SECRET_KEY }}
           JWT_SECRET_KEY: ${{ secrets.DEV_JWT_SECRET_KEY }}
+
           BASE_DOMAIN: ratel.foundation
           MIGRATE: false
           ENABLE_S3: false
@@ -124,6 +125,8 @@ jobs:
           KAIA_FEEPAYER_ADDR: ${{ secrets.DEV_KAIA_ADDR }}
           KAIA_OWNER_KEY: ${{ secrets.DEV_KAIA_KEY }}
           KAIA_OWNER_ADDR: ${{ secrets.DEV_KAIA_ADDR }}
+
+          NONCELAB_TOKEN: ${{ secrets.NONCELAB_TOKEN }}
         run: |
           npm i -g aws-cdk
           make deploy
@@ -171,14 +174,14 @@ jobs:
           SERVICE: telegram-bot
           DOMAIN: telegram-bot.dev.ratel.foundation
           DATABASE_TYPE: postgres
-          
+
           DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
 
           TELEGRAM_TOKEN: ${{ secrets.DEV_TELEGRAM_TOKEN }}
           TELEGRAM_MINI_APP_URI: https://t.me/crypto_ratel_dev_bot?startapp
           BASE_DOMAIN: ratel.foundation
           REPO_NAME: ratel/telegram-bot
-          
+
           MIGRATE: false
           ENABLE_S3: false
           ENABLE_FARGATE: true
@@ -229,7 +232,7 @@ jobs:
           SERVICE: fetcher
           DOMAIN: fetcher-api.dev.ratel.foundation
           AUTH_DOMAIN: dev.ratel.foundation
-          
+
           DATABASE_TYPE: postgres
           DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
           OPENAPI_KEY: ${{ secrets.OPENAPI_KEY }}

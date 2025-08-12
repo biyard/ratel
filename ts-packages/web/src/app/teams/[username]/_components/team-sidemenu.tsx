@@ -5,7 +5,13 @@ import React, { useContext, useMemo } from 'react';
 import TeamProfile from './team-profile';
 import Link from 'next/link';
 import { route } from '@/route';
-import { Home, UserGroup, Settings, User, Post } from '@/components/icons';
+import {
+  Home,
+  UserGroup,
+  Settings,
+  EditContent,
+  Folder,
+} from '@/components/icons';
 import { TeamContext } from '@/lib/contexts/team-context';
 
 export interface TeamSidemenuProps {
@@ -35,22 +41,22 @@ export default function TeamSidemenu({ username }: TeamSidemenuProps) {
           <span>Home</span>
         </Link>
         <Link href={route.teamDrafts(team.username)} className="sidemenu-link">
-          <Post className="w-[24px] h-[24px]" />
+          <EditContent className="w-6 h-6 [&>path]:stroke-neutral-500" />
           <span>Drafts</span>
         </Link>
         <Link href={route.teamGroups(team.username)} className="sidemenu-link">
-          <UserGroup />
-          <span>Groups</span>
+          <Folder className="w-6 h-6 [&>path]:stroke-neutral-500" />
+          <span>Manage Group</span>
         </Link>
         <Link href={route.teamMembers(team.username)} className="sidemenu-link">
-          <User className="w-[24px] h-[24px]" />
+          <UserGroup className="w-6 h-6" />
           <span>Members</span>
         </Link>
         <Link
           href={route.teamSettings(team.username)}
           className="sidemenu-link"
         >
-          <Settings className="w-[24px] h-[24px]" />
+          <Settings className="w-6 h-6" />
           <span>Settings</span>
         </Link>
       </nav>
