@@ -10,6 +10,11 @@ pub mod controllers {
             pub mod industry;
             pub mod select_topic;
         }
+        pub mod networks {
+            pub mod follow;
+            pub mod network;
+            pub mod search;
+        }
         pub mod telegram {
             pub mod subscribe;
         }

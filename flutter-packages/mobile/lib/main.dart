@@ -23,6 +23,7 @@ Future<void> main() async {
   AuthService.init();
   IndustryService.init();
   SignupService.init();
+  NetworkService.init();
   DriveApi.init();
 
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]).then((
