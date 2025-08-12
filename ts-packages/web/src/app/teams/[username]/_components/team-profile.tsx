@@ -41,13 +41,17 @@ export default function TeamProfile({ team }: TeamProfileProps) {
     <div className="flex flex-col gap-5 px-4 py-5 rounded-[10px] bg-component-bg">
       <TeamSelector team={team} />
       <div className="relative">
-        <Image
-          src={team?.profile_url || '/default-profile.png'}
-          alt={team?.nickname ?? 'team profile'}
-          width={80}
-          height={80}
-          className="rounded-full border-2 object-cover object-top w-[80px] h-[80px]"
-        />
+        {team.profile_url && team.profile_url !== '' ? (
+          <Image
+            src={team?.profile_url}
+            alt={team?.nickname ?? 'team profile'}
+            width={80}
+            height={80}
+            className="rounded-full border-2 object-cover object-top w-20 h-20"
+          />
+        ) : (
+          <div className="w-20 h-20 rounded-full border border-neutral-500 bg-neutral-600" />
+        )}
       </div>
 
       <div className="font-medium">{team.nickname}</div>

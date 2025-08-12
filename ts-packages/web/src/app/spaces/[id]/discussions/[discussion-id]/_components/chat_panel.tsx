@@ -94,16 +94,17 @@ export default function ChatPanel({
               >
                 <div className="flex flex-row gap-[5px] justify-end items-end">
                   {!isMe ? (
-                    senderInfo?.profile_url ? (
+                    senderInfo?.profile_url &&
+                    senderInfo?.profile_url !== '' ? (
                       <Image
                         width={30}
                         height={30}
-                        src={senderInfo.profile_url || '/default-profile.png'}
+                        src={senderInfo.profile_url}
                         alt={`${senderInfo.username}'s profile`}
-                        className="w-[30px] h-[30px] object-cover rounded-full"
+                        className="w-7.5 h-7.5 object-cover rounded-full"
                       />
                     ) : (
-                      <div className="w-8 h-8 bg-neutral-500 rounded-full" />
+                      <div className="w-7.5 h-7.5 bg-neutral-500 rounded-full" />
                     )
                   ) : (
                     <></>

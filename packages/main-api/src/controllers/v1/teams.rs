@@ -107,6 +107,7 @@ impl TeamController {
                 Membership::Free,
                 generate_referral_code(),
                 None,
+                None,
             )
             .await
             .map_err(|e| {

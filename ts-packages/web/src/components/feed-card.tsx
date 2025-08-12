@@ -175,14 +175,17 @@ export function FeedContents({
   contents: string;
   url?: string;
 }) {
-  const c =
-    typeof window !== 'undefined' ? DOMPurify.sanitize(contents) : contents;
+  const [sanitized, setSanitized] = useState<string>('');
+
+  useEffect(() => {
+    setSanitized(DOMPurify.sanitize(contents));
+  }, [contents]);
 
   return (
-    <Col className="text-white">
+    <div className="text-white">
       <p
         className="feed-content font-normal text-[15px]/[24px] align-middle tracking-[0.5px] text-c-wg-30 px-5"
-        dangerouslySetInnerHTML={{ __html: c }}
+        dangerouslySetInnerHTML={{ __html: sanitized }}
       ></p>
 
       {url && (
@@ -198,10 +201,9 @@ export function FeedContents({
           </div>
         </div>
       )}
-    </Col>
+    </div>
   );
 }
-
 export function IconText({
   children,
   className,
@@ -247,7 +249,7 @@ export function UserBadge({
 export function SpaceTag() {
   return (
     <span className="flex flex-row justify-start items-center px-2 border border-primary/50 bg-transparent gap-1 rounded-sm">
-      <Palace className="w-3.5 h-3.5 [&_g>path:nth-child(n+2)]:stroke-primary" />
+      <Palace className="w-3.5 h-3.5 [&>path]:stroke-primary [&_g>path:nth-child(n+2)]:stroke-primary" />
       <div className="font-semibold text-xs/[25px] text-primary">SPACE</div>
     </span>
   );

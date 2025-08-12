@@ -380,8 +380,8 @@ function EditableDiscussionInfo({
     setDesc(description);
     setStartTime(startedAt);
     setEndTime(endedAt);
-    setUsers(users);
-  }, [name, description, startedAt, endedAt, users]);
+    setUsers(participants);
+  }, [name, description, startedAt, endedAt, participants]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
