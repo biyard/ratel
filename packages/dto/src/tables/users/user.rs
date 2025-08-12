@@ -10,7 +10,7 @@ use super::Team;
 use crate::GroupRepositoryQueryBuilder;
 
 #[derive(validator::Validate)]
-#[api_model(base = "/v1/users", read_action = user_info, table = users, action = [signup(telegram_raw = Option<String>), email_signup(telegram_raw = Option<String>), update_telegram_id(telegram_raw = Option<String>)], iter_type=QueryResponse)]
+#[api_model(base = "/v1/users", read_action = [user_info], table = users, action = [signup(telegram_raw = Option<String>), email_signup(telegram_raw = Option<String>), update_telegram_id(telegram_raw = Option<String>)], iter_type=QueryResponse)]
 pub struct User {
     #[api_model(primary_key)]
     pub id: i64,
@@ -39,7 +39,7 @@ pub struct User {
     pub user_type: UserType,
     #[api_model(version = v0.1, indexed)]
     pub parent_id: Option<i64>,
-    #[api_model(action = [signup, email_signup], version = v0.1, indexed, unique)]
+    #[api_model(action = [signup, email_signup], read_action = [find_by_username], version = v0.1, indexed, unique)]
     #[serde(default)]
     pub username: String,
 
@@ -94,6 +94,14 @@ pub struct User {
     #[api_model(version = v0.6, unique, indexed)]
     #[serde(default)]
     pub referral_code: String,
+
+    #[api_model(version = v0.9, unique)]
+    #[serde(default)]
+    pub phone_number: Option<String>,
+
+    #[api_model(read_action = find_by_phone_number, skip)]
+    #[serde(default)]
+    pub phone: String,
 
     #[api_model(version = v0.8, unique)]
     #[serde(default)]

@@ -134,6 +134,7 @@ pub async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
                 Membership::Free,
                 "".to_string(),
                 None,
+                None,
             )
             .await?;
     }

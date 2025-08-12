@@ -64,36 +64,40 @@ export default function TeamSelector({ onSelect, team }: TeamSelectorProps) {
         <DropdownMenuLabel>Teams</DropdownMenuLabel>
         <DropdownMenuGroup>
           {teams.map((team, index) => {
-            return team.nickname != '' ? (
-              <DropdownMenuItem
-                className="focus:bg-accent focus:text-accent-foreground data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 dark:data-[variant=destructive]:focus:bg-destructive/20 data-[variant=destructive]:focus:text-destructive data-[variant=destructive]:*:[svg]:!text-destructive [&_svg:not([class*='text-'])]:text-muted-foreground relative flex cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[inset]:pl-8 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 w-full flex flex-row items-center gap-2 px-2 py-2 hover:bg-neutral-800 cursor-pointer"
-                key={`team-select-menu-${team.id}`}
-                asChild
-              >
-                <Link
-                  href={
-                    index === 0
-                      ? route.home()
-                      : route.teamByUsername(team.username)
-                  }
-                  className="flex items-center gap-2"
-                  onClick={() => {
-                    setSelectedTeam(index);
-                    onSelect!(index);
-                  }}
+            return (
+              team.nickname != '' && (
+                <DropdownMenuItem
+                  className="focus:bg-accent focus:text-accent-foreground data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 dark:data-[variant=destructive]:focus:bg-destructive/20 data-[variant=destructive]:focus:text-destructive data-[variant=destructive]:*:[svg]:!text-destructive [&_svg:not([class*='text-'])]:text-muted-foreground relative flex cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[inset]:pl-8 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 w-full flex flex-row items-center gap-2 px-2 py-2 hover:bg-neutral-800 cursor-pointer"
+                  key={`team-select-menu-${team.id}`}
+                  asChild
                 >
-                  <Image
-                    src={team.profile_url || '/default-profile.png'}
-                    alt={team.nickname}
-                    width={24}
-                    height={24}
-                    className="w-6 h-6 rounded-full object-cover object-top"
-                  />
-                  <span>{team.nickname}</span>
-                </Link>
-              </DropdownMenuItem>
-            ) : (
-              <></>
+                  <Link
+                    href={
+                      index === 0
+                        ? route.home()
+                        : route.teamByUsername(team.username)
+                    }
+                    className="flex items-center gap-2"
+                    onClick={() => {
+                      setSelectedTeam(index);
+                      onSelect!(index);
+                    }}
+                  >
+                    {team.profile_url && team.profile_url !== '' ? (
+                      <Image
+                        src={team.profile_url}
+                        alt={team.nickname}
+                        width={24}
+                        height={24}
+                        className="w-6 h-6 rounded-full object-cover object-top"
+                      />
+                    ) : (
+                      <div className="w-6 h-6 rounded-full border border-neutral-500 bg-neutral-600" />
+                    )}
+                    <span>{team.nickname}</span>
+                  </Link>
+                </DropdownMenuItem>
+              )
             );
           })}
         </DropdownMenuGroup>

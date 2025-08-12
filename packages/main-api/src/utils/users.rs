@@ -37,6 +37,7 @@ pub async fn extract_user_with_allowing_anonymous(
                             Membership::Free,
                             "".to_string(),
                             None,
+                            None,
                         )
                         .await?
                 }

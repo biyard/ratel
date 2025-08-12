@@ -99,7 +99,6 @@ export default function MyFollower({ type }: { type: RelationType }) {
               .open(
                 <UnFollowPopup
                   username={followings[index].username}
-                  email={followings[index].email}
                   oncancel={() => {
                     popup.close();
                   }}

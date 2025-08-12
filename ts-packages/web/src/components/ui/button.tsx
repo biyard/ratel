@@ -14,7 +14,7 @@ const buttonVariants = cva(
         rounded_secondary:
           'bg-white text-background rounded-full hover:bg-white/80 hover:shadow-[inset_0_0_0_1000px_rgba(0,0,0,0.2)]',
         default:
-          'bg-white text-black rounded-xl hover:bg-white/80 hover:shadow-[inset_0_0_0_1000px_rgba(0,0,0,0.2)]',
+          'bg-white text-black rounded-xl hover:shadow-[inset_0_0_0_1000px_rgba(0,0,0,0.2)]',
         outline:
           'bg-transparent text-white rounded-lg border border-wg-70 hover:border-white hover:bg-background',
       },
