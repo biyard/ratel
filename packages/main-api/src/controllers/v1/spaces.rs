@@ -66,7 +66,7 @@ impl SpaceController {
         // Access control for notice spaces
         if space.space_type == SpaceType::Notice {
             let is_owner = user_id == space.owner_id;
-
+          
             match space.status {
                 SpaceStatus::Draft => {
                     // Draft notice spaces: only owner has access
@@ -872,6 +872,7 @@ impl SpaceController {
                     Error::SpaceWritePostError
                 })?;
         }
+
         tx.commit().await?;
 
         Ok(res)

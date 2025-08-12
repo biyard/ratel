@@ -116,7 +116,7 @@ pub struct Space {
     // Vec length should be 0 or 1.
     pub sprint_leagues: Vec<SprintLeague>,
 
-    #[api_model(summary, type=JSONB, nullable)]
+    #[api_model(summary, type=JSONB, nullable, version = v0.2)]
     #[serde(default)]
     pub notice_quiz: Vec<NoticeQuestion>,
 
