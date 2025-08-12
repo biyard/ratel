@@ -50,21 +50,47 @@ class VerificationController extends BaseController {
   }
 
   Future<void> verify() async {
+    final auth = AuthApi();
     if (!isComplete || isBusy.value) return;
     isBusy.value = true;
     try {
       final pin = code.join();
       logger.d("pin value: ${pin}");
-      await Future.delayed(const Duration(milliseconds: 800));
-      Get.rootDelegate.offAndToNamed(AppRoutes.setupProfileScreen);
+      final res = await auth.verifyCode(email, pin);
+
+      if (res != null) {
+        logger.d("verification response: ${res}");
+        Get.rootDelegate.offNamed(AppRoutes.setupProfileScreen);
+      } else {
+        Biyard.error(
+          "Failed to verify code",
+          "Please check the response code again.",
+        );
+      }
     } finally {
       isBusy.value = false;
     }
   }
 
   Future<void> resend() async {
+    final auth = AuthApi();
     if (isBusy.value) return;
-    Get.snackbar('Verification', 'Code resent to $email');
+    isBusy.value = true;
+
+    try {
+      final res = await auth.sendVerificationCode(email);
+
+      if (res != null) {
+        Biyard.info("Success to resend verification code");
+      } else {
+        Biyard.error(
+          "Failed to send authorization code",
+          "Send Authorization code failed. Please try again later.",
+        );
+      }
+    } finally {
+      isBusy.value = false;
+    }
   }
 
   @override

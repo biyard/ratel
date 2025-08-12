@@ -82,7 +82,19 @@ class SignupScreen extends GetWidget<SignupController> {
                     ),
                   ),
 
-                  const SizedBox(height: 30),
+                  30.vgap,
+
+                  if (!controller.isFormFilled) ...[
+                    Text(
+                      "Password must be at least 8 characters long and contain a combination of numbers, letters, and special characters.",
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.normal,
+                        color: Colors.redAccent,
+                      ),
+                    ),
+                    30.vgap,
+                  ],
 
                   SizedBox(
                     width: double.infinity,

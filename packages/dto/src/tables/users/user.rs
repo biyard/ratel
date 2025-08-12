@@ -2,6 +2,7 @@ use by_types::QueryResponse;
 
 use bdk::prelude::*;
 
+use crate::Industry;
 use crate::{Badge, Group};
 
 use super::Follower;
@@ -26,7 +27,7 @@ pub struct User {
     #[validate(email)]
     pub email: String,
     #[api_model(action = [signup, email_signup], nullable, action_by_id = edit_profile)]
-    #[validate(url)]
+    // #[validate(url)]
     pub profile_url: String,
 
     #[api_model(action = [signup, email_signup])]
@@ -109,6 +110,10 @@ pub struct User {
     #[api_model(read_action = login_by_telegram, skip)]
     #[serde(default)]
     pub telegram_raw: String,
+
+    #[api_model(one_to_many = user_industries, foreign_table_name = industries, foreign_primary_key = industry_id, foreign_reference_key = user_id)]
+    #[serde(default)]
+    pub industry: Vec<Industry>,
 }
 
 impl User {

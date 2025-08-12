@@ -11,6 +11,8 @@ class SetupProfileController extends BaseController {
 
   Rx<String> get displayName => signupService.displayName;
   Rx<String> get username => signupService.username;
+  Rx<String> get email => signupService.email;
+  Rx<String> get password => signupService.password;
 
   @override
   void onInit() {
@@ -47,11 +49,30 @@ class SetupProfileController extends BaseController {
         termsAccepted.value;
   }
 
-  void goNext() {
+  Future<void> next() async {
+    final auth = AuthApi();
     if (!formValid.value) return;
     logger.d('Setup Profile: ${displayName.value}, ${username.value}');
 
-    Get.rootDelegate.offNamed(AppRoutes.selectTopicScreen);
+    try {
+      final res = await auth.signup(
+        email.value,
+        password.value,
+        displayName.value,
+        username.value,
+        termsAccepted.value,
+      );
+
+      if (res != null) {
+        // Biyard.info("Success to signup user");
+        Get.rootDelegate.offNamed(AppRoutes.selectTopicScreen);
+      } else {
+        Biyard.error(
+          "Failed to signup",
+          "Signup failed. Please try again later.",
+        );
+      }
+    } finally {}
   }
 
   void goBack() {
