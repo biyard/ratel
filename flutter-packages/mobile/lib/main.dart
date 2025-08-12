@@ -21,6 +21,7 @@ Future<void> main() async {
   l.LayoutService.init();
   AnonymousService.init();
   AuthService.init();
+  IndustryService.init();
   SignupService.init();
   DriveApi.init();
 

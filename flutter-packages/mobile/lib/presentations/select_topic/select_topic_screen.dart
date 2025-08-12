@@ -15,16 +15,16 @@ class SelectTopicScreen extends GetWidget<SelectTopicController> {
               height: 70,
               child: Row(
                 children: [
-                  InkWell(onTap: controller.goBack, child: Assets.backIcon),
-                  10.gap,
-                  const Text(
-                    'Interesting topics',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
-                    ),
-                  ),
+                  // InkWell(onTap: controller.goBack, child: Assets.backIcon),
+                  // 10.gap,
+                  // const Text(
+                  //   'Interesting topics',
+                  //   style: TextStyle(
+                  //     color: Colors.white,
+                  //     fontWeight: FontWeight.w600,
+                  //     fontSize: 14,
+                  //   ),
+                  // ),
                 ],
               ),
             ),
@@ -62,7 +62,7 @@ class SelectTopicScreen extends GetWidget<SelectTopicController> {
                         children: controller.filtered.map((t) {
                           final isSel = controller.selected.contains(t);
                           return InkWell(
-                            onTap: () => controller.toggle(t),
+                            onTap: () => controller.toggle(t.label),
                             borderRadius: BorderRadius.circular(4),
                             child: Container(
                               padding: const EdgeInsets.symmetric(
@@ -81,7 +81,7 @@ class SelectTopicScreen extends GetWidget<SelectTopicController> {
                                 ),
                               ),
                               child: Text(
-                                t,
+                                t.label,
                                 style: TextStyle(
                                   color: isSel
                                       ? Colors.white
@@ -119,9 +119,17 @@ class SelectTopicScreen extends GetWidget<SelectTopicController> {
                         ),
                       )
                     : ElevatedButton(
-                        onPressed: controller.next,
+                        onPressed:
+                            (controller.selected.length <
+                                controller.minRequired)
+                            ? () => {}
+                            : controller.next,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
+                          backgroundColor:
+                              (controller.selected.length <
+                                  controller.minRequired)
+                              ? AppColors.primary.withAlpha(70)
+                              : AppColors.primary,
                           foregroundColor: Colors.black,
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(

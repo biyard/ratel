@@ -17,6 +17,80 @@ class AuthApi extends GetConnect {
   final signDomain = Config.signDomain;
   final env = Config.env;
 
+  Future<String?> cookieHeaderAsync() => _buildCookieHeaderAsync();
+
+  AuthApi() {
+    httpClient.addRequestModifier<void>((req) async {
+      final bypass = req.headers["_noCookieHeader"] == '1';
+      req.headers.remove("_noCookieHeader");
+
+      if (!bypass) {
+        final cookie = await _buildCookieHeaderAsync();
+        logger.d('${req.method} ${req.url} | Cookie: $cookie');
+        if (cookie?.isNotEmpty == true) {
+          req.headers['Cookie'] = cookie!;
+        }
+      } else {
+        req.headers.remove('Cookie');
+        logger.d('${req.method} ${req.url} | Cookie BYPASS');
+      }
+      return req;
+    });
+  }
+
+  static const _noCookieHeader = '_noCookieHeader';
+
+  Map<String, String> _noCookieJson({String? auth}) => {
+    'Content-Type': 'application/json',
+    if (auth != null) 'Authorization': auth,
+    _noCookieHeader: '1',
+  };
+
+  Future<bool> _hasSession() async {
+    await _lazyLoadJarIfEmpty();
+    return (_cookieJar[_sidKeyStorage]?.isNotEmpty ?? false) ||
+        (_cookieJar[_authKeyStorage]?.isNotEmpty ?? false);
+  }
+
+  Future<void> ensureLoggedOut() async {
+    if (await _hasSession()) {
+      try {
+        await logout();
+      } catch (_) {}
+      await clearSession();
+    }
+  }
+
+  Future<void> init() async {
+    final sid = await _secure.read(key: _sidKeyStorage);
+    final auth = await _secure.read(key: _authKeyStorage);
+    if (sid?.isNotEmpty == true) _cookieJar[_sidKeyStorage] = sid!;
+    if (auth?.isNotEmpty == true) _cookieJar[_authKeyStorage] = auth!;
+    logger.d('loaded cookies: $_cookieJar');
+  }
+
+  Future<void> _lazyLoadJarIfEmpty() async {
+    if (_cookieJar.isNotEmpty) return;
+    final sid = await _secure.read(key: _sidKeyStorage);
+    final auth = await _secure.read(key: _authKeyStorage);
+    if (sid?.isNotEmpty == true) _cookieJar[_sidKeyStorage] = sid!;
+    if (auth?.isNotEmpty == true) _cookieJar[_authKeyStorage] = auth!;
+  }
+
+  Future<String?> _buildCookieHeaderAsync() async {
+    await _lazyLoadJarIfEmpty();
+    return _buildCookieHeaderSync();
+  }
+
+  String? _buildCookieHeaderSync() {
+    final sid = _cookieJar[_sidKeyStorage];
+    final auth = _cookieJar[_authKeyStorage];
+    final parts = <String>[];
+    if (sid?.isNotEmpty == true) parts.add('$_sidKeyStorage=$sid');
+    if (auth?.isNotEmpty == true) parts.add('$_authKeyStorage=$auth');
+    return parts.isEmpty ? null : parts.join('; ');
+  }
+
   static const _secure = FlutterSecureStorage(
     aOptions: AndroidOptions(encryptedSharedPreferences: true),
     iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
@@ -61,6 +135,18 @@ class AuthApi extends GetConnect {
     return res.body;
   }
 
+  Future<dynamic> logout() async {
+    final uri = Uri.parse(apiEndpoint).resolve('/v2/users/logout');
+
+    final res = await post(
+      uri.toString(),
+      {},
+      headers: {'Content-Type': 'application/json'},
+    );
+
+    logger.d("logout res: ${res}");
+  }
+
   Future<dynamic> signup(
     String email,
     String password,
@@ -68,6 +154,7 @@ class AuthApi extends GetConnect {
     String userName,
     bool agree,
   ) async {
+    await ensureLoggedOut();
     final hashed = '0x${sha256Hex(password)}';
 
     final uri = Uri.parse(apiEndpoint)
@@ -96,10 +183,7 @@ class AuthApi extends GetConnect {
     final res = await post(
       uri.toString(),
       body,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': authHeader,
-      },
+      headers: _noCookieJson(auth: authHeader),
     );
 
     logger.d("signup response status: ${res.statusCode}");
@@ -113,6 +197,7 @@ class AuthApi extends GetConnect {
   }
 
   Future<dynamic> loginWithPassword(String email, String password) async {
+    await ensureLoggedOut();
     final hashed = '0x${sha256Hex(password)}';
 
     final uri = Uri.parse(apiEndpoint)
@@ -134,10 +219,7 @@ class AuthApi extends GetConnect {
 
     final res = await get(
       uri.toString(),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': authHeader,
-      },
+      headers: _noCookieJson(auth: authHeader),
     );
 
     logger.d("response body: ${res.body}");
@@ -205,6 +287,13 @@ class AuthApi extends GetConnect {
     if (sid != null) out[sidName] = sid;
     if (auth != null) out[authName] = auth;
     return out;
+  }
+
+  Future<void> clearSession() async {
+    _cookieJar.clear();
+    await _secure.delete(key: _sidKeyStorage);
+    await _secure.delete(key: _authKeyStorage);
+    logger.d('session cleared');
   }
 }
 
