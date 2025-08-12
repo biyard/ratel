@@ -4341,6 +4341,7 @@ dependencies = [
  "hex",
  "hmac",
  "rand 0.9.1",
+ "regex",
  "rest-api",
  "rlp",
  "rmcp",

@@ -5,6 +5,7 @@ use crate::controllers::{
     m2::noncelab::users::register_users::{
         RegisterUserResponse, register_users_by_noncelab_handler,
     },
+    v2::users::find_user::find_user_handler,
     v2::{
         industries::{industry::list_industries_handler, select_topic::select_topics_handler},
         networks::{
@@ -67,7 +68,7 @@ pub async fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Ro
             "/m1",
             controllers::m1::MenaceController::route(pool.clone())?,
         )
-        .native_route("/v2/users/logout", npost(logout_handler))
+        .native_route("/v2/users/logout", npost(logout_handler))   
         .native_route(
             "/v2/industries/select-topics",
             npost(select_topics_handler).with_state(pool.clone()),
@@ -88,6 +89,9 @@ pub async fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Ro
             "/v2/networks/follow",
             npost(follow_handler).with_state(pool.clone()),
         )
+        .native_route(
+            "/v2/users",nget(find_user_handler).with_state(pool.clone()),
+        )
         // Admin APIs
         .route(
             "/v2/telegram/subscribe",
@@ -105,7 +109,7 @@ pub async fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Ro
                 register_users_by_noncelab_handler,
                 RegisterUserResponse,
                 "Register users by Noncelab",
-                "This endpoint allows you to register users by Noncelab.",
+                "This endpoint allows you to register users by Noncelab.\n\n**Authorization header required**\n\n`Authorization: Bearer <token>`",
             )
             .with_state(pool.clone()),
         ))

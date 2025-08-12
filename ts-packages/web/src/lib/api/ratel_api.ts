@@ -178,8 +178,10 @@ export const ratelApi = {
     getTotalInfo: (page: number, size: number) =>
       `/v1/totals?param-type=query&bookmark=${page}&size=${size}`,
     getUserInfo: () => '/v1/users?action=user-info',
-    getUserByEmail: (email: string) =>
-      `/v1/users?param-type=read&action=find-by-email&email=${email}`,
+    getUserByEmail: (email: string) => `/v2/users?email=${email}`,
+    getUserByUsername: (username: string) => `/v2/users?username=${username}`,
+    getUserByPhoneNumber: (phoneNumber: string) =>
+      `/v2/users?phone-number=${phoneNumber}`,
 
     signup: () => '/v1/users?action=signup',
     editProfile: (user_id: number) => `/v1/users/${user_id}`,
@@ -192,7 +194,9 @@ export const ratelApi = {
   assets: {
     getPresignedUrl: (file_type: FileType, total_count = 1) =>
       `/v1/assets?action=get-presigned-uris&file_type=${file_type}&total_count=${total_count}`,
-    createMultipartUpload: () => `/v1/assets/complete`,
+    getMultipartPresignedUrl: (file_type: FileType, total_count = 1) =>
+      `/v1/assets/multipart?action=get-presigned-uris&file_type=${file_type}&total_count=${total_count}`,
+    createMultipartUpload: () => `/v1/assets/multipart/complete`,
   },
   teams: {
     createTeam: () => '/v1/teams',
@@ -279,8 +283,17 @@ export const ratelApi = {
       `/v1/spaces/${spaceId}/notice-quiz-answers`,
   },
   sprint_league: {
+    createSprintLeague: (space_id: number) =>
+      `/v1/spaces/${space_id}/sprint-leagues`,
     voteSprintLeague: (space_id: number, sprint_league_id: number) =>
       `/v1/spaces/${space_id}/sprint-leagues/${sprint_league_id}`,
+    updateSprintLeaguePlayer: (
+      spaceId: number,
+      sprintLeagueId: number,
+      playerId: number,
+    ) => {
+      return `/v1/spaces/${spaceId}/sprint-leagues/${sprintLeagueId}/players/${playerId}`;
+    },
   },
   telegram: {
     subscribe: () => '/v2/telegram/subscribe',
