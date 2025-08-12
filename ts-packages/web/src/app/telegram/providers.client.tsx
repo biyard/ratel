@@ -1,24 +1,13 @@
 'use client';
 
-import { DehydratedState, HydrationBoundary } from '@tanstack/react-query';
 import React, { ReactNode, createContext, useContext } from 'react';
 
 type ContextType = object;
 
 export const Context = createContext<ContextType | undefined>(undefined);
 
-export default function ClientProviders({
-  children,
-  dehydratedState,
-}: {
-  children: ReactNode;
-  dehydratedState: DehydratedState;
-}) {
-  return (
-    <HydrationBoundary state={dehydratedState}>
-      <Context.Provider value={{}}>{children}</Context.Provider>
-    </HydrationBoundary>
-  );
+export default function ClientProviders({ children }: { children: ReactNode }) {
+  return <Context.Provider value={{}}>{children}</Context.Provider>;
 }
 
 export function useTelegramContext() {

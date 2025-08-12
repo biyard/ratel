@@ -10,12 +10,9 @@ import {
   DeliberationTab,
   DeliberationTabType,
   FinalConsensus,
-  Poll,
-  SurveyAnswer,
   Thread,
 } from './types';
 import { UserType } from '@/lib/api/models/user';
-import { StateSetter } from '@/types';
 import { logger } from '@/lib/logger';
 import {
   postingSpaceRequest,
@@ -40,39 +37,22 @@ import { SpaceDraftCreateRequest } from '@/lib/api/models/space_draft';
 import { useQueryClient } from '@tanstack/react-query';
 import { QK_GET_SPACE_BY_SPACE_ID } from '@/constants';
 import { useFeedByID } from '@/app/(social)/_hooks/feed';
-
-export interface MappedResponse {
-  question: Question;
-  answers: Answer[];
-}
+import { MappedResponse, Poll, SurveyAnswer } from '../type';
 
 type ContextType = {
   spaceId: number;
   selectedType: DeliberationTabType;
-  setSelectedType: StateSetter<DeliberationTabType>;
   isEdit: boolean;
-  setIsEdit: StateSetter<boolean>;
   title: string;
-  setTitle: StateSetter<string>;
   startedAt: number;
-  setStartedAt: StateSetter<number>;
   endedAt: number;
-  setEndedAt: StateSetter<number>;
   thread: Thread;
-  setThread: StateSetter<Thread>;
   deliberation: Deliberation;
-  setDeliberation: StateSetter<Deliberation>;
   survey: Poll;
-  setSurvey: StateSetter<Poll>;
   answers: SurveyResponse[];
   mappedResponses: MappedResponse[];
   answer: SurveyAnswer;
-  setAnswer: StateSetter<SurveyAnswer>;
   draft: FinalConsensus;
-  setDraft: StateSetter<FinalConsensus>;
-  handleGoBack: () => void;
-  handleDownloadExcel: () => void;
-  handleViewRecord: (discussionId: number, record: string) => Promise<void>;
 
   userType: UserType;
   proposerImage: string;
@@ -80,6 +60,17 @@ type ContextType = {
   createdAt: number;
   status: SpaceStatus;
 
+  handleGoBack: () => void;
+  handleDownloadExcel: () => void;
+  handleViewRecord: (discussionId: number, record: string) => Promise<void>;
+  handleUpdateSelectedType: (type: DeliberationTabType) => void;
+  handleUpdateStartDate: (startDate: number) => void;
+  handleUpdateEndDate: (endDate: number) => void;
+  handleUpdateTitle: (title: string) => void;
+  handleUpdateThread: (thread: Thread) => void;
+  handleUpdateDeliberation: (deliberation: Deliberation) => void;
+  handleUpdateSurvey: (survey: Poll) => void;
+  handleUpdateDraft: (draft: FinalConsensus) => void;
   handleLike: () => void;
   handleShare: () => void;
   handleSetAnswers: (answers: Answer[]) => void;
@@ -165,7 +156,12 @@ export default function ClientProviders({
   const [answer, setAnswer] = useState<SurveyAnswer>({
     answers:
       space.user_responses.length != 0 ? space.user_responses[0].answers : [],
-    is_completed: space.user_responses.length != 0,
+    is_completed:
+      space.user_responses.length !== 0
+        ? space.user_responses[0].survey_type === 1
+          ? false
+          : true
+        : false,
   });
 
   const [draft, setDraft] = useState<FinalConsensus>({
@@ -232,11 +228,8 @@ export default function ClientProviders({
     }
   };
 
-  const handleSetAnswers = (answers: Answer[]) => {
-    setAnswer((prev) => ({
-      ...prev,
-      answers,
-    }));
+  const handleUpdateTitle = (title: string) => {
+    setTitle(title);
   };
 
   const handleSetStartDate = (startDate: number) => {
@@ -249,10 +242,47 @@ export default function ClientProviders({
   const { post } = useApiCall();
 
   const handleSend = async () => {
+    const questions =
+      survey.surveys.length != 0 ? survey.surveys[0].questions : [];
+
+    let answers = answer.answers;
+
+    let isCheck = true;
+
+    answers = [
+      ...answers,
+      ...Array(questions.length - answers.length).fill(undefined),
+    ];
+
+    for (let i = 0; i < questions.length; i++) {
+      const required = questions[i].is_required;
+      const ans = answers[i];
+
+      if (!required) {
+        if (!ans) {
+          answers[i] = {
+            answer_type: questions[i].answer_type,
+            answer: null,
+          };
+        }
+        continue;
+      }
+
+      if (!ans) {
+        isCheck = false;
+        break;
+      }
+    }
+
+    if (!isCheck) {
+      showErrorToast('Please fill in all required values.');
+      return;
+    }
+
     try {
       await post(
         ratelApi.responses.respond_answer(spaceId),
-        surveyResponseCreateRequest(answer.answers),
+        surveyResponseCreateRequest(answers),
       );
       data.refetch();
       queryClient.invalidateQueries({
@@ -373,7 +403,7 @@ export default function ClientProviders({
     if (space.user_responses && space.user_responses.length > 0) {
       setAnswer({
         answers: space.user_responses[0].answers,
-        is_completed: true,
+        is_completed: space.user_responses[0].survey_type === 1 ? false : true,
       });
     }
   }, [space.user_responses]);
@@ -409,11 +439,73 @@ export default function ClientProviders({
     router.refresh();
   };
 
+  const handleUpdateThread = (thread: Thread) => {
+    setThread(thread);
+  };
+
+  const handleUpdateDeliberation = (deliberation: Deliberation) => {
+    setDeliberation(deliberation);
+  };
+
+  const handleUpdateSurvey = (survey: Poll) => {
+    setSurvey(survey);
+  };
+
+  const handleUpdateDraft = (draft: FinalConsensus) => {
+    setDraft(draft);
+  };
+
+  const handleSetAnswers = (answers: Answer[]) => {
+    setAnswer((prev) => ({
+      ...prev,
+      answers,
+    }));
+  };
+
+  const handleUpdateStartDate = (startDate: number) => {
+    setStartedAt(Math.floor(startDate));
+  };
+
+  const handleUpdateEndDate = (endDate: number) => {
+    setEndedAt(Math.floor(endDate));
+  };
+
+  const handleUpdateSelectedType = (type: DeliberationTabType) => {
+    setSelectedType(type);
+  };
+
   const handleSave = async () => {
     if (checkString(title) || checkString(thread.html_contents)) {
       showErrorToast('Please remove any test-related keywords before saving.');
       setIsEdit(false);
       return;
+    }
+
+    for (let i = 0; i < survey.surveys.length; i++) {
+      const question = survey.surveys[i].questions;
+
+      for (let j = 0; j < question.length; j++) {
+        const q = question[j];
+
+        if (q.title === '') {
+          showErrorToast('Please fill in the question title.');
+          return;
+        }
+
+        if (q.answer_type === 'checkbox' || q.answer_type === 'dropdown') {
+          if (q.options.length < 2) {
+            showErrorToast('questions must have at least two options.');
+            return;
+          }
+        }
+
+        if (q.answer_type === 'linear_scale') {
+          if (q.max_label === '' || q.min_label === '') {
+            showErrorToast('Please fill in the labels for the linear scale.');
+            return;
+          }
+        }
+      }
     }
 
     const discussions = deliberation.discussions.map((disc) => ({
@@ -467,26 +559,16 @@ export default function ClientProviders({
       value={{
         spaceId,
         selectedType,
-        setSelectedType,
         isEdit,
-        setIsEdit,
         title,
-        setTitle,
         startedAt,
-        setStartedAt,
         endedAt,
-        setEndedAt,
         thread,
-        setThread,
         deliberation,
-        setDeliberation,
         survey,
-        setSurvey,
         answers,
         answer,
-        setAnswer,
         draft,
-        setDraft,
         handleGoBack,
         handleDownloadExcel,
         userType,
@@ -495,6 +577,14 @@ export default function ClientProviders({
         createdAt,
         status,
         mappedResponses,
+        handleUpdateSelectedType,
+        handleUpdateStartDate,
+        handleUpdateEndDate,
+        handleUpdateTitle,
+        handleUpdateThread,
+        handleUpdateDeliberation,
+        handleUpdateSurvey,
+        handleUpdateDraft,
         handleSetAnswers,
         handleSetStartDate,
         handleSetEndDate,

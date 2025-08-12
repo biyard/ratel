@@ -1,0 +1,17 @@
+export { default as AddLayer1 } from './add-layer-1.svg';
+export { default as AddLayer } from './add-layer.svg';
+export { default as BorderBottom } from './border-bottom.svg';
+export { default as BorderHorizontal } from './border-horizontal.svg';
+export { default as BorderInner } from './border-inner.svg';
+export { default as BorderLeft } from './border-left.svg';
+export { default as BorderRight } from './border-right.svg';
+export { default as BorderTopLeft } from './border-top-left.svg';
+export { default as BorderTop } from './border-top.svg';
+export { default as Layer1 } from './layer-1.svg';
+export { default as LayerCheck } from './layer-check.svg';
+export { default as LayerOff1 } from './layer-off-1.svg';
+export { default as LayerOff } from './layer-off.svg';
+export { default as Layer } from './layer.svg';
+export { default as NoBorder } from './no-border.svg';
+export { default as ZoomIn } from './zoom-in.svg';
+export { default as ZoomOut } from './zoom-out.svg';
