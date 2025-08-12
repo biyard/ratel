@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { wrap } from "../utils";
 import { CONFIGS } from "../config";
-import { credentials } from "../test-data/auth";
+const { credentials } = CONFIGS;
 
 test("[Home page] Testing the Join movement modal", async ({
     page, browserName, context
@@ -47,7 +47,7 @@ test("[Home page] Testing the Join movement modal", async ({
                 await popup.waitForSelector('input[type="password"]', {
                   timeout: CONFIGS.MODAL_WAIT_TIME,
                 });
-                await popup.fill('input[type="password"]', credentials.pass);
+                await popup.fill('input[type="password"]', credentials.password);
                 await popup.click('button:has-text("Next")');
                 await p.capture("enter-password.png");
                 if (await popup.isVisible("text=Wrong password. Try again")) {

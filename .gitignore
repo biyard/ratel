@@ -23,3 +23,5 @@ release.keystore
 .idea
 
 *.out
+
+*my-test.spec.ts

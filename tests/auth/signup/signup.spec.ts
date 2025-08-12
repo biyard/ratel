@@ -2,33 +2,29 @@ import { test, expect } from "@playwright/test";
 import { CONFIGS } from "../../config";
 import { wrap } from "../../utils";
 
-test.describe('Email/Password Signup Flow', () => {
-  test('should create account with valid credentials', async ({ page }) => {
-    await page.goto('/');
+test.describe("Auth Flow - Create Account", () => {
+  test("should show validation and allow account creation steps", async ({ page }, testInfo) => {
+    const p = wrap(page, testInfo.project.name, "/");
+    await p.goto("/", { waitUntil: "load", timeout: CONFIGS.PAGE_WAIT_TIME });
 
-    await page.fill('#email', 'testuser@example.com');
-    await page.fill('#password', 'correct-password');
-    await page.click('button[type="submit"]');
+    await p.getByRole("button", { name: "Sign In" }).click();
+    await p.getByRole("button", { name: "Create an account" }).click();
 
-    await expect(page).toHaveURL('/login');
-    await expect(page.locator('h1')).toContainText('Login');
-  });
+    await p.getByRole("button", { name: "Send" }).click();
 
-  test('should show error on wrong credentials types', async ({ page }) => {
-    await page.goto('/');
+    await expect(p.locator("text=Please enter a valid email").first()).toBeVisible();
 
-    await page.fill('#email', 'testuser@example.com');
-    await page.fill('#password', 'wrong-password');
-    await page.click('button[type="submit"]');
+    await p.locator('input[name="username"]').fill(CONFIGS.credentials.newUserEmail);
+    await p.getByRole("button", { name: "Send" }).click();
 
-    await expect(page.locator('.error')).toHaveText('Invalid credentials');
-  });
+    await p.getByRole("textbox", { name: "Verification code" }).fill(CONFIGS.credentials.verificationCode);
+    await p.getByRole("button", { name: "Verify" }).click();
 
-  test('should show validation errors on empty fields', async ({ page }) => {
-    await page.goto('/');
+    await p.getByRole("textbox", { name: "Display Name" }).fill(CONFIGS.credentials.displayName);
+    await p.getByRole("textbox", { name: "User Name" }).fill(CONFIGS.credentials.username);
 
-    await page.click('button[type="submit"]');
-    await expect(page.locator('#email-error')).toHaveText('Email is required');
-    await expect(page.locator('#password-error')).toHaveText('Password is required');
+    await p.getByText("I have read and accept the Terms of Service").click();
+
+    await p.getByRole('button', { name: 'Finished Sign-up' }).click();
   });
 });

@@ -20,7 +20,9 @@ jobs:
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
       - name: Decode and restore auth.json
-        run: echo "${{ secrets.RATEL_STORAGE_STATE }}" | base64 --decode > auth.json
+        run: |
+          echo "${{ secrets.RATEL_STORAGE_STATE }}" | base64 --decode > auth.json
+          chmod 600 auth.json
       - name: Run Playwright tests (Skip secret-dependent tests on PRs)
         env:
           WAIT_TIMEOUT: 5000
@@ -32,7 +34,7 @@ jobs:
         run: |
           if [ "$GITHUB_EVENT_NAME" == "pull_request" ]; then
             echo "Skipping tests that require secrets on pull request."
-            npx playwright test tests/console/deliberations/start_deliberations.spec.ts --grep-invert @secret-required
+            npx playwright test tests/auth/login --grep-invert @secret-required
           else
             echo "Running all the tests."
             npx playwright test --project 'chromium-*'
