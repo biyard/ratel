@@ -93,9 +93,13 @@ impl UserControllerV1 {
         Extension(auth): Extension<Option<Authorization>>,
         Json(body): Json<UserAction>,
     ) -> Result<Json<User>> {
+        tracing::debug!("act_user: {:?}", body);
         let principal = extract_principal(&ctrl.pool, auth).await?;
+        tracing::debug!("principal: {:?}", principal);
 
         body.validate()?;
+
+        tracing::debug!("validation success");
 
         match body {
             UserAction::Signup(req) => ctrl.signup(req, principal).await,
