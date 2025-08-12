@@ -125,8 +125,6 @@ a {
   scrollbar-width: none; /* Firefox */
 }
 
-
-
 .ProseMirror ul {
   list-style-type: disc;
   padding-left: 1.5rem;
@@ -136,8 +134,6 @@ a {
   list-style-type: decimal;
   padding-left: 1.5rem;
 }
-
-
 
 /* Table container */
 .tiptap-table {
@@ -207,14 +203,13 @@ a {
   background-color: #003366 !important; /* Darker blue for selection */
 }
 
-
 /* toast-overrides.css */
 .custom-toast-wrapper {
-  background: transparent !important; 
-  box-shadow: none !important;        
-  padding: 0 !important;              
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
 }
 
 .custom-toast-body {
-  padding: 0 !important; 
+  padding: 0 !important;
 }

@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 import UserSidemenu from './_components/user-sidemenu';
 import Loading from '../loading';
 import { CreatePost, PostDraftProvider } from './_components/create-post';
-import { CreateRePost, RePostDraftProvider } from './_components/create-repost3';
+import { CreateRePost, RePostDraftProvider } from './_components/create-repost';
 import Provider from './providers';
 
 export default async function SocialLayout({
@@ -29,7 +29,7 @@ export default async function SocialLayout({
                 <div className="fixed bottom-0 left-0 right-0 z-10 flex flex-row items-center justify-center">
                   <div className="max-w-desktop w-full">
                     <CreatePost />
-                    <CreateRePost/>
+                    <CreateRePost />
                   </div>
                 </div>
               </RePostDraftProvider>

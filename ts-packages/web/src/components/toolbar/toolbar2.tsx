@@ -272,7 +272,6 @@ import {
   SELECTION_CHANGE_COMMAND,
 } from 'lexical';
 
-
 import { cn } from '@/lib/utils';
 import FileUploader from '@/components/file-uploader';
 
