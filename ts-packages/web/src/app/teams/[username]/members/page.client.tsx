@@ -31,11 +31,13 @@ export default function TeamMembers({ username }: { username: string }) {
             key={member.id}
             className="flex flex-row w-full h-fit gap-[15px] bg-transparent"
           >
-            {!member.profile_url || member.profile_url.includes('test') ? (
+            {!member.profile_url ||
+            member.profile_url.includes('test') ||
+            member.profile_url === '' ? (
               <div className="w-12 h-12 rounded-full bg-neutral-500" />
             ) : (
               <Image
-                src={member.profile_url || '/default-profile.png'}
+                src={member.profile_url}
                 alt={member.username}
                 width={48}
                 height={48}
