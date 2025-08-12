@@ -109,6 +109,39 @@ export function spaceUpdateRequest(
   };
 }
 
+export interface CreateSpaceRequest {
+  create_space: {
+    space_type: SpaceType;
+    feed_id: number;
+    user_ids: number[];
+    num_of_redeem_codes: number;
+    started_at: number | null;
+    ended_at: number | null;
+    booster_type: BoosterType | null;
+  };
+}
+
+export function createSpaceRequest(
+  space_type: SpaceType,
+  feed_id: number,
+  user_ids: number[] = [],
+  num_of_redeem_codes: number = 0,
+  started_at: number | null = null,
+  ended_at: number | null = null,
+  booster_type: BoosterType | null = null,
+): CreateSpaceRequest {
+  return {
+    create_space: {
+      space_type,
+      feed_id,
+      user_ids,
+      num_of_redeem_codes,
+      started_at,
+      ended_at,
+      booster_type,
+    },
+  };
+}
 export interface Author {
   id: number;
   nickname: string;
@@ -127,6 +160,7 @@ export enum SpaceType {
   Committee = 5,
   SprintLeague = 6,
   Notice = 7,
+  dAgit = 8,
 }
 
 export enum SpaceStatus {
