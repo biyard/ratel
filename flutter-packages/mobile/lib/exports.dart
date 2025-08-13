@@ -82,6 +82,7 @@ export 'presentations/connection/connection_screen.dart';
 export 'presentations/boosting/boosting_binding.dart';
 export 'presentations/boosting/boosting_controller.dart';
 export 'presentations/boosting/boosting_screen.dart';
+export 'presentations/boosting/boosting_model.dart';
 
 export 'presentations/drafts/draft_binding.dart';
 export 'presentations/drafts/draft_controller.dart';

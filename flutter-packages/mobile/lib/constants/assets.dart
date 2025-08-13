@@ -33,6 +33,7 @@ abstract class Assets {
   static const String mail = 'assets/icons/mail.svg';
   static const String notification = 'assets/icons/notification.svg';
   static const String people = 'assets/icons/people.svg';
+  static const String exchange = 'assets/icons/exchange.svg';
 
   static const String logo = 'assets/icons/logo.png';
   static const String favicon = 'assets/icons/favicon.svg';
