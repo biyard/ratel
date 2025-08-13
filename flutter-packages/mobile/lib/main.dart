@@ -56,6 +56,7 @@ class MyApp extends StatelessWidget {
         },
       ),
       debugShowCheckedModeBanner: false,
+      defaultTransition: Transition.rightToLeft,
       theme: theme,
       routerDelegate: Get.createDelegate(
         navigatorObservers: [BiyardNavigatorObserver(), l.LayoutObserver()],
