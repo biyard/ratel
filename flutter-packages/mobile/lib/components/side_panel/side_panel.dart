@@ -6,6 +6,36 @@ class SidePanel extends StatelessWidget {
   final double width;
   final VoidCallback onClose;
 
+  Future<void> openThemeSheet(BuildContext context) async {
+    showModalBottomSheet(
+      context: context,
+      useRootNavigator: true,
+      isScrollControlled: true,
+      useSafeArea: true,
+      showDragHandle: true,
+      backgroundColor: AppColors.panelBg,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (_) => ThemeSheet(),
+    );
+  }
+
+  Future<void> openAccountsSheet(BuildContext context) async {
+    await showModalBottomSheet(
+      context: context,
+      useRootNavigator: true,
+      isScrollControlled: true,
+      useSafeArea: true,
+      showDragHandle: true,
+      backgroundColor: AppColors.panelBg,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (_) => const AccountsSheet(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Material(
@@ -36,14 +66,29 @@ class SidePanel extends StatelessWidget {
                       color: AppColors.neutral700,
                     ),
                   ),
-
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Image.asset(Assets.logo, width: 25, height: 25),
                       10.gap,
-                      SvgPicture.asset(Assets.option, width: 24, height: 24),
+                      InkWell(
+                        onTap: () async {
+                          final rootCtx = Get.context ?? context;
+                          onClose();
+                          await Future.delayed(
+                            const Duration(milliseconds: 320),
+                          );
+                          if (rootCtx != null) {
+                            await openAccountsSheet(rootCtx);
+                          }
+                        },
+                        child: SvgPicture.asset(
+                          Assets.option,
+                          width: 24,
+                          height: 24,
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -55,7 +100,7 @@ class SidePanel extends StatelessWidget {
                 children: [
                   Text(
                     'Miner Choi',
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -63,10 +108,9 @@ class SidePanel extends StatelessWidget {
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
-
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
+                    children: const [
                       Text(
                         '\$100 ',
                         style: TextStyle(
@@ -76,7 +120,7 @@ class SidePanel extends StatelessWidget {
                           height: 1.3,
                         ),
                       ),
-                      2.gap,
+                      SizedBox(width: 2),
                       Text(
                         'Ratels',
                         style: TextStyle(
@@ -101,9 +145,7 @@ class SidePanel extends StatelessWidget {
               ),
               10.vgap,
               Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
+                children: const [
                   Text(
                     '100 ',
                     style: TextStyle(
@@ -122,7 +164,7 @@ class SidePanel extends StatelessWidget {
                       height: 1.3,
                     ),
                   ),
-                  10.gap,
+                  SizedBox(width: 10),
                   Text(
                     '100 ',
                     style: TextStyle(
@@ -143,10 +185,8 @@ class SidePanel extends StatelessWidget {
                   ),
                 ],
               ),
-
               15.vgap,
-              Container(color: Color(0xffd4d4d4), height: 0.3),
-
+              Container(color: const Color(0xffd4d4d4), height: 0.3),
               Expanded(
                 child: ListView(
                   padding: const EdgeInsets.symmetric(
@@ -209,11 +249,20 @@ class SidePanel extends StatelessWidget {
                   ],
                 ),
               ),
-
-              Container(color: Color(0xffd4d4d4), height: 0.3),
+              Container(color: const Color(0xffd4d4d4), height: 0.3),
               Padding(
                 padding: const EdgeInsets.fromLTRB(0, 30, 15, 15),
-                child: SvgPicture.asset(Assets.dark, width: 24, height: 24),
+                child: InkWell(
+                  onTap: () async {
+                    final rootCtx = Get.context ?? context;
+                    onClose();
+                    await Future.delayed(const Duration(milliseconds: 320));
+                    if (rootCtx != null) {
+                      await openThemeSheet(rootCtx);
+                    }
+                  },
+                  child: SvgPicture.asset(Assets.dark, width: 24, height: 24),
+                ),
               ),
             ],
           ),
@@ -252,6 +301,186 @@ class MenuItem extends StatelessWidget {
       contentPadding: const EdgeInsets.symmetric(horizontal: 1, vertical: 2),
       horizontalTitleGap: 4,
       dense: true,
+    );
+  }
+}
+
+class ThemeSheet extends StatefulWidget {
+  const ThemeSheet({super.key});
+
+  @override
+  State<ThemeSheet> createState() => _ThemeSheetState();
+}
+
+class _ThemeSheetState extends State<ThemeSheet> {
+  late ThemeMode _selected;
+
+  @override
+  void initState() {
+    super.initState();
+    _selected = Get.isDarkMode ? ThemeMode.dark : ThemeMode.light;
+  }
+
+  Widget _option(String label, ThemeMode mode) {
+    return RadioListTile<ThemeMode>(
+      value: mode,
+      groupValue: _selected,
+      onChanged: (v) {
+        if (v == null) return;
+        setState(() => _selected = v);
+        Get.changeThemeMode(v);
+      },
+      activeColor: AppColors.primary,
+      controlAffinity: ListTileControlAffinity.trailing,
+      title: const Text('', style: TextStyle()),
+      subtitle: Text(
+        label,
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.w600,
+          fontSize: 14,
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 6, 16, 16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+            decoration: const BoxDecoration(
+              border: Border(
+                bottom: BorderSide(color: AppColors.neutral700, width: 1),
+              ),
+            ),
+            child: const Text(
+              'Theme',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          const SizedBox(height: 6),
+          _option('Dark', ThemeMode.dark),
+          _option('Light', ThemeMode.light),
+          _option('System theme', ThemeMode.system),
+          const SizedBox(height: 6),
+        ],
+      ),
+    );
+  }
+}
+
+class AccountsSheet extends StatefulWidget {
+  const AccountsSheet({super.key});
+  @override
+  State<AccountsSheet> createState() => _AccountsSheetState();
+}
+
+class _AccountsSheetState extends State<AccountsSheet> {
+  int _selected = 0;
+
+  Widget _accountTile({
+    required int index,
+    required String name,
+    required String sub,
+  }) {
+    final isSel = _selected == index;
+    return ListTile(
+      leading: const CircleAvatar(
+        radius: 14,
+        backgroundColor: AppColors.neutral600,
+      ),
+      title: Text(
+        name,
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.w600,
+          fontSize: 14,
+        ),
+      ),
+      subtitle: Text(
+        sub,
+        style: const TextStyle(color: AppColors.neutral400, fontSize: 12),
+      ),
+      trailing: Icon(
+        isSel ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+        color: isSel ? AppColors.primary : AppColors.neutral600,
+      ),
+      onTap: () => setState(() => _selected = index),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+    );
+  }
+
+  Widget _actionButton(String label, {VoidCallback? onTap}) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        height: 44,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(50),
+          border: Border.all(color: Color(0xff464646), width: 1),
+        ),
+        child: Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w400,
+            fontSize: 14,
+            height: 1.1,
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 6, 16, 16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+            decoration: const BoxDecoration(
+              border: Border(
+                bottom: BorderSide(color: AppColors.neutral700, width: 1),
+              ),
+            ),
+            child: const Text(
+              'Accounts',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+
+          _accountTile(index: 0, name: 'Miner Choi', sub: '@hackartist'),
+          _accountTile(index: 1, name: 'Ratel foundation', sub: 'email.'),
+
+          const SizedBox(height: 12),
+
+          _actionButton('Create a new Account', onTap: () {}),
+          const SizedBox(height: 8),
+          _actionButton('Add on existing account', onTap: () {}),
+          const SizedBox(height: 6),
+        ],
+      ),
     );
   }
 }
