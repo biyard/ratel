@@ -34,6 +34,9 @@ abstract class Assets {
   static const String notification = 'assets/icons/notification.svg';
   static const String people = 'assets/icons/people.svg';
   static const String exchange = 'assets/icons/exchange.svg';
+  static const String send = 'assets/icons/send.svg';
+  static const String verified = 'assets/icons/verified.svg';
+  static const String roundedPlus = 'assets/icons/rounded_plus.svg';
 
   static const String logo = 'assets/icons/logo.png';
   static const String favicon = 'assets/icons/favicon.svg';
