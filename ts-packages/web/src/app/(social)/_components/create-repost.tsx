@@ -6,7 +6,8 @@ import {
   useCallback,
   useRef,
 } from 'react';
-import { X, Loader2 } from 'lucide-react';
+import { Clear } from '@/components/icons';
+import { Loader } from '@/components/icons';
 import { cn } from '@/lib/utils';
 import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { useUserInfo } from '../_hooks/user';
@@ -15,7 +16,6 @@ import { useApiCall } from '@/lib/api/use-send';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { useRouter } from 'next/navigation';
 import { route } from '@/route';
-import { Check } from 'lucide-react';
 import Certified from '@/assets/icons/certified.svg';
 import DoubleArrowDown from '@/assets/icons/double-arrow-down.svg';
 import { logger } from '@/lib/logger';
@@ -80,7 +80,7 @@ export function CreateRePost() {
     try {
       const response = await post(ratelApi.feeds.repost(), {
         repost: {
-          html_contents: content,
+          html_contents: editorRef.current!.getHTML(),
           quote_feed_id: originalFeedId,
           parent_id: authorId,
           user_id: User?.id,
@@ -112,7 +112,7 @@ export function CreateRePost() {
     const url = repostUrl?.trim();
     if (!url) return;
 
-    setContent(content ? `${content} ${url}` : url);
+    editorRef.current?.chain().focus().insertContent(url).run();
     setShowUrlInput(false);
     setRepostUrl('');
   };
@@ -121,7 +121,7 @@ export function CreateRePost() {
     const url = commentUrl?.trim();
     if (!url) return;
 
-    setContent(content ? `${content} ${url}` : url);
+    editorRef.current?.chain().focus().insertContent(url).run();
     setCommentUrl('');
     setShowCommentUrlInput(false);
   };
@@ -205,7 +205,7 @@ export function CreateRePost() {
                   onClick={removeQuotedImage}
                   className="absolute top-2 right-2 bg-black/70 rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
                 >
-                  <X className="w-4 h-4 text-white" />
+                  <Clear className="w-4 h-4 text-white" />
                 </button>
               </div>
             )}
@@ -257,7 +257,7 @@ export function CreateRePost() {
               className="shrink-0 bg-primary text-background rounded-full hover:bg-primary/70 px-4 py-2 font-bold flex items-center gap-x-2"
             >
               {isReposting ? (
-                <Loader2 className="animate-spin" />
+                <Loader className="animate-spin" />
               ) : (
                 <UserCircle />
               )}
@@ -268,7 +268,10 @@ export function CreateRePost() {
           {/* URL Input Dialogs */}
           {showUrlInput && (
             <div className="absolute top-4 left-2 z-20 bg-neutral-800 border border-neutral-600 rounded-md px-3 py-2 flex items-center gap-2 w-[90%]">
-              <LinkPaste />
+              <button onClick={handleInsertUrl}>
+                <LinkPaste />
+              </button>
+
               <input
                 autoFocus
                 value={repostUrl}
@@ -277,13 +280,13 @@ export function CreateRePost() {
                 placeholder="Paste or search for the relevant discussion or topic URL"
                 className="bg-transparent text-white text-sm placeholder-neutral-400 outline-none flex-1"
               />
-              <button
+              {/* <button
                 onClick={handleInsertUrl}
                 className="text-green-400 hover:text-white"
                 aria-label="Insert URL"
               >
                 <Check className="w-4 h-4" />
-              </button>
+              </button> */}
               <button
                 onClick={() => {
                   setShowUrlInput(false);
@@ -292,14 +295,16 @@ export function CreateRePost() {
                 className="text-neutral-400 hover:text-white"
                 aria-label="Cancel"
               >
-                <X className="w-4 h-4" />
+                <Clear className="w-4 h-4" />
               </button>
             </div>
           )}
 
           {showCommentUrlInput && (
             <div className="absolute top-2/5 left-2 z-20 bg-neutral-800 border border-neutral-600 rounded-md px-3 py-2 flex items-center gap-2 w-[90%]">
-              <CommentPaste />
+              <button onClick={handleCommentUrl}>
+                <CommentPaste />
+              </button>
 
               <input
                 autoFocus
@@ -309,13 +314,13 @@ export function CreateRePost() {
                 placeholder="Please paste or search for the comment to quote"
                 className="bg-transparent text-white text-sm placeholder-neutral-400 outline-none flex-1"
               />
-              <button
+              {/* <button
                 onClick={handleCommentUrl}
                 className="text-green-400 hover:text-white"
                 aria-label="Insert URL"
               >
                 <Check className="w-4 h-4" />
-              </button>
+              </button> */}
               <button
                 onClick={() => {
                   setShowCommentUrlInput(false);
@@ -324,7 +329,7 @@ export function CreateRePost() {
                 className="text-neutral-400 hover:text-white"
                 aria-label="Cancel"
               >
-                <X className="w-4 h-4" />
+                <Clear className="w-4 h-4" />
               </button>
             </div>
           )}
@@ -343,7 +348,7 @@ export function CreateRePost() {
                   onClick={removeImage}
                   className="absolute top-2 right-2 bg-black/70 rounded-full p-1.5"
                 >
-                  <X className="w-4 h-4 text-white" />
+                  <Clear className="w-4 h-4 text-white" />
                 </button>
               </div>
             </div>
