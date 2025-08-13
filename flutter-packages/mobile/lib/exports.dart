@@ -95,6 +95,7 @@ export 'presentations/posts/post_screen.dart';
 export 'presentations/verified/verified_binding.dart';
 export 'presentations/verified/verified_controller.dart';
 export 'presentations/verified/verified_screen.dart';
+export 'presentations/verified/verified_model.dart';
 
 export 'localization/main_localization.dart';
 
