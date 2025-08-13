@@ -2,8 +2,8 @@ use bdk::prelude::*;
 
 use crate::*;
 
-#[api_model(table = oracle_consensus)]
-pub struct OracleConsensus {
+#[api_model(table = consensus)]
+pub struct Consensus {
     #[api_model(primary_key)]
     pub id: i64,
     #[api_model(auto = [insert])]
@@ -17,18 +17,19 @@ pub struct OracleConsensus {
     #[api_model(many_to_one = artworks)]
     pub artwork_id: i64,
 
-    #[api_model(one_to_many = oracle_votes, foreign_key = consensus_id, nested)]
-    pub votes: Vec<OracleVote>,
+    pub total_oracles: i64,
 
-    #[api_model(action = update, type = INTEGER)]
-    pub result: OracleConsensusResult,
+    #[api_model(one_to_many = consensus_votes, foreign_key = consensus_id, nested)]
+    pub votes: Vec<ConsensusVote>,
+
+    #[api_model(type = INTEGER, nullable)]
+    pub result: Option<ConsensusResult>,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
-pub enum OracleConsensusResult {
+pub enum ConsensusResult {
     #[default]
-    Ongoing = 1,
-    Accepted = 2,
-    Rejected = 3,
+    Accepted = 1,
+    Rejected = 2,
 }

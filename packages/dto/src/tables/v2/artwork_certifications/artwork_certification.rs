@@ -13,6 +13,6 @@ pub struct ArtworkCertification {
     #[api_model(many_to_one = artworks)]
     pub artwork_id: i64,
 
-    #[api_model(many_to_one = oracle_consensus)]
+    #[api_model(many_to_one = consensus)]
     pub consensus_id: i64,
 }

@@ -1,6 +1,12 @@
 mod dagits;
 pub use dagits::*;
 
+mod dagit_oracles;
+pub use dagit_oracles::*;
+
+mod dagit_artworks;
+pub use dagit_artworks::*;
+
 mod artworks;
 pub use artworks::*;
 
@@ -13,11 +19,11 @@ pub use artwork_certifications::*;
 mod oracles;
 pub use oracles::*;
 
-mod oracle_votes;
-pub use oracle_votes::*;
+mod consensus_votes;
+pub use consensus_votes::*;
 
-mod oracle_consensus;
-pub use oracle_consensus::*;
+mod consensus;
+pub use consensus::*;
+
 mod user;
-
 pub use user::*;

@@ -9,7 +9,7 @@ pub struct Oracle {
     #[api_model(auto = [insert, update])]
     pub updated_at: i64,
 
-    #[api_model(many_to_one = users)]
+    #[api_model(many_to_one = users, unique)]
     pub user_id: i64,
 
     #[api_model(action = create, type = INTEGER)]
