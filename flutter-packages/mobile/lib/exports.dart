@@ -79,6 +79,22 @@ export 'presentations/connection/connection_model.dart';
 export 'presentations/connection/connection_controller.dart';
 export 'presentations/connection/connection_screen.dart';
 
+export 'presentations/boosting/boosting_binding.dart';
+export 'presentations/boosting/boosting_controller.dart';
+export 'presentations/boosting/boosting_screen.dart';
+
+export 'presentations/drafts/draft_binding.dart';
+export 'presentations/drafts/draft_controller.dart';
+export 'presentations/drafts/draft_screen.dart';
+
+export 'presentations/posts/post_binding.dart';
+export 'presentations/posts/post_controller.dart';
+export 'presentations/posts/post_screen.dart';
+
+export 'presentations/verified/verified_binding.dart';
+export 'presentations/verified/verified_controller.dart';
+export 'presentations/verified/verified_screen.dart';
+
 export 'localization/main_localization.dart';
 
 export 'models/profile.dart';

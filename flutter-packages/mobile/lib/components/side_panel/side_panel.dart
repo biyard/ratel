@@ -1,9 +1,10 @@
 import 'package:ratel/exports.dart';
 
 class SidePanel extends StatelessWidget {
-  const SidePanel({super.key, required this.width});
+  const SidePanel({super.key, required this.width, required this.onClose});
 
   final double width;
+  final VoidCallback onClose;
 
   @override
   Widget build(BuildContext context) {
@@ -160,6 +161,10 @@ class SidePanel extends StatelessWidget {
                         height: 20,
                       ),
                       label: 'Drafts',
+                      onTap: () {
+                        onClose();
+                        Get.rootDelegate.offAndToNamed(AppRoutes.draftScreen);
+                      },
                     ),
                     MenuItem(
                       icon: SvgPicture.asset(
@@ -168,6 +173,10 @@ class SidePanel extends StatelessWidget {
                         height: 20,
                       ),
                       label: 'Posts',
+                      onTap: () {
+                        onClose();
+                        Get.rootDelegate.offAndToNamed(AppRoutes.postScreen);
+                      },
                     ),
                     MenuItem(
                       icon: SvgPicture.asset(
@@ -176,6 +185,12 @@ class SidePanel extends StatelessWidget {
                         height: 20,
                       ),
                       label: 'Verified Credential',
+                      onTap: () {
+                        onClose();
+                        Get.rootDelegate.offAndToNamed(
+                          AppRoutes.verifiedScreen,
+                        );
+                      },
                     ),
                     MenuItem(
                       icon: SvgPicture.asset(
@@ -184,6 +199,12 @@ class SidePanel extends StatelessWidget {
                         height: 20,
                       ),
                       label: 'Boosting Points',
+                      onTap: () {
+                        onClose();
+                        Get.rootDelegate.offAndToNamed(
+                          AppRoutes.boostingScreen,
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -203,9 +224,16 @@ class SidePanel extends StatelessWidget {
 }
 
 class MenuItem extends StatelessWidget {
-  const MenuItem({super.key, required this.icon, required this.label});
+  const MenuItem({
+    super.key,
+    required this.icon,
+    required this.label,
+    this.onTap,
+  });
+
   final SvgPicture icon;
   final String label;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -220,7 +248,7 @@ class MenuItem extends StatelessWidget {
           height: 1.2,
         ),
       ),
-      onTap: () {},
+      onTap: onTap,
       contentPadding: const EdgeInsets.symmetric(horizontal: 1, vertical: 2),
       horizontalTitleGap: 4,
       dense: true,
