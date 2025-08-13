@@ -4,7 +4,20 @@ pub mod controllers {
     pub mod v1;
     pub mod v2 {
         pub mod users {
+            pub mod find_user;
             pub mod logout;
+        }
+        pub mod industries {
+            pub mod industry;
+            pub mod select_topic;
+        }
+        pub mod networks {
+            pub mod follow;
+            pub mod network;
+            pub mod search;
+        }
+        pub mod telegram {
+            pub mod subscribe;
         }
     }
     pub mod m2 {

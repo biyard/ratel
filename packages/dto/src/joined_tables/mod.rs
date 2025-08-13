@@ -13,6 +13,7 @@ mod space_share_users;
 mod space_users;
 mod team_members;
 mod user_badges;
+mod user_industries;
 
 pub use discussion_members::*;
 pub use election_pledges_quizzes::*;
@@ -25,6 +26,7 @@ pub use space_like_users::*;
 pub use space_share_users::*;
 pub use space_users::*;
 pub use team_members::*;
+pub use user_industries::*;
 
 mod advocacy_campaign_authors;
 pub use advocacy_campaign_authors::*;

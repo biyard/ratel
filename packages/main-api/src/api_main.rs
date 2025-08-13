@@ -49,6 +49,7 @@ pub async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         ElectionPledge,
         ElectionPledgeLike,
         Industry,
+        UserIndustry,
         Feed,
         FeedUser,
         FeedShare,
@@ -90,6 +91,9 @@ pub async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         Mynetwork,
         Verification,
         Notification,
+        NoticeQuizAnswer,
+        NoticeQuizAttempt,
+        TelegramSubscribe,
         Artwork,
         Oracle,
         Dagit,
@@ -136,6 +140,7 @@ pub async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
                 "password".to_string(),
                 Membership::Free,
                 "".to_string(),
+                None,
                 None,
             )
             .await?;
@@ -210,6 +215,8 @@ pub async fn api_main() -> Result<Router> {
         ));
     let mcp_router =
         by_axum::axum::Router::new().nest_service("/mcp", controllers::mcp::route().await?);
+    // let bot = teloxide::Bot::new(conf.telegram_token);
+    // let bot = std::sync::Arc::new(bot);
     let api_router = route(pool.clone())
         .await?
         .layer(middleware::from_fn(authorization_middleware))

@@ -5,9 +5,9 @@ import { usePostByUserId } from '../_hooks/use-posts';
 import { Col } from '@/components/ui/col';
 import FeedCard from '@/components/feed-card';
 import { logger } from '@/lib/logger';
-import { Post } from '../page.client';
 import CreatePostButton from '../_components/create-post-button';
 import { checkString } from '@/lib/string-filter-utils';
+import { Post } from '../_components/pages/home';
 
 export default function MyPostsPage() {
   const { data: user } = useSuspenseUserInfo();
