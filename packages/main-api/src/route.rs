@@ -5,12 +5,21 @@ use crate::controllers::{
     m2::noncelab::users::register_users::{
         RegisterUserResponse, register_users_by_noncelab_handler,
     },
-    v2::users::logout::logout_handler,
+    v2::users::find_user::find_user_handler,
+    v2::{
+        industries::{industry::list_industries_handler, select_topic::select_topics_handler},
+        networks::{
+            follow::follow_handler, network::list_networks_handler,
+            search::list_networks_by_keyword_handler,
+        },
+        telegram::subscribe::telegram_subscribe_handler,
+        users::logout::logout_handler,
+    },
 };
-
 use by_axum::axum;
 use dto::Result;
 
+use axum::native_routing::get as nget;
 use axum::native_routing::post as npost;
 
 macro_rules! wrap_api {
@@ -53,24 +62,55 @@ macro_rules! post_api {
 }
 
 pub async fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Router> {
-    Ok(
-        by_axum::axum::Router::new()
-            .nest("/v1", controllers::v1::route(pool.clone()).await?)
-            .nest(
-                "/m1",
-                controllers::m1::MenaceController::route(pool.clone())?,
+    Ok(by_axum::axum::Router::new()
+        .nest("/v1", controllers::v1::route(pool.clone()).await?)
+        .nest(
+            "/m1",
+            controllers::m1::MenaceController::route(pool.clone())?,
+        )
+        .native_route("/v2/users/logout", npost(logout_handler))   
+        .native_route(
+            "/v2/industries/select-topics",
+            npost(select_topics_handler).with_state(pool.clone()),
+        )
+        .native_route(
+            "/v2/industries",
+            nget(list_industries_handler).with_state(pool.clone()),
+        )
+        .native_route(
+            "/v2/networks",
+            nget(list_networks_handler).with_state(pool.clone()),
+        )
+        .native_route(
+            "/v2/networks/search",
+            nget(list_networks_by_keyword_handler).with_state(pool.clone()),
+        )
+        .native_route(
+            "/v2/networks/follow",
+            npost(follow_handler).with_state(pool.clone()),
+        )
+        .native_route(
+            "/v2/users",nget(find_user_handler).with_state(pool.clone()),
+        )
+        // Admin APIs
+        .route(
+            "/v2/telegram/subscribe",
+            post_api!(
+                telegram_subscribe_handler,
+                (),
+                "Subscribe to Telegram",
+                "This endpoint allows users to subscribe to Telegram notifications.",
             )
-            .native_route("/v2/users/logout", npost(logout_handler))
-            // Admin APIs
-            .route(
-                "/m2/noncelab/users",
-                post_api!(
-                    register_users_by_noncelab_handler,
-                    RegisterUserResponse,
-                    "Register users by Noncelab",
-                    "This endpoint allows you to register users by Noncelab.",
-                )
-                .with_state(pool.clone()),
-            ), // End of APIs
-    )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/m2/noncelab/users",
+            post_api!(
+                register_users_by_noncelab_handler,
+                RegisterUserResponse,
+                "Register users by Noncelab",
+                "This endpoint allows you to register users by Noncelab.\n\n**Authorization header required**\n\n`Authorization: Bearer <token>`",
+            )
+            .with_state(pool.clone()),
+        ))
 }

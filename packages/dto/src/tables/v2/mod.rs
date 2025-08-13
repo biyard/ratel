@@ -18,3 +18,6 @@ pub use oracle_votes::*;
 
 mod oracle_consensus;
 pub use oracle_consensus::*;
+mod user;
+
+pub use user::*;

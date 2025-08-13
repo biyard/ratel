@@ -8,6 +8,12 @@ import { SpaceDraft, SpaceDraftCreateRequest } from './space_draft';
 import { SprintLeague } from './sprint_league';
 import { Survey, SurveyCreateRequest } from './survey';
 import { UserType } from './user';
+import {
+  QuizQuestion,
+  BoosterType,
+  PublishingScope,
+  NoticeQuizRequest,
+} from './notice';
 
 export interface Space {
   id: number;
@@ -39,6 +45,12 @@ export interface Space {
   likes: number;
   shares: number;
   is_liked: boolean;
+
+  // Quiz
+  notice_quiz: QuizQuestion[];
+  booster_type?: BoosterType;
+  // Publishing scope
+  publishing_scope: PublishingScope;
 }
 
 export interface PostingSpaceRequest {
@@ -62,6 +74,8 @@ export interface SpaceUpdateRequest {
     elearnings: ElearningCreateRequest[];
     surveys: SurveyCreateRequest[];
     drafts: SpaceDraftCreateRequest[];
+    publishing_scope: PublishingScope;
+    quiz?: NoticeQuizRequest | null; // Updated to use new format
   };
 }
 
@@ -75,6 +89,8 @@ export function spaceUpdateRequest(
   title?: string,
   started_at?: number,
   ended_at?: number,
+  publishing_scope: PublishingScope = PublishingScope.Private,
+  quiz?: NoticeQuizRequest | null,
 ): SpaceUpdateRequest {
   return {
     update_space: {
@@ -87,10 +103,45 @@ export function spaceUpdateRequest(
       elearnings,
       surveys,
       drafts,
+      publishing_scope,
+      quiz,
     },
   };
 }
 
+export interface CreateSpaceRequest {
+  create_space: {
+    space_type: SpaceType;
+    feed_id: number;
+    user_ids: number[];
+    num_of_redeem_codes: number;
+    started_at: number | null;
+    ended_at: number | null;
+    booster_type: BoosterType | null;
+  };
+}
+
+export function createSpaceRequest(
+  space_type: SpaceType,
+  feed_id: number,
+  user_ids: number[] = [],
+  num_of_redeem_codes: number = 0,
+  started_at: number | null = null,
+  ended_at: number | null = null,
+  booster_type: BoosterType | null = null,
+): CreateSpaceRequest {
+  return {
+    create_space: {
+      space_type,
+      feed_id,
+      user_ids,
+      num_of_redeem_codes,
+      started_at,
+      ended_at,
+      booster_type,
+    },
+  };
+}
 export interface Author {
   id: number;
   nickname: string;
@@ -108,6 +159,8 @@ export enum SpaceType {
   Nft = 4,
   Committee = 5,
   SprintLeague = 6,
+  Notice = 7,
+  dAgit = 8,
 }
 
 export enum SpaceStatus {

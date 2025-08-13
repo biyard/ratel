@@ -9,7 +9,7 @@ import { getServerQueryClient } from '@/lib/query-utils.server';
 import { client } from '@/lib/apollo';
 import { ratelApi } from '@/lib/api/ratel_api';
 import ClientProviders from './providers.client';
-import { dehydrate } from '@tanstack/react-query';
+import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
 import { FeedStatus } from '@/lib/api/models/feeds';
 
 export default async function Provider({
@@ -47,8 +47,8 @@ export default async function Provider({
   const dehydratedState = dehydrate(queryClient);
 
   return (
-    <ClientProviders dehydratedState={dehydratedState} userId={userId}>
-      {children}
+    <ClientProviders userId={userId}>
+      <HydrationBoundary state={dehydratedState}>{children}</HydrationBoundary>
     </ClientProviders>
   );
 }

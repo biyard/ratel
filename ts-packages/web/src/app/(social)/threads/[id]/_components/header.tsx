@@ -1,14 +1,23 @@
 'use client';
 
 import { useFeedByID } from '@/app/(social)/_hooks/feed';
-import { ArrowLeft } from '@/components/icons';
+import { ArrowLeft, Palace } from '@/components/icons';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { UserType } from '@/lib/api/models/user';
 import { getTimeAgo } from '@/lib/time-utils';
-import { Trash2, Edit, Unlock, Plus } from 'lucide-react';
+import { Trash2, Edit } from 'lucide-react';
 import Image from 'next/image';
-import { BadgeIcon, Extra, PalaceSvgrepo } from '@/components/icons';
+import {
+  BadgeIcon,
+  Extra,
+  UnlockPublic,
+  ThumbUp,
+  CommentIcon,
+  Rewards,
+  Shares,
+  Lock,
+} from '@/components/icons';
 import Link from 'next/link';
 import { route } from '@/route';
 import { usePopup } from '@/lib/contexts/popup-service';
@@ -28,6 +37,7 @@ import { useApiCall } from '@/lib/api/use-send';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { showSuccessToast, showErrorToast } from '@/lib/toast';
 import { usePostDraft } from '@/app/(social)/_components/create-post';
+import { convertNumberToString } from '@/lib/number-utils';
 
 export default function Header({ post_id }: { post_id: number }) {
   const { data: post } = useFeedByID(post_id);
@@ -86,6 +96,43 @@ export default function Header({ post_id }: { post_id: number }) {
     }
   };
 
+  // Like functionality state and handlers
+  const [localLikes, setLocalLikes] = useState(post?.likes || 0);
+  const [localIsLiked, setLocalIsLiked] = useState(post?.is_liked || false);
+  const [isLikeProcessing, setIsLikeProcessing] = useState(false);
+
+  useEffect(() => {
+    setLocalLikes(post?.likes || 0);
+    setLocalIsLiked(post?.is_liked || false);
+  }, [post?.likes, post?.is_liked]);
+
+  const handleLike = async () => {
+    if (isLikeProcessing || !post) return; // Prevent multiple clicks
+
+    const newValue = !localIsLiked;
+
+    // Set processing state and optimistic update
+    setIsLikeProcessing(true);
+    setLocalIsLiked(newValue);
+    setLocalLikes((prev) => (newValue ? prev + 1 : prev - 1));
+
+    try {
+      await apiPost(ratelApi.feeds.likePost(post.id), {
+        like: { value: newValue },
+      });
+
+      // Success - no notification needed, visual feedback is enough
+    } catch (error) {
+      // Revert optimistic update on error
+      setLocalIsLiked(post.is_liked || false);
+      setLocalLikes(post.likes || 0);
+      console.error('Failed to update like:', error);
+      showErrorToast('Failed to update like. Please try again.');
+    } finally {
+      setIsLikeProcessing(false);
+    }
+  };
+
   const isPostOwner = author_id === user_id || selectedTeam;
 
   return (
@@ -94,7 +141,7 @@ export default function Header({ post_id }: { post_id: number }) {
         <button onClick={router.back}>
           <ArrowLeft />
         </button>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2.5">
           {space_id ? (
             <Link href={target ?? ''}>
               <Button variant="rounded_secondary" className="max-tablet:hidden">
@@ -104,27 +151,27 @@ export default function Header({ post_id }: { post_id: number }) {
           ) : isPostOwner ? (
             <>
               <Button
-                variant="default"
-                className="rounded-md max-tablet:hidden"
+                variant="rounded_secondary"
+                className="rounded-md max-tablet:hidden text-lg px-3 py-1.5"
                 onClick={handleEditPost}
               >
-                <Edit className="size-4" />
+                <Edit className="!size-5" />
                 Edit
               </Button>
               <Button
-                variant="default"
-                className="rounded-md max-tablet:hidden"
+                variant="rounded_secondary"
+                className="rounded-md max-tablet:hidden text-lg px-3 py-1.5"
               >
-                <Unlock className="size-4" />
+                <UnlockPublic className="!size-5 [&>path]:stroke-black" />
                 Make Public
               </Button>
               <Button
-                variant="rounded_secondary"
+                variant="rounded_primary"
                 onClick={handleCreateSpace}
-                className="max-tablet:hidden bg-[#FCB300] hover:bg-[#FCB300]/80"
+                className="max-tablet:hidden bg-[#FCB300] hover:bg-[#FCB300]/80 text-lg px-3 py-1.5"
               >
-                <PalaceSvgrepo className="size-5" />
-                Create Space
+                <Palace className="!size-5" />
+                Create a Space
               </Button>
             </>
           ) : (
@@ -140,7 +187,7 @@ export default function Header({ post_id }: { post_id: number }) {
                   aria-haspopup="true"
                   aria-label="Post options"
                 >
-                  <Extra className="w-6 h-6 text-gray-400" />
+                  <Extra className="size-6 text-gray-400" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
@@ -164,8 +211,8 @@ export default function Header({ post_id }: { post_id: number }) {
                           onClick={handleCreateSpace}
                           className="flex items-center w-full px-4 py-2 text-sm text-white hover:bg-gray-700 cursor-pointer"
                         >
-                          <Plus className="w-4 h-4" />
-                          Create Space
+                          <Palace className="w-4 h-4 [&>path]:stroke-white" />
+                          Create a Space
                         </button>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
@@ -179,7 +226,7 @@ export default function Header({ post_id }: { post_id: number }) {
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
                         <button className="flex items-center w-full px-4 py-2 text-sm text-white hover:bg-gray-700 cursor-pointer">
-                          <Unlock className="w-4 h-4" />
+                          <UnlockPublic className="w-4 h-4 [&>path]:stroke-white" />
                           Make Public
                         </button>
                       </DropdownMenuItem>
@@ -217,6 +264,51 @@ export default function Header({ post_id }: { post_id: number }) {
             </Badge>
           ))}
         </div>
+        <div className="flex items-center gap-4">
+          {/* Feed Stats */}
+          <button
+            onClick={handleLike}
+            disabled={isLikeProcessing}
+            className={`flex items-center gap-1 transition-colors ${
+              isLikeProcessing
+                ? 'cursor-not-allowed opacity-50'
+                : 'cursor-pointer'
+            }`}
+          >
+            <ThumbUp
+              className={
+                localIsLiked
+                  ? 'size-7 [&>path]:fill-primary [&>path]:stroke-primary'
+                  : 'size-7 text-gray-400'
+              }
+            />
+            <span className="text-base text-white">
+              {convertNumberToString(localLikes)}
+            </span>
+          </button>
+          <div className="flex items-center gap-1">
+            <CommentIcon className="size-7 text-gray-400" />
+            <span className="text-base text-white">
+              {convertNumberToString(post?.comments || 0)}
+            </span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Rewards className="size-7 text-gray-400" />
+            <span className="text-base text-white">
+              {convertNumberToString(post?.rewards || 0)}
+            </span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Shares className="size-7 text-gray-400" />
+            <span className="text-base text-white">
+              {convertNumberToString(post?.shares || 0)}
+            </span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Lock className="size-7 text-gray-400" />
+            <span className="text-base text-white">Private</span>
+          </div>
+        </div>
       </div>
 
       <div>
@@ -247,17 +339,21 @@ export function ProposerProfile({
 }) {
   return (
     <div className="flex flex-row w-fit gap-2 justify-between items-center">
-      <Image
-        src={profileUrl || '/default-profile.png'}
-        alt={proposerName}
-        width={20}
-        height={20}
-        className={
-          userType == UserType.Team
-            ? 'rounded-[8px] object-cover object-top w-[25px] h-[25px]'
-            : 'rounded-full object-cover object-top w-[25px] h-[25px]'
-        }
-      />
+      {profileUrl && profileUrl !== '' ? (
+        <Image
+          src={profileUrl}
+          alt={proposerName}
+          width={20}
+          height={20}
+          className={
+            userType == UserType.Team
+              ? 'rounded-lg object-cover object-top w-6.25 h-6.25'
+              : 'rounded-full object-cover object-top w-6.25 h-6.25'
+          }
+        />
+      ) : (
+        <div className="w-6.25 h-6.25 rounded-full border border-neutral-500 bg-neutral-600" />
+      )}
       <div className="font-semibold text-white text-sm/[20px]">
         {proposerName}
       </div>
