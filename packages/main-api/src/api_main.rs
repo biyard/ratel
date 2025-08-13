@@ -90,6 +90,13 @@ pub async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         Mynetwork,
         Verification,
         Notification,
+        Artwork,
+        Oracle,
+        Dagit,
+        OracleConsensus,
+        OracleVote,
+        ArtworkCertification,
+        ArtworkOriginal,
     );
 
     if Industry::query_builder()
