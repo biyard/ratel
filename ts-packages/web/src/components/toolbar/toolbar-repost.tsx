@@ -25,7 +25,7 @@ import RightAlignLight from '@/assets/icons/editor/paragraph-light.svg';
 
 interface ToolbarPluginProps {
   editor: Editor | null;
-  onImageUpload: (url: string) => void;
+  onImageUpload?: (url: string) => void;
   enableImage?: boolean;
   onTriggerLinkPaste?: () => void;
   onCommentPaste?: () => void;

@@ -4,17 +4,12 @@ import {
   useContext,
   useState,
   useCallback,
-  useEffect,
+  useRef,
 } from 'react';
 import { X, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { useUserInfo } from '../_hooks/user';
-import { useEditor, EditorContent } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import Underline from '@tiptap/extension-underline';
-import TextAlign from '@tiptap/extension-text-align';
-import Link from '@tiptap/extension-link';
 import Image from 'next/image';
 import { useApiCall } from '@/lib/api/use-send';
 import { ratelApi } from '@/lib/api/ratel_api';
@@ -24,13 +19,6 @@ import { Check } from 'lucide-react';
 import Certified from '@/assets/icons/certified.svg';
 import DoubleArrowDown from '@/assets/icons/double-arrow-down.svg';
 import { logger } from '@/lib/logger';
-import { Table } from '@tiptap/extension-table';
-import Highlight from '@tiptap/extension-highlight';
-import TextStyle from '@tiptap/extension-text-style';
-import Color from '@tiptap/extension-color';
-import TableRow from '@tiptap/extension-table-row';
-import TableHeader from '@tiptap/extension-table-header';
-import TableCell from '@tiptap/extension-table-cell';
 import { UserCircle } from '@/components/icons';
 import ToolbarPlugin from '@/components/toolbar/toolbar-repost';
 import {
@@ -38,6 +26,10 @@ import {
   showSuccessToast,
 } from '@/components/custom-toast/toast';
 import DOMPurify from 'dompurify';
+import { TiptapEditor } from '@/components/text-editor/tiptap-editor';
+import { Editor } from '@tiptap/core';
+import LinkPaste from '@/assets/icons/editor/link-paste.svg';
+import CommentPaste from '@/assets/icons/editor/comment-paste.svg';
 
 export function CreateRePost() {
   const {
@@ -71,83 +63,11 @@ export function CreateRePost() {
   const { data: userInfo } = useUserInfo();
   const { post } = useApiCall();
   const router = useRouter();
-
+  const editorRef = useRef<Editor | null>(null);
   const [isReposting, setIsReposting] = useState(false);
 
-  const editor = useEditor({
-    extensions: [
-      StarterKit.configure({
-        bulletList: {
-          HTMLAttributes: { class: 'list-disc pl-4' },
-        },
-        orderedList: {
-          HTMLAttributes: { class: 'list-decimal pl-4' },
-        },
-      }),
-      TextStyle,
-      Color,
-      Highlight.configure({ multicolor: true }),
-      TextAlign.configure({
-        types: ['heading', 'paragraph'],
-      }),
-      Table.configure({
-        resizable: true,
-        HTMLAttributes: {
-          class: 'tiptap-table',
-          style: 'border: 1px solid #e0e0e0;',
-        },
-      }),
-      TableRow.configure({
-        HTMLAttributes: {
-          class: 'tiptap-table-row',
-        },
-      }),
-      TableHeader.configure({
-        HTMLAttributes: {
-          class: 'tiptap-table-header',
-          style: 'background-color: #f5f5f5;',
-        },
-      }),
-      TableCell.configure({
-        HTMLAttributes: {
-          class: 'tiptap-table-cell',
-          style:
-            'background-color: #fcb300; color: #333; border: 1px solid #e0e0e0;',
-        },
-      }),
-      Link.configure({
-        openOnClick: false,
-      }),
-      Underline,
-    ],
-    content: content || '',
-    onUpdate: ({ editor }) => {
-      const html = editor.getHTML();
-      setContent(html);
-    },
-  });
-
-  useEffect(() => {
-    return () => {
-      if (editor) {
-        editor.destroy();
-      }
-    };
-  }, [editor]);
-
-  useEffect(() => {
-    if (
-      editor &&
-      !editor.isDestroyed &&
-      content &&
-      editor.getHTML() !== content
-    ) {
-      editor.commands.setContent(content);
-    }
-  }, [editor, content]);
-
   const handlePublish = async () => {
-    if (!title.trim() || !content || !editor) return;
+    if (!title.trim() || !content) return;
 
     setIsReposting(true);
     let didTimeout = false;
@@ -160,7 +80,7 @@ export function CreateRePost() {
     try {
       const response = await post(ratelApi.feeds.repost(), {
         repost: {
-          html_contents: editor.getHTML(),
+          html_contents: content,
           quote_feed_id: originalFeedId,
           parent_id: authorId,
           user_id: User?.id,
@@ -168,14 +88,11 @@ export function CreateRePost() {
       });
 
       clearTimeout(timeout);
-      if (didTimeout) {
-        return; 
-      }
-      showSuccessToast('Repost Successful!');
-      editor.commands.clearContent(true);
-      router.push(route.threadByFeedId(response.id));
-      resetDraft();
+      if (didTimeout) return;
 
+      showSuccessToast('Repost Successful!');
+      resetDraft();
+      router.push(route.threadByFeedId(response.id));
     } catch (error) {
       setIsReposting(false);
       logger.debug('Failed to publish repost:', error);
@@ -193,25 +110,21 @@ export function CreateRePost() {
 
   const handleInsertUrl = () => {
     const url = repostUrl?.trim();
-    if (!url || !editor) return;
+    if (!url) return;
 
-    editor.commands.insertContent(url);
+    setContent(content ? `${content} ${url}` : url);
     setShowUrlInput(false);
     setRepostUrl('');
   };
 
   const handleCommentUrl = () => {
     const url = commentUrl?.trim();
-    if (!url || !editor) return;
+    if (!url) return;
 
-    editor.commands.insertContent(url);
+    setContent(content ? `${content} ${url}` : url);
     setCommentUrl('');
     setShowCommentUrlInput(false);
   };
-
-  if (!editor) {
-    return null;
-  }
 
   return (
     <div className={`flex flex-col w-full ${!expand ? 'hidden' : 'block'}`}>
@@ -312,26 +225,58 @@ export function CreateRePost() {
 
         {/* Editor Area */}
         <div className="px-4 pt-2 min-h-[80px] relative">
-          <EditorContent
-            editor={editor}
-            className="outline-none min-h-[100px] text-neutral-300"
+          <TiptapEditor
+            ref={editorRef}
+            content={content || ''}
+            onUpdate={setContent}
+            className="mb-2"
           />
 
+          {/*  Toolbar + Post Button Row */}
+          <div className="flex items-center justify-between gap-4 m-2 ">
+            {/* Toolbar */}
+            {editorRef.current && (
+              <ToolbarPlugin
+                editor={editorRef.current}
+                onImageUpload={setImage}
+                onTriggerLinkPaste={() => {
+                  setShowUrlInput(true);
+                  setRepostUrl('');
+                }}
+                onCommentPaste={() => {
+                  setShowCommentUrlInput(true);
+                  setCommentUrl('');
+                }}
+              />
+            )}
+
+            {/* Post Button */}
+            <button
+              onClick={handlePublish}
+              disabled={isSubmitDisabled}
+              className="shrink-0 bg-primary text-background rounded-full hover:bg-primary/70 px-4 py-2 font-bold flex items-center gap-x-2"
+            >
+              {isReposting ? (
+                <Loader2 className="animate-spin" />
+              ) : (
+                <UserCircle />
+              )}
+              {isReposting ? '' : 'Post'}
+            </button>
+          </div>
+
+          {/* URL Input Dialogs */}
           {showUrlInput && (
             <div className="absolute top-4 left-2 z-20 bg-neutral-800 border border-neutral-600 rounded-md px-3 py-2 flex items-center gap-2 w-[90%]">
+              <LinkPaste />
               <input
                 autoFocus
                 value={repostUrl}
                 onChange={(e) => setRepostUrl(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    handleInsertUrl();
-                  }
-                }}
+                onKeyDown={(e) => e.key === 'Enter' && handleInsertUrl()}
                 placeholder="Paste or search for the relevant discussion or topic URL"
                 className="bg-transparent text-white text-sm placeholder-neutral-400 outline-none flex-1"
               />
-
               <button
                 onClick={handleInsertUrl}
                 className="text-green-400 hover:text-white"
@@ -339,7 +284,6 @@ export function CreateRePost() {
               >
                 <Check className="w-4 h-4" />
               </button>
-
               <button
                 onClick={() => {
                   setShowUrlInput(false);
@@ -355,19 +299,16 @@ export function CreateRePost() {
 
           {showCommentUrlInput && (
             <div className="absolute top-2/5 left-2 z-20 bg-neutral-800 border border-neutral-600 rounded-md px-3 py-2 flex items-center gap-2 w-[90%]">
+              <CommentPaste />
+
               <input
                 autoFocus
                 value={commentUrl}
                 onChange={(e) => setCommentUrl(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    handleCommentUrl();
-                  }
-                }}
+                onKeyDown={(e) => e.key === 'Enter' && handleCommentUrl()}
                 placeholder="Please paste or search for the comment to quote"
                 className="bg-transparent text-white text-sm placeholder-neutral-400 outline-none flex-1"
               />
-
               <button
                 onClick={handleCommentUrl}
                 className="text-green-400 hover:text-white"
@@ -375,7 +316,6 @@ export function CreateRePost() {
               >
                 <Check className="w-4 h-4" />
               </button>
-
               <button
                 onClick={() => {
                   setShowCommentUrlInput(false);
@@ -408,35 +348,6 @@ export function CreateRePost() {
               </div>
             </div>
           )}
-
-          {/* Footer */}
-          <div className="flex items-center justify-between p-4">
-            <div className="flex space-x-2">
-              {/* Toolbar components would go here */}
-              <ToolbarPlugin
-                editor={editor}
-                onImageUpload={setImage}
-                onTriggerLinkPaste={() => {
-                  setShowUrlInput(true);
-                  setRepostUrl('');
-                }}
-                onCommentPaste={() => {
-                  setShowCommentUrlInput(true);
-                  setCommentUrl('');
-                }}
-              />
-            </div>
-
-            <button
-              onClick={handlePublish}
-              disabled={isSubmitDisabled}
-              className="bg-primary text-background rounded-full hover:bg-primary/70 hover:shadow-[inset_0_0_0_1000px_rgba(0,0,0,0.2)] flex px-4 py-2 font-bold gap-x-2 items-center"
-            >
-              {isReposting ? <Loader2 /> : <UserCircle />}
-
-              {isReposting ? '' : 'Post'}
-            </button>
-          </div>
         </div>
       </div>
     </div>
@@ -450,10 +361,8 @@ interface RePostDraftContextType {
   authorProfileUrl?: string;
   setAuthorName: (name: string) => void;
   setAuthorProfileUrl: (url: string) => void;
-
   authorId: number | null;
   setAuthorId: (id: number | null) => void;
-
   industry?: string;
   setIndustry: (name: string) => void;
   expand: boolean;
