@@ -140,7 +140,10 @@ class _MainScreenState extends State<MainScreen>
                   offset: Offset(dx, 0),
                   child: Align(
                     alignment: Alignment.centerLeft,
-                    child: SidePanel(width: sheetWidth),
+                    child: SidePanel(
+                      width: sheetWidth,
+                      onClose: closeSidePanel,
+                    ),
                   ),
                 );
               },

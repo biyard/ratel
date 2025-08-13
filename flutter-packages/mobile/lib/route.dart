@@ -11,6 +11,10 @@ class AppRoutes {
   static const String selectTopicScreen = '/select-topic';
   static const String connectionScreen = '/connection';
   static const String setupAttributeScreen = '/setup-attribute';
+  static const String boostingScreen = '/boosting';
+  static const String draftScreen = '/draft';
+  static const String postScreen = '/post';
+  static const String verifiedScreen = '/verified';
   static const String mySpaces = '/my-spaces';
   static const String explore = "/dashboard/explore";
   static const String home = "/dashboard/home";
@@ -24,6 +28,42 @@ class AppRoutes {
       name: mainScreen,
       page: () => MainScreen(),
       binding: MainBinding(),
+      customTransition: SlideOverTransition(),
+      transitionDuration: const Duration(milliseconds: 300),
+      opaque: true,
+      curve: Curves.easeOutCubic,
+    ),
+    GetPage(
+      name: boostingScreen,
+      page: () => const BoostingScreen(),
+      binding: BoostingBinding(),
+      customTransition: SlideOverTransition(),
+      transitionDuration: const Duration(milliseconds: 300),
+      opaque: true,
+      curve: Curves.easeOutCubic,
+    ),
+    GetPage(
+      name: postScreen,
+      page: () => const PostScreen(),
+      binding: PostBinding(),
+      customTransition: SlideOverTransition(),
+      transitionDuration: const Duration(milliseconds: 300),
+      opaque: true,
+      curve: Curves.easeOutCubic,
+    ),
+    GetPage(
+      name: draftScreen,
+      page: () => const DraftScreen(),
+      binding: DraftBinding(),
+      customTransition: SlideOverTransition(),
+      transitionDuration: const Duration(milliseconds: 300),
+      opaque: true,
+      curve: Curves.easeOutCubic,
+    ),
+    GetPage(
+      name: verifiedScreen,
+      page: () => const VerifiedScreen(),
+      binding: VerifiedBinding(),
       customTransition: SlideOverTransition(),
       transitionDuration: const Duration(milliseconds: 300),
       opaque: true,
