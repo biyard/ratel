@@ -18,6 +18,13 @@ abstract class Assets {
   static const String roundBubble = 'assets/icons/roundBubble.svg';
   static const String thumbs = 'assets/icons/thumbs.svg';
 
+  static const String editContent = 'assets/icons/edit_content.svg';
+  static const String folder = 'assets/icons/folder.svg';
+  static const String option = 'assets/icons/option.svg';
+  static const String star = 'assets/icons/star.svg';
+  static const String verification = 'assets/icons/verification.svg';
+  static const String dark = 'assets/icons/dark.svg';
+
   static const String filter = 'assets/icons/filter.svg';
   static const String plus = 'assets/icons/plus.svg';
   static const String chat = 'assets/icons/chat.svg';
