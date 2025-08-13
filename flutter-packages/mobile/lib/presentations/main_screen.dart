@@ -220,6 +220,25 @@ class _MainScreenState extends State<MainScreen> {
                 ),
                 Positioned(
                   top: 0,
+                  left: 0,
+                  right: 0,
+                  child: Row(
+                    children: List.generate(
+                      routes.length,
+                      (i) => SizedBox(
+                        width: itemWidth,
+                        child: Container(
+                          height: 0.2,
+                          color: i == currentIndex
+                              ? Colors.transparent
+                              : AppColors.iconPrimary,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 0,
                   left: itemWidth * currentIndex,
                   child: Container(
                     width: itemWidth,
