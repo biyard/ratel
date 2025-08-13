@@ -1,25 +1,25 @@
 'use client';
 
 import React from 'react';
+import { usePopup } from '@/lib/contexts/popup-service';
 
 export interface QuizSubmitFormProps {
   onSubmit: () => void;
-  onClose: () => void;
 }
 
-export default function QuizSubmitForm({
-  onSubmit,
-  onClose,
-}: QuizSubmitFormProps) {
+export default function QuizSubmitForm({ onSubmit }: QuizSubmitFormProps) {
+  const popup = usePopup();
+
   return (
-    <div className="w-[500px] flex flex-col mt-6">
+    <div className="w-[500px] flex flex-col mt-2">
       <div className="text-center font-bold text-white text-[24px] mb-6">
         Just heads up!
       </div>
 
       {/* Warning Content */}
       <div className="text-center font-medium text-neutral-400 text-base">
-        Wrong answers will reduce your reward by 50%
+        Wrong answers will reduce your reward by{' '}
+        <span className="text-red-500 font-bold">50%</span>
         <br />
         You can test again, but remember — the{' '}
         <span className="font-bold">
@@ -35,7 +35,7 @@ export default function QuizSubmitForm({
       {/* Action Buttons */}
       <div className="flex flex-row justify-end gap-4 mt-8.75">
         <button
-          onClick={onClose}
+          onClick={() => popup.close()}
           className="px-10 py-[14.5px] bg-transparent font-bold text-base text-neutral-400"
         >
           Cancel
