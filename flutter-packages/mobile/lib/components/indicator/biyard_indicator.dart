@@ -34,7 +34,7 @@ class _BiyardIndicatorState extends State<BiyardIndicator> {
     //   colors: _kDefaultRainbowColors,
     // );
     return Container(
-      color: Colors.grey.withOpacity(0.3),
+      color: AppColors.bg,
       child: const Row(
         mainAxisAlignment: MainAxisAlignment.center,
         mainAxisSize: MainAxisSize.max,
