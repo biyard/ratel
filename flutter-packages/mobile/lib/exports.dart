@@ -102,6 +102,7 @@ export 'components/custom_checkbox/custom_checkbox.dart';
 
 export 'components/modal/login_modal.dart';
 export 'components/modal/modal_title.dart';
+export 'components/side_panel/side_panel.dart';
 
 export 'services/auth/auth_service.dart';
 export 'services/auth/auth_api.dart';
