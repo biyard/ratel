@@ -105,3 +105,4 @@ export { default as UserCircle } from '@/assets/icons/user-circle.svg';
 
 export { default as FilterArrow } from '@/assets/icons/filter.svg';
 export { default as CheckCircle2 } from '@/assets/icons/check-circele2.svg';
+export { default as Loader } from '@/assets/icons/loader2.svg';
