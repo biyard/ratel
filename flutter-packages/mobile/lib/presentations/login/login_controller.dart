@@ -16,11 +16,20 @@ class LoginController extends BaseController {
   void toggleShowPassword() => showPassword.toggle();
 
   Future<void> signIn() async {
+    final auth = AuthApi();
     if (isBusy.value || !isFormValid) return;
     isBusy.value = true;
     try {
-      await Future.delayed(const Duration(milliseconds: 800));
-      Get.rootDelegate.offNamed(AppRoutes.mainScreen);
+      final res = await auth.loginWithPassword(email.value, password.value);
+
+      if (res != null) {
+        Get.rootDelegate.offNamed(AppRoutes.mainScreen);
+      } else {
+        Biyard.error(
+          "Failed to login",
+          "Login failed. Please try again later.",
+        );
+      }
     } finally {
       isBusy.value = false;
     }

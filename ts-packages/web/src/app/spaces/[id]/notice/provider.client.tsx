@@ -120,6 +120,8 @@ type ContextType = {
   handlePostingSpace: () => Promise<void>;
   handleEdit: () => void;
   handleSave: () => Promise<void>;
+  handleSaveWithoutExitingEditMode: () => Promise<void>;
+  handleSaveAndPublish: (scope: PublishingScope) => Promise<void>;
   handlePublishWithScope: (scope: PublishingScope) => Promise<void>;
   handleSubmitQuiz: (questions: Question[]) => Promise<void>;
 };
@@ -389,6 +391,151 @@ export default function ClientProviders({
     }
   };
 
+  const handleSaveWithoutExitingEditMode = async () => {
+    if (!space) return;
+    console.log('handleSaveWithoutExitingEditMode called');
+    // Show temporary saving message
+    showInfoToast('Saving changes...');
+
+    if (!validateString(title)) {
+      showErrorToast('Title contains invalid characters');
+      return;
+    }
+
+    if (!title.trim()) {
+      showErrorToast('Title cannot be empty');
+      return;
+    }
+
+    try {
+      // Validate quiz questions before saving
+      if (quizQuestions.length > 0) {
+        const validationError = validateQuizQuestions(quizQuestions);
+        if (validationError) {
+          showErrorToast(validationError);
+          return;
+        }
+      }
+
+      // Convert frontend quiz questions to backend format
+      // When space is InProgress, pass null to prevent quiz modifications
+      const quizRequest =
+        space.status === SpaceStatus.InProgress
+          ? null
+          : convertQuestionsToNoticeQuizRequest(quizQuestions);
+
+      // Debug log to verify the correct structure is being sent
+      console.log('Quiz being sent:', JSON.stringify(quizRequest, null, 2));
+
+      const updateRequest = spaceUpdateRequest(
+        htmlContent,
+        space.files,
+        [], // discussions
+        [], // elearnings
+        [], // surveys
+        [], // drafts
+        title,
+        space.started_at,
+        space.ended_at,
+        space.publishing_scope, // preserve current publishing scope
+        quizRequest, // quiz
+      );
+
+      // Debug log the full request payload
+      console.log(
+        'Full update request payload:',
+        JSON.stringify(updateRequest, null, 2),
+      );
+
+      await callUpdateSpace(
+        ratelApi.spaces.getSpaceBySpaceId(space.id),
+        updateRequest,
+      );
+
+      await queryClient.invalidateQueries({
+        queryKey: [QK_GET_SPACE_BY_SPACE_ID, space.id],
+      });
+      showSuccessToast('Space saved successfully');
+      // Note: Do NOT call setIsEdit(false) here - keep in edit mode
+    } catch (e) {
+      showErrorToast('Failed to save space');
+      logger.error(e);
+    }
+  };
+
+  const handleSaveAndPublish = async (scope: PublishingScope) => {
+    if (!space) return;
+    console.log('handleSaveAndPublish called with scope:', scope);
+
+    // Show temporary saving message
+    showInfoToast('Saving and publishing...');
+
+    if (!validateString(title)) {
+      showErrorToast('Title contains invalid characters');
+      return;
+    }
+
+    if (!title.trim()) {
+      showErrorToast('Title cannot be empty');
+      return;
+    }
+
+    try {
+      // Validate quiz questions before saving
+      if (quizQuestions.length > 0) {
+        const validationError = validateQuizQuestions(quizQuestions);
+        if (validationError) {
+          showErrorToast(validationError);
+          return;
+        }
+      }
+
+      // Convert frontend quiz questions to backend format
+      // When space is InProgress, pass null to prevent quiz modifications
+      const quizRequest =
+        space.status === SpaceStatus.InProgress
+          ? null
+          : convertQuestionsToNoticeQuizRequest(quizQuestions);
+
+      // Create update request with BOTH the content changes AND the publishing scope
+      const updateRequest = spaceUpdateRequest(
+        htmlContent,
+        space.files,
+        [], // discussions
+        [], // elearnings
+        [], // surveys
+        [], // drafts
+        title,
+        space.started_at,
+        space.ended_at,
+        scope, // Use the new publishing scope
+        quizRequest, // quiz
+      );
+
+      // Debug log the full request payload
+      console.log(
+        'Save and publish request payload:',
+        JSON.stringify(updateRequest, null, 2),
+      );
+
+      await callUpdateSpace(
+        ratelApi.spaces.getSpaceBySpaceId(space.id),
+        updateRequest,
+      );
+
+      await queryClient.invalidateQueries({
+        queryKey: [QK_GET_SPACE_BY_SPACE_ID, space.id],
+      });
+
+      showSuccessToast(
+        `Space saved and published ${scope === PublishingScope.Public ? 'publicly' : 'privately'} successfully`,
+      );
+    } catch (e) {
+      showErrorToast('Failed to save and publish space');
+      logger.error(e);
+    }
+  };
+
   const handleSubmitQuiz = async (questions: Question[]) => {
     console.log('Provider handleSubmitQuiz called with questions:', questions);
     console.log('Space:', space);
@@ -479,14 +626,7 @@ export default function ClientProviders({
 
         console.log('Latest attempt after submission:', latestAttempt);
 
-        // Show appropriate toast based on success status
-        if (latestAttempt && latestAttempt.is_successful) {
-          showSuccessToast('Coin Earned! View it in your profile.');
-        } else {
-          showErrorToast('Each wrong answer cuts your reward in half!');
-        }
-
-        // Trigger one final refresh to ensure all components update
+        // Trigger refresh to update quiz data and UI state
         await forceRefreshQuizData();
 
         // Wait a short moment and refresh again to ensure UI updates
@@ -497,8 +637,6 @@ export default function ClientProviders({
         console.error('Failed to fetch attempt data:', attemptError);
         // Still refresh queries even if fetch failed
         await forceRefreshQuizData();
-        // Fallback to generic success message
-        showSuccessToast('Quiz submitted successfully!');
       }
     } catch (e) {
       console.error('Submit quiz error:', e);
@@ -614,6 +752,8 @@ export default function ClientProviders({
     handlePostingSpace,
     handleEdit,
     handleSave,
+    handleSaveWithoutExitingEditMode,
+    handleSaveAndPublish,
     handlePublishWithScope,
     handleSubmitQuiz,
   };

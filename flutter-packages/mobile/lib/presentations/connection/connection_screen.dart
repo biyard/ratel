@@ -16,16 +16,16 @@ class ConnectionScreen extends GetWidget<ConnectionController> {
                 height: 70,
                 child: Row(
                   children: [
-                    InkWell(onTap: controller.goBack, child: Assets.backIcon),
-                    10.gap,
-                    const Text(
-                      'Make connections',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                      ),
-                    ),
+                    // InkWell(onTap: controller.goBack, child: Assets.backIcon),
+                    // 10.gap,
+                    // const Text(
+                    //   'Make connections',
+                    //   style: TextStyle(
+                    //     color: Colors.white,
+                    //     fontWeight: FontWeight.w600,
+                    //     fontSize: 14,
+                    //   ),
+                    // ),
                   ],
                 ),
               ),
@@ -49,22 +49,24 @@ class ConnectionScreen extends GetWidget<ConnectionController> {
                 onChanged: controller.onSearchChanged,
               ),
               30.vgap,
-              SizedBox(
-                height: MediaQuery.of(context).size.height - 350,
-                child: ListView.separated(
-                  itemCount: controller.filtered.length,
-                  separatorBuilder: (_, __) => 0.vgap,
-                  itemBuilder: (context, index) {
-                    final n = controller.filtered[index];
-                    final isFollowing = controller.followed.contains(n.userId);
-                    return _NetworkTile(
-                      username: n.username,
-                      description: n.description,
-                      profile: n.profileUrl,
-                      isFollowing: isFollowing,
-                      onToggle: () => controller.toggleFollow(n.userId),
-                    );
-                  },
+              Obx(
+                () => SizedBox(
+                  height: MediaQuery.of(context).size.height - 350,
+                  child: ListView.separated(
+                    itemCount: controller.networks.length,
+                    separatorBuilder: (_, __) => 0.vgap,
+                    itemBuilder: (context, index) {
+                      final n = controller.networks[index];
+                      final isFollowing = controller.followed.contains(n.id);
+                      return _NetworkTile(
+                        username: n.nickname,
+                        description: n.description,
+                        profile: n.profileUrl,
+                        isFollowing: isFollowing,
+                        onToggle: () => controller.toggleFollow(n.id),
+                      );
+                    },
+                  ),
                 ),
               ),
               16.vgap,
