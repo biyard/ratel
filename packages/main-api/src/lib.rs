@@ -19,6 +19,24 @@ pub mod controllers {
         pub mod telegram {
             pub mod subscribe;
         }
+
+        pub mod dagits {
+            pub mod add_oracle;
+            pub mod get_dagit;
+
+            pub mod artworks {
+                pub mod create_artwork;
+                pub mod get_artwork_detail;
+            }
+
+            pub mod consensus {
+                pub mod create_consensus;
+                pub mod vote;
+            }
+        }
+        pub mod oracles {
+            pub mod create_oracle;
+        }
     }
     pub mod m2 {
         pub mod noncelab {
