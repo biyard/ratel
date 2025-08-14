@@ -28,13 +28,17 @@ export default function ProfileSection() {
       <TeamSelector onSelect={handleTeamSelect} team={team} />
 
       <div className="relative">
-        <Image
-          src={user?.profile_url || '/default-profile.png'}
-          alt={user?.nickname ?? 'team profile'}
-          width={80}
-          height={80}
-          className="rounded-full border-2 object-cover object-top"
-        />
+        {user?.profile_url && user?.profile_url !== '' ? (
+          <Image
+            src={user?.profile_url}
+            alt={user?.nickname ?? 'team profile'}
+            width={80}
+            height={80}
+            className="w-20 h-20 rounded-full border-2 object-cover object-top"
+          />
+        ) : (
+          <div className="w-20 h-20 rounded-full border border-neutral-500 bg-neutral-600" />
+        )}
       </div>
 
       <div className="font-medium">{user.nickname}</div>

@@ -1,91 +1,33 @@
 import 'package:ratel/exports.dart';
 
 class ConnectionController extends BaseController {
+  @override
+  void onInit() {
+    listNetworks();
+    super.onInit();
+  }
+
+  void listNetworks() async {
+    final items = await networkApi.getNetworks();
+    logger.d("items length: ${items.length}");
+    networks(items);
+  }
+
+  final networkApi = Get.find<NetworkApi>();
+
   final query = ''.obs;
 
-  //FIXME: fix to query api
-  final networks = [
-    Network(
-      userId: 1,
-      profileUrl: "",
-      username: "User name 1",
-      description:
-          "Candidate for State, Senate, NY Candidate for State, Senate, NY Candidate for State, Senate, NY Candidate for State, Senate, NY ",
-    ),
-    Network(
-      userId: 2,
-      profileUrl: "",
-      username: "User name 2",
-      description:
-          "Candidate for State, Senate, NY Candidate for State, Senate, NY Candidate for State, Senate, NY Candidate for State, Senate, NY ",
-    ),
-    Network(
-      userId: 3,
-      profileUrl: "",
-      username: "User name 3",
-      description:
-          "Candidate for State, Senate, NY Candidate for State, Senate, NY Candidate for State, Senate, NY Candidate for State, Senate, NY ",
-    ),
-    Network(
-      userId: 4,
-      profileUrl: "",
-      username: "User name 4",
-      description:
-          "Candidate for State, Senate, NY Candidate for State, Senate, NY Candidate for State, Senate, NY Candidate for State, Senate, NY ",
-    ),
-    Network(
-      userId: 5,
-      profileUrl: "",
-      username: "User name 5",
-      description:
-          "Candidate for State, Senate, NY Candidate for State, Senate, NY Candidate for State, Senate, NY Candidate for State, Senate, NY ",
-    ),
-    Network(
-      userId: 6,
-      profileUrl: "",
-      username: "User name 6",
-      description:
-          "Candidate for State, Senate, NY Candidate for State, Senate, NY Candidate for State, Senate, NY Candidate for State, Senate, NY ",
-    ),
-    Network(
-      userId: 7,
-      profileUrl: "",
-      username: "User name 7",
-      description:
-          "Candidate for State, Senate, NY Candidate for State, Senate, NY Candidate for State, Senate, NY Candidate for State, Senate, NY ",
-    ),
-    Network(
-      userId: 8,
-      profileUrl: "",
-      username: "User name 8",
-      description:
-          "Candidate for State, Senate, NY Candidate for State, Senate, NY Candidate for State, Senate, NY Candidate for State, Senate, NY ",
-    ),
-    Network(
-      userId: 9,
-      profileUrl: "",
-      username: "User name 9",
-      description:
-          "Candidate for State, Senate, NY Candidate for State, Senate, NY Candidate for State, Senate, NY Candidate for State, Senate, NY ",
-    ),
-    Network(
-      userId: 10,
-      profileUrl: "",
-      username: "User name 10",
-      description:
-          "Candidate for State, Senate, NY Candidate for State, Senate, NY Candidate for State, Senate, NY Candidate for State, Senate, NY ",
-    ),
-  ];
+  RxList<NetworkModel> networks = <NetworkModel>[].obs;
 
   final followed = <int>{}.obs;
 
-  List<Network> get filtered {
+  List<NetworkModel> get filtered {
     final q = query.value.trim().toLowerCase();
     if (q.isEmpty) return networks;
     return networks
         .where(
           (n) =>
-              n.username.toLowerCase().contains(q) ||
+              n.nickname.toLowerCase().contains(q) ||
               n.description.toLowerCase().contains(q),
         )
         .toList();
@@ -93,7 +35,11 @@ class ConnectionController extends BaseController {
 
   bool get hasFollowed => followed.isNotEmpty;
 
-  void onSearchChanged(String v) => query.value = v;
+  Future<void> onSearchChanged(String v) async {
+    query.value = v;
+    final items = await networkApi.getNetworksByKeyword(v);
+    networks(items);
+  }
 
   void toggleFollow(int userId) {
     if (followed.contains(userId)) {
@@ -103,7 +49,24 @@ class ConnectionController extends BaseController {
     }
   }
 
+  Future<void> next() async {
+    final network = NetworkApi();
+    final ids = followed.toList();
+
+    try {
+      final res = await network.follow(ids);
+
+      if (res != null) {
+        Get.rootDelegate.offNamed(AppRoutes.setupAttributeScreen);
+      } else {
+        Biyard.error(
+          "Failed to follow user.",
+          "Follow user is failed. Please try again later.",
+        );
+      }
+    } finally {}
+  }
+
   void goBack() => Get.rootDelegate.offNamed(AppRoutes.selectTopicScreen);
   void skip() => Get.rootDelegate.offNamed(AppRoutes.setupAttributeScreen);
-  void next() => Get.rootDelegate.offNamed(AppRoutes.setupAttributeScreen);
 }
