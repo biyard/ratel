@@ -94,6 +94,15 @@ pub async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         NoticeQuizAnswer,
         NoticeQuizAttempt,
         TelegramSubscribe,
+        Dagit,
+        Artwork,
+        Oracle,
+        DagitOracle,
+        DagitArtwork,
+        Consensus,
+        ConsensusVote,
+        ArtworkCertification,
+        ArtworkDetail
     );
 
     if Industry::query_builder()
