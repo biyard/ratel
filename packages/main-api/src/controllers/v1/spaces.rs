@@ -4,6 +4,7 @@ mod discussions;
 mod meeting;
 mod notice_quiz_answers;
 mod notice_quiz_attempts;
+mod notice_quiz_attempts;
 mod redeem_codes;
 mod responses;
 mod sprint_leagues;
@@ -64,33 +65,59 @@ impl SpaceController {
             .fetch_one(&self.pool)
             .await?;
 
-        // Access control for draft notice spaces
-        if space.space_type == SpaceType::Notice && space.status == SpaceStatus::Draft {
-            // Check if user is the owner
+        // Access control for notice spaces
+        if space.space_type == SpaceType::Notice {
             let is_owner = user_id == space.owner_id;
+          
+            match space.status {
+                SpaceStatus::Draft => {
+                    // Draft notice spaces: only owner has access
+                    if !is_owner {
+                        tracing::warn!(
+                            "Access denied for user {} to draft notice space {} - only owner allowed",
+                            user_id,
+                            id
+                        );
+                        return Err(Error::Unauthorized);
+                    }
+                }
+                _ => {
+                    // published spaces
+                    match space.publishing_scope {
+                        PublishingScope::Private => {
+                            // Private: only space members can access
+                            let is_member = if user_id != 0 {
+                                SpaceMember::query_builder()
+                                    .space_id_equals(id)
+                                    .user_id_equals(user_id)
+                                    .query()
+                                    .map(SpaceMember::from)
+                                    .fetch_optional(&self.pool)
+                                    .await?
+                                    .is_some()
+                            } else {
+                                false
+                            };
 
-            // Check if user is a space member
-            let is_member = if user_id != 0 {
-                SpaceMember::query_builder()
-                    .space_id_equals(id)
-                    .user_id_equals(user_id)
-                    .query()
-                    .map(SpaceMember::from)
-                    .fetch_optional(&self.pool)
-                    .await?
-                    .is_some()
-            } else {
-                false
-            };
-
-            // If user is neither owner nor member, deny access
-            if !is_owner && !is_member {
-                tracing::warn!(
-                    "Access denied for user {} to draft notice space {} - not owner or member",
-                    user_id,
-                    id
-                );
-                return Err(Error::Unauthorized);
+                            if !is_owner && !is_member {
+                                tracing::warn!(
+                                    "Access denied for user {} to private notice space {} - not owner or member",
+                                    user_id,
+                                    id
+                                );
+                                return Err(Error::Unauthorized);
+                            }
+                        }
+                        PublishingScope::Public => {
+                            // Public: all users can access (no additional checks needed)
+                            tracing::debug!(
+                                "Allowing access to public notice space {} for user {}",
+                                id,
+                                user_id
+                            );
+                        }
+                    }
+                }
             }
         }
 
@@ -422,6 +449,7 @@ impl SpaceController {
 
         let mut tx = self.pool.begin().await?;
 
+        // notice quiz
         // If quiz is provided, save the quiz with answers and convert to read-only version for space
         let notice_quiz_for_space = if let Some(ref quiz_data) = quiz {
             if !quiz_data.questions.is_empty() {
@@ -830,6 +858,11 @@ impl SpaceController {
             })?
             .ok_or(Error::SpaceWritePostError)?;
 
+        if space_type == SpaceType::Dagit {
+            Dagit::get_repository(self.pool.clone())
+                .insert_with_tx(&mut *tx, res.id)
+                .await?;
+        }
         let g = SpaceGroup::get_repository(self.pool.clone());
         let group = g
             .insert_with_tx(&mut *tx, res.id, "Admin".to_string())
@@ -846,6 +879,7 @@ impl SpaceController {
                     Error::SpaceWritePostError
                 })?;
         }
+
         tx.commit().await?;
 
         Ok(res)
@@ -1076,6 +1110,7 @@ impl SpaceController {
             for (option_index, option) in question.options.iter().enumerate() {
                 let content = option.content.trim();
 
+
                 // Check for empty content
                 if content.is_empty() {
                     tracing::error!(
@@ -1197,11 +1232,14 @@ impl SpaceController {
             .nest(
                 "/:space-id/notice-quiz-attempts",
                 notice_quiz_attempts::SpaceNoticeQuizAttemptController::new(self.pool.clone())
+                    
                     .route(),
             )
+            
             .nest(
                 "/:space-id/notice-quiz-answers",
                 notice_quiz_answers::SpaceNoticeQuizAnswersController::new(self.pool.clone())
+                    
                     .route(),
             ))
     }

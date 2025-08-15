@@ -99,7 +99,6 @@ export default function MyFollower({ type }: { type: RelationType }) {
               .open(
                 <UnFollowPopup
                   username={followings[index].username}
-                  email={followings[index].email}
                   oncancel={() => {
                     popup.close();
                   }}
@@ -151,22 +150,22 @@ function FollowingInfo({
               <div className="flex flex-row w-full justify-between items-start">
                 <div className="flex flex-row w-fit gap-2">
                   {user.user_type == UserType.Team ? (
-                    user.profile_url ? (
+                    user.profile_url && user.profile_url !== '' ? (
                       <Image
                         width={32}
                         height={32}
-                        src={user.profile_url || '/default-profile.png'}
+                        src={user.profile_url}
                         alt="Profile"
                         className="w-8 h-8 rounded-lg object-cover"
                       />
                     ) : (
                       <div className="w-8 h-8 rounded-lg bg-neutral-500" />
                     )
-                  ) : user.profile_url ? (
+                  ) : user.profile_url && user.profile_url !== '' ? (
                     <Image
                       width={32}
                       height={32}
-                      src={user.profile_url || '/default-profile.png'}
+                      src={user.profile_url}
                       alt="Profile"
                       className="w-8 h-8 rounded-full object-cover"
                     />

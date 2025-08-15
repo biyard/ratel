@@ -93,9 +93,13 @@ impl UserControllerV1 {
         Extension(auth): Extension<Option<Authorization>>,
         Json(body): Json<UserAction>,
     ) -> Result<Json<User>> {
+        tracing::debug!("act_user: {:?}", body);
         let principal = extract_principal(&ctrl.pool, auth).await?;
+        tracing::debug!("principal: {:?}", principal);
 
         body.validate()?;
+
+        tracing::debug!("validation success");
 
         match body {
             UserAction::Signup(req) => ctrl.signup(req, principal).await,
@@ -120,6 +124,8 @@ impl UserControllerV1 {
 
         match req.action {
             Some(UserReadActionType::FindByEmail) => ctrl.find_by_email(req).await,
+            Some(UserReadActionType::FindByUsername) => ctrl.find_by_username(req).await,
+            Some(UserReadActionType::FindByPhoneNumber) => ctrl.find_by_phone_number(req).await,
             Some(UserReadActionType::CheckEmail) => ctrl.check_email(req).await,
             Some(UserReadActionType::UserInfo) => {
                 req.principal = Some(principal);
@@ -323,6 +329,7 @@ impl UserControllerV1 {
                 "".to_string(),
                 Membership::Free,
                 generate_referral_code(),
+                None,
                 telegram_id,
             )
             .await?;
@@ -383,6 +390,7 @@ impl UserControllerV1 {
                 req.password,
                 Membership::Free,
                 generate_referral_code(),
+                None,
                 telegram_id,
             )
             .await?;
@@ -403,6 +411,58 @@ impl UserControllerV1 {
             .fetch_one(&self.pool)
             .await
             .map_err(|_| Error::NotFound)?;
+
+        Ok(Json(user))
+    }
+
+    #[instrument]
+    async fn find_by_username(
+        &self,
+        UserReadAction { username, .. }: UserReadAction,
+    ) -> Result<Json<User>> {
+        tracing::debug!("find user by username: {:?}", username);
+        let username = username.ok_or(Error::InvalidUsername)?;
+        let user = match User::query_builder()
+            .username_equals(username)
+            .query()
+            .map(User::from)
+            .fetch_one(&self.pool)
+            .await
+        {
+            Ok(v) => v,
+            Err(e) => {
+                tracing::error!("failed to find user by username: {:?}", e);
+                return Err(Error::NotFound);
+            }
+        };
+
+        tracing::debug!("found user: {:?}", user);
+
+        Ok(Json(user))
+    }
+
+    #[instrument]
+    async fn find_by_phone_number(
+        &self,
+        UserReadAction { phone, .. }: UserReadAction,
+    ) -> Result<Json<User>> {
+        tracing::debug!("find user by phone number: {:?}", phone);
+        let phone_number = phone.ok_or(Error::InvalidPhoneNumber)?;
+        let user = match User::query_builder()
+            .phone_number_equals(phone_number)
+            .query()
+            .map(User::from)
+            .fetch_one(&self.pool)
+            .await
+        {
+            Ok(v) => v,
+            Err(e) => {
+                tracing::error!("failed to find user by phone number: {:?}", e);
+                return Err(Error::NotFound);
+            }
+        };
+
+        tracing::debug!("found user: {:?}", user);
 
         Ok(Json(user))
     }

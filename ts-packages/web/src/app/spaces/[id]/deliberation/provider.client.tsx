@@ -135,7 +135,6 @@ export default function ClientProviders({
         updated_at: member.updated_at,
         nickname: member.nickname,
         username: member.username,
-        email: member.email,
         profile_url: member.profile_url ?? '',
         user_type: UserType.Individual,
       })),
