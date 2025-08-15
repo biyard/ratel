@@ -34,7 +34,7 @@ pub async fn check_perm(
         RatelResource::Reply { team_id } => {
             Box::new(TeamPermissionVerifier::new(team_id, pool).await)
         }
-        RatelResource::News | RatelResource::Promotions => {
+        RatelResource::News | RatelResource::Promotions | RatelResource::Oracles => {
             Box::new(GeneralPermissionVerifier::new())
         }
         RatelResource::Space { space_id } => {

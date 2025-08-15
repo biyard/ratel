@@ -24,7 +24,7 @@ interface QuizQuestionWithSelection {
 
 import { useApiCall } from '@/lib/api/use-send';
 import { ratelApi } from '@/lib/api/ratel_api';
-import { showErrorToast, showSuccessToast, showInfoToast } from '@/lib/toast';
+import { showErrorToast, showInfoToast } from '@/lib/toast';
 import { logger } from '@/lib/logger';
 import Image from 'next/image';
 
@@ -152,11 +152,7 @@ export default function QuizTaker({
       );
 
       if (response) {
-        if (response.is_successful) {
-          showSuccessToast('Quiz submitted successfully! You got it right!');
-        } else {
-          showSuccessToast('Quiz submitted! Try again to improve your result.');
-        }
+        // Success/failure notifications are handled by the provider
         onSubmitSuccess?.(response);
       }
     } catch (error: unknown) {

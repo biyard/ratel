@@ -14,14 +14,18 @@ export default function SpaceSideMenu({ spaceId }: { spaceId: number }) {
   const { data: feed } = usePostByFeedId(space?.feed_id);
 
   return (
-    <div className="flex flex-col max-w-[250px] max-tablet:!hidden w-full gap-[10px]">
-      <Image
-        src={feed.url ?? '/default-profile.png'}
-        alt={feed.title ?? ''}
-        width={250}
-        height={127}
-        className="rounded-[10px] object-cover object-top"
-      />
+    <div className="flex flex-col max-w-[250px] max-tablet:!hidden w-full gap-2.5">
+      {feed.url && feed.url !== '' ? (
+        <Image
+          src={feed.url}
+          alt={feed.title ?? ''}
+          width={250}
+          height={127}
+          className="rounded-[10px] object-cover object-top"
+        />
+      ) : (
+        <div className="w-6 h-6 rounded-[10px] border border-neutral-500 bg-neutral-600" />
+      )}
 
       <BlackBox>
         <div className="flex flex-col gap-5">

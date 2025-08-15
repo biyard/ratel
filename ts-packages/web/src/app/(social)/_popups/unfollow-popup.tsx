@@ -5,13 +5,11 @@ import React from 'react';
 
 export default function UnFollowPopup({
   username,
-  email,
 
   oncancel,
   unfollow,
 }: {
   username: string;
-  email: string;
 
   oncancel: () => void;
   unfollow: () => void;
@@ -20,10 +18,7 @@ export default function UnFollowPopup({
     <div className="w-100 max-tablet:w-full flex flex-col gap-10 items-center">
       <Col className="w-full gap-2.5">
         <p className="text-center break-words leading-relaxed">
-          Unfollow the{' '}
-          <span className="font-bold break-all">
-            {username ? username : email}
-          </span>{' '}
+          Unfollow the <span className="font-bold break-all">{username}</span>{' '}
           account.
         </p>
       </Col>

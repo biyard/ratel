@@ -11,12 +11,19 @@ import Clear from '@/assets/icons/clear.svg';
 import Fire from '@/assets/icons/fire.svg';
 import Trophy from '@/assets/icons/trophy.svg';
 import HexDown from '@/assets/icons/hex-down.svg';
+import { Add } from '@/components/icons';
 import { Settings } from 'lucide-react';
 // import { File, Mega } from '@/components/icons';
 // import { NoticeTab } from '../types';
 import { useNoticeSpace, useNoticeSpaceContext } from '../provider.client';
 import { useSpaceByIdContext } from '../../providers.client';
 import { useLatestQuizAttempt, useQuizAttempts } from '@/lib/api/ratel_api';
+import {
+  calculateBaseReward,
+  calculateRewardWithPenalties,
+  formatRewardAmount,
+  getBoosterMultiplier,
+} from '../_utils/reward-calculator';
 import { usePopup } from '@/lib/contexts/popup-service';
 import SetSchedulePopup from './modal/set_schedule';
 import { useQuizDataRefresh } from '@/hooks/use-quiz-updates';
@@ -43,6 +50,18 @@ export default function SpaceSideMenu() {
   // Auto-refresh quiz data when component mounts or user changes
   useQuizDataRefresh(spaceId || 0);
 
+  // Function to calculate reward amount based on booster type (using shared utility)
+  const getRewardAmount = (boosterType?: string | number): string => {
+    const rewardAmount = calculateBaseReward(boosterType);
+    return formatRewardAmount(rewardAmount);
+  };
+
+  // Function to get booster text based on booster type
+  const getBoosterText = (boosterType?: string | number): string => {
+    const multiplier = getBoosterMultiplier(boosterType);
+    return multiplier === 0 ? 'None' : `x${multiplier}`;
+  };
+
   return (
     <div className="flex flex-col max-w-[250px] max-tablet:!hidden w-full gap-[10px]">
       <BlackBox>
@@ -60,14 +79,45 @@ export default function SpaceSideMenu() {
             </div>
           </div>
 
-          {/* Booster reward line - only show if booster type is not 'none' */}
+          {/* Reward value content moved to top */}
+          <div className="flex flex-col pl-1 gap-3 mb-3">
+            {[
+              {
+                label: getRewardAmount(currentSpace?.booster_type),
+                description: 'Correct',
+                icon: Add,
+              },
+            ].map((item) => (
+              <div className="flex gap-2" key={item.label}>
+                <div className="flex items-center">
+                  <item.icon
+                    width={24}
+                    height={24}
+                    className="text-neutral-500 self-center"
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <div className="font-medium text-white text-[15px]/[12px]">
+                    {item.label}
+                  </div>
+                  <div className="font-medium text-neutral-80 text-xs/[12px]">
+                    {item.description}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Booster reward line - only show if booster type provides actual boost */}
           {(() => {
             const boosterType = currentSpace?.booster_type || 'none';
-            if (boosterType === 'none') return null;
+            const multiplier = getBoosterMultiplier(boosterType);
+
+            // Don't show booster section if there's no boost (multiplier is 0)
+            if (multiplier === 0) return null;
 
             // Map booster type values to their display names
             const boosterTypeMap: { [key: string]: string } = {
-              '1': 'NoBoost',
               '2': 'X2',
               '3': 'X10',
               '4': 'X100',
@@ -132,18 +182,18 @@ export default function SpaceSideMenu() {
                     <HexDown
                       width={22}
                       height={22}
-                      style={{ color: 'var(--color-error)' }}
+                      className="[&>path]:stroke-[#EF4444]"
                     />
                     <span
                       className="font-bold text-[13px]"
-                      style={{ color: 'var(--color-error)' }}
+                      style={{ color: '#EF4444' }}
                     >
                       X 0.5
                     </span>
                   </div>
                   <span
                     className="font-bold text-[13px]"
-                    style={{ color: 'var(--color-error)' }}
+                    style={{ color: '#EF4444' }}
                   >
                     Penalty
                   </span>
@@ -154,32 +204,31 @@ export default function SpaceSideMenu() {
             return penaltyLines;
           })()}
 
-          <div className="flex flex-col pl-1 gap-3">
-            {[
-              {
-                label: '+10,000 P',
-                description: 'Correct',
-                icon: Check,
-              },
-            ].map((item) => (
-              <div className="flex gap-2" key={item.label}>
-                <div className="flex items-center">
-                  <item.icon
-                    width={24}
-                    height={24}
-                    className="text-neutral-500 self-center"
-                  />
+          {/* Total Estimated Value header at bottom */}
+          <div className="flex flex-col pl-1">
+            <div className="border-t border-[var(--color-neutral-700)]/50 pt-2 pb-0"></div>
+            <div className="flex items-center gap-1 text-neutral-400 font-semibold text-[14px] mb-2">
+              Total Estimated Value
+            </div>
+            {(() => {
+              // Calculate total estimated value using shared utility
+              const failedAttempts =
+                attemptsData?.items?.filter(
+                  (attempt) => !attempt.is_successful,
+                ) || [];
+              const penaltyCount = Math.min(failedAttempts.length, 2);
+
+              const finalValue = calculateRewardWithPenalties(
+                currentSpace?.booster_type,
+                penaltyCount,
+              );
+
+              return (
+                <div className="font-medium text-white text-[18px]/[16px]">
+                  +{finalValue.toLocaleString()} P
                 </div>
-                <div className="flex flex-col gap-1.5">
-                  <div className="font-medium text-white text-[15px]/[12px]">
-                    {item.label}
-                  </div>
-                  <div className="font-medium text-neutral-80 text-xs/[12px]">
-                    {item.description}
-                  </div>
-                </div>
-              </div>
-            ))}
+              );
+            })()}
           </div>
         </div>
       </BlackBox>
@@ -196,7 +245,7 @@ export default function SpaceSideMenu() {
           <div className="flex flex-col pl-1 gap-3">
             {[
               {
-                label: '+10,000 P',
+                label: getRewardAmount(currentSpace?.booster_type),
                 description: 'Correct Attempt',
                 icon: Check,
               },
@@ -206,7 +255,7 @@ export default function SpaceSideMenu() {
                 icon: Clear,
               },
               {
-                label: 'x2',
+                label: getBoosterText(currentSpace?.booster_type),
                 description: 'Boosting',
                 icon: Fire,
               },

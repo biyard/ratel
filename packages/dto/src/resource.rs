@@ -6,4 +6,5 @@ pub enum RatelResource {
     Promotions,
     Space { space_id: i64 },
     Team { team_id: i64 },
+    Oracles,
 }
