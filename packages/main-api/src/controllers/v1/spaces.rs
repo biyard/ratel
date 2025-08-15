@@ -4,7 +4,6 @@ mod discussions;
 mod meeting;
 mod notice_quiz_answers;
 mod notice_quiz_attempts;
-mod notice_quiz_attempts;
 mod redeem_codes;
 mod responses;
 mod sprint_leagues;
