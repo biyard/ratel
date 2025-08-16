@@ -22,11 +22,48 @@ class UserApi extends GetConnect {
     final headers = <String, String>{'Content-Type': 'application/json'};
     final res = await get(uri.toString(), headers: headers);
 
-    if (!res.isOk) return UserModel(id: 0);
+    if (!res.isOk) {
+      return UserModel(
+        id: 0,
+        profileUrl: '',
+        nickname: '',
+        username: '',
+        points: 0,
+        followersCount: 0,
+        followingsCount: 0,
+
+        teams: [],
+      );
+    }
 
     logger.d("user info: ${res.body}");
 
     final item = res.body;
-    return UserModel(id: int.parse(item["id"].toString()));
+    final List<Team> teams = [];
+
+    for (var i = 0; i < item["teams"].length; i++) {
+      final team = item["teams"][i];
+
+      teams.add(
+        Team(
+          id: int.parse(team["id"].toString()),
+          profileUrl: team["profile_url"] ?? "",
+          nickname: team["nickname"] ?? "",
+          username: team["username"] ?? "",
+        ),
+      );
+    }
+
+    return UserModel(
+      id: int.parse(item["id"].toString()),
+      profileUrl: item["profile_url"] ?? "",
+      nickname: item["nickname"] ?? "",
+      username: item["username"] ?? "",
+      points: int.parse(item["points"].toString()),
+      followersCount: int.parse(item["followers_count"].toString()),
+      followingsCount: int.parse(item["followings_count"].toString()),
+
+      teams: teams,
+    );
   }
 }
