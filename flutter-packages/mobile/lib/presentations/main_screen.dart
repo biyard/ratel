@@ -13,10 +13,12 @@ class _MainScreenState extends State<MainScreen>
     with SingleTickerProviderStateMixin {
   int currentIndex = 0;
   late final AnimationController _panelCtrl;
+  late final MainController controller;
 
   @override
   void initState() {
     super.initState();
+    controller = Get.find<MainController>();
     _panelCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 280),
@@ -140,9 +142,12 @@ class _MainScreenState extends State<MainScreen>
                   offset: Offset(dx, 0),
                   child: Align(
                     alignment: Alignment.centerLeft,
-                    child: SidePanel(
-                      width: sheetWidth,
-                      onClose: closeSidePanel,
+                    child: Obx(
+                      () => SidePanel(
+                        width: sheetWidth,
+                        user: controller.user.value,
+                        onClose: closeSidePanel,
+                      ),
                     ),
                   ),
                 );

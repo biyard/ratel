@@ -1,8 +1,14 @@
 import 'package:ratel/exports.dart';
 
 class SidePanel extends StatelessWidget {
-  const SidePanel({super.key, required this.width, required this.onClose});
+  const SidePanel({
+    super.key,
+    required this.user,
+    required this.width,
+    required this.onClose,
+  });
 
+  final UserModel user;
   final double width;
   final VoidCallback onClose;
 
@@ -32,7 +38,7 @@ class SidePanel extends StatelessWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      builder: (_) => const AccountsSheet(),
+      builder: (_) => AccountsSheet(teams: user.teams),
     );
   }
 
@@ -58,14 +64,23 @@ class SidePanel extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(100),
-                    child: Container(
-                      width: 35,
-                      height: 35,
-                      color: AppColors.neutral700,
-                    ),
-                  ),
+                  (user.profileUrl != "")
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(100),
+                          child: Image.network(
+                            user.profileUrl,
+                            width: 35,
+                            height: 35,
+                          ),
+                        )
+                      : ClipRRect(
+                          borderRadius: BorderRadius.circular(100),
+                          child: Container(
+                            width: 35,
+                            height: 35,
+                            color: AppColors.neutral700,
+                          ),
+                        ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.center,
@@ -99,7 +114,7 @@ class SidePanel extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Text(
-                    'Miner Choi',
+                    user.nickname,
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 12,
@@ -110,9 +125,9 @@ class SidePanel extends StatelessWidget {
                   ),
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
-                    children: const [
+                    children: [
                       Text(
-                        '\$100 ',
+                        '\$${user.points}',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 12,
@@ -134,8 +149,8 @@ class SidePanel extends StatelessWidget {
                   ),
                 ],
               ),
-              const Text(
-                '@hackartist',
+              Text(
+                user.username,
                 style: TextStyle(
                   color: Color(0xffd4d4d4),
                   fontSize: 11,
@@ -145,9 +160,9 @@ class SidePanel extends StatelessWidget {
               ),
               10.vgap,
               Row(
-                children: const [
+                children: [
                   Text(
-                    '100 ',
+                    "${user.followingsCount.toString()} ",
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w600,
@@ -166,7 +181,7 @@ class SidePanel extends StatelessWidget {
                   ),
                   SizedBox(width: 10),
                   Text(
-                    '100 ',
+                    "${user.followersCount.toString()} ",
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w600,
@@ -380,7 +395,9 @@ class _ThemeSheetState extends State<ThemeSheet> {
 }
 
 class AccountsSheet extends StatefulWidget {
-  const AccountsSheet({super.key});
+  const AccountsSheet({super.key, required this.teams});
+
+  final List<Team> teams;
   @override
   State<AccountsSheet> createState() => _AccountsSheetState();
 }
@@ -446,6 +463,13 @@ class _AccountsSheetState extends State<AccountsSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final tiles = widget.teams.map((t) {
+      final id = t.id;
+      final name = t.nickname;
+      final username = t.username;
+      return _accountTile(index: id, name: name, sub: '@$username');
+    }).toList();
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 6, 16, 16),
       child: Column(
@@ -470,8 +494,7 @@ class _AccountsSheetState extends State<AccountsSheet> {
           ),
           const SizedBox(height: 8),
 
-          _accountTile(index: 0, name: 'Miner Choi', sub: '@hackartist'),
-          _accountTile(index: 1, name: 'Ratel foundation', sub: 'email.'),
+          ...tiles,
 
           const SizedBox(height: 12),
 
