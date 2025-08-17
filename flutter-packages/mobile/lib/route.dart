@@ -11,6 +11,10 @@ class AppRoutes {
   static const String selectTopicScreen = '/select-topic';
   static const String connectionScreen = '/connection';
   static const String setupAttributeScreen = '/setup-attribute';
+  static const String boostingScreen = '/boosting';
+  static const String draftScreen = '/draft';
+  static const String postScreen = '/post';
+  static const String verifiedScreen = '/verified';
   static const String mySpaces = '/my-spaces';
   static const String explore = "/dashboard/explore";
   static const String home = "/dashboard/home";
@@ -24,97 +28,201 @@ class AppRoutes {
       name: mainScreen,
       page: () => MainScreen(),
       binding: MainBinding(),
-      transition: Transition.noTransition,
+      customTransition: SlideOverTransition(),
+      transitionDuration: const Duration(milliseconds: 300),
+      opaque: true,
+      curve: Curves.easeOutCubic,
+    ),
+    GetPage(
+      name: boostingScreen,
+      page: () => const BoostingScreen(),
+      binding: BoostingBinding(),
+      customTransition: SlideOverTransition(),
+      transitionDuration: const Duration(milliseconds: 300),
+      opaque: true,
+      curve: Curves.easeOutCubic,
+    ),
+    GetPage(
+      name: postScreen,
+      page: () => const PostScreen(),
+      binding: PostBinding(),
+      customTransition: SlideOverTransition(),
+      transitionDuration: const Duration(milliseconds: 300),
+      opaque: true,
+      curve: Curves.easeOutCubic,
+    ),
+    GetPage(
+      name: draftScreen,
+      page: () => const DraftScreen(),
+      binding: DraftBinding(),
+      customTransition: SlideOverTransition(),
+      transitionDuration: const Duration(milliseconds: 300),
+      opaque: true,
+      curve: Curves.easeOutCubic,
+    ),
+    GetPage(
+      name: verifiedScreen,
+      page: () => const VerifiedScreen(),
+      binding: VerifiedBinding(),
+      customTransition: SlideOverTransition(),
+      transitionDuration: const Duration(milliseconds: 300),
+      opaque: true,
+      curve: Curves.easeOutCubic,
     ),
     GetPage(
       name: introScreen,
       page: () => const IntroScreen(),
       binding: IntroBinding(),
-      transition: Transition.noTransition,
+      customTransition: SlideOverTransition(),
+      transitionDuration: const Duration(milliseconds: 300),
+      opaque: true,
+      curve: Curves.easeOutCubic,
     ),
     GetPage(
       name: loginScreen,
       page: () => const LoginScreen(),
       binding: LoginBinding(),
-      transition: Transition.noTransition,
+      customTransition: SlideOverTransition(),
+      transitionDuration: const Duration(milliseconds: 300),
+      opaque: true,
+      curve: Curves.easeOutCubic,
     ),
     GetPage(
       name: signupScreen,
       page: () => const SignupScreen(),
       binding: SignupBinding(),
-      transition: Transition.noTransition,
+      customTransition: SlideOverTransition(),
+      transitionDuration: const Duration(milliseconds: 300),
+      opaque: true,
+      curve: Curves.easeOutCubic,
     ),
     GetPage(
       name: verificationScreen,
       page: () => const VerificationScreen(),
       binding: VerificationBinding(),
-      transition: Transition.noTransition,
+      customTransition: SlideOverTransition(),
+      transitionDuration: const Duration(milliseconds: 300),
+      opaque: true,
+      curve: Curves.easeOutCubic,
     ),
     GetPage(
       name: setupProfileScreen,
       page: () => const SetupProfileScreen(),
       binding: SetupProfileBinding(),
-      transition: Transition.noTransition,
+      customTransition: SlideOverTransition(),
+      transitionDuration: const Duration(milliseconds: 300),
+      opaque: true,
+      curve: Curves.easeOutCubic,
     ),
     GetPage(
       name: selectTopicScreen,
       page: () => const SelectTopicScreen(),
       binding: SelectTopicBinding(),
-      transition: Transition.noTransition,
+      customTransition: SlideOverTransition(),
+      transitionDuration: const Duration(milliseconds: 300),
+      opaque: true,
+      curve: Curves.easeOutCubic,
     ),
     GetPage(
       name: connectionScreen,
       page: () => const ConnectionScreen(),
       binding: ConnectionBinding(),
-      transition: Transition.noTransition,
+      customTransition: SlideOverTransition(),
+      transitionDuration: const Duration(milliseconds: 300),
+      opaque: true,
+      curve: Curves.easeOutCubic,
     ),
     GetPage(
       name: setupAttributeScreen,
       page: () => const SetupAttributeScreen(),
       binding: SetupAttributeBinding(),
-      transition: Transition.noTransition,
+      customTransition: SlideOverTransition(),
+      transitionDuration: const Duration(milliseconds: 300),
+      opaque: true,
+      curve: Curves.easeOutCubic,
     ),
     GetPage(
       name: mySpaces,
       page: () => const MySpacesScreen(),
       binding: MySpacesBinding(),
-      transition: Transition.noTransition,
+      customTransition: SlideOverTransition(),
+      transitionDuration: const Duration(milliseconds: 300),
+      opaque: true,
+      curve: Curves.easeOutCubic,
     ),
     GetPage(
       name: welcomeScreen,
       page: () => const WelcomeScreen(),
       binding: WelcomeBinding(),
-      transition: Transition.noTransition,
+      customTransition: SlideOverTransition(),
+      transitionDuration: const Duration(milliseconds: 300),
+      opaque: true,
+      curve: Curves.easeOutCubic,
     ),
     GetPage(
       name: explore,
       page: () => ExploreScreen(),
       binding: ExploreBinding(),
-      transition: Transition.noTransition,
+      customTransition: SlideOverTransition(),
+      transitionDuration: const Duration(milliseconds: 300),
+      opaque: true,
+      curve: Curves.easeOutCubic,
     ),
     GetPage(
       name: home,
       page: () => HomeScreen(),
       binding: HomeBinding(),
-      transition: Transition.noTransition,
+      customTransition: SlideOverTransition(),
+      transitionDuration: const Duration(milliseconds: 300),
+      opaque: true,
+      curve: Curves.easeOutCubic,
     ),
     GetPage(
       name: myNetwork,
       page: () => NetworkScreen(),
       binding: NetworkBinding(),
-      transition: Transition.noTransition,
+      customTransition: SlideOverTransition(),
+      transitionDuration: const Duration(milliseconds: 300),
+      opaque: true,
+      curve: Curves.easeOutCubic,
     ),
     GetPage(
       name: message,
       page: () => MessageScreen(),
       binding: MessageBinding(),
-      transition: Transition.noTransition,
+      customTransition: SlideOverTransition(),
+      transitionDuration: const Duration(milliseconds: 300),
+      opaque: true,
+      curve: Curves.easeOutCubic,
     ),
 
     GetPage(
       name: notification,
       page: () => const NotificationScreen(),
-      transition: Transition.noTransition,
+      customTransition: SlideOverTransition(),
+      transitionDuration: const Duration(milliseconds: 300),
+      opaque: true,
+      curve: Curves.easeOutCubic,
     ),
   ];
+}
+
+class SlideOverTransition extends CustomTransition {
+  SlideOverTransition();
+
+  @override
+  Widget buildTransition(
+    BuildContext context,
+    Curve? curve,
+    Alignment? alignment,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    final slide = Tween(
+      begin: const Offset(1, 0),
+      end: Offset.zero,
+    ).chain(CurveTween(curve: curve ?? Curves.easeOutCubic)).animate(animation);
+    return SlideTransition(position: slide, child: child);
+  }
 }

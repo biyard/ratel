@@ -10,6 +10,7 @@ class Header extends StatelessWidget {
     this.onTapFilter,
     this.onTapPlus,
     this.controller,
+    this.onTapAvatar,
   });
 
   final String? profileImage;
@@ -18,6 +19,7 @@ class Header extends StatelessWidget {
   final VoidCallback? onTapFilter;
   final VoidCallback? onTapPlus;
   final TextEditingController? controller;
+  final VoidCallback? onTapAvatar;
 
   @override
   Widget build(BuildContext context) {
@@ -47,7 +49,10 @@ class Header extends StatelessWidget {
       child: Row(
         children: [
           //FIXME: fix to real profile
-          _Avatar(imageUrl: profileImage, size: avatar),
+          InkWell(
+            onTap: onTapAvatar,
+            child: _Avatar(imageUrl: profileImage, size: avatar),
+          ),
           const SizedBox(width: iconPad),
           SizedBox(
             width: fieldWidth.clamp(160, double.infinity),
