@@ -30,11 +30,6 @@ pub struct SpacePath {
 }
 
 
-#[derive(Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo)]
-pub struct SpaceDeleteConfirmation {
-    pub confirmation: bool,
-    pub space_name: String,
-}
 
 #[derive(Clone, Debug)]
 pub struct SpaceController {
@@ -895,27 +890,27 @@ impl SpaceController {
 
     
 
-    async fn delete_space(&self, space_id: i64, auth: Option<Authorization> confirmation: SpaceDeleteConfirmation,) -> Result<()> {
+    async fn delete_space(&self, space_id: i64, auth: Option<Authorization>, confirmation: SpaceDeleteConfirmation) -> Result<()> {
         let user_id = extract_user_id(&self.pool, auth.clone()).await?;
 
         // Get the space to verify existence and fetch feed ID
         let space = self.get_space_by_id(auth.clone(), space_id).await?;
 
-
-            // Verify confirmation
+        // Verify confirmation
         if !confirmation.confirmation {
             tracing::warn!("Delete operation cancelled - user did not confirm");
-            return Err(Error::OperationCancelled);
+            return Err(Error::BadRequest);
         }
 
         // Verify space name matches exactly
-        if confirmation.space_name != space.title {
+        let space_title = space.title.clone().unwrap_or_default();
+        if confirmation.space_name != space_title {
             tracing::error!(
                 "Space name verification failed - expected '{}' got '{}'",
-                space.title,
+                space_title,
                 confirmation.space_name
             );
-            return Err(Error::VerificationFailed);
+            return Err(Error::BadRequest);
         }
 
         let feed = Feed::query_builder(user_id)
@@ -1309,8 +1304,12 @@ impl SpaceController {
             SpaceByIdAction::PostingSpace(_) => ctrl.posting_space(id, auth).await?,
             SpaceByIdAction::Like(req) => ctrl.like_space(id, auth, req.value).await?,
             SpaceByIdAction::Share(_) => ctrl.share_space(id, auth).await?,
-            SpaceByIdAction::Delete(_) => {
-                ctrl.delete_space(id, auth).await?;
+            SpaceByIdAction::Delete(request) => {
+                let confirmation = SpaceDeleteConfirmation {
+                    confirmation: request.confirmation,
+                    space_name: request.space_name,
+                };
+                ctrl.delete_space(id, auth, confirmation).await?;
                 Space::default() // return a default (empty) Space object as JSON
             }
         };
