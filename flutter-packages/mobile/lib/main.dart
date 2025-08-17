@@ -24,6 +24,8 @@ Future<void> main() async {
   IndustryService.init();
   SignupService.init();
   NetworkService.init();
+  FeedsService.init();
+  UserService.init();
   DriveApi.init();
 
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]).then((
@@ -56,6 +58,7 @@ class MyApp extends StatelessWidget {
         },
       ),
       debugShowCheckedModeBanner: false,
+      defaultTransition: Transition.rightToLeft,
       theme: theme,
       routerDelegate: Get.createDelegate(
         navigatorObservers: [BiyardNavigatorObserver(), l.LayoutObserver()],

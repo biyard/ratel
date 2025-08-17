@@ -1,6 +1,7 @@
 import 'package:ratel/exports.dart';
 
-class HomeController extends BaseController {
+class DraftController extends BaseController {
+  final userApi = Get.find<UserApi>();
   final feedsApi = Get.find<FeedsApi>();
 
   @override
@@ -11,10 +12,16 @@ class HomeController extends BaseController {
 
   void listFeeds() async {
     showLoading();
-    final items = await feedsApi.listFeeds(1, 10);
+    final item = await userApi.getUserInfo();
+    final userId = item.id;
+    final items = await feedsApi.listFeedsByUserId(1, 10, userId, 1);
     feeds.assignAll(items);
     logger.d('feeds loaded: ${feeds.length}');
     hideLoading();
+  }
+
+  void goBack() {
+    Get.rootDelegate.offNamed(AppRoutes.mainScreen);
   }
 
   RxList<FeedModel> feeds = <FeedModel>[].obs;
