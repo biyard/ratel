@@ -29,6 +29,13 @@ pub struct SpacePath {
     pub id: i64,
 }
 
+
+#[derive(Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo)]
+pub struct SpaceDeleteConfirmation {
+    pub confirmation: bool,
+    pub space_name: String,
+}
+
 #[derive(Clone, Debug)]
 pub struct SpaceController {
     repo: SpaceRepository,
@@ -43,6 +50,8 @@ pub struct SpaceController {
     pool: sqlx::Pool<sqlx::Postgres>,
     notice_answer_repo: NoticeQuizAnswerRepository,
 }
+
+
 
 impl SpaceController {
     async fn get_space_by_id(&self, auth: Option<Authorization>, id: i64) -> Result<Space> {
@@ -884,11 +893,30 @@ impl SpaceController {
         Ok(res)
     }
 
-    async fn delete_space(&self, space_id: i64, auth: Option<Authorization>) -> Result<()> {
+    
+
+    async fn delete_space(&self, space_id: i64, auth: Option<Authorization> confirmation: SpaceDeleteConfirmation,) -> Result<()> {
         let user_id = extract_user_id(&self.pool, auth.clone()).await?;
 
         // Get the space to verify existence and fetch feed ID
         let space = self.get_space_by_id(auth.clone(), space_id).await?;
+
+
+            // Verify confirmation
+        if !confirmation.confirmation {
+            tracing::warn!("Delete operation cancelled - user did not confirm");
+            return Err(Error::OperationCancelled);
+        }
+
+        // Verify space name matches exactly
+        if confirmation.space_name != space.title {
+            tracing::error!(
+                "Space name verification failed - expected '{}' got '{}'",
+                space.title,
+                confirmation.space_name
+            );
+            return Err(Error::VerificationFailed);
+        }
 
         let feed = Feed::query_builder(user_id)
             .id_equals(space.feed_id)
