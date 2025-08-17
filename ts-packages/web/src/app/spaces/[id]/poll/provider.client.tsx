@@ -397,8 +397,8 @@ export default function ClientProviders({
   const handleDelete = async () => {
     try {
       await post(ratelApi.spaces.deleteSpaceById(spaceId), { delete: {} });
-      router.push('/');
       showSuccessToast('Space deleted successfully');
+      router.push('/');
     } catch (error) {
       logger.debug('Failed to delete space:', error);
       logger.error('Error deleting space:', error);
