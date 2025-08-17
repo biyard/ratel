@@ -75,7 +75,7 @@ export default function DropdownMenu({
   };
 
   return (
-    <div className="w-56 bg-neutral-800 text-white rounded-lg shadow-lg py-2 space-y-1">
+    <div className="w-56 bg-neutral-800 text-white rounded-lg shadow-lg py-2  space-y-1">
       {menuItems.map((item, index) => (
         <div
           key={index}
