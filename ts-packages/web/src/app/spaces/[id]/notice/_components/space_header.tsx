@@ -46,6 +46,7 @@ export interface SpaceHeaderProps {
   onpost: () => void;
   onlike: () => void;
   onshare: () => void;
+  onpublishwhileediting?: () => void;
   setTitle?: (title: string) => void;
 }
 
@@ -69,6 +70,7 @@ export default function SpaceHeader({
   onsave = () => {},
   onedit = () => {},
   onpost = () => {},
+  onpublishwhileediting = () => {},
 }: SpaceHeaderProps) {
   const { data: userInfo } = useUserInfo();
   const userId = userInfo ? userInfo.id : 0;
@@ -91,13 +93,28 @@ export default function SpaceHeader({
         {(authorId === userId || selectedTeam) && (
           <div className="flex flex-row items-center gap-2 text-sm text-white">
             {isEdit ? (
-              <button
-                className="flex flex-row w-fit px-3.5 py-2 rounded-md bg-white gap-1"
-                onClick={onsave}
-              >
-                <Save className="stroke-neutral-500 [&>path]:stroke-2 w-5 h-5" />
-                <div className="font-bold text-zinc-900 text-sm">Save</div>
-              </button>
+              <>
+                <button
+                  className="flex flex-row w-fit px-3.5 py-2 rounded-md bg-white gap-1"
+                  onClick={onsave}
+                >
+                  <Save className="stroke-neutral-500 [&>path]:stroke-2 w-5 h-5" />
+                  <div className="font-bold text-zinc-900 text-sm">Save</div>
+                </button>
+                {/* Removed publish button while editing for draft spaces - it should not show */}
+                {/* Show make public button while editing if space is privately published */}
+                {status === SpaceStatus.InProgress && isPrivatelyPublished && (
+                  <button
+                    className="flex flex-row w-fit px-3.5 py-2 rounded-md bg-white gap-1"
+                    onClick={onpublishwhileediting}
+                  >
+                    <Internet className="stroke-neutral-500 [&>path]:stroke-2 w-5 h-5" />
+                    <div className="font-bold text-zinc-900 text-sm">
+                      Make Public
+                    </div>
+                  </button>
+                )}
+              </>
             ) : (
               <button
                 className="flex flex-row w-fit px-3.5 py-2 rounded-md bg-white gap-1"

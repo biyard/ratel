@@ -100,3 +100,9 @@ export { default as StrikeThrough1 } from '@/assets/icons/richtext/strike-throug
 export { default as Underline1 } from '@/assets/icons/richtext/underline.svg';
 export { default as Bullet1 } from '@/assets/icons/richtext/bullet.svg';
 export { default as Ordered1 } from '@/assets/icons/richtext/ordered.svg';
+
+export { default as UserCircle } from '@/assets/icons/user-circle.svg';
+
+export { default as FilterArrow } from '@/assets/icons/filter.svg';
+export { default as CheckCircle2 } from '@/assets/icons/check-circele2.svg';
+export { default as Loader } from '@/assets/icons/loader2.svg';
