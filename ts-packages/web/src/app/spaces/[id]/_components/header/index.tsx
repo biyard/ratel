@@ -25,6 +25,7 @@ import { Feed } from '@/lib/api/models/feeds';
 import { useSpaceContext } from './provider';
 import { useDropdown } from '../dropdown/dropdown-service';
 import DropdownMenu from '../dropdown/dropdown-menu';
+import DeleteSpacePopup from '../modal/confirm-delete';
 
 export default function SpaceHeader({
   space,
@@ -63,6 +64,22 @@ export default function SpaceHeader({
           onclose={() => popup.close()}
           onpublic={async () => {
             await handlePostingSpace();
+            popup.close();
+          }}
+        />,
+      )
+      .withoutBackdropClose();
+  };
+
+  // Add this new handler function in SpaceHeader
+  const handleDeleteClick = () => {
+    popup
+      .open(
+        <DeleteSpacePopup
+          spaceName={space.title}
+          onClose={() => popup.close()}
+          onDelete={async () => {
+            await handleDelete(); // Your existing delete handler
             popup.close();
           }}
         />,
@@ -166,7 +183,7 @@ export default function SpaceHeader({
                     }
                   }}
                 >
-                  <DropdownMenu onclose={close} ondelete={handleDelete} />
+                  <DropdownMenu onclose={close} ondelete={handleDeleteClick} />
                 </div>
               )}
             </div>
