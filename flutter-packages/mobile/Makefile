@@ -33,7 +33,7 @@ $(BUILD_CONFIG_FILE):
 	@rm -rf $(BUILD_DIR)/config.json
 	@mkdir -p $(BUILD_DIR)
 	@cp $(FIXTURE_CONFIG_FILE) $(BUILD_CONFIG_FILE)
-	@sed -i '' "s/{ENV}/$(ENV)/g" $(BUILD_CONFIG_FILE)
+	sed -i '' "s/{ENV}/$(ENV)/g" $(BUILD_CONFIG_FILE)
 	@sed -i '' "s/{LOG_LEVEL}/$(LOG_LEVEL)/g" $(BUILD_CONFIG_FILE)
 	@sed -i '' "s|{REDIRECT_URL}|$(REDIRECT_URL)|g" $(BUILD_CONFIG_FILE)
 	@sed -i '' "s|{API_ENDPOINT}|$(API_ENDPOINT)|g" $(BUILD_CONFIG_FILE)
