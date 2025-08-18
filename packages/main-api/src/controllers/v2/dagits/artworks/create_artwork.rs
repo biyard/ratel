@@ -1,3 +1,4 @@
+#![allow(unused)]
 use crate::utils::s3_upload::{self, PresignedUrl};
 use crate::{config, security::check_perm};
 use base64::{Engine, engine::general_purpose};
@@ -91,17 +92,17 @@ pub async fn create_artwork_handler(
 
     tx.commit().await?;
 
-    let pool_clone = pool.clone();
-    let artwork_id = artwork.id;
-    tokio::spawn(async move {
-        if let Err(e) = process_watermark_async(pool_clone, artwork_id, url).await {
-            tracing::error!(
-                "Failed to process watermark for artwork {}: {}",
-                artwork_id,
-                e
-            );
-        }
-    });
+    // let pool_clone = pool.clone();
+    // let artwork_id = artwork.id;
+    // tokio::spawn(async move {
+    //     if let Err(e) = process_watermark_async(pool_clone, artwork_id, url).await {
+    //         tracing::error!(
+    //             "Failed to process watermark for artwork {}: {}",
+    //             artwork_id,
+    //             e
+    //         );
+    //     }
+    // });
 
     Ok(Json(artwork))
 }
