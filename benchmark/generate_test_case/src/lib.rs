@@ -1,4 +1,5 @@
 use reqwest::Client;
+use reqwest::header::COOKIE;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
@@ -96,7 +97,11 @@ pub struct ApiClient {
 
 impl ApiClient {
     pub fn new() -> Self {
+        let mut headers = reqwest::header::HeaderMap::new();
+        headers.insert(reqwest::header::USER_AGENT, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36".parse().unwrap());
+
         let client = Client::builder()
+            .default_headers(headers)
             .timeout(Duration::from_secs(30))
             .build()
             .expect("Failed to create HTTP client");
@@ -350,7 +355,7 @@ impl ApiClient {
             .await
             .map_err(|e| anyhow!("Failed to parse space response: {:?}", e))?;
 
-        let url = format!("{}/v1/spaces", self.base_url);
+        let url = format!("{}/v1/spaces/{}", self.base_url, space.id);
         let response = self
             .client
             .post(&url)
@@ -451,7 +456,6 @@ impl ApiClient {
         usersig: &str,
     ) -> Result<(String, i64)> {
         let url = format!("{}/v1/users", self.base_url);
-
         let response = self
             .client
             .get(&url)
@@ -463,25 +467,45 @@ impl ApiClient {
             .header("Authorization", format!("usersig {}", usersig))
             .send()
             .await?;
-
+        let mut sid = None;
         if response.status().is_success() {
             for cookie_header in response.headers().get_all("set-cookie") {
                 if let Ok(cookie_str) = cookie_header.to_str() {
-                    if let Some(token) = extract_token_from_cookie(cookie_str) {
-                        let user: User = response.json().await?;
-                        return Ok((token, user.id));
+                    if let Some((token_type, token)) = extract_token_from_cookie(cookie_str) {
+                        if token_type == TokenType::AuthToken {
+                            let user: User = response.json().await?;
+                            return Ok((token, user.id));
+                        }
+                        if token_type == TokenType::SID {
+                            sid = Some(token);
+                        }
                     }
                 }
             }
-            Err(anyhow!("Login successful but no token found in cookies"))
-        } else {
-            let status = response.status().clone();
-            let error_text = response
-                .text()
-                .await
-                .unwrap_or_else(|_| "Unknown error".to_string());
-            Err(anyhow!("Failed to login: {} - {}", status, error_text))
+        };
+
+        if let Some(sid) = sid {
+            let url = format!("{}/v1/users?action=user-info", self.base_url);
+            let response = self
+                .client
+                .get(&url)
+                .header(COOKIE, format!("dev_sid={}", sid))
+                .send()
+                .await?;
+            if response.status().is_success() {
+                for cookie_header in response.headers().get_all("set-cookie") {
+                    if let Ok(cookie_str) = cookie_header.to_str() {
+                        if let Some((token_type, token)) = extract_token_from_cookie(cookie_str) {
+                            if token_type == TokenType::AuthToken {
+                                let user: User = response.json().await?;
+                                return Ok((token, user.id));
+                            }
+                        }
+                    }
+                }
+            };
         }
+        Err(anyhow!("Login failed"))
     }
 }
 
@@ -511,9 +535,13 @@ pub fn generate_test_users(count: usize, password: &str) -> Vec<EmailSignupReque
     users
 }
 
-pub fn extract_token_from_cookie(cookie_str: &str) -> Option<String> {
+#[derive(Debug, Clone, PartialEq)]
+pub enum TokenType {
+    AuthToken,
+    SID,
+}
+pub fn extract_token_from_cookie(cookie_str: &str) -> Option<(TokenType, String)> {
     let cookies: Vec<&str> = cookie_str.split(&[',', ';'][..]).collect();
-
     for cookie in cookies {
         let cookie = cookie.trim();
 
@@ -522,8 +550,11 @@ pub fn extract_token_from_cookie(cookie_str: &str) -> Option<String> {
             let value = cookie[equals_pos + 1..].trim();
 
             match key.as_str() {
-                "token" | "auth_token" | "access_token" | "jwt" | "bearer" | "authorization" => {
-                    return Some(value.to_string());
+                "dev_auth_token" => {
+                    return Some((TokenType::AuthToken, value.to_string()));
+                }
+                "dev_sid" => {
+                    return Some((TokenType::SID, value.to_string()));
                 }
                 _ => {
                     if value.len() > 50
@@ -532,7 +563,7 @@ pub fn extract_token_from_cookie(cookie_str: &str) -> Option<String> {
                                 .chars()
                                 .all(|c| c.is_alphanumeric() || c == '_' || c == '-'))
                     {
-                        return Some(value.to_string());
+                        return Some((TokenType::AuthToken, value.to_string()));
                     }
                 }
             }

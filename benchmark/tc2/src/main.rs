@@ -64,7 +64,8 @@ async fn main() -> Result<()> {
         use std::fs::File;
         use std::io::{BufWriter, Write};
 
-        let mut file = BufWriter::new(File::create("admin.csv")?);
+        let file_name = option_env!("ADMIN_CSV").unwrap_or("admin.csv");
+        let mut file = BufWriter::new(File::create(file_name)?);
 
         writeln!(file, "adminToken,spaceId")?;
         writeln!(
