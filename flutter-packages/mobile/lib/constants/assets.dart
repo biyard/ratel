@@ -47,6 +47,17 @@ abstract class Assets {
   static const String bell = 'assets/images/bell.svg';
   static const String search = 'assets/images/search.svg';
   static const String google = 'assets/images/google.svg';
+  static const String upload = 'assets/icons/upload.svg';
+
+  static const String docx = 'assets/icons/docx.svg';
+  static const String jpg = 'assets/icons/jpg.svg';
+  static const String mov = 'assets/icons/mov.svg';
+  static const String mp4 = 'assets/icons/mp4.svg';
+  static const String pdf = 'assets/icons/pdf.svg';
+  static const String png = 'assets/icons/png.svg';
+  static const String pptx = 'assets/icons/pptx.svg';
+  static const String xlsx = 'assets/icons/xlsx.svg';
+  static const String zip = 'assets/icons/zip.svg';
 
   static final addIcon = SvgPicture.asset(add, width: 15, height: 15);
   static final backIcon = SvgPicture.asset(back, width: 16, height: 16);
