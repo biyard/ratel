@@ -135,8 +135,6 @@ class SpaceApi extends GetConnect {
     for (var i = 0; i < item["feed_comments"].length; i++) {
       final comment = item["feed_comments"][i];
 
-      logger.d("comment info: ${comment}");
-
       comments.add(
         CommentModel(
           id: int.parse((comment["id"] ?? 0).toString()),
