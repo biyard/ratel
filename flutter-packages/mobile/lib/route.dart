@@ -143,8 +143,8 @@ class AppRoutes {
     ),
     GetPage(
       name: mySpaces,
-      page: () => const MySpacesScreen(),
-      binding: MySpacesBinding(),
+      page: () => const SpacesScreen(),
+      binding: SpacesBinding(),
       customTransition: SlideOverTransition(),
       transitionDuration: const Duration(milliseconds: 300),
       opaque: true,
