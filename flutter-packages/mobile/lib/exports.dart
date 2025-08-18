@@ -71,9 +71,10 @@ export 'presentations/setup_attribute/setup_attribute_binding.dart';
 export 'presentations/setup_attribute/setup_attribute_controller.dart';
 export 'presentations/setup_attribute/setup_attribute_screen.dart';
 
-export 'presentations/my_spaces/my_spaces_binding.dart';
-export 'presentations/my_spaces/my_spaces_controller.dart';
-export 'presentations/my_spaces/my_spaces_screen.dart';
+export 'presentations/spaces/spaces_binding.dart';
+export 'presentations/spaces/spaces_controller.dart';
+export 'presentations/spaces/spaces_screen.dart';
+export 'presentations/spaces/spaces_model.dart';
 
 export 'presentations/connection/connection_binding.dart';
 export 'presentations/connection/connection_model.dart';

@@ -1,0 +1,146 @@
+import 'package:flutter/rendering.dart';
+import 'package:ratel/exports.dart';
+
+class SpacesController extends BaseController {
+  final scrollCtrl = ScrollController();
+  final boostingHeaderKey = GlobalKey();
+  final chipsKey = GlobalKey();
+  final isBoostingSection = false.obs;
+
+  //TODO: connect api
+  final List<SpaceModel> mySpaces = [
+    SpaceModel(
+      id: 1,
+      createdAt: DateTime.now().millisecondsSinceEpoch - 15 * 60 * 1000,
+      title: 'DAO Treasury Transparency Act Deliberation Space',
+      description: 'I commented out it needs | commented out it l..',
+      imageUrl: '',
+      boostingType: 1,
+      members: 1320,
+    ),
+    SpaceModel(
+      id: 2,
+      createdAt:
+          DateTime.now().millisecondsSinceEpoch - 1 * 24 * 60 * 60 * 1000,
+      title: 'DAO Transparency Act & Crypto Investor Protection Act',
+      description: 'I commented out it needs | commented out it l..',
+      imageUrl: '',
+      boostingType: 2,
+      members: 980,
+    ),
+    SpaceModel(
+      id: 3,
+      createdAt:
+          DateTime.now().millisecondsSinceEpoch - 3 * 24 * 60 * 60 * 1000,
+      title: 'Crypto Investor Protection Act',
+      description: 'I commented out it needs | commented out it l..',
+      imageUrl: '',
+      boostingType: null,
+      members: 540,
+    ),
+    SpaceModel(
+      id: 4,
+      createdAt:
+          DateTime.now().millisecondsSinceEpoch - 5 * 24 * 60 * 60 * 1000,
+      title: 'Community Treasury & Grants Working Group',
+      description: 'Last update posted by admin.',
+      imageUrl: '',
+      boostingType: 3,
+      members: 2100,
+    ),
+    SpaceModel(
+      id: 5,
+      createdAt:
+          DateTime.now().millisecondsSinceEpoch - 8 * 24 * 60 * 60 * 1000,
+      title: 'Open Governance Forum',
+      description: 'Weekly sync materials uploaded.',
+      imageUrl: '',
+      boostingType: 4,
+      members: 15200,
+    ),
+  ];
+
+  late final List<SpaceModel> popularBoosting =
+      mySpaces.where((s) => (s.boostingType ?? 1) >= 2).toList()
+        ..sort((a, b) => (b.boostingType ?? 1).compareTo(a.boostingType ?? 1));
+
+  @override
+  void onInit() {
+    super.onInit();
+    scrollCtrl.addListener(_onScroll);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      isBoostingSection.value = false;
+    });
+  }
+
+  @override
+  void onClose() {
+    scrollCtrl.dispose();
+    super.onClose();
+  }
+
+  void _onScroll() {
+    final dir = scrollCtrl.position.userScrollDirection;
+    if (dir == ScrollDirection.reverse) {
+      if (!isBoostingSection.value) isBoostingSection.value = true;
+    } else if (dir == ScrollDirection.forward) {
+      if (isBoostingSection.value) isBoostingSection.value = false;
+    }
+    if (scrollCtrl.position.atEdge && scrollCtrl.position.pixels <= 0) {
+      if (isBoostingSection.value) isBoostingSection.value = false;
+    }
+  }
+
+  void scrollToMySpaces() {
+    if (isBoostingSection.value) isBoostingSection.value = false;
+
+    if (scrollCtrl.hasClients) {
+      scrollCtrl.animateTo(
+        0,
+        duration: const Duration(milliseconds: 320),
+        curve: Curves.easeOutCubic,
+      );
+    }
+  }
+
+  void scrollToBoosting() {
+    if (!isBoostingSection.value) isBoostingSection.value = true;
+
+    if (scrollCtrl.hasClients) {
+      final target = scrollCtrl.position.maxScrollExtent * 0.6;
+      scrollCtrl.animateTo(
+        target,
+        duration: const Duration(milliseconds: 320),
+        curve: Curves.easeInOutCubic,
+      );
+    }
+  }
+
+  static String formatTime(int ts) {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final diff = (now - ts).clamp(0, 1 << 31);
+    final m = diff ~/ (60 * 1000);
+    if (m < 1) return 'now';
+    if (m < 60) return '${m}m';
+    final h = m ~/ 60;
+    if (h < 24) return '${h}h';
+    final d = h ~/ 24;
+    return '${d}d';
+  }
+
+  static String boostLabel(int? t) {
+    switch (t) {
+      case 2:
+        return 'x2';
+      case 3:
+        return 'x10';
+      case 4:
+        return 'x100';
+      default:
+        return '';
+    }
+  }
+
+  static String kFormat(int n) =>
+      n >= 1000 ? '${(n / 1000).toStringAsFixed(1)}K' : '$n';
+}

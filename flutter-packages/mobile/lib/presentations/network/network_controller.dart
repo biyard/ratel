@@ -1,6 +1,7 @@
 import 'package:ratel/exports.dart';
 
 class NetworkController extends BaseController {
+  //FIXME: fix to real api
   RxList<InvitationModel> invitations = [
     InvitationModel(
       id: 1,
