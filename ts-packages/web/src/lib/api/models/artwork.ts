@@ -1,3 +1,4 @@
+import { ConsensusVoteType } from './consensus';
 import { FileInfo } from './feeds';
 
 export default interface Artwork {
@@ -30,7 +31,7 @@ export interface ArtworkCertificate {
   certified_at: number;
   voters: {
     nickname: string;
-    vote_type: number;
+    vote_type: ConsensusVoteType;
     description?: string | null;
   }[];
 }

@@ -1,6 +1,6 @@
 export default interface Consensus {
   id: number;
-  dagit_id: number;
+  space_id: number;
   artwork_id: number;
   total_oracles: number;
   votes: ConsensusVote[];
