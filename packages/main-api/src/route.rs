@@ -27,7 +27,7 @@ use crate::controllers::{
     },
 };
 use by_axum::axum;
-use dto::Result;
+use dto::{Result, by_axum::axum::Extension};
 
 use axum::native_routing::get as nget;
 use axum::native_routing::post as npost;
@@ -148,6 +148,13 @@ pub async fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Ro
             .with_state(pool.clone()),
         )
         .route(
+            "/v2/dummy",
+            post_with(
+                dummy_handler,
+                api_docs!("Dummy Endpoint", "A dummy endpoint for testing"),
+            ),
+        )
+        .route(
             "/v2/dagits/:space_id/artworks",
             post_with(
                 create_artwork_handler,
@@ -230,3 +237,9 @@ pub async fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Ro
 
 
 */
+
+async fn dummy_handler(
+    Extension(_auth): Extension<Option<dto::by_axum::auth::Authorization>>,
+) -> Result<axum::Json<()>> {
+    Ok(axum::Json(()))
+}
