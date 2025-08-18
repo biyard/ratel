@@ -6,7 +6,7 @@ import 'package:path/path.dart' as p;
 import 'package:url_launcher/url_launcher.dart' as launcher;
 import 'dart:io' as io;
 
-enum SpaceTab { summary, deliberation, elearning, poll, insights }
+enum SpaceTab { summary, deliberation, elearning, poll }
 
 class SpaceController extends BaseController {
   final spaceApi = Get.find<SpaceApi>();
@@ -20,6 +20,7 @@ class SpaceController extends BaseController {
     files: [],
     discussions: [],
     elearnings: [],
+    surveys: [],
   ).obs;
 
   final DraggableScrollableController commentsCtrl =
@@ -35,6 +36,7 @@ class SpaceController extends BaseController {
   Future<void> getSpace(int spaceId) async {
     showLoading();
     final item = await spaceApi.getSpaceById(spaceId);
+    logger.d("surveys: ${item.surveys}");
     space(item);
     hideLoading();
   }
@@ -77,8 +79,8 @@ class SpaceController extends BaseController {
         return 'E-Learning';
       case SpaceTab.poll:
         return 'Poll';
-      case SpaceTab.insights:
-        return 'Insights';
+      // case SpaceTab.insights:
+      //   return 'Insights';
     }
   }
 }
