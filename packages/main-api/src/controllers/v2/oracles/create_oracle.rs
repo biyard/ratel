@@ -23,8 +23,8 @@ pub struct CreateOracleRequest {
     #[schemars(description = "Dagit ID (optional)")]
     pub oracle_type: OracleType,
 
-    #[schemars(description = "Dagit ID (optional)")]
-    pub dagit_id: Option<i64>,
+    #[schemars(description = "Space ID (optional)")]
+    pub space_id: Option<i64>,
 }
 
 use crate::security::check_perm;
@@ -48,9 +48,9 @@ pub async fn create_oracle_handler(
         .insert_with_tx(&mut *tx, req.user_id, req.oracle_type)
         .await?
         .ok_or(Error::ServerError("Failed to create oracle".to_string()))?;
-    if req.dagit_id.is_some() {
-        let dagit = Dagit::query_builder()
-            .id_equals(req.dagit_id.unwrap())
+    if req.space_id.is_some() {
+        let dagit = Dagit::query_builder(0)
+            .id_equals(req.space_id.unwrap())
             .query()
             .map(Dagit::from)
             .fetch_one(&pool)
@@ -58,14 +58,12 @@ pub async fn create_oracle_handler(
         check_perm(
             &pool,
             auth,
-            RatelResource::Space {
-                space_id: dagit.space_id,
-            },
+            RatelResource::Space { space_id: dagit.id },
             GroupPermission::ManageSpace,
         )
         .await?;
         DagitOracle::get_repository(pool.clone())
-            .insert_with_tx(&mut *tx, req.dagit_id.unwrap(), oracle.id)
+            .insert_with_tx(&mut *tx, req.space_id.unwrap(), oracle.id)
             .await?;
     }
     tx.commit().await?;
