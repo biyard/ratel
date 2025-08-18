@@ -1,4 +1,4 @@
-name: my_workspace
+name: ratel_workspace
 workspace:
   members:
     - flutter-packages/**
