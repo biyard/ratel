@@ -31,6 +31,7 @@ export 'presentations/message/message_screen.dart';
 
 export 'presentations/network/network_binding.dart';
 export 'presentations/network/network_controller.dart';
+export 'presentations/network/network_model.dart';
 export 'presentations/network/network_screen.dart';
 
 export 'presentations/notification/notification_screen.dart';
