@@ -23,7 +23,7 @@ release.keystore
 .idea
 
 *.out
-
-benchmark/*/report/*
+jmeter.log
+benchmark/**/report*/
 benchmark/**/*.jtl
 benchmark/**/*.csv

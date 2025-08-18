@@ -179,19 +179,30 @@ pub async fn api_main() -> Result<Router> {
     let app = by_axum::new();
     let conf = config::get();
     by_axum::auth::set_auth_config(conf.auth.clone());
-    tracing::debug!("config: {:?}", conf);
+
     let auth_token_key = format!("{}_auth_token", conf.env);
     let auth_token_key = Box::leak(Box::new(auth_token_key));
     set_auth_token_key(auth_token_key);
-
+    tracing::info!("Before Pool creation");
     let pool = if let DatabaseConfig::Postgres { url, pool_size } = conf.database {
-        PgPoolOptions::new()
+        let res = PgPoolOptions::new()
             .max_connections(pool_size)
             .connect(url)
-            .await?
+            .await;
+        match res {
+            Ok(pool) => {
+                tracing::info!("Postgres pool created successfully");
+                pool
+            }
+            Err(e) => {
+                tracing::error!("Failed to create Postgres pool: {:?}", e);
+                return Err(e.into());
+            }
+        }
     } else {
         panic!("Database is not initialized. Call init() first.");
     };
+    tracing::info!("After Pool creation");
 
     let session_store = PostgresStore::new(pool.clone());
     if conf.migrate {
