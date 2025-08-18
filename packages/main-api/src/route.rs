@@ -9,7 +9,7 @@ use crate::controllers::{
         dagits::{
             add_oracle::add_oracle_handler,
             artworks::{
-                create_artwork::create_artwork_handler,
+                create_artwork::{create_artwork_handler, dummy_handler},
                 get_artwork_certificate::get_artwork_certificate_handler,
                 get_artwork_detail::get_artwork_detail_handler,
             },
@@ -148,6 +148,14 @@ pub async fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Ro
             .with_state(pool.clone()),
         )
         .route(
+            "/v2/dummy",
+            post_with(
+                dummy_handler,
+                api_docs!("Dummy Endpoint", "A dummy endpoint for testing"),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
             "/v2/dagits/:space_id/artworks",
             post_with(
                 create_artwork_handler,
@@ -224,9 +232,3 @@ pub async fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Ro
             .with_state(pool.clone()),
         ))
 }
-/*
-
-
-
-
-*/
