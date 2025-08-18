@@ -1,4 +1,5 @@
 import 'package:flutter/gestures.dart';
+import 'package:flutter_html/flutter_html.dart';
 import 'package:ratel/exports.dart';
 import 'package:ratel/presentations/space/tab/deliberation_tab.dart';
 import 'package:ratel/presentations/space/tab/elearning_tab.dart';
@@ -23,15 +24,18 @@ class SpaceScreen extends GetWidget<SpaceController> {
                 padding: const EdgeInsets.all(20),
                 child: Row(
                   children: [
-                    RoundContainer(
-                      color: Colors.white.withAlpha(50),
-                      radius: 100,
-                      child: Padding(
-                        padding: const EdgeInsets.all(5.0),
-                        child: SvgPicture.asset(
-                          Assets.back,
-                          width: 20,
-                          height: 20,
+                    InkWell(
+                      onTap: () => controller.goBack(),
+                      child: RoundContainer(
+                        color: Colors.white.withAlpha(50),
+                        radius: 100,
+                        child: Padding(
+                          padding: const EdgeInsets.all(5.0),
+                          child: SvgPicture.asset(
+                            Assets.back,
+                            width: 20,
+                            height: 20,
+                          ),
                         ),
                       ),
                     ),
@@ -117,11 +121,6 @@ class SpaceScreen extends GetWidget<SpaceController> {
                             sheetBottom: sheetPx,
                             scrollBottomPadding: scrollBottomPadding,
                           );
-                        // case SpaceTab.insights:
-                        //   return _PlaceholderTab(
-                        //     title: 'Insights',
-                        //     bottomPadding: scrollBottomPadding,
-                        //   );
                       }
                     });
                   },
@@ -144,7 +143,7 @@ class SpaceScreen extends GetWidget<SpaceController> {
 
                 return ClipRRect(
                   borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(16),
+                    top: Radius.circular(30),
                   ),
                   child: Material(
                     color: AppColors.panelBg,
@@ -188,8 +187,8 @@ class SpaceScreen extends GetWidget<SpaceController> {
                                           'Comments',
                                           style: TextStyle(
                                             color: Colors.white,
-                                            fontWeight: FontWeight.w700,
-                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 12,
                                           ),
                                         ),
                                       ],
@@ -203,13 +202,34 @@ class SpaceScreen extends GetWidget<SpaceController> {
                                   ),
                                 ),
                                 if (showComments)
-                                  SliverList.separated(
-                                    itemBuilder: (_, __) =>
-                                        const _CommentItem(),
-                                    separatorBuilder: (_, __) =>
-                                        const SizedBox(height: 10),
-                                    itemCount: 8,
-                                  )
+                                  Obx(() {
+                                    final items =
+                                        controller.space.value.comments;
+                                    if (items.isEmpty) {
+                                      return const SliverToBoxAdapter(
+                                        child: Padding(
+                                          padding: EdgeInsets.symmetric(
+                                            vertical: 16,
+                                          ),
+                                          child: Center(
+                                            child: Text(
+                                              'No comments yet',
+                                              style: TextStyle(
+                                                color: AppColors.neutral500,
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                    return SliverList.separated(
+                                      itemBuilder: (_, i) =>
+                                          _CommentItem(model: items[i]),
+                                      separatorBuilder: (_, __) => 10.vgap,
+                                      itemCount: items.length,
+                                    );
+                                  })
                                 else
                                   const SliverToBoxAdapter(
                                     child: SizedBox.shrink(),
@@ -231,38 +251,71 @@ class SpaceScreen extends GetWidget<SpaceController> {
                           child: SafeArea(
                             top: false,
                             child: Padding(
-                              padding: const EdgeInsets.fromLTRB(12, 6, 12, 10),
+                              padding: const EdgeInsets.fromLTRB(10, 2, 10, 2),
                               child: Row(
                                 children: [
                                   Expanded(
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 10,
+                                    child: TextField(
+                                      controller: controller.commentCtrl,
+                                      focusNode: controller.commentFocus,
+                                      minLines: 1,
+                                      maxLines: 4,
+                                      onChanged: controller.onCommentChanged,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 13,
                                       ),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.neutral800,
-                                        borderRadius: BorderRadius.circular(10),
-                                        border: Border.all(
-                                          color: AppColors.neutral700,
-                                          width: 1,
-                                        ),
-                                      ),
-                                      child: const Text(
-                                        'Add a comment…',
-                                        style: TextStyle(
+                                      cursorColor: Colors.white,
+                                      textInputAction: TextInputAction.newline,
+                                      decoration: InputDecoration(
+                                        hintText: 'Add a comment…',
+                                        hintStyle: const TextStyle(
                                           color: AppColors.neutral400,
                                           fontSize: 13,
+                                        ),
+                                        isDense: true,
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                              horizontal: 5,
+                                              vertical: 3,
+                                            ),
+                                        filled: true,
+                                        fillColor: AppColors.neutral800,
+                                        enabledBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            50,
+                                          ),
+                                          borderSide: const BorderSide(
+                                            color: AppColors.primary,
+                                            width: 1,
+                                          ),
+                                        ),
+                                        focusedBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            50,
+                                          ),
+                                          borderSide: const BorderSide(
+                                            color: AppColors.primary,
+                                            width: 1,
+                                          ),
                                         ),
                                       ),
                                     ),
                                   ),
                                   const SizedBox(width: 8),
-                                  IconButton(
-                                    onPressed: () {},
-                                    icon: const Icon(
-                                      Icons.send_rounded,
-                                      color: Colors.white,
+                                  InkWell(
+                                    onTap: controller.sendComment,
+                                    child: RoundContainer(
+                                      radius: 100,
+                                      color: Colors.white.withAlpha(30),
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(4.0),
+                                        child: SvgPicture.asset(
+                                          Assets.send,
+                                          width: 20,
+                                          height: 20,
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -322,105 +375,87 @@ class TabChip extends StatelessWidget {
   }
 }
 
-class _PlaceholderTab extends StatelessWidget {
-  const _PlaceholderTab({required this.title, required this.bottomPadding});
-  final String title;
-  final double bottomPadding;
+class _CommentItem extends StatelessWidget {
+  const _CommentItem({required this.model});
+  final CommentModel model;
 
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: EdgeInsets.only(bottom: bottomPadding),
-      child: SizedBox(
-        height: 240,
-        child: Center(
-          child: Text(
-            '$title tab content',
-            style: const TextStyle(color: Colors.white),
-          ),
-        ),
-      ),
-    );
+  String _timeAgo(int createdAtSec) {
+    final now = DateTime.now();
+    final dt = DateTime.fromMillisecondsSinceEpoch(createdAtSec * 1000);
+    final d = now.difference(dt);
+
+    if (d.inSeconds < 60) return '${d.inSeconds}s';
+    if (d.inMinutes < 60) return '${d.inMinutes}m';
+    if (d.inHours < 24) return '${d.inHours}h';
+    return '${d.inDays}d';
   }
-}
-
-class _FileChip extends StatelessWidget {
-  const _FileChip({required this.name});
-  final String name;
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 90,
-      child: Column(
+    final when = _timeAgo(model.createdAt);
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(30, 10, 30, 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 64,
-            height: 64,
-            decoration: BoxDecoration(
-              color: AppColors.neutral700,
-              borderRadius: BorderRadius.circular(12),
+          CircleAvatar(
+            radius: 12,
+            backgroundColor: AppColors.neutral600,
+            backgroundImage: (model.profileUrl.isNotEmpty)
+                ? NetworkImage(model.profileUrl)
+                : null,
+            child: (model.profileUrl.isEmpty) ? Container() : null,
+          ),
+          5.gap,
+
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  model.nickname,
+                  style: const TextStyle(
+                    color: AppColors.neutral300,
+                    fontWeight: FontWeight.w400,
+                    fontSize: 12,
+                    height: 1.1,
+                  ),
+                ),
+                4.vgap,
+
+                Html(
+                  data: model.comment,
+                  style: {
+                    'html': Style(
+                      color: Colors.white,
+                      fontSize: FontSize(12),
+                      lineHeight: LineHeight.number(1.35),
+                      padding: HtmlPaddings.zero,
+                      margin: Margins.zero,
+                    ),
+                    'body': Style(
+                      margin: Margins.zero,
+                      padding: HtmlPaddings.zero,
+                    ),
+                    'p': Style(margin: Margins.zero),
+                  },
+                ),
+              ],
             ),
-            alignment: Alignment.center,
-            child: const Icon(Icons.picture_as_pdf, color: Colors.redAccent),
           ),
-          const SizedBox(height: 6),
+          10.gap,
+
           Text(
-            name,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(color: AppColors.neutral300, fontSize: 11),
-          ),
-          const Text(
-            '5.3MB',
-            style: TextStyle(color: AppColors.neutral500, fontSize: 10),
+            when,
+            style: const TextStyle(
+              color: AppColors.neutral300,
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ],
       ),
-    );
-  }
-}
-
-class _CommentItem extends StatelessWidget {
-  const _CommentItem();
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const CircleAvatar(radius: 14, backgroundColor: AppColors.neutral600),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
-              Text(
-                'Author',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 12,
-                ),
-              ),
-              SizedBox(height: 2),
-              Text(
-                '댓글 내용이 여기에 표시됩니다. 댓글 예시 텍스트…',
-                style: TextStyle(
-                  color: AppColors.neutral300,
-                  fontSize: 12,
-                  height: 1.35,
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(width: 8),
-        const Text(
-          '1h',
-          style: TextStyle(color: AppColors.neutral500, fontSize: 10),
-        ),
-      ],
     );
   }
 }

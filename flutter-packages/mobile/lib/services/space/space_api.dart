@@ -13,6 +13,31 @@ class SpaceApi extends GetConnect {
     });
   }
 
+  Future<dynamic> setComment(
+    int feedId,
+    int userId,
+    String htmlContents,
+  ) async {
+    final uri = Uri.parse(apiEndpoint).resolve('/v1/feeds');
+
+    final headers = <String, String>{'Content-Type': 'application/json'};
+    final body = {
+      'comment': {
+        'html_contents': htmlContents,
+        'user_id': userId,
+        'parent_id': feedId,
+      },
+    };
+
+    final res = await post(uri.toString(), body, headers: headers);
+
+    if (!res.isOk) return null;
+
+    logger.d('response body: ${res.body}');
+
+    return res.isOk;
+  }
+
   Future<SpaceModel> getSpaceById(int spaceId) async {
     final uri = Uri.parse(apiEndpoint).resolve('/v1/spaces/$spaceId');
 
@@ -22,12 +47,14 @@ class SpaceApi extends GetConnect {
     if (!res.isOk) {
       return SpaceModel(
         id: 0,
+        feedId: 0,
         title: "",
         htmlContents: "",
         files: [],
         discussions: [],
         elearnings: [],
         surveys: [],
+        comments: [],
       );
     }
 
@@ -37,6 +64,7 @@ class SpaceApi extends GetConnect {
     final List<FileModel> files = [];
     final List<DiscussionModel> discussions = [];
     final List<ElearningModel> elearnings = [];
+    final List<CommentModel> comments = [];
 
     for (var i = 0; i < item["files"].length; i++) {
       final file = item["files"][i];
@@ -104,14 +132,32 @@ class SpaceApi extends GetConnect {
       );
     }
 
+    for (var i = 0; i < item["feed_comments"].length; i++) {
+      final comment = item["feed_comments"][i];
+
+      logger.d("comment info: ${comment}");
+
+      comments.add(
+        CommentModel(
+          id: int.parse((comment["id"] ?? 0).toString()),
+          createdAt: int.parse((comment["created_at"] ?? 0).toString()),
+          nickname: comment["author"][0]["nickname"] ?? "",
+          comment: comment["html_contents"] ?? "",
+          profileUrl: comment["author"][0]["profile_url"] ?? "",
+        ),
+      );
+    }
+
     return SpaceModel(
       id: int.parse(item["id"].toString()),
+      feedId: int.parse(item["feed_id"].toString()),
       title: item["title"] ?? "",
       htmlContents: item["html_contents"] ?? "",
       files: files,
       discussions: discussions,
       elearnings: elearnings,
       surveys: surveys,
+      comments: comments,
     );
   }
 }

@@ -2,21 +2,25 @@ typedef Json = Map<String, dynamic>;
 
 class SpaceModel {
   final int id;
+  final int feedId;
   final String title;
   final String htmlContents;
   final List<FileModel> files;
   final List<DiscussionModel> discussions;
   final List<ElearningModel> elearnings;
   final List<SurveyModel> surveys;
+  final List<CommentModel> comments;
 
   const SpaceModel({
     required this.id,
+    required this.feedId,
     required this.title,
     required this.htmlContents,
     required this.files,
     required this.discussions,
     required this.elearnings,
     required this.surveys,
+    required this.comments,
   });
 
   factory SpaceModel.fromJson(Json j) {
@@ -25,14 +29,40 @@ class SpaceModel {
 
     return SpaceModel(
       id: (j['id'] ?? 0) as int,
+      feedId: (j['feed_id'] ?? 0) as int,
       title: (j['title'] ?? '') as String,
       htmlContents: (j['html_contents'] ?? j['htmlContents'] ?? '') as String,
       files: _list('files', FileModel.fromJson),
       discussions: _list('discussions', DiscussionModel.fromJson),
       elearnings: _list('elearnings', ElearningModel.fromJson),
       surveys: _list('surveys', SurveyModel.fromJson),
+      comments: _list('feed_comments', CommentModel.fromJson),
     );
   }
+}
+
+class CommentModel {
+  final int id;
+  final int createdAt;
+  final String profileUrl;
+  final String nickname;
+  final String comment;
+
+  const CommentModel({
+    required this.id,
+    required this.createdAt,
+    required this.profileUrl,
+    required this.nickname,
+    required this.comment,
+  });
+
+  factory CommentModel.fromJson(Json j) => CommentModel(
+    id: (j['id'] ?? 0) as int,
+    createdAt: (j['created_at'] ?? 0) as int,
+    profileUrl: j['profile_url'] ?? "",
+    nickname: j['nickname'] ?? "",
+    comment: j["html_contents"] ?? "",
+  );
 }
 
 class ElearningModel {
