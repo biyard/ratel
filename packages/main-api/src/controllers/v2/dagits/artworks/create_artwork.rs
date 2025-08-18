@@ -46,6 +46,22 @@ pub struct CreateArtworkRequest {
     pub file: File,
 }
 
+pub async fn dummy_handler(
+    Extension(auth): Extension<Option<Authorization>>,
+    State(pool): State<Pool<Postgres>>,
+    Path(CreateArtworkPathParams { space_id }): Path<CreateArtworkPathParams>,
+    Json(req): Json<CreateArtworkRequest>,
+) -> Result<Json<Artwork>> {
+    let _ = check_perm(
+        &pool,
+        auth,
+        dto::RatelResource::Space { space_id },
+        GroupPermission::ManageSpace,
+    )
+    .await;
+    Ok(Json(Artwork::default()))
+}
+
 pub async fn create_artwork_handler(
     Extension(auth): Extension<Option<Authorization>>,
     State(pool): State<Pool<Postgres>>,
