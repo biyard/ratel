@@ -4,6 +4,7 @@ class SpaceModel {
   final String htmlContents;
   final List<FileModel> files;
   final List<DiscussionModel> discussions;
+  final List<ElearningModel> elearnings;
 
   const SpaceModel({
     required this.id,
@@ -11,7 +12,15 @@ class SpaceModel {
     required this.htmlContents,
     required this.files,
     required this.discussions,
+    required this.elearnings,
   });
+}
+
+class ElearningModel {
+  final int id;
+  final List<FileModel> files;
+
+  const ElearningModel({required this.id, required this.files});
 }
 
 class DiscussionModel {
