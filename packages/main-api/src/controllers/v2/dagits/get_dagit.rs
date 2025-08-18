@@ -6,6 +6,7 @@ use dto::{
     by_axum::{auth::Authorization, axum::extract::Path},
     sqlx::{Pool, Postgres},
 };
+use tracing_subscriber::filter::combinator::Or;
 
 use crate::security::check_perm;
 
@@ -20,31 +21,37 @@ use crate::security::check_perm;
     JsonSchema,
 )]
 pub struct GetDagitPathParams {
-    #[schemars(description = "Dagit ID")]
-    pub dagit_id: i64,
+    #[schemars(description = "Space ID")]
+    pub space_id: i64,
 }
 
 pub async fn get_dagit_handler(
     Extension(auth): Extension<Option<Authorization>>,
     State(pool): State<Pool<Postgres>>,
-    Path(GetDagitPathParams { dagit_id }): Path<GetDagitPathParams>,
+    Path(GetDagitPathParams { space_id }): Path<GetDagitPathParams>,
 ) -> Result<Json<Dagit>> {
-    let dagit = Dagit::query_builder()
-        .artworks_builder(Artwork::query_builder())
-        .id_equals(dagit_id)
+    tracing::debug!("get_dagit_handler called with space_id: {}", space_id);
+    let user = check_perm(
+        &pool,
+        auth,
+        dto::RatelResource::Space { space_id: space_id },
+        GroupPermission::ReadPosts,
+    )
+    .await?;
+    let oracle_id = Oracle::query_builder()
+        .user_id_equals(user.id)
+        .query()
+        .map(Oracle::from)
+        .fetch_one(&pool)
+        .await?
+        .id;
+    let dagit = Dagit::query_builder(oracle_id)
+        .artworks_builder(Artwork::query_builder(oracle_id))
+        .id_equals(space_id)
         .query()
         .map(Dagit::from)
         .fetch_one(&pool)
         .await?;
-    check_perm(
-        &pool,
-        auth,
-        dto::RatelResource::Space {
-            space_id: dagit.space_id,
-        },
-        GroupPermission::ReadPosts,
-    )
-    .await?;
 
     Ok(Json(dagit))
 }

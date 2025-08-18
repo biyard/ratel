@@ -10,13 +10,21 @@ abstract class Assets {
   static const String badge = 'assets/icons/badge.svg';
   static const String bookmark = 'assets/icons/bookmark.svg';
   static const String coin = 'assets/icons/coin.svg';
+  static const String coin2 = 'assets/icons/coin_2.svg';
   static const String edit1 = 'assets/icons/edit_1.svg';
   static const String extra = 'assets/icons/extra.svg';
   static const String feed = 'assets/icons/feed.svg';
   static const String palace = 'assets/icons/palace.svg';
   static const String reward = 'assets/icons/reward.svg';
-  static const String roundBubble = 'assets/icons/roundBubble.svg';
+  static const String roundBubble = 'assets/icons/round_bubble.svg';
   static const String thumbs = 'assets/icons/thumbs.svg';
+
+  static const String editContent = 'assets/icons/edit_content.svg';
+  static const String folder = 'assets/icons/folder.svg';
+  static const String option = 'assets/icons/option.svg';
+  static const String star = 'assets/icons/star.svg';
+  static const String verification = 'assets/icons/verification.svg';
+  static const String dark = 'assets/icons/dark.svg';
 
   static const String filter = 'assets/icons/filter.svg';
   static const String plus = 'assets/icons/plus.svg';
@@ -25,6 +33,10 @@ abstract class Assets {
   static const String mail = 'assets/icons/mail.svg';
   static const String notification = 'assets/icons/notification.svg';
   static const String people = 'assets/icons/people.svg';
+  static const String exchange = 'assets/icons/exchange.svg';
+  static const String send = 'assets/icons/send.svg';
+  static const String verified = 'assets/icons/verified.svg';
+  static const String roundedPlus = 'assets/icons/rounded_plus.svg';
 
   static const String logo = 'assets/icons/logo.png';
   static const String favicon = 'assets/icons/favicon.svg';

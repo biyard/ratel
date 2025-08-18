@@ -7,6 +7,7 @@ import NoticeSpacePage from './notice';
 import CommitteeSpacePage from './committee/page.client';
 import SprintLeaguePage from './sprint-league';
 import PollSpacePage from './poll';
+import DAgitPage from './dAgit';
 
 export default async function Page({
   params,
@@ -27,6 +28,8 @@ export default async function Page({
     return <NoticeSpacePage />;
   } else if (space.data?.space_type === SpaceType.Poll) {
     return <PollSpacePage />;
+  } else if (space.data?.space_type === SpaceType.dAgit) {
+    return <DAgitPage spaceId={spaceId} />;
   }
 
   logger.debug('Unknown space type:', space.data?.space_type);

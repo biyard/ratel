@@ -18,7 +18,4 @@ pub struct ArtworkDetail {
 
     #[api_model(action = create)]
     pub image: String,
-
-    #[api_model(one_to_many = artwork_certifications, foreign_key = artwork_id, reference_key = artwork_id, aggregator = exist)]
-    pub is_certified: bool,
 }

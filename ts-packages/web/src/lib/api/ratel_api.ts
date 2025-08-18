@@ -170,6 +170,7 @@ export const proxy = {
 export const ratelApi = {
   users: {
     login: () => '/v1/users?action=login',
+
     logout: () => '/v2/users/logout',
     loginWithPassword: (email: string, password: string) =>
       `/v1/users?action=login-by-password&email=${encodeURIComponent(email)}&password=${password}`,
@@ -237,6 +238,9 @@ export const ratelApi = {
     publishDraft: (post_id: number) => `/v1/feeds/${post_id}`,
     removeDraft: (post_id: number) => `/v1/feeds/${post_id}?action=delete`,
     likePost: (post_id: number) => `/v1/feeds/${post_id}`,
+    repost: () => '/v1/feeds',
+    unrepost: (post_id: number) => `/v1/feeds/${post_id}?action=unrepost`,
+
     getPostsByUserId: (
       user_id: number,
       page: number,
@@ -294,6 +298,18 @@ export const ratelApi = {
     ) => {
       return `/v1/spaces/${spaceId}/sprint-leagues/${sprintLeagueId}/players/${playerId}`;
     },
+  },
+  dagit: {
+    getDagitBySpaceId: (spaceId: number) => `/v2/dagits/${spaceId}`,
+    addOracle: (spaceId: number) => `/v2/dagits/${spaceId}/oracles`,
+    createArtwork: (spaceId: number) => `/v2/dagits/${spaceId}/artworks`,
+    getArtworkById: (artworkId: number) => `/v2/artworks/${artworkId}`,
+    getArtworkCertificate: (artworkId: number) =>
+      `/v2/artworks/${artworkId}/certificate`,
+
+    startConsensus: (spaceId: number) => `/v2/dagits/${spaceId}/consensus`,
+    voteConsensus: (spaceId: number, artworkId: number) =>
+      `/v2/dagits/${spaceId}/artworks/${artworkId}/vote`,
   },
   telegram: {
     subscribe: () => '/v2/telegram/subscribe',

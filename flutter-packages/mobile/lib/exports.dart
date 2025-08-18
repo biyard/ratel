@@ -79,6 +79,24 @@ export 'presentations/connection/connection_model.dart';
 export 'presentations/connection/connection_controller.dart';
 export 'presentations/connection/connection_screen.dart';
 
+export 'presentations/boosting/boosting_binding.dart';
+export 'presentations/boosting/boosting_controller.dart';
+export 'presentations/boosting/boosting_screen.dart';
+export 'presentations/boosting/boosting_model.dart';
+
+export 'presentations/drafts/draft_binding.dart';
+export 'presentations/drafts/draft_controller.dart';
+export 'presentations/drafts/draft_screen.dart';
+
+export 'presentations/posts/post_binding.dart';
+export 'presentations/posts/post_controller.dart';
+export 'presentations/posts/post_screen.dart';
+
+export 'presentations/verified/verified_binding.dart';
+export 'presentations/verified/verified_controller.dart';
+export 'presentations/verified/verified_screen.dart';
+export 'presentations/verified/verified_model.dart';
+
 export 'localization/main_localization.dart';
 
 export 'models/profile.dart';
@@ -99,12 +117,18 @@ export 'components/profile/profile.dart';
 export 'components/round_container/round_container.dart';
 export 'components/text_field/text_field.dart';
 export 'components/custom_checkbox/custom_checkbox.dart';
+export 'components/feed_card/feed_card.dart';
 
 export 'components/modal/login_modal.dart';
 export 'components/modal/modal_title.dart';
+export 'components/side_panel/side_panel.dart';
 
 export 'services/auth/auth_service.dart';
 export 'services/auth/auth_api.dart';
+
+export 'services/user/user_api.dart';
+export 'services/user/user_model.dart';
+export 'services/user/user_service.dart';
 
 export 'services/firebase/firebase.dart';
 export 'services/api/drive_api.dart';
@@ -116,6 +140,9 @@ export 'services/industry/industry_model.dart';
 export 'services/network/network_api.dart';
 export 'services/network/network_model.dart';
 export 'services/network/network_service.dart';
+export 'services/feeds/feeds_api.dart';
+export 'services/feeds/feeds_service.dart';
+export 'services/feeds/feeds_model.dart';
 
 export 'binding.dart';
 export 'config.dart';

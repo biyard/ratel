@@ -39,3 +39,7 @@ export const QK_GET_SPACE = 'get-spaces';
 export const QK_GET_FEED = 'get-feeds';
 
 export const QK_GET_SPRINT_LEAGUE = 'get-sprint-leagues';
+
+export const QK_GET_DAGIT = 'get-dagit';
+export const QK_GET_ARTWORK = 'get-artwork';
+export const QK_GET_ARTWORK_CERTIFICATE = 'get-artwork-certificate';
