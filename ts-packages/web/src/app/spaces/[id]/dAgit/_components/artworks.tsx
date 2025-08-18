@@ -188,7 +188,8 @@ export default function Artworks({ spaceId }: { spaceId: number }) {
     <div className="flex flex-col gap-10">
       <div className="flex flex-row justify-between items-center">
         <h2 className="text-xl font-bold ">
-          Total Artworks : {artworks.length.toLocaleString()}
+          Total Artworks :{' '}
+          {(artworks.length + insertedArtworks.length).toLocaleString()}
         </h2>
         {isEdit && (
           <Button variant="rounded_primary" onClick={handleAddArtwork}>
