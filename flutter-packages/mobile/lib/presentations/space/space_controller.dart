@@ -18,6 +18,7 @@ class SpaceController extends BaseController {
     title: "",
     htmlContents: "",
     files: [],
+    discussions: [],
   ).obs;
 
   final DraggableScrollableController commentsCtrl =
