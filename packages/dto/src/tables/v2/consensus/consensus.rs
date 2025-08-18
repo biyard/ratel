@@ -1,7 +1,6 @@
 use bdk::prelude::*;
 
 use crate::*;
-
 #[api_model(table = consensus)]
 pub struct Consensus {
     #[api_model(primary_key)]
@@ -11,8 +10,8 @@ pub struct Consensus {
     #[api_model(auto = [insert, update])]
     pub updated_at: i64,
 
-    #[api_model(many_to_one = dagits)]
-    pub dagit_id: i64,
+    #[api_model(many_to_one = spaces)]
+    pub space_id: i64,
 
     #[api_model(many_to_one = artworks)]
     pub artwork_id: i64,

@@ -26,6 +26,7 @@ pub mod controllers {
 
             pub mod artworks {
                 pub mod create_artwork;
+                pub mod get_artwork_certificate;
                 pub mod get_artwork_detail;
             }
 
