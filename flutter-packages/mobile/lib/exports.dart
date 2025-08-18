@@ -76,6 +76,11 @@ export 'presentations/spaces/spaces_controller.dart';
 export 'presentations/spaces/spaces_screen.dart';
 export 'presentations/spaces/spaces_model.dart';
 
+export 'presentations/space/space_binding.dart';
+export 'presentations/space/space_controller.dart';
+export 'presentations/space/space_screen.dart';
+export 'presentations/space/space_model.dart';
+
 export 'presentations/connection/connection_binding.dart';
 export 'presentations/connection/connection_model.dart';
 export 'presentations/connection/connection_controller.dart';
@@ -145,6 +150,9 @@ export 'services/network/network_service.dart';
 export 'services/feeds/feeds_api.dart';
 export 'services/feeds/feeds_service.dart';
 export 'services/feeds/feeds_model.dart';
+export 'services/space/space_api.dart';
+export 'services/space/space_model.dart';
+export 'services/space/space_service.dart';
 
 export 'binding.dart';
 export 'config.dart';

@@ -22,12 +22,22 @@ class AppRoutes {
   static const String message = "/dashboard/message";
 
   static const String notification = "/dashboard/notification";
+  static spaceWithId(int id) => '/space/$id';
 
   static List<GetPage> pages = [
     GetPage(
       name: mainScreen,
       page: () => MainScreen(),
       binding: MainBinding(),
+      customTransition: SlideOverTransition(),
+      transitionDuration: const Duration(milliseconds: 300),
+      opaque: true,
+      curve: Curves.easeOutCubic,
+    ),
+    GetPage(
+      name: '/space/:id',
+      page: () => SpaceScreen(),
+      binding: SpaceBinding(),
       customTransition: SlideOverTransition(),
       transitionDuration: const Duration(milliseconds: 300),
       opaque: true,

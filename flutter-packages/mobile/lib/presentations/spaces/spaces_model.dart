@@ -1,5 +1,5 @@
-class SpaceModel {
-  SpaceModel({
+class SpaceSummaryModel {
+  SpaceSummaryModel({
     required this.id,
     required this.createdAt,
     required this.title,
