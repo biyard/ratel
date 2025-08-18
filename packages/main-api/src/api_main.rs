@@ -1,4 +1,8 @@
-use crate::{config, controllers, route::route};
+use crate::{config, controllers, route::route, utils::rds_client::RdsClient};
+use aws_config::{BehaviorVersion, Region, defaults};
+use aws_sdk_rdsdata::Client as RdsDataClient;
+use aws_sdk_s3::config::Credentials;
+
 use bdk::prelude::{by_axum::axum::Router, *};
 use by_axum::axum::middleware;
 use by_types::DatabaseConfig;
@@ -198,6 +202,25 @@ pub async fn api_main() -> Result<Router> {
             return Err(e.into());
         }
     }
+    let aws_config = defaults(BehaviorVersion::latest())
+        .region(Region::new(conf.aws.region))
+        .credentials_provider(Credentials::new(
+            conf.aws.access_key_id,
+            conf.aws.secret_access_key,
+            None,
+            None,
+            "ratel",
+        ))
+        .load()
+        .await;
+
+    let rds_client = RdsDataClient::new(&aws_config);
+    let rds_client = RdsClient::new(
+        rds_client,
+        conf.rds.resource_arn,
+        conf.rds.secret_arn,
+        "ratel",
+    );
 
     let is_local = conf.env == "local";
     let session_layer = SessionManagerLayer::new(session_store)
@@ -219,7 +242,7 @@ pub async fn api_main() -> Result<Router> {
         by_axum::axum::Router::new().nest_service("/mcp", controllers::mcp::route().await?);
     // let bot = teloxide::Bot::new(conf.telegram_token);
     // let bot = std::sync::Arc::new(bot);
-    let api_router = route(pool.clone())
+    let api_router = route(pool.clone(), rds_client)
         .await?
         .layer(middleware::from_fn(authorization_middleware))
         .layer(session_layer)

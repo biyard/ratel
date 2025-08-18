@@ -1,30 +1,37 @@
+use std::sync::Arc;
+
 use bdk::prelude::*;
 
-use crate::controllers::{
-    self,
-    m2::noncelab::users::register_users::{
-        RegisterUserResponse, register_users_by_noncelab_handler,
-    },
-    v2::{
-        dagits::{
-            add_oracle::add_oracle_handler,
-            artworks::{
-                create_artwork::{create_artwork_handler, dummy_handler},
-                get_artwork_certificate::get_artwork_certificate_handler,
-                get_artwork_detail::get_artwork_detail_handler,
+use crate::{
+    controllers::{
+        self,
+        m2::noncelab::users::register_users::{
+            RegisterUserResponse, register_users_by_noncelab_handler,
+        },
+        v2::{
+            dagits::{
+                add_oracle::add_oracle_handler,
+                artworks::{
+                    create_artwork::create_artwork_handler,
+                    get_artwork_certificate::get_artwork_certificate_handler,
+                    get_artwork_detail::get_artwork_detail_handler,
+                },
+                consensus::{
+                    create_consensus::create_consensus_handler, vote::consensus_vote_handler,
+                },
+                get_dagit::get_dagit_handler,
             },
-            consensus::{create_consensus::create_consensus_handler, vote::consensus_vote_handler},
-            get_dagit::get_dagit_handler,
+            industries::{industry::list_industries_handler, select_topic::select_topics_handler},
+            networks::{
+                follow::follow_handler, network::list_networks_handler,
+                search::list_networks_by_keyword_handler,
+            },
+            oracles::create_oracle::create_oracle_handler,
+            telegram::subscribe::telegram_subscribe_handler,
+            users::{find_user::find_user_handler, logout::logout_handler},
         },
-        industries::{industry::list_industries_handler, select_topic::select_topics_handler},
-        networks::{
-            follow::follow_handler, network::list_networks_handler,
-            search::list_networks_by_keyword_handler,
-        },
-        oracles::create_oracle::create_oracle_handler,
-        telegram::subscribe::telegram_subscribe_handler,
-        users::{find_user::find_user_handler, logout::logout_handler},
     },
+    utils::rds_client::RdsClient,
 };
 use by_axum::axum;
 use dto::Result;
@@ -99,7 +106,10 @@ macro_rules! api_docs {
     };
 }
 
-pub async fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Router> {
+pub async fn route(
+    pool: sqlx::Pool<sqlx::Postgres>,
+    rds_client: Arc<RdsClient>,
+) -> Result<by_axum::axum::Router> {
     Ok(by_axum::axum::Router::new()
         .nest("/v1", controllers::v1::route(pool.clone()).await?)
         .nest(
@@ -148,20 +158,12 @@ pub async fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Ro
             .with_state(pool.clone()),
         )
         .route(
-            "/v2/dummy/:space_id",
-            post_with(
-                dummy_handler,
-                api_docs!("Dummy Endpoint", "A dummy endpoint for testing"),
-            )
-            .with_state(pool.clone()),
-        )
-        .route(
             "/v2/dagits/:space_id/artworks",
             post_with(
                 create_artwork_handler,
                 api_docs!("Create Artwork", "Create a new artwork for a dagit"),
             )
-            .with_state(pool.clone()),
+            .with_state((pool.clone(), rds_client.clone())),
         )
         .route(
             "/v2/dagits/:space_id/consensus",

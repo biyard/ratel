@@ -125,6 +125,8 @@ jobs:
           KAIA_FEEPAYER_ADDR: ${{ secrets.DEV_KAIA_ADDR }}
           KAIA_OWNER_KEY: ${{ secrets.DEV_KAIA_KEY }}
           KAIA_OWNER_ADDR: ${{ secrets.DEV_KAIA_ADDR }}
+          RDS_RESOURCE_ARN: ${{ secrets.RDS_RESOURCE_ARN }}
+          RDS_SECRET_ARN: ${{ secrets.RDS_SECRET_ARN }}
 
           NONCELAB_TOKEN: ${{ secrets.NONCELAB_TOKEN }}
         run: |
