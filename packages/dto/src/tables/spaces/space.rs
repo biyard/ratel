@@ -183,6 +183,18 @@ pub struct File {
     pub url: Option<String>,
 }
 
+// implementation for File default
+impl Default for File {
+    fn default() -> Self {
+        File {
+            name: String::new(),
+            size: String::new(),
+            ext: FileExtension::JPG,
+            url: None,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub enum BoosterType {
