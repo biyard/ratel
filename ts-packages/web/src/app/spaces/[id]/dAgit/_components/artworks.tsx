@@ -16,12 +16,14 @@ import useDagitBySpaceId, { useDagitByIdMutation } from '@/hooks/use-dagit';
 import { openStartConsensusModal } from './start-consensus-modal';
 import { ConsensusVoteType } from '@/lib/api/models/consensus';
 import { openVoteModal } from './vote-modal';
+import { useUserInfo } from '@/app/(social)/_hooks/user';
 
 function ArtworkViewer({
   artwork,
   isTemporary = false,
   totalOracles = 0,
   isOracle = false,
+  isOwner = false,
   handleStartConsensus = async (_artworkId: number) => {},
   handleVote = async (
     _artworkId: number,
@@ -33,6 +35,7 @@ function ArtworkViewer({
   isTemporary?: boolean;
   totalOracles?: number;
   isOracle?: boolean;
+  isOwner?: boolean;
 
   handleStartConsensus?: (artworkId: number) => Promise<void>;
   handleVote?: (
@@ -41,7 +44,10 @@ function ArtworkViewer({
     voteType: ConsensusVoteType,
   ) => Promise<void>;
 }) {
-  const { data: original } = useArtworkDetailById(artwork.id, !isTemporary);
+  const { data: original } = useArtworkDetailById(
+    artwork.id,
+    !isTemporary && isOwner,
+  );
   const { data: certificate } = useArtworkCertificateById(
     artwork.id,
     !isTemporary && artwork.is_certified,
@@ -151,6 +157,7 @@ function ArtworkViewer({
 }
 
 export default function Artworks({ spaceId }: { spaceId: number }) {
+  const { data: userInfo } = useUserInfo();
   const { data: dagit } = useDagitBySpaceId(spaceId);
   const { artworks, insertArtwork, insertedArtworks } = useDagitStore();
 
@@ -198,7 +205,8 @@ export default function Artworks({ spaceId }: { spaceId: number }) {
         )}
       </div>
       <div className="grid grid-cols-1 desktop:grid-cols-2 gap-4">
-        {artworks.map((artwork) => (
+        {/* FIXME: Use Infinite Scroll with InfiniteQuery */}
+        {artworks.splice(0, 10).map((artwork) => (
           <ArtworkViewer
             artwork={artwork}
             key={artwork.id}
@@ -206,6 +214,7 @@ export default function Artworks({ spaceId }: { spaceId: number }) {
             totalOracles={dagit.oracles.length}
             handleStartConsensus={handleStartConsensus}
             handleVote={handleVote}
+            isOwner={userInfo?.id === artwork.owner_id}
           />
         ))}
         {insertedArtworks.map((artwork) => (

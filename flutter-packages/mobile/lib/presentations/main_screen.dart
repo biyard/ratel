@@ -362,7 +362,7 @@ class _MainScreenState extends State<MainScreen>
       case AppRoutes.myNetwork:
         return const NetworkScreen();
       case AppRoutes.mySpaces:
-        return const MySpacesScreen();
+        return const SpacesScreen();
       case AppRoutes.notification:
         return const NotificationScreen();
       default:
