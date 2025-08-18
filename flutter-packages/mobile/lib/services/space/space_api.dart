@@ -20,12 +20,19 @@ class SpaceApi extends GetConnect {
     final res = await get(uri.toString(), headers: headers);
 
     if (!res.isOk) {
-      return SpaceModel(id: 0, title: "", htmlContents: "", files: []);
+      return SpaceModel(
+        id: 0,
+        title: "",
+        htmlContents: "",
+        files: [],
+        discussions: [],
+      );
     }
 
     logger.d("space info: ${res.body}");
     final item = res.body;
     final List<FileModel> files = [];
+    final List<DiscussionModel> discussions = [];
 
     for (var i = 0; i < item["files"].length; i++) {
       final file = item["files"][i];
@@ -40,11 +47,26 @@ class SpaceApi extends GetConnect {
       );
     }
 
+    for (var i = 0; i < item["discussions"].length; i++) {
+      final discussion = item["discussions"][i];
+
+      discussions.add(
+        DiscussionModel(
+          id: int.parse(discussion["id"].toString()),
+          startedAt: int.parse(discussion["started_at"].toString()),
+          endedAt: int.parse(discussion["ended_at"].toString()),
+          name: discussion["name"],
+          record: discussion["record"] ?? "",
+        ),
+      );
+    }
+
     return SpaceModel(
       id: int.parse(item["id"].toString()),
       title: item["title"] ?? "",
       htmlContents: item["html_contents"] ?? "",
       files: files,
+      discussions: discussions,
     );
   }
 }

@@ -59,6 +59,9 @@ abstract class Assets {
   static const String xlsx = 'assets/icons/xlsx.svg';
   static const String zip = 'assets/icons/zip.svg';
 
+  static const String record = 'assets/icons/record.svg';
+  static const String play = 'assets/icons/play.svg';
+
   static final addIcon = SvgPicture.asset(add, width: 15, height: 15);
   static final backIcon = SvgPicture.asset(back, width: 16, height: 16);
   static final badgeImage = SvgPicture.asset(badge, width: 20, height: 20);

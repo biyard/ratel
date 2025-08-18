@@ -65,6 +65,7 @@ dependencies:
   webview_flutter: ^4.2.2
   url_launcher: ^6.3.0
   open_filex: ^4.5.0
+  intl: ^0.20.2
 
 dev_dependencies:
   flutter_test:
