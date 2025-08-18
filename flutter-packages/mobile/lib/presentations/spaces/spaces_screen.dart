@@ -40,7 +40,12 @@ class SpacesScreen extends GetWidget<SpacesController> {
                 controller: controller.scrollCtrl,
                 padding: const EdgeInsets.fromLTRB(12, 6, 12, 24),
                 children: [
-                  ...controller.mySpaces.map((m) => MySpaceTile(model: m)),
+                  ...controller.mySpaces.map(
+                    (m) => MySpaceTile(
+                      onClick: () => {controller.routingSpace(m.id)},
+                      model: m,
+                    ),
+                  ),
                   40.vgap,
                   Container(
                     key: controller.boostingHeaderKey,
@@ -56,7 +61,7 @@ class SpacesScreen extends GetWidget<SpacesController> {
                   ),
                   20.vgap,
                   ...controller.popularBoosting.map(
-                    (m) => _BoostingTile(model: m),
+                    (m) => _BoostingTile(onClick: () => {}, model: m),
                   ),
                 ],
               ),
@@ -108,165 +113,173 @@ class TagChip extends StatelessWidget {
 }
 
 class MySpaceTile extends StatelessWidget {
-  const MySpaceTile({super.key, required this.model});
-  final SpaceModel model;
+  const MySpaceTile({super.key, required this.model, required this.onClick});
+  final SpaceSummaryModel model;
+  final VoidCallback onClick;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          (model.imageUrl != "")
-              ? ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.network(model.imageUrl, width: 56, height: 56),
-                )
-              : ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Container(
-                    width: 56,
-                    height: 56,
-                    color: AppColors.neutral500,
+      child: InkWell(
+        onTap: onClick,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            (model.imageUrl != "")
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.network(model.imageUrl, width: 56, height: 56),
+                  )
+                : ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Container(
+                      width: 56,
+                      height: 56,
+                      color: AppColors.neutral500,
+                    ),
                   ),
-                ),
-          10.gap,
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        model.title,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
-                          height: 1.1,
+            10.gap,
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          model.title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                            height: 1.1,
+                          ),
                         ),
                       ),
-                    ),
-                    10.gap,
-                    Text(
-                      SpacesController.formatTime(model.createdAt),
-                      style: const TextStyle(
-                        color: AppColors.btnSDisabledText,
-                        fontWeight: FontWeight.w300,
-                        fontSize: 9,
-                        height: 1.3,
+                      10.gap,
+                      Text(
+                        SpacesController.formatTime(model.createdAt),
+                        style: const TextStyle(
+                          color: AppColors.btnSDisabledText,
+                          fontWeight: FontWeight.w300,
+                          fontSize: 9,
+                          height: 1.3,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                8.vgap,
-                Text(
-                  model.description,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w400,
-                    fontSize: 12,
-                    height: 1.1,
+                    ],
                   ),
-                ),
-              ],
+                  8.vgap,
+                  Text(
+                    model.description,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w400,
+                      fontSize: 12,
+                      height: 1.1,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
 
 class _BoostingTile extends StatelessWidget {
-  const _BoostingTile({required this.model});
-  final SpaceModel model;
+  const _BoostingTile({required this.onClick, required this.model});
+  final VoidCallback onClick;
+  final SpaceSummaryModel model;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          (model.imageUrl != "")
-              ? ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.network(model.imageUrl, width: 56, height: 56),
-                )
-              : ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Container(
-                    width: 56,
-                    height: 56,
-                    color: AppColors.neutral500,
+      child: InkWell(
+        onTap: onClick,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            (model.imageUrl != "")
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.network(model.imageUrl, width: 56, height: 56),
+                  )
+                : ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Container(
+                      width: 56,
+                      height: 56,
+                      color: AppColors.neutral500,
+                    ),
                   ),
-                ),
-          10.gap,
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        model.title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
-                          height: 1.1,
+            10.gap,
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          model.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                            height: 1.1,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-                1.vgap,
-                Text(
-                  "#crypto #korea",
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w400,
-                    height: 1.2,
+                    ],
                   ),
-                ),
-                1.vgap,
-                Row(
-                  children: [
-                    SvgPicture.asset(Assets.user),
-
-                    5.gap,
-                    Text(
-                      '${SpacesController.kFormat(model.members)}/${SpacesController.kFormat(model.members)}',
-                      style: const TextStyle(
-                        color: AppColors.iconPrimary,
-                        fontWeight: FontWeight.w500,
-                        fontSize: 11,
-                        height: 1.2,
-                      ),
+                  1.vgap,
+                  Text(
+                    "#crypto #korea",
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w400,
+                      height: 1.2,
                     ),
-                  ],
-                ),
-              ],
+                  ),
+                  1.vgap,
+                  Row(
+                    children: [
+                      SvgPicture.asset(Assets.user),
+
+                      5.gap,
+                      Text(
+                        '${SpacesController.kFormat(model.members)}/${SpacesController.kFormat(model.members)}',
+                        style: const TextStyle(
+                          color: AppColors.iconPrimary,
+                          fontWeight: FontWeight.w500,
+                          fontSize: 11,
+                          height: 1.2,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

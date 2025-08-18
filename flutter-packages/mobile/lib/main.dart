@@ -25,6 +25,7 @@ Future<void> main() async {
   SignupService.init();
   NetworkService.init();
   FeedsService.init();
+  SpaceService.init();
   UserService.init();
   DriveApi.init();
 

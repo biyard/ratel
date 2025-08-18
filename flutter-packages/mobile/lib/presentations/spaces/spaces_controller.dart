@@ -8,9 +8,9 @@ class SpacesController extends BaseController {
   final isBoostingSection = false.obs;
 
   //TODO: connect api
-  final List<SpaceModel> mySpaces = [
-    SpaceModel(
-      id: 1,
+  final List<SpaceSummaryModel> mySpaces = [
+    SpaceSummaryModel(
+      id: 183,
       createdAt: DateTime.now().millisecondsSinceEpoch - 15 * 60 * 1000,
       title: 'DAO Treasury Transparency Act Deliberation Space',
       description: 'I commented out it needs | commented out it l..',
@@ -18,8 +18,8 @@ class SpacesController extends BaseController {
       boostingType: 1,
       members: 1320,
     ),
-    SpaceModel(
-      id: 2,
+    SpaceSummaryModel(
+      id: 183,
       createdAt:
           DateTime.now().millisecondsSinceEpoch - 1 * 24 * 60 * 60 * 1000,
       title: 'DAO Transparency Act & Crypto Investor Protection Act',
@@ -28,8 +28,8 @@ class SpacesController extends BaseController {
       boostingType: 2,
       members: 980,
     ),
-    SpaceModel(
-      id: 3,
+    SpaceSummaryModel(
+      id: 183,
       createdAt:
           DateTime.now().millisecondsSinceEpoch - 3 * 24 * 60 * 60 * 1000,
       title: 'Crypto Investor Protection Act',
@@ -38,8 +38,8 @@ class SpacesController extends BaseController {
       boostingType: null,
       members: 540,
     ),
-    SpaceModel(
-      id: 4,
+    SpaceSummaryModel(
+      id: 183,
       createdAt:
           DateTime.now().millisecondsSinceEpoch - 5 * 24 * 60 * 60 * 1000,
       title: 'Community Treasury & Grants Working Group',
@@ -48,8 +48,8 @@ class SpacesController extends BaseController {
       boostingType: 3,
       members: 2100,
     ),
-    SpaceModel(
-      id: 5,
+    SpaceSummaryModel(
+      id: 183,
       createdAt:
           DateTime.now().millisecondsSinceEpoch - 8 * 24 * 60 * 60 * 1000,
       title: 'Open Governance Forum',
@@ -60,7 +60,7 @@ class SpacesController extends BaseController {
     ),
   ];
 
-  late final List<SpaceModel> popularBoosting =
+  late final List<SpaceSummaryModel> popularBoosting =
       mySpaces.where((s) => (s.boostingType ?? 1) >= 2).toList()
         ..sort((a, b) => (b.boostingType ?? 1).compareTo(a.boostingType ?? 1));
 
@@ -101,6 +101,10 @@ class SpacesController extends BaseController {
         curve: Curves.easeOutCubic,
       );
     }
+  }
+
+  void routingSpace(int spaceId) {
+    Get.rootDelegate.offNamed(AppRoutes.spaceWithId(spaceId));
   }
 
   void scrollToBoosting() {
