@@ -20,9 +20,16 @@ pub struct Config {
     pub slack_channel_abusing: &'static str,
     pub slack_channel_monitor: &'static str,
     pub kaia: KaiaConfig,
+    pub rds: RdsDataConfig,
     pub from_email: &'static str,
     pub telegram_token: &'static str,
     pub noncelab_token: &'static str,
+}
+
+#[derive(Debug)]
+pub struct RdsDataConfig {
+    pub resource_arn: &'static str,
+    pub secret_arn: &'static str,
 }
 
 #[derive(Debug)]
@@ -52,7 +59,10 @@ impl Default for Config {
                 feepayer_address: option_env!("KAIA_FEEPAYER_ADDR").expect("You must set KAIA_FEEPAYER_ADDR"),
             },
             from_email: option_env!("FROM_EMAIL").unwrap_or("no-reply@ratel.foundation"),
-
+            rds: RdsDataConfig {
+                resource_arn: option_env!("RDS_RESOURCE_ARN").expect("You must set RDS_RESOURCE_ARN"),
+                secret_arn: option_env!("RDS_SECRET_ARN").expect("You must set RDS_SECRET_ARN"),
+            },
             env: option_env!("ENV").expect("You must set ENV"),
             domain: option_env!("DOMAIN").expect("You must set DOMAIN"),
             openapi_key: option_env!("OPENAPI_KEY").expect("OPENAPI_KEY is required"),

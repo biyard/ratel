@@ -6,6 +6,7 @@ pub mod email;
 pub mod middlewares;
 pub mod notifications;
 pub mod openapi;
+pub mod rds_client;
 pub mod referal_code;
 pub mod s3_upload;
 pub mod telegram;

@@ -1,15 +1,17 @@
-#![allow(unused)]
-use crate::utils::s3_upload::{self, PresignedUrl};
-use crate::{config, security::check_perm};
-use base64::{Engine, engine::general_purpose};
+use std::sync::Arc;
+
 use bdk::prelude::*;
 use by_axum::axum::{Extension, Json, extract::State};
-use dto::ArtworkRepositoryUpdateRequest;
 use dto::{
-    Artwork, ArtworkDetail, Dagit, DagitArtwork, Error, File, GroupPermission, Result,
+    Result,
     by_axum::{auth::Authorization, axum::extract::Path},
     sqlx::{Pool, Postgres},
 };
+
+use crate::utils::rds_client::RdsClient;
+use aws_sdk_rdsdata::types::{Field, SqlParameter};
+use dto::*;
+
 #[derive(
     Debug,
     Clone,
@@ -46,146 +48,134 @@ pub struct CreateArtworkRequest {
     pub file: File,
 }
 
-pub async fn dummy_handler(
-    Extension(auth): Extension<Option<Authorization>>,
-    State(pool): State<Pool<Postgres>>,
-    Path(CreateArtworkPathParams { space_id }): Path<CreateArtworkPathParams>,
-    Json(req): Json<CreateArtworkRequest>,
-) -> Result<Json<Artwork>> {
-    let _ = check_perm(
-        &pool,
-        auth,
-        dto::RatelResource::Space { space_id },
-        GroupPermission::ManageSpace,
-    )
-    .await;
-    Ok(Json(Artwork::default()))
+#[derive(
+    Debug,
+    Clone,
+    serde::Serialize,
+    serde::Deserialize,
+    PartialEq,
+    Default,
+    aide::OperationIo,
+    JsonSchema,
+)]
+pub struct CreateArtworkResponse {
+    #[schemars(description = "Artwork Id")]
+    pub id: i64,
+}
+#[derive(serde::Deserialize, Debug)]
+struct DagitRecord {
+    id: i64,
+    owner_id: i64,
+}
+#[derive(serde::Deserialize, Debug)]
+struct ArtworkRecord {
+    id: i64,
 }
 
 pub async fn create_artwork_handler(
-    Extension(auth): Extension<Option<Authorization>>,
-    State(pool): State<Pool<Postgres>>,
+    Extension(_auth): Extension<Option<Authorization>>,
+    State((_pool, rds_client)): State<(Pool<Postgres>, Arc<RdsClient>)>,
     Path(CreateArtworkPathParams { space_id }): Path<CreateArtworkPathParams>,
     Json(req): Json<CreateArtworkRequest>,
-) -> Result<Json<Artwork>> {
+) -> Result<Json<CreateArtworkResponse>> {
     let url = req.file.url.clone().ok_or(Error::BadRequest)?;
-    let dagit = Dagit::query_builder(0)
-        .id_equals(space_id)
-        .query()
-        .map(Dagit::from)
-        .fetch_one(&pool)
-        .await?;
 
-    check_perm(
-        &pool,
-        auth,
-        dto::RatelResource::Space { space_id: dagit.id },
-        GroupPermission::ManageSpace,
-    )
-    .await?;
-
-    let mut tx = pool.begin().await?;
-    let artwork = Artwork::get_repository(pool.clone())
-        .insert_with_tx(
-            &mut *tx,
-            dagit.owner_id,
-            req.title,
-            req.description,
-            req.file,
+    let dagit: DagitRecord = rds_client
+        .query_one(
+            "SELECT id, owner_id FROM spaces WHERE id = :space_id",
+            Some(vec![
+                SqlParameter::builder()
+                    .name("space_id")
+                    .value(Field::LongValue(space_id))
+                    .build(),
+            ]),
         )
-        .await?
-        .ok_or(dto::Error::ServerError(
-            "Failed to create artwork".to_string(),
-        ))?;
-
-    ArtworkDetail::get_repository(pool.clone())
-        .insert_with_tx(&mut *tx, artwork.id, dagit.owner_id, url.clone())
         .await?;
-
-    DagitArtwork::get_repository(pool.clone())
-        .insert_with_tx(&mut *tx, dagit.id, artwork.id)
-        .await?;
-
-    tx.commit().await?;
-
-    // let pool_clone = pool.clone();
-    // let artwork_id = artwork.id;
-    // tokio::spawn(async move {
-    //     if let Err(e) = process_watermark_async(pool_clone, artwork_id, url).await {
-    //         tracing::error!(
-    //             "Failed to process watermark for artwork {}: {}",
-    //             artwork_id,
-    //             e
-    //         );
-    //     }
-    // });
-
-    Ok(Json(artwork))
-}
-
-async fn process_watermark_async(
-    pool: Pool<Postgres>,
-    artwork_id: i64,
-    original_url: String,
-) -> Result<()> {
-    let bytes = read_image_from_url(&original_url).await?;
-    let watermarked_bytes =
-        tokio::task::spawn_blocking(move || visible_watermarking(bytes)).await??;
-
-    let config = config::get();
-    let PresignedUrl {
-        presigned_uris,
-        uris,
-        total_count: _,
-    } = s3_upload::get_put_object_uri(&config.aws, &config.bucket, Some(1)).await?;
-
-    let client = reqwest::Client::new();
-    client
-        .put(presigned_uris[0].clone())
-        .body(watermarked_bytes)
-        .send()
-        .await?;
-
-    Artwork::get_repository(pool.clone())
-        .update(
-            artwork_id,
-            ArtworkRepositoryUpdateRequest {
-                file: Some(File {
-                    url: Some(uris[0].clone()),
-                    ..Default::default()
-                }),
-                ..Default::default()
-            },
+    let artwork_record: ArtworkRecord = rds_client
+        .insert_returning(
+            "INSERT INTO artworks (owner_id, title, description, file) 
+         VALUES (:owner_id, :title, :description, :file::jsonb) 
+         RETURNING id, owner_id, title, description, created_at, updated_at",
+            Some(vec![
+                SqlParameter::builder()
+                    .name("owner_id")
+                    .value(Field::LongValue(dagit.owner_id))
+                    .build(),
+                SqlParameter::builder()
+                    .name("title")
+                    .value(Field::StringValue(req.title.clone()))
+                    .build(),
+                SqlParameter::builder()
+                    .name("description")
+                    .value(match &req.description {
+                        Some(desc) => Field::StringValue(desc.clone()),
+                        None => Field::IsNull(true),
+                    })
+                    .build(),
+                SqlParameter::builder()
+                    .name("file")
+                    .value(Field::StringValue(
+                        serde_json::to_string(&req.file).map_err(|e| {
+                            Error::ServerError(format!("Failed to serialize file: {}", e))
+                        })?,
+                    ))
+                    .build(),
+            ]),
         )
         .await?;
 
-    Ok(())
+    rds_client
+        .insert(
+            "INSERT INTO artwork_details (artwork_id, owner_id, image)
+         VALUES (:artwork_id, :owner_id, :image)",
+            Some(vec![
+                SqlParameter::builder()
+                    .name("artwork_id")
+                    .value(Field::LongValue(artwork_record.id))
+                    .build(),
+                SqlParameter::builder()
+                    .name("owner_id")
+                    .value(Field::LongValue(dagit.owner_id))
+                    .build(),
+                SqlParameter::builder()
+                    .name("image")
+                    .value(Field::StringValue(url.clone()))
+                    .build(),
+            ]),
+        )
+        .await?;
+
+    rds_client
+        .insert(
+            "INSERT INTO dagit_artworks (space_id, artwork_id)
+         VALUES (:space_id, :artwork_id)",
+            Some(vec![
+                SqlParameter::builder()
+                    .name("space_id")
+                    .value(Field::LongValue(dagit.id))
+                    .build(),
+                SqlParameter::builder()
+                    .name("artwork_id")
+                    .value(Field::LongValue(artwork_record.id))
+                    .build(),
+            ]),
+        )
+        .await?;
+
+    Ok(Json(CreateArtworkResponse {
+        id: artwork_record.id,
+    }))
 }
 
-// pub async fn create_artwork_handler(
-//     Extension(auth): Extension<Option<Authorization>>,
-//     State(pool): State<Pool<Postgres>>,
-//     Path(CreateArtworkPathParams { space_id }): Path<CreateArtworkPathParams>,
-//     Json(mut req): Json<CreateArtworkRequest>,
-// ) -> Result<Json<Artwork>> {
-//     let url = req.file.url.clone().ok_or(Error::BadRequest)?;
-//     let dagit = Dagit::query_builder(0)
-//         .id_equals(space_id)
-//         .query()
-//         .map(Dagit::from)
-//         .fetch_one(&pool)
-//         .await?;
+// async fn process_watermark_async(
+//     pool: Pool<Postgres>,
+//     artwork_id: i64,
+//     original_url: String,
+// ) -> Result<()> {
+//     let bytes = read_image_from_url(&original_url).await?;
+//     let watermarked_bytes =
+//         tokio::task::spawn_blocking(move || visible_watermarking(bytes)).await??;
 
-//     check_perm(
-//         &pool,
-//         auth,
-//         dto::RatelResource::Space { space_id: dagit.id },
-//         GroupPermission::ManageSpace,
-//     )
-//     .await?;
-
-//     let bytes = read_image_from_url(&url).await?;
-//     let bytes = visible_watermarking(bytes)?;
 //     let config = config::get();
 //     let PresignedUrl {
 //         presigned_uris,
@@ -196,77 +186,22 @@ async fn process_watermark_async(
 //     let client = reqwest::Client::new();
 //     client
 //         .put(presigned_uris[0].clone())
-//         .body(bytes)
+//         .body(watermarked_bytes)
 //         .send()
 //         .await?;
 
-//     req.file.url = Some(uris[0].clone());
-
-//     let mut tx = pool.begin().await?;
-//     let artwork = Artwork::get_repository(pool.clone())
-//         .insert_with_tx(
-//             &mut *tx,
-//             dagit.owner_id,
-//             req.title,
-//             req.description,
-//             req.file,
+//     Artwork::get_repository(pool.clone())
+//         .update(
+//             artwork_id,
+//             ArtworkRepositoryUpdateRequest {
+//                 file: Some(File {
+//                     url: Some(uris[0].clone()),
+//                     ..Default::default()
+//                 }),
+//                 ..Default::default()
+//             },
 //         )
-//         .await?
-//         .ok_or(dto::Error::ServerError(
-//             "Failed to create artwork".to_string(),
-//         ))?;
-
-//     ArtworkDetail::get_repository(pool.clone())
-//         .insert_with_tx(&mut *tx, artwork.id, dagit.owner_id, url)
 //         .await?;
 
-//     DagitArtwork::get_repository(pool.clone())
-//         .insert_with_tx(&mut *tx, dagit.id, artwork.id)
-//         .await?;
-//     tx.commit().await?;
-//     Ok(Json(artwork))
+//     Ok(())
 // }
-
-async fn read_image_from_url(url: &str) -> Result<Vec<u8>> {
-    let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(30))
-        .build()?;
-    let bytes = client.get(url).send().await?.bytes().await?;
-    Ok(bytes.to_vec())
-}
-
-pub fn visible_watermarking(slice: Vec<u8>) -> Result<Vec<u8>> {
-    let mut orig = photon_rs::PhotonImage::new_from_byteslice(slice);
-
-    let width = orig.get_width();
-    let height = orig.get_height();
-    if width == 0 || height == 0 {
-        tracing::error!("Image has zero width or height");
-        return Err(Error::BadRequest);
-    }
-    // Update the path below to the correct location of your watermark image file
-    let logo = include_bytes!("./protected.png");
-
-    let logo = general_purpose::STANDARD.encode(logo.as_ref());
-
-    let wm = photon_rs::PhotonImage::new_from_base64(&logo);
-
-    let wm_width = wm.get_width();
-    let wm_height = wm.get_height();
-
-    let w_width = (width as f32 * 0.8) as u32;
-    let w_height = ((w_width as f32 / wm_width as f32) * wm_height as f32) as u32;
-    let wm = photon_rs::transform::resize(
-        &wm,
-        w_width,
-        w_height,
-        photon_rs::transform::SamplingFilter::Nearest,
-    );
-    let x = (width - w_width) / 2;
-    let y = (height - w_height) / 2;
-
-    photon_rs::multiple::watermark(&mut orig, &wm, x as i64, y as i64);
-    let bytes = orig.get_bytes();
-
-    Ok(bytes)
-}

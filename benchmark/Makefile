@@ -39,6 +39,9 @@ ec2.stop:
 ec2.run:
 	cd ./$(TARGET) && SSH_KEY_PATH=$(SSH_KEY_PATH) EC2_AGENT_PUBLIC_IP=$(EC2_AGENT_PUBLIC_IP) EC2_AGENT_INSTANCE_ID=$(EC2_AGENT_INSTANCE_ID) make ec2.run
 
+ec2.shell:
+	ssh -i $(SSH_KEY_PATH) ubuntu@$(EC2_AGENT_PUBLIC_IP)
+
 ec2.list:
 	echo "Instance ID: $(EC2_AGENT_INSTANCE_ID)"
 	echo "Public IP: $(EC2_AGENT_PUBLIC_IP)"
