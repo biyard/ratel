@@ -41,7 +41,7 @@ mod telegram_subscribes;
 mod us_bills;
 mod user_points;
 mod users;
-// mod v2;
+mod v2;
 mod verifications;
 mod votes;
 
@@ -88,6 +88,6 @@ pub use telegram_subscribes::*;
 pub use us_bills::*;
 pub use user_points::*;
 pub use users::*;
-// pub use v2::*;
+pub use v2::*;
 pub use verifications::*;
 pub use votes::*;
