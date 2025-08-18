@@ -1,0 +1,7 @@
+name: ratel_workspace
+workspace:
+  members:
+    - flutter-packages/**
+
+environment:
+  sdk: ^3.8.1
