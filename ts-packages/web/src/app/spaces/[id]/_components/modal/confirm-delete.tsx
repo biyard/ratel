@@ -27,11 +27,15 @@ export default function DeleteSpacePopup({
       </div>
 
       <div className="text-center font-medium text-neutral-400 text-base mb-6">
-        This action cannot be undone. This will permanently delete the Space and all its contents.
+        This action cannot be undone. This will permanently delete the Space and
+        all its contents.
       </div>
 
       <div className="mb-6">
-        <label htmlFor="spaceNameVerification" className="block text-neutral-400 text-sm mb-2">
+        <label
+          htmlFor="spaceNameVerification"
+          className="block text-neutral-400 text-sm mb-2"
+        >
           To confirm, type the Space name exactly as shown:
         </label>
         <input
