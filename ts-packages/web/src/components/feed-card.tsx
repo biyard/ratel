@@ -14,6 +14,18 @@ import Image from 'next/image';
 import { route } from '@/route';
 import { SpaceType } from '@/lib/api/models/spaces';
 import { Button } from './ui/button';
+import {
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+  DropdownMenu,
+  DropdownMenuItem,
+} from './ui/dropdown-menu';
+import { Edit1 } from './icons';
+import { useRepostDraft } from '@/app/(social)/_components/create-repost';
+import { showSuccessToast, showErrorToast } from './custom-toast/toast';
+import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
+import { Loader2 } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 export interface FeedCardProps {
   id: number;
@@ -38,6 +50,8 @@ export interface FeedCardProps {
   user_id: number;
   onboard: boolean;
 
+  onRepostThought?: () => void;
+  onRepost?: (e: React.MouseEvent) => void;
   onLikeClick?: (value: boolean) => void;
   refetch?: () => void;
   isLikeProcessing?: boolean;
@@ -46,15 +60,29 @@ export interface FeedCardProps {
 export default function FeedCard(props: FeedCardProps) {
   const router = useRouter();
   const { post } = useApiCall();
+  const { data: User } = useSuspenseUserInfo();
 
   const [localLikes, setLocalLikes] = useState(props.likes);
   const [localIsLiked, setLocalIsLiked] = useState(props.is_liked);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [localShares, setLocalShares] = useState(props.shares);
+
+  const {
+    setAuthorName,
+    setIndustry,
+    setAuthorProfileUrl,
+    setFeedContent,
+    setFeedImageUrl,
+    setOriginalFeedId,
+    setExpand,
+    setAuthorId,
+  } = useRepostDraft();
 
   // Sync with props when they change
   useEffect(() => {
     setLocalLikes(props.likes);
     setLocalIsLiked(props.is_liked);
+    setLocalShares(props.shares);
   }, [props.likes, props.is_liked]);
 
   const handleLike = async (value: boolean) => {
@@ -83,6 +111,42 @@ export default function FeedCard(props: FeedCardProps) {
     }
   };
 
+  const handleRepost = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsProcessing(true);
+
+    try {
+      await post(ratelApi.feeds.repost(), {
+        repost: {
+          parent_id: props.id,
+          user_id: User.id,
+          html_contents: '',
+          quote_feed_id: null,
+        },
+      });
+
+      setLocalShares((prev) => prev + 1);
+      showSuccessToast('Reposted successfully');
+      props.refetch?.();
+    } catch (error) {
+      logger.error('Failed to repost:', error);
+      showErrorToast('Failed to repost');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleRepostThought = () => {
+    setAuthorId(props.author_id);
+    setAuthorName(props.author_name);
+    setIndustry(props.industry);
+    setAuthorProfileUrl(props.author_profile_url);
+    setFeedContent(props.contents);
+    setFeedImageUrl(props.url || null);
+    setOriginalFeedId(props.id);
+    setExpand(true);
+  };
+
   return (
     <Col
       className={`cursor-pointer border rounded-[10px] ${props.space_id && props.space_type ? 'border-primary bg-primary/10' : 'border-neutral-700'}`}
@@ -94,9 +158,12 @@ export default function FeedCard(props: FeedCardProps) {
       <FeedFooter
         {...props}
         likes={localLikes}
+        shares={localShares}
         is_liked={localIsLiked}
         isLikeProcessing={isProcessing}
         onLikeClick={handleLike}
+        onRepostThought={handleRepostThought}
+        onRepost={handleRepost}
       />
     </Col>
   );
@@ -287,6 +354,11 @@ export function JoinNowButton({ onClick }: { onClick: () => void }) {
   );
 }
 
+interface FeedFooterProps extends Omit<FeedCardProps, 'onRepostThought'> {
+  onRepostThought?: () => void;
+  // isLikeProcessing?: boolean;
+}
+
 export function FeedFooter({
   space_id,
   space_type,
@@ -297,8 +369,37 @@ export function FeedFooter({
   is_liked,
   onLikeClick,
   isLikeProcessing,
-}: FeedCardProps) {
+  onRepost,
+  onRepostThought,
+}: FeedFooterProps) {
   const router = useRouter();
+
+  const [isReposting, setIsReposting] = useState(false);
+
+  const handleRepostWithThoughts = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsReposting(true);
+    try {
+      onRepostThought?.();
+    } catch (error) {
+      console.error('Failed to repost:', error);
+    } finally {
+      setIsReposting(false);
+    }
+  };
+
+  const handleRepost = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsReposting(true);
+    try {
+      onRepost?.(e);
+    } catch (error) {
+      console.error('Failed to repost:', error);
+    } finally {
+      setIsReposting(false);
+    }
+  };
+
   return (
     <Row
       className={`items-center justify-between border-t w-full px-5 ${space_id && space_type ? 'border-primary/10' : 'border-neutral-800'} `}
@@ -349,9 +450,42 @@ export function FeedFooter({
           <Rewards />
           {convertNumberToString(rewards)}
         </IconText>
+
         <IconText>
-          <Shares />
-          {convertNumberToString(shares)}
+          <DropdownMenu modal={false}>
+            <DropdownMenuTrigger asChild>
+              <button onClick={(e) => e.stopPropagation()}>
+                <Shares />
+                {convertNumberToString(shares)}
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              className="w-84 border-0 transition ease-out duration-100 py-4 px-2"
+            >
+              <DropdownMenuItem asChild>
+                <button
+                  onClick={handleRepostWithThoughts}
+                  disabled={isReposting}
+                  className="flex items-center gap-3 w-full px-4 py-2 rounded hover:bg-neutral-700 transition-colors text-white text-lg font-semibold"
+                >
+                  {isReposting ? <Loader2 /> : <Edit1 />}
+                  Repost with your thoughts
+                </button>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem asChild>
+                <button
+                  onClick={handleRepost}
+                  disabled={isReposting}
+                  className="flex items-center gap-3 w-full px-4 py-2 rounded hover:bg-neutral-700 transition-colors text-white text-lg font-semibold"
+                >
+                  {isReposting ? <Loader2 /> : <Shares />}
+                  Repost
+                </button>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </IconText>
       </div>
     </Row>

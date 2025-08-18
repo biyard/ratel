@@ -46,6 +46,7 @@ dependencies:
       url: https://github.com/victor138128/flutterfire.git
       path: packages/firebase_analytics/firebase_analytics
       ref: main
+  flutter_html: ^3.0.0
   sign_in_with_apple: ^7.0.1
   googleapis: ^11.4.0
   google_sign_in: ^6.1.5

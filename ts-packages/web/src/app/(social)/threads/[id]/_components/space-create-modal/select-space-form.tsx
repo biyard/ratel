@@ -16,7 +16,7 @@ import { usePopup } from '@/lib/contexts/popup-service';
 import { logger } from '@/lib/logger';
 import SpaceConfigForm from './space-config-form';
 import RadioButton from '@/components/radio-button';
-
+import { Cube } from '@/assets/icons/shopping';
 interface SpaceFormProps {
   type: SpaceType;
   Icon: React.JSX.Element;
@@ -60,7 +60,13 @@ const SpaceForms: SpaceFormProps[] = [
       'Mini social game where three runners compete in a race, and their speed is determined by community voting',
     experiment: true,
   },
-
+  {
+    type: SpaceType.dAgit,
+    Icon: <Cube />,
+    label: 'd.AGIT',
+    description: 'Create d.AGIT space for managing artworks',
+    disabled: true,
+  },
   // {
   //   type: SpaceType.Nft,
   //   Icon: <Cube />,

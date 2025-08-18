@@ -71,7 +71,7 @@ impl SpaceController {
         // Access control for notice spaces
         if space.space_type == SpaceType::Notice {
             let is_owner = user_id == space.owner_id;
-          
+
             match space.status {
                 SpaceStatus::Draft => {
                     // Draft notice spaces: only owner has access
@@ -861,11 +861,6 @@ impl SpaceController {
             })?
             .ok_or(Error::SpaceWritePostError)?;
 
-        // if space_type == SpaceType::Dagit {
-        //     Dagit::get_repository(self.pool.clone())
-        //         .insert_with_tx(&mut *tx, res.id)
-        //         .await?;
-        // }
         let g = SpaceGroup::get_repository(self.pool.clone());
         let group = g
             .insert_with_tx(&mut *tx, res.id, "Admin".to_string())
