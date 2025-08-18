@@ -299,6 +299,18 @@ export const ratelApi = {
       return `/v1/spaces/${spaceId}/sprint-leagues/${sprintLeagueId}/players/${playerId}`;
     },
   },
+  dagit: {
+    getDagitBySpaceId: (spaceId: number) => `/v2/dagits/${spaceId}`,
+    addOracle: (spaceId: number) => `/v2/dagits/${spaceId}/oracles`,
+    createArtwork: (spaceId: number) => `/v2/dagits/${spaceId}/artworks`,
+    getArtworkById: (artworkId: number) => `/v2/artworks/${artworkId}`,
+    getArtworkCertificate: (artworkId: number) =>
+      `/v2/artworks/${artworkId}/certificate`,
+
+    startConsensus: (spaceId: number) => `/v2/dagits/${spaceId}/consensus`,
+    voteConsensus: (spaceId: number, artworkId: number) =>
+      `/v2/dagits/${spaceId}/artworks/${artworkId}/vote`,
+  },
   telegram: {
     subscribe: () => '/v2/telegram/subscribe',
   },
