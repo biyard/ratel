@@ -8,7 +8,7 @@ use dto::{
 };
 use tracing_subscriber::filter::combinator::Or;
 
-use crate::security::check_perm;
+use crate::{security::check_perm, utils::users::extract_user};
 
 #[derive(
     Debug,
@@ -31,20 +31,18 @@ pub async fn get_dagit_handler(
     Path(GetDagitPathParams { space_id }): Path<GetDagitPathParams>,
 ) -> Result<Json<Dagit>> {
     tracing::debug!("get_dagit_handler called with space_id: {}", space_id);
-    let user = check_perm(
-        &pool,
-        auth,
-        dto::RatelResource::Space { space_id: space_id },
-        GroupPermission::ReadPosts,
-    )
-    .await?;
-    let oracle_id = Oracle::query_builder()
+    let user = extract_user(&pool, auth).await?;
+
+    let oracle = Oracle::query_builder()
         .user_id_equals(user.id)
         .query()
         .map(Oracle::from)
         .fetch_one(&pool)
-        .await?
-        .id;
+        .await;
+    let oracle_id = match oracle {
+        Ok(o) => o.id,
+        Err(_) => 0,
+    };
     let dagit = Dagit::query_builder(oracle_id)
         .artworks_builder(Artwork::query_builder(oracle_id))
         .id_equals(space_id)

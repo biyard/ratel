@@ -1,7 +1,7 @@
 use bdk::prelude::*;
 use by_axum::axum::{Extension, Json, extract::State};
 use dto::{
-    Dagit, DagitOracle, GroupPermission, Result,
+    Dagit, DagitOracle, GroupPermission, Oracle, Result,
     by_axum::{auth::Authorization, axum::extract::Path},
     sqlx::{Pool, Postgres},
 };
@@ -19,8 +19,8 @@ use crate::security::check_perm;
     JsonSchema,
 )]
 pub struct AddOracleRequest {
-    #[schemars(description = "Oracle ID")]
-    pub oracle_id: i64,
+    #[schemars(description = "User ID")]
+    pub user_id: i64,
 }
 
 #[derive(
@@ -56,8 +56,17 @@ pub async fn add_oracle_handler(
         GroupPermission::ManageSpace,
     )
     .await?;
+
+    let oracle_id = Oracle::query_builder()
+        .user_id_equals(req.user_id)
+        .query()
+        .map(Oracle::from)
+        .fetch_one(&pool)
+        .await?
+        .id;
+
     let dagit_oracle = DagitOracle::get_repository(pool.clone())
-        .insert(space_id, req.oracle_id)
+        .insert(space_id, oracle_id)
         .await?;
 
     let dagit = Dagit::query_builder(dagit_oracle.oracle_id)
