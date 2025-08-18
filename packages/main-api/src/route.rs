@@ -1,4 +1,3 @@
-#![allow(unused)]
 use bdk::prelude::*;
 
 use crate::controllers::{
@@ -11,6 +10,7 @@ use crate::controllers::{
             add_oracle::add_oracle_handler,
             artworks::{
                 create_artwork::create_artwork_handler,
+                get_artwork_certificate::get_artwork_certificate_handler,
                 get_artwork_detail::get_artwork_detail_handler,
             },
             consensus::{create_consensus::create_consensus_handler, vote::consensus_vote_handler},
@@ -32,7 +32,6 @@ use dto::Result;
 use axum::native_routing::get as nget;
 use axum::native_routing::post as npost;
 use axum::routing::{get_with, post_with};
-use by_axum::axum::Router;
 
 macro_rules! wrap_api {
     (
@@ -133,15 +132,15 @@ pub async fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Ro
             nget(find_user_handler).with_state(pool.clone()),
         )
         .route(
-            "/v2/dagits/:dagit_id",
+            "/v2/dagits/:space_id",
             get_with(
                 get_dagit_handler,
-                api_docs!("Get Dagit", "Retrieve a specific dagit"),
+                api_docs!("Get Dagit by space ID", "Retrieve dagit in a space"),
             )
             .with_state(pool.clone()),
         )
         .route(
-            "/v2/dagits/:dagit_id/oracles",
+            "/v2/dagits/:space_id/oracles",
             post_with(
                 add_oracle_handler,
                 api_docs!("Add Oracle", "Add a new oracle to a dagit"),
@@ -149,7 +148,7 @@ pub async fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Ro
             .with_state(pool.clone()),
         )
         .route(
-            "/v2/dagits/:dagit_id/artworks",
+            "/v2/dagits/:space_id/artworks",
             post_with(
                 create_artwork_handler,
                 api_docs!("Create Artwork", "Create a new artwork for a dagit"),
@@ -157,15 +156,7 @@ pub async fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Ro
             .with_state(pool.clone()),
         )
         .route(
-            "/v2/dagits/:dagit_id/artworks/:artwork_id",
-            get_with(
-                get_artwork_detail_handler,
-                api_docs!("Get Artwork", "Retrieve a specific artwork"),
-            )
-            .with_state(pool.clone()),
-        )
-        .route(
-            "/v2/dagits/:dagit_id/consensus",
+            "/v2/dagits/:space_id/consensus",
             post_with(
                 create_consensus_handler,
                 api_docs!("Start Dagit Consensus", "Start a new consensus for a dagit"),
@@ -173,13 +164,29 @@ pub async fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Ro
             .with_state(pool.clone()),
         )
         .route(
-            "/v2/dagits/:dagit_id/consensus/:consensus_id/vote",
+            "/v2/artworks/:artwork_id",
+            get_with(
+                get_artwork_detail_handler,
+                api_docs!("Get Artwork", "Retrieve a specific artwork"),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/v2/dagits/:space_id/artworks/:artwork_id/vote",
             post_with(
                 consensus_vote_handler,
                 api_docs!(
                     "Vote on Dagit Consensus",
                     "Submit a vote for a specific dagit consensus"
                 ),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/v2/artworks/:artwork_id/certificate",
+            get_with(
+                get_artwork_certificate_handler,
+                api_docs!("Get Artwork", "Retrieve a specific artwork"),
             )
             .with_state(pool.clone()),
         )

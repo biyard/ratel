@@ -1,13 +1,12 @@
-#![allow(unused)]
 use bdk::prelude::*;
 use by_axum::axum::{Extension, Json, extract::State};
 use dto::{
-    ArtworkDetail, Error, Result,
+    ArtworkDetail, Result,
     by_axum::{auth::Authorization, axum::extract::Path},
     sqlx::{Pool, Postgres},
 };
 
-use crate::utils::users::{extract_user, extract_user_id};
+use crate::utils::users::extract_user_id;
 
 #[derive(
     Debug,
@@ -37,5 +36,6 @@ pub async fn get_artwork_detail_handler(
         .map(ArtworkDetail::from)
         .fetch_one(&pool)
         .await?;
+
     Ok(Json(artwork))
 }

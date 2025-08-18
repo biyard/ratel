@@ -1,4 +1,3 @@
-#![allow(unused)]
 use bdk::prelude::*;
 use by_axum::axum::{Extension, Json, extract::State};
 use dto::{
@@ -35,17 +34,17 @@ pub struct AddOracleRequest {
     JsonSchema,
 )]
 pub struct AddOraclePathParams {
-    #[schemars(description = "Dagit ID")]
-    pub dagit_id: i64,
+    #[schemars(description = "Space ID")]
+    pub space_id: i64,
 }
 pub async fn add_oracle_handler(
     Extension(auth): Extension<Option<Authorization>>,
     State(pool): State<Pool<Postgres>>,
-    Path(AddOraclePathParams { dagit_id }): Path<AddOraclePathParams>,
+    Path(AddOraclePathParams { space_id }): Path<AddOraclePathParams>,
     Json(req): Json<AddOracleRequest>,
 ) -> Result<Json<Dagit>> {
-    let dagit = Dagit::query_builder()
-        .id_equals(dagit_id)
+    let dagit = Dagit::query_builder(0)
+        .id_equals(space_id)
         .query()
         .map(Dagit::from)
         .fetch_one(&pool)
@@ -53,18 +52,16 @@ pub async fn add_oracle_handler(
     check_perm(
         &pool,
         auth,
-        dto::RatelResource::Space {
-            space_id: dagit.space_id,
-        },
+        dto::RatelResource::Space { space_id: dagit.id },
         GroupPermission::ManageSpace,
     )
     .await?;
-    DagitOracle::get_repository(pool.clone())
-        .insert(dagit_id, req.oracle_id)
+    let dagit_oracle = DagitOracle::get_repository(pool.clone())
+        .insert(space_id, req.oracle_id)
         .await?;
 
-    let dagit = Dagit::query_builder()
-        .id_equals(dagit_id)
+    let dagit = Dagit::query_builder(dagit_oracle.oracle_id)
+        .id_equals(space_id)
         .query()
         .map(Dagit::from)
         .fetch_one(&pool)
