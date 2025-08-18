@@ -26,6 +26,7 @@ class SpaceApi extends GetConnect {
         htmlContents: "",
         files: [],
         discussions: [],
+        elearnings: [],
       );
     }
 
@@ -33,6 +34,7 @@ class SpaceApi extends GetConnect {
     final item = res.body;
     final List<FileModel> files = [];
     final List<DiscussionModel> discussions = [];
+    final List<ElearningModel> elearnings = [];
 
     for (var i = 0; i < item["files"].length; i++) {
       final file = item["files"][i];
@@ -61,12 +63,31 @@ class SpaceApi extends GetConnect {
       );
     }
 
+    for (var i = 0; i < item["elearnings"].length; i++) {
+      final elearning = item["elearnings"][i];
+
+      elearnings.add(
+        ElearningModel(
+          id: int.parse(elearning["id"].toString()),
+          files: [
+            FileModel(
+              name: elearning["files"][0]["name"],
+              size: elearning["files"][0]["size"],
+              ext: elearning["files"][0]["ext"],
+              url: elearning["files"][0]["url"],
+            ),
+          ],
+        ),
+      );
+    }
+
     return SpaceModel(
       id: int.parse(item["id"].toString()),
       title: item["title"] ?? "",
       htmlContents: item["html_contents"] ?? "",
       files: files,
       discussions: discussions,
+      elearnings: elearnings,
     );
   }
 }
