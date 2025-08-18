@@ -43,7 +43,16 @@ pub async fn create_oracle_handler(
     // )
     // .await?;
     let mut tx = pool.begin().await?;
-
+    let oracle = Oracle::query_builder()
+        .user_id_equals(req.user_id)
+        .query()
+        .fetch_optional(&mut *tx)
+        .await?;
+    if oracle.is_some() {
+        return Err(Error::ServerError(
+            "Oracle already exists for this user".to_string(),
+        ));
+    }
     let oracle = Oracle::get_repository(pool.clone())
         .insert_with_tx(&mut *tx, req.user_id, req.oracle_type)
         .await?
