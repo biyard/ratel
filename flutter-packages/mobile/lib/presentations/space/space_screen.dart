@@ -2,6 +2,7 @@ import 'package:flutter/gestures.dart';
 import 'package:ratel/exports.dart';
 import 'package:ratel/presentations/space/tab/deliberation_tab.dart';
 import 'package:ratel/presentations/space/tab/elearning_tab.dart';
+import 'package:ratel/presentations/space/tab/poll_tab.dart';
 import 'package:ratel/presentations/space/tab/summary_tab.dart';
 
 class SpaceScreen extends GetWidget<SpaceController> {
@@ -111,15 +112,16 @@ class SpaceScreen extends GetWidget<SpaceController> {
                             scrollBottomPadding: scrollBottomPadding,
                           );
                         case SpaceTab.poll:
-                          return _PlaceholderTab(
-                            title: 'Poll',
-                            bottomPadding: scrollBottomPadding,
+                          return PollTab(
+                            space: controller.space.value,
+                            sheetBottom: sheetPx,
+                            scrollBottomPadding: scrollBottomPadding,
                           );
-                        case SpaceTab.insights:
-                          return _PlaceholderTab(
-                            title: 'Insights',
-                            bottomPadding: scrollBottomPadding,
-                          );
+                        // case SpaceTab.insights:
+                        //   return _PlaceholderTab(
+                        //     title: 'Insights',
+                        //     bottomPadding: scrollBottomPadding,
+                        //   );
                       }
                     });
                   },
