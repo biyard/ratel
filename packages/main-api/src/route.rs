@@ -148,7 +148,7 @@ pub async fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Ro
             .with_state(pool.clone()),
         )
         .route(
-            "/v2/dummy",
+            "/v2/dummy/:space_id",
             post_with(
                 dummy_handler,
                 api_docs!("Dummy Endpoint", "A dummy endpoint for testing"),
