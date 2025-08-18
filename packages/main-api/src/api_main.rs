@@ -187,8 +187,9 @@ pub async fn api_main() -> Result<Router> {
     let pool = if let DatabaseConfig::Postgres { url, pool_size } = conf.database {
         let res = PgPoolOptions::new()
             .max_connections(pool_size)
-            .connect(url)
-            .await;
+            .connect_lazy(url);
+        // .connect(url)
+        // .await;
         match res {
             Ok(pool) => {
                 tracing::info!("Postgres pool created successfully");
