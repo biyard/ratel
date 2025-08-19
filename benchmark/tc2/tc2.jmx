@@ -12,9 +12,9 @@
     <hashTree>
       <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup"
         testname="User Threads for Max TPS">
-        <intProp name="ThreadGroup.num_threads">1500</intProp>
-        <intProp name="ThreadGroup.ramp_time">120</intProp>
-        <longProp name="ThreadGroup.duration">300</longProp>
+        <intProp name="ThreadGroup.num_threads">1000</intProp>
+        <intProp name="ThreadGroup.ramp_time">10</intProp>
+        <longProp name="ThreadGroup.duration">20</longProp>
         <longProp name="ThreadGroup.delay">0</longProp>
         <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
         <boolProp name="ThreadGroup.scheduler">true</boolProp>
@@ -22,7 +22,6 @@
         <elementProp name="ThreadGroup.main_controller" elementType="LoopController"
           guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller">
           <intProp name="LoopController.loops">-1</intProp>
-          <boolProp name="LoopController.continue_forever">false</boolProp>
         </elementProp>
       </ThreadGroup>
       <hashTree>
@@ -82,16 +81,6 @@
             </collectionProp>
           </elementProp>
         </HTTPSamplerProxy>
-        <hashTree />
-        <ConstantThroughputTimer guiclass="TestBeanGUI" testclass="ConstantThroughputTimer"
-          testname="Constant Throughput Timer" enabled="true">
-          <doubleProp>
-            <name>throughput</name>
-            <value>200000.0</value>
-            <savedValue>0.0</savedValue>
-          </doubleProp>
-          <intProp name="calcMode">0</intProp>
-        </ConstantThroughputTimer>
         <hashTree />
       </hashTree>
       <ResultCollector guiclass="SummaryReport" testclass="ResultCollector"

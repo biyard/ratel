@@ -87,7 +87,7 @@ async fn main() -> Result<()> {
             .await
         {
             println!(
-                "✗ Failed to add oracle to space for user {}: {}",
+                "✗ Failed to add oracle to space for user {}: {:?}",
                 user.nickname, e
             );
         }

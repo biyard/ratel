@@ -1,15 +1,11 @@
-use std::sync::Arc;
-
 use bdk::prelude::*;
 use by_axum::axum::{Extension, Json, extract::State};
 use dto::{
     Result,
     by_axum::{auth::Authorization, axum::extract::Path},
-    sqlx::{Pool, Postgres},
+    sqlx::{Pool, Postgres, postgres::PgRow},
 };
 
-use crate::utils::rds_client::RdsClient;
-use aws_sdk_rdsdata::types::{Field, SqlParameter};
 use dto::*;
 
 #[derive(
@@ -62,14 +58,10 @@ pub struct CreateArtworkResponse {
     #[schemars(description = "Artwork Id")]
     pub id: i64,
 }
-#[derive(serde::Deserialize, Debug)]
-struct ArtworkRecord {
-    id: i64,
-}
 
 pub async fn create_artwork_handler(
     Extension(_auth): Extension<Option<Authorization>>,
-    State((_pool, rds_client)): State<(Pool<Postgres>, Arc<RdsClient>)>,
+    State(pool): State<Pool<Postgres>>,
     Path(CreateArtworkPathParams { space_id }): Path<CreateArtworkPathParams>,
     Json(req): Json<CreateArtworkRequest>,
 ) -> Result<Json<CreateArtworkResponse>> {
@@ -77,63 +69,49 @@ pub async fn create_artwork_handler(
 
     let file_json = serde_json::to_string(&req.file).map_err(|_| Error::BadRequest)?;
 
-    let artwork_record: ArtworkRecord = rds_client
-        .insert_returning(
-            r#"
+    let query = r#"
             WITH space_check AS (
-                SELECT id, owner_id FROM spaces WHERE id = :space_id
+                SELECT id, owner_id FROM spaces WHERE id = $1
             ),
             inserted_artwork AS (
                 INSERT INTO artworks (owner_id, title, description, file)
-                SELECT owner_id, :title, :description, :file::jsonb
+                SELECT owner_id, $2, $3, $4::jsonb
                 FROM space_check
                 RETURNING id, owner_id
             ),
             inserted_detail AS (
                 INSERT INTO artwork_details (artwork_id, owner_id, image)
-                SELECT ia.id, ia.owner_id, :image
+                SELECT ia.id, ia.owner_id, $5
                 FROM inserted_artwork ia
                 RETURNING artwork_id
             ),
             inserted_dagit_artwork AS (
                 INSERT INTO dagit_artworks (space_id, artwork_id)
-                SELECT :space_id, ia.id
+                SELECT $1, ia.id
                 FROM inserted_artwork ia
                 RETURNING artwork_id
             )
             SELECT id FROM inserted_artwork
-            "#,
-            Some(vec![
-                SqlParameter::builder()
-                    .name("space_id")
-                    .value(Field::LongValue(space_id))
-                    .build(),
-                SqlParameter::builder()
-                    .name("title")
-                    .value(Field::StringValue(req.title))
-                    .build(),
-                SqlParameter::builder()
-                    .name("description")
-                    .value(match req.description {
-                        Some(desc) => Field::StringValue(desc),
-                        None => Field::IsNull(true),
-                    })
-                    .build(),
-                SqlParameter::builder()
-                    .name("file")
-                    .value(Field::StringValue(file_json))
-                    .build(),
-                SqlParameter::builder()
-                    .name("image")
-                    .value(Field::StringValue(url))
-                    .build(),
-            ]),
-        )
-        .await?;
+            "#;
 
-    Ok(Json(CreateArtworkResponse {
-        id: artwork_record.id,
-    }))
+    let artwork_id = sqlx::query(query)
+        .bind(space_id)
+        .bind(req.title)
+        .bind(req.description.as_deref())
+        .bind(file_json)
+        .bind(url)
+        .map(|row: PgRow| {
+            use sqlx::Row;
+            row.get::<i64, _>("id")
+        })
+        .fetch_one(&pool)
+        .await
+        .map_err(|e| {
+            tracing::error!("Failed to create artwork: {}", e);
+            Error::ServerError("Failed to create artwork".to_string())
+        })?;
+
+    Ok(Json(CreateArtworkResponse { id: artwork_id }))
 }
 
 // async fn process_watermark_async(
