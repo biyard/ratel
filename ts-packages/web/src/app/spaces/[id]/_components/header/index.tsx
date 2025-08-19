@@ -76,7 +76,7 @@ export default function SpaceHeader({
     popup
       .open(
         <DeleteSpacePopup
-          spaceName={space.title}
+          spaceName={space.title || 'Untitled Space'}
           onClose={() => popup.close()}
           onDelete={async () => {
             await handleDelete(); // Your existing delete handler
@@ -152,14 +152,28 @@ export default function SpaceHeader({
                 aria-haspopup="menu"
                 className="w-fit p-2 rounded-md bg-neutral-800"
                 onKeyDown={(e) => {
-                  if (
-                    e.key === 'Enter' ||
-                    e.key === ' ' ||
-                    e.key === 'ArrowDown'
-                  ) {
+                  // if (
+                  //   e.key === 'Enter' ||
+                  //   e.key === ' ' ||
+                  //   e.key === 'ArrowDown'
+                  // ) {
+                  //   e.preventDefault();
+                  //   toggle();
+                  //   if (!isOpen) {
+                  //     setTimeout(() => {
+                  //       const firstMenuItem =
+                  //         dropdownRef.current?.querySelector(
+                  //           '[role="menuitem"]:not([aria-disabled="true"])',
+                  //         );
+                  //       (firstMenuItem as HTMLElement)?.focus();
+                  //     }, 0);
+                  //   }
+                  // }
+
+                  if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
-                    toggle();
                     if (!isOpen) {
+                      toggle(); // open
                       setTimeout(() => {
                         const firstMenuItem =
                           dropdownRef.current?.querySelector(
@@ -167,6 +181,29 @@ export default function SpaceHeader({
                           );
                         (firstMenuItem as HTMLElement)?.focus();
                       }, 0);
+                    } else {
+                      // move focus into menu if already open
+                      const firstMenuItem = dropdownRef.current?.querySelector(
+                        '[role="menuitem"]:not([aria-disabled="true"])',
+                      );
+                      (firstMenuItem as HTMLElement)?.focus();
+                    }
+                  } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    if (!isOpen) {
+                      toggle(); // open
+                      setTimeout(() => {
+                        const firstMenuItem =
+                          dropdownRef.current?.querySelector(
+                            '[role="menuitem"]:not([aria-disabled="true"])',
+                          );
+                        (firstMenuItem as HTMLElement)?.focus();
+                      }, 0);
+                    } else {
+                      const firstMenuItem = dropdownRef.current?.querySelector(
+                        '[role="menuitem"]:not([aria-disabled="true"])',
+                      );
+                      (firstMenuItem as HTMLElement)?.focus();
                     }
                   }
                 }}

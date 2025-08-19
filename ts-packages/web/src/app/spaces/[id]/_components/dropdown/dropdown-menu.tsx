@@ -20,8 +20,7 @@ export default function DropdownMenu({
       label: 'Delete',
       disabled: false,
       action: () => {
-        ondelete(); // This will now trigger the popup instead of direct deletion
-        onclose();
+        ondelete();
       },
     },
   ];

@@ -7,17 +7,28 @@ export default function DeleteSpacePopup({
   onDelete,
   onClose,
 }: {
-  spaceName?: string;
-  onDelete: () => void;
+  spaceName: string;
+  onDelete: () => void | Promise<void>;
   onClose?: () => void;
 }) {
   const [inputValue, setInputValue] = useState('');
   const [isConfirmed, setIsConfirmed] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setInputValue(value);
     setIsConfirmed(value === spaceName);
+  };
+  const handleDelete = async () => {
+    if (!isConfirmed || isDeleting) return;
+
+    setIsDeleting(true);
+    try {
+      await onDelete();
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -56,15 +67,15 @@ export default function DeleteSpacePopup({
           Cancel
         </button>
         <button
-          onClick={onDelete}
-          disabled={!isConfirmed}
+          onClick={handleDelete}
+          disabled={!isConfirmed || isDeleting}
           className={`w-full py-[14.5px] font-bold text-base rounded-[10px] ${
-            isConfirmed
+            isConfirmed && !isDeleting
               ? 'bg-red-600 text-white hover:bg-red-700'
               : 'bg-neutral-700 text-neutral-500 cursor-not-allowed'
           } transition-colors`}
         >
-          Delete Space
+          {isDeleting ? 'Deleting...' : 'Delete Space'}
         </button>
       </div>
     </div>
