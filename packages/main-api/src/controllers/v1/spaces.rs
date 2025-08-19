@@ -955,7 +955,7 @@ impl SpaceController {
                 .await?;
         }
 
-        // === DELETE SURVEYS ===
+        // === DELETE SURVEY RESPONSES FIRST, THEN SURVEYS ===
         let surveys = Survey::query_builder()
             .space_id_equals(space_id)
             .query()
@@ -963,6 +963,21 @@ impl SpaceController {
             .fetch_all(&self.pool)
             .await?;
 
+        let response_repo = SurveyResponse::get_repository(self.pool.clone());
+        for survey in &surveys {
+            // Delete all responses for this survey first
+            let responses = SurveyResponse::query_builder()
+                .survey_id_equals(survey.id)
+                .query()
+                .map(SurveyResponse::from)
+                .fetch_all(&self.pool)
+                .await?;
+            for resp in responses {
+                response_repo.delete_with_tx(&mut *tx, resp.id).await?;
+            }
+        }
+
+        // surveys themselves
         for survey in surveys {
             self.survey_repo.delete_with_tx(&mut *tx, survey.id).await?;
         }
@@ -1048,17 +1063,6 @@ impl SpaceController {
                 .await?; // Changed to use self.space_group_repo
         }
 
-        // === DELETE SURVEY RESPONSES ===
-        let response_repo = SurveyResponse::get_repository(self.pool.clone());
-        let responses = SurveyResponse::query_builder()
-            .space_id_equals(space_id)
-            .query()
-            .map(SurveyResponse::from)
-            .fetch_all(&self.pool)
-            .await?;
-        for resp in responses {
-            response_repo.delete_with_tx(&mut *tx, resp.id).await?;
-        }
 
         // === DELETE SPACE COMMENTS ===
         // let comment_repo = SpaceComment::get_repository(self.pool.clone());
@@ -1082,6 +1086,31 @@ impl SpaceController {
             .await?;
         for comment in comments {
             comment_repo.delete_with_tx(&mut *tx, comment.id).await?;
+        }
+
+
+         // === DELETE NOTICE QUIZ ANSWERS ===
+        let quiz_answer_repo = NoticeQuizAnswer::get_repository(self.pool.clone());
+        let quiz_answers = NoticeQuizAnswer::query_builder()
+            .space_id_equals(space_id)
+            .query()
+            .map(NoticeQuizAnswer::from)
+            .fetch_all(&self.pool)
+            .await?;
+        for ans in quiz_answers {
+            quiz_answer_repo.delete_with_tx(&mut *tx, ans.id).await?;
+        }
+
+        // === DELETE NOTICE QUIZ ATTEMPTS ===
+        let quiz_attempt_repo = NoticeQuizAttempt::get_repository(self.pool.clone());
+        let quiz_attempts = NoticeQuizAttempt::query_builder()
+           .space_id_equals(space_id)
+            .query()
+            .map(NoticeQuizAttempt::from)
+            .fetch_all(&self.pool)
+           .await?;
+        for att in quiz_attempts {
+            quiz_attempt_repo.delete_with_tx(&mut *tx, att.id).await?;
         }
 
         // ===  DELETE THE SPACE ITSELF ===
