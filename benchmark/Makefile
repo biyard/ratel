@@ -10,7 +10,7 @@ SCHEDULER ?= single
 SSH_KEY_PATH ?= ~/.ssh/biyard-new.pem
 
 
-run:
+prepare:
 	cd ./$(TARGET) && API_BASE_URL=$(API_BASE_URL) SIGN_DOMAIN=$(SIGN_DOMAIN) TEST_USER_PASSWORD=$(TEST_USER_PASSWORD) make run
 
 clean:

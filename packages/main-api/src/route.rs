@@ -108,7 +108,7 @@ macro_rules! api_docs {
 
 pub async fn route(
     pool: sqlx::Pool<sqlx::Postgres>,
-    rds_client: Arc<RdsClient>,
+    _rds_client: Arc<RdsClient>,
 ) -> Result<by_axum::axum::Router> {
     Ok(by_axum::axum::Router::new()
         .nest("/v1", controllers::v1::route(pool.clone()).await?)
@@ -163,7 +163,7 @@ pub async fn route(
                 create_artwork_handler,
                 api_docs!("Create Artwork", "Create a new artwork for a dagit"),
             )
-            .with_state((pool.clone(), rds_client.clone())),
+            .with_state(pool.clone()),
         )
         .route(
             "/v2/dagits/:space_id/consensus",
