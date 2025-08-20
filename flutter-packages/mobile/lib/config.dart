@@ -14,6 +14,6 @@ class Config {
   );
   static const signDomain = String.fromEnvironment(
     'SIGN_DOMAIN',
-    defaultValue: 'https://api.dev.ratel.foundation',
+    defaultValue: 'dev.ratel.foundation',
   );
 }
