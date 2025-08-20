@@ -44,6 +44,7 @@ function ArtworkViewer({
     voteType: ConsensusVoteType,
   ) => Promise<void>;
 }) {
+  console.log('ArtworkViewer', artwork.file.url);
   const { data: original } = useArtworkDetailById(
     artwork.id,
     !isTemporary && isOwner,
@@ -54,9 +55,6 @@ function ArtworkViewer({
   );
   const popup = usePopup();
   const [showOriginal, setShowOriginal] = useState(false);
-  if (!artwork.file.url) {
-    return <span>No Image Available</span>;
-  }
 
   return (
     <div className="flex flex-col gap-4 border border-primary rounded p-4">
@@ -66,33 +64,46 @@ function ArtworkViewer({
           {artwork.is_certified && <Certified />}
           {isTemporary && ' (Temporary)'}
         </h3>
-        {!isTemporary && (
+        {!isTemporary && original && (
           <Button
             size="sm"
-            variant="rounded_secondary"
+            variant="rounded_primary"
             disabled={!original || !original.image}
             onClick={() => setShowOriginal((prev) => !prev)}
           >
-            Show Original
+            {showOriginal ? 'Hide Original' : 'Show Original'}
           </Button>
         )}
       </div>
       <div className="flex flex-col w-full h-full justify-center items-center">
         <div className="relative w-full max-h-128 object-cover">
-          <Image
-            src={
-              showOriginal && original?.image
-                ? original.image
-                : artwork.file.url
-            }
-            alt={artwork.title}
-            width={500}
-            height={500}
-          />
+          {showOriginal && original?.image && (
+            <Image
+              src={original.image}
+              alt={artwork.title}
+              width={500}
+              height={500}
+              className="object-cover"
+            />
+          )}
+          {!showOriginal && !!artwork.file.url && (
+            <Image
+              src={artwork.file.url}
+              alt={artwork.title}
+              width={500}
+              height={500}
+              className="object-cover"
+            />
+          )}
+          {!artwork.file.url && !showOriginal && (
+            <span className="w-full flex text-center">
+              No Thumbnail Available
+            </span>
+          )}
         </div>
       </div>
       <div className="self-end">
-        {!artwork.is_certified && !artwork.has_consensus && (
+        {!isTemporary && !artwork.is_certified && !artwork.has_consensus && (
           <Button
             variant="outline"
             size="sm"
@@ -163,16 +174,15 @@ export default function Artworks({ spaceId }: { spaceId: number }) {
 
   const popup = usePopup();
 
-  const { isEdit } = useEditCoordinatorStore();
-
+  const isEdit = useEditCoordinatorStore().isEdit;
   const {
     startConsensus: { mutateAsync: startConsensus },
     voteConsensus: { mutateAsync: voteArtwork },
   } = useDagitByIdMutation(spaceId);
 
-  if (!artworks || artworks.length === 0) {
-    return null;
-  }
+  // if (!artworks || artworks.length === 0) {
+  //   return null;
+  // }
 
   const handleAddArtwork = () => {
     openCreateArtworkModal(popup, async (title, description, file) => {
@@ -206,7 +216,7 @@ export default function Artworks({ spaceId }: { spaceId: number }) {
       </div>
       <div className="grid grid-cols-1 desktop:grid-cols-2 gap-4">
         {/* FIXME: Use Infinite Scroll with InfiniteQuery */}
-        {artworks.splice(0, 10).map((artwork) => (
+        {artworks.slice(0, 10).map((artwork) => (
           <ArtworkViewer
             artwork={artwork}
             key={artwork.id}

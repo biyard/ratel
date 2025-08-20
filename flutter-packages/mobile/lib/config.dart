@@ -1,6 +1,9 @@
 class Config {
-  static const env = String.fromEnvironment('ENV');
-  static const logLevel = String.fromEnvironment('LOG_LEVEL');
+  static const env = String.fromEnvironment('ENV', defaultValue: 'dev');
+  static const logLevel = String.fromEnvironment(
+    'LOG_LEVEL',
+    defaultValue: 'debug',
+  );
   static const redirectUrl = String.fromEnvironment(
     'REDIRECT_URL',
     defaultValue: 'https://dev.ratel.foundation',
