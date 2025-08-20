@@ -20,7 +20,7 @@ class Credentials extends StatefulWidget {
 class _CredentialsState extends State<Credentials> {
   static const double _minSize = 0.20;
   static const double _openSize = 0.60;
-  static const double _maxSize = 0.95;
+  static const double _maxSize = 0.7;
 
   final _dragCtrl = DraggableScrollableController();
 
@@ -171,124 +171,92 @@ class _CredentialsState extends State<Credentials> {
             initialChildSize: _minSize,
             minChildSize: _minSize,
             maxChildSize: _maxSize,
-            snap: false,
             builder: (ctx, scrollCtrl) {
-              return Material(
-                color: AppColors.panelBg,
-                surfaceTintColor: Colors.transparent,
-                elevation: 0,
+              return ClipRRect(
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(16),
                 ),
-                child: SafeArea(
-                  top: false,
-                  bottom: true,
-                  child: ListView(
-                    controller: scrollCtrl,
-                    padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
-                    children: [
-                      GestureDetector(
-                        behavior: HitTestBehavior.opaque,
-                        onVerticalDragUpdate: (d) =>
-                            _onHeaderDragUpdate(context, d),
-                        onVerticalDragEnd: _onHeaderDragEnd,
-                        onTap: () {
-                          if (_dragCtrl.size < (_openSize - 0.01)) {
-                            _openSheet();
-                          } else {
-                            _collapseSheet();
-                          }
-                        },
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Center(
-                              child: Container(
-                                width: 44,
-                                height: 5,
-                                decoration: BoxDecoration(
-                                  color: const Color(0xff6b6b6d),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            const Row(
-                              children: [
-                                Icon(Icons.add, color: Colors.white, size: 20),
-                                SizedBox(width: 8),
-                                Text(
-                                  'Verify yours',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            Container(height: 0.1, color: AppColors.neutral700),
-                            const SizedBox(height: 12),
-                          ],
-                        ),
-                      ),
-
-                      ..._items.map((it) {
-                        final verified = hasCredential(it.title);
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
-                          child: InkWell(
-                            onTap: () {
-                              if (verified) return;
-                              widget.onNext();
-                              _collapseSheet();
-                            },
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: const Color(0xffffffff).withAlpha(12),
-                                borderRadius: BorderRadius.circular(5),
-                                border: Border.all(
-                                  color: AppColors.neutral700,
-                                  width: 1,
-                                ),
-                              ),
-                              child: ListTile(
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 20,
-                                ),
-                                title: Text(
-                                  it.title,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 12,
-                                    height: 1.1,
-                                  ),
-                                ),
-                                subtitle: Text(
-                                  it.subtitle,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w500,
-                                    fontSize: 11,
-                                    height: 1.3,
-                                  ),
-                                ),
-                                trailing: verified
-                                    ? SvgPicture.asset(Assets.verified)
-                                    : SvgPicture.asset(Assets.send),
-                              ),
-                            ),
+                child: Material(
+                  color: AppColors.panelBg,
+                  surfaceTintColor: Colors.transparent,
+                  elevation: 0,
+                  child: SafeArea(
+                    top: false,
+                    bottom: true,
+                    child: CustomScrollView(
+                      controller: scrollCtrl,
+                      slivers: [
+                        SliverPersistentHeader(
+                          pinned: true,
+                          delegate: _VerifyHeaderDelegate(
+                            height: 80,
+                            onTap: () {},
+                            onDragUpdate: (d) =>
+                                _onHeaderDragUpdate(context, d),
+                            onDragEnd: _onHeaderDragEnd,
                           ),
-                        );
-                      }),
-
-                      Container(
-                        height: MediaQuery.of(context).padding.bottom,
-                        color: AppColors.panelBg,
-                      ),
-                    ],
+                        ),
+                        SliverList(
+                          delegate: SliverChildBuilderDelegate((context, i) {
+                            final it = _items[i];
+                            final verified = hasCredential(it.title);
+                            return Padding(
+                              padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+                              child: InkWell(
+                                onTap: () {
+                                  if (verified) return;
+                                  widget.onNext();
+                                  _collapseSheet();
+                                },
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: const Color(
+                                      0xffffffff,
+                                    ).withAlpha(12),
+                                    borderRadius: BorderRadius.circular(5),
+                                    border: Border.all(
+                                      color: AppColors.neutral700,
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: ListTile(
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 20,
+                                    ),
+                                    title: Text(
+                                      it.title,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 12,
+                                        height: 1.1,
+                                      ),
+                                    ),
+                                    subtitle: Text(
+                                      it.subtitle,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w500,
+                                        fontSize: 11,
+                                        height: 1.3,
+                                      ),
+                                    ),
+                                    trailing: verified
+                                        ? SvgPicture.asset(Assets.verified)
+                                        : SvgPicture.asset(Assets.send),
+                                  ),
+                                ),
+                              ),
+                            );
+                          }, childCount: _items.length),
+                        ),
+                        SliverToBoxAdapter(
+                          child: SizedBox(
+                            height: MediaQuery.of(context).padding.bottom,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               );
@@ -298,6 +266,80 @@ class _CredentialsState extends State<Credentials> {
       ),
     );
   }
+}
+
+class _VerifyHeaderDelegate extends SliverPersistentHeaderDelegate {
+  _VerifyHeaderDelegate({
+    required this.height,
+    required this.onTap,
+    required this.onDragUpdate,
+    required this.onDragEnd,
+  });
+
+  final double height;
+  final VoidCallback onTap;
+  final GestureDragUpdateCallback onDragUpdate;
+  final GestureDragEndCallback onDragEnd;
+
+  @override
+  double get minExtent => height;
+  @override
+  double get maxExtent => height;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return ColoredBox(
+      color: AppColors.panelBg,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        onVerticalDragUpdate: onDragUpdate,
+        onVerticalDragEnd: onDragEnd,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 44,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: const Color(0xff6b6b6d),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              const Row(
+                children: [
+                  Icon(Icons.add, color: Colors.white, size: 20),
+                  SizedBox(width: 8),
+                  Text(
+                    'Verify yours',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              const Divider(color: AppColors.neutral700, height: 1),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  bool shouldRebuild(covariant _VerifyHeaderDelegate old) => false;
 }
 
 class AddCard extends StatelessWidget {
