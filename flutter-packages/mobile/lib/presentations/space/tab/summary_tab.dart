@@ -8,15 +8,18 @@ class SummaryTab extends StatelessWidget {
     required this.space,
     required this.sheetBottom,
     required this.scrollBottomPadding,
+    required this.peekTopPx,
   });
 
   final SpaceModel space;
   final double sheetBottom;
   final double scrollBottomPadding;
+  final double peekTopPx;
 
   @override
   Widget build(BuildContext context) {
     final sp = space;
+    final safeBtm = MediaQuery.of(context).padding.bottom;
 
     return Stack(
       children: [
@@ -46,7 +49,7 @@ class SummaryTab extends StatelessWidget {
           Positioned(
             left: 12,
             right: 12,
-            bottom: sheetBottom + 8,
+            bottom: peekTopPx + 8,
             child: SizedBox(
               height: 64,
               child: SingleChildScrollView(

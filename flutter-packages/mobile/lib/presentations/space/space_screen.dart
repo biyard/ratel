@@ -84,15 +84,16 @@ class SpaceScreen extends GetWidget<SpaceController> {
                   animation: controller.commentsCtrl,
                   builder: (ctx, _) {
                     final screenH = MediaQuery.of(ctx).size.height;
-
+                    const double kSheetMinSize = 0.15;
                     final double sheetFraction =
                         controller.commentsCtrl.isAttached
                         ? controller.commentsCtrl.size
                         : kSheetMinSize;
 
                     final double sheetPx = sheetFraction * screenH - 20;
+                    final double sheetMinPx = kSheetMinSize * screenH - 20;
 
-                    const double helloH = 28.0;
+                    final double helloH = 28.0;
                     final double scrollBottomPadding = sheetPx + helloH + 16;
 
                     return Obx(() {
@@ -101,6 +102,7 @@ class SpaceScreen extends GetWidget<SpaceController> {
                           return SummaryTab(
                             space: controller.space.value,
                             sheetBottom: sheetPx,
+                            peekTopPx: sheetMinPx,
                             scrollBottomPadding: scrollBottomPadding,
                           );
                         case SpaceTab.deliberation:
@@ -286,7 +288,7 @@ class SpaceScreen extends GetWidget<SpaceController> {
                                             50,
                                           ),
                                           borderSide: const BorderSide(
-                                            color: AppColors.primary,
+                                            color: Colors.transparent,
                                             width: 1,
                                           ),
                                         ),
