@@ -190,12 +190,12 @@ class _MainScreenState extends State<MainScreen>
                               type: BottomNavigationBarType.fixed,
                               backgroundColor: Colors.transparent,
                               currentIndex: currentIndex,
-                              selectedItemColor: Colors.white,
+                              selectedItemColor: AppColors.primary,
                               unselectedItemColor: AppColors.neutral500,
                               selectedLabelStyle: const TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,
-                                color: Colors.white,
+                                color: AppColors.primary,
                               ),
                               unselectedLabelStyle: const TextStyle(
                                 fontSize: 12,
@@ -219,7 +219,7 @@ class _MainScreenState extends State<MainScreen>
                                     width: 25,
                                     height: 25,
                                     colorFilter: const ColorFilter.mode(
-                                      Colors.white,
+                                      AppColors.primary,
                                       BlendMode.srcIn,
                                     ),
                                   ),
@@ -240,7 +240,7 @@ class _MainScreenState extends State<MainScreen>
                                     width: 25,
                                     height: 25,
                                     colorFilter: const ColorFilter.mode(
-                                      Colors.white,
+                                      AppColors.primary,
                                       BlendMode.srcIn,
                                     ),
                                   ),
@@ -261,7 +261,7 @@ class _MainScreenState extends State<MainScreen>
                                     width: 25,
                                     height: 25,
                                     colorFilter: const ColorFilter.mode(
-                                      Colors.white,
+                                      AppColors.primary,
                                       BlendMode.srcIn,
                                     ),
                                   ),
@@ -282,7 +282,7 @@ class _MainScreenState extends State<MainScreen>
                                     width: 25,
                                     height: 25,
                                     colorFilter: const ColorFilter.mode(
-                                      Colors.white,
+                                      AppColors.primary,
                                       BlendMode.srcIn,
                                     ),
                                   ),
@@ -303,7 +303,7 @@ class _MainScreenState extends State<MainScreen>
                                     width: 25,
                                     height: 25,
                                     colorFilter: const ColorFilter.mode(
-                                      Colors.white,
+                                      AppColors.primary,
                                       BlendMode.srcIn,
                                     ),
                                   ),
@@ -339,7 +339,7 @@ class _MainScreenState extends State<MainScreen>
                             child: Container(
                               width: itemWidth,
                               height: 2,
-                              color: Colors.white,
+                              color: AppColors.primary,
                             ),
                           ),
                         ],
