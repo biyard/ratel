@@ -75,10 +75,12 @@ pub async fn create_artwork_handler(
     Extension(_auth): Extension<Option<Authorization>>,
     State((pool, sqs_client)): State<(Pool<Postgres>, Arc<SqsClient>)>,
     Path(CreateArtworkPathParams { space_id }): Path<CreateArtworkPathParams>,
-    Json(req): Json<CreateArtworkRequest>,
+    Json(mut req): Json<CreateArtworkRequest>,
 ) -> Result<Json<CreateArtworkResponse>> {
-    let url = req.file.url.clone().ok_or(Error::BadRequest)?;
-
+    let original_url = req.file.url.clone().ok_or(Error::BadRequest)?;
+    if req.skip_encryption.is_none_or(|v| !v) {
+        req.file.url = None;
+    }
     let file_json = serde_json::to_string(&req.file).map_err(|_| Error::BadRequest)?;
 
     let query = r#"
@@ -111,7 +113,7 @@ pub async fn create_artwork_handler(
         .bind(req.title)
         .bind(req.description.as_deref())
         .bind(file_json)
-        .bind(url.clone())
+        .bind(original_url.clone())
         .map(|row: PgRow| {
             use sqlx::Row;
             row.get::<i64, _>("id")
@@ -129,7 +131,7 @@ pub async fn create_artwork_handler(
     }
     let task = WatermarkTask {
         artwork_id,
-        original_url: url,
+        original_url: original_url,
     };
     let message_body = serde_json::to_string(&task)
         .map_err(|_| Error::ServerError("Failed to serialize watermark task".to_string()))?;

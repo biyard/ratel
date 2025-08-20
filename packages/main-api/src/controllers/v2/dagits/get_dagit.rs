@@ -8,7 +8,10 @@ use dto::{
 };
 use tracing_subscriber::filter::combinator::Or;
 
-use crate::{security::check_perm, utils::users::extract_user};
+use crate::{
+    security::check_perm,
+    utils::users::{extract_user, extract_user_id},
+};
 
 #[derive(
     Debug,
@@ -31,10 +34,10 @@ pub async fn get_dagit_handler(
     Path(GetDagitPathParams { space_id }): Path<GetDagitPathParams>,
 ) -> Result<Json<Dagit>> {
     tracing::debug!("get_dagit_handler called with space_id: {}", space_id);
-    let user = extract_user(&pool, auth).await?;
+    let user_id = extract_user_id(&pool, auth).await.unwrap_or(0);
 
     let oracle = Oracle::query_builder()
-        .user_id_equals(user.id)
+        .user_id_equals(user_id)
         .query()
         .map(Oracle::from)
         .fetch_one(&pool)
