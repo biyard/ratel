@@ -177,9 +177,7 @@ class StepReview extends StatelessWidget {
             ),
           ),
 
-          SizedBox(
-            width: double.infinity,
-            height: MediaQuery.of(context).size.height - 330,
+          Expanded(
             child: SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
