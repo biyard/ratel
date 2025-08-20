@@ -51,6 +51,9 @@ pub struct CreateArtworkRequest {
 
     #[schemars(description = "Artwork file")]
     pub file: File,
+
+    #[schemars(description = "WARNING: This field is just for testing")]
+    pub skip_encryption: Option<bool>,
 }
 
 #[derive(
@@ -120,6 +123,10 @@ pub async fn create_artwork_handler(
             Error::ServerError("Failed to create artwork".to_string())
         })?;
 
+    if req.skip_encryption.is_some_and(|v| v) {
+        tracing::info!("Skipping encryption for artwork ID: {}", artwork_id);
+        return Ok(Json(CreateArtworkResponse { id: artwork_id }));
+    }
     let task = WatermarkTask {
         artwork_id,
         original_url: url,

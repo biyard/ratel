@@ -206,7 +206,7 @@ export default function Artworks({ spaceId }: { spaceId: number }) {
       </div>
       <div className="grid grid-cols-1 desktop:grid-cols-2 gap-4">
         {/* FIXME: Use Infinite Scroll with InfiniteQuery */}
-        {artworks.splice(0, 10).map((artwork) => (
+        {artworks.slice(0, 10).map((artwork) => (
           <ArtworkViewer
             artwork={artwork}
             key={artwork.id}
