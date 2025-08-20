@@ -1,3 +1,4 @@
+import 'package:flutter_html/flutter_html.dart';
 import 'package:ratel/exports.dart';
 
 class NetworkScreen extends GetWidget<NetworkController> {
@@ -8,52 +9,58 @@ class NetworkScreen extends GetWidget<NetworkController> {
     return Layout<NetworkController>(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(14, 8, 14, 12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SectionCard(
-              title: 'Invitations',
-              child: Column(
-                children: [
-                  for (final entry
-                      in controller.invitations.asMap().entries) ...[
-                    InvitationTile(
-                      model: entry.value,
-                      onAccept: () {},
-                      onReject: () {},
-                    ),
-                    5.vgap,
-                    if (entry.key != controller.invitations.length - 1) ...[
-                      Container(height: 0.5, color: Color(0xff2a2a2a)),
-                      5.vgap,
+        child: Obx(
+          () => SizedBox(
+            width: double.infinity,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SectionCard(
+                  title: 'Invitations',
+                  child: Column(
+                    children: [
+                      for (final entry
+                          in controller.invitations.asMap().entries) ...[
+                        InvitationTile(
+                          model: entry.value,
+                          onAccept: () {},
+                          onReject: () {},
+                        ),
+                        5.vgap,
+                        if (entry.key != controller.invitations.length - 1) ...[
+                          Container(height: 0.5, color: Color(0xff2a2a2a)),
+                          5.vgap,
+                        ],
+                      ],
                     ],
-                  ],
-                ],
-              ),
-            ),
-            10.vgap,
+                  ),
+                ),
+                10.vgap,
 
-            SectionCard(
-              title: 'Suggestions',
-              child: GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                padding: const EdgeInsets.only(top: 4, bottom: 4),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  mainAxisSpacing: 12,
-                  crossAxisSpacing: 12,
-                  childAspectRatio: 0.78,
+                SectionCard(
+                  title: 'Suggestions',
+                  child: GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    padding: const EdgeInsets.only(top: 4, bottom: 4),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 12,
+                          crossAxisSpacing: 12,
+                          childAspectRatio: 0.78,
+                        ),
+                    itemCount: controller.suggestions.length,
+                    itemBuilder: (_, i) => SuggestionCard(
+                      model: controller.suggestions[i],
+                      onFollow: () {},
+                      onDismiss: () {},
+                    ),
+                  ),
                 ),
-                itemCount: controller.suggestions.length,
-                itemBuilder: (_, i) => SuggestionCard(
-                  model: controller.suggestions[i],
-                  onFollow: () {},
-                  onDismiss: () {},
-                ),
-              ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -68,6 +75,7 @@ class SectionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: double.infinity,
       decoration: BoxDecoration(
         color: AppColors.componentBg,
         borderRadius: BorderRadius.circular(8),
@@ -101,7 +109,7 @@ class InvitationTile extends StatelessWidget {
     required this.onReject,
   });
 
-  final InvitationModel model;
+  final NetworkModel model;
   final VoidCallback onAccept;
   final VoidCallback onReject;
 
@@ -109,136 +117,147 @@ class InvitationTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(color: Colors.transparent),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              (model.profileUrl != "")
-                  ? CircleAvatar(
-                      radius: 15,
-                      child: Image.network(
-                        model.profileUrl,
-                        width: 15,
-                        height: 15,
+      child: Obx(
+        () => Column(
+          children: [
+            Row(
+              children: [
+                (model.profileUrl != "")
+                    ? CircleAvatar(
+                        radius: 15,
+                        child: Image.network(
+                          model.profileUrl,
+                          width: 15,
+                          height: 15,
+                        ),
+                      )
+                    : const CircleAvatar(
+                        radius: 15,
+                        backgroundColor: Color(0xffd9d9d9),
                       ),
-                    )
-                  : const CircleAvatar(
-                      radius: 15,
-                      backgroundColor: Color(0xffd9d9d9),
-                    ),
-              8.gap,
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                8.gap,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        model.nickname,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
+                          height: 1.2,
+                        ),
+                      ),
+                      Text(
+                        '@${model.username}',
+                        style: const TextStyle(
+                          color: AppColors.btnSDisabledText,
+                          fontWeight: FontWeight.w500,
+                          fontSize: 11,
+                          height: 1.3,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Row(
                   children: [
-                    Text(
-                      model.nickname,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 12,
-                        height: 1.2,
+                    ElevatedButton(
+                      onPressed: onReject,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: Colors.black,
+                        padding: EdgeInsets.fromLTRB(10, 5, 10, 5),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(50),
+                        ),
+                      ),
+                      child: const Text(
+                        'Reject',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.neutral800,
+                          fontSize: 11,
+                          height: 1.3,
+                        ),
                       ),
                     ),
-                    Text(
-                      '@${model.username}',
-                      style: const TextStyle(
-                        color: AppColors.btnSDisabledText,
-                        fontWeight: FontWeight.w500,
-                        fontSize: 11,
-                        height: 1.3,
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      onPressed: onAccept,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Color(0xff51a2ff),
+                        foregroundColor: Colors.black,
+                        padding: EdgeInsets.fromLTRB(10, 5, 10, 5),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(50),
+                        ),
+                      ),
+                      child: const Text(
+                        'Accept',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white,
+                          fontSize: 11,
+                          height: 1.3,
+                        ),
                       ),
                     ),
                   ],
                 ),
-              ),
-              Row(
-                children: [
-                  ElevatedButton(
-                    onPressed: onReject,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: Colors.black,
-                      padding: EdgeInsets.fromLTRB(10, 5, 10, 5),
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(50),
-                      ),
-                    ),
-                    child: const Text(
-                      'Reject',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.neutral800,
-                        fontSize: 11,
-                        height: 1.3,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  ElevatedButton(
-                    onPressed: onAccept,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xff51a2ff),
-                      foregroundColor: Colors.black,
-                      padding: EdgeInsets.fromLTRB(10, 5, 10, 5),
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(50),
-                      ),
-                    ),
-                    child: const Text(
-                      'Accept',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w500,
-                        color: Colors.white,
-                        fontSize: 11,
-                        height: 1.3,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          5.vgap,
-          SizedBox(
-            width: double.infinity,
-            child: Text(
-              model.description,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontWeight: FontWeight.w400,
-                color: AppColors.neutral300,
-                fontSize: 12,
-                height: 1.2,
+              ],
+            ),
+            5.vgap,
+            SizedBox(
+              width: double.infinity,
+              child: Text(
+                model.description,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w400,
+                  color: AppColors.neutral300,
+                  fontSize: 12,
+                  height: 1.2,
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
 
 class SuggestionCard extends StatelessWidget {
-  const SuggestionCard({
+  SuggestionCard({
     super.key,
     required this.model,
     required this.onDismiss,
     required this.onFollow,
   });
 
-  final SuggestionModel model;
+  final NetworkModel model;
   final VoidCallback onDismiss;
   final VoidCallback onFollow;
+
+  final heading = Style(
+    fontSize: FontSize(14),
+    fontWeight: FontWeight.w500,
+    lineHeight: LineHeight.number(1.3),
+    margin: Margins.zero,
+    padding: HtmlPaddings.zero,
+  );
 
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: double.infinity,
       decoration: BoxDecoration(
         color: const Color(0xff35343f),
         borderRadius: BorderRadius.circular(5),
@@ -247,46 +266,55 @@ class SuggestionCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Stack(
-            children: [
-              (model.profileUrl != "")
-                  ? CircleAvatar(
-                      radius: 25,
-                      child: Image.network(
-                        model.profileUrl,
-                        width: 50,
-                        height: 50,
+          Container(
+            width: double.infinity,
+            child: Stack(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    (model.profileUrl != "")
+                        ? CircleAvatar(
+                            radius: 25,
+                            child: Image.network(
+                              model.profileUrl,
+                              width: 50,
+                              height: 50,
+                            ),
+                          )
+                        : Align(
+                            alignment: Alignment.topCenter,
+                            child: CircleAvatar(
+                              radius: 25,
+                              backgroundColor: Color(0xffd9d9d9),
+                            ),
+                          ),
+                  ],
+                ),
+                Positioned(
+                  right: 0,
+                  top: 0,
+                  child: InkWell(
+                    onTap: onDismiss,
+                    borderRadius: BorderRadius.circular(100),
+                    child: Container(
+                      width: 20,
+                      height: 20,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withAlpha(30),
+                        borderRadius: BorderRadius.circular(100),
                       ),
-                    )
-                  : Align(
-                      alignment: Alignment.topCenter,
-                      child: CircleAvatar(
-                        radius: 25,
-                        backgroundColor: Color(0xffd9d9d9),
+                      child: const Icon(
+                        Icons.close,
+                        size: 14,
+                        color: Color(0xff35343f),
                       ),
-                    ),
-              Positioned(
-                right: 0,
-                top: 0,
-                child: InkWell(
-                  onTap: onDismiss,
-                  borderRadius: BorderRadius.circular(100),
-                  child: Container(
-                    width: 20,
-                    height: 20,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withAlpha(30),
-                      borderRadius: BorderRadius.circular(100),
-                    ),
-                    child: const Icon(
-                      Icons.close,
-                      size: 14,
-                      color: Color(0xff35343f),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           10.vgap,
 
@@ -302,33 +330,48 @@ class SuggestionCard extends StatelessWidget {
               height: 1.2,
             ),
           ),
-          Text(
-            model.description,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: AppColors.neutral300,
-              fontWeight: FontWeight.w500,
-              fontSize: 11,
-              height: 1.3,
-            ),
+
+          Html(
+            data: model.description,
+            style: {
+              "html": Style(
+                color: AppColors.neutral300,
+                fontWeight: FontWeight.w500,
+                fontSize: FontSize(14),
+                lineHeight: LineHeight.number(1.3),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                textOverflow: TextOverflow.ellipsis,
+                margin: Margins.zero,
+                padding: HtmlPaddings.zero,
+                whiteSpace: WhiteSpace.normal,
+              ),
+              "body": Style(margin: Margins.zero, padding: HtmlPaddings.zero),
+              "p": Style(margin: Margins.zero),
+
+              "h1": heading,
+              "h2": heading,
+              "h3": heading,
+              "h4": heading,
+              "h5": heading,
+              "h6": heading,
+            },
           ),
 
           const Spacer(),
 
-          Text(
-            (model.spaces != null)
-                ? '${model.spaces} mutual spaces'
-                : '${model.follows} follows',
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: AppColors.neutral300,
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          10.vgap,
+          // Text(
+          //   (model.spaces != null)
+          //       ? '${model.spaces} mutual spaces'
+          //       : '${model.follows} follows',
+          //   textAlign: TextAlign.center,
+          //   style: const TextStyle(
+          //     color: AppColors.neutral300,
+          //     fontSize: 11,
+          //     fontWeight: FontWeight.w500,
+          //   ),
+          // ),
+          // 10.vgap,
           SizedBox(
             height: 22,
             width: double.infinity,
