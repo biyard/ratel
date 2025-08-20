@@ -10,183 +10,195 @@ class FeedCard extends StatelessWidget {
     final hasSpace = data.spaceIds.isNotEmpty;
     final hasRewards = data.rewards != null;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.bg,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.neutral700),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: EdgeInsets.fromLTRB(20, 20, 20, 10),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    if (hasSpace)
-                      _Badge(
-                        icon: SvgPicture.asset(
-                          Assets.palace,
-                          width: 14,
-                          height: 14,
+    return InkWell(
+      onTap: () {
+        if (!hasSpace) return;
+
+        final spaceId = data.spaceIds[0];
+        Get.rootDelegate.offAndToNamed(AppRoutes.spaceWithId(spaceId));
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.bg,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.neutral700),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: EdgeInsets.fromLTRB(20, 20, 20, 10),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      if (hasSpace)
+                        _Badge(
+                          icon: SvgPicture.asset(
+                            Assets.palace,
+                            width: 14,
+                            height: 14,
+                          ),
+                          label: 'SPACE',
+                          fg: AppColors.neutral800,
+                          bg: AppColors.primary,
                         ),
-                        label: 'SPACE',
-                        fg: AppColors.neutral800,
-                        bg: AppColors.primary,
-                      ),
-                    if (hasSpace) 10.gap,
-                    if (hasRewards)
-                      _Badge(
-                        icon: SvgPicture.asset(
-                          Assets.coin2,
-                          width: 14,
-                          height: 14,
+                      if (hasSpace) 10.gap,
+                      if (hasRewards)
+                        _Badge(
+                          icon: SvgPicture.asset(
+                            Assets.coin2,
+                            width: 14,
+                            height: 14,
+                          ),
+                          label: 'REWARDS',
+                          fg: AppColors.neutral800,
+                          bg: AppColors.primary,
                         ),
-                        label: 'REWARDS',
-                        fg: AppColors.neutral800,
-                        bg: AppColors.primary,
+                      if (hasRewards) 10.gap,
+                      _Badge(
+                        icon: null,
+                        label: data.feedType,
+                        fg: Colors.white,
+                        bg: Colors.transparent,
+                        border: AppColors.neutral700,
                       ),
-                    if (hasRewards) 10.gap,
-                    _Badge(
-                      icon: null,
-                      label: data.feedType,
-                      fg: Colors.white,
-                      bg: Colors.transparent,
-                      border: AppColors.neutral700,
-                    ),
-                    const Spacer(),
-                    SvgPicture.asset(Assets.bookmark, width: 20, height: 20),
-                    10.gap,
-                    SvgPicture.asset(Assets.edit1, width: 20, height: 20),
-                    10.gap,
-                    SvgPicture.asset(Assets.extra, width: 20, height: 20),
-                  ],
-                ),
-                11.5.vgap,
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (data.image != null && data.image != "") ...[
-                      _thumb(data.image!),
+                      const Spacer(),
+                      SvgPicture.asset(Assets.bookmark, width: 20, height: 20),
                       10.gap,
+                      SvgPicture.asset(Assets.edit1, width: 20, height: 20),
+                      10.gap,
+                      SvgPicture.asset(Assets.extra, width: 20, height: 20),
                     ],
-                    Flexible(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            data.title,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              height: 1.3,
-                            ),
-                          ),
-                          10.vgap,
-                          Row(
-                            children: [
-                              _avatar(data.authorUrl),
-                              10.gap,
-                              Text(
-                                data.authorName,
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 12,
-                                  height: 1.3,
-                                ),
-                              ),
-                              10.gap,
-                              SvgPicture.asset(
-                                Assets.badge,
-                                width: 20,
-                                height: 20,
-                              ),
-                              const Spacer(),
-                              Text(
-                                _timeAgo(data.createdAt),
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w400,
-                                  fontSize: 12,
-                                  height: 1.3,
-                                ),
-                              ),
-                            ],
-                          ),
-                          10.vgap,
-                          Html(
-                            data: data.description,
-                            style: {
-                              "*": Style(
-                                margin: Margins.zero,
-                                padding: HtmlPaddings.zero,
-                                color: Colors.white,
-                                fontSize: FontSize(12),
-                                fontWeight: FontWeight.w400,
-                                lineHeight: LineHeight.number(1.3),
-                                maxLines: 1,
-                                textOverflow: TextOverflow.ellipsis,
-                              ),
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          Container(
-            height: 1,
-            width: double.infinity,
-            color: AppColors.neutral800,
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(7, 10, 7, 10),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                _Stat(
-                  icon: SvgPicture.asset(Assets.thumbs, width: 13, height: 13),
-                  label: '${data.likes}',
-                ),
-                10.gap,
-                _Stat(
-                  icon: SvgPicture.asset(
-                    Assets.roundBubble,
-                    width: 13,
-                    height: 13,
                   ),
-                  label: '${data.comments}',
-                ),
-                if (data.rewards != null) ...[
-                  10.gap,
+                  11.5.vgap,
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (data.image != null && data.image != "") ...[
+                        _thumb(data.image!),
+                        10.gap,
+                      ],
+                      Flexible(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              data.title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                height: 1.3,
+                              ),
+                            ),
+                            10.vgap,
+                            Row(
+                              children: [
+                                _avatar(data.authorUrl),
+                                10.gap,
+                                Text(
+                                  data.authorName,
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 12,
+                                    height: 1.3,
+                                  ),
+                                ),
+                                10.gap,
+                                SvgPicture.asset(
+                                  Assets.badge,
+                                  width: 20,
+                                  height: 20,
+                                ),
+                                const Spacer(),
+                                Text(
+                                  _timeAgo(data.createdAt),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w400,
+                                    fontSize: 12,
+                                    height: 1.3,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            10.vgap,
+                            Html(
+                              data: data.description,
+                              style: {
+                                "*": Style(
+                                  margin: Margins.zero,
+                                  padding: HtmlPaddings.zero,
+                                  color: Colors.white,
+                                  fontSize: FontSize(12),
+                                  fontWeight: FontWeight.w400,
+                                  lineHeight: LineHeight.number(1.3),
+                                  maxLines: 1,
+                                  textOverflow: TextOverflow.ellipsis,
+                                ),
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              height: 1,
+              width: double.infinity,
+              color: AppColors.neutral800,
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(7, 10, 7, 10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
                   _Stat(
                     icon: SvgPicture.asset(
-                      Assets.reward,
+                      Assets.thumbs,
                       width: 13,
                       height: 13,
                     ),
-                    label: '${data.rewards}',
+                    label: '${data.likes}',
+                  ),
+                  10.gap,
+                  _Stat(
+                    icon: SvgPicture.asset(
+                      Assets.roundBubble,
+                      width: 13,
+                      height: 13,
+                    ),
+                    label: '${data.comments}',
+                  ),
+                  if (data.rewards != null) ...[
+                    10.gap,
+                    _Stat(
+                      icon: SvgPicture.asset(
+                        Assets.reward,
+                        width: 13,
+                        height: 13,
+                      ),
+                      label: '${data.rewards}',
+                    ),
+                  ],
+                  10.gap,
+                  _Stat(
+                    icon: SvgPicture.asset(Assets.feed, width: 13, height: 13),
+                    label: '${data.reposts}',
                   ),
                 ],
-                10.gap,
-                _Stat(
-                  icon: SvgPicture.asset(Assets.feed, width: 13, height: 13),
-                  label: '${data.reposts}',
-                ),
-              ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

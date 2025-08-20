@@ -1,5 +1,32 @@
 typedef Json = Map<String, dynamic>;
 
+class MySpaceModel {
+  final List<SpaceSummary> spaces;
+  final List<SpaceSummary> boostings;
+
+  const MySpaceModel({required this.spaces, required this.boostings});
+}
+
+class SpaceSummary {
+  final int id;
+  final int createdAt;
+  final int updatedAt;
+
+  final String title;
+  final String htmlContents;
+  final String imageUrl;
+
+  const SpaceSummary({
+    required this.id,
+    required this.createdAt,
+    required this.updatedAt,
+
+    required this.title,
+    required this.htmlContents,
+    required this.imageUrl,
+  });
+}
+
 class SpaceModel {
   final int id;
   final int feedId;

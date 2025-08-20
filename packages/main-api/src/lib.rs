@@ -35,6 +35,9 @@ pub mod controllers {
                 pub mod vote;
             }
         }
+        pub mod spaces {
+            pub mod get_my_space;
+        }
         pub mod oracles {
             pub mod create_oracle;
         }

@@ -13,6 +13,48 @@ class SpaceApi extends GetConnect {
     });
   }
 
+  Future<MySpaceModel> getMySpaces() async {
+    final uri = Uri.parse(apiEndpoint).resolve('/v2/my-spaces');
+    final headers = <String, String>{'Content-Type': 'application/json'};
+    final res = await get(uri.toString(), headers: headers);
+
+    logger.d("my spaces res: ${res.body}");
+
+    if (!res.isOk) return MySpaceModel(spaces: [], boostings: []);
+
+    final List<SpaceSummary> mySpace = [];
+    final List<SpaceSummary> boostings = [];
+
+    for (var i = 0; i < res.body["spaces"].length; i++) {
+      final space = res.body["spaces"][i];
+      mySpace.add(
+        SpaceSummary(
+          id: int.parse(space["id"].toString()),
+          createdAt: int.parse(space["created_at"].toString()),
+          updatedAt: int.parse(space["updated_at"].toString()),
+          title: space["title"],
+          htmlContents: space["html_contents"],
+          imageUrl: space["image_url"],
+        ),
+      );
+    }
+
+    for (var i = 0; i < res.body["boostings"].length; i++) {
+      final space = res.body["boostings"][i];
+      boostings.add(
+        SpaceSummary(
+          id: int.parse(space["id"].toString()),
+          createdAt: int.parse(space["created_at"].toString()),
+          updatedAt: int.parse(space["updated_at"].toString()),
+          title: space["title"],
+          htmlContents: space["html_contents"],
+          imageUrl: space["image_url"],
+        ),
+      );
+    }
+    return MySpaceModel(spaces: mySpace, boostings: boostings);
+  }
+
   Future<dynamic> setComment(
     int feedId,
     int userId,

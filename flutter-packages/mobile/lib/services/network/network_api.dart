@@ -31,43 +31,64 @@ class NetworkApi extends GetConnect {
     final userRes = await get(userUri.toString(), headers: headers);
     final networkRes = await get(networkUri.toString(), headers: headers);
 
-    logger.d("user info: ${userRes.body["id"]} ${userRes.body["followings"]}");
+    logger.d(
+      "user info: ${userRes.body["id"]} followings: ${userRes.body["followings"]} followers: ${userRes.body["followers"]}",
+    );
     logger.d("network info: ${networkRes.body["suggested_users"]}");
 
     final List<NetworkModel> followers = [];
-    final List<NetworkModel> followings = [];
+    final List<NetworkModel> followings = [
+      NetworkModel(
+        id: 51,
+        profileUrl:
+            "https://ca.slack-edge.com/T03H3B09USV-U03GQMUNE2W-20ccd88c2612-512",
+        nickname: "Summer Park",
+        username: "Summer Park",
+        description:
+            "<div>educator in the Korean Web3 industry, specializing in industry convergence and DAO technology and applications in the context of blockchain and Web3.0</div>",
+      ),
+      NetworkModel(
+        id: 52,
+        profileUrl:
+            "https://lh3.googleusercontent.com/a/ACg8ocJH35xGbTc7wWb1C8n55KDYdoIKAthJEvFGYXRP9qgFRO9dWM8=s96-c",
+        nickname: "Rosa Park",
+        username: "Rosa Park",
+        description: "<div>Project manager at Ratel foundation</div>",
+      ),
+    ];
 
     if (!userRes.isOk || !networkRes.isOk) {
       return MyNetworkModel(followers: followers, followings: followings);
     }
 
-    final followersRaw = userRes.body["followers"] as List? ?? [];
-    final followingRaw = userRes.body["followings"] as List? ?? [];
+    // final followersRaw = userRes.body["followers"] as List? ?? [];
+    // final followingRaw = userRes.body["followings"] as List? ?? [];
 
-    final followerIds = followersRaw
-        .map((e) => e is Map ? e["id"] : e)
-        .map((v) => int.tryParse(v?.toString() ?? ''))
-        .whereType<int>()
-        .toSet();
+    // final followerIds = followersRaw
+    //     .map((e) => e is Map ? e["id"] : e)
+    //     .map((v) => int.tryParse(v?.toString() ?? ''))
+    //     .whereType<int>()
+    //     .toSet();
 
-    final alreadyAdded = followings.map((n) => n.id).toSet();
+    // final alreadyAdded = followings.map((n) => n.id).toSet();
 
-    for (final f in followingRaw) {
-      final id = int.tryParse(f["id"]?.toString() ?? '');
-      if (id == null) continue;
-      if (followerIds.contains(id)) continue;
-      if (alreadyAdded.contains(id)) continue;
+    // for (final f in followingRaw) {
+    //   final id = int.tryParse(f["id"]?.toString() ?? '');
+    //   logger.d("following raws ids: ${followerIds} ${id}");
+    //   if (id == null) continue;
+    //   if (followerIds.contains(id)) continue;
+    //   if (alreadyAdded.contains(id)) continue;
 
-      followings.add(
-        NetworkModel(
-          id: id,
-          profileUrl: f["profile_url"] ?? "",
-          nickname: f["nickname"] ?? "",
-          username: f["username"] ?? "",
-          description: f["html_contents"] ?? "",
-        ),
-      );
-    }
+    //   followings.add(
+    //     NetworkModel(
+    //       id: id,
+    //       profileUrl: f["profile_url"] ?? "",
+    //       nickname: f["nickname"] ?? "",
+    //       username: f["username"] ?? "",
+    //       description: f["html_contents"] ?? "",
+    //     ),
+    //   );
+    // }
 
     for (var i = 0; i < networkRes.body["suggested_users"].length; i++) {
       logger.d("index: ${i} network: ${networkRes.body["suggested_users"]}");

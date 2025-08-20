@@ -27,6 +27,7 @@ use crate::{
                 search::list_networks_by_keyword_handler,
             },
             oracles::create_oracle::create_oracle_handler,
+            spaces::get_my_space::get_my_space_controller,
             telegram::subscribe::telegram_subscribe_handler,
             users::{find_user::find_user_handler, logout::logout_handler},
         },
@@ -178,6 +179,14 @@ pub async fn route(
             get_with(
                 get_artwork_detail_handler,
                 api_docs!("Get Artwork", "Retrieve a specific artwork"),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/v2/my-spaces",
+            get_with(
+                get_my_space_controller,
+                api_docs!("Get My Space", "Retrieve a spaces"),
             )
             .with_state(pool.clone()),
         )
