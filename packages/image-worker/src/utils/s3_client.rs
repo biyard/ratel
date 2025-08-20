@@ -13,7 +13,6 @@ use crate::config::{self, BucketConfig};
 pub struct PresignedUrl {
     pub presigned_uris: Vec<String>,
     pub uris: Vec<String>,
-    pub total_count: i32,
 }
 
 pub struct S3Client {
@@ -79,7 +78,6 @@ impl S3Client {
         Ok(PresignedUrl {
             presigned_uris,
             uris,
-            total_count,
         })
     }
 }
