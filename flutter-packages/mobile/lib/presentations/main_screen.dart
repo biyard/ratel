@@ -97,6 +97,7 @@ class _MainScreenState extends State<MainScreen>
 
     return Scaffold(
       extendBody: true,
+      bottomNavigationBar: buildBottomNav(barHeight, inset),
       body: SafeArea(
         bottom: false,
         child: Stack(
@@ -153,203 +154,199 @@ class _MainScreenState extends State<MainScreen>
                 );
               },
             ),
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: AnimatedBuilder(
-                animation: _panelCtrl,
-                builder: (_, child) {
-                  final dy = barHeight * _panelCtrl.value;
-                  return Transform.translate(
-                    offset: Offset(0, dy),
-                    child: child,
-                  );
-                },
-                child: SizedBox(
-                  height: barHeight,
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      final itemWidth = constraints.maxWidth / routes.length;
-                      return Stack(
-                        children: [
-                          Container(
-                            decoration: const BoxDecoration(
-                              color: AppColors.neutral800,
-                              border: Border(
-                                top: BorderSide(
-                                  color: AppColors.iconPrimary,
-                                  width: 0.1,
-                                ),
-                              ),
-                            ),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.only(bottom: inset),
-                            child: BottomNavigationBar(
-                              type: BottomNavigationBarType.fixed,
-                              backgroundColor: Colors.transparent,
-                              currentIndex: currentIndex,
-                              selectedItemColor: AppColors.primary,
-                              unselectedItemColor: AppColors.neutral500,
-                              selectedLabelStyle: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                                color: AppColors.primary,
-                              ),
-                              unselectedLabelStyle: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                                color: AppColors.neutral500,
-                              ),
-                              onTap: onTap,
-                              items: [
-                                BottomNavigationBarItem(
-                                  icon: SvgPicture.asset(
-                                    Assets.home,
-                                    width: 25,
-                                    height: 25,
-                                    colorFilter: const ColorFilter.mode(
-                                      AppColors.iconPrimary,
-                                      BlendMode.srcIn,
-                                    ),
-                                  ),
-                                  activeIcon: SvgPicture.asset(
-                                    Assets.home,
-                                    width: 25,
-                                    height: 25,
-                                    colorFilter: const ColorFilter.mode(
-                                      AppColors.primary,
-                                      BlendMode.srcIn,
-                                    ),
-                                  ),
-                                  label: 'Home',
-                                ),
-                                BottomNavigationBarItem(
-                                  icon: SvgPicture.asset(
-                                    Assets.people,
-                                    width: 25,
-                                    height: 25,
-                                    colorFilter: const ColorFilter.mode(
-                                      AppColors.iconPrimary,
-                                      BlendMode.srcIn,
-                                    ),
-                                  ),
-                                  activeIcon: SvgPicture.asset(
-                                    Assets.people,
-                                    width: 25,
-                                    height: 25,
-                                    colorFilter: const ColorFilter.mode(
-                                      AppColors.primary,
-                                      BlendMode.srcIn,
-                                    ),
-                                  ),
-                                  label: 'My network',
-                                ),
-                                BottomNavigationBarItem(
-                                  icon: SvgPicture.asset(
-                                    Assets.chat,
-                                    width: 25,
-                                    height: 25,
-                                    colorFilter: const ColorFilter.mode(
-                                      AppColors.iconPrimary,
-                                      BlendMode.srcIn,
-                                    ),
-                                  ),
-                                  activeIcon: SvgPicture.asset(
-                                    Assets.chat,
-                                    width: 25,
-                                    height: 25,
-                                    colorFilter: const ColorFilter.mode(
-                                      AppColors.primary,
-                                      BlendMode.srcIn,
-                                    ),
-                                  ),
-                                  label: 'My spaces',
-                                ),
-                                BottomNavigationBarItem(
-                                  icon: SvgPicture.asset(
-                                    Assets.notification,
-                                    width: 25,
-                                    height: 25,
-                                    colorFilter: const ColorFilter.mode(
-                                      AppColors.iconPrimary,
-                                      BlendMode.srcIn,
-                                    ),
-                                  ),
-                                  activeIcon: SvgPicture.asset(
-                                    Assets.notification,
-                                    width: 25,
-                                    height: 25,
-                                    colorFilter: const ColorFilter.mode(
-                                      AppColors.primary,
-                                      BlendMode.srcIn,
-                                    ),
-                                  ),
-                                  label: 'Notification',
-                                ),
-                                BottomNavigationBarItem(
-                                  icon: SvgPicture.asset(
-                                    Assets.mail,
-                                    width: 25,
-                                    height: 25,
-                                    colorFilter: const ColorFilter.mode(
-                                      AppColors.iconPrimary,
-                                      BlendMode.srcIn,
-                                    ),
-                                  ),
-                                  activeIcon: SvgPicture.asset(
-                                    Assets.mail,
-                                    width: 25,
-                                    height: 25,
-                                    colorFilter: const ColorFilter.mode(
-                                      AppColors.primary,
-                                      BlendMode.srcIn,
-                                    ),
-                                  ),
-                                  label: 'Messages',
-                                ),
-                              ],
-                            ),
-                          ),
-                          Positioned(
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            child: Row(
-                              children: List.generate(
-                                routes.length,
-                                (i) => SizedBox(
-                                  width: itemWidth,
-                                  child: Container(
-                                    height:
-                                        1 /
-                                        MediaQuery.of(context).devicePixelRatio,
-                                    color: i == currentIndex
-                                        ? Colors.transparent
-                                        : AppColors.iconPrimary,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          Positioned(
-                            top: 0,
-                            left: itemWidth * currentIndex,
-                            child: Container(
-                              width: itemWidth,
-                              height: 2,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                        ],
-                      );
-                    },
+            // Positioned(
+            //   left: 0,
+            //   right: 0,
+            //   bottom: 0,
+            //   child: buildBottomNav(barHeight, inset),
+            // ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  AnimatedBuilder buildBottomNav(double barHeight, double inset) {
+    return AnimatedBuilder(
+      animation: _panelCtrl,
+      builder: (_, child) {
+        final dy = barHeight * _panelCtrl.value;
+        return Transform.translate(offset: Offset(0, dy), child: child);
+      },
+      child: SizedBox(
+        height: barHeight,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final itemWidth = constraints.maxWidth / routes.length;
+            return Stack(
+              children: [
+                Container(
+                  decoration: const BoxDecoration(
+                    color: AppColors.neutral800,
+                    border: Border(
+                      top: BorderSide(color: AppColors.iconPrimary, width: 0.1),
+                    ),
                   ),
                 ),
-              ),
-            ),
-          ],
+                Padding(
+                  padding: EdgeInsets.only(bottom: inset),
+                  child: BottomNavigationBar(
+                    type: BottomNavigationBarType.fixed,
+                    backgroundColor: Colors.transparent,
+                    currentIndex: currentIndex,
+                    selectedItemColor: AppColors.primary,
+                    unselectedItemColor: AppColors.neutral500,
+                    selectedLabelStyle: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.primary,
+                    ),
+                    unselectedLabelStyle: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.neutral500,
+                    ),
+                    onTap: onTap,
+                    items: [
+                      BottomNavigationBarItem(
+                        icon: SvgPicture.asset(
+                          Assets.home,
+                          width: 25,
+                          height: 25,
+                          colorFilter: const ColorFilter.mode(
+                            AppColors.iconPrimary,
+                            BlendMode.srcIn,
+                          ),
+                        ),
+                        activeIcon: SvgPicture.asset(
+                          Assets.home,
+                          width: 25,
+                          height: 25,
+                          colorFilter: const ColorFilter.mode(
+                            AppColors.primary,
+                            BlendMode.srcIn,
+                          ),
+                        ),
+                        label: 'Home',
+                      ),
+                      BottomNavigationBarItem(
+                        icon: SvgPicture.asset(
+                          Assets.people,
+                          width: 25,
+                          height: 25,
+                          colorFilter: const ColorFilter.mode(
+                            AppColors.iconPrimary,
+                            BlendMode.srcIn,
+                          ),
+                        ),
+                        activeIcon: SvgPicture.asset(
+                          Assets.people,
+                          width: 25,
+                          height: 25,
+                          colorFilter: const ColorFilter.mode(
+                            AppColors.primary,
+                            BlendMode.srcIn,
+                          ),
+                        ),
+                        label: 'My network',
+                      ),
+                      BottomNavigationBarItem(
+                        icon: SvgPicture.asset(
+                          Assets.chat,
+                          width: 25,
+                          height: 25,
+                          colorFilter: const ColorFilter.mode(
+                            AppColors.iconPrimary,
+                            BlendMode.srcIn,
+                          ),
+                        ),
+                        activeIcon: SvgPicture.asset(
+                          Assets.chat,
+                          width: 25,
+                          height: 25,
+                          colorFilter: const ColorFilter.mode(
+                            AppColors.primary,
+                            BlendMode.srcIn,
+                          ),
+                        ),
+                        label: 'My spaces',
+                      ),
+                      BottomNavigationBarItem(
+                        icon: SvgPicture.asset(
+                          Assets.notification,
+                          width: 25,
+                          height: 25,
+                          colorFilter: const ColorFilter.mode(
+                            AppColors.iconPrimary,
+                            BlendMode.srcIn,
+                          ),
+                        ),
+                        activeIcon: SvgPicture.asset(
+                          Assets.notification,
+                          width: 25,
+                          height: 25,
+                          colorFilter: const ColorFilter.mode(
+                            AppColors.primary,
+                            BlendMode.srcIn,
+                          ),
+                        ),
+                        label: 'Notification',
+                      ),
+                      BottomNavigationBarItem(
+                        icon: SvgPicture.asset(
+                          Assets.mail,
+                          width: 25,
+                          height: 25,
+                          colorFilter: const ColorFilter.mode(
+                            AppColors.iconPrimary,
+                            BlendMode.srcIn,
+                          ),
+                        ),
+                        activeIcon: SvgPicture.asset(
+                          Assets.mail,
+                          width: 25,
+                          height: 25,
+                          colorFilter: const ColorFilter.mode(
+                            AppColors.primary,
+                            BlendMode.srcIn,
+                          ),
+                        ),
+                        label: 'Messages',
+                      ),
+                    ],
+                  ),
+                ),
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: Row(
+                    children: List.generate(
+                      routes.length,
+                      (i) => SizedBox(
+                        width: itemWidth,
+                        child: Container(
+                          height: 1 / MediaQuery.of(context).devicePixelRatio,
+                          color: i == currentIndex
+                              ? Colors.transparent
+                              : AppColors.iconPrimary,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 0,
+                  left: itemWidth * currentIndex,
+                  child: Container(
+                    width: itemWidth,
+                    height: 2,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );
