@@ -104,7 +104,12 @@ class _MainScreenState extends State<MainScreen>
           children: [
             Column(
               children: [
-                Header(onTapAvatar: openSidePanel),
+                Obx(
+                  () => Header(
+                    profileImage: controller.user.value.profileUrl,
+                    onTapAvatar: openSidePanel,
+                  ),
+                ),
                 Expanded(
                   child: Navigator(
                     key: Get.nestedKey(1),

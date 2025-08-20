@@ -15,7 +15,7 @@ class FeedCard extends StatelessWidget {
         if (!hasSpace) return;
 
         final spaceId = data.spaceIds[0];
-        Get.rootDelegate.offAndToNamed(AppRoutes.spaceWithId(spaceId));
+        Get.rootDelegate.toNamed(AppRoutes.spaceWithId(spaceId));
       },
       child: Container(
         decoration: BoxDecoration(

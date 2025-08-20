@@ -62,7 +62,7 @@ class SpacesController extends BaseController {
   }
 
   void routingSpace(int spaceId) {
-    Get.rootDelegate.offNamed(AppRoutes.spaceWithId(spaceId));
+    Get.rootDelegate.toNamed(AppRoutes.spaceWithId(spaceId));
   }
 
   void scrollToBoosting() {
