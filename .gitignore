@@ -27,3 +27,4 @@ jmeter.log
 benchmark/**/report*/
 benchmark/**/*.jtl
 benchmark/**/*.csv
+.projectile

@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 
 abstract class AppColors {
+  // New Themes
+  static const Color bg = Color(0xFF0A0A0A);
+  static const Color primary = Color(0xfffcb300);
+
   static const Color textPrimaryColor = Color(0xff000000);
   static const Color keyColor = textPrimaryColor;
 
   static const Color black = Color(0xff000203);
-  static const Color primary = Color(0xfffcb300);
   static const Color secondary = Color(0x00d4d4d4);
 
   static const Color textPrimary = Color(0xffffffff);
@@ -60,7 +63,6 @@ abstract class AppColors {
   static const Color cP5010 = Color(0xdb27801a);
   static const Color supportive = Color(0xff6eedd8);
   static const Color against = Color(0xffff9eee);
-  static const Color bg = Color(0xff1a1a1a);
   static const Color tabHover = Color(0xff282828);
   static const Color missionTitle = Color(0xffdee1e6);
   static const Color tag = Color(0xffdee1e6);
