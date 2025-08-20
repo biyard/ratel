@@ -73,7 +73,6 @@ pub async fn consensus_vote_handler(
         .await?;
 
     let oracle_id: i64 = oracle_row.get("oracle_id");
-    tracing::debug!("Oracle ID: {}", oracle_id);
 
     let consensus_query = r#"
         SELECT 
