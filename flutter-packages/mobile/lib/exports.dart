@@ -155,6 +155,10 @@ export 'services/space/space_api.dart';
 export 'services/space/space_model.dart';
 export 'services/space/space_service.dart';
 
+export 'services/asset/asset_api.dart';
+export 'services/asset/asset_model.dart';
+export 'services/asset/asset_service.dart';
+
 export 'binding.dart';
 export 'config.dart';
 export 'route.dart';
