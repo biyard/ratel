@@ -38,6 +38,7 @@ abstract class Assets {
   static const String verified = 'assets/icons/verified.svg';
   static const String roundedPlus = 'assets/icons/rounded_plus.svg';
   static const String user = 'assets/icons/user.svg';
+  static const String credentialBadge = 'assets/icons/credential_badge.svg';
 
   static const String logo = 'assets/icons/logo.png';
   static const String favicon = 'assets/icons/favicon.svg';
