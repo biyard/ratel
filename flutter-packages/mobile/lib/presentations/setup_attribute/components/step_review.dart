@@ -22,15 +22,11 @@ class StepReview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final h = MediaQuery.of(context).size.height;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          width: double.infinity,
-          height: h - 270,
-          child: SingleChildScrollView(
+    return Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -52,50 +48,51 @@ class StepReview extends StatelessWidget {
               ],
             ),
           ),
-        ),
-        Row(
-          children: [
-            SizedBox(
-              width: 140,
-              child: TextButton(
-                onPressed: onRecapture,
-                child: const Text(
-                  'Re-capture',
-                  style: TextStyle(
-                    color: AppColors.neutral300,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 16,
+          Spacer(),
+          Row(
+            children: [
+              SizedBox(
+                width: 140,
+                child: TextButton(
+                  onPressed: onRecapture,
+                  child: const Text(
+                    'Re-capture',
+                    style: TextStyle(
+                      color: AppColors.neutral300,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                    ),
                   ),
                 ),
               ),
-            ),
-            10.gap,
-            Flexible(
-              fit: FlexFit.tight,
-              child: ElevatedButton(
-                onPressed: onDone,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.black,
-                  padding: const EdgeInsets.symmetric(vertical: 14.5),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+              10.gap,
+              Flexible(
+                fit: FlexFit.tight,
+                child: ElevatedButton(
+                  onPressed: onDone,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(vertical: 14.5),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
-                ),
-                child: const Text(
-                  'DONE',
-                  style: TextStyle(
-                    color: AppColors.bg,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
+                  child: const Text(
+                    'DONE',
+                    style: TextStyle(
+                      color: AppColors.bg,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
-        ),
-        24.vgap,
-      ],
+            ],
+          ),
+          24.vgap,
+        ],
+      ),
     );
   }
 

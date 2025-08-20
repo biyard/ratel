@@ -10,6 +10,7 @@ class SetupAttributeScreen extends GetWidget<SetupAttributeController> {
   @override
   Widget build(BuildContext context) {
     return Layout<SetupAttributeController>(
+      scrollable: false,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Obx(
