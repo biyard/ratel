@@ -18,6 +18,9 @@ abstract class Assets {
   static const String reward = 'assets/icons/reward.svg';
   static const String roundBubble = 'assets/icons/round_bubble.svg';
   static const String thumbs = 'assets/icons/thumbs.svg';
+  static const String exchange2 = 'assets/icons/exchange2.svg';
+  static const String rewardCoin = 'assets/icons/reward_coin.svg';
+  static const String botCoin = 'assets/icons/botcoin_coin.svg';
 
   static const String editContent = 'assets/icons/edit_content.svg';
   static const String folder = 'assets/icons/folder.svg';
@@ -39,6 +42,7 @@ abstract class Assets {
   static const String roundedPlus = 'assets/icons/rounded_plus.svg';
   static const String user = 'assets/icons/user.svg';
   static const String credentialBadge = 'assets/icons/credential_badge.svg';
+  static const String solarStar = 'assets/icons/solar_star.svg';
 
   static const String logo = 'assets/icons/logo.png';
   static const String favicon = 'assets/icons/favicon.svg';

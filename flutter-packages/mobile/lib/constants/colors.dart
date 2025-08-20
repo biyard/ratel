@@ -4,6 +4,7 @@ abstract class AppColors {
   static const Color textPrimaryColor = Color(0xff000000);
   static const Color keyColor = textPrimaryColor;
 
+  static const Color indigo950 = Color(0xff1e1b4b);
   static const Color black = Color(0xff000203);
   static const Color primary = Color(0xfffcb300);
   static const Color secondary = Color(0x00d4d4d4);
@@ -54,6 +55,7 @@ abstract class AppColors {
   static const Color neutral600 = Color(0xff525252);
   static const Color neutral700 = Color(0xff404040);
   static const Color neutral800 = Color(0xff262626);
+  static const Color neutral900 = Color(0xff171717);
   static const Color cC20 = Color(0xff6eedd8);
   static const Color cP20 = Color(0xffff9eee);
   static const Color cP50 = Color(0xffdb2780);
