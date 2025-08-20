@@ -6,11 +6,12 @@ class NetworkScreen extends GetWidget<NetworkController> {
 
   @override
   Widget build(BuildContext context) {
+    final double h = MediaQuery.of(context).size.height;
     return Layout<NetworkController>(
+      scrollable: false,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(14, 8, 14, 12),
-        child: SizedBox(
-          width: double.infinity,
+        child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -59,7 +60,7 @@ class NetworkScreen extends GetWidget<NetworkController> {
                           crossAxisCount: 2,
                           mainAxisSpacing: 12,
                           crossAxisSpacing: 12,
-                          childAspectRatio: 0.78,
+                          childAspectRatio: 0.9,
                         ),
                     itemCount: sug.length,
                     itemBuilder: (_, i) => SuggestionCard(
