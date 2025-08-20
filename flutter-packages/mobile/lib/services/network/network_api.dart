@@ -13,6 +13,80 @@ class NetworkApi extends GetConnect {
     });
   }
 
+  Future<MyNetworkModel> getNetworksByV1() async {
+    final userUri = Uri.parse(apiEndpoint)
+        .resolve('/v1/users')
+        .replace(queryParameters: <String, String>{'action': 'user-info'});
+
+    final networkUri = Uri.parse(apiEndpoint)
+        .resolve('/v1/network')
+        .replace(
+          queryParameters: <String, String>{
+            'param-type': 'read',
+            'action': 'find-one',
+          },
+        );
+
+    final headers = <String, String>{'Content-Type': 'application/json'};
+    final userRes = await get(userUri.toString(), headers: headers);
+    final networkRes = await get(networkUri.toString(), headers: headers);
+
+    logger.d("user info: ${userRes.body["id"]} ${userRes.body["followings"]}");
+    logger.d("network info: ${networkRes.body["suggested_users"]}");
+
+    final List<NetworkModel> followers = [];
+    final List<NetworkModel> followings = [];
+
+    if (!userRes.isOk || !networkRes.isOk) {
+      return MyNetworkModel(followers: followers, followings: followings);
+    }
+
+    final followersRaw = userRes.body["followers"] as List? ?? [];
+    final followingRaw = userRes.body["followings"] as List? ?? [];
+
+    final followerIds = followersRaw
+        .map((e) => e is Map ? e["id"] : e)
+        .map((v) => int.tryParse(v?.toString() ?? ''))
+        .whereType<int>()
+        .toSet();
+
+    final alreadyAdded = followings.map((n) => n.id).toSet();
+
+    for (final f in followingRaw) {
+      final id = int.tryParse(f["id"]?.toString() ?? '');
+      if (id == null) continue;
+      if (followerIds.contains(id)) continue;
+      if (alreadyAdded.contains(id)) continue;
+
+      followings.add(
+        NetworkModel(
+          id: id,
+          profileUrl: f["profile_url"] ?? "",
+          nickname: f["nickname"] ?? "",
+          username: f["username"] ?? "",
+          description: f["html_contents"] ?? "",
+        ),
+      );
+    }
+
+    for (var i = 0; i < networkRes.body["suggested_users"].length; i++) {
+      logger.d("index: ${i} network: ${networkRes.body["suggested_users"]}");
+      final follower = networkRes.body["suggested_users"][i];
+      logger.d("follower: ${follower}");
+      followers.add(
+        NetworkModel(
+          id: int.parse(follower["id"].toString()),
+          profileUrl: follower["profile_url"] ?? "",
+          nickname: follower["nickname"] ?? "",
+          username: follower["username"] ?? "",
+          description: follower["html_contents"] ?? "",
+        ),
+      );
+    }
+
+    return MyNetworkModel(followers: followers, followings: followings);
+  }
+
   Future<dynamic> getNetworks() async {
     final uri = Uri.parse(apiEndpoint).resolve('/v2/networks');
 
@@ -30,6 +104,7 @@ class NetworkApi extends GetConnect {
           id: int.parse(network["id"].toString()),
           profileUrl: network["profile_url"] ?? "",
           nickname: network["nickname"],
+          username: network["username"] ?? "",
           description: network["html_contents"] ?? "",
         ),
       );
@@ -42,6 +117,7 @@ class NetworkApi extends GetConnect {
           id: int.parse(network["id"].toString()),
           profileUrl: network["profile_url"] ?? "",
           nickname: network["nickname"],
+          username: network["username"] ?? "",
           description: network["html_contents"] ?? "",
         ),
       );
@@ -70,6 +146,7 @@ class NetworkApi extends GetConnect {
           id: int.parse(network["id"].toString()),
           profileUrl: network["profile_url"] ?? "",
           nickname: network["nickname"],
+          username: network["username"] ?? "",
           description: network["description"] ?? "",
         ),
       );
@@ -82,6 +159,7 @@ class NetworkApi extends GetConnect {
           id: int.parse(network["id"].toString()),
           profileUrl: network["profile_url"] ?? "",
           nickname: network["nickname"],
+          username: network["username"] ?? "",
           description: network["description"] ?? "",
         ),
       );
