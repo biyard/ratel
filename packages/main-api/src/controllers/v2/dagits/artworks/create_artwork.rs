@@ -5,8 +5,17 @@ use dto::{
     by_axum::{auth::Authorization, axum::extract::Path},
     sqlx::{Pool, Postgres, postgres::PgRow},
 };
+use std::sync::Arc;
 
 use dto::*;
+
+use crate::utils::sqs_client::SqsClient;
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct WatermarkTask {
+    pub artwork_id: i64,
+    pub original_url: String,
+}
 
 #[derive(
     Debug,
@@ -61,7 +70,7 @@ pub struct CreateArtworkResponse {
 
 pub async fn create_artwork_handler(
     Extension(_auth): Extension<Option<Authorization>>,
-    State(pool): State<Pool<Postgres>>,
+    State((pool, sqs_client)): State<(Pool<Postgres>, Arc<SqsClient>)>,
     Path(CreateArtworkPathParams { space_id }): Path<CreateArtworkPathParams>,
     Json(req): Json<CreateArtworkRequest>,
 ) -> Result<Json<CreateArtworkResponse>> {
@@ -99,7 +108,7 @@ pub async fn create_artwork_handler(
         .bind(req.title)
         .bind(req.description.as_deref())
         .bind(file_json)
-        .bind(url)
+        .bind(url.clone())
         .map(|row: PgRow| {
             use sqlx::Row;
             row.get::<i64, _>("id")
@@ -111,44 +120,16 @@ pub async fn create_artwork_handler(
             Error::ServerError("Failed to create artwork".to_string())
         })?;
 
+    let task = WatermarkTask {
+        artwork_id,
+        original_url: url,
+    };
+    let message_body = serde_json::to_string(&task)
+        .map_err(|_| Error::ServerError("Failed to serialize watermark task".to_string()))?;
+
+    if let Err(e) = sqs_client.send_message(&message_body).await {
+        tracing::error!("Failed to send watermark task to SQS: {}", e);
+    }
+
     Ok(Json(CreateArtworkResponse { id: artwork_id }))
 }
-
-// async fn process_watermark_async(
-//     pool: Pool<Postgres>,
-//     artwork_id: i64,
-//     original_url: String,
-// ) -> Result<()> {
-//     let bytes = read_image_from_url(&original_url).await?;
-//     let watermarked_bytes =
-//         tokio::task::spawn_blocking(move || visible_watermarking(bytes)).await??;
-
-//     let config = config::get();
-//     let PresignedUrl {
-//         presigned_uris,
-//         uris,
-//         total_count: _,
-//     } = s3_upload::get_put_object_uri(&config.aws, &config.bucket, Some(1)).await?;
-
-//     let client = reqwest::Client::new();
-//     client
-//         .put(presigned_uris[0].clone())
-//         .body(watermarked_bytes)
-//         .send()
-//         .await?;
-
-//     Artwork::get_repository(pool.clone())
-//         .update(
-//             artwork_id,
-//             ArtworkRepositoryUpdateRequest {
-//                 file: Some(File {
-//                     url: Some(uris[0].clone()),
-//                     ..Default::default()
-//                 }),
-//                 ..Default::default()
-//             },
-//         )
-//         .await?;
-
-//     Ok(())
-// }

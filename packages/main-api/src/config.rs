@@ -21,6 +21,7 @@ pub struct Config {
     pub slack_channel_monitor: &'static str,
     pub kaia: KaiaConfig,
     pub rds: RdsDataConfig,
+    pub watermark_sqs_url: &'static str,
     pub from_email: &'static str,
     pub telegram_token: &'static str,
     pub noncelab_token: &'static str,
@@ -51,6 +52,7 @@ pub struct BucketConfig {
 impl Default for Config {
     fn default() -> Self {
         Config {
+            watermark_sqs_url: option_env!("WATERMARK_QUEUE_URL").expect("You must set WATERMARK_QUEUE_URL"),
             kaia: KaiaConfig {
                 endpoint: option_env!("KAIA_ENDPOINT").expect("You must set KAIA_ENDPOINT"),
                 owner_key: option_env!("KAIA_OWNER_KEY").expect("You must set KAIA_OWNER_KEY"),
