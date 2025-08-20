@@ -12,15 +12,11 @@ class StepCapture extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final h = MediaQuery.of(context).size.height;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          width: double.infinity,
-          height: h - 270,
-          child: Column(
+    return Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
@@ -53,32 +49,33 @@ class StepCapture extends StatelessWidget {
               ),
             ],
           ),
-        ),
-        //FIXME: remove this widget when passport is implemented
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: onCapture,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.black,
-              padding: const EdgeInsets.symmetric(vertical: 14.5),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+          const Spacer(),
+          //FIXME: remove this widget when passport is implemented
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: onCapture,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.black,
+                padding: const EdgeInsets.symmetric(vertical: 14.5),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
-            ),
-            child: const Text(
-              'YES',
-              style: TextStyle(
-                color: AppColors.bg,
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
+              child: const Text(
+                'YES',
+                style: TextStyle(
+                  color: AppColors.bg,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
           ),
-        ),
-        24.vgap,
-      ],
+          24.vgap,
+        ],
+      ),
     );
   }
 }

@@ -6,6 +6,7 @@ class ConnectionScreen extends GetWidget<ConnectionController> {
   @override
   Widget build(BuildContext context) {
     return Layout<ConnectionController>(
+      scrollable: false,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Obx(
@@ -50,8 +51,7 @@ class ConnectionScreen extends GetWidget<ConnectionController> {
               ),
               30.vgap,
               Obx(
-                () => SizedBox(
-                  height: MediaQuery.of(context).size.height - 350,
+                () => Expanded(
                   child: ListView.separated(
                     itemCount: controller.networks.length,
                     separatorBuilder: (_, __) => 0.vgap,
