@@ -2,7 +2,6 @@
 
 import 'dart:ui';
 
-import 'package:firebase_core/firebase_core.dart';
 import 'package:ratel/components/layout/layout_service.dart' as l;
 import 'package:ratel/services/rust/rust_service.dart';
 import 'package:ratel/utils/biyard_navigate_observer/biyard_navigate_observer.dart';
@@ -60,7 +59,11 @@ class MyApp extends StatelessWidget {
       ),
       debugShowCheckedModeBanner: false,
       defaultTransition: Transition.rightToLeft,
-      theme: theme,
+      theme: getThemeData(Brightness.light),
+      darkTheme: getThemeData(Brightness.dark),
+
+      // FIXME: This is a temporary fix for dark mode
+      themeMode: ThemeMode.dark,
       routerDelegate: Get.createDelegate(
         navigatorObservers: [BiyardNavigatorObserver(), l.LayoutObserver()],
       ),

@@ -8,6 +8,7 @@ export 'package:get/get.dart';
 export 'utils/logger/logger.dart';
 export 'utils/page_state.dart';
 export 'utils/controller/controller.dart';
+export 'utils/string/comma.dart';
 export 'utils/app_localization/app_localization.dart';
 
 export 'extensions/gap.dart';
