@@ -6,7 +6,7 @@ A new Flutter project.
 
 1. Setting flutter version
 
-- flutter: 3.32.5
+- flutter: 3.35.1
 - sdk platform tools: 35.0.2-12147458
 - java: openjdk 21.0.6
 
