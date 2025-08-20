@@ -104,9 +104,7 @@ class SpaceController extends BaseController {
 
   void setTab(SpaceTab t) => activeTab.value = t;
 
-  void goBack() {
-    Get.rootDelegate.offNamed(AppRoutes.mySpaces);
-  }
+  void goBack() => Get.back();
 
   String tabLabel(SpaceTab t) {
     switch (t) {
