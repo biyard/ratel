@@ -4,30 +4,55 @@ enum VerifiedStep { myCredential, info, countryCheck, capture, review }
 
 class VerifiedController extends BaseController {
   final Rx<VerifiedStep> step = VerifiedStep.myCredential.obs;
+  final Rx<String> didId = 'did:ratel:q11y3sqd...'.obs;
   final RxList<VerifiedModel> credentials = <VerifiedModel>[
     VerifiedModel(
-      label: "Blood type",
+      label: "Crypto Wallet",
+      value: "Active",
+      metadata:
+          "https://metadata.ratel.foundation/332cafb00e5a8c7011e69d364c848e514c1f17c6.jpg",
+    ),
+    VerifiedModel(
+      label: "BTC Tax",
+      value: "15%",
+      metadata:
+          "https://metadata.ratel.foundation/2df2dc1afdf4ba79613dced79e66169b477936dd.jpg",
+    ),
+    VerifiedModel(
+      label: "SOL Tax",
+      value: "10%",
+      metadata:
+          "https://metadata.ratel.foundation/434a44149e8c94e2892ae2828249a8aafd928b02.jpg",
+    ),
+    VerifiedModel(
+      label: "Blood Type",
       value: "A-",
       metadata:
-          "https://metadata.ratel.foundation/d98d2d3a632d2272e6f6ec729feb85745f547322.jpg",
+          "https://metadata.ratel.foundation/565a44c913996e1c98581f5772de4dfc6f32f6be.jpg",
+    ),
+    VerifiedModel(
+      label: "Region",
+      value: "Busan",
+      metadata:
+          "https://metadata.ratel.foundation/1aae7a4ecfd33cfcf8bbd0a3f540b4562be19e6c.jpg",
     ),
     VerifiedModel(
       label: "Gender",
-      value: "Main",
+      value: "Male",
       metadata:
           "https://metadata.ratel.foundation/46cac616c26546e62a9ce3ea614d47f7ce5e2369.jpg",
     ),
     VerifiedModel(
-      label: "Residential Area",
-      value: "Busan",
-      metadata:
-          "https://metadata.ratel.foundation/8ea8c023f59aaa5d4e974cd7f95fd1c73882d15b.jpg",
-    ),
-    VerifiedModel(
-      label: "Annual Salary",
+      label: "Salary",
       value: "\$20k",
       metadata:
-          "https://metadata.ratel.foundation/e03aefdfdc27a9457f40abc575c7b49145004a56.jpg",
+          "https://metadata.ratel.foundation/5f824db1c8d8c3612dcbed68021a9d9ab79e04f8.jpg",
+    ),
+    VerifiedModel(
+      label: "Occupation",
+      value: "Engineer",
+      metadata:
+          "https://metadata.ratel.foundation/27342ac6292fb7d2b87647841f5fab093bda09f6.jpg",
     ),
   ].obs;
 
