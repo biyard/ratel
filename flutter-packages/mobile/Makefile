@@ -45,6 +45,9 @@ all: clean run
 %.keystore:
 	scripts/create-key.sh $@ android$*key $(PASSWORD)
 
+run: $(BUILD_CONFIG_FILE)
+	flutter run --dart-define-from-file=$(BUILD_CONFIG_FILE)
+
 run.android: $(BUILD_CONFIG_FILE)
 	flutter run --dart-define-from-file=$(BUILD_CONFIG_FILE) -d emulator-5554
 
