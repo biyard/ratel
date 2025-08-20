@@ -6,6 +6,7 @@ class SelectTopicScreen extends GetWidget<SelectTopicController> {
   @override
   Widget build(BuildContext context) {
     return Layout<SelectTopicController>(
+      scrollable: false,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Column(
@@ -48,9 +49,7 @@ class SelectTopicScreen extends GetWidget<SelectTopicController> {
               onChanged: controller.onSearchChanged,
             ),
             16.vgap,
-            SizedBox(
-              width: double.infinity,
-              height: MediaQuery.of(context).size.height - 360,
+            Expanded(
               child: SingleChildScrollView(
                 child: Obx(
                   () => Column(

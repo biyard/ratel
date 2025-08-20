@@ -6,6 +6,7 @@ class WelcomeScreen extends GetWidget<WelcomeController> {
   @override
   Widget build(BuildContext context) {
     return Layout<WelcomeController>(
+      scrollable: false,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Column(
@@ -13,7 +14,7 @@ class WelcomeScreen extends GetWidget<WelcomeController> {
           children: [
             SizedBox(
               width: double.infinity,
-              height: MediaQuery.of(context).size.height - 150,
+              height: MediaQuery.of(context).size.height - 220,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
