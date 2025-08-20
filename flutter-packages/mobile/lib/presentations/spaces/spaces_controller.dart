@@ -7,71 +7,29 @@ class SpacesController extends BaseController {
   final chipsKey = GlobalKey();
   final isBoostingSection = false.obs;
 
-  //TODO: connect api
-  final List<SpaceSummaryModel> mySpaces = [
-    SpaceSummaryModel(
-      id: 183,
-      createdAt: DateTime.now().millisecondsSinceEpoch - 15 * 60 * 1000,
-      title: 'DAO Treasury Transparency Act Deliberation Space',
-      description: 'I commented out it needs | commented out it l..',
-      imageUrl: '',
-      boostingType: 1,
-      members: 1320,
-    ),
-    SpaceSummaryModel(
-      id: 183,
-      createdAt:
-          DateTime.now().millisecondsSinceEpoch - 1 * 24 * 60 * 60 * 1000,
-      title: 'DAO Transparency Act & Crypto Investor Protection Act',
-      description: 'I commented out it needs | commented out it l..',
-      imageUrl: '',
-      boostingType: 2,
-      members: 980,
-    ),
-    SpaceSummaryModel(
-      id: 183,
-      createdAt:
-          DateTime.now().millisecondsSinceEpoch - 3 * 24 * 60 * 60 * 1000,
-      title: 'Crypto Investor Protection Act',
-      description: 'I commented out it needs | commented out it l..',
-      imageUrl: '',
-      boostingType: null,
-      members: 540,
-    ),
-    SpaceSummaryModel(
-      id: 183,
-      createdAt:
-          DateTime.now().millisecondsSinceEpoch - 5 * 24 * 60 * 60 * 1000,
-      title: 'Community Treasury & Grants Working Group',
-      description: 'Last update posted by admin.',
-      imageUrl: '',
-      boostingType: 3,
-      members: 2100,
-    ),
-    SpaceSummaryModel(
-      id: 183,
-      createdAt:
-          DateTime.now().millisecondsSinceEpoch - 8 * 24 * 60 * 60 * 1000,
-      title: 'Open Governance Forum',
-      description: 'Weekly sync materials uploaded.',
-      imageUrl: '',
-      boostingType: 4,
-      members: 15200,
-    ),
-  ];
-
-  late final List<SpaceSummaryModel> popularBoosting =
-      mySpaces.where((s) => (s.boostingType ?? 1) >= 2).toList()
-        ..sort((a, b) => (b.boostingType ?? 1).compareTo(a.boostingType ?? 1));
+  final spaceApi = Get.find<SpaceApi>();
 
   @override
   void onInit() {
     super.onInit();
+    listFeeds();
     scrollCtrl.addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       isBoostingSection.value = false;
     });
   }
+
+  void listFeeds() async {
+    showLoading();
+    final items = await spaceApi.getMySpaces();
+    logger.d("item length: ${items.boostings.length} ${items.spaces.length}");
+    mySpaces(items.spaces);
+    boostings(items.boostings);
+    hideLoading();
+  }
+
+  RxList<SpaceSummary> mySpaces = <SpaceSummary>[].obs;
+  RxList<SpaceSummary> boostings = <SpaceSummary>[].obs;
 
   @override
   void onClose() {
