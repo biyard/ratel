@@ -30,6 +30,7 @@ use crate::{
             telegram::subscribe::telegram_subscribe_handler,
             users::{find_user::find_user_handler, logout::logout_handler},
         },
+        well_known::get_did_document::get_did_document_handler,
     },
     utils::sqs_client::SqsClient,
 };
@@ -232,5 +233,6 @@ pub async fn route(
                 )
             )
             .with_state(pool.clone()),
-        ))
+        )
+        .native_route("/.well-known/did.json", nget(get_did_document_handler)))
 }
