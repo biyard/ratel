@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:ratel/exports.dart';
 
 class NetworkApi extends GetConnect {
@@ -90,7 +92,11 @@ class NetworkApi extends GetConnect {
     //   );
     // }
 
-    for (var i = 0; i < networkRes.body["suggested_users"].length; i++) {
+    for (
+      var i = 0;
+      i < min(networkRes.body["suggested_users"].length, 4);
+      i++
+    ) {
       logger.d("index: ${i} network: ${networkRes.body["suggested_users"]}");
       final follower = networkRes.body["suggested_users"][i];
       logger.d("follower: ${follower}");
