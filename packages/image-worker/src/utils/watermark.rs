@@ -17,7 +17,6 @@ pub async fn process_watermark_async(
     let PresignedUrl {
         presigned_uris,
         uris,
-        total_count: _,
     } = s3_client.get_put_object_uri(1).await?;
 
     let client = reqwest::Client::new();
