@@ -132,6 +132,52 @@ jobs:
         run: |
           npm i -g aws-cdk
           make deploy
+  image-worker:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          ssh-key: ${{ secrets.PULL_KEY_REPO }}
+
+      - uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          components: clippy, rustfmt
+          target: wasm32-unknown-unknown
+          toolchain: stable
+
+      - uses: cargo-bins/cargo-binstall@main
+      - name: Install toml-cli
+        run: |
+          cargo binstall toml-cli --force
+
+      - name: Deploy APIs
+        env:
+          REGION: ap-northeast-2
+          ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          ENV: dev
+          RUST_LOG: debug
+          SERVICE: image-worker
+          DATABASE_TYPE: postgres
+          DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
+
+          BASE_DOMAIN: ratel.foundation
+          MIGRATE: false
+          ENABLE_S3: false
+          ENABLE_LAMBDA: false
+          ENABLE_SQS_WORKER: true
+          ENABLE_CDN: false
+        run: |
+          npm i -g aws-cdk
+          make deploy
 
   telegram-bot:
     runs-on: ubuntu-latest
