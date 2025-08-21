@@ -39,6 +39,8 @@
 	<string>This app needs microphone access</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>This app needs location access</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Passport verification requires camera access.</string>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
