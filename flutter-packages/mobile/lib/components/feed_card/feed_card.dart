@@ -64,11 +64,11 @@ class FeedCard extends StatelessWidget {
                         border: AppColors.neutral700,
                       ),
                       const Spacer(),
-                      SvgPicture.asset(Assets.bookmark, width: 20, height: 20),
-                      10.gap,
-                      SvgPicture.asset(Assets.edit1, width: 20, height: 20),
-                      10.gap,
-                      SvgPicture.asset(Assets.extra, width: 20, height: 20),
+                      // SvgPicture.asset(Assets.bookmark, width: 20, height: 20),
+                      // 10.gap,
+                      // SvgPicture.asset(Assets.edit1, width: 20, height: 20),
+                      // 10.gap,
+                      // SvgPicture.asset(Assets.extra, width: 20, height: 20),
                     ],
                   ),
                   11.5.vgap,
@@ -292,7 +292,7 @@ class _Stat extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 76,
+      width: 60,
       child: Center(
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
