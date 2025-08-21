@@ -129,6 +129,17 @@ jobs:
           RDS_SECRET_ARN: ${{ secrets.RDS_SECRET_ARN }}
 
           NONCELAB_TOKEN: ${{ secrets.NONCELAB_TOKEN }}
+
+          BBS_BLS_X: ${{ secrets.BBS_BLS_X }}
+          BBS_BLS_Y: ${{ secrets.BBS_BLS_Y }}
+          BBS_BLS_D: ${{ secrets.BBS_BLS_D }}
+          BBS_BLS_CRV: ${{ secrets.BBS_BLS_CRV }}
+
+          P256_X: ${{ secrets.P256_X }}
+          P256_Y: ${{ secrets.P256_Y }}
+          P256_D: ${{ secrets.P256_D }}
+          P256_CRV: ${{ secrets.P256_CRV }}
+          
         run: |
           npm i -g aws-cdk
           make deploy
