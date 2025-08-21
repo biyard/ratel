@@ -1,4 +1,4 @@
-name: Ratel
+name: ratel
 description: "The first platform connecting South Korea’s citizens with lawmakers to drive institutional reform for the crypto industry.Are you with us ?"
 
 # The following line prevents the package from being accidentally published to
@@ -70,6 +70,8 @@ dependencies:
   dotted_border: ^3.1.0
   image_picker: ^1.0.7
   file_picker: ^10.3.1
+  camera: ^0.11.2
+  permission_handler: ^12.0.1
 
 dev_dependencies:
   flutter_test:
