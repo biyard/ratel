@@ -62,7 +62,10 @@ impl RatelMcpServer {
     async fn login(&self) -> McpResult {
         let token = Uuid::new_v4().to_string();
 
-        let login_url = format!("https://webapp.ggernaut.com/mcp-login?session_id={}", token);
+        let login_url = format!(
+            "https://dev.ratel.foundation/mcp-login?session_id={}",
+            token
+        );
 
         Ok(CallToolResult::success(vec![Content::text(format!(
             r#"🔐 **Login Required**
