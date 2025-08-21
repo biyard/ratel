@@ -1,5 +1,7 @@
 import 'package:ratel/exports.dart';
 import 'package:dotted_border/dotted_border.dart';
+import 'package:ratel/presentations/verified/components/crypto_wallet_connect_sheet.dart';
+import 'package:ratel/services/wallet/wallet_service.dart';
 
 class Credentials extends StatefulWidget {
   const Credentials({
@@ -22,11 +24,15 @@ class _CredentialsState extends State<Credentials> {
   static const double _openSize = 0.60;
   static const double _maxSize = 0.7;
 
+  var crypto = false;
+
   final _dragCtrl = DraggableScrollableController();
 
   bool hasCredential(String label) => widget.credentials.any(
-    (e) =>
-        e.label.toLowerCase() == label.toLowerCase() || label.contains('Tax'),
+    (e) => (label == "Crypto Wallet")
+        ? crypto
+        : (e.label.toLowerCase() == label.toLowerCase() ||
+              label.contains('Tax')),
   );
 
   void _openSheet() {
@@ -84,6 +90,30 @@ class _CredentialsState extends State<Credentials> {
     VerifyItem('Region', 'Social identity or passport'),
   ];
 
+  Future<void> _handleCryptoTap() async {
+    final ws = Get.find<WalletService>();
+    await ws.ensureInit(context);
+
+    final addr = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF0F0F10),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (_) => const CryptoWalletConnectSheet(),
+    );
+
+    // if (addr == null || addr.isEmpty) {
+    //   Biyard.error("Failed to get address", "Failed to get ethereum address");
+    //   return;
+    // }
+
+    logger.d("metamask wallet: $addr");
+    setState(() => crypto = true);
+    _collapseSheet();
+  }
+
   @override
   Widget build(BuildContext context) {
     final bottomPad = MediaQuery.of(context).size.height * _minSize + 16;
@@ -135,22 +165,33 @@ class _CredentialsState extends State<Credentials> {
                 ),
                 Padding(
                   padding: const EdgeInsets.all(10),
-                  child: GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: widget.credentials.length + 1,
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 3,
-                          mainAxisSpacing: 10,
-                          crossAxisSpacing: 10,
-                          childAspectRatio: 1,
-                        ),
-                    itemBuilder: (context, i) {
-                      if (i == widget.credentials.length) {
-                        return AddCard(onTap: _openSheet);
+                  child: Builder(
+                    builder: (context) {
+                      final filtered = List<VerifiedModel>.from(
+                        widget.credentials,
+                      );
+                      if (!crypto && filtered.isNotEmpty) {
+                        filtered.removeAt(0);
                       }
-                      return CredCard(model: widget.credentials[i]);
+
+                      return GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: filtered.length + 1,
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 3,
+                              mainAxisSpacing: 10,
+                              crossAxisSpacing: 10,
+                              childAspectRatio: 1,
+                            ),
+                        itemBuilder: (context, i) {
+                          if (i == filtered.length) {
+                            return AddCard(onTap: _openSheet);
+                          }
+                          return CredCard(model: filtered[i]);
+                        },
+                      );
                     },
                   ),
                 ),
@@ -203,10 +244,15 @@ class _CredentialsState extends State<Credentials> {
                             return Padding(
                               padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
                               child: InkWell(
-                                onTap: () {
+                                onTap: () async {
                                   if (verified) return;
-                                  widget.onNext();
-                                  _collapseSheet();
+
+                                  if (it.title == "Crypto Wallet") {
+                                    await _handleCryptoTap();
+                                  } else {
+                                    widget.onNext();
+                                    _collapseSheet();
+                                  }
                                 },
                                 child: Container(
                                   decoration: BoxDecoration(
