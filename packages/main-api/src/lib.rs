@@ -49,6 +49,9 @@ pub mod controllers {
             }
         }
     }
+    pub mod well_known {
+        pub mod get_did_document;
+    }
 }
 
 pub mod api_main;
