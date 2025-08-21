@@ -37,6 +37,7 @@ class SpaceModel {
   final List<ElearningModel> elearnings;
   final List<SurveyModel> surveys;
   final List<CommentModel> comments;
+  final List<SurveyResponse> userResponses;
 
   const SpaceModel({
     required this.id,
@@ -48,6 +49,7 @@ class SpaceModel {
     required this.elearnings,
     required this.surveys,
     required this.comments,
+    required this.userResponses,
   });
 
   factory SpaceModel.fromJson(Json j) {
@@ -64,8 +66,27 @@ class SpaceModel {
       elearnings: _list('elearnings', ElearningModel.fromJson),
       surveys: _list('surveys', SurveyModel.fromJson),
       comments: _list('feed_comments', CommentModel.fromJson),
+      userResponses: _list('user_responses', SurveyResponse.fromJson),
     );
   }
+}
+
+class SurveyResponse {
+  final int id;
+  final int createdAt;
+  final int surveyId;
+
+  const SurveyResponse({
+    required this.id,
+    required this.createdAt,
+    required this.surveyId,
+  });
+
+  factory SurveyResponse.fromJson(Json j) => SurveyResponse(
+    id: (j['id'] ?? 0) as int,
+    createdAt: (j['created_at'] ?? 0) as int,
+    surveyId: (j['survey_id'] ?? 0) as int,
+  );
 }
 
 class CommentModel {
@@ -389,4 +410,121 @@ class LinearScaleQuestionModel extends QuestionModel {
     maxLabel: (j['max_label'] ?? '') as String,
     isRequired: (j['is_required'] as bool?) ?? false,
   );
+}
+
+String answerTypeToString(AnswerType t) => switch (t) {
+  AnswerType.singleChoice => 'single_choice',
+  AnswerType.multipleChoice => 'multiple_choice',
+  AnswerType.shortAnswer => 'short_answer',
+  AnswerType.subjective => 'subjective',
+  AnswerType.checkbox => 'checkbox',
+  AnswerType.dropdown => 'dropdown',
+  AnswerType.linearScale => 'linear_scale',
+};
+
+AnswerType answerTypeFromString(String s) => switch (s) {
+  'single_choice' => AnswerType.singleChoice,
+  'multiple_choice' => AnswerType.multipleChoice,
+  'short_answer' => AnswerType.shortAnswer,
+  'subjective' => AnswerType.subjective,
+  'checkbox' => AnswerType.checkbox,
+  'dropdown' => AnswerType.dropdown,
+  'linear_scale' => AnswerType.linearScale,
+  _ => throw ArgumentError('Unknown answer_type: $s'),
+};
+
+abstract class Answer {
+  final AnswerType type;
+  const Answer(this.type);
+
+  Json toJson();
+
+  factory Answer.fromJson(Json j) {
+    final t = answerTypeFromString(j['answer_type'] as String);
+    final a = j['answer'];
+    switch (t) {
+      case AnswerType.singleChoice:
+        return SingleChoiceAnswer(_asIntOrNull(a));
+      case AnswerType.multipleChoice:
+        return MultipleChoiceAnswer(_asIntListOrNull(a));
+      case AnswerType.shortAnswer:
+        return ShortAnswer(a as String?);
+      case AnswerType.subjective:
+        return SubjectiveAnswer(a as String?);
+      case AnswerType.checkbox:
+        return CheckboxAnswer(_asIntListOrNull(a));
+      case AnswerType.dropdown:
+        return DropdownAnswer(_asIntOrNull(a));
+      case AnswerType.linearScale:
+        return LinearScaleAnswer(_asIntOrNull(a));
+    }
+  }
+}
+
+class SingleChoiceAnswer extends Answer {
+  final int? answer;
+  const SingleChoiceAnswer(this.answer) : super(AnswerType.singleChoice);
+  @override
+  Json toJson() => {'answer_type': answerTypeToString(type), 'answer': answer};
+}
+
+class MultipleChoiceAnswer extends Answer {
+  final List<int>? answer;
+  const MultipleChoiceAnswer(this.answer) : super(AnswerType.multipleChoice);
+  @override
+  Json toJson() => {'answer_type': answerTypeToString(type), 'answer': answer};
+}
+
+class ShortAnswer extends Answer {
+  final String? answer;
+  const ShortAnswer(this.answer) : super(AnswerType.shortAnswer);
+  @override
+  Json toJson() => {'answer_type': answerTypeToString(type), 'answer': answer};
+}
+
+class SubjectiveAnswer extends Answer {
+  final String? answer;
+  const SubjectiveAnswer(this.answer) : super(AnswerType.subjective);
+  @override
+  Json toJson() => {'answer_type': answerTypeToString(type), 'answer': answer};
+}
+
+class CheckboxAnswer extends Answer {
+  final List<int>? answer;
+  const CheckboxAnswer(this.answer) : super(AnswerType.checkbox);
+  @override
+  Json toJson() => {'answer_type': answerTypeToString(type), 'answer': answer};
+}
+
+class DropdownAnswer extends Answer {
+  final int? answer;
+  const DropdownAnswer(this.answer) : super(AnswerType.dropdown);
+  @override
+  Json toJson() => {'answer_type': answerTypeToString(type), 'answer': answer};
+}
+
+class LinearScaleAnswer extends Answer {
+  final int? answer;
+  const LinearScaleAnswer(this.answer) : super(AnswerType.linearScale);
+  @override
+  Json toJson() => {'answer_type': answerTypeToString(type), 'answer': answer};
+}
+
+int? _asIntOrNull(dynamic v) {
+  if (v == null) return null;
+  if (v is int) return v;
+  if (v is num) return v.toInt();
+  return int.tryParse(v.toString());
+}
+
+List<int>? _asIntListOrNull(dynamic v) {
+  if (v == null) return null;
+  if (v is List) {
+    return v
+        .map((e) => _asIntOrNull(e))
+        .where((e) => e != null)
+        .cast<int>()
+        .toList();
+  }
+  return null;
 }

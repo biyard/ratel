@@ -94,8 +94,11 @@ class _CredentialsState extends State<Credentials> {
     final ws = Get.find<WalletService>();
     await ws.ensureInit(context);
 
+    final rootCtx = Get.key.currentContext ?? Get.overlayContext ?? context;
+
     final addr = await showModalBottomSheet<String>(
-      context: context,
+      context: rootCtx,
+      useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: const Color(0xFF0F0F10),
       shape: const RoundedRectangleBorder(
@@ -103,11 +106,6 @@ class _CredentialsState extends State<Credentials> {
       ),
       builder: (_) => const CryptoWalletConnectSheet(),
     );
-
-    // if (addr == null || addr.isEmpty) {
-    //   Biyard.error("Failed to get address", "Failed to get ethereum address");
-    //   return;
-    // }
 
     logger.d("metamask wallet: $addr");
     setState(() => crypto = true);
@@ -245,7 +243,9 @@ class _CredentialsState extends State<Credentials> {
                               padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
                               child: InkWell(
                                 onTap: () async {
+                                  logger.d("hello");
                                   if (verified) return;
+                                  logger.d("hi");
 
                                   if (it.title == "Crypto Wallet") {
                                     await _handleCryptoTap();

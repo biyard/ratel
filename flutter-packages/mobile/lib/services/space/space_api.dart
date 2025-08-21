@@ -80,6 +80,33 @@ class SpaceApi extends GetConnect {
     return res.isOk;
   }
 
+  Future<dynamic> responseAnswer(
+    int spaceId,
+    int surveyId,
+    List<Answer> answers,
+  ) async {
+    final uri = Uri.parse(
+      apiEndpoint,
+    ).resolve('/v1/spaces/${spaceId}/responses');
+
+    final headers = <String, String>{'Content-Type': 'application/json'};
+    final body = {
+      'respond_answer': {
+        'answers': answers.map((e) => e.toJson()).toList(),
+        'survey_type': 2,
+        'survey_id_param': surveyId,
+      },
+    };
+
+    final res = await post(uri.toString(), body, headers: headers);
+
+    if (!res.isOk) return null;
+
+    logger.d('response body: ${res.body}');
+
+    return res.isOk;
+  }
+
   Future<SpaceModel> getSpaceById(int spaceId) async {
     final uri = Uri.parse(apiEndpoint).resolve('/v1/spaces/$spaceId');
 
@@ -97,16 +124,29 @@ class SpaceApi extends GetConnect {
         elearnings: [],
         surveys: [],
         comments: [],
+        userResponses: [],
       );
     }
 
-    logger.d("space info: ${res.body}");
+    logger.d("space info: ${res.body["user_responses"]}");
     final item = res.body;
 
     final List<FileModel> files = [];
     final List<DiscussionModel> discussions = [];
     final List<ElearningModel> elearnings = [];
     final List<CommentModel> comments = [];
+    final List<SurveyResponse> responses = [];
+
+    for (var i = 0; i < item["user_responses"].length; i++) {
+      final res = item["user_responses"][i];
+      responses.add(
+        SurveyResponse(
+          id: int.parse(res["id"].toString()),
+          createdAt: int.parse(res["created_at"].toString()),
+          surveyId: int.parse(res["survey_id"].toString()),
+        ),
+      );
+    }
 
     for (var i = 0; i < item["files"].length; i++) {
       final file = item["files"][i];
@@ -198,6 +238,7 @@ class SpaceApi extends GetConnect {
       elearnings: elearnings,
       surveys: surveys,
       comments: comments,
+      userResponses: responses,
     );
   }
 }
