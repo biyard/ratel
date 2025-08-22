@@ -1,3 +1,4 @@
+// lib/presentations/verified/components/crypto_wallet_connect_sheet.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:reown_appkit/reown_appkit.dart';
@@ -24,7 +25,7 @@ class _CryptoWalletConnectSheetState extends State<CryptoWalletConnectSheet> {
   void initState() {
     super.initState();
     final ws = Get.find<WalletService>();
-    _initFuture = ws.ensureInit(context).then((_) {
+    _initFuture = ws.ensureInit(context, logoutIfConnected: true).then((_) {
       _addr = ws.currentAddress();
       _onConnect = (_) => _afterPossibleConnect();
       _onUpdate = (_) => _afterPossibleConnect();
@@ -60,9 +61,6 @@ class _CryptoWalletConnectSheetState extends State<CryptoWalletConnectSheet> {
       _addr = addr;
       _waiting = false;
     });
-    if (addr != null && addr.isNotEmpty && mounted) {
-      Navigator.of(context).pop(addr);
-    }
   }
 
   @override
@@ -96,36 +94,17 @@ class _CryptoWalletConnectSheetState extends State<CryptoWalletConnectSheet> {
                       height: 48,
                       child: Center(child: CircularProgressIndicator()),
                     )
-                  else ...[
+                  else
                     AppKitModalConnectButton(
                       appKit: ws.appKitModal,
                       context: context,
                     ),
-                    const SizedBox(height: 8),
-                    TextButton(
-                      onPressed: () => ws.appKitModal.openModalView(),
-                      child: const Text(
-                        'Open wallets (fallback)',
-                        style: TextStyle(color: Colors.white70),
-                      ),
-                    ),
-                  ],
                   const SizedBox(height: 12),
                   if (_waiting)
                     const Text(
                       'Waiting for approval...',
                       style: TextStyle(color: Colors.white70),
                     ),
-                  if (_addr != null && _addr!.isNotEmpty) ...[
-                    const SizedBox(height: 6),
-                    Text(
-                      _addr!,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
                   const SizedBox(height: 8),
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(null),

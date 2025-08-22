@@ -292,7 +292,7 @@ class SpaceScreen extends GetWidget<SpaceController> {
                                           fillColor: AppColors.neutral800,
                                           enabledBorder: OutlineInputBorder(
                                             borderRadius: BorderRadius.circular(
-                                              50,
+                                              10,
                                             ),
                                             borderSide: const BorderSide(
                                               color: Colors.transparent,
@@ -301,7 +301,7 @@ class SpaceScreen extends GetWidget<SpaceController> {
                                           ),
                                           focusedBorder: OutlineInputBorder(
                                             borderRadius: BorderRadius.circular(
-                                              50,
+                                              10,
                                             ),
                                             borderSide: const BorderSide(
                                               color: AppColors.primary,
