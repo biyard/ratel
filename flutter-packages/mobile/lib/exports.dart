@@ -126,6 +126,7 @@ export 'components/round_container/round_container.dart';
 export 'components/text_field/text_field.dart';
 export 'components/custom_checkbox/custom_checkbox.dart';
 export 'components/feed_card/feed_card.dart';
+export 'components/passport_camera/passport_camera.dart';
 
 export 'components/modal/login_modal.dart';
 export 'components/modal/modal_title.dart';

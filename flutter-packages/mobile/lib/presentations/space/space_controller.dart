@@ -13,6 +13,9 @@ class SpaceController extends BaseController {
   final userApi = Get.find<UserApi>();
 
   final Rx<SpaceTab> activeTab = SpaceTab.summary.obs;
+  final Rx<bool> isSurvey = false.obs;
+  final Rx<int> surveyId = 0.obs;
+  final RxList<QuestionModel> questions = <QuestionModel>[].obs;
 
   Rx<SpaceModel> space = SpaceModel(
     id: 0,
@@ -24,6 +27,7 @@ class SpaceController extends BaseController {
     elearnings: [],
     surveys: [],
     comments: [],
+    userResponses: [],
   ).obs;
 
   Rx<UserModel> user = UserModel(
@@ -48,7 +52,7 @@ class SpaceController extends BaseController {
   void onInit() {
     super.onInit();
     final String? id = Get.parameters['id'];
-    getSpace(int.parse(id ?? "0"));
+    getSpace(int.parse(id ?? "0"), true);
     // commentCtrl.addListener(() {
     //   canSend.value = commentCtrl.text.trim().isNotEmpty;
     // });
@@ -65,15 +69,19 @@ class SpaceController extends BaseController {
     canSend.value = v.trim().isNotEmpty;
   }
 
-  Future<void> getSpace(int spaceId) async {
-    showLoading();
+  Future<void> getSpace(int spaceId, bool isLoading) async {
+    if (isLoading) {
+      showLoading();
+    }
     final item = await spaceApi.getSpaceById(spaceId);
     logger.d("surveys: ${item.surveys}");
     space(item);
 
     final userRes = await userApi.getUserInfo();
     user(userRes);
-    hideLoading();
+    if (isLoading) {
+      hideLoading();
+    }
   }
 
   Future<({bool success, String? path, String? error})> downloadFileFromUrl({
@@ -104,7 +112,15 @@ class SpaceController extends BaseController {
 
   void setTab(SpaceTab t) => activeTab.value = t;
 
-  void goBack() => Get.back();
+  void goBack() {
+    if (isSurvey.value) {
+      isSurvey(false);
+      questions([]);
+      surveyId(0);
+    } else {
+      Get.back();
+    }
+  }
 
   String tabLabel(SpaceTab t) {
     switch (t) {
@@ -121,6 +137,27 @@ class SpaceController extends BaseController {
     }
   }
 
+  Future<void> sendAnswer(List<Answer> answers) async {
+    int id = surveyId.value;
+    int spaceId = space.value.id;
+
+    final res = await spaceApi.responseAnswer(spaceId, id, answers);
+
+    if (res != null) {
+      final String? id = Get.parameters['id'];
+      await getSpace(int.parse(id ?? "0"), true);
+
+      isSurvey(false);
+      questions([]);
+      surveyId(0);
+    } else {
+      Biyard.error(
+        "Failed to send answer",
+        "Send Answer failed. Please try again later.",
+      );
+    }
+  }
+
   Future<void> sendComment() async {
     final text = commentCtrl.text.trim();
     if (text.isEmpty) return;
@@ -133,7 +170,11 @@ class SpaceController extends BaseController {
 
     if (res != null) {
       final String? id = Get.parameters['id'];
-      await getSpace(int.parse(id ?? "0"));
+      showLoading();
+
+      await getSpace(int.parse(id ?? "0"), false);
+
+      hideLoading();
     } else {
       Biyard.error(
         "Failed to send comment",
