@@ -469,16 +469,19 @@ jobs:
 
       - name: Create & unlock temp keychain
         run: |
-          KEYCHAIN_NAME="ci-temp"
+          KEYCHAIN_LABEL="ci-temp"                               
           KEYCHAIN_PASSWORD="password"
-          KEYCHAIN_PATH="$HOME/Library/Keychains/${KEYCHAIN_NAME}.keychain-db"
+          KEYCHAIN_FILE="${KEYCHAIN_LABEL}.keychain-db"          
+          KEYCHAIN_PATH="$HOME/Library/Keychains/${KEYCHAIN_FILE}"
 
-          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_NAME"
-          security set-keychain-settings -lut 21600 "$KEYCHAIN_NAME"
-          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_NAME"
-          security list-keychains -s "$KEYCHAIN_PATH" login.keychain-db
-          echo "MATCH_KEYCHAIN_PATH=$KEYCHAIN_PATH" >> $GITHUB_ENV
-          echo "MATCH_KEYCHAIN_PASSWORD=$KEYCHAIN_PASSWORD" >> $GITHUB_ENV
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_LABEL"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_LABEL"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_LABEL"
+
+          security list-keychains -s "$KEYCHAIN_PATH" "$HOME/Library/Keychains/login.keychain-db"
+
+          echo "MATCH_KEYCHAIN_NAME=${KEYCHAIN_FILE}" >> $GITHUB_ENV
+          echo "MATCH_KEYCHAIN_PASSWORD=${KEYCHAIN_PASSWORD}" >> $GITHUB_ENV
 
       - name: Install signing with match (readonly)
         working-directory: flutter-packages/mobile/ios
@@ -488,7 +491,7 @@ jobs:
         run: |
           bundle exec fastlane match appstore \
             --readonly \
-            --keychain_name "$MATCH_KEYCHAIN_PATH" \
+            --keychain_name "$MATCH_KEYCHAIN_NAME" \
             --keychain_password "$MATCH_KEYCHAIN_PASSWORD"
 
       - name: Build and Upload to TestFlight
