@@ -23,3 +23,8 @@ release.keystore
 .idea
 
 *.out
+jmeter.log
+benchmark/**/report*/
+benchmark/**/*.jtl
+benchmark/**/*.csv
+.projectile

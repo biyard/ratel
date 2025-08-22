@@ -8,6 +8,7 @@ export 'package:get/get.dart';
 export 'utils/logger/logger.dart';
 export 'utils/page_state.dart';
 export 'utils/controller/controller.dart';
+export 'utils/string/comma.dart';
 export 'utils/app_localization/app_localization.dart';
 
 export 'extensions/gap.dart';
@@ -31,6 +32,7 @@ export 'presentations/message/message_screen.dart';
 
 export 'presentations/network/network_binding.dart';
 export 'presentations/network/network_controller.dart';
+export 'presentations/network/network_model.dart';
 export 'presentations/network/network_screen.dart';
 
 export 'presentations/notification/notification_screen.dart';
@@ -70,9 +72,15 @@ export 'presentations/setup_attribute/setup_attribute_binding.dart';
 export 'presentations/setup_attribute/setup_attribute_controller.dart';
 export 'presentations/setup_attribute/setup_attribute_screen.dart';
 
-export 'presentations/my_spaces/my_spaces_binding.dart';
-export 'presentations/my_spaces/my_spaces_controller.dart';
-export 'presentations/my_spaces/my_spaces_screen.dart';
+export 'presentations/spaces/spaces_binding.dart';
+export 'presentations/spaces/spaces_controller.dart';
+export 'presentations/spaces/spaces_screen.dart';
+export 'presentations/spaces/spaces_model.dart';
+
+export 'presentations/space/space_binding.dart';
+export 'presentations/space/space_controller.dart';
+export 'presentations/space/space_screen.dart';
+export 'presentations/space/space_model.dart';
 
 export 'presentations/connection/connection_binding.dart';
 export 'presentations/connection/connection_model.dart';
@@ -118,6 +126,7 @@ export 'components/round_container/round_container.dart';
 export 'components/text_field/text_field.dart';
 export 'components/custom_checkbox/custom_checkbox.dart';
 export 'components/feed_card/feed_card.dart';
+export 'components/passport_camera/passport_camera.dart';
 
 export 'components/modal/login_modal.dart';
 export 'components/modal/modal_title.dart';
@@ -143,6 +152,13 @@ export 'services/network/network_service.dart';
 export 'services/feeds/feeds_api.dart';
 export 'services/feeds/feeds_service.dart';
 export 'services/feeds/feeds_model.dart';
+export 'services/space/space_api.dart';
+export 'services/space/space_model.dart';
+export 'services/space/space_service.dart';
+
+export 'services/asset/asset_api.dart';
+export 'services/asset/asset_model.dart';
+export 'services/asset/asset_service.dart';
 
 export 'binding.dart';
 export 'config.dart';

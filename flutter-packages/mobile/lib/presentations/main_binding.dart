@@ -9,6 +9,6 @@ class MainBinding extends Bindings {
     Get.lazyPut<MessageController>(() => MessageController());
     Get.lazyPut<NetworkController>(() => NetworkController());
     Get.lazyPut<NotificationController>(() => NotificationController());
-    Get.lazyPut<MySpacesController>(() => MySpacesController());
+    Get.lazyPut<SpacesController>(() => SpacesController());
   }
 }

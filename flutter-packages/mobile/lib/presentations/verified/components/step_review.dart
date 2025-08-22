@@ -27,109 +27,160 @@ class StepReview extends StatelessWidget {
       ),
     ];
 
+    const handleColor = Color(0xFF6B6B6D);
+    const handleW = 44.0;
+    const handleH = 5.0;
+    const radius = Radius.circular(30);
+
+    const minSize = 0.25;
+    const initSize = 0.38;
+    const maxSize = 0.90;
+
+    final dsCtrl = DraggableScrollableController();
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      useSafeArea: true,
-      showDragHandle: true,
-      backgroundColor: Color(0xff3a3a3e),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-      ),
-      builder: (ctx) {
-        return DraggableScrollableSheet(
-          expand: false,
-          initialChildSize: 0.38,
-          minChildSize: 0.25,
-          maxChildSize: 0.9,
-          builder: (ctx, scrollCtrl) {
-            return ListView.separated(
-              controller: scrollCtrl,
-              padding: EdgeInsets.fromLTRB(
-                16,
-                0,
-                16,
-                MediaQuery.of(ctx).padding.bottom + 16,
-              ),
-              itemCount: items.length + 1,
-              separatorBuilder: (_, __) => const SizedBox(height: 10),
-              itemBuilder: (_, i) {
-                if (i == 0) {
-                  return Container(
-                    decoration: const BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(
-                          color: Color(0xffd4d4d4),
-                          width: 0.1,
-                        ),
-                      ),
-                    ),
-                    child: Padding(
-                      padding: EdgeInsets.all(10.0),
-                      child: Text(
-                        'Additional attributes',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.w700,
-                          height: 1.2,
-                        ),
-                      ),
-                    ),
-                  );
-                }
+      useSafeArea: false,
+      showDragHandle: false,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black54,
+      builder: (_) {
+        final safeB = MediaQuery.of(context).padding.bottom;
 
-                final it = items[i - 1];
-                return Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white.withAlpha(20),
-                    borderRadius: BorderRadius.circular(5),
-                  ),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 0,
-                    ),
-                    title: Text(
-                      it.title,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 12,
-                        height: 1.2,
+        void onHeaderDragUpdate(DragUpdateDetails d) {
+          final h = MediaQuery.of(context).size.height;
+          final next = (dsCtrl.size - (d.primaryDelta ?? 0) / h).clamp(
+            minSize,
+            maxSize,
+          );
+          dsCtrl.jumpTo(next);
+        }
+
+        void onHeaderDragEnd(DragEndDetails d) {
+          final v = d.primaryVelocity ?? 0;
+          double target;
+          if (v < -320) {
+            target = initSize;
+          } else if (v > 320) {
+            target = minSize;
+          } else {
+            target = dsCtrl.size >= 0.5 ? initSize : minSize;
+          }
+          dsCtrl.animateTo(
+            target,
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOutCubic,
+          );
+        }
+
+        return ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: radius),
+          child: Material(
+            color: const Color(0xff3a3a3e),
+            clipBehavior: Clip.antiAlias,
+            child: SafeArea(
+              top: false,
+              bottom: false,
+              child: DraggableScrollableSheet(
+                controller: dsCtrl,
+                expand: false,
+                initialChildSize: initSize,
+                minChildSize: minSize,
+                maxChildSize: maxSize,
+                builder: (ctx, scrollCtrl) {
+                  return CustomScrollView(
+                    controller: scrollCtrl,
+                    slivers: [
+                      SliverPadding(
+                        padding: const EdgeInsets.fromLTRB(10, 10, 0, 0),
+                        sliver: SliverPersistentHeader(
+                          pinned: true,
+                          delegate: _HandleHeaderDelegate(
+                            height: 90,
+                            title: 'Additional attributes',
+                            handleColor: handleColor,
+                            handleWidth: handleW,
+                            handleHeight: handleH,
+                            onTap: () {
+                              if (dsCtrl.size < (initSize - 0.01)) {
+                                dsCtrl.animateTo(
+                                  initSize,
+                                  duration: const Duration(milliseconds: 200),
+                                  curve: Curves.easeOutCubic,
+                                );
+                              } else {
+                                dsCtrl.animateTo(
+                                  minSize,
+                                  duration: const Duration(milliseconds: 200),
+                                  curve: Curves.easeOutCubic,
+                                );
+                              }
+                            },
+                            onDragUpdate: onHeaderDragUpdate,
+                            onDragEnd: onHeaderDragEnd,
+                          ),
+                        ),
                       ),
-                    ),
-                    subtitle: Text(
-                      it.subtitle,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w500,
-                        fontSize: 11,
-                        height: 1.2,
-                      ),
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        (it.verified)
-                            ? SvgPicture.asset(Assets.verified)
-                            : InkWell(
-                                onTap: () => {
-                                  onRecapture(),
-                                  Navigator.of(ctx).maybePop(),
-                                },
-                                child: SvgPicture.asset(Assets.send),
+
+                      SliverPadding(
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+                        sliver: SliverList.separated(
+                          itemCount: items.length,
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(height: 10),
+                          itemBuilder: (_, i) {
+                            final it = items[i];
+                            return Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white.withAlpha(20),
+                                borderRadius: BorderRadius.circular(5),
                               ),
-                      ],
-                    ),
-                    onTap: () {
-                      Navigator.of(ctx).maybePop();
-                    },
-                  ),
-                );
-              },
-            );
-          },
+                              child: InkWell(
+                                onTap: () {
+                                  if (it.verified) return;
+                                  onRecapture();
+                                  Navigator.of(ctx).maybePop();
+                                },
+                                child: ListTile(
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                  ),
+                                  title: Text(
+                                    it.title,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 12,
+                                      height: 1.2,
+                                    ),
+                                  ),
+                                  subtitle: Text(
+                                    it.subtitle,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 11,
+                                      height: 1.2,
+                                    ),
+                                  ),
+                                  trailing: it.verified
+                                      ? SvgPicture.asset(Assets.verified)
+                                      : SvgPicture.asset(Assets.send),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+
+                      SliverToBoxAdapter(child: SizedBox(height: safeB + 16)),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ),
         );
       },
     );
@@ -157,13 +208,11 @@ class StepReview extends StatelessWidget {
                     color: Colors.white,
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    height: 1.2,
                   ),
                 ),
               ],
             ),
           ),
-
           const Padding(
             padding: EdgeInsets.fromLTRB(4, 0, 4, 16),
             child: Text(
@@ -176,10 +225,7 @@ class StepReview extends StatelessWidget {
               ),
             ),
           ),
-
-          SizedBox(
-            width: double.infinity,
-            height: MediaQuery.of(context).size.height - 330,
+          Expanded(
             child: SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -190,7 +236,6 @@ class StepReview extends StatelessWidget {
                     style: TextStyle(
                       color: AppColors.neutral300,
                       fontSize: 12,
-                      fontWeight: FontWeight.w400,
                       height: 1.33,
                     ),
                   ),
@@ -202,8 +247,6 @@ class StepReview extends StatelessWidget {
                       style: TextStyle(
                         color: AppColors.neutral300,
                         fontSize: 11,
-                        height: 1.45,
-                        fontWeight: FontWeight.w400,
                       ),
                     ),
                   ),
@@ -224,7 +267,6 @@ class StepReview extends StatelessWidget {
               ),
             ),
           ),
-
           Row(
             children: [
               SizedBox(
@@ -242,8 +284,7 @@ class StepReview extends StatelessWidget {
                 ),
               ),
               10.gap,
-              Flexible(
-                fit: FlexFit.tight,
+              Expanded(
                 child: ElevatedButton(
                   onPressed: onDone,
                   style: ElevatedButton.styleFrom(
@@ -271,6 +312,85 @@ class StepReview extends StatelessWidget {
       ),
     );
   }
+}
+
+class _HandleHeaderDelegate extends SliverPersistentHeaderDelegate {
+  _HandleHeaderDelegate({
+    required this.height,
+    required this.title,
+    required this.handleColor,
+    required this.handleWidth,
+    required this.handleHeight,
+    required this.onTap,
+    required this.onDragUpdate,
+    required this.onDragEnd,
+  });
+
+  final double height;
+  final String title;
+
+  final Color handleColor;
+  final double handleWidth;
+  final double handleHeight;
+
+  final VoidCallback onTap;
+  final GestureDragUpdateCallback onDragUpdate;
+  final GestureDragEndCallback onDragEnd;
+
+  @override
+  double get minExtent => height;
+  @override
+  double get maxExtent => height;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return ColoredBox(
+      color: const Color(0xff3a3a3e),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        onVerticalDragUpdate: onDragUpdate,
+        onVerticalDragEnd: onDragEnd,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: handleWidth,
+                  height: handleHeight,
+                  margin: const EdgeInsets.only(bottom: 8),
+                  decoration: BoxDecoration(
+                    color: handleColor,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+              ),
+              20.vgap,
+              Text(
+                title,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 10),
+              const Divider(color: AppColors.neutral700, height: 1),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  bool shouldRebuild(covariant _HandleHeaderDelegate old) => false;
 }
 
 class AttrItem {
