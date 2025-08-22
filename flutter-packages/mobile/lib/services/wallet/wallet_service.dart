@@ -7,28 +7,41 @@ class WalletService extends GetxService {
     Get.put<WalletService>(WalletService());
   }
 
-  //FIXME: add project id to wallet service file
+  //FIXME: add to project id
   static const String _projectId = '';
   static const String _nativeScheme = 'ratelapp://';
 
   ReownAppKitModal? _kit;
-  ReownAppKitModal get appKitModal => _kit!;
-  bool get isReady => _kit != null;
+  bool _ready = false;
 
-  Future<void> ensureInit(BuildContext context) async {
-    if (_kit != null) return;
-    _kit = ReownAppKitModal(
-      context: context,
-      projectId: _projectId,
-      metadata: const PairingMetadata(
-        name: 'Ratel',
-        description: 'Ratel mobile dApp',
-        url: 'https://dev.ratel.foundation',
-        icons: ['https://dev.ratel.foundation/favicon.png'],
-        redirect: Redirect(native: _nativeScheme),
-      ),
-    );
-    await _kit!.init();
+  bool get isReady => _ready;
+  ReownAppKitModal get appKitModal => _kit!;
+
+  Future<void> ensureInit(
+    BuildContext context, {
+    bool logoutIfConnected = false,
+  }) async {
+    if (_kit == null) {
+      _kit = ReownAppKitModal(
+        context: context,
+        projectId: _projectId,
+        metadata: const PairingMetadata(
+          name: 'Ratel',
+          description: 'Ratel mobile dApp',
+          url: 'https://dev.ratel.foundation',
+          icons: ['https://dev.ratel.foundation/favicon.png'],
+          redirect: Redirect(native: _nativeScheme),
+        ),
+      );
+      await _kit!.init();
+      _ready = true;
+    }
+    if (logoutIfConnected &&
+        (_kit!.session != null || (currentAddress() ?? '').isNotEmpty)) {
+      try {
+        await _kit!.disconnect();
+      } catch (_) {}
+    }
   }
 
   String? currentAddress() {
@@ -38,5 +51,9 @@ class WalletService extends GetxService {
     return _kit!.session?.getAddress(ns);
   }
 
-  void openModal() => _kit?.openModalView();
+  Future<void> disconnect() async {
+    try {
+      await _kit?.disconnect();
+    } catch (_) {}
+  }
 }

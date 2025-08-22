@@ -31,8 +31,7 @@ class _CredentialsState extends State<Credentials> {
   bool hasCredential(String label) => widget.credentials.any(
     (e) => (label == "Crypto Wallet")
         ? crypto
-        : (e.label.toLowerCase() == label.toLowerCase() ||
-              label.contains('Tax')),
+        : (e.label.toLowerCase() == label.toLowerCase()),
   );
 
   void _openSheet() {
@@ -78,16 +77,17 @@ class _CredentialsState extends State<Credentials> {
   }
 
   List<VerifyItem> get _items => const [
-    VerifyItem('Age', 'Social identity or passport'),
-    VerifyItem('Country', 'Social identity or passport'),
+    VerifyItem('Region', 'Social identity'),
     VerifyItem('Company', 'DID or Employment'),
     VerifyItem('Occuption', 'Current job or role for matching'),
     VerifyItem('Annual Salary', 'Revenue certificate or incoming bank account'),
-    VerifyItem('Crypto Wallet', 'Indicates possession'),
+
     VerifyItem('Crypto Tax', 'Shows the tax rate on crypto holdings'),
-    VerifyItem('Blood Type', 'Medical checkup certificate'),
+    VerifyItem('Crypto Wallet', 'Indicates possession'),
+    VerifyItem('Birth Date', 'Social identity or passport'),
     VerifyItem('Gender', 'Medical checkup certificate or Social identity'),
-    VerifyItem('Region', 'Social identity or passport'),
+
+    VerifyItem('Country', 'Social identity or passport'),
   ];
 
   Future<void> _handleCryptoTap() async {
@@ -462,11 +462,11 @@ class CredCard extends StatelessWidget {
               children: [
                 Text(
                   model.value,
-                  maxLines: 1,
+                  maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 20,
+                    fontSize: 16,
                     fontWeight: FontWeight.w900,
                     height: 1.2,
                   ),
@@ -474,11 +474,11 @@ class CredCard extends StatelessWidget {
                 const SizedBox(height: 3),
                 Text(
                   model.label,
-                  maxLines: 1,
+                  maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 14,
+                    fontSize: 15,
                     fontWeight: FontWeight.w700,
                     height: 1.2,
                   ),
