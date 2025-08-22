@@ -13,6 +13,7 @@ class SetupProfileController extends BaseController {
   Rx<String> get username => signupService.username;
   Rx<String> get email => signupService.email;
   Rx<String> get password => signupService.password;
+  Rx<String> avatarUrl = "".obs;
 
   @override
   void onInit() {
@@ -60,6 +61,7 @@ class SetupProfileController extends BaseController {
         password.value,
         displayName.value,
         username.value,
+        avatarUrl.value,
         termsAccepted.value,
       );
 

@@ -4,6 +4,7 @@ import 'dart:ui';
 
 import 'package:ratel/components/layout/layout_service.dart' as l;
 import 'package:ratel/services/rust/rust_service.dart';
+import 'package:ratel/services/wallet/wallet_service.dart';
 import 'package:ratel/utils/biyard_navigate_observer/biyard_navigate_observer.dart';
 
 import 'exports.dart';
@@ -26,6 +27,8 @@ Future<void> main() async {
   FeedsService.init();
   SpaceService.init();
   UserService.init();
+  AssetService.init();
+  WalletService.init();
   DriveApi.init();
 
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]).then((

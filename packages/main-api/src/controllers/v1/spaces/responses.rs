@@ -170,6 +170,7 @@ impl SurveyResponseController {
         SurveyResponseRespondAnswerRequest {
             answers,
             survey_type,
+            survey_id_param,
         }: SurveyResponseRespondAnswerRequest,
     ) -> Result<Json<SurveyResponse>> {
         let user = extract_user_with_allowing_anonymous(&self.pool, auth).await?;
@@ -177,7 +178,13 @@ impl SurveyResponseController {
 
         let res = self
             .repo
-            .insert(space_id, user_id, answers, 0, survey_type)
+            .insert(
+                space_id,
+                user_id,
+                answers,
+                survey_id_param.unwrap_or_default(),
+                survey_type,
+            )
             .await?;
         Ok(Json(res))
     }

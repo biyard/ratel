@@ -6,7 +6,6 @@ class SignupScreen extends GetWidget<SignupController> {
   @override
   Widget build(BuildContext context) {
     return Layout<SignupController>(
-      scrollable: false,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Column(
@@ -35,7 +34,9 @@ class SignupScreen extends GetWidget<SignupController> {
               ),
             ),
 
-            Expanded(
+            SizedBox(
+              width: double.infinity,
+              height: MediaQuery.of(context).size.height - 120,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,

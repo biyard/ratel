@@ -13,26 +13,14 @@ class VerifiedController extends BaseController {
           "https://metadata.ratel.foundation/332cafb00e5a8c7011e69d364c848e514c1f17c6.jpg",
     ),
     VerifiedModel(
-      label: "BTC Tax",
-      value: "15%",
-      metadata:
-          "https://metadata.ratel.foundation/2df2dc1afdf4ba79613dced79e66169b477936dd.jpg",
-    ),
-    VerifiedModel(
-      label: "SOL Tax",
-      value: "10%",
-      metadata:
-          "https://metadata.ratel.foundation/434a44149e8c94e2892ae2828249a8aafd928b02.jpg",
-    ),
-    VerifiedModel(
-      label: "Blood Type",
-      value: "A-",
+      label: "Birth Date",
+      value: "1999-01-12",
       metadata:
           "https://metadata.ratel.foundation/565a44c913996e1c98581f5772de4dfc6f32f6be.jpg",
     ),
     VerifiedModel(
-      label: "Region",
-      value: "Busan",
+      label: "Country",
+      value: "Republic of Korea",
       metadata:
           "https://metadata.ratel.foundation/1aae7a4ecfd33cfcf8bbd0a3f540b4562be19e6c.jpg",
     ),
@@ -41,18 +29,6 @@ class VerifiedController extends BaseController {
       value: "Male",
       metadata:
           "https://metadata.ratel.foundation/46cac616c26546e62a9ce3ea614d47f7ce5e2369.jpg",
-    ),
-    VerifiedModel(
-      label: "Salary",
-      value: "\$20k",
-      metadata:
-          "https://metadata.ratel.foundation/5f824db1c8d8c3612dcbed68021a9d9ab79e04f8.jpg",
-    ),
-    VerifiedModel(
-      label: "Occupation",
-      value: "Engineer",
-      metadata:
-          "https://metadata.ratel.foundation/27342ac6292fb7d2b87647841f5fab093bda09f6.jpg",
     ),
   ].obs;
 

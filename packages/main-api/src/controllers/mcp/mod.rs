@@ -15,6 +15,7 @@ use rmcp::{
         StreamableHttpService, session::local::LocalSessionManager,
     },
 };
+use uuid::Uuid;
 
 use crate::utils::users::{extract_user, extract_user_id};
 
@@ -55,29 +56,42 @@ impl RatelMcpServer {
         })
     }
 
-    #[tool(description = "Login with email into Ratel")]
-    async fn login_with_email(
-        &self,
-        #[tool(param)]
-        #[schemars(description = "User email address")]
-        email: String,
-    ) -> McpResult {
-        tracing::debug!("Login with email: {}", email);
+    #[tool(
+        description = "Login into Ratel Web. After login, you can use other tools with session_id on URL"
+    )]
+    async fn login(&self) -> McpResult {
+        let token = Uuid::new_v4().to_string();
 
-        todo!()
+        let login_url = format!(
+            "https://dev.ratel.foundation/mcp-login?session_id={}",
+            token
+        );
+
+        Ok(CallToolResult::success(vec![Content::text(format!(
+            r#"🔐 **Login Required**
+
+Please visit this URL to login [Ratel Web]({}).
+            "#,
+            login_url
+        ))]))
     }
 
     #[tool(
         description = "It checks if you have been logged in or not in Ratel. Some APIs require login."
     )]
-    async fn check_if_logged_in(&self) -> McpResult {
-        tracing::debug!("Checking if user is logged in");
+    async fn check_if_logged_in(
+        &self,
+        #[tool(param)]
+        #[schemars(description = "Session ID which comes from login tool")]
+        session_id: String,
+    ) -> McpResult {
+        tracing::debug!("Checking if user is logged in {}", session_id);
         let auth = self.session_to_authorization().await;
         let user = extract_user(&self.pool, auth).await;
         tracing::debug!("User ID extracted: {:?}", user);
         Ok(match user {
             Ok(user) => CallToolResult::success(vec![Content::text(format!(
-                "You are logged in as user ID: {}",
+                "You are logged in as user name: {}",
                 user.nickname
             ))]),
 

@@ -44,7 +44,7 @@ class VerifiedScreen extends GetWidget<VerifiedController> {
         );
       case VerifiedStep.review:
         return StepReview(
-          birth: "1985-11-11",
+          birth: "1999-01-12",
           onRecapture: controller.back,
           onDone: controller.goMain,
         );

@@ -61,6 +61,8 @@ class SelectTopicController extends BaseController {
           "Subscribe topic is failed. Please try again later.",
         );
       }
+    } catch (e) {
+      logger.d("subscribe topic failed with error: ${e}");
     } finally {}
   }
 }
