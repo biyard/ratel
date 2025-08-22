@@ -44,6 +44,8 @@ class IndustryApi extends GetConnect {
 
     final res = await post(uri.toString(), body, headers: headers);
 
+    logger.d('response body: ${res.isOk} ');
+
     if (!res.isOk) return null;
 
     logger.d('response body: ${res.body}');

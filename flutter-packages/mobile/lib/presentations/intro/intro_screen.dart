@@ -6,14 +6,14 @@ class IntroScreen extends GetWidget<IntroController> {
   @override
   Widget build(BuildContext context) {
     return Layout<IntroController>(
+      scrollable: false,
       style: LayoutStyle(background: AppColors.primary),
       child: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 8),
-            SizedBox(
-              height: MediaQuery.of(context).size.height - 250,
+            8.vgap,
+            Expanded(
               child: PageView.builder(
                 controller: controller.pageController,
                 onPageChanged: controller.onPageChanged,
@@ -21,7 +21,7 @@ class IntroScreen extends GetWidget<IntroController> {
                 physics: const BouncingScrollPhysics(),
                 itemBuilder: (context, index) {
                   final data = controller.pages[index];
-                  return _OnboardingPage(
+                  return OnboardingPage(
                     title1: data.title1,
                     title2: data.title2,
                     description: data.description,
@@ -30,7 +30,7 @@ class IntroScreen extends GetWidget<IntroController> {
               ),
             ),
 
-            const SizedBox(height: 16),
+            16.vgap,
 
             Obx(() {
               final length = controller.pages.length;
@@ -92,12 +92,13 @@ class IntroScreen extends GetWidget<IntroController> {
   }
 }
 
-class _OnboardingPage extends StatelessWidget {
+class OnboardingPage extends StatelessWidget {
   final String title1;
   final String title2;
   final String description;
 
-  const _OnboardingPage({
+  const OnboardingPage({
+    super.key,
     required this.title1,
     required this.title2,
     required this.description,

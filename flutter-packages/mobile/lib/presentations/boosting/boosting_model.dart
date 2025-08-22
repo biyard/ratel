@@ -13,3 +13,9 @@ class BoostingModel {
     required this.exchanged,
   });
 }
+
+class RewardModel {
+  final int points;
+
+  const RewardModel({required this.points});
+}

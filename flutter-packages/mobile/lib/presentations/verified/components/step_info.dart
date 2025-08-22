@@ -46,67 +46,69 @@ class StepInfo extends StatelessWidget {
             ),
           ),
 
-          SizedBox(
-            width: double.infinity,
-            height: MediaQuery.of(context).size.height - 330,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  "We never save your privacy (including passport, birth date and so on) into our server.\nIt will only be utilized to create anonymous credential called SSI\n(self-sovereign identity).",
-                  style: TextStyle(
-                    color: AppColors.neutral300,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w400,
-                    height: 1.33,
+          Expanded(
+            child: SizedBox(
+              width: double.infinity,
+              height: MediaQuery.of(context).size.height - 330,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "We never save your privacy (including passport, birth date and so on) into our server.\nIt will only be utilized to create anonymous credential called SSI\n(self-sovereign identity).",
+                    style: TextStyle(
+                      color: AppColors.neutral300,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w400,
+                      height: 1.33,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF35343F),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 46, 20, 46),
-                    child: Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          SvgPicture.asset(
-                            Assets.passport,
-                            width: 50,
-                            height: 50,
-                          ),
-                          const SizedBox(height: 10),
-                          const Text(
-                            'Set up your own attribute to participate diverse spaces\ngiving rewards.',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: Color(0xffd4d4d4),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w400,
-                              height: 1.33,
+                  const SizedBox(height: 16),
+                  Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF35343F),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 46, 20, 46),
+                      child: Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            SvgPicture.asset(
+                              Assets.passport,
+                              width: 50,
+                              height: 50,
                             ),
-                          ),
-                          Text(
-                            '(20k rewards)',
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              color: AppColors.primary,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w400,
-                              height: 1.33,
+                            const SizedBox(height: 10),
+                            const Text(
+                              'Set up your own attribute to participate diverse spaces\ngiving rewards.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Color(0xffd4d4d4),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w400,
+                                height: 1.33,
+                              ),
                             ),
-                          ),
-                        ],
+                            Text(
+                              '(20k rewards)',
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                color: AppColors.primary,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w400,
+                                height: 1.33,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
 

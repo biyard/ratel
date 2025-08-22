@@ -1,7 +1,8 @@
 use bdk::prelude::*;
 use by_axum::axum::{Extension, Json, extract::State};
 use dto::{
-    Dagit, DagitOracle, Error, GroupPermission, Oracle, OracleType, RatelResource, Result,
+    DagitOracle, DagitWithoutJoin, Error, GroupPermission, Oracle, OracleType, RatelResource,
+    Result,
     by_axum::auth::Authorization,
     sqlx::{Pool, Postgres},
 };
@@ -43,16 +44,29 @@ pub async fn create_oracle_handler(
     // )
     // .await?;
     let mut tx = pool.begin().await?;
+    let oracle = Oracle::query_builder()
+        .user_id_equals(req.user_id)
+        .query()
+        .fetch_optional(&mut *tx)
+        .await?;
 
-    let oracle = Oracle::get_repository(pool.clone())
+    if oracle.is_some() {
+        return Err(Error::ServerError(
+            "Oracle already exists for this user".to_string(),
+        ));
+    }
+
+    let oracle_repo = Oracle::get_repository(pool.clone());
+    let oracle = oracle_repo
         .insert_with_tx(&mut *tx, req.user_id, req.oracle_type)
         .await?
         .ok_or(Error::ServerError("Failed to create oracle".to_string()))?;
+
     if req.space_id.is_some() {
-        let dagit = Dagit::query_builder(0)
+        let dagit = DagitWithoutJoin::query_builder()
             .id_equals(req.space_id.unwrap())
             .query()
-            .map(Dagit::from)
+            .map(DagitWithoutJoin::from)
             .fetch_one(&pool)
             .await?;
         check_perm(
@@ -62,7 +76,9 @@ pub async fn create_oracle_handler(
             GroupPermission::ManageSpace,
         )
         .await?;
-        DagitOracle::get_repository(pool.clone())
+        let dagit_oracle_repo = DagitOracle::get_repository(pool.clone());
+
+        dagit_oracle_repo
             .insert_with_tx(&mut *tx, req.space_id.unwrap(), oracle.id)
             .await?;
     }

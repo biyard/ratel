@@ -7,13 +7,11 @@ class StepInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          width: double.infinity,
-          height: MediaQuery.of(context).size.height - 270,
-          child: Column(
+    return Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Column(
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -72,57 +70,58 @@ class StepInfo extends StatelessWidget {
               ),
             ],
           ),
-        ),
-        SizedBox(
-          width: double.infinity,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              SizedBox(
-                width: 110,
-                child: TextButton(
-                  onPressed: onSkip,
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 14.5),
-                    child: Text(
-                      'SKIP',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 16,
+          Spacer(),
+          SizedBox(
+            width: double.infinity,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                SizedBox(
+                  width: 110,
+                  child: TextButton(
+                    onPressed: onSkip,
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 14.5),
+                      child: Text(
+                        'SKIP',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 16,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-              Flexible(
-                fit: FlexFit.tight,
-                child: ElevatedButton(
-                  onPressed: onNext,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.black,
-                    padding: const EdgeInsets.symmetric(vertical: 14.5),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+                Flexible(
+                  fit: FlexFit.tight,
+                  child: ElevatedButton(
+                    onPressed: onNext,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.black,
+                      padding: const EdgeInsets.symmetric(vertical: 14.5),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
-                  ),
-                  child: const Text(
-                    'NEXT',
-                    style: TextStyle(
-                      color: AppColors.bg,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
+                    child: const Text(
+                      'NEXT',
+                      style: TextStyle(
+                        color: AppColors.bg,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-        24.vgap,
-      ],
+          24.vgap,
+        ],
+      ),
     );
   }
 }

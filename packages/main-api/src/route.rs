@@ -1,31 +1,40 @@
+use std::sync::Arc;
+
 use bdk::prelude::*;
 
-use crate::controllers::{
-    self,
-    m2::noncelab::users::register_users::{
-        RegisterUserResponse, register_users_by_noncelab_handler,
-    },
-    v2::{
-        dagits::{
-            add_oracle::add_oracle_handler,
-            artworks::{
-                create_artwork::create_artwork_handler,
-                get_artwork_certificate::get_artwork_certificate_handler,
-                get_artwork_detail::get_artwork_detail_handler,
+use crate::{
+    controllers::{
+        self,
+        m2::noncelab::users::register_users::{
+            RegisterUserResponse, register_users_by_noncelab_handler,
+        },
+        v2::{
+            dagits::{
+                add_oracle::add_oracle_handler,
+                artworks::{
+                    create_artwork::create_artwork_handler,
+                    get_artwork_certificate::get_artwork_certificate_handler,
+                    get_artwork_detail::get_artwork_detail_handler,
+                },
+                consensus::{
+                    create_consensus::create_consensus_handler, vote::consensus_vote_handler,
+                },
+                get_dagit::get_dagit_handler,
             },
-            consensus::{create_consensus::create_consensus_handler, vote::consensus_vote_handler},
-            get_dagit::get_dagit_handler,
+            spaces::delete_space::delete_space_handler,
+            industries::{industry::list_industries_handler, select_topic::select_topics_handler},
+            networks::{
+                follow::follow_handler, network::list_networks_handler,
+                search::list_networks_by_keyword_handler,
+            },
+            oracles::create_oracle::create_oracle_handler,
+            spaces::get_my_space::get_my_space_controller,
+            telegram::subscribe::telegram_subscribe_handler,
+            users::{find_user::find_user_handler, logout::logout_handler},
         },
-        spaces::delete_space::delete_space_handler,
-        industries::{industry::list_industries_handler, select_topic::select_topics_handler},
-        networks::{
-            follow::follow_handler, network::list_networks_handler,
-            search::list_networks_by_keyword_handler,
-        },
-        oracles::create_oracle::create_oracle_handler,
-        telegram::subscribe::telegram_subscribe_handler,
-        users::{find_user::find_user_handler, logout::logout_handler},
+        well_known::get_did_document::get_did_document_handler,
     },
+    utils::sqs_client::SqsClient,
 };
 use by_axum::axum;
 use dto::Result;
@@ -100,7 +109,10 @@ macro_rules! api_docs {
     };
 }
 
-pub async fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Router> {
+pub async fn route(
+    pool: sqlx::Pool<sqlx::Postgres>,
+    sqs_client: Arc<SqsClient>,
+) -> Result<by_axum::axum::Router> {
     Ok(by_axum::axum::Router::new()
         .nest("/v1", controllers::v1::route(pool.clone()).await?)
         .nest(
@@ -154,7 +166,7 @@ pub async fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Ro
                 create_artwork_handler,
                 api_docs!("Create Artwork", "Create a new artwork for a dagit"),
             )
-            .with_state(pool.clone()),
+            .with_state((pool.clone(), sqs_client.clone())),
         )
         .route(
             "/v2/dagits/:space_id/consensus",
@@ -169,6 +181,14 @@ pub async fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Ro
             get_with(
                 get_artwork_detail_handler,
                 api_docs!("Get Artwork", "Retrieve a specific artwork"),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/v2/my-spaces",
+            get_with(
+                get_my_space_controller,
+                api_docs!("Get My Space", "Retrieve a spaces"),
             )
             .with_state(pool.clone()),
         )
@@ -235,11 +255,6 @@ pub async fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Ro
                 )
             )
             .with_state(pool.clone()),
-        ))
+        )
+        .native_route("/.well-known/did.json", nget(get_did_document_handler)))
 }
-/*
-
-
-
-
-*/
