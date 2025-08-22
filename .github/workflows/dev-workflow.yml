@@ -390,12 +390,12 @@ jobs:
         with:
           channel: stable
           cache: true
-      - name: Setup Ruby
+      - name: Setup Ruby (bundler)
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: "3.2"
-      - name: Install fastlane and cocoapods
-        run: gem install -N fastlane cocoapods
+          bundler-cache: true
+          working-directory: flutter-packages/mobile/ios
       - name: Flutter pub get
         run: flutter pub get
       - name: Pod install
@@ -403,7 +403,6 @@ jobs:
         run: pod install --repo-update
       - name: Write App Store Connect API key
         working-directory: flutter-packages/mobile/ios
-        if: env.ASC_KEY_BASE64 != ''
         env:
           ASC_KEY_BASE64: ${{ secrets.ASC_KEY_BASE64 }}
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
@@ -419,29 +418,19 @@ jobs:
         run: |
           mkdir -p ~/.ssh
           ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
-      - name: Create & unlock temp keychain
+      - name: Create and unlock temporary keychain
         run: |
           set -euo pipefail
+          KEYCHAIN_LABEL="ci-temp"
           KEYCHAIN_PASSWORD="password"
-          KEYCHAIN_PATH="$HOME/Library/Keychains/ci-temp.keychain-db"
-
-          mkdir -p "$HOME/Library/Keychains"
-
-          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
-          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-
-          CURRENT_LIST=$(security list-keychains -d user | sed 's/[[:space:]"]//g')
-          security list-keychains -d user -s $CURRENT_LIST "$KEYCHAIN_PATH"
-
-          security default-keychain -s "$KEYCHAIN_PATH"
-
-          ls -l "$HOME/Library/Keychains" || true
-          security list-keychains -d user
-
-          echo "MATCH_KEYCHAIN_PATH=$KEYCHAIN_PATH" >> $GITHUB_ENV
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_LABEL"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_LABEL"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_LABEL"
+          EXISTING=$(security list-keychains -d user | sed 's/[[:space:]"]//g')
+          security list-keychains -d user -s $EXISTING "$HOME/Library/Keychains/${KEYCHAIN_LABEL}.keychain-db"
+          security default-keychain -s "$HOME/Library/Keychains/${KEYCHAIN_LABEL}.keychain-db"
+          echo "MATCH_KEYCHAIN_NAME=$KEYCHAIN_LABEL" >> $GITHUB_ENV
           echo "MATCH_KEYCHAIN_PASSWORD=$KEYCHAIN_PASSWORD" >> $GITHUB_ENV
-
       - name: Install signing with match (readonly)
         working-directory: flutter-packages/mobile/ios
         env:
@@ -450,25 +439,15 @@ jobs:
         run: |
           bundle exec fastlane match appstore \
             --readonly \
-            --keychain_name "$MATCH_KEYCHAIN_PATH" \
+            --keychain_name "$MATCH_KEYCHAIN_NAME" \
             --keychain_password "$MATCH_KEYCHAIN_PASSWORD"
       - name: Build and Upload to TestFlight
         working-directory: flutter-packages/mobile/ios
         env:
-          APP_STORE_CONNECT_API_KEY_PATH: fastlane/AuthKey_${{ env.ASC_KEY_ID }}.p8
-          APP_STORE_CONNECT_API_KEY_KEY_ID: ${{ env.ASC_KEY_ID }}
-          APP_STORE_CONNECT_API_KEY_ISSUER_ID: ${{ env.ASC_ISSUER_ID }}
+          ASC_KEY_ID: ${{ env.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ env.ASC_ISSUER_ID }}
         run: |
-          if fastlane lanes | grep -q "deploy"; then
-            fastlane deploy
-          else
-            fastlane run build_app scheme:Runner export_method:app-store skip_package_ipa:false
-            if [ -f fastlane/AuthKey_${ASC_KEY_ID}.p8 ]; then
-              fastlane run upload_to_testflight skip_waiting_for_build_processing:true distribute_external:false changelog:"Auto build $GITHUB_SHA" api_key_path:fastlane/AuthKey_${ASC_KEY_ID}.p8
-            else
-              exit 1
-            fi
-          fi
+          bundle exec fastlane deploy
       - name: Upload .ipa artifact
         if: always()
         uses: actions/upload-artifact@v4
