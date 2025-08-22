@@ -20,6 +20,11 @@ pub mod controllers {
             pub mod subscribe;
         }
 
+        // Spaces APIs
+        pub mod spaces {
+            pub mod delete_space;
+        }
+
         pub mod dagits {
             pub mod add_oracle;
             pub mod get_dagit;

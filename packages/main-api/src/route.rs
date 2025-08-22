@@ -16,6 +16,7 @@ use crate::controllers::{
             consensus::{create_consensus::create_consensus_handler, vote::consensus_vote_handler},
             get_dagit::get_dagit_handler,
         },
+        spaces::delete_space::delete_space_handler,
         industries::{industry::list_industries_handler, select_topic::select_topics_handler},
         networks::{
             follow::follow_handler, network::list_networks_handler,
@@ -144,7 +145,7 @@ pub async fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Ro
             post_with(
                 add_oracle_handler,
                 api_docs!("Add Oracle", "Add a new oracle to a dagit"),
-            )
+            )ManageSpaceManageSpace
             .with_state(pool.clone()),
         )
         .route(
@@ -205,6 +206,18 @@ pub async fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Ro
                 (),
                 "Subscribe to Telegram",
                 "This endpoint allows users to subscribe to Telegram notifications."
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/v2/spaces/:space_id/delete",
+            post_with(
+                delete_space_handler,
+                api_docs!(
+                    (),
+                    "Delete Space",
+                    "Delete a space and all its related resources after confirmation"
+                ),
             )
             .with_state(pool.clone()),
         )
