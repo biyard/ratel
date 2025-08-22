@@ -126,6 +126,7 @@ export 'components/round_container/round_container.dart';
 export 'components/text_field/text_field.dart';
 export 'components/custom_checkbox/custom_checkbox.dart';
 export 'components/feed_card/feed_card.dart';
+export 'components/passport_camera/passport_camera.dart';
 
 export 'components/modal/login_modal.dart';
 export 'components/modal/modal_title.dart';
@@ -154,6 +155,10 @@ export 'services/feeds/feeds_model.dart';
 export 'services/space/space_api.dart';
 export 'services/space/space_model.dart';
 export 'services/space/space_service.dart';
+
+export 'services/asset/asset_api.dart';
+export 'services/asset/asset_model.dart';
+export 'services/asset/asset_service.dart';
 
 export 'binding.dart';
 export 'config.dart';

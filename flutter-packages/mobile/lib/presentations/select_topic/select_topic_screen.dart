@@ -146,7 +146,7 @@ class SelectTopicScreen extends GetWidget<SelectTopicController> {
                       ),
               ),
             ),
-            25.vgap,
+            50.vgap,
           ],
         ),
       ),

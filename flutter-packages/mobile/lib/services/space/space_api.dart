@@ -13,6 +13,48 @@ class SpaceApi extends GetConnect {
     });
   }
 
+  Future<MySpaceModel> getMySpaces() async {
+    final uri = Uri.parse(apiEndpoint).resolve('/v2/my-spaces');
+    final headers = <String, String>{'Content-Type': 'application/json'};
+    final res = await get(uri.toString(), headers: headers);
+
+    logger.d("my spaces res: ${res.body}");
+
+    if (!res.isOk) return MySpaceModel(spaces: [], boostings: []);
+
+    final List<SpaceSummary> mySpace = [];
+    final List<SpaceSummary> boostings = [];
+
+    for (var i = 0; i < res.body["spaces"].length; i++) {
+      final space = res.body["spaces"][i];
+      mySpace.add(
+        SpaceSummary(
+          id: int.parse(space["id"].toString()),
+          createdAt: int.parse(space["created_at"].toString()),
+          updatedAt: int.parse(space["updated_at"].toString()),
+          title: space["title"],
+          htmlContents: space["html_contents"],
+          imageUrl: space["image_url"],
+        ),
+      );
+    }
+
+    for (var i = 0; i < res.body["boostings"].length; i++) {
+      final space = res.body["boostings"][i];
+      boostings.add(
+        SpaceSummary(
+          id: int.parse(space["id"].toString()),
+          createdAt: int.parse(space["created_at"].toString()),
+          updatedAt: int.parse(space["updated_at"].toString()),
+          title: space["title"],
+          htmlContents: space["html_contents"],
+          imageUrl: space["image_url"],
+        ),
+      );
+    }
+    return MySpaceModel(spaces: mySpace, boostings: boostings);
+  }
+
   Future<dynamic> setComment(
     int feedId,
     int userId,
@@ -26,6 +68,33 @@ class SpaceApi extends GetConnect {
         'html_contents': htmlContents,
         'user_id': userId,
         'parent_id': feedId,
+      },
+    };
+
+    final res = await post(uri.toString(), body, headers: headers);
+
+    if (!res.isOk) return null;
+
+    logger.d('response body: ${res.body}');
+
+    return res.isOk;
+  }
+
+  Future<dynamic> responseAnswer(
+    int spaceId,
+    int surveyId,
+    List<Answer> answers,
+  ) async {
+    final uri = Uri.parse(
+      apiEndpoint,
+    ).resolve('/v1/spaces/${spaceId}/responses');
+
+    final headers = <String, String>{'Content-Type': 'application/json'};
+    final body = {
+      'respond_answer': {
+        'answers': answers.map((e) => e.toJson()).toList(),
+        'survey_type': 2,
+        'survey_id_param': surveyId,
       },
     };
 
@@ -55,16 +124,29 @@ class SpaceApi extends GetConnect {
         elearnings: [],
         surveys: [],
         comments: [],
+        userResponses: [],
       );
     }
 
-    logger.d("space info: ${res.body}");
+    logger.d("space info: ${res.body["user_responses"]}");
     final item = res.body;
 
     final List<FileModel> files = [];
     final List<DiscussionModel> discussions = [];
     final List<ElearningModel> elearnings = [];
     final List<CommentModel> comments = [];
+    final List<SurveyResponse> responses = [];
+
+    for (var i = 0; i < item["user_responses"].length; i++) {
+      final res = item["user_responses"][i];
+      responses.add(
+        SurveyResponse(
+          id: int.parse(res["id"].toString()),
+          createdAt: int.parse(res["created_at"].toString()),
+          surveyId: int.parse(res["survey_id"].toString()),
+        ),
+      );
+    }
 
     for (var i = 0; i < item["files"].length; i++) {
       final file = item["files"][i];
@@ -156,6 +238,7 @@ class SpaceApi extends GetConnect {
       elearnings: elearnings,
       surveys: surveys,
       comments: comments,
+      userResponses: responses,
     );
   }
 }

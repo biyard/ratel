@@ -28,9 +28,11 @@ use crate::{
             },
             notifications::{mark_all_read::mark_all_notifications_read_handler},
             oracles::create_oracle::create_oracle_handler,
+            spaces::get_my_space::get_my_space_controller,
             telegram::subscribe::telegram_subscribe_handler,
             users::{find_user::find_user_handler, logout::logout_handler},
         },
+        well_known::get_did_document::get_did_document_handler,
     },
     utils::sqs_client::SqsClient,
 };
@@ -183,6 +185,14 @@ pub async fn route(
             .with_state(pool.clone()),
         )
         .route(
+            "/v2/my-spaces",
+            get_with(
+                get_my_space_controller,
+                api_docs!("Get My Space", "Retrieve a spaces"),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
             "/v2/dagits/:space_id/artworks/:artwork_id/vote",
             post_with(
                 consensus_vote_handler,
@@ -243,5 +253,6 @@ pub async fn route(
                 )
             )
             .with_state(pool.clone()),
-        ))
+        )
+        .native_route("/.well-known/did.json", nget(get_did_document_handler)))
 }

@@ -48,7 +48,6 @@ class Header extends StatelessWidget {
       alignment: Alignment.center,
       child: Row(
         children: [
-          //FIXME: fix to real profile
           InkWell(
             onTap: onTapAvatar,
             child: _Avatar(imageUrl: profileImage, size: avatar),

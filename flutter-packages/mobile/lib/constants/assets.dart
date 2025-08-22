@@ -53,6 +53,7 @@ abstract class Assets {
   static const String search = 'assets/images/search.svg';
   static const String google = 'assets/images/google.svg';
   static const String upload = 'assets/icons/upload.svg';
+  static const String ai = 'assets/icons/ai.svg';
 
   static const String docx = 'assets/icons/docx.svg';
   static const String jpg = 'assets/icons/jpg.svg';

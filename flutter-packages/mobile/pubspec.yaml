@@ -1,4 +1,4 @@
-name: Ratel
+name: ratel
 description: "The first platform connecting South Korea’s citizens with lawmakers to drive institutional reform for the crypto industry.Are you with us ?"
 
 # The following line prevents the package from being accidentally published to
@@ -36,7 +36,7 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   get: ^4.6.5
-  connectivity_plus: ^4.0.2
+  connectivity_plus: ^6.1.1
   flutter_svg: ^2.0.7
   logger: ^2.4.0
   firebase_auth: ^5.0.0
@@ -54,7 +54,7 @@ dependencies:
   extension_google_sign_in_as_googleapis_auth: ^2.0.11
   googleapis_auth: ^1.4.1
   loading_indicator: ^3.1.1
-  http: ^0.13.0
+  http: ^1.1.2
   http_parser: ^4.0.2
   cryptography: ^2.7.0
   flutter_secure_storage: ^9.0.0
@@ -68,6 +68,11 @@ dependencies:
   open_filex: ^4.5.0
   intl: ^0.20.2
   dotted_border: ^3.1.0
+  image_picker: ^1.0.7
+  file_picker: ^10.3.1
+  camera: ^0.11.2
+  permission_handler: ^12.0.1
+  reown_appkit: ^1.5.0
 
 dev_dependencies:
   flutter_test:

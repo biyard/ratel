@@ -225,9 +225,7 @@ class SidePanel extends StatelessWidget {
                       label: 'Verified Credential',
                       onTap: () {
                         onClose();
-                        Get.rootDelegate.offAndToNamed(
-                          AppRoutes.verifiedScreen,
-                        );
+                        Get.rootDelegate.toNamed(AppRoutes.verifiedScreen);
                       },
                     ),
                     MenuItem(

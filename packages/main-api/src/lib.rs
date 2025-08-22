@@ -38,6 +38,9 @@ pub mod controllers {
                 pub mod vote;
             }
         }
+        pub mod spaces {
+            pub mod get_my_space;
+        }
         pub mod oracles {
             pub mod create_oracle;
         }
@@ -48,6 +51,9 @@ pub mod controllers {
                 pub mod register_users;
             }
         }
+    }
+    pub mod well_known {
+        pub mod get_did_document;
     }
 }
 

@@ -38,6 +38,7 @@ jobs:
           components: clippy, rustfmt
           target: wasm32-unknown-unknown
           toolchain: stable
+
       - name: Install PostgreSQL Client
         run: sudo apt-get install -y postgresql-client
 
@@ -68,7 +69,7 @@ jobs:
           KAIA_OWNER_KEY: ${{ secrets.DEV_KAIA_KEY }}
           KAIA_OWNER_ADDR: ${{ secrets.DEV_KAIA_ADDR }}
         run: |
-          cd packages/main-api  && make test
+          cd packages/main-api && make test
 
   main-api:
     runs-on: ubuntu-22.04
@@ -92,6 +93,7 @@ jobs:
           toolchain: stable
 
       - uses: cargo-bins/cargo-binstall@main
+
       - name: Install toml-cli
         run: |
           cargo binstall toml-cli --force
@@ -111,7 +113,6 @@ jobs:
           OPENAPI_KEY: ${{ secrets.OPENAPI_KEY }}
           AUTH_SECRET_KEY: ${{ secrets.DEV_AUTH_SECRET_KEY }}
           JWT_SECRET_KEY: ${{ secrets.DEV_JWT_SECRET_KEY }}
-
           BASE_DOMAIN: ratel.foundation
           MIGRATE: false
           ENABLE_S3: false
@@ -119,7 +120,6 @@ jobs:
           SLACK_CHANNEL_SPONSOR: ${{ secrets.DEV_SLACK }}
           US_CONGRESS_KEY: ${{ secrets.US_CONGRESS_KEY }}
           SLACK_CHANNEL_ABUSING: ${{ secrets.DEV_SLACK }}
-
           KAIA_ENDPOINT: https://public-en-kairos.node.kaia.io
           KAIA_FEEPAYER_KEY: ${{ secrets.DEV_KAIA_KEY }}
           KAIA_FEEPAYER_ADDR: ${{ secrets.DEV_KAIA_ADDR }}
@@ -127,11 +127,19 @@ jobs:
           KAIA_OWNER_ADDR: ${{ secrets.DEV_KAIA_ADDR }}
           RDS_RESOURCE_ARN: ${{ secrets.RDS_RESOURCE_ARN }}
           RDS_SECRET_ARN: ${{ secrets.RDS_SECRET_ARN }}
-
           NONCELAB_TOKEN: ${{ secrets.NONCELAB_TOKEN }}
+          BBS_BLS_X: ${{ secrets.BBS_BLS_X }}
+          BBS_BLS_Y: ${{ secrets.BBS_BLS_Y }}
+          BBS_BLS_D: ${{ secrets.BBS_BLS_D }}
+          BBS_BLS_CRV: ${{ secrets.BBS_BLS_CRV }}
+          P256_X: ${{ secrets.P256_X }}
+          P256_Y: ${{ secrets.P256_Y }}
+          P256_D: ${{ secrets.P256_D }}
+          P256_CRV: ${{ secrets.P256_CRV }}
         run: |
           npm i -g aws-cdk
           make deploy
+
   image-worker:
     runs-on: ubuntu-22.04
 
@@ -154,6 +162,7 @@ jobs:
           toolchain: stable
 
       - uses: cargo-bins/cargo-binstall@main
+
       - name: Install toml-cli
         run: |
           cargo binstall toml-cli --force
@@ -168,7 +177,6 @@ jobs:
           SERVICE: image-worker
           DATABASE_TYPE: postgres
           DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
-
           BASE_DOMAIN: ratel.foundation
           MIGRATE: false
           ENABLE_S3: false
@@ -181,6 +189,7 @@ jobs:
 
   telegram-bot:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v3
         with:
@@ -200,6 +209,7 @@ jobs:
           toolchain: stable
 
       - uses: cargo-bins/cargo-binstall@main
+
       - name: Install dependencies
         run: |
           cargo binstall toml-cli
@@ -222,14 +232,11 @@ jobs:
           SERVICE: telegram-bot
           DOMAIN: telegram-bot.dev.ratel.foundation
           DATABASE_TYPE: postgres
-
           DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
-
           TELEGRAM_TOKEN: ${{ secrets.DEV_TELEGRAM_TOKEN }}
           TELEGRAM_MINI_APP_URI: https://t.me/crypto_ratel_dev_bot?startapp
           BASE_DOMAIN: ratel.foundation
           REPO_NAME: ratel/telegram-bot
-
           MIGRATE: false
           ENABLE_S3: false
           ENABLE_FARGATE: true
@@ -237,8 +244,10 @@ jobs:
         run: |
           npm i -g aws-cdk
           make deploy
+
   fetcher:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v3
         with:
@@ -258,6 +267,7 @@ jobs:
           toolchain: stable
 
       - uses: cargo-bins/cargo-binstall@main
+
       - name: Install dependencies
         run: |
           cargo binstall toml-cli
@@ -280,7 +290,6 @@ jobs:
           SERVICE: fetcher
           DOMAIN: fetcher-api.dev.ratel.foundation
           AUTH_DOMAIN: dev.ratel.foundation
-
           DATABASE_TYPE: postgres
           DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
           OPENAPI_KEY: ${{ secrets.OPENAPI_KEY }}
@@ -294,7 +303,6 @@ jobs:
           REPO_NAME: ratel/fetcher
           US_CONGRESS_KEY: ${{ secrets.US_CONGRESS_KEY }}
           RPC_ENDPOINT: https://public-en-kairos.node.kaia.io
-
           MIGRATE: false
           ENABLE_S3: false
           ENABLE_FARGATE: true
@@ -330,6 +338,176 @@ jobs:
       - name: Build
         run: make build
 
+  android-apk:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: flutter-packages/mobile
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          ssh-key: ${{ secrets.PULL_KEY_REPO }}
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Flutter pub get
+        run: flutter pub get
+
+      # add android keystore file to github
+      - name: Prepare Android signing (real or placeholder)
+        working-directory: flutter-packages/mobile
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p android/app
+          if [[ -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]]; then
+            echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android/app/keystore.jks
+            printf "%s\n" \
+              "storeFile=app/keystore.jks" \
+              "storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
+              "keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}" \
+              "keyPassword=${{ secrets.ANDROID_KEY_ALIAS_PASSWORD }}" \
+              > android/key.properties
+          else
+            keytool -genkey -v \
+              -keystore android/app/debug-placeholder.keystore \
+              -storepass android -keypass android \
+              -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 \
+              -dname "CN=Android,O=Android,C=US"
+            printf "%s\n" \
+              "storeFile=app/debug-placeholder.keystore" \
+              "storePassword=android" \
+              "keyAlias=androiddebugkey" \
+              "keyPassword=android" \
+              > android/key.properties
+          fi
+
+      - name: Build APK (debug)
+        run: |
+          make ENV=dev build-config
+          flutter build apk --debug --dart-define-from-file=.build/config.json
+
+      - name: Package artifacts (zip)
+        run: make artifact.zip
+
+      - name: Upload APK artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-apk-${{ github.sha }}
+          path: |
+            flutter-packages/mobile/build/app/outputs/flutter-apk/*.apk
+            flutter-packages/mobile/build/app/outputs/apk/**/*.apk
+            flutter-packages/mobile/.build/*.zip
+          if-no-files-found: warn
+          retention-days: 30
+
+  ios-testflight:
+    runs-on: macos-14
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: flutter-packages/mobile
+    env:
+      MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+      MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          ssh-key: ${{ secrets.PULL_KEY_REPO }}
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: "15.4"
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.2"
+      - name: Install fastlane and cocoapods
+        run: gem install -N fastlane cocoapods
+      - name: Flutter pub get
+        run: flutter pub get
+      - name: Pod install
+        working-directory: flutter-packages/mobile/ios
+        run: pod install --repo-update
+      - name: Write App Store Connect API key
+        working-directory: flutter-packages/mobile/ios
+        if: env.ASC_KEY_BASE64 != ''
+        env:
+          ASC_KEY_BASE64: ${{ secrets.ASC_KEY_BASE64 }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+        run: |
+          mkdir -p fastlane
+          echo "$ASC_KEY_BASE64" | base64 -d > fastlane/AuthKey_${ASC_KEY_ID}.p8
+          chmod 600 fastlane/AuthKey_${ASC_KEY_ID}.p8
+      - name: Setup SSH for match repo
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.MATCH_SSH_KEY }}
+
+      - name: Trust github.com host
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
+
+      - name: Install signing with match (readonly)
+        working-directory: flutter-packages/mobile/ios
+        env:
+          MATCH_GIT_URL: git@github.com:biyard/ratel-certificate.git
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_KEYCHAIN_NAME: "ci-temp.keychain-db"
+          MATCH_KEYCHAIN_PASSWORD: "password"
+        run: |
+          bundle exec fastlane match appstore \
+            --readonly \
+            --keychain_name "$MATCH_KEYCHAIN_NAME" \
+            --keychain_password "$MATCH_KEYCHAIN_PASSWORD"
+
+      - name: Build and Upload to TestFlight
+        working-directory: flutter-packages/mobile/ios
+        env:
+          APP_STORE_CONNECT_API_KEY_PATH: fastlane/AuthKey_${{ env.ASC_KEY_ID }}.p8
+          APP_STORE_CONNECT_API_KEY_KEY_ID: ${{ env.ASC_KEY_ID }}
+          APP_STORE_CONNECT_API_KEY_ISSUER_ID: ${{ env.ASC_ISSUER_ID }}
+        run: |
+          if fastlane lanes | grep -q "deploy"; then
+            fastlane deploy
+          else
+            fastlane run build_app scheme:Runner export_method:app-store skip_package_ipa:false
+            if [ -f fastlane/AuthKey_${ASC_KEY_ID}.p8 ]; then
+              fastlane run upload_to_testflight skip_waiting_for_build_processing:true distribute_external:false changelog:"Auto build $GITHUB_SHA" api_key_path:fastlane/AuthKey_${ASC_KEY_ID}.p8
+            else
+              exit 1
+            fi
+          fi
+      - name: Upload .ipa artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-ipa-${{ github.sha }}
+          path: |
+            flutter-packages/mobile/build/ios/**/*.ipa
+            flutter-packages/mobile/ios/*.ipa
+          if-no-files-found: warn
+          retention-days: 14
+
   create-release-pr:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/dev'
@@ -339,6 +517,7 @@ jobs:
         with:
           submodules: recursive
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
+
       - name: Git pr release action
         uses: grassedge/git-pr-release-action@v1.0
         with:
