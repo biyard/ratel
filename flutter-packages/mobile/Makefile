@@ -20,6 +20,11 @@ ARTIFACT_DIR ?= .build
 ARTIFACT_NAME ?= artifacts-$(ENV)-$(GIT_SHA)-$(DATE_STR)
 ARTIFACT_ZIP ?= $(ARTIFACT_DIR)/$(ARTIFACT_NAME).zip
 
+SED_INPLACE = sed -i
+ifeq ($(shell uname),Darwin)
+  SED_INPLACE = sed -i ''
+endif
+
 ifeq ("$(ENV)","prod")
 	REDIRECT_URL = https://ratel.foundation
 	API_ENDPOINT = https://api.ratel.foundation
@@ -44,11 +49,11 @@ $(BUILD_CONFIG_FILE):
 	@rm -rf $(BUILD_DIR)/config.json
 	@mkdir -p $(BUILD_DIR)
 	@cp $(FIXTURE_CONFIG_FILE) $(BUILD_CONFIG_FILE)
-	sed -i '' "s/{ENV}/$(ENV)/g" $(BUILD_CONFIG_FILE)
-	@sed -i '' "s/{LOG_LEVEL}/$(LOG_LEVEL)/g" $(BUILD_CONFIG_FILE)
-	@sed -i '' "s|{REDIRECT_URL}|$(REDIRECT_URL)|g" $(BUILD_CONFIG_FILE)
-	@sed -i '' "s|{API_ENDPOINT}|$(API_ENDPOINT)|g" $(BUILD_CONFIG_FILE)
-	@sed -i '' "s|{SIGN_DOMAIN}|$(SIGN_DOMAIN)|g" $(BUILD_CONFIG_FILE)
+	@$(SED_INPLACE) "s/{ENV}/$(ENV)/g" $(BUILD_CONFIG_FILE)
+	@$(SED_INPLACE) "s/{LOG_LEVEL}/$(LOG_LEVEL)/g" $(BUILD_CONFIG_FILE)
+	@$(SED_INPLACE) "s|{REDIRECT_URL}|$(REDIRECT_URL)|g" $(BUILD_CONFIG_FILE)
+	@$(SED_INPLACE) "s|{API_ENDPOINT}|$(API_ENDPOINT)|g" $(BUILD_CONFIG_FILE)
+	@$(SED_INPLACE) "s|{SIGN_DOMAIN}|$(SIGN_DOMAIN)|g" $(BUILD_CONFIG_FILE)
 
 .PHONY: all
 all: clean run
