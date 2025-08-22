@@ -423,14 +423,20 @@ jobs:
           set -euo pipefail
           KEYCHAIN_LABEL="ci-temp"
           KEYCHAIN_PASSWORD="password"
-          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_LABEL"
-          security set-keychain-settings -lut 21600 "$KEYCHAIN_LABEL"
-          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_LABEL"
-          EXISTING=$(security list-keychains -d user | sed 's/[[:space:]"]//g')
-          security list-keychains -d user -s $EXISTING "$HOME/Library/Keychains/${KEYCHAIN_LABEL}.keychain-db"
-          security default-keychain -s "$HOME/Library/Keychains/${KEYCHAIN_LABEL}.keychain-db"
+          KEYCHAIN_PATH="$HOME/Library/Keychains/${KEYCHAIN_LABEL}.keychain-db"
+
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          security list-keychains -d user -s "$KEYCHAIN_PATH" "$HOME/Library/Keychains/login.keychain-db"
+          security default-keychain -s "$KEYCHAIN_PATH"
+
           echo "MATCH_KEYCHAIN_NAME=$KEYCHAIN_LABEL" >> $GITHUB_ENV
           echo "MATCH_KEYCHAIN_PASSWORD=$KEYCHAIN_PASSWORD" >> $GITHUB_ENV
+
+          ls -l "$HOME/Library/Keychains"
+          security list-keychains -d user
       - name: Install signing with match (readonly)
         working-directory: flutter-packages/mobile/ios
         env:
