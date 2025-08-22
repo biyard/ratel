@@ -11,7 +11,6 @@ env:
 jobs:
   test-with-server:
     runs-on: ubuntu-latest
-
     services:
       postgres:
         image: postgres
@@ -26,26 +25,21 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
-
     steps:
       - uses: actions/checkout@v3
         with:
           submodules: recursive
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
-
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           components: clippy, rustfmt
           target: wasm32-unknown-unknown
           toolchain: stable
-
       - name: Install PostgreSQL Client
         run: sudo apt-get install -y postgresql-client
-
       - name: Initialize Database SQL
         run: |
           psql postgresql://postgres:postgres@localhost:5432/test -f ./deps/rust-sdk/fixtures/sql/init.sql
-
       - name: test
         env:
           RUSTFLAGS: "-A warnings"
@@ -73,31 +67,25 @@ jobs:
 
   main-api:
     runs-on: ubuntu-22.04
-
     steps:
       - uses: actions/checkout@v3
         with:
           submodules: recursive
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
-
       - uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-northeast-2
-
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           components: clippy, rustfmt
           target: wasm32-unknown-unknown
           toolchain: stable
-
       - uses: cargo-bins/cargo-binstall@main
-
       - name: Install toml-cli
         run: |
           cargo binstall toml-cli --force
-
       - name: Deploy APIs
         env:
           REGION: ap-northeast-2
@@ -142,31 +130,25 @@ jobs:
 
   image-worker:
     runs-on: ubuntu-22.04
-
     steps:
       - uses: actions/checkout@v3
         with:
           submodules: recursive
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
-
       - uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-northeast-2
-
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           components: clippy, rustfmt
           target: wasm32-unknown-unknown
           toolchain: stable
-
       - uses: cargo-bins/cargo-binstall@main
-
       - name: Install toml-cli
         run: |
           cargo binstall toml-cli --force
-
       - name: Deploy APIs
         env:
           REGION: ap-northeast-2
@@ -189,31 +171,25 @@ jobs:
 
   telegram-bot:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v3
         with:
           submodules: recursive
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
-
       - uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-northeast-2
-
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           components: clippy, rustfmt
           target: wasm32-unknown-unknown
           toolchain: stable
-
       - uses: cargo-bins/cargo-binstall@main
-
       - name: Install dependencies
         run: |
           cargo binstall toml-cli
-
       - name: Cache builder
         id: telegram-bot-build-cache
         uses: actions/cache@v3
@@ -221,7 +197,6 @@ jobs:
           key: telegram-bot-build-cache
           path: |
             packages/telegram-bot/target
-
       - name: Deploy APIs
         env:
           REGION: ap-northeast-2
@@ -247,31 +222,25 @@ jobs:
 
   fetcher:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v3
         with:
           submodules: recursive
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
-
       - uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-northeast-2
-
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           components: clippy, rustfmt
           target: wasm32-unknown-unknown
           toolchain: stable
-
       - uses: cargo-bins/cargo-binstall@main
-
       - name: Install dependencies
         run: |
           cargo binstall toml-cli
-
       - name: Cache builder
         id: fetcher-build-cache
         uses: actions/cache@v3
@@ -279,7 +248,6 @@ jobs:
           key: fetcher-build-cache
           path: |
             packages/fetcher/target
-
       - name: Deploy APIs
         env:
           REGION: ap-northeast-2
@@ -313,28 +281,22 @@ jobs:
 
   nextjs-web:
     runs-on: ubuntu-latest
-
     defaults:
       run:
         working-directory: ts-packages/web
-
     steps:
       - uses: actions/checkout@v4
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
-
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
         with:
           version: 10
           run_install: true
-
       - name: Run ESLint
         run: pnpm lint
-
       - name: Build
         run: make build
 
@@ -348,21 +310,16 @@ jobs:
         with:
           submodules: recursive
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
-
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
-
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
           cache: true
-
       - name: Flutter pub get
         run: flutter pub get
-
-      # add android keystore file to github
       - name: Prepare Android signing (real or placeholder)
         working-directory: flutter-packages/mobile
         shell: bash
@@ -390,15 +347,12 @@ jobs:
               "keyPassword=android" \
               > android/key.properties
           fi
-
       - name: Build APK (debug)
         run: |
           make ENV=dev build-config
           flutter build apk --debug --dart-define-from-file=.build/config.json
-
       - name: Package artifacts (zip)
         run: make artifact.zip
-
       - name: Upload APK artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -461,39 +415,33 @@ jobs:
         uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.MATCH_SSH_KEY }}
-
       - name: Trust github.com host
         run: |
           mkdir -p ~/.ssh
           ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
-
       - name: Create & unlock temp keychain
         run: |
-          KEYCHAIN_LABEL="ci-temp"                               
+          KEYCHAIN_LABEL="ci-temp"
           KEYCHAIN_PASSWORD="password"
-          KEYCHAIN_FILE="${KEYCHAIN_LABEL}.keychain-db"          
+          KEYCHAIN_FILE="${KEYCHAIN_LABEL}.keychain-db"
           KEYCHAIN_PATH="$HOME/Library/Keychains/${KEYCHAIN_FILE}"
-
           security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_LABEL"
           security set-keychain-settings -lut 21600 "$KEYCHAIN_LABEL"
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_LABEL"
-
           security list-keychains -s "$KEYCHAIN_PATH" "$HOME/Library/Keychains/login.keychain-db"
-
-          echo "MATCH_KEYCHAIN_NAME=${KEYCHAIN_FILE}" >> $GITHUB_ENV
+          security default-keychain -s "$KEYCHAIN_PATH"
+          echo "MATCH_KEYCHAIN_NAME=${KEYCHAIN_LABEL}" >> $GITHUB_ENV
           echo "MATCH_KEYCHAIN_PASSWORD=${KEYCHAIN_PASSWORD}" >> $GITHUB_ENV
-
       - name: Install signing with match (readonly)
         working-directory: flutter-packages/mobile/ios
         env:
-          MATCH_GIT_URL: git@github.com:biyard/ratel-certificate.git
+          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
         run: |
           bundle exec fastlane match appstore \
             --readonly \
             --keychain_name "$MATCH_KEYCHAIN_NAME" \
             --keychain_password "$MATCH_KEYCHAIN_PASSWORD"
-
       - name: Build and Upload to TestFlight
         working-directory: flutter-packages/mobile/ios
         env:
@@ -531,7 +479,6 @@ jobs:
         with:
           submodules: recursive
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
-
       - name: Git pr release action
         uses: grassedge/git-pr-release-action@v1.0
         with:
