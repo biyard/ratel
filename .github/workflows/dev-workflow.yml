@@ -378,6 +378,7 @@ jobs:
       ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
       APP_IDENTIFIER: foundation.ratel.app
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      PROFILE_NAME: AppStore_foundation.ratel.app
     steps:
       - uses: actions/checkout@v4
         with:
@@ -455,6 +456,7 @@ jobs:
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
           APP_IDENTIFIER: foundation.ratel.app
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          PROFILE_NAME: AppStore_foundation.ratel.app
         run: |
           bundle exec fastlane deploy
       - name: Dump xcodebuild log on failure
