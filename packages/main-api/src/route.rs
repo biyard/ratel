@@ -157,7 +157,7 @@ pub async fn route(
             post_with(
                 add_oracle_handler,
                 api_docs!("Add Oracle", "Add a new oracle to a dagit"),
-            )ManageSpaceManageSpace
+            )
             .with_state(pool.clone()),
         )
         .route(
