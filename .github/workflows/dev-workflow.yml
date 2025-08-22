@@ -457,13 +457,29 @@ jobs:
           mkdir -p fastlane
           echo "$ASC_KEY_BASE64" | base64 -d > fastlane/AuthKey_${ASC_KEY_ID}.p8
           chmod 600 fastlane/AuthKey_${ASC_KEY_ID}.p8
-      - name: Install signing with match
+      - name: Setup SSH for match repo
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.MATCH_SSH_KEY }}
+
+      - name: Trust github.com host
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
+
+      - name: Install signing with match (readonly)
         working-directory: flutter-packages/mobile/ios
         env:
+          MATCH_GIT_URL: git@github.com:biyard/ratel-certificate.git
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
           MATCH_KEYCHAIN_NAME: "ci-temp.keychain-db"
           MATCH_KEYCHAIN_PASSWORD: "password"
         run: |
-          fastlane match appstore --readonly --keychain_name "$MATCH_KEYCHAIN_NAME" --keychain_password "$MATCH_KEYCHAIN_PASSWORD"
+          bundle exec fastlane match appstore \
+            --readonly \
+            --keychain_name "$MATCH_KEYCHAIN_NAME" \
+            --keychain_password "$MATCH_KEYCHAIN_PASSWORD"
+
       - name: Build and Upload to TestFlight
         working-directory: flutter-packages/mobile/ios
         env:
