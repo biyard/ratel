@@ -9,10 +9,10 @@ class SetupAttributeController extends BaseController {
   final selectedCountry = 'Country'.obs;
   final capturedPath = ''.obs;
 
-  final name = 'James Choi'.obs;
-  final birth = '1985-11-11'.obs;
+  final name = 'Lee Chanhui'.obs;
+  final birth = '1999-01-12'.obs;
   final nationality = 'Republic of Korea'.obs;
-  final expire = '2032-10-30'.obs;
+  final expire = '2034-08-06'.obs;
   final gender = 'Male'.obs;
 
   void goBack() {

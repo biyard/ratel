@@ -152,6 +152,7 @@ class AuthApi extends GetConnect {
     String password,
     String displayName,
     String userName,
+    String profileUrl,
     bool agree,
   ) async {
     await ensureLoggedOut();
@@ -169,7 +170,7 @@ class AuthApi extends GetConnect {
       'email_signup': {
         'nickname': displayName,
         'email': email,
-        'profile_url': '',
+        'profile_url': profileUrl,
         'term_agreed': agree,
         'informed_agreed': false,
         'username': userName,

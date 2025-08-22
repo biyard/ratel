@@ -33,7 +33,7 @@ $(BUILD_CONFIG_FILE):
 	@rm -rf $(BUILD_DIR)/config.json
 	@mkdir -p $(BUILD_DIR)
 	@cp $(FIXTURE_CONFIG_FILE) $(BUILD_CONFIG_FILE)
-	@sed -i '' "s/{ENV}/$(ENV)/g" $(BUILD_CONFIG_FILE)
+	sed -i '' "s/{ENV}/$(ENV)/g" $(BUILD_CONFIG_FILE)
 	@sed -i '' "s/{LOG_LEVEL}/$(LOG_LEVEL)/g" $(BUILD_CONFIG_FILE)
 	@sed -i '' "s|{REDIRECT_URL}|$(REDIRECT_URL)|g" $(BUILD_CONFIG_FILE)
 	@sed -i '' "s|{API_ENDPOINT}|$(API_ENDPOINT)|g" $(BUILD_CONFIG_FILE)
@@ -45,8 +45,11 @@ all: clean run
 %.keystore:
 	scripts/create-key.sh $@ android$*key $(PASSWORD)
 
+run: $(BUILD_CONFIG_FILE)
+	flutter run --dart-define-from-file=$(BUILD_CONFIG_FILE)
+
 run.android: $(BUILD_CONFIG_FILE)
-	flutter run --dart-define-from-file=$(BUILD_CONFIG_FILE) -d emulator-5554
+	flutter run --dart-define-from-file=$(BUILD_CONFIG_FILE) -d R3CWB028JTN
 
 run.ios: $(BUILD_CONFIG_FILE)
 	flutter run --dart-define-from-file=$(BUILD_CONFIG_FILE) -d 947A4545-75D7-4264-AC8C-EFFE2C728C87

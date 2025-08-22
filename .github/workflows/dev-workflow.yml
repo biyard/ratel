@@ -61,7 +61,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           JWT_SECRET_KEY: ${{ secrets.DEV_JWT_SECRET }}
           US_CONGRESS_KEY: ${{ secrets.US_CONGRESS_KEY }}
-
+          POOL_SIZE: 1
           KAIA_ENDPOINT: https://public-en-kairos.node.kaia.io
           KAIA_FEEPAYER_KEY: ${{ secrets.DEV_KAIA_KEY }}
           KAIA_FEEPAYER_ADDR: ${{ secrets.DEV_KAIA_ADDR }}
@@ -125,8 +125,67 @@ jobs:
           KAIA_FEEPAYER_ADDR: ${{ secrets.DEV_KAIA_ADDR }}
           KAIA_OWNER_KEY: ${{ secrets.DEV_KAIA_KEY }}
           KAIA_OWNER_ADDR: ${{ secrets.DEV_KAIA_ADDR }}
+          RDS_RESOURCE_ARN: ${{ secrets.RDS_RESOURCE_ARN }}
+          RDS_SECRET_ARN: ${{ secrets.RDS_SECRET_ARN }}
 
           NONCELAB_TOKEN: ${{ secrets.NONCELAB_TOKEN }}
+
+          BBS_BLS_X: ${{ secrets.BBS_BLS_X }}
+          BBS_BLS_Y: ${{ secrets.BBS_BLS_Y }}
+          BBS_BLS_D: ${{ secrets.BBS_BLS_D }}
+          BBS_BLS_CRV: ${{ secrets.BBS_BLS_CRV }}
+
+          P256_X: ${{ secrets.P256_X }}
+          P256_Y: ${{ secrets.P256_Y }}
+          P256_D: ${{ secrets.P256_D }}
+          P256_CRV: ${{ secrets.P256_CRV }}
+          
+        run: |
+          npm i -g aws-cdk
+          make deploy
+  image-worker:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          ssh-key: ${{ secrets.PULL_KEY_REPO }}
+
+      - uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          components: clippy, rustfmt
+          target: wasm32-unknown-unknown
+          toolchain: stable
+
+      - uses: cargo-bins/cargo-binstall@main
+      - name: Install toml-cli
+        run: |
+          cargo binstall toml-cli --force
+
+      - name: Deploy APIs
+        env:
+          REGION: ap-northeast-2
+          ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          ENV: dev
+          RUST_LOG: debug
+          SERVICE: image-worker
+          DATABASE_TYPE: postgres
+          DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
+
+          BASE_DOMAIN: ratel.foundation
+          MIGRATE: false
+          ENABLE_S3: false
+          ENABLE_LAMBDA: false
+          ENABLE_SQS_WORKER: true
+          ENABLE_CDN: false
         run: |
           npm i -g aws-cdk
           make deploy

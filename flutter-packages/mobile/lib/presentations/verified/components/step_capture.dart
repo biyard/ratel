@@ -1,6 +1,7 @@
+import 'dart:async';
 import 'package:ratel/exports.dart';
 
-class StepCapture extends StatelessWidget {
+class StepCapture extends StatefulWidget {
   const StepCapture({
     super.key,
     required this.onPrev,
@@ -11,6 +12,40 @@ class StepCapture extends StatelessWidget {
   final String imageUrl;
   final VoidCallback onPrev;
   final VoidCallback onCapture;
+
+  @override
+  State<StepCapture> createState() => _StepCaptureState();
+}
+
+class _StepCaptureState extends State<StepCapture> {
+  Timer? _timer;
+  int _secLeft = 10;
+  bool _started = false;
+  bool _done = false;
+
+  void _startCountdown() {
+    if (_started || _done || !mounted) return;
+    setState(() {
+      _started = true;
+      _secLeft = 10;
+    });
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (t) {
+      if (!mounted) return;
+      setState(() => _secLeft--);
+      if (_secLeft <= 0) {
+        t.cancel();
+        _done = true;
+        widget.onCapture();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +59,7 @@ class StepCapture extends StatelessWidget {
             child: Row(
               children: [
                 InkWell(
-                  onTap: onPrev,
+                  onTap: widget.onPrev,
                   child: SvgPicture.asset(Assets.back, width: 16, height: 16),
                 ),
                 10.gap,
@@ -52,10 +87,7 @@ class StepCapture extends StatelessWidget {
               ),
             ),
           ),
-
-          SizedBox(
-            width: double.infinity,
-            height: MediaQuery.of(context).size.height - 330,
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -75,44 +107,12 @@ class StepCapture extends StatelessWidget {
                     width: double.infinity,
                     height: 220,
                     color: const Color(0xFF2E2D37),
-                    child: imageUrl.isEmpty
-                        ? const Center(
-                            child: Icon(
-                              Icons.photo_camera,
-                              color: AppColors.neutral500,
-                              size: 40,
-                            ),
-                          )
-                        : Image.network(imageUrl, fit: BoxFit.cover),
+                    child: PassportLiveCamera(onReady: _startCountdown),
                   ),
                 ),
               ],
             ),
           ),
-
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: onCapture,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.black,
-                padding: const EdgeInsets.symmetric(vertical: 14.5),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              child: const Text(
-                'YES',
-                style: TextStyle(
-                  color: AppColors.bg,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 24),
         ],
       ),
     );
