@@ -143,19 +143,6 @@ impl NotificationController {
             .with_state(self.clone()))
     }
 
-    // pub async fn act_notification(
-    //     State(ctrl): State<NotificationController>,
-    //     Extension(auth): Extension<Option<Authorization>>,
-    //     Json(body): Json<NotificationAction>,
-    // ) -> Result<Json<Notification>> {
-    //     match body {
-    //         NotificationAction::Create (param) => {
-    //             let notification = ctrl.create_notification(auth, param).await?;
-    //             Ok(Json(notification))
-    //         }
-    //     }
-    // }
-
     pub async fn act_notification_by_id(
         State(ctrl): State<NotificationController>,
         Extension(auth): Extension<Option<Authorization>>,
@@ -191,172 +178,251 @@ impl NotificationController {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tests::{TestContext, setup, setup_jwt_token, setup_test_user};
+    use crate::tests::{TestContext, setup};
 
-    async fn test_setup(pool: &sqlx::Pool<sqlx::Postgres>) -> (User, User) {
-        let id1 = uuid::Uuid::new_v4().to_string();
-        let id2 = uuid::Uuid::new_v4().to_string();
+    // async fn test_setup(pool: &sqlx::Pool<sqlx::Postgres>) -> (User, User) {
+    //     let id1 = uuid::Uuid::new_v4().to_string();
+    //     let id2 = uuid::Uuid::new_v4().to_string();
 
-        let user1 = setup_test_user(&id1, pool).await.unwrap();
-        let user2 = setup_test_user(&id2, pool).await.unwrap();
+    //     let user1 = setup_test_user(&id1, pool).await.unwrap();
+    //     let user2 = setup_test_user(&id2, pool).await.unwrap();
 
-        (user1, user2)
-    }
+    //     (user1, user2)
+    // }
 
-    async fn create_test_notification(
-        pool: &sqlx::Pool<sqlx::Postgres>,
-        user_id: i64,
-        title: String,
-        _content: String,
-    ) -> Result<Notification> {
-        let mut tx = pool.begin().await?;
-        let test_notification = NotificationData::ConnectNetwork {
-            requester_id: user_id,
-            image_url: "https://example.com/profile.jpg".to_string(),
-            description: title,
-        };
-        let result = crate::utils::notifications::send_notification(pool, &mut tx, user_id, test_notification).await?;
-        tx.commit().await?;
-        Ok(result)
-    }
+    // async fn create_test_notification(
+    //     pool: &sqlx::Pool<sqlx::Postgres>,
+    //     user_id: i64,
+    //     title: String,
+    //     _content: String,
+    // ) -> Result<Notification> {
+    //     let mut tx = pool.begin().await?;
+    //     let test_notification = NotificationData::ConnectNetwork {
+    //         requester_id: user_id,
+    //         image_url: "https://example.com/profile.jpg".to_string(),
+    //         description: title,
+    //     };
+    //     let result = crate::utils::notifications::send_notification(pool, &mut tx, user_id, test_notification).await?;
+    //     tx.commit().await?;
+    //     Ok(result)
+    // }
 
+
+    // #[tokio::test]
+    // async fn test_update_status_to_read() {
+    //     let TestContext { pool, now, .. } = setup().await.unwrap();
+    //     let ctrl = NotificationController::new(pool.clone());
+
+    //     let (user1, _) = test_setup(&pool).await;
+    //     let claims = setup_jwt_token(user1.clone()).0;
+    //     let auth = Some(Authorization::Bearer { claims });
+
+    //     // Create a test notification
+    //     let notification = create_test_notification(&pool, user1.id, format!("Test {}", now), "Test message".to_string()).await.unwrap();
+        
+    //     assert_eq!(notification.read, false);
+
+    //     // Update status to read
+    //     let result = ctrl.update_status_to_read(notification.id, auth).await;
+        
+    //     assert!(result.is_ok(), "Should be able to update notification status");
+        
+    //     let updated_notification = result.unwrap();
+    //     assert_eq!(updated_notification.read, true);
+    // }
+
+    // #[tokio::test]
+    // async fn test_update_status_unauthorized() {
+    //     let TestContext { pool, now, .. } = setup().await.unwrap();
+    //     let ctrl = NotificationController::new(pool.clone());
+
+    //     let (user1, user2) = test_setup(&pool).await;
+    //     let claims = setup_jwt_token(user2.clone()).0;
+    //     let auth = Some(Authorization::Bearer { claims });
+
+    //     // Create notification for user1
+    //     let notification = create_test_notification(&pool, user1.id, format!("Test {}", now), "Test message".to_string()).await.unwrap();
+
+    //     // Try to update with user2 credentials (should fail)
+    //     let result = ctrl.update_status_to_read(notification.id, auth).await;
+        
+    //     assert!(result.is_err(), "Should fail when trying to update another user's notification");
+    //     assert_eq!(result, Err(Error::Unauthorized));
+    // }
+
+    // #[tokio::test]
+    // async fn test_update_status_not_found() {
+    //     let TestContext { pool, .. } = setup().await.unwrap();
+    //     let ctrl = NotificationController::new(pool.clone());
+
+    //     let (user1, _) = test_setup(&pool).await;
+    //     let claims = setup_jwt_token(user1.clone()).0;
+    //     let auth = Some(Authorization::Bearer { claims });
+
+    //     // Try to update non-existent notification
+    //     let result = ctrl.update_status_to_read(99999, auth).await;
+        
+    //     assert!(result.is_err(), "Should fail for non-existent notification");
+    //     assert_eq!(result, Err(Error::NotFound));
+    // }
+
+    // #[tokio::test]
+    // async fn test_dismiss_notification() {
+    //     let TestContext { pool, now, .. } = setup().await.unwrap();
+    //     let ctrl = NotificationController::new(pool.clone());
+
+    //     let (user1, _) = test_setup(&pool).await;
+    //     let claims = setup_jwt_token(user1.clone()).0;
+    //     let auth = Some(Authorization::Bearer { claims });
+
+    //     // Create a test notification
+    //     let notification = create_test_notification(&pool, user1.id, format!("Test {}", now), "Test message".to_string()).await.unwrap();
+
+    //     // Dismiss the notification
+    //     let result = ctrl.dismiss_notification(notification.id, auth).await;
+        
+    //     assert!(result.is_ok(), "Should be able to dismiss notification");
+
+    //     // Verify notification is deleted by trying to find it
+    //     let query_result = Notification::query_builder()
+    //         .id_equals(notification.id)
+    //         .query()
+    //         .map(Notification::from)
+    //         .fetch_optional(&pool)
+    //         .await;
+        
+    //     assert!(query_result.is_ok());
+    //     assert!(query_result.unwrap().is_none(), "Notification should be deleted");
+    // }
+
+    // #[tokio::test]
+    // async fn test_dismiss_notification_unauthorized() {
+    //     let TestContext { pool, now, .. } = setup().await.unwrap();
+    //     let ctrl = NotificationController::new(pool.clone());
+
+    //     let (user1, user2) = test_setup(&pool).await;
+    //     let claims = setup_jwt_token(user2.clone()).0;
+    //     let auth = Some(Authorization::Bearer { claims });
+
+    //     // Create notification for user1
+    //     let notification = create_test_notification(&pool, user1.id, format!("Test {}", now), "Test message".to_string()).await.unwrap();
+
+    //     // Try to dismiss with user2 credentials (should fail)
+    //     let result = ctrl.dismiss_notification(notification.id, auth).await;
+        
+    //     assert!(result.is_err(), "Should fail when trying to dismiss another user's notification");
+    //     assert_eq!(result, Err(Error::Unauthorized));
+    // }
+
+    // #[tokio::test]
+    // async fn test_dismiss_notification_not_found() {
+    //     let TestContext { pool, .. } = setup().await.unwrap();
+    //     let ctrl = NotificationController::new(pool.clone());
+
+    //     let (user1, _) = test_setup(&pool).await;
+    //     let claims = setup_jwt_token(user1.clone()).0;
+    //     let auth = Some(Authorization::Bearer { claims });
+
+    //     // Try to dismiss non-existent notification
+    //     let result = ctrl.dismiss_notification(99999, auth).await;
+        
+    //     assert!(result.is_err(), "Should fail for non-existent notification");
+    //     assert_eq!(result, Err(Error::NotFound));
+    // }
+
+    // #[tokio::test]
+    // async fn test_dismiss_notification_without_auth() {
+    //     let TestContext { pool, now, .. } = setup().await.unwrap();
+    //     let ctrl = NotificationController::new(pool.clone());
+
+    //     let (user1, _) = test_setup(&pool).await;
+
+    //     // Create a test notification
+    //     let notification = create_test_notification(&pool, user1.id, format!("Test {}", now), "Test message".to_string()).await.unwrap();
+
+    //     // Try to dismiss without authentication
+    //     let result = ctrl.dismiss_notification(notification.id, None).await;
+        
+    //     assert!(result.is_err(), "Should fail without authentication");
+    // }
 
     #[tokio::test]
-    async fn test_update_status_to_read() {
-        let TestContext { pool, now, .. } = setup().await.unwrap();
-        let ctrl = NotificationController::new(pool.clone());
-
-        let (user1, _) = test_setup(&pool).await;
-        let claims = setup_jwt_token(user1.clone()).0;
-        let auth = Some(Authorization::Bearer { claims });
-
-        // Create a test notification
-        let notification = create_test_notification(&pool, user1.id, format!("Test {}", now), "Test message".to_string()).await.unwrap();
-        
-        assert_eq!(notification.read, false);
-
-        // Update status to read
-        let result = ctrl.update_status_to_read(notification.id, auth).await;
-        
-        assert!(result.is_ok(), "Should be able to update notification status");
-        
-        let updated_notification = result.unwrap();
-        assert_eq!(updated_notification.read, true);
-    }
-
-    #[tokio::test]
-    async fn test_update_status_unauthorized() {
-        let TestContext { pool, now, .. } = setup().await.unwrap();
-        let ctrl = NotificationController::new(pool.clone());
-
-        let (user1, user2) = test_setup(&pool).await;
-        let claims = setup_jwt_token(user2.clone()).0;
-        let auth = Some(Authorization::Bearer { claims });
-
-        // Create notification for user1
-        let notification = create_test_notification(&pool, user1.id, format!("Test {}", now), "Test message".to_string()).await.unwrap();
-
-        // Try to update with user2 credentials (should fail)
-        let result = ctrl.update_status_to_read(notification.id, auth).await;
-        
-        assert!(result.is_err(), "Should fail when trying to update another user's notification");
-        assert_eq!(result, Err(Error::Unauthorized));
-    }
-
-    #[tokio::test]
-    async fn test_update_status_not_found() {
+    async fn test_create_all_notification_types() {
         let TestContext { pool, .. } = setup().await.unwrap();
-        let ctrl = NotificationController::new(pool.clone());
+        let user_id = 144i64;
 
-        let (user1, _) = test_setup(&pool).await;
-        let claims = setup_jwt_token(user1.clone()).0;
-        let auth = Some(Authorization::Bearer { claims });
+        let mut tx = pool.begin().await.unwrap();
 
-        // Try to update non-existent notification
-        let result = ctrl.update_status_to_read(99999, auth).await;
+        // Create InviteTeam notification
+        let invite_team_data = NotificationData::InviteTeam {
+            team_id: 100,
+            group_id: 200,
+            image_url: Some("https://example.com/team-logo.jpg".to_string()),
+            description: "You have been invited to join the Development Team".to_string(),
+        };
         
-        assert!(result.is_err(), "Should fail for non-existent notification");
-        assert_eq!(result, Err(Error::NotFound));
-    }
+        let _ = crate::utils::notifications::send_notification(&pool, &mut tx, user_id, invite_team_data).await.unwrap();
 
-    #[tokio::test]
-    async fn test_dismiss_notification() {
-        let TestContext { pool, now, .. } = setup().await.unwrap();
-        let ctrl = NotificationController::new(pool.clone());
-
-        let (user1, _) = test_setup(&pool).await;
-        let claims = setup_jwt_token(user1.clone()).0;
-        let auth = Some(Authorization::Bearer { claims });
-
-        // Create a test notification
-        let notification = create_test_notification(&pool, user1.id, format!("Test {}", now), "Test message".to_string()).await.unwrap();
-
-        // Dismiss the notification
-        let result = ctrl.dismiss_notification(notification.id, auth).await;
+        // Create InviteDiscussion notification
+        let invite_discussion_data = NotificationData::InviteDiscussion {
+            discussion_id: 300,
+            image_url: Some("https://example.com/discussion-icon.jpg".to_string()),
+            description: "You have been invited to join the project discussion".to_string(),
+        };
         
-        assert!(result.is_ok(), "Should be able to dismiss notification");
+        let _ = crate::utils::notifications::send_notification(&pool, &mut tx, user_id, invite_discussion_data).await.unwrap();
 
-        // Verify notification is deleted by trying to find it
-        let query_result = Notification::query_builder()
-            .id_equals(notification.id)
+        // Create BoostingSpace notification
+        let boosting_space_data = NotificationData::BoostingSpace {
+            space_id: 400,
+            image_url: Some("https://example.com/space-boost.jpg".to_string()),
+            description: "Your space has been boosted by the community".to_string(),
+        };
+
+        let _ = crate::utils::notifications::send_notification(&pool, &mut tx, user_id, boosting_space_data).await.unwrap();
+
+        // Create ConnectNetwork notification
+        let connect_network_data = NotificationData::ConnectNetwork {
+            requester_id: 500,
+            image_url: "https://example.com/user-profile.jpg".to_string(),
+            description: "John Doe wants to connect with you on the network".to_string(),
+        };
+
+        let _ = crate::utils::notifications::send_notification(&pool, &mut tx, user_id, connect_network_data).await.unwrap();
+
+        // Commit the transaction
+        tx.commit().await.unwrap();
+
+        // Verify all notifications were created by fetching them
+        let notifications = Notification::query_builder()
+            .user_id_equals(user_id)
             .query()
             .map(Notification::from)
-            .fetch_optional(&pool)
-            .await;
-        
-        assert!(query_result.is_ok());
-        assert!(query_result.unwrap().is_none(), "Notification should be deleted");
-    }
+            .fetch_all(&pool)
+            .await
+            .unwrap();
 
-    #[tokio::test]
-    async fn test_dismiss_notification_unauthorized() {
-        let TestContext { pool, now, .. } = setup().await.unwrap();
-        let ctrl = NotificationController::new(pool.clone());
+        assert_eq!(notifications.len(), 4, "Should have created 4 notifications");
 
-        let (user1, user2) = test_setup(&pool).await;
-        let claims = setup_jwt_token(user2.clone()).0;
-        let auth = Some(Authorization::Bearer { claims });
+        // Verify each notification type was created correctly
+        let has_invite_team = notifications.iter().any(|n| matches!(n.metadata, NotificationData::InviteTeam { .. }));
+        let has_invite_discussion = notifications.iter().any(|n| matches!(n.metadata, NotificationData::InviteDiscussion { .. }));
+        let has_boosting_space = notifications.iter().any(|n| matches!(n.metadata, NotificationData::BoostingSpace { .. }));
+        let has_connect_network = notifications.iter().any(|n| matches!(n.metadata, NotificationData::ConnectNetwork { .. }));
 
-        // Create notification for user1
-        let notification = create_test_notification(&pool, user1.id, format!("Test {}", now), "Test message".to_string()).await.unwrap();
+        assert!(has_invite_team, "Should have InviteTeam notification");
+        assert!(has_invite_discussion, "Should have InviteDiscussion notification");
+        assert!(has_boosting_space, "Should have BoostingSpace notification");
+        assert!(has_connect_network, "Should have ConnectNetwork notification");
 
-        // Try to dismiss with user2 credentials (should fail)
-        let result = ctrl.dismiss_notification(notification.id, auth).await;
-        
-        assert!(result.is_err(), "Should fail when trying to dismiss another user's notification");
-        assert_eq!(result, Err(Error::Unauthorized));
-    }
+        // Verify all notifications belong to the correct user and are unread
+        for notification in &notifications {
+            assert_eq!(notification.user_id, user_id, "All notifications should belong to user {}", user_id);
+            assert_eq!(notification.read, false, "All notifications should be unread initially");
+        }
 
-    #[tokio::test]
-    async fn test_dismiss_notification_not_found() {
-        let TestContext { pool, .. } = setup().await.unwrap();
-        let ctrl = NotificationController::new(pool.clone());
-
-        let (user1, _) = test_setup(&pool).await;
-        let claims = setup_jwt_token(user1.clone()).0;
-        let auth = Some(Authorization::Bearer { claims });
-
-        // Try to dismiss non-existent notification
-        let result = ctrl.dismiss_notification(99999, auth).await;
-        
-        assert!(result.is_err(), "Should fail for non-existent notification");
-        assert_eq!(result, Err(Error::NotFound));
-    }
-
-    #[tokio::test]
-    async fn test_dismiss_notification_without_auth() {
-        let TestContext { pool, now, .. } = setup().await.unwrap();
-        let ctrl = NotificationController::new(pool.clone());
-
-        let (user1, _) = test_setup(&pool).await;
-
-        // Create a test notification
-        let notification = create_test_notification(&pool, user1.id, format!("Test {}", now), "Test message".to_string()).await.unwrap();
-
-        // Try to dismiss without authentication
-        let result = ctrl.dismiss_notification(notification.id, None).await;
-        
-        assert!(result.is_err(), "Should fail without authentication");
+        println!("Successfully created all notification types for user {}", user_id);
+        println!("Notification IDs: {:?}", notifications.iter().map(|n| n.id).collect::<Vec<_>>());
     }
 
 

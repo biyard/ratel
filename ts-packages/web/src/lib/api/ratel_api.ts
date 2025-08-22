@@ -299,6 +299,21 @@ export const ratelApi = {
       return `/v1/spaces/${spaceId}/sprint-leagues/${sprintLeagueId}/players/${playerId}`;
     },
   },
+  notifications: {
+    getNotifications: (filterType?: string) => {
+      const params = new URLSearchParams({
+        'param-type': 'query',
+      });
+      if (filterType && filterType !== 'all') {
+        params.append('type', filterType);
+      }
+      return `/v1/notifications?${params.toString()}`;
+    },
+    dismiss: (notificationId: number) => `/v1/notifications/${notificationId}`,
+    markAsRead: (notificationId: number) =>
+      `/v1/notifications/${notificationId}`,
+    markAllAsRead: () => `/v2/notifications/mark-all-read`,
+  },
   dagit: {
     getDagitBySpaceId: (spaceId: number) => `/v2/dagits/${spaceId}`,
     addOracle: (spaceId: number) => `/v2/dagits/${spaceId}/oracles`,
