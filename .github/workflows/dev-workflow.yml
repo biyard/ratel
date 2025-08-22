@@ -421,16 +421,23 @@ jobs:
           ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
       - name: Create & unlock temp keychain
         run: |
-          KEYCHAIN_LABEL="ci-temp"
+          set -euo pipefail
           KEYCHAIN_PASSWORD="password"
-          KEYCHAIN_PATH="$HOME/Library/Keychains/${KEYCHAIN_LABEL}.keychain-db"
+          KEYCHAIN_PATH="$HOME/Library/Keychains/ci-temp.keychain-db"
 
-          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_LABEL"
-          security set-keychain-settings -lut 21600 "$KEYCHAIN_LABEL"
-          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_LABEL"
+          mkdir -p "$HOME/Library/Keychains"
 
-          security list-keychains -d user -s "$KEYCHAIN_PATH" "$HOME/Library/Keychains/login.keychain-db"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          CURRENT_LIST=$(security list-keychains -d user | sed 's/[[:space:]"]//g')
+          security list-keychains -d user -s $CURRENT_LIST "$KEYCHAIN_PATH"
+
           security default-keychain -s "$KEYCHAIN_PATH"
+
+          ls -l "$HOME/Library/Keychains" || true
+          security list-keychains -d user
 
           echo "MATCH_KEYCHAIN_PATH=$KEYCHAIN_PATH" >> $GITHUB_ENV
           echo "MATCH_KEYCHAIN_PASSWORD=$KEYCHAIN_PASSWORD" >> $GITHUB_ENV
