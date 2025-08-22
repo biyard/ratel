@@ -411,6 +411,23 @@ jobs:
           echo "$ASC_KEY_BASE64" | base64 -d > fastlane/AuthKey_${ASC_KEY_ID}.p8
           chmod 600 fastlane/AuthKey_${ASC_KEY_ID}.p8
 
+      - name: Setup SSH for match repo
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.MATCH_SSH_KEY }}
+
+      - name: Trust github.com host keys
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Sanity check SSH to GitHub
+        env:
+          GIT_SSH_COMMAND: "ssh -v"
+        run: |
+          ssh -T git@github.com || true
+
       - name: Create and unlock temporary keychain
         run: |
           set -euo pipefail
@@ -435,6 +452,7 @@ jobs:
         run: |
           bundle exec fastlane match appstore \
             --readonly \
+            --git_url "$MATCH_GIT_URL" \
             --app_identifier foundation.ratel.app \
             --keychain_name "$MATCH_KEYCHAIN_NAME" \
             --keychain_password "$MATCH_KEYCHAIN_PASSWORD"
