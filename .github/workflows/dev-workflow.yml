@@ -362,6 +362,38 @@ jobs:
       - name: Flutter pub get
         run: flutter pub get
 
+      # add android keystore file to github
+      - name: Prepare Android signing (real or placeholder)
+        working-directory: flutter-packages/mobile
+        run: |
+          mkdir -p android/app
+
+          if [ -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]; then
+            echo "Using real signing from secrets"
+            echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android/app/keystore.jks
+            cat > android/key.properties <<'EOF'
+            storeFile=app/keystore.jks
+            storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+            keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}
+            keyPassword=${{ secrets.ANDROID_KEY_ALIAS_PASSWORD }}
+            EOF
+          else
+            echo "No signing secrets; create placeholder for debug"
+            cat > android/key.properties <<'EOF'
+            storeFile=app/debug-placeholder.keystore
+            storePassword=android
+            keyAlias=androiddebugkey
+            keyPassword=android
+            EOF
+            keytool -genkey -v \
+              -keystore android/app/debug-placeholder.keystore \
+              -storepass android -keypass android \
+              -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 \
+              -dname "CN=Android,O=Android,C=US"
+          fi
+
+          ls -l android/key.properties android/app/*.keystore || true
+
       - name: Build APK (debug)
         run: |
           make ENV=dev build-config
