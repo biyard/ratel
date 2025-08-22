@@ -27,7 +27,10 @@ function Header(props: HeaderProps) {
   const popup = usePopup();
 
   const { data } = useSuspenseUserInfo();
-  const loggedIn = data && data.user_type !== UserType.Individual;
+  const loggedIn =
+    data &&
+    (data.user_type === UserType.Individual ||
+      data.user_type === UserType.Team);
 
   const navItems = [
     {

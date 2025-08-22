@@ -1,4 +1,5 @@
-use crate::{config, controllers, route::route};
+use crate::{config, controllers, route::route, utils::sqs_client};
+
 use bdk::prelude::{by_axum::axum::Router, *};
 use by_axum::axum::middleware;
 use by_types::DatabaseConfig;
@@ -175,19 +176,31 @@ pub async fn api_main() -> Result<Router> {
     let app = by_axum::new();
     let conf = config::get();
     by_axum::auth::set_auth_config(conf.auth.clone());
-    tracing::debug!("config: {:?}", conf);
+
     let auth_token_key = format!("{}_auth_token", conf.env);
     let auth_token_key = Box::leak(Box::new(auth_token_key));
     set_auth_token_key(auth_token_key);
-
+    tracing::info!("Before Pool creation");
     let pool = if let DatabaseConfig::Postgres { url, pool_size } = conf.database {
-        PgPoolOptions::new()
+        let res = PgPoolOptions::new()
             .max_connections(pool_size)
-            .connect(url)
-            .await?
+            .connect_lazy(url);
+        // .connect(url)
+        // .await;
+        match res {
+            Ok(pool) => {
+                tracing::info!("Postgres pool created successfully");
+                pool
+            }
+            Err(e) => {
+                tracing::error!("Failed to create Postgres pool: {:?}", e);
+                return Err(e.into());
+            }
+        }
     } else {
         panic!("Database is not initialized. Call init() first.");
     };
+    tracing::info!("After Pool creation");
 
     let session_store = PostgresStore::new(pool.clone());
     if conf.migrate {
@@ -198,6 +211,8 @@ pub async fn api_main() -> Result<Router> {
             return Err(e.into());
         }
     }
+
+    let sqs_client = sqs_client::SqsClient::new().await;
 
     let is_local = conf.env == "local";
     let session_layer = SessionManagerLayer::new(session_store)
@@ -219,7 +234,7 @@ pub async fn api_main() -> Result<Router> {
         by_axum::axum::Router::new().nest_service("/mcp", controllers::mcp::route().await?);
     // let bot = teloxide::Bot::new(conf.telegram_token);
     // let bot = std::sync::Arc::new(bot);
-    let api_router = route(pool.clone())
+    let api_router = route(pool.clone(), sqs_client)
         .await?
         .layer(middleware::from_fn(authorization_middleware))
         .layer(session_layer)

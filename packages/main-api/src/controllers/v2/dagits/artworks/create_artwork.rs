@@ -1,13 +1,22 @@
-use crate::utils::s3_upload::{self, PresignedUrl};
-use crate::{config, security::check_perm};
-use base64::{Engine, engine::general_purpose};
 use bdk::prelude::*;
 use by_axum::axum::{Extension, Json, extract::State};
 use dto::{
-    Artwork, ArtworkDetail, Dagit, DagitArtwork, Error, File, GroupPermission, Result,
+    Result,
     by_axum::{auth::Authorization, axum::extract::Path},
-    sqlx::{Pool, Postgres},
+    sqlx::{Pool, Postgres, postgres::PgRow},
 };
+use std::sync::Arc;
+
+use dto::*;
+
+use crate::utils::sqs_client::SqsClient;
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct WatermarkTask {
+    pub artwork_id: i64,
+    pub original_url: String,
+}
+
 #[derive(
     Debug,
     Clone,
@@ -42,114 +51,94 @@ pub struct CreateArtworkRequest {
 
     #[schemars(description = "Artwork file")]
     pub file: File,
+
+    #[schemars(description = "WARNING: This field is just for testing")]
+    pub skip_encryption: Option<bool>,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    serde::Serialize,
+    serde::Deserialize,
+    PartialEq,
+    Default,
+    aide::OperationIo,
+    JsonSchema,
+)]
+pub struct CreateArtworkResponse {
+    #[schemars(description = "Artwork Id")]
+    pub id: i64,
 }
 
 pub async fn create_artwork_handler(
-    Extension(auth): Extension<Option<Authorization>>,
-    State(pool): State<Pool<Postgres>>,
+    Extension(_auth): Extension<Option<Authorization>>,
+    State((pool, sqs_client)): State<(Pool<Postgres>, Arc<SqsClient>)>,
     Path(CreateArtworkPathParams { space_id }): Path<CreateArtworkPathParams>,
     Json(mut req): Json<CreateArtworkRequest>,
-) -> Result<Json<Artwork>> {
-    let url = req.file.url.clone().ok_or(Error::BadRequest)?;
-    let dagit = Dagit::query_builder(0)
-        .id_equals(space_id)
-        .query()
-        .map(Dagit::from)
-        .fetch_one(&pool)
-        .await?;
-
-    check_perm(
-        &pool,
-        auth,
-        dto::RatelResource::Space { space_id: dagit.id },
-        GroupPermission::ManageSpace,
-    )
-    .await?;
-
-    // let author_id = dagit.author[0].id;
-    let bytes = read_image_from_url(&url).await?;
-    let bytes = visible_watermarking(bytes)?;
-    let config = config::get();
-    let PresignedUrl {
-        presigned_uris,
-        uris,
-        total_count: _,
-    } = s3_upload::get_put_object_uri(&config.aws, &config.bucket, Some(1)).await?;
-
-    let client = reqwest::Client::new();
-    client
-        .put(presigned_uris[0].clone())
-        .body(bytes)
-        .send()
-        .await?;
-
-    req.file.url = Some(uris[0].clone());
-
-    let mut tx = pool.begin().await?;
-    let artwork = Artwork::get_repository(pool.clone())
-        .insert_with_tx(
-            &mut *tx,
-            dagit.owner_id,
-            req.title,
-            req.description,
-            req.file,
-        )
-        .await?
-        .ok_or(dto::Error::ServerError(
-            "Failed to create artwork".to_string(),
-        ))?;
-
-    ArtworkDetail::get_repository(pool.clone())
-        .insert_with_tx(&mut *tx, artwork.id, dagit.owner_id, url)
-        .await?;
-
-    DagitArtwork::get_repository(pool.clone())
-        .insert_with_tx(&mut *tx, dagit.id, artwork.id)
-        .await?;
-    tx.commit().await?;
-    Ok(Json(artwork))
-}
-
-async fn read_image_from_url(url: &str) -> Result<Vec<u8>> {
-    let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(30))
-        .build()?;
-    let bytes = client.get(url).send().await?.bytes().await?;
-    Ok(bytes.to_vec())
-}
-
-pub fn visible_watermarking(slice: Vec<u8>) -> Result<Vec<u8>> {
-    let mut orig = photon_rs::PhotonImage::new_from_byteslice(slice);
-
-    let width = orig.get_width();
-    let height = orig.get_height();
-    if width == 0 || height == 0 {
-        tracing::error!("Image has zero width or height");
-        return Err(Error::BadRequest);
+) -> Result<Json<CreateArtworkResponse>> {
+    let original_url = req.file.url.clone().ok_or(Error::BadRequest)?;
+    if req.skip_encryption.is_none_or(|v| !v) {
+        req.file.url = None;
     }
-    // Update the path below to the correct location of your watermark image file
-    let logo = include_bytes!("./protected.png");
+    let file_json = serde_json::to_string(&req.file).map_err(|_| Error::BadRequest)?;
 
-    let logo = general_purpose::STANDARD.encode(logo.as_ref());
+    let query = r#"
+            WITH space_check AS (
+                SELECT id, owner_id FROM spaces WHERE id = $1
+            ),
+            inserted_artwork AS (
+                INSERT INTO artworks (owner_id, title, description, file)
+                SELECT owner_id, $2, $3, $4::jsonb
+                FROM space_check
+                RETURNING id, owner_id
+            ),
+            inserted_detail AS (
+                INSERT INTO artwork_details (artwork_id, owner_id, image)
+                SELECT ia.id, ia.owner_id, $5
+                FROM inserted_artwork ia
+                RETURNING artwork_id
+            ),
+            inserted_dagit_artwork AS (
+                INSERT INTO dagit_artworks (space_id, artwork_id)
+                SELECT $1, ia.id
+                FROM inserted_artwork ia
+                RETURNING artwork_id
+            )
+            SELECT id FROM inserted_artwork
+            "#;
 
-    let wm = photon_rs::PhotonImage::new_from_base64(&logo);
+    let artwork_id = sqlx::query(query)
+        .bind(space_id)
+        .bind(req.title)
+        .bind(req.description.as_deref())
+        .bind(file_json)
+        .bind(original_url.clone())
+        .map(|row: PgRow| {
+            use sqlx::Row;
+            row.get::<i64, _>("id")
+        })
+        .fetch_one(&pool)
+        .await
+        .map_err(|e| {
+            tracing::error!("Failed to create artwork: {}", e);
+            Error::ServerError("Failed to create artwork".to_string())
+        })?;
 
-    let wm_width = wm.get_width();
-    let wm_height = wm.get_height();
+    if req.skip_encryption.is_some_and(|v| v) {
+        tracing::info!("Skipping encryption for artwork ID: {}", artwork_id);
+        return Ok(Json(CreateArtworkResponse { id: artwork_id }));
+    }
+    let task = WatermarkTask {
+        artwork_id,
+        original_url: original_url,
+    };
+    let message_body = serde_json::to_string(&task)
+        .map_err(|_| Error::ServerError("Failed to serialize watermark task".to_string()))?;
 
-    let w_width = (width as f32 * 0.8) as u32;
-    let w_height = ((w_width as f32 / wm_width as f32) * wm_height as f32) as u32;
-    let wm = photon_rs::transform::resize(
-        &wm,
-        w_width,
-        w_height,
-        photon_rs::transform::SamplingFilter::Nearest,
-    );
-    let x = (width - w_width) / 2;
-    let y = (height - w_height) / 2;
+    if let Err(e) = sqs_client.send_message(&message_body).await {
+        tracing::error!("Failed to send watermark task to SQS: {}", e);
+    }
 
-    photon_rs::multiple::watermark(&mut orig, &wm, x as i64, y as i64);
-    let bytes = orig.get_bytes();
-
-    Ok(bytes)
+    Ok(Json(CreateArtworkResponse { id: artwork_id }))
 }

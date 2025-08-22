@@ -12,6 +12,7 @@ class VerifiedScreen extends GetWidget<VerifiedController> {
   Widget build(BuildContext context) {
     final h = MediaQuery.of(context).size.height;
     return Layout<VerifiedController>(
+      scrollable: false,
       child: Obx(
         () =>
             SizedBox(height: h - 65, child: _buildStep(controller.step.value)),
@@ -24,6 +25,7 @@ class VerifiedScreen extends GetWidget<VerifiedController> {
       case VerifiedStep.myCredential:
         return Credentials(
           credentials: controller.credentials,
+          did: controller.didId.value,
           onNext: controller.next,
         );
       case VerifiedStep.info:
@@ -42,7 +44,7 @@ class VerifiedScreen extends GetWidget<VerifiedController> {
         );
       case VerifiedStep.review:
         return StepReview(
-          birth: "1985-11-11",
+          birth: "1999-01-12",
           onRecapture: controller.back,
           onDone: controller.goMain,
         );

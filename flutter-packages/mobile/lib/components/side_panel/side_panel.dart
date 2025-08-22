@@ -13,17 +13,14 @@ class SidePanel extends StatelessWidget {
   final VoidCallback onClose;
 
   Future<void> openThemeSheet(BuildContext context) async {
-    showModalBottomSheet(
+    await showModalBottomSheet(
       context: context,
       useRootNavigator: true,
       isScrollControlled: true,
-      useSafeArea: true,
-      showDragHandle: true,
-      backgroundColor: AppColors.panelBg,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (_) => ThemeSheet(),
+      useSafeArea: false,
+      showDragHandle: false,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const StyledSheet(title: 'Theme', child: ThemeSheet()),
     );
   }
 
@@ -32,13 +29,13 @@ class SidePanel extends StatelessWidget {
       context: context,
       useRootNavigator: true,
       isScrollControlled: true,
-      useSafeArea: true,
-      showDragHandle: true,
-      backgroundColor: AppColors.panelBg,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      useSafeArea: false,
+      showDragHandle: false,
+      backgroundColor: Colors.transparent,
+      builder: (_) => StyledSheet(
+        title: 'Accounts',
+        child: AccountsSheet(teams: user.teams),
       ),
-      builder: (_) => AccountsSheet(teams: user.teams),
     );
   }
 
@@ -57,12 +54,10 @@ class SidePanel extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(15),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   (user.profileUrl != "")
                       ? ClipRRect(
@@ -73,20 +68,18 @@ class SidePanel extends StatelessWidget {
                             height: 35,
                           ),
                         )
-                      : ClipRRect(
-                          borderRadius: BorderRadius.circular(100),
-                          child: Container(
-                            width: 35,
-                            height: 35,
+                      : Container(
+                          width: 35,
+                          height: 35,
+                          decoration: const BoxDecoration(
                             color: AppColors.neutral700,
+                            shape: BoxShape.circle,
                           ),
                         ),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Image.asset(Assets.logo, width: 25, height: 25),
-                      10.gap,
+                      const SizedBox(width: 10),
                       InkWell(
                         onTap: () async {
                           final rootCtx = Get.context ?? context;
@@ -94,9 +87,7 @@ class SidePanel extends StatelessWidget {
                           await Future.delayed(
                             const Duration(milliseconds: 320),
                           );
-                          if (rootCtx != null) {
-                            await openAccountsSheet(rootCtx);
-                          }
+                          if (rootCtx != null) await openAccountsSheet(rootCtx);
                         },
                         child: SvgPicture.asset(
                           Assets.option,
@@ -108,41 +99,37 @@ class SidePanel extends StatelessWidget {
                   ),
                 ],
               ),
-              20.vgap,
+              const SizedBox(height: 20),
+
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Text(
                     user.nickname,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      height: 1.3,
                     ),
-                    overflow: TextOverflow.ellipsis,
                   ),
                   Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Text(
                         '\$${user.points}',
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          height: 1.3,
                         ),
                       ),
-                      SizedBox(width: 2),
-                      Text(
+                      const SizedBox(width: 2),
+                      const Text(
                         'Ratels',
                         style: TextStyle(
                           color: Color(0xffd4d4d4),
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          height: 1.3,
                         ),
                       ),
                     ],
@@ -151,57 +138,53 @@ class SidePanel extends StatelessWidget {
               ),
               Text(
                 user.username,
-                style: TextStyle(
+                style: const TextStyle(
                   color: Color(0xffd4d4d4),
                   fontSize: 11,
                   fontWeight: FontWeight.w500,
-                  height: 1.4,
                 ),
               ),
-              10.vgap,
+              const SizedBox(height: 10),
               Row(
                 children: [
                   Text(
-                    "${user.followingsCount.toString()} ",
-                    style: TextStyle(
+                    "${user.followingsCount} ",
+                    style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w600,
                       fontSize: 12,
-                      height: 1.3,
                     ),
                   ),
-                  Text(
+                  const Text(
                     'Following',
                     style: TextStyle(
                       color: Color(0xffd4d4d4),
                       fontWeight: FontWeight.w500,
                       fontSize: 11,
-                      height: 1.3,
                     ),
                   ),
-                  SizedBox(width: 10),
+                  const SizedBox(width: 10),
                   Text(
-                    "${user.followersCount.toString()} ",
-                    style: TextStyle(
+                    "${user.followersCount} ",
+                    style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w600,
                       fontSize: 12,
-                      height: 1.3,
                     ),
                   ),
-                  Text(
+                  const Text(
                     'Followers',
                     style: TextStyle(
                       color: Color(0xffd4d4d4),
                       fontWeight: FontWeight.w500,
                       fontSize: 11,
-                      height: 1.3,
                     ),
                   ),
                 ],
               ),
-              15.vgap,
+              const SizedBox(height: 15),
               Container(color: const Color(0xffd4d4d4), height: 0.3),
+
               Expanded(
                 child: ListView(
                   padding: const EdgeInsets.symmetric(
@@ -242,9 +225,7 @@ class SidePanel extends StatelessWidget {
                       label: 'Verified Credential',
                       onTap: () {
                         onClose();
-                        Get.rootDelegate.offAndToNamed(
-                          AppRoutes.verifiedScreen,
-                        );
+                        Get.rootDelegate.toNamed(AppRoutes.verifiedScreen);
                       },
                     ),
                     MenuItem(
@@ -265,6 +246,7 @@ class SidePanel extends StatelessWidget {
                 ),
               ),
               Container(color: const Color(0xffd4d4d4), height: 0.3),
+
               Padding(
                 padding: const EdgeInsets.fromLTRB(0, 30, 15, 15),
                 child: InkWell(
@@ -272,9 +254,7 @@ class SidePanel extends StatelessWidget {
                     final rootCtx = Get.context ?? context;
                     onClose();
                     await Future.delayed(const Duration(milliseconds: 320));
-                    if (rootCtx != null) {
-                      await openThemeSheet(rootCtx);
-                    }
+                    if (rootCtx != null) await openThemeSheet(rootCtx);
                   },
                   child: SvgPicture.asset(Assets.dark, width: 24, height: 24),
                 ),
@@ -294,7 +274,6 @@ class MenuItem extends StatelessWidget {
     required this.label,
     this.onTap,
   });
-
   final SvgPicture icon;
   final String label;
   final VoidCallback? onTap;
@@ -309,7 +288,6 @@ class MenuItem extends StatelessWidget {
           color: Color(0xffd4d4d4),
           fontWeight: FontWeight.w600,
           fontSize: 14,
-          height: 1.2,
         ),
       ),
       onTap: onTap,
@@ -336,25 +314,34 @@ class _ThemeSheetState extends State<ThemeSheet> {
     _selected = Get.isDarkMode ? ThemeMode.dark : ThemeMode.light;
   }
 
-  Widget _option(String label, ThemeMode mode) {
-    return RadioListTile<ThemeMode>(
-      value: mode,
-      groupValue: _selected,
-      onChanged: (v) {
-        if (v == null) return;
-        setState(() => _selected = v);
-        Get.changeThemeMode(v);
-      },
-      activeColor: AppColors.primary,
-      controlAffinity: ListTileControlAffinity.trailing,
-      title: const Text('', style: TextStyle()),
-      subtitle: Text(
+  void _select(ThemeMode v) {
+    setState(() => _selected = v);
+    Get.changeThemeMode(v);
+  }
+
+  Widget _row(String label, ThemeMode mode) {
+    return ListTile(
+      onTap: () => _select(mode),
+      contentPadding: EdgeInsets.zero,
+      horizontalTitleGap: 0,
+      minVerticalPadding: 0,
+      visualDensity: const VisualDensity(horizontal: 0, vertical: -2),
+      title: Text(
         label,
         style: const TextStyle(
           color: Colors.white,
           fontWeight: FontWeight.w600,
-          fontSize: 14,
+          fontSize: 16,
+          height: 1.2,
         ),
+      ),
+      trailing: Radio<ThemeMode>(
+        value: mode,
+        groupValue: _selected,
+        onChanged: (v) {
+          if (v != null) _select(v);
+        },
+        activeColor: AppColors.primary,
       ),
     );
   }
@@ -362,32 +349,27 @@ class _ThemeSheetState extends State<ThemeSheet> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 6, 16, 16),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-            decoration: const BoxDecoration(
-              border: Border(
-                bottom: BorderSide(color: AppColors.neutral700, width: 1),
-              ),
-            ),
-            child: const Text(
-              'Theme',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-              ),
+          const Text(
+            'Theme',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              height: 1.2,
             ),
           ),
-          const SizedBox(height: 6),
-          _option('Dark', ThemeMode.dark),
-          _option('Light', ThemeMode.light),
-          _option('System theme', ThemeMode.system),
-          const SizedBox(height: 6),
+          12.vgap,
+          const Divider(height: 1, color: AppColors.neutral700),
+          30.vgap,
+
+          _row('Dark', ThemeMode.dark),
+          _row('Light', ThemeMode.light),
+          _row('System-wide setting', ThemeMode.system),
         ],
       ),
     );
@@ -396,8 +378,8 @@ class _ThemeSheetState extends State<ThemeSheet> {
 
 class AccountsSheet extends StatefulWidget {
   const AccountsSheet({super.key, required this.teams});
-
   final List<Team> teams;
+
   @override
   State<AccountsSheet> createState() => _AccountsSheetState();
 }
@@ -412,6 +394,12 @@ class _AccountsSheetState extends State<AccountsSheet> {
   }) {
     final isSel = _selected == index;
     return ListTile(
+      onTap: () => setState(() => _selected = index),
+      contentPadding: EdgeInsets.zero,
+      minVerticalPadding: 0,
+      horizontalTitleGap: 8,
+      visualDensity: const VisualDensity(horizontal: 0, vertical: -2),
+      dense: true,
       leading: const CircleAvatar(
         radius: 14,
         backgroundColor: AppColors.neutral600,
@@ -422,18 +410,21 @@ class _AccountsSheetState extends State<AccountsSheet> {
           color: Colors.white,
           fontWeight: FontWeight.w600,
           fontSize: 14,
+          height: 1.2,
         ),
       ),
       subtitle: Text(
         sub,
-        style: const TextStyle(color: AppColors.neutral400, fontSize: 12),
+        style: const TextStyle(
+          color: AppColors.neutral400,
+          fontSize: 12,
+          height: 1.2,
+        ),
       ),
       trailing: Icon(
         isSel ? Icons.radio_button_checked : Icons.radio_button_unchecked,
         color: isSel ? AppColors.primary : AppColors.neutral600,
       ),
-      onTap: () => setState(() => _selected = index),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 8),
     );
   }
 
@@ -446,7 +437,7 @@ class _AccountsSheetState extends State<AccountsSheet> {
         decoration: BoxDecoration(
           color: Colors.transparent,
           borderRadius: BorderRadius.circular(50),
-          border: Border.all(color: Color(0xff464646), width: 1),
+          border: Border.all(color: const Color(0xff464646), width: 1),
         ),
         child: Text(
           label,
@@ -463,46 +454,126 @@ class _AccountsSheetState extends State<AccountsSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final tiles = widget.teams.map((t) {
-      final id = t.id;
-      final name = t.nickname;
-      final username = t.username;
-      return _accountTile(index: id, name: name, sub: '@$username');
-    }).toList();
+    final tiles = widget.teams
+        .map(
+          (t) => _accountTile(
+            index: t.id,
+            name: t.nickname,
+            sub: '@${t.username}',
+          ),
+        )
+        .toList();
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 6, 16, 16),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-            decoration: const BoxDecoration(
-              border: Border(
-                bottom: BorderSide(color: AppColors.neutral700, width: 1),
-              ),
-            ),
-            child: const Text(
-              'Accounts',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
+          _SheetHeader(title: 'Accounts'),
           const SizedBox(height: 8),
-
           ...tiles,
-
-          const SizedBox(height: 12),
-
+          const SizedBox(height: 10),
           _actionButton('Create a new Account', onTap: () {}),
           const SizedBox(height: 8),
           _actionButton('Add on existing account', onTap: () {}),
           const SizedBox(height: 6),
         ],
+      ),
+    );
+  }
+}
+
+class StyledSheet extends StatelessWidget {
+  const StyledSheet({
+    super.key,
+    required this.child,
+    this.title,
+    this.backgroundColor = AppColors.panelBg,
+    this.radius = const Radius.circular(16),
+    this.handle = true,
+    this.handleColor = const Color(0xFF6B6B6D),
+    this.handleWidth = 44,
+    this.handleHeight = 5,
+    this.horizontal = 16,
+    this.top = 6,
+    this.bottom = 16,
+  });
+
+  final Widget child;
+  final String? title;
+
+  final Color backgroundColor;
+  final Radius radius;
+
+  final bool handle;
+  final Color handleColor;
+  final double handleWidth;
+  final double handleHeight;
+
+  final double horizontal;
+  final double top;
+  final double bottom;
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).padding.bottom;
+
+    return Material(
+      color: backgroundColor,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: radius),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: SafeArea(
+        top: false,
+        bottom: false,
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(horizontal, top, horizontal, bottom),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (handle)
+                Container(
+                  width: handleWidth,
+                  height: handleHeight,
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: handleColor,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+              if (title != null) const SizedBox(height: 6),
+              child,
+              SizedBox(height: bottomInset),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SheetHeader extends StatelessWidget {
+  const _SheetHeader({required this.title});
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+      decoration: const BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: AppColors.neutral700, width: 1),
+        ),
+      ),
+      child: Text(
+        title,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 18,
+          fontWeight: FontWeight.w700,
+        ),
       ),
     );
   }

@@ -1,6 +1,8 @@
 import 'package:ratel/exports.dart';
 
 class BoostingController extends BaseController {
+  Rx<RewardModel> reward = RewardModel(points: 200000).obs;
+
   RxList<BoostingModel> boostings = <BoostingModel>[
     BoostingModel(
       id: 1,

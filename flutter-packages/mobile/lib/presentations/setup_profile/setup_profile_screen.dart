@@ -1,3 +1,4 @@
+import 'package:ratel/components/file_uploader/file_uploader.dart';
 import 'package:ratel/exports.dart';
 
 class SetupProfileScreen extends GetWidget<SetupProfileController> {
@@ -5,6 +6,7 @@ class SetupProfileScreen extends GetWidget<SetupProfileController> {
 
   @override
   Widget build(BuildContext context) {
+    final assetApi = Get.find<AssetApi>();
     return Layout<SetupProfileController>(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -44,6 +46,46 @@ class SetupProfileScreen extends GetWidget<SetupProfileController> {
                         fontSize: 36,
                         fontWeight: FontWeight.w900,
                         height: 1.22,
+                      ),
+                    ),
+                    30.vgap,
+                    FileUploader(
+                      assetApi: assetApi,
+                      onUploadSuccess: (url) =>
+                          controller.avatarUrl.value = url,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Obx(() {
+                            final url = controller.avatarUrl.value;
+                            return RoundContainer(
+                              width: 150,
+                              height: 150,
+                              radius: 100,
+                              color: AppColors.neutral500,
+                              child: ClipOval(
+                                child: (url.isEmpty)
+                                    ? Center(
+                                        child: Text(
+                                          "Profile",
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w500,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      )
+                                    : Image.network(
+                                        url,
+                                        width: 150,
+                                        height: 150,
+                                        fit: BoxFit.cover,
+                                      ),
+                              ),
+                            );
+                          }),
+                        ],
                       ),
                     ),
                     30.vgap,

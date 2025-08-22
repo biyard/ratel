@@ -9,6 +9,7 @@ class Layout<T extends BaseController> extends GetView {
     this.decoration,
     this.height,
     this.bottomSheet,
+    this.scrollable = true,
   });
 
   final Widget child;
@@ -17,6 +18,7 @@ class Layout<T extends BaseController> extends GetView {
   final BoxDecoration? decoration;
   final double? height;
   final Widget? bottomSheet;
+  final bool scrollable;
 
   @override
   Widget build(BuildContext context) {
@@ -26,6 +28,8 @@ class Layout<T extends BaseController> extends GetView {
     return Scaffold(
       backgroundColor: style.background,
       body: SafeArea(
+        top: true,
+        bottom: false,
         child: Stack(
           alignment: Alignment.topLeft,
           children: [
@@ -45,29 +49,21 @@ class Layout<T extends BaseController> extends GetView {
   }
 
   Widget buildBody(BuildContext context, bool notBuilder) {
-    Widget body = child;
+    final Widget content = notBuilder
+        ? child
+        : GetBuilder<T>(
+            builder: (T c) {
+              logger.d('GetBuilder: $c');
+              return child;
+            },
+          );
 
-    return SizedBox(
-      width: MediaQuery.of(context).size.width,
-      height: MediaQuery.of(context).size.height,
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            notBuilder
-                ? body
-                : GetBuilder<T>(
-                    builder: (T ctrl) {
-                      logger.d('GetBuilder: $ctrl');
-                      return body;
-                    },
-                  ),
-          ],
-        ),
-      ),
-    );
+    final Widget padded = content;
+
+    if (scrollable) {
+      return SingleChildScrollView(child: padded);
+    }
+    return SizedBox.expand(child: padded);
   }
 }
 
