@@ -449,6 +449,30 @@ jobs:
             --team_id "$APPLE_TEAM_ID" \
             --keychain_name "$MATCH_KEYCHAIN_NAME" \
             --keychain_password "$MATCH_KEYCHAIN_PASSWORD"
+
+      - name: Resolve installed provisioning profile name
+        shell: bash
+        run: |
+          set -euo pipefail
+          TARGET_BUNDLE_ID="foundation.ratel.app"
+          FOUND_NAME=""
+          for f in ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision; do
+            TMP="$(mktemp)"
+            security cms -D -i "$f" > "$TMP" 2>/dev/null || continue
+            BID=$(/usr/libexec/PlistBuddy -c 'Print :Entitlements:application-identifier' "$TMP" 2>/dev/null || true)
+            NAME=$(/usr/libexec/PlistBuddy -c 'Print :Name' "$TMP" 2>/dev/null || true)
+            if [[ "${BID#*.}" == "$TARGET_BUNDLE_ID" ]]; then
+              FOUND_NAME="$NAME"
+              UUID=$(/usr/libexec/PlistBuddy -c 'Print :UUID' "$TMP" 2>/dev/null || true)
+              echo "Resolved provisioning profile: $FOUND_NAME ($UUID)"
+              break
+            fi
+          done
+          if [[ -z "$FOUND_NAME" ]]; then
+            echo "PROFILE_NAME=match AppStore $TARGET_BUNDLE_ID" >> $GITHUB_ENV
+          else
+            echo "PROFILE_NAME=$FOUND_NAME" >> $GITHUB_ENV
+          fi
       - name: Build and Upload to TestFlight
         working-directory: flutter-packages/mobile/ios
         env:
