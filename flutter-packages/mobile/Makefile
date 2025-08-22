@@ -9,6 +9,17 @@ NET ?= local
 MOBILE ?= android
 PORT ?= 5000
 
+ANDROID_OUT_APK_DIR ?= build/app/outputs/flutter-apk
+ANDROID_OUT_APK_GLOB ?= $(ANDROID_OUT_APK_DIR)/*.apk
+ANDROID_OUT_AAB_DIR ?= build/app/outputs/bundle/release
+ANDROID_OUT_AAB_GLOB ?= $(ANDROID_OUT_AAB_DIR)/*.aab
+
+GIT_SHA := $(shell git rev-parse --short HEAD 2>/dev/null || echo local)
+DATE_STR := $(shell date +%Y%m%d-%H%M%S 2>/dev/null || echo 00000000-000000)
+ARTIFACT_DIR ?= .build
+ARTIFACT_NAME ?= artifacts-$(ENV)-$(GIT_SHA)-$(DATE_STR)
+ARTIFACT_ZIP ?= $(ARTIFACT_DIR)/$(ARTIFACT_NAME).zip
+
 ifeq ("$(ENV)","prod")
 	REDIRECT_URL = https://ratel.foundation
 	API_ENDPOINT = https://api.ratel.foundation
@@ -49,7 +60,7 @@ run: $(BUILD_CONFIG_FILE)
 	flutter run --dart-define-from-file=$(BUILD_CONFIG_FILE)
 
 run.android: $(BUILD_CONFIG_FILE)
-	flutter run --dart-define-from-file=$(BUILD_CONFIG_FILE) -d R3CWB028JTN
+	flutter run --dart-define-from-file=$(BUILD_CONFIG_FILE) -d emulator-5554
 
 run.ios: $(BUILD_CONFIG_FILE)
 	flutter run --dart-define-from-file=$(BUILD_CONFIG_FILE) -d 947A4545-75D7-4264-AC8C-EFFE2C728C87
@@ -105,3 +116,34 @@ build: clean $(BUILD_CONFIG_FILE)
 
 clean:
 	@rm -rf $(BUILD_CONFIG_FILE) build
+
+.PHONY: build.android.apk
+build.android.apk: $(BUILD_CONFIG_FILE)
+	flutter build apk --release --split-per-abi --dart-define-from-file=$(BUILD_CONFIG_FILE)
+	@ls -lh $(ANDROID_OUT_APK_GLOB) || true
+
+.PHONY: build.android.aab
+build.android.aab: $(BUILD_CONFIG_FILE)
+	flutter build appbundle --release --dart-define-from-file=$(BUILD_CONFIG_FILE)
+	@ls -lh $(ANDROID_OUT_AAB_GLOB) || true
+
+.PHONY: artifact.list
+artifact.list:
+	@echo "APK:"; ls -1 $(ANDROID_OUT_APK_GLOB) 2>/dev/null || true
+	@echo "AAB:"; ls -1 $(ANDROID_OUT_AAB_GLOB) 2>/dev/null || true
+
+.PHONY: artifact.zip
+artifact.zip:
+	@mkdir -p $(ARTIFACT_DIR)
+	@echo "Packaging -> $(ARTIFACT_ZIP)"
+	@zip -r $(ARTIFACT_ZIP) $(ANDROID_OUT_APK_DIR) 2>/dev/null || true
+	@zip -j $(ARTIFACT_ZIP) $(ANDROID_OUT_AAB_GLOB) 2>/dev/null || true
+	@ls -lh $(ARTIFACT_ZIP) || true
+
+.PHONY: ci.android.apk
+ci.android.apk: build-config build.android.apk artifact.zip
+	@echo "Artifacts ready at $(ARTIFACT_ZIP)"
+
+.PHONY: ci.android.aab
+ci.android.aab: build-config build.android.aab artifact.zip
+	@echo "Artifacts ready at $(ARTIFACT_ZIP)"
