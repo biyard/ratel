@@ -408,6 +408,88 @@ jobs:
             flutter-packages/mobile/build/app/outputs/apk/**/*.apk
             flutter-packages/mobile/.build/*.zip
           if-no-files-found: warn
+          retention-days: 30
+
+  ios-testflight:
+    runs-on: macos-14
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: flutter-packages/mobile
+    env:
+      MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+      MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          ssh-key: ${{ secrets.PULL_KEY_REPO }}
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: "15.4"
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.2"
+      - name: Install fastlane and cocoapods
+        run: gem install -N fastlane cocoapods
+      - name: Flutter pub get
+        run: flutter pub get
+      - name: Pod install
+        working-directory: flutter-packages/mobile/ios
+        run: pod install --repo-update
+      - name: Write App Store Connect API key
+        working-directory: flutter-packages/mobile/ios
+        if: env.ASC_KEY_BASE64 != ''
+        env:
+          ASC_KEY_BASE64: ${{ secrets.ASC_KEY_BASE64 }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+        run: |
+          mkdir -p fastlane
+          echo "$ASC_KEY_BASE64" | base64 -d > fastlane/AuthKey_${ASC_KEY_ID}.p8
+          chmod 600 fastlane/AuthKey_${ASC_KEY_ID}.p8
+      - name: Install signing with match
+        working-directory: flutter-packages/mobile/ios
+        env:
+          MATCH_KEYCHAIN_NAME: "ci-temp.keychain-db"
+          MATCH_KEYCHAIN_PASSWORD: "password"
+        run: |
+          fastlane match appstore --readonly --keychain_name "$MATCH_KEYCHAIN_NAME" --keychain_password "$MATCH_KEYCHAIN_PASSWORD"
+      - name: Build and Upload to TestFlight
+        working-directory: flutter-packages/mobile/ios
+        env:
+          APP_STORE_CONNECT_API_KEY_PATH: fastlane/AuthKey_${{ env.ASC_KEY_ID }}.p8
+          APP_STORE_CONNECT_API_KEY_KEY_ID: ${{ env.ASC_KEY_ID }}
+          APP_STORE_CONNECT_API_KEY_ISSUER_ID: ${{ env.ASC_ISSUER_ID }}
+        run: |
+          if fastlane lanes | grep -q "deploy"; then
+            fastlane deploy
+          else
+            fastlane run build_app scheme:Runner export_method:app-store skip_package_ipa:false
+            if [ -f fastlane/AuthKey_${ASC_KEY_ID}.p8 ]; then
+              fastlane run upload_to_testflight skip_waiting_for_build_processing:true distribute_external:false changelog:"Auto build $GITHUB_SHA" api_key_path:fastlane/AuthKey_${ASC_KEY_ID}.p8
+            else
+              exit 1
+            fi
+          fi
+      - name: Upload .ipa artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-ipa-${{ github.sha }}
+          path: |
+            flutter-packages/mobile/build/ios/**/*.ipa
+            flutter-packages/mobile/ios/*.ipa
+          if-no-files-found: warn
           retention-days: 14
 
   create-release-pr:
