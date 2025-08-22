@@ -32,7 +32,24 @@ target 'Runner' do
 end
 
 post_install do |installer|
-  installer.pods_project.targets.each do |target|
-    flutter_additional_ios_build_settings(target)
+  installer.pods_project.targets.each do |t|
+    flutter_additional_ios_build_settings(t)
+
+    t.build_configurations.each do |config|
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'
+
+      config.build_settings['CODE_SIGNING_ALLOWED']  = 'NO'
+      config.build_settings['CODE_SIGNING_REQUIRED'] = 'NO'
+    end
+  end
+
+  if installer.respond_to?(:generated_projects)
+    installer.generated_projects.each do |project|
+      project.targets.each do |t|
+        t.build_configurations.each do |config|
+          config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'
+        end
+      end
+    end
   end
 end
