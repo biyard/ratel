@@ -26,6 +26,7 @@ use crate::{
                 follow::follow_handler, network::list_networks_handler,
                 search::list_networks_by_keyword_handler,
             },
+            notifications::{mark_all_read::mark_all_notifications_read_handler},
             oracles::create_oracle::create_oracle_handler,
             telegram::subscribe::telegram_subscribe_handler,
             users::{find_user::find_user_handler, logout::logout_handler},
@@ -215,6 +216,16 @@ pub async fn route(
                 (),
                 "Subscribe to Telegram",
                 "This endpoint allows users to subscribe to Telegram notifications."
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/v2/notifications/mark-all-read",
+            post_api!(
+                mark_all_notifications_read_handler,
+                (),
+                "Mark All Notifications Read",
+                "Mark all notifications as read for the authenticated user."
             )
             .with_state(pool.clone()),
         )
