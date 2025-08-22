@@ -24,12 +24,12 @@ platform :ios do
       configuration: "Release",
       export_method: "app-store",
       clean: true,
-      xcargs: "DEVELOPMENT_TEAM=#{team_id} CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY='Apple Distribution' PROVISIONING_PROFILE_SPECIFIER='#{specifier}' PRODUCT_BUNDLE_IDENTIFIER=#{app_id}",
+      xcargs: "DEVELOPMENT_TEAM=#{team_id} PRODUCT_BUNDLE_IDENTIFIER=#{app_id}",
       export_options: {
         method: "app-store",
-        signingStyle: "manual",
+        signingStyle: "manual",                         
         provisioningProfiles: {
-          app_id => profile_name
+          app_id => profile_name                        
         }
       }
     )
