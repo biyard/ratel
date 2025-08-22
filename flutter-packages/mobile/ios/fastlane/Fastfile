@@ -12,7 +12,11 @@ platform :ios do
 
     app_id = ENV["APP_IDENTIFIER"] || "foundation.ratel.app"
     team_id = ENV["APPLE_TEAM_ID"]
+
     profile_name = ENV["PROFILE_NAME"] || "match AppStore #{app_id}"
+    profile_uuid = ENV["PROFILE_UUID"] 
+
+    specifier = profile_uuid && profile_uuid.length > 0 ? profile_uuid : profile_name
 
     build_ios_app(
       workspace: "Runner.xcworkspace",
@@ -20,7 +24,7 @@ platform :ios do
       configuration: "Release",
       export_method: "app-store",
       clean: true,
-      xcargs: "DEVELOPMENT_TEAM=#{team_id} CODE_SIGN_STYLE=Manual PROVISIONING_PROFILE_SPECIFIER='#{profile_name}' PRODUCT_BUNDLE_IDENTIFIER=#{app_id}",
+      xcargs: "DEVELOPMENT_TEAM=#{team_id} CODE_SIGN_STYLE=Manual PROVISIONING_PROFILE_SPECIFIER='#{specifier}' PRODUCT_BUNDLE_IDENTIFIER=#{app_id}",
       export_options: {
         method: "app-store",
         signingStyle: "manual",
