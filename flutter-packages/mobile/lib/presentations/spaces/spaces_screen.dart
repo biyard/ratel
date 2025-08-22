@@ -1,3 +1,4 @@
+import 'package:flutter_html/flutter_html.dart';
 import 'package:ratel/exports.dart';
 
 class SpacesScreen extends GetWidget<SpacesController> {
@@ -33,37 +34,39 @@ class SpacesScreen extends GetWidget<SpacesController> {
             );
           }),
           20.vgap,
-          Expanded(
-            child: NotificationListener<ScrollNotification>(
-              onNotification: (_) => false,
-              child: ListView(
-                controller: controller.scrollCtrl,
-                padding: const EdgeInsets.fromLTRB(12, 6, 12, 24),
-                children: [
-                  ...controller.mySpaces.map(
-                    (m) => MySpaceTile(
-                      onClick: () => {controller.routingSpace(m.id)},
-                      model: m,
-                    ),
-                  ),
-                  40.vgap,
-                  Container(
-                    key: controller.boostingHeaderKey,
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    child: const Text(
-                      'Popular boosting spaces giving rewards',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14,
+          Obx(
+            () => Expanded(
+              child: NotificationListener<ScrollNotification>(
+                onNotification: (_) => false,
+                child: ListView(
+                  controller: controller.scrollCtrl,
+                  padding: const EdgeInsets.fromLTRB(12, 6, 12, 24),
+                  children: [
+                    ...controller.mySpaces.map(
+                      (m) => MySpaceTile(
+                        onClick: () => {controller.routingSpace(m.id)},
+                        model: m,
                       ),
                     ),
-                  ),
-                  20.vgap,
-                  ...controller.popularBoosting.map(
-                    (m) => _BoostingTile(onClick: () => {}, model: m),
-                  ),
-                ],
+                    40.vgap,
+                    Container(
+                      key: controller.boostingHeaderKey,
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      child: const Text(
+                        'Popular boosting spaces giving rewards',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                    20.vgap,
+                    ...controller.boostings.map(
+                      (m) => _BoostingTile(onClick: () => {}, model: m),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -114,7 +117,7 @@ class TagChip extends StatelessWidget {
 
 class MySpaceTile extends StatelessWidget {
   const MySpaceTile({super.key, required this.model, required this.onClick});
-  final SpaceSummaryModel model;
+  final SpaceSummary model;
   final VoidCallback onClick;
 
   @override
@@ -130,7 +133,12 @@ class MySpaceTile extends StatelessWidget {
             (model.imageUrl != "")
                 ? ClipRRect(
                     borderRadius: BorderRadius.circular(8),
-                    child: Image.network(model.imageUrl, width: 56, height: 56),
+                    child: Image.network(
+                      model.imageUrl,
+                      width: 56,
+                      height: 56,
+                      fit: BoxFit.cover,
+                    ),
                   )
                 : ClipRRect(
                     borderRadius: BorderRadius.circular(8),
@@ -176,16 +184,45 @@ class MySpaceTile extends StatelessWidget {
                     ],
                   ),
                   8.vgap,
-                  Text(
-                    model.description,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w400,
-                      fontSize: 12,
-                      height: 1.1,
-                    ),
+                  Html(
+                    data: model.htmlContents,
+                    style: {
+                      "html": Style(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w400,
+                        fontSize: FontSize(12),
+                        lineHeight: LineHeight.number(1.1),
+                        maxLines: 1,
+                        textOverflow: TextOverflow.ellipsis,
+                        margin: Margins.zero,
+                        padding: HtmlPaddings.zero,
+                        whiteSpace: WhiteSpace.normal,
+                      ),
+                      "body": Style(
+                        margin: Margins.zero,
+                        padding: HtmlPaddings.zero,
+                      ),
+                      "p": Style(
+                        margin: Margins.zero,
+                        padding: HtmlPaddings.zero,
+                      ),
+
+                      "h1": Style(
+                        fontSize: FontSize(12),
+                        fontWeight: FontWeight.w400,
+                        margin: Margins.zero,
+                      ),
+                      "h2": Style(
+                        fontSize: FontSize(12),
+                        fontWeight: FontWeight.w400,
+                        margin: Margins.zero,
+                      ),
+                      "h3": Style(
+                        fontSize: FontSize(12),
+                        fontWeight: FontWeight.w400,
+                        margin: Margins.zero,
+                      ),
+                    },
                   ),
                 ],
               ),
@@ -200,7 +237,7 @@ class MySpaceTile extends StatelessWidget {
 class _BoostingTile extends StatelessWidget {
   const _BoostingTile({required this.onClick, required this.model});
   final VoidCallback onClick;
-  final SpaceSummaryModel model;
+  final SpaceSummary model;
 
   @override
   Widget build(BuildContext context) {
@@ -215,7 +252,12 @@ class _BoostingTile extends StatelessWidget {
             (model.imageUrl != "")
                 ? ClipRRect(
                     borderRadius: BorderRadius.circular(8),
-                    child: Image.network(model.imageUrl, width: 56, height: 56),
+                    child: Image.network(
+                      model.imageUrl,
+                      width: 56,
+                      height: 56,
+                      fit: BoxFit.cover,
+                    ),
                   )
                 : ClipRRect(
                     borderRadius: BorderRadius.circular(8),
@@ -265,7 +307,7 @@ class _BoostingTile extends StatelessWidget {
 
                       5.gap,
                       Text(
-                        '${SpacesController.kFormat(model.members)}/${SpacesController.kFormat(model.members)}',
+                        '1500/2000',
                         style: const TextStyle(
                           color: AppColors.iconPrimary,
                           fontWeight: FontWeight.w500,

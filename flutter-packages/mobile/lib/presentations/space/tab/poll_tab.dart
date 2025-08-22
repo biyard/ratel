@@ -42,7 +42,12 @@ class PollTab extends StatelessWidget {
         ),
         itemBuilder: (context, index) {
           final m = surveys[index];
-          return _SurveyTile(model: m);
+          logger.d("model: ${index} ${m.questions[0].title}");
+          return _SurveyTile(
+            model: m,
+            userResponses: space.userResponses,
+            isAI: (index == 0) && (surveys.length != 1),
+          );
         },
       ),
     );
@@ -50,10 +55,18 @@ class PollTab extends StatelessWidget {
 }
 
 class _SurveyTile extends StatelessWidget {
-  const _SurveyTile({required this.model});
+  const _SurveyTile({
+    required this.model,
+    required this.userResponses,
+    required this.isAI,
+  });
   final SurveyModel model;
+  final List<SurveyResponse> userResponses;
+  final bool isAI;
 
   String get _statusText {
+    if (isAI && userResponses.isNotEmpty) return 'Voted';
+
     switch (model.status) {
       case ProjectStatus.ready:
         return 'Ready';
@@ -65,6 +78,8 @@ class _SurveyTile extends StatelessWidget {
   }
 
   Color get _statusColor {
+    if (isAI && userResponses.isNotEmpty) return AppColors.btnPDisabledText;
+
     switch (model.status) {
       case ProjectStatus.ready:
         return Colors.white;
@@ -77,17 +92,22 @@ class _SurveyTile extends StatelessWidget {
 
   bool get _tappable => model.status == ProjectStatus.inProgress;
 
-  String _fmtDue(int sec) => DateFormat(
-    'MMM d',
-  ).format(DateTime.fromMillisecondsSinceEpoch(sec * 1000));
-
   @override
   Widget build(BuildContext context) {
     const title = 'Final survey';
     final questionsCnt = model.questions.length;
+    final spaceController = Get.find<SpaceController>();
 
     return InkWell(
-      onTap: _tappable ? () {} : null,
+      onTap: _tappable
+          ? () {
+              if (_statusText != "Start") return;
+
+              spaceController.isSurvey(true);
+              spaceController.questions(model.questions);
+              spaceController.surveyId(model.id);
+            }
+          : null,
       borderRadius: BorderRadius.circular(8),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 6),
@@ -135,17 +155,29 @@ class _SurveyTile extends StatelessWidget {
                     ),
                   ),
 
-                  // if (model.endedAt > 0) ...[
-                  //   const SizedBox(height: 2),
-                  //   Text(
-                  //     'by ${_fmtDue(model.endedAt)}',
-                  //     style: const TextStyle(
-                  //       color: AppColors.neutral500,
-                  //       fontSize: 11,
-                  //       height: 1.3,
-                  //     ),
-                  //   ),
-                  // ],
+                  if (isAI) ...[
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            SvgPicture.asset(Assets.ai, width: 12, height: 12),
+                            5.gap,
+                            Text(
+                              "Ratel AI",
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
                 ],
               ),
             ),
