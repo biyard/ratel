@@ -12,7 +12,7 @@ platform :ios do
 
     app_id = ENV["APP_IDENTIFIER"] || "foundation.ratel.app"
     team_id = ENV["APPLE_TEAM_ID"]
-    profile_name = ENV["PROFILE_NAME"] || "AppStore_#{app_id}"
+    profile_name = ENV["PROFILE_NAME"] || "match AppStore #{app_id}"
 
     build_ios_app(
       workspace: "Runner.xcworkspace",
