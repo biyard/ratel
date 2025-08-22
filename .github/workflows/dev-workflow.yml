@@ -410,14 +410,7 @@ jobs:
           mkdir -p fastlane
           echo "$ASC_KEY_BASE64" | base64 -d > fastlane/AuthKey_${ASC_KEY_ID}.p8
           chmod 600 fastlane/AuthKey_${ASC_KEY_ID}.p8
-      - name: Setup SSH for match repo
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.MATCH_SSH_KEY }}
-      - name: Trust github.com host
-        run: |
-          mkdir -p ~/.ssh
-          ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
+
       - name: Create and unlock temporary keychain
         run: |
           set -euo pipefail
@@ -428,15 +421,12 @@ jobs:
           security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
           security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-
           security list-keychains -d user -s "$KEYCHAIN_PATH" "$HOME/Library/Keychains/login.keychain-db"
           security default-keychain -s "$KEYCHAIN_PATH"
 
           echo "MATCH_KEYCHAIN_NAME=$KEYCHAIN_LABEL" >> $GITHUB_ENV
           echo "MATCH_KEYCHAIN_PASSWORD=$KEYCHAIN_PASSWORD" >> $GITHUB_ENV
 
-          ls -l "$HOME/Library/Keychains"
-          security list-keychains -d user
       - name: Install signing with match (readonly)
         working-directory: flutter-packages/mobile/ios
         env:
@@ -445,15 +435,27 @@ jobs:
         run: |
           bundle exec fastlane match appstore \
             --readonly \
+            --app_identifier foundation.ratel.app \
             --keychain_name "$MATCH_KEYCHAIN_NAME" \
             --keychain_password "$MATCH_KEYCHAIN_PASSWORD"
+
       - name: Build and Upload to TestFlight
         working-directory: flutter-packages/mobile/ios
         env:
-          ASC_KEY_ID: ${{ env.ASC_KEY_ID }}
-          ASC_ISSUER_ID: ${{ env.ASC_ISSUER_ID }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          APP_IDENTIFIER: foundation.ratel.app
         run: |
           bundle exec fastlane deploy
+
+      - name: Dump xcodebuild log on failure
+        if: failure()
+        run: |
+          LOG_DIR="$HOME/Library/Logs/gym"
+          echo "=== List logs ==="
+          ls -la "$LOG_DIR" || true
+          echo "=== Tail Runner-Runner.log ==="
+          tail -n +1 "$LOG_DIR"/Runner-Runner.log || true
       - name: Upload .ipa artifact
         if: always()
         uses: actions/upload-artifact@v4
