@@ -1,5 +1,7 @@
 import 'package:ratel/exports.dart';
 import 'package:dotted_border/dotted_border.dart';
+import 'package:ratel/presentations/verified/components/crypto_wallet_connect_sheet.dart';
+import 'package:ratel/services/wallet/wallet_service.dart';
 
 class Credentials extends StatefulWidget {
   const Credentials({
@@ -22,11 +24,14 @@ class _CredentialsState extends State<Credentials> {
   static const double _openSize = 0.60;
   static const double _maxSize = 0.7;
 
+  var crypto = false;
+
   final _dragCtrl = DraggableScrollableController();
 
   bool hasCredential(String label) => widget.credentials.any(
-    (e) =>
-        e.label.toLowerCase() == label.toLowerCase() || label.contains('Tax'),
+    (e) => (label == "Crypto Wallet")
+        ? crypto
+        : (e.label.toLowerCase() == label.toLowerCase()),
   );
 
   void _openSheet() {
@@ -72,17 +77,40 @@ class _CredentialsState extends State<Credentials> {
   }
 
   List<VerifyItem> get _items => const [
-    VerifyItem('Age', 'Social identity or passport'),
-    VerifyItem('Country', 'Social identity or passport'),
+    VerifyItem('Region', 'Social identity'),
     VerifyItem('Company', 'DID or Employment'),
     VerifyItem('Occuption', 'Current job or role for matching'),
     VerifyItem('Annual Salary', 'Revenue certificate or incoming bank account'),
-    VerifyItem('Crypto Wallet', 'Indicates possession'),
+
     VerifyItem('Crypto Tax', 'Shows the tax rate on crypto holdings'),
-    VerifyItem('Blood Type', 'Medical checkup certificate'),
+    VerifyItem('Crypto Wallet', 'Indicates possession'),
+    VerifyItem('Birth Date', 'Social identity or passport'),
     VerifyItem('Gender', 'Medical checkup certificate or Social identity'),
-    VerifyItem('Region', 'Social identity or passport'),
+
+    VerifyItem('Country', 'Social identity or passport'),
   ];
+
+  Future<void> _handleCryptoTap() async {
+    final ws = Get.find<WalletService>();
+    await ws.ensureInit(context);
+
+    final rootCtx = Get.key.currentContext ?? Get.overlayContext ?? context;
+
+    final addr = await showModalBottomSheet<String>(
+      context: rootCtx,
+      useRootNavigator: true,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF0F0F10),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (_) => const CryptoWalletConnectSheet(),
+    );
+
+    logger.d("metamask wallet: $addr");
+    setState(() => crypto = true);
+    _collapseSheet();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -135,22 +163,33 @@ class _CredentialsState extends State<Credentials> {
                 ),
                 Padding(
                   padding: const EdgeInsets.all(10),
-                  child: GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: widget.credentials.length + 1,
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 3,
-                          mainAxisSpacing: 10,
-                          crossAxisSpacing: 10,
-                          childAspectRatio: 1,
-                        ),
-                    itemBuilder: (context, i) {
-                      if (i == widget.credentials.length) {
-                        return AddCard(onTap: _openSheet);
+                  child: Builder(
+                    builder: (context) {
+                      final filtered = List<VerifiedModel>.from(
+                        widget.credentials,
+                      );
+                      if (!crypto && filtered.isNotEmpty) {
+                        filtered.removeAt(0);
                       }
-                      return CredCard(model: widget.credentials[i]);
+
+                      return GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: filtered.length + 1,
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 3,
+                              mainAxisSpacing: 10,
+                              crossAxisSpacing: 10,
+                              childAspectRatio: 1,
+                            ),
+                        itemBuilder: (context, i) {
+                          if (i == filtered.length) {
+                            return AddCard(onTap: _openSheet);
+                          }
+                          return CredCard(model: filtered[i]);
+                        },
+                      );
                     },
                   ),
                 ),
@@ -203,10 +242,17 @@ class _CredentialsState extends State<Credentials> {
                             return Padding(
                               padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
                               child: InkWell(
-                                onTap: () {
+                                onTap: () async {
+                                  logger.d("hello");
                                   if (verified) return;
-                                  widget.onNext();
-                                  _collapseSheet();
+                                  logger.d("hi");
+
+                                  if (it.title == "Crypto Wallet") {
+                                    await _handleCryptoTap();
+                                  } else {
+                                    widget.onNext();
+                                    _collapseSheet();
+                                  }
                                 },
                                 child: Container(
                                   decoration: BoxDecoration(
@@ -416,11 +462,11 @@ class CredCard extends StatelessWidget {
               children: [
                 Text(
                   model.value,
-                  maxLines: 1,
+                  maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 20,
+                    fontSize: 16,
                     fontWeight: FontWeight.w900,
                     height: 1.2,
                   ),
@@ -428,11 +474,11 @@ class CredCard extends StatelessWidget {
                 const SizedBox(height: 3),
                 Text(
                   model.label,
-                  maxLines: 1,
+                  maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 14,
+                    fontSize: 15,
                     fontWeight: FontWeight.w700,
                     height: 1.2,
                   ),

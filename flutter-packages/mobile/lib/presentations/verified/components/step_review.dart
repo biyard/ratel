@@ -136,38 +136,38 @@ class StepReview extends StatelessWidget {
                                 color: Colors.white.withAlpha(20),
                                 borderRadius: BorderRadius.circular(5),
                               ),
-                              child: ListTile(
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 20,
-                                ),
-                                title: Text(
-                                  it.title,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 12,
-                                    height: 1.2,
+                              child: InkWell(
+                                onTap: () {
+                                  if (it.verified) return;
+                                  onRecapture();
+                                  Navigator.of(ctx).maybePop();
+                                },
+                                child: ListTile(
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 20,
                                   ),
-                                ),
-                                subtitle: Text(
-                                  it.subtitle,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w500,
-                                    fontSize: 11,
-                                    height: 1.2,
+                                  title: Text(
+                                    it.title,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 12,
+                                      height: 1.2,
+                                    ),
                                   ),
+                                  subtitle: Text(
+                                    it.subtitle,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 11,
+                                      height: 1.2,
+                                    ),
+                                  ),
+                                  trailing: it.verified
+                                      ? SvgPicture.asset(Assets.verified)
+                                      : SvgPicture.asset(Assets.send),
                                 ),
-                                trailing: it.verified
-                                    ? SvgPicture.asset(Assets.verified)
-                                    : InkWell(
-                                        onTap: () {
-                                          onRecapture();
-                                          Navigator.of(ctx).maybePop();
-                                        },
-                                        child: SvgPicture.asset(Assets.send),
-                                      ),
-                                onTap: () => Navigator.of(ctx).maybePop(),
                               ),
                             );
                           },

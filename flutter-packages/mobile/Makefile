@@ -49,7 +49,7 @@ run: $(BUILD_CONFIG_FILE)
 	flutter run --dart-define-from-file=$(BUILD_CONFIG_FILE)
 
 run.android: $(BUILD_CONFIG_FILE)
-	flutter run --dart-define-from-file=$(BUILD_CONFIG_FILE) -d emulator-5554
+	flutter run --dart-define-from-file=$(BUILD_CONFIG_FILE) -d R3CWB028JTN
 
 run.ios: $(BUILD_CONFIG_FILE)
 	flutter run --dart-define-from-file=$(BUILD_CONFIG_FILE) -d 947A4545-75D7-4264-AC8C-EFFE2C728C87
