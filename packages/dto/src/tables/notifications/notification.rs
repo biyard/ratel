@@ -18,9 +18,31 @@ pub struct Notification {
     #[serde(default)]
     pub metadata: NotificationData,
 
+    #[api_model(summary, version = v0.1, indexed, type = INTEGER)]
+    #[serde(default)]
+    pub notification_type: NotificationType,
+
     #[api_model(summary, version = v0.1)]
     pub read: bool,
 }
+
+#[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub enum NotificationType {
+    #[default]
+    #[translate(en = "Unknown")]
+    Unknown = 0,
+
+    #[translate(en = "Invite Team")]
+    InviteTeam = 1,
+    #[translate(en = "Invite Discussion")]
+    InviteDiscussion = 2,
+    #[translate(en = "Boosting Space")]
+    BoostingSpace = 3,
+    #[translate(en = "Connect Network")]
+    ConnectNetwork = 4,
+}
+
 
 #[derive(Debug, Clone, Eq, PartialEq, Default, serde::Serialize, serde::Deserialize, Translate)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
@@ -28,15 +50,8 @@ pub enum NotificationData {
     #[default]
     None,
 
-    #[translate(en = "Invite Team")]
     InviteTeam { team_id: i64, group_id: i64, image_url: Option<String>, description: String },
-
-    #[translate(en = "Invite Discussion")]
     InviteDiscussion { discussion_id: i64, image_url: Option<String>, description: String },
-
-    #[translate(en = "Boosting Space")]
     BoostingSpace { space_id: i64, image_url: Option<String>, description: String },
-
-    #[translate(en = "Connect Network")]
     ConnectNetwork { requester_id: i64, image_url: String, description: String },
 }
