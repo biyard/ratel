@@ -467,17 +467,28 @@ jobs:
           mkdir -p ~/.ssh
           ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
 
+      - name: Create & unlock temp keychain
+        run: |
+          KEYCHAIN_NAME="ci-temp"
+          KEYCHAIN_PASSWORD="password"
+          KEYCHAIN_PATH="$HOME/Library/Keychains/${KEYCHAIN_NAME}.keychain-db"
+
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_NAME"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_NAME"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_NAME"
+          security list-keychains -s "$KEYCHAIN_PATH" login.keychain-db
+          echo "MATCH_KEYCHAIN_PATH=$KEYCHAIN_PATH" >> $GITHUB_ENV
+          echo "MATCH_KEYCHAIN_PASSWORD=$KEYCHAIN_PASSWORD" >> $GITHUB_ENV
+
       - name: Install signing with match (readonly)
         working-directory: flutter-packages/mobile/ios
         env:
           MATCH_GIT_URL: git@github.com:biyard/ratel-certificate.git
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
-          MATCH_KEYCHAIN_NAME: "ci-temp.keychain-db"
-          MATCH_KEYCHAIN_PASSWORD: "password"
         run: |
           bundle exec fastlane match appstore \
             --readonly \
-            --keychain_name "$MATCH_KEYCHAIN_NAME" \
+            --keychain_name "$MATCH_KEYCHAIN_PATH" \
             --keychain_password "$MATCH_KEYCHAIN_PASSWORD"
 
       - name: Build and Upload to TestFlight
