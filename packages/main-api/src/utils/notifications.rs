@@ -6,12 +6,20 @@ pub async fn send_notification(
     user_id: i64,
     content: NotificationData,
 ) -> Result<Notification> {
-    
+    let notification_type = match content {
+        NotificationData::BoostingSpace { .. } => NotificationType::BoostingSpace,
+        NotificationData::ConnectNetwork { .. } => NotificationType::ConnectNetwork,
+        NotificationData::InviteDiscussion { .. } => NotificationType::InviteDiscussion,
+        NotificationData::InviteTeam { .. } => NotificationType::InviteTeam,
+        NotificationData::None => NotificationType::Unknown,
+    };
+
     let repo = Notification::get_repository(pool.clone());
     repo.insert_with_tx(
             &mut **tx,
             user_id,
             content,
+            notification_type,
             false
         )
         .await
