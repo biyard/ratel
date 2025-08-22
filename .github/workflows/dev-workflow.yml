@@ -38,6 +38,7 @@ jobs:
           components: clippy, rustfmt
           target: wasm32-unknown-unknown
           toolchain: stable
+
       - name: Install PostgreSQL Client
         run: sudo apt-get install -y postgresql-client
 
@@ -68,7 +69,7 @@ jobs:
           KAIA_OWNER_KEY: ${{ secrets.DEV_KAIA_KEY }}
           KAIA_OWNER_ADDR: ${{ secrets.DEV_KAIA_ADDR }}
         run: |
-          cd packages/main-api  && make test
+          cd packages/main-api && make test
 
   main-api:
     runs-on: ubuntu-22.04
@@ -92,6 +93,7 @@ jobs:
           toolchain: stable
 
       - uses: cargo-bins/cargo-binstall@main
+
       - name: Install toml-cli
         run: |
           cargo binstall toml-cli --force
@@ -111,7 +113,6 @@ jobs:
           OPENAPI_KEY: ${{ secrets.OPENAPI_KEY }}
           AUTH_SECRET_KEY: ${{ secrets.DEV_AUTH_SECRET_KEY }}
           JWT_SECRET_KEY: ${{ secrets.DEV_JWT_SECRET_KEY }}
-
           BASE_DOMAIN: ratel.foundation
           MIGRATE: false
           ENABLE_S3: false
@@ -119,7 +120,6 @@ jobs:
           SLACK_CHANNEL_SPONSOR: ${{ secrets.DEV_SLACK }}
           US_CONGRESS_KEY: ${{ secrets.US_CONGRESS_KEY }}
           SLACK_CHANNEL_ABUSING: ${{ secrets.DEV_SLACK }}
-
           KAIA_ENDPOINT: https://public-en-kairos.node.kaia.io
           KAIA_FEEPAYER_KEY: ${{ secrets.DEV_KAIA_KEY }}
           KAIA_FEEPAYER_ADDR: ${{ secrets.DEV_KAIA_ADDR }}
@@ -127,22 +127,19 @@ jobs:
           KAIA_OWNER_ADDR: ${{ secrets.DEV_KAIA_ADDR }}
           RDS_RESOURCE_ARN: ${{ secrets.RDS_RESOURCE_ARN }}
           RDS_SECRET_ARN: ${{ secrets.RDS_SECRET_ARN }}
-
           NONCELAB_TOKEN: ${{ secrets.NONCELAB_TOKEN }}
-
           BBS_BLS_X: ${{ secrets.BBS_BLS_X }}
           BBS_BLS_Y: ${{ secrets.BBS_BLS_Y }}
           BBS_BLS_D: ${{ secrets.BBS_BLS_D }}
           BBS_BLS_CRV: ${{ secrets.BBS_BLS_CRV }}
-
           P256_X: ${{ secrets.P256_X }}
           P256_Y: ${{ secrets.P256_Y }}
           P256_D: ${{ secrets.P256_D }}
           P256_CRV: ${{ secrets.P256_CRV }}
-          
         run: |
           npm i -g aws-cdk
           make deploy
+
   image-worker:
     runs-on: ubuntu-22.04
 
@@ -165,6 +162,7 @@ jobs:
           toolchain: stable
 
       - uses: cargo-bins/cargo-binstall@main
+
       - name: Install toml-cli
         run: |
           cargo binstall toml-cli --force
@@ -179,7 +177,6 @@ jobs:
           SERVICE: image-worker
           DATABASE_TYPE: postgres
           DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
-
           BASE_DOMAIN: ratel.foundation
           MIGRATE: false
           ENABLE_S3: false
@@ -192,6 +189,7 @@ jobs:
 
   telegram-bot:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v3
         with:
@@ -211,6 +209,7 @@ jobs:
           toolchain: stable
 
       - uses: cargo-bins/cargo-binstall@main
+
       - name: Install dependencies
         run: |
           cargo binstall toml-cli
@@ -233,14 +232,11 @@ jobs:
           SERVICE: telegram-bot
           DOMAIN: telegram-bot.dev.ratel.foundation
           DATABASE_TYPE: postgres
-
           DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
-
           TELEGRAM_TOKEN: ${{ secrets.DEV_TELEGRAM_TOKEN }}
           TELEGRAM_MINI_APP_URI: https://t.me/crypto_ratel_dev_bot?startapp
           BASE_DOMAIN: ratel.foundation
           REPO_NAME: ratel/telegram-bot
-
           MIGRATE: false
           ENABLE_S3: false
           ENABLE_FARGATE: true
@@ -248,8 +244,10 @@ jobs:
         run: |
           npm i -g aws-cdk
           make deploy
+
   fetcher:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v3
         with:
@@ -269,6 +267,7 @@ jobs:
           toolchain: stable
 
       - uses: cargo-bins/cargo-binstall@main
+
       - name: Install dependencies
         run: |
           cargo binstall toml-cli
@@ -291,7 +290,6 @@ jobs:
           SERVICE: fetcher
           DOMAIN: fetcher-api.dev.ratel.foundation
           AUTH_DOMAIN: dev.ratel.foundation
-
           DATABASE_TYPE: postgres
           DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
           OPENAPI_KEY: ${{ secrets.OPENAPI_KEY }}
@@ -305,7 +303,6 @@ jobs:
           REPO_NAME: ratel/fetcher
           US_CONGRESS_KEY: ${{ secrets.US_CONGRESS_KEY }}
           RPC_ENDPOINT: https://public-en-kairos.node.kaia.io
-
           MIGRATE: false
           ENABLE_S3: false
           ENABLE_FARGATE: true
@@ -341,6 +338,47 @@ jobs:
       - name: Build
         run: make build
 
+  android-apk:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: flutter-packages/mobile
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          ssh-key: ${{ secrets.PULL_KEY_REPO }}
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Flutter pub get
+        run: flutter pub get
+
+      - name: Build APK (dev)
+        run: make ENV=dev build.android.apk
+
+      - name: Package artifacts (zip)
+        run: make artifact.zip
+
+      - name: Upload APK artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-apk-${{ github.sha }}
+          path: |
+            flutter-packages/mobile/build/app/outputs/flutter-apk/*.apk
+            flutter-packages/mobile/build/app/outputs/apk/**/*.apk
+            flutter-packages/mobile/.build/*.zip
+          if-no-files-found: warn
+          retention-days: 14
+
   create-release-pr:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/dev'
@@ -350,6 +388,7 @@ jobs:
         with:
           submodules: recursive
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
+
       - name: Git pr release action
         uses: grassedge/git-pr-release-action@v1.0
         with:
