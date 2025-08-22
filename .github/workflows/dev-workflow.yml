@@ -362,8 +362,10 @@ jobs:
       - name: Flutter pub get
         run: flutter pub get
 
-      - name: Build APK (dev)
-        run: make ENV=dev build.android.apk
+      - name: Build APK (debug)
+        run: |
+          make ENV=dev build-config
+          flutter build apk --debug --dart-define-from-file=.build/config.json
 
       - name: Package artifacts (zip)
         run: make artifact.zip
