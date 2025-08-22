@@ -12,6 +12,7 @@ platform :ios do
 
     app_id = ENV["APP_IDENTIFIER"] || "foundation.ratel.app"
     profile_name = "match AppStore #{app_id}"
+    team_id = ENV["APPLE_TEAM_ID"]
 
     build_ios_app(
       workspace: "Runner.xcworkspace",
@@ -24,7 +25,8 @@ platform :ios do
         provisioningProfiles: {
           app_id => profile_name
         }
-      }
+      },
+      xcargs: "DEVELOPMENT_TEAM=#{team_id} CODE_SIGN_STYLE=Manual"
     )
 
     upload_to_testflight(api_key: api_key)

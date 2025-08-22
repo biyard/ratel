@@ -376,6 +376,7 @@ jobs:
       MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
       ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
       ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -410,70 +411,57 @@ jobs:
           mkdir -p fastlane
           echo "$ASC_KEY_BASE64" | base64 -d > fastlane/AuthKey_${ASC_KEY_ID}.p8
           chmod 600 fastlane/AuthKey_${ASC_KEY_ID}.p8
-
       - name: Setup SSH for match repo
         uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.MATCH_SSH_KEY }}
-
       - name: Trust github.com host keys
         run: |
           mkdir -p ~/.ssh
           ssh-keyscan github.com >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
-
-      - name: Sanity check SSH to GitHub
-        env:
-          GIT_SSH_COMMAND: "ssh -v"
-        run: |
-          ssh -T git@github.com || true
-
       - name: Create and unlock temporary keychain
         run: |
           set -euo pipefail
           KEYCHAIN_LABEL="ci-temp"
           KEYCHAIN_PASSWORD="password"
           KEYCHAIN_PATH="$HOME/Library/Keychains/${KEYCHAIN_LABEL}.keychain-db"
-
           security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
           security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
           security list-keychains -d user -s "$KEYCHAIN_PATH" "$HOME/Library/Keychains/login.keychain-db"
           security default-keychain -s "$KEYCHAIN_PATH"
-
           echo "MATCH_KEYCHAIN_NAME=$KEYCHAIN_LABEL" >> $GITHUB_ENV
           echo "MATCH_KEYCHAIN_PASSWORD=$KEYCHAIN_PASSWORD" >> $GITHUB_ENV
-
       - name: Install signing with match (readonly)
         working-directory: flutter-packages/mobile/ios
         env:
           MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
           bundle exec fastlane match appstore \
             --readonly \
             --git_url "$MATCH_GIT_URL" \
             --app_identifier foundation.ratel.app \
+            --team_id "$APPLE_TEAM_ID" \
             --keychain_name "$MATCH_KEYCHAIN_NAME" \
             --keychain_password "$MATCH_KEYCHAIN_PASSWORD"
-
       - name: Build and Upload to TestFlight
         working-directory: flutter-packages/mobile/ios
         env:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
           APP_IDENTIFIER: foundation.ratel.app
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
           bundle exec fastlane deploy
-
       - name: Dump xcodebuild log on failure
         if: failure()
         run: |
           LOG_DIR="$HOME/Library/Logs/gym"
-          echo "=== List logs ==="
           ls -la "$LOG_DIR" || true
-          echo "=== Tail Runner-Runner.log ==="
-          tail -n +1 "$LOG_DIR"/Runner-Runner.log || true
+          tail -n +200 "$LOG_DIR"/Runner-Runner.log || true
       - name: Upload .ipa artifact
         if: always()
         uses: actions/upload-artifact@v4
