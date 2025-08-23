@@ -2,7 +2,7 @@ use bdk::prelude::*;
 use by_axum::axum::{extract::{Path, State}, Extension, Json};
 use crate::by_axum::auth::Authorization;
 use dto::{
-    Discussion, DiscussionMember, Elearning, Error, Feed, GroupPermission, NoticeQuizAnswer,
+    Discussion, DiscussionParticipant, Elearning, Error, Feed, GroupPermission, NoticeQuizAnswer,
     NoticeQuizAttempt, Result, Space, SpaceComment, SpaceDeleteConfirmation, SpaceDraft, SpaceGroup,
     SpaceLikeUser, SpaceMember, SpaceShareUser, sqlx::{Pool, Postgres},
 };
@@ -60,16 +60,18 @@ pub async fn delete_space_handler(
         .fetch_all(&pool)
         .await?;
     let discussion_repo = Discussion::get_repository(pool.clone());
-    let discussion_member_repo = dto::DiscussionMember::get_repository(pool.clone());
+    let discussion_participant_repo = dto::DiscussionParticipant::get_repository(pool.clone());
     for discussion in discussions {
-        let participants = DiscussionMember::query_builder()
+        let participants = DiscussionParticipant::query_builder()
             .discussion_id_equals(discussion.id)
             .query()
-            .map(DiscussionMember::from)
+            .map(DiscussionParticipant::from)
             .fetch_all(&pool)
             .await?;
         for participant in participants {
-            discussion_member_repo.delete_with_tx(&mut *tx, participant.id).await?;
+            discussion_participant_repo
+                .delete_with_tx(&mut *tx, participant.id)
+                .await?;
         }
         discussion_repo.delete_with_tx(&mut *tx, discussion.id).await?;
     }
