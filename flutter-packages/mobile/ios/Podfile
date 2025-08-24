@@ -18,12 +18,10 @@ def flutter_root
 end
 
 require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)
-
 flutter_ios_podfile_setup
 
 target 'Runner' do
-  # use_frameworks!           
-  use_modular_headers!         
+  use_frameworks! :linkage => :static
 
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
 
@@ -37,21 +35,20 @@ post_install do |installer|
     flutter_additional_ios_build_settings(t)
     t.build_configurations.each do |config|
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'
-
-      config.build_settings['CODE_SIGNING_ALLOWED']  = 'NO'
-      config.build_settings['CODE_SIGNING_REQUIRED'] = 'NO'
-
-      config.build_settings['SWIFT_VERSION'] = '5.10'
-
-      existing = config.build_settings['OTHER_SWIFT_FLAGS']
-      existing = Array(existing || ['$(inherited)'])
-      unless existing.join(' ').include?('AccessLevelOnImport')
-        existing += ['-enable-experimental-feature', 'AccessLevelOnImport']
-      end
-      config.build_settings['OTHER_SWIFT_FLAGS'] = existing
-
-      config.build_settings['BUILD_LIBRARY_FOR_DISTRIBUTION'] = 'NO'
-      config.build_settings['DEAD_CODE_STRIPPING'] = 'YES'
+      flags = config.build_settings['OTHER_SWIFT_FLAGS'] || '$(inherited)'
+      config.build_settings['OTHER_SWIFT_FLAGS'] = "#{flags} -enable-experimental-feature AccessLevelOnImport"
     end
+  end
+
+  installer.aggregate_targets.each do |agg|
+    app = agg.user_project
+    app.targets.each do |t|
+      next unless t.name == 'Runner'
+      t.build_configurations.each do |config|
+        config.build_settings['ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES'] = 'YES'
+        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'
+      end
+    end
+    app.save
   end
 end
