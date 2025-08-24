@@ -400,6 +400,14 @@ jobs:
           working-directory: flutter-packages/mobile/ios
       - name: Flutter pub get
         run: flutter pub get
+      - name: Generate iOS Release configs (Flutter)
+        run: |
+          rm -f ios/Flutter/Generated.xcconfig
+          flutter build ios --config-only --release
+      - name: Patch CocoaPods base config include
+        run: |
+          grep -q 'Pods-Runner\.release' ios/Flutter/Release.xcconfig || echo '#include "../Pods/Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"' >> ios/Flutter/Release.xcconfig
+          grep -q 'Pods-Runner\.profile' ios/Flutter/Profile.xcconfig || echo '#include "../Pods/Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig"' >> ios/Flutter/Profile.xcconfig
       - name: Pod install
         working-directory: flutter-packages/mobile/ios
         run: pod install --repo-update
@@ -448,7 +456,6 @@ jobs:
             --team_id "$APPLE_TEAM_ID" \
             --keychain_name "$MATCH_KEYCHAIN_NAME" \
             --keychain_password "$MATCH_KEYCHAIN_PASSWORD"
-
       - name: Resolve installed provisioning profile name
         shell: bash
         run: |
