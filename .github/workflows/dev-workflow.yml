@@ -383,40 +383,42 @@ jobs:
         with:
           submodules: recursive
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
+
       - name: Select Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
           xcode-version: "15.4"
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: stable
           cache: true
+
       - name: Setup Ruby (bundler)
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: "3.2"
           bundler-cache: true
           working-directory: flutter-packages/mobile/ios
+
       - name: Flutter pub get
         run: flutter pub get
+
       - name: Generate iOS Release configs (Flutter)
         run: |
           rm -f ios/Flutter/Generated.xcconfig
           flutter build ios --config-only --release
+
       - name: Patch CocoaPods base config include
         run: |
           grep -q 'Pods-Runner\.release' ios/Flutter/Release.xcconfig || echo '#include "../Pods/Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"' >> ios/Flutter/Release.xcconfig
           grep -q 'Pods-Runner\.profile' ios/Flutter/Profile.xcconfig || echo '#include "../Pods/Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig"' >> ios/Flutter/Profile.xcconfig
-      - name: Flutter pub get
-        run: flutter pub get
-
-      - name: Generate iOS Release configs
-        run: flutter build ios --config-only --release
 
       - name: Pod install
         working-directory: flutter-packages/mobile/ios
         run: pod install --repo-update
+
       - name: Write App Store Connect API key
         working-directory: flutter-packages/mobile/ios
         env:
@@ -426,15 +428,18 @@ jobs:
           mkdir -p fastlane
           echo "$ASC_KEY_BASE64" | base64 -d > fastlane/AuthKey_${ASC_KEY_ID}.p8
           chmod 600 fastlane/AuthKey_${ASC_KEY_ID}.p8
+
       - name: Setup SSH for match repo
         uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.MATCH_SSH_KEY }}
+
       - name: Trust github.com host keys
         run: |
           mkdir -p ~/.ssh
           ssh-keyscan github.com >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
+
       - name: Create and unlock temporary keychain
         run: |
           set -euo pipefail
@@ -448,6 +453,7 @@ jobs:
           security default-keychain -s "$KEYCHAIN_PATH"
           echo "MATCH_KEYCHAIN_NAME=$KEYCHAIN_LABEL" >> $GITHUB_ENV
           echo "MATCH_KEYCHAIN_PASSWORD=$KEYCHAIN_PASSWORD" >> $GITHUB_ENV
+
       - name: Install signing with match (readonly)
         working-directory: flutter-packages/mobile/ios
         env:
@@ -462,21 +468,24 @@ jobs:
             --team_id "$APPLE_TEAM_ID" \
             --keychain_name "$MATCH_KEYCHAIN_NAME" \
             --keychain_password "$MATCH_KEYCHAIN_PASSWORD"
-      - name: Resolve installed provisioning profile name
+
+      - name: Resolve installed provisioning profile (name & UUID)
         shell: bash
         run: |
           set -euo pipefail
           TARGET_BUNDLE_ID="foundation.ratel.app"
           FOUND_NAME=""
+          FOUND_UUID=""
           for f in ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision; do
             TMP="$(mktemp)"
             security cms -D -i "$f" > "$TMP" 2>/dev/null || continue
             BID=$(/usr/libexec/PlistBuddy -c 'Print :Entitlements:application-identifier' "$TMP" 2>/dev/null || true)
             NAME=$(/usr/libexec/PlistBuddy -c 'Print :Name' "$TMP" 2>/dev/null || true)
+            UUID=$(/usr/libexec/PlistBuddy -c 'Print :UUID' "$TMP" 2>/dev/null || true)
             if [[ "${BID#*.}" == "$TARGET_BUNDLE_ID" ]]; then
               FOUND_NAME="$NAME"
-              UUID=$(/usr/libexec/PlistBuddy -c 'Print :UUID' "$TMP" 2>/dev/null || true)
-              echo "Resolved provisioning profile: $FOUND_NAME ($UUID)"
+              FOUND_UUID="$UUID"
+              echo "Resolved provisioning profile: $FOUND_NAME ($FOUND_UUID)"
               break
             fi
           done
@@ -484,7 +493,9 @@ jobs:
             echo "PROFILE_NAME=match AppStore $TARGET_BUNDLE_ID" >> $GITHUB_ENV
           else
             echo "PROFILE_NAME=$FOUND_NAME" >> $GITHUB_ENV
+            echo "PROFILE_UUID=$FOUND_UUID" >> $GITHUB_ENV
           fi
+
       - name: Build and Upload to TestFlight
         working-directory: flutter-packages/mobile/ios
         env:
@@ -494,12 +505,14 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
           bundle exec fastlane deploy
+
       - name: Dump xcodebuild log on failure
         if: failure()
         run: |
           LOG_DIR="$HOME/Library/Logs/gym"
           ls -la "$LOG_DIR" || true
           tail -n +200 "$LOG_DIR"/Runner-Runner.log || true
+
       - name: Upload .ipa artifact
         if: always()
         uses: actions/upload-artifact@v4
