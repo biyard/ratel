@@ -22,6 +22,7 @@ flutter_ios_podfile_setup
 
 target 'Runner' do
   use_frameworks! :linkage => :static
+
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
 
   target 'RunnerTests' do
@@ -31,15 +32,19 @@ end
 
 post_install do |installer|
   installer.pods_project.targets.each do |t|
+    flutter_additional_ios_build_settings(t)
+
     t.build_configurations.each do |config|
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'
+      config.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'
+
+      if t.name.end_with?('_privacy')
+        config.build_settings['ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES'] = 'NO'
+      end
 
       if t.name == 'FirebaseCoreInternal'
-        flags = config.build_settings['OTHER_SWIFT_FLAGS'] || '$(inherited)'
-        config.build_settings['OTHER_SWIFT_FLAGS'] = "#{flags} -enable-experimental-feature AccessLevelOnImport"
-      end
-      if t.respond_to?(:product_type) && t.product_type == 'com.apple.product-type.bundle'
-        config.build_settings['ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES'] = 'NO'
+        existing = config.build_settings['OTHER_SWIFT_FLAGS'] || '$(inherited)'
+        config.build_settings['OTHER_SWIFT_FLAGS'] = "#{existing} -enable-experimental-feature AccessLevelOnImport"
       end
     end
   end
@@ -49,8 +54,9 @@ post_install do |installer|
     app.targets.each do |t|
       next unless t.name == 'Runner'
       t.build_configurations.each do |config|
-        config.build_settings['ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES'] = 'YES'
         config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'
+        config.build_settings['ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES'] = 'YES'
+        config.build_settings['CODE_SIGNING_ALLOWED'] = 'YES'
       end
     end
     app.save

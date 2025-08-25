@@ -378,7 +378,6 @@ jobs:
       ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
       APP_IDENTIFIER: foundation.ratel.app
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-
     steps:
       - uses: actions/checkout@v4
         with:
@@ -396,13 +395,12 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Flutter env
-        run: |
-          flutter --version
-          flutter config --no-analytics
-
-      - name: Precache iOS engine
-        run: flutter precache --ios
+      - name: Setup Ruby (bundler)
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.2"
+          bundler-cache: true
+          working-directory: flutter-packages/mobile/ios
 
       - name: Flutter pub get
         run: flutter pub get
@@ -419,9 +417,7 @@ jobs:
 
       - name: Pod install
         working-directory: flutter-packages/mobile/ios
-        run: |
-          rm -rf Pods Podfile.lock
-          pod install --repo-update
+        run: pod install --repo-update
 
       - name: Write App Store Connect API key
         working-directory: flutter-packages/mobile/ios
@@ -488,7 +484,6 @@ jobs:
               FOUND_NAME="$NAME"
               UUID=$(/usr/libexec/PlistBuddy -c 'Print :UUID' "$TMP" 2>/dev/null || true)
               echo "Resolved provisioning profile: $FOUND_NAME ($UUID)"
-              echo "PROFILE_UUID=$UUID" >> $GITHUB_ENV
               break
             fi
           done
