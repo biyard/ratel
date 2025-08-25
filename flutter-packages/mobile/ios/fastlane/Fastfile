@@ -14,8 +14,6 @@ platform :ios do
     team_id = ENV["APPLE_TEAM_ID"]
 
     profile_name = ENV["PROFILE_NAME"] || "match AppStore #{app_id}"
-    profile_uuid = ENV["PROFILE_UUID"] 
-    specifier = profile_uuid && profile_uuid.length > 0 ? profile_uuid : profile_name
 
     build_ios_app(
       workspace: "Runner.xcworkspace",
@@ -23,13 +21,7 @@ platform :ios do
       configuration: "Release",
       export_method: "app-store",
       clean: true,
-      xcargs: "DEVELOPMENT_TEAM=#{team_id} " \
-              "PRODUCT_BUNDLE_IDENTIFIER=#{app_id} " \
-              "CODE_SIGN_STYLE=Manual " \
-              "CODE_SIGN_IDENTITY='Apple Distribution' " \
-              "PROVISIONING_PROFILE_SPECIFIER='#{specifier}' " \
-              "ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES=YES " \
-              "OTHER_LDFLAGS='$(inherited) -weak_framework SwiftUICore'",
+      xcargs: "DEVELOPMENT_TEAM=#{team_id} PRODUCT_BUNDLE_IDENTIFIER=#{app_id} OTHER_LDFLAGS='$(inherited) -weak_framework SwiftUICore'",
       export_options: {
         method: "app-store",
         signingStyle: "manual",
