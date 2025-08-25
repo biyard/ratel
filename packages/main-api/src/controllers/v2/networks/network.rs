@@ -4,7 +4,7 @@ use dto::{
         auth::Authorization,
         axum::{Extension, Json, extract::State},
     },
-    sqlx::PgPool,
+    sqlx::{PgPool, Pool, Postgres},
     *,
 };
 
@@ -31,7 +31,16 @@ pub async fn list_networks_handler(
 ) -> Result<Json<ConnectionResponse>> {
     let user_id = extract_user_id(&pool, auth).await?;
 
-    // 🧠 SMART TEAM SUGGESTIONS - Advanced ML-inspired scoring system
+    let suggested_teams = get_suggested_teams(pool.clone(), user_id).await?;
+    let suggested_users = get_suggested_users(pool.clone(), user_id).await?;
+
+    Ok(Json(ConnectionResponse {
+        suggested_teams,
+        suggested_users,
+    }))
+}
+
+pub async fn get_suggested_teams(pool: Pool<Postgres>, user_id: i64) -> Result<Vec<Follower>> {
     let suggested_teams_sql = r#"
             WITH user_activity_stats AS (
                 -- Calculate current user's engagement profile for personalized scoring
@@ -143,7 +152,17 @@ pub async fn list_networks_handler(
             LIMIT 3
         "#;
 
-    // 🧠 SMART USER SUGGESTIONS - Advanced collaborative filtering
+    let suggested_teams = sqlx::query(suggested_teams_sql)
+        .bind(user_id)
+        .bind(UserType::Team as i32)
+        .map(Follower::from)
+        .fetch_all(&pool)
+        .await?;
+
+    Ok(suggested_teams)
+}
+
+pub async fn get_suggested_users(pool: Pool<Postgres>, user_id: i64) -> Result<Vec<Follower>> {
     let suggested_users_sql = r#"
             WITH user_profile AS (
                 -- Build current user's profile for recommendation (optimized - only needed fields)
@@ -262,13 +281,6 @@ pub async fn list_networks_handler(
             LIMIT 5
         "#;
 
-    let suggested_teams = sqlx::query(suggested_teams_sql)
-        .bind(user_id)
-        .bind(UserType::Team as i32)
-        .map(Follower::from)
-        .fetch_all(&pool)
-        .await?;
-
     let suggested_users = sqlx::query(suggested_users_sql)
         .bind(user_id)
         .bind(UserType::Individual as i32)
@@ -276,8 +288,5 @@ pub async fn list_networks_handler(
         .fetch_all(&pool)
         .await?;
 
-    Ok(Json(ConnectionResponse {
-        suggested_teams,
-        suggested_users,
-    }))
+    Ok(suggested_users)
 }
