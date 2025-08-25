@@ -10,19 +10,16 @@ platform :ios do
       in_house: false
     )
 
-    app_id = ENV["APP_IDENTIFIER"] || "foundation.ratel.app"
+    app_id  = ENV["APP_IDENTIFIER"] || "foundation.ratel.app"
     team_id = ENV["APPLE_TEAM_ID"]
+
     profile_name = ENV["PROFILE_NAME"] || "match AppStore #{app_id}"
-    profile_uuid = ENV["PROFILE_UUID"]
 
     update_code_signing_settings(
       use_automatic_signing: false,
-      path: "Runner.xcodeproj",
       targets: ["Runner"],
-      team_id: team_id,
-      code_sign_identity: "Apple Distribution",
-      profile_name: (profile_uuid && profile_uuid.length > 0) ? profile_uuid : profile_name,
-      build_configurations: ["Release"]
+      profile_name: profile_name,
+      team_id: team_id
     )
 
     build_ios_app(
@@ -30,12 +27,14 @@ platform :ios do
       scheme:         "Runner",
       configuration:  "Release",
       export_method:  "app-store",
-      clean: true,
-      xcargs: "DEVELOPMENT_TEAM=#{team_id} PRODUCT_BUNDLE_IDENTIFIER=#{app_id}",
+      clean:          true,
+      xcargs: "DEVELOPMENT_TEAM=#{team_id} PRODUCT_BUNDLE_IDENTIFIER=#{app_id} OTHER_LDFLAGS='$(inherited) -weak_framework SwiftUICore'",
       export_options: {
         method: "app-store",
         signingStyle: "manual",
-        provisioningProfiles: { app_id => profile_name }
+        provisioningProfiles: {
+          app_id => profile_name
+        }
       }
     )
 
