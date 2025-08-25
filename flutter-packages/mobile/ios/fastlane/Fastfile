@@ -29,7 +29,7 @@ platform :ios do
       configuration:  "Release",
       export_method:  "app-store",
       clean:          true,
-      xcargs: "DEVELOPMENT_TEAM=#{team_id} PRODUCT_BUNDLE_IDENTIFIER=#{app_id} OTHER_LDFLAGS='$(inherited)' FLUTTER_BUILD_NUMBER=#{ENV['FLUTTER_BUILD_NUMBER'] || 7}", # <-- 여기 콤마 추가
+      xcargs: "DEVELOPMENT_TEAM=#{team_id} PRODUCT_BUNDLE_IDENTIFIER=#{app_id} OTHER_LDFLAGS='$(inherited)' FLUTTER_BUILD_NUMBER=#{ENV['FLUTTER_BUILD_NUMBER'] || 7}", 
       export_options: {
         method: "app-store",
         signingStyle: "manual",
@@ -39,6 +39,6 @@ platform :ios do
       }
     )
 
-    upload_to_testflight(api_key: api_key)
+    upload_to_testflight(api_key: api_key, skip_waiting_for_build_processing: true)
   end
 end
