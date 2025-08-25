@@ -1,4 +1,3 @@
-# ios/Podfile
 platform :ios, '13.0'
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
 
@@ -23,7 +22,6 @@ flutter_ios_podfile_setup
 
 target 'Runner' do
   use_frameworks! :linkage => :static
-
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
 
   target 'RunnerTests' do
@@ -39,6 +37,9 @@ post_install do |installer|
       if t.name == 'FirebaseCoreInternal'
         flags = config.build_settings['OTHER_SWIFT_FLAGS'] || '$(inherited)'
         config.build_settings['OTHER_SWIFT_FLAGS'] = "#{flags} -enable-experimental-feature AccessLevelOnImport"
+      end
+      if t.respond_to?(:product_type) && t.product_type == 'com.apple.product-type.bundle'
+        config.build_settings['ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES'] = 'NO'
       end
     end
   end
