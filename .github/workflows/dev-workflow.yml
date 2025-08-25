@@ -365,7 +365,8 @@ jobs:
           APK=$(ls -t build/app/outputs/flutter-apk/*.apk | head -n 1)
           ZIP=".build/$(basename "${APK%.apk}").zip"
           zip -j "$ZIP" "$APK"
-          echo "APK_ZIP=$ZIP" >> $GITHUB_ENV
+          echo "APK_ZIP=$PWD/$ZIP" >> $GITHUB_ENV
+          ls -lh "$APK" "$ZIP"
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
