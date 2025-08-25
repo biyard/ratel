@@ -12,14 +12,15 @@ platform :ios do
 
     app_id  = ENV["APP_IDENTIFIER"] || "foundation.ratel.app"
     team_id = ENV["APPLE_TEAM_ID"]
-
     profile_name = ENV["PROFILE_NAME"] || "match AppStore #{app_id}"
 
     update_code_signing_settings(
       use_automatic_signing: false,
       targets: ["Runner"],
+      build_configurations: ["Release"],
+      team_id: team_id,
       profile_name: profile_name,
-      team_id: team_id
+      code_sign_identity: "Apple Distribution"
     )
 
     build_ios_app(
