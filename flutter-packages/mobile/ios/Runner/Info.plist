@@ -33,8 +33,6 @@
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
-	<key>NSCameraUsageDescription</key>
-	<string>This app needs camera access</string>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>metamask</string>
@@ -60,11 +58,10 @@
 	<string>This app needs microphone access</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>This app needs location access</string>
-	<key>NSCameraUsageDescription</key>
-	<string>Passport verification requires camera access.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Allow access to your photo library so you can select and upload images within the app.</string>
-	<key>ITSAppUsesNonExemptEncryption</key> <No>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
