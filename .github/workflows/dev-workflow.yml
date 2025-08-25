@@ -376,19 +376,13 @@ jobs:
           path: ${{ env.APK_ZIP }}
           if-no-files-found: error
           retention-days: 30
-      - name: Link to artifact (run page)
-        if: always()
-        run: |
-          echo "### Android APK artifact" >> $GITHUB_STEP_SUMMARY
-          echo "- Run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" >> $GITHUB_STEP_SUMMARY
-          echo "- Artifact name: mobile-apk-${GITHUB_SHA}" >> $GITHUB_STEP_SUMMARY
-      - name: Link to artifact (run page)
+      - name: Artifact info (no URLs)
         if: always()
         run: |
           {
             echo "### Android APK artifact"
-            echo "- Run: ./actions/runs/$GITHUB_RUN_ID"
-            echo "- Artifact: ./actions/runs/$GITHUB_RUN_ID/artifacts/${{ steps.upload_apk.outputs.artifact-id }}"
+            echo "- Artifact name: mobile-apk-${GITHUB_SHA}"
+            echo "- Download"
           } >> $GITHUB_STEP_SUMMARY
 
   ios-testflight:
