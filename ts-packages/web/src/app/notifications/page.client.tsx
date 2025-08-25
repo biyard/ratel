@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Check } from 'lucide-react';
 import { useInView } from 'react-intersection-observer';
@@ -16,6 +16,7 @@ import { useFeedByID } from '@/app/(social)/_hooks/use-feed';
 import {
   NotificationType,
   Notification,
+  NotificationsFilter,
   getNotificationType,
   getNotificationContent,
 } from './types';
@@ -33,30 +34,11 @@ type NotificationTabType =
 
 export default function NotificationPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { data: promotion } = usePromotion();
   const { data: feed } = useFeedByID(promotion.feed_id);
-  const [selectedType, setSelectedType] = useState<NotificationTabType>(
-    NotificationTab.NOTIFICATIONS,
-  );
-  const [filterType, setFilterType] = useState<NotificationType>(
-    NotificationType.ALL,
-  );
-
-  // Update tab based on URL parameter
-  useEffect(() => {
-    const tab = searchParams.get('tab');
-    if (tab === 'messages') {
-      setSelectedType(NotificationTab.MESSAGES);
-    } else {
-      setSelectedType(NotificationTab.NOTIFICATIONS);
-    }
-  }, [searchParams]);
+  const [filterType, setFilterType] = useState<NotificationsFilter>('all');
 
   const handleTabChange = (newType: NotificationTabType) => {
-    setSelectedType(newType);
-
-    // Update URL without page reload
     if (newType === NotificationTab.MESSAGES) {
       router.push('/messages', { scroll: false });
     } else {
@@ -69,19 +51,12 @@ export default function NotificationPage() {
       <div className="flex-1 flex relative">
         <Col className="flex-1 flex max-mobile:px-[10px]">
           <div className="flex flex-col w-full gap-5 max-mobile:gap-3">
-            <SelectedType
-              selectedType={selectedType}
-              setSelectedType={handleTabChange}
-            />
+            <SelectedType handleTabChange={handleTabChange} />
 
-            {selectedType === NotificationTab.NOTIFICATIONS ? (
-              <NotificationsContent
-                filterType={filterType}
-                setFilterType={setFilterType}
-              />
-            ) : (
-              <div className="text-white">Messages content will go here</div>
-            )}
+            <NotificationsContent
+              filterType={filterType}
+              setFilterType={setFilterType}
+            />
           </div>
         </Col>
 
@@ -103,42 +78,24 @@ export default function NotificationPage() {
 }
 
 function SelectedType({
-  selectedType,
-  setSelectedType,
+  handleTabChange,
 }: {
-  selectedType: NotificationTabType;
-  setSelectedType: (selectedType: NotificationTabType) => void;
+  handleTabChange: (selectedType: NotificationTabType) => void;
 }) {
   return (
     <div className="flex flex-row w-full justify-center items-center gap-20 max-mobile:gap-8">
-      <div
-        className={`cursor-pointer flex flex-col w-[180px] max-mobile:w-auto max-mobile:flex-1 h-[35px] justify-start items-center text-white text-base max-mobile:text-sm ${
-          selectedType === NotificationTab.NOTIFICATIONS
-            ? 'font-semibold'
-            : 'font-normal'
-        }`}
-        onClick={() => setSelectedType(NotificationTab.NOTIFICATIONS)}
-      >
+      <div className="cursor-pointer flex flex-col w-[180px] max-mobile:w-auto max-mobile:flex-1 h-[35px] justify-start items-center text-white text-base max-mobile:text-sm font-semibold">
         <div className="relative pb-2">
           <span>{NotificationTab.NOTIFICATIONS}</span>
-          {selectedType === NotificationTab.NOTIFICATIONS && (
-            <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-8 h-0.5 bg-primary"></div>
-          )}
+          <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-8 h-0.5 bg-primary"></div>
         </div>
       </div>
       <div
-        className={`cursor-pointer flex flex-col w-[180px] max-mobile:w-auto max-mobile:flex-1 h-[35px] justify-start items-center text-white text-base max-mobile:text-sm ${
-          selectedType === NotificationTab.MESSAGES
-            ? 'font-semibold'
-            : 'font-normal'
-        }`}
-        onClick={() => setSelectedType(NotificationTab.MESSAGES)}
+        className="cursor-pointer flex flex-col w-[180px] max-mobile:w-auto max-mobile:flex-1 h-[35px] justify-start items-center text-white text-base max-mobile:text-sm font-normal"
+        onClick={() => handleTabChange(NotificationTab.MESSAGES)}
       >
         <div className="relative pb-2">
           <span>{NotificationTab.MESSAGES}</span>
-          {selectedType === NotificationTab.MESSAGES && (
-            <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-8 h-0.5 bg-primary"></div>
-          )}
         </div>
       </div>
     </div>
@@ -149,8 +106,8 @@ function NotificationsContent({
   filterType,
   setFilterType,
 }: {
-  filterType: NotificationType;
-  setFilterType: (type: NotificationType) => void;
+  filterType: NotificationsFilter;
+  setFilterType: (type: NotificationsFilter) => void;
 }) {
   const { ref, inView } = useInView({ threshold: 0.5 });
   const {
@@ -335,11 +292,11 @@ function FilterBar({
   filterType,
   setFilterType,
 }: {
-  filterType: NotificationType;
-  setFilterType: (type: NotificationType) => void;
+  filterType: NotificationsFilter;
+  setFilterType: (type: NotificationsFilter) => void;
 }) {
   const filterOptions = [
-    { value: NotificationType.ALL, label: 'All' },
+    { value: 'all' as const, label: 'All' },
     { value: NotificationType.INVITE_TEAM, label: 'Team Invites' },
     { value: NotificationType.INVITE_DISCUSSION, label: 'Discussion Invites' },
     { value: NotificationType.BOOSTING_SPACE, label: 'Space Boosts' },
