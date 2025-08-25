@@ -433,7 +433,6 @@ jobs:
         uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.MATCH_SSH_KEY }}
-
       - name: Trust github.com host keys
         run: |
           mkdir -p ~/.ssh
