@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { Check } from 'lucide-react';
+import { useInView } from 'react-intersection-observer';
 import News from '@/app/(social)/_components/News';
 import Suggestions from '@/app/(social)/_components/suggestions';
 import BlackBox from '@/app/(social)/_components/black-box';
@@ -15,10 +16,10 @@ import { useFeedByID } from '@/app/(social)/_hooks/use-feed';
 import {
   NotificationType,
   Notification,
-  useNotifications,
   getNotificationType,
   getNotificationContent,
 } from './types';
+import { useNotificationsInfinite } from '@/hooks/use-notifications';
 import NotificationDropdown from './notification-dropdown';
 import NotificationReadStatus from './notification-read-status';
 
@@ -151,13 +152,26 @@ function NotificationsContent({
   filterType: NotificationType;
   setFilterType: (type: NotificationType) => void;
 }) {
+  const { ref, inView } = useInView({ threshold: 0.5 });
   const {
-    data: notifications,
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
     isLoading,
     refetch,
-  } = useNotifications(filterType);
+  } = useNotificationsInfinite(filterType);
   const { post: apiPost } = useApiCall();
   const [isMarkingAllRead, setIsMarkingAllRead] = useState(false);
+
+  const notifications = data?.pages.flatMap((page) => page.items) || [];
+
+  // Infinite scroll effect
+  useEffect(() => {
+    if (inView && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const handleMarkAllAsRead = async () => {
     if (isMarkingAllRead) return;
@@ -204,10 +218,8 @@ function NotificationsContent({
         <div className="flex flex-col">
           {notifications
             .map((notification: Notification) => {
-              const content = getNotificationContent(notification.metadata);
-              const notificationType = getNotificationType(
-                notification.metadata,
-              );
+              const content = getNotificationContent(notification);
+              const notificationType = getNotificationType(notification);
 
               // Only show notifications that can be properly parsed
               if (!content) {
@@ -289,6 +301,26 @@ function NotificationsContent({
             })
             .filter(Boolean)}{' '}
           {/* Filter out null values */}
+          {/* Loading indicator for fetching more */}
+          {isFetchingNextPage && (
+            <div className="flex justify-center py-4">
+              <div className="text-white text-sm">
+                Loading more notifications...
+              </div>
+            </div>
+          )}
+          {/* Infinite scroll trigger */}
+          {hasNextPage && !isLoading && !isFetchingNextPage && (
+            <div ref={ref} className="h-10" />
+          )}
+          {/* End message */}
+          {!hasNextPage && notifications.length > 0 && (
+            <div className="flex justify-center py-4">
+              <div className="text-neutral-500 text-sm">
+                You've reached the end
+              </div>
+            </div>
+          )}
         </div>
       ) : (
         <div className="flex flex-row w-full h-fit justify-center items-center px-[16px] max-mobile:px-[12px] py-[20px] max-mobile:py-[16px] border border-gray-500 rounded-[8px] font-medium text-base max-mobile:text-sm text-gray-500">
