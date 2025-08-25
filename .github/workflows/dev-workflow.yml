@@ -329,6 +329,7 @@ jobs:
       - name: Flutter pub get
         run: flutter pub get
       - name: Prepare Android signing (real or placeholder)
+        working-directory: flutter-packages/mobile
         shell: bash
         run: |
           set -euo pipefail
@@ -358,29 +359,18 @@ jobs:
         run: |
           make ENV=dev build-config
           flutter build apk --debug --dart-define-from-file=.build/config.json
-      - name: Package single APK (zip)
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p .build
-          APK=$(ls -t build/app/outputs/flutter-apk/*.apk | head -n 1)
-          ZIP=".build/$(basename "${APK%.apk}").zip"
-          zip -j "$ZIP" "$APK"
-          echo "APK_ZIP=$PWD/$ZIP" >> $GITHUB_ENV
-          ls -lh "$APK" "$ZIP"
-      - name: Upload APK artifact
+      - name: Package artifacts (zip)
+        run: make artifact.zip
+      - name: Upload APK artifacts
         uses: actions/upload-artifact@v4
         with:
           name: mobile-apk-${{ github.sha }}
-          path: ${{ env.APK_ZIP }}
-          if-no-files-found: error
+          path: |
+            flutter-packages/mobile/build/app/outputs/flutter-apk/*.apk
+            flutter-packages/mobile/build/app/outputs/apk/**/*.apk
+            flutter-packages/mobile/.build/*.zip
+          if-no-files-found: warn
           retention-days: 30
-      - name: Link to artifact (run page)
-        if: always()
-        run: |
-          echo "### Android APK artifact" >> $GITHUB_STEP_SUMMARY
-          echo "- Run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" >> $GITHUB_STEP_SUMMARY
-          echo "- Artifact name: mobile-apk-${GITHUB_SHA}" >> $GITHUB_STEP_SUMMARY
 
   ios-testflight:
     runs-on: macos-14
