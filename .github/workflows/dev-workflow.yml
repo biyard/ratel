@@ -329,7 +329,6 @@ jobs:
       - name: Flutter pub get
         run: flutter pub get
       - name: Prepare Android signing (real or placeholder)
-        working-directory: flutter-packages/mobile
         shell: bash
         run: |
           set -euo pipefail
@@ -359,17 +358,20 @@ jobs:
         run: |
           make ENV=dev build-config
           flutter build apk --debug --dart-define-from-file=.build/config.json
-      - name: Package artifacts (zip)
-        run: make artifact.zip
-      - name: Upload APK artifacts
+      - name: Package single APK (zip)
+        run: |
+          set -euo pipefail
+          mkdir -p .build
+          APK=$(ls -t build/app/outputs/flutter-apk/*.apk | head -n 1)
+          ZIP=".build/$(basename "${APK%.apk}").zip"
+          zip -j "$ZIP" "$APK"
+          echo "APK_ZIP=$ZIP" >> $GITHUB_ENV
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: mobile-apk-${{ github.sha }}
-          path: |
-            flutter-packages/mobile/build/app/outputs/flutter-apk/*.apk
-            flutter-packages/mobile/build/app/outputs/apk/**/*.apk
-            flutter-packages/mobile/.build/*.zip
-          if-no-files-found: warn
+          path: ${{ env.APK_ZIP }}
+          if-no-files-found: error
           retention-days: 30
 
   ios-testflight:
