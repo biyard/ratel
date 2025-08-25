@@ -21,7 +21,7 @@ use crate::utils::users::extract_user_id;
     JsonSchema,
 )]
 pub struct FollowRequest {
-    #[schemars(description = "Follower IDs")]
+    #[schemars(description = "Followee IDs")]
     pub followee_ids: Vec<i64>,
 }
 
