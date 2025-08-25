@@ -378,6 +378,7 @@ jobs:
       ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
       APP_IDENTIFIER: foundation.ratel.app
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+
     steps:
       - uses: actions/checkout@v4
         with:
@@ -395,12 +396,13 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Setup Ruby (bundler)
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: "3.2"
-          bundler-cache: true
-          working-directory: flutter-packages/mobile/ios
+      - name: Flutter env
+        run: |
+          flutter --version
+          flutter config --no-analytics
+
+      - name: Precache iOS engine
+        run: flutter precache --ios
 
       - name: Flutter pub get
         run: flutter pub get
@@ -417,7 +419,9 @@ jobs:
 
       - name: Pod install
         working-directory: flutter-packages/mobile/ios
-        run: pod install --repo-update
+        run: |
+          rm -rf Pods Podfile.lock
+          pod install --repo-update
 
       - name: Write App Store Connect API key
         working-directory: flutter-packages/mobile/ios
@@ -433,6 +437,7 @@ jobs:
         uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.MATCH_SSH_KEY }}
+
       - name: Trust github.com host keys
         run: |
           mkdir -p ~/.ssh
@@ -468,23 +473,22 @@ jobs:
             --keychain_name "$MATCH_KEYCHAIN_NAME" \
             --keychain_password "$MATCH_KEYCHAIN_PASSWORD"
 
-      - name: Resolve installed provisioning profile (name & UUID)
+      - name: Resolve installed provisioning profile name
         shell: bash
         run: |
           set -euo pipefail
           TARGET_BUNDLE_ID="foundation.ratel.app"
           FOUND_NAME=""
-          FOUND_UUID=""
           for f in ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision; do
             TMP="$(mktemp)"
             security cms -D -i "$f" > "$TMP" 2>/dev/null || continue
             BID=$(/usr/libexec/PlistBuddy -c 'Print :Entitlements:application-identifier' "$TMP" 2>/dev/null || true)
             NAME=$(/usr/libexec/PlistBuddy -c 'Print :Name' "$TMP" 2>/dev/null || true)
-            UUID=$(/usr/libexec/PlistBuddy -c 'Print :UUID' "$TMP" 2>/dev/null || true)
             if [[ "${BID#*.}" == "$TARGET_BUNDLE_ID" ]]; then
               FOUND_NAME="$NAME"
-              FOUND_UUID="$UUID"
-              echo "Resolved provisioning profile: $FOUND_NAME ($FOUND_UUID)"
+              UUID=$(/usr/libexec/PlistBuddy -c 'Print :UUID' "$TMP" 2>/dev/null || true)
+              echo "Resolved provisioning profile: $FOUND_NAME ($UUID)"
+              echo "PROFILE_UUID=$UUID" >> $GITHUB_ENV
               break
             fi
           done
@@ -492,7 +496,6 @@ jobs:
             echo "PROFILE_NAME=match AppStore $TARGET_BUNDLE_ID" >> $GITHUB_ENV
           else
             echo "PROFILE_NAME=$FOUND_NAME" >> $GITHUB_ENV
-            echo "PROFILE_UUID=$FOUND_UUID" >> $GITHUB_ENV
           fi
 
       - name: Build and Upload to TestFlight
