@@ -376,14 +376,6 @@ jobs:
           path: ${{ env.APK_ZIP }}
           if-no-files-found: error
           retention-days: 30
-      - name: Artifact info (no URLs)
-        if: always()
-        run: |
-          {
-            echo "### Android APK artifact"
-            echo "- Artifact name: mobile-apk-${GITHUB_SHA}"
-            echo "- Download"
-          } >> $GITHUB_STEP_SUMMARY
 
   ios-testflight:
     runs-on: macos-14
