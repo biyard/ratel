@@ -29,7 +29,7 @@ platform :ios do
       configuration:  "Release",
       export_method:  "app-store",
       clean:          true,
-      xcargs: "DEVELOPMENT_TEAM=#{team_id} PRODUCT_BUNDLE_IDENTIFIER=#{app_id} OTHER_LDFLAGS='$(inherited) -weak_framework SwiftUICore'",
+      xcargs: "DEVELOPMENT_TEAM=#{team_id} PRODUCT_BUNDLE_IDENTIFIER=#{app_id}",
       export_options: {
         method: "app-store",
         signingStyle: "manual",
