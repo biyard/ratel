@@ -300,9 +300,11 @@ export const ratelApi = {
     },
   },
   notifications: {
-    getNotifications: (filterType?: string) => {
+    getNotifications: (page: number, size: number, filterType?: string) => {
       const params = new URLSearchParams({
         'param-type': 'query',
+        bookmark: page.toString(),
+        size: size.toString(),
       });
       if (filterType && filterType !== 'all') {
         params.append('type', filterType);
