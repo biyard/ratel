@@ -2,7 +2,7 @@ use bdk::prelude::*;
 use by_axum::axum::http::{HeaderMap, HeaderValue, StatusCode};
 use dto::by_axum::axum::response::IntoResponse;
 use serde_json::json;
-use ssi::JWK;
+// use ssi::JWK;
 
 use crate::config;
 
@@ -16,13 +16,16 @@ pub async fn get_did_document_handler() -> impl IntoResponse {
     let es256_x = conf.did.p256_x;
     let es256_y = conf.did.p256_y;
 
-    let bls_multibase = multibase::encode(
-        multibase::Base::Base58Btc,
-        JWK::generate_bls12381g2()
-            .to_multicodec()
-            .unwrap()
-            .as_bytes(),
-    );
+    //FIXME: remove this comment when conflicting is resolved about session
+    // let bls_multibase = multibase::encode(
+    //     multibase::Base::Base58Btc,
+    //     JWK::generate_bls12381g2()
+    //         .to_multicodec()
+    //         .unwrap()
+    //         .as_bytes(),
+    // );
+
+    let bls_multibase = "".to_string();
 
     let did_doc = json!({
         "@context": [
