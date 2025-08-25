@@ -329,6 +329,7 @@ jobs:
       - name: Flutter pub get
         run: flutter pub get
       - name: Prepare Android signing (real or placeholder)
+        working-directory: flutter-packages/mobile
         shell: bash
         run: |
           set -euo pipefail
