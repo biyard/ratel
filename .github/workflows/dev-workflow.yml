@@ -359,6 +359,7 @@ jobs:
           make ENV=dev build-config
           flutter build apk --debug --dart-define-from-file=.build/config.json
       - name: Package single APK (zip)
+        shell: bash
         run: |
           set -euo pipefail
           mkdir -p .build
@@ -374,6 +375,12 @@ jobs:
           path: ${{ env.APK_ZIP }}
           if-no-files-found: error
           retention-days: 30
+      - name: Link to artifact (run page)
+        if: always()
+        run: |
+          echo "### Android APK artifact" >> $GITHUB_STEP_SUMMARY
+          echo "- Run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" >> $GITHUB_STEP_SUMMARY
+          echo "- Artifact name: mobile-apk-${GITHUB_SHA}" >> $GITHUB_STEP_SUMMARY
 
   ios-testflight:
     runs-on: macos-14
