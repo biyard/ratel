@@ -408,7 +408,7 @@ jobs:
       - name: Generate iOS Release configs (Flutter)
         run: |
           rm -f ios/Flutter/Generated.xcconfig
-          flutter build ios --config-only --release
+          ENV=dev make build.ios
 
       - name: Patch CocoaPods base config include
         run: |
@@ -493,6 +493,11 @@ jobs:
             echo "PROFILE_NAME=$FOUND_NAME" >> $GITHUB_ENV
           fi
 
+      - name: Compute iOS build number
+        env:
+          IOS_BUILD_BASE: 8
+        run: echo "FLUTTER_BUILD_NUMBER=$(( GITHUB_RUN_NUMBER + ${IOS_BUILD_BASE:-0} ))" >> $GITHUB_ENV
+
       - name: Build and Upload to TestFlight
         working-directory: flutter-packages/mobile/ios
         env:
@@ -500,8 +505,6 @@ jobs:
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
           APP_IDENTIFIER: foundation.ratel.app
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          # fix flutter build version when ios deploying
-          FLUTTER_BUILD_NUMBER: 8
         run: |
           bundle exec fastlane deploy
 

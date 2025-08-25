@@ -74,7 +74,7 @@ run.web: $(BUILD_CONFIG_FILE)
 	flutter run --dart-define-from-file=$(BUILD_CONFIG_FILE) -d chrome --web-renderer $(RENDERER)
 
 build.ios: $(BUILD_CONFIG_FILE)
-	flutter build ios --dart-define-from-file=$(BUILD_CONFIG_FILE) --release --no-codesign
+	flutter build ios --config-only --dart-define-from-file=$(BUILD_CONFIG_FILE) --release
 
 build.android: $(BUILD_CONFIG_FILE)
 	flutter build appbundle --dart-define-from-file=$(BUILD_CONFIG_FILE) --release

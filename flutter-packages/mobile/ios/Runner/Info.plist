@@ -64,6 +64,7 @@
 	<string>Passport verification requires camera access.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Allow access to your photo library so you can select and upload images within the app.</string>
+	<key>ITSAppUsesNonExemptEncryption</key> <No>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
