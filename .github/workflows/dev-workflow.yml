@@ -500,6 +500,7 @@ jobs:
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
           APP_IDENTIFIER: foundation.ratel.app
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          # fix flutter build version when ios deploying
           FLUTTER_BUILD_NUMBER: 7
         run: |
           bundle exec fastlane deploy
