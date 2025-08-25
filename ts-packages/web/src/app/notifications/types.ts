@@ -4,8 +4,10 @@ export enum NotificationType {
   INVITE_DISCUSSION = 2,
   BOOSTING_SPACE = 3,
   CONNECT_NETWORK = 4,
-  ALL = 'all', // Special filter value for frontend
 }
+
+// Frontend-only filter type; compose with the enum instead of polluting it
+export type NotificationsFilter = NotificationType | 'all';
 
 // Match the Rust NotificationData structure
 export interface NotificationData {
