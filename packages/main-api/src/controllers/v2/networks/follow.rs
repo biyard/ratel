@@ -1,3 +1,4 @@
+use bdk::prelude::*;
 use dto::{
     Mynetwork, Result,
     by_axum::{
@@ -6,16 +7,34 @@ use dto::{
     },
     sqlx::PgPool,
 };
-use serde::{Deserialize, Serialize};
 
 use crate::utils::users::extract_user_id;
 
-#[derive(Debug, Deserialize)]
+#[derive(
+    Debug,
+    Clone,
+    serde::Serialize,
+    serde::Deserialize,
+    PartialEq,
+    Default,
+    aide::OperationIo,
+    JsonSchema,
+)]
 pub struct FollowRequest {
+    #[schemars(description = "Follower IDs")]
     pub followee_ids: Vec<i64>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(
+    Debug,
+    Clone,
+    serde::Serialize,
+    serde::Deserialize,
+    PartialEq,
+    Default,
+    aide::OperationIo,
+    JsonSchema,
+)]
 pub struct FollowResponse {
     pub followee_ids: Vec<i64>,
 }

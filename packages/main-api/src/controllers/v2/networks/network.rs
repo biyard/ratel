@@ -7,11 +7,19 @@ use dto::{
     sqlx::PgPool,
     *,
 };
-use serde::Serialize;
 
 use crate::utils::users::extract_user_id;
 
-#[derive(Debug, Serialize)]
+#[derive(
+    Debug,
+    Clone,
+    serde::Serialize,
+    serde::Deserialize,
+    PartialEq,
+    Default,
+    aide::OperationIo,
+    JsonSchema,
+)]
 pub struct ConnectionResponse {
     pub suggested_teams: Vec<Follower>,
     pub suggested_users: Vec<Follower>,
