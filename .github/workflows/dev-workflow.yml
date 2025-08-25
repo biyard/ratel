@@ -11,7 +11,6 @@ env:
 jobs:
   test-with-server:
     runs-on: ubuntu-latest
-
     services:
       postgres:
         image: postgres
@@ -26,13 +25,11 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
-
     steps:
       - uses: actions/checkout@v3
         with:
           submodules: recursive
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
-
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           components: clippy, rustfmt
@@ -40,11 +37,9 @@ jobs:
           toolchain: stable
       - name: Install PostgreSQL Client
         run: sudo apt-get install -y postgresql-client
-
       - name: Initialize Database SQL
         run: |
           psql postgresql://postgres:postgres@localhost:5432/test -f ./deps/rust-sdk/fixtures/sql/init.sql
-
       - name: test
         env:
           RUSTFLAGS: "-A warnings"
@@ -67,35 +62,38 @@ jobs:
           KAIA_FEEPAYER_ADDR: ${{ secrets.DEV_KAIA_ADDR }}
           KAIA_OWNER_KEY: ${{ secrets.DEV_KAIA_KEY }}
           KAIA_OWNER_ADDR: ${{ secrets.DEV_KAIA_ADDR }}
+          BBS_BLS_X: ${{ secrets.BBS_BLS_X }}
+          BBS_BLS_Y: ${{ secrets.BBS_BLS_Y }}
+          BBS_BLS_D: ${{ secrets.BBS_BLS_D }}
+          BBS_BLS_CRV: ${{ secrets.BBS_BLS_CRV }}
+          P256_X: ${{ secrets.P256_X }}
+          P256_Y: ${{ secrets.P256_Y }}
+          P256_D: ${{ secrets.P256_D }}
+          P256_CRV: ${{ secrets.P256_CRV }}
         run: |
-          cd packages/main-api  && make test
+          cd packages/main-api && make test
 
   main-api:
     runs-on: ubuntu-22.04
-
     steps:
       - uses: actions/checkout@v3
         with:
           submodules: recursive
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
-
       - uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-northeast-2
-
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           components: clippy, rustfmt
           target: wasm32-unknown-unknown
           toolchain: stable
-
       - uses: cargo-bins/cargo-binstall@main
       - name: Install toml-cli
         run: |
           cargo binstall toml-cli --force
-
       - name: Deploy APIs
         env:
           REGION: ap-northeast-2
@@ -111,7 +109,6 @@ jobs:
           OPENAPI_KEY: ${{ secrets.OPENAPI_KEY }}
           AUTH_SECRET_KEY: ${{ secrets.DEV_AUTH_SECRET_KEY }}
           JWT_SECRET_KEY: ${{ secrets.DEV_JWT_SECRET_KEY }}
-
           BASE_DOMAIN: ratel.foundation
           MIGRATE: false
           ENABLE_S3: false
@@ -119,7 +116,6 @@ jobs:
           SLACK_CHANNEL_SPONSOR: ${{ secrets.DEV_SLACK }}
           US_CONGRESS_KEY: ${{ secrets.US_CONGRESS_KEY }}
           SLACK_CHANNEL_ABUSING: ${{ secrets.DEV_SLACK }}
-
           KAIA_ENDPOINT: https://public-en-kairos.node.kaia.io
           KAIA_FEEPAYER_KEY: ${{ secrets.DEV_KAIA_KEY }}
           KAIA_FEEPAYER_ADDR: ${{ secrets.DEV_KAIA_ADDR }}
@@ -127,48 +123,40 @@ jobs:
           KAIA_OWNER_ADDR: ${{ secrets.DEV_KAIA_ADDR }}
           RDS_RESOURCE_ARN: ${{ secrets.RDS_RESOURCE_ARN }}
           RDS_SECRET_ARN: ${{ secrets.RDS_SECRET_ARN }}
-
           NONCELAB_TOKEN: ${{ secrets.NONCELAB_TOKEN }}
-
           BBS_BLS_X: ${{ secrets.BBS_BLS_X }}
           BBS_BLS_Y: ${{ secrets.BBS_BLS_Y }}
           BBS_BLS_D: ${{ secrets.BBS_BLS_D }}
           BBS_BLS_CRV: ${{ secrets.BBS_BLS_CRV }}
-
           P256_X: ${{ secrets.P256_X }}
           P256_Y: ${{ secrets.P256_Y }}
           P256_D: ${{ secrets.P256_D }}
           P256_CRV: ${{ secrets.P256_CRV }}
-          
         run: |
           npm i -g aws-cdk
           make deploy
+
   image-worker:
     runs-on: ubuntu-22.04
-
     steps:
       - uses: actions/checkout@v3
         with:
           submodules: recursive
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
-
       - uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-northeast-2
-
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           components: clippy, rustfmt
           target: wasm32-unknown-unknown
           toolchain: stable
-
       - uses: cargo-bins/cargo-binstall@main
       - name: Install toml-cli
         run: |
           cargo binstall toml-cli --force
-
       - name: Deploy APIs
         env:
           REGION: ap-northeast-2
@@ -179,7 +167,6 @@ jobs:
           SERVICE: image-worker
           DATABASE_TYPE: postgres
           DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
-
           BASE_DOMAIN: ratel.foundation
           MIGRATE: false
           ENABLE_S3: false
@@ -197,24 +184,20 @@ jobs:
         with:
           submodules: recursive
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
-
       - uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-northeast-2
-
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           components: clippy, rustfmt
           target: wasm32-unknown-unknown
           toolchain: stable
-
       - uses: cargo-bins/cargo-binstall@main
       - name: Install dependencies
         run: |
           cargo binstall toml-cli
-
       - name: Cache builder
         id: telegram-bot-build-cache
         uses: actions/cache@v3
@@ -222,7 +205,6 @@ jobs:
           key: telegram-bot-build-cache
           path: |
             packages/telegram-bot/target
-
       - name: Deploy APIs
         env:
           REGION: ap-northeast-2
@@ -233,14 +215,11 @@ jobs:
           SERVICE: telegram-bot
           DOMAIN: telegram-bot.dev.ratel.foundation
           DATABASE_TYPE: postgres
-
           DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
-
           TELEGRAM_TOKEN: ${{ secrets.DEV_TELEGRAM_TOKEN }}
           TELEGRAM_MINI_APP_URI: https://t.me/crypto_ratel_dev_bot?startapp
           BASE_DOMAIN: ratel.foundation
           REPO_NAME: ratel/telegram-bot
-
           MIGRATE: false
           ENABLE_S3: false
           ENABLE_FARGATE: true
@@ -248,6 +227,7 @@ jobs:
         run: |
           npm i -g aws-cdk
           make deploy
+
   fetcher:
     runs-on: ubuntu-latest
     steps:
@@ -255,24 +235,20 @@ jobs:
         with:
           submodules: recursive
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
-
       - uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-northeast-2
-
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           components: clippy, rustfmt
           target: wasm32-unknown-unknown
           toolchain: stable
-
       - uses: cargo-bins/cargo-binstall@main
       - name: Install dependencies
         run: |
           cargo binstall toml-cli
-
       - name: Cache builder
         id: fetcher-build-cache
         uses: actions/cache@v3
@@ -280,7 +256,6 @@ jobs:
           key: fetcher-build-cache
           path: |
             packages/fetcher/target
-
       - name: Deploy APIs
         env:
           REGION: ap-northeast-2
@@ -291,7 +266,6 @@ jobs:
           SERVICE: fetcher
           DOMAIN: fetcher-api.dev.ratel.foundation
           AUTH_DOMAIN: dev.ratel.foundation
-
           DATABASE_TYPE: postgres
           DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
           OPENAPI_KEY: ${{ secrets.OPENAPI_KEY }}
@@ -305,7 +279,6 @@ jobs:
           REPO_NAME: ratel/fetcher
           US_CONGRESS_KEY: ${{ secrets.US_CONGRESS_KEY }}
           RPC_ENDPOINT: https://public-en-kairos.node.kaia.io
-
           MIGRATE: false
           ENABLE_S3: false
           ENABLE_FARGATE: true
@@ -316,30 +289,255 @@ jobs:
 
   nextjs-web:
     runs-on: ubuntu-latest
-
     defaults:
       run:
         working-directory: ts-packages/web
-
     steps:
       - uses: actions/checkout@v4
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
-
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
         with:
           version: 10
           run_install: true
-
       - name: Run ESLint
         run: pnpm lint
-
       - name: Build
         run: make build
+
+  android-apk:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: flutter-packages/mobile
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          ssh-key: ${{ secrets.PULL_KEY_REPO }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Flutter pub get
+        run: flutter pub get
+      - name: Prepare Android signing (real or placeholder)
+        working-directory: flutter-packages/mobile
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p android/app
+          if [[ -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]]; then
+            echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android/app/keystore.jks
+            printf "%s\n" \
+              "storeFile=app/keystore.jks" \
+              "storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
+              "keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}" \
+              "keyPassword=${{ secrets.ANDROID_KEY_ALIAS_PASSWORD }}" \
+              > android/key.properties
+          else
+            keytool -genkey -v \
+              -keystore android/app/debug-placeholder.keystore \
+              -storepass android -keypass android \
+              -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 \
+              -dname "CN=Android,O=Android,C=US"
+            printf "%s\n" \
+              "storeFile=app/debug-placeholder.keystore" \
+              "storePassword=android" \
+              "keyAlias=androiddebugkey" \
+              "keyPassword=android" \
+              > android/key.properties
+          fi
+      - name: Build APK (debug)
+        run: |
+          make ENV=dev build-config
+          flutter build apk --debug --dart-define-from-file=.build/config.json
+      - name: Package single APK (zip)
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .build
+          APK=$(ls -t build/app/outputs/flutter-apk/*.apk | head -n 1)
+          ZIP=".build/$(basename "${APK%.apk}").zip"
+          zip -j "$ZIP" "$APK"
+          echo "APK_ZIP=$PWD/$ZIP" >> $GITHUB_ENV
+          ls -lh "$APK" "$ZIP"
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-apk-${{ github.sha }}
+          path: ${{ env.APK_ZIP }}
+          if-no-files-found: error
+          retention-days: 30
+
+  ios-testflight:
+    runs-on: macos-14
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: flutter-packages/mobile
+    env:
+      MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+      MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      APP_IDENTIFIER: foundation.ratel.app
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          ssh-key: ${{ secrets.PULL_KEY_REPO }}
+
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: "16.2"
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Setup Ruby (bundler)
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.2"
+          bundler-cache: true
+          working-directory: flutter-packages/mobile/ios
+
+      - name: Flutter pub get
+        run: flutter pub get
+
+      - name: Generate iOS Release configs (Flutter)
+        run: |
+          rm -f ios/Flutter/Generated.xcconfig
+          ENV=dev make build.ios
+
+      - name: Patch CocoaPods base config include
+        run: |
+          grep -q 'Pods-Runner\.release' ios/Flutter/Release.xcconfig || echo '#include "../Pods/Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"' >> ios/Flutter/Release.xcconfig
+          grep -q 'Pods-Runner\.profile' ios/Flutter/Profile.xcconfig || echo '#include "../Pods/Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig"' >> ios/Flutter/Profile.xcconfig
+
+      - name: Pod install
+        working-directory: flutter-packages/mobile/ios
+        run: pod install --repo-update
+
+      - name: Write App Store Connect API key
+        working-directory: flutter-packages/mobile/ios
+        env:
+          ASC_KEY_BASE64: ${{ secrets.ASC_KEY_BASE64 }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+        run: |
+          mkdir -p fastlane
+          echo "$ASC_KEY_BASE64" | base64 -d > fastlane/AuthKey_${ASC_KEY_ID}.p8
+          chmod 600 fastlane/AuthKey_${ASC_KEY_ID}.p8
+
+      - name: Setup SSH for match repo
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.MATCH_SSH_KEY }}
+
+      - name: Trust github.com host keys
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Create and unlock temporary keychain
+        run: |
+          set -euo pipefail
+          KEYCHAIN_LABEL="ci-temp"
+          KEYCHAIN_PASSWORD="password"
+          KEYCHAIN_PATH="$HOME/Library/Keychains/${KEYCHAIN_LABEL}.keychain-db"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security list-keychains -d user -s "$KEYCHAIN_PATH" "$HOME/Library/Keychains/login.keychain-db"
+          security default-keychain -s "$KEYCHAIN_PATH"
+          echo "MATCH_KEYCHAIN_NAME=$KEYCHAIN_LABEL" >> $GITHUB_ENV
+          echo "MATCH_KEYCHAIN_PASSWORD=$KEYCHAIN_PASSWORD" >> $GITHUB_ENV
+
+      - name: Install signing with match (readonly)
+        working-directory: flutter-packages/mobile/ios
+        env:
+          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          bundle exec fastlane match appstore \
+            --readonly \
+            --git_url "$MATCH_GIT_URL" \
+            --app_identifier foundation.ratel.app \
+            --team_id "$APPLE_TEAM_ID" \
+            --keychain_name "$MATCH_KEYCHAIN_NAME" \
+            --keychain_password "$MATCH_KEYCHAIN_PASSWORD"
+
+      - name: Resolve installed provisioning profile name
+        shell: bash
+        run: |
+          set -euo pipefail
+          TARGET_BUNDLE_ID="foundation.ratel.app"
+          FOUND_NAME=""
+          for f in ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision; do
+            TMP="$(mktemp)"
+            security cms -D -i "$f" > "$TMP" 2>/dev/null || continue
+            BID=$(/usr/libexec/PlistBuddy -c 'Print :Entitlements:application-identifier' "$TMP" 2>/dev/null || true)
+            NAME=$(/usr/libexec/PlistBuddy -c 'Print :Name' "$TMP" 2>/dev/null || true)
+            if [[ "${BID#*.}" == "$TARGET_BUNDLE_ID" ]]; then
+              FOUND_NAME="$NAME"
+              UUID=$(/usr/libexec/PlistBuddy -c 'Print :UUID' "$TMP" 2>/dev/null || true)
+              echo "Resolved provisioning profile: $FOUND_NAME ($UUID)"
+              break
+            fi
+          done
+          if [[ -z "$FOUND_NAME" ]]; then
+            echo "PROFILE_NAME=match AppStore $TARGET_BUNDLE_ID" >> $GITHUB_ENV
+          else
+            echo "PROFILE_NAME=$FOUND_NAME" >> $GITHUB_ENV
+          fi
+
+      - name: Compute iOS build number
+        env:
+          IOS_BUILD_BASE: 8
+        run: echo "FLUTTER_BUILD_NUMBER=$(( GITHUB_RUN_NUMBER + ${IOS_BUILD_BASE:-0} ))" >> $GITHUB_ENV
+
+      - name: Build and Upload to TestFlight
+        working-directory: flutter-packages/mobile/ios
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          APP_IDENTIFIER: foundation.ratel.app
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          bundle exec fastlane deploy
+
+      - name: Dump xcodebuild log on failure
+        if: failure()
+        run: |
+          LOG_DIR="$HOME/Library/Logs/gym"
+          ls -la "$LOG_DIR" || true
+          tail -n +200 "$LOG_DIR"/Runner-Runner.log || true
+
+      - name: Upload .ipa artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-ipa-${{ github.sha }}
+          path: |
+            flutter-packages/mobile/build/ios/**/*.ipa
+            flutter-packages/mobile/ios/*.ipa
+          if-no-files-found: warn
+          retention-days: 14
 
   create-release-pr:
     runs-on: ubuntu-latest
