@@ -31,7 +31,7 @@ export const useNotificationsInfinite = (
         : undefined;
     },
     initialPageParam: 1,
-    refetchInterval: 30000, // Refetch every 30 seconds for notifications
+    refetchInterval: 7000, // Refetch every 7 seconds for notifications
     refetchOnWindowFocus: true,
   });
 };
