@@ -1,19 +1,31 @@
+use bdk::prelude::*;
 use dto::{
-    Error, Result, UserV2,
+    Error, JsonSchema, Result, UserV2, aide,
     by_axum::axum::{
         Json,
         extract::{Query, State},
     },
     sqlx::PgPool,
 };
-use serde::Deserialize;
 use tracing::{debug, error};
 
-#[derive(Debug, Deserialize)]
+#[derive(
+    Debug,
+    Clone,
+    serde::Serialize,
+    serde::Deserialize,
+    PartialEq,
+    Default,
+    aide::OperationIo,
+    JsonSchema,
+)]
 pub struct UserQuery {
+    #[schemars(description = "Username")]
     pub username: Option<String>,
+    #[schemars(description = "Phone Number")]
     #[serde(rename = "phone-number")]
     pub phone_number: Option<String>,
+    #[schemars(description = "Email")]
     pub email: Option<String>,
 }
 
