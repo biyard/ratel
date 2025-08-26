@@ -12,18 +12,35 @@ class SpaceSummary {
   final int createdAt;
   final int updatedAt;
 
+  final int feedId;
+
   final String title;
   final String htmlContents;
   final String imageUrl;
+
+  final String authorUrl;
+  final String authorName;
+
+  final int likes;
+  final int rewards;
+  final int comments;
 
   const SpaceSummary({
     required this.id,
     required this.createdAt,
     required this.updatedAt,
 
+    required this.feedId,
     required this.title,
     required this.htmlContents,
     required this.imageUrl,
+
+    required this.authorUrl,
+    required this.authorName,
+
+    required this.likes,
+    required this.rewards,
+    required this.comments,
   });
 }
 

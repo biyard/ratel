@@ -21,12 +21,13 @@ use crate::{
                 },
                 get_dagit::get_dagit_handler,
             },
+            dashboards::get_dashboard::get_dashboard_handler,
             industries::{industry::list_industries_handler, select_topic::select_topics_handler},
             networks::{
                 follow::follow_handler, network::list_networks_handler,
                 search::list_networks_by_keyword_handler,
             },
-            notifications::{mark_all_read::mark_all_notifications_read_handler},
+            notifications::mark_all_read::mark_all_notifications_read_handler,
             oracles::create_oracle::create_oracle_handler,
             spaces::get_my_space::get_my_space_controller,
             telegram::subscribe::telegram_subscribe_handler,
@@ -143,6 +144,14 @@ pub async fn route(
         .native_route(
             "/v2/users",
             nget(find_user_handler).with_state(pool.clone()),
+        )
+        .route(
+            "/v2/dashboards",
+            get_with(
+                get_dashboard_handler,
+                api_docs!("Get Dashboards", "Retrieve dashboard in a service"),
+            )
+            .with_state(pool.clone()),
         )
         .route(
             "/v2/dagits/:space_id",

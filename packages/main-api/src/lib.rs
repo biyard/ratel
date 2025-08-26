@@ -23,6 +23,10 @@ pub mod controllers {
             pub mod subscribe;
         }
 
+        pub mod dashboards {
+            pub mod get_dashboard;
+        }
+
         pub mod dagits {
             pub mod add_oracle;
             pub mod get_dagit;

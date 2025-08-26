@@ -32,9 +32,17 @@ class SpaceApi extends GetConnect {
           id: int.parse(space["id"].toString()),
           createdAt: int.parse(space["created_at"].toString()),
           updatedAt: int.parse(space["updated_at"].toString()),
+          feedId: int.parse(space["feed_id"].toString()),
           title: space["title"],
           htmlContents: space["html_contents"],
           imageUrl: space["image_url"],
+
+          //FIXME: connect api this field
+          authorUrl: "",
+          authorName: "",
+          likes: 0,
+          rewards: 0,
+          comments: 0,
         ),
       );
     }
@@ -46,9 +54,17 @@ class SpaceApi extends GetConnect {
           id: int.parse(space["id"].toString()),
           createdAt: int.parse(space["created_at"].toString()),
           updatedAt: int.parse(space["updated_at"].toString()),
+          feedId: int.parse(space["feed_id"].toString()),
           title: space["title"],
           htmlContents: space["html_contents"],
           imageUrl: space["image_url"],
+
+          //FIXME: connect api this field
+          authorUrl: "",
+          authorName: "",
+          likes: 0,
+          rewards: 0,
+          comments: 0,
         ),
       );
     }
