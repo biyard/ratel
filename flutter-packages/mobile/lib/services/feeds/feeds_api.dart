@@ -26,7 +26,7 @@ class FeedsApi extends GetConnect {
 
     logger.d('response body: ${res.body}');
 
-    return res.body;
+    return "success";
   }
 
   Future<dynamic> removeBookmark(int feedId) async {
@@ -42,7 +42,7 @@ class FeedsApi extends GetConnect {
 
     logger.d('response body: ${res.body}');
 
-    return res.body;
+    return "success";
   }
 
   Future<List<FeedSummary>> listBookmarkedFeeds() async {
@@ -78,6 +78,7 @@ class FeedsApi extends GetConnect {
           image: feed["url"] ?? "",
           title: feed["title"] ?? "",
           description: feed["html_contents"] ?? "",
+          isBookmarked: bool.parse(feed["is_bookmarked"].toString()) ?? false,
           authorId: (feed["author"].length != 0)
               ? int.parse(feed["author"][0]["id"].toString())
               : 0,

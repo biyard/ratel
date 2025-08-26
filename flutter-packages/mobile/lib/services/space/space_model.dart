@@ -25,6 +25,8 @@ class SpaceSummary {
   final int rewards;
   final int comments;
 
+  final bool isBookmarked;
+
   const SpaceSummary({
     required this.id,
     required this.createdAt,
@@ -41,6 +43,8 @@ class SpaceSummary {
     required this.likes,
     required this.rewards,
     required this.comments,
+
+    required this.isBookmarked,
   });
 }
 

@@ -29,13 +29,14 @@ class HomeController extends BaseController {
 
       if (res != null) {
         Biyard.info("Bookmarked successfully");
+        getDashboards();
+      } else {
+        Biyard.error(
+          "Failed to bookmark.",
+          "Bookmarked failed. Please try again later.",
+        );
       }
-    } finally {
-      Biyard.error(
-        "Failed to bookmark.",
-        "Bookmarked failed. Please try again later.",
-      );
-    }
+    } finally {}
   }
 
   Future<void> removebookmark(int feedId) async {
@@ -44,13 +45,14 @@ class HomeController extends BaseController {
 
       if (res != null) {
         Biyard.info("Remove Bookmarked successfully");
+        getDashboards();
+      } else {
+        Biyard.error(
+          "Failed to remove bookmark.",
+          "Remove Bookmarked failed. Please try again later.",
+        );
       }
-    } finally {
-      Biyard.error(
-        "Failed to remove bookmark.",
-        "Remove Bookmarked failed. Please try again later.",
-      );
-    }
+    } finally {}
   }
 
   RxList<SpaceSummary> topSpaces = <SpaceSummary>[].obs;

@@ -58,6 +58,7 @@ pub async fn get_dashboard_handler(
         s.image_url = feed.url;
         s.likes = feed.likes;
         s.rewards = feed.rewards;
+        s.is_bookmarked = feed.is_bookmarked;
         s.number_of_comments = feed.comments;
 
         top_spaces.push(s);

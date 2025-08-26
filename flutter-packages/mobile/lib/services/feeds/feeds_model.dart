@@ -42,6 +42,7 @@ class FeedSummary {
   final String title;
   final String description;
   final int authorId;
+  final bool isBookmarked;
   final String authorUrl;
   final String authorName;
   final int createdAt;
@@ -58,6 +59,7 @@ class FeedSummary {
     required this.image,
     required this.title,
     required this.description,
+    required this.isBookmarked,
     required this.authorId,
     required this.authorUrl,
     required this.authorName,
