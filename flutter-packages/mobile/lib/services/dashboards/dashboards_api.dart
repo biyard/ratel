@@ -43,6 +43,7 @@ class DashboardsApi extends GetConnect {
           title: space["title"] ?? "",
           htmlContents: space["html_contents"] ?? "",
           imageUrl: space["image_url"] ?? "",
+          isBookmarked: bool.parse(space["is_bookmarked"].toString()) ?? false,
           authorUrl: author["profile_url"] ?? "",
           authorName: author["username"] ?? "",
           likes: int.parse(space["likes"].toString()),
@@ -80,6 +81,7 @@ class DashboardsApi extends GetConnect {
           authorName: (feed["author"].length != 0)
               ? feed["author"][0]["nickname"] ?? ""
               : "",
+          isBookmarked: bool.parse(feed["is_bookmarked"].toString()) ?? false,
           createdAt: int.parse(feed["created_at"].toString()),
           rewards: int.parse(feed["rewards"].toString()),
           likes: int.parse(feed["likes"].toString()),
@@ -108,6 +110,7 @@ class DashboardsApi extends GetConnect {
           image: feed["url"] ?? "",
           title: feed["title"] ?? "",
           description: feed["html_contents"] ?? "",
+          isBookmarked: bool.parse(feed["is_bookmarked"].toString()) ?? false,
           authorId: (feed["author"].length != 0)
               ? int.parse(feed["author"][0]["id"].toString())
               : 0,

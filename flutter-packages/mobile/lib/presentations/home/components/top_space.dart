@@ -84,7 +84,11 @@ class SpaceSummaryCard extends StatelessWidget {
                     Spacer(),
                     InkWell(
                       onTap: () async {
-                        await controller.addBookmark(data.feedId);
+                        if (data.isBookmarked) {
+                          await controller.removebookmark(data.feedId);
+                        } else {
+                          await controller.addBookmark(data.feedId);
+                        }
                       },
                       child: SvgPicture.asset(
                         Assets.bookmark,

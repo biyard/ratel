@@ -17,6 +17,22 @@ class BookmarkController extends BaseController {
     hideLoading();
   }
 
+  Future<void> removebookmark(int feedId) async {
+    try {
+      final res = await feedsApi.removeBookmark(feedId);
+
+      if (res != null) {
+        Biyard.info("Remove Bookmarked successfully");
+        getBookmarks();
+      } else {
+        Biyard.error(
+          "Failed to remove bookmark.",
+          "Remove Bookmarked failed. Please try again later.",
+        );
+      }
+    } finally {}
+  }
+
   void goBack() {
     Get.rootDelegate.offNamed(AppRoutes.mainScreen);
   }

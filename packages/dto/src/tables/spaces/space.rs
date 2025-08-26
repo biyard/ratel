@@ -116,6 +116,9 @@ pub struct Space {
     pub rewards: i64,
     #[api_model(skip)]
     #[serde(default)]
+    pub is_bookmarked: bool,
+    #[api_model(skip)]
+    #[serde(default)]
     pub number_of_comments: i64,
     #[api_model(skip)]
     #[serde(default)]
