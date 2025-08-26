@@ -1,3 +1,5 @@
+import PageClient from './page.client';
+
 export default function Notification() {
-  return <div>{'Notification page'}</div>;
+  return <PageClient />;
 }
