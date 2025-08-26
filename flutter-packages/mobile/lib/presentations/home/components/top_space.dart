@@ -1,5 +1,4 @@
 import 'package:ratel/exports.dart';
-import 'package:ratel/presentations/home/components/app_card.dart';
 
 class TopSpace extends StatelessWidget {
   final List<SpaceSummary> items;
@@ -54,6 +53,7 @@ class SpaceSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final controller = Get.find<HomeController>();
     return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -82,7 +82,16 @@ class SpaceSummaryCard extends StatelessWidget {
                       label: HomeLocalization.rewards,
                     ),
                     Spacer(),
-                    SvgPicture.asset(Assets.bookmark, width: 20, height: 20),
+                    InkWell(
+                      onTap: () async {
+                        await controller.addBookmark(data.feedId);
+                      },
+                      child: SvgPicture.asset(
+                        Assets.bookmark,
+                        width: 20,
+                        height: 20,
+                      ),
+                    ),
                   ],
                 ),
                 15.vgap,
@@ -122,64 +131,68 @@ class SpaceSummaryCard extends StatelessWidget {
                   ],
                 ),
                 15.vgap,
+              ],
+            ),
+          ),
 
+          Spacer(),
+
+          Padding(
+            padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
+            child: Row(
+              children: [
                 Row(
                   children: [
-                    Row(
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(100),
-                          child: RoundContainer(
-                            width: 20,
-                            height: 20,
-                            radius: 100,
-                            color: AppColors.neutral500,
-                            child: (data.authorUrl != "")
-                                ? Image.network(
-                                    data.authorUrl,
-                                    fit: BoxFit.cover,
-                                  )
-                                : Container(),
-                          ),
-                        ),
-                        4.gap,
-                        Text(
-                          data.authorName,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                            fontSize: 12,
-                            height: 1.2,
-                          ),
-                        ),
-                        4.gap,
-                        SvgPicture.asset(
-                          Assets.badge,
-                          width: 16,
-                          height: 16,
-                          colorFilter: ColorFilter.mode(
-                            AppColors.primary,
-                            BlendMode.dstIn,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const Spacer(),
-                    Text(
-                      timeAgo(data.updatedAt),
-                      style: TextStyle(
-                        fontWeight: FontWeight.w500,
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(100),
+                      child: RoundContainer(
+                        width: 20,
+                        height: 20,
+                        radius: 100,
                         color: AppColors.neutral500,
+                        child: (data.authorUrl != "")
+                            ? Image.network(data.authorUrl, fit: BoxFit.cover)
+                            : Container(),
+                      ),
+                    ),
+                    4.gap,
+                    Text(
+                      data.authorName,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
                         fontSize: 12,
                         height: 1.2,
                       ),
                     ),
+                    4.gap,
+                    SvgPicture.asset(
+                      Assets.badge,
+                      width: 16,
+                      height: 16,
+                      colorFilter: ColorFilter.mode(
+                        AppColors.primary,
+                        BlendMode.dstIn,
+                      ),
+                    ),
                   ],
                 ),
-                15.vgap,
+                const Spacer(),
+                Text(
+                  timeAgo(data.updatedAt),
+                  style: TextStyle(
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.neutral500,
+                    fontSize: 12,
+                    height: 1.2,
+                  ),
+                ),
               ],
             ),
           ),
+
+          15.vgap,
+
           const Divider(color: AppColors.neutral800, height: 1),
 
           Padding(

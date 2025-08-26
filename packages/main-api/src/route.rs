@@ -9,6 +9,10 @@ use crate::{
             RegisterUserResponse, register_users_by_noncelab_handler,
         },
         v2::{
+            bookmarks::{
+                add_bookmark::add_bookmark_handler, list_bookmarks::get_bookmarks_handler,
+                remove_bookmark::remove_bookmark_handler,
+            },
             dagits::{
                 add_oracle::add_oracle_handler,
                 artworks::{
@@ -164,6 +168,30 @@ pub async fn route(
             post_with(
                 follow_handler,
                 api_docs!("Follow Users", "Follow users with follower IDs"),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/v2/bookmarks/add",
+            post_with(
+                add_bookmark_handler,
+                api_docs!("Add Bookmarks", "Add Feed Bookmarks with user ID"),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/v2/bookmarks/remove",
+            post_with(
+                remove_bookmark_handler,
+                api_docs!("Remove Bookmarks", "Remove Feed Bookmarks with user ID"),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/v2/bookmarks",
+            get_with(
+                get_bookmarks_handler,
+                api_docs!("List Bookmarks", "Retrieve bookmarked feed with user ID"),
             )
             .with_state(pool.clone()),
         )
