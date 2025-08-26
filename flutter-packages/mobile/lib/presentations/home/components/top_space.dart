@@ -10,8 +10,8 @@ class TopSpace extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Top Spaces',
+        Text(
+          HomeLocalization.topSpace,
           style: TextStyle(
             color: Colors.white,
             fontSize: 16,
@@ -70,7 +70,7 @@ class SpaceSummaryCard extends StatelessWidget {
                         width: 14,
                         height: 14,
                       ),
-                      label: 'Space',
+                      label: HomeLocalization.space,
                     ),
                     10.gap,
                     YellowChip(
@@ -79,7 +79,7 @@ class SpaceSummaryCard extends StatelessWidget {
                         width: 14,
                         height: 14,
                       ),
-                      label: 'Rewards',
+                      label: HomeLocalization.rewards,
                     ),
                     Spacer(),
                     SvgPicture.asset(Assets.bookmark, width: 20, height: 20),

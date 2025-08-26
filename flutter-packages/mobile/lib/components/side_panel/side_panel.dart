@@ -130,11 +130,11 @@ class SidePanel extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  itemLabel("Points", user.points),
+                  itemLabel(MainLocalization.points, user.points),
                   30.gap,
-                  itemLabel("Following", user.followingsCount),
+                  itemLabel(MainLocalization.following, user.followingsCount),
                   30.gap,
-                  itemLabel("Followers", user.followersCount),
+                  itemLabel(MainLocalization.followers, user.followersCount),
                 ],
               ),
               30.vgap,
@@ -157,7 +157,7 @@ class SidePanel extends StatelessWidget {
                           BlendMode.srcIn,
                         ),
                       ),
-                      label: 'Drafts',
+                      label: MainLocalization.drafts,
                       onTap: () {
                         onClose();
                         Get.rootDelegate.offAndToNamed(AppRoutes.draftScreen);
@@ -173,7 +173,7 @@ class SidePanel extends StatelessWidget {
                           BlendMode.srcIn,
                         ),
                       ),
-                      label: 'Posts',
+                      label: MainLocalization.posts,
                       onTap: () {
                         onClose();
                         Get.rootDelegate.offAndToNamed(AppRoutes.postScreen);
@@ -189,7 +189,7 @@ class SidePanel extends StatelessWidget {
                           BlendMode.srcIn,
                         ),
                       ),
-                      label: 'Bookmarks',
+                      label: MainLocalization.bookmarks,
                       onTap: () {
                         onClose();
                         // Get.rootDelegate.offAndToNamed(AppRoutes.postScreen);
@@ -205,7 +205,7 @@ class SidePanel extends StatelessWidget {
                           BlendMode.srcIn,
                         ),
                       ),
-                      label: 'Verified Credential',
+                      label: MainLocalization.verifiedCredential,
                       onTap: () {
                         onClose();
                         Get.rootDelegate.toNamed(AppRoutes.verifiedScreen);
@@ -221,7 +221,7 @@ class SidePanel extends StatelessWidget {
                           BlendMode.srcIn,
                         ),
                       ),
-                      label: 'My Rewards',
+                      label: MainLocalization.myRewards,
                       onTap: () {
                         onClose();
                         Get.rootDelegate.offAndToNamed(
@@ -239,7 +239,7 @@ class SidePanel extends StatelessWidget {
                           BlendMode.srcIn,
                         ),
                       ),
-                      label: 'Settings',
+                      label: MainLocalization.settings,
                       onTap: () {
                         onClose();
                         // Get.rootDelegate.offAndToNamed(
@@ -386,8 +386,8 @@ class _ThemeSheetState extends State<ThemeSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Theme',
+          Text(
+            MainLocalization.theme,
             style: TextStyle(
               color: Colors.white,
               fontSize: 24,
@@ -399,9 +399,9 @@ class _ThemeSheetState extends State<ThemeSheet> {
           const Divider(height: 1, color: AppColors.neutral700),
           30.vgap,
 
-          _row('Dark', ThemeMode.dark),
-          _row('Light', ThemeMode.light),
-          _row('System-wide setting', ThemeMode.system),
+          _row(MainLocalization.dark, ThemeMode.dark),
+          _row(MainLocalization.light, ThemeMode.light),
+          _row(MainLocalization.systemWideSetting, ThemeMode.system),
         ],
       ),
     );
@@ -497,13 +497,13 @@ class _AccountsSheetState extends State<AccountsSheet> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _SheetHeader(title: 'Accounts'),
+          _SheetHeader(title: MainLocalization.accounts),
           const SizedBox(height: 8),
           ...tiles,
           const SizedBox(height: 10),
-          _actionButton('Create a new Account', onTap: () {}),
+          _actionButton(MainLocalization.createAccount, onTap: () {}),
           const SizedBox(height: 8),
-          _actionButton('Add on existing account', onTap: () {}),
+          _actionButton(MainLocalization.addExistingAccount, onTap: () {}),
           const SizedBox(height: 6),
         ],
       ),

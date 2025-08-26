@@ -108,6 +108,7 @@ export 'presentations/verified/verified_screen.dart';
 export 'presentations/verified/verified_model.dart';
 
 export 'localization/main_localization.dart';
+export 'localization/home_localization.dart';
 
 export 'models/profile.dart';
 export 'models/file.dart';

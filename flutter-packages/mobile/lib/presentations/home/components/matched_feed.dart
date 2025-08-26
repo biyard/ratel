@@ -11,8 +11,8 @@ class MatchedFeed extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'AI Matched',
+        Text(
+          HomeLocalization.aiMatched,
           style: TextStyle(
             color: Colors.white,
             fontSize: 16,
@@ -199,8 +199,8 @@ class MatchedChip extends StatelessWidget {
             ),
           ),
           4.gap,
-          const Text(
-            'Matched',
+          Text(
+            HomeLocalization.matched,
             style: TextStyle(
               color: Colors.white,
               fontSize: 12,
