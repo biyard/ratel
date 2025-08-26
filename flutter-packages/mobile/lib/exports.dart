@@ -9,7 +9,9 @@ export 'utils/logger/logger.dart';
 export 'utils/page_state.dart';
 export 'utils/controller/controller.dart';
 export 'utils/string/comma.dart';
+export 'utils/string/compact.dart';
 export 'utils/app_localization/app_localization.dart';
+export 'utils/time/time.dart';
 
 export 'extensions/gap.dart';
 
