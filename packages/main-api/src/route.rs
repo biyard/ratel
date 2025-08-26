@@ -6,7 +6,7 @@ use crate::{
     controllers::{
         self,
         m2::noncelab::users::register_users::{
-            RegisterUserResponse, register_users_by_noncelab_handler,
+            register_users_by_noncelab_handler, RegisterUserResponse
         },
         v2::{
             dagits::{
@@ -20,24 +20,17 @@ use crate::{
                     create_consensus::create_consensus_handler, vote::consensus_vote_handler,
                 },
                 get_dagit::get_dagit_handler,
-            },
-            industries::{industry::list_industries_handler, select_topic::select_topics_handler},
-            networks::{
+            }, documents::extract_passport_info_handler::{extract_passport_info_handler, PassportHandlerState}, industries::{industry::list_industries_handler, select_topic::select_topics_handler}, networks::{
                 follow::follow_handler, network::list_networks_handler,
                 search::list_networks_by_keyword_handler,
-            },
-            notifications::{mark_all_read::mark_all_notifications_read_handler},
-            oracles::create_oracle::create_oracle_handler,
-            spaces::get_my_space::get_my_space_controller,
-            telegram::subscribe::telegram_subscribe_handler,
-            users::{find_user::find_user_handler, logout::logout_handler},
+            }, notifications::mark_all_read::mark_all_notifications_read_handler, oracles::create_oracle::create_oracle_handler, spaces::get_my_space::get_my_space_controller, telegram::subscribe::telegram_subscribe_handler, users::{find_user::find_user_handler, logout::logout_handler}
         },
         well_known::get_did_document::get_did_document_handler,
     },
-    utils::sqs_client::SqsClient,
+    utils::{aws::{BedrockClient, RekognitionClient, TextractClient}, sqs_client::SqsClient},
 };
 use by_axum::axum;
-use dto::Result;
+use dto::{by_axum::axum::extract::DefaultBodyLimit, Result};
 
 use axum::native_routing::get as nget;
 use axum::native_routing::post as npost;
@@ -112,6 +105,9 @@ macro_rules! api_docs {
 pub async fn route(
     pool: sqlx::Pool<sqlx::Postgres>,
     sqs_client: Arc<SqsClient>,
+    bedrock_client: BedrockClient,
+    rek_client: RekognitionClient,
+    textract_client: TextractClient,
 ) -> Result<by_axum::axum::Router> {
     Ok(by_axum::axum::Router::new()
         .nest("/v1", controllers::v1::route(pool.clone()).await?)
@@ -253,6 +249,19 @@ pub async fn route(
             .with_state(pool.clone()),
         )
         .route(
+            "/v2/documents/passport",
+            post_with(extract_passport_info_handler, api_docs!(
+                "Extract Information from Passport Image",
+                "This endpoint allows you to extract passport information from an image.\n\n**Authorization header required**\n\n"
+            ))
+            .with_state(PassportHandlerState {
+                pool: pool.clone(),
+                bedrock_client: bedrock_client.clone(),
+                rek_client: rek_client.clone(),
+                textract_client: textract_client.clone(),
+            }).layer(DefaultBodyLimit::max(10 * 1024 * 1024)), // 10MB
+        )
+        .route(
             "/v2/telegram/subscribe",
             post_api!(
                 telegram_subscribe_handler,
@@ -272,6 +281,7 @@ pub async fn route(
             )
             .with_state(pool.clone()),
         )
+        
         .route(
             "/m2/noncelab/users",
             post_api!(
