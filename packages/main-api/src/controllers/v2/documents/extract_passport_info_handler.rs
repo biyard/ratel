@@ -84,22 +84,27 @@ pub async fn extract_passport_info_handler(
     State(state): State<PassportHandlerState>,
     Json(req): Json<PassportRequest>,
 ) -> Result<Json<PassportResponse>> {
-    // 1. Detect if the image is a passport using AWS Rekognition
-    // Price: $0.0012 per image
+    /*
+    1. Detect if the image is a passport using AWS Rekognition
+    Rekognition `detect labels` API Price:
+        $0.0012 per image
 
-    // 2. Extract text from the passport image using AWS Textract
-    // Price: $0.0015 per image
+    2. Extract text from the passport image using AWS Textract
+    Textract `detect_document_text` API Price:
+        $0.0015 per image
 
-    // 3. Use AWS Bedrock to parse the extracted text and extract passport fields
-    /* Price:
-       $0.000041 per 1K input tokens
-       $0.000164 per 1K output tokens
+    3. Use AWS Bedrock to parse the extracted text and extract passport fields
+    Bedrock NOVA.micro Model Price:
+        $0.000041 per 1K input tokens
+        $0.000164 per 1K output tokens
 
 
-       per request 600 input tokens and 60 output tokens used
-       Estimated: $0.00003444 ($0.000041 * 0.6 + $0.000164 * 0.06 = $0.0000246 + $0.00000984)
+    Estimated: $0.00003444
+        (per request 600 input tokens and 60 output tokens used)
+        ($0.000041 * 0.6 + $0.000164 * 0.06 = $0.0000246 + $0.00000984)
+
+    **Total estimated cost per request: $0.00283444 (~ 3.71 KRW)**
     */
-    // Total estimated cost per request: $0.00283444 (~ 3.71 KRW)
     let rek_output =
         state
             .rek_client

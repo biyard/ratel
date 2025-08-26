@@ -26,6 +26,7 @@ pub struct Config {
     pub telegram_token: &'static str,
     pub noncelab_token: &'static str,
     pub did: DidConfig,
+    pub bedrock_model_id: &'static str,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -119,6 +120,7 @@ impl Default for Config {
                 p256_d: option_env!("P256_D").expect("You must set P256_D"),
                 p256_crv: option_env!("P256_CRV").expect("You must set P256_CRV"),
             },
+            bedrock_model_id: option_env!("BEDROCK_MODEL_ID").expect("You must set BEDROCK_MODEL_ID"),
         }
     }
 }

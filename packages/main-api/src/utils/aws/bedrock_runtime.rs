@@ -40,8 +40,8 @@ impl BedrockClient {
             .build();
 
         let client = Client::from_conf(aws_config);
-        //FIXME: model id should be configurable
-        let model_id = "arn:aws:bedrock:ap-northeast-2:385474633683:inference-profile/apac.amazon.nova-micro-v1:0";
+
+        let model_id = conf.bedrock_model_id;
 
         Self {
             client,
