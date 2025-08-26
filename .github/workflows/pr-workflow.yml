@@ -88,6 +88,14 @@ jobs:
           JWT_SECRET_KEY: ${{ secrets.DEV_JWT_SECRET }}
           SLACK_CHANNEL_SPONSOR: ${{ secrets.DEV_SLACK }}
           US_CONGRESS_KEY: ${{ secrets.US_CONGRESS_KEY }}
+          BBS_BLS_X: ${{ secrets.BBS_BLS_X }}
+          BBS_BLS_Y: ${{ secrets.BBS_BLS_Y }}
+          BBS_BLS_D: ${{ secrets.BBS_BLS_D }}
+          BBS_BLS_CRV: ${{ secrets.BBS_BLS_CRV }}
+          P256_X: ${{ secrets.P256_X }}
+          P256_Y: ${{ secrets.P256_Y }}
+          P256_D: ${{ secrets.P256_D }}
+          P256_CRV: ${{ secrets.P256_CRV }}
 
           KAIA_FEEPAYER_KEY: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
           KAIA_FEEPAYER_ADDR: "0x742d35Cc6634C0532925a3b8D72C1a6C4A2c4c8f"

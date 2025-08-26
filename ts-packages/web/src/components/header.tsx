@@ -94,7 +94,7 @@ function Header(props: HeaderProps) {
           height="24"
         />
       ),
-      visible: config.experiment,
+      visible: true,
       href: route.notifications(),
       authorized: true,
     },
