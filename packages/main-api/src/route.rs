@@ -9,6 +9,10 @@ use crate::{
             RegisterUserResponse, register_users_by_noncelab_handler,
         },
         v2::{
+            bookmarks::{
+                add_bookmark::add_bookmark_handler, list_bookmarks::get_bookmarks_handler,
+                remove_bookmark::remove_bookmark_handler,
+            },
             dagits::{
                 add_oracle::add_oracle_handler,
                 artworks::{
@@ -21,14 +25,15 @@ use crate::{
                 },
                 get_dagit::get_dagit_handler,
             },
-            spaces::delete_space::delete_space_handler,
+            dashboards::get_dashboard::get_dashboard_handler,
             industries::{industry::list_industries_handler, select_topic::select_topics_handler},
             networks::{
                 follow::follow_handler, network::list_networks_handler,
                 search::list_networks_by_keyword_handler,
             },
-            notifications::{mark_all_read::mark_all_notifications_read_handler},
+            notifications::mark_all_read::mark_all_notifications_read_handler,
             oracles::create_oracle::create_oracle_handler,
+            spaces::delete_space::delete_space_handler,
             spaces::get_my_space::get_my_space_controller,
             telegram::subscribe::telegram_subscribe_handler,
             users::{find_user::find_user_handler, logout::logout_handler},
@@ -166,6 +171,30 @@ pub async fn route(
             .with_state(pool.clone()),
         )
         .route(
+            "/bookmarks/add",
+            post_with(
+                add_bookmark_handler,
+                api_docs!("Add Bookmarks", "Add Feed Bookmarks with user ID"),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/bookmarks/remove",
+            post_with(
+                remove_bookmark_handler,
+                api_docs!("Remove Bookmarks", "Remove Feed Bookmarks with user ID"),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/bookmarks",
+            get_with(
+                get_bookmarks_handler,
+                api_docs!("List Bookmarks", "Retrieve bookmarked feed with user ID"),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
             "/users",
             get_with(
                 find_user_handler,
@@ -173,6 +202,14 @@ pub async fn route(
                     "Get User",
                     "Retrieve users with username or phone number or email"
                 ),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/dashboards",
+            get_with(
+                get_dashboard_handler,
+                api_docs!("Get Dashboards", "Retrieve dashboard in a service"),
             )
             .with_state(pool.clone()),
         )
