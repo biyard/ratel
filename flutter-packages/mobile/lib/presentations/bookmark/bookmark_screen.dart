@@ -19,7 +19,7 @@ class BookmarkScreen extends GetWidget<BookmarkController> {
                 ),
                 20.gap,
                 Text(
-                  'Bookmarks',
+                  BookmarkLocalization.bookmarks,
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 24,
@@ -42,7 +42,12 @@ class BookmarkScreen extends GetWidget<BookmarkController> {
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: items.length,
                   separatorBuilder: (_, __) => 10.vgap,
-                  itemBuilder: (_, i) => FeedBox(data: items[i]),
+                  itemBuilder: (_, i) => FeedBox(
+                    data: items[i],
+                    onBookmarkTap: (feedId, isBookmarked) async {
+                      await controller.removebookmark(feedId);
+                    },
+                  ),
                 ),
               );
             }),
@@ -61,8 +66,8 @@ class _BookmarkEmpty extends StatelessWidget {
     return Container(
       alignment: Alignment.center,
       padding: const EdgeInsets.symmetric(vertical: 60),
-      child: const Text(
-        'No bookmarks yet',
+      child: Text(
+        BookmarkLocalization.bookmarkError,
         style: TextStyle(color: AppColors.neutral500, fontSize: 14),
       ),
     );

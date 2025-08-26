@@ -91,7 +91,9 @@ class SpaceSummaryCard extends StatelessWidget {
                         }
                       },
                       child: SvgPicture.asset(
-                        Assets.bookmark,
+                        (data.isBookmarked)
+                            ? Assets.bookmarkFilled
+                            : Assets.bookmark,
                         width: 20,
                         height: 20,
                       ),

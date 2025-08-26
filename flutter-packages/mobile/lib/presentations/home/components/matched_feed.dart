@@ -2,7 +2,8 @@ import 'package:ratel/exports.dart';
 
 class MatchedFeed extends StatelessWidget {
   final List<FeedSummary> items;
-  const MatchedFeed({super.key, required this.items});
+  final void Function(int feedId, bool isBookmarked)? onBookmarkTap;
+  const MatchedFeed({super.key, required this.items, this.onBookmarkTap});
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +21,10 @@ class MatchedFeed extends StatelessWidget {
           ),
         ),
         10.vgap,
-        for (final it in items) ...[MatchedFeedCard(data: it), 10.vgap],
+        for (final it in items) ...[
+          MatchedFeedCard(data: it, onBookmarkTap: onBookmarkTap),
+          10.vgap,
+        ],
       ],
     );
   }
@@ -28,7 +32,8 @@ class MatchedFeed extends StatelessWidget {
 
 class MatchedFeedCard extends StatelessWidget {
   final FeedSummary data;
-  const MatchedFeedCard({super.key, required this.data});
+  final void Function(int feedId, bool isBookmarked)? onBookmarkTap;
+  const MatchedFeedCard({super.key, required this.data, this.onBookmarkTap});
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +48,21 @@ class MatchedFeedCard extends StatelessWidget {
               children: [
                 MatchedChip(),
                 const Spacer(),
-                SvgPicture.asset(Assets.bookmark, width: 20, height: 20),
+                InkWell(
+                  onTap: () =>
+                      onBookmarkTap?.call(data.feedId, data.isBookmarked),
+                  borderRadius: BorderRadius.circular(20),
+                  child: Padding(
+                    padding: const EdgeInsets.all(4),
+                    child: SvgPicture.asset(
+                      data.isBookmarked
+                          ? Assets.bookmarkFilled
+                          : Assets.bookmark,
+                      width: 20,
+                      height: 20,
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
