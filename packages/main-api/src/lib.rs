@@ -16,6 +16,9 @@ pub mod controllers {
             pub mod network;
             pub mod search;
         }
+        pub mod notifications {
+            pub mod mark_all_read;
+        }
         pub mod telegram {
             pub mod subscribe;
         }
