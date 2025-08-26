@@ -1,3 +1,4 @@
+use bdk::prelude::*;
 use dto::{
     Follower, Result, UserType,
     by_axum::{
@@ -9,18 +10,36 @@ use dto::{
     },
     sqlx::{self, PgPool},
 };
-use serde::{Deserialize, Serialize};
 
 use crate::utils::users::extract_user_id;
 
-#[derive(Debug, Serialize)]
+#[derive(
+    Debug,
+    Clone,
+    serde::Serialize,
+    serde::Deserialize,
+    PartialEq,
+    Default,
+    aide::OperationIo,
+    JsonSchema,
+)]
 pub struct NetworkResponse {
     pub suggested_teams: Vec<Follower>,
     pub suggested_users: Vec<Follower>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(
+    Debug,
+    Clone,
+    serde::Serialize,
+    serde::Deserialize,
+    PartialEq,
+    Default,
+    aide::OperationIo,
+    JsonSchema,
+)]
 pub struct SearchQuery {
+    #[schemars(description = "Search Keyword")]
     pub keyword: Option<String>,
 }
 
