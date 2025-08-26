@@ -893,7 +893,7 @@ impl SpaceController {
 
         // Verify confirmation
         if !confirmation.confirmation {
-            tracing::warn!("Delete operation cancelled - user did not confirm");
+            tracing::error!("Delete operation cancelled - user did not confirm");
             return Err(Error::BadRequest);
         }
 
