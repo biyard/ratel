@@ -67,7 +67,7 @@ pub async fn get_dashboard_handler(
 
     //FIXME: fix matched feeds by using ai
     let matched_feeds: Vec<FeedSummary> = FeedSummary::query_builder(user_id)
-        .limit(5)
+        .limit(1)
         .page(1)
         .order_by_created_at_desc()
         .query()
