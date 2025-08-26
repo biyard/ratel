@@ -34,6 +34,8 @@ class BookmarkController extends BaseController {
   }
 
   void goBack() {
+    final controller = Get.find<HomeController>();
+    controller.getDashboards();
     Get.rootDelegate.offNamed(AppRoutes.mainScreen);
   }
 

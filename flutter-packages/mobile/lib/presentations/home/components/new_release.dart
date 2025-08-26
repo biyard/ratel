@@ -2,7 +2,8 @@ import 'package:ratel/exports.dart';
 
 class NewRelease extends StatelessWidget {
   final List<FeedSummary> items;
-  const NewRelease({super.key, required this.items});
+  final void Function(int feedId, bool isBookmarked)? onBookmarkTap;
+  const NewRelease({super.key, required this.items, this.onBookmarkTap});
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +21,10 @@ class NewRelease extends StatelessWidget {
           ),
         ),
         10.vgap,
-        for (final it in items) ...[FeedBox(data: it), 10.vgap],
+        for (final it in items) ...[
+          FeedBox(data: it, onBookmarkTap: onBookmarkTap),
+          10.vgap,
+        ],
       ],
     );
   }

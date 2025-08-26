@@ -2,7 +2,8 @@ import 'package:ratel/exports.dart';
 
 class FeedBox extends StatelessWidget {
   final FeedSummary data;
-  const FeedBox({super.key, required this.data});
+  final void Function(int feedId, bool isBookmarked)? onBookmarkTap;
+  const FeedBox({super.key, required this.data, this.onBookmarkTap});
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +17,21 @@ class FeedBox extends StatelessWidget {
               children: [
                 DarkTagChip(text: data.feedType),
                 Spacer(),
-                SvgPicture.asset(Assets.bookmark, width: 20, height: 20),
+                InkWell(
+                  onTap: () =>
+                      onBookmarkTap?.call(data.feedId, data.isBookmarked),
+                  borderRadius: BorderRadius.circular(20),
+                  child: Padding(
+                    padding: const EdgeInsets.all(4),
+                    child: SvgPicture.asset(
+                      data.isBookmarked
+                          ? Assets.bookmarkFilled
+                          : Assets.bookmark,
+                      width: 20,
+                      height: 20,
+                    ),
+                  ),
+                ),
               ],
             ),
           ),

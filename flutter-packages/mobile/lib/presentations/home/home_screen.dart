@@ -17,9 +17,31 @@ class HomeScreen extends GetWidget<HomeController> {
           children: [
             Obx(() => TopSpace(items: controller.topSpaces.value)),
             30.vgap,
-            Obx(() => MatchedFeed(items: controller.matchedFeeds.value)),
+            Obx(
+              () => MatchedFeed(
+                items: controller.matchedFeeds.value,
+                onBookmarkTap: (feedId, isBookmarked) async {
+                  if (isBookmarked) {
+                    await controller.removebookmark(feedId);
+                  } else {
+                    await controller.addBookmark(feedId);
+                  }
+                },
+              ),
+            ),
             30.vgap,
-            Obx(() => NewRelease(items: controller.newFeeds.value)),
+            Obx(
+              () => NewRelease(
+                items: controller.newFeeds.value,
+                onBookmarkTap: (feedId, isBookmarked) async {
+                  if (isBookmarked) {
+                    await controller.removebookmark(feedId);
+                  } else {
+                    await controller.addBookmark(feedId);
+                  }
+                },
+              ),
+            ),
           ],
         ),
       ),
