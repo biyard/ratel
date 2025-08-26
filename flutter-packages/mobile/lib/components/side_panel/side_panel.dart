@@ -105,85 +105,40 @@ class SidePanel extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    user.nickname,
+                    "@${user.nickname}",
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      height: 1.1,
                     ),
-                  ),
-                  Row(
-                    children: [
-                      Text(
-                        '\$${user.points}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(width: 2),
-                      const Text(
-                        'Ratels',
-                        style: TextStyle(
-                          color: Color(0xffd4d4d4),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
                   ),
                 ],
               ),
               Text(
                 user.username,
                 style: const TextStyle(
-                  color: Color(0xffd4d4d4),
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
+                  color: AppColors.neutral300,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  height: 1.2,
                 ),
               ),
-              const SizedBox(height: 10),
+              30.vgap,
               Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Text(
-                    "${user.followingsCount} ",
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 12,
-                    ),
-                  ),
-                  const Text(
-                    'Following',
-                    style: TextStyle(
-                      color: Color(0xffd4d4d4),
-                      fontWeight: FontWeight.w500,
-                      fontSize: 11,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Text(
-                    "${user.followersCount} ",
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 12,
-                    ),
-                  ),
-                  const Text(
-                    'Followers',
-                    style: TextStyle(
-                      color: Color(0xffd4d4d4),
-                      fontWeight: FontWeight.w500,
-                      fontSize: 11,
-                    ),
-                  ),
+                  itemLabel("Points", user.points),
+                  30.gap,
+                  itemLabel("Following", user.followingsCount),
+                  30.gap,
+                  itemLabel("Followers", user.followersCount),
                 ],
               ),
-              const SizedBox(height: 15),
-              Container(color: const Color(0xffd4d4d4), height: 0.3),
+              30.vgap,
+              Container(color: AppColors.neutral300, height: 0.3),
 
               Expanded(
                 child: ListView(
@@ -197,6 +152,10 @@ class SidePanel extends StatelessWidget {
                         Assets.editContent,
                         width: 20,
                         height: 20,
+                        colorFilter: ColorFilter.mode(
+                          AppColors.neutral500,
+                          BlendMode.srcIn,
+                        ),
                       ),
                       label: 'Drafts',
                       onTap: () {
@@ -206,9 +165,13 @@ class SidePanel extends StatelessWidget {
                     ),
                     MenuItem(
                       icon: SvgPicture.asset(
-                        Assets.folder,
+                        Assets.file,
                         width: 20,
                         height: 20,
+                        colorFilter: ColorFilter.mode(
+                          AppColors.neutral500,
+                          BlendMode.srcIn,
+                        ),
                       ),
                       label: 'Posts',
                       onTap: () {
@@ -218,9 +181,29 @@ class SidePanel extends StatelessWidget {
                     ),
                     MenuItem(
                       icon: SvgPicture.asset(
+                        Assets.bookmark,
+                        width: 20,
+                        height: 20,
+                        colorFilter: ColorFilter.mode(
+                          AppColors.neutral500,
+                          BlendMode.srcIn,
+                        ),
+                      ),
+                      label: 'Bookmarks',
+                      onTap: () {
+                        onClose();
+                        // Get.rootDelegate.offAndToNamed(AppRoutes.postScreen);
+                      },
+                    ),
+                    MenuItem(
+                      icon: SvgPicture.asset(
                         Assets.verification,
                         width: 20,
                         height: 20,
+                        colorFilter: ColorFilter.mode(
+                          AppColors.neutral500,
+                          BlendMode.srcIn,
+                        ),
                       ),
                       label: 'Verified Credential',
                       onTap: () {
@@ -233,8 +216,12 @@ class SidePanel extends StatelessWidget {
                         Assets.star,
                         width: 20,
                         height: 20,
+                        colorFilter: ColorFilter.mode(
+                          AppColors.neutral500,
+                          BlendMode.srcIn,
+                        ),
                       ),
-                      label: 'Boosting Points',
+                      label: 'My Rewards',
                       onTap: () {
                         onClose();
                         Get.rootDelegate.offAndToNamed(
@@ -242,10 +229,28 @@ class SidePanel extends StatelessWidget {
                         );
                       },
                     ),
+                    MenuItem(
+                      icon: SvgPicture.asset(
+                        Assets.setting,
+                        width: 20,
+                        height: 20,
+                        colorFilter: ColorFilter.mode(
+                          AppColors.neutral500,
+                          BlendMode.srcIn,
+                        ),
+                      ),
+                      label: 'Settings',
+                      onTap: () {
+                        onClose();
+                        // Get.rootDelegate.offAndToNamed(
+                        //   AppRoutes.boostingScreen,
+                        // );
+                      },
+                    ),
                   ],
                 ),
               ),
-              Container(color: const Color(0xffd4d4d4), height: 0.3),
+              Container(color: AppColors.neutral300, height: 0.3),
 
               Padding(
                 padding: const EdgeInsets.fromLTRB(0, 30, 15, 15),
@@ -263,6 +268,32 @@ class SidePanel extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  Widget itemLabel(String label, int value) {
+    return Column(
+      children: [
+        Text(
+          value.toString(),
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+            fontSize: 16,
+            height: 1.1,
+          ),
+        ),
+        2.vgap,
+        Text(
+          label,
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            color: AppColors.neutral300,
+            fontSize: 14,
+            height: 1.2,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -285,9 +316,10 @@ class MenuItem extends StatelessWidget {
       title: Text(
         label,
         style: const TextStyle(
-          color: Color(0xffd4d4d4),
-          fontWeight: FontWeight.w600,
-          fontSize: 14,
+          color: AppColors.neutral300,
+          fontWeight: FontWeight.w700,
+          fontSize: 18,
+          height: 1.2,
         ),
       ),
       onTap: onTap,
@@ -358,7 +390,7 @@ class _ThemeSheetState extends State<ThemeSheet> {
             'Theme',
             style: TextStyle(
               color: Colors.white,
-              fontSize: 18,
+              fontSize: 24,
               fontWeight: FontWeight.w700,
               height: 1.2,
             ),
@@ -409,17 +441,13 @@ class _AccountsSheetState extends State<AccountsSheet> {
         style: const TextStyle(
           color: Colors.white,
           fontWeight: FontWeight.w600,
-          fontSize: 14,
+          fontSize: 16,
           height: 1.2,
         ),
       ),
       subtitle: Text(
         sub,
-        style: const TextStyle(
-          color: AppColors.neutral400,
-          fontSize: 12,
-          height: 1.2,
-        ),
+        style: const TextStyle(color: Colors.white, fontSize: 12, height: 1.2),
       ),
       trailing: Icon(
         isSel ? Icons.radio_button_checked : Icons.radio_button_unchecked,
@@ -437,15 +465,15 @@ class _AccountsSheetState extends State<AccountsSheet> {
         decoration: BoxDecoration(
           color: Colors.transparent,
           borderRadius: BorderRadius.circular(50),
-          border: Border.all(color: const Color(0xff464646), width: 1),
+          border: Border.all(color: Colors.white, width: 1),
         ),
         child: Text(
           label,
           style: const TextStyle(
             color: Colors.white,
-            fontWeight: FontWeight.w400,
+            fontWeight: FontWeight.w700,
             fontSize: 14,
-            height: 1.1,
+            height: 1,
           ),
         ),
       ),
@@ -458,8 +486,8 @@ class _AccountsSheetState extends State<AccountsSheet> {
         .map(
           (t) => _accountTile(
             index: t.id,
-            name: t.nickname,
-            sub: '@${t.username}',
+            name: '@${t.nickname}',
+            sub: t.username,
           ),
         )
         .toList();
@@ -571,8 +599,9 @@ class _SheetHeader extends StatelessWidget {
         title,
         style: const TextStyle(
           color: Colors.white,
-          fontSize: 18,
+          fontSize: 24,
           fontWeight: FontWeight.w700,
+          height: 1.2,
         ),
       ),
     );

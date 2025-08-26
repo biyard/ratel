@@ -22,6 +22,8 @@ abstract class Assets {
   static const String rewardCoin = 'assets/icons/reward_coin.svg';
   static const String botCoin = 'assets/icons/botcoin_coin.svg';
   static const String bot = 'assets/icons/bot.svg';
+  static const String file = 'assets/icons/file.svg';
+  static const String setting = 'assets/icons/setting.svg';
 
   static const String editContent = 'assets/icons/edit_content.svg';
   static const String folder = 'assets/icons/folder.svg';

@@ -7,7 +7,6 @@ class HomeController extends BaseController {
   @override
   void onInit() {
     super.onInit();
-    listFeeds();
     getDashboards();
   }
 
@@ -22,14 +21,6 @@ class HomeController extends BaseController {
     newFeeds(item.newFeeds);
     hideLoading();
   }
-
-  void listFeeds() async {
-    final items = await feedsApi.listFeeds(1, 10);
-    feeds.assignAll(items);
-    logger.d('feeds loaded: ${feeds.length}');
-  }
-
-  RxList<FeedModel> feeds = <FeedModel>[].obs;
 
   RxList<SpaceSummary> topSpaces = <SpaceSummary>[].obs;
   RxList<FeedSummary> matchedFeeds = <FeedSummary>[].obs;
