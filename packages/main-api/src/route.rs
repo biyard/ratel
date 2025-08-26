@@ -33,6 +33,7 @@ use crate::{
             },
             notifications::mark_all_read::mark_all_notifications_read_handler,
             oracles::create_oracle::create_oracle_handler,
+            spaces::delete_space::delete_space_handler,
             spaces::get_my_space::get_my_space_controller,
             telegram::subscribe::telegram_subscribe_handler,
             users::{find_user::find_user_handler, logout::logout_handler},
@@ -42,7 +43,9 @@ use crate::{
     utils::sqs_client::SqsClient,
 };
 use by_axum::axum;
+use by_axum::axum::middleware;
 use dto::Result;
+use dto::by_axum::auth::authorization_middleware;
 
 use axum::native_routing::get as nget;
 use axum::native_routing::post as npost;
@@ -118,15 +121,11 @@ pub async fn route(
     pool: sqlx::Pool<sqlx::Postgres>,
     sqs_client: Arc<SqsClient>,
 ) -> Result<by_axum::axum::Router> {
-    Ok(by_axum::axum::Router::new()
-        .nest("/v1", controllers::v1::route(pool.clone()).await?)
-        .nest(
-            "/m1",
-            controllers::m1::MenaceController::route(pool.clone())?,
-        )
-        .native_route("/v2/users/logout", npost(logout_handler))
+    // Build v2 router and layer authorization middleware so Extension<Option<Authorization>> is present
+    let v2_router = by_axum::axum::Router::new()
+        .native_route("/users/logout", npost(logout_handler))
         .route(
-            "/v2/industries/select-topics",
+            "/industries/select-topics",
             post_with(
                 select_topics_handler,
                 api_docs!("Select Topics", "Select interesting topics"),
@@ -134,7 +133,7 @@ pub async fn route(
             .with_state(pool.clone()),
         )
         .route(
-            "/v2/industries",
+            "/industries",
             get_with(
                 list_industries_handler,
                 api_docs!("List Industries", "List industry types"),
@@ -142,7 +141,7 @@ pub async fn route(
             .with_state(pool.clone()),
         )
         .route(
-            "/v2/networks",
+            "/networks",
             get_with(
                 list_networks_handler,
                 api_docs!(
@@ -153,7 +152,7 @@ pub async fn route(
             .with_state(pool.clone()),
         )
         .route(
-            "/v2/networks/search",
+            "/networks/search",
             get_with(
                 list_networks_by_keyword_handler,
                 api_docs!(
@@ -164,7 +163,7 @@ pub async fn route(
             .with_state(pool.clone()),
         )
         .route(
-            "/v2/networks/follow",
+            "/networks/follow",
             post_with(
                 follow_handler,
                 api_docs!("Follow Users", "Follow users with follower IDs"),
@@ -172,7 +171,7 @@ pub async fn route(
             .with_state(pool.clone()),
         )
         .route(
-            "/v2/bookmarks/add",
+            "/bookmarks/add",
             post_with(
                 add_bookmark_handler,
                 api_docs!("Add Bookmarks", "Add Feed Bookmarks with user ID"),
@@ -180,7 +179,7 @@ pub async fn route(
             .with_state(pool.clone()),
         )
         .route(
-            "/v2/bookmarks/remove",
+            "/bookmarks/remove",
             post_with(
                 remove_bookmark_handler,
                 api_docs!("Remove Bookmarks", "Remove Feed Bookmarks with user ID"),
@@ -188,7 +187,7 @@ pub async fn route(
             .with_state(pool.clone()),
         )
         .route(
-            "/v2/bookmarks",
+            "/bookmarks",
             get_with(
                 get_bookmarks_handler,
                 api_docs!("List Bookmarks", "Retrieve bookmarked feed with user ID"),
@@ -196,7 +195,7 @@ pub async fn route(
             .with_state(pool.clone()),
         )
         .route(
-            "/v2/users",
+            "/users",
             get_with(
                 find_user_handler,
                 api_docs!(
@@ -207,7 +206,7 @@ pub async fn route(
             .with_state(pool.clone()),
         )
         .route(
-            "/v2/dashboards",
+            "/dashboards",
             get_with(
                 get_dashboard_handler,
                 api_docs!("Get Dashboards", "Retrieve dashboard in a service"),
@@ -215,7 +214,7 @@ pub async fn route(
             .with_state(pool.clone()),
         )
         .route(
-            "/v2/dagits/:space_id",
+            "/dagits/:space_id",
             get_with(
                 get_dagit_handler,
                 api_docs!("Get Dagit by space ID", "Retrieve dagit in a space"),
@@ -223,7 +222,7 @@ pub async fn route(
             .with_state(pool.clone()),
         )
         .route(
-            "/v2/dagits/:space_id/oracles",
+            "/dagits/:space_id/oracles",
             post_with(
                 add_oracle_handler,
                 api_docs!("Add Oracle", "Add a new oracle to a dagit"),
@@ -231,7 +230,7 @@ pub async fn route(
             .with_state(pool.clone()),
         )
         .route(
-            "/v2/dagits/:space_id/artworks",
+            "/dagits/:space_id/artworks",
             post_with(
                 create_artwork_handler,
                 api_docs!("Create Artwork", "Create a new artwork for a dagit"),
@@ -239,7 +238,7 @@ pub async fn route(
             .with_state((pool.clone(), sqs_client.clone())),
         )
         .route(
-            "/v2/dagits/:space_id/consensus",
+            "/dagits/:space_id/consensus",
             post_with(
                 create_consensus_handler,
                 api_docs!("Start Dagit Consensus", "Start a new consensus for a dagit"),
@@ -247,7 +246,7 @@ pub async fn route(
             .with_state(pool.clone()),
         )
         .route(
-            "/v2/artworks/:artwork_id",
+            "/artworks/:artwork_id",
             get_with(
                 get_artwork_detail_handler,
                 api_docs!("Get Artwork", "Retrieve a specific artwork"),
@@ -255,7 +254,7 @@ pub async fn route(
             .with_state(pool.clone()),
         )
         .route(
-            "/v2/my-spaces",
+            "/my-spaces",
             get_with(
                 get_my_space_controller,
                 api_docs!("Get My Space", "Retrieve a spaces"),
@@ -263,7 +262,7 @@ pub async fn route(
             .with_state(pool.clone()),
         )
         .route(
-            "/v2/dagits/:space_id/artworks/:artwork_id/vote",
+            "/dagits/:space_id/artworks/:artwork_id/vote",
             post_with(
                 consensus_vote_handler,
                 api_docs!(
@@ -274,7 +273,7 @@ pub async fn route(
             .with_state(pool.clone()),
         )
         .route(
-            "/v2/artworks/:artwork_id/certificate",
+            "/artworks/:artwork_id/certificate",
             get_with(
                 get_artwork_certificate_handler,
                 api_docs!("Get Artwork", "Retrieve a specific artwork"),
@@ -282,15 +281,7 @@ pub async fn route(
             .with_state(pool.clone()),
         )
         .route(
-            "/m2/oracles",
-            post_with(
-                create_oracle_handler,
-                api_docs!("Create Oracle", "Create a new oracle"),
-            )
-            .with_state(pool.clone()),
-        )
-        .route(
-            "/v2/telegram/subscribe",
+            "/telegram/subscribe",
             post_api!(
                 telegram_subscribe_handler,
                 (),
@@ -300,12 +291,42 @@ pub async fn route(
             .with_state(pool.clone()),
         )
         .route(
-            "/v2/notifications/mark-all-read",
+            "/spaces/:space_id/delete",
+            post_with(
+                delete_space_handler,
+                api_docs!(
+                    (),
+                    "Delete Space",
+                    "Delete a space and all its related resources after confirmation"
+                ),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/notifications/mark-all-read",
             post_api!(
                 mark_all_notifications_read_handler,
                 (),
                 "Mark All Notifications Read",
                 "Mark all notifications as read for the authenticated user."
+            )
+            .with_state(pool.clone()),
+        )
+        // Ensure per-request auth extension exists for all v2 endpoints
+        .layer(middleware::from_fn(authorization_middleware));
+
+    Ok(by_axum::axum::Router::new()
+        .nest("/v1", controllers::v1::route(pool.clone()).await?)
+        .nest(
+            "/m1",
+            controllers::m1::MenaceController::route(pool.clone())?,
+        )
+        // Keep m2 endpoints as-is
+        .route(
+            "/m2/oracles",
+            post_with(
+                create_oracle_handler,
+                api_docs!("Create Oracle", "Create a new oracle"),
             )
             .with_state(pool.clone()),
         )
@@ -324,5 +345,6 @@ pub async fn route(
             )
             .with_state(pool.clone()),
         )
+        .nest("/v2", v2_router)
         .native_route("/.well-known/did.json", nget(get_did_document_handler)))
 }
