@@ -1,4 +1,11 @@
-use crate::{config, controllers, route::route, utils::sqs_client};
+use crate::{
+    config, controllers,
+    route::route,
+    utils::{
+        aws::{BedrockClient, RekognitionClient, TextractClient},
+        sqs_client,
+    },
+};
 
 use bdk::prelude::{by_axum::axum::Router, *};
 use by_axum::axum::middleware;
@@ -213,6 +220,9 @@ pub async fn api_main() -> Result<Router> {
     }
 
     let sqs_client = sqs_client::SqsClient::new().await;
+    let bedrock_client = BedrockClient::new();
+    let rek_client = RekognitionClient::new();
+    let textract_client = TextractClient::new();
 
     let is_local = conf.env == "local";
     let session_layer = SessionManagerLayer::new(session_store)
@@ -234,11 +244,17 @@ pub async fn api_main() -> Result<Router> {
         by_axum::axum::Router::new().nest_service("/mcp", controllers::mcp::route().await?);
     // let bot = teloxide::Bot::new(conf.telegram_token);
     // let bot = std::sync::Arc::new(bot);
-    let api_router = route(pool.clone(), sqs_client)
-        .await?
-        .layer(middleware::from_fn(authorization_middleware))
-        .layer(session_layer)
-        .layer(middleware::from_fn(cookie_middleware));
+    let api_router = route(
+        pool.clone(),
+        sqs_client,
+        bedrock_client,
+        rek_client,
+        textract_client,
+    )
+    .await?
+    .layer(middleware::from_fn(authorization_middleware))
+    .layer(session_layer)
+    .layer(middleware::from_fn(cookie_middleware));
 
     let app = app.merge(mcp_router).merge(api_router);
     Ok(app)

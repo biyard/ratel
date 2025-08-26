@@ -44,6 +44,10 @@ pub mod controllers {
         pub mod oracles {
             pub mod create_oracle;
         }
+
+        pub mod documents {
+            pub mod extract_passport_info_handler;
+        }
     }
     pub mod m2 {
         pub mod noncelab {
