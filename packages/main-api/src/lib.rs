@@ -23,6 +23,12 @@ pub mod controllers {
             pub mod subscribe;
         }
 
+        // Spaces APIs
+        pub mod spaces {
+            pub mod delete_space;
+            pub mod get_my_space;
+        }
+
         pub mod dagits {
             pub mod add_oracle;
             pub mod get_dagit;
@@ -38,9 +44,7 @@ pub mod controllers {
                 pub mod vote;
             }
         }
-        pub mod spaces {
-            pub mod get_my_space;
-        }
+        
         pub mod oracles {
             pub mod create_oracle;
         }
