@@ -120,29 +120,62 @@ pub async fn route(
             controllers::m1::MenaceController::route(pool.clone())?,
         )
         .native_route("/v2/users/logout", npost(logout_handler))
-        .native_route(
+        .route(
             "/v2/industries/select-topics",
-            npost(select_topics_handler).with_state(pool.clone()),
+            post_with(
+                select_topics_handler,
+                api_docs!("Select Topics", "Select interesting topics"),
+            )
+            .with_state(pool.clone()),
         )
-        .native_route(
+        .route(
             "/v2/industries",
-            nget(list_industries_handler).with_state(pool.clone()),
+            get_with(
+                list_industries_handler,
+                api_docs!("List Industries", "List industry types"),
+            )
+            .with_state(pool.clone()),
         )
-        .native_route(
+        .route(
             "/v2/networks",
-            nget(list_networks_handler).with_state(pool.clone()),
+            get_with(
+                list_networks_handler,
+                api_docs!(
+                    "List Networks",
+                    "List networks based on recommendation algorithm"
+                ),
+            )
+            .with_state(pool.clone()),
         )
-        .native_route(
+        .route(
             "/v2/networks/search",
-            nget(list_networks_by_keyword_handler).with_state(pool.clone()),
+            get_with(
+                list_networks_by_keyword_handler,
+                api_docs!(
+                    "List Networks by keyword",
+                    "List networks by search keyword"
+                ),
+            )
+            .with_state(pool.clone()),
         )
-        .native_route(
+        .route(
             "/v2/networks/follow",
-            npost(follow_handler).with_state(pool.clone()),
+            post_with(
+                follow_handler,
+                api_docs!("Follow Users", "Follow users with follower IDs"),
+            )
+            .with_state(pool.clone()),
         )
-        .native_route(
+        .route(
             "/v2/users",
-            nget(find_user_handler).with_state(pool.clone()),
+            get_with(
+                find_user_handler,
+                api_docs!(
+                    "Get User",
+                    "Retrieve users with username or phone number or email"
+                ),
+            )
+            .with_state(pool.clone()),
         )
         .route(
             "/v2/dagits/:space_id",
