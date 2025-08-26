@@ -192,7 +192,7 @@ class SidePanel extends StatelessWidget {
                       label: MainLocalization.bookmarks,
                       onTap: () {
                         onClose();
-                        // Get.rootDelegate.offAndToNamed(AppRoutes.postScreen);
+                        Get.rootDelegate.offAndToNamed(AppRoutes.bookmark);
                       },
                     ),
                     MenuItem(

@@ -22,6 +22,37 @@ class HomeController extends BaseController {
     hideLoading();
   }
 
+  Future<void> addBookmark(int feedId) async {
+    logger.d("bookmarked feed id: ${feedId}");
+    try {
+      final res = await feedsApi.addBookmark(feedId);
+
+      if (res != null) {
+        Biyard.info("Bookmarked successfully");
+      }
+    } finally {
+      Biyard.error(
+        "Failed to bookmark.",
+        "Bookmarked failed. Please try again later.",
+      );
+    }
+  }
+
+  Future<void> removebookmark(int feedId) async {
+    try {
+      final res = await feedsApi.removeBookmark(feedId);
+
+      if (res != null) {
+        Biyard.info("Remove Bookmarked successfully");
+      }
+    } finally {
+      Biyard.error(
+        "Failed to remove bookmark.",
+        "Remove Bookmarked failed. Please try again later.",
+      );
+    }
+  }
+
   RxList<SpaceSummary> topSpaces = <SpaceSummary>[].obs;
   RxList<FeedSummary> matchedFeeds = <FeedSummary>[].obs;
   RxList<FeedSummary> newFeeds = <FeedSummary>[].obs;

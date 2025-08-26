@@ -13,6 +13,92 @@ class FeedsApi extends GetConnect {
     });
   }
 
+  Future<dynamic> addBookmark(int feedId) async {
+    final uri = Uri.parse(apiEndpoint).resolve('/v2/bookmarks/add');
+    final headers = <String, String>{'Content-Type': 'application/json'};
+    final body = {'feed_id': feedId};
+
+    final res = await post(uri.toString(), body, headers: headers);
+
+    logger.d('response body: ${res.isOk} ');
+
+    if (!res.isOk) return null;
+
+    logger.d('response body: ${res.body}');
+
+    return res.body;
+  }
+
+  Future<dynamic> removeBookmark(int feedId) async {
+    final uri = Uri.parse(apiEndpoint).resolve('/v2/bookmarks/remove');
+    final headers = <String, String>{'Content-Type': 'application/json'};
+    final body = {'feed_id': feedId};
+
+    final res = await post(uri.toString(), body, headers: headers);
+
+    logger.d('response body: ${res.isOk} ');
+
+    if (!res.isOk) return null;
+
+    logger.d('response body: ${res.body}');
+
+    return res.body;
+  }
+
+  Future<List<FeedSummary>> listBookmarkedFeeds() async {
+    final uri = Uri.parse(apiEndpoint).resolve('/v2/bookmarks');
+
+    final headers = <String, String>{'Content-Type': 'application/json'};
+    final res = await get(uri.toString(), headers: headers);
+
+    if (!res.isOk) return [];
+
+    final List<FeedSummary> feeds = [];
+
+    final items = res.body["bookmarked_feeds"];
+
+    logger.d("bookmarked feeds: $items");
+
+    for (var i = 0; i < items.length; i++) {
+      final feed = items[i];
+      final List<int> spaceIds = ((feed['spaces'] ?? []) as List)
+          .map((s) => s?['id'])
+          .where((id) => id != null)
+          .map<int>((id) => id is int ? id : int.parse(id.toString()))
+          .toList();
+      final feedType = (feed["industry"].length == 0)
+          ? "Crypto"
+          : feed["industry"][0]["name"];
+
+      feeds.add(
+        FeedSummary(
+          feedId: int.parse(items[i]["id"].toString()),
+          spaceIds: spaceIds,
+          feedType: feedType,
+          image: feed["url"] ?? "",
+          title: feed["title"] ?? "",
+          description: feed["html_contents"] ?? "",
+          authorId: (feed["author"].length != 0)
+              ? int.parse(feed["author"][0]["id"].toString())
+              : 0,
+          authorUrl: (feed["author"].length != 0)
+              ? feed["author"][0]["profile_url"] ?? ""
+              : "",
+          authorName: (feed["author"].length != 0)
+              ? feed["author"][0]["nickname"] ?? ""
+              : "",
+          createdAt: int.parse(feed["created_at"].toString()),
+          rewards: int.parse(feed["rewards"].toString()),
+          likes: int.parse(feed["likes"].toString()),
+          comments: int.parse(feed["comments"].toString()),
+          reposts: int.parse(feed["shares"].toString()),
+        ),
+      );
+    }
+
+    return feeds;
+  }
+
   //status == 1: draft, status == 2: published
   Future<List<FeedModel>> listFeedsByUserId(
     int page,

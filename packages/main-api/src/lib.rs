@@ -27,6 +27,12 @@ pub mod controllers {
             pub mod get_dashboard;
         }
 
+        pub mod bookmarks {
+            pub mod add_bookmark;
+            pub mod list_bookmarks;
+            pub mod remove_bookmark;
+        }
+
         pub mod dagits {
             pub mod add_oracle;
             pub mod get_dagit;

@@ -1,38 +1,11 @@
 import 'package:ratel/exports.dart';
 
-class MatchedFeed extends StatelessWidget {
-  final List<FeedSummary> items;
-  const MatchedFeed({super.key, required this.items});
-
-  @override
-  Widget build(BuildContext context) {
-    if (items.isEmpty) return const SizedBox.shrink();
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          HomeLocalization.aiMatched,
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            height: 1.2,
-          ),
-        ),
-        10.vgap,
-        for (final it in items) ...[MatchedFeedCard(data: it), 10.vgap],
-      ],
-    );
-  }
-}
-
-class MatchedFeedCard extends StatelessWidget {
+class FeedBox extends StatelessWidget {
   final FeedSummary data;
-  const MatchedFeedCard({super.key, required this.data});
+  const FeedBox({super.key, required this.data});
 
   @override
   Widget build(BuildContext context) {
-    logger.d("author url: ${data.authorUrl}");
     return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -41,29 +14,49 @@ class MatchedFeedCard extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
             child: Row(
               children: [
-                MatchedChip(),
-                const Spacer(),
+                DarkTagChip(text: data.feedType),
+                Spacer(),
                 SvgPicture.asset(Assets.bookmark, width: 20, height: 20),
               ],
             ),
           ),
-          10.vgap,
-
+          15.vgap,
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 15),
-            child: Text(
-              data.title,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 18,
-                color: Colors.white,
-                height: 1.2,
-              ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (data.image != null && data.image!.isNotEmpty) ...[
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: RoundContainer(
+                      width: 54,
+                      height: 54,
+                      radius: 8,
+                      color: AppColors.neutral500,
+                      child: Image.network(data.image!, fit: BoxFit.cover),
+                    ),
+                  ),
+                  10.gap,
+                ],
+
+                Expanded(
+                  child: Text(
+                    data.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 18,
+                      color: Colors.white,
+                      height: 1.2,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-          10.vgap,
+          15.vgap,
 
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 15),
@@ -78,14 +71,12 @@ class MatchedFeedCard extends StatelessWidget {
                     color: AppColors.neutral500,
                     child:
                         (data.authorUrl.isNotEmpty &&
-                            data.authorUrl != "" &&
-                            !data.authorUrl.contains("test"))
+                            !data.authorUrl.contains('test'))
                         ? Image.network(data.authorUrl, fit: BoxFit.cover)
-                        : Container(),
+                        : const SizedBox.shrink(),
                   ),
                 ),
-                4.gap,
-
+                6.gap,
                 ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 110),
                   child: Text(
@@ -99,12 +90,12 @@ class MatchedFeedCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                4.gap,
+                6.gap,
                 SvgPicture.asset(
                   Assets.badge,
                   width: 16,
                   height: 16,
-                  colorFilter: ColorFilter.mode(
+                  colorFilter: const ColorFilter.mode(
                     AppColors.primary,
                     BlendMode.dstIn,
                   ),
@@ -123,32 +114,22 @@ class MatchedFeedCard extends StatelessWidget {
             ),
           ),
           20.vgap,
+
           const Divider(color: AppColors.neutral800, height: 1),
+
           Padding(
-            padding: const EdgeInsets.fromLTRB(15, 15, 15, 0),
+            padding: const EdgeInsets.fromLTRB(30, 15, 30, 0),
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 iconText(
                   SvgPicture.asset(Assets.thumbs, width: 20, height: 20),
                   compact(data.likes),
                 ),
-                20.gap,
                 iconText(
                   SvgPicture.asset(Assets.roundBubble, width: 20, height: 20),
                   compact(data.comments),
-                ),
-                const Spacer(),
-                iconText(
-                  SvgPicture.asset(
-                    Assets.rewardCoin,
-                    width: 20,
-                    height: 20,
-                    colorFilter: ColorFilter.mode(
-                      AppColors.primary,
-                      BlendMode.dstIn,
-                    ),
-                  ),
-                  '${comma(data.rewards ?? 0)} P',
                 ),
               ],
             ),
@@ -162,10 +143,10 @@ class MatchedFeedCard extends StatelessWidget {
     return Row(
       children: [
         icon,
-        5.gap,
+        6.gap,
         Text(
           text,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w400,
             color: Colors.white,
@@ -176,41 +157,27 @@ class MatchedFeedCard extends StatelessWidget {
   }
 }
 
-class MatchedChip extends StatelessWidget {
-  const MatchedChip({super.key});
+class DarkTagChip extends StatelessWidget {
+  final String text;
+  const DarkTagChip({super.key, required this.text});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       height: 24,
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4.5),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2.5),
       decoration: BoxDecoration(
         color: AppColors.neutral800,
         borderRadius: BorderRadius.circular(4),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SvgPicture.asset(
-            Assets.bot,
-            width: 14,
-            height: 14,
-            colorFilter: const ColorFilter.mode(
-              AppColors.primary,
-              BlendMode.srcIn,
-            ),
-          ),
-          4.gap,
-          Text(
-            HomeLocalization.matched,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              height: 1.2,
-            ),
-          ),
-        ],
+      child: Text(
+        text,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          height: 1.2,
+        ),
       ),
     );
   }
