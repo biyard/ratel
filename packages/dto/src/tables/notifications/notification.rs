@@ -44,7 +44,7 @@ pub enum NotificationType {
 }
 
 
-#[derive(Debug, Clone, Eq, PartialEq, Default, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Default, serde::Serialize, serde::Deserialize, Translate)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub enum NotificationData {
     #[default]
