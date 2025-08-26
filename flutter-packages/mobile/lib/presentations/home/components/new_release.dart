@@ -11,8 +11,8 @@ class NewRelease extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'New Release for you',
+        Text(
+          HomeLocalization.newRelease,
           style: TextStyle(
             color: Colors.white,
             fontSize: 16,
@@ -205,70 +205,6 @@ class DarkTagChip extends StatelessWidget {
           fontWeight: FontWeight.w600,
           height: 1.2,
         ),
-      ),
-    );
-  }
-}
-
-class _PlusOneChip extends StatelessWidget {
-  final String text;
-  const _PlusOneChip(this.text);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 24,
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2.5),
-      decoration: BoxDecoration(
-        color: AppColors.neutral800,
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Text(
-        text,
-        style: const TextStyle(
-          color: Colors.white70,
-          fontSize: 12,
-          fontWeight: FontWeight.w700,
-          height: 1.2,
-        ),
-      ),
-    );
-  }
-}
-
-class _DarkPillCheckChip extends StatelessWidget {
-  final String text;
-  final bool checked;
-  const _DarkPillCheckChip(this.text, {this.checked = false});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 30,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1B1C1F),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: const Color(0xFF2A2B2E)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.check_circle,
-            size: 16,
-            color: checked ? AppColors.primary : AppColors.neutral500,
-          ),
-          6.gap,
-          Text(
-            text,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 12.5,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
       ),
     );
   }
