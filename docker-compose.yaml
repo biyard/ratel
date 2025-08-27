@@ -1,5 +1,3 @@
-version: '3.9'
-
 services:
   # Database
   # postgres:
@@ -141,13 +139,7 @@ services:
       - .:/app
     working_dir: /app
     restart: unless-stopped
-    command: >
-      bash -lc "
-        corepack enable \
-        corepack prepare pnpm@10.15.0 --activate \
-        pnpm -w install \
-        pnpm -C ts-packages/web dev
-      "
+    command: ["bash", "scripts/web-entrypoint.sh"]
     environment:
       PORT: 8080
     ports:
