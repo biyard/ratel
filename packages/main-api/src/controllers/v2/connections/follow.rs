@@ -39,7 +39,7 @@ pub struct FollowResponse {
     pub followee_ids: Vec<i64>,
 }
 
-pub async fn follow_handler(
+pub async fn connection_follow_handler(
     Extension(auth): Extension<Option<Authorization>>,
     State(pool): State<PgPool>,
     Json(body): Json<FollowRequest>,

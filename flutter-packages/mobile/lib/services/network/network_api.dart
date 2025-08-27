@@ -39,58 +39,40 @@ class NetworkApi extends GetConnect {
     logger.d("network info: ${networkRes.body["suggested_users"]}");
 
     final List<NetworkModel> followers = [];
-    final List<NetworkModel> followings = [
-      NetworkModel(
-        id: 51,
-        profileUrl:
-            "https://ca.slack-edge.com/T03H3B09USV-U03GQMUNE2W-20ccd88c2612-512",
-        nickname: "Summer Park",
-        username: "Summer Park",
-        description:
-            "<div>educator in the Korean Web3 industry, specializing in industry convergence and DAO technology and applications in the context of blockchain and Web3.0</div>",
-      ),
-      NetworkModel(
-        id: 52,
-        profileUrl:
-            "https://lh3.googleusercontent.com/a/ACg8ocJH35xGbTc7wWb1C8n55KDYdoIKAthJEvFGYXRP9qgFRO9dWM8=s96-c",
-        nickname: "Rosa Park",
-        username: "Rosa Park",
-        description: "<div>Project manager at Ratel foundation</div>",
-      ),
-    ];
+    final List<NetworkModel> followings = [];
 
     if (!userRes.isOk || !networkRes.isOk) {
       return MyNetworkModel(followers: followers, followings: followings);
     }
 
-    // final followersRaw = userRes.body["followers"] as List? ?? [];
-    // final followingRaw = userRes.body["followings"] as List? ?? [];
+    final followersRaw = userRes.body["followers"] as List? ?? [];
+    final followingRaw = userRes.body["followings"] as List? ?? [];
 
-    // final followerIds = followersRaw
-    //     .map((e) => e is Map ? e["id"] : e)
-    //     .map((v) => int.tryParse(v?.toString() ?? ''))
-    //     .whereType<int>()
-    //     .toSet();
+    final followerIds = followersRaw
+        .map((e) => e is Map ? e["id"] : e)
+        .map((v) => int.tryParse(v?.toString() ?? ''))
+        .whereType<int>()
+        .toSet();
 
-    // final alreadyAdded = followings.map((n) => n.id).toSet();
+    final alreadyAdded = followings.map((n) => n.id).toSet();
 
-    // for (final f in followingRaw) {
-    //   final id = int.tryParse(f["id"]?.toString() ?? '');
-    //   logger.d("following raws ids: ${followerIds} ${id}");
-    //   if (id == null) continue;
-    //   if (followerIds.contains(id)) continue;
-    //   if (alreadyAdded.contains(id)) continue;
+    for (final f in followingRaw) {
+      final id = int.tryParse(f["id"]?.toString() ?? '');
+      logger.d("following raws ids: ${followerIds} ${id}");
+      if (id == null) continue;
+      if (followerIds.contains(id)) continue;
+      if (alreadyAdded.contains(id)) continue;
 
-    //   followings.add(
-    //     NetworkModel(
-    //       id: id,
-    //       profileUrl: f["profile_url"] ?? "",
-    //       nickname: f["nickname"] ?? "",
-    //       username: f["username"] ?? "",
-    //       description: f["html_contents"] ?? "",
-    //     ),
-    //   );
-    // }
+      followings.add(
+        NetworkModel(
+          id: id,
+          profileUrl: f["profile_url"] ?? "",
+          nickname: f["nickname"] ?? "",
+          username: f["username"] ?? "",
+          description: f["html_contents"] ?? "",
+        ),
+      );
+    }
 
     for (
       var i = 0;
@@ -114,8 +96,8 @@ class NetworkApi extends GetConnect {
     return MyNetworkModel(followers: followers, followings: followings);
   }
 
-  Future<dynamic> getNetworks() async {
-    final uri = Uri.parse(apiEndpoint).resolve('/v2/networks');
+  Future<dynamic> getConnections() async {
+    final uri = Uri.parse(apiEndpoint).resolve('/v2/connections');
 
     final headers = <String, String>{'Content-Type': 'application/json'};
     final res = await get(uri.toString(), headers: headers);
@@ -154,9 +136,9 @@ class NetworkApi extends GetConnect {
     return networks;
   }
 
-  Future<dynamic> getNetworksByKeyword(String keyword) async {
+  Future<dynamic> getConnectionByKeyword(String keyword) async {
     final uri = Uri.parse(apiEndpoint)
-        .resolve('/v2/networks/search')
+        .resolve('/v2/connections/search')
         .replace(queryParameters: <String, String>{'keyword': keyword});
 
     final headers = <String, String>{'Content-Type': 'application/json'};
@@ -196,8 +178,8 @@ class NetworkApi extends GetConnect {
     return networks;
   }
 
-  Future<dynamic> follow(List<int> followeeIds) async {
-    final uri = Uri.parse(apiEndpoint).resolve('/v2/networks/follow');
+  Future<dynamic> connectionFollow(List<int> followeeIds) async {
+    final uri = Uri.parse(apiEndpoint).resolve('/v2/connections/follow');
 
     final headers = <String, String>{'Content-Type': 'application/json'};
     final body = {'followee_ids': followeeIds};
