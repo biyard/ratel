@@ -1,0 +1,155 @@
+services:
+  # Database
+  # postgres:
+  #   image: postgres:15
+  #   restart: unless-stopped
+  #   environment:
+  #     POSTGRES_USER: postgres
+  #     POSTGRES_PASSWORD: postgres
+  #     POSTGRES_DB: ratel
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U postgres"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+  #   networks:
+  #     - ratel-network
+
+  # # Hasura GraphQL Engine
+  # hasura:
+  #   image: hasura/graphql-engine:v2.40.0
+  #   restart: unless-stopped
+  #   ports:
+  #     - "28080:8080"
+  #   environment:
+  #     HASURA_GRAPHQL_METADATA_DATABASE_URL: postgres://postgres:postgres@postgres:5432/ratel
+  #     HASURA_GRAPHQL_DATABASE_URL: postgres://postgres:postgres@postgres:5432/ratel
+  #     HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
+  #     HASURA_GRAPHQL_DEV_MODE: "true"
+  #     HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup, http-log, webhook-log, websocket-log, query-log
+  #     HASURA_GRAPHQL_ADMIN_SECRET: ratel_admin_secret
+  #     HASURA_GRAPHQL_AUTH_HOOK: http://main-api:3000/v1/auth/hasura
+  #     HASURA_GRAPHQL_AUTH_HOOK_MODE: POST
+  #     HASURA_GRAPHQL_LOG_LEVEL: debug
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #   networks:
+  #     - ratel-network
+
+  # # Main API Service
+  # main-api:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.main-api
+  #   restart: unless-stopped
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     ENV: dev
+  #     RUST_LOG: debug
+  #     DATABASE_URL: postgres://postgres:postgres@postgres:5432/ratel
+  #     MIGRATE: "true"
+  #     SECRET_TOKEN: dev_secret_token_12345
+  #     DOMAIN: localhost:3000
+  #     AUTH_DOMAIN: localhost:3000
+  #     AWS_REGION: us-east-1
+  #     # Disable AWS services for local development
+  #     AWS_ACCESS_KEY_ID: ""
+  #     AWS_SECRET_ACCESS_KEY: ""
+  #     # Local file storage instead of S3
+  #     BUCKET_NAME: local-storage
+  #     ASSET_DIR: uploads
+  #     # Telegram (optional for local dev)
+  #     TELEGRAM_TOKEN: ""
+  #   volumes:
+  #     - ./uploads:/app/uploads
+  #     - ./target:/app/target
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+  #   networks:
+  #     - ratel-network
+
+  # # Fetcher Service
+  # fetcher:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.fetcher
+  #   restart: unless-stopped
+  #   ports:
+  #     - "3001:3000"
+  #   environment:
+  #     ENV: dev
+  #     RUST_LOG: debug
+  #     DATABASE_URL: postgres://postgres:postgres@postgres:5432/ratel
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #   networks:
+  #     - ratel-network
+
+  # # Image Worker Service
+  # image-worker:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.image-worker
+  #   restart: unless-stopped
+  #   environment:
+  #     ENV: dev
+  #     RUST_LOG: debug
+  #     AWS_REGION: us-east-1
+  #     # Disable AWS SQS for local development
+  #     AWS_ACCESS_KEY_ID: ""
+  #     AWS_SECRET_ACCESS_KEY: ""
+  #   volumes:
+  #     - ./uploads:/app/uploads
+  #   networks:
+  #     - ratel-network
+
+  # # Telegram Bot Service (optional)
+  # telegram-bot:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.telegram-bot
+  #   restart: unless-stopped
+  #   environment:
+  #     ENV: dev
+  #     RUST_LOG: debug
+  #     TELEGRAM_TOKEN: ${TELEGRAM_TOKEN:-}
+  #     DATABASE_URL: postgres://postgres:postgres@postgres:5432/ratel
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #   networks:
+  #     - ratel-network
+  #   profiles:
+  #     - telegram
+
+  # Web Frontend
+  web:
+    image: node:22.14
+    volumes:
+      - .:/app
+    working_dir: /app
+    restart: unless-stopped
+    command: ["bash", "scripts/web-entrypoint.sh"]
+    environment:
+      PORT: 8080
+    ports:
+      - "8080:8080"
+    networks:
+      - ratel-network
+
+volumes:
+  postgres_data:
+
+networks:
+  ratel-network:
+    driver: bridge
