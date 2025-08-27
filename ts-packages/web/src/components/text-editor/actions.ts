@@ -8,6 +8,7 @@ export type UseEditorActionsProps = {
   linkUrl: string;
   setLinkUrl: (url: string) => void;
   setShowLinkPopover: (show: boolean) => void;
+  setShowColorPicker: (show: boolean) => void;
   fileInputRef: React.RefObject<HTMLInputElement | null>;
 };
 
@@ -17,6 +18,7 @@ export const useEditorActions = ({
   linkUrl,
   setLinkUrl,
   setShowLinkPopover,
+  setShowColorPicker,
   fileInputRef,
 }: UseEditorActionsProps) => {
   const handleLinkClick = useCallback(() => {
@@ -29,9 +31,21 @@ export const useEditorActions = ({
   const addLink = useCallback(() => {
     if (!editor || !linkUrl.trim()) return;
 
-    const processedUrl = linkUrl.includes('://')
-      ? linkUrl
-      : `https://${linkUrl}`;
+    // const processedUrl = linkUrl.includes('://')
+    //   ? linkUrl
+    //   : `https://${linkUrl}`;
+
+    const ensureProtocol = (u: string) =>
+      /^(https?:)?\/\//i.test(u) ? u : `https://${u}`;
+    const candidate = ensureProtocol(linkUrl.trim());
+    let processedUrl: string;
+    try {
+      const u = new URL(candidate);
+      if (!['http:', 'https:'].includes(u.protocol)) return;
+      processedUrl = u.toString();
+    } catch {
+      return;
+    }
 
     if (editor.state.selection.empty === false) {
       editor
@@ -44,7 +58,11 @@ export const useEditorActions = ({
       editor
         .chain()
         .focus()
-        .insertContent(`<a href="${processedUrl}">${linkUrl}</a>`)
+        .insertContent({
+          type: 'text',
+          text: linkUrl,
+          marks: [{ type: 'link', attrs: { href: processedUrl } }],
+        })
         .run();
     }
 
@@ -63,9 +81,10 @@ export const useEditorActions = ({
     (color: string) => {
       if (!editor) return;
       editor.chain().focus().setColor(color).run();
-      setShowLinkPopover(false);
+      // Close the color picker after applying color
+      setShowColorPicker(false);
     },
-    [editor, setShowLinkPopover],
+    [editor, setShowColorPicker],
   );
 
   const addImage = useCallback(() => {

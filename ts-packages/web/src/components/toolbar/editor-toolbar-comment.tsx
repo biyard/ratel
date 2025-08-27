@@ -1,9 +1,5 @@
 import { Button } from '@/components/ui/button';
-import {
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-} from '@radix-ui/react-popover';
+import { Root, Trigger, Content } from '@radix-ui/react-popover';
 import { Input } from '@/components/ui/input';
 import CodesPen from '@/assets/icons/editor/codespen.svg';
 import BoldIcon from '@/assets/icons/editor/bold.svg';
@@ -109,13 +105,13 @@ export const EditorToolbarComment = ({
         </button>
 
         {/* Color Picker */}
-        <Popover open={showColorPicker} onOpenChange={setShowColorPicker}>
-          <PopoverTrigger asChild>
+        <Root open={showColorPicker} onOpenChange={setShowColorPicker}>
+          <Trigger asChild>
             <button className="bg-neutral-900 text-lg text-neutral-600">
               <PaintIcon className="h-6 w-6" />
             </button>
-          </PopoverTrigger>
-          <PopoverContent className="w-48 p-2 bg-gray-800 border-gray-600">
+          </Trigger>
+          <Content className="w-48 p-2 bg-gray-800 border-gray-600">
             <div className="grid grid-cols-7 gap-1">
               {colors.map((color) => (
                 <button
@@ -126,12 +122,12 @@ export const EditorToolbarComment = ({
                 />
               ))}
             </div>
-          </PopoverContent>
-        </Popover>
+          </Content>
+        </Root>
 
         {/* Link */}
-        <Popover open={showLinkPopover} onOpenChange={setShowLinkPopover}>
-          <PopoverTrigger asChild>
+        <Root open={showLinkPopover} onOpenChange={setShowLinkPopover}>
+          <Trigger asChild>
             <button
               className={`bg-neutral-900 text-lg ${
                 editor.isActive('link') ? 'text-white' : 'text-neutral-600'
@@ -140,8 +136,8 @@ export const EditorToolbarComment = ({
             >
               <LinkPaste className="h-6 w-6" />
             </button>
-          </PopoverTrigger>
-          <PopoverContent className="w-80 p-3 bg-gray-800 border-gray-600">
+          </Trigger>
+          <Content className="w-80 p-3 bg-gray-800 border-gray-600">
             <div className="space-y-2">
               <div className="flex gap-2">
                 <Input
@@ -185,8 +181,8 @@ export const EditorToolbarComment = ({
                 insert it directly.
               </p>
             </div>
-          </PopoverContent>
-        </Popover>
+          </Content>
+        </Root>
 
         {/* Image */}
         <button

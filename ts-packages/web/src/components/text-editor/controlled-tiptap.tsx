@@ -3,10 +3,7 @@
 import { forwardRef, useImperativeHandle } from 'react';
 import { EditorContent } from '@tiptap/react';
 import type { Editor } from '@tiptap/core';
-import {
-  useTiptapEditor,
-  type UseTiptapEditorOptions,
-} from './useTiptapEditor';
+import { useTiptapEditor, type UseTiptapEditorOptions } from './tiptap-editor';
 
 export interface ControlledTiptapProps
   extends Pick<

@@ -159,7 +159,7 @@ export default function Comment({ comment, onSubmit, onLike }: CommentProps) {
               }}
             />
             {showReplies && expand && comment.num_of_replies > 0 && (
-              <div className="absolute left-10 w-0.5 h-10 z-12 bg-primary rounded-t-md" />
+              <div className="absolute left-10 w-0.5 h-10 z-10 bg-primary rounded-t-md" />
             )}
           </div>
         )}
@@ -205,7 +205,7 @@ export default function Comment({ comment, onSubmit, onLike }: CommentProps) {
 
         {/* Bottom vertical line */}
         {showReplies && expand && comment.num_of_replies > 0 && (
-          <div className="absolute left-20 bottom-12 w-0.5 h-21 z-12 bg-primary rounded-t-md" />
+          <div className="absolute left-20 bottom-12 w-0.5 h-20 z-10 bg-primary rounded-t-md" />
         )}
 
         {/* Collapse Replies Button */}

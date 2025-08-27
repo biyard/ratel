@@ -64,8 +64,19 @@ export const useTiptapEditor = (options?: UseTiptapEditorOptions) => {
           class: 'text-blue-400 underline cursor-pointer hover:text-blue-300',
         },
         // Loosen validation – callers can sanitize if needed
-        /*eslint-disable-next-line @typescript-eslint/no-unused-vars*/
-        validate: (_href) => true,
+        validate: (href) => {
+          try {
+            const u = new URL(
+              href,
+              typeof window !== 'undefined'
+                ? window.location.origin
+                : 'https://localhost',
+            );
+            return ['http:', 'https:', 'mailto:'].includes(u.protocol);
+          } catch {
+            return false;
+          }
+        },
       }) as unknown as TiptapExtension,
     );
   }

@@ -1,10 +1,10 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { EditorContent } from '@tiptap/react';
 import { useEditorActions } from '@/components/text-editor/actions';
-import { useTiptapEditor } from '@/components/text-editor/useTiptapEditor';
+import { useTiptapEditor } from '@/components/text-editor/tiptap-editor';
 import { EditorToolbarComment as EditorToolbar } from '@/components/toolbar/editor-toolbar-comment';
 import { CommentIcon } from '../icons';
-import { Loader2 } from 'lucide-react';
+import { Loader } from '../icons';
 import { cn } from '@/lib/utils';
 import { ChevronDoubleDownIcon } from '@heroicons/react/20/solid';
 
@@ -33,12 +33,18 @@ export default function CommentComposer({
   const [isLoading, setLoading] = useState(false);
   const [disabled, setDisabled] = useState(true);
 
+  // Use a ref so the image handler can safely reference the editor
+  const editorRef = useRef<ReturnType<typeof useTiptapEditor> | null>(null);
+
   const handleImageFile = useCallback((file: File) => {
     const reader = new FileReader();
     reader.onloadend = () => {
       const src = reader.result as string;
       const id = Date.now().toString();
       setUploadedImages((prev) => [...prev, { id, src, name: file.name }]);
+      // Also insert into editor for paste/drag workflows
+      const ed = editorRef.current;
+      ed?.chain().focus().setImage({ src }).run();
     };
     reader.readAsDataURL(file);
   }, []);
@@ -52,6 +58,11 @@ export default function CommentComposer({
       image: true,
     },
   });
+
+  // Keep the ref in sync with the current editor instance
+  useEffect(() => {
+    editorRef.current = editor ?? null;
+  }, [editor]);
 
   const {
     handleLinkClick,
@@ -68,6 +79,7 @@ export default function CommentComposer({
     linkUrl,
     setLinkUrl,
     setShowLinkPopover,
+    setShowColorPicker,
     fileInputRef,
   });
 
@@ -151,7 +163,7 @@ export default function CommentComposer({
             )}
           >
             {isLoading ? (
-              <Loader2 className="animate-spin size-6" />
+              <Loader className="animate-spin size-6" />
             ) : (
               <CommentIcon
                 width={24}
