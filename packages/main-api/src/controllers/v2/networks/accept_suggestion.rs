@@ -1,6 +1,6 @@
 use bdk::prelude::*;
 use dto::{
-    Follower, Mynetwork, Result,
+    Follower, Mynetwork, NotificationData, Result,
     by_axum::{
         auth::Authorization,
         axum::{Extension, Json, extract::State},
@@ -8,7 +8,7 @@ use dto::{
     sqlx::PgPool,
 };
 
-use crate::utils::users::extract_user_id;
+use crate::utils::{notifications::send_notification, users::extract_user_id};
 
 #[derive(
     Debug,
@@ -50,7 +50,9 @@ pub async fn accept_suggestion_handler(
     let user_id = extract_user_id(&pool, auth).await?;
     let followee_id = body.followee_id;
 
-    let _ = repo.insert_with_tx(&pool, user_id, followee_id).await?;
+    let mut tx = pool.begin().await?;
+
+    let _ = repo.insert_with_tx(&mut *tx, user_id, followee_id).await?;
 
     let mut excluded_ids = body.suggestion_ids.clone();
     excluded_ids.push(followee_id);
@@ -87,7 +89,24 @@ pub async fn accept_suggestion_handler(
         .fetch_optional(&pool)
         .await?;
 
+    let notification_data = NotificationData::ConnectNetwork {
+        requester_id: user_id,
+        image_url: "".to_string(),
+        description: "Someone has started following you".to_string(),
+    };
+
+    if let Err(e) = send_notification(&pool.clone(), &mut tx, followee_id, notification_data).await
+    {
+        tracing::error!(
+            "Failed to send ConnectNetwork notification to user {}: {:?}",
+            followee_id,
+            e
+        );
+    }
+
     let suggestion = next.ok_or(dto::Error::NotFound)?;
+
+    tx.commit().await?;
 
     Ok(Json(AcceptSuggestionResponse { suggestion }))
 }

@@ -7,6 +7,9 @@ class NetworkScreen extends GetWidget<NetworkController> {
   @override
   Widget build(BuildContext context) {
     final bottomPad = MediaQuery.of(context).padding.bottom;
+    final items = controller.invitations.value;
+    final lastIndex = items.length - 1;
+
     return Layout<NetworkController>(
       child: Padding(
         padding: EdgeInsets.fromLTRB(14, 8, 14, bottomPad),
@@ -18,40 +21,55 @@ class NetworkScreen extends GetWidget<NetworkController> {
               child: Obx(
                 () => (controller.invitations.value.isEmpty)
                     ? const SizedBox.shrink()
-                    : Column(
-                        children: [
-                          for (final entry
-                              in controller.invitations.value
-                                  .asMap()
-                                  .entries) ...[
-                            InvitationTile(
-                              model: entry.value,
-                              onAccept: () async {
-                                await controller.acceptInvitation(
-                                  entry.value.id,
-                                );
-                              },
-                              onReject: () async {
-                                await controller.rejectInvitation(
-                                  entry.value.id,
-                                );
-                              },
-                            ),
-                            5.vgap,
-                            if (entry.key !=
-                                controller.invitations.value.length - 1) ...[
-                              Container(
-                                height: 0.5,
-                                color: const Color(0xff2a2a2a),
-                              ),
-                              5.vgap,
+                    : RoundContainer(
+                        color: Color(0xff171717),
+                        radius: 8,
+                        child: Padding(
+                          padding: const EdgeInsets.all(15.0),
+                          child: Column(
+                            children: [
+                              for (final entry
+                                  in controller.invitations.value
+                                      .asMap()
+                                      .entries) ...[
+                                Padding(
+                                  padding: EdgeInsets.fromLTRB(
+                                    0,
+                                    entry.key == 0 ? 0 : 20,
+                                    0,
+                                    entry.key == lastIndex ? 0 : 20,
+                                  ),
+                                  child: InvitationTile(
+                                    model: entry.value,
+                                    onAccept: () async {
+                                      await controller.acceptInvitation(
+                                        entry.value.id,
+                                      );
+                                    },
+                                    onReject: () async {
+                                      await controller.rejectInvitation(
+                                        entry.value.id,
+                                      );
+                                    },
+                                  ),
+                                ),
+                                if (entry.key !=
+                                    controller.invitations.value.length -
+                                        1) ...[
+                                  Container(
+                                    height: 0.1,
+                                    color: const Color(0xffd4d4d4),
+                                  ),
+                                  5.vgap,
+                                ],
+                              ],
                             ],
-                          ],
-                        ],
+                          ),
+                        ),
                       ),
               ),
             ),
-            10.vgap,
+            30.vgap,
 
             Obx(() {
               final sug = controller.suggestions;
@@ -63,8 +81,8 @@ class NetworkScreen extends GetWidget<NetworkController> {
                   padding: const EdgeInsets.only(top: 4, bottom: 4),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
-                    mainAxisSpacing: 12,
-                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 10,
+                    crossAxisSpacing: 10,
                     childAspectRatio: 0.9,
                   ),
                   itemCount: sug.length,
@@ -97,7 +115,7 @@ class SectionCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: AppColors.componentBg,
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(8),
       ),
       padding: const EdgeInsets.fromLTRB(15, 5, 15, 5),
@@ -113,7 +131,7 @@ class SectionCard extends StatelessWidget {
               height: 1.2,
             ),
           ),
-          10.vgap,
+          15.vgap,
           child,
         ],
       ),
@@ -162,7 +180,7 @@ class InvitationTile extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      model.nickname,
+                      '@${model.nickname}',
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w600,
@@ -187,21 +205,22 @@ class InvitationTile extends StatelessWidget {
                   ElevatedButton(
                     onPressed: onReject,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
+                      backgroundColor: Colors.transparent,
                       foregroundColor: Colors.black,
                       padding: EdgeInsets.fromLTRB(10, 5, 10, 5),
                       minimumSize: Size.zero,
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(50),
+                        side: BorderSide(width: 1, color: Colors.white),
                       ),
                     ),
                     child: Text(
                       NetworkLocalization.reject,
                       style: TextStyle(
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.neutral800,
-                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                        fontSize: 14,
                         height: 1.3,
                       ),
                     ),
@@ -210,7 +229,7 @@ class InvitationTile extends StatelessWidget {
                   ElevatedButton(
                     onPressed: onAccept,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xff51a2ff),
+                      backgroundColor: AppColors.primary,
                       foregroundColor: Colors.black,
                       padding: EdgeInsets.fromLTRB(10, 5, 10, 5),
                       minimumSize: Size.zero,
@@ -222,9 +241,9 @@ class InvitationTile extends StatelessWidget {
                     child: Text(
                       NetworkLocalization.accept,
                       style: TextStyle(
-                        fontWeight: FontWeight.w500,
-                        color: Colors.white,
-                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.bg,
+                        fontSize: 14,
                         height: 1.3,
                       ),
                     ),
@@ -328,7 +347,7 @@ class SuggestionCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: const Color(0xff35343f),
+        color: const Color(0xff171717),
         borderRadius: BorderRadius.circular(5),
       ),
       padding: const EdgeInsets.all(10),
@@ -370,8 +389,8 @@ class SuggestionCard extends StatelessWidget {
                     onTap: onDismiss,
                     borderRadius: BorderRadius.circular(100),
                     child: Container(
-                      width: 20,
-                      height: 20,
+                      width: 16,
+                      height: 16,
                       decoration: BoxDecoration(
                         color: Colors.white.withAlpha(30),
                         borderRadius: BorderRadius.circular(100),
@@ -379,7 +398,7 @@ class SuggestionCard extends StatelessWidget {
                       child: const Icon(
                         Icons.close,
                         size: 14,
-                        color: Color(0xff35343f),
+                        color: Color(0xff171717),
                       ),
                     ),
                   ),
@@ -444,25 +463,32 @@ class SuggestionCard extends StatelessWidget {
           // ),
           // 10.vgap,
           SizedBox(
-            height: 22,
+            height: 28,
             width: double.infinity,
             child: OutlinedButton(
               onPressed: onFollow,
               style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: Color(0xff51a2ff), width: 1),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(50),
                 ),
                 foregroundColor: Colors.white,
+                backgroundColor: Colors.white,
               ),
-              child: Text(
-                NetworkLocalization.follow,
-                style: TextStyle(
-                  color: Color(0xff51a2ff),
-                  fontWeight: FontWeight.w500,
-                  fontSize: 11,
-                  height: 1.2,
-                ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  SvgPicture.asset(Assets.add, width: 15, height: 15),
+                  3.gap,
+                  Text(
+                    NetworkLocalization.follow,
+                    style: TextStyle(
+                      color: AppColors.bg,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

@@ -37,7 +37,10 @@ use crate::{
                 reject_invitation::reject_invitation_handler,
                 reject_suggestion::reject_suggestion_handler,
             },
-            notifications::mark_all_read::mark_all_notifications_read_handler,
+            notifications::{
+                get_notifications::get_notifications_handler,
+                mark_all_read::mark_all_notifications_read_handler,
+            },
             oracles::create_oracle::create_oracle_handler,
             spaces::{delete_space::delete_space_handler, get_my_space::get_my_space_controller},
             telegram::subscribe::telegram_subscribe_handler,
@@ -344,6 +347,14 @@ pub async fn route(
                     "Delete Space",
                     "Delete a space and all its related resources after confirmation"
                 ),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/notifications",
+            get_with(
+                get_notifications_handler,
+                api_docs!((), "Get Notifications", "Retrieve a notifications"),
             )
             .with_state(pool.clone()),
         )

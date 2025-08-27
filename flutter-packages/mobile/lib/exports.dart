@@ -116,6 +116,7 @@ export 'localization/main_localization.dart';
 export 'localization/home_localization.dart';
 export 'localization/bookmark_localization.dart';
 export 'localization/network_localization.dart';
+export 'localization/notification_localization.dart';
 
 export 'models/profile.dart';
 export 'models/file.dart';
@@ -170,6 +171,9 @@ export 'services/space/space_service.dart';
 export 'services/dashboards/dashboards_api.dart';
 export 'services/dashboards/dashboards_model.dart';
 export 'services/dashboards/dashboards_service.dart';
+export 'services/notifications/notifications_api.dart';
+export 'services/notifications/notifications_model.dart';
+export 'services/notifications/notifications_service.dart';
 
 export 'services/asset/asset_api.dart';
 export 'services/asset/asset_model.dart';

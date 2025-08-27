@@ -84,6 +84,12 @@ pub async fn get_suggestions(pool: Pool<Postgres>, user_id: i64) -> Result<Vec<F
           )
           AND NOT EXISTS (
               SELECT 1
+              FROM my_networks mn
+              WHERE mn.follower_id = u.id
+                AND mn.following_id = $1
+          )
+          AND NOT EXISTS (
+              SELECT 1
               FROM user_suggestion_dismissals d
               WHERE d.user_id = $1
                 AND d.dismissal_user_id = u.id

@@ -24,6 +24,7 @@ pub mod controllers {
             pub mod search;
         }
         pub mod notifications {
+            pub mod get_notifications;
             pub mod mark_all_read;
         }
         pub mod telegram {
