@@ -29,7 +29,9 @@ export const useEditorActions = ({
   const addLink = useCallback(() => {
     if (!editor || !linkUrl.trim()) return;
 
-    const processedUrl = linkUrl.includes('://') ? linkUrl : `https://${linkUrl}`;
+    const processedUrl = linkUrl.includes('://')
+      ? linkUrl
+      : `https://${linkUrl}`;
 
     if (editor.state.selection.empty === false) {
       editor
@@ -39,7 +41,11 @@ export const useEditorActions = ({
         .setLink({ href: processedUrl })
         .run();
     } else {
-      editor.chain().focus().insertContent(`<a href="${processedUrl}">${linkUrl}</a>`).run();
+      editor
+        .chain()
+        .focus()
+        .insertContent(`<a href="${processedUrl}">${linkUrl}</a>`)
+        .run();
     }
 
     setShowLinkPopover(false);

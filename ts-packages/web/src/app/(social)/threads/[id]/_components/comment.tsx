@@ -46,7 +46,6 @@ export default function ThreadComment({ post_id }: { post_id: number }) {
     <>
       <div className="flex flex-col gap-2.5">
         <div className="flex flex-row text-white gap-2 ">
-
           <SquareChat
             width={24}
             height={24}

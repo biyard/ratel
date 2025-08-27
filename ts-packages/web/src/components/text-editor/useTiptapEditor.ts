@@ -81,7 +81,9 @@ export const useTiptapEditor = (options?: UseTiptapEditorOptions) => {
     );
   }
   if (features.highlight) {
-    exts.push(Highlight.configure({ multicolor: true }) as unknown as TiptapExtension);
+    exts.push(
+      Highlight.configure({ multicolor: true }) as unknown as TiptapExtension,
+    );
   }
   if (features.align) {
     exts.push(
@@ -134,35 +136,33 @@ export const useTiptapEditor = (options?: UseTiptapEditorOptions) => {
           'Type here. Use Markdown, BB code, or HTML to format. Drag or paste images.',
       },
       // Support drag-drop image
-      handleDrop:
-        handleImageFile
-          ? (view, event) => {
-              const file = (event as DragEvent).dataTransfer?.files?.[0];
-              if (file?.type?.startsWith('image/')) {
+      handleDrop: handleImageFile
+        ? (view, event) => {
+            const file = (event as DragEvent).dataTransfer?.files?.[0];
+            if (file?.type?.startsWith('image/')) {
+              event.preventDefault();
+              handleImageFile(file);
+              return true;
+            }
+            return false;
+          }
+        : undefined,
+      // Support paste image
+      handlePaste: handleImageFile
+        ? (view, event) => {
+            const items = (event as ClipboardEvent).clipboardData?.items;
+            if (!items) return false;
+            for (let i = 0; i < items.length; i++) {
+              const f = items[i]?.getAsFile?.();
+              if (f?.type?.startsWith('image/')) {
                 event.preventDefault();
-                handleImageFile(file);
+                handleImageFile(f);
                 return true;
               }
-              return false;
             }
-          : undefined,
-      // Support paste image
-      handlePaste:
-        handleImageFile
-          ? (view, event) => {
-              const items = (event as ClipboardEvent).clipboardData?.items;
-              if (!items) return false;
-              for (let i = 0; i < items.length; i++) {
-                const f = items[i]?.getAsFile?.();
-                if (f?.type?.startsWith('image/')) {
-                  event.preventDefault();
-                  handleImageFile(f);
-                  return true;
-                }
-              }
-              return false;
-            }
-          : undefined,
+            return false;
+          }
+        : undefined,
       ...(editorProps ?? {}),
     },
   });

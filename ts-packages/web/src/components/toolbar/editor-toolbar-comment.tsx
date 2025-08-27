@@ -44,7 +44,16 @@ export const EditorToolbarComment = ({
   setShowColorPicker,
   addImage,
 }: EditorToolbarProps) => {
-  const colors = ['#000', '#f00', '#0f0', '#00f', '#ff0', '#f0f', '#0ff', '#fff'];
+  const colors = [
+    '#000',
+    '#f00',
+    '#0f0',
+    '#00f',
+    '#ff0',
+    '#f0f',
+    '#0ff',
+    '#fff',
+  ];
 
   return (
     <div className="bg-neutral-900">
@@ -180,7 +189,10 @@ export const EditorToolbarComment = ({
         </Popover>
 
         {/* Image */}
-        <button className="bg-neutral-900 text-lg text-neutral-600" onClick={addImage}>
+        <button
+          className="bg-neutral-900 text-lg text-neutral-600"
+          onClick={addImage}
+        >
           <ImageUpload className="h-6 w-6" />
         </button>
       </div>

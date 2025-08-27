@@ -50,12 +50,10 @@ export default function ToolbarPlugin({
   const [rows, setRows] = useState(3);
   const [cols, setCols] = useState(3);
 
-  
   // Refs for click-outside detection
   const textColorPickerRef = useRef<HTMLDivElement>(null);
   const bgColorPickerRef = useRef<HTMLDivElement>(null);
   const tableMenuRef = useRef<HTMLDivElement>(null);
-
 
   // Apply text color
   const applyTextColor = (color: string) => {
@@ -221,18 +219,12 @@ export default function ToolbarPlugin({
       )}
 
       {/* Link */}
-      <ToggleIconButton
-        onClick={onTriggerLinkPaste}
-        aria-label="Insert link"
-      >
+      <ToggleIconButton onClick={onTriggerLinkPaste} aria-label="Insert link">
         <LinkPaste />
       </ToggleIconButton>
 
       {/* Comment*/}
-      <ToggleIconButton
-        onClick={onCommentPaste}
-        aria-label="Add comment"
-      >
+      <ToggleIconButton onClick={onCommentPaste} aria-label="Add comment">
         <CommentPaste />
       </ToggleIconButton>
 
