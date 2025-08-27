@@ -1,8 +1,9 @@
 'use client';
 import { useState } from 'react';
 import Image from 'next/image';
-import { ChevronDown, ChevronUp } from 'lucide-react';
-import { BendArrowRight, ThumbUp, TrashArrowUp } from '@/components/icons';
+import { ChevronDown, ChevronUp, BendArrowRight } from '@/assets/icons/arrows';
+import ThumbUp from '@/assets/icons/thumb-up.svg';
+import TrashArrowUp from '@/assets/icons/trash-arrow-up.svg';
 import { getTimeAgo } from '@/lib/time-utils';
 import { Comment as CommentType } from '@/lib/api/models/feeds';
 import CommentComposer from './comment-composer';
@@ -98,17 +99,15 @@ export default function Comment({ comment, onSubmit, onLike }: CommentProps) {
           <div className="flex flex-row gap-5">
             <div className="relative">
               <button
-                className={`gap-2 flex items-center disabled:cursor-not-allowed ${
-                  showReplies
-                    ? 'bg-primary p-2 rounded-md text-neutral-800'
-                    : 'text-primary'
-                }`}
+                className={`gap-2 flex items-center disabled:cursor-not-allowed ${showReplies
+                  ? 'bg-primary p-2 rounded-md text-neutral-800'
+                  : 'text-primary'
+                  }`}
                 disabled={comment.num_of_replies === 0}
                 onClick={() => setShowReplies(!showReplies)}
               >
-                {`${comment.num_of_replies ?? 0} ${
-                  comment.num_of_replies <= 1 ? 'Reply' : 'Replies'
-                }`}
+                {`${comment.num_of_replies ?? 0} ${comment.num_of_replies <= 1 ? 'Reply' : 'Replies'
+                  }`}
                 {ChevronIcon}
               </button>
               {showReplies && expand && comment.num_of_replies > 0 && (
@@ -123,7 +122,7 @@ export default function Comment({ comment, onSubmit, onLike }: CommentProps) {
               }}
               className="flex gap-2 cursor-pointer justify-center items-center"
             >
-              <BendArrowRight width={24} height={24} />
+              <BendArrowRight width={24} height={24} className="[&>path]:stroke-neutral-700" />
               Reply
             </div>
           </div>
