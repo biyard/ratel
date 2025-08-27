@@ -1,6 +1,5 @@
 'use client';
 import { Editor } from '@tiptap/react';
-import { cn } from '@/lib/utils';
 import FileUploader from '@/components/file-uploader';
 import { useState, useEffect, useRef } from 'react';
 import { HexColorPicker } from 'react-colorful';
