@@ -9,7 +9,7 @@
 import { useFeedByID } from '@/app/(social)/_hooks/feed';
 // import Comment, { NewComment } from '@/components/comment';
 import Comment from '@/components/comment';
-import { ChatIcon } from '@/components/icons';
+import { ChatIcon2 } from '@/components/icons';
 import { useLoggedIn, useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { writeCommentRequest } from '@/lib/api/models/feeds/comment';
 import { ratelApi } from '@/lib/api/ratel_api';
@@ -59,7 +59,7 @@ export default function ThreadComment({ post_id }: { post_id: number }) {
             height={24}
             className="[&>path]:stroke-white [&>line]:stroke-white"
           /> */}
-          <ChatIcon
+          <ChatIcon2
             width={24}
             height={24}
             className="[&>path]:stroke-white [&>line]:stroke-white"
@@ -83,7 +83,7 @@ export default function ThreadComment({ post_id }: { post_id: number }) {
                   className="[&>path]:stroke-neutral-500"
                 /> */}
 
-                <ChatIcon
+                <ChatIcon2
                   width={24}
                   height={24}
                   className="[&>path]:stroke-white [&>line]:stroke-white"
