@@ -60,7 +60,8 @@ pub mod controllers {
         }
 
         pub mod documents {
-            pub mod extract_passport_info_handler;
+            pub mod extract_passport_info;
+            pub mod upload_private_image;
         }
     }
     pub mod m2 {

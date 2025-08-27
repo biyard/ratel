@@ -36,7 +36,6 @@ impl RekognitionClient {
             .timeout_config(timeout_config)
             .retry_config(retry_config)
             .behavior_version_latest()
-            .clone()
             .build();
 
         let client = Client::from_conf(aws_config);
@@ -46,12 +45,10 @@ impl RekognitionClient {
 
     pub async fn detect_labels_from_image(
         &self,
-        image_bytes: Vec<u8>,
+        image: Image,
         max_labels: Option<i32>,
         min_confidence: Option<f32>,
     ) -> Result<Vec<Label>> {
-        let image = Image::builder().bytes(image_bytes.into()).build();
-
         let rek_output = self
             .client
             .detect_labels()
@@ -72,4 +69,30 @@ impl RekognitionClient {
 
         Ok(labels)
     }
+
+    pub fn get_image_from_s3_object(bucket: &str, key: &str) -> Image {
+        tracing::debug!(
+            "Getting image from S3 object: bucket={}, key={}",
+            bucket,
+            key
+        );
+        let s3_object = aws_sdk_rekognition::types::S3Object::builder()
+            .bucket(bucket)
+            .name(key)
+            .build();
+        Image::builder().s3_object(s3_object).build()
+    }
 }
+
+/*
+
+aws iam create-policy \
+    --policy-name PrivateS3AccessPolicy \
+    --policy-document file://policy.json
+
+aws iam attach-group-policy \
+    --group-name dev \
+    --policy-arn arn:aws:iam::385474633683:policy/PrivateS3AccessPolicy
+
+
+ */

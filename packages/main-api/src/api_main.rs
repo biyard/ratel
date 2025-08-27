@@ -2,7 +2,7 @@ use crate::{
     config, controllers,
     route::route,
     utils::{
-        aws::{BedrockClient, RekognitionClient, TextractClient},
+        aws::{BedrockClient, RekognitionClient, S3Client, TextractClient},
         sqs_client,
     },
 };
@@ -224,7 +224,8 @@ pub async fn api_main() -> Result<Router> {
     let bedrock_client = BedrockClient::new();
     let rek_client = RekognitionClient::new();
     let textract_client = TextractClient::new();
-
+    let private_s3_client = S3Client::new(conf.private_bucket_name);
+    let metadata_s3_client = S3Client::new(conf.bucket.name);
     let is_local = conf.env == "local";
     let session_layer = SessionManagerLayer::new(session_store)
         .with_secure(!is_local)
@@ -251,6 +252,8 @@ pub async fn api_main() -> Result<Router> {
         bedrock_client,
         rek_client,
         textract_client,
+        metadata_s3_client,
+        private_s3_client,
     )
     .await?
     .layer(middleware::from_fn(authorization_middleware))

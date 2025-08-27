@@ -36,7 +36,6 @@ impl BedrockClient {
             .timeout_config(timeout_config)
             .retry_config(retry_config)
             .behavior_version_latest()
-            .clone()
             .build();
 
         let client = Client::from_conf(aws_config);
@@ -70,7 +69,6 @@ impl BedrockClient {
                 tracing::error!("Error calling Bedrock Converse: {:?}", e);
                 Error::AwsBedrockError(format!("{:?}", e))
             })?;
-        tracing::debug!("TOKEN USAGE: {:?}", bedrock_response.usage);
         let contents = bedrock_response
             .output()
             .ok_or(Error::AwsBedrockError("Empty Bedrock response".to_string()))?
@@ -80,8 +78,6 @@ impl BedrockClient {
                 Error::AwsBedrockError(format!("{:?}", e))
             })?
             .content();
-
-        tracing::debug!("Bedrock response content: {:?}", contents);
 
         let text = contents
             .first()
