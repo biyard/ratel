@@ -99,15 +99,17 @@ export default function Comment({ comment, onSubmit, onLike }: CommentProps) {
           <div className="flex flex-row gap-5">
             <div className="relative">
               <button
-                className={`gap-2 flex items-center disabled:cursor-not-allowed ${showReplies
-                  ? 'bg-primary p-2 rounded-md text-neutral-800'
-                  : 'text-primary'
-                  }`}
+                className={`gap-2 flex items-center disabled:cursor-not-allowed ${
+                  showReplies
+                    ? 'bg-primary p-2 rounded-md text-neutral-800'
+                    : 'text-primary'
+                }`}
                 disabled={comment.num_of_replies === 0}
                 onClick={() => setShowReplies(!showReplies)}
               >
-                {`${comment.num_of_replies ?? 0} ${comment.num_of_replies <= 1 ? 'Reply' : 'Replies'
-                  }`}
+                {`${comment.num_of_replies ?? 0} ${
+                  comment.num_of_replies <= 1 ? 'Reply' : 'Replies'
+                }`}
                 {ChevronIcon}
               </button>
               {showReplies && expand && comment.num_of_replies > 0 && (
@@ -122,7 +124,11 @@ export default function Comment({ comment, onSubmit, onLike }: CommentProps) {
               }}
               className="flex gap-2 cursor-pointer justify-center items-center"
             >
-              <BendArrowRight width={24} height={24} className="[&>path]:stroke-neutral-700" />
+              <BendArrowRight
+                width={24}
+                height={24}
+                className="[&>path]:stroke-neutral-700"
+              />
               Reply
             </div>
           </div>
