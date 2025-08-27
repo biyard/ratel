@@ -2,7 +2,7 @@
 
 import BlackBox from '@/app/(social)/_components/black-box';
 import React from 'react';
-import TextEditor from '@/components/text-editor/text-editor';
+import { ControlledTiptap } from '@/components/text-editor/controlled-tiptap';
 
 export interface SpaceContentsProps {
   isEdit?: boolean;
@@ -86,10 +86,19 @@ export default function SpaceContents({
   );
 
   return isEdit ? (
-    <TextEditor
+    <ControlledTiptap
       content={htmlContents}
-      onChange={(text: string) => {
+      onUpdateHTML={(text: string) => {
         setContents(text);
+      }}
+      features={{
+        underline: true,
+        color: true,
+        link: true,
+        image: true,
+        highlight: true,
+        align: true,
+        lists: true,
       }}
     />
   ) : (

@@ -1,8 +1,8 @@
 import { useCallback } from 'react';
+import type { Editor } from '@tiptap/react';
 
-type UseEditorActionsProps = {
-  /* eslint-disable-next-line @typescript-eslint/no-explicit-any*/
-  editor: any;
+export type UseEditorActionsProps = {
+  editor: Editor | null;
   /* eslint-disable-next-line @typescript-eslint/no-explicit-any*/
   setUploadedImages: React.Dispatch<React.SetStateAction<any[]>>;
   linkUrl: string;
@@ -20,6 +20,7 @@ export const useEditorActions = ({
   fileInputRef,
 }: UseEditorActionsProps) => {
   const handleLinkClick = useCallback(() => {
+    if (!editor) return;
     const previousUrl = editor.getAttributes('link').href;
     setLinkUrl(previousUrl || '');
     setShowLinkPopover(true);
@@ -28,12 +29,8 @@ export const useEditorActions = ({
   const addLink = useCallback(() => {
     if (!editor || !linkUrl.trim()) return;
 
-    // Automatically add https:// if missing
-    const processedUrl = linkUrl.includes('://')
-      ? linkUrl
-      : `https://${linkUrl}`;
+    const processedUrl = linkUrl.includes('://') ? linkUrl : `https://${linkUrl}`;
 
-    // Case 1: If text is selected, convert it to a link
     if (editor.state.selection.empty === false) {
       editor
         .chain()
@@ -41,21 +38,16 @@ export const useEditorActions = ({
         .extendMarkRange('link')
         .setLink({ href: processedUrl })
         .run();
-    }
-    // Case 2: If no text selected, insert the URL as a clickable link
-    else {
-      editor
-        .chain()
-        .focus()
-        .insertContent(`<a href="${processedUrl}">${linkUrl}</a>`)
-        .run();
+    } else {
+      editor.chain().focus().insertContent(`<a href="${processedUrl}">${linkUrl}</a>`).run();
     }
 
     setShowLinkPopover(false);
     setLinkUrl('');
-  }, [editor, linkUrl]);
+  }, [editor, linkUrl, setLinkUrl, setShowLinkPopover]);
 
   const removeLink = useCallback(() => {
+    if (!editor) return;
     editor.chain().focus().unsetLink().run();
     setShowLinkPopover(false);
     setLinkUrl('');
@@ -63,6 +55,7 @@ export const useEditorActions = ({
 
   const setColor = useCallback(
     (color: string) => {
+      if (!editor) return;
       editor.chain().focus().setColor(color).run();
       setShowLinkPopover(false);
     },
@@ -75,6 +68,7 @@ export const useEditorActions = ({
 
   const handleImageUpload = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (!editor) return;
       const file = e.target.files?.[0];
       if (!file) return;
       const reader = new FileReader();
@@ -98,6 +92,7 @@ export const useEditorActions = ({
 
   const insertImageFromPreview = useCallback(
     (src: string) => {
+      if (!editor) return;
       editor.chain().focus().setImage({ src }).run();
     },
     [editor],

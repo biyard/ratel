@@ -1,14 +1,14 @@
 'use client';
 import { useFeedByID } from '@/app/(social)/_hooks/feed';
 import Comment from '@/components/comment';
-import { ChatIcon2 } from '@/components/icons';
+import { SquareChat } from '@/assets/icons/chat';
 import { useLoggedIn, useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { writeCommentRequest } from '@/lib/api/models/feeds/comment';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { useApiCall } from '@/lib/api/use-send';
 import { logger } from '@/lib/logger';
 import { useState } from 'react';
-import RichTextEditor from '@/components/comment/rich-text-editor';
+import RichTextEditor from '@/components/comment/comment-composer';
 
 export default function ThreadComment({ post_id }: { post_id: number }) {
   const isLogin = useLoggedIn();
@@ -46,12 +46,8 @@ export default function ThreadComment({ post_id }: { post_id: number }) {
     <>
       <div className="flex flex-col gap-2.5">
         <div className="flex flex-row text-white gap-2 ">
-          {/* <CommentIcon
-            width={24}
-            height={24}
-            className="[&>path]:stroke-white [&>line]:stroke-white"
-          /> */}
-          <ChatIcon2
+
+          <SquareChat
             width={24}
             height={24}
             className="[&>path]:stroke-white [&>line]:stroke-white"
@@ -69,7 +65,7 @@ export default function ThreadComment({ post_id }: { post_id: number }) {
                 onClick={() => setExpand(true)}
                 className="flex flex-row w-full px-3.5 py-2 gap-2 bg-neutral-800 border border-neutral-700 items-center rounded-lg"
               >
-                <ChatIcon2
+                <SquareChat
                   width={24}
                   height={24}
                   className="[&>path]:stroke-white [&>line]:stroke-white"

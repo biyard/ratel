@@ -1,8 +1,8 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { EditorContent } from '@tiptap/react';
-import { useEditorActions } from './_components/editor-actions';
-import { useRichTextEditor } from './_components/editor-setup';
-import { EditorToolbar } from './_components/editor-toolbar';
+import { useEditorActions } from '@/components/text-editor/actions';
+import { useTiptapEditor } from '@/components/text-editor/useTiptapEditor';
+import { EditorToolbarComment as EditorToolbar } from '@/components/toolbar/editor-toolbar-comment';
 import { CommentIcon } from '../icons';
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -16,7 +16,7 @@ interface RichTextEditorProps {
   className?: string;
 }
 
-export default function RichTextEditor({
+export default function CommentComposer({
   onSubmit,
   onClose,
   className,
@@ -43,8 +43,14 @@ export default function RichTextEditor({
     reader.readAsDataURL(file);
   }, []);
 
-  const editor = useRichTextEditor({
+  const editor = useTiptapEditor({
     handleImageFile,
+    features: {
+      underline: true,
+      color: true,
+      link: true,
+      image: true,
+    },
   });
 
   const {

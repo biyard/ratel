@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import FileUploader from '@/components/file-uploader';
 import { useState, useEffect, useRef } from 'react';
 import { HexColorPicker } from 'react-colorful';
+import { ToggleIconButton } from './primitives/toggle-iconbutton';
 
 //Icons Import
 import CodesPen from '@/assets/icons/editor/codespen.svg';
@@ -49,10 +50,12 @@ export default function ToolbarPlugin({
   const [rows, setRows] = useState(3);
   const [cols, setCols] = useState(3);
 
+  
   // Refs for click-outside detection
   const textColorPickerRef = useRef<HTMLDivElement>(null);
   const bgColorPickerRef = useRef<HTMLDivElement>(null);
   const tableMenuRef = useRef<HTMLDivElement>(null);
+
 
   // Apply text color
   const applyTextColor = (color: string) => {
@@ -110,55 +113,51 @@ export default function ToolbarPlugin({
   return (
     <div className="flex items-center gap-4 [&>button]:size-6 [&>button]:rounded [&>button]:hover:bg-neutral-700 ">
       {/*  formatting buttons */}
-      <button
+      <ToggleIconButton
         onClick={() => editor.chain().focus().toggleCode().run()}
-        className={cn(editor.isActive('code') && 'bg-neutral-600')}
+        active={editor.isActive('code')}
         aria-label="Code"
       >
         <CodesPen />
-      </button>
-      <button
+      </ToggleIconButton>
+      <ToggleIconButton
         onClick={() => editor.chain().focus().toggleBold().run()}
-        className={cn(editor.isActive('bold') && 'bg-neutral-600')}
+        active={editor.isActive('bold')}
         aria-label="Bold"
       >
         <BoldIcon />
-      </button>
-      <button
+      </ToggleIconButton>
+      <ToggleIconButton
         onClick={() => editor.chain().focus().toggleItalic().run()}
-        className={cn(editor.isActive('italic') && 'bg-neutral-600')}
+        active={editor.isActive('italic')}
         aria-label="Italic"
       >
         <Italics />
-      </button>
-      <button
+      </ToggleIconButton>
+      <ToggleIconButton
         onClick={() => editor.chain().focus().toggleUnderline().run()}
-        className={cn(editor.isActive('underline') && 'bg-neutral-600')}
+        active={editor.isActive('underline')}
         aria-label="Underline"
       >
         <UnderlineIcon />
-      </button>
-      <button
+      </ToggleIconButton>
+      <ToggleIconButton
         onClick={() => editor.chain().focus().toggleStrike().run()}
-        className={cn(editor.isActive('strike') && 'bg-neutral-600')}
+        active={editor.isActive('strike')}
         aria-label="Strikethrough"
       >
         <Strike />
-      </button>
+      </ToggleIconButton>
 
       {/* Text Color Picker */}
       <div className="relative" ref={textColorPickerRef}>
-        <button
+        <ToggleIconButton
           onClick={() => setShowTextColorPicker(!showTextColorPicker)}
-          className={cn(
-            'hover:bg-neutral-600',
-            editor.isActive('textStyle', { color: textColor }) &&
-              'bg-neutral-600',
-          )}
+          active={editor.isActive('textStyle', { color: textColor })}
           aria-label="Text color"
         >
           <Paint />
-        </button>
+        </ToggleIconButton>
         {showTextColorPicker && (
           //
           <div className="absolute bottom-full left-0 z-50 mb-2 p-2 bg-white rounded shadow-lg">
@@ -183,16 +182,13 @@ export default function ToolbarPlugin({
 
       {/* Background Color Picker */}
       <div className="relative" ref={bgColorPickerRef}>
-        <button
+        <ToggleIconButton
           onClick={() => setShowBgColorPicker(!showBgColorPicker)}
-          className={cn(
-            'hover:bg-neutral-600',
-            editor.isActive('highlight') && 'bg-neutral-600',
-          )}
+          active={editor.isActive('highlight')}
           aria-label="Background color"
         >
           <Paint2 />
-        </button>
+        </ToggleIconButton>
         {showBgColorPicker && (
           // COlor picker
           <div className="absolute bottom-full left-0 z-50 mb-2 p-2 bg-white rounded shadow-lg">
@@ -218,42 +214,37 @@ export default function ToolbarPlugin({
       {/* Image Upload - unchanged */}
       {enableImage && (
         <FileUploader onUploadSuccess={onImageUpload}>
-          <button type="button" aria-label="Upload image">
+          <ToggleIconButton type="button" aria-label="Upload image">
             <ImageUpload />
-          </button>
+          </ToggleIconButton>
         </FileUploader>
       )}
 
       {/* Link */}
-      <button
+      <ToggleIconButton
         onClick={onTriggerLinkPaste}
-        className={cn('hover:bg-neutral-600')}
         aria-label="Insert link"
       >
         <LinkPaste />
-      </button>
+      </ToggleIconButton>
 
       {/* Comment*/}
-      <button
+      <ToggleIconButton
         onClick={onCommentPaste}
-        className={cn('hover:bg-neutral-600')}
         aria-label="Add comment"
       >
         <CommentPaste />
-      </button>
+      </ToggleIconButton>
 
       {/* Table */}
       <div className="relative" ref={tableMenuRef}>
-        <button
+        <ToggleIconButton
           onClick={() => setShowTableMenu(!showTableMenu)}
-          className={cn(
-            'hover:bg-neutral-600',
-            editor.isActive('table') && 'bg-neutral-600',
-          )}
+          active={editor.isActive('table')}
           aria-label="Insert table"
         >
           <TableCells />
-        </button>
+        </ToggleIconButton>
         {showTableMenu && (
           /* TABLE MENU*/
           <div className="absolute bottom-full left-0 z-50 mb-2 p-4 bg-white rounded shadow-lg w-64">
@@ -305,62 +296,47 @@ export default function ToolbarPlugin({
       </div>
 
       {/* Bullet List*/}
-      <button
+      <ToggleIconButton
         onClick={() => editor.chain().focus().toggleBulletList().run()}
-        className={cn(
-          'hover:bg-neutral-600',
-          editor.isActive('bulletList') && 'bg-neutral-600',
-        )}
+        active={editor.isActive('bulletList')}
         disabled={!editor.can().toggleBulletList()}
         aria-label="Bullet list"
       >
         <Bullet />
-      </button>
+      </ToggleIconButton>
 
       {/* Numbered List */}
-      <button
+      <ToggleIconButton
         onClick={() => editor.chain().focus().toggleOrderedList().run()}
-        className={cn(
-          'hover:bg-neutral-600',
-          editor.isActive('orderedList') && 'bg-neutral-600',
-        )}
+        active={editor.isActive('orderedList')}
         disabled={!editor.can().toggleOrderedList()}
         aria-label="Numbered list"
       >
         <NumberBullet />
-      </button>
+      </ToggleIconButton>
 
       {/* Alignment Buttons */}
-      <button
+      <ToggleIconButton
         onClick={() => editor.chain().focus().setTextAlign('left').run()}
-        className={cn(
-          'hover:bg-neutral-600',
-          editor.isActive({ textAlign: 'left' }) && 'bg-neutral-600',
-        )}
+        active={editor.isActive({ textAlign: 'left' })}
         aria-label="Align left"
       >
         <LeftAlign />
-      </button>
-      <button
+      </ToggleIconButton>
+      <ToggleIconButton
         onClick={() => editor.chain().focus().setTextAlign('right').run()}
-        className={cn(
-          'hover:bg-neutral-600',
-          editor.isActive({ textAlign: 'right' }) && 'bg-neutral-600',
-        )}
+        active={editor.isActive({ textAlign: 'right' })}
         aria-label="Align right"
       >
         <RightAlign />
-      </button>
-      <button
+      </ToggleIconButton>
+      <ToggleIconButton
         onClick={() => editor.chain().focus().setTextAlign('center').run()}
-        className={cn(
-          'hover:bg-neutral-600',
-          editor.isActive({ textAlign: 'center' }) && 'bg-neutral-600',
-        )}
+        active={editor.isActive({ textAlign: 'center' })}
         aria-label="Align center"
       >
         <RightAlignLight />
-      </button>
+      </ToggleIconButton>
     </div>
   );
 }

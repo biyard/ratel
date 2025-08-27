@@ -20,13 +20,13 @@ import Certified from '@/assets/icons/certified.svg';
 import DoubleArrowDown from '@/assets/icons/double-arrow-down.svg';
 import { logger } from '@/lib/logger';
 import { UserCircle } from '@/components/icons';
-import ToolbarPlugin from '@/components/toolbar/toolbar-repost';
+import ToolbarPlugin from '@/components/toolbar/editor-toolbar-repost';
 import {
   showErrorToast,
   showSuccessToast,
 } from '@/components/custom-toast/toast';
 import DOMPurify from 'dompurify';
-import { TiptapEditor } from '@/components/text-editor/tiptap-editor';
+import { ControlledTiptap } from '@/components/text-editor/controlled-tiptap';
 import { Editor } from '@tiptap/core';
 import LinkPaste from '@/assets/icons/editor/link-paste.svg';
 import CommentPaste from '@/assets/icons/editor/comment-paste.svg';
@@ -225,11 +225,20 @@ export function CreateRePost() {
 
         {/* Editor Area */}
         <div className="px-4 pt-2 min-h-[80px] relative">
-          <TiptapEditor
+          <ControlledTiptap
             ref={editorRef}
             content={content || ''}
-            onUpdate={setContent}
+            onUpdateHTML={setContent}
             className="mb-2"
+            features={{
+              underline: true,
+              color: true,
+              link: true,
+              highlight: true,
+              align: true,
+              table: true,
+              lists: true,
+            }}
           />
 
           {/*  Toolbar + Post Button Row */}
