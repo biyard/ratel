@@ -14,7 +14,7 @@ class NetworkScreen extends GetWidget<NetworkController> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SectionCard(
-              title: 'Invitations',
+              title: NetworkLocalization.invitations,
               child: Obx(
                 () => (controller.invitations.value.isEmpty)
                     ? const SizedBox.shrink()
@@ -26,8 +26,16 @@ class NetworkScreen extends GetWidget<NetworkController> {
                                   .entries) ...[
                             InvitationTile(
                               model: entry.value,
-                              onAccept: () {},
-                              onReject: () {},
+                              onAccept: () async {
+                                await controller.acceptInvitation(
+                                  entry.value.id,
+                                );
+                              },
+                              onReject: () async {
+                                await controller.rejectInvitation(
+                                  entry.value.id,
+                                );
+                              },
                             ),
                             5.vgap,
                             if (entry.key !=
@@ -48,7 +56,7 @@ class NetworkScreen extends GetWidget<NetworkController> {
             Obx(() {
               final sug = controller.suggestions;
               return SectionCard(
-                title: 'Suggestions',
+                title: NetworkLocalization.suggestions,
                 child: GridView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
@@ -62,8 +70,12 @@ class NetworkScreen extends GetWidget<NetworkController> {
                   itemCount: sug.length,
                   itemBuilder: (_, i) => SuggestionCard(
                     model: sug[i],
-                    onFollow: () {},
-                    onDismiss: () {},
+                    onFollow: () async {
+                      await controller.acceptSuggestion(sug[i].id);
+                    },
+                    onDismiss: () async {
+                      await controller.rejectSuggestion(sug[i].id);
+                    },
                   ),
                 ),
               );
@@ -129,13 +141,14 @@ class InvitationTile extends StatelessWidget {
         children: [
           Row(
             children: [
-              (model.profileUrl != "")
+              (model.profileUrl != "" && !model.profileUrl.contains("test"))
                   ? CircleAvatar(
                       radius: 15,
+                      backgroundColor: Colors.transparent,
                       child: Image.network(
                         model.profileUrl,
-                        width: 15,
-                        height: 15,
+                        width: 18,
+                        height: 18,
                         fit: BoxFit.cover,
                       ),
                     )
@@ -183,8 +196,8 @@ class InvitationTile extends StatelessWidget {
                         borderRadius: BorderRadius.circular(50),
                       ),
                     ),
-                    child: const Text(
-                      'Reject',
+                    child: Text(
+                      NetworkLocalization.reject,
                       style: TextStyle(
                         fontWeight: FontWeight.w500,
                         color: AppColors.neutral800,
@@ -206,8 +219,8 @@ class InvitationTile extends StatelessWidget {
                         borderRadius: BorderRadius.circular(50),
                       ),
                     ),
-                    child: const Text(
-                      'Accept',
+                    child: Text(
+                      NetworkLocalization.accept,
                       style: TextStyle(
                         fontWeight: FontWeight.w500,
                         color: Colors.white,
@@ -322,7 +335,7 @@ class SuggestionCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Container(
+          SizedBox(
             width: double.infinity,
             child: Stack(
               children: [
@@ -330,9 +343,11 @@ class SuggestionCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    (model.profileUrl != "")
+                    (model.profileUrl != "" &&
+                            !model.profileUrl.contains("test"))
                         ? CircleAvatar(
                             radius: 25,
+                            backgroundColor: Colors.transparent,
                             child: Image.network(
                               model.profileUrl,
                               width: 50,
@@ -440,8 +455,8 @@ class SuggestionCard extends StatelessWidget {
                 ),
                 foregroundColor: Colors.white,
               ),
-              child: const Text(
-                'Follow',
+              child: Text(
+                NetworkLocalization.follow,
                 style: TextStyle(
                   color: Color(0xff51a2ff),
                   fontWeight: FontWeight.w500,

@@ -31,10 +31,15 @@ use crate::{
             },
             dashboards::get_dashboard::get_dashboard_handler,
             industries::{industry::list_industries_handler, select_topic::select_topics_handler},
+            networks::{
+                accept_invitation::accept_invitation_handler,
+                accept_suggestion::accept_suggestion_handler, list_networks::list_networks_handler,
+                reject_invitation::reject_invitation_handler,
+                reject_suggestion::reject_suggestion_handler,
+            },
             notifications::mark_all_read::mark_all_notifications_read_handler,
             oracles::create_oracle::create_oracle_handler,
-            spaces::delete_space::delete_space_handler,
-            spaces::get_my_space::get_my_space_controller,
+            spaces::{delete_space::delete_space_handler, get_my_space::get_my_space_controller},
             telegram::subscribe::telegram_subscribe_handler,
             users::{find_user::find_user_handler, logout::logout_handler},
         },
@@ -167,6 +172,46 @@ pub async fn route(
             post_with(
                 connection_follow_handler,
                 api_docs!("Follow Users", "Follow users with follower IDs"),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/networks",
+            get_with(
+                list_networks_handler,
+                api_docs!("List Networks", "List Networks with user ID"),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/networks/invitations/accept",
+            post_with(
+                accept_invitation_handler,
+                api_docs!("Accept invitation", "Accept Invitation from followee ID"),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/networks/invitations/reject",
+            post_with(
+                reject_invitation_handler,
+                api_docs!("Reject invitation", "Reject Invitation from followee ID"),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/networks/suggestions/accept",
+            post_with(
+                accept_suggestion_handler,
+                api_docs!("Accept suggestion", "Accept Suggestion from followee ID"),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/networks/suggestions/reject",
+            post_with(
+                reject_suggestion_handler,
+                api_docs!("Reject suggestion", "Reject Suggestion from followee ID"),
             )
             .with_state(pool.clone()),
         )
