@@ -20,6 +20,7 @@ class AppRoutes {
   static const String home = "/dashboard/home";
   static const String myNetwork = "/dashboard/network";
   static const String message = "/dashboard/message";
+  static const String bookmark = '/bookmark';
 
   static const String notification = "/dashboard/notification";
   static spaceWithId(int id) => '/space/$id';
@@ -209,6 +210,15 @@ class AppRoutes {
     GetPage(
       name: notification,
       page: () => const NotificationScreen(),
+      customTransition: SlideOverTransition(),
+      transitionDuration: const Duration(milliseconds: 300),
+      opaque: true,
+      curve: Curves.easeOutCubic,
+    ),
+    GetPage(
+      name: bookmark,
+      page: () => const BookmarkScreen(),
+      binding: BookmarkBinding(),
       customTransition: SlideOverTransition(),
       transitionDuration: const Duration(milliseconds: 300),
       opaque: true,
