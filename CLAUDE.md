@@ -127,7 +127,7 @@ The docker-compose.yaml provides:
 - **fetcher** - Legislative data fetching (port 3001)
 - **image-worker** - Image processing service
 - **telegram-bot** - Telegram bot (optional, requires TELEGRAM_TOKEN)
-- **web** - Next.js frontend (port 3002)
+- **web** - Next.js frontend (port 8080)
 
 Access points:
 - Web Application: http://localhost:3002
@@ -144,7 +144,7 @@ Copy `.env.example` to `.env` and configure:
 
 ## Development Notes
 
-- The web frontend requires environment setup via `setup-env.sh`
+- The web frontend requires environment setup via `ts-packages/web/setup-env.sh`
 - Services use environment variables for configuration
 - AWS integration for cloud deployments (disabled in local Docker setup)
 - Telegram SDK integration for bot functionality
