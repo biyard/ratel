@@ -123,7 +123,7 @@ pub async fn extract_passport_info_handler(
     let document = Document::builder()
         .bytes(req.image_byte.clone().into())
         .build();
-    let detected_text = state.textract_client.detect_labels(document).await?;
+    let detected_text = state.textract_client.detect_document_text(document).await?;
     let merged_text = detected_text.join("\n");
     tracing::debug!("Detected text: {}", merged_text);
 
@@ -178,18 +178,13 @@ Date of expiry
         Error::PassportVerificationFailed("Failed to extract JSON from response".to_string())
     })?;
     tracing::debug!("Extracted JSON string: {}", json_str);
-    let passport_info: std::result::Result<PassportInfo, _> = serde_json::from_str(&json_str);
-    if let Err(err) = passport_info {
-        tracing::error!("Failed to parse passport info: {:?}", err);
-        return Err(Error::PassportVerificationFailed(
-            "Failed to parse passport info".to_string(),
-        ));
-    }
-
-    tracing::debug!("Parsed passport info: {:?}", passport_info);
+    let passport_info: PassportInfo = serde_json::from_str(&json_str).map_err(|e| {
+        tracing::error!("Failed to parse JSON string: {}, error: {:?}", json_str, e);
+        Error::PassportVerificationFailed("Failed to parse JSON from response".to_string())
+    })?;
 
     Ok(Json(PassportResponse {
-        result: Some(passport_info.unwrap()),
+        result: Some(passport_info),
     }))
 }
 

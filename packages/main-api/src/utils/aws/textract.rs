@@ -39,7 +39,7 @@ impl TextractClient {
         Self { client }
     }
 
-    pub async fn detect_labels(&self, doc: Document) -> Result<Vec<String>> {
+    pub async fn detect_document_text(&self, doc: Document) -> Result<Vec<String>> {
         let textract_output = self
             .client
             .detect_document_text()
