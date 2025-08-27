@@ -1,6 +1,6 @@
 use bdk::prelude::*;
 use dto::{
-    Mynetwork, Result,
+    Mynetwork, NotificationData, Result,
     by_axum::{
         auth::Authorization,
         axum::{Extension, Json, extract::State},
@@ -8,7 +8,7 @@ use dto::{
     sqlx::PgPool,
 };
 
-use crate::utils::users::extract_user_id;
+use crate::utils::{notifications::send_notification, users::extract_user_id};
 
 #[derive(
     Debug,
@@ -53,6 +53,22 @@ pub async fn connection_follow_handler(
     let mut tx = pool.begin().await.unwrap();
     for followee_id in followee_ids.clone() {
         let _d = repo.insert_with_tx(&mut *tx, user_id, followee_id).await?;
+
+        let notification_data = NotificationData::ConnectNetwork {
+            requester_id: user_id,
+            image_url: "".to_string(),
+            description: "Someone has started following you".to_string(),
+        };
+
+        if let Err(e) =
+            send_notification(&pool.clone(), &mut tx, followee_id, notification_data).await
+        {
+            tracing::error!(
+                "Failed to send ConnectNetwork notification to user {}: {:?}",
+                followee_id,
+                e
+            );
+        }
     }
     tx.commit().await.unwrap();
 
