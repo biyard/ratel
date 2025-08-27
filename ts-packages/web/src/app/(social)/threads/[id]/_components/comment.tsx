@@ -1,13 +1,5 @@
-// 
-
-
-
-
-
 'use client';
-
 import { useFeedByID } from '@/app/(social)/_hooks/feed';
-// import Comment, { NewComment } from '@/components/comment';
 import Comment from '@/components/comment';
 import { ChatIcon2 } from '@/components/icons';
 import { useLoggedIn, useSuspenseUserInfo } from '@/lib/api/hooks/users';
@@ -77,12 +69,6 @@ export default function ThreadComment({ post_id }: { post_id: number }) {
                 onClick={() => setExpand(true)}
                 className="flex flex-row w-full px-3.5 py-2 gap-2 bg-neutral-800 border border-neutral-700 items-center rounded-lg"
               >
-                {/* <CommentIcon
-                  width={24}
-                  height={24}
-                  className="[&>path]:stroke-neutral-500"
-                /> */}
-
                 <ChatIcon2
                   width={24}
                   height={24}
