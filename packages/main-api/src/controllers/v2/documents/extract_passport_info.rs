@@ -1,11 +1,17 @@
 use crate::{
     config,
-    utils::aws::{BedrockClient, RekognitionClient, S3Client, TextractClient},
+    utils::{
+        aws::{BedrockClient, RekognitionClient, S3Client, TextractClient},
+        users::extract_user_id,
+    },
 };
 use bdk::prelude::*;
 use dto::{
     Error, JsonSchema, Result, aide,
-    by_axum::axum::{Json, extract::State},
+    by_axum::{
+        auth::Authorization,
+        axum::{Extension, Json, extract::State},
+    },
     sqlx::PgPool,
 };
 use serde::{Deserialize, Serialize};
@@ -88,9 +94,11 @@ pub struct PassportHandlerState {
 }
 
 pub async fn extract_passport_info_handler(
+    Extension(auth): Extension<Option<Authorization>>,
     State(state): State<PassportHandlerState>,
     Json(req): Json<PassportRequest>,
 ) -> Result<Json<PassportResponse>> {
+    extract_user_id(&state.pool, auth).await?;
     let passport_info = worker(&state, &req).await;
     if let Err(e) = state.s3_client.delete_object(&req.key).await {
         tracing::error!("Failed to delete S3 object {}: {:?}", &req.key, e);
