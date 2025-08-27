@@ -188,7 +188,7 @@ export function FeedBody({
         <div className="flex flex-row justify-start items-center gap-2.5">
           {space_id && space_type ? <SpaceTag /> : <></>}
           <IndustryTag industry={industry} />
-          {onboard && <OnboradingTag />}
+          {onboard && <OnboardingTag />}
         </div>
       </Row>
       <h2 className="w-full line-clamp-2 font-bold text-xl/[25px] tracking-[0.5px] align-middle text-white px-5">
@@ -303,7 +303,7 @@ export function IndustryTag({ industry }: { industry: string }) {
   );
 }
 
-export function OnboradingTag() {
+export function OnboardingTag() {
   return (
     <span className="rounded-sm bg-primary text-white px-2 text-xs/[25px] font-semibold align-middle uppercase">
       Onboard
