@@ -6,73 +6,69 @@ class NetworkScreen extends GetWidget<NetworkController> {
 
   @override
   Widget build(BuildContext context) {
-    final double h = MediaQuery.of(context).size.height;
+    final bottomPad = MediaQuery.of(context).padding.bottom;
     return Layout<NetworkController>(
-      scrollable: false,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(14, 8, 14, 12),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SectionCard(
-                title: 'Invitations',
-                child: Obx(
-                  () => (controller.invitations.value.isEmpty)
-                      ? const SizedBox.shrink()
-                      : Column(
-                          children: [
-                            for (final entry
-                                in controller.invitations.value
-                                    .asMap()
-                                    .entries) ...[
-                              InvitationTile(
-                                model: entry.value,
-                                onAccept: () {},
-                                onReject: () {},
+        padding: EdgeInsets.fromLTRB(14, 8, 14, bottomPad),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SectionCard(
+              title: 'Invitations',
+              child: Obx(
+                () => (controller.invitations.value.isEmpty)
+                    ? const SizedBox.shrink()
+                    : Column(
+                        children: [
+                          for (final entry
+                              in controller.invitations.value
+                                  .asMap()
+                                  .entries) ...[
+                            InvitationTile(
+                              model: entry.value,
+                              onAccept: () {},
+                              onReject: () {},
+                            ),
+                            5.vgap,
+                            if (entry.key !=
+                                controller.invitations.value.length - 1) ...[
+                              Container(
+                                height: 0.5,
+                                color: const Color(0xff2a2a2a),
                               ),
                               5.vgap,
-                              if (entry.key !=
-                                  controller.invitations.value.length - 1) ...[
-                                Container(
-                                  height: 0.5,
-                                  color: const Color(0xff2a2a2a),
-                                ),
-                                5.vgap,
-                              ],
                             ],
                           ],
-                        ),
-                ),
+                        ],
+                      ),
               ),
-              10.vgap,
+            ),
+            10.vgap,
 
-              Obx(() {
-                final sug = controller.suggestions;
-                return SectionCard(
-                  title: 'Suggestions',
-                  child: GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    padding: const EdgeInsets.only(top: 4, bottom: 4),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          mainAxisSpacing: 12,
-                          crossAxisSpacing: 12,
-                          childAspectRatio: 0.9,
-                        ),
-                    itemCount: sug.length,
-                    itemBuilder: (_, i) => SuggestionCard(
-                      model: sug[i],
-                      onFollow: () {},
-                      onDismiss: () {},
-                    ),
+            Obx(() {
+              final sug = controller.suggestions;
+              return SectionCard(
+                title: 'Suggestions',
+                child: GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  padding: const EdgeInsets.only(top: 4, bottom: 4),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    mainAxisSpacing: 12,
+                    crossAxisSpacing: 12,
+                    childAspectRatio: 0.9,
                   ),
-                );
-              }),
-            ],
-          ),
+                  itemCount: sug.length,
+                  itemBuilder: (_, i) => SuggestionCard(
+                    model: sug[i],
+                    onFollow: () {},
+                    onDismiss: () {},
+                  ),
+                ),
+              );
+            }),
+          ],
         ),
       ),
     );

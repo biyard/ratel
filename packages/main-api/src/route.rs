@@ -13,6 +13,10 @@ use crate::{
                 add_bookmark::add_bookmark_handler, list_bookmarks::get_bookmarks_handler,
                 remove_bookmark::remove_bookmark_handler,
             },
+            connections::{
+                follow::connection_follow_handler, network::list_connections_handler,
+                search::list_connections_by_keyword_handler,
+            },
             dagits::{
                 add_oracle::add_oracle_handler,
                 artworks::{
@@ -27,10 +31,6 @@ use crate::{
             },
             dashboards::get_dashboard::get_dashboard_handler,
             industries::{industry::list_industries_handler, select_topic::select_topics_handler},
-            networks::{
-                follow::follow_handler, network::list_networks_handler,
-                search::list_networks_by_keyword_handler,
-            },
             notifications::mark_all_read::mark_all_notifications_read_handler,
             oracles::create_oracle::create_oracle_handler,
             spaces::delete_space::delete_space_handler,
@@ -141,31 +141,31 @@ pub async fn route(
             .with_state(pool.clone()),
         )
         .route(
-            "/networks",
+            "/connections",
             get_with(
-                list_networks_handler,
+                list_connections_handler,
                 api_docs!(
-                    "List Networks",
-                    "List networks based on recommendation algorithm"
+                    "List Connections",
+                    "List connections based on recommendation algorithm"
                 ),
             )
             .with_state(pool.clone()),
         )
         .route(
-            "/networks/search",
+            "/connnections/search",
             get_with(
-                list_networks_by_keyword_handler,
+                list_connections_by_keyword_handler,
                 api_docs!(
-                    "List Networks by keyword",
-                    "List networks by search keyword"
+                    "List Connections by keyword",
+                    "List connections by search keyword"
                 ),
             )
             .with_state(pool.clone()),
         )
         .route(
-            "/networks/follow",
+            "/connections/follow",
             post_with(
-                follow_handler,
+                connection_follow_handler,
                 api_docs!("Follow Users", "Follow users with follower IDs"),
             )
             .with_state(pool.clone()),
