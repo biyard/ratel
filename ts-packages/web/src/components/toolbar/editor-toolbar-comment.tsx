@@ -5,16 +5,13 @@ import {
   PopoverContent,
 } from '@radix-ui/react-popover';
 import { Input } from '@/components/ui/input';
-import {
-  Bold,
-  Italic,
-  UnderlineIcon,
-  Strikethrough,
-  Code,
-  LinkIcon,
-  ImageIcon,
-} from 'lucide-react';
-
+import CodesPen from '@/assets/icons/editor/codespen.svg';
+import BoldIcon from '@/assets/icons/editor/bold.svg';
+import Italics from '@/assets/icons/editor/italics.svg';
+import UnderlineIcon from '@/assets/icons/editor/underline.svg';
+import Strike from '@/assets/icons/editor/strike.svg';
+import ImageUpload from '@/assets/icons/editor/upload-image.svg';
+import LinkPaste from '@/assets/icons/editor/link-paste.svg';
 import PaintIcon from '@/assets/icons/editor/paint.svg';
 
 interface EditorToolbarProps {
@@ -59,7 +56,7 @@ export const EditorToolbarComment = ({
           }`}
           onClick={() => editor.chain().focus().toggleCode().run()}
         >
-          <Code className="h-6 w-6" />
+          <CodesPen className="h-6 w-6" />
         </button>
 
         {/* Bold */}
@@ -69,7 +66,7 @@ export const EditorToolbarComment = ({
           }`}
           onClick={() => editor.chain().focus().toggleBold().run()}
         >
-          <Bold className="h-6 w-6" />
+          <BoldIcon className="h-6 w-6" />
         </button>
 
         {/* Italic */}
@@ -79,7 +76,7 @@ export const EditorToolbarComment = ({
           }`}
           onClick={() => editor.chain().focus().toggleItalic().run()}
         >
-          <Italic className="h-6 w-6" />
+          <Italics className="h-6 w-6" />
         </button>
 
         {/* Underline */}
@@ -99,7 +96,7 @@ export const EditorToolbarComment = ({
           }`}
           onClick={() => editor.chain().focus().toggleStrike().run()}
         >
-          <Strikethrough className="h-6 w-6" />
+          <Strike className="h-6 w-6" />
         </button>
 
         {/* Color Picker */}
@@ -132,7 +129,7 @@ export const EditorToolbarComment = ({
               }`}
               onClick={handleLinkClick}
             >
-              <LinkIcon className="h-6 w-6" />
+              <LinkPaste className="h-6 w-6" />
             </button>
           </PopoverTrigger>
           <PopoverContent className="w-80 p-3 bg-gray-800 border-gray-600">
@@ -184,7 +181,7 @@ export const EditorToolbarComment = ({
 
         {/* Image */}
         <button className="bg-neutral-900 text-lg text-neutral-600" onClick={addImage}>
-          <ImageIcon className="h-6 w-6" />
+          <ImageUpload className="h-6 w-6" />
         </button>
       </div>
     </div>
