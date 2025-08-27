@@ -80,7 +80,6 @@ export default function ThreadComment({ post_id }: { post_id: number }) {
               </button>
             )}
             {expand && (
-          
               <RichTextEditor
                 className="min-h-30"
                 onClose={() => setExpand(false)}
