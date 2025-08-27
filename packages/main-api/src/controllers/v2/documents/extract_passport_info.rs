@@ -1,4 +1,7 @@
-use aws_sdk_textract::types::Document;
+use crate::{
+    config,
+    utils::aws::{BedrockClient, RekognitionClient, S3Client, TextractClient},
+};
 use bdk::prelude::*;
 use dto::{
     Error, JsonSchema, Result, aide,
@@ -7,14 +10,12 @@ use dto::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::utils::aws::{BedrockClient, RekognitionClient, TextractClient};
-
 #[derive(
     Debug, Clone, Serialize, Deserialize, PartialEq, Default, aide::OperationIo, JsonSchema,
 )]
 pub struct PassportRequest {
-    #[schemars(description = "Image byte of the passport(Max Size : 10MB)")]
-    pub image_byte: Vec<u8>,
+    #[schemars(description = "S3 Object Key of the passport image within the s3 bucket")]
+    pub key: String,
 }
 
 #[derive(
@@ -22,7 +23,21 @@ pub struct PassportRequest {
 )]
 pub struct PassportResponse {
     #[schemars(description = "Passport verification result")]
-    pub result: Option<PassportInfo>,
+    pub result: PassportInfo,
+}
+
+#[derive(
+    Default, Debug, Clone, Serialize, Deserialize, PartialEq, aide::OperationIo, JsonSchema,
+)]
+pub struct PassportInfo {
+    pub first_name: String,
+    pub last_name: String,
+    #[serde(deserialize_with = "date_format::deserialize")]
+    pub birth_date: i64,
+    pub nationality: String,
+    #[serde(deserialize_with = "date_format::deserialize")]
+    pub expiration_date: i64,
+    pub gender: Gender,
 }
 
 mod date_format {
@@ -42,22 +57,13 @@ mod date_format {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, aide::OperationIo, JsonSchema)]
-pub struct PassportInfo {
-    pub first_name: String,
-    pub last_name: String,
-    #[serde(deserialize_with = "date_format::deserialize")]
-    pub birth_date: i64,
-    pub nationality: String,
-    #[serde(deserialize_with = "date_format::deserialize")]
-    pub expiration_date: i64,
-    pub gender: Gender,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, aide::OperationIo, JsonSchema)]
+#[derive(
+    Debug, Default, Clone, Serialize, Deserialize, PartialEq, aide::OperationIo, JsonSchema,
+)]
 pub enum Gender {
     Male,
     Female,
+    #[default]
     Other,
 }
 
@@ -78,12 +84,23 @@ pub struct PassportHandlerState {
     pub bedrock_client: BedrockClient,
     pub rek_client: RekognitionClient,
     pub textract_client: TextractClient,
+    pub s3_client: S3Client,
 }
 
 pub async fn extract_passport_info_handler(
     State(state): State<PassportHandlerState>,
     Json(req): Json<PassportRequest>,
 ) -> Result<Json<PassportResponse>> {
+    let passport_info = worker(&state, &req).await;
+    if let Err(e) = state.s3_client.delete_object(&req.key).await {
+        tracing::error!("Failed to delete S3 object {}: {:?}", &req.key, e);
+    }
+    Ok(Json(PassportResponse {
+        result: passport_info?,
+    }))
+}
+
+async fn worker(state: &PassportHandlerState, req: &PassportRequest) -> Result<PassportInfo> {
     /*
     1. Detect if the image is a passport using AWS Rekognition
     Rekognition `detect labels` API Price:
@@ -105,10 +122,13 @@ pub async fn extract_passport_info_handler(
 
     **Total estimated cost per request: $0.00283444 (~ 3.71 KRW)**
     */
-    let rek_output =
-        state
-            .rek_client
-            .detect_labels_from_image(req.image_byte.clone(), Some(10), Some(80.0));
+
+    let image =
+        RekognitionClient::get_image_from_s3_object(config::get().private_bucket_name, &req.key);
+
+    let rek_output = state
+        .rek_client
+        .detect_labels_from_image(image, Some(10), Some(80.0));
     let is_passport = rek_output
         .await?
         .iter()
@@ -120,12 +140,10 @@ pub async fn extract_passport_info_handler(
         ));
     }
 
-    let document = Document::builder()
-        .bytes(req.image_byte.clone().into())
-        .build();
+    let document =
+        TextractClient::get_document_from_s3_object(config::get().private_bucket_name, &req.key);
     let detected_text = state.textract_client.detect_document_text(document).await?;
     let merged_text = detected_text.join("\n");
-    tracing::debug!("Detected text: {}", merged_text);
 
     let prompt = format!(
         r#"
@@ -177,15 +195,12 @@ Date of expiry
         tracing::error!("Failed to extract JSON from Bedrock response: {}", text);
         Error::PassportVerificationFailed("Failed to extract JSON from response".to_string())
     })?;
-    tracing::debug!("Extracted JSON string: {}", json_str);
     let passport_info: PassportInfo = serde_json::from_str(&json_str).map_err(|e| {
         tracing::error!("Failed to parse JSON string: {}, error: {:?}", json_str, e);
         Error::PassportVerificationFailed("Failed to parse JSON from response".to_string())
     })?;
 
-    Ok(Json(PassportResponse {
-        result: Some(passport_info),
-    }))
+    Ok(passport_info)
 }
 
 fn extract_json(text: &str) -> Option<&str> {

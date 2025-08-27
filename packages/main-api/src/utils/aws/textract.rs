@@ -31,7 +31,6 @@ impl TextractClient {
             .timeout_config(timeout_config)
             .retry_config(retry_config)
             .behavior_version_latest()
-            .clone()
             .build();
 
         let client = Client::from_conf(aws_config);
@@ -62,5 +61,14 @@ impl TextractClient {
                 }
             })
             .collect())
+    }
+
+    pub fn get_document_from_s3_object(bucket: &str, key: &str) -> Document {
+        let s3_object = aws_sdk_textract::types::S3Object::builder()
+            .bucket(bucket)
+            .name(key)
+            .build();
+
+        Document::builder().s3_object(s3_object).build()
     }
 }

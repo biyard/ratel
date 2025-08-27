@@ -25,8 +25,9 @@ use crate::{
                 get_dagit::get_dagit_handler,
             },
             dashboards::get_dashboard::get_dashboard_handler,
-            documents::extract_passport_info_handler::{
-                PassportHandlerState, extract_passport_info_handler,
+            documents::{
+                extract_passport_info::{PassportHandlerState, extract_passport_info_handler},
+                upload_private_image::{UploadPrivateImageState, upload_private_image_handler},
             },
             industries::{industry::list_industries_handler, select_topic::select_topics_handler},
             networks::{
@@ -35,20 +36,19 @@ use crate::{
             },
             notifications::mark_all_read::mark_all_notifications_read_handler,
             oracles::create_oracle::create_oracle_handler,
-            spaces::delete_space::delete_space_handler,
-            spaces::get_my_space::get_my_space_controller,
+            spaces::{delete_space::delete_space_handler, get_my_space::get_my_space_controller},
             telegram::subscribe::telegram_subscribe_handler,
             users::{find_user::find_user_handler, logout::logout_handler},
         },
         well_known::get_did_document::get_did_document_handler,
     },
     utils::{
-        aws::{BedrockClient, RekognitionClient, TextractClient},
+        aws::{BedrockClient, RekognitionClient, S3Client, TextractClient},
         sqs_client::SqsClient,
     },
 };
 use by_axum::axum;
-use dto::{Result, by_axum::axum::extract::DefaultBodyLimit};
+use dto::Result;
 
 use axum::native_routing::get as nget;
 use axum::native_routing::post as npost;
@@ -126,6 +126,8 @@ pub async fn route(
     bedrock_client: BedrockClient,
     rek_client: RekognitionClient,
     textract_client: TextractClient,
+    _metadata_s3_client: S3Client,
+    private_s3_client: S3Client,
 ) -> Result<by_axum::axum::Router> {
     Ok(by_axum::axum::Router::new()
         .native_route("/users/logout", npost(logout_handler))
@@ -294,6 +296,16 @@ pub async fn route(
             .with_state(pool.clone()),
         )
         .route(
+            "/v2/documents",
+            get_with(upload_private_image_handler, api_docs!(
+                "Get S3 Presigned URL for Uploading Private Image",
+                "This endpoint provides presigned URLs for uploading private images to S3.\n\n**Authorization header required**\n\n"
+            ))
+            .with_state(UploadPrivateImageState {
+                s3_client: private_s3_client.clone(),
+            })
+        )
+        .route(
             "/v2/documents/passport",
             post_with(extract_passport_info_handler, api_docs!(
                 "Extract Information from Passport Image",
@@ -304,7 +316,8 @@ pub async fn route(
                 bedrock_client: bedrock_client.clone(),
                 rek_client: rek_client.clone(),
                 textract_client: textract_client.clone(),
-            }).layer(DefaultBodyLimit::max(10 * 1024 * 1024)), // 10MB
+                s3_client: private_s3_client.clone(),
+            })
         )
         .route(
             "/v2/telegram/subscribe",
