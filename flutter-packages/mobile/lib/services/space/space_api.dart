@@ -20,38 +20,67 @@ class SpaceApi extends GetConnect {
 
     logger.d("my spaces res: ${res.body}");
 
-    if (!res.isOk) return MySpaceModel(spaces: [], boostings: []);
+    if (!res.isOk || res.body == null)
+      return MySpaceModel(spaces: [], boostings: []);
 
-    final List<SpaceSummary> mySpace = [];
-    final List<SpaceSummary> boostings = [];
+    int _i(dynamic v) {
+      if (v == null) return 0;
+      final s = '$v'.trim();
+      if (s.isEmpty || s.toLowerCase() == 'null') return 0;
+      return int.tryParse(s) ?? 0;
+    }
 
-    for (var i = 0; i < res.body["spaces"].length; i++) {
-      final space = res.body["spaces"][i];
+    String _s(dynamic v) {
+      if (v == null) return '';
+      final s = '$v';
+      return s.toLowerCase() == 'null' ? '' : s;
+    }
+
+    final mySpace = <SpaceSummary>[];
+    final boostings = <SpaceSummary>[];
+
+    final spacesJson = res.body['spaces'] as List? ?? const [];
+    for (final space in spacesJson) {
       mySpace.add(
         SpaceSummary(
-          id: int.parse(space["id"].toString()),
-          createdAt: int.parse(space["created_at"].toString()),
-          updatedAt: int.parse(space["updated_at"].toString()),
-          title: space["title"],
-          htmlContents: space["html_contents"],
-          imageUrl: space["image_url"],
+          id: _i(space['id']),
+          createdAt: _i(space['created_at']),
+          updatedAt: _i(space['updated_at']),
+          feedId: _i(space['feed_id']),
+          title: _s(space['title']),
+          htmlContents: _s(space['html_contents']),
+          imageUrl: _s(space['image_url']),
+          isBookmarked: false,
+          authorUrl: '',
+          authorName: '',
+          likes: 0,
+          rewards: 0,
+          comments: 0,
         ),
       );
     }
 
-    for (var i = 0; i < res.body["boostings"].length; i++) {
-      final space = res.body["boostings"][i];
+    final boostingsJson = res.body['boostings'] as List? ?? const [];
+    for (final space in boostingsJson) {
       boostings.add(
         SpaceSummary(
-          id: int.parse(space["id"].toString()),
-          createdAt: int.parse(space["created_at"].toString()),
-          updatedAt: int.parse(space["updated_at"].toString()),
-          title: space["title"],
-          htmlContents: space["html_contents"],
-          imageUrl: space["image_url"],
+          id: _i(space['id']),
+          createdAt: _i(space['created_at']),
+          updatedAt: _i(space['updated_at']),
+          feedId: _i(space['feed_id']),
+          title: _s(space['title']),
+          htmlContents: _s(space['html_contents']),
+          imageUrl: _s(space['image_url']),
+          isBookmarked: false,
+          authorUrl: '',
+          authorName: '',
+          likes: 0,
+          rewards: 0,
+          comments: 0,
         ),
       );
     }
+
     return MySpaceModel(spaces: mySpace, boostings: boostings);
   }
 
