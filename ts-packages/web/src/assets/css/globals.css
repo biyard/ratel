@@ -79,6 +79,8 @@ a {
   --color-tag: #dee1e6;
   --color-component-bg: #191919;
 
+  --color-web-bg: #0a0a0a;
+
   --breakpoint-desktop: 1177px;
   --breakpoint-tablet: 900px;
   --breakpoint-mobile: 500px;
