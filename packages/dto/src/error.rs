@@ -244,6 +244,12 @@ pub enum Error {
         ko = "스프린트 리그 업데이트에 실패했습니다."
     )]
     SprintLeagueUpdateFailed,
+
+    PassportVerificationFailed(String),
+
+    AwsRekognitionError(String),
+    AwsTextractError(String),
+    AwsBedrockError(String),
 }
 
 impl<E: StdError + 'static> From<E> for Error {

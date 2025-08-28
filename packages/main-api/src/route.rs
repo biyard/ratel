@@ -4,7 +4,6 @@ use bdk::prelude::*;
 
 use crate::{
     controllers::{
-        self,
         m2::noncelab::users::register_users::{
             RegisterUserResponse, register_users_by_noncelab_handler,
         },
@@ -26,6 +25,10 @@ use crate::{
                 get_dagit::get_dagit_handler,
             },
             dashboards::get_dashboard::get_dashboard_handler,
+            documents::{
+                extract_passport_info::{PassportHandlerState, extract_passport_info_handler},
+                upload_private_image::{UploadPrivateImageState, upload_private_image_handler},
+            },
             industries::{industry::list_industries_handler, select_topic::select_topics_handler},
             networks::{
                 follow::follow_handler, network::list_networks_handler,
@@ -33,19 +36,19 @@ use crate::{
             },
             notifications::mark_all_read::mark_all_notifications_read_handler,
             oracles::create_oracle::create_oracle_handler,
-            spaces::delete_space::delete_space_handler,
-            spaces::get_my_space::get_my_space_controller,
+            spaces::{delete_space::delete_space_handler, get_my_space::get_my_space_controller},
             telegram::subscribe::telegram_subscribe_handler,
             users::{find_user::find_user_handler, logout::logout_handler},
         },
         well_known::get_did_document::get_did_document_handler,
     },
-    utils::sqs_client::SqsClient,
+    utils::{
+        aws::{BedrockClient, RekognitionClient, S3Client, TextractClient},
+        sqs_client::SqsClient,
+    },
 };
 use by_axum::axum;
-use by_axum::axum::middleware;
 use dto::Result;
-use dto::by_axum::auth::authorization_middleware;
 
 use axum::native_routing::get as nget;
 use axum::native_routing::post as npost;
@@ -120,9 +123,13 @@ macro_rules! api_docs {
 pub async fn route(
     pool: sqlx::Pool<sqlx::Postgres>,
     sqs_client: Arc<SqsClient>,
+    bedrock_client: BedrockClient,
+    rek_client: RekognitionClient,
+    textract_client: TextractClient,
+    _metadata_s3_client: S3Client,
+    private_s3_client: S3Client,
 ) -> Result<by_axum::axum::Router> {
-    // Build v2 router and layer authorization middleware so Extension<Option<Authorization>> is present
-    let v2_router = by_axum::axum::Router::new()
+    Ok(by_axum::axum::Router::new()
         .native_route("/users/logout", npost(logout_handler))
         .route(
             "/industries/select-topics",
@@ -281,7 +288,39 @@ pub async fn route(
             .with_state(pool.clone()),
         )
         .route(
-            "/telegram/subscribe",
+            "/m2/oracles",
+            post_with(
+                create_oracle_handler,
+                api_docs!("Create Oracle", "Create a new oracle"),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/v2/documents",
+            get_with(upload_private_image_handler, api_docs!(
+                "Get S3 Presigned URL for Uploading Private Image",
+                "This endpoint provides presigned URLs for uploading private images to S3.\n\n**Authorization header required**\n\n"
+            ))
+            .with_state(UploadPrivateImageState {
+                s3_client: private_s3_client.clone(),
+            })
+        )
+        .route(
+            "/v2/documents/passport",
+            post_with(extract_passport_info_handler, api_docs!(
+                "Extract Information from Passport Image",
+                "This endpoint allows you to extract passport information from an image.\n\n**Authorization header required**\n\n"
+            ))
+            .with_state(PassportHandlerState {
+                pool: pool.clone(),
+                bedrock_client: bedrock_client.clone(),
+                rek_client: rek_client.clone(),
+                textract_client: textract_client.clone(),
+                s3_client: private_s3_client.clone(),
+            })
+        )
+        .route(
+            "/v2/telegram/subscribe",
             post_api!(
                 telegram_subscribe_handler,
                 (),
@@ -312,24 +351,6 @@ pub async fn route(
             )
             .with_state(pool.clone()),
         )
-        // Ensure per-request auth extension exists for all v2 endpoints
-        .layer(middleware::from_fn(authorization_middleware));
-
-    Ok(by_axum::axum::Router::new()
-        .nest("/v1", controllers::v1::route(pool.clone()).await?)
-        .nest(
-            "/m1",
-            controllers::m1::MenaceController::route(pool.clone())?,
-        )
-        // Keep m2 endpoints as-is
-        .route(
-            "/m2/oracles",
-            post_with(
-                create_oracle_handler,
-                api_docs!("Create Oracle", "Create a new oracle"),
-            )
-            .with_state(pool.clone()),
-        )
         .route(
             "/m2/noncelab/users",
             post_api!(
@@ -345,6 +366,5 @@ pub async fn route(
             )
             .with_state(pool.clone()),
         )
-        .nest("/v2", v2_router)
         .native_route("/.well-known/did.json", nget(get_did_document_handler)))
 }
