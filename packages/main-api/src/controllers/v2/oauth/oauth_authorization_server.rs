@@ -37,13 +37,12 @@ pub struct AuthorizationServerMetadata {
 pub async fn oauth_authorization_server_handler() -> Result<Json<AuthorizationServerMetadata>> {
     let conf = config::get();
 
-    let domain = conf.domain.as_str();
-    let domain = "https://api.ggernaut.com";
+    let domain = conf.domain.to_string();
     let metadata = AuthorizationServerMetadata {
-        issuer: domain.to_string(),
-        registration_endpoint: format!("https://{}/oauth/register", domain),
-        authorization_endpoint: format!("https://{}/oauth/authorize", domain),
-        token_endpoint: format!("https://{}/oauth/token", domain),
+        registration_endpoint: format!("https://{}/v2/oauth/register", domain),
+        authorization_endpoint: format!("https://{}/v2/oauth/authorize", domain),
+        token_endpoint: format!("https://{}/v2/oauth/token", domain),
+        issuer: domain,
         scopes_supported: Some(vec!["profile".to_string(), "email".to_string()]),
         jwks_uri: None,
         response_types_supported: Some(vec!["code".to_string()]),
@@ -53,5 +52,6 @@ pub async fn oauth_authorization_server_handler() -> Result<Json<AuthorizationSe
 
         service_documentation: None,
     };
+    tracing::debug!("OAuth metadata: {:?}", metadata);
     Ok(Json(metadata))
 }

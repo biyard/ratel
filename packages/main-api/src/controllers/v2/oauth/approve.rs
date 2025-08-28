@@ -4,11 +4,7 @@ use dto::{
     AuthCode, Result,
     by_axum::{
         auth::Authorization,
-        axum::{
-            Extension, Json,
-            extract::State,
-            response::{IntoResponse, Redirect},
-        },
+        axum::{Extension, Json, extract::State},
     },
     sqlx::PgPool,
 };
@@ -32,8 +28,21 @@ pub struct ApproveRequest {
     pub scope: String,
     pub state: String,
 }
+#[derive(
+    Debug,
+    Clone,
+    serde::Serialize,
+    serde::Deserialize,
+    PartialEq,
+    Default,
+    aide::OperationIo,
+    JsonSchema,
+)]
+pub struct Response {
+    pub redirect_url: String,
+}
 
-fn generate_random_string() -> String {
+pub fn generate_random_string() -> String {
     let mut key = [0u8; 32];
     rand::rng().fill_bytes(&mut key);
     URL_SAFE_NO_PAD.encode(key)
@@ -43,12 +52,13 @@ pub async fn approve_handler(
     Extension(auth): Extension<Option<Authorization>>,
     State(pool): State<PgPool>,
     Json(req): Json<ApproveRequest>,
-) -> Result<impl IntoResponse> {
+) -> Result<Json<Response>> {
     let user_id = extract_user_id(&pool, auth).await?;
     let code = generate_random_string();
     AuthCode::get_repository(pool)
-        .insert(code.clone(), req.client_id.clone(), user_id, 3600)
+        .insert(user_id, code.clone(), req.client_id.clone(), 3600)
         .await?;
+    tracing::debug!("Request: {:?}", req);
     let url = format!(
         "{}?code={}{}",
         req.redirect_uri,
@@ -59,6 +69,5 @@ pub async fn approve_handler(
             format!("&state={}", req.state)
         }
     );
-    let url = serde_urlencoded::from_str(&url)?;
-    Ok(Redirect::to(url))
+    Ok(Json(Response { redirect_url: url }))
 }

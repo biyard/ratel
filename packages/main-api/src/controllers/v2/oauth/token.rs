@@ -3,7 +3,11 @@ use dto::{
     AuthClient, AuthCode, Error, Result,
     by_axum::{
         auth::generate_jwt,
-        axum::{Json, extract::State},
+        axum::{
+            Json,
+            body::Body,
+            extract::{Request, State},
+        },
     },
     sqlx::PgPool,
 };
@@ -23,6 +27,7 @@ pub struct TokenRequest {
     pub code: String,
     pub redirect_uri: String,
     pub client_id: String,
+    #[serde(default)]
     pub client_secret: String,
 }
 
@@ -46,11 +51,31 @@ pub struct TokenResponse {
     pub scope: Option<String>,
 }
 
-pub async fn oauth_token(
+pub async fn token_handler(
     State(pool): State<PgPool>,
-    Json(req): Json<TokenRequest>,
+    request: Request<Body>,
 ) -> Result<Json<TokenResponse>> {
-    tracing::debug!("received token request");
+    let bytes = match by_axum::axum::body::to_bytes(request.into_body(), usize::MAX).await {
+        Ok(bytes) => bytes,
+        Err(e) => {
+            tracing::error!("can't read request body: {}", e);
+            return Err(Error::BadRequest);
+        }
+    };
+
+    let body_str = String::from_utf8_lossy(&bytes);
+    tracing::debug!("request body: {}", body_str);
+
+    let req = match serde_urlencoded::from_bytes::<TokenRequest>(&bytes) {
+        Ok(form) => {
+            tracing::debug!("successfully parsed form data: {:?}", form);
+            form
+        }
+        Err(e) => {
+            tracing::error!("can't parse form data: {}", e);
+            return Err(Error::BadRequest);
+        }
+    };
     match req.grant_type.as_str() {
         "authorization_code" => {
             tracing::debug!("handling authorization_code grant type");
@@ -64,7 +89,6 @@ pub async fn oauth_token(
 
     AuthClient::query_builder()
         .client_id_equals(req.client_id.clone())
-        .client_secret_equals(req.client_secret)
         .query()
         .fetch_one(&pool)
         .await?;

@@ -4,8 +4,9 @@ use dto::{
     by_axum::axum::{Json, extract::State, http::StatusCode, response::IntoResponse},
     sqlx::PgPool,
 };
-use rand::{Rng, distr::Alphanumeric};
 use uuid::Uuid;
+
+use crate::controllers::v2::oauth::approve::generate_random_string;
 
 #[derive(
     Debug,
@@ -42,15 +43,7 @@ pub struct ClientRegistrationResponse {
     pub redirect_uris: Vec<String>,
 }
 
-fn generate_random_string(length: usize) -> String {
-    rand::rng()
-        .sample_iter(&Alphanumeric)
-        .take(length)
-        .map(char::from)
-        .collect()
-}
-
-pub async fn oauth_register_handler(
+pub async fn register_handler(
     State(pool): State<PgPool>,
     Json(req): Json<ClientRegistrationRequest>,
 ) -> impl IntoResponse {
@@ -67,7 +60,7 @@ pub async fn oauth_register_handler(
 
     // generate client id and secret
     let client_id = format!("client-{}", Uuid::new_v4());
-    let client_secret = generate_random_string(32);
+    let client_secret = generate_random_string();
 
     let repo = AuthClient::get_repository(pool)
         .insert(

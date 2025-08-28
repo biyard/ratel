@@ -1,316 +1,66 @@
 use bdk::prelude::*;
 
-use dto::{
-    FeedCommentRequest, FeedCreateDraftRequest, FeedQuery, FeedUpdateRequest, User,
-    by_axum::auth::{Authorization, UserSession},
-};
+use dto::{by_axum::axum, sqlx::PgPool};
 use rmcp::{
-    ServerHandler,
+    RoleServer, ServerHandler,
     model::{
-        CallToolResult, Content, ErrorCode, Implementation, ProtocolVersion, ServerCapabilities,
-        ServerInfo,
+        CallToolResult, Content, Implementation, ProtocolVersion, ServerCapabilities, ServerInfo,
     },
+    service::RequestContext,
     tool,
     transport::streamable_http_server::{
         StreamableHttpService, session::local::LocalSessionManager,
     },
 };
-use uuid::Uuid;
 
-use crate::utils::users::{extract_user, extract_user_id};
+use crate::utils::users::extract_user;
 
-use super::v1::feeds::FeedController;
-
+#[allow(dead_code)]
 pub(self) type McpResult = Result<CallToolResult, rmcp::Error>;
 
-pub async fn route() -> dto::Result<StreamableHttpService<RatelMcpServer>> {
+pub async fn route(pool: PgPool) -> dto::Result<StreamableHttpService<RatelMcpServer>> {
     Ok(StreamableHttpService::new(
-        RatelMcpServer::new,
+        move || RatelMcpServer::new(pool.clone()),
         LocalSessionManager::default().into(),
         Default::default(),
     ))
 }
-
 #[derive(Clone)]
 pub struct RatelMcpServer {
-    pool: sqlx::Pool<sqlx::Postgres>,
-    feed: FeedController,
+    #[allow(dead_code)]
+    pool: PgPool,
 }
 
 #[tool(tool_box)]
 impl RatelMcpServer {
-    pub fn new() -> Result<Self, std::io::Error> {
-        let conf = crate::config::get();
-        let pool = if let by_types::DatabaseConfig::Postgres { url, pool_size } = conf.database {
-            sqlx::postgres::PgPoolOptions::new()
-                .max_connections(pool_size)
-                .connect_lazy(url)
-                .expect("Failed to connect to the database")
-        } else {
-            panic!("Database is not initialized. Call init() first.");
-        };
-
-        Ok(Self {
-            feed: FeedController::new(pool.clone()),
-            pool,
-        })
-    }
-
-    #[tool(
-        description = "Login into Ratel Web. After login, you can use other tools with session_id on URL"
-    )]
-    async fn login(&self) -> McpResult {
-        let token = Uuid::new_v4().to_string();
-
-        let login_url = format!(
-            "https://dev.ratel.foundation/mcp-login?session_id={}",
-            token
-        );
-
-        Ok(CallToolResult::success(vec![Content::text(format!(
-            r#"🔐 **Login Required**
-
-Please visit this URL to login [Ratel Web]({}).
-            "#,
-            login_url
-        ))]))
+    pub fn new(pool: PgPool) -> Result<Self, std::io::Error> {
+        Ok(Self { pool })
     }
 
     #[tool(
         description = "It checks if you have been logged in or not in Ratel. Some APIs require login."
     )]
-    async fn check_if_logged_in(
-        &self,
-        #[tool(param)]
-        #[schemars(description = "Session ID which comes from login tool")]
-        session_id: String,
-    ) -> McpResult {
-        tracing::debug!("Checking if user is logged in {}", session_id);
-        let auth = self.session_to_authorization().await;
-        let user = extract_user(&self.pool, auth).await;
-        tracing::debug!("User ID extracted: {:?}", user);
-        Ok(match user {
-            Ok(user) => CallToolResult::success(vec![Content::text(format!(
-                "You are logged in as user name: {}",
-                user.nickname
-            ))]),
+    async fn check_if_logged_in(&self, ctx: RequestContext<RoleServer>) -> McpResult {
+        let token_info = if let Some(parts) = ctx.extensions.get::<axum::http::request::Parts>() {
+            let auth = parts.extensions.get::<by_axum::auth::Authorization>();
+            let user = extract_user(&self.pool, auth.cloned()).await;
+            if user.is_err() {
+                return Ok(CallToolResult::error(vec![Content::text(format!(
+                    "You are not logged in. Error: {}",
+                    user.err().unwrap()
+                ))]));
+            }
+            let user = user.unwrap();
+            format!("User ID: {}, Nickname: {}", user.id, user.nickname)
+        } else {
+            " (No HTTP context)".to_string()
+        };
 
-            Err(e) => CallToolResult::error(vec![Content::text(format!(
-                "You are not logged in. Error: {}",
-                e
-            ))]),
-        })
-    }
-
-    #[tool(description = "Get my information. This should be called after login.")]
-    async fn get_my_info(&self) -> McpResult {
-        tracing::debug!("Getting user info");
-        let auth = self.session_to_authorization().await;
-        let user_id = extract_user_id(&self.pool, auth).await.map_err(|e| {
-            tracing::error!("Failed to extract user ID: {}", e);
-            rmcp::Error::new(ErrorCode::INTERNAL_ERROR, e.to_string(), None)
-        })?;
-
-        let user = User::query_builder()
-            .id_equals(user_id)
-            .query()
-            .map(User::from)
-            .fetch_one(&self.pool)
-            .await
-            .map_err(|e| {
-                tracing::error!("Failed to fetch user: {}", e);
-                rmcp::Error::new(ErrorCode::INTERNAL_ERROR, e.to_string(), None)
-            })?;
-        let result = format!("My Name: {:?}", user.nickname);
-        Ok(CallToolResult::success(vec![Content::text(result)]))
-    }
-
-    #[tool(description = "Post a feed to Ratel. This should be called after login.")]
-    async fn post_feed(
-        &self,
-        #[tool(param)]
-        #[schemars(description = "Feed title. It should be short and descriptive.")]
-        title: String,
-        #[tool(param)]
-        #[schemars(description = "Feed content. It allows HTML formatting.")]
-        content: String,
-    ) -> McpResult {
-        tracing::debug!("Posting feed: {}", content);
-
-        let auth = self.session_to_authorization().await;
-        let user_id = extract_user_id(&self.pool, auth.clone())
-            .await
-            .map_err(|e| {
-                tracing::error!("Failed to extract user ID: {}", e);
-                rmcp::Error::new(ErrorCode::INTERNAL_ERROR, e.to_string(), None)
-            })?;
-
-        let feed = self
-            .feed
-            .create_draft(
-                auth.clone(),
-                FeedCreateDraftRequest {
-                    feed_type: dto::FeedType::Post,
-                    user_id,
-                },
-            )
-            .await
-            .map_err(|e| {
-                tracing::error!("Failed to create feed draft: {}", e);
-                rmcp::Error::new(ErrorCode::INTERNAL_ERROR, e.to_string(), None)
-            })?;
-
-        self.feed
-            .update(
-                feed.id,
-                auth.clone(),
-                FeedUpdateRequest {
-                    title: Some(title),
-                    html_contents: content,
-                    industry_id: 1,
-                    ..Default::default()
-                },
-            )
-            .await
-            .map_err(|e| {
-                tracing::error!("Failed to update feed: {}", e);
-                rmcp::Error::new(ErrorCode::INTERNAL_ERROR, e.to_string(), None)
-            })?;
-
-        self.feed.publish_draft(feed.id, auth).await.map_err(|e| {
-            tracing::error!("Failed to publish feed: {}", e);
-            rmcp::Error::new(ErrorCode::INTERNAL_ERROR, e.to_string(), None)
-        })?;
-        let domain = crate::config::get().domain;
+        tracing::debug!("Token info extracted: {:?}", token_info);
         Ok(CallToolResult::success(vec![Content::text(format!(
-            "Feed posted successfully with ID: https://{domain}/threads/{}",
-            feed.id
+            "You are logged in. Token info: {}",
+            token_info
         ))]))
-    }
-
-    #[tool(description = "Read feeds from Ratel")]
-    async fn read_feeds(
-        &self,
-        #[tool(param)]
-        #[schemars(description = "The number of page starting from 1")]
-        page: usize,
-
-        #[tool(param)]
-        #[schemars(description = "size of a page")]
-        size: usize,
-    ) -> McpResult {
-        tracing::debug!("Reading feeds");
-        let auth = self.session_to_authorization().await;
-        let feeds = self
-            .feed
-            .query(
-                auth,
-                FeedQuery::new(size)
-                    .with_page(page)
-                    .with_status(dto::FeedStatus::Published),
-            )
-            .await
-            .map_err(|e| {
-                tracing::error!("Failed to read feeds: {}", e);
-                rmcp::Error::new(ErrorCode::INTERNAL_ERROR, e.to_string(), None)
-            })?;
-
-        Ok(CallToolResult::success(vec![Content::text(
-            serde_json::to_string(&feeds).map_err(|e| {
-                rmcp::Error::new(
-                    ErrorCode::INTERNAL_ERROR,
-                    format!("Failed to serialize feeds: {}", e),
-                    None,
-                )
-            })?,
-        )]))
-    }
-
-    #[tool(description = "Like a feed in Ratel.This should be called after login")]
-    async fn like_feed(
-        &self,
-        #[tool(param)]
-        #[schemars(description = "Feed ID to like")]
-        feed_id: i64,
-    ) -> McpResult {
-        tracing::debug!("Liking feed with ID: {}", feed_id);
-        let auth = self.session_to_authorization().await;
-
-        self.feed.like(feed_id, auth, true).await.map_err(|e| {
-            tracing::error!("Failed to like feed: {}", e);
-            rmcp::Error::new(ErrorCode::INTERNAL_ERROR, e.to_string(), None)
-        })?;
-        Ok(CallToolResult::success(vec![Content::text(format!(
-            "Feed with ID {} liked successfully",
-            feed_id
-        ))]))
-    }
-
-    #[tool(description = "Comment a feed in Ratel.This should be called after login")]
-    async fn comment_feed(
-        &self,
-        #[tool(param)]
-        #[schemars(description = "Feed ID to comment")]
-        feed_id: i64,
-        #[tool(param)]
-        #[schemars(description = "Comment content. It allows HTML formatting.")]
-        content: String,
-    ) -> McpResult {
-        tracing::debug!("Liking feed with ID: {}", feed_id);
-        let auth = self.session_to_authorization().await;
-        self.feed
-            .comment(
-                auth,
-                FeedCommentRequest {
-                    parent_id: Some(feed_id),
-                    html_contents: content,
-                },
-            )
-            .await
-            .map_err(|e| {
-                tracing::error!("Failed to comment feed: {}", e);
-                rmcp::Error::new(ErrorCode::INTERNAL_ERROR, e.to_string(), None)
-            })?;
-        Ok(CallToolResult::success(vec![Content::text(format!(
-            "Comment on Feed ID {} commented successfully",
-            feed_id
-        ))]))
-    }
-
-    #[tool(description = "Join a discussion in Ratel. This should be called after login")]
-    pub async fn join_discussion(
-        &self,
-        #[tool(param)]
-        #[schemars(description = "Space ID to join")]
-        space_id: i64,
-    ) -> McpResult {
-        tracing::debug!("Joining discussion with ID: {}", space_id);
-        // let auth = self.session_to_authorization().await;
-
-        Ok(CallToolResult::success(vec![Content::text(format!(
-            "Joined discussion with ID: {}",
-            space_id
-        ))]))
-    }
-
-    async fn session_to_authorization(&self) -> Option<Authorization> {
-        //FIXME: Implement Session Management
-        let user = User::query_builder()
-            .email_equals("ryan@biyard.co".to_string())
-            .query()
-            .map(User::from)
-            .fetch_one(&self.pool)
-            .await
-            .map_err(|e| {
-                tracing::error!("Failed to fetch user: {}", e);
-                rmcp::Error::new(ErrorCode::INTERNAL_ERROR, e.to_string(), None)
-            })
-            .ok()?;
-        Some(Authorization::Session(UserSession {
-            user_id: user.id,
-            email: user.email,
-            principal: user.principal,
-        }))
     }
 }
 
