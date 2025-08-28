@@ -13,3 +13,5 @@ pub mod sqs_client;
 pub mod telegram;
 pub mod users;
 pub mod wallets;
+
+pub mod aws;
