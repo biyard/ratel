@@ -58,6 +58,14 @@ pub mod controllers {
         pub mod oracles {
             pub mod create_oracle;
         }
+
+        pub mod oauth {
+            pub mod approve;
+            pub mod authorize;
+            pub mod oauth_authorization_server;
+            pub mod register;
+            pub mod token;
+        }
     }
     pub mod m2 {
         pub mod noncelab {

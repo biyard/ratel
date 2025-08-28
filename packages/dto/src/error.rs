@@ -270,10 +270,17 @@ unsafe impl Sync for Error {}
 #[cfg(feature = "server")]
 impl by_axum::axum::response::IntoResponse for Error {
     fn into_response(self) -> by_axum::axum::response::Response {
-        (
-            by_axum::axum::http::StatusCode::BAD_REQUEST,
-            by_axum::axum::Json(self),
-        )
-            .into_response()
+        match self {
+            Error::Unauthorized => (
+                by_axum::axum::http::StatusCode::UNAUTHORIZED,
+                by_axum::axum::Json(self),
+            )
+                .into_response(),
+            _ => (
+                by_axum::axum::http::StatusCode::BAD_REQUEST,
+                by_axum::axum::Json(self),
+            )
+                .into_response(),
+        }
     }
 }
