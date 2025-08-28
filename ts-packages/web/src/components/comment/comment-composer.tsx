@@ -6,7 +6,7 @@ import { EditorToolbarComment as EditorToolbar } from '@/components/toolbar/edit
 import { CommentIcon } from '../icons';
 import { Loader } from '../icons';
 import { cn } from '@/lib/utils';
-import { ChevronDoubleDownIcon } from '@heroicons/react/20/solid';
+import ChevronDoubleDownIcon from '@/assets/icons/double-arrow-down.svg';
 
 interface RichTextEditorProps {
   /*eslint-disable-next-line @typescript-eslint/no-explicit-any*/

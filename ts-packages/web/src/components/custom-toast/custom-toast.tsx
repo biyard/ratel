@@ -1,6 +1,6 @@
 import React from 'react';
-import { CheckCircle2 } from '../icons';
 
+import { CheckCircle2 } from '../icons';
 type CustomToastProps = {
   message: string;
 };

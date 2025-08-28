@@ -107,4 +107,3 @@ export { default as FilterArrow } from '@/assets/icons/filter.svg';
 export { default as CheckCircle2 } from '@/assets/icons/check-circele2.svg';
 export { default as Loader } from '@/assets/icons/loader2.svg';
 export { default as TrashArrowUp } from '@/assets/icons/trash-arrow-up.svg';
-export { default as ChatIcon2 } from '@/assets/icons/chat/chat-gray.svg';
