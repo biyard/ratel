@@ -387,6 +387,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "aws-sdk-bedrockruntime"
+version = "1.103.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5b3bbd237ec790046e1ecc9ad97de30214c6df36b6b731503e520b0fca102610"
+dependencies = [
+ "aws-credential-types",
+ "aws-runtime",
+ "aws-sigv4",
+ "aws-smithy-async",
+ "aws-smithy-eventstream",
+ "aws-smithy-http",
+ "aws-smithy-json",
+ "aws-smithy-runtime",
+ "aws-smithy-runtime-api",
+ "aws-smithy-types",
+ "aws-types",
+ "bytes",
+ "fastrand",
+ "http 0.2.12",
+ "hyper 0.14.32",
+ "regex-lite",
+ "tracing",
+]
+
+[[package]]
 name = "aws-sdk-chimesdkmediapipelines"
 version = "1.75.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -457,6 +482,28 @@ name = "aws-sdk-rdsdata"
 version = "1.83.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0d792e82e158d7fbeaed3fdcddf09ddabf64f7bce013758d0f1e9e94aa0e7d75"
+dependencies = [
+ "aws-credential-types",
+ "aws-runtime",
+ "aws-smithy-async",
+ "aws-smithy-http",
+ "aws-smithy-json",
+ "aws-smithy-runtime",
+ "aws-smithy-runtime-api",
+ "aws-smithy-types",
+ "aws-types",
+ "bytes",
+ "fastrand",
+ "http 0.2.12",
+ "regex-lite",
+ "tracing",
+]
+
+[[package]]
+name = "aws-sdk-rekognition"
+version = "1.85.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ee61f2e8d75989b42a79e2f0636c833ec0c06852d5cd5da43f7c0b376b35ab43"
 dependencies = [
  "aws-credential-types",
  "aws-runtime",
@@ -613,6 +660,28 @@ dependencies = [
  "aws-smithy-types",
  "aws-smithy-xml",
  "aws-types",
+ "fastrand",
+ "http 0.2.12",
+ "regex-lite",
+ "tracing",
+]
+
+[[package]]
+name = "aws-sdk-textract"
+version = "1.82.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d86eca66b15c4f4a9b9582c3506f251551b4facbfae43c795116f2ad5db9e51b"
+dependencies = [
+ "aws-credential-types",
+ "aws-runtime",
+ "aws-smithy-async",
+ "aws-smithy-http",
+ "aws-smithy-json",
+ "aws-smithy-runtime",
+ "aws-smithy-runtime-api",
+ "aws-smithy-types",
+ "aws-types",
+ "bytes",
  "fastrand",
  "http 0.2.12",
  "regex-lite",
@@ -4994,13 +5063,16 @@ version = "0.7.13"
 dependencies = [
  "async-trait",
  "aws-config",
+ "aws-sdk-bedrockruntime",
  "aws-sdk-chimesdkmediapipelines",
  "aws-sdk-chimesdkmeetings",
  "aws-sdk-mediaconvert",
  "aws-sdk-rdsdata",
+ "aws-sdk-rekognition",
  "aws-sdk-s3",
  "aws-sdk-sesv2",
  "aws-sdk-sqs",
+ "aws-sdk-textract",
  "base64 0.22.1",
  "bdk",
  "chrono",
