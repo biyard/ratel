@@ -59,6 +59,11 @@ pub mod controllers {
             pub mod create_oracle;
         }
 
+        pub mod documents {
+            pub mod extract_passport_info;
+            pub mod upload_private_image;
+        }
+
         pub mod oauth {
             pub mod approve;
             pub mod authorize;
