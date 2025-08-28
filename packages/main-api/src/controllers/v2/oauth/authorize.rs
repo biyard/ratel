@@ -8,6 +8,8 @@ use dto::{
     sqlx::PgPool,
 };
 
+use crate::config;
+
 #[derive(
     Debug,
     Clone,
@@ -40,25 +42,33 @@ pub async fn authorize_handler(
         }
     }
     let client = AuthClient::query_builder()
-        .client_id_contains(req.client_id.clone())
+        .client_id_equals(req.client_id.clone())
         .query()
         .map(AuthClient::from)
         .fetch_one(&pool)
         .await?;
-    if client.redirect_uris.contains(&req.redirect_uri) {
+    let redirect_uri = url::Url::parse(&req.redirect_uri)?;
+    if !client.redirect_uris.contains(&redirect_uri.to_string()) {
         return Err(Error::BadRequest);
     }
-    let client_url = "http://localhost:8080/oauth";
+
+    let client_url = format!("https://{}/oauth-login", config::get().signing_domain);
     let url = format!(
-        "{}?client_id={}&redirect_uri={}&scope={}&state={}",
+        "{}?client_id={}&redirect_uri={}{}{}",
         client_url,
         req.client_id,
         req.redirect_uri,
-        req.scope.unwrap_or_default(),
-        req.state.unwrap_or_default()
+        if let Some(state) = &req.state {
+            format!("&state={}", state)
+        } else {
+            "".to_string()
+        },
+        if let Some(scope) = &req.scope {
+            format!("&scope={}", scope)
+        } else {
+            "".to_string()
+        },
     );
 
-    let url = serde_urlencoded::from_str(&url)?;
-
-    Ok(Redirect::to(url))
+    Ok(Redirect::to(&url))
 }

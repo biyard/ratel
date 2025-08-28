@@ -15,3 +15,5 @@ pub mod users;
 pub mod wallets;
 
 pub mod aws;
+
+pub mod mcp_middleware;

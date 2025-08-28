@@ -3,6 +3,7 @@ use crate::{
     route::route,
     utils::{
         aws::{BedrockClient, RekognitionClient, S3Client, TextractClient},
+        mcp_middleware::mcp_middleware,
         sqs_client,
     },
 };
@@ -111,7 +112,9 @@ pub async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         Consensus,
         ConsensusVote,
         ArtworkCertification,
-        ArtworkDetail
+        ArtworkDetail,
+        AuthClient,
+        AuthCode,
     );
 
     if Industry::query_builder()
@@ -242,8 +245,9 @@ pub async fn api_main() -> Result<Router> {
                 .checked_add(Duration::days(30))
                 .unwrap(),
         ));
-    let mcp_router =
-        by_axum::axum::Router::new().nest_service("/mcp", controllers::mcp::route().await?);
+    let mcp_router = by_axum::axum::Router::new()
+        .nest_service("/mcp", controllers::mcp::route(pool.clone()).await?)
+        .layer(middleware::from_fn(mcp_middleware));
     // let bot = teloxide::Bot::new(conf.telegram_token);
     // let bot = std::sync::Arc::new(bot);
     let api_router = route(
