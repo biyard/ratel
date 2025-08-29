@@ -50,7 +50,7 @@ class DraftByIdScreen extends GetWidget<DraftByIdController> {
                         borderRadius: BorderRadius.circular(100),
                       ),
                       child: Text(
-                        'Post',
+                        DraftLocalization.draftPost,
                         style: TextStyle(
                           color: enabled
                               ? AppColors.black
@@ -74,10 +74,10 @@ class DraftByIdScreen extends GetWidget<DraftByIdController> {
                 fontWeight: FontWeight.w700,
                 height: 1.2,
               ),
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 isDense: true,
                 border: InputBorder.none,
-                hintText: 'Type a title',
+                hintText: DraftLocalization.draftTypeTitle,
                 hintStyle: TextStyle(
                   color: AppColors.neutral500,
                   fontSize: 24,
@@ -89,18 +89,16 @@ class DraftByIdScreen extends GetWidget<DraftByIdController> {
             10.vgap,
             Obx(
               () => controller.warnTitle.value
-                  ? const WarningBox(
-                      text: 'Enter at least 10 characters to continue',
-                    )
+                  ? WarningBox(text: DraftLocalization.draftTitleWarning)
                   : const SizedBox.shrink(),
             ),
             30.vgap,
             Container(height: 1, color: const Color(0xFF464646)),
             20.vgap,
-            const Align(
+            Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                'Category',
+                DraftLocalization.draftCategory,
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 12,
@@ -109,15 +107,15 @@ class DraftByIdScreen extends GetWidget<DraftByIdController> {
                 ),
               ),
             ),
-            const SizedBox(height: 10),
+            10.vgap,
             Obx(
               () => controller.categories.isEmpty
                   ? Align(
                       alignment: Alignment.centerLeft,
                       child: GestureDetector(
                         onTap: () => _showAddCategorySheet(context, controller),
-                        child: const Text(
-                          'Add categories...',
+                        child: Text(
+                          DraftLocalization.draftAddCategory,
                           style: TextStyle(
                             color: Color(0xFF9E9E9E),
                             fontSize: 14,
@@ -133,7 +131,7 @@ class DraftByIdScreen extends GetWidget<DraftByIdController> {
             10.vgap,
             Obx(
               () => controller.warnCategory.value
-                  ? const WarningBox(text: 'At least one category is required')
+                  ? WarningBox(text: DraftLocalization.draftCategoryWarning)
                   : const SizedBox.shrink(),
             ),
             20.vgap,
@@ -161,9 +159,9 @@ class DraftByIdScreen extends GetWidget<DraftByIdController> {
                           fontWeight: FontWeight.w500,
                           height: 1.4,
                         ),
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           border: InputBorder.none,
-                          hintText: 'Type something...',
+                          hintText: DraftLocalization.draftTypeSomething,
                           hintStyle: TextStyle(
                             color: AppColors.neutral500,
                             fontSize: 18,
@@ -173,11 +171,11 @@ class DraftByIdScreen extends GetWidget<DraftByIdController> {
                     ),
 
                     if (showWarn)
-                      const Positioned(
+                      Positioned(
                         left: 0,
                         bottom: 8,
                         child: WarningBox(
-                          text: 'Enter at least 100 characters to continue',
+                          text: DraftLocalization.draftDescriptionWarning,
                         ),
                       ),
                   ],
@@ -267,8 +265,8 @@ class DraftByIdScreen extends GetWidget<DraftByIdController> {
                         padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
                       onPressed: Get.back,
-                      child: const Text(
-                        'Cancel',
+                      child: Text(
+                        DraftLocalization.draftCancel,
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 14,
@@ -277,7 +275,7 @@ class DraftByIdScreen extends GetWidget<DraftByIdController> {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  10.vgap,
                   Expanded(
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
@@ -291,8 +289,8 @@ class DraftByIdScreen extends GetWidget<DraftByIdController> {
                         c.addCategory(temp.text);
                         Get.back();
                       },
-                      child: const Text(
-                        'Add',
+                      child: Text(
+                        DraftLocalization.draftAdd,
                         style: TextStyle(
                           color: AppColors.neutral800,
                           fontSize: 14,
@@ -364,9 +362,9 @@ class WarningBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: const Color(0xFF7C2D2D),
+        color: const Color(0xFFEF4444).withAlpha(70),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -378,7 +376,7 @@ class WarningBox extends StatelessWidget {
             text,
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 12,
+              fontSize: 14,
               fontWeight: FontWeight.w600,
             ),
           ),
