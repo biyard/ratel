@@ -45,6 +45,22 @@ class FeedsApi extends GetConnect {
     return "success";
   }
 
+  Future<dynamic> deleteFeed(int feedId) async {
+    final uri = Uri.parse(apiEndpoint)
+        .resolve('/v1/feeds/$feedId')
+        .replace(queryParameters: {'action': 'delete'});
+    final headers = <String, String>{'Content-Type': 'application/json'};
+    final body = {'delete': {}};
+
+    final res = await post(uri.toString(), body, headers: headers);
+
+    logger.d('response body: ${res.isOk} ');
+
+    if (!res.isOk) return null;
+
+    return "success";
+  }
+
   Future<List<FeedSummary>> listBookmarkedFeeds() async {
     final uri = Uri.parse(apiEndpoint).resolve('/v2/bookmarks');
 
@@ -166,6 +182,61 @@ class FeedsApi extends GetConnect {
     logger.d("feeds: ${res.body["items"]}");
 
     return feeds;
+  }
+
+  Future<FeedModel> getFeedById(int feedId) async {
+    final uri = Uri.parse(apiEndpoint).resolve('/v1/feeds/${feedId}');
+    final headers = <String, String>{'Content-Type': 'application/json'};
+    final res = await get(uri.toString(), headers: headers);
+
+    if (!res.isOk) {
+      return FeedModel(
+        feedId: 0,
+        spaceIds: [],
+        feedType: '',
+        image: '',
+        title: '',
+        description: '',
+        authorId: 0,
+        authorUrl: '',
+        authorName: '',
+        createdAt: 0,
+        rewards: 0,
+        likes: 0,
+        comments: 0,
+        reposts: 0,
+      );
+    }
+    final item = res.body;
+    final List<int> spaceIds = ((item['spaces'] ?? []) as List)
+        .map((s) => s?['id'])
+        .where((id) => id != null)
+        .map<int>((id) => id is int ? id : int.parse(id.toString()))
+        .toList();
+
+    return FeedModel(
+      feedId: int.parse(item["id"].toString()),
+      spaceIds: spaceIds,
+      //FIXME: fix to real feed type
+      feedType: "Crypto",
+      image: item["url"] ?? "",
+      title: item["title"] ?? '',
+      description: item["html_contents"] ?? "",
+      authorId: (item["author"].length != 0)
+          ? int.parse(item["author"][0]["id"].toString())
+          : 0,
+      authorUrl: (item["author"].length != 0)
+          ? item["author"][0]["profile_url"] ?? ""
+          : "",
+      authorName: (item["author"].length != 0)
+          ? item["author"][0]["nickname"] ?? ""
+          : "",
+      createdAt: int.parse(item["created_at"].toString()),
+      rewards: int.parse(item["rewards"].toString()),
+      likes: int.parse(item["likes"].toString()),
+      comments: int.parse(item["comments"].toString()),
+      reposts: int.parse(item["shares"].toString()),
+    );
   }
 
   Future<List<FeedModel>> listFeeds(int page, int size) async {

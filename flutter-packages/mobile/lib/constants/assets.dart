@@ -71,6 +71,8 @@ abstract class Assets {
 
   static const String record = 'assets/icons/record.svg';
   static const String play = 'assets/icons/play.svg';
+  static const String delete2 = 'assets/icons/delete_2.svg';
+  static const String warning = 'assets/icons/warning.svg';
 
   static final addIcon = SvgPicture.asset(add, width: 15, height: 15);
   static final backIcon = SvgPicture.asset(back, width: 16, height: 16);

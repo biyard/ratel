@@ -103,6 +103,10 @@ export 'presentations/drafts/draft_binding.dart';
 export 'presentations/drafts/draft_controller.dart';
 export 'presentations/drafts/draft_screen.dart';
 
+export 'presentations/drafts/id/draft_by_id_binding.dart';
+export 'presentations/drafts/id/draft_by_id_controller.dart';
+export 'presentations/drafts/id/draft_by_id_screen.dart';
+
 export 'presentations/posts/post_binding.dart';
 export 'presentations/posts/post_controller.dart';
 export 'presentations/posts/post_screen.dart';
