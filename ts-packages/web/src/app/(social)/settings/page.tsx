@@ -37,7 +37,6 @@ export default function MyProfilePage() {
 
   return (
     <div className="w-full flex flex-col gap-6">
-
       {/* Top tabs section with active indicator */}
       <div className="w-full max-w-[800px] mx-auto px-4">
         <div className="relative">
@@ -51,7 +50,9 @@ export default function MyProfilePage() {
                 }}
                 className={
                   'flex-1 py-3 text-center transition-colors ' +
-                  (activeIndex === idx ? 'text-neutral-100' : 'hover:text-neutral-200')
+                  (activeIndex === idx
+                    ? 'text-neutral-100'
+                    : 'hover:text-neutral-200')
                 }
                 onClick={() => setActiveIndex(idx)}
               >
@@ -70,9 +71,7 @@ export default function MyProfilePage() {
 
       {/* Tab content */}
       <div className="w-full px-4 md:px-0">
-        {activeIndex === 0 && (
-          <MyInfo />
-        )}
+        {activeIndex === 0 && <MyInfo />}
         {activeIndex === 1 && (
           <div className="w-full max-w-[800px] mx-auto text-neutral-300">
             {/* TODO: Replace with MyInventory component when available */}

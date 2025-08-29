@@ -1,6 +1,14 @@
 'use client';
 
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 export type ThemeSetting = 'dark' | 'light' | 'system';
 export type ResolvedTheme = 'dark' | 'light';
@@ -18,7 +26,10 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 function getSystemTheme(): ResolvedTheme {
   if (typeof window === 'undefined') return 'dark';
-  return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  return window.matchMedia &&
+    window.matchMedia('(prefers-color-scheme: dark)').matches
+    ? 'dark'
+    : 'light';
 }
 
 function applyThemeToDom(theme: ResolvedTheme) {
@@ -37,7 +48,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [themeSetting, setThemeSetting] = useState<ThemeSetting>(() => {
     if (typeof window === 'undefined') return 'dark';
     try {
-      const saved = window.localStorage.getItem(STORAGE_KEY) as ThemeSetting | null;
+      const saved = window.localStorage.getItem(
+        STORAGE_KEY,
+      ) as ThemeSetting | null;
       return saved ?? 'system';
     } catch {
       return 'system';
@@ -67,14 +80,21 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (themeSetting !== 'system') return;
     const mq = window.matchMedia('(prefers-color-scheme: dark)');
-    const handler = () => {
-      applyThemeToDom(mq.matches ? 'dark' : 'light');
+    const modernHandler = (e: MediaQueryListEvent) => {
+      applyThemeToDom(e.matches ? 'dark' : 'light');
     };
-    if (mq.addEventListener) mq.addEventListener('change', handler);
-    else mq.addListener(handler as any);
+    const legacyHandler: (
+      this: MediaQueryList,
+      ev: MediaQueryListEvent,
+    ) => void = function (this: MediaQueryList, e: MediaQueryListEvent) {
+      applyThemeToDom(e.matches ? 'dark' : 'light');
+    };
+    if (mq.addEventListener) mq.addEventListener('change', modernHandler);
+    else mq.addListener(legacyHandler);
     return () => {
-      if (mq.removeEventListener) mq.removeEventListener('change', handler);
-      else mq.removeListener(handler as any);
+      if (mq.removeEventListener)
+        mq.removeEventListener('change', modernHandler);
+      else mq.removeListener(legacyHandler);
     };
   }, [themeSetting]);
 
@@ -94,7 +114,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const toggleTheme = useCallback(() => {
-    setThemeSetting(prev => (prev === 'light' ? 'dark' : 'light'));
+    setThemeSetting((prev) => (prev === 'light' ? 'dark' : 'light'));
   }, []);
 
   const value = useMemo(
@@ -102,7 +122,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     [themeSetting, resolvedTheme, setTheme, toggleTheme],
   );
 
-  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
+  return (
+    <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
+  );
 }
 
 export function useTheme() {
