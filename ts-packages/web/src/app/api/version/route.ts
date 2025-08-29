@@ -1,9 +1,8 @@
 import { config } from '@/config';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 
 export async function GET() {
-  return new NextResponse({
+  return NextResponse.json({
     version: config.version,
   });
-
 }
