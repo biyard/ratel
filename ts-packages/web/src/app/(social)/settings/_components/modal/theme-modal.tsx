@@ -14,7 +14,9 @@ export default function ThemeModal({
   onSave,
   initialTheme = 'dark',
 }: ThemeModalProps) {
-  const [selectedTheme, setSelectedTheme] = useState<'dark' | 'light' | 'system'>(initialTheme);
+  const [selectedTheme, setSelectedTheme] = useState<
+    'dark' | 'light' | 'system'
+  >(initialTheme);
 
   const options: { label: string; value: 'dark' | 'light' | 'system' }[] = [
     { label: 'Dark Theme', value: 'dark' },
@@ -27,7 +29,6 @@ export default function ThemeModal({
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4  border-neutral-800">
         <p className="text-white font-bold text-lg">Theme</p>
-
       </div>
 
       {/* Options */}
