@@ -15,6 +15,21 @@ class LoginController extends BaseController {
 
   void toggleShowPassword() => showPassword.toggle();
 
+  @override
+  void onInit() {
+    super.onInit();
+    autoLogin();
+  }
+
+  Future<void> autoLogin() async {
+    final auth = AuthApi();
+    await auth.init();
+    final ok = await auth.tryAutoSignIn();
+    if (ok) {
+      Get.rootDelegate.offNamed(AppRoutes.mainScreen);
+    }
+  }
+
   Future<void> signIn() async {
     final auth = AuthApi();
     if (isBusy.value || !isFormValid) return;

@@ -145,6 +145,7 @@ export 'components/side_panel/side_panel.dart';
 
 export 'services/auth/auth_service.dart';
 export 'services/auth/auth_api.dart';
+export 'services/auth/auth_model.dart';
 
 export 'services/user/user_api.dart';
 export 'services/user/user_model.dart';
