@@ -14,6 +14,7 @@ import {
   Share2,
   CommentIcon,
   Rewards,
+  Extra,
 } from '@/components/icons';
 import { TeamContext } from '@/lib/contexts/team-context';
 import { useUserInfo } from '@/app/(social)/_hooks/user';
@@ -22,6 +23,9 @@ import { usePopup } from '@/lib/contexts/popup-service';
 import GoPublicPopup from '../modal/go-public';
 import { Feed } from '@/lib/api/models/feeds';
 import { useSpaceContext } from './provider';
+import { useDropdown } from '../dropdown/dropdown-service';
+import DropdownMenu from '../dropdown/dropdown-menu';
+import DeleteSpacePopup from '../modal/confirm-delete';
 
 export default function SpaceHeader({
   space,
@@ -48,6 +52,7 @@ export default function SpaceHeader({
     handleShare,
     handlePostingSpace,
     handleUpdateTitle,
+    handleDelete,
   } = context;
 
   const popup = usePopup();
@@ -66,6 +71,22 @@ export default function SpaceHeader({
       .withoutBackdropClose();
   };
 
+  // Add this new handler function in SpaceHeader
+  const handleDeleteClick = () => {
+    popup
+      .open(
+        <DeleteSpacePopup
+          spaceName={space.title || 'Untitled Space'}
+          onClose={() => popup.close()}
+          onDelete={async () => {
+            await handleDelete(); // Your existing delete handler
+            popup.close();
+          }}
+        />,
+      )
+      .withoutBackdropClose();
+  };
+
   const { data: userInfo } = useUserInfo();
   const userId = userInfo?.id ?? 0;
   const { teams } = useContext(TeamContext);
@@ -76,6 +97,7 @@ export default function SpaceHeader({
   const shares = feed.shares;
   const comments = feed.comments;
   const rewards = feed.rewards;
+  const { isOpen, toggle, close, dropdownRef } = useDropdown();
 
   return (
     <div className="flex flex-col w-full gap-2.5 mb-10">
@@ -121,6 +143,87 @@ export default function SpaceHeader({
                 </div>
               </button>
             )}
+
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={toggle}
+                aria-expanded={isOpen}
+                aria-label="Space options menu"
+                aria-haspopup="menu"
+                className="w-fit p-2 rounded-md bg-neutral-800"
+                onKeyDown={(e) => {
+                  // if (
+                  //   e.key === 'Enter' ||
+                  //   e.key === ' ' ||
+                  //   e.key === 'ArrowDown'
+                  // ) {
+                  //   e.preventDefault();
+                  //   toggle();
+                  //   if (!isOpen) {
+                  //     setTimeout(() => {
+                  //       const firstMenuItem =
+                  //         dropdownRef.current?.querySelector(
+                  //           '[role="menuitem"]:not([aria-disabled="true"])',
+                  //         );
+                  //       (firstMenuItem as HTMLElement)?.focus();
+                  //     }, 0);
+                  //   }
+                  // }
+
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    if (!isOpen) {
+                      toggle(); // open
+                      setTimeout(() => {
+                        const firstMenuItem =
+                          dropdownRef.current?.querySelector(
+                            '[role="menuitem"]:not([aria-disabled="true"])',
+                          );
+                        (firstMenuItem as HTMLElement)?.focus();
+                      }, 0);
+                    } else {
+                      // move focus into menu if already open
+                      const firstMenuItem = dropdownRef.current?.querySelector(
+                        '[role="menuitem"]:not([aria-disabled="true"])',
+                      );
+                      (firstMenuItem as HTMLElement)?.focus();
+                    }
+                  } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    if (!isOpen) {
+                      toggle(); // open
+                      setTimeout(() => {
+                        const firstMenuItem =
+                          dropdownRef.current?.querySelector(
+                            '[role="menuitem"]:not([aria-disabled="true"])',
+                          );
+                        (firstMenuItem as HTMLElement)?.focus();
+                      }, 0);
+                    } else {
+                      const firstMenuItem = dropdownRef.current?.querySelector(
+                        '[role="menuitem"]:not([aria-disabled="true"])',
+                      );
+                      (firstMenuItem as HTMLElement)?.focus();
+                    }
+                  }
+                }}
+              >
+                <Extra />
+              </button>
+              {isOpen && (
+                <div
+                  role="menu"
+                  className="absolute top-full mt-2 right-0 z-50"
+                  onBlur={(e) => {
+                    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                      close();
+                    }
+                  }}
+                >
+                  <DropdownMenu onclose={close} ondelete={handleDeleteClick} />
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>

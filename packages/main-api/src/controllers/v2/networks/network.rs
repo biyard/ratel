@@ -23,6 +23,9 @@ use crate::utils::users::extract_user_id;
 pub struct ConnectionResponse {
     pub suggested_teams: Vec<Follower>,
     pub suggested_users: Vec<Follower>,
+    pub most_followed_users: Vec<SuggestedUser>,
+    pub overlapping_space_users: Vec<SuggestedUser>,
+    pub mutual_connection_users: Vec<SuggestedUser>,
 }
 
 pub async fn list_networks_handler(
@@ -33,10 +36,16 @@ pub async fn list_networks_handler(
 
     let suggested_teams = get_suggested_teams(pool.clone(), user_id).await?;
     let suggested_users = get_suggested_users(pool.clone(), user_id).await?;
+    let most_followed_users = SuggestedUser::get_by_followers(&pool, user_id).await?;
+    let overlapping_space_users = SuggestedUser::get_by_mutual_spaces(&pool, user_id).await?;
+    let mutual_connection_users = SuggestedUser::get_by_mutual_connection(&pool, user_id).await?;
 
     Ok(Json(ConnectionResponse {
         suggested_teams,
         suggested_users,
+        most_followed_users,
+        overlapping_space_users,
+        mutual_connection_users,
     }))
 }
 

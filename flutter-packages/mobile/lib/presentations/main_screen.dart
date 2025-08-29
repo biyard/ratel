@@ -232,7 +232,7 @@ class _MainScreenState extends State<MainScreen>
                             BlendMode.srcIn,
                           ),
                         ),
-                        label: 'Home',
+                        label: MainLocalization.home,
                       ),
                       BottomNavigationBarItem(
                         icon: SvgPicture.asset(
@@ -253,7 +253,7 @@ class _MainScreenState extends State<MainScreen>
                             BlendMode.srcIn,
                           ),
                         ),
-                        label: 'My network',
+                        label: MainLocalization.network,
                       ),
                       BottomNavigationBarItem(
                         icon: SvgPicture.asset(
@@ -274,7 +274,7 @@ class _MainScreenState extends State<MainScreen>
                             BlendMode.srcIn,
                           ),
                         ),
-                        label: 'My spaces',
+                        label: MainLocalization.spaces,
                       ),
                       BottomNavigationBarItem(
                         icon: SvgPicture.asset(
@@ -295,7 +295,7 @@ class _MainScreenState extends State<MainScreen>
                             BlendMode.srcIn,
                           ),
                         ),
-                        label: 'Notification',
+                        label: MainLocalization.notification,
                       ),
                       BottomNavigationBarItem(
                         icon: SvgPicture.asset(
@@ -316,7 +316,7 @@ class _MainScreenState extends State<MainScreen>
                             BlendMode.srcIn,
                           ),
                         ),
-                        label: 'Messages',
+                        label: MainLocalization.messages,
                       ),
                     ],
                   ),
