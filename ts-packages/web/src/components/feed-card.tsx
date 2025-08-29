@@ -83,7 +83,7 @@ export default function FeedCard(props: FeedCardProps) {
     setLocalLikes(props.likes);
     setLocalIsLiked(props.is_liked);
     setLocalShares(props.shares);
-  }, [props.likes, props.is_liked]);
+  }, [props.likes, props.is_liked, props.shares]);
 
   const handleLike = async (value: boolean) => {
     if (isProcessing) return; // Prevent multiple clicks

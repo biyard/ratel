@@ -33,7 +33,7 @@ export default function ThemeModal({
 
       {/* Options */}
       <div className="flex flex-col gap-2">
-        {options.map((opt, idx) => (
+        {options.map((opt) => (
           <button
             key={opt.value}
             onClick={() => setSelectedTheme(opt.value)}
