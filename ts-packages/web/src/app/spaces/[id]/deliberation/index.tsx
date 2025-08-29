@@ -16,7 +16,7 @@ import { DeliberationTab } from './types';
 import { TeamContext } from '@/lib/contexts/team-context';
 import { SpaceStatus } from '@/lib/api/models/spaces';
 import { useUserInfo } from '@/app/(social)/_hooks/user';
-import SpaceHeader from '../_components/header';
+import SpaceHeader from '../_components/header/index';
 import { SpaceProvider } from '../_components/header/provider';
 import DeliberationAnalyzePage from './_components/analyze-tab';
 import { DeliberationSurveyPage } from './_components/survey-tab';

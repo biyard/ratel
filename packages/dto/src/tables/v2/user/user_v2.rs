@@ -2,8 +2,8 @@ use by_types::QueryResponse;
 
 use bdk::prelude::*;
 
-use crate::GroupRepositoryQueryBuilder;
 use crate::{Badge, Follower, Group, Membership, Team, UserType};
+use crate::{Feed, GroupRepositoryQueryBuilder};
 
 #[derive(validator::Validate)]
 #[api_model(base = "/v2/users", table = users, iter_type=QueryResponse)]
@@ -65,6 +65,10 @@ pub struct UserV2 {
     #[api_model(many_to_many = user_badges, foreign_table_name = badges, foreign_primary_key = badge_id, foreign_reference_key = user_id)]
     #[serde(default)]
     pub badges: Vec<Badge>,
+
+    #[api_model(many_to_many = feed_bookmark_users, foreign_table_name = feeds, foreign_primary_key = feed_id, foreign_reference_key = user_id)]
+    #[serde(default)]
+    pub bookmarked_feeds: Vec<Feed>,
 
     #[api_model(version = v0.3, indexed, unique)]
     #[serde(default)]

@@ -28,3 +28,4 @@ benchmark/**/report*/
 benchmark/**/*.jtl
 benchmark/**/*.csv
 .projectile
+/.pnpm-store/

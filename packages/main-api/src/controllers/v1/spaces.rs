@@ -29,6 +29,8 @@ pub struct SpacePath {
     pub id: i64,
 }
 
+
+
 #[derive(Clone, Debug)]
 pub struct SpaceController {
     repo: SpaceRepository,
@@ -38,10 +40,13 @@ pub struct SpaceController {
     discussion_member_repo: DiscussionMemberRepository,
     elearning_repo: ElearningRepository,
     survey_repo: SurveyRepository,
+    space_group_repo: SpaceGroupRepository,
     space_draft_repo: SpaceDraftRepository,
     pool: sqlx::Pool<sqlx::Postgres>,
     notice_answer_repo: NoticeQuizAnswerRepository,
 }
+
+
 
 impl SpaceController {
     async fn get_space_by_id(&self, auth: Option<Authorization>, id: i64) -> Result<Space> {
@@ -878,6 +883,243 @@ impl SpaceController {
         Ok(res)
     }
 
+    
+
+    async fn delete_space(&self, space_id: i64, auth: Option<Authorization>, confirmation: SpaceDeleteConfirmation) -> Result<()> {
+        let user_id = extract_user_id(&self.pool, auth.clone()).await?;
+
+        // Get the space to verify existence and fetch feed ID
+        let space = self.get_space_by_id(auth.clone(), space_id).await?;
+
+        // Verify confirmation
+        if !confirmation.confirmation {
+            tracing::error!("Delete operation cancelled - user did not confirm");
+            return Err(Error::BadRequest);
+        }
+
+        // Verify space name matches exactly
+        let space_title = space.title.clone().unwrap_or_default();
+        if confirmation.space_name != space_title {
+            tracing::error!(
+                "Space name verification failed - expected '{}' got '{}'",
+                space_title,
+                confirmation.space_name
+            );
+            return Err(Error::BadRequest);
+        }
+
+        let feed = Feed::query_builder(user_id)
+            .id_equals(space.feed_id)
+            .query()
+            .map(Feed::from)
+            .fetch_one(&self.pool)
+            .await?;
+
+        // Check permissions
+        check_perm(
+            &self.pool,
+            auth,
+            RatelResource::Post {
+                team_id: feed.user_id,
+            },
+            GroupPermission::WritePosts,
+        )
+        .await?;
+
+        let mut tx = self.pool.begin().await?;
+
+        // === DELETE DISCUSSIONS + MEMBERS ===
+        let discussions = Discussion::query_builder()
+            .space_id_equals(space_id)
+            .query()
+            .map(Discussion::from)
+            .fetch_all(&self.pool)
+            .await?;
+
+        for discussion in discussions {
+            let participants = DiscussionParticipant::query_builder()
+                .discussion_id_equals(discussion.id)
+                .query()
+                .map(DiscussionParticipant::from)
+                .fetch_all(&self.pool)
+                .await?;
+
+            for participant in participants {
+                self.discussion_member_repo
+                    .delete_with_tx(&mut *tx, participant.id)
+                    .await?;
+            }
+
+            self.discussion_repo
+                .delete_with_tx(&mut *tx, discussion.id)
+                .await?;
+        }
+
+        // === DELETE SURVEY RESPONSES FIRST, THEN SURVEYS ===
+        let surveys = Survey::query_builder()
+            .space_id_equals(space_id)
+            .query()
+            .map(Survey::from)
+            .fetch_all(&self.pool)
+            .await?;
+
+        let response_repo = SurveyResponse::get_repository(self.pool.clone());
+        for survey in &surveys {
+            // Delete all responses for this survey first
+            let responses = SurveyResponse::query_builder()
+                .survey_id_equals(survey.id)
+                .query()
+                .map(SurveyResponse::from)
+                .fetch_all(&self.pool)
+                .await?;
+            for resp in responses {
+                response_repo.delete_with_tx(&mut *tx, resp.id).await?;
+            }
+        }
+
+        // surveys themselves
+        for survey in surveys {
+            self.survey_repo.delete_with_tx(&mut *tx, survey.id).await?;
+        }
+
+        // === DELETE ELEARNING ===
+        let elearnings = Elearning::query_builder()
+            .space_id_equals(space_id)
+            .query()
+            .map(Elearning::from)
+            .fetch_all(&self.pool)
+            .await?;
+
+        for elearning in elearnings {
+            self.elearning_repo
+                .delete_with_tx(&mut *tx, elearning.id)
+                .await?;
+        }
+
+        // === DELETE SPACE MEMBERS ===
+        let members = SpaceMember::query_builder()
+            .space_id_equals(space_id)
+            .query()
+            .map(SpaceMember::from)
+            .fetch_all(&self.pool)
+            .await?;
+
+        for member in members {
+            self.space_member_repo
+                .delete_with_tx(&mut *tx, member.id)
+                .await?;
+        }
+
+        // === DELETE SPACE DRAFT ===
+        let drafts = SpaceDraft::query_builder()
+            .space_id_equals(space_id)
+            .query()
+            .map(SpaceDraft::from)
+            .fetch_all(&self.pool)
+            .await?;
+
+        for draft in drafts {
+            self.space_draft_repo
+                .delete_with_tx(&mut *tx, draft.id)
+                .await?;
+        }
+
+        // ===  DELETE SpaceLikeUser / SpaceShareUser  ===
+        let like_repo = SpaceLikeUser::get_repository(self.pool.clone());
+        let share_repo = SpaceShareUser::get_repository(self.pool.clone());
+
+        let likes = SpaceLikeUser::query_builder()
+            .space_id_equals(space_id)
+            .query()
+            .map(SpaceLikeUser::from)
+            .fetch_all(&self.pool)
+            .await?;
+
+        for like in likes {
+            like_repo.delete_with_tx(&mut *tx, like.id).await?;
+        }
+
+        let shares = SpaceShareUser::query_builder()
+            .space_id_equals(space_id)
+            .query()
+            .map(SpaceShareUser::from)
+            .fetch_all(&self.pool)
+            .await?;
+
+        for share in shares {
+            share_repo.delete_with_tx(&mut *tx, share.id).await?;
+        }
+
+        // === DELETE SPACE GROUPS ===
+        let groups = SpaceGroup::query_builder()
+            .space_id_equals(space_id)
+            .query()
+            .map(SpaceGroup::from)
+            .fetch_all(&self.pool)
+            .await?;
+        for group in groups {
+            self.space_group_repo
+                .delete_with_tx(&mut *tx, group.id)
+                .await?; // Changed to use self.space_group_repo
+        }
+
+
+        // === DELETE SPACE COMMENTS ===
+        // let comment_repo = SpaceComment::get_repository(self.pool.clone());
+        // let comments = SpaceComment::query_builder()
+        //     // .space_id_equals(space_id)
+        //     .id_equals(space_id)
+        //     .query()
+        //     .map(SpaceComment::from)
+        //     .fetch_all(&self.pool)
+        //     .await?;
+        // for comment in comments {
+        //     comment_repo.delete_with_tx(&mut *tx, comment.id).await?;
+        // }
+
+        let comment_repo = SpaceComment::get_repository(self.pool.clone());
+        let comments = SpaceComment::query_builder()
+            .parent_id_equals(space.feed_id) // Comments are related through the feed
+            .query()
+            .map(SpaceComment::from)
+            .fetch_all(&self.pool)
+            .await?;
+        for comment in comments {
+            comment_repo.delete_with_tx(&mut *tx, comment.id).await?;
+        }
+
+
+         // === DELETE NOTICE QUIZ ANSWERS ===
+        let quiz_answer_repo = NoticeQuizAnswer::get_repository(self.pool.clone());
+        let quiz_answers = NoticeQuizAnswer::query_builder()
+            .space_id_equals(space_id)
+            .query()
+            .map(NoticeQuizAnswer::from)
+            .fetch_all(&self.pool)
+            .await?;
+        for ans in quiz_answers {
+            quiz_answer_repo.delete_with_tx(&mut *tx, ans.id).await?;
+        }
+
+        // === DELETE NOTICE QUIZ ATTEMPTS ===
+        let quiz_attempt_repo = NoticeQuizAttempt::get_repository(self.pool.clone());
+        let quiz_attempts = NoticeQuizAttempt::query_builder()
+           .space_id_equals(space_id)
+            .query()
+            .map(NoticeQuizAttempt::from)
+            .fetch_all(&self.pool)
+           .await?;
+        for att in quiz_attempts {
+            quiz_attempt_repo.delete_with_tx(&mut *tx, att.id).await?;
+        }
+
+        // ===  DELETE THE SPACE ITSELF ===
+        self.repo.delete_with_tx(&mut *tx, space_id).await?;
+
+        tx.commit().await?;
+        Ok(())
+    }
+
     /// Helper function to validate quiz requests (with correct answers)
     fn validate_notice_quiz_request(quiz: &[NoticeQuestionRequest]) -> Result<()> {
         for (question_index, question) in quiz.iter().enumerate() {
@@ -913,6 +1155,7 @@ impl SpaceController {
             let mut selected_count = 0;
             for (option_index, option) in question.options.iter().enumerate() {
                 let content = option.content.trim();
+
 
                 // Check for empty content
                 if content.is_empty() {
@@ -973,6 +1216,7 @@ impl SpaceController {
         let elearning_repo = Elearning::get_repository(pool.clone());
         let survey_repo = Survey::get_repository(pool.clone());
         let notice_answer_repo = NoticeQuizAnswer::get_repository(pool.clone());
+        let space_group_repo = SpaceGroup::get_repository(pool.clone());
 
         Self {
             repo,
@@ -985,6 +1229,7 @@ impl SpaceController {
             space_member_repo,
             space_draft_repo,
             notice_answer_repo,
+            space_group_repo,
         }
     }
 
@@ -1033,11 +1278,14 @@ impl SpaceController {
             .nest(
                 "/:space-id/notice-quiz-attempts",
                 notice_quiz_attempts::SpaceNoticeQuizAttemptController::new(self.pool.clone())
+                    
                     .route(),
             )
+            
             .nest(
                 "/:space-id/notice-quiz-answers",
                 notice_quiz_answers::SpaceNoticeQuizAnswersController::new(self.pool.clone())
+                    
                     .route(),
             ))
     }
@@ -1080,6 +1328,14 @@ impl SpaceController {
             SpaceByIdAction::PostingSpace(_) => ctrl.posting_space(id, auth).await?,
             SpaceByIdAction::Like(req) => ctrl.like_space(id, auth, req.value).await?,
             SpaceByIdAction::Share(_) => ctrl.share_space(id, auth).await?,
+            SpaceByIdAction::Delete(request) => {
+                let confirmation = SpaceDeleteConfirmation {
+                    confirmation: request.confirmation,
+                    space_name: request.space_name,
+                };
+                ctrl.delete_space(id, auth, confirmation).await?;
+                Space::default() // return a default (empty) Space object as JSON
+            }
         };
 
         Ok(Json(feed))

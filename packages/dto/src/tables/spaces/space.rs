@@ -5,9 +5,16 @@ use std::collections::{HashMap, HashSet};
 use uuid::Uuid;
 use validator::Validate;
 
+#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct SpaceDeleteConfirmation {
+    pub confirmation: bool,
+    pub space_name: String,
+}
+
 //TODO: action(like, comments, find_by_id, create_space), query_action
 #[derive(Validate)]
-#[api_model(base = "/v1/spaces", table = spaces, action = [create_space(user_ids = Vec<i64>)], action_by_id = [posting_space, update_space(discussions = Vec<DiscussionCreateRequest>, elearnings = Vec<ElearningCreateRequest>, surveys = Vec<SurveyCreateRequest>, drafts = Vec<SpaceDraftCreateRequest>, quiz = Option<NoticeQuizRequest>), like(value = bool), share()])]
+#[api_model(base = "/v1/spaces", table = spaces, action = [create_space(user_ids = Vec<i64>)], action_by_id = [delete(confirmation = bool, space_name = String), posting_space, update_space(discussions = Vec<DiscussionCreateRequest>, elearnings = Vec<ElearningCreateRequest>, surveys = Vec<SurveyCreateRequest>, drafts = Vec<SpaceDraftCreateRequest>, quiz = Option<NoticeQuizRequest>), like(value = bool), share()])]
 pub struct Space {
     #[api_model(summary, primary_key, read_action = [find_by_id])]
     pub id: i64,
@@ -107,9 +114,22 @@ pub struct Space {
     #[api_model(summary, many_to_many = space_share_users, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = space_id, aggregator = count)]
     #[serde(default)]
     pub shares: i64,
+
     #[api_model(summary, many_to_many = space_like_users, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = space_id, aggregator = exist)]
     #[serde(default)]
     pub is_liked: bool,
+    #[api_model(skip)]
+    #[serde(default)]
+    pub rewards: i64,
+    #[api_model(skip)]
+    #[serde(default)]
+    pub is_bookmarked: bool,
+    #[api_model(skip)]
+    #[serde(default)]
+    pub number_of_comments: i64,
+    #[api_model(skip)]
+    #[serde(default)]
+    pub image_url: Option<String>,
 
     #[api_model(one_to_many = sprint_leagues, foreign_key = space_id, nested)]
     #[serde(default)]

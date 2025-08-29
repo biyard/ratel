@@ -149,7 +149,7 @@ export default function FeedCard(props: FeedCardProps) {
 
   return (
     <Col
-      className={`cursor-pointer border rounded-[10px] ${props.space_id && props.space_type ? 'border-primary bg-primary/10' : 'border-neutral-700'}`}
+      className={`cursor-pointer border rounded-[10px] border-neutral-700`}
       onClick={() => {
         router.push(route.threadByFeedId(props.id));
       }}
@@ -188,35 +188,8 @@ export function FeedBody({
         <div className="flex flex-row justify-start items-center gap-2.5">
           {space_id && space_type ? <SpaceTag /> : <></>}
           <IndustryTag industry={industry} />
-          {onboard && <OnboradingTag />}
+          {onboard && <OnboardingTag />}
         </div>
-        {/* {user_id === author_id && !space_id && (
-          <Button
-            variant="rounded_primary"
-            className="text-[10px] font-semibold align-middle uppercase py-1 px-3"
-          >
-            Create a Space
-          </Button>
-        )} */}
-
-        {/* {space_id && space_type ? (
-          <Button
-            variant="rounded_primary"
-            className="text-[10px] font-semibold align-middle uppercase py-1 px-3"
-            onClick={(e) => {
-              e.stopPropagation();
-              if (space_type === SpaceType.Committee) {
-                router.push(route.commiteeSpaceById(space_id));
-              } else {
-                router.push(route.deliberationSpaceById(space_id));
-              }
-            }}
-          >
-            Join
-          </Button>
-        ) : (
-          <div />
-        )} */}
       </Row>
       <h2 className="w-full line-clamp-2 font-bold text-xl/[25px] tracking-[0.5px] align-middle text-white px-5">
         {title}
@@ -315,9 +288,9 @@ export function UserBadge({
 
 export function SpaceTag() {
   return (
-    <span className="flex flex-row justify-start items-center px-2 border border-primary/50 bg-transparent gap-1 rounded-sm">
-      <Palace className="w-3.5 h-3.5 [&>path]:stroke-primary [&_g>path:nth-child(n+2)]:stroke-primary" />
-      <div className="font-semibold text-xs/[25px] text-primary">SPACE</div>
+    <span className="flex flex-row justify-start items-center px-2 border border-primary/50 bg-primary gap-1 rounded-sm">
+      <Palace className="w-3.5 h-3.5 [&>path]:stroke-web-bg [&_g>path:nth-child(n+2)]:stroke-web-bg" />
+      <div className="font-semibold text-xs/[25px] text-web-bg">SPACE</div>
     </span>
   );
 }
@@ -330,7 +303,7 @@ export function IndustryTag({ industry }: { industry: string }) {
   );
 }
 
-export function OnboradingTag() {
+export function OnboardingTag() {
   return (
     <span className="rounded-sm bg-primary text-white px-2 text-xs/[25px] font-semibold align-middle uppercase">
       Onboard

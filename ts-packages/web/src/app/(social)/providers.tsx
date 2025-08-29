@@ -55,12 +55,16 @@ export default async function Provider({ children }: { children: ReactNode }) {
 
   const apolloClient = client;
   const newsQuery = ratelApi.graphql.listNews(3);
-  await apolloClient.query({
-    query: newsQuery.query,
-    variables: newsQuery.variables,
-  });
-
-  const apolloCache = JSON.stringify(apolloClient.extract());
+  let apolloCache = '{}';
+  try {
+    await apolloClient.query({
+      query: newsQuery.query,
+      variables: newsQuery.variables,
+    });
+    apolloCache = JSON.stringify(apolloClient.extract());
+  } catch (error) {
+    console.error('Failed to fetch news', error);
+  }
 
   return (
     <ClientProviders apolloCache={apolloCache}>

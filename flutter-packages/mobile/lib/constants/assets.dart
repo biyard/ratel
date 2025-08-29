@@ -9,6 +9,7 @@ abstract class Assets {
 
   static const String badge = 'assets/icons/badge.svg';
   static const String bookmark = 'assets/icons/bookmark.svg';
+  static const String bookmarkFilled = 'assets/icons/bookmark_filled.svg';
   static const String coin = 'assets/icons/coin.svg';
   static const String coin2 = 'assets/icons/coin_2.svg';
   static const String edit1 = 'assets/icons/edit_1.svg';
@@ -21,6 +22,9 @@ abstract class Assets {
   static const String exchange2 = 'assets/icons/exchange2.svg';
   static const String rewardCoin = 'assets/icons/reward_coin.svg';
   static const String botCoin = 'assets/icons/botcoin_coin.svg';
+  static const String bot = 'assets/icons/bot.svg';
+  static const String file = 'assets/icons/file.svg';
+  static const String setting = 'assets/icons/setting.svg';
 
   static const String editContent = 'assets/icons/edit_content.svg';
   static const String folder = 'assets/icons/folder.svg';
