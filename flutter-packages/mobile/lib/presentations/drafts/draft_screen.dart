@@ -19,8 +19,8 @@ class DraftScreen extends GetWidget<DraftController> {
                   child: SvgPicture.asset(Assets.back, width: 24, height: 24),
                 ),
                 20.gap,
-                const Text(
-                  'My Drafts',
+                Text(
+                  DraftLocalization.draftMyDraft,
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 24,
@@ -247,7 +247,7 @@ void showRemoveDraftModal(BuildContext ctx, int feedId) {
             child: Column(
               children: [
                 Text(
-                  "Delete Draft",
+                  DraftLocalization.draftDeleteDraft,
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w700,
@@ -257,7 +257,7 @@ void showRemoveDraftModal(BuildContext ctx, int feedId) {
                 ),
                 24.vgap,
                 Text(
-                  "Could you remove this draft? This action cannot be undone.",
+                  DraftLocalization.draftDeleteDraftDescription,
                   style: TextStyle(
                     color: AppColors.neutral300,
                     fontWeight: FontWeight.w400,
@@ -280,7 +280,7 @@ void showRemoveDraftModal(BuildContext ctx, int feedId) {
                         child: Padding(
                           padding: EdgeInsets.fromLTRB(20, 15, 20, 15),
                           child: Text(
-                            "Cancel",
+                            DraftLocalization.draftCancel,
                             style: TextStyle(
                               color: AppColors.neutral300,
                               fontWeight: FontWeight.w700,
@@ -307,7 +307,7 @@ void showRemoveDraftModal(BuildContext ctx, int feedId) {
                           child: Padding(
                             padding: EdgeInsets.fromLTRB(20, 15, 20, 15),
                             child: Text(
-                              "Remove",
+                              DraftLocalization.draftRemove,
                               style: TextStyle(
                                 color: AppColors.bg,
                                 fontWeight: FontWeight.w700,
