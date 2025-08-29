@@ -529,6 +529,8 @@ impl FeedController {
                 Error::DatabaseException("Delete operation failed".to_string())
             })?;
 
+        tracing::debug!("deleted feed: {:?}", res.id);
+
         if res.parent_id.is_some() && res.feed_type == FeedType::Repost {
             let share = FeedShare::query_builder()
                 .feed_id_equals(res.parent_id.unwrap())
