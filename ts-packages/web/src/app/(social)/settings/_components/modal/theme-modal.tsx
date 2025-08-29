@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Check, X } from 'lucide-react';
+import CheckCircle from '@/assets/icons/check-circle.svg';
 
 export interface ThemeModalProps {
   onCancel: () => void;
@@ -27,7 +27,7 @@ export default function ThemeModal({
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4  border-neutral-800">
         <p className="text-white font-bold text-lg">Theme</p>
-       
+
       </div>
 
       {/* Options */}
@@ -42,7 +42,7 @@ export default function ThemeModal({
           >
             <span className="text-white">{opt.label}</span>
             {selectedTheme === opt.value && (
-              <Check className="h-5 w-5 text-amber-400" />
+              <CheckCircle className="h-5 w-5 [&>circle]:hidden [&>path]:stroke-primary" />
             )}
           </button>
         ))}

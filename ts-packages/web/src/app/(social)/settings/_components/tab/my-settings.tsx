@@ -1,12 +1,12 @@
-// import { ChevronRight } from "lucide-react";
 import ChevronRight from "@/assets/icons/chevron-right.svg";
 import ThemeModal from "../modal/theme-modal";
 import { usePopup } from "@/lib/contexts/popup-service";
 import React from "react";
+import { useTheme } from "@/lib/contexts/theme-context";
 
 export default function MySettings() {
     const popup = usePopup();
-    const [theme, setTheme] = React.useState<'dark' | 'light' | 'system'>('light');
+    const { themeSetting, setTheme } = useTheme();
     const themeLabels: Record<'dark' | 'light' | 'system', string> = {
       dark: 'Dark Theme',
       light: 'Light Theme',
@@ -17,7 +17,7 @@ export default function MySettings() {
       popup
         .open(
           <ThemeModal
-            initialTheme={theme}
+            initialTheme={themeSetting}
             onSave={(selected) => {
               setTheme(selected);
               popup.close();
@@ -44,7 +44,7 @@ export default function MySettings() {
                 <h2 className="text-lg font-bold mb-4 text-sm text-white">Appearance</h2>
 
                 <div className="flex flex-col gap-4">
-                    <SpecBox left_text="Theme" action_text={themeLabels[theme]} onClick={handleSaveClick}/>
+                    <SpecBox left_text="Theme" action_text={themeLabels[themeSetting]} onClick={handleSaveClick}/>
 
                     <SpecBox left_text="Language" action_text="English" />
                 </div>

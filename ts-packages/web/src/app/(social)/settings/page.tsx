@@ -1,5 +1,4 @@
 'use client';
-
 import React from 'react';
 import MyInfo from './_components/tab/my-info';
 import MySettings from './_components/tab/my-settings';

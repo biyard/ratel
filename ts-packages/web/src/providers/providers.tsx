@@ -7,6 +7,7 @@ import { TeamProvider } from '@/lib/service/team-provider';
 import { ApolloProvider } from '@apollo/client';
 import { hydrate, QueryClientProvider } from '@tanstack/react-query';
 import { getQueryClient } from './getQueryClient';
+import { ThemeProvider } from '@/lib/contexts/theme-context';
 
 export default function Providers({
   children,
@@ -22,7 +23,9 @@ export default function Providers({
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <PopupProvider>
-            <TeamProvider>{children}</TeamProvider>
+            <ThemeProvider>
+              <TeamProvider>{children}</TeamProvider>
+            </ThemeProvider>
           </PopupProvider>
         </AuthProvider>
       </QueryClientProvider>

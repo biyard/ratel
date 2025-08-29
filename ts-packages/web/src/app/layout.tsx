@@ -32,6 +32,13 @@ export default async function RootLayout({
     <html lang="en">
       <head>
         <link rel="icon" href="/logos/favicon.ico" />
+        {/* Initial theme script to avoid FOUC */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "(function(){try{var k='ratel.theme';var s=localStorage.getItem(k)||'system';var m=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches;var t=s==='system'?(m?'dark':'light'):s;if(t==='light'){document.documentElement.setAttribute('data-theme','light');}else{document.documentElement.removeAttribute('data-theme');}}catch(e){}})();",
+          }}
+        />
       </head>
       <body className={`${raleway.variable} antialiased bg-bg`}>
         <CookieProvider>
