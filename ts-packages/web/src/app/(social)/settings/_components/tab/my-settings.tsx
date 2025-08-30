@@ -1,24 +1,36 @@
 import ChevronRight from '@/assets/icons/chevron-right.svg';
 import ThemeModal from '../modal/theme-modal';
 import { usePopup } from '@/lib/contexts/popup-service';
-import React from 'react';
-import { useTheme } from '@/lib/contexts/theme-context';
+import React, { useEffect, useState } from 'react';
+import { useTheme } from 'next-themes';
+
+type Theme = 'light' | 'dark' | 'system';
 
 export default function MySettings() {
   const popup = usePopup();
-  const { themeSetting, setTheme } = useTheme();
-  const themeLabels: Record<'dark' | 'light' | 'system', string> = {
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  // Ensure component is mounted to avoid hydration mismatch
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const themeLabels: Record<Theme, string> = {
     dark: 'Dark Theme',
     light: 'Light Theme',
     system: 'System Default',
   };
 
+  // Prevent rendering theme text until component is mounted
+  const currentTheme = mounted ? (theme as Theme) || 'system' : 'system';
+
   const handleSaveClick = () => {
     popup
       .open(
         <ThemeModal
-          initialTheme={themeSetting}
-          onSave={(selected) => {
+          initialTheme={currentTheme as Theme}
+          onSave={(selected: Theme) => {
             setTheme(selected);
             popup.close();
           }}
@@ -45,7 +57,7 @@ export default function MySettings() {
         <div className="flex flex-col gap-4">
           <SpecBox
             left_text="Theme"
-            action_text={themeLabels[themeSetting]}
+            action_text={themeLabels[currentTheme as Theme]}
             onClick={handleSaveClick}
           />
 
