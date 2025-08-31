@@ -2,8 +2,12 @@
 import { Col } from '@/components/ui/col';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { useSuspenseQuery } from '@apollo/client';
+import {
+  ErrorBoundary,
+  ErrorComponent,
+} from 'next/dist/client/components/error-boundary';
 import { useRouter } from 'next/navigation';
-import React from 'react';
+import React, { Suspense } from 'react';
 
 export interface NewsItem {
   id: number;
@@ -12,7 +16,20 @@ export interface NewsItem {
   created_at: number;
 }
 
-export default function News() {
+const Error: ErrorComponent = ({ error }) => {
+  console.error('Error occurred:', error);
+  return <div></div>;
+};
+export default function Wrapper() {
+  return (
+    <ErrorBoundary errorComponent={Error}>
+      <Suspense fallback={<div>Loading...</div>}>
+        <News />
+      </Suspense>
+    </ErrorBoundary>
+  );
+}
+function News() {
   const router = useRouter();
   const q = ratelApi.graphql.listNews(3);
   const {

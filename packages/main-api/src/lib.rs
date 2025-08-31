@@ -66,6 +66,11 @@ pub mod controllers {
         pub mod oracles {
             pub mod create_oracle;
         }
+
+        pub mod documents {
+            pub mod extract_passport_info;
+            pub mod upload_private_image;
+        }
     }
     pub mod m2 {
         pub mod noncelab {
