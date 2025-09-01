@@ -13,6 +13,8 @@ type Config = {
   sign_domain: string;
   experiment: boolean;
   graphql_url: string;
+
+  version: string;
 };
 
 export enum Env {
@@ -43,4 +45,6 @@ export const config: Config = {
   graphql_url:
     process.env.NEXT_PUBLIC_GRAPHQL_URL ||
     'https://graphql.dev.ratel.foundation/v1/graphql',
+
+  version: process.env.NEXT_PUBLIC_VERSION || 'unknown',
 };

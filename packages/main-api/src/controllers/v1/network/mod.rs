@@ -1,6 +1,8 @@
-use crate::controllers::v2::networks::network::get_suggested_users;
+use crate::controllers::v2::connections::network::get_suggested_users;
 use crate::utils::users::extract_user_with_options;
-use crate::{by_axum::axum::routing::get, controllers::v2::networks::network::get_suggested_teams};
+use crate::{
+    by_axum::axum::routing::get, controllers::v2::connections::network::get_suggested_teams,
+};
 use bdk::prelude::*;
 use by_axum::{
     auth::Authorization,
