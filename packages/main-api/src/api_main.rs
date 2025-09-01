@@ -98,6 +98,8 @@ pub async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         SpaceBadge,
         Onboard,
         Mynetwork,
+        ConnectionInvitationDecline,
+        UserSuggestionDismissal,
         Verification,
         Notification,
         NoticeQuizAnswer,

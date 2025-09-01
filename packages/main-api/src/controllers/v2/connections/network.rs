@@ -28,7 +28,7 @@ pub struct ConnectionResponse {
     pub mutual_connection_users: Vec<SuggestedUser>,
 }
 
-pub async fn list_networks_handler(
+pub async fn list_connections_handler(
     Extension(auth): Extension<Option<Authorization>>,
     State(pool): State<PgPool>,
 ) -> Result<Json<ConnectionResponse>> {
