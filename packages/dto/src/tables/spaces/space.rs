@@ -325,7 +325,7 @@ pub fn convert_notice_quiz_request(
             NoticeQuestion {
                 id: question_id,
                 title: q_req.title.clone(),
-                images: vec![], // Empty for now, can be extended
+                images: q_req.images.iter().take(2).cloned().collect(), // Take first 2 images max
                 options,
             }
         })
