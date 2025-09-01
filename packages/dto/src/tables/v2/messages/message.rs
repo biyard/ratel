@@ -1,7 +1,6 @@
 use bdk::prelude::*;
 use validator::Validate;
 
-
 #[derive(Validate)]
 #[api_model(table = messages)]
 pub struct Message {
@@ -20,12 +19,11 @@ pub struct Message {
 
     #[api_model(type = INTEGER)]
     pub status: MessageStatus,
-    
+
     #[api_model(many_to_one = users)]
     pub sender_id: i64,
     #[api_model(many_to_one = conversations)]
     pub conversation_id: i64,
-
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]
