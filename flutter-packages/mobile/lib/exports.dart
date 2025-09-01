@@ -157,6 +157,7 @@ export 'services/auth/auth_model.dart';
 export 'services/documents/documents_api.dart';
 export 'services/documents/documents_model.dart';
 export 'services/documents/documents_service.dart';
+export 'services/documents/secure_passport_store.dart';
 
 export 'services/user/user_api.dart';
 export 'services/user/user_model.dart';

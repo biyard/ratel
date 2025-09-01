@@ -8,7 +8,7 @@ import 'passport_box.dart';
 
 class StepCapture extends StatefulWidget {
   const StepCapture({super.key, required this.onParsed});
-  final void Function(PassportInfo info) onParsed;
+  final Future<void> Function(PassportInfo info) onParsed;
 
   @override
   State<StepCapture> createState() => _StepCaptureState();

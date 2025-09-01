@@ -24,7 +24,7 @@ class VerifiedScreen extends GetWidget<VerifiedController> {
     switch (step) {
       case VerifiedStep.myCredential:
         return Credentials(
-          credentials: controller.credentials,
+          credentials: controller.credentials.value,
           did: controller.didId.value,
           onNext: controller.next,
         );

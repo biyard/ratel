@@ -53,21 +53,35 @@ class SetupAttributeScreen extends GetWidget<SetupAttributeController> {
                 StepCountry(onNo: controller.skip, onYes: controller.toCapture)
               else if (controller.step.value == SetupAttrStep.capture)
                 StepCapture(
-                  onParsed: (info) => {
+                  onParsed: (info) async {
                     controller.name.value = displayName(
                       info.firstName,
                       info.lastName,
-                    ),
-                    controller.birth.value = fmtYmd(info.birthDate),
-                    controller.expire.value = fmtYmd(info.expirationDate),
-                    controller.gender.value = info.gender,
+                    );
+                    controller.birth.value = fmtYmd(info.birthDate);
+                    controller.expire.value = fmtYmd(info.expirationDate);
+                    controller.gender.value = info.gender;
                     controller.nationality.value = mapNationality(
                       info.nationality,
-                    ),
+                    );
                     controller.selectedCountry.value =
-                        controller.nationality.value,
+                        controller.nationality.value;
 
-                    controller.toReview(),
+                    final store = SecurePassportStore();
+                    await store.saveFromPassport(controller.userId.value, info);
+
+                    final hasBirth = await store.s.containsKey(
+                      key: 'passport_birth_date ${controller.userId.value}',
+                      aOptions: SecurePassportStore.aOpts,
+                      iOptions: SecurePassportStore.iOpts,
+                    );
+                    final all = await store.s.readAll(
+                      aOptions: SecurePassportStore.aOpts,
+                      iOptions: SecurePassportStore.iOpts,
+                    );
+                    logger.d('contains birth=$hasBirth, all=$all');
+
+                    controller.toReview();
                   },
                 )
               else
