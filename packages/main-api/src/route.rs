@@ -9,6 +9,15 @@ use crate::{
             RegisterUserResponse, register_users_by_noncelab_handler,
         },
         v2::{
+            conversations::{
+                add_conversations::create_conversation_handler,
+                get_conversation_by_id::get_conversation_by_id_handler,
+                get_conversations::get_conversations_handler,
+                messages::{
+                    add_messages::add_message_handler, clear_message::clear_message_handler,
+                    get_messages::get_messages_handler, poll_messages::poll_messages_handler,
+                },
+            },
             dagits::{
                 add_oracle::add_oracle_handler,
                 artworks::{
@@ -21,14 +30,14 @@ use crate::{
                 },
                 get_dagit::get_dagit_handler,
             },
-            spaces::delete_space::delete_space_handler,
             industries::{industry::list_industries_handler, select_topic::select_topics_handler},
             networks::{
                 follow::follow_handler, network::list_networks_handler,
                 search::list_networks_by_keyword_handler,
             },
-            notifications::{mark_all_read::mark_all_notifications_read_handler},
+            notifications::mark_all_read::mark_all_notifications_read_handler,
             oracles::create_oracle::create_oracle_handler,
+            spaces::delete_space::delete_space_handler,
             spaces::get_my_space::get_my_space_controller,
             telegram::subscribe::telegram_subscribe_handler,
             users::{find_user::find_user_handler, logout::logout_handler},
@@ -119,6 +128,81 @@ pub async fn route(
     // Build v2 router and layer authorization middleware so Extension<Option<Authorization>> is present
     let v2_router = by_axum::axum::Router::new()
         .native_route("/users/logout", npost(logout_handler))
+        // Conversation routes
+        .route(
+            "/conversations",
+            post_with(
+                create_conversation_handler,
+                api_docs!(
+                    "Create Conversation",
+                    "Create a new group or channel conversation"
+                ),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/conversations",
+            get_with(
+                get_conversations_handler,
+                api_docs!(
+                    "Get Conversations",
+                    "Retrieve user's conversations with pagination"
+                ),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/conversations/:id",
+            get_with(
+                get_conversation_by_id_handler,
+                api_docs!(
+                    "Get Conversation by ID",
+                    "Retrieve a specific conversation by ID"
+                ),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/conversations/:conversation_id/messages",
+            post_with(
+                add_message_handler,
+                api_docs!("Add Message", "Add a new message to a conversation"),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/conversations/:conversation_id/messages",
+            get_with(
+                get_messages_handler,
+                api_docs!(
+                    "Get Messages",
+                    "Retrieve messages from a conversation with pagination"
+                ),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/conversations/:conversation_id/messages/poll",
+            get_with(
+                poll_messages_handler,
+                api_docs!(
+                    "Poll Messages",
+                    "Long poll for new messages in a conversation"
+                ),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/conversations/:conversation_id/messages/:message_id/clear",
+            post_with(
+                clear_message_handler,
+                api_docs!(
+                    "Clear Message",
+                    "Clear the content of a message (soft delete)"
+                ),
+            )
+            .with_state(pool.clone()),
+        )
         .route(
             "/industries/select-topics",
             post_with(

@@ -44,9 +44,28 @@ pub mod controllers {
                 pub mod vote;
             }
         }
-        
+
         pub mod oracles {
             pub mod create_oracle;
+        }
+
+        pub mod conversations {
+            pub mod add_conversations;
+            pub mod get_conversation_by_id;
+            pub mod get_conversations;
+
+            pub mod messages {
+                pub mod add_messages;
+                pub mod clear_message;
+                pub mod get_messages;
+                pub mod poll_messages;
+                
+                #[cfg(test)]
+                pub mod tests;
+            }
+            
+            #[cfg(test)]
+            pub mod tests;
         }
     }
     pub mod m2 {

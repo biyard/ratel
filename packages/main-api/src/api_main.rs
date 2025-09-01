@@ -103,7 +103,10 @@ pub async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         Consensus,
         ConsensusVote,
         ArtworkCertification,
-        ArtworkDetail
+        ArtworkDetail,
+        Conversation,
+        Message,
+        ConversationParticipant,
     );
 
     if Industry::query_builder()
