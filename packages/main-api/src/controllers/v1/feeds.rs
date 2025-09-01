@@ -14,7 +14,7 @@ use sqlx::postgres::PgRow;
 
 use crate::{
     security::check_perm,
-    utils::users::{extract_user_id, extract_user_with_options},
+    utils::users::{extract_user, extract_user_id, extract_user_with_options},
 };
 
 #[derive(
@@ -677,6 +677,52 @@ impl FeedController {
     // ) -> Result<Feed> {
     //     todo!()
     // }
+
+    pub async fn get(&self, id: i64, auth: Option<Authorization>) -> Result<Feed> {
+        let user = extract_user(&self.pool, auth.clone())
+            .await
+            .unwrap_or_default();
+        let user_id = user.id;
+        let teams = user.teams;
+
+        let mut feed = Feed::query_builder(user_id)
+            .comment_list_builder(
+                Comment::query_builder(user_id).replies_builder(Reply::query_builder()),
+            )
+            .id_equals(id)
+            .query()
+            .map(Feed::from)
+            .fetch_one(&self.pool)
+            .await?;
+
+        if !feed.author.is_empty() {
+            let author = feed.author[0].clone();
+            if !feed.spaces.is_empty() {
+                let space = feed.spaces[0].clone();
+                let should_filter = space.status == SpaceStatus::Draft
+                    && author.id != user_id
+                    && !teams.iter().any(|t| t.id == author.id);
+
+                if !should_filter {
+                    feed.spaces = vec![space];
+                } else {
+                    feed.spaces = vec![];
+                }
+            }
+        }
+
+        if feed.status == FeedStatus::Draft {
+            check_perm(
+                &self.pool,
+                auth,
+                RatelResource::Post { team_id: user_id },
+                GroupPermission::ReadPostDrafts,
+            )
+            .await?;
+        }
+
+        Ok(feed)
+    }
 }
 
 impl FeedController {
@@ -750,54 +796,14 @@ impl FeedController {
             }
         }
     }
-
     pub async fn get_feed_by_id(
         State(ctrl): State<FeedController>,
         Extension(auth): Extension<Option<Authorization>>,
         Path(FeedPath { id }): Path<FeedPath>,
     ) -> Result<Json<Feed>> {
         tracing::debug!("get_feed {:?}", id);
-        let user = extract_user_with_options(&ctrl.pool, auth.clone(), false)
-            .await
-            .unwrap_or_default();
-        let user_id = user.id;
-        let teams = user.teams;
 
-        let mut feed = Feed::query_builder(user_id)
-            .comment_list_builder(
-                Comment::query_builder(user_id).replies_builder(Reply::query_builder()),
-            )
-            .id_equals(id)
-            .query()
-            .map(Feed::from)
-            .fetch_one(&ctrl.pool)
-            .await?;
-
-        if !feed.author.is_empty() {
-            let author = feed.author[0].clone();
-            if !feed.spaces.is_empty() {
-                let space = feed.spaces[0].clone();
-                let should_filter = space.status == SpaceStatus::Draft
-                    && author.id != user_id
-                    && !teams.iter().any(|t| t.id == author.id);
-
-                if !should_filter {
-                    feed.spaces = vec![space];
-                } else {
-                    feed.spaces = vec![];
-                }
-            }
-        }
-
-        if feed.status == FeedStatus::Draft {
-            check_perm(
-                &ctrl.pool,
-                auth,
-                RatelResource::Post { team_id: user_id },
-                GroupPermission::ReadPostDrafts,
-            )
-            .await?;
-        }
+        let feed = ctrl.get(id, auth).await?;
         Ok(Json(feed))
     }
 
