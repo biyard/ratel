@@ -16,27 +16,6 @@ class DocumentsApi extends GetConnect {
     });
   }
 
-  Future<PassportInfo> uploadPassport(Uint8List bytes) async {
-    final uri = Uri.parse(apiEndpoint).resolve('/v2/documents/passport');
-
-    final body = {'image_byte': bytes};
-
-    final res = await post(uri.toString(), body);
-
-    if (!res.isOk) {
-      logger.e('uploadPassport failed: ${res.statusCode} ${res.bodyString}');
-      throw Exception('Passport upload failed (${res.statusCode}).');
-    }
-
-    final Map<String, dynamic> data = (res.body is Map)
-        ? (res.body as Map).cast<String, dynamic>()
-        : jsonDecode(res.bodyString ?? '{}') as Map<String, dynamic>;
-
-    logger.d('uploadPassport response: $data');
-
-    return PassportInfo.fromJson(data);
-  }
-
   Future<({String url, String key})> getPresigned({int total = 1}) async {
     final uri = Uri.parse(apiEndpoint)
         .resolve('/v2/documents')
