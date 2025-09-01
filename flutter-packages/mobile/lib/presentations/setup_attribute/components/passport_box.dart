@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -28,27 +29,45 @@ class _PassportCameraBoxState extends State<PassportCameraBox> {
     try {
       final status = await Permission.camera.request();
       if (!status.isGranted) {
+        if (!mounted) return;
         setState(() => _error = 'Camera permission denied');
         return;
       }
+
       final cameras = await availableCameras();
+      if (cameras.isEmpty) {
+        if (!mounted) return;
+        setState(() => _error = 'No camera available');
+        return;
+      }
+
       final camera = cameras.firstWhere(
         (c) => c.lensDirection == CameraLensDirection.back,
         orElse: () => cameras.first,
       );
+
       final controller = CameraController(
         camera,
         ResolutionPreset.medium,
-        imageFormatGroup: ImageFormatGroup.jpeg,
         enableAudio: false,
+        imageFormatGroup: Platform.isAndroid
+            ? ImageFormatGroup.nv21
+            : ImageFormatGroup.bgra8888,
       );
+
       _initializeFuture = controller.initialize();
       await _initializeFuture;
+
+      if (!mounted) {
+        await controller.dispose();
+        return;
+      }
+
       _controller = controller;
-      if (!mounted) return;
       widget.onReady(controller);
       setState(() {});
     } catch (e) {
+      if (!mounted) return;
       setState(() => _error = '$e');
     }
   }
