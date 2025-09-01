@@ -3,6 +3,8 @@ import 'package:ratel/exports.dart';
 enum SetupAttrStep { info, countryCheck, capture, review }
 
 class SetupAttributeController extends BaseController {
+  Rx<int> userId = 0.obs;
+  final userApi = Get.find<UserApi>();
   final step = SetupAttrStep.info.obs;
 
   final selectedCountry = 'Country'.obs;
@@ -13,6 +15,17 @@ class SetupAttributeController extends BaseController {
   final nationality = ''.obs;
   final expire = ''.obs;
   final gender = ''.obs;
+
+  @override
+  void onInit() {
+    super.onInit();
+    getUser();
+  }
+
+  void getUser() async {
+    final item = await userApi.getUserInfo();
+    userId(item.id);
+  }
 
   void goBack() {
     switch (step.value) {
