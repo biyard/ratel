@@ -12,15 +12,33 @@ pub mod controllers {
             pub mod select_topic;
         }
         pub mod networks {
+            pub mod accept_invitation;
+            pub mod accept_suggestion;
+            pub mod list_networks;
+            pub mod reject_invitation;
+            pub mod reject_suggestion;
+        }
+        pub mod connections {
             pub mod follow;
             pub mod network;
             pub mod search;
         }
         pub mod notifications {
+            pub mod get_notifications;
             pub mod mark_all_read;
         }
         pub mod telegram {
             pub mod subscribe;
+        }
+
+        pub mod dashboards {
+            pub mod get_dashboard;
+        }
+
+        pub mod bookmarks {
+            pub mod add_bookmark;
+            pub mod list_bookmarks;
+            pub mod remove_bookmark;
         }
 
         // Spaces APIs
@@ -44,9 +62,14 @@ pub mod controllers {
                 pub mod vote;
             }
         }
-
+        
         pub mod oracles {
             pub mod create_oracle;
+        }
+
+        pub mod documents {
+            pub mod extract_passport_info;
+            pub mod upload_private_image;
         }
 
         pub mod conversations {
