@@ -11,7 +11,7 @@ use dto::{
     sqlx::PgPool,
 };
 use serde::{Deserialize, Serialize};
-use tokio::time::{timeout, Duration};
+use tokio::time::{Duration, timeout};
 
 use crate::utils::users::extract_user_id;
 
