@@ -3,8 +3,17 @@ import 'package:ratel/exports.dart';
 enum VerifiedStep { myCredential, info, countryCheck, capture, review }
 
 class VerifiedController extends BaseController {
+  Rx<int> userId = 0.obs;
+  final userApi = Get.find<UserApi>();
   final Rx<VerifiedStep> step = VerifiedStep.myCredential.obs;
   final Rx<String> didId = 'did:ratel:q11y3sqd...'.obs;
+
+  final name = ''.obs;
+  final birth = ''.obs;
+  final nationality = ''.obs;
+  final expire = ''.obs;
+  final gender = ''.obs;
+
   final RxList<VerifiedModel> credentials = <VerifiedModel>[
     VerifiedModel(
       label: "Crypto Wallet",
@@ -41,6 +50,7 @@ class VerifiedController extends BaseController {
   Future<void> applyFromSecure() async {
     final userApi = Get.find<UserApi>();
     final item = await userApi.getUserInfo();
+    userId(item.id);
     final d = await SecurePassportStore().read(item.id);
     _upsert('Birth Date', d.birth, _metaBirth);
     _upsert('Country', mapNationality(d.country ?? ''), _metaCountry);

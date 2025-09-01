@@ -4,7 +4,6 @@ import 'package:camera/camera.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:ratel/exports.dart';
-import 'passport_box.dart';
 
 class StepCapture extends StatefulWidget {
   const StepCapture({super.key, required this.onParsed});
