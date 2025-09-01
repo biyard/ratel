@@ -1,48 +1,77 @@
-import 'dart:async';
+import 'package:camera/camera.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:ratel/exports.dart';
+import 'passport_box.dart';
 
 class StepCapture extends StatefulWidget {
-  const StepCapture({
-    super.key,
-    required this.imageUrl,
-    required this.onCapture,
-  });
-
-  final String imageUrl;
-  final VoidCallback onCapture;
+  const StepCapture({super.key, required this.onParsed});
+  final void Function(PassportInfo info) onParsed;
 
   @override
   State<StepCapture> createState() => _StepCaptureState();
 }
 
 class _StepCaptureState extends State<StepCapture> {
-  Timer? _timer;
-  int _secLeft = 10;
-  bool _started = false;
-  bool _done = false;
+  final _api = DocumentsApi();
+  CameraController? _controller;
+  bool _busy = false;
+  String? _error;
+  bool _showCamera = true;
 
-  void _startCountdown() {
-    if (_started || _done || !mounted) return;
-    setState(() {
-      _started = true;
-      _secLeft = 10;
-    });
-    _timer?.cancel();
-    _timer = Timer.periodic(const Duration(seconds: 1), (t) {
-      if (!mounted) return;
-      setState(() => _secLeft--);
-      if (_secLeft <= 0) {
-        t.cancel();
-        _done = true;
-        widget.onCapture();
-      }
-    });
+  void _onCameraReady(CameraController controller) {
+    _controller = controller;
   }
 
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
+  Future<Uint8List> compressJpeg(Uint8List src) async {
+    final out = await FlutterImageCompress.compressWithList(
+      src,
+      quality: 85,
+      minWidth: 1600,
+      minHeight: 1600,
+      format: CompressFormat.jpeg,
+    );
+    return Uint8List.fromList(out);
+  }
+
+  Future<void> _captureAndSend() async {
+    if (_busy) return;
+    final controller = _controller;
+    if (controller == null || !controller.value.isInitialized) {
+      setState(() => _error = 'Camera is not ready. Please try again.');
+      return;
+    }
+
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+
+    try {
+      await controller.pausePreview();
+      final xfile = await controller.takePicture();
+      final raw = await xfile.readAsBytes();
+      final bytes = await compressJpeg(raw);
+
+      final presign = await _api.getPresigned();
+      await _api.putToS3(presign.url, bytes);
+      final info = await _api.uploadPassportKey(presign.key);
+
+      if (!mounted) return;
+      setState(() {
+        _busy = false;
+        _showCamera = false;
+      });
+      widget.onParsed(info);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _busy = false;
+        _error = 'Upload failed: $e';
+      });
+      try {
+        await _controller?.resumePreview();
+      } catch (_) {}
+    }
   }
 
   @override
@@ -69,7 +98,30 @@ class _StepCaptureState extends State<StepCapture> {
               borderRadius: BorderRadius.circular(6),
             ),
             clipBehavior: Clip.antiAlias,
-            child: PassportLiveCamera(onReady: _startCountdown),
+            child: _showCamera
+                ? PassportCameraBox(onReady: _onCameraReady)
+                : const ColoredBox(color: Color(0xFF2E2D37)),
+          ),
+          12.vgap,
+          if (_error != null)
+            Text(
+              _error!,
+              style: const TextStyle(color: Colors.red, fontSize: 12),
+            ),
+          8.vgap,
+          SizedBox(
+            width: double.infinity,
+            height: 44,
+            child: ElevatedButton(
+              onPressed: _busy ? null : _captureAndSend,
+              child: _busy
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text('Scan passport'),
+            ),
           ),
         ],
       ),

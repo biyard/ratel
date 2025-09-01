@@ -154,6 +154,10 @@ export 'services/auth/auth_service.dart';
 export 'services/auth/auth_api.dart';
 export 'services/auth/auth_model.dart';
 
+export 'services/documents/documents_api.dart';
+export 'services/documents/documents_model.dart';
+export 'services/documents/documents_service.dart';
+
 export 'services/user/user_api.dart';
 export 'services/user/user_model.dart';
 export 'services/user/user_service.dart';
