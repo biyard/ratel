@@ -10,33 +10,23 @@ use dto::{
 };
 use rand::RngCore;
 
-use crate::utils::users::extract_user_id;
+use crate::{
+    models::oauth::scope::{Scope, deserialize_scope_vec},
+    utils::users::extract_user_id,
+};
 
 #[derive(
-    Debug,
-    Clone,
-    serde::Serialize,
-    serde::Deserialize,
-    PartialEq,
-    Default,
-    aide::OperationIo,
-    JsonSchema,
+    Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq, aide::OperationIo, JsonSchema,
 )]
 pub struct ApproveRequest {
     pub client_id: String,
     pub redirect_uri: String,
-    pub scope: String,
+    #[serde(deserialize_with = "deserialize_scope_vec")]
+    pub scope: Vec<Scope>,
     pub state: String,
 }
 #[derive(
-    Debug,
-    Clone,
-    serde::Serialize,
-    serde::Deserialize,
-    PartialEq,
-    Default,
-    aide::OperationIo,
-    JsonSchema,
+    Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq, aide::OperationIo, JsonSchema,
 )]
 pub struct Response {
     pub redirect_url: String,

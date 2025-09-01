@@ -8,23 +8,23 @@ use dto::{
     sqlx::PgPool,
 };
 
-use crate::config;
+use crate::{
+    config,
+    models::oauth::{
+        response_type::ResponseType,
+        scope::{Scope, deserialize_scope_vec},
+    },
+};
 
 #[derive(
-    Debug,
-    Clone,
-    serde::Serialize,
-    serde::Deserialize,
-    PartialEq,
-    Default,
-    aide::OperationIo,
-    JsonSchema,
+    Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq, aide::OperationIo, JsonSchema,
 )]
 pub struct AuthorizeQuery {
-    pub response_type: String,
+    pub response_type: ResponseType,
     pub client_id: String,
     pub redirect_uri: String,
-    pub scope: Option<String>,
+    #[serde(deserialize_with = "deserialize_scope_vec")]
+    pub scope: Vec<Scope>,
     pub state: Option<String>,
 }
 
@@ -32,15 +32,6 @@ pub async fn authorize_handler(
     State(pool): State<PgPool>,
     Query(req): Query<AuthorizeQuery>,
 ) -> Result<impl IntoResponse> {
-    match req.response_type.as_str() {
-        "code" => {
-            tracing::debug!("handling code response type");
-        }
-        _ => {
-            tracing::error!("unsupported response type: {}", req.response_type);
-            return Err(Error::BadRequest);
-        }
-    }
     let client = AuthClient::query_builder()
         .client_id_equals(req.client_id.clone())
         .query()
@@ -63,10 +54,17 @@ pub async fn authorize_handler(
         } else {
             "".to_string()
         },
-        if let Some(scope) = &req.scope {
-            format!("&scope={}", scope)
-        } else {
+        if req.scope.is_empty() {
             "".to_string()
+        } else {
+            format!(
+                "&scope={}",
+                req.scope
+                    .iter()
+                    .map(|s| s.as_str())
+                    .collect::<Vec<_>>()
+                    .join("+")
+            )
         },
     );
 

@@ -1,7 +1,12 @@
 use bdk::prelude::*;
 use dto::{Result, by_axum::axum::Json};
 
-use crate::config;
+use crate::{
+    config,
+    models::oauth::{
+        code_challenge::CodeChallengeMethod, response_type::ResponseType, scope::Scope,
+    },
+};
 
 #[derive(
     Debug,
@@ -43,10 +48,10 @@ pub async fn oauth_authorization_server_handler() -> Result<Json<AuthorizationSe
         authorization_endpoint: format!("https://{}/v2/oauth/authorize", domain),
         token_endpoint: format!("https://{}/v2/oauth/token", domain),
         issuer: domain,
-        scopes_supported: Some(vec!["profile".to_string(), "email".to_string()]),
+        scopes_supported: Some(Scope::variants()),
         jwks_uri: None,
-        response_types_supported: Some(vec!["code".to_string()]),
-        code_challenge_methods_supported: Some(vec!["S256".to_string()]),
+        response_types_supported: Some(ResponseType::variants()),
+        code_challenge_methods_supported: Some(CodeChallengeMethod::variants()),
         grant_types_supported: None,
         token_endpoint_auth_methods_supported: None,
 

@@ -6,7 +6,14 @@ use dto::{
 };
 use uuid::Uuid;
 
-use crate::controllers::v2::oauth::approve::generate_random_string;
+use crate::{
+    controllers::v2::oauth::approve::generate_random_string,
+    models::oauth::{
+        grant_type::GrantType,
+        response_type::ResponseType,
+        scope::{Scope, deserialize_scope_vec},
+    },
+};
 
 #[derive(
     Debug,
@@ -18,12 +25,15 @@ use crate::controllers::v2::oauth::approve::generate_random_string;
     aide::OperationIo,
     JsonSchema,
 )]
+
 pub struct ClientRegistrationRequest {
     pub client_name: String,
     pub redirect_uris: Vec<String>,
-    pub grant_types: Vec<String>,
+    pub grant_types: Vec<GrantType>,
     pub token_endpoint_auth_method: String,
-    pub response_types: Vec<String>,
+    pub response_types: Vec<ResponseType>,
+    #[serde(deserialize_with = "deserialize_scope_vec")]
+    pub scope: Vec<Scope>,
 }
 
 #[derive(
