@@ -13,6 +13,10 @@ use crate::{
                 add_bookmark::add_bookmark_handler, list_bookmarks::get_bookmarks_handler,
                 remove_bookmark::remove_bookmark_handler,
             },
+            connections::{
+                follow::connection_follow_handler, network::list_connections_handler,
+                search::list_connections_by_keyword_handler,
+            },
             dagits::{
                 add_oracle::add_oracle_handler,
                 artworks::{
@@ -32,10 +36,15 @@ use crate::{
             },
             industries::{industry::list_industries_handler, select_topic::select_topics_handler},
             networks::{
-                follow::follow_handler, network::list_networks_handler,
-                search::list_networks_by_keyword_handler,
+                accept_invitation::accept_invitation_handler,
+                accept_suggestion::accept_suggestion_handler, list_networks::list_networks_handler,
+                reject_invitation::reject_invitation_handler,
+                reject_suggestion::reject_suggestion_handler,
             },
-            notifications::mark_all_read::mark_all_notifications_read_handler,
+            notifications::{
+                get_notifications::get_notifications_handler,
+                mark_all_read::mark_all_notifications_read_handler,
+            },
             oracles::create_oracle::create_oracle_handler,
             spaces::{delete_space::delete_space_handler, get_my_space::get_my_space_controller},
             telegram::subscribe::telegram_subscribe_handler,
@@ -154,32 +163,72 @@ pub async fn route(
             .with_state(pool.clone()),
         )
         .route(
+            "/v2/connections",
+            get_with(
+                list_connections_handler,
+                api_docs!(
+                    "List Connections",
+                    "List connections based on recommendation algorithm"
+                ),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/v2/connections/search",
+            get_with(
+                list_connections_by_keyword_handler,
+                api_docs!(
+                    "List Connections by keyword",
+                    "List connections by search keyword"
+                ),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/v2/connections/follow",
+            post_with(
+                connection_follow_handler,
+                api_docs!("Follow Users", "Follow users with follower IDs"),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
             "/v2/networks",
             get_with(
                 list_networks_handler,
-                api_docs!(
-                    "List Networks",
-                    "List networks based on recommendation algorithm"
-                ),
+                api_docs!("List Networks", "List Networks with user ID"),
             )
             .with_state(pool.clone()),
         )
         .route(
-            "/v2/networks/search",
-            get_with(
-                list_networks_by_keyword_handler,
-                api_docs!(
-                    "List Networks by keyword",
-                    "List networks by search keyword"
-                ),
-            )
-            .with_state(pool.clone()),
-        )
-        .route(
-            "/v2/networks/follow",
+            "/v2/networks/invitations/accept",
             post_with(
-                follow_handler,
-                api_docs!("Follow Users", "Follow users with follower IDs"),
+                accept_invitation_handler,
+                api_docs!("Accept invitation", "Accept Invitation from followee ID"),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/v2/networks/invitations/reject",
+            post_with(
+                reject_invitation_handler,
+                api_docs!("Reject invitation", "Reject Invitation from followee ID"),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/v2/networks/suggestions/accept",
+            post_with(
+                accept_suggestion_handler,
+                api_docs!("Accept suggestion", "Accept Suggestion from followee ID"),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/v2/networks/suggestions/reject",
+            post_with(
+                reject_suggestion_handler,
+                api_docs!("Reject suggestion", "Reject Suggestion from followee ID"),
             )
             .with_state(pool.clone()),
         )
@@ -188,6 +237,14 @@ pub async fn route(
             post_with(
                 add_bookmark_handler,
                 api_docs!("Add Bookmarks", "Add Feed Bookmarks with user ID"),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/v2/notifications",
+            get_with(
+                get_notifications_handler,
+                api_docs!((), "Get Notifications", "Retrieve a notifications"),
             )
             .with_state(pool.clone()),
         )
