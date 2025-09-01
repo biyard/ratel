@@ -5,9 +5,10 @@ import { usePopup } from '@/lib/contexts/popup-service';
 import React from 'react';
 import LocaleModal from '../modal/locale_modal';
 import { useRouter } from 'next/navigation';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 
 export default function MySettings() {
+  const t = useTranslations('Settings');
   const popup = usePopup();
   const router = useRouter();
   const locale = useLocale() as 'en' | 'ko';
@@ -27,17 +28,17 @@ export default function MySettings() {
           onCancel={() => popup.close()}
         />,
       )
-      .withTitle('Select a language');
+      .withTitle(t('select_language'));
   };
 
   return (
     <div className="w-full max-w-[800px] mx-auto flex flex-col gap-6 px-4 md:px-0">
       <section className="bg-component-bg p-4 md:p-6 rounded-lg">
-        <h2 className="text-lg font-bold mb-4 text-white">Appearance</h2>
+        <h2 className="text-lg font-bold mb-4 text-white">{t('appearance')}</h2>
 
         <div className="flex flex-col gap-4">
           <SpecBox
-            left_text="Language"
+            left_text={t('language')}
             action_text={actionText}
             onClick={handleChangeLanguage}
           />

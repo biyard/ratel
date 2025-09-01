@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import CheckCircle from '@/assets/icons/check-circle.svg';
+import { useTranslations } from 'next-intl';
 
 export interface LocaleModalProps {
   onCancel: () => void;
@@ -14,6 +15,7 @@ export default function LocaleModal({
   onSave,
   initialLocale = 'en',
 }: LocaleModalProps) {
+  const t = useTranslations('Settings');
   const [selected, setSelected] = useState<'en' | 'ko'>(initialLocale);
 
   const options: { label: string; value: 'en' | 'ko' }[] = [
@@ -50,13 +52,13 @@ export default function LocaleModal({
           onClick={onCancel}
           className="px-6 py-[12px] bg-transparent font-bold text-base text-neutral-400 hover:text-white transition-colors"
         >
-          Cancel
+          {t('cancel')}
         </button>
         <button
           onClick={() => onSave(selected)}
           className="px-8 py-[12px] font-bold text-base text-bg rounded-[10px] bg-primary"
         >
-          Save
+          {t('save')}
         </button>
       </div>
     </div>

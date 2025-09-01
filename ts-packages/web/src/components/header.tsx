@@ -62,7 +62,7 @@ function Header(props: HeaderProps) {
       authorized: false,
     },
     {
-      name: t('myNetwork'),
+      name: t('my_network'),
       icon: (
         <UserGroupIcon
           className="group-hover:[&>path]:stroke-white transition-all"
