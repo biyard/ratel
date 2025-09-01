@@ -1,0 +1,11 @@
+{
+  "Nav": {
+    "home": "Home",
+    "explore": "Explore",
+    "myNetwork": "My Network",
+    "message": "Message",
+    "notification": "Notification",
+    "signIn": "Sign In",
+    "logout": "Logout"
+  }
+}
