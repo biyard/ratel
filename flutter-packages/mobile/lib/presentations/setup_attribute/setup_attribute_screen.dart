@@ -100,41 +100,4 @@ class SetupAttributeScreen extends GetWidget<SetupAttributeController> {
       ),
     );
   }
-
-  String fmtYmd(int epochSec) {
-    final dt = DateTime.fromMillisecondsSinceEpoch(
-      epochSec * 1000,
-      isUtc: true,
-    ).toLocal();
-    final m = dt.month.toString().padLeft(2, '0');
-    final d = dt.day.toString().padLeft(2, '0');
-    return '${dt.year}-$m-$d';
-  }
-
-  String displayName(String first, String last) {
-    String cap(String s) =>
-        s.isEmpty ? s : s[0].toUpperCase() + s.substring(1).toLowerCase();
-    final l = cap(last.trim());
-    final f = cap(first.trim());
-    return [l, f].where((e) => e.isNotEmpty).join(' ');
-  }
-
-  String mapNationality(String codeOrName) {
-    final m = {
-      'ROK': 'Republic of Korea',
-      'KOR': 'Republic of Korea',
-      'USA': 'United States',
-      'GBR': 'United Kingdom',
-      'JPN': 'Japan',
-      'CHN': 'China',
-      'CAN': 'Canada',
-      'AUS': 'Australia',
-      'DEU': 'Germany',
-      'FRA': 'France',
-      'ESP': 'Spain',
-      'ITA': 'Italy',
-      'NGA': 'Nigeria',
-    };
-    return m[codeOrName.toUpperCase()] ?? codeOrName;
-  }
 }
