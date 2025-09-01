@@ -34,7 +34,25 @@ class IntroController extends BaseController {
         curve: Curves.easeOut,
       );
     } else {
+      await autoLogin();
       Get.rootDelegate.offNamed(AppRoutes.loginScreen);
+    }
+  }
+
+  Future<void> autoLogin() async {
+    final auth = AuthApi();
+    final user = UserApi();
+    await auth.init();
+    final res = await user.getUserInfo();
+
+    if (res.id == 0) {
+      return;
+    }
+
+    final ok = await auth.tryAutoSignIn();
+
+    if (ok) {
+      Get.rootDelegate.offNamed(AppRoutes.mainScreen);
     }
   }
 
