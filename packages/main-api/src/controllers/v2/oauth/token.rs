@@ -12,18 +12,13 @@ use dto::{
     sqlx::PgPool,
 };
 
+use crate::models::oauth::{grant_type::GrantType, scope::Scope};
+
 #[derive(
-    Debug,
-    Clone,
-    serde::Serialize,
-    serde::Deserialize,
-    PartialEq,
-    Default,
-    aide::OperationIo,
-    JsonSchema,
+    Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq, aide::OperationIo, JsonSchema,
 )]
 pub struct TokenRequest {
-    pub grant_type: String,
+    pub grant_type: GrantType,
     pub code: String,
     pub redirect_uri: String,
     pub client_id: String,
@@ -32,14 +27,7 @@ pub struct TokenRequest {
 }
 
 #[derive(
-    Debug,
-    Clone,
-    serde::Serialize,
-    serde::Deserialize,
-    PartialEq,
-    Default,
-    aide::OperationIo,
-    JsonSchema,
+    Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq, aide::OperationIo, JsonSchema,
 )]
 pub struct TokenResponse {
     pub access_token: String,
@@ -48,7 +36,7 @@ pub struct TokenResponse {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub refresh_token: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub scope: Option<String>,
+    pub scope: Option<Scope>,
 }
 
 pub async fn token_handler(
@@ -76,16 +64,6 @@ pub async fn token_handler(
             return Err(Error::BadRequest);
         }
     };
-    match req.grant_type.as_str() {
-        "authorization_code" => {
-            tracing::debug!("handling authorization_code grant type");
-            // Handle authorization_code grant type
-        }
-        _ => {
-            tracing::error!("unsupported grant type: {}", req.grant_type);
-            return Err(Error::BadRequest);
-        }
-    }
 
     AuthClient::query_builder()
         .client_id_equals(req.client_id.clone())
