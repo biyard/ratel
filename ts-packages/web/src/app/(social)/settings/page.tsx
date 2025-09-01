@@ -2,9 +2,11 @@
 import React from 'react';
 import MyInfo from './_components/tab/my-info';
 import MySettings from './_components/tab/my-settings';
+import { useTranslations } from 'next-intl';
 
 export default function MyProfilePage() {
-  const tabs = ['My Info', 'My Inventory', 'Settings'] as const;
+  const t = useTranslations('Settings');
+  const tabs = [t('my_info'), t('my_inventory'), t('settings')] as const;
   const [activeIndex, setActiveIndex] = React.useState<number>(0);
 
   // Refs to measure tab button positions
@@ -75,7 +77,7 @@ export default function MyProfilePage() {
         {activeIndex === 1 && (
           <div className="w-full max-w-[800px] mx-auto text-neutral-300">
             {/* TODO: Replace with MyInventory component when available */}
-            My Inventory content coming soon.
+            {t('my_inventory_coming_soon')}
           </div>
         )}
         {activeIndex === 2 && (

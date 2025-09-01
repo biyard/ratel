@@ -21,6 +21,7 @@ import { route } from '@/route';
 import { useAuth } from '@/lib/contexts/auth-context';
 import { TeamContext } from '@/lib/contexts/team-context';
 import Image from 'next/image';
+import { useTranslations } from 'next-intl';
 
 export interface TeamSelectorProps {
   onSelect?: (index: number) => void;
@@ -28,6 +29,7 @@ export interface TeamSelectorProps {
 }
 
 export default function TeamSelector({ onSelect, team }: TeamSelectorProps) {
+  const t = useTranslations('Home');
   const popup = usePopup();
   const { logout } = useAuth();
   const { teams, selectedIndex, setSelectedTeam } = useContext(TeamContext);
@@ -61,7 +63,7 @@ export default function TeamSelector({ onSelect, team }: TeamSelectorProps) {
       </DropdownMenuTrigger>
 
       <DropdownMenuContent className="w-[var(--radix-dropdown-menu-trigger-width)] bg-bg">
-        <DropdownMenuLabel>Teams</DropdownMenuLabel>
+        <DropdownMenuLabel>{t('teams')}</DropdownMenuLabel>
         <DropdownMenuGroup>
           {teams.map((team, index) => {
             return team.nickname != '' ? (
@@ -106,10 +108,10 @@ export default function TeamSelector({ onSelect, team }: TeamSelectorProps) {
           <DropdownMenuItem
             onClick={() => {
               logger.debug('Create team clicked');
-              popup.open(<TeamCreationPopup />).withTitle('Create a new team');
+              popup.open(<TeamCreationPopup />).withTitle(t('create_new_team'));
             }}
           >
-            <span>Create a team</span>
+            <span>{t('create_team')}</span>
           </DropdownMenuItem>
 
           <DropdownMenuItem
@@ -119,7 +121,7 @@ export default function TeamSelector({ onSelect, team }: TeamSelectorProps) {
               userInfo.refetch();
             }}
           >
-            <span>Log out</span>
+            <span>{t('logout')}</span>
           </DropdownMenuItem>
         </DropdownMenuGroup>
       </DropdownMenuContent>
