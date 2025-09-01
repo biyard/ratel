@@ -51,3 +51,6 @@ build:
 
 test:
 	$(BUILD_ENV) RUSTFLAGS="-D warnings" RUST_TEST_THREADS=1 cargo test
+
+mcp-inspector:
+	npx @modelcontextprotocol/inspector
