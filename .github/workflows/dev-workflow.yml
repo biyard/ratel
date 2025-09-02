@@ -21,7 +21,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: nextjs-web-cdk-next-${{ github.sha }}
-          path: cdk/.next
+          path: ${{ github.workspace }}/cdk/.next/
       - uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -365,7 +365,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: nextjs-web-cdk-next-${{ github.sha }}
-          path: ${{ github.workspace }}/cdk/.next/**
+          path: ${{ github.workspace }}/cdk/.next/
           if-no-files-found: error
           retention-days: 7
           
