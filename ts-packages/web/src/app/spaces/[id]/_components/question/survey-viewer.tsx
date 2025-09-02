@@ -11,6 +11,7 @@ import DropdownViewer from './_component/viewer/dropdown-viewer';
 import LinearScaleViewer from './_component/viewer/linear-scale-viewer';
 import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { Poll, SurveyAnswer } from '../../type';
+import { useTranslations } from 'next-intl';
 
 interface Question {
   title: string;
@@ -46,6 +47,7 @@ export default function SurveyViewer({
   handleSend: () => Promise<void>;
   space: Space;
 }) {
+  const t = useTranslations('PollSpace');
   const { data: userInfo } = useSuspenseUserInfo();
   const userId = userInfo?.id || 0;
   const members = space.discussions.flatMap((discussion) => discussion.members);
@@ -266,7 +268,7 @@ export default function SurveyViewer({
             }
           }}
         >
-          Save
+          {t('save')}
         </div>
       </div>
     </div>

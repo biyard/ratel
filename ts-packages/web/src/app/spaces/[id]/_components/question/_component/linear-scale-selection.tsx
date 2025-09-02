@@ -3,6 +3,7 @@ import { Input } from '@/components/ui/input';
 import React from 'react';
 import { ShapeArrowDown } from '@/components/icons';
 import Select from '@/components/select';
+import { useTranslations } from 'next-intl';
 
 export default function LinearScaleSelection({
   minValue,
@@ -17,6 +18,7 @@ export default function LinearScaleSelection({
   labels: Record<number, string>;
   setLabels: (val: number, label: string) => void;
 }) {
+  const t = useTranslations('PollSpace');
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-row items-center gap-2">
@@ -42,7 +44,7 @@ export default function LinearScaleSelection({
           </span>
           <Input
             className="border-b border-transparent !border-b-white focus:!border-transparent focus:rounded-md font-normal text-base/[24px] placeholder:text-neutral-600 text-neutral-300 rounded-none"
-            placeholder="Label"
+            placeholder={t('label_hint')}
             value={labels[minValue] || ''}
             onChange={(e) => {
               const val = e.target.value;
@@ -57,7 +59,7 @@ export default function LinearScaleSelection({
           </span>
           <Input
             className="border-b border-transparent !border-b-white focus:!border-transparent focus:rounded-md font-normal text-base/[24px] placeholder:text-neutral-600 text-neutral-300 rounded-none"
-            placeholder="Label"
+            placeholder={t('label_hint')}
             value={labels[maxValue] || ''}
             onChange={(e) => {
               const val = e.target.value;

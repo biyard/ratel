@@ -5,6 +5,7 @@ import CustomCheckbox from '@/components/checkbox/custom-checkbox';
 import { Answer } from '@/lib/api/models/response';
 import { Question } from '@/lib/api/models/survey';
 import Wrapper from './_components/wrapper';
+import { useTranslations } from 'next-intl';
 
 export default function ObjectiveViewer({
   answerType,
@@ -36,6 +37,7 @@ export default function ObjectiveViewer({
     type: Question['answer_type'],
   ) => void;
 }) {
+  const t = useTranslations('PollSpace');
   return (
     <>
       <Wrapper
@@ -50,7 +52,7 @@ export default function ObjectiveViewer({
           height={280}
           className="object-contain max-h-70 w-fit rounded-lg"
           src={imageUrl}
-          alt={title || 'Question Title'}
+          alt={title || t('question_title')}
         />
       ) : (
         <></>

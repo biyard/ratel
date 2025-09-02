@@ -81,33 +81,33 @@
   "SpaceForms": {
     "poll": {
       "label": "Poll",
-      "desc": "빠른 의견이나 선호도를 수집합니다."
+      "desc": "빠른 의견이나 선호도를 수집하세요."
     },
     "notice": {
       "label": "Notice",
-      "desc": "포인트 부스팅 옵션과 함께 공지 또는 퀴즈를 게시합니다."
+      "desc": "포인트 보너스가 걸린 공지 또는 퀴즈를 등록하세요."
     },
     "deliberation": {
       "label": "Deliberation",
-      "desc": "관점을 공유하고 심층적인 토론에 참여하세요."
+      "desc": "관점을 공유하고 깊의 있는 논의를 진행하세요."
     },
     "sprintLeague": {
       "label": "Sprint League",
-      "desc": "세 명의 러너가 경주하고 커뮤니티 투표로 속도가 결정되는 소셜 미니 게임입니다."
+      "desc": "투표와 경쟁에 포인트 보너스를 더한, 게임형 리그 양식입니다."
     },
     "dAgit": {
       "label": "d.AGIT",
-      "desc": "작품 관리를 위한 d.AGIT 스페이스를 생성합니다."
+      "desc": "NFT 발행을 위한 정보를 제출하세요."
     },
 
     "notice_title": "Notice 스페이스 설정하기",
     "notice_description_1": "{spaceType} 스페이스를 생성하면, <b>부스터 설정은 변경할 수 없습니다.</b>",
-    "notice_description_2": "확인하기 전에 모든 설정이 정확한지 다시 확인하세요.",
+    "notice_description_2": "확인하기 전에 모든 설정이 정확한지 꼭 확인해주세요.",
 
     "date": "날짜",
     "boost": "부스팅",
-    "active_booster": "부스터 활성화",
-    "active_booster_desc": "부스터를 사용하면 스프린트 종료 시 배수에 따라 Ratel 구독자만 추가 포인트를 획득합니다. 구독에 관심이 있으시면 자세한 안내를 위해 <btn>문의</btn>해 주세요.",
+    "active_booster": "부스터를 활성화해주세요.",
+    "active_booster_desc": "부스터를 사용하면, 스프린트 종료 시 Ratel 구독자만 배수에 따라 보너스 포인트를 받습니다. 구독에 관심이 있다면, 자세한 내용을 위해 <btn>문의</btn>해 주세요.",
     "booster": "부스터",
     "create": "생성하기"
   },
@@ -180,6 +180,73 @@
     "remove_test_keyword": "test 와 관련된 글자를 제거해주세요",
     "write_title": "제목을 입력해주세요.",
     "write_content": "여기에 마크다운 형태를 활용하여 설명을 입력해주세요."
+  },
+  "PollSpace": {
+    "title_hint": "제목을 입력하세요.",
+    "required": "필수",
+    "optional": "선택",
+    "single_choice": "단일 선택",
+    "multiple_choice": "다중 선택",
+    "delete": "삭제하기",
+    "add_option": "옵션 추가하기",
+    "multiple_selection": "다중 선택",
+    "option_hint": "옵션을 입력하세요.",
+    "label_hint": "옵션을 입력하세요.",
+    "question_title": "질문 제목",
+    "choose": "선택하기",
+    "subjective_hint": "당신의 생각을 공유해주세요.",
+
+    "poll": "투표",
+    "analyze": "분석",
+    "timeline": "타임라인",
+    "created": "생성",
+    "poll_open": "투표 시작",
+    "poll_close": "투표 종료",
+
+    "set_schedule": "스케쥴 설정",
+    "confirm": "확인",
+
+    "start_date_warning": "시작 일자는 종료 일자보다 앞에 위치해야합니다.",
+    "end_date_warning": "종료 일자는 시작 일자보다 뒤에 위치해야합니다.",
+
+    "save": "저장하기",
+
+    "download_excel": "엑셀로 다운로드하기",
+
+    "participants": "참여자 수",
+    "remainings": "남은 일자",
+    "date": "기간",
+    "responses": "명 응답"
+  },
+  "Space": {
+    "unsupported_space_type": "지원되지 않는 스페이스 유형입니다.",
+    "no_authorized_user": "인증되지 않은 사용자입니다.",
+    "untitled_space": "제목 없는 스페이스",
+
+    "delete_title": "스페이스 삭제 <name></name>",
+    "delete_warning": "이 작업은 되돌릴 수 없습니다. 스페이스와 그 안의 모든 콘텐츠가 영구적으로 삭제됩니다.",
+    "delete_label": "확인을 위해 아래와 동일하게 스페이스 이름을 입력하세요:",
+    "delete_placeholder": "확인을 위해 \"{spaceName}\"을(를) 입력하세요",
+    "cancel": "취소",
+    "delete_button": "스페이스 삭제",
+    "deleting": "삭제 중...",
+
+    "save": "저장하기",
+    "edit": "편집하기",
+    "make_public": "공개로 만들기",
+    "see_committee_list": "참여자 리스트 확인하기",
+    "change_category": "카테고리 변경하기",
+    "delete": "삭제하기",
+
+    "private": "개인",
+    "public": "공개",
+    "onboard": "온보딩",
+
+    "input_title": "제목을 입력하세요.",
+
+    "make_public_title": "스페이스는 곧 공개될 예정입니다.",
+    "make_public_desc_line1": "공개로 전환하면 이 스페이스는 모두에게 보입니다",
+    "make_public_desc_line2": "그리고 <b>다시 비공개로 되돌릴 수 없습니다.</b>"
   },
   "Settings": {
     "my_info": "나의 정보",
