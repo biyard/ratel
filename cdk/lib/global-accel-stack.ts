@@ -130,6 +130,26 @@ export class GlobalAccelStack extends Stack {
       }),
     );
 
+    const nextImageCachePolicy = new cloudfront.CachePolicy(
+      this,
+      "NextImageCachePolicy",
+      {
+        cachePolicyName: "NextImageCachePolicy",
+        defaultTtl: cdk.Duration.days(1),
+        minTtl: cdk.Duration.seconds(60),
+        maxTtl: cdk.Duration.days(365),
+        queryStringBehavior: cloudfront.CacheQueryStringBehavior.allowList(
+          "url",
+          "w",
+          "q",
+        ),
+        headerBehavior: cloudfront.CacheHeaderBehavior.none(),
+        cookieBehavior: cloudfront.CacheCookieBehavior.none(),
+        enableAcceptEncodingBrotli: true,
+        enableAcceptEncodingGzip: true,
+      },
+    );
+
     // CloudFront cert (must be in us-east-1). Use provided ARN or create DNS‑validated one.
     this.distribution = new cloudfront.Distribution(this, "Distribution", {
       defaultBehavior: {
@@ -147,7 +167,7 @@ export class GlobalAccelStack extends Stack {
         },
         "/_next/image*": {
           origin,
-          cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+          cachePolicy: nextImageCachePolicy,
           compress: true,
         },
 
