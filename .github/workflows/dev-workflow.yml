@@ -34,6 +34,7 @@ jobs:
           SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
           npm i -g aws-cdk
+          mkdir cdk/.next
           tar xzvf next.tar.gz -C cdk/.next
           make cdk/public
           make cdk-deploy-v2
