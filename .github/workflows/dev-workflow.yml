@@ -358,14 +358,12 @@ jobs:
             make docker.push
             cd ../..
             make cdk/.next
-            pwd
-            ls cdk/.next
 
       - name: Upload Next.js CDK .next
         uses: actions/upload-artifact@v4
         with:
           name: nextjs-web-cdk-next-${{ github.sha }}
-          path: cdk/.next
+          path: ${{ github.workspace }}/cdk/.next
           if-no-files-found: error
           retention-days: 7
   android-apk:
