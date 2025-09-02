@@ -255,14 +255,19 @@ export class GlobalAccelStack extends Stack {
       ),
     });
 
-    new s3deploy.BucketDeployment(this, "DeployStatic", {
+    new s3deploy.BucketDeployment(this, "NextStaticDeployStatic", {
       destinationBucket: staticBucket,
       distribution: this.distribution,
-      distributionPaths: ["/__invalidate__"],
-      sources: [
-        s3deploy.Source.asset(".next/static"),
-        s3deploy.Source.asset("public"),
-      ],
+      distributionPaths: ["/_next/static/*"],
+      sources: [s3deploy.Source.asset(".next/static")],
+      destinationKeyPrefix: "_next/static",
+    });
+
+    new s3deploy.BucketDeployment(this, "PublicDeployStatic", {
+      destinationBucket: staticBucket,
+      distribution: this.distribution,
+      distributionPaths: ["/*"],
+      sources: [s3deploy.Source.asset("public")],
     });
 
     new cdk.CfnOutput(this, "CloudFrontDomain", {
