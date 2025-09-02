@@ -97,7 +97,7 @@ export default function ClientLayout({
               onClick={() => {
                 popup
                   .open(<LoginModal />)
-                  .withTitle('Join the Movement')
+                  .withTitle(t('join_the_movement'))
                   .withoutBackdropClose();
               }}
             >
