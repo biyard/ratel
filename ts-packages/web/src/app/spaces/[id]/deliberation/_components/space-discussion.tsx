@@ -23,6 +23,7 @@ import {
   useDeliberationSpace,
   useDeliberationSpaceContext,
 } from '../provider.client';
+import { useTranslations } from 'next-intl';
 
 export default function SpaceDiscussion() {
   const { isEdit } = useDeliberationSpaceContext();
@@ -43,6 +44,7 @@ function ViewDiscussion() {
 }
 
 function DiscussionSchedules() {
+  const t = useTranslations('DeliberationSpace');
   const { status, handleViewRecord } = useDeliberationSpaceContext();
   const { data: userInfo } = useSuspenseUserInfo();
   const userId = userInfo?.id || 0;
@@ -60,7 +62,7 @@ function DiscussionSchedules() {
       <BlackBox>
         <div className="flex flex-col w-full gap-5">
           <div className="font-bold text-white text-[15px]/[20px]">
-            Discussions
+            {t('discussions')}
           </div>
           <div className="flex flex-col w-full gap-2.5">
             {discussions.map((discussion, index) => (
@@ -119,6 +121,7 @@ export function DiscussionRoom({
   onclick: () => void;
   viewRecordClick: () => void;
 }) {
+  const t = useTranslations('DeliberationSpace');
   const now = Math.floor(Date.now() / 1000);
 
   const isLive = now >= startDate && now <= endDate;
@@ -128,10 +131,10 @@ export function DiscussionRoom({
   const formattedDate = `${format(new Date(startDate * 1000), 'dd MMM, yyyy HH:mm')} - ${format(new Date(endDate * 1000), 'dd MMM, yyyy HH:mm')}`;
 
   const statusLabel = isUpcoming
-    ? 'Upcoming discussion'
+    ? t('upcoming_discussion')
     : isFinished
-      ? 'Finished discussion'
-      : 'On-going';
+      ? t('finished_discussion')
+      : t('ongoing_discussion');
 
   const isMember = members.some((member) => member.id === userId);
 
@@ -197,6 +200,7 @@ export function DiscussionRoom({
 }
 
 function ViewRecord({ onClick }: { onClick: () => void }) {
+  const t = useTranslations('DeliberationSpace');
   return (
     <div
       className="cursor-pointer flex flex-row items-center w-fit h-fit px-5 py-2.5 gap-2.5 bg-white hover:bg-neutral-300 rounded-lg"
@@ -204,13 +208,14 @@ function ViewRecord({ onClick }: { onClick: () => void }) {
         onClick();
       }}
     >
-      <div className="font-bold text-[#000203] text-sm">View Record</div>
+      <div className="font-bold text-[#000203] text-sm">{t('view_record')}</div>
       <ArrowRight className="stroke-black stroke-3 w-[15px] h-[15px]" />
     </div>
   );
 }
 
 function JoinButton({ onClick }: { onClick: () => void }) {
+  const t = useTranslations('join');
   return (
     <div
       className="cursor-pointer flex flex-row items-center w-fit h-fit px-5 py-2.5 gap-2.5 bg-white hover:bg-neutral-300 rounded-lg"
@@ -218,13 +223,14 @@ function JoinButton({ onClick }: { onClick: () => void }) {
         onClick();
       }}
     >
-      <div className="font-bold text-[#000203] text-sm">Join</div>
+      <div className="font-bold text-[#000203] text-sm">{t('join')}</div>
       <ArrowRight className="stroke-black stroke-3 w-[15px] h-[15px]" />
     </div>
   );
 }
 
 function EditableDiscussion() {
+  const t = useTranslations('DeliberationSpace');
   const { deliberation, handleUpdateDeliberation } =
     useDeliberationSpaceContext();
   const discussions = deliberation.discussions;
@@ -268,7 +274,7 @@ function EditableDiscussion() {
       <div className="flex flex-col w-full gap-5">
         <div className="flex flex-row w-full justify-between items-center">
           <div className="font-bold text-white text-[15px]/[20px]">
-            Discussion
+            {t('discussions')}
           </div>
 
           <AddDiscussion
@@ -288,7 +294,7 @@ function EditableDiscussion() {
                     }}
                   />,
                 )
-                .withTitle('New Discussion')
+                .withTitle(t('new_discussion'))
                 .overflow(true)
                 .withoutBackdropClose();
             }}
@@ -319,6 +325,7 @@ function EditableDiscussion() {
 }
 
 function AddDiscussion({ onadd }: { onadd: () => void }) {
+  const t = useTranslations('DeliberationSpace');
   return (
     <div
       onClick={() => {
@@ -327,7 +334,9 @@ function AddDiscussion({ onadd }: { onadd: () => void }) {
       className="cursor-pointer flex flex-row w-fit px-[14px] py-[8px] gap-1 bg-white rounded-[6px] hover:bg-neutral-300"
     >
       <Add className="w-5 h-5 stroke-neutral-500 text-neutral-500" />
-      <span className=" text-[#000203] font-bold text-sm">Add Discussion</span>
+      <span className=" text-[#000203] font-bold text-sm">
+        {t('add_discussion')}
+      </span>
     </div>
   );
 }
@@ -352,6 +361,7 @@ function EditableDiscussionInfo({
   onupdate: (index: number, discussion: DiscussionInfo) => void;
   onremove: (index: number) => void;
 }) {
+  const t = useTranslations('DeliberationSpace');
   const now = Math.floor(Date.now() / 1000);
 
   const popup = usePopup();
@@ -370,10 +380,10 @@ function EditableDiscussionInfo({
   const formattedDate = `${format(new Date(startTime * 1000), 'dd MMM, yyyy HH:mm')} - ${format(new Date(endTime * 1000), 'dd MMM, yyyy HH:mm')}`;
 
   const statusLabel = isUpcoming
-    ? 'Upcoming discussion'
+    ? t('upcoming_discussion')
     : isFinished
-      ? 'Finished discussion'
-      : 'On-going';
+      ? t('finished_discussion')
+      : t('ongoing_discussion');
 
   useEffect(() => {
     setTitle(name);
@@ -463,7 +473,7 @@ function EditableDiscussionInfo({
                   setMenuOpen(false);
                 }}
               >
-                Update
+                {t('update')}
               </div>
               <div
                 className="px-4 py-2 hover:bg-neutral-200 cursor-pointer whitespace-nowrap"
@@ -472,7 +482,7 @@ function EditableDiscussionInfo({
                   setMenuOpen(false);
                 }}
               >
-                Delete
+                {t('delete')}
               </div>
             </div>
           )}
