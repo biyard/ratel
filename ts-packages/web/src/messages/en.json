@@ -181,6 +181,130 @@
     "write_title": "Write a title...",
     "write_content": "Type here, Use Markdown, BB code, or HTML to format."
   },
+  "NoticeSpace": {
+    "publish_space": "Publish this Space",
+    "private_publish": "Private Publish",
+    "private_publish_desc_1": "Cannot change back to private once published publicly.",
+    "private_publish_desc_2": "Only your team members will be able to access this space.",
+    "public_publish": "Public Publish",
+    "public_publish_desc": "Anyone can access and participate in this space.",
+    "publish": "Publish",
+
+    "go_public_title": "You're About to Go Public",
+    "go_public_desc": "Once made public, this Space will be visible to everyone and cannot be made private again.",
+    "cancel": "Cancel",
+    "go_public": "Go Public",
+
+    "save_first_title": "Save first, make public?",
+    "unsaved_desc_line1": "Looks like you haven't saved yet.",
+    "unsaved_desc_line2": "Want to save your changes before going public,",
+    "unsaved_desc_line3": "or skip it and publish anyway?",
+    "public_warning_rich": "Once made public, this Space will be visible to everyone and <b>cannot be made private again.</b>",
+    "just_publish": "Just Publish",
+    "save_and_publish": "Save & Publish",
+
+    "save": "Save",
+    "make_public": "Make Public",
+    "edit": "Edit",
+    "draft": "Draft",
+    "private": "Private",
+    "public": "Public",
+    "onboard": "ONBOARD",
+
+    "reward": "Reward",
+    "correct": "Correct",
+    "wrong": "Wrong",
+    "boosting": "Boosting",
+    "penalty": "Penalty",
+    "total_estimated_value": "Total Estimated Value",
+    "scoring_rules": "Scoring Rules",
+    "correct_attempt": "Correct Attempt",
+    "wrong_attempt": "Wrong Attempt",
+    "timeline": "Timeline",
+    "created": "Created",
+    "start": "Start",
+    "end": "End",
+
+    "set_notice_schedule": "Set Notice Schedule",
+    "start_date_warning": "The start date must be earlier than the end date.",
+    "confirm": "Confirm",
+
+    "no_quiz_warning": "No quiz questions yet. Click the button below to add your first question.",
+    "option": "Option Text",
+    "remove_option": "Remove option",
+    "new_option": "New Option",
+
+    "answer_question_required": "Please answer all questions before submitting.",
+    "correct_answer_required": "Please define correct answers for all questions before submission.",
+    "quiz_save_required": "Please save your quiz before submission becomes available.",
+    "failed_save_quiz": "Failed to submit quiz. Please try again.",
+    "image_limit_warning": "Maximum 2 images allowed per question",
+    "attempt": "Attempt",
+    "max_reached": "Max reached",
+    "passed": "Passed",
+    "maximum_attempts_reached": "Maximum attempts reached",
+    "submit": "Submit",
+    "add_option": "Add Option",
+    "maximum_option": "Maximum 4 options",
+    "delete": "Delete",
+    "title": "Title",
+
+    "quiz_submit_title": "Just a heads up!",
+    "quiz_submit_desc_line1": "Wrong answers will reduce your reward by <b>50%</b>.",
+    "quiz_submit_desc_line2": "You can try again, but the <b>reward will be halved each time</b>.",
+    "quiz_submit_cta_question": "Submit your answer anyway?",
+
+    "quiz_error": {
+      "empty_title": "Question {n} title cannot be empty",
+      "min_options": "Question {n} must have at least 2 options",
+      "max_options": "Question {n} can have maximum 4 options",
+      "duplicate_options": "Question {n} has duplicate options",
+      "empty_option": "Question {n} option {k} cannot be empty",
+      "no_correct": "Question {n} must have at least one correct option selected"
+    },
+
+    "success_update_start_date": "Start date updated successfully",
+    "failed_update_start_date": "Failed to update start date",
+
+    "success_update_end_date": "End date updated successfully",
+    "failed_update_end_date": "Failed to update end date",
+
+    "success_post_space": "Space posted successfully",
+    "failed_post_space": "Failed to post space",
+
+    "success_publish_space_public": "Space published publicly successfully",
+    "success_publish_space_private": "Space published privately successfully",
+    "failed_publish_space": "Failed to publish space",
+
+    "saving_change": "Saving changes...",
+    "invalid_title_character": "Title contains invalid characters",
+    "title_empty": "Title cannot be empty",
+    "success_update_space": "Space updated successfully",
+    "failed_update_space": "Failed to update space",
+
+    "success_save_space": "Space saved successfully",
+    "failed_save_space": "Failed to save space",
+
+    "already_passed_quiz": "You have already passed this quiz.",
+    "max_attempts_for_this_quiz": "You have reached the maximum number of attempts (3) for this quiz.",
+    "cannot_submit_already_or_max": "Cannot submit: either you have already passed or reached maximum attempts.",
+    "failed_to_submit_quiz": "Failed to submit quiz",
+
+    "interactive_quiz_title": "Interactive Quiz",
+    "interactive_quiz_desc": "Answer all questions and submit to test your understanding.",
+    "attempts_up_to_n": "You have up to {n} attempts.",
+    "quiz_answer_required_n": "Please answer question {n}",
+    "submitting_answers": "Submitting your answers...",
+    "submitting": "Submitting...",
+
+    "notif": {
+      "success_title": "+ {amount} P",
+      "success_body_no_penalty": "Coin earned! View it in your profile.",
+      "success_body_with_penalty": "Coin earned! ({count}x penalty applied)",
+      "failed_title": "× 0.5 Penalty",
+      "failed_body": "Each wrong answer cuts your reward in half!"
+    }
+  },
   "DeliberationSpace": {
     "attached_files": "Attached Files",
     "upload": "Upload",

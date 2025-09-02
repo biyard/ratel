@@ -27,6 +27,7 @@ import { ratelApi } from '@/lib/api/ratel_api';
 import { showErrorToast, showInfoToast } from '@/lib/toast';
 import { logger } from '@/lib/logger';
 import Image from 'next/image';
+import { useTranslations } from 'next-intl';
 
 interface QuizTakerProps {
   spaceId: number;
@@ -50,6 +51,7 @@ export default function QuizTaker({
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { post } = useApiCall();
+  const t = useTranslations('NoticeSpace');
 
   // Initialize user answers when questions change
   React.useEffect(() => {
@@ -101,12 +103,12 @@ export default function QuizTaker({
         (opt) => opt.is_selected === true,
       );
       if (!hasSelection) {
-        showErrorToast(`Please answer question ${i + 1}`);
+        showErrorToast(t('quiz_answer_required_n', { n: i + 1 }));
         return false;
       }
     }
     return true;
-  }, [userAnswers]);
+  }, [userAnswers, t]);
 
   const handleSubmit = useCallback(async () => {
     if (disabled || isSubmitting) return;
@@ -114,7 +116,7 @@ export default function QuizTaker({
     if (!validateAnswers()) return;
 
     setIsSubmitting(true);
-    showInfoToast('Submitting your answers...');
+    showInfoToast(t('submitting_answers'));
 
     try {
       // NEW: Convert user answers to HashMap format for O(1) backend validation
@@ -163,15 +165,11 @@ export default function QuizTaker({
         error instanceof Error ? error.message : String(error);
 
       if (errorMessage.includes('maximum attempts')) {
-        showErrorToast(
-          'You have reached the maximum number of attempts (3) for this quiz.',
-        );
+        showErrorToast(t('maximum_attempts_reached'));
       } else if (errorMessage.includes('InvalidInputValue')) {
-        showErrorToast(
-          'Invalid quiz answers. Please check your responses and try again.',
-        );
+        showErrorToast(t('failed_to_submit_quiz'));
       } else {
-        showErrorToast('Failed to submit quiz answers. Please try again.');
+        showErrorToast(t('failed_to_submit_quiz'));
       }
     } finally {
       setIsSubmitting(false);
@@ -185,12 +183,13 @@ export default function QuizTaker({
     post,
     onSubmitSuccess,
     questions,
+    t,
   ]);
 
   if (questions.length === 0) {
     return (
       <div className="bg-[var(--color-component-bg)] rounded-[10px] p-6 text-center">
-        <p className="text-white/70">No quiz questions available.</p>
+        <p className="text-white/70">{t('no_quiz_warning')}</p>
       </div>
     );
   }
@@ -198,10 +197,11 @@ export default function QuizTaker({
   return (
     <div className="space-y-6">
       <div className="bg-[var(--color-component-bg)] rounded-[10px] p-6">
-        <h2 className="text-xl font-bold text-white mb-4">Interactive Quiz</h2>
+        <h2 className="text-xl font-bold text-white mb-4">
+          {t('interactive_quiz_title')}
+        </h2>
         <p className="text-white/70 mb-6">
-          Answer all questions and submit to test your understanding. You have
-          up to 3 attempts.
+          {t('interactive_quiz_desc')} {t('attempts_up_to_n', { n: 3 })}
         </p>
 
         <div className="space-y-6">
@@ -279,7 +279,7 @@ export default function QuizTaker({
                 : 'bg-blue-600 hover:bg-blue-700 text-white'
             }`}
           >
-            {isSubmitting ? 'Submitting...' : 'Submit Quiz'}
+            {isSubmitting ? t('submitting') : t('submit')}
           </button>
         </div>
       </div>

@@ -23,6 +23,7 @@ import {
 import { TeamContext } from '@/lib/contexts/team-context';
 import { useUserInfo } from '@/app/(social)/_hooks/user';
 import { getTimeAgo } from '@/lib/time-utils';
+import { useTranslations } from 'next-intl';
 
 export interface SpaceHeaderProps {
   title: string;
@@ -72,6 +73,7 @@ export default function SpaceHeader({
   onpost = () => {},
   onpublishwhileediting = () => {},
 }: SpaceHeaderProps) {
+  const t = useTranslations('NoticeSpace');
   const { data: userInfo } = useUserInfo();
   const userId = userInfo ? userInfo.id : 0;
   const { teams } = useContext(TeamContext);
@@ -99,7 +101,9 @@ export default function SpaceHeader({
                   onClick={onsave}
                 >
                   <Save className="stroke-neutral-500 [&>path]:stroke-2 w-5 h-5" />
-                  <div className="font-bold text-zinc-900 text-sm">Save</div>
+                  <div className="font-bold text-zinc-900 text-sm">
+                    {t('save')}
+                  </div>
                 </button>
                 {/* Removed publish button while editing for draft spaces - it should not show */}
                 {/* Show make public button while editing if space is privately published */}
@@ -110,7 +114,7 @@ export default function SpaceHeader({
                   >
                     <Internet className="stroke-neutral-500 [&>path]:stroke-2 w-5 h-5" />
                     <div className="font-bold text-zinc-900 text-sm">
-                      Make Public
+                      {t('make_public')}
                     </div>
                   </button>
                 )}
@@ -121,7 +125,9 @@ export default function SpaceHeader({
                 onClick={onedit}
               >
                 <Edit1 className="stroke-neutral-500 [&>path]:stroke-2 w-5 h-5" />
-                <div className="font-bold text-zinc-900 text-sm">Edit</div>
+                <div className="font-bold text-zinc-900 text-sm">
+                  {t('edit')}
+                </div>
               </button>
             )}
 
@@ -136,7 +142,9 @@ export default function SpaceHeader({
                 onClick={onpost}
               >
                 <ArrowUp className="stroke-neutral-500 [&>path]:stroke-2 w-5 h-5" />
-                <div className="font-bold text-zinc-900 text-sm">Publish</div>
+                <div className="font-bold text-zinc-900 text-sm">
+                  {t('publish')}
+                </div>
               </button>
             )}
             {!isEdit &&
@@ -148,7 +156,7 @@ export default function SpaceHeader({
                 >
                   <Internet className="stroke-neutral-500 [&>path]:stroke-2 w-5 h-5" />
                   <div className="font-bold text-zinc-900 text-sm">
-                    Go Public
+                    {t('go_public')}
                   </div>
                 </button>
               )}
@@ -194,17 +202,23 @@ export default function SpaceHeader({
           {status === SpaceStatus.Draft ? (
             <div className="flex flex-row w-fit gap-1 items-center">
               <Lock className="w-5 h-5" />
-              <div className="font-normal text-white text-[15px]">Draft</div>
+              <div className="font-normal text-white text-[15px]">
+                {t('draft')}
+              </div>
             </div>
           ) : status === SpaceStatus.InProgress && isPrivatelyPublished ? (
             <div className="flex flex-row w-fit gap-1 items-center">
               <Lock className="w-5 h-5" />
-              <div className="font-normal text-white text-[15px]">Private</div>
+              <div className="font-normal text-white text-[15px]">
+                {t('private')}
+              </div>
             </div>
           ) : (
             <div className="flex flex-row w-fit gap-1 items-center">
               <Unlock2 className="w-5 h-5" />
-              <div className="font-normal text-white text-[15px]">Public</div>
+              <div className="font-normal text-white text-[15px]">
+                {t('public')}
+              </div>
             </div>
           )}
         </div>
@@ -268,10 +282,13 @@ export default function SpaceHeader({
 }
 
 function Onboard() {
+  const t = useTranslations('NoticeSpace');
   return (
     <div className="flex flex-row items-center w-fit px-2 gap-1 border border-[#05df72] opacity-50 rounded-sm">
       <Play className="w-2.5 h-2.5 stroke-[#00d492] fill-[#00d492]" />
-      <div className="font-semibold text-sm/[25px] text-[#05df72]">ONBOARD</div>
+      <div className="font-semibold text-sm/[25px] text-[#05df72]">
+        {t('onboard')}
+      </div>
     </div>
   );
 }
