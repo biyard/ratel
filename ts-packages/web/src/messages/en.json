@@ -216,7 +216,23 @@
     "participants": "Participants",
     "remainings": "Remainings",
     "date": "Date",
-    "responses": "Responses"
+    "responses": "Responses",
+
+    "success_share_info": "The space URL has been copied to your clipboard.",
+    "failed_share_info": "Unable to share space at this time. Please try again later.",
+    "failed_like_info": "Unable to register your like at this time. Please try again later.",
+    "all_input_required": "Please fill in all required values.",
+    "success_save_response": "Your response has been saved successfully.",
+    "failed_save_response": "There was a problem saving your response. Please try again later.",
+    "success_post_space": "Your space has been posted successfully.",
+    "failed_post_space": "Failed to post the space. Please try again.",
+    "success_delete_space": "Space deleted successfully",
+    "failed_delete_space": "Failed to delete space. Please try again later.",
+    "question_title_required": "Please fill in the question title.",
+    "more_option_required": "questions must have at least two options.",
+    "fill_label_required": "Please fill in the labels for the linear scale.",
+    "success_update_space": "Space has been updated successfully.",
+    "failed_update_space": "Failed to update the space. Please try again."
   },
   "Space": {
     "unsupported_space_type": "Unsupported space type",
