@@ -181,6 +181,73 @@
     "write_title": "Write a title...",
     "write_content": "Type here, Use Markdown, BB code, or HTML to format."
   },
+  "PollSpace": {
+    "title_hint": "Title",
+    "required": "Required",
+    "optional": "Optional",
+    "single_choice": "Single Choice",
+    "multiple_choice": "Multiple Choice",
+    "delete": "Delete",
+    "add_option": "Add Option",
+    "multiple_selection": "Multiple selection",
+    "option_hint": "Type something...",
+    "label_hint": "Label",
+    "question_title": "Question Title",
+    "choose": "Choose",
+    "subjective_hint": "Please share your opinion.",
+
+    "poll": "Poll",
+    "analyze": "Analyze",
+    "timeline": "Timeline",
+    "created": "Created",
+    "poll_open": "Poll Open",
+    "poll_close": "Poll Close",
+
+    "set_schedule": "Set Schedule",
+    "confirm": "Confirm",
+
+    "start_date_warning": "The start date must be earlier than the end date.",
+    "end_date_warning": "The end date must be later than the start date.",
+
+    "save": "Save",
+
+    "download_excel": "Download Excel",
+
+    "participants": "Participants",
+    "remainings": "Remainings",
+    "date": "Date",
+    "responses": "Responses"
+  },
+  "Space": {
+    "unsupported_space_type": "Unsupported space type",
+    "no_authorized_user": "No Authorized User",
+    "untitled_space": "Untitled Space",
+
+    "delete_title": "Delete Space <name></name>",
+    "delete_warning": "This action cannot be undone. This will permanently delete the Space and all its contents.",
+    "delete_label": "To confirm, type the Space name exactly as shown:",
+    "delete_placeholder": "Type \"{spaceName}\" to confirm",
+    "cancel": "Cancel",
+    "delete_button": "Delete Space",
+    "deleting": "Deleting...",
+
+    "save": "Save",
+    "edit": "Edit",
+    "make_public": "Make Public",
+    "see_committee_list": "See committee list",
+    "change_category": "Change Category",
+    "delete": "Delete",
+
+    "private": "Private",
+    "public": "Public",
+    "onboard": "ONBOARD",
+
+    "input_title": "Input title.",
+
+    "make_public_title": "You’re About to Go Public",
+    "make_public_desc_line1": "Once made public, this Space will be visible to everyone",
+    "make_public_desc_line2": "and <b>cannot be made private again.</b>"
+  },
   "Settings": {
     "my_info": "My Info",
     "my_inventory": "My Inventory",

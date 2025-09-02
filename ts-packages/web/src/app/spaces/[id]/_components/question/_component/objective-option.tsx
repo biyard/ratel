@@ -3,6 +3,7 @@ import { DialPad2, Remove } from '@/components/icons';
 import { Input } from '@/components/ui/input';
 import React from 'react';
 import { AnswerType } from '../answer-type-select';
+import { useTranslations } from 'next-intl';
 
 export default function ObjectiveOption({
   questionOptions,
@@ -19,6 +20,7 @@ export default function ObjectiveOption({
   handleRemoveOption: (index: number) => void;
   addOption: () => void;
 }) {
+  const t = useTranslations('PollSpace');
   return (
     <div className="flex flex-col gap-2">
       {questionOptions.map((opt, idx) => (
@@ -35,7 +37,7 @@ export default function ObjectiveOption({
           <Input
             className="border-b border-transparent !border-b-white focus:!border-transparent focus:rounded-md font-normal text-base/[24px] placeholder:text-neutral-600 text-neutral-300 rounded-none"
             type="text"
-            placeholder={`Type something...`}
+            placeholder={t('option_hint')}
             value={opt}
             onChange={(e) => handleOptionChange(idx, e.target.value)}
           />
@@ -49,7 +51,7 @@ export default function ObjectiveOption({
         onClick={addOption}
         className="cursor-pointer text-sm text-neutral-500 font-semibold text-left mt-2"
       >
-        + Add Option
+        + {t('add_option')}
       </button>
     </div>
   );

@@ -1,3 +1,5 @@
+import { useTranslations } from 'next-intl';
+
 export default function DropdownMenu({
   onclose,
   ondelete,
@@ -5,19 +7,21 @@ export default function DropdownMenu({
   onclose: () => void;
   ondelete: () => void;
 }) {
+  const t = useTranslations('Space');
+
   const menuItems = [
     {
-      label: 'See committee list',
+      label: t('see_committee_list'),
       disabled: true,
       action: () => {},
     },
     {
-      label: 'Change Category',
+      label: t('change_category'),
       disabled: true,
       action: () => {},
     },
     {
-      label: 'Delete',
+      label: t('delete'),
       disabled: false,
       action: () => {
         ondelete();

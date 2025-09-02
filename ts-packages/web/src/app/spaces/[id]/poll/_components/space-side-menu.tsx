@@ -13,8 +13,10 @@ import { TeamContext } from '@/lib/contexts/team-context';
 import { usePopup } from '@/lib/contexts/popup-service';
 import { PollTab } from '../types';
 import SetSchedulePopup from '../../_components/modal/set-schedule';
+import { useTranslations } from 'next-intl';
 
 export default function SpaceSideMenu() {
+  const t = useTranslations('PollSpace');
   const popup = usePopup();
   const {
     isEdit,
@@ -47,7 +49,7 @@ export default function SpaceSideMenu() {
             }}
           >
             <Vote className="[&>path]:stroke-neutral-80 w-5 h-5" />
-            <div className="font-bold text-white text-sm">Poll</div>
+            <div className="font-bold text-white text-sm">{t('poll')}</div>
           </div>
 
           {(space.author.some((a) => a.id === userId) || selectedTeam) &&
@@ -61,7 +63,9 @@ export default function SpaceSideMenu() {
                 }}
               >
                 <PieChart1 className="[&>path]:stroke-neutral-80 w-5 h-5" />
-                <div className="font-bold text-white text-sm">Analyze</div>
+                <div className="font-bold text-white text-sm">
+                  {t('analyze')}
+                </div>
               </div>
             )}
         </div>
@@ -71,7 +75,7 @@ export default function SpaceSideMenu() {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-1 text-neutral-400 font-semibold text-[14px]">
               <Clock width={20} height={20} />
-              Timeline
+              {t('timeline')}
             </div>
             {isEdit ? (
               <div
@@ -105,9 +109,9 @@ export default function SpaceSideMenu() {
 
           <div className="flex flex-col pl-3.25 gap-5">
             {[
-              { label: 'Created', date: createdAt },
-              { label: 'Poll Open', date: startedAt },
-              { label: 'Poll Close', date: endedAt },
+              { label: t('created'), date: createdAt },
+              { label: t('poll_open'), date: startedAt },
+              { label: t('poll_close'), date: endedAt },
             ]
               .filter(
                 (item): item is { label: string; date: number } =>
