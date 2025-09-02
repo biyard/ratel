@@ -17,11 +17,12 @@ import { logger } from '@/lib/logger';
 import SpaceConfigForm from './space-config-form';
 import RadioButton from '@/components/radio-button';
 import { Cube } from '@/assets/icons/shopping';
+import { useTranslations } from 'next-intl';
 interface SpaceFormProps {
   type: SpaceType;
   Icon: React.JSX.Element;
-  label: string;
-  description: string;
+  labelKey: string;
+  descKey: string;
   disabled?: boolean;
   experiment?: boolean;
 }
@@ -37,34 +38,33 @@ const SpaceForms: SpaceFormProps[] = [
   {
     type: SpaceType.Poll,
     Icon: <Vote />,
-    label: 'Poll',
-    description: 'Collect quick opinions or preferences.',
+    labelKey: 'poll.label',
+    descKey: 'poll.desc',
   },
   {
     type: SpaceType.Notice,
     Icon: <Mega />,
-    label: 'Notice',
-    description: 'Post announcements or quizzes with optional point boosts',
+    labelKey: 'notice.label',
+    descKey: 'notice.desc',
   },
   {
     type: SpaceType.Deliberation,
     Icon: <Discuss />,
-    label: 'Deliberation',
-    description: 'Share perspectives and engage in in-depth discussion.',
+    labelKey: 'deliberation.label',
+    descKey: 'deliberation.desc',
   },
   {
     type: SpaceType.SprintLeague,
     Icon: <Palace className="[&>path]:stroke-[var(--color-neutral-500)]" />,
-    label: 'Sprint League',
-    description:
-      'Mini social game where three runners compete in a race, and their speed is determined by community voting',
+    labelKey: 'sprintLeague.label',
+    descKey: 'sprintLeague.desc',
     experiment: true,
   },
   {
     type: SpaceType.dAgit,
     Icon: <Cube />,
-    label: 'd.AGIT',
-    description: 'Create d.AGIT space for managing artworks',
+    labelKey: 'dAgit.label',
+    descKey: 'dAgit.desc',
     disabled: true,
   },
   // {
@@ -226,23 +226,23 @@ function SpaceForm({
   selected: boolean;
   onClick: () => void;
 }) {
+  const t = useTranslations('SpaceForms');
   const disabled = form.disabled || (form.experiment && !config.experiment);
+
   return (
     <div
       className={`flex flex-row gap-2.5 justify-center items-center w-full p-5 border rounded-[10px] ${selected ? 'border-primary' : 'border-neutral-800'} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}} `}
       onClick={() => {
-        if (!disabled) {
-          onClick();
-        }
+        if (!disabled) onClick();
       }}
     >
       <div className="size-8 [&>svg]:size-8">{form.Icon}</div>
       <div className="flex flex-col flex-1 gap-1">
         <span className="font-bold text-[15px]/[20px] text-white">
-          {form.label}
+          {t(form.labelKey)}
         </span>
         <span className="font-normal text-[15px]/[24px] text-neutral-300">
-          {form.description}
+          {t(form.descKey)}
         </span>
       </div>
       <RadioButton selected={selected} onClick={onClick} />

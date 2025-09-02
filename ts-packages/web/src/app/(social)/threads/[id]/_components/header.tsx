@@ -38,8 +38,10 @@ import { ratelApi } from '@/lib/api/ratel_api';
 import { showSuccessToast, showErrorToast } from '@/lib/toast';
 import { usePostDraft } from '@/app/(social)/_components/create-post';
 import { convertNumberToString } from '@/lib/number-utils';
+import { useTranslations } from 'next-intl';
 
 export default function Header({ post_id }: { post_id: number }) {
+  const t = useTranslations('Threads');
   const { data: post } = useFeedByID(post_id);
   const popup = usePopup();
   const router = useRouter();
@@ -72,17 +74,17 @@ export default function Header({ post_id }: { post_id: number }) {
     popup
       .open(<SpaceCreateModal feed_id={post_id} />)
       .withoutBackdropClose()
-      .withTitle('Select a Space Type');
+      .withTitle(t('select_space_type'));
   };
 
   const handleDeletePost = async () => {
     try {
       await apiPost(ratelApi.feeds.removeDraft(post_id), { delete: {} });
-      showSuccessToast('Post deleted successfully');
+      showSuccessToast(t('success_delete_post_message'));
       router.push('/'); // Navigate to homepage after successful deletion
     } catch (error) {
       console.error('Failed to delete post:', error);
-      showErrorToast('Failed to delete post. Please try again.');
+      showErrorToast(t('failed_delete_post_message'));
       // Remain on the feed page on failure
     }
   };
@@ -92,7 +94,7 @@ export default function Header({ post_id }: { post_id: number }) {
       await loadDraft(post_id);
     } catch (error) {
       console.error('Failed to load draft for editing:', error);
-      showErrorToast('Failed to load post for editing. Please try again.');
+      showErrorToast(t('failed_edit_post_message'));
     }
   };
 
@@ -127,7 +129,7 @@ export default function Header({ post_id }: { post_id: number }) {
       setLocalIsLiked(post.is_liked || false);
       setLocalLikes(post.likes || 0);
       console.error('Failed to update like:', error);
-      showErrorToast('Failed to update like. Please try again.');
+      showErrorToast(t('failed_like_post_message'));
     } finally {
       setIsLikeProcessing(false);
     }
@@ -145,7 +147,7 @@ export default function Header({ post_id }: { post_id: number }) {
           {space_id ? (
             <Link href={target ?? ''}>
               <Button variant="rounded_secondary" className="max-tablet:hidden">
-                Join Space
+                {t('join_space')}
               </Button>
             </Link>
           ) : isPostOwner ? (
@@ -156,14 +158,14 @@ export default function Header({ post_id }: { post_id: number }) {
                 onClick={handleEditPost}
               >
                 <Edit className="!size-5" />
-                Edit
+                {t('edit')}
               </Button>
               <Button
                 variant="rounded_secondary"
                 className="rounded-md max-tablet:hidden text-lg px-3 py-1.5"
               >
                 <UnlockPublic className="!size-5 [&>path]:stroke-black" />
-                Make Public
+                {t('make_public')}
               </Button>
               <Button
                 variant="rounded_primary"
@@ -171,7 +173,7 @@ export default function Header({ post_id }: { post_id: number }) {
                 className="max-tablet:hidden bg-[#FCB300] hover:bg-[#FCB300]/80 text-lg px-3 py-1.5"
               >
                 <Palace className="!size-5" />
-                Create a Space
+                {t('create_space')}
               </Button>
             </>
           ) : (
@@ -200,7 +202,7 @@ export default function Header({ post_id }: { post_id: number }) {
                     <DropdownMenuItem asChild>
                       <Link href={target ?? ''}>
                         <button className="flex items-center w-full px-4 py-2 text-sm text-white hover:bg-gray-700 cursor-pointer">
-                          Join Space
+                          {t('join_space')}
                         </button>
                       </Link>
                     </DropdownMenuItem>
@@ -212,7 +214,7 @@ export default function Header({ post_id }: { post_id: number }) {
                           className="flex items-center w-full px-4 py-2 text-sm text-white hover:bg-gray-700 cursor-pointer"
                         >
                           <Palace className="w-4 h-4 [&>path]:stroke-white" />
-                          Create a Space
+                          {t('create_space')}
                         </button>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
@@ -221,13 +223,13 @@ export default function Header({ post_id }: { post_id: number }) {
                           className="flex items-center w-full px-4 py-2 text-sm text-white hover:bg-gray-700 cursor-pointer"
                         >
                           <Edit className="w-4 h-4" />
-                          Edit
+                          {t('edit')}
                         </button>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
                         <button className="flex items-center w-full px-4 py-2 text-sm text-white hover:bg-gray-700 cursor-pointer">
                           <UnlockPublic className="w-4 h-4 [&>path]:stroke-white" />
-                          Make Public
+                          {t('make_public')}
                         </button>
                       </DropdownMenuItem>
                     </>
@@ -242,7 +244,7 @@ export default function Header({ post_id }: { post_id: number }) {
                       className="flex items-center w-full px-4 py-2 text-sm text-red-400 hover:bg-gray-700 cursor-pointer"
                     >
                       <Trash2 className="w-4 h-4" />
-                      Delete
+                      {t('delete')}
                     </button>
                   </DropdownMenuItem>
                 )}
@@ -306,7 +308,7 @@ export default function Header({ post_id }: { post_id: number }) {
           </div>
           <div className="flex items-center gap-1">
             <Lock className="size-7 text-gray-400" />
-            <span className="text-base text-white">Private</span>
+            <span className="text-base text-white">{t('private')}</span>
           </div>
         </div>
       </div>
