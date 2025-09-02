@@ -1,9 +1,16 @@
-import { Stack, StackProps, aws_route53 as route53 } from "aws-cdk-lib";
+import {
+  Stack,
+  StackProps,
+  aws_route53 as route53,
+  aws_certificatemanager as acm,
+} from "aws-cdk-lib";
 import { Construct } from "constructs";
-import * as ga from "aws-cdk-lib/aws-globalaccelerator";
-import * as ga_endpoints from "aws-cdk-lib/aws-globalaccelerator-endpoints";
-import * as route53_targets from "aws-cdk-lib/aws-route53-targets";
 import * as elbv2 from "aws-cdk-lib/aws-elasticloadbalancingv2";
+import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
+import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
+import * as cdk from "aws-cdk-lib";
+import * as targets from "aws-cdk-lib/aws-route53-targets";
+import * as s3 from "aws-cdk-lib/aws-s3";
 
 export interface GlobalAccelStackProps extends StackProps {
   // Three ALBs built in regional stacks:
@@ -11,96 +18,207 @@ export interface GlobalAccelStackProps extends StackProps {
   usAlb: elbv2.IApplicationLoadBalancer;
   krAlb: elbv2.IApplicationLoadBalancer;
 
-  // DNS host like "api2.dev.ratel.foundation"
+  // DNS host like "dev.ratel.foundation"
   fullDomainName: string;
 }
 
 export class GlobalAccelStack extends Stack {
-  public readonly accelerator: ga.Accelerator;
+  public readonly distribution: cloudfront.Distribution;
 
   constructor(scope: Construct, id: string, props: GlobalAccelStackProps) {
     super(scope, id, { ...props, crossRegionReferences: true });
 
-    // 1) Global Accelerator (allocates 2 anycast static IPs)
-    const acc = new ga.Accelerator(this, "Accelerator", {
-      acceleratorName: "api2-dev-ratel-foundation",
-    });
+    const { euAlb, usAlb, krAlb, fullDomainName } = props;
 
-    // 2) Listener(s): HTTPS only (443). Add 80 if you need plain HTTP pass-through.
-    const listener = acc.addListener("Https", {
-      portRanges: [{ fromPort: 443, toPort: 443 }],
-    });
+    const webDomain = fullDomainName;
+    const apiDomain = `api.${fullDomainName}`;
+    const albDomain = `alb.${fullDomainName}`;
 
-    // 3) Endpoint groups per Region (attach each regional ALB)
-    listener.addEndpointGroup("EU", {
-      // Frankfurt
-      region: "eu-central-1",
-      healthCheckPort: 443,
-      healthCheckPath: "/version",
-      healthCheckProtocol: ga.HealthCheckProtocol.HTTPS,
-      endpoints: [
-        new ga_endpoints.ApplicationLoadBalancerEndpoint(props.euAlb, {
-          preserveClientIp: true,
-          weight: 100,
-        }),
-      ],
-    });
-
-    listener.addEndpointGroup("US", {
-      // N. Virginia
-      region: "us-east-1",
-      healthCheckPort: 443,
-      healthCheckPath: "/version",
-      healthCheckProtocol: ga.HealthCheckProtocol.HTTPS,
-      endpoints: [
-        new ga_endpoints.ApplicationLoadBalancerEndpoint(props.usAlb, {
-          preserveClientIp: true,
-          weight: 100,
-        }),
-      ],
-    });
-
-    listener.addEndpointGroup("KR", {
-      // Seoul
-      region: "ap-northeast-2",
-      healthCheckPort: 443,
-      healthCheckPath: "/version",
-      healthCheckProtocol: ga.HealthCheckProtocol.HTTPS,
-      endpoints: [
-        new ga_endpoints.ApplicationLoadBalancerEndpoint(props.krAlb, {
-          preserveClientIp: true,
-          weight: 100,
-        }),
-      ],
-    });
-
-    this.accelerator = acc;
-
-    // 4) Route53 record: api2.dev.ratel.foundation -> Global Accelerator
-    //    A/AAAA Alias to GA (supports dual-stack)
+    // Root hosted zone derived from fullDomainName (e.g., ratel.foundation)
+    const baseDomain = "ratel.foundation";
     const zone = route53.HostedZone.fromLookup(this, "RootZone", {
-      domainName: "ratel.foundation",
+      domainName: baseDomain,
+    });
+    const cert = new acm.Certificate(this, "AlbCert", {
+      domainName: webDomain,
+      subjectAlternativeNames: [apiDomain],
+      validation: acm.CertificateValidation.fromDns(zone),
     });
 
-    const recordName = props.fullDomainName.replace(".ratel.foundation", "");
+    // Single origin hostname resolved via Route 53 latency policy
 
-    new route53.ARecord(this, "A-GA", {
+    // ---- Latency-based A/AAAA records: origin.<host> → per‑region ALBs ----
+    // Note: we set `region` to the AWS region of the ALB; setIdentifier must be unique per record.
+    const albEntries: Array<{
+      id: string;
+      region: string;
+      alb: elbv2.IApplicationLoadBalancer;
+    }> = [
+      { id: "eu", region: "eu-central-1", alb: euAlb },
+      { id: "us", region: "us-east-1", alb: usAlb },
+      { id: "kr", region: "ap-northeast-2", alb: krAlb },
+    ];
+
+    albEntries.forEach(({ id: rid, region, alb }) => {
+      new route53.CfnRecordSet(this, `LatencyA-${rid}`, {
+        hostedZoneId: zone.hostedZoneId,
+        name: albDomain,
+        type: "A",
+        setIdentifier: `alb-${rid}`,
+        region,
+        aliasTarget: {
+          dnsName: alb.loadBalancerDnsName,
+          hostedZoneId: alb.loadBalancerCanonicalHostedZoneId,
+          evaluateTargetHealth: false,
+        },
+      });
+
+      new route53.CfnRecordSet(this, `LatencyAAAA-${rid}`, {
+        hostedZoneId: zone.hostedZoneId,
+        name: albDomain,
+        type: "AAAA",
+        setIdentifier: `alb6-${rid}`,
+        region,
+        aliasTarget: {
+          dnsName: alb.loadBalancerDnsName,
+          hostedZoneId: alb.loadBalancerCanonicalHostedZoneId,
+          evaluateTargetHealth: false,
+        },
+      });
+    });
+
+    // ---- CloudFront Distribution using latency-routed origin ----
+    const origin = new origins.HttpOrigin(albDomain, {
+      protocolPolicy: cloudfront.OriginProtocolPolicy.HTTPS_ONLY, // keep ALB HTTPS; if ALB is HTTP, switch to HTTP_ONLY
+      originSslProtocols: [cloudfront.OriginSslPolicy.TLS_V1_2],
+      readTimeout: cdk.Duration.seconds(30),
+      keepaliveTimeout: cdk.Duration.seconds(5),
+    });
+
+    const assetsBucket = s3.Bucket.fromBucketName(
+      this,
+      "DefaultS3Bucket",
+      fullDomainName,
+    );
+    const s3Origin = origins.S3BucketOrigin.withBucketDefaults(assetsBucket);
+
+    // CloudFront cert (must be in us-east-1). Use provided ARN or create DNS‑validated one.
+    this.distribution = new cloudfront.Distribution(this, "Distribution", {
+      defaultBehavior: {
+        origin,
+        cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED, // API/SSR default; tune if you want caching
+        originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER,
+        allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
+        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+      },
+      additionalBehaviors: {
+        "/metadata/*": {
+          origin: s3Origin,
+          cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+          compress: true,
+        },
+        "/assets/*": {
+          origin: s3Origin,
+          cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+          compress: true,
+        },
+        "/*.js": {
+          origin: s3Origin,
+          cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+          compress: true,
+        },
+        "/*.css": {
+          origin: s3Origin,
+          cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+          compress: true,
+        },
+        "/*.html": {
+          origin: s3Origin,
+          cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+          compress: true,
+        },
+        "/*.ico": {
+          origin: s3Origin,
+          cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+          compress: true,
+        },
+        "/*.svg": {
+          origin: s3Origin,
+          cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+          compress: true,
+        },
+        "/*.avif": {
+          origin: s3Origin,
+          cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+          compress: true,
+        },
+        "/*.png": {
+          origin: s3Origin,
+          cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+          compress: true,
+        },
+        "/*.wasm": {
+          origin: s3Origin,
+          cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+          compress: true,
+        },
+        "/icons/*": {
+          origin: s3Origin,
+          cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+          compress: true,
+        },
+        "/images/*": {
+          origin: s3Origin,
+          cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+          compress: true,
+        },
+        "/public/*": {
+          origin: s3Origin,
+          cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+          compress: true,
+        },
+      },
+
+      domainNames: [webDomain, apiDomain],
+      certificate: cert,
+      httpVersion: cloudfront.HttpVersion.HTTP2_AND_3,
+      priceClass: cloudfront.PriceClass.PRICE_CLASS_ALL,
+    });
+
+    // ---- Route53 alias for the end-user domain → CloudFront ----
+    new route53.ARecord(this, "AliasV4", {
       zone,
-      recordName, // "api2.dev"
+      recordName: webDomain.replace(`.${baseDomain}`, ""), // e.g., 'dev'
       target: route53.RecordTarget.fromAlias(
-        new route53_targets.GlobalAcceleratorTarget(this.accelerator),
+        new targets.CloudFrontTarget(this.distribution),
+      ),
+    });
+    new route53.AaaaRecord(this, "AliasV6", {
+      zone,
+      recordName: webDomain.replace(`.${baseDomain}`, ""),
+      target: route53.RecordTarget.fromAlias(
+        new targets.CloudFrontTarget(this.distribution),
       ),
     });
 
-    new route53.AaaaRecord(this, "AAAA-GA", {
+    new route53.ARecord(this, "ApiAliasV4", {
       zone,
-      recordName,
+      recordName: apiDomain.replace(`.${baseDomain}`, ""), // e.g., 'dev'
       target: route53.RecordTarget.fromAlias(
-        new route53_targets.GlobalAcceleratorTarget(this.accelerator),
+        new targets.CloudFrontTarget(this.distribution),
+      ),
+    });
+    new route53.AaaaRecord(this, "ApiAliasV6", {
+      zone,
+      recordName: apiDomain.replace(`.${baseDomain}`, ""),
+      target: route53.RecordTarget.fromAlias(
+        new targets.CloudFrontTarget(this.distribution),
       ),
     });
 
-    // Nice to have: output accelerator DNS & IPs
-    this.exportValue(this.accelerator.dnsName, { name: "AcceleratorDns" });
+    new cdk.CfnOutput(this, "CloudFrontDomain", {
+      value: this.distribution.distributionDomainName,
+    });
+    new cdk.CfnOutput(this, "OriginHostname", { value: albDomain });
   }
 }
