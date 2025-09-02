@@ -11,6 +11,8 @@ import 'react-toastify/dist/ReactToastify.css';
 import { prefetchUserInfo } from './(social)/_hooks/user';
 import { getServerQueryClient } from '@/lib/query-utils.server';
 import ReferralHandler from './_providers/referral-handler';
+import { NextIntlClientProvider } from 'next-intl';
+import { getLocale, getMessages } from 'next-intl/server';
 
 const raleway = Raleway({
   variable: '--font-raleway',
@@ -24,27 +26,31 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const queryClient = await getServerQueryClient();
-
   await prefetchUserInfo(queryClient);
   const dehydratedState = dehydrate(queryClient);
 
+  const locale = await getLocale();
+  const messages = await getMessages();
+
   return (
-    <html lang="en">
+    <html lang={locale}>
       <head>
         <link rel="icon" href="/logos/favicon.ico" />
       </head>
       <body className={`${raleway.variable} antialiased bg-bg`}>
-        <CookieProvider>
-          <Providers dehydratedState={dehydratedState}>
-            <HydrationBoundary state={dehydratedState}>
-              <ReferralHandler />
-              <ClientLayout>{children}</ClientLayout>
-              <PopupZone />
-            </HydrationBoundary>
-            <ReactQueryDevtools initialIsOpen={false} />
-          </Providers>
-        </CookieProvider>
-        <ToastContainer />
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <CookieProvider>
+            <Providers dehydratedState={dehydratedState}>
+              <HydrationBoundary state={dehydratedState}>
+                <ReferralHandler />
+                <ClientLayout>{children}</ClientLayout>
+                <PopupZone />
+              </HydrationBoundary>
+              <ReactQueryDevtools initialIsOpen={false} />
+            </Providers>
+          </CookieProvider>
+          <ToastContainer />
+        </NextIntlClientProvider>
       </body>
     </html>
   );
