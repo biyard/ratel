@@ -54,6 +54,63 @@
     "user_name_warning": "사용자 이름에서 테스트 키워드를 제거해 주세요.",
     "already_exists_user": "이미 존재하는 이름입니다."
   },
+  "Threads": {
+    "edit": "편집하기",
+    "make_public": "공개로 만들기",
+    "create_space": "스페이스 생성",
+    "delete": "삭제하기",
+    "private": "개인",
+    "public": "공개",
+    "reply": "응답",
+    "replies": "응답",
+    "join_space": "스페이스 참여하기",
+    "share_your_thoughts": "당신의 생각을 공유해주세요...",
+    "attached_files": "첨부 파일",
+    "contents_hint": "여기에 마크다운 형태를 활용하여 설명을 입력해주세요.",
+
+    "select_space_type": "스페이스 타입 선택",
+    "success_delete_post_message": "성공적으로 게시물을 삭제했습니다.",
+    "failed_delete_post_message": "게시물 삭제에 실패했습니다. 잠시 후 다시 시도해주세요.",
+    "failed_edit_post_message": "편집할 게시물을 불러오는 데 실패했습니다. 잠시 후 다시 시도해 주세요.",
+    "failed_like_post_message": "좋아요를 업데이트하는 데 실패했습니다. 다시 시도해 주세요.",
+
+    "not_found_title": "존재하지 않는 스레드",
+    "not_found_description": "스레드가 존재하지 않습니다.",
+    "go_home": "홈으로 돌아가기"
+  },
+  "SpaceForms": {
+    "poll": {
+      "label": "Poll",
+      "desc": "빠른 의견이나 선호도를 수집합니다."
+    },
+    "notice": {
+      "label": "Notice",
+      "desc": "포인트 부스팅 옵션과 함께 공지 또는 퀴즈를 게시합니다."
+    },
+    "deliberation": {
+      "label": "Deliberation",
+      "desc": "관점을 공유하고 심층적인 토론에 참여하세요."
+    },
+    "sprintLeague": {
+      "label": "Sprint League",
+      "desc": "세 명의 러너가 경주하고 커뮤니티 투표로 속도가 결정되는 소셜 미니 게임입니다."
+    },
+    "dAgit": {
+      "label": "d.AGIT",
+      "desc": "작품 관리를 위한 d.AGIT 스페이스를 생성합니다."
+    },
+
+    "notice_title": "Notice 스페이스 설정하기",
+    "notice_description_1": "{spaceType} 스페이스를 생성하면, <b>부스터 설정은 변경할 수 없습니다.</b>",
+    "notice_description_2": "확인하기 전에 모든 설정이 정확한지 다시 확인하세요.",
+
+    "date": "날짜",
+    "boost": "부스팅",
+    "active_booster": "부스터 활성화",
+    "active_booster_desc": "부스터를 사용하면 스프린트 종료 시 배수에 따라 Ratel 구독자만 추가 포인트를 획득합니다. 구독에 관심이 있으시면 자세한 안내를 위해 <btn>문의</btn>해 주세요.",
+    "booster": "부스터",
+    "create": "생성하기"
+  },
   "Home": {
     "create_post": "게시물 생성하기",
     "my_posts": "내 게시물",

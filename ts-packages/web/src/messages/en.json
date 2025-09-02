@@ -54,6 +54,63 @@
     "user_name_warning": "Please remove the test keyword from your username.",
     "already_exists_user": "This username is already taken."
   },
+  "Threads": {
+    "edit": "Edit",
+    "make_public": "Make Public",
+    "create_space": "Create a Space",
+    "delete": "Delete",
+    "private": "Private",
+    "public": "Public",
+    "reply": "Reply",
+    "replies": "Replies",
+    "join_space": "Join Space",
+    "share_your_thoughts": "Share your thoughts...",
+    "attached_files": "Attached Files",
+    "contents_hint": "Type here, Use Markdown, BB code, or HTML to format.",
+
+    "select_space_type": "Select a Space Type",
+    "success_delete_post_message": "Post deleted successfully",
+    "failed_delete_post_message": "Failed to delete post. Please try again.",
+    "failed_edit_post_message": "Failed to load post for editing. Please try again.",
+    "failed_like_post_message": "Failed to update like. Please try again.",
+
+    "not_found_title": "Thread Not Found",
+    "not_found_description": "This thread does not exist.",
+    "go_home": "Go Home"
+  },
+  "SpaceForms": {
+    "poll": {
+      "label": "Poll",
+      "desc": "Collect quick opinions or preferences."
+    },
+    "notice": {
+      "label": "Notice",
+      "desc": "Post announcements or quizzes with optional point boosts"
+    },
+    "deliberation": {
+      "label": "Deliberation",
+      "desc": "Share perspectives and engage in in-depth discussion."
+    },
+    "sprintLeague": {
+      "label": "Sprint League",
+      "desc": "Mini social game where three runners compete in a race, and their speed is determined by community voting"
+    },
+    "dAgit": {
+      "label": "d.AGIT",
+      "desc": "Create d.AGIT space for managing artworks"
+    },
+
+    "notice_title": "Set a Notice Space",
+    "notice_description_1": "Once the {spaceType} Space is created, <b>the booster settings cannot be changed.</b>",
+    "notice_description_2": "Please make sure everything is correct before confirming.",
+
+    "date": "Date",
+    "boost": "Boost",
+    "active_booster": "Activate Booster",
+    "active_booster_desc": "If a booster is used, only Ratel subscribers will earn boosted points based on the multiplier when the sprint ends. If you're interested in a subscription, please <btn>contact</btn> us for more details.",
+    "booster": "Booster",
+    "create": "Create"
+  },
   "Home": {
     "create_post": "Create Post",
     "my_posts": "My Posts",
