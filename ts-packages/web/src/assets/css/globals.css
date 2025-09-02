@@ -3,18 +3,53 @@
 
 @custom-variant light (&:where([data-theme=light], [data-theme=light] *));
 
-@theme static {
+/* @theme static {
   --color-background: #1e1e1e;
   --color-component-bg: #191919;
   --color-custom-white: #ffffff;
   --color-neutral-900: #171717;
-}
+} */
 
 [data-theme='light'] {
-  --color-background: #f5f5f5;
-  --color-component-bg: #fafafa;
+  
+
   --color-custom-white: #262626;
   --color-neutral-900: #ffffff;
+
+  /* Tailwind variables */
+  --color-background: #f5f5f5;
+  --color-primary: #fcb300;
+  --color-secondary: #777677;
+
+  --color-btn-hover: #282828;
+
+  --color-c-wg-30: #aeaeae;
+  --color-c-wg-50: #777677;
+  --color-c-wg-70: #464646;
+  --color-c-wg-80: #323232;
+  --color-c-cg-30: #aeb8b8;
+  --color-footer: #191919;
+  --color-copyright: #9095a1;
+  --color-neutral-80: #6b6b6b;
+  --color-neutral-400: #a1a1a1;
+  --color-neutral-500: #737373;
+  --color-neutral-600: #525252;
+  --color-neutral-700: #404040;
+  --color-neutral-800: #262626;
+  --color-c-c-20: #6eedd8;
+  --color-c-p-20: #ff9eee;
+  --color-c-p-50: #db2780;
+  --color-c-p-50-10: #db27801a;
+  --color-supportive: #6eedd8;
+  --color-against: #ff9eee;
+  --color-bg: #1e1e1e;
+  --color-tab-hover: #282828;
+  --color-mission-title: #dee1e6;
+  --color-tag: #dee1e6;
+  --color-component-bg: #fafafa;
+
+  --color-web-bg: #0a0a0a;
+
   /* Table tokens (light overrides) */
   --table-bg: #ffffff;
   --table-border: #e0e0e0;
