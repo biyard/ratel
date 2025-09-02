@@ -260,8 +260,8 @@ export class GlobalAccelStack extends Stack {
       distribution: this.distribution,
       distributionPaths: ["/__invalidate__"],
       sources: [
-        s3deploy.Source.asset("../ts-packages/web/.next/static"),
-        s3deploy.Source.asset("../ts-packages/web/public/assets"),
+        s3deploy.Source.asset(".next/static"),
+        s3deploy.Source.asset("public"),
       ],
     });
 
