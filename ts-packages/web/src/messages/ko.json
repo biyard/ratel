@@ -216,7 +216,23 @@
     "participants": "참여자 수",
     "remainings": "남은 일자",
     "date": "기간",
-    "responses": "명 응답"
+    "responses": "명 응답",
+
+    "success_share_info": "스페이스 URL이 성공적으로 복사되었습니다.",
+    "failed_share_info": "스페이스 복사에 실패했습니다. 잠시 후 다시 시도해주세요.",
+    "failed_like_info": "스페이스 좋아요 업데이트에 실패했습니다. 잠시 후 다시 시도해주세요.",
+    "all_input_required": "모든 값을 입력해주세요.",
+    "success_save_response": "응답이 성공적으로 저장되었습니다.",
+    "failed_save_response": "응답 저장에 실패했습니다. 잠시 후 다시 시도주세요.",
+    "success_post_space": "스페이스가 성공적으로 게시되었습니다.",
+    "failed_post_space": "스페이스 게시에 실패했습니다. 잠시 후 다시 시도해주세요.",
+    "success_delete_space": "스페이스가 성공적으로 삭제되었습니다.",
+    "failed_delete_space": "스페이스 삭제에 실패했습니다. 잠시 후 다시 시도해주세요.",
+    "question_title_required": "질문 제목을 입력해주세요.",
+    "more_option_required": "옵션을 2개 이상 선택해주세요.",
+    "fill_label_required": "레이블을 채워주세요.",
+    "success_update_space": "스페이스를 성공적으로 업데이트했습니다.",
+    "failed_update_space": "스페이스 업데이트에 실패했습니다. 잠시 후 다시 시도해주세요."
   },
   "Space": {
     "unsupported_space_type": "지원되지 않는 스페이스 유형입니다.",
