@@ -35,7 +35,9 @@ jobs:
         run: |
           npm i -g aws-cdk
           mkdir cdk/.next
+          ls -al
           tar xzvf next.tar.gz -C cdk/.next
+          ls -al cdk/.next
           make cdk/public
           make cdk-deploy-v2
 
