@@ -21,7 +21,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: nextjs-web-cdk-next-${{ github.sha }}
-          path: ${{ github.workspace }}/cdk/.next/
+          path: next.tar.gz
       - uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -34,6 +34,7 @@ jobs:
           SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
           npm i -g aws-cdk
+          tar xzvf next.tar.gz -C cdk/.next
           make cdk/public
           make cdk-deploy-v2
 
@@ -358,14 +359,13 @@ jobs:
             make docker.push
             cd ../..
             make cdk/.next
-            ls -al cdk
-            ls -al ${{ github.workspace }}/cdk/.next
+            tar czvf next.tar.gz cdk/.next
 
       - name: Upload Next.js CDK .next
         uses: actions/upload-artifact@v4
         with:
           name: nextjs-web-cdk-next-${{ github.sha }}
-          path: ${{ github.workspace }}/cdk/.next/
+          path: ${{ github.workspace }}/next.tar.gz
           if-no-files-found: error
           retention-days: 7
           
