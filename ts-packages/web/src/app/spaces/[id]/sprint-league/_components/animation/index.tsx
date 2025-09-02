@@ -16,6 +16,7 @@ import { logger } from '@/lib/logger';
 import { SprintLeaguePlayer } from '@/lib/api/models/sprint_league';
 import { useApplication } from '@pixi/react';
 import { showInfoToast } from '@/lib/toast';
+import { useTranslations } from 'next-intl';
 
 const backgroundBundle = [
   {
@@ -160,6 +161,7 @@ function Inner({
   onRepost,
   disabled = false,
 }: InnerProps) {
+  const t = useTranslations('SprintSpace');
   const { app } = useApplication();
   const [baseSpeed, setBaseSpeed] = useState(
     initStatus !== Status.BEFORE_VOTE && initStatus !== Status.GAME_END
@@ -182,7 +184,7 @@ function Inner({
 
   const handleStartVote = () => {
     if (disabled) {
-      showInfoToast('Voting is only allowed when the space is published.');
+      showInfoToast(t('start_voting_info'));
       return;
     }
     setStatus(Status.VOTING);
