@@ -63,7 +63,7 @@ build: clean
 deps/rust-sdk/cdk/node_modules:
 	cd deps/rust-sdk/cdk && npm install
 
-cdk-deploy-v2: deps/rust-sdk/cdk/node_modules
+cdk-deploy-v2:
 	cd cdk && npm i
 	cd cdk && $(BUILD_CDK_ENV) npm run build
 	cd cdk && $(BUILD_CDK_ENV) cdk synth
