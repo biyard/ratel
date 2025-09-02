@@ -25,7 +25,7 @@ jobs:
       - name: Deploy
         run: |
           npm i -g aws-cdk
-          make cdk-deploy
+          make cdk-deploy-v2
 
   test-with-server:
     runs-on: ubuntu-latest

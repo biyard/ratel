@@ -22,7 +22,8 @@ ifeq ($(ENABLE_DOCKER),true)
 	DOCKER_COMMAND_SUFFUIX = -docker
 endif
 
-BUILD_CDK_ENV ?= DOMAIN=$(DOMAIN) COMMIT=$(COMMIT) ENV=$(ENV) STACK=$(STACK)
+BUILD_CDK_ENV ?= AWS_ACCESS_KEY_ID=$(ACCESS_KEY_ID) AWS_SECRET_ACCESS_KEY=$(SECRET_ACCESS_KEY) AWS_REGION=$(REGION) DOMAIN=$(DOMAIN) TABLE_NAME=$(TABLE_NAME) WORKSPACE_ROOT=$(WORKSPACE_ROOT) SERVICE=$(SERVICE) VPC_ID=$(VPC_ID) AWS_ACCOUNT_ID=$(AWS_ACCOUNT_ID) COMMIT=$(COMMIT) ENV=$(ENV) ENABLE_S3=$(ENABLE_S3) ENABLE_DYNAMO=$(ENABLE_DYNAMO) ENABLE_FARGATE=$(ENABLE_FARGATE) ENABLE_LAMBDA=$(ENABLE_LAMBDA) ENABLE_OPENSEARCH=$(ENABLE_OPENSEARCH) BASE_DOMAIN=$(BASE_DOMAIN) PROJECT=$(PROJECT) STACK=$(STACK) HOSTED_ZONE_ID=$(HOSTED_ZONE_ID)
+
 
 .build/evm-keys:
 	docker run --rm -it ghcr.io/foundry-rs/foundry:latest "cast wallet new --json" > .build/evm-keys.json
@@ -62,10 +63,16 @@ build: clean
 deps/rust-sdk/cdk/node_modules:
 	cd deps/rust-sdk/cdk && npm install
 
-cdk-deploy: deps/rust-sdk/cdk/node_modules
+cdk-deploy-v2: deps/rust-sdk/cdk/node_modules
+	cd cdk && npm i
 	cd cdk && $(BUILD_CDK_ENV) npm run build
 	cd cdk && $(BUILD_CDK_ENV) cdk synth
 	cd cdk && $(BUILD_CDK_ENV) cdk deploy --require-approval never $(AWS_FLAG) --all
+
+cdk-deploy: deps/rust-sdk/cdk/node_modules
+	cd deps/rust-sdk/cdk && $(BUILD_CDK_ENV) CODE_PATH=$(PWD)/.build/$(SERVICE) npm run build
+	cd deps/rust-sdk/cdk && $(BUILD_CDK_ENV) CODE_PATH=$(PWD)/.build/$(SERVICE) cdk synth
+	cd deps/rust-sdk/cdk && $(BUILD_CDK_ENV) CODE_PATH=$(PWD)/.build/$(SERVICE) cdk deploy --require-approval never $(AWS_FLAG) --all
 
 s3-deploy:
 	cp -r packages/$(SERVICE)/public .build/$(SERVICE)/public/public
