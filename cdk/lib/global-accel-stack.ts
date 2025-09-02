@@ -11,6 +11,9 @@ import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
 import * as cdk from "aws-cdk-lib";
 import * as targets from "aws-cdk-lib/aws-route53-targets";
 import * as s3 from "aws-cdk-lib/aws-s3";
+import * as cf from "aws-cdk-lib/aws-cloudfront";
+import * as s3deploy from "aws-cdk-lib/aws-s3-deployment";
+import * as iam from "aws-cdk-lib/aws-iam";
 
 export interface GlobalAccelStackProps extends StackProps {
   // Three ALBs built in regional stacks:
@@ -102,6 +105,31 @@ export class GlobalAccelStack extends Stack {
     );
     const s3Origin = origins.S3BucketOrigin.withBucketDefaults(assetsBucket);
 
+    // 1) S3 for static assets
+    const staticBucket = new s3.Bucket(this, "NextStaticBucket", {
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      encryption: s3.BucketEncryption.S3_MANAGED,
+    });
+
+    // 2) CloudFront OAC
+    const oac = new cloudfront.S3OriginAccessControl(this, "OAC", {
+      originAccessControlName: "static-oac",
+      signing: cloudfront.Signing.SIGV4_ALWAYS,
+    });
+    // attach OAC policy (CDK currently sets it on Distribution; also add bucket policy)
+    staticBucket.addToResourcePolicy(
+      new iam.PolicyStatement({
+        actions: ["s3:GetObject"],
+        resources: [staticBucket.arnForObjects("*")],
+        principals: [new iam.ServicePrincipal("cloudfront.amazonaws.com")],
+        conditions: {
+          StringEquals: {
+            "AWS:SourceArn": `arn:aws:cloudfront::${this.account}:distribution/*`,
+          },
+        },
+      }),
+    );
+
     // CloudFront cert (must be in us-east-1). Use provided ARN or create DNS‑validated one.
     this.distribution = new cloudfront.Distribution(this, "Distribution", {
       defaultBehavior: {
@@ -113,7 +141,7 @@ export class GlobalAccelStack extends Stack {
       },
       additionalBehaviors: {
         "/_next/static/*": {
-          origin,
+          origin: s3Origin,
           cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
           compress: true,
         },
@@ -129,7 +157,7 @@ export class GlobalAccelStack extends Stack {
           compress: true,
         },
         "/assets/*": {
-          origin,
+          origin: s3Origin,
           cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
           compress: true,
         },
@@ -227,9 +255,27 @@ export class GlobalAccelStack extends Stack {
       ),
     });
 
+    new s3deploy.BucketDeployment(this, "DeployStatic", {
+      destinationBucket: staticBucket,
+      distribution: this.distribution,
+      distributionPaths: ["/__invalidate__"],
+      sources: [
+        s3deploy.Source.asset("../ts-packages/web/.next/static"),
+        s3deploy.Source.asset("../ts-packages/web/public/assets"),
+      ],
+    });
+
     new cdk.CfnOutput(this, "CloudFrontDomain", {
       value: this.distribution.distributionDomainName,
     });
+
+    new cdk.CfnOutput(this, "CloudFrontID", {
+      value: this.distribution.distributionId,
+    });
+    new cdk.CfnOutput(this, "CloudFrontArn", {
+      value: this.distribution.distributionArn,
+    });
+
     new cdk.CfnOutput(this, "OriginHostname", { value: albDomain });
   }
 }
