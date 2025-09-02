@@ -103,31 +103,20 @@ export class GlobalAccelStack extends Stack {
       "DefaultS3Bucket",
       fullDomainName,
     );
-    const s3Origin = origins.S3BucketOrigin.withBucketDefaults(assetsBucket);
 
     // 1) S3 for static assets
     const staticBucket = new s3.Bucket(this, "NextStaticBucket", {
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       encryption: s3.BucketEncryption.S3_MANAGED,
     });
+    const oai = new cloudfront.OriginAccessIdentity(this, "OAI");
+    staticBucket.grantRead(oai);
 
-    // 2) CloudFront OAC
-    const oac = new cloudfront.S3OriginAccessControl(this, "OAC", {
-      originAccessControlName: "static-oac",
-      signing: cloudfront.Signing.SIGV4_ALWAYS,
-    });
-    // attach OAC policy (CDK currently sets it on Distribution; also add bucket policy)
-    staticBucket.addToResourcePolicy(
-      new iam.PolicyStatement({
-        actions: ["s3:GetObject"],
-        resources: [staticBucket.arnForObjects("*")],
-        principals: [new iam.ServicePrincipal("cloudfront.amazonaws.com")],
-        conditions: {
-          StringEquals: {
-            "AWS:SourceArn": `arn:aws:cloudfront::${this.account}:distribution/*`,
-          },
-        },
-      }),
+    const s3Origin = origins.S3BucketOrigin.withOriginAccessIdentity(
+      staticBucket,
+      {
+        originAccessIdentity: oai,
+      },
     );
 
     const nextImageCachePolicy = new cloudfront.CachePolicy(
@@ -151,6 +140,12 @@ export class GlobalAccelStack extends Stack {
     );
 
     // CloudFront cert (must be in us-east-1). Use provided ARN or create DNS‑validated one.
+    const s3OriginProp = {
+      origin: s3Origin,
+      cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+      compress: true,
+    };
+
     this.distribution = new cloudfront.Distribution(this, "Distribution", {
       defaultBehavior: {
         origin,
@@ -160,82 +155,25 @@ export class GlobalAccelStack extends Stack {
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       },
       additionalBehaviors: {
-        "/_next/static/*": {
-          origin: s3Origin,
-          cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
-          compress: true,
-        },
         "/_next/image*": {
           origin,
           cachePolicy: nextImageCachePolicy,
           compress: true,
         },
-
-        "/metadata/*": {
-          origin,
-          cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
-          compress: true,
-        },
-        "/assets/*": {
-          origin: s3Origin,
-          cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
-          compress: true,
-        },
-        "/*.js": {
-          origin,
-          cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
-          compress: true,
-        },
-        "/*.css": {
-          origin,
-          cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
-          compress: true,
-        },
-        "/*.html": {
-          origin: s3Origin,
-          cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
-          compress: true,
-        },
-        "/*.ico": {
-          origin,
-          cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
-          compress: true,
-        },
-        "/*.svg": {
-          origin,
-          cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
-          compress: true,
-        },
-        "/*.avif": {
-          origin,
-          cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
-          compress: true,
-        },
-        "/*.png": {
-          origin,
-          cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
-          compress: true,
-        },
-        "/*.wasm": {
-          origin,
-          cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
-          compress: true,
-        },
-        "/icons/*": {
-          origin,
-          cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
-          compress: true,
-        },
-        "/images/*": {
-          origin,
-          cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
-          compress: true,
-        },
-        "/public/*": {
-          origin,
-          cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
-          compress: true,
-        },
+        "/_next/static/*": s3OriginProp,
+        "/metadata/*": s3OriginProp,
+        "/assets/*": s3OriginProp,
+        "/*.js": s3OriginProp,
+        "/*.css": s3OriginProp,
+        "/*.html": s3OriginProp,
+        "/*.ico": s3OriginProp,
+        "/*.svg": s3OriginProp,
+        "/*.avif": s3OriginProp,
+        "/*.png": s3OriginProp,
+        "/*.wasm": s3OriginProp,
+        "/icons/*": s3OriginProp,
+        "/images/*": s3OriginProp,
+        "/public/*": s3OriginProp,
       },
 
       domainNames: [webDomain, apiDomain],
