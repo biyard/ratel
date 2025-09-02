@@ -201,6 +201,13 @@ jobs:
       - name: Install toml-cli
         run: |
           cargo binstall toml-cli --force
+      - name: Cache builder
+        id: image-worker-build-cache
+        uses: actions/cache@v3
+        with:
+          key: image-worker-build-cache
+          path: |
+            packages/image-worker/target
       - name: Deploy APIs
         env:
           REGION: ap-northeast-2

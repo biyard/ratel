@@ -120,6 +120,7 @@ export class RegionalServiceStack extends Stack {
       environment: {
         NODE_ENV: "production",
         PORT: "8080",
+        NEXT_PUBLIC_VERSION: props.commit,
       },
     });
 
