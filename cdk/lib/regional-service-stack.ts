@@ -121,6 +121,11 @@ export class RegionalServiceStack extends Stack {
         NODE_ENV: "production",
         PORT: "8080",
         NEXT_PUBLIC_VERSION: props.commit,
+        NEXT_PUBLIC_LOG_LEVEL: process.env.NEXT_PUBLIC_LOG_LEVEL!,
+        NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL!,
+        NEXT_PUBLIC_SIGN_DOMAIN: process.env.NEXT_PUBLIC_SIGN_DOMAIN!,
+        NEXT_PUBLIC_GRAPHQL_URL: process.env.NEXT_PUBLIC_GRAPHQL_URL!,
+        NEXT_PUBLIC_EXPERIMENT: process.env.NEXT_PUBLIC_EXPERIMENT!,
       },
     });
 
