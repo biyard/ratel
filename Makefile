@@ -71,7 +71,7 @@ cdk/.next:
 	docker cp web-container:/app/ts-packages/web/.next cdk/.next
 
 cdk/public:
-	cp -r ts-packages/web/public
+	cp -r ts-packages/web/public cdk/public
 
 cdk-deploy-v2:
 	cd cdk && npm i
