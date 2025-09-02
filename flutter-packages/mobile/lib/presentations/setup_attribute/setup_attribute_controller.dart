@@ -3,17 +3,29 @@ import 'package:ratel/exports.dart';
 enum SetupAttrStep { info, countryCheck, capture, review }
 
 class SetupAttributeController extends BaseController {
+  Rx<int> userId = 0.obs;
+  final userApi = Get.find<UserApi>();
   final step = SetupAttrStep.info.obs;
 
-  //FIXME: fix to using passport library
   final selectedCountry = 'Country'.obs;
   final capturedPath = ''.obs;
 
-  final name = 'Lee Chanhui'.obs;
-  final birth = '1999-01-12'.obs;
-  final nationality = 'Republic of Korea'.obs;
-  final expire = '2034-08-06'.obs;
-  final gender = 'Male'.obs;
+  final name = ''.obs;
+  final birth = ''.obs;
+  final nationality = ''.obs;
+  final expire = ''.obs;
+  final gender = ''.obs;
+
+  @override
+  void onInit() {
+    super.onInit();
+    getUser();
+  }
+
+  void getUser() async {
+    final item = await userApi.getUserInfo();
+    userId(item.id);
+  }
 
   void goBack() {
     switch (step.value) {
@@ -38,9 +50,7 @@ class SetupAttributeController extends BaseController {
 
   void toCapture() => step.value = SetupAttrStep.capture;
 
-  void mockCapture() {
-    capturedPath.value =
-        'https://images.unsplash.com/photo-1543852786-1cf6624b9987?w=1200';
+  void toReview() {
     step.value = SetupAttrStep.review;
   }
 

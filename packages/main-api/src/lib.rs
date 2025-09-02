@@ -12,11 +12,19 @@ pub mod controllers {
             pub mod select_topic;
         }
         pub mod networks {
+            pub mod accept_invitation;
+            pub mod accept_suggestion;
+            pub mod list_networks;
+            pub mod reject_invitation;
+            pub mod reject_suggestion;
+        }
+        pub mod connections {
             pub mod follow;
             pub mod network;
             pub mod search;
         }
         pub mod notifications {
+            pub mod get_notifications;
             pub mod mark_all_read;
         }
         pub mod telegram {

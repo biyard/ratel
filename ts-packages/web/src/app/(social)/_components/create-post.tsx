@@ -52,6 +52,7 @@ import ToolbarPlugin from '@/components/toolbar/toolbar';
 import { useRouter } from 'next/navigation';
 import { route } from '@/route';
 import { QK_GET_FEED_BY_FEED_ID } from '@/constants';
+import { useTranslations } from 'next-intl';
 
 export const editorTheme = {
   ltr: 'text-left',
@@ -81,6 +82,7 @@ function EditorRefPlugin({
 }
 
 export function CreatePost() {
+  const t = useTranslations('Home');
   const {
     expand,
     setExpand,
@@ -217,7 +219,7 @@ export function CreatePost() {
             <div className="px-4 pt-4">
               <input
                 type="text"
-                placeholder="Write a title..."
+                placeholder={t('write_title')}
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 className="w-full bg-transparent text-white text-xl font-semibold placeholder-neutral-500 outline-none border-none"
@@ -232,7 +234,7 @@ export function CreatePost() {
                 }
                 placeholder={
                   <div className="absolute top-0 text-neutral-500 pointer-events-none select-none">
-                    Type here, Use Markdown, BB code, or HTML to format.
+                    {t('write_content')}
                   </div>
                 }
                 ErrorBoundary={LexicalErrorBoundary}
