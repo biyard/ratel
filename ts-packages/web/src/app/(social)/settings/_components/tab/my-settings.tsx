@@ -3,7 +3,7 @@
 import ChevronRight from '@/assets/icons/chevron-right.svg';
 import { usePopup } from '@/lib/contexts/popup-service';
 import React from 'react';
-import LocaleModal from '../modal/locale_modal';
+import LocaleModal from '../modal/locale-modal';
 import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 
