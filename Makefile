@@ -18,6 +18,9 @@ API_PREFIX ?=
 
 STACK ?= ratel-dev-stack
 
+WEB_REPO_NAME ?= ratel/web
+ECR_NAME ?= $(shell aws ecr describe-repositories --repository-names $(WEB_REPO_NAME)  --query "repositories[0].repositoryUri" --output text)
+
 ifeq ($(ENABLE_DOCKER),true)
 	DOCKER_COMMAND_SUFFUIX = -docker
 endif
@@ -63,7 +66,14 @@ build: clean
 deps/rust-sdk/cdk/node_modules:
 	cd deps/rust-sdk/cdk && npm install
 
-cdk-deploy-v2:
+cdk/.next:
+	docker create --name web-container $(ECR_NAME):$(COMMIT)
+	docker cp web-container:/app/ts-packages/web/.next cdk/.next
+
+cdk/public:
+	cp -r ts-packages/web/public
+
+cdk-deploy-v2: cdk/.next cdk/public
 	cd cdk && npm i
 	cd cdk && $(BUILD_CDK_ENV) npm run build
 	cd cdk && $(BUILD_CDK_ENV) cdk synth
