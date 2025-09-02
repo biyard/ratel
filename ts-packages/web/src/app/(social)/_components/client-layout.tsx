@@ -10,12 +10,14 @@ import { usePopup } from '@/lib/contexts/popup-service';
 import { LoginModal } from '@/components/popup/login-popup';
 import { useUserInfo } from '../_hooks/user';
 import { usePathname } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 
 export default function ClientLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const t = useTranslations('Nav');
   const popup = usePopup();
   const { data, refetch, isLoading } = useUserInfo();
   const { logout } = useAuth();
@@ -75,7 +77,7 @@ export default function ClientLayout({
             onClick={() => setMobileExtends(false)}
             className={linkClass}
           >
-            Home
+            {t('home')}
           </Link>
 
           {!isLoading && data ? (
@@ -87,7 +89,7 @@ export default function ClientLayout({
                 setMobileExtends(false);
               }}
             >
-              Logout
+              {t('logout')}
             </div>
           ) : (
             <button
@@ -99,7 +101,7 @@ export default function ClientLayout({
                   .withoutBackdropClose();
               }}
             >
-              Sign In
+              {t('signIn')}
             </button>
           )}
         </div>
