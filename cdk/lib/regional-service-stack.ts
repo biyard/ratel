@@ -41,7 +41,7 @@ export class RegionalServiceStack extends Stack {
     const healthPath = props.healthCheckPath ?? "/version";
     const apiRepoName = props.apiRepoName ?? "ratel/main-api";
     const webRepoName = props.webRepoName ?? "ratel/web";
-    const minCapacity = props.minCapacity ?? 1;
+    const minCapacity = props.minCapacity ?? 2;
     const maxCapacity = props.maxCapacity ?? 50;
     const albDomain = `alb.${domain}`;
     const baseDomain = "ratel.foundation";
