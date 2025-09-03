@@ -13,6 +13,7 @@ import clsx from 'clsx';
 import { logger } from '@/lib/logger';
 import { checkString } from '@/lib/string-filter-utils';
 import { showErrorToast } from '@/lib/toast';
+import { useTranslations } from 'next-intl';
 
 export default function InviteMemberPopup({
   team_id,
@@ -23,6 +24,7 @@ export default function InviteMemberPopup({
   groups: Group[];
   onclick: (group_id: number, users: number[]) => void;
 }) {
+  const t = useTranslations('Team');
   const { post, get } = useApiCall();
   const [groupIndex, setGroupIndex] = useState(0);
   const [selectedGroup, setSelectedGroup] = useState(groups[0]);
@@ -74,11 +76,11 @@ export default function InviteMemberPopup({
               }
             }
           } else {
-            showErrorToast('Invalid or unregistered input.');
+            showErrorToast(t('invalid_user'));
           }
         } catch (err) {
           logger.error('failed to search user with error: ', err);
-          showErrorToast('Failed to search for user.');
+          showErrorToast(t('failed_search_user'));
         }
       }
 
@@ -92,7 +94,7 @@ export default function InviteMemberPopup({
     <div className="flex flex-col w-[900px] min-h-[400px] max-w-[900px] min-w-[400px] max-mobile:!w-full max-mobile:!max-w-full gap-5">
       <div className="flex flex-col w-full gap-[10px]">
         <div className="font-bold text-[15px]/[28px] text-neutral-400">
-          Select the group
+          {t('select_group')}
         </div>
         <SelectBox
           groups={groups}
@@ -105,14 +107,12 @@ export default function InviteMemberPopup({
 
       <div className="flex flex-col w-full">
         <div className="font-bold text-[15px]/[28px] text-neutral-400">
-          Email, Username, or Phone Number
+          {t('email_label')}
         </div>
         <div className="mt-[10px]">
           <SearchInput
             value={searchValue}
-            placeholder={
-              'Enter email, username, or phone number (ex: john@example.com or john or 01012345678)'
-            }
+            placeholder={t('email_hint')}
             setValue={async (value) => {
               setValue(value, false);
             }}
@@ -175,6 +175,7 @@ function InviteMemberButton({
   isError: boolean;
   onclick: () => void;
 }) {
+  const t = useTranslations('Team');
   const containerClass = clsx(
     'flex flex-row w-full justify-center items-center my-[15px] py-[15px] rounded-lg font-bold text-[#000203] text-base',
     isError ? 'cursor-not-allowed bg-neutral-500' : 'cursor-pointer bg-primary',
@@ -189,7 +190,7 @@ function InviteMemberButton({
           }
         }}
       >
-        Send
+        {t('send')}
       </div>
 
       {isError && (

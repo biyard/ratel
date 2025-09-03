@@ -18,6 +18,7 @@ import Link from 'next/link';
 import { route } from '@/route';
 import { logger } from '@/lib/logger';
 import TeamCreationPopup from '@/app/(social)/_popups/team-creation-popup';
+import { useTranslations } from 'next-intl';
 
 interface ProfileProps {
   profileUrl?: string;
@@ -25,6 +26,7 @@ interface ProfileProps {
 }
 
 export default function Profile({ profileUrl, name }: ProfileProps) {
+  const t = useTranslations('Home');
   const { teams, selectedIndex, setSelectedTeam } = useContext(TeamContext);
   const team = useMemo(() => teams[selectedIndex], [teams, selectedIndex]);
   const userInfo = useUserInfo();
@@ -68,7 +70,7 @@ export default function Profile({ profileUrl, name }: ProfileProps) {
         className="w-[250px] h-fit rounded-lg border border-primary p-[10px] bg-bg z-20"
       >
         <DropdownMenuLabel className="text-xs text-neutral-400 px-2 py-1">
-          Teams
+          {t('teams')}
         </DropdownMenuLabel>
 
         <DropdownMenuGroup>
@@ -119,7 +121,7 @@ export default function Profile({ profileUrl, name }: ProfileProps) {
             }}
             className="w-full px-2 py-1.5 hover:bg-transparent rounded-md text-sm text-white cursor-pointer focus-visible:outline-none"
           >
-            <span>Create a team</span>
+            <span>{t('create_team')}</span>
           </DropdownMenuItem>
 
           <DropdownMenuItem
@@ -129,7 +131,7 @@ export default function Profile({ profileUrl, name }: ProfileProps) {
             }}
             className="w-full px-2 py-1.5 hover:bg-transparent rounded-md text-sm text-white cursor-pointer focus-visible:outline-none"
           >
-            <span>Log out</span>
+            <span>{t('logout')}</span>
           </DropdownMenuItem>
         </DropdownMenuGroup>
       </DropdownMenuContent>
