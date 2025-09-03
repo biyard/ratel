@@ -1,14 +1,23 @@
 import 'package:ratel/exports.dart';
 
+//FIXME: fix to common component
 class StepReview extends StatelessWidget {
   const StepReview({
     super.key,
+    required this.name,
     required this.birth,
+    required this.nationality,
+    required this.expire,
+    required this.gender,
     required this.onRecapture,
     required this.onDone,
   });
 
+  final String name;
   final String birth;
+  final String nationality;
+  final String expire;
+  final String gender;
   final VoidCallback onRecapture;
   final VoidCallback onDone;
 
@@ -213,23 +222,24 @@ class StepReview extends StatelessWidget {
               ],
             ),
           ),
-          const Padding(
-            padding: EdgeInsets.fromLTRB(4, 0, 4, 16),
-            child: Text(
-              'Verified Attributes',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 32,
-                fontWeight: FontWeight.w800,
-                height: 1.1,
-              ),
-            ),
-          ),
+
           Expanded(
             child: SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  const Padding(
+                    padding: EdgeInsets.fromLTRB(4, 0, 4, 16),
+                    child: Text(
+                      'Verified Attributes',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 32,
+                        fontWeight: FontWeight.w800,
+                        height: 1.1,
+                      ),
+                    ),
+                  ),
                   const Text(
                     "We never save your privacy (including passport, birth date and so on) into our server.\n"
                     "It will only be utilized to create anonymous credential called SSI (self-sovereign identity).",
@@ -240,21 +250,27 @@ class StepReview extends StatelessWidget {
                     ),
                   ),
                   18.vgap,
-                  const Padding(
-                    padding: EdgeInsets.only(bottom: 4),
-                    child: Text(
-                      'Birth date',
-                      style: TextStyle(
-                        color: AppColors.neutral300,
-                        fontSize: 11,
-                      ),
+                  SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        6.vgap,
+                        label('Name'),
+                        field(name),
+                        12.vgap,
+                        label('Birth date'),
+                        field(birth),
+                        12.vgap,
+                        label('Nationality'),
+                        field(nationality),
+                        12.vgap,
+                        label('Expiration date'),
+                        field(expire),
+                        12.vgap,
+                        label('Gender'),
+                        field(gender),
+                      ],
                     ),
-                  ),
-                  AppTextField(
-                    hint: birth,
-                    controller: TextEditingController(text: birth),
-                    readOnly: true,
-                    onChanged: (_) {},
                   ),
                   14.vgap,
                   Center(
@@ -263,53 +279,81 @@ class StepReview extends StatelessWidget {
                       child: SvgPicture.asset(Assets.roundedPlus),
                     ),
                   ),
+                  15.vgap,
+
+                  Row(
+                    children: [
+                      SizedBox(
+                        width: 140,
+                        child: TextButton(
+                          onPressed: onRecapture,
+                          child: const Text(
+                            'Re-capture',
+                            style: TextStyle(
+                              color: AppColors.neutral300,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                      ),
+                      10.gap,
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: onDone,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.black,
+                            padding: const EdgeInsets.symmetric(vertical: 14.5),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          child: const Text(
+                            'DONE',
+                            style: TextStyle(
+                              color: AppColors.bg,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  24.vgap,
                 ],
               ),
             ),
           ),
-          Row(
-            children: [
-              SizedBox(
-                width: 140,
-                child: TextButton(
-                  onPressed: onRecapture,
-                  child: const Text(
-                    'Re-capture',
-                    style: TextStyle(
-                      color: AppColors.neutral300,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-              ),
-              10.gap,
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: onDone,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.black,
-                    padding: const EdgeInsets.symmetric(vertical: 14.5),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  child: const Text(
-                    'DONE',
-                    style: TextStyle(
-                      color: AppColors.bg,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          24.vgap,
         ],
       ),
+    );
+  }
+
+  Padding label(String t) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 3),
+      child: Text(
+        t,
+        style: const TextStyle(
+          color: AppColors.neutral400,
+          fontSize: 11,
+          height: 1.45,
+          fontWeight: FontWeight.w400,
+        ),
+      ),
+    );
+  }
+
+  AppTextField field(String v) {
+    return AppTextField(
+      hint: v,
+      controller: TextEditingController(text: v),
+      onChanged: (_) {},
+      keyboardType: TextInputType.text,
+      obscureText: false,
+      readOnly: true,
     );
   }
 }

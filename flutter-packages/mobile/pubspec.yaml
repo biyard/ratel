@@ -76,6 +76,8 @@ dependencies:
   sqflite: ^2.4.2
   flutter_slidable: ^4.0.1
   path: ^1.9.1
+  flutter_image_compress: ^2.4.0
+  google_mlkit_text_recognition: ^0.15.0
 
 dev_dependencies:
   flutter_test:

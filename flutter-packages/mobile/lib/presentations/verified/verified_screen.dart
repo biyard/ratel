@@ -24,7 +24,7 @@ class VerifiedScreen extends GetWidget<VerifiedController> {
     switch (step) {
       case VerifiedStep.myCredential:
         return Credentials(
-          credentials: controller.credentials,
+          credentials: controller.credentials.value,
           did: controller.didId.value,
           onNext: controller.next,
         );
@@ -39,12 +39,37 @@ class VerifiedScreen extends GetWidget<VerifiedController> {
       case VerifiedStep.capture:
         return StepCapture(
           onPrev: controller.back,
-          imageUrl: "",
-          onCapture: controller.next,
+          onParsed: (info) async {
+            controller.name.value = displayName(info.firstName, info.lastName);
+            controller.birth.value = fmtYmd(info.birthDate);
+            controller.expire.value = fmtYmd(info.expirationDate);
+            controller.gender.value = info.gender;
+            controller.nationality.value = mapNationality(info.nationality);
+
+            final store = SecurePassportStore();
+            await store.saveFromPassport(controller.userId.value, info);
+
+            final hasBirth = await store.s.containsKey(
+              key: 'passport_birth_date ${controller.userId.value}',
+              aOptions: SecurePassportStore.aOpts,
+              iOptions: SecurePassportStore.iOpts,
+            );
+            final all = await store.s.readAll(
+              aOptions: SecurePassportStore.aOpts,
+              iOptions: SecurePassportStore.iOpts,
+            );
+            logger.d('contains birth=$hasBirth, all=$all');
+
+            controller.next();
+          },
         );
       case VerifiedStep.review:
         return StepReview(
-          birth: "1999-01-12",
+          name: controller.name.value,
+          birth: controller.birth.value,
+          nationality: controller.nationality.value,
+          expire: controller.expire.value,
+          gender: controller.gender.value,
           onRecapture: controller.back,
           onDone: controller.goMain,
         );
