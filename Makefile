@@ -1,5 +1,5 @@
 ENV ?= dev
-BASE_DOMAIN ?=
+BASE_DOMAIN ?= ratel.foundation
 DOMAIN ?= $(ENV).$(BASE_DOMAIN)
 
 HOSTED_ZONE_ID ?= $(shell aws route53 list-hosted-zones-by-name --dns-name $(BASE_DOMAIN) --query "HostedZones[0].Id" --output text | cut -d'/' -f3)
@@ -69,15 +69,16 @@ deps/rust-sdk/cdk/node_modules:
 cdk/.next:
 	docker create --name web-container $(ECR_NAME):$(COMMIT)
 	docker cp web-container:/app/ts-packages/web/.next cdk/.next
+	docker rm -f web-container
 
 cdk/public:
-	cp -r ts-packages/web/public
+	cp -r ts-packages/web/public cdk/public
 
 cdk-deploy-v2:
 	cd cdk && npm i
 	cd cdk && $(BUILD_CDK_ENV) npm run build
 	cd cdk && $(BUILD_CDK_ENV) cdk synth
-	cd cdk && $(BUILD_CDK_ENV) cdk deploy --require-approval never $(AWS_FLAG) --all
+	cd cdk && $(BUILD_CDK_ENV) cdk deploy --require-approval never $(AWS_FLAG) --all --concurrency 3
 
 cdk-deploy: deps/rust-sdk/cdk/node_modules
 	cd deps/rust-sdk/cdk && $(BUILD_CDK_ENV) CODE_PATH=$(PWD)/.build/$(SERVICE) npm run build

@@ -11,7 +11,7 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    needs: [main-api, nextjs-web]
+    needs: [main-api, nextjs-web, telegram-bot, fetcher]
     steps:
       - uses: actions/checkout@v3
         with:
@@ -21,19 +21,27 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: nextjs-web-cdk-next-${{ github.sha }}
-          path: cdk/.next
+          path: ./
       - uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-northeast-2
+      # - name: Setup SSH session with tmate
+      #   uses: mxschmitt/action-tmate@v3
+      #   with:
+      #     limit-access-to-actor: true
       - name: Deploy
         env:
           REGION: ap-northeast-2
           ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          PGHOST_EU: ${{ secrets.DEV_PGHOST_EU }}
+          PGHOST_US: ${{ secrets.DEV_PGHOST_US }}
+          PGHOST_AP: ${{ secrets.DEV_PGHOST_AP }}
         run: |
           npm i -g aws-cdk
+          tar xzvf next.tar.gz
           make cdk/public
           make cdk-deploy-v2
 
@@ -111,6 +119,13 @@ jobs:
         with:
           submodules: recursive
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
+      - name: Cache builder
+        id: main-api-build-cache
+        uses: actions/cache@v3
+        with:
+          key: main-api-build-cache
+          path: |
+            packages/main-api/target
       - uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -189,6 +204,13 @@ jobs:
       - name: Install toml-cli
         run: |
           cargo binstall toml-cli --force
+      - name: Cache builder
+        id: image-worker-build-cache
+        uses: actions/cache@v3
+        with:
+          key: image-worker-build-cache
+          path: |
+            packages/image-worker/target
       - name: Deploy APIs
         env:
           REGION: ap-northeast-2
@@ -212,6 +234,10 @@ jobs:
 
   telegram-bot:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/telegram-bot
+
     steps:
       - uses: actions/checkout@v3
         with:
@@ -259,11 +285,15 @@ jobs:
           ENABLE_FARGATE: true
           ENABLE_LAMBDA: false
         run: |
-          npm i -g aws-cdk
-          make deploy
+          make docker.build
+          make docker.login
+          make docker.push
 
   fetcher:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/fetcher
     steps:
       - uses: actions/checkout@v3
         with:
@@ -319,8 +349,9 @@ jobs:
           ENABLE_FARGATE: true
           ENABLE_LAMBDA: false
         run: |
-          npm i -g aws-cdk
-          make deploy
+          make docker.build
+          make docker.login
+          make docker.push
 
   nextjs-web:
     runs-on: ubuntu-latest
@@ -358,14 +389,16 @@ jobs:
             make docker.push
             cd ../..
             make cdk/.next
+            tar czvf next.tar.gz cdk/.next
 
       - name: Upload Next.js CDK .next
         uses: actions/upload-artifact@v4
         with:
           name: nextjs-web-cdk-next-${{ github.sha }}
-          path: ${{ github.workspace }}/cdk/.next
+          path: ${{ github.workspace }}/next.tar.gz
           if-no-files-found: error
           retention-days: 7
+
   android-apk:
     runs-on: ubuntu-latest
     defaults:
@@ -600,7 +633,7 @@ jobs:
   create-release-pr:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/dev'
-    needs: [fetcher, telegram-bot, image-worker, android-apk, ios-testflight, deploy]
+    needs: [image-worker, android-apk, ios-testflight, deploy]
     steps:
       - uses: actions/checkout@v3
         with:
