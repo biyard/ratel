@@ -141,12 +141,6 @@ export class GlobalAccelStack extends Stack {
     );
 
     // CloudFront cert (must be in us-east-1). Use provided ARN or create DNS‑validated one.
-    const s3OriginProp = {
-      origin: s3Origin,
-      cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
-      compress: true,
-    };
-
     const cachedNextProp = {
       origin,
       cachePolicy: nextImageCachePolicy,
@@ -164,19 +158,19 @@ export class GlobalAccelStack extends Stack {
       additionalBehaviors: {
         "/_next/static/*": cachedNextProp,
         "/_next/image*": cachedNextProp,
-        "/metadata/*": s3OriginProp,
-        "/assets/*": s3OriginProp,
-        "/*.js": s3OriginProp,
-        "/*.css": s3OriginProp,
-        "/*.html": s3OriginProp,
-        "/*.ico": s3OriginProp,
-        "/*.svg": s3OriginProp,
-        "/*.avif": s3OriginProp,
-        "/*.png": s3OriginProp,
-        "/*.wasm": s3OriginProp,
-        "/icons/*": s3OriginProp,
-        "/images/*": s3OriginProp,
-        "/public/*": s3OriginProp,
+        "/metadata/*": cachedNextProp,
+        "/assets/*": cachedNextProp,
+        "/*.js": cachedNextProp,
+        "/*.css": cachedNextProp,
+        "/*.html": cachedNextProp,
+        "/*.ico": cachedNextProp,
+        "/*.svg": cachedNextProp,
+        "/*.avif": cachedNextProp,
+        "/*.png": cachedNextProp,
+        "/*.wasm": cachedNextProp,
+        "/icons/*": cachedNextProp,
+        "/images/*": cachedNextProp,
+        "/public/*": cachedNextProp,
       },
 
       domainNames: [webDomain, apiDomain],
