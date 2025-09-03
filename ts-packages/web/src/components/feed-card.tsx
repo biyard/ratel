@@ -26,6 +26,7 @@ import { showSuccessToast, showErrorToast } from './custom-toast/toast';
 import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { Loader2 } from 'lucide-react';
 import { logger } from '@/lib/logger';
+import { useTranslations } from 'next-intl';
 
 export interface FeedCardProps {
   id: number;
@@ -312,6 +313,7 @@ export function OnboardingTag() {
 }
 
 export function JoinNowButton({ onClick }: { onClick: () => void }) {
+  const t = useTranslations('Home');
   return (
     <Button
       variant="rounded_primary"
@@ -322,7 +324,7 @@ export function JoinNowButton({ onClick }: { onClick: () => void }) {
         onClick();
       }}
     >
-      Join Now
+      {t('join_now')}
     </Button>
   );
 }
@@ -346,6 +348,7 @@ export function FeedFooter({
   onRepostThought,
 }: FeedFooterProps) {
   const router = useRouter();
+  const t = useTranslations('Home');
 
   const [isReposting, setIsReposting] = useState(false);
 
@@ -443,7 +446,7 @@ export function FeedFooter({
                   className="flex items-center gap-3 w-full px-4 py-2 rounded hover:bg-neutral-700 transition-colors text-white text-lg font-semibold"
                 >
                   {isReposting ? <Loader2 /> : <Edit1 />}
-                  Repost with your thoughts
+                  {t('repost_with_your_thoughts')}
                 </button>
               </DropdownMenuItem>
 
@@ -454,7 +457,7 @@ export function FeedFooter({
                   className="flex items-center gap-3 w-full px-4 py-2 rounded hover:bg-neutral-700 transition-colors text-white text-lg font-semibold"
                 >
                   {isReposting ? <Loader2 /> : <Shares />}
-                  Repost
+                  {t('repost')}
                 </button>
               </DropdownMenuItem>
             </DropdownMenuContent>

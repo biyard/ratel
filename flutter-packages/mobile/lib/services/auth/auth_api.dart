@@ -101,6 +101,31 @@ class AuthApi extends GetConnect {
 
   final Map<String, String> _cookieJar = {};
 
+  Future<bool> tryAutoSignIn() async {
+    final saved = await AuthDb.read();
+    logger.d('saved db session: $saved');
+    if (saved == null) return false;
+
+    final sid = saved['sid'] as String?;
+    final auth = saved['auth_token'] as String?;
+
+    logger.d('read saved session: sid=$sid, auth=$auth');
+    if ((sid == null || sid.isEmpty) && (auth == null || auth.isEmpty)) {
+      return false;
+    }
+
+    if (sid?.isNotEmpty == true) _cookieJar[_sidKeyStorage] = sid!;
+    if (auth?.isNotEmpty == true) _cookieJar[_authKeyStorage] = auth!;
+    if (sid?.isNotEmpty == true) {
+      await _secure.write(key: _sidKeyStorage, value: sid);
+    }
+    if (auth?.isNotEmpty == true) {
+      await _secure.write(key: _authKeyStorage, value: auth);
+    }
+
+    return true;
+  }
+
   Future<dynamic> sendVerificationCode(String email) async {
     final uri = Uri.parse(apiEndpoint).resolve('/v1/users/verifications');
 
@@ -145,6 +170,8 @@ class AuthApi extends GetConnect {
     );
 
     logger.d("logout res: ${res}");
+
+    await AuthDb.clear();
   }
 
   Future<dynamic> signup(
@@ -243,6 +270,8 @@ class AuthApi extends GetConnect {
     logger.d('cookie jar updated: $_cookieJar');
 
     logger.d("cookie: ${cookies}");
+
+    await AuthDb.save(email, cookies[sidName], cookies[authName]);
 
     return LoginResult(
       body: res.body,

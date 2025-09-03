@@ -61,6 +61,7 @@ import { checkString } from '@/lib/string-filter-utils';
 import { showErrorToast } from '@/lib/toast';
 import { postByUserIdQk } from '@/app/(social)/_hooks/use-posts';
 import { useTeamByUsername } from '../../_hooks/use-team';
+import { useTranslations } from 'next-intl';
 
 export const editorTheme = {
   ltr: 'text-left',
@@ -173,6 +174,7 @@ function EditorRefPlugin({
 }
 
 export function CreatePost() {
+  const t = useTranslations('Team');
   const {
     expand,
     setExpand,
@@ -309,7 +311,7 @@ export function CreatePost() {
           <div className="px-4 pt-4">
             <input
               type="text"
-              placeholder="Write a title..."
+              placeholder={t('write_title')}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className="w-full bg-transparent text-white text-xl font-semibold placeholder-neutral-500 outline-none border-none"
@@ -324,7 +326,7 @@ export function CreatePost() {
               }
               placeholder={
                 <div className="absolute top-0 text-neutral-500 pointer-events-none select-none">
-                  Type here, Use Markdown, BB code, or HTML to format.
+                  {t('write_content')}
                 </div>
               }
               ErrorBoundary={LexicalErrorBoundary}
