@@ -64,7 +64,7 @@ pub async fn telegram_handler(
                     Command::Help => {
                         let help_text = match lang.as_deref() {
                             Some("ko") => {
-                                "도움말: /help - 도움말을 표시합니다.\n/subcribe - 알림을 구독합니다.\n/unsubscribe - 알림 구독을 취소합니다."
+                                "도움말: /help - 도움말을 표시합니다.\n/subscribe - 알림을 구독합니다.\n/unsubscribe - 알림 구독을 취소합니다."
                             }
                             _ => {
                                 "Help: /help - Show this help message.\n/subscribe - Subscribe to updates.\n/unsubscribe - Unsubscribe from updates."
@@ -77,7 +77,6 @@ pub async fn telegram_handler(
                             chat_id: chat_id.0,
                             lang: lang.clone(),
                         });
-
                         match lang.as_deref() {
                             Some("ko") => {
                                 let keyboard = InlineKeyboardMarkup::new(vec![vec![
