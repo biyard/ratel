@@ -147,6 +147,12 @@ export class GlobalAccelStack extends Stack {
       compress: true,
     };
 
+    const cachedNextProp = {
+      origin,
+      cachePolicy: nextImageCachePolicy,
+      compress: true,
+    };
+
     this.distribution = new cloudfront.Distribution(this, "Distribution", {
       defaultBehavior: {
         origin,
@@ -156,12 +162,7 @@ export class GlobalAccelStack extends Stack {
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       },
       additionalBehaviors: {
-        "/_next/image*": {
-          origin,
-          cachePolicy: nextImageCachePolicy,
-          compress: true,
-        },
-        "/_next/static/*": s3OriginProp,
+        "/_next/*": cachedNextProp,
         "/metadata/*": s3OriginProp,
         "/assets/*": s3OriginProp,
         "/*.js": s3OriginProp,
