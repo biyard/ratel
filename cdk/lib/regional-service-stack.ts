@@ -30,6 +30,7 @@ export interface RegionalServiceStackProps extends StackProps {
   minCapacity?: number;
   maxCapacity?: number;
   enableDaemon?: boolean;
+  pghost: string;
 }
 
 export class RegionalServiceStack extends Stack {
@@ -101,6 +102,9 @@ export class RegionalServiceStack extends Stack {
       logging: new ecs.AwsLogDriver({
         streamPrefix: "ratel-api",
       }),
+      environment: {
+        PGHOST: props.pghost,
+      },
     });
 
     apiContainer.addPortMappings({

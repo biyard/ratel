@@ -19,6 +19,7 @@ const kr = new RegionalServiceStack(app, `ratel-${env}-svc-ap-northeast-2`, {
   fullDomainName: host,
   healthCheckPath: "/version",
   commit: process.env.COMMIT!,
+  pghost: process.env.PGHOST_AP!,
   enableDaemon: true,
 });
 
@@ -30,6 +31,7 @@ const eu = new RegionalServiceStack(app, `ratel-${env}-svc-eu-central-1`, {
   fullDomainName: host,
   healthCheckPath: "/version",
   commit: process.env.COMMIT!,
+  pghost: process.env.PGHOST_EU!,
 });
 
 const us = new RegionalServiceStack(app, `ratel-${env}-svc-us-east-1`, {
@@ -40,6 +42,7 @@ const us = new RegionalServiceStack(app, `ratel-${env}-svc-us-east-1`, {
   fullDomainName: host,
   healthCheckPath: "/version",
   commit: process.env.COMMIT!,
+  pghost: process.env.PGHOST_US!,
 });
 
 // --- Global Accelerator + Route53 stack ---
@@ -54,4 +57,5 @@ new GlobalAccelStack(app, "GlobalAccel", {
   euAlb: eu.alb,
   usAlb: us.alb,
   krAlb: kr.alb,
+  commit: process.env.COMMIT!,
 });
