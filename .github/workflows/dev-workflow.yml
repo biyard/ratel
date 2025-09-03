@@ -148,7 +148,10 @@ jobs:
           DOMAIN: api.dev.ratel.foundation
           AUTH_DOMAIN: dev.ratel.foundation
           DATABASE_TYPE: postgres
-          DATABASE_URL: ${{ secrets.DATABASE_DEV_ALL_URLS }}
+          DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
+          PGHOST_EU: ${{ secrets.DEV_PGHOST_EU }}
+          PGHOST_US: ${{ secrets.DEV_PGHOST_US }}
+          PGHOST_AP: ${{ secrets.DEV_PGHOST_AP }}
           OPENAPI_KEY: ${{ secrets.OPENAPI_KEY }}
           AUTH_SECRET_KEY: ${{ secrets.DEV_AUTH_SECRET_KEY }}
           JWT_SECRET_KEY: ${{ secrets.DEV_JWT_SECRET_KEY }}

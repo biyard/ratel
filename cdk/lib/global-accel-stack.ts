@@ -23,6 +23,7 @@ export interface GlobalAccelStackProps extends StackProps {
 
   // DNS host like "dev.ratel.foundation"
   fullDomainName: string;
+  commit: string;
 }
 
 export class GlobalAccelStack extends Stack {
@@ -31,7 +32,7 @@ export class GlobalAccelStack extends Stack {
   constructor(scope: Construct, id: string, props: GlobalAccelStackProps) {
     super(scope, id, { ...props, crossRegionReferences: true });
 
-    const { euAlb, usAlb, krAlb, fullDomainName } = props;
+    const { euAlb, usAlb, krAlb, fullDomainName, commit } = props;
 
     const webDomain = fullDomainName;
     const apiDomain = `api.${fullDomainName}`;
@@ -106,9 +107,9 @@ export class GlobalAccelStack extends Stack {
 
     // 1) S3 for static assets
     const staticBucket = new s3.Bucket(this, "NextStaticBucket", {
-      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
-      encryption: s3.BucketEncryption.S3_MANAGED,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
+
     const oai = new cloudfront.OriginAccessIdentity(this, "OAI");
     staticBucket.grantRead(oai);
 
@@ -217,7 +218,12 @@ export class GlobalAccelStack extends Stack {
       destinationBucket: staticBucket,
       distribution: this.distribution,
       distributionPaths: ["/_next/static/*"],
-      sources: [s3deploy.Source.asset(".next/static")],
+      sources: [
+        s3deploy.Source.asset(".next/static", {
+          assetHash: commit,
+          assetHashType: cdk.AssetHashType.CUSTOM,
+        }),
+      ],
       destinationKeyPrefix: "_next/static",
     });
 
@@ -225,7 +231,12 @@ export class GlobalAccelStack extends Stack {
       destinationBucket: staticBucket,
       distribution: this.distribution,
       distributionPaths: ["/*"],
-      sources: [s3deploy.Source.asset("public")],
+      sources: [
+        s3deploy.Source.asset("public", {
+          assetHash: commit,
+          assetHashType: cdk.AssetHashType.CUSTOM,
+        }),
+      ],
     });
 
     new cdk.CfnOutput(this, "CloudFrontDomain", {
