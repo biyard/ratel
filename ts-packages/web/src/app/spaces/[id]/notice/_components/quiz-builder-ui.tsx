@@ -80,9 +80,7 @@ export function convertQuizQuestionToQuestion(
   return {
     id: quizQuestion.id || id,
     title: quizQuestion.title,
-    imageUrls: quizQuestion.images
-      .map((img) => img.url)
-      .filter((url): url is string => url !== null),
+    imageUrls: quizQuestion.images.filter((url) => url !== null && url !== ''),
     options: quizQuestion.options.map((option, index) => ({
       id: option.id || `option-${Date.now()}-${index}`,
       text: option.content,
@@ -426,7 +424,7 @@ export default function QuizBuilderUI({
                 ...q.options,
                 {
                   id: `option-${Date.now()}`,
-                  text: 'New Option',
+                  text: '',
                   isCorrect: false,
                   isSelected: false,
                 },
