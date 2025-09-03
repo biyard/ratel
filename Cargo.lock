@@ -5078,6 +5078,7 @@ dependencies = [
  "chrono",
  "dto",
  "ethers",
+ "futures",
  "hex",
  "hmac",
  "multibase",

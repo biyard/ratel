@@ -15,9 +15,12 @@ use dto::{
         auth::{authorization_middleware, generate_jwt, set_auth_token_key},
         axum::{extract::Request, http::Response, middleware::Next},
     },
+    sqlx::PgPool,
     *,
 };
+use futures::{StreamExt, stream};
 use sqlx::postgres::PgPoolOptions;
+use tokio::time::timeout;
 use tower_sessions::{
     Session, SessionManagerLayer,
     cookie::time::{Duration, OffsetDateTime},
@@ -182,6 +185,34 @@ pub async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
     Ok(())
 }
 
+pub async fn db_init(urls: &Vec<&'static str>, max_conn: u32) -> Result<PgPool> {
+    let build_pool = |url: &'static str| async move {
+        let fut = PgPoolOptions::new()
+            .max_connections(max_conn)
+            .acquire_timeout(std::time::Duration::from_secs(5))
+            .connect(&url);
+
+        match timeout(std::time::Duration::from_secs(5), fut).await {
+            Ok(Ok(pool)) => Ok(pool),
+            Ok(Err(e)) => {
+                tracing::warn!("Error connecting to DB at {}: {}", url, e);
+                Err(Error::DbPoolTimeout)
+            }
+            Err(_) => Err(Error::DbPoolTimeout),
+        }
+    };
+
+    let mut tasks = stream::iter(urls.into_iter().map(|u| build_pool(u))).buffer_unordered(8);
+
+    while let Some(res) = tasks.next().await {
+        if let Ok(pool) = res {
+            return Ok(pool);
+        }
+    }
+
+    Err(Error::DbPoolTimeout)
+}
+
 pub async fn api_main() -> Result<Router> {
     let app = by_axum::new();
     let conf = config::get();
@@ -190,27 +221,18 @@ pub async fn api_main() -> Result<Router> {
     let auth_token_key = format!("{}_auth_token", conf.env);
     let auth_token_key = Box::leak(Box::new(auth_token_key));
     set_auth_token_key(auth_token_key);
-    tracing::info!("Before Pool creation");
+
     let pool = if let DatabaseConfig::Postgres { url, pool_size } = conf.database {
-        let res = PgPoolOptions::new()
-            .max_connections(pool_size)
-            .connect_lazy(url);
-        // .connect(url)
-        // .await;
-        match res {
-            Ok(pool) => {
-                tracing::info!("Postgres pool created successfully");
-                pool
-            }
-            Err(e) => {
-                tracing::error!("Failed to create Postgres pool: {:?}", e);
-                return Err(e.into());
-            }
-        }
+        let urls = url.split(",").collect::<Vec<&'static str>>();
+        let pool = db_init(&urls, pool_size).await?;
+        tracing::info!(
+            "Connected to Postgres at {}",
+            pool.connect_options().get_host()
+        );
+        pool
     } else {
         panic!("Database is not initialized. Call init() first.");
     };
-    tracing::info!("After Pool creation");
 
     let session_store = PostgresStore::new(pool.clone());
     if conf.migrate {
