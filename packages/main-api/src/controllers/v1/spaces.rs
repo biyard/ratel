@@ -10,6 +10,7 @@ mod sprint_leagues;
 
 use std::collections::{HashMap, HashSet};
 
+use crate::config;
 use crate::security::check_perm;
 use crate::utils::aws_media_convert::merge_recording_chunks;
 use crate::utils::users::extract_user_id_with_no_error;
@@ -29,8 +30,6 @@ pub struct SpacePath {
     pub id: i64,
 }
 
-
-
 #[derive(Clone, Debug)]
 pub struct SpaceController {
     repo: SpaceRepository,
@@ -45,8 +44,6 @@ pub struct SpaceController {
     pool: sqlx::Pool<sqlx::Postgres>,
     notice_answer_repo: NoticeQuizAnswerRepository,
 }
-
-
 
 impl SpaceController {
     async fn get_space_by_id(&self, auth: Option<Authorization>, id: i64) -> Result<Space> {
@@ -328,6 +325,32 @@ impl SpaceController {
                 return Err(e);
             }
         };
+
+        if space.space_type == SpaceType::SprintLeague {
+            let client = reqwest::Client::new();
+            let payload =
+                TelegramNotificationPayload::SprintLeague(SprintLeaguePayload { space_id });
+            let res = client
+                .post(format!("{}/{}", config::get().telegram_bot_url, "notify"))
+                .json(&payload)
+                .send()
+                .await;
+            match res {
+                Ok(_) => {
+                    tracing::debug!(
+                        "Successfully sent Telegram notification for space {}",
+                        space_id
+                    );
+                }
+                Err(e) => {
+                    tracing::error!(
+                        "Failed to send Telegram notification for space {}: {}",
+                        space_id,
+                        e
+                    );
+                }
+            };
+        }
 
         let surveys = Survey::query_builder()
             .space_id_equals(space_id)
@@ -883,9 +906,12 @@ impl SpaceController {
         Ok(res)
     }
 
-    
-
-    async fn delete_space(&self, space_id: i64, auth: Option<Authorization>, confirmation: SpaceDeleteConfirmation) -> Result<()> {
+    async fn delete_space(
+        &self,
+        space_id: i64,
+        auth: Option<Authorization>,
+        confirmation: SpaceDeleteConfirmation,
+    ) -> Result<()> {
         let user_id = extract_user_id(&self.pool, auth.clone()).await?;
 
         // Get the space to verify existence and fetch feed ID
@@ -1063,7 +1089,6 @@ impl SpaceController {
                 .await?; // Changed to use self.space_group_repo
         }
 
-
         // === DELETE SPACE COMMENTS ===
         // let comment_repo = SpaceComment::get_repository(self.pool.clone());
         // let comments = SpaceComment::query_builder()
@@ -1088,8 +1113,7 @@ impl SpaceController {
             comment_repo.delete_with_tx(&mut *tx, comment.id).await?;
         }
 
-
-         // === DELETE NOTICE QUIZ ANSWERS ===
+        // === DELETE NOTICE QUIZ ANSWERS ===
         let quiz_answer_repo = NoticeQuizAnswer::get_repository(self.pool.clone());
         let quiz_answers = NoticeQuizAnswer::query_builder()
             .space_id_equals(space_id)
@@ -1104,11 +1128,11 @@ impl SpaceController {
         // === DELETE NOTICE QUIZ ATTEMPTS ===
         let quiz_attempt_repo = NoticeQuizAttempt::get_repository(self.pool.clone());
         let quiz_attempts = NoticeQuizAttempt::query_builder()
-           .space_id_equals(space_id)
+            .space_id_equals(space_id)
             .query()
             .map(NoticeQuizAttempt::from)
             .fetch_all(&self.pool)
-           .await?;
+            .await?;
         for att in quiz_attempts {
             quiz_attempt_repo.delete_with_tx(&mut *tx, att.id).await?;
         }
@@ -1155,7 +1179,6 @@ impl SpaceController {
             let mut selected_count = 0;
             for (option_index, option) in question.options.iter().enumerate() {
                 let content = option.content.trim();
-
 
                 // Check for empty content
                 if content.is_empty() {
@@ -1278,14 +1301,11 @@ impl SpaceController {
             .nest(
                 "/:space-id/notice-quiz-attempts",
                 notice_quiz_attempts::SpaceNoticeQuizAttemptController::new(self.pool.clone())
-                    
                     .route(),
             )
-            
             .nest(
                 "/:space-id/notice-quiz-answers",
                 notice_quiz_answers::SpaceNoticeQuizAnswersController::new(self.pool.clone())
-                    
                     .route(),
             ))
     }
