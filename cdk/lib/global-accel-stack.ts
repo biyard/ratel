@@ -162,7 +162,8 @@ export class GlobalAccelStack extends Stack {
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       },
       additionalBehaviors: {
-        "/_next/*": cachedNextProp,
+        "/_next/static/*": cachedNextProp,
+        "/_next/image*": cachedNextProp,
         "/metadata/*": s3OriginProp,
         "/assets/*": s3OriginProp,
         "/*.js": s3OriginProp,
