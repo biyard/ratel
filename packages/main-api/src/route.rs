@@ -1,6 +1,8 @@
 use std::sync::Arc;
 
 use bdk::prelude::*;
+use tower_http::trace::TraceLayer;
+use tracing::Level;
 
 use crate::{
     controllers::{
@@ -380,7 +382,7 @@ pub async fn route(
                 api_docs!(
                     "Extract Information from Passport Image",
                     r#"This endpoint allows you to extract passport information from an image.
-                
+
                 **Authorization header required**"#
                 ),
             )
@@ -434,13 +436,36 @@ pub async fn route(
                     RegisterUserResponse,
                     "Register users by Noncelab",
                     r#"This endpoint allows you to register users by Noncelab.
-                    
+
                     **Authorization header required**
-                    
+
                     `Authorization: Bearer <token>`"#
                 ),
             )
             .with_state(pool.clone()),
         )
-        .native_route("/.well-known/did.json", nget(get_did_document_handler)))
+        .native_route("/.well-known/did.json", nget(get_did_document_handler))
+        .layer(
+            TraceLayer::new_for_http()
+                .make_span_with(|request: &axum::http::Request<_>| {
+                    tracing::span!(
+                        Level::INFO,
+                        "request",
+                        method = %request.method(),
+                        uri = %request.uri(),
+                        version = ?request.version()
+                    )
+                })
+                .on_response(
+                    |response: &axum::http::Response<_>,
+                     latency: std::time::Duration,
+                     _span: &tracing::Span| {
+                        tracing::info!(
+                            status = %response.status(),
+                            latency = ?latency,
+                            "response generated"
+                        )
+                    },
+                ),
+        ))
 }

@@ -1,0 +1,12 @@
+node_modules
+**/.next
+Dockerfile
+.git
+**/.build
+.build
+target
+**/target
+**/dist
+flutter-packages
+**/.env*
+.pnpm-store
