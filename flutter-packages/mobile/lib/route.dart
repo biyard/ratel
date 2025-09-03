@@ -24,6 +24,7 @@ class AppRoutes {
 
   static const String notification = "/dashboard/notification";
   static spaceWithId(int id) => '/space/$id';
+  static draftWithId(int id) => '/draft/$id';
 
   static List<GetPage> pages = [
     GetPage(
@@ -39,6 +40,15 @@ class AppRoutes {
       name: '/space/:id',
       page: () => SpaceScreen(),
       binding: SpaceBinding(),
+      customTransition: SlideOverTransition(),
+      transitionDuration: const Duration(milliseconds: 300),
+      opaque: true,
+      curve: Curves.easeOutCubic,
+    ),
+    GetPage(
+      name: '/draft/:id',
+      page: () => DraftByIdScreen(),
+      binding: DraftByIdBinding(),
       customTransition: SlideOverTransition(),
       transitionDuration: const Duration(milliseconds: 300),
       opaque: true,

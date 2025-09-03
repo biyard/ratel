@@ -55,6 +55,7 @@ multibase = "0.9.1"
 aws-sdk-bedrockruntime = "1.103.0"
 aws-sdk-rekognition = "1.85.0"
 aws-sdk-textract = "1.82.0"
+tower-http = "0.6.6"
 
 [dev-dependencies]
 rest-api = { workspace = true, features = ["test"] }

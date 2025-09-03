@@ -17,8 +17,10 @@ import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { useSettingsContext } from '../../providers.client';
 import WalletSummary from '../wallet-summary';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 
 export default function MyInfo() {
+  const t = useTranslations('Settings');
   const { post } = useApiCall();
   const userInfo = useSuspenseUserInfo();
   const { data: user } = userInfo;
@@ -49,18 +51,18 @@ export default function MyInfo() {
           />
         ) : (
           <button className="w-40 h-40 rounded-full bg-c-wg-80 text-sm font-semibold flex items-center justify-center text-c-wg-50">
-            Upload logo
+            {t('upload_logo')}
           </button>
         )}
       </FileUploader>
 
       <Col className="w-full gap-2.5">
         <Row className="max-tablet:flex-col">
-          <label className="w-40 font-bold">Username</label>
+          <label className="w-40 font-bold">{t('username')}</label>
           <Input type="text" disabled value={`@${user?.username}`} />
         </Row>
         <Row className="max-tablet:flex-col">
-          <label className="w-40 font-bold">EVM Address</label>
+          <label className="w-40 font-bold">{t('evm_address')}</label>
           <Row>
             <Input type="text" disabled value={`${user?.evm_address}`} />
             <Button
@@ -68,7 +70,7 @@ export default function MyInfo() {
               className="py-0 rounded-sm"
               onClick={() => handleShowWalletConnect(!showWalletConnect)}
             >
-              {showWalletConnect ? 'Hide' : 'Change'}
+              {showWalletConnect ? t('hide') : t('change')}
             </Button>
           </Row>
         </Row>
@@ -93,18 +95,18 @@ export default function MyInfo() {
         </Row>
 
         <Row className="max-tablet:flex-col">
-          <label className="w-40 font-bold">Display name</label>
+          <label className="w-40 font-bold">{t('display_name')}</label>
           <Input
             type="text"
-            placeholder="Team display name"
+            placeholder={t('display_name')}
             value={nickname}
             onInput={handleNickname}
           />
         </Row>
         <Col>
-          <label className="w-40 font-bold">Description</label>
+          <label className="w-40 font-bold">{t('description')}</label>
           <Textarea
-            placeholder="Please type description of your team."
+            placeholder={t('description_hint')}
             value={htmlContents}
             onChange={handleContents}
           />
@@ -122,7 +124,7 @@ export default function MyInfo() {
               router.push(route.home());
             }}
           >
-            Save
+            {t('save')}
           </Button>
         </Row>
       </Col>

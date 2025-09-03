@@ -8,7 +8,7 @@ class ConnectionController extends BaseController {
   }
 
   void listNetworks() async {
-    final items = await networkApi.getNetworks();
+    final items = await networkApi.getConnections();
     logger.d("items length: ${items.length}");
     networks(items);
   }
@@ -37,7 +37,7 @@ class ConnectionController extends BaseController {
 
   Future<void> onSearchChanged(String v) async {
     query.value = v;
-    final items = await networkApi.getNetworksByKeyword(v);
+    final items = await networkApi.getConnectionByKeyword(v);
     networks(items);
   }
 
@@ -54,7 +54,7 @@ class ConnectionController extends BaseController {
     final ids = followed.toList();
 
     try {
-      final res = await network.follow(ids);
+      final res = await network.connectionFollow(ids);
 
       if (res != null) {
         Get.rootDelegate.offNamed(AppRoutes.setupAttributeScreen);

@@ -10,9 +10,11 @@ import Link from 'next/link';
 import { route } from '@/route';
 import { Post, Draft, Settings } from '@/components/icons';
 import { UserType } from '@/lib/api/models/user';
+import { useTranslations } from 'next-intl';
 // import DevTools from './dev-tools';
 
 export default function UserSidemenu() {
+  const t = useTranslations('Home');
   const { data: user, isLoading } = useUserInfo();
   if (
     isLoading ||
@@ -30,15 +32,15 @@ export default function UserSidemenu() {
       <nav className="py-5 px-3 w-full rounded-[10px] bg-component-bg">
         <Link href={route.myPosts()} className="sidemenu-link">
           <Post className="w-[24px] h-[24px]" />
-          <span>My Posts</span>
+          <span>{t('my_posts')}</span>
         </Link>
         <Link href={route.drafts()} className="sidemenu-link">
           <Draft className="w-[24px] h-[24px]" />
-          <span>Drafts</span>
+          <span>{t('drafts')}</span>
         </Link>
         <Link href={route.settings()} className="sidemenu-link">
           <Settings className="w-[24px] h-[24px]" />
-          <span>Settings</span>
+          <span>{t('settings')}</span>
         </Link>
       </nav>
 

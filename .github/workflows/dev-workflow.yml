@@ -9,6 +9,39 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [main-api, nextjs-web]
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          ssh-key: ${{ secrets.PULL_KEY_REPO }}
+      - name: Download Next.js CDK .next
+        uses: actions/download-artifact@v4
+        with:
+          name: nextjs-web-cdk-next-${{ github.sha }}
+          path: ./
+      - uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+      # - name: Setup SSH session with tmate
+      #   uses: mxschmitt/action-tmate@v3
+      #   with:
+      #     limit-access-to-actor: true
+      - name: Deploy
+        env:
+          REGION: ap-northeast-2
+          ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          npm i -g aws-cdk
+          tar xzvf next.tar.gz
+          make cdk/public
+          make cdk-deploy-v2
+
   test-with-server:
     runs-on: ubuntu-latest
     services:
@@ -74,11 +107,22 @@ jobs:
 
   main-api:
     runs-on: ubuntu-22.04
+    defaults:
+      run:
+        working-directory: packages/main-api
+
     steps:
       - uses: actions/checkout@v3
         with:
           submodules: recursive
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
+      - name: Cache builder
+        id: main-api-build-cache
+        uses: actions/cache@v3
+        with:
+          key: main-api-build-cache
+          path: |
+            packages/main-api/target
       - uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -132,8 +176,9 @@ jobs:
           P256_D: ${{ secrets.P256_D }}
           P256_CRV: ${{ secrets.P256_CRV }}
         run: |
-          npm i -g aws-cdk
-          make deploy
+          make docker.build
+          make docker.login
+          make docker.push
 
   image-worker:
     runs-on: ubuntu-22.04
@@ -156,9 +201,17 @@ jobs:
       - name: Install toml-cli
         run: |
           cargo binstall toml-cli --force
+      - name: Cache builder
+        id: image-worker-build-cache
+        uses: actions/cache@v3
+        with:
+          key: image-worker-build-cache
+          path: |
+            packages/image-worker/target
       - name: Deploy APIs
         env:
           REGION: ap-northeast-2
+          STACK: ratel-image-worker-dev-stack
           ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           ENV: dev
@@ -207,6 +260,7 @@ jobs:
       - name: Deploy APIs
         env:
           REGION: ap-northeast-2
+          STACK: ratel-telegram-bot-dev-stack
           ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           ENV: dev
@@ -258,6 +312,7 @@ jobs:
       - name: Deploy APIs
         env:
           REGION: ap-northeast-2
+          STACK: ratel-fetcher-dev-stack
           ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           ENV: dev
@@ -293,19 +348,44 @@ jobs:
         working-directory: ts-packages/web
     steps:
       - uses: actions/checkout@v4
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: aws-actions/configure-aws-credentials@v2
         with:
-          node-version: 22
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 10
-          run_install: true
-      - name: Run ESLint
-        run: pnpm lint
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
       - name: Build
-        run: make build
+        env:
+          REGION: ap-northeast-2
+          NEXT_PUBLIC_LOG_LEVEL: debug
+          NEXT_PUBLIC_FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
+          NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET:  ${{ secrets.FIREBASE_STORAGE_BUCKET }}
+          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
+          NEXT_PUBLIC_FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
+          NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID:  ${{ secrets.FIREBASE_MEASUREMENT_ID }}
+
+          NEXT_PUBLIC_ENV: dev
+          NEXT_PUBLIC_SIGN_DOMAIN: dev.ratel.foundation
+          NEXT_PUBLIC_API_URL: https://api.dev.ratel.foundation
+          NEXT_PUBLIC_EXPERIMENT: true
+          NEXT_PUBLIC_GRAPHQL_URL: https://graphql.dev.ratel.foundation/v1/graphql
+
+        run: |
+            make docker.build
+            make docker.login
+            make docker.push
+            cd ../..
+            make cdk/.next
+            tar czvf next.tar.gz cdk/.next
+
+      - name: Upload Next.js CDK .next
+        uses: actions/upload-artifact@v4
+        with:
+          name: nextjs-web-cdk-next-${{ github.sha }}
+          path: ${{ github.workspace }}/next.tar.gz
+          if-no-files-found: error
+          retention-days: 7
 
   android-apk:
     runs-on: ubuntu-latest
@@ -541,7 +621,7 @@ jobs:
   create-release-pr:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/dev'
-    needs: [main-api, fetcher, nextjs-web, telegram-bot, image-worker, android-apk, ios-testflight]
+    needs: [fetcher, telegram-bot, image-worker, android-apk, ios-testflight, deploy]
     steps:
       - uses: actions/checkout@v3
         with:
@@ -550,6 +630,6 @@ jobs:
       - name: Git pr release action
         uses: grassedge/git-pr-release-action@v1.0
         with:
-          base: main
-          head: stg
+          base: stg
+          head: dev
           token: ${{ secrets.GITHUB_TOKEN }}
