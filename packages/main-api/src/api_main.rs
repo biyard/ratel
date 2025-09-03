@@ -203,6 +203,8 @@ pub async fn db_init(url: &'static str, max_conn: u32) -> Result<PgPool> {
         url.to_string()
     };
 
+    tracing::debug!("Connecting to database at {}", url);
+
     let pool = PgPoolOptions::new()
         .max_connections(max_conn)
         .connect(&url)
