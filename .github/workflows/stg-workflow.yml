@@ -67,8 +67,11 @@ jobs:
           KAIA_OWNER_ADDR: ${{ secrets.PROD_KAIA_OWNER_KEY_ADDR }}
           KAIA_ENDPOINT: https://public-en.node.kaia.io
 
-          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           NONCELAB_TOKEN: ${{ secrets.NONCELAB_TOKEN }}
+
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_BOT_URL: https://telegram-bot.ratel.foundation
+
 
         run: |
           npm i -g aws-cdk
