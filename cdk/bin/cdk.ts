@@ -57,4 +57,5 @@ new GlobalAccelStack(app, "GlobalAccel", {
   euAlb: eu.alb,
   usAlb: us.alb,
   krAlb: kr.alb,
+  commit: process.env.COMMIT!,
 });
