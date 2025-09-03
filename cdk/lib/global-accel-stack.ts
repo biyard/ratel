@@ -217,7 +217,12 @@ export class GlobalAccelStack extends Stack {
       destinationBucket: staticBucket,
       distribution: this.distribution,
       distributionPaths: ["/_next/static/*"],
-      sources: [s3deploy.Source.asset(".next/static")],
+      sources: [
+        s3deploy.Source.asset(".next/static", {
+          assetHashType: cdk.AssetHashType.CUSTOM,
+          assetHash: "static-build-v1",
+        }),
+      ],
       destinationKeyPrefix: "_next/static",
     });
 
