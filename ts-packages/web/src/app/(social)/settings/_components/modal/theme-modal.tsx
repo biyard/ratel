@@ -59,7 +59,7 @@ export default function ThemeModal({
         </button>
         <button
           onClick={() => onSave(selectedTheme)}
-          className="w-full py-[14.5px] font-bold text-base text-bg rounded-[10px] bg-primary"
+          className="w-full py-[14.5px] font-bold text-base text-modal-text rounded-[10px] bg-primary"
         >
           Save
         </button>
