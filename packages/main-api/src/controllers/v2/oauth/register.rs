@@ -70,7 +70,18 @@ pub async fn register_handler(
 
     // generate client id and secret
     let client_id = format!("client-{}", Uuid::new_v4());
-    let client_secret = generate_random_string();
+    let client_secret = if let Ok(v) = generate_random_string() {
+        v
+    } else {
+        return (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(serde_json::json!({
+                "error": "server_error",
+                "error_description": "failed to generate client secret"
+            })),
+        )
+            .into_response();
+    };
 
     let repo = AuthClient::get_repository(pool)
         .insert(

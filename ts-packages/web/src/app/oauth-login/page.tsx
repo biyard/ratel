@@ -27,9 +27,7 @@ export default function OAuthLoginPage() {
       `${config.api_url}/v2/oauth/approve`,
       {
         method: 'POST',
-        headers: {
-          credentials: 'include',
-        },
+        credentials: 'include',
         body: JSON.stringify(approveRequest),
       },
     );

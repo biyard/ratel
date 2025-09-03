@@ -1,4 +1,5 @@
 use bdk::prelude::*;
+use chrono::Utc;
 use dto::{
     AuthClient, AuthCode, Error, Result,
     by_axum::{
@@ -78,6 +79,12 @@ pub async fn token_handler(
         .map(AuthCode::from)
         .fetch_one(&pool)
         .await?;
+
+    let now = Utc::now().timestamp() as i64;
+    if code.expires_at < now {
+        tracing::debug!("auth code expired: {:?}", code);
+        return Err(Error::Unauthorized);
+    }
 
     let mut claims = by_types::Claims {
         sub: code.user_id.to_string(),

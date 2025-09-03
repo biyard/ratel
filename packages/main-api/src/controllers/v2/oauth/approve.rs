@@ -8,9 +8,10 @@ use dto::{
     },
     sqlx::PgPool,
 };
-use rand::RngCore;
+use rand::{TryRngCore, rngs::OsRng};
 
 use crate::{
+    Error,
     models::oauth::scope::{Scope, deserialize_scope_vec},
     utils::users::extract_user_id,
 };
@@ -32,10 +33,15 @@ pub struct Response {
     pub redirect_url: String,
 }
 
-pub fn generate_random_string() -> String {
+pub fn generate_random_string() -> Result<String> {
     let mut key = [0u8; 32];
-    rand::rng().fill_bytes(&mut key);
-    URL_SAFE_NO_PAD.encode(key)
+
+    OsRng.try_fill_bytes(&mut key).map_err(|e| {
+        tracing::error!("Failed to generate random string: {}", e);
+        Error::ServerError(e.to_string())
+    })?;
+
+    Ok(URL_SAFE_NO_PAD.encode(key))
 }
 
 pub async fn approve_handler(
@@ -44,7 +50,7 @@ pub async fn approve_handler(
     Json(req): Json<ApproveRequest>,
 ) -> Result<Json<Response>> {
     let user_id = extract_user_id(&pool, auth).await?;
-    let code = generate_random_string();
+    let code = generate_random_string()?;
     AuthCode::get_repository(pool)
         .insert(user_id, code.clone(), req.client_id.clone(), 3600)
         .await?;
