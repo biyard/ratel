@@ -5093,6 +5093,7 @@ dependencies = [
  "teloxide 0.17.0",
  "tokio",
  "tower 0.5.2",
+ "tower-http",
  "tower-sessions",
  "tower-sessions-sqlx-store",
  "tracing",

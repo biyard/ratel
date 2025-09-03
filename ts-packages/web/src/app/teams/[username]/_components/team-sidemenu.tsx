@@ -13,12 +13,14 @@ import {
   Folder,
 } from '@/components/icons';
 import { TeamContext } from '@/lib/contexts/team-context';
+import { useTranslations } from 'next-intl';
 
 export interface TeamSidemenuProps {
   username: string;
 }
 
 export default function TeamSidemenu({ username }: TeamSidemenuProps) {
+  const t = useTranslations('Team');
   const { teams } = useContext(TeamContext);
   const team = useMemo(() => {
     return teams.find((t) => t.username === username);
@@ -38,26 +40,26 @@ export default function TeamSidemenu({ username }: TeamSidemenuProps) {
           className="sidemenu-link"
         >
           <Home />
-          <span>Home</span>
+          <span>{t('home')}</span>
         </Link>
         <Link href={route.teamDrafts(team.username)} className="sidemenu-link">
           <EditContent className="w-6 h-6 [&>path]:stroke-neutral-500" />
-          <span>Drafts</span>
+          <span>{t('drafts')}</span>
         </Link>
         <Link href={route.teamGroups(team.username)} className="sidemenu-link">
           <Folder className="w-6 h-6 [&>path]:stroke-neutral-500" />
-          <span>Manage Group</span>
+          <span>{t('manage_group')}</span>
         </Link>
         <Link href={route.teamMembers(team.username)} className="sidemenu-link">
           <UserGroup className="w-6 h-6" />
-          <span>Members</span>
+          <span>{t('members')}</span>
         </Link>
         <Link
           href={route.teamSettings(team.username)}
           className="sidemenu-link"
         >
           <Settings className="w-6 h-6" />
-          <span>Settings</span>
+          <span>{t('settings')}</span>
         </Link>
       </nav>
 
