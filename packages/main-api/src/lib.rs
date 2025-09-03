@@ -71,6 +71,14 @@ pub mod controllers {
             pub mod extract_passport_info;
             pub mod upload_private_image;
         }
+
+        pub mod oauth {
+            pub mod approve;
+            pub mod authorize;
+            pub mod oauth_authorization_server;
+            pub mod register;
+            pub mod token;
+        }
     }
     pub mod m2 {
         pub mod noncelab {

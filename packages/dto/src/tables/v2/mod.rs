@@ -27,3 +27,9 @@ pub use consensus::*;
 
 mod user;
 pub use user::*;
+
+mod auth_clients;
+pub use auth_clients::*;
+
+mod auth_codes;
+pub use auth_codes::*;
