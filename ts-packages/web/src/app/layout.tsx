@@ -13,6 +13,7 @@ import { getServerQueryClient } from '@/lib/query-utils.server';
 import ReferralHandler from './_providers/referral-handler';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
+import ThemeWrapper from './theme-wrapper';
 
 const raleway = Raleway({
   variable: '--font-raleway',
@@ -33,24 +34,26 @@ export default async function RootLayout({
   const messages = await getMessages();
 
   return (
-    <html lang={locale}>
+    <html lang={locale} suppressHydrationWarning>
       <head>
         <link rel="icon" href="/logos/favicon.ico" />
       </head>
       <body className={`${raleway.variable} antialiased bg-bg`}>
-        <NextIntlClientProvider locale={locale} messages={messages}>
-          <CookieProvider>
-            <Providers dehydratedState={dehydratedState}>
-              <HydrationBoundary state={dehydratedState}>
-                <ReferralHandler />
-                <ClientLayout>{children}</ClientLayout>
-                <PopupZone />
-              </HydrationBoundary>
-              <ReactQueryDevtools initialIsOpen={false} />
-            </Providers>
-          </CookieProvider>
-          <ToastContainer />
-        </NextIntlClientProvider>
+        <ThemeWrapper>
+          <NextIntlClientProvider locale={locale} messages={messages}>
+            <CookieProvider>
+              <Providers dehydratedState={dehydratedState}>
+                <HydrationBoundary state={dehydratedState}>
+                  <ReferralHandler />
+                  <ClientLayout>{children}</ClientLayout>
+                  <PopupZone />
+                </HydrationBoundary>
+                <ReactQueryDevtools initialIsOpen={false} />
+              </Providers>
+            </CookieProvider>
+            <ToastContainer />
+          </NextIntlClientProvider>
+        </ThemeWrapper>
       </body>
     </html>
   );
