@@ -69,6 +69,7 @@ deps/rust-sdk/cdk/node_modules:
 cdk/.next:
 	docker create --name web-container $(ECR_NAME):$(COMMIT)
 	docker cp web-container:/app/ts-packages/web/.next cdk/.next
+	docker rm -f web-container
 
 cdk/public:
 	cp -r ts-packages/web/public cdk/public
