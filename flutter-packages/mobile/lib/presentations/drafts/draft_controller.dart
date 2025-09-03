@@ -24,5 +24,27 @@ class DraftController extends BaseController {
     Get.rootDelegate.offNamed(AppRoutes.mainScreen);
   }
 
+  void openDraft(int feedId) {
+    Get.rootDelegate.toNamed(AppRoutes.draftWithId(feedId));
+  }
+
+  Future<void> deleteDraft(int feedId) async {
+    logger.d("delete draft id: ${feedId}");
+    try {
+      final res = await feedsApi.deleteFeed(feedId);
+
+      if (res != null) {
+        Biyard.info("Delete Draft successfully");
+        listFeeds();
+      } else {
+        Biyard.error(
+          "Failed to delete draft.",
+          "Delete Draft failed. Please try again later.",
+        );
+      }
+    } finally {}
+  }
+
   RxList<FeedModel> feeds = <FeedModel>[].obs;
+  Rx<bool> isBusy = false.obs;
 }

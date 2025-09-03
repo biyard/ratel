@@ -15,19 +15,144 @@ class NetworkApi extends GetConnect {
     });
   }
 
+  Future<NetworkModel?> acceptSuggestion(
+    List<int> suggestionIds,
+    int followeeId,
+  ) async {
+    final uri = Uri.parse(
+      apiEndpoint,
+    ).resolve('/v2/networks/suggestions/accept');
+
+    final headers = <String, String>{'Content-Type': 'application/json'};
+    final body = {'suggestion_ids': suggestionIds, 'followee_id': followeeId};
+
+    final res = await post(uri.toString(), body, headers: headers);
+
+    logger.d('response body: ${res.bodyString} ');
+
+    if (!res.isOk) return null;
+
+    final suggestion = res.body["suggestion"];
+
+    return NetworkModel(
+      id: int.parse(suggestion["id"].toString()),
+      profileUrl: suggestion["profile_url"] ?? "",
+      nickname: suggestion["nickname"] ?? "",
+      username: suggestion["username"] ?? "",
+      description: suggestion["html_contents"] ?? "",
+    );
+  }
+
+  Future<NetworkModel?> rejectSuggestion(
+    List<int> suggestionIds,
+    int followeeId,
+  ) async {
+    final uri = Uri.parse(
+      apiEndpoint,
+    ).resolve('/v2/networks/suggestions/reject');
+
+    final headers = <String, String>{'Content-Type': 'application/json'};
+    final body = {'suggestion_ids': suggestionIds, 'followee_id': followeeId};
+
+    final res = await post(uri.toString(), body, headers: headers);
+
+    logger.d('response body: ${res.isOk} ');
+
+    if (!res.isOk) return null;
+
+    final suggestion = res.body["suggestion"];
+
+    return NetworkModel(
+      id: int.parse(suggestion["id"].toString()),
+      profileUrl: suggestion["profile_url"] ?? "",
+      nickname: suggestion["nickname"] ?? "",
+      username: suggestion["username"] ?? "",
+      description: suggestion["html_contents"] ?? "",
+    );
+  }
+
+  Future<NetworkModel?> acceptInvitation(
+    List<int> invitationIds,
+    int followeeId,
+  ) async {
+    final uri = Uri.parse(
+      apiEndpoint,
+    ).resolve('/v2/networks/invitations/accept');
+
+    final headers = <String, String>{'Content-Type': 'application/json'};
+    final body = {'followee_id': followeeId, 'invitation_ids': invitationIds};
+
+    final res = await post(uri.toString(), body, headers: headers);
+
+    logger.d('response body: ${res.isOk} ');
+
+    if (!res.isOk) return null;
+
+    final invitation = res.body["invitation"];
+
+    if (invitation == null) {
+      return NetworkModel(
+        id: 0,
+        profileUrl: "",
+        nickname: "",
+        username: "",
+        description: "",
+      );
+    }
+
+    return NetworkModel(
+      id: int.parse(invitation["id"].toString()),
+      profileUrl: invitation["profile_url"] ?? "",
+      nickname: invitation["nickname"] ?? "",
+      username: invitation["username"] ?? "",
+      description: invitation["html_contents"] ?? "",
+    );
+  }
+
+  Future<NetworkModel?> rejectInvitation(
+    List<int> invitationIds,
+    int followeeId,
+  ) async {
+    final uri = Uri.parse(
+      apiEndpoint,
+    ).resolve('/v2/networks/invitations/reject');
+
+    final headers = <String, String>{'Content-Type': 'application/json'};
+    final body = {'followee_id': followeeId, 'invitation_ids': invitationIds};
+
+    final res = await post(uri.toString(), body, headers: headers);
+
+    logger.d('response body: ${res.isOk} ');
+
+    if (!res.isOk) return null;
+
+    final invitation = res.body["invitation"];
+
+    if (invitation == null) {
+      return NetworkModel(
+        id: 0,
+        profileUrl: "",
+        nickname: "",
+        username: "",
+        description: "",
+      );
+    }
+
+    return NetworkModel(
+      id: int.parse(invitation["id"].toString()),
+      profileUrl: invitation["profile_url"] ?? "",
+      nickname: invitation["nickname"] ?? "",
+      username: invitation["username"] ?? "",
+      description: invitation["html_contents"] ?? "",
+    );
+  }
+
   Future<MyNetworkModel> getNetworksByV1() async {
     final userUri = Uri.parse(apiEndpoint)
         .resolve('/v1/users')
         .replace(queryParameters: <String, String>{'action': 'user-info'});
 
-    final networkUri = Uri.parse(apiEndpoint)
-        .resolve('/v1/network')
-        .replace(
-          queryParameters: <String, String>{
-            'param-type': 'read',
-            'action': 'find-one',
-          },
-        );
+    final networkUri = Uri.parse(apiEndpoint).resolve('/v2/networks');
 
     final headers = <String, String>{'Content-Type': 'application/json'};
     final userRes = await get(userUri.toString(), headers: headers);
@@ -36,69 +161,30 @@ class NetworkApi extends GetConnect {
     logger.d(
       "user info: ${userRes.body["id"]} followings: ${userRes.body["followings"]} followers: ${userRes.body["followers"]}",
     );
-    logger.d("network info: ${networkRes.body["suggested_users"]}");
+    logger.d("network info: ${networkRes.body["suggestions"]}");
 
     final List<NetworkModel> followers = [];
-    final List<NetworkModel> followings = [
-      NetworkModel(
-        id: 51,
-        profileUrl:
-            "https://ca.slack-edge.com/T03H3B09USV-U03GQMUNE2W-20ccd88c2612-512",
-        nickname: "Summer Park",
-        username: "Summer Park",
-        description:
-            "<div>educator in the Korean Web3 industry, specializing in industry convergence and DAO technology and applications in the context of blockchain and Web3.0</div>",
-      ),
-      NetworkModel(
-        id: 52,
-        profileUrl:
-            "https://lh3.googleusercontent.com/a/ACg8ocJH35xGbTc7wWb1C8n55KDYdoIKAthJEvFGYXRP9qgFRO9dWM8=s96-c",
-        nickname: "Rosa Park",
-        username: "Rosa Park",
-        description: "<div>Project manager at Ratel foundation</div>",
-      ),
-    ];
+    final List<NetworkModel> followings = [];
 
     if (!userRes.isOk || !networkRes.isOk) {
       return MyNetworkModel(followers: followers, followings: followings);
     }
 
-    // final followersRaw = userRes.body["followers"] as List? ?? [];
-    // final followingRaw = userRes.body["followings"] as List? ?? [];
+    for (final f in networkRes.body["invitations"]) {
+      followings.add(
+        NetworkModel(
+          id: int.parse(f["id"].toString()),
+          profileUrl: f["profile_url"] ?? "",
+          nickname: f["nickname"] ?? "",
+          username: f["username"] ?? "",
+          description: f["html_contents"] ?? "",
+        ),
+      );
+    }
 
-    // final followerIds = followersRaw
-    //     .map((e) => e is Map ? e["id"] : e)
-    //     .map((v) => int.tryParse(v?.toString() ?? ''))
-    //     .whereType<int>()
-    //     .toSet();
-
-    // final alreadyAdded = followings.map((n) => n.id).toSet();
-
-    // for (final f in followingRaw) {
-    //   final id = int.tryParse(f["id"]?.toString() ?? '');
-    //   logger.d("following raws ids: ${followerIds} ${id}");
-    //   if (id == null) continue;
-    //   if (followerIds.contains(id)) continue;
-    //   if (alreadyAdded.contains(id)) continue;
-
-    //   followings.add(
-    //     NetworkModel(
-    //       id: id,
-    //       profileUrl: f["profile_url"] ?? "",
-    //       nickname: f["nickname"] ?? "",
-    //       username: f["username"] ?? "",
-    //       description: f["html_contents"] ?? "",
-    //     ),
-    //   );
-    // }
-
-    for (
-      var i = 0;
-      i < min(networkRes.body["suggested_users"].length, 4);
-      i++
-    ) {
-      logger.d("index: ${i} network: ${networkRes.body["suggested_users"]}");
-      final follower = networkRes.body["suggested_users"][i];
+    for (var i = 0; i < min(networkRes.body["suggestions"].length, 4); i++) {
+      logger.d("index: ${i} network: ${networkRes.body["suggestions"]}");
+      final follower = networkRes.body["suggestions"][i];
       logger.d("follower: ${follower}");
       followers.add(
         NetworkModel(
@@ -114,8 +200,8 @@ class NetworkApi extends GetConnect {
     return MyNetworkModel(followers: followers, followings: followings);
   }
 
-  Future<dynamic> getNetworks() async {
-    final uri = Uri.parse(apiEndpoint).resolve('/v2/networks');
+  Future<dynamic> getConnections() async {
+    final uri = Uri.parse(apiEndpoint).resolve('/v2/connections');
 
     final headers = <String, String>{'Content-Type': 'application/json'};
     final res = await get(uri.toString(), headers: headers);
@@ -154,9 +240,9 @@ class NetworkApi extends GetConnect {
     return networks;
   }
 
-  Future<dynamic> getNetworksByKeyword(String keyword) async {
+  Future<dynamic> getConnectionByKeyword(String keyword) async {
     final uri = Uri.parse(apiEndpoint)
-        .resolve('/v2/networks/search')
+        .resolve('/v2/connections/search')
         .replace(queryParameters: <String, String>{'keyword': keyword});
 
     final headers = <String, String>{'Content-Type': 'application/json'};
@@ -196,8 +282,8 @@ class NetworkApi extends GetConnect {
     return networks;
   }
 
-  Future<dynamic> follow(List<int> followeeIds) async {
-    final uri = Uri.parse(apiEndpoint).resolve('/v2/networks/follow');
+  Future<dynamic> connectionFollow(List<int> followeeIds) async {
+    final uri = Uri.parse(apiEndpoint).resolve('/v2/connections/follow');
 
     final headers = <String, String>{'Content-Type': 'application/json'};
     final body = {'followee_ids': followeeIds};

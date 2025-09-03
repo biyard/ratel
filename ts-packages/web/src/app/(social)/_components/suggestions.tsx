@@ -10,8 +10,10 @@ import { followRequest } from '@/lib/api/models/networks/follow';
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import { logger } from '@/lib/logger';
 import { Follower } from '@/lib/api/models/network';
+import { useTranslations } from 'next-intl';
 
 export default function Suggestions() {
+  const t = useTranslations('Home');
   const { post } = useApiCall();
   const network = useNetwork();
 
@@ -59,7 +61,7 @@ export default function Suggestions() {
 
   return (
     <BlackBox>
-      <h3 className="font-medium mb-3">Suggested</h3>
+      <h3 className="font-medium mb-3">{t('suggested')}</h3>
       <div className="flex flex-col gap-[35px]">
         {suggestions.map((user) => (
           <SuggestionItem key={user.id} user={user} onFollow={handleFollow} />
@@ -70,7 +72,7 @@ export default function Suggestions() {
         className="mt-5 text-xs text-gray-400 flex items-center hover:text-gray-300 transition-colors"
         aria-label="View all suggestions"
       >
-        <span>View all</span>
+        <span>{t('view_all')}</span>
         <ChevronRight size={14} />
       </Link>
     </BlackBox>

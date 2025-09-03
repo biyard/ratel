@@ -11,6 +11,7 @@ import {
 } from '@/lib/api/models/networks/follow';
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import { logger } from '@/lib/logger';
+import { useTranslations } from 'next-intl';
 
 export interface TeamProfileProps {
   team?: Team;
@@ -96,6 +97,7 @@ export default function TeamProfile({ team }: TeamProfileProps) {
 }
 
 function UnFollowButton({ onClick }: { onClick: () => void }) {
+  const t = useTranslations('Team');
   const [isHovered, setIsHovered] = useState(false);
 
   return (
@@ -108,13 +110,15 @@ function UnFollowButton({ onClick }: { onClick: () => void }) {
       <div
         className={`font-bold  ${isHovered ? 'text-[#ff4d4f]' : 'text-neutral-700'} text-xs`}
       >
-        {isHovered ? 'Unfollow' : 'Following'}
+        {isHovered ? t('unfollow') : t('following')}
       </div>
     </div>
   );
 }
 
 function FollowButton({ onClick }: { onClick: () => void }) {
+  const t = useTranslations('Team');
+
   return (
     <div
       className="cursor-pointer flex flex-row w-fit h-fit px-[10px] py-[5px] bg-white hover:bg-gray-300 rounded-[50px]"
@@ -122,7 +126,7 @@ function FollowButton({ onClick }: { onClick: () => void }) {
         onClick();
       }}
     >
-      <div className="font-bold text-[#000203] text-xs">Follow</div>
+      <div className="font-bold text-[#000203] text-xs">{t('follow')}</div>
     </div>
   );
 }

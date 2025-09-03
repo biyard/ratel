@@ -43,7 +43,7 @@ pub struct SearchQuery {
     pub keyword: Option<String>,
 }
 
-pub async fn list_networks_by_keyword_handler(
+pub async fn list_connections_by_keyword_handler(
     Extension(auth): Extension<Option<Authorization>>,
     State(pool): State<PgPool>,
     Query(SearchQuery { keyword }): Query<SearchQuery>,
