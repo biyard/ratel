@@ -31,6 +31,10 @@ async function getDataFromServer<T>(
   url: string,
   force = false,
 ): Promise<{ key: (string | number)[]; data: T | null }> {
+  logger.debug('getDataFromServer: Starting fetching data', {
+    key,
+    url,
+  });
   const queryClient = await getServerQueryClient();
 
   if (!force) {
@@ -49,6 +53,11 @@ async function getDataFromServer<T>(
   if (res.data) {
     queryClient.setQueryData(key, res.data);
   }
+
+  logger.debug('getDataFromServer: fetched data from server', {
+    key,
+    url,
+  });
 
   return {
     key,
