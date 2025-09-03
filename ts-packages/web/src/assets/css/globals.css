@@ -17,9 +17,11 @@
   --gray-800: #262626;
   --gray-900: #171717;
   --gray-950: #0a0a0a;
-
+  
+  --modal-text:#000203;
   --bg-dark: #1e1e1e;
   --bg-component-dark: #191919;
+
 
   /* Brand & Accent */
   --brand-primary: #fcb300;
@@ -58,7 +60,7 @@
   --color-component-bg: var(--bg-component-dark);
   --color-primary: var(--brand-primary);
   --color-secondary: var(--brand-secondary);
-
+  --color-modal-text: var(--modal-text);
   --color-supportive: var(--accent-green);
   --color-against: var(--accent-pink-light);
 
