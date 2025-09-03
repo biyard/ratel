@@ -283,6 +283,9 @@ jobs:
 
   fetcher:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/fetcher
     steps:
       - uses: actions/checkout@v3
         with:
@@ -339,7 +342,9 @@ jobs:
           ENABLE_LAMBDA: false
         run: |
           npm i -g aws-cdk
-          make deploy
+          make docker.build
+          make docker.login
+          make docker.push
 
   nextjs-web:
     runs-on: ubuntu-latest
