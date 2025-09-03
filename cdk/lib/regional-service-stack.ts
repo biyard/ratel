@@ -16,6 +16,7 @@ import {
 import { Repository } from "aws-cdk-lib/aws-ecr";
 import { Construct } from "constructs";
 import * as r53Targets from "aws-cdk-lib/aws-route53-targets";
+import { DaemonStack } from "./daemon-stack";
 
 export interface RegionalServiceStackProps extends StackProps {
   // Domain parts, e.g. "dev2.ratel.foundation"
@@ -28,6 +29,8 @@ export interface RegionalServiceStackProps extends StackProps {
   webRepoName?: string;
   minCapacity?: number;
   maxCapacity?: number;
+  enableDaemon?: boolean;
+  pghost: string;
 }
 
 export class RegionalServiceStack extends Stack {
@@ -41,7 +44,7 @@ export class RegionalServiceStack extends Stack {
     const healthPath = props.healthCheckPath ?? "/version";
     const apiRepoName = props.apiRepoName ?? "ratel/main-api";
     const webRepoName = props.webRepoName ?? "ratel/web";
-    const minCapacity = props.minCapacity ?? 1;
+    const minCapacity = props.minCapacity ?? 2;
     const maxCapacity = props.maxCapacity ?? 50;
     const albDomain = `alb.${domain}`;
     const baseDomain = "ratel.foundation";
@@ -99,6 +102,9 @@ export class RegionalServiceStack extends Stack {
       logging: new ecs.AwsLogDriver({
         streamPrefix: "ratel-api",
       }),
+      environment: {
+        PGHOST: props.pghost,
+      },
     });
 
     apiContainer.addPortMappings({
@@ -120,6 +126,12 @@ export class RegionalServiceStack extends Stack {
       environment: {
         NODE_ENV: "production",
         PORT: "8080",
+        NEXT_PUBLIC_VERSION: props.commit,
+        NEXT_PUBLIC_LOG_LEVEL: process.env.NEXT_PUBLIC_LOG_LEVEL!,
+        NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL!,
+        NEXT_PUBLIC_SIGN_DOMAIN: process.env.NEXT_PUBLIC_SIGN_DOMAIN!,
+        NEXT_PUBLIC_GRAPHQL_URL: process.env.NEXT_PUBLIC_GRAPHQL_URL!,
+        NEXT_PUBLIC_EXPERIMENT: process.env.NEXT_PUBLIC_EXPERIMENT!,
       },
     });
 
@@ -253,6 +265,16 @@ export class RegionalServiceStack extends Stack {
         new r53Targets.LoadBalancerTarget(this.alb),
       ),
     });
+
+    if (props.enableDaemon) {
+      new DaemonStack(this, {
+        vpc,
+        cluster,
+        listener,
+        taskExecutionRole,
+        commit: props.commit,
+      });
+    }
 
     // Outputs
     this.exportValue(this.alb.loadBalancerDnsName, { name: `${id}-AlbDns` });
