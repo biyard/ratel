@@ -17,8 +17,10 @@ import { route } from '@/route';
 import { checkString } from '@/lib/string-filter-utils';
 import { showErrorToast } from '@/lib/toast';
 import Image from 'next/image';
+import { useTranslations } from 'next-intl';
 
 export default function SettingsPage({ username }: { username: string }) {
+  const t = useTranslations('Team');
   const { teams, updateSelectedTeam } = useContext(TeamContext);
   const team = useMemo(() => {
     return teams.find((t) => t.username === username);
@@ -48,7 +50,7 @@ export default function SettingsPage({ username }: { username: string }) {
 
   const handleSave = async () => {
     if (checkString(nickname ?? '') || checkString(htmlContents ?? '')) {
-      showErrorToast('Please remove the test keyword');
+      showErrorToast(t('remove_test_keyword'));
       return;
     }
 
@@ -83,29 +85,29 @@ export default function SettingsPage({ username }: { username: string }) {
           />
         ) : (
           <button className="w-40 h-40 rounded-full bg-c-wg-80 text-sm font-semibold flex items-center justify-center text-c-wg-50">
-            Upload logo
+            {t('upload_logo')}
           </button>
         )}
       </FileUploader>
 
       <Col className="w-full gap-2.5">
         <Row className="max-tablet:flex-col">
-          <label className="w-40 font-bold">Username</label>
+          <label className="w-40 font-bold">{t('username')}</label>
           <Input type="text" disabled value={`@${team?.username}`} />
         </Row>
         <Row className="max-tablet:flex-col">
-          <label className="w-40 font-bold">Display name</label>
+          <label className="w-40 font-bold">{t('display_name')}</label>
           <Input
             type="text"
-            placeholder="Team display name"
+            placeholder={t('display_name_hint')}
             value={nickname}
             onInput={handleNickname}
           />
         </Row>
         <Col>
-          <label className="w-40 font-bold">Description</label>
+          <label className="w-40 font-bold">{t('description')}</label>
           <Textarea
-            placeholder="Please type description of your team."
+            placeholder={t('team_description_hint')}
             value={htmlContents}
             onChange={handleContents}
           />
@@ -117,7 +119,7 @@ export default function SettingsPage({ username }: { username: string }) {
             variant={'rounded_primary'}
             onClick={handleSave}
           >
-            Save
+            {t('save')}
           </Button>
         </Row>
       </Col>

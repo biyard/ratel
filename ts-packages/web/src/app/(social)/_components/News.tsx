@@ -2,6 +2,7 @@
 import { Col } from '@/components/ui/col';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { useSuspenseQuery } from '@apollo/client';
+import { useTranslations } from 'next-intl';
 import {
   ErrorBoundary,
   ErrorComponent,
@@ -30,6 +31,7 @@ export default function Wrapper() {
   );
 }
 function News() {
+  const t = useTranslations('Home');
   const router = useRouter();
   const q = ratelApi.graphql.listNews(3);
   const {
@@ -44,7 +46,7 @@ function News() {
   return (
     <Col className="w-full rounded-[10px] bg-component-bg px-4 py-5 mt-[10px]">
       <h3 className="text-[15px]/[20px] tracking-[0.5px] font-bold text-white">
-        Latest News
+        {t('latest_news')}
       </h3>
       <Col className="gap-3.75">
         {news.map((item) => (

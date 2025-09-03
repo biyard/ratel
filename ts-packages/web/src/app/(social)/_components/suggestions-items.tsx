@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import { UserType } from '@/lib/api/models/user';
+import { useTranslations } from 'next-intl';
 
 type SuggestionItemProps = {
   user: {
@@ -16,6 +17,7 @@ export default function SuggestionItem({
   user,
   onFollow,
 }: SuggestionItemProps) {
+  const t = useTranslations('Home');
   const isTeam = user.user_type === UserType.Team;
   const imageClass = isTeam ? 'rounded-lg' : 'rounded-full';
 
@@ -43,7 +45,7 @@ export default function SuggestionItem({
             onClick={() => onFollow(user.id)}
             aria-label={`Follow ${user.username}`}
           >
-            + Follow
+            + {t('follow')}
           </button>
         </div>
       </div>

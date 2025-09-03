@@ -2,8 +2,10 @@
 import { Edit1 } from '@/components/icons';
 import React from 'react';
 import { usePostDraft } from './create-post';
+import { useTranslations } from 'next-intl';
 
 export default function CreatePostButton() {
+  const t = useTranslations('Team');
   const { newDraft } = usePostDraft();
   return (
     <div
@@ -14,7 +16,7 @@ export default function CreatePostButton() {
     >
       <Edit1 className="w-4 h-4" />
       <div className="font-bold text-base/[22px] text-neutral-900">
-        Create Post
+        {t('create_post')}
       </div>
     </div>
   );
