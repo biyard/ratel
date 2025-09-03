@@ -28,6 +28,8 @@ pub enum Error {
     Klaytn(String),
     InvalidUserQuery(String),
 
+    DbPoolTimeout,
+
     #[translate(en = "Could not find any resource", ko = "리소스를 찾을 수 없습니다.")]
     NotFound,
 
