@@ -7,8 +7,6 @@ use bdk::prelude::*;
 use dto::{sqlx::PgPool, *};
 use tokio::time::sleep;
 
-use crate::config;
-
 #[derive(Clone, Debug)]
 pub struct SpaceController {
     repo: SpaceRepository,
@@ -29,8 +27,10 @@ impl SpaceController {
                 tracing::error!("Failed to initialize INSTANCE on {e:?}");
             }
             tokio::spawn(async move {
-                let _ = tokio::join!(arc_ctrl.finish_spaces(), arc_ctrl.start_spaces());
-                sleep(Duration::from_secs(60)).await;
+                loop {
+                    let _ = arc_ctrl.finish_spaces().await;
+                    sleep(Duration::from_secs(10)).await;
+                }
             });
         }
 
