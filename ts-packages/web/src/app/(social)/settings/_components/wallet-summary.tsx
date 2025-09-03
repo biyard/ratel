@@ -6,12 +6,14 @@ import { useWallet } from '@/lib/api/hooks/wallet';
 import { ClipboardCopy } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
+import { useTranslations } from 'next-intl';
 
 export type WalletSummaryProps = {
   onUpdate?: (address: string) => void;
 };
 
 export default function WalletSummary({ onUpdate }: WalletSummaryProps) {
+  const t = useTranslations('Settings');
   const { address, connectWallet } = useWallet();
   const [copied, setCopied] = useState(false);
 
@@ -55,7 +57,7 @@ export default function WalletSummary({ onUpdate }: WalletSummaryProps) {
                     )}
                   </>
                 ) : (
-                  <span>Connect Wallet to Get Started</span>
+                  <span>{t('connect_wallet')}</span>
                 )}
               </div>
             </div>
@@ -63,7 +65,7 @@ export default function WalletSummary({ onUpdate }: WalletSummaryProps) {
 
           {address && (
             <Button variant={'default'} onClick={() => onUpdate?.(address)}>
-              Save
+              {t('save')}
             </Button>
           )}
         </div>
