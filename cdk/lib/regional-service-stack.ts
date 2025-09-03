@@ -16,6 +16,7 @@ import {
 import { Repository } from "aws-cdk-lib/aws-ecr";
 import { Construct } from "constructs";
 import * as r53Targets from "aws-cdk-lib/aws-route53-targets";
+import { DaemonStack } from "./daemon-stack";
 
 export interface RegionalServiceStackProps extends StackProps {
   // Domain parts, e.g. "dev2.ratel.foundation"
@@ -28,6 +29,7 @@ export interface RegionalServiceStackProps extends StackProps {
   webRepoName?: string;
   minCapacity?: number;
   maxCapacity?: number;
+  enableDaemon?: boolean;
 }
 
 export class RegionalServiceStack extends Stack {
@@ -259,6 +261,16 @@ export class RegionalServiceStack extends Stack {
         new r53Targets.LoadBalancerTarget(this.alb),
       ),
     });
+
+    if (props.enableDaemon) {
+      new DaemonStack(this, {
+        vpc,
+        cluster,
+        listener,
+        taskExecutionRole,
+        commit: props.commit,
+      });
+    }
 
     // Outputs
     this.exportValue(this.alb.loadBalancerDnsName, { name: `${id}-AlbDns` });

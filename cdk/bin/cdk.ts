@@ -11,6 +11,17 @@ const env = process.env.ENV || "dev";
 const host = "dev.ratel.foundation";
 
 // --- Regional stacks (ALB + Fargate) ---
+const kr = new RegionalServiceStack(app, `ratel-${env}-svc-ap-northeast-2`, {
+  env: {
+    account: process.env.CDK_DEFAULT_ACCOUNT,
+    region: "ap-northeast-2",
+  },
+  fullDomainName: host,
+  healthCheckPath: "/version",
+  commit: process.env.COMMIT!,
+  enableDaemon: true,
+});
+
 const eu = new RegionalServiceStack(app, `ratel-${env}-svc-eu-central-1`, {
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
@@ -25,16 +36,6 @@ const us = new RegionalServiceStack(app, `ratel-${env}-svc-us-east-1`, {
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
     region: "us-east-1",
-  },
-  fullDomainName: host,
-  healthCheckPath: "/version",
-  commit: process.env.COMMIT!,
-});
-
-const kr = new RegionalServiceStack(app, `ratel-${env}-svc-ap-northeast-2`, {
-  env: {
-    account: process.env.CDK_DEFAULT_ACCOUNT,
-    region: "ap-northeast-2",
   },
   fullDomainName: host,
   healthCheckPath: "/version",
