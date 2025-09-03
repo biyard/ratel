@@ -1,3 +1,5 @@
+use std::env;
+
 use crate::{
     config, controllers,
     route::route,
@@ -185,32 +187,30 @@ pub async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
     Ok(())
 }
 
-pub async fn db_init(urls: &Vec<&'static str>, max_conn: u32) -> Result<PgPool> {
-    let build_pool = |url: &'static str| async move {
-        let fut = PgPoolOptions::new()
-            .max_connections(max_conn)
-            .acquire_timeout(std::time::Duration::from_secs(5))
-            .connect(&url);
-
-        match timeout(std::time::Duration::from_secs(5), fut).await {
-            Ok(Ok(pool)) => Ok(pool),
-            Ok(Err(e)) => {
-                tracing::warn!("Error connecting to DB at {}: {}", url, e);
-                Err(Error::DbPoolTimeout)
+pub async fn db_init(url: &'static str, max_conn: u32) -> Result<PgPool> {
+    let url = if let Ok(host) = env::var("PGHOST") {
+        let url = if let Some(at_pos) = url.rfind('@') {
+            let (before_at, after_at) = url.split_at(at_pos + 1);
+            if let Some(slash_pos) = after_at.find('/') {
+                let (_, after_slash) = after_at.split_at(slash_pos);
+                format!("{}{}{}", before_at, host, after_slash)
+            } else {
+                url.to_string()
             }
-            Err(_) => Err(Error::DbPoolTimeout),
-        }
+        } else {
+            url.to_string()
+        };
+        url
+    } else {
+        url.to_string()
     };
 
-    let mut tasks = stream::iter(urls.into_iter().map(|u| build_pool(u))).buffer_unordered(8);
+    let pool = PgPoolOptions::new()
+        .max_connections(max_conn)
+        .connect(&url)
+        .await?;
 
-    while let Some(res) = tasks.next().await {
-        if let Ok(pool) = res {
-            return Ok(pool);
-        }
-    }
-
-    Err(Error::DbPoolTimeout)
+    Ok(pool)
 }
 
 pub async fn api_main() -> Result<Router> {
@@ -223,8 +223,7 @@ pub async fn api_main() -> Result<Router> {
     set_auth_token_key(auth_token_key);
 
     let pool = if let DatabaseConfig::Postgres { url, pool_size } = conf.database {
-        let urls = url.split(",").collect::<Vec<&'static str>>();
-        let pool = db_init(&urls, pool_size).await?;
+        let pool = db_init(url, pool_size).await?;
         tracing::info!(
             "Connected to Postgres at {}",
             pool.connect_options().get_host()
