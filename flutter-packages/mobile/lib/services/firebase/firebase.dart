@@ -200,19 +200,22 @@ class ByFirebase extends GetxService {
   Future<User?> signIn() async {
     user = null;
 
-    await initialied.future;
-
     FirebaseAuth auth = FirebaseAuth.instance;
 
     try {
       logger.d("signIn");
       GoogleSignIn googleSignIn = GoogleSignIn(
+        clientId:
+            '925748630857-gla98vdbf4th33ahd0shlsu47qnp0u90.apps.googleusercontent.com',
         scopes: [
           // "email",
           // 'https://www.googleapis.com/auth/drive.appdata',
         ],
       );
-      logger.d("scopes: ${googleSignIn.scopes}");
+
+      await googleSignIn.disconnect();
+      await googleSignIn.signOut();
+
       GoogleSignInAccount? googleUser = await googleSignIn.signIn();
 
       if (googleUser == null) {
@@ -260,7 +263,7 @@ class ByFirebase extends GetxService {
         ],
         webAuthenticationOptions: WebAuthenticationOptions(
           //FIXME: fix config
-          clientId: "com.biyard.dagitMobile",
+          clientId: "foundation.ratel.app",
           redirectUri: Uri.parse(
             "https://glow-abiding-parallelogram.glitch.me/callbacks/sign_in_with_apple",
           ),
