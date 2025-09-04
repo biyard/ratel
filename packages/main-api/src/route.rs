@@ -56,6 +56,11 @@ use crate::{
                 get_notifications::get_notifications_handler,
                 mark_all_read::mark_all_notifications_read_handler,
             },
+            oauth::{
+                approve::approve_handler, authorize::authorize_handler,
+                oauth_authorization_server::oauth_authorization_server_handler,
+                register::register_handler, token::token_handler,
+            },
             oracles::create_oracle::create_oracle_handler,
             spaces::{delete_space::delete_space_handler, get_my_space::get_my_space_controller},
             telegram::subscribe::telegram_subscribe_handler,
@@ -510,6 +515,40 @@ pub async fn route(
                     "Mark all notifications as read for the authenticated user."
                 ),
             )
+            .with_state(pool.clone()),
+        )
+        .native_route(
+            "/v2/oauth/register",
+            npost(register_handler)
+                .options(register_handler)
+                .with_state(pool.clone()),
+        )
+        .native_route(
+            "/v2/oauth/approve",
+            npost(approve_handler)
+                .options(approve_handler)
+                .with_state(pool.clone()),
+        )
+        .native_route(
+            "/v2/oauth/authorize",
+            nget(authorize_handler).with_state(pool.clone()),
+        )
+        .native_route(
+            "/v2/oauth/token",
+            npost(token_handler)
+                .options(token_handler)
+                .with_state(pool.clone()),
+        )
+        .route(
+            "/.well-known/oauth-authorization-server",
+            get_with(
+                oauth_authorization_server_handler,
+                api_docs!(
+                    "Authorization Server Metadata",
+                    "Retrieve OAuth 2.0 Authorization Server Metadata"
+                ),
+            )
+            .options(oauth_authorization_server_handler)
             .with_state(pool.clone()),
         )
         .route(
