@@ -164,7 +164,7 @@ pub async fn route(
         .native_route("/v2/users/logout", npost(logout_handler))
 
         .route(
-            "/conversations",
+            "/v2/conversations",
             post_with(
                 create_conversation_handler,
                 api_docs!(
