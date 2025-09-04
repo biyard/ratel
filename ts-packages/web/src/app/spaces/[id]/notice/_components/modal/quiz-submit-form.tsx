@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { usePopup } from '@/lib/contexts/popup-service';
+import { useTranslations } from 'next-intl';
 
 export interface QuizSubmitFormProps {
   onSubmit: () => void;
@@ -9,42 +10,43 @@ export interface QuizSubmitFormProps {
 
 export default function QuizSubmitForm({ onSubmit }: QuizSubmitFormProps) {
   const popup = usePopup();
+  const t = useTranslations('NoticeSpace');
 
   return (
     <div className="w-[500px] flex flex-col mt-2">
       <div className="text-center font-bold text-white text-[24px] mb-6">
-        Just heads up!
+        {t('quiz_submit_title')}
       </div>
 
-      {/* Warning Content */}
       <div className="text-center font-medium text-neutral-400 text-base">
-        Wrong answers will reduce your reward by{' '}
-        <span className="text-red-500 font-bold">50%</span>
+        {t.rich('quiz_submit_desc_line1', {
+          b: (chunks) => (
+            <span className="text-red-500 font-bold">{chunks}</span>
+          ),
+        })}
         <br />
-        You can test again, but remember — the{' '}
-        <span className="font-bold">
-          reward will be halved each time you do.
-        </span>
+        {t.rich('quiz_submit_desc_line2', {
+          b: (chunks) => <span className="font-bold">{chunks}</span>,
+        })}
         <br />
         <br />
         <span className="text-white text-lg font-medium">
-          Submit your answer anyway?
+          {t('quiz_submit_cta_question')}
         </span>
       </div>
 
-      {/* Action Buttons */}
       <div className="flex flex-row justify-end gap-4 mt-8.75">
         <button
           onClick={() => popup.close()}
-          className="px-10 py-[14.5px] bg-transparent font-bold text-base text-neutral-400"
+          className="min-w-30 px-10 py-[14.5px] bg-transparent font-bold text-base text-neutral-400"
         >
-          Cancel
+          {t('cancel')}
         </button>
         <button
           onClick={onSubmit}
           className="w-full py-[14.5px] bg-primary font-bold text-black text-base rounded-[10px]"
         >
-          Submit
+          {t('submit')}
         </button>
       </div>
     </div>

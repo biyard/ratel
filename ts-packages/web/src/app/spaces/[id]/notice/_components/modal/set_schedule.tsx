@@ -5,6 +5,7 @@ import { Internet } from '@/components/icons';
 import { showErrorToast } from '@/lib/toast';
 import TimeDropdown from '@/components/time-dropdown';
 import CalendarDropdown from '@/components/calendar-dropdown';
+import { useTranslations } from 'next-intl';
 
 export default function SetSchedulePopup({
   startedAt,
@@ -15,6 +16,7 @@ export default function SetSchedulePopup({
   endedAt: number;
   onconfirm: (startDate: number, endDate: number) => void;
 }) {
+  const t = useTranslations('NoticeSpace');
   const [sessions, setSessions] = useState([
     { label: 'Notice', start: startedAt * 1000, end: endedAt * 1000 },
   ]);
@@ -28,7 +30,7 @@ export default function SetSchedulePopup({
   const handleConfirm = () => {
     for (const s of sessions) {
       if (s.start >= s.end) {
-        showErrorToast('Start date must be earlier than end date.');
+        showErrorToast(t('start_date_warning'));
         return;
       }
     }
@@ -39,7 +41,7 @@ export default function SetSchedulePopup({
   return (
     <div className="w-full max-w-[900px] bg-[var(--color-background)] p-8 rounded-2xl">
       <div className="text-2xl font-bold text-white mb-6">
-        Set Notice Schedule
+        {t('set_notice_schedule')}
       </div>
 
       {sessions.map((session, index) => (
@@ -97,7 +99,7 @@ export default function SetSchedulePopup({
           onClick={handleConfirm}
           className="w-fit px-10 py-[14.5px] rounded-[10px] bg-primary hover:bg-hover text-black text-bold text-base hover:text-black cursor-pointer"
         >
-          Confirm
+          {t('confirm')}
         </button>
       </div>
     </div>

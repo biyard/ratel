@@ -21,6 +21,7 @@ import { ThumbsUp } from '@/assets/icons/emoji';
 import { Play, Expand } from '@/assets/icons';
 import Loading from '@/app/loading';
 import { Button } from '../ui/button';
+import { useTranslations } from 'next-intl';
 
 const ErrorComponent: ErrorComponent = ({ error, reset }) => {
   console.error('Error occurred:', error);
@@ -58,6 +59,7 @@ export function TitleSection({
   setTitle,
   handleShare,
 }: TitleSectionProps) {
+  const t = useTranslations('SprintSpace');
   return (
     <div>
       {isEdit ? (
@@ -65,7 +67,7 @@ export function TitleSection({
           className="border-b border-transparent !border-b-white focus:!border-transparent focus:rounded-md font-bold text-white text-[24px]/[30px] placeholder:text-neutral-300 placeholder:font-medium rounded-none"
           value={title || ''}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="Input title."
+          placeholder={t('title_hint')}
         />
       ) : (
         <div className="flex flex-row w-full justify-between items-center overflow-ellipsis">
@@ -96,6 +98,7 @@ export function PostInfoSection({
   isDraft,
   isPublic,
 }: PostInfoSectionProps) {
+  const t = useTranslations('SprintSpace');
   return (
     <div className="flex flex-row w-full justify-between items-center">
       <div className="flex flex-row w-fit gap-2.5 items-center">
@@ -126,17 +129,23 @@ export function PostInfoSection({
           {isDraft ? (
             <>
               <File />
-              <div className="font-normal text-white text-[15px]">Draft</div>
+              <div className="font-normal text-white text-[15px]">
+                {t('draft')}
+              </div>
             </>
           ) : isPublic ? (
             <>
               <Unlock2 />
-              <div className="font-normal text-white text-[15px]">Public</div>
+              <div className="font-normal text-white text-[15px]">
+                {t('public')}
+              </div>
             </>
           ) : (
             <>
               <Lock2 />
-              <div className="font-normal text-white text-[15px]">Private</div>
+              <div className="font-normal text-white text-[15px]">
+                {t('private')}
+              </div>
             </>
           )}
         </div>
@@ -185,10 +194,13 @@ export function AuthorSection({
 }
 
 function Onboard() {
+  const t = useTranslations('SprintSpace');
   return (
     <div className="flex flex-row items-center w-fit px-2 gap-1 border border-[#05df72] opacity-50 rounded-sm">
       <Play className="size-2.5 stroke-[#00d492] fill-[#00d492]" />
-      <div className="font-semibold text-sm/[25px] text-[#05df72]">ONBOARD</div>
+      <div className="font-semibold text-sm/[25px] text-[#05df72]">
+        {t('onboard')}
+      </div>
     </div>
   );
 }

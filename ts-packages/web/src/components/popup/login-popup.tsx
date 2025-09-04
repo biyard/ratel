@@ -23,6 +23,7 @@ import { isWebView } from '@/lib/webview-utils';
 import { TelegramIcon } from '../icons';
 import { type User as TelegramUser } from '@telegram-apps/sdk-react';
 import { getQueryClient } from '@/providers/getQueryClient';
+import { useTranslations } from 'next-intl';
 
 interface LoginModalProps {
   id?: string;
@@ -39,6 +40,8 @@ export const LoginModal = ({
   id = 'login_popup',
   disableClose = false,
 }: LoginModalProps) => {
+  const t = useTranslations('SignIn');
+  const signupTranslate = useTranslations('Signup');
   const popup = usePopup();
   const network = useNetwork();
   const anonKeyPair = useEd25519KeyPair();
@@ -103,9 +106,7 @@ export const LoginModal = ({
     setPassword(pw);
 
     if (!validatePassword(pw)) {
-      setPasswordWarning(
-        'Password must contain letters, numbers, and special characters (min 8 chars).',
-      );
+      setPasswordWarning(t('invalid_password_format'));
       return;
     } else {
       setPasswordWarning('');
@@ -134,7 +135,7 @@ export const LoginModal = ({
 
     // check if email is valid
     if (!email || !email.includes('@')) {
-      setWarning('Please enter a valid email address.');
+      setWarning(t('invalid_email_format'));
       return;
     }
 
@@ -143,7 +144,7 @@ export const LoginModal = ({
     } = await cli.query(ratelApi.graphql.getUserByEmail(email));
 
     if (users.length === 0) {
-      setWarning('This email is not registered.');
+      setWarning(t('unregistered_email'));
       return;
     }
 
@@ -156,7 +157,7 @@ export const LoginModal = ({
     const loader = popup.open(
       <LoaderPopup
         title="Sign in"
-        description="Signing you in..."
+        description={signupTranslate('signing_in')}
         logo={<GoogleIcon width="50" height="50" />}
         logoOrigin={<GoogleIcon />}
         msg="Continue with Google"
@@ -198,9 +199,9 @@ export const LoginModal = ({
         <LoginFailurePopup
           logo={<GoogleIcon />}
           logoOrigin={<GoogleIcon />}
-          title="Login failed"
-          description="Google authentication failed"
-          msg="Try again later."
+          title={signupTranslate('login_failed')}
+          description={signupTranslate('google_login_failed_description')}
+          msg={signupTranslate('login_failed_msg')}
           serviceName="Google"
           onRetry={handleGoogleSignIn}
         />,
@@ -213,7 +214,7 @@ export const LoginModal = ({
     const loader = popup.open(
       <LoaderPopup
         title="Sign in"
-        description="Signing you in..."
+        description={signupTranslate('signing_in')}
         logo={<TelegramIcon width="50" height="50" />}
         logoOrigin={<TelegramIcon width={24} height={24} />}
         msg="Continue with Telegram"
@@ -248,9 +249,9 @@ export const LoginModal = ({
         <LoginFailurePopup
           logo={<TelegramIcon width={24} height={24} />}
           logoOrigin={<TelegramIcon width={24} height={24} />}
-          title="Login failed"
-          description="Telegram authentication failed"
-          msg="Try again later."
+          title={signupTranslate('login_failed')}
+          description={signupTranslate('telegram_login_failed_description')}
+          msg={signupTranslate('login_failed_msg')}
           serviceName="Telegram"
           onRetry={handleTelegramSignIn}
         />,
@@ -271,21 +272,21 @@ export const LoginModal = ({
     >
       <Col className="gap-4">
         <Row className="justify-start items-center text-sm gap-1">
-          <label className="text-white font-medium">New user?</label>
+          <label className="text-white font-medium">{t('new_user')}</label>
           <button
             className="text-primary/70 hover:text-primary"
             onClick={handleSignUp}
           >
-            Create an account
+            {t('create_account')}
           </button>
         </Row>
         <Col>
-          <label className="text-sm">Email address </label>
+          <label className="text-sm">{t('email_address')} </label>
           <Input
             type="email"
             name="username"
             autoComplete="email"
-            placeholder="Enter your email address"
+            placeholder={t('email_address_hint')}
             className="w-full bg-[#000203] rounded-[10px] px-5 py-5.5 text-white font-light"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -302,10 +303,10 @@ export const LoginModal = ({
         </Col>
 
         <Col aria-hidden={!showPassword} className="aria-hidden:hidden">
-          <label className="text-sm">Password</label>
+          <label className="text-sm">{t('password')}</label>
           <Input
             type="password"
-            placeholder="Enter your password"
+            placeholder={t('password_hint')}
             className="w-full bg-[#000203] rounded-[10px] px-5 py-5.5 text-white font-light"
             value={password}
             onChange={(e) => handleChangePassword(e.target.value)}
@@ -321,7 +322,7 @@ export const LoginModal = ({
             className="text-xs py-1.5 px-4"
             onClick={handleContinue}
           >
-            {showPassword ? 'Sign in' : 'Continue'}
+            {showPassword ? t('sign_in') : t('continue')}
           </Button>
         </Row>
       </Col>
