@@ -15,6 +15,7 @@ pub struct Message {
 
     pub html_contents: String,
 
+    // FIXME: Implement proper tracking for GM
     #[api_model(type = INTEGER)]
     pub status: MessageStatus,
 
