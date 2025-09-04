@@ -19,6 +19,15 @@ use crate::{
                 follow::connection_follow_handler, network::list_connections_handler,
                 search::list_connections_by_keyword_handler,
             },
+            conversations::{
+                add_conversations::create_conversation_handler,
+                get_conversation_by_id::get_conversation_by_id_handler,
+                get_conversations::get_conversations_handler,
+                messages::{
+                    add_messages::add_message_handler, clear_message::clear_message_handler,
+                    get_messages::get_messages_handler, poll_messages::poll_messages_handler,
+                },
+            },
             dagits::{
                 add_oracle::add_oracle_handler,
                 artworks::{
@@ -153,6 +162,80 @@ pub async fn route(
             controllers::m1::MenaceController::route(pool.clone())?,
         )
         .native_route("/v2/users/logout", npost(logout_handler))
+        .route(
+            "/v2/conversations",
+            post_with(
+                create_conversation_handler,
+                api_docs!(
+                    "Create Conversation",
+                    "Create a new group or channel conversation"
+                ),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/v2/conversations",
+            get_with(
+                get_conversations_handler,
+                api_docs!(
+                    "Get Conversations",
+                    "Retrieve user's conversations with pagination"
+                ),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/v2/conversations/:conversation_id",
+            get_with(
+                get_conversation_by_id_handler,
+                api_docs!(
+                    "Get Conversation by ID",
+                    "Retrieve a specific conversation by ID"
+                ),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/v2/conversations/:conversation_id/messages",
+            post_with(
+                add_message_handler,
+                api_docs!("Add Message", "Add a new message to a conversation"),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/v2/conversations/:conversation_id/messages",
+            get_with(
+                get_messages_handler,
+                api_docs!(
+                    "Get Messages",
+                    "Retrieve messages from a conversation with pagination"
+                ),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/v2/conversations/:conversation_id/messages/poll",
+            get_with(
+                poll_messages_handler,
+                api_docs!(
+                    "Poll Messages",
+                    "Long poll for new messages in a conversation"
+                ),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/v2/messages/:message_id/clear",
+            post_with(
+                clear_message_handler,
+                api_docs!(
+                    "Clear Message",
+                    "Clear the content of a message (soft delete)"
+                ),
+            )
+            .with_state(pool.clone()),
+        )
         .route(
             "/v2/industries/select-topics",
             post_with(

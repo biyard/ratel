@@ -118,6 +118,9 @@ pub async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         ConsensusVote,
         ArtworkCertification,
         ArtworkDetail,
+        Conversation,
+        Message,
+        ConversationParticipant,
         AuthClient,
         AuthCode,
     );
