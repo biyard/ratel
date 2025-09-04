@@ -11,6 +11,7 @@ import Clear from '@/assets/icons/clear.svg';
 import Fire from '@/assets/icons/fire.svg';
 import Trophy from '@/assets/icons/trophy.svg';
 import HexDown from '@/assets/icons/hex-down.svg';
+import Remove from '@/assets/icons/remove.svg';
 import { Add } from '@/components/icons';
 import { Settings } from 'lucide-react';
 // import { File, Mega } from '@/components/icons';
@@ -88,6 +89,11 @@ export default function SpaceSideMenu() {
                 label: getRewardAmount(currentSpace?.booster_type),
                 description: t('correct'),
                 icon: Add,
+              },
+              {
+                label: '- 50%',
+                description: 'Per Incorrect',
+                icon: Remove,
               },
             ].map((item) => (
               <div className="flex gap-2" key={item.label}>

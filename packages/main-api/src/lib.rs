@@ -71,6 +71,31 @@ pub mod controllers {
             pub mod extract_passport_info;
             pub mod upload_private_image;
         }
+        pub mod conversations {
+            pub mod add_conversations;
+            pub mod get_conversation_by_id;
+            pub mod get_conversations;
+
+            pub mod messages {
+                pub mod add_messages;
+                pub mod clear_message;
+                pub mod get_messages;
+                pub mod poll_messages;
+
+                #[cfg(test)]
+                pub mod tests;
+            }
+
+            #[cfg(test)]
+            pub mod tests;
+        }
+        pub mod oauth {
+            pub mod approve;
+            pub mod authorize;
+            pub mod oauth_authorization_server;
+            pub mod register;
+            pub mod token;
+        }
     }
     pub mod m2 {
         pub mod noncelab {

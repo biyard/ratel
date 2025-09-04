@@ -2,7 +2,7 @@
 export interface QuizQuestion {
   id: string; // UUID from backend
   title: string;
-  images: ImgFile[];
+  images: string[]; // Backend sends string[] URLs directly
   options: QuizOption[];
 }
 
@@ -18,7 +18,7 @@ export interface NoticeQuizRequest {
 
 export interface NoticeQuestionRequest {
   title: string;
-  images: string[]; // URLs as strings to match backend Vec<String>
+  images: string[];
   options: NoticeOptionRequest[];
 }
 
@@ -29,7 +29,7 @@ export interface NoticeOptionRequest {
 
 // Answer Storage Types (matches backend NoticeAnswer)
 export interface NoticeAnswer {
-  answers: { [questionId: string]: string[] }; // question_id -> array of selected option_ids
+  answers: { [questionId: string]: string[] };
 }
 
 // Quiz Submission Request
@@ -72,7 +72,7 @@ export interface NoticeQuizAnswer {
   created_at: number;
   updated_at: number;
   space_id: number;
-  answers: NoticeAnswer; // HashMap of question_id -> correct option_ids
+  answers: NoticeAnswer;
 }
 
 export function spaceSubmitQuizAnswersRequest(

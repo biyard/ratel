@@ -10,12 +10,7 @@ import {
 // Extended interface for user answers with selected state
 interface QuizQuestionWithSelection {
   title: string;
-  images: Array<{
-    name: string;
-    size: string;
-    ext: number;
-    url: string | null;
-  }>;
+  images: string[];
   options: Array<{
     content: string;
     is_selected: boolean;
@@ -217,14 +212,14 @@ export default function QuizTaker({
               {/* Question Images */}
               {question.images && question.images.length > 0 && (
                 <div className="mb-4">
-                  {question.images.map((image, imageIndex) => (
+                  {question.images.map((imageUrl, imageIndex) => (
                     <div
                       key={imageIndex}
                       className="relative w-full max-w-md mx-auto"
                     >
-                      {image.url && (
+                      {imageUrl && (
                         <Image
-                          src={image.url}
+                          src={imageUrl}
                           alt={`Question ${questionIndex + 1} image ${imageIndex + 1}`}
                           width={400}
                           height={300}
