@@ -162,7 +162,6 @@ pub async fn route(
             controllers::m1::MenaceController::route(pool.clone())?,
         )
         .native_route("/v2/users/logout", npost(logout_handler))
-
         .route(
             "/v2/conversations",
             post_with(
@@ -186,7 +185,7 @@ pub async fn route(
             .with_state(pool.clone()),
         )
         .route(
-            "/v2/conversations/:id",
+            "/v2/conversations/:conversation_id",
             get_with(
                 get_conversation_by_id_handler,
                 api_docs!(
