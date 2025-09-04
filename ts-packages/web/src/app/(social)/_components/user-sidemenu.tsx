@@ -29,7 +29,7 @@ export default function UserSidemenu() {
       <ProfileSection />
 
       {/* Navigation */}
-      <nav className="py-5 px-3 w-full rounded-[10px] bg-component-bg">
+      <nav className="py-5 px-3 w-full rounded-[10px] bg-component-bg text-foreground">
         <Link href={route.myPosts()} className="sidemenu-link">
           <Post className="w-[24px] h-[24px]" />
           <span>{t('my_posts')}</span>
