@@ -11,11 +11,9 @@ pub struct Message {
     #[api_model(auto = [insert, update])]
     pub updated_at: i64,
 
-    #[api_model()]
     pub seq_id: i64,
 
-    #[api_model()]
-    pub html_content: String,
+    pub html_contents: String,
 
     #[api_model(type = INTEGER)]
     pub status: MessageStatus,

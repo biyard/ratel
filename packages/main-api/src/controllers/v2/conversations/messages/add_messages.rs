@@ -18,7 +18,7 @@ use crate::utils::users::extract_user_id;
 pub struct AddMessageRequest {
     #[validate(length(min = 1, max = 10000))]
     #[schemars(description = "HTML content of the message")]
-    pub html_content: String,
+    pub html_contents: String,
 
     #[schemars(description = "Conversation ID to send message to (optional for direct messages)")]
     pub conversation_id: Option<i64>,
@@ -185,12 +185,12 @@ pub async fn add_message_handler(
     // Then insert the message
     let message_id: i64 = sqlx::query_scalar(
         r#"
-        INSERT INTO messages (html_content, status, sender_id, conversation_id, seq_id, created_at, updated_at)
+        INSERT INTO messages (html_contents, status, sender_id, conversation_id, seq_id, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, EXTRACT(EPOCH FROM NOW())::bigint * 1000, EXTRACT(EPOCH FROM NOW())::bigint * 1000)
         RETURNING id
         "#,
     )
-    .bind(&req.html_content)
+    .bind(&req.html_contents)
     .bind(MessageStatus::Sent as i32)
     .bind(user_id)
     .bind(conversation_id)

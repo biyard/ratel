@@ -20,8 +20,8 @@ pub struct PollMessagesQuery {
     #[schemars(description = "Conversation ID to poll messages for")]
     pub conversation_id: i64,
 
-    #[schemars(description = "Timestamp to get messages since (in milliseconds)")]
-    pub since: Option<i64>,
+    #[schemars(description = "Last message ID received (get messages with ID greater than this)")]
+    pub since_id: Option<i64>,
 
     #[schemars(description = "Maximum time to wait for new messages (seconds, default: 30)")]
     pub timeout_seconds: Option<u64>,
@@ -41,9 +41,10 @@ pub async fn poll_messages_handler(
     let user_id = extract_user_id(&pool, auth).await?;
 
     tracing::debug!(
-        "Polling messages for conversation {} by user {}",
+        "Polling messages for conversation {} by user {}, since_id: {:?}",
         query.conversation_id,
-        user_id
+        user_id,
+        query.since_id
     );
 
     // Verify that the user is a participant in this conversation
@@ -65,43 +66,73 @@ pub async fn poll_messages_handler(
         return Err(Error::Unauthorized);
     }
 
-    let since_timestamp = query.since.unwrap_or(0);
+    let since_id = query.since_id.unwrap_or(0);
+
+    // Set timeout
     let timeout_duration = Duration::from_secs(query.timeout_seconds.unwrap_or(30));
 
-    // For now, implement a simple polling mechanism
-    // In a production system, you'd want to use more sophisticated real-time updates
+    // Implement proper timeout with polling
+    let start_time = tokio::time::Instant::now();
     let poll_result = timeout(timeout_duration, async {
-        // Simple polling loop - check for new messages every second
         loop {
-            let messages = Message::query_builder()
-                .conversation_id_equals(query.conversation_id)
+            let mut messages_query =
+                Message::query_builder().conversation_id_equals(query.conversation_id);
+
+            if since_id > 0 {
+                messages_query = messages_query.id_greater_than(since_id);
+            }
+
+            let new_messages = messages_query
                 .query()
                 .map(Message::from)
                 .fetch_all(&pool)
                 .await?;
 
-            let new_messages: Vec<Message> = messages
-                .into_iter()
-                .filter(|msg| msg.created_at > since_timestamp)
-                .collect();
-
             if !new_messages.is_empty() {
+                tracing::debug!(
+                    "Found {} new messages for conversation {}",
+                    new_messages.len(),
+                    query.conversation_id
+                );
                 return Ok::<PollMessagesResponse, Error>(PollMessagesResponse {
                     messages: new_messages,
                     has_new_messages: true,
                 });
             }
 
-            // Wait a second before checking again
-            tokio::time::sleep(Duration::from_secs(1)).await;
+            // Check if we should continue polling
+            if start_time.elapsed() >= timeout_duration {
+                break;
+            }
+
+            // Wait before checking again, but don't exceed timeout
+            let remaining_time = timeout_duration.saturating_sub(start_time.elapsed());
+            let sleep_duration = Duration::from_millis(500).min(remaining_time);
+
+            if sleep_duration.is_zero() {
+                break;
+            }
+
+            tokio::time::sleep(sleep_duration).await;
         }
+
+        // Return empty response if no new messages found within timeout
+        Ok::<PollMessagesResponse, Error>(PollMessagesResponse {
+            messages: vec![],
+            has_new_messages: false,
+        })
     })
     .await;
 
     match poll_result {
         Ok(response) => Ok(Json(response?)),
-        Err(_) => {
+        Err(_timeout_elapsed) => {
             // Timeout occurred, return empty response
+            tracing::debug!(
+                "Polling timeout elapsed for conversation {} user {}",
+                query.conversation_id,
+                user_id
+            );
             Ok(Json(PollMessagesResponse {
                 messages: vec![],
                 has_new_messages: false,
