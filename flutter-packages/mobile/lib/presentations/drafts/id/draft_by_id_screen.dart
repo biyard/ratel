@@ -1,4 +1,5 @@
 import 'package:ratel/exports.dart';
+import 'package:ratel/presentations/drafts/id/components/draft_rich_body.dart';
 
 class DraftByIdScreen extends GetWidget<DraftByIdController> {
   const DraftByIdScreen({super.key});
@@ -141,35 +142,20 @@ class DraftByIdScreen extends GetWidget<DraftByIdController> {
             Expanded(
               child: Obx(() {
                 final showWarn = controller.warnBody.value;
+                final html = controller.bodyHtml.value;
                 return Stack(
                   children: [
                     Positioned.fill(
                       bottom: showWarn ? 44 : 0,
-                      child: TextField(
-                        controller: controller.bodyCtrl,
-                        cursorColor: Colors.white,
-                        keyboardType: TextInputType.multiline,
-                        textInputAction: TextInputAction.newline,
-                        expands: true,
-                        maxLines: null,
-                        minLines: null,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w500,
-                          height: 1.4,
-                        ),
-                        decoration: InputDecoration(
-                          border: InputBorder.none,
-                          hintText: DraftLocalization.draftTypeSomething,
-                          hintStyle: TextStyle(
-                            color: AppColors.neutral500,
-                            fontSize: 18,
-                          ),
-                        ),
+                      child: DraftRichBody(
+                        initialHtml: html,
+                        showWarn: controller.warnBody.value,
+                        onHtmlChanged: (newHtml) {
+                          controller.bodyCtrl.text = newHtml;
+                          // controller.bodyHtml.value = newHtml;
+                        },
                       ),
                     ),
-
                     if (showWarn)
                       Positioned(
                         left: 0,
