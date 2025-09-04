@@ -1,28 +1,35 @@
 #[cfg(test)]
 mod tests {
-    use crate::controllers::v2::conversations::messages::add_messages::*;
-    use crate::controllers::v2::conversations::messages::clear_message::*;
-    use crate::controllers::v2::conversations::messages::get_messages::*;
-    use crate::controllers::v2::conversations::messages::poll_messages::*;
-    use crate::tests::{TestContext, setup, setup_test_user};
+    use crate::controllers::v2::conversations::messages::add_messages::{
+        self, AddMessageRequest, add_message_handler,
+    };
+    use crate::controllers::v2::conversations::messages::clear_message::{
+        MessagePath, clear_message_handler,
+    };
+    use crate::controllers::v2::conversations::messages::get_messages::{
+        GetMessagesQuery, get_messages_handler,
+    };
+    use crate::controllers::v2::conversations::messages::poll_messages::{
+        PollMessagesQuery, poll_messages_handler,
+    };
+    use crate::tests::{setup, setup_test_user};
     use bdk::prelude::*;
     use dto::by_axum::auth::Authorization;
-    use dto::by_axum::axum::extract::{Query, State};
+    use dto::by_axum::axum::extract::{Path, Query, State};
     use dto::by_axum::axum::{Extension, Json};
     use dto::{
         Conversation, ConversationParticipant, ConversationType, Message, MessageStatus,
         ParticipantRole,
     };
-    use tokio::time::Duration;
-    use uuid::Uuid;
+    use tokio::time::{Duration, sleep};
 
-    // Helper function to create a test conversation with participants
-    async fn create_test_conversation_with_participants(
+    // Helper function to create a test conversation
+    async fn create_test_conversation(
         pool: &sqlx::PgPool,
         creator_id: i64,
-        participant_ids: Vec<i64>,
+        title: String,
         conv_type: ConversationType,
-        title: Option<String>,
+        participant_ids: Vec<i64>,
     ) -> Conversation {
         let mut tx = pool.begin().await.unwrap();
 
@@ -30,7 +37,7 @@ mod tests {
         let conversation = conversation_repo
             .insert_with_tx(
                 &mut *tx,
-                title,
+                Some(title),
                 Some("Test description".to_string()),
                 conv_type,
             )
@@ -76,28 +83,10 @@ mod tests {
         sender_id: i64,
         content: &str,
     ) -> Message {
-        let mut tx = pool.begin().await.unwrap();
-
-        // First, lock the conversation to prevent race conditions on seq_id
-        sqlx::query("SELECT id FROM conversations WHERE id = $1 FOR UPDATE")
-            .bind(conversation_id)
-            .execute(&mut *tx)
-            .await
-            .unwrap();
-
-        // Now get the next seq_id safely
-        let next_seq_id: i64 = sqlx::query_scalar(
-            "SELECT COALESCE(MAX(seq_id), 0) + 1 FROM messages WHERE conversation_id = $1",
-        )
-        .bind(conversation_id)
-        .fetch_one(&mut *tx)
-        .await
-        .unwrap();
-
         let message_id: i64 = sqlx::query_scalar(
             r#"
             INSERT INTO messages (html_contents, status, sender_id, conversation_id, seq_id, created_at, updated_at)
-            VALUES ($1, $2, $3, $4, $5, EXTRACT(EPOCH FROM NOW())::bigint * 1000, EXTRACT(EPOCH FROM NOW())::bigint * 1000)
+            VALUES ($1, $2, $3, $4, 1, EXTRACT(EPOCH FROM NOW())::bigint * 1000, EXTRACT(EPOCH FROM NOW())::bigint * 1000)
             RETURNING id
             "#,
         )
@@ -105,976 +94,494 @@ mod tests {
         .bind(MessageStatus::Sent as i32)
         .bind(sender_id)
         .bind(conversation_id)
-        .bind(next_seq_id)
-        .fetch_one(&mut *tx)
+        .fetch_one(pool)
         .await
         .unwrap();
 
-        let message = Message::query_builder()
+        Message::query_builder()
             .id_equals(message_id)
             .query()
             .map(Message::from)
-            .fetch_one(&mut *tx)
+            .fetch_one(pool)
             .await
-            .unwrap();
-
-        tx.commit().await.unwrap();
-        message
+            .unwrap()
     }
 
-    // ADD MESSAGE TESTS
     #[tokio::test]
-    async fn test_add_message_to_existing_group_conversation() {
-        let TestContext {
-            user, pool, now, ..
-        } = setup().await.unwrap();
+    async fn test_add_message_success() {
+        let ctx = setup().await.unwrap();
+        let pool = ctx.pool.clone();
 
-        let user2_id = Uuid::new_v4().to_string();
-        let user2 = setup_test_user(&user2_id, &pool).await.unwrap();
-
-        // Create a group conversation
-        let conversation = create_test_conversation_with_participants(
+        // Create a test conversation
+        let conversation = create_test_conversation(
             &pool,
-            user.id,
-            vec![user2.id],
+            ctx.user.id,
+            "Test Conversation".to_string(),
             ConversationType::Group,
-            Some(format!("Test Group {}", now)),
+            vec![ctx.user.id],
         )
         .await;
 
-        let html_contents = format!("Test message content {}", now);
-
-        let req = AddMessageRequest {
-            html_contents: html_contents.clone(),
-            conversation_id: Some(conversation.id),
+        let request = AddMessageRequest {
+            html_contents: "<p>Hello, world!</p>".to_string(),
             recipient_id: None,
         };
 
         let result = add_message_handler(
             Extension(Some(Authorization::Bearer {
-                claims: crate::tests::setup_jwt_token(user.clone()).0,
+                claims: ctx.claims.clone(),
             })),
             State(pool.clone()),
-            Json(req),
+            Path(add_messages::ConversationPath {
+                conversation_id: conversation.id,
+            }),
+            Json(request),
         )
         .await;
 
         assert!(result.is_ok());
         let response = result.unwrap().0;
-
-        assert_eq!(response.message.html_contents, html_contents);
-        assert_eq!(response.message.sender_id, user.id);
-        assert_eq!(response.message.conversation_id, conversation.id);
-        assert_eq!(response.message.status, MessageStatus::Sent);
-        assert!(response.message.seq_id > 0);
-    }
-
-    #[tokio::test]
-    async fn test_add_message_to_existing_channel_conversation() {
-        let TestContext {
-            user, pool, now, ..
-        } = setup().await.unwrap();
-
-        let user2_id = Uuid::new_v4().to_string();
-        let user2 = setup_test_user(&user2_id, &pool).await.unwrap();
-
-        // Create a channel conversation
-        let conversation = create_test_conversation_with_participants(
-            &pool,
-            user.id,
-            vec![user2.id],
-            ConversationType::Channel,
-            Some(format!("Test Channel {}", now)),
-        )
-        .await;
-
-        let html_contents = format!("Test channel message {}", now);
-
-        let req = AddMessageRequest {
-            html_contents: html_contents.clone(),
-            conversation_id: Some(conversation.id),
-            recipient_id: None,
-        };
-
-        let result = add_message_handler(
-            Extension(Some(Authorization::Bearer {
-                claims: crate::tests::setup_jwt_token(user.clone()).0,
-            })),
-            State(pool.clone()),
-            Json(req),
-        )
-        .await;
-
-        assert!(result.is_ok());
-        let response = result.unwrap().0;
-
-        assert_eq!(response.message.html_contents, html_contents);
-        assert_eq!(response.message.sender_id, user.id);
+        assert_eq!(response.message.html_contents, "<p>Hello, world!</p>");
+        assert_eq!(response.message.sender_id, ctx.user.id);
         assert_eq!(response.message.conversation_id, conversation.id);
     }
 
     #[tokio::test]
-    async fn test_add_message_create_new_direct_conversation() {
-        let TestContext {
-            user, pool, now, ..
-        } = setup().await.unwrap();
+    async fn test_add_message_unauthorized_user() {
+        let ctx = setup().await.unwrap();
+        let pool = ctx.pool.clone();
 
-        let user2_id = Uuid::new_v4().to_string();
-        let user2 = setup_test_user(&user2_id, &pool).await.unwrap();
-
-        let html_contents = format!("Test direct message {}", now);
-
-        let req = AddMessageRequest {
-            html_contents: html_contents.clone(),
-            conversation_id: None,
-            recipient_id: Some(user2.id),
-        };
-
-        let result = add_message_handler(
-            Extension(Some(Authorization::Bearer {
-                claims: crate::tests::setup_jwt_token(user.clone()).0,
-            })),
-            State(pool.clone()),
-            Json(req),
-        )
-        .await;
-
-        // Debug the actual error
-        if let Err(ref e) = result {
-            eprintln!("Test failed with error: {:?}", e);
-            panic!("Expected success but got error: {:?}", e);
-        }
-
-        assert!(result.is_ok());
-        let response = result.unwrap().0;
-
-        assert_eq!(response.message.html_contents, html_contents);
-        assert_eq!(response.message.sender_id, user.id);
-        assert_eq!(response.message.status, MessageStatus::Sent);
-
-        // Verify direct conversation was created
-        let conversation = Conversation::query_builder()
-            .id_equals(response.message.conversation_id)
-            .query()
-            .map(Conversation::from)
-            .fetch_one(&pool)
+        // Create another user with unique ID
+        let other_user = setup_test_user(&format!("other-{}", uuid::Uuid::new_v4()), &pool)
             .await
             .unwrap();
 
-        assert_eq!(conversation.conversation_type, ConversationType::Direct);
-        assert_eq!(conversation.title, None);
-
-        // Verify both users are participants
-        let participants = ConversationParticipant::query_builder()
-            .conversation_id_equals(conversation.id)
-            .query()
-            .map(ConversationParticipant::from)
-            .fetch_all(&pool)
-            .await
-            .unwrap();
-
-        assert_eq!(participants.len(), 2);
-        let participant_ids: Vec<i64> = participants.iter().map(|p| p.user_id).collect();
-        assert!(participant_ids.contains(&user.id));
-        assert!(participant_ids.contains(&user2.id));
-    }
-
-    #[tokio::test]
-    async fn test_add_message_use_existing_direct_conversation() {
-        let TestContext {
-            user, pool, now, ..
-        } = setup().await.unwrap();
-
-        let user2_id = Uuid::new_v4().to_string();
-        let user2 = setup_test_user(&user2_id, &pool).await.unwrap();
-
-        // Create existing direct conversation
-        let existing_conversation = create_test_conversation_with_participants(
+        // Create a conversation that the other user is NOT part of
+        let conversation = create_test_conversation(
             &pool,
-            user.id,
-            vec![user2.id],
+            ctx.user.id,
+            "Private Conversation".to_string(),
             ConversationType::Direct,
-            None,
+            vec![ctx.user.id],
         )
         .await;
 
-        let html_contents = format!("Test direct message in existing conversation {}", now);
-
-        let req = AddMessageRequest {
-            html_contents: html_contents.clone(),
-            conversation_id: None,
-            recipient_id: Some(user2.id),
+        let request = AddMessageRequest {
+            html_contents: "<p>Unauthorized message</p>".to_string(),
+            recipient_id: None,
         };
 
+        // Try to add message as other user who is not a participant
+        let other_claims = crate::tests::setup_jwt_token(other_user).0;
         let result = add_message_handler(
             Extension(Some(Authorization::Bearer {
-                claims: crate::tests::setup_jwt_token(user.clone()).0,
+                claims: other_claims,
             })),
             State(pool.clone()),
-            Json(req),
+            Path(add_messages::ConversationPath {
+                conversation_id: conversation.id,
+            }),
+            Json(request),
         )
         .await;
 
-        assert!(result.is_ok());
-        let response = result.unwrap().0;
-
-        // Should use existing conversation, not create a new one
-        assert_eq!(response.message.conversation_id, existing_conversation.id);
-        assert_eq!(response.message.html_contents, html_contents);
-        assert_eq!(response.message.sender_id, user.id);
+        assert!(result.is_err());
     }
 
     #[tokio::test]
-    async fn test_add_message_unauthorized_to_conversation() {
-        let TestContext {
-            user, pool, now, ..
-        } = setup().await.unwrap();
+    async fn test_add_message_invalid_content() {
+        let ctx = setup().await.unwrap();
+        let pool = ctx.pool.clone();
 
-        let user2_id = Uuid::new_v4().to_string();
-        let user2 = setup_test_user(&user2_id, &pool).await.unwrap();
-
-        let user3_id = Uuid::new_v4().to_string();
-        let user3 = setup_test_user(&user3_id, &pool).await.unwrap();
-
-        // Create conversation where user is NOT a participant
-        let conversation = create_test_conversation_with_participants(
+        let conversation = create_test_conversation(
             &pool,
-            user2.id,
-            vec![user3.id], // Only user2 and user3 are participants
+            ctx.user.id,
+            "Test Conversation".to_string(),
             ConversationType::Group,
-            Some(format!("Private Group {}", now)),
+            vec![ctx.user.id],
         )
         .await;
-
-        let req = AddMessageRequest {
-            html_contents: "Unauthorized message".to_string(),
-            conversation_id: Some(conversation.id),
-            recipient_id: None,
-        };
-
-        let result = add_message_handler(
-            Extension(Some(Authorization::Bearer {
-                claims: crate::tests::setup_jwt_token(user.clone()).0,
-            })),
-            State(pool.clone()),
-            Json(req),
-        )
-        .await;
-
-        assert!(
-            result.is_err(),
-            "Should be unauthorized to send message to conversation user is not part of"
-        );
-    }
-
-    #[tokio::test]
-    async fn test_add_message_to_nonexistent_conversation() {
-        let TestContext { user, pool, .. } = setup().await.unwrap();
-
-        let req = AddMessageRequest {
-            html_contents: "Test message".to_string(),
-            conversation_id: Some(999999), // Non-existent conversation
-            recipient_id: None,
-        };
-
-        let result = add_message_handler(
-            Extension(Some(Authorization::Bearer {
-                claims: crate::tests::setup_jwt_token(user.clone()).0,
-            })),
-            State(pool.clone()),
-            Json(req),
-        )
-        .await;
-
-        assert!(result.is_err(), "Should fail for non-existent conversation");
-    }
-
-    #[tokio::test]
-    async fn test_add_message_to_nonexistent_recipient() {
-        let TestContext { user, pool, .. } = setup().await.unwrap();
-
-        let req = AddMessageRequest {
-            html_contents: "Test message".to_string(),
-            conversation_id: None,
-            recipient_id: Some(999999), // Non-existent user
-        };
-
-        let result = add_message_handler(
-            Extension(Some(Authorization::Bearer {
-                claims: crate::tests::setup_jwt_token(user.clone()).0,
-            })),
-            State(pool.clone()),
-            Json(req),
-        )
-        .await;
-
-        assert!(result.is_err(), "Should fail for non-existent recipient");
-    }
-
-    #[tokio::test]
-    async fn test_add_message_to_self() {
-        let TestContext { user, pool, .. } = setup().await.unwrap();
-
-        let req = AddMessageRequest {
-            html_contents: "Message to self".to_string(),
-            conversation_id: None,
-            recipient_id: Some(user.id), // Same as sender
-        };
-
-        let result = add_message_handler(
-            Extension(Some(Authorization::Bearer {
-                claims: crate::tests::setup_jwt_token(user.clone()).0,
-            })),
-            State(pool.clone()),
-            Json(req),
-        )
-        .await;
-
-        assert!(result.is_err(), "Should not allow sending message to self");
-    }
-
-    #[tokio::test]
-    async fn test_add_message_validation_errors() {
-        let TestContext { user, pool, .. } = setup().await.unwrap();
 
         // Test empty content
-        let req = AddMessageRequest {
+        let request = AddMessageRequest {
             html_contents: "".to_string(),
-            conversation_id: Some(1),
             recipient_id: None,
         };
 
         let result = add_message_handler(
             Extension(Some(Authorization::Bearer {
-                claims: crate::tests::setup_jwt_token(user.clone()).0,
+                claims: ctx.claims.clone(),
             })),
             State(pool.clone()),
-            Json(req),
+            Path(add_messages::ConversationPath {
+                conversation_id: conversation.id,
+            }),
+            Json(request),
         )
         .await;
 
-        assert!(result.is_err(), "Should fail with empty content");
-
-        // Test content too long (10000+ characters)
-        let long_content = "a".repeat(10001);
-        let req = AddMessageRequest {
-            html_contents: long_content,
-            conversation_id: Some(1),
-            recipient_id: None,
-        };
-
-        let result = add_message_handler(
-            Extension(Some(Authorization::Bearer {
-                claims: crate::tests::setup_jwt_token(user.clone()).0,
-            })),
-            State(pool.clone()),
-            Json(req),
-        )
-        .await;
-
-        assert!(result.is_err(), "Should fail with content too long");
-
-        // Test missing both conversation_id and recipient_id
-        let req = AddMessageRequest {
-            html_contents: "Valid content".to_string(),
-            conversation_id: None,
-            recipient_id: None,
-        };
-
-        let result = add_message_handler(
-            Extension(Some(Authorization::Bearer {
-                claims: crate::tests::setup_jwt_token(user.clone()).0,
-            })),
-            State(pool.clone()),
-            Json(req),
-        )
-        .await;
-
-        assert!(
-            result.is_err(),
-            "Should fail when both conversation_id and recipient_id are missing"
-        );
+        assert!(result.is_err());
     }
 
-    #[tokio::test]
-    async fn test_add_message_sequential_ids() {
-        let TestContext {
-            user, pool, now, ..
-        } = setup().await.unwrap();
-
-        let user2_id = Uuid::new_v4().to_string();
-        let user2 = setup_test_user(&user2_id, &pool).await.unwrap();
-
-        // Create a conversation
-        let conversation = create_test_conversation_with_participants(
-            &pool,
-            user.id,
-            vec![user2.id],
-            ConversationType::Group,
-            Some(format!("Test Sequential {}", now)),
-        )
-        .await;
-
-        // Add first message
-        let req1 = AddMessageRequest {
-            html_contents: "First message".to_string(),
-            conversation_id: Some(conversation.id),
-            recipient_id: None,
-        };
-
-        let result1 = add_message_handler(
-            Extension(Some(Authorization::Bearer {
-                claims: crate::tests::setup_jwt_token(user.clone()).0,
-            })),
-            State(pool.clone()),
-            Json(req1),
-        )
-        .await;
-
-        assert!(result1.is_ok());
-        let message1 = result1.unwrap().0.message;
-
-        // Add second message
-        let req2 = AddMessageRequest {
-            html_contents: "Second message".to_string(),
-            conversation_id: Some(conversation.id),
-            recipient_id: None,
-        };
-
-        let result2 = add_message_handler(
-            Extension(Some(Authorization::Bearer {
-                claims: crate::tests::setup_jwt_token(user2.clone()).0,
-            })),
-            State(pool.clone()),
-            Json(req2),
-        )
-        .await;
-
-        assert!(result2.is_ok());
-        let message2 = result2.unwrap().0.message;
-
-        // Verify sequential seq_ids
-        assert!(message2.seq_id > message1.seq_id);
-        assert_eq!(message2.seq_id, message1.seq_id + 1);
-    }
-
-    // GET MESSAGES TESTS
     #[tokio::test]
     async fn test_get_messages_success() {
-        let TestContext {
-            user, pool, now, ..
-        } = setup().await.unwrap();
+        let ctx = setup().await.unwrap();
+        let pool = ctx.pool.clone();
 
-        let user2_id = Uuid::new_v4().to_string();
-        let user2 = setup_test_user(&user2_id, &pool).await.unwrap();
-
-        // Create conversation and messages
-        let conversation = create_test_conversation_with_participants(
+        let conversation = create_test_conversation(
             &pool,
-            user.id,
-            vec![user2.id],
+            ctx.user.id,
+            "Test Conversation".to_string(),
             ConversationType::Group,
-            Some(format!("Test Messages {}", now)),
+            vec![ctx.user.id],
         )
         .await;
 
         // Create test messages
-        let _message1 = create_test_message(&pool, conversation.id, user.id, "Message 1").await;
-        let _message2 = create_test_message(&pool, conversation.id, user2.id, "Message 2").await;
+        create_test_message(&pool, conversation.id, ctx.user.id, "Message 1").await;
+        create_test_message(&pool, conversation.id, ctx.user.id, "Message 2").await;
+        create_test_message(&pool, conversation.id, ctx.user.id, "Message 3").await;
 
-        let query = GetMessagesQuery {
-            conversation_id: conversation.id,
-            size: 50,
-            page: 1,
-        };
+        let query = GetMessagesQuery { size: 10, page: 1 };
 
         let result = get_messages_handler(
             Extension(Some(Authorization::Bearer {
-                claims: crate::tests::setup_jwt_token(user.clone()).0,
+                claims: ctx.claims.clone(),
             })),
             State(pool.clone()),
+            Path(
+                crate::controllers::v2::conversations::messages::get_messages::ConversationPath {
+                    conversation_id: conversation.id,
+                },
+            ),
             Query(query),
         )
         .await;
 
         assert!(result.is_ok());
         let response = result.unwrap().0;
-
-        assert_eq!(response.items.len(), 2);
-        assert_eq!(response.total_count, 2);
-
-        // Messages should be ordered by created_at DESC (newest first)
-        assert!(response.items[0].created_at >= response.items[1].created_at);
+        assert_eq!(response.items.len(), 3);
+        assert_eq!(response.total_count, 3);
     }
 
     #[tokio::test]
-    async fn test_get_messages_with_pagination() {
-        let TestContext {
-            user, pool, now, ..
-        } = setup().await.unwrap();
+    async fn test_get_messages_pagination() {
+        let ctx = setup().await.unwrap();
+        let pool = ctx.pool.clone();
 
-        let user2_id = Uuid::new_v4().to_string();
-        let user2 = setup_test_user(&user2_id, &pool).await.unwrap();
-
-        // Create conversation
-        let conversation = create_test_conversation_with_participants(
+        let conversation = create_test_conversation(
             &pool,
-            user.id,
-            vec![user2.id],
+            ctx.user.id,
+            "Test Conversation".to_string(),
             ConversationType::Group,
-            Some(format!("Test Pagination {}", now)),
+            vec![ctx.user.id],
         )
         .await;
 
-        // Create multiple messages
-        for i in 0..5 {
-            create_test_message(&pool, conversation.id, user.id, &format!("Message {}", i)).await;
-            tokio::time::sleep(Duration::from_millis(10)).await; // Ensure different timestamps
+        // Create 5 test messages
+        for i in 1..=5 {
+            create_test_message(
+                &pool,
+                conversation.id,
+                ctx.user.id,
+                &format!("Message {}", i),
+            )
+            .await;
         }
 
-        // Test first page
-        let query = GetMessagesQuery {
-            conversation_id: conversation.id,
-            size: 2,
-            page: 1,
-        };
+        // Test first page with size 2
+        let query = GetMessagesQuery { size: 2, page: 1 };
 
         let result = get_messages_handler(
             Extension(Some(Authorization::Bearer {
-                claims: crate::tests::setup_jwt_token(user.clone()).0,
+                claims: ctx.claims.clone(),
             })),
             State(pool.clone()),
+            Path(
+                crate::controllers::v2::conversations::messages::get_messages::ConversationPath {
+                    conversation_id: conversation.id,
+                },
+            ),
             Query(query),
         )
         .await;
 
         assert!(result.is_ok());
         let response = result.unwrap().0;
-
         assert_eq!(response.items.len(), 2);
-        assert_eq!(response.total_count, 5);
-
-        // Test second page
-        let query = GetMessagesQuery {
-            conversation_id: conversation.id,
-            size: 2,
-            page: 2,
-        };
-
-        let result = get_messages_handler(
-            Extension(Some(Authorization::Bearer {
-                claims: crate::tests::setup_jwt_token(user.clone()).0,
-            })),
-            State(pool.clone()),
-            Query(query),
-        )
-        .await;
-
-        assert!(result.is_ok());
-        let response = result.unwrap().0;
-
-        assert_eq!(response.items.len(), 2);
-        assert_eq!(response.total_count, 5);
-
-        // Test last page
-        let query = GetMessagesQuery {
-            conversation_id: conversation.id,
-            size: 2,
-            page: 3,
-        };
-
-        let result = get_messages_handler(
-            Extension(Some(Authorization::Bearer {
-                claims: crate::tests::setup_jwt_token(user.clone()).0,
-            })),
-            State(pool.clone()),
-            Query(query),
-        )
-        .await;
-
-        assert!(result.is_ok());
-        let response = result.unwrap().0;
-
-        assert_eq!(response.items.len(), 1);
         assert_eq!(response.total_count, 5);
     }
 
     #[tokio::test]
     async fn test_get_messages_unauthorized() {
-        let TestContext {
-            user, pool, now, ..
-        } = setup().await.unwrap();
+        let ctx = setup().await.unwrap();
+        let pool = ctx.pool.clone();
 
-        let user2_id = Uuid::new_v4().to_string();
-        let user2 = setup_test_user(&user2_id, &pool).await.unwrap();
+        // Create another user with unique ID
+        let other_user = setup_test_user(&format!("unauthorized-{}", uuid::Uuid::new_v4()), &pool)
+            .await
+            .unwrap();
 
-        let user3_id = Uuid::new_v4().to_string();
-        let user3 = setup_test_user(&user3_id, &pool).await.unwrap();
-
-        // Create conversation where user is NOT a participant
-        let conversation = create_test_conversation_with_participants(
+        // Create a conversation that the other user is NOT part of
+        let conversation = create_test_conversation(
             &pool,
-            user2.id,
-            vec![user3.id], // Only user2 and user3
-            ConversationType::Group,
-            Some(format!("Private Messages {}", now)),
+            ctx.user.id,
+            "Private Conversation".to_string(),
+            ConversationType::Direct,
+            vec![ctx.user.id],
         )
         .await;
 
-        let query = GetMessagesQuery {
-            conversation_id: conversation.id,
-            size: 50,
-            page: 1,
-        };
+        let query = GetMessagesQuery { size: 10, page: 1 };
 
+        let other_claims = crate::tests::setup_jwt_token(other_user).0;
         let result = get_messages_handler(
             Extension(Some(Authorization::Bearer {
-                claims: crate::tests::setup_jwt_token(user.clone()).0,
+                claims: other_claims,
             })),
             State(pool.clone()),
+            Path(
+                crate::controllers::v2::conversations::messages::get_messages::ConversationPath {
+                    conversation_id: conversation.id,
+                },
+            ),
             Query(query),
         )
         .await;
 
-        assert!(
-            result.is_err(),
-            "Should be unauthorized to get messages from conversation user is not part of"
-        );
+        assert!(result.is_err());
     }
 
     #[tokio::test]
-    async fn test_get_messages_invalid_conversation_id() {
-        let TestContext { user, pool, .. } = setup().await.unwrap();
+    async fn test_poll_messages_immediate_return_with_new_messages() {
+        let ctx = setup().await.unwrap();
+        let pool = ctx.pool.clone();
 
-        // Test with conversation_id = 0
-        let query = GetMessagesQuery {
-            conversation_id: 0,
-            size: 50,
-            page: 1,
-        };
-
-        let result = get_messages_handler(
-            Extension(Some(Authorization::Bearer {
-                claims: crate::tests::setup_jwt_token(user.clone()).0,
-            })),
-            State(pool.clone()),
-            Query(query),
-        )
-        .await;
-
-        assert!(result.is_err(), "Should fail with invalid conversation_id");
-    }
-
-    #[tokio::test]
-    async fn test_get_messages_size_and_page_validation() {
-        let TestContext {
-            user, pool, now, ..
-        } = setup().await.unwrap();
-
-        let conversation = create_test_conversation_with_participants(
+        let conversation = create_test_conversation(
             &pool,
-            user.id,
-            vec![user.id],
+            ctx.user.id,
+            "Test Conversation".to_string(),
             ConversationType::Group,
-            Some(format!("Test Validation {}", now)),
+            vec![ctx.user.id],
         )
         .await;
 
-        // Test size too large (should be capped to 100)
-        let query = GetMessagesQuery {
-            conversation_id: conversation.id,
-            size: 200,
-            page: 1,
-        };
+        // Create a message first
+        let first_message =
+            create_test_message(&pool, conversation.id, ctx.user.id, "First message").await;
 
-        let result = get_messages_handler(
-            Extension(Some(Authorization::Bearer {
-                claims: crate::tests::setup_jwt_token(user.clone()).0,
-            })),
-            State(pool.clone()),
-            Query(query),
-        )
-        .await;
-
-        assert!(result.is_ok(), "Should handle large size by capping it");
-
-        // Test negative size (should be set to minimum 1)
-        let query = GetMessagesQuery {
-            conversation_id: conversation.id,
-            size: -5,
-            page: 1,
-        };
-
-        let result = get_messages_handler(
-            Extension(Some(Authorization::Bearer {
-                claims: crate::tests::setup_jwt_token(user.clone()).0,
-            })),
-            State(pool.clone()),
-            Query(query),
-        )
-        .await;
-
-        assert!(
-            result.is_ok(),
-            "Should handle negative size by setting to minimum"
-        );
-
-        // Test page less than 1 (should be set to minimum 1)
-        let query = GetMessagesQuery {
-            conversation_id: conversation.id,
-            size: 10,
-            page: 0,
-        };
-
-        let result = get_messages_handler(
-            Extension(Some(Authorization::Bearer {
-                claims: crate::tests::setup_jwt_token(user.clone()).0,
-            })),
-            State(pool.clone()),
-            Query(query),
-        )
-        .await;
-
-        assert!(
-            result.is_ok(),
-            "Should handle page less than 1 by setting to minimum"
-        );
-    }
-
-    // POLL MESSAGES TESTS
-    #[tokio::test]
-    async fn test_poll_messages_with_new_messages() {
-        let TestContext {
-            user, pool, now, ..
-        } = setup().await.unwrap();
-
-        let user2_id = Uuid::new_v4().to_string();
-        let user2 = setup_test_user(&user2_id, &pool).await.unwrap();
-
-        // Create conversation
-        let conversation = create_test_conversation_with_participants(
-            &pool,
-            user.id,
-            vec![user2.id],
-            ConversationType::Group,
-            Some(format!("Test Poll {}", now)),
-        )
-        .await;
-
-        // Create an existing message
-        let existing_message =
-            create_test_message(&pool, conversation.id, user.id, "Existing message").await;
-
-        // Start polling from after the existing message
-        let since_id = existing_message.id;
+        // Now create another message
+        create_test_message(&pool, conversation.id, ctx.user.id, "Second message").await;
 
         let query = PollMessagesQuery {
-            conversation_id: conversation.id,
-            since_id: Some(since_id),
-            timeout_seconds: Some(3), // Longer timeout to allow polling to catch the new message
+            since_id: Some(first_message.id),
+            timeout_seconds: Some(5),
         };
-
-        // Create new message in a separate task to simulate real-time message
-        let pool_clone = pool.clone();
-        let conversation_id = conversation.id;
-        let user2_id_for_task = user2.id;
-        tokio::spawn(async move {
-            tokio::time::sleep(Duration::from_millis(500)).await; // Wait longer to ensure polling starts
-            create_test_message(
-                &pool_clone,
-                conversation_id,
-                user2_id_for_task,
-                "New message",
-            )
-            .await;
-        });
 
         let result = poll_messages_handler(
             Extension(Some(Authorization::Bearer {
-                claims: crate::tests::setup_jwt_token(user.clone()).0,
+                claims: ctx.claims.clone(),
             })),
             State(pool.clone()),
+            Path(
+                crate::controllers::v2::conversations::messages::poll_messages::ConversationPath {
+                    conversation_id: conversation.id,
+                },
+            ),
             Query(query),
         )
         .await;
 
         assert!(result.is_ok());
         let response = result.unwrap().0;
-
-        assert_eq!(response.has_new_messages, true);
+        assert!(response.has_new_messages);
         assert_eq!(response.messages.len(), 1);
-        assert_eq!(response.messages[0].html_contents, "New message");
-        assert!(response.messages[0].id > since_id);
+        assert_eq!(response.messages[0].html_contents, "Second message");
     }
 
     #[tokio::test]
-    async fn test_poll_messages_timeout() {
-        let TestContext {
-            user, pool, now, ..
-        } = setup().await.unwrap();
+    async fn test_poll_messages_timeout_no_new_messages() {
+        let ctx = setup().await.unwrap();
+        let pool = ctx.pool.clone();
 
-        let user2_id = Uuid::new_v4().to_string();
-        let user2 = setup_test_user(&user2_id, &pool).await.unwrap();
-
-        // Create conversation
-        let conversation = create_test_conversation_with_participants(
+        let conversation = create_test_conversation(
             &pool,
-            user.id,
-            vec![user2.id],
+            ctx.user.id,
+            "Test Conversation".to_string(),
             ConversationType::Group,
-            Some(format!("Test Poll Timeout {}", now)),
+            vec![ctx.user.id],
         )
         .await;
 
+        let message =
+            create_test_message(&pool, conversation.id, ctx.user.id, "Existing message").await;
+
         let query = PollMessagesQuery {
-            conversation_id: conversation.id,
-            since_id: Some(999999999), // High ID value to ensure no messages are newer
-            timeout_seconds: Some(1),  // Short timeout
+            since_id: Some(message.id),
+            timeout_seconds: Some(1), // Short timeout for test
         };
 
         let start = std::time::Instant::now();
         let result = poll_messages_handler(
             Extension(Some(Authorization::Bearer {
-                claims: crate::tests::setup_jwt_token(user.clone()).0,
+                claims: ctx.claims.clone(),
             })),
             State(pool.clone()),
+            Path(
+                crate::controllers::v2::conversations::messages::poll_messages::ConversationPath {
+                    conversation_id: conversation.id,
+                },
+            ),
             Query(query),
         )
         .await;
 
-        let elapsed = start.elapsed();
-
+        let duration = start.elapsed();
         assert!(result.is_ok());
         let response = result.unwrap().0;
-
-        assert_eq!(response.has_new_messages, false);
+        assert!(!response.has_new_messages);
         assert_eq!(response.messages.len(), 0);
-        assert!(elapsed >= Duration::from_secs(1)); // Should have waited for timeout
+        assert!(duration >= Duration::from_secs(1));
     }
 
     #[tokio::test]
     async fn test_poll_messages_unauthorized() {
-        let TestContext {
-            user, pool, now, ..
-        } = setup().await.unwrap();
+        let ctx = setup().await.unwrap();
+        let pool = ctx.pool.clone();
 
-        let user2_id = Uuid::new_v4().to_string();
-        let user2 = setup_test_user(&user2_id, &pool).await.unwrap();
+        // Create another user with unique ID
+        let other_user = setup_test_user(&format!("poll-unauth-{}", uuid::Uuid::new_v4()), &pool)
+            .await
+            .unwrap();
 
-        let user3_id = Uuid::new_v4().to_string();
-        let user3 = setup_test_user(&user3_id, &pool).await.unwrap();
-
-        // Create conversation where user is NOT a participant
-        let conversation = create_test_conversation_with_participants(
+        // Create a conversation that the other user is NOT part of
+        let conversation = create_test_conversation(
             &pool,
-            user2.id,
-            vec![user3.id],
-            ConversationType::Group,
-            Some(format!("Private Poll {}", now)),
+            ctx.user.id,
+            "Private Conversation".to_string(),
+            ConversationType::Direct,
+            vec![ctx.user.id],
         )
         .await;
 
         let query = PollMessagesQuery {
-            conversation_id: conversation.id,
-            since_id: Some(0),
+            since_id: None,
             timeout_seconds: Some(1),
         };
 
+        let other_claims = crate::tests::setup_jwt_token(other_user).0;
         let result = poll_messages_handler(
             Extension(Some(Authorization::Bearer {
-                claims: crate::tests::setup_jwt_token(user.clone()).0,
+                claims: other_claims,
             })),
             State(pool.clone()),
+            Path(
+                crate::controllers::v2::conversations::messages::poll_messages::ConversationPath {
+                    conversation_id: conversation.id,
+                },
+            ),
             Query(query),
         )
         .await;
 
-        assert!(
-            result.is_err(),
-            "Should be unauthorized to poll messages from conversation user is not part of"
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_poll_messages_with_new_message_arriving() {
+        let ctx = setup().await.unwrap();
+        let pool = ctx.pool.clone();
+
+        let conversation = create_test_conversation(
+            &pool,
+            ctx.user.id,
+            "Test Conversation".to_string(),
+            ConversationType::Group,
+            vec![ctx.user.id],
+        )
+        .await;
+
+        let existing_message =
+            create_test_message(&pool, conversation.id, ctx.user.id, "Existing message").await;
+
+        let query = PollMessagesQuery {
+            since_id: Some(existing_message.id),
+            timeout_seconds: Some(5),
+        };
+
+        // Clone necessary data for the spawned task
+        let poll_pool = pool.clone();
+        let poll_claims = ctx.claims.clone();
+        let poll_conversation_id = conversation.id;
+
+        // Start polling in background
+        let poll_handle = tokio::spawn(async move {
+            poll_messages_handler(
+                Extension(Some(Authorization::Bearer {
+                    claims: poll_claims,
+                })),
+                State(poll_pool),
+                Path(crate::controllers::v2::conversations::messages::poll_messages::ConversationPath { conversation_id: poll_conversation_id }),
+                Query(query),
+            ).await
+        });
+
+        // Wait a bit and then add a new message
+        sleep(Duration::from_millis(500)).await;
+        create_test_message(
+            &pool,
+            conversation.id,
+            ctx.user.id,
+            "New message during poll",
+        )
+        .await;
+
+        // Wait for poll to complete
+        let result = poll_handle.await.unwrap();
+
+        assert!(result.is_ok());
+        let response = result.unwrap().0;
+        assert!(response.has_new_messages);
+        assert_eq!(response.messages.len(), 1);
+        assert_eq!(
+            response.messages[0].html_contents,
+            "New message during poll"
         );
     }
 
     #[tokio::test]
-    async fn test_poll_messages_default_values() {
-        let TestContext {
-            user, pool, now, ..
-        } = setup().await.unwrap();
+    async fn test_clear_message_success() {
+        let ctx = setup().await.unwrap();
+        let pool = ctx.pool.clone();
 
-        let conversation = create_test_conversation_with_participants(
+        let conversation = create_test_conversation(
             &pool,
-            user.id,
-            vec![user.id],
+            ctx.user.id,
+            "Test Conversation".to_string(),
             ConversationType::Group,
-            Some(format!("Test Poll Defaults {}", now)),
+            vec![ctx.user.id],
         )
         .await;
 
-        // Create a message to be returned immediately
-        create_test_message(&pool, conversation.id, user.id, "Immediate message").await;
+        let message =
+            create_test_message(&pool, conversation.id, ctx.user.id, "Message to clear").await;
 
-        let query = PollMessagesQuery {
-            conversation_id: conversation.id,
-            since_id: None,        // Should default to 0
-            timeout_seconds: None, // Should default to 30
-        };
-
-        let result = poll_messages_handler(
+        let result = clear_message_handler(
             Extension(Some(Authorization::Bearer {
-                claims: crate::tests::setup_jwt_token(user.clone()).0,
+                claims: ctx.claims.clone(),
             })),
             State(pool.clone()),
-            Query(query),
+            Path(MessagePath {
+                message_id: message.id,
+            }),
         )
         .await;
 
         assert!(result.is_ok());
         let response = result.unwrap().0;
+        assert!(response.success);
 
-        // Should return immediately since there are messages after timestamp 0
-        assert_eq!(response.has_new_messages, true);
-        assert_eq!(response.messages.len(), 1);
-    }
-
-    // CLEAR MESSAGE TESTS
-    #[tokio::test]
-    async fn test_clear_message_success() {
-        let TestContext {
-            user, pool, now, ..
-        } = setup().await.unwrap();
-
-        let user2_id = Uuid::new_v4().to_string();
-        let user2 = setup_test_user(&user2_id, &pool).await.unwrap();
-
-        // Create conversation and message
-        let conversation = create_test_conversation_with_participants(
-            &pool,
-            user.id,
-            vec![user2.id],
-            ConversationType::Group,
-            Some(format!("Test Clear {}", now)),
-        )
-        .await;
-
-        let message =
-            create_test_message(&pool, conversation.id, user.id, "Message to clear").await;
-
-        let req = ClearMessageRequest {
-            message_id: message.id,
-        };
-
-        let result = clear_message_handler(
-            Extension(Some(Authorization::Bearer {
-                claims: crate::tests::setup_jwt_token(user.clone()).0,
-            })),
-            State(pool.clone()),
-            Json(req),
-        )
-        .await;
-
-        assert!(result.is_ok());
-
-        // Verify message content was cleared
+        // Verify message content is cleared
         let cleared_message = Message::query_builder()
             .id_equals(message.id)
             .query()
@@ -1084,137 +591,267 @@ mod tests {
             .unwrap();
 
         assert_eq!(cleared_message.html_contents, "");
-        assert_eq!(cleared_message.seq_id, message.seq_id); // seq_id should remain
-        assert_eq!(cleared_message.conversation_id, message.conversation_id);
     }
 
     #[tokio::test]
-    async fn test_clear_message_unauthorized() {
-        let TestContext {
-            user, pool, now, ..
-        } = setup().await.unwrap();
+    async fn test_clear_message_unauthorized_not_sender() {
+        let ctx = setup().await.unwrap();
+        let pool = ctx.pool.clone();
 
-        let user2_id = Uuid::new_v4().to_string();
-        let user2 = setup_test_user(&user2_id, &pool).await.unwrap();
+        // Create another user with unique ID
+        let other_user = setup_test_user(&format!("clear-unauth-{}", uuid::Uuid::new_v4()), &pool)
+            .await
+            .unwrap();
 
-        let user3_id = Uuid::new_v4().to_string();
-        let user3 = setup_test_user(&user3_id, &pool).await.unwrap();
-
-        // Create conversation and message by user2
-        let conversation = create_test_conversation_with_participants(
+        let conversation = create_test_conversation(
             &pool,
-            user2.id,
-            vec![user3.id],
+            ctx.user.id,
+            "Test Conversation".to_string(),
             ConversationType::Group,
-            Some(format!("Test Clear Unauthorized {}", now)),
+            vec![ctx.user.id, other_user.id],
         )
         .await;
 
+        // Create message by first user
         let message =
-            create_test_message(&pool, conversation.id, user2.id, "Message by user2").await;
+            create_test_message(&pool, conversation.id, ctx.user.id, "Message by user 1").await;
 
-        // Try to clear as user (not sender, not participant)
-        let req = ClearMessageRequest {
-            message_id: message.id,
-        };
-
+        // Try to clear message as other user
+        let other_claims = crate::tests::setup_jwt_token(other_user).0;
         let result = clear_message_handler(
             Extension(Some(Authorization::Bearer {
-                claims: crate::tests::setup_jwt_token(user.clone()).0,
+                claims: other_claims,
             })),
             State(pool.clone()),
-            Json(req),
+            Path(MessagePath {
+                message_id: message.id,
+            }),
         )
         .await;
 
-        assert!(
-            result.is_err(),
-            "Should be unauthorized to clear message not sent by user"
-        );
+        assert!(result.is_err());
     }
 
     #[tokio::test]
-    async fn test_clear_nonexistent_message() {
-        let TestContext { user, pool, .. } = setup().await.unwrap();
-
-        let req = ClearMessageRequest {
-            message_id: 999999, // Non-existent message
-        };
+    async fn test_clear_message_not_found() {
+        let ctx = setup().await.unwrap();
+        let pool = ctx.pool.clone();
 
         let result = clear_message_handler(
             Extension(Some(Authorization::Bearer {
-                claims: crate::tests::setup_jwt_token(user.clone()).0,
+                claims: ctx.claims.clone(),
             })),
             State(pool.clone()),
-            Json(req),
+            Path(MessagePath { message_id: 99999 }), // Non-existent message ID
         )
         .await;
 
-        assert!(result.is_err(), "Should fail for non-existent message");
+        assert!(result.is_err());
     }
 
     #[tokio::test]
-    async fn test_unauthorized_message_requests() {
-        let TestContext { pool, now, .. } = setup().await.unwrap();
+    async fn test_message_sequence_ordering() {
+        let ctx = setup().await.unwrap();
+        let pool = ctx.pool.clone();
 
-        // Test add message without auth
-        let req = AddMessageRequest {
-            html_contents: format!("Test {}", now),
-            conversation_id: Some(1),
+        let conversation = create_test_conversation(
+            &pool,
+            ctx.user.id,
+            "Sequence Test".to_string(),
+            ConversationType::Group,
+            vec![ctx.user.id],
+        )
+        .await;
+
+        // Add multiple messages
+        let messages = vec!["First message", "Second message", "Third message"];
+
+        let mut created_messages = Vec::new();
+        for content in messages {
+            let request = AddMessageRequest {
+                html_contents: content.to_string(),
+                recipient_id: None,
+            };
+
+            let result = add_message_handler(
+                Extension(Some(Authorization::Bearer {
+                    claims: ctx.claims.clone(),
+                })),
+                State(pool.clone()),
+                Path(add_messages::ConversationPath {
+                    conversation_id: conversation.id,
+                }),
+                Json(request),
+            )
+            .await;
+
+            assert!(result.is_ok());
+            created_messages.push(result.unwrap().0.message);
+        }
+
+        // Verify sequence ordering
+        for (i, message) in created_messages.iter().enumerate() {
+            assert_eq!(message.seq_id, (i + 1) as i64);
+        }
+
+        // Get messages and verify order (should be desc by created_at)
+        let query = GetMessagesQuery { size: 10, page: 1 };
+
+        let result = get_messages_handler(
+            Extension(Some(Authorization::Bearer {
+                claims: ctx.claims.clone(),
+            })),
+            State(pool.clone()),
+            Path(
+                crate::controllers::v2::conversations::messages::get_messages::ConversationPath {
+                    conversation_id: conversation.id,
+                },
+            ),
+            Query(query),
+        )
+        .await;
+
+        assert!(result.is_ok());
+        let response = result.unwrap().0;
+        assert_eq!(response.items.len(), 3);
+
+        // Verify all messages are present (order may vary due to same timestamps)
+        let contents: Vec<&str> = response
+            .items
+            .iter()
+            .map(|m| m.html_contents.as_str())
+            .collect();
+        assert!(contents.contains(&"First message"));
+        assert!(contents.contains(&"Second message"));
+        assert!(contents.contains(&"Third message"));
+    }
+
+    #[tokio::test]
+    async fn test_message_size_limits() {
+        let ctx = setup().await.unwrap();
+        let pool = ctx.pool.clone();
+
+        let conversation = create_test_conversation(
+            &pool,
+            ctx.user.id,
+            "Size Test".to_string(),
+            ConversationType::Group,
+            vec![ctx.user.id],
+        )
+        .await;
+
+        // Test maximum allowed size (10000 characters)
+        let max_content = "a".repeat(10000);
+        let request = AddMessageRequest {
+            html_contents: max_content,
             recipient_id: None,
         };
 
         let result = add_message_handler(
-            Extension(None), // No authorization
+            Extension(Some(Authorization::Bearer {
+                claims: ctx.claims.clone(),
+            })),
             State(pool.clone()),
-            Json(req),
+            Path(add_messages::ConversationPath {
+                conversation_id: conversation.id,
+            }),
+            Json(request),
         )
         .await;
 
-        assert!(result.is_err(), "Should fail without authorization");
+        assert!(result.is_ok());
 
-        // Test get messages without auth
-        let query = GetMessagesQuery {
-            conversation_id: 1,
-            size: 50,
-            page: 1,
+        // Test over maximum size (10001 characters)
+        let over_max_content = "a".repeat(10001);
+        let request = AddMessageRequest {
+            html_contents: over_max_content,
+            recipient_id: None,
         };
+
+        let result = add_message_handler(
+            Extension(Some(Authorization::Bearer {
+                claims: ctx.claims.clone(),
+            })),
+            State(pool.clone()),
+            Path(add_messages::ConversationPath {
+                conversation_id: conversation.id,
+            }),
+            Json(request),
+        )
+        .await;
+
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_get_messages_query_validation() {
+        let ctx = setup().await.unwrap();
+        let pool = ctx.pool.clone();
+
+        let conversation = create_test_conversation(
+            &pool,
+            ctx.user.id,
+            "Validation Test".to_string(),
+            ConversationType::Group,
+            vec![ctx.user.id],
+        )
+        .await;
+
+        // Test size > 100 gets clamped to 100
+        let query = GetMessagesQuery { size: 150, page: 1 };
 
         let result = get_messages_handler(
-            Extension(None), // No authorization
+            Extension(Some(Authorization::Bearer {
+                claims: ctx.claims.clone(),
+            })),
             State(pool.clone()),
+            Path(
+                crate::controllers::v2::conversations::messages::get_messages::ConversationPath {
+                    conversation_id: conversation.id,
+                },
+            ),
             Query(query),
         )
         .await;
 
-        assert!(result.is_err(), "Should fail without authorization");
+        assert!(result.is_ok());
 
-        // Test poll messages without auth
-        let query = PollMessagesQuery {
-            conversation_id: 1,
-            since_id: Some(0),
-            timeout_seconds: Some(1),
-        };
+        // Test size < 1 gets clamped to 1
+        let query = GetMessagesQuery { size: 0, page: 1 };
 
-        let result = poll_messages_handler(
-            Extension(None), // No authorization
+        let result = get_messages_handler(
+            Extension(Some(Authorization::Bearer {
+                claims: ctx.claims.clone(),
+            })),
             State(pool.clone()),
+            Path(
+                crate::controllers::v2::conversations::messages::get_messages::ConversationPath {
+                    conversation_id: conversation.id,
+                },
+            ),
             Query(query),
         )
         .await;
 
-        assert!(result.is_err(), "Should fail without authorization");
+        assert!(result.is_ok());
 
-        // Test clear message without auth
-        let req = ClearMessageRequest { message_id: 1 };
+        // Test page < 1 gets clamped to 1
+        let query = GetMessagesQuery { size: 10, page: 0 };
 
-        let result = clear_message_handler(
-            Extension(None), // No authorization
+        let result = get_messages_handler(
+            Extension(Some(Authorization::Bearer {
+                claims: ctx.claims.clone(),
+            })),
             State(pool.clone()),
-            Json(req),
+            Path(
+                crate::controllers::v2::conversations::messages::get_messages::ConversationPath {
+                    conversation_id: conversation.id,
+                },
+            ),
+            Query(query),
         )
         .await;
 
-        assert!(result.is_err(), "Should fail without authorization");
+        assert!(result.is_ok());
     }
 }

@@ -5,7 +5,7 @@ use dto::{
         auth::Authorization,
         axum::{
             Extension, Json,
-            extract::{Query, State},
+            extract::{Path, Query, State},
         },
     },
     sqlx::PgPool,
@@ -16,10 +16,13 @@ use tokio::time::{Duration, timeout};
 use crate::utils::users::extract_user_id;
 
 #[derive(Debug, Clone, Serialize, Deserialize, aide::OperationIo, JsonSchema)]
-pub struct PollMessagesQuery {
-    #[schemars(description = "Conversation ID to poll messages for")]
+pub struct ConversationPath {
+    #[schemars(description = "Conversation ID")]
     pub conversation_id: i64,
+}
 
+#[derive(Debug, Clone, Serialize, Deserialize, aide::OperationIo, JsonSchema)]
+pub struct PollMessagesQuery {
     #[schemars(description = "Last message ID received (get messages with ID greater than this)")]
     pub since_id: Option<i64>,
 
@@ -36,20 +39,21 @@ pub struct PollMessagesResponse {
 pub async fn poll_messages_handler(
     Extension(auth): Extension<Option<Authorization>>,
     State(pool): State<PgPool>,
+    Path(ConversationPath { conversation_id }): Path<ConversationPath>,
     Query(query): Query<PollMessagesQuery>,
 ) -> Result<Json<PollMessagesResponse>> {
     let user_id = extract_user_id(&pool, auth).await?;
 
     tracing::debug!(
         "Polling messages for conversation {} by user {}, since_id: {:?}",
-        query.conversation_id,
+        conversation_id,
         user_id,
         query.since_id
     );
 
     // Verify that the user is a participant in this conversation
     let participant_count = ConversationParticipant::query_builder()
-        .conversation_id_equals(query.conversation_id)
+        .conversation_id_equals(conversation_id)
         .user_id_equals(user_id)
         .query()
         .map(ConversationParticipant::from)
@@ -61,7 +65,7 @@ pub async fn poll_messages_handler(
         tracing::warn!(
             "User {} attempted to poll messages from conversation {} they don't participate in",
             user_id,
-            query.conversation_id
+            conversation_id
         );
         return Err(Error::Unauthorized);
     }
@@ -76,7 +80,7 @@ pub async fn poll_messages_handler(
     let poll_result = timeout(timeout_duration, async {
         loop {
             let mut messages_query =
-                Message::query_builder().conversation_id_equals(query.conversation_id);
+                Message::query_builder().conversation_id_equals(conversation_id);
 
             if since_id > 0 {
                 messages_query = messages_query.id_greater_than(since_id);
@@ -92,7 +96,7 @@ pub async fn poll_messages_handler(
                 tracing::debug!(
                     "Found {} new messages for conversation {}",
                     new_messages.len(),
-                    query.conversation_id
+                    conversation_id
                 );
                 return Ok::<PollMessagesResponse, Error>(PollMessagesResponse {
                     messages: new_messages,
@@ -130,7 +134,7 @@ pub async fn poll_messages_handler(
             // Timeout occurred, return empty response
             tracing::debug!(
                 "Polling timeout elapsed for conversation {} user {}",
-                query.conversation_id,
+                conversation_id,
                 user_id
             );
             Ok(Json(PollMessagesResponse {

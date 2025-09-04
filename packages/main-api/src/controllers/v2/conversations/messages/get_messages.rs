@@ -6,7 +6,7 @@ use dto::{
         auth::Authorization,
         axum::{
             Extension, Json,
-            extract::{Query, State},
+            extract::{Path, Query, State},
         },
     },
     sqlx::PgPool,
@@ -17,11 +17,13 @@ use sqlx::postgres::PgRow;
 use crate::utils::users::extract_user_id;
 
 #[derive(Debug, Clone, Serialize, Deserialize, aide::OperationIo, JsonSchema)]
-pub struct GetMessagesQuery {
-    #[serde(default = "default_conversation_id")]
-    #[schemars(description = "Conversation ID to get messages for")]
+pub struct ConversationPath {
+    #[schemars(description = "Conversation ID")]
     pub conversation_id: i64,
+}
 
+#[derive(Debug, Clone, Serialize, Deserialize, aide::OperationIo, JsonSchema)]
+pub struct GetMessagesQuery {
     #[serde(default = "default_size")]
     #[schemars(description = "Number of messages per page (default: 50, max: 100)")]
     pub size: i32,
@@ -31,9 +33,6 @@ pub struct GetMessagesQuery {
     pub page: i32,
 }
 
-fn default_conversation_id() -> i64 {
-    0
-}
 fn default_size() -> i32 {
     50
 }
@@ -58,26 +57,22 @@ impl GetMessagesQuery {
 pub async fn get_messages_handler(
     Extension(auth): Extension<Option<Authorization>>,
     State(pool): State<PgPool>,
+    Path(ConversationPath { conversation_id }): Path<ConversationPath>,
     Query(query): Query<GetMessagesQuery>,
 ) -> Result<Json<QueryResponse<Message>>> {
     let user_id = extract_user_id(&pool, auth).await?;
 
-    // Validate conversation_id is provided
-    if query.conversation_id == 0 {
-        return Err(Error::BadRequest);
-    }
-
     tracing::debug!(
         "Getting messages for user {} in conversation {} (size: {}, page: {})",
         user_id,
-        query.conversation_id,
+        conversation_id,
         query.size(),
         query.page()
     );
 
     // Verify user is a participant in the conversation
     let participant_count = ConversationParticipant::query_builder()
-        .conversation_id_equals(query.conversation_id)
+        .conversation_id_equals(conversation_id)
         .user_id_equals(user_id)
         .query()
         .map(ConversationParticipant::from)
@@ -93,7 +88,7 @@ pub async fn get_messages_handler(
 
     // Get messages ordered by created_at DESC (newest first) with pagination
     let items: Vec<Message> = Message::query_builder()
-        .conversation_id_equals(query.conversation_id)
+        .conversation_id_equals(conversation_id)
         .limit(query.size())
         .page(query.page())
         .order_by_created_at_desc()
@@ -111,7 +106,7 @@ pub async fn get_messages_handler(
         "Retrieved {} messages out of {} total for conversation {}",
         items.len(),
         total_count,
-        query.conversation_id
+        conversation_id
     );
 
     Ok(Json(QueryResponse { total_count, items }))
