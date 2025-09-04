@@ -12,6 +12,7 @@ import { logger } from '@/lib/logger';
 import { checkString } from '@/lib/string-filter-utils';
 import { showErrorToast } from '@/lib/toast';
 import { DiscussionInfo } from '../../types';
+import { useTranslations } from 'next-intl';
 
 export default function InviteMemberPopup({
   title,
@@ -29,6 +30,7 @@ export default function InviteMemberPopup({
   users: TotalUser[];
   onadd: (discussion: DiscussionInfo) => void;
 }) {
+  const t = useTranslations('DeliberationSpace');
   const { get } = useApiCall();
 
   const [selectedUsers, setSelectedUsers] = useState<TotalUser[]>(users);
@@ -67,11 +69,11 @@ export default function InviteMemberPopup({
               setSelectedUsers((prev) => [...prev, data]);
             }
           } else {
-            showErrorToast('Invalid or unregistered input.');
+            showErrorToast(t('invalid_user'));
           }
         } catch (err) {
           logger.error('failed to search user with error: ', err);
-          showErrorToast('Failed to search for user.');
+          showErrorToast(t('failed_search_user'));
         }
       }
 
@@ -85,14 +87,12 @@ export default function InviteMemberPopup({
     <div className="flex flex-col w-[900px] min-h-[300px] max-w-[900px] min-w-[400px] max-mobile:!w-full max-mobile:!max-w-full gap-5">
       <div className="flex flex-col w-full">
         <div className="font-bold text-[15px]/[28px] text-neutral-400">
-          Email, Username, or Phone Number
+          {t('invite_label')}
         </div>
         <div className="mt-[10px]">
           <SearchInput
             value={searchValue}
-            placeholder={
-              'Enter email, username, or phone number (ex: john@example.com or john or 01012345678)'
-            }
+            placeholder={t('invite_hint')}
             setValue={async (value) => {
               setValue(value, false);
             }}
@@ -160,6 +160,7 @@ function InviteMemberButton({
   isError: boolean;
   onclick: () => void;
 }) {
+  const t = useTranslations('DeliberationSpace');
   const containerClass = clsx(
     'flex flex-row w-full justify-center items-center my-[15px] py-[15px] rounded-lg font-bold text-[#000203] text-base',
     isError
@@ -176,13 +177,12 @@ function InviteMemberButton({
           }
         }}
       >
-        Send
+        {t('send')}
       </div>
 
       {isError && (
         <div className="font-semibold text-base text-red-400">
-          The user does not exist or already exists in the group. Please check
-          the email again.
+          {t('invite_warning')}
         </div>
       )}
     </div>

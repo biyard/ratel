@@ -10,6 +10,7 @@ import React, {
 import NoticeNotification, {
   NoticeNotificationData,
 } from './notice-notification';
+import { useTranslations } from 'next-intl';
 
 interface NoticeNotificationContextType {
   showSuccessNotification: (
@@ -33,30 +34,34 @@ export function NoticeNotificationProvider({
   const [notification, setNotification] =
     useState<NoticeNotificationData | null>(null);
 
+  const t = useTranslations('NoticeSpace');
+
   const showSuccessNotification = useCallback(
     (rewardAmount: number, penaltyCount?: number) => {
       const displayText =
         penaltyCount && penaltyCount > 0
-          ? `Coin Earned! (${penaltyCount}x penalty applied)`
-          : 'Coin Earned! View it in your profile.';
+          ? t('notif.success_body_with_penalty', { count: penaltyCount })
+          : t('notif.success_body_no_penalty');
 
       setNotification({
         type: 'success',
-        title: `+ ${rewardAmount.toLocaleString()} P`,
+        title: t('notif.success_title', {
+          amount: rewardAmount.toLocaleString(),
+        }),
         body: displayText,
         rewardAmount,
       });
     },
-    [],
+    [t],
   );
 
   const showFailedNotification = useCallback(() => {
     setNotification({
       type: 'failed',
-      title: 'X 0.5 Penalty',
-      body: 'Each wrong answer cuts your reward in half!',
+      title: t('notif.failed_title'),
+      body: t('notif.failed_body'),
     });
-  }, []);
+  }, [t]);
 
   const closeNotification = useCallback(() => {
     setNotification(null);

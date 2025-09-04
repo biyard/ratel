@@ -5,8 +5,10 @@ import BlackBox from '@/app/(social)/_components/black-box';
 import Image from 'next/image';
 import { File } from '@/components/file';
 import LexicalHtmlViewer from '../../../../../components/lexical/lexical-html-viewer';
+import { useTranslations } from 'next-intl';
 
 export default function Thread({ post_id }: { post_id: number }) {
+  const t = useTranslations('Threads');
   const { data: post } = useFeedByID(post_id);
 
   return (
@@ -30,7 +32,7 @@ export default function Thread({ post_id }: { post_id: number }) {
         <BlackBox>
           <div className="flex flex-col w-full gap-5">
             <div className="font-bold text-white text-[15px]/[20px]">
-              Attached Files
+              {t('attached_files')}
             </div>
 
             <div className="grid grid-cols-2 max-tablet:grid-cols-1 gap-2.5">

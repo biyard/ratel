@@ -6,6 +6,7 @@ import SummaryReport from '../dashboard/summary-report';
 import ObjectiveResponse from '../dashboard/objective-response';
 import SubjectiveResponse from '../dashboard/subjective-response';
 import { SurveyResponse } from '@/lib/api/models/response';
+import { useTranslations } from 'next-intl';
 
 enum AnswerType {
   SingleChoice = 'single_choice',
@@ -28,6 +29,7 @@ export function AnalyzePage({
   mappedResponses: MappedResponse[];
   handleDownloadExcel: () => void;
 }) {
+  const t = useTranslations('PollSpace');
   logger.debug('mapped responses: ', mappedResponses);
 
   const responseCount = answers.length;
@@ -46,7 +48,7 @@ export function AnalyzePage({
               handleDownloadExcel();
             }}
           >
-            {'Download Excel'}
+            {t('download_excel')}
           </button>
         </div>
       </div>

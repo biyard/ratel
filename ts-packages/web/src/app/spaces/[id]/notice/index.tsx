@@ -20,6 +20,7 @@ import { SpaceType, SpaceStatus } from '@/lib/api/models/spaces';
 import { PublishingScope } from '@/lib/api/models/notice';
 import { TeamContext } from '@/lib/contexts/team-context';
 import { useUserInfo } from '@/app/(social)/_hooks/user';
+import { useTranslations } from 'next-intl';
 
 export default function NoticeSpacePage() {
   return (
@@ -32,6 +33,7 @@ export default function NoticeSpacePage() {
 }
 
 function Page() {
+  const t = useTranslations('Space');
   const space = useNoticeSpace();
   const feed = useNoticeFeed(space.feed_id);
   const popup = usePopup();
@@ -69,7 +71,7 @@ function Page() {
     !space.author.some((a) => a.id === userId) &&
     !selectedTeam
   ) {
-    return <div>No Authorized User</div>;
+    return <div>{t('no_authorized_user')}</div>;
   }
 
   const handlePost = async () => {

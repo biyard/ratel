@@ -27,61 +27,60 @@ import {
 } from '@/lib/api/models/notice';
 
 // Quiz validation function
-const validateQuizQuestions = (questions: Question[]): string | null => {
+const validateQuizQuestions = (
+  questions: Question[],
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  t: (key: string, values?: Record<string, any>) => string,
+): string | null => {
   if (questions.length === 0) return null;
 
   for (let i = 0; i < questions.length; i++) {
     const question = questions[i];
     const questionNumber = i + 1;
 
-    // Check if question title is not empty
     if (!question.title.trim()) {
-      return `Question ${questionNumber} title cannot be empty`;
+      return t('quiz_error.empty_title', { n: questionNumber });
     }
 
-    // Check if question has at least 2 options
     if (question.options.length < 2) {
-      return `Question ${questionNumber} must have at least 2 options`;
+      return t('quiz_error.min_options', { n: questionNumber });
     }
 
-    // Check if question has no more than 4 options
     if (question.options.length > 4) {
-      return `Question ${questionNumber} can have maximum 4 options`;
+      return t('quiz_error.max_options', { n: questionNumber });
     }
 
-    // Check for duplicate options (case-insensitive)
     const optionTexts = question.options.map((opt) =>
       opt.text.trim().toLowerCase(),
     );
-    const uniqueTexts = new Set(optionTexts);
-
-    if (optionTexts.length !== uniqueTexts.size) {
-      return `Question ${questionNumber} has duplicate options`;
+    if (new Set(optionTexts).size !== optionTexts.length) {
+      return t('quiz_error.duplicate_options', { n: questionNumber });
     }
 
-    // Check for empty options
     for (let j = 0; j < question.options.length; j++) {
       if (!question.options[j].text.trim()) {
-        return `Question ${questionNumber} option ${j + 1} cannot be empty`;
+        return t('quiz_error.empty_option', {
+          n: questionNumber,
+          k: j + 1,
+        });
       }
     }
 
-    // Check if at least one option is marked as correct
-    const hasCorrectOption = question.options.some(
-      (option) => option.isCorrect,
-    );
+    const hasCorrectOption = question.options.some((opt) => opt.isCorrect);
     if (!hasCorrectOption) {
-      return `Question ${questionNumber} must have at least one correct option selected`;
+      return t('quiz_error.no_correct', { n: questionNumber });
     }
   }
 
-  return null; // No validation errors
+  return null;
 };
+
 import {
   Question,
   convertQuestionsToNoticeQuizRequest,
   convertQuizQuestionsToQuestions,
 } from './_components/quiz-builder-ui';
+import { useTranslations } from 'next-intl';
 
 type ContextType = {
   spaceId: number;
@@ -133,6 +132,7 @@ export default function ClientProviders({
 }: {
   children: React.ReactNode;
 }) {
+  const t = useTranslations('NoticeSpace');
   const { spaceId } = useSpaceByIdContext();
   const { data: space, refetch } = useSpaceById(spaceId);
   // We can ignore the feed variable since we're not using it here
@@ -210,9 +210,9 @@ export default function ClientProviders({
           queryKey: [QK_GET_SPACE_BY_SPACE_ID, space.id],
         });
 
-        showSuccessToast('Start date updated successfully');
+        showSuccessToast(t('success_update_start_date'));
       } catch (e) {
-        showErrorToast('Failed to update start date');
+        showErrorToast(t('failed_update_start_date'));
         logger.error(e);
         // Revert to original value on error
         setStartedAt(space.started_at || 0);
@@ -247,9 +247,9 @@ export default function ClientProviders({
           queryKey: [QK_GET_SPACE_BY_SPACE_ID, space.id],
         });
 
-        showSuccessToast('End date updated successfully');
+        showSuccessToast(t('success_update_end_date'));
       } catch (e) {
-        showErrorToast('Failed to update end date');
+        showErrorToast(t('failed_update_end_date'));
         logger.error(e);
         // Revert to original value on error
         setEndedAt(space.ended_at || 0);
@@ -268,9 +268,9 @@ export default function ClientProviders({
         queryKey: [QK_GET_SPACE_BY_SPACE_ID, space.id],
       });
       refetch();
-      showSuccessToast('Space posted successfully');
+      showSuccessToast(t('success_post_space'));
     } catch (e) {
-      showErrorToast('Failed to post space');
+      showErrorToast(t('failed_post_space'));
       logger.error(e);
     }
   };
@@ -278,27 +278,25 @@ export default function ClientProviders({
   const handlePublishWithScope = async (scope: PublishingScope) => {
     if (!space) return;
     try {
-      // First, post the space
       await callPostingSpace(
         ratelApi.spaces.getSpaceBySpaceId(space.id),
         postingSpaceRequest(),
       );
 
-      // Then, update the publishing scope
       await callUpdateSpace(
         ratelApi.spaces.getSpaceBySpaceId(space.id),
         spaceUpdateRequest(
           space.html_contents,
           space.files,
-          [], // discussions
-          [], // elearnings
-          [], // surveys
-          [], // drafts
+          [],
+          [],
+          [],
+          [],
           space.title,
           space.started_at,
           space.ended_at,
           scope,
-          null, // Don't modify quiz when publishing
+          null,
         ),
       );
 
@@ -306,11 +304,14 @@ export default function ClientProviders({
         queryKey: [QK_GET_SPACE_BY_SPACE_ID, space.id],
       });
       refetch();
+
       showSuccessToast(
-        `Space published ${scope === PublishingScope.Public ? 'publicly' : 'privately'} successfully`,
+        scope === PublishingScope.Public
+          ? t('success_publish_space_public')
+          : t('success_publish_space_private'),
       );
     } catch (e) {
-      showErrorToast('Failed to publish space');
+      showErrorToast(t('failed_publish_space'));
       logger.error(e);
     }
   };
@@ -323,22 +324,22 @@ export default function ClientProviders({
     if (!space) return;
     console.log('handleSave called');
     // Show temporary saving message
-    showInfoToast('Saving changes...');
+    showInfoToast(t('saving_change'));
 
     if (!validateString(title)) {
-      showErrorToast('Title contains invalid characters');
+      showErrorToast(t('invalid_title_character'));
       return;
     }
 
     if (!title.trim()) {
-      showErrorToast('Title cannot be empty');
+      showErrorToast(t('title_empty'));
       return;
     }
 
     try {
       // Validate quiz questions before saving
       if (quizQuestions.length > 0) {
-        const validationError = validateQuizQuestions(quizQuestions);
+        const validationError = validateQuizQuestions(quizQuestions, t);
         if (validationError) {
           showErrorToast(validationError);
           return;
@@ -383,10 +384,10 @@ export default function ClientProviders({
       await queryClient.invalidateQueries({
         queryKey: [QK_GET_SPACE_BY_SPACE_ID, space.id],
       });
-      showSuccessToast('Space updated successfully');
+      showSuccessToast(t('success_update_space'));
       setIsEdit(false);
     } catch (e) {
-      showErrorToast('Failed to update space');
+      showErrorToast(t('failed_update_space'));
       logger.error(e);
     }
   };
@@ -395,22 +396,22 @@ export default function ClientProviders({
     if (!space) return;
     console.log('handleSaveWithoutExitingEditMode called');
     // Show temporary saving message
-    showInfoToast('Saving changes...');
+    showInfoToast(t('saving_change'));
 
     if (!validateString(title)) {
-      showErrorToast('Title contains invalid characters');
+      showErrorToast(t('invalid_title_character'));
       return;
     }
 
     if (!title.trim()) {
-      showErrorToast('Title cannot be empty');
+      showErrorToast(t('title_empty'));
       return;
     }
 
     try {
       // Validate quiz questions before saving
       if (quizQuestions.length > 0) {
-        const validationError = validateQuizQuestions(quizQuestions);
+        const validationError = validateQuizQuestions(quizQuestions, t);
         if (validationError) {
           showErrorToast(validationError);
           return;
@@ -455,10 +456,10 @@ export default function ClientProviders({
       await queryClient.invalidateQueries({
         queryKey: [QK_GET_SPACE_BY_SPACE_ID, space.id],
       });
-      showSuccessToast('Space saved successfully');
+      showSuccessToast(t('success_save_space'));
       // Note: Do NOT call setIsEdit(false) here - keep in edit mode
     } catch (e) {
-      showErrorToast('Failed to save space');
+      showErrorToast(t('failed_save_space'));
       logger.error(e);
     }
   };
@@ -468,22 +469,22 @@ export default function ClientProviders({
     console.log('handleSaveAndPublish called with scope:', scope);
 
     // Show temporary saving message
-    showInfoToast('Saving and publishing...');
+    showInfoToast(t('saving_change'));
 
     if (!validateString(title)) {
-      showErrorToast('Title contains invalid characters');
+      showErrorToast(t('invalid_title_character'));
       return;
     }
 
     if (!title.trim()) {
-      showErrorToast('Title cannot be empty');
+      showErrorToast(t('title_empty'));
       return;
     }
 
     try {
       // Validate quiz questions before saving
       if (quizQuestions.length > 0) {
-        const validationError = validateQuizQuestions(quizQuestions);
+        const validationError = validateQuizQuestions(quizQuestions, t);
         if (validationError) {
           showErrorToast(validationError);
           return;
@@ -528,10 +529,12 @@ export default function ClientProviders({
       });
 
       showSuccessToast(
-        `Space saved and published ${scope === PublishingScope.Public ? 'publicly' : 'privately'} successfully`,
+        scope === PublishingScope.Public
+          ? t('success_publish_space_public')
+          : t('success_publish_space_private'),
       );
     } catch (e) {
-      showErrorToast('Failed to save and publish space');
+      showErrorToast(t('failed_publish_space'));
       logger.error(e);
     }
   };
@@ -663,20 +666,15 @@ export default function ClientProviders({
           });
 
           if (currentLatestAttempt?.is_successful) {
-            showErrorToast('You have already passed this quiz.');
+            showErrorToast(t('already_passed_quiz'));
           } else {
-            showErrorToast(
-              'You have reached the maximum number of attempts (3) for this quiz.',
-            );
+            showErrorToast(t('max_attempts_for_this_quiz'));
           }
         } catch {
-          // Fallback error message if we can't determine the specific reason
-          showErrorToast(
-            'Cannot submit: either you have already passed or reached maximum attempts.',
-          );
+          showErrorToast(t('cannot_submit_already_or_max'));
         }
       } else {
-        showErrorToast('Failed to submit quiz');
+        showErrorToast(t('failed_to_submit_quiz'));
       }
 
       logger.error(e);

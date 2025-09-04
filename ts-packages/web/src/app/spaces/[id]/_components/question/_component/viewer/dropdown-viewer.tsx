@@ -4,6 +4,7 @@ import { Answer } from '@/lib/api/models/response';
 import { Question } from '@/lib/api/models/survey';
 import React from 'react';
 import Wrapper from './_components/wrapper';
+import { useTranslations } from 'next-intl';
 
 export default function DropdownViewer({
   title,
@@ -26,6 +27,7 @@ export default function DropdownViewer({
     type: Question['answer_type'],
   ) => void;
 }) {
+  const t = useTranslations('PollSpace');
   return (
     <div className="flex flex-col w-full gap-2.5">
       <Wrapper
@@ -46,7 +48,7 @@ export default function DropdownViewer({
           className="w-full appearance-none border border-btn-o focus:border-primary px-5 py-[10.5px] pr-10 font-medium text-[15px]/[22.5px] text-neutral-600 rounded-lg truncate bg-transparent"
         >
           <option className="truncate" value="" disabled>
-            Choose
+            {t('choose')}
           </option>
           {options?.map((opt, idx) => (
             <option
