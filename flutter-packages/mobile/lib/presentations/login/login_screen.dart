@@ -112,9 +112,20 @@ class LoginScreen extends GetWidget<LoginController> {
                             ),
                           ),
                           20.vgap,
-                          InkWell(
-                            onTap: controller.signInWithGoogle,
-                            child: Assets.googleImage,
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              InkWell(
+                                onTap: controller.signInWithGoogle,
+                                child: Assets.googleImage,
+                              ),
+                              10.gap,
+                              InkWell(
+                                onTap: controller.signInWithApple,
+                                child: Assets.appleImage,
+                              ),
+                            ],
                           ),
                         ],
                       ),

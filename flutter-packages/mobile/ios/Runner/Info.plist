@@ -38,8 +38,18 @@
 		<string>metamask</string>
 		<string>https</string>
 	</array>
+	<key>GIDClientID</key>
+	<string>925748630857-gla98vdbf4th33ahd0shlsu47qnp0u90.apps.googleusercontent.com</string>
 	<key>CFBundleURLTypes</key>
 	<array>
+	<dict>
+	    <key>CFBundleTypeRole</key>
+	    <string>Editor</string>
+	    <key>CFBundleURLSchemes</key>
+	    <array>
+	        <string>com.googleusercontent.apps.925748630857-gla98vdbf4th33ahd0shlsu47qnp0u90</string>
+	    </array>
+	</dict>
 	<dict>
 		<key>CFBundleTypeRole</key>
 		<string>Editor</string>

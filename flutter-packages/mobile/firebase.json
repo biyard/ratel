@@ -1,0 +1,30 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "ratel-eef15",
+          "appId": "1:925748630857:android:21bade2376f06f480d3698",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "ios": {
+        "default": {
+          "projectId": "ratel-eef15",
+          "appId": "1:925748630857:ios:6398b2828de79f0c0d3698",
+          "uploadDebugSymbols": false,
+          "fileOutput": "ios/Runner/GoogleService-Info.plist"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "ratel-eef15",
+          "configurations": {
+            "android": "1:925748630857:android:21bade2376f06f480d3698",
+            "ios": "1:925748630857:ios:6398b2828de79f0c0d3698"
+          }
+        }
+      }
+    }
+  }
+}

@@ -2,7 +2,9 @@
 
 import 'dart:ui';
 
+import 'package:firebase_core/firebase_core.dart';
 import 'package:ratel/components/layout/layout_service.dart' as l;
+import 'package:ratel/firebase_options.dart';
 import 'package:ratel/services/rust/rust_service.dart';
 import 'package:ratel/services/wallet/wallet_service.dart';
 import 'package:ratel/utils/biyard_navigate_observer/biyard_navigate_observer.dart';
@@ -12,9 +14,7 @@ import 'exports.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // await Firebase.initializeApp();
-
-  // ByFirebase.init();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   RustService.init();
   ByFirebase.init();
