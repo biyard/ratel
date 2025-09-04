@@ -21,6 +21,7 @@ import FileUploader from '../file-uploader';
 import Image from 'next/image';
 import { emailSignupRequest } from '@/lib/api/models/users/email-signup-request';
 import { signupRequest } from '@/lib/api/models/users/signup-request';
+import { useTranslations } from 'next-intl';
 
 export interface UserSetupPopupProps {
   id?: string;
@@ -47,6 +48,7 @@ const UserSetupPopup = ({
   username = '',
   nickname = '',
 }: UserSetupPopupProps) => {
+  const t = useTranslations('Signup');
   const { post } = useApiCall();
   const client = useApolloClient();
 
@@ -75,7 +77,7 @@ const UserSetupPopup = ({
 
   const handleSubmit = async () => {
     if (checkString(displayName) || checkString(userName)) {
-      showErrorToast('Please remove the test keyword');
+      showErrorToast(t('remove_test_keyword'));
       return;
     }
     if (!agreed || !isUserNameValid) return;
@@ -178,7 +180,7 @@ const UserSetupPopup = ({
             />
 
             <div className="absolute w-40 h-40 inset-0 bg-component-bg/50 flex items-center justify-center text-center rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-white font-semibold">
-              Click to change profile image
+              {t('clicked_image')}
             </div>
           </div>
         </FileUploader>
@@ -187,7 +189,7 @@ const UserSetupPopup = ({
           <div className="w-full flex flex-col gap-[5px]">
             <div className="flex flex-row items-start">
               <span className="text-c-cg-30 font-bold text-base/7">
-                {'Email'}
+                {t('email')}
               </span>
             </div>
 
@@ -195,7 +197,7 @@ const UserSetupPopup = ({
               <input
                 className="w-full outline-none px-5 h-11 text-white text-base placeholder-gray-500 font-medium border rounded-lg border-gray-600"
                 disabled={email !== '' || isValidEmail}
-                name="username"
+                name={t('username')}
                 autoComplete="email"
                 value={emailState}
                 onChange={(e) => {
@@ -208,7 +210,7 @@ const UserSetupPopup = ({
                   className="rounded-sm"
                   onClick={handleSendCode}
                 >
-                  Send
+                  {t('send')}
                 </Button>
               )}
             </Row>
@@ -229,7 +231,7 @@ const UserSetupPopup = ({
                 className="rounded-sm"
                 onClick={handleVerify}
               >
-                Verify
+                {t('verify')}
               </Button>
             </Row>
           </div>
@@ -237,7 +239,7 @@ const UserSetupPopup = ({
             <div className="w-full flex flex-col gap-[5px]">
               <div className="flex flex-row items-start">
                 <span className="text-c-cg-30 font-bold text-base/7">
-                  Password
+                  {t('password')}
                 </span>
               </div>
               <input
@@ -253,8 +255,7 @@ const UserSetupPopup = ({
 
               {!isValid && password.length > 7 && (
                 <p className="text-red-500 text-sm mt-1">
-                  Password must contain letters, numbers, and special characters
-                  (min 8 chars).
+                  {t('invalid_password_format')}
                 </p>
               )}
             </div>
@@ -262,16 +263,14 @@ const UserSetupPopup = ({
 
           <div className="flex flex-col gap-5 w-full mt-2.25">
             <LabeledInput
-              labelName={'Display Name'}
-              placeholder={'Display Name'}
+              labelName={t('display_name')}
+              placeholder={t('display_name')}
               value={displayName}
               onInput={(value: string) => {
                 setDisplayName(value);
 
                 if (checkString(value)) {
-                  setWarningDisplayname(
-                    'Please remove the test keyword from your display name.',
-                  );
+                  setWarningDisplayname(t('display_name_warning'));
                   setIsValidDisplayName(false);
                   return;
                 } else {
@@ -283,8 +282,8 @@ const UserSetupPopup = ({
             />
 
             <LabeledInput
-              labelName={'User Name'}
-              placeholder={'User Name'}
+              labelName={t('user_name')}
+              placeholder={t('user_name')}
               value={userName}
               onInput={async (value: string) => {
                 setUserName(value);
@@ -295,15 +294,11 @@ const UserSetupPopup = ({
                 }
 
                 if (!isValidUsername(value)) {
-                  setWarning(
-                    'Only numbers, lowercase letters, -, _ and more than one character can be entered.',
-                  );
+                  setWarning(t('invalid_username_format'));
                   setIsUserNameValid(false);
                   return;
                 } else if (checkString(value)) {
-                  setWarning(
-                    'Please remove the test keyword from your username.',
-                  );
+                  setWarning(t('user_name_warning'));
                   setIsUserNameValid(false);
                   return;
                 } else {
@@ -317,7 +312,7 @@ const UserSetupPopup = ({
                 );
 
                 if (users.length > 0) {
-                  setWarning('This username is already taken.');
+                  setWarning(t('already_exists_user'));
                   setIsUserNameValid(false);
                 } else {
                   setWarning('');
@@ -331,8 +326,10 @@ const UserSetupPopup = ({
           <div className="flex flex-col gap-2.25 items-start mb-5 mt-5">
             <Checkbox id="agree_checkbox" onChange={setAgreed}>
               <span className="text-sm text-gray-400">
-                <strong>[Required]</strong> I have read and accept the{' '}
-                <strong>Terms of Service</strong>
+                {t.rich('agree_tos', {
+                  req: (chunks) => <strong>{chunks}</strong>,
+                  b: (chunks) => <strong>{chunks}</strong>,
+                })}
               </span>
             </Checkbox>
 
@@ -340,9 +337,7 @@ const UserSetupPopup = ({
               id="announcement_checkbox"
               onChange={setAnnouncementAgree}
             >
-              <span className="text-sm text-gray-400">
-                I want to receive announcements and news from Ratel.
-              </span>
+              <span className="text-sm text-gray-400">{t('agree_news')}</span>
             </Checkbox>
           </div>
 
@@ -356,7 +351,7 @@ const UserSetupPopup = ({
             }
             onClick={handleSubmit}
           >
-            {'Finished Sign-up'}
+            {t('finish_signup')}
           </PrimaryButton>
         </div>
 

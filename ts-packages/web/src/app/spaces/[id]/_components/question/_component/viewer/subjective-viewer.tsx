@@ -4,6 +4,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Answer } from '@/lib/api/models/response';
 import React from 'react';
 import Wrapper from './_components/wrapper';
+import { useTranslations } from 'next-intl';
 
 export default function SubjectiveViewer({
   title,
@@ -28,6 +29,8 @@ export default function SubjectiveViewer({
     type: 'short_answer' | 'subjective',
   ) => void;
 }) {
+  const t = useTranslations('PollSpace');
+
   return (
     <div className="flex flex-col w-full gap-[10px]">
       <Wrapper
@@ -39,7 +42,7 @@ export default function SubjectiveViewer({
       {answerType === 'short_answer' ? (
         <Input
           type="text"
-          placeholder="Please share your opinion."
+          placeholder={t('subjective_hint')}
           className="bg-neutral-800 border border-neutral-700 text-base text-white placeholder:text-neutral-600 px-4 py-3 rounded-lg focus:outline-none focus:border-yellow-500"
           value={
             selected?.answer_type === 'short_answer'
@@ -52,7 +55,7 @@ export default function SubjectiveViewer({
       ) : (
         <Textarea
           rows={7}
-          placeholder="Please share your opinion."
+          placeholder={t('subjective_hint')}
           className="bg-neutral-800 min-h-[185px] border border-neutral-700 text-base text-white placeholder:text-neutral-600 px-4 py-3 rounded-lg focus:outline-none focus:border-yellow-500"
           value={
             selected?.answer_type === 'subjective'

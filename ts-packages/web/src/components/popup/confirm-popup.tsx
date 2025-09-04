@@ -5,11 +5,13 @@ import React from 'react';
 import { WelcomeHeader } from './welcome-header';
 import { PrimaryButton } from '../button/primary-button';
 import { LoginPopupFooter } from './login-popup-footer';
+import { useTranslations } from 'next-intl';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface ConfirmPopupProps {}
 
 export const ConfirmPopup = ({}: ConfirmPopupProps) => {
+  const t = useTranslations('Signup');
   const popup = usePopup();
 
   const handleClose = () => {
@@ -20,12 +22,12 @@ export const ConfirmPopup = ({}: ConfirmPopupProps) => {
     <div className="max-w-100 w-full mx-1.25 max-mobile:!max-w-full mt-[35px]">
       <div className="w-full flex flex-col gap-[35px] mb-6">
         <WelcomeHeader
-          title="Welcome to Ratel!"
-          description="Policy is shaped by civic engagement—when we speak up, policymakers listen. Ratel gives you a platform to take action and shape crypto policy. Your voice matters, so make it heard and help secure a bright future for crypto."
+          title={t('welcome_title')}
+          description={t('welcome_description')}
         />
 
         <PrimaryButton onClick={handleClose} disabled={false}>
-          {'Start'}
+          {t('start')}
         </PrimaryButton>
       </div>
 

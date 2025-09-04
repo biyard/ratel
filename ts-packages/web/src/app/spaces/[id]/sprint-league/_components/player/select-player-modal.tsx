@@ -6,8 +6,11 @@ import { PlayerImages } from '@/lib/api/models/sprint_league';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { BasePlayerImages } from '.';
+import { useTranslations } from 'next-intl';
 
 const openCharacterSelectModal = (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  t: (key: string, values?: Record<string, any>) => string,
   popup: ReturnType<typeof usePopup>,
   handleSelect: (images: PlayerImages) => void,
 ) => {
@@ -39,7 +42,7 @@ const openCharacterSelectModal = (
         }}
       />,
     )
-    .withTitle("Select a player's character");
+    .withTitle(t('select_player_modal_title'));
 };
 export { openCharacterSelectModal };
 
@@ -50,14 +53,12 @@ export default function PlayerSelectModal({
   onSelect: (id: string) => void;
   players: Record<string, string>;
 }) {
+  const t = useTranslations('SprintSpace');
   const [value, setValue] = useState<string | null>(null);
 
   return (
     <div className="flex flex-col gap-4 w-[50vw] max-w-200">
-      <span>
-        Once the Sprint league is made public, character selection can no longer
-        be changed.
-      </span>
+      <span>{t('select_player_modal_desc')}</span>
       <div className="grid-cols-3 grid gap-10">
         {Object.entries(players).map(([alias]) => (
           <div

@@ -2,18 +2,22 @@
 import { Lock2 } from '@/assets/icons/security';
 import { Internet } from '@/assets/icons/internet-script';
 import { Button } from '@/components/ui/button';
-
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import SelectableCardList, {
   CardItemProps,
 } from '@/components/selectable-card-list';
 import { usePopup } from '@/lib/contexts/popup-service';
+import { useTranslations } from 'next-intl';
 
-// https://www.figma.com/design/YaLSz7dzRingD7CipyaC47/Ratel?node-id=3983-91206&t=riEhxEnpWA7Fr3v9-4
+export enum PublishType {
+  Private = 'private',
+  Public = 'public',
+}
 
 export const openModal = (
   popup: ReturnType<typeof usePopup>,
   onPublish: (type: PublishType) => Promise<void>,
+  title: string,
 ) =>
   popup
     .open(
@@ -29,36 +33,37 @@ export const openModal = (
       />,
     )
     .withoutBackdropClose()
-    .withTitle('Publish this space');
-
-const items: CardItemProps[] = [
-  {
-    value: 'private',
-    Icon: <Lock2 className="[&>path]:stroke-neutral-500" />,
-    label: 'Private Publish',
-    description: 'Only your team members will be able to access this space.',
-  },
-  {
-    value: 'public',
-    Icon: (
-      <Internet className="[&>path]:stroke-neutral-500 [&>circle]:stroke-neutral-500" />
-    ),
-    label: 'Public Publish',
-    description: 'Anyone can access and participate in this space.',
-  },
-];
-
-export enum PublishType {
-  Private = 'private',
-  Public = 'public',
-}
+    .withTitle(title);
 
 export default function PublishSpaceModal({
   onPublish,
 }: {
   onPublish: (type: PublishType) => Promise<void>;
 }) {
+  const t = useTranslations('SprintSpace');
+
+  const items: CardItemProps[] = useMemo(
+    () => [
+      {
+        value: PublishType.Private,
+        Icon: <Lock2 className="[&>path]:stroke-neutral-500" />,
+        label: `${t('private')} ${t('publish')}`,
+        description: t('private_desc'),
+      },
+      {
+        value: PublishType.Public,
+        Icon: (
+          <Internet className="[&>path]:stroke-neutral-500 [&>circle]:stroke-neutral-500" />
+        ),
+        label: `${t('public')} ${t('publish')}`,
+        description: t('public_desc'),
+      },
+    ],
+    [t],
+  );
+
   const [selectedType, setSelectedType] = useState<PublishType | null>(null);
+
   return (
     <div className="max-w-110 flex flex-col gap-6">
       <SelectableCardList
@@ -72,7 +77,7 @@ export default function PublishSpaceModal({
         disabled={!selectedType}
         onClick={() => selectedType && onPublish(selectedType)}
       >
-        Publish
+        {t('publish')}
       </Button>
     </div>
   );

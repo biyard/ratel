@@ -26,6 +26,7 @@ import { useSpaceContext } from './provider';
 import { useDropdown } from '../dropdown/dropdown-service';
 import DropdownMenu from '../dropdown/dropdown-menu';
 import DeleteSpacePopup from '../modal/confirm-delete';
+import { useTranslations } from 'next-intl';
 
 export default function SpaceHeader({
   space,
@@ -34,6 +35,7 @@ export default function SpaceHeader({
   space: Space;
   feed: Feed;
 }) {
+  const t = useTranslations('Space');
   const context = useSpaceContext();
   if (!context)
     throw new Error('SpaceHeader must be used within SpaceHeaderProvider');
@@ -76,7 +78,7 @@ export default function SpaceHeader({
     popup
       .open(
         <DeleteSpacePopup
-          spaceName={space.title || 'Untitled Space'}
+          spaceName={space.title || t('untitled_space')}
           onClose={() => popup.close()}
           onDelete={async () => {
             await handleDelete(); // Your existing delete handler
@@ -120,7 +122,9 @@ export default function SpaceHeader({
                 onClick={handleSave}
               >
                 <Save className="stroke-neutral-500 [&>path]:stroke-2 w-5 h-5" />
-                <div className="font-bold text-zinc-900 text-sm">Save</div>
+                <div className="font-bold text-zinc-900 text-sm">
+                  {t('save')}
+                </div>
               </button>
             ) : (
               <button
@@ -128,7 +132,9 @@ export default function SpaceHeader({
                 onClick={handleEdit}
               >
                 <Edit1 className="stroke-neutral-500 [&>path]:stroke-2 w-5 h-5" />
-                <div className="font-bold text-zinc-900 text-sm">Edit</div>
+                <div className="font-bold text-zinc-900 text-sm">
+                  {t('edit')}
+                </div>
               </button>
             )}
 
@@ -139,7 +145,7 @@ export default function SpaceHeader({
               >
                 <Unlock2 className="stroke-neutral-500 [&>path]:stroke-2 w-5 h-5" />
                 <div className="font-bold text-zinc-900 text-sm">
-                  Make Public
+                  {t('make_public')}
                 </div>
               </button>
             )}
@@ -266,12 +272,16 @@ export default function SpaceHeader({
           {status == SpaceStatus.InProgress ? (
             <div className="flex flex-row w-fit gap-1 items-center">
               <Unlock2 className="w-5 h-5" />
-              <div className="font-normal text-white text-[15px]">Public</div>
+              <div className="font-normal text-white text-[15px]">
+                {t('public')}
+              </div>
             </div>
           ) : (
             <div className="flex flex-row w-fit gap-1 items-center">
               <Lock className="w-5 h-5" />
-              <div className="font-normal text-white text-[15px]">Private</div>
+              <div className="font-normal text-white text-[15px]">
+                {t('private')}
+              </div>
             </div>
           )}
         </div>
@@ -284,7 +294,7 @@ export default function SpaceHeader({
               className="border-b border-transparent !border-b-white focus:!border-transparent focus:rounded-md font-bold text-white text-[24px]/[30px] placeholder:text-neutral-300 placeholder:font-medium rounded-none"
               value={title}
               onChange={(e) => handleUpdateTitle(e.target.value)}
-              placeholder="Input title."
+              placeholder={t('input_title')}
             />
           </>
         ) : (
@@ -330,10 +340,13 @@ export default function SpaceHeader({
 }
 
 function Onboard() {
+  const t = useTranslations('Space');
   return (
     <div className="flex flex-row items-center w-fit px-2 gap-1 border border-[#05df72] opacity-50 rounded-sm">
       <Play className="w-2.5 h-2.5 stroke-[#00d492] fill-[#00d492]" />
-      <div className="font-semibold text-sm/[25px] text-[#05df72]">ONBOARD</div>
+      <div className="font-semibold text-sm/[25px] text-[#05df72]">
+        {t('onboard')}
+      </div>
     </div>
   );
 }

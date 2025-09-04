@@ -1,6 +1,7 @@
 import BlackBox from '@/app/(social)/_components/black-box';
 import { RewardCoin } from '@/assets/icons/money-payment';
 import { Settings2 } from '@/assets/icons/settings';
+import { useTranslations } from 'next-intl';
 import { ReactNode } from 'react';
 
 interface RewardProps {
@@ -29,13 +30,14 @@ export default function RewardMenu({
   rewardItems: RewardProps[];
   modifierItems: ModifierProps[];
 }) {
+  const s = useTranslations('SprintSpace');
   return (
     <BlackBox>
       <div className="flex flex-col w-full text-neutral-500 gap-5">
         <div className="flex flex-row font-bold text-sm justify-between">
           <div className="flex flex-row gap-2">
             <RewardCoin className="size-5 [&>*]:stroke-neutral-500" />
-            Rewards
+            {s('rewards')}
           </div>
           {isEditing && (
             <button
