@@ -74,6 +74,15 @@ abstract class Assets {
   static const String delete2 = 'assets/icons/delete_2.svg';
   static const String warning = 'assets/icons/warning.svg';
 
+  static const String bold = 'assets/icons/bold.svg';
+  static const String bottomLine = 'assets/icons/bottom_line.svg';
+  static const String bullet = 'assets/icons/bullet.svg';
+  static const String h1 = 'assets/icons/h1.svg';
+  static const String h2 = 'assets/icons/h2.svg';
+  static const String h3 = 'assets/icons/h3.svg';
+  static const String italic = 'assets/icons/italic.svg';
+  static const String keyboard = 'assets/icons/keyboard.svg';
+
   static final addIcon = SvgPicture.asset(add, width: 15, height: 15);
   static final backIcon = SvgPicture.asset(back, width: 16, height: 16);
   static final badgeImage = SvgPicture.asset(badge, width: 20, height: 20);

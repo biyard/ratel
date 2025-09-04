@@ -1,3 +1,4 @@
+import 'package:ratel/exports.dart';
 import 'package:flutter/material.dart';
 import 'package:super_editor/super_editor.dart';
 import 'package:super_editor_markdown/super_editor_markdown.dart';
@@ -8,29 +9,34 @@ class DraftRichBody extends StatefulWidget {
   const DraftRichBody({
     super.key,
     required this.initialHtml,
-    required this.showWarn,
     required this.onHtmlChanged,
+    this.showWarn = false,
   });
   final String? initialHtml;
   final bool showWarn;
   final ValueChanged<String> onHtmlChanged;
+
   @override
   State<DraftRichBody> createState() => _DraftRichBodyState();
 }
 
 class _DraftRichBodyState extends State<DraftRichBody> {
   static const neutral500 = Color(0xFF9E9E9E);
+
   late MutableDocument _doc;
   late final MutableDocumentComposer _composer;
   late Editor _editor;
   late final Stylesheet _whiteTextSheet;
+
   final _focusNode = FocusNode();
   final _scrollController = ScrollController();
-  bool _isEditorFocused = false;
+
   bool _pushingHtml = false;
   bool _booting = true;
+
   DocumentChangeListener? _docListener;
   VoidCallback? _selListener;
+
   String _exportHtml() {
     try {
       final mdText = serializeDocumentToMarkdown(_doc);
@@ -112,16 +118,47 @@ class _DraftRichBodyState extends State<DraftRichBody> {
     TextStyle existing,
   ) {
     TextStyle s = existing.merge(const TextStyle(color: Colors.white));
-    if (attributions.contains(boldAttribution)) {
+    if (attributions.contains(boldAttribution))
       s = s.merge(const TextStyle(fontWeight: FontWeight.w900));
-    }
-    if (attributions.contains(italicsAttribution)) {
+    if (attributions.contains(italicsAttribution))
       s = s.merge(const TextStyle(fontStyle: FontStyle.italic));
-    }
-    if (attributions.contains(underlineAttribution)) {
+    if (attributions.contains(underlineAttribution))
       s = s.merge(const TextStyle(decoration: TextDecoration.underline));
-    }
     return s;
+  }
+
+  ParagraphNode? _currentParagraphNode() {
+    final sel = _composer.selection;
+    if (sel == null) return null;
+    final node = _doc.getNodeById(sel.extent.nodeId);
+    if (node is ParagraphNode) return node;
+    if (node is TextNode) return ParagraphNode(id: node.id, text: node.text);
+    return null;
+  }
+
+  bool _isH1Active() {
+    final node = _currentParagraphNode();
+    if (node == null) return false;
+    return _blockTypeOf(node) == header1Attribution;
+  }
+
+  bool _isH2Active() {
+    final node = _currentParagraphNode();
+    if (node == null) return false;
+    return _blockTypeOf(node) == header2Attribution;
+  }
+
+  bool _isH3Active() {
+    final node = _currentParagraphNode();
+    if (node == null) return false;
+    return _blockTypeOf(node) == header3Attribution;
+  }
+
+  bool _isBulletActive() {
+    final sel = _composer.selection;
+    if (sel == null) return false;
+    final node = _doc.getNodeById(sel.extent.nodeId);
+    return node is ListItemNode && node.type == ListItemType.unordered;
   }
 
   void _toggleInline(Attribution a) {
@@ -293,95 +330,6 @@ class _DraftRichBodyState extends State<DraftRichBody> {
     setState(() {});
   }
 
-  void _attachDocListener() {
-    if (_docListener != null) {
-      _doc.removeListener(_docListener!);
-    }
-    _docListener = (changes) {
-      if (_booting) return;
-      widget.onHtmlChanged(_exportHtml());
-      setState(() {});
-    };
-    _doc.addListener(_docListener!);
-  }
-
-  void _attachSelectionListener() {
-    if (_selListener != null) {
-      _composer.selectionNotifier.removeListener(_selListener!);
-    }
-    _selListener = () {
-      if (_booting) return;
-      setState(() {});
-    };
-    _composer.selectionNotifier.addListener(_selListener!);
-  }
-
-  bool _rangeHas(TextNode node, int start, int end, Attribution a) {
-    if (start >= end) {
-      final off = start.clamp(0, node.text.text.length);
-      return node.text.hasAttributionAt(off, attribution: a);
-    }
-    for (int i = start; i < end; i++) {
-      if (!node.text.hasAttributionAt(i, attribution: a)) return false;
-    }
-    return true;
-  }
-
-  bool _isInlineActive(Attribution a) {
-    final sel = _composer.selection;
-    if (sel == null) return false;
-    final node = _doc.getNodeById(sel.extent.nodeId);
-    if (node is! TextNode) return false;
-    if (sel.isCollapsed) {
-      final off = (sel.extent.nodePosition as TextNodePosition).offset;
-      return node.text.hasAttributionAt(off, attribution: a);
-    } else {
-      if (sel.base.nodeId != sel.extent.nodeId) return false;
-      final base = (sel.base.nodePosition as TextNodePosition).offset;
-      final extent = (sel.extent.nodePosition as TextNodePosition).offset;
-      final start = base <= extent ? base : extent;
-      final end = base <= extent ? extent : base;
-      return _rangeHas(node, start, end, a);
-    }
-  }
-
-  ParagraphNode? _currentParagraphNode() {
-    final sel = _composer.selection;
-    if (sel == null) return null;
-    final node = _doc.getNodeById(sel.extent.nodeId);
-    if (node is ParagraphNode) return node;
-    if (node is TextNode) {
-      final para = ParagraphNode(id: node.id, text: node.text);
-      return para;
-    }
-    return null;
-  }
-
-  bool _isH1Active() {
-    final node = _currentParagraphNode();
-    if (node == null) return false;
-    return _blockTypeOf(node) == header1Attribution;
-  }
-
-  bool _isH2Active() {
-    final node = _currentParagraphNode();
-    if (node == null) return false;
-    return _blockTypeOf(node) == header2Attribution;
-  }
-
-  bool _isH3Active() {
-    final node = _currentParagraphNode();
-    if (node == null) return false;
-    return _blockTypeOf(node) == header3Attribution;
-  }
-
-  bool _isBulletActive() {
-    final sel = _composer.selection;
-    if (sel == null) return false;
-    final node = _doc.getNodeById(sel.extent.nodeId);
-    return node is ListItemNode && node.type == ListItemType.unordered;
-  }
-
   @override
   void didUpdateWidget(covariant DraftRichBody oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -453,22 +401,35 @@ class _DraftRichBodyState extends State<DraftRichBody> {
     );
     _attachDocListener();
     _attachSelectionListener();
-    _focusNode.addListener(() {
-      if (mounted) setState(() => _isEditorFocused = _focusNode.hasFocus);
-    });
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _booting = false;
-    });
+    _focusNode.addListener(() => setState(() {}));
+    WidgetsBinding.instance.addPostFrameCallback((_) => _booting = false);
+  }
+
+  void _attachDocListener() {
+    if (_docListener != null) _doc.removeListener(_docListener!);
+    _docListener = (changes) {
+      if (_booting) return;
+      widget.onHtmlChanged(_exportHtml());
+      setState(() {});
+    };
+    _doc.addListener(_docListener!);
+  }
+
+  void _attachSelectionListener() {
+    if (_selListener != null)
+      _composer.selectionNotifier.removeListener(_selListener!);
+    _selListener = () {
+      if (_booting) return;
+      setState(() {});
+    };
+    _composer.selectionNotifier.addListener(_selListener!);
   }
 
   @override
   void dispose() {
-    if (_docListener != null) {
-      _doc.removeListener(_docListener!);
-    }
-    if (_selListener != null) {
+    if (_docListener != null) _doc.removeListener(_docListener!);
+    if (_selListener != null)
       _composer.selectionNotifier.removeListener(_selListener!);
-    }
     _focusNode.dispose();
     _scrollController.dispose();
     _composer.dispose();
@@ -477,74 +438,98 @@ class _DraftRichBodyState extends State<DraftRichBody> {
 
   @override
   Widget build(BuildContext context) {
-    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
-    final isBold = _isInlineActive(boldAttribution);
-    final isItalic = _isInlineActive(italicsAttribution);
-    final isUnderline = _isInlineActive(underlineAttribution);
-    final isH1 = _isH1Active();
-    final isH2 = _isH2Active();
-    final isH3 = _isH3Active();
-    final isBullet = _isBulletActive();
-    return GestureDetector(
-      behavior: HitTestBehavior.translucent,
-      onTap: () {
-        if (!_focusNode.hasFocus) _focusNode.requestFocus();
-      },
-      child: Stack(
-        children: [
-          Positioned.fill(
-            bottom: widget.showWarn ? 44 : 0,
-            child: ColoredBox(
-              color: Colors.transparent,
-              child: DefaultTextStyle.merge(
-                style: const TextStyle(color: Colors.white),
-                child: SuperEditor(
-                  key: ValueKey(_doc),
-                  editor: _editor,
-                  composer: _composer,
-                  focusNode: _focusNode,
-                  scrollController: _scrollController,
-                  stylesheet: _whiteTextSheet,
-                ),
+    final kb = MediaQuery.of(context).viewInsets.bottom;
+    const barH = 50.0;
+
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onTap: () {
+              if (!_focusNode.hasFocus) _focusNode.requestFocus();
+            },
+            child: DefaultTextStyle.merge(
+              style: const TextStyle(color: Colors.white),
+              child: SuperEditor(
+                key: ValueKey(_doc),
+                editor: _editor,
+                composer: _composer,
+                focusNode: _focusNode,
+                scrollController: _scrollController,
+                stylesheet: _whiteTextSheet,
               ),
             ),
           ),
-          AnimatedPositioned(
-            duration: const Duration(milliseconds: 180),
-            curve: Curves.easeOut,
-            left: 0,
-            right: 0,
-            bottom: _isEditorFocused ? bottomInset : -80,
-            child: _ScrollableToolbar(
-              neutralBg: neutral500,
-              onBold: () => _toggleInline(boldAttribution),
-              onItalic: () => _toggleInline(italicsAttribution),
-              onUnderline: () => _toggleInline(underlineAttribution),
-              onHeading1: _toggleH1,
-              onHeading2: _toggleH2,
-              onHeading3: _toggleH3,
-              onParagraph: _setParagraph,
-              onBullet: _toggleUnorderedList,
-              onKeyboardDown: () => FocusScope.of(context).unfocus(),
-              activeBold: isBold,
-              activeItalic: isItalic,
-              activeUnderline: isUnderline,
-              activeH1: isH1,
-              activeH2: isH2,
-              activeH3: isH3,
-              activeBullet: isBullet,
-            ),
+        ),
+        AnimatedPositioned(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOutCubic,
+          left: 0,
+          right: 0,
+          bottom: _focusNode.hasFocus ? kb : -barH,
+          child: _ToolbarBar(
+            bottomPadding: 0,
+            neutralBg: neutral500,
+            onBold: () => _toggleInline(boldAttribution),
+            onItalic: () => _toggleInline(italicsAttribution),
+            onUnderline: () => _toggleInline(underlineAttribution),
+            onHeading1: _toggleH1,
+            onHeading2: _toggleH2,
+            onHeading3: _toggleH3,
+            onParagraph: _setParagraph,
+            onBullet: _toggleUnorderedList,
+            onKeyboardDown: () {
+              FocusScope.of(context).unfocus();
+            },
+            activeBold: _isInlineActive(boldAttribution),
+            activeItalic: _isInlineActive(italicsAttribution),
+            activeUnderline: _isInlineActive(underlineAttribution),
+            activeH1: _isH1Active(),
+            activeH2: _isH2Active(),
+            activeH3: _isH3Active(),
+            activeBullet: _isBulletActive(),
           ),
-          if (widget.showWarn)
-            const Positioned(left: 0, bottom: 64, child: SizedBox.shrink()),
-        ],
-      ),
+        ),
+        if (widget.showWarn)
+          const Positioned(left: 0, bottom: 64, child: SizedBox.shrink()),
+      ],
     );
+  }
+
+  bool _isInlineActive(Attribution a) {
+    final sel = _composer.selection;
+    if (sel == null) return false;
+    final node = _doc.getNodeById(sel.extent.nodeId);
+    if (node is! TextNode) return false;
+    if (sel.isCollapsed) {
+      final off = (sel.extent.nodePosition as TextNodePosition).offset;
+      return node.text.hasAttributionAt(off, attribution: a);
+    } else {
+      if (sel.base.nodeId != sel.extent.nodeId) return false;
+      final base = (sel.base.nodePosition as TextNodePosition).offset;
+      final extent = (sel.extent.nodePosition as TextNodePosition).offset;
+      final start = base <= extent ? base : extent;
+      final end = base <= extent ? extent : base;
+      return _rangeHas(node, start, end, a);
+    }
+  }
+
+  bool _rangeHas(TextNode node, int start, int end, Attribution a) {
+    if (start >= end) {
+      final off = start.clamp(0, node.text.text.length);
+      return node.text.hasAttributionAt(off, attribution: a);
+    }
+    for (int i = start; i < end; i++) {
+      if (!node.text.hasAttributionAt(i, attribution: a)) return false;
+    }
+    return true;
   }
 }
 
-class _ScrollableToolbar extends StatelessWidget {
-  const _ScrollableToolbar({
+class _ToolbarBar extends StatelessWidget {
+  const _ToolbarBar({
+    required this.bottomPadding,
     required this.neutralBg,
     required this.onBold,
     required this.onItalic,
@@ -563,7 +548,10 @@ class _ScrollableToolbar extends StatelessWidget {
     required this.activeH3,
     required this.activeBullet,
   });
+
+  final double bottomPadding;
   final Color neutralBg;
+
   final VoidCallback onBold;
   final VoidCallback onItalic;
   final VoidCallback onUnderline;
@@ -573,6 +561,7 @@ class _ScrollableToolbar extends StatelessWidget {
   final VoidCallback onParagraph;
   final VoidCallback onBullet;
   final VoidCallback onKeyboardDown;
+
   final bool activeBold;
   final bool activeItalic;
   final bool activeUnderline;
@@ -580,87 +569,132 @@ class _ScrollableToolbar extends StatelessWidget {
   final bool activeH2;
   final bool activeH3;
   final bool activeBullet;
+
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      top: false,
-      child: Container(
-        height: 56,
-        decoration: const BoxDecoration(
-          color: Color(0xFF1F1F1F),
-          border: Border(top: BorderSide(color: Color(0xFF3C3C3C))),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 8),
+    return Material(
+      color: Color(0xff29292f),
+      clipBehavior: Clip.hardEdge,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
+      ),
+      child: SizedBox(
+        width: double.infinity,
+        height: 70 + bottomPadding,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(0, 0, 0, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                height: 50,
+                width: double.infinity,
                 child: Row(
                   children: [
-                    _TbBtn(
-                      label: 'B',
-                      onTap: onBold,
-                      isBold: true,
-                      active: activeBold,
-                      activeBg: neutralBg,
+                    Expanded(
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _TbBtn(
+                              label: SvgPicture.asset(
+                                Assets.bold,
+                                width: 24,
+                                height: 24,
+                                color: AppColors.neutral300,
+                              ),
+                              onTap: onBold,
+                              isBold: true,
+                              active: activeBold,
+                              activeBg: neutralBg,
+                            ),
+                            _TbBtn(
+                              label: SvgPicture.asset(
+                                Assets.italic,
+                                width: 24,
+                                height: 24,
+                                color: AppColors.neutral300,
+                              ),
+                              onTap: onItalic,
+                              isItalic: true,
+                              active: activeItalic,
+                              activeBg: neutralBg,
+                            ),
+                            _TbBtn(
+                              label: SvgPicture.asset(
+                                Assets.bottomLine,
+                                width: 24,
+                                height: 24,
+                                color: AppColors.neutral300,
+                              ),
+                              onTap: onUnderline,
+                              isUnderline: true,
+                              active: activeUnderline,
+                              activeBg: neutralBg,
+                            ),
+                            const _Divider(),
+                            _TbBtn(
+                              label: SvgPicture.asset(
+                                Assets.h1,
+                                width: 14,
+                                height: 14,
+                                color: AppColors.neutral300,
+                              ),
+                              onTap: onHeading1,
+                              active: activeH1,
+                              activeBg: neutralBg,
+                            ),
+                            _TbBtn(
+                              label: SvgPicture.asset(
+                                Assets.h2,
+                                width: 14,
+                                height: 14,
+                                color: AppColors.neutral300,
+                              ),
+                              onTap: onHeading2,
+                              active: activeH2,
+                              activeBg: neutralBg,
+                            ),
+                            _TbBtn(
+                              label: SvgPicture.asset(
+                                Assets.h3,
+                                width: 14,
+                                height: 14,
+                                color: AppColors.neutral300,
+                              ),
+                              onTap: onHeading3,
+                              active: activeH3,
+                              activeBg: neutralBg,
+                            ),
+                            const _Divider(),
+                            _TbBtn(
+                              label: SvgPicture.asset(
+                                Assets.bullet,
+                                width: 24,
+                                height: 24,
+                                color: AppColors.neutral300,
+                              ),
+                              onTap: onBullet,
+                              active: activeBullet,
+                              activeBg: neutralBg,
+                            ),
+
+                            // const _TbBtn(label: '“ ”'),
+                            // const _TbBtn(label: '—'),
+                            // const _TbBtn(label: 'link'),
+                            // const _TbBtn(label: 'img'),
+                          ],
+                        ),
+                      ),
                     ),
-                    _TbBtn(
-                      label: 'I',
-                      onTap: onItalic,
-                      isItalic: true,
-                      active: activeItalic,
-                      activeBg: neutralBg,
-                    ),
-                    _TbBtn(
-                      label: 'U',
-                      onTap: onUnderline,
-                      isUnderline: true,
-                      active: activeUnderline,
-                      activeBg: neutralBg,
-                    ),
-                    const _Divider(),
-                    _TbBtn(
-                      label: 'H1',
-                      onTap: onHeading1,
-                      active: activeH1,
-                      activeBg: neutralBg,
-                    ),
-                    _TbBtn(
-                      label: 'H2',
-                      onTap: onHeading2,
-                      active: activeH2,
-                      activeBg: neutralBg,
-                    ),
-                    _TbBtn(
-                      label: 'H3',
-                      onTap: onHeading3,
-                      active: activeH3,
-                      activeBg: neutralBg,
-                    ),
-                    const _Divider(),
-                    _TbBtn(
-                      label: '•',
-                      onTap: onBullet,
-                      active: activeBullet,
-                      activeBg: neutralBg,
-                    ),
-                    const _Divider(),
-                    const _TbBtn(label: '“ ”'),
-                    const _TbBtn(label: '—'),
-                    const _TbBtn(label: 'link'),
-                    const _TbBtn(label: 'img'),
-                    const _TbBtn(label: 'code'),
                   ],
                 ),
               ),
-            ),
-            IconButton(
-              onPressed: onKeyboardDown,
-              icon: const Icon(Icons.keyboard_hide, color: Colors.white),
-              splashRadius: 20,
-            ),
-          ],
+              SizedBox(height: bottomPadding),
+            ],
+          ),
         ),
       ),
     );
@@ -671,7 +705,10 @@ class _Divider extends StatelessWidget {
   const _Divider();
   @override
   Widget build(BuildContext context) {
-    return const VerticalDivider(width: 10, color: Color(0xFF3C3C3C));
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(0, 11, 0, 9),
+      child: const VerticalDivider(width: 10, color: Color(0xFF636366)),
+    );
   }
 }
 
@@ -685,47 +722,31 @@ class _TbBtn extends StatelessWidget {
     this.active = false,
     this.activeBg,
   });
-  final String label;
+  final SvgPicture label;
   final VoidCallback? onTap;
   final bool isBold;
   final bool isItalic;
   final bool isUnderline;
   final bool active;
   final Color? activeBg;
+
   @override
   Widget build(BuildContext context) {
     final bg = active
         ? (activeBg ?? const Color(0xFF9E9E9E))
         : Colors.transparent;
-    final fg = Colors.white;
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(100),
+      borderRadius: BorderRadius.circular(10),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        margin: const EdgeInsets.symmetric(horizontal: 4),
+        margin: EdgeInsets.zero,
         decoration: BoxDecoration(
           color: bg,
-          borderRadius: BorderRadius.circular(100),
+          borderRadius: BorderRadius.circular(10),
         ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: fg,
-            fontWeight: isBold ? FontWeight.w700 : FontWeight.w600,
-            fontStyle: isItalic ? FontStyle.italic : null,
-            decoration: isUnderline ? TextDecoration.underline : null,
-            fontSize: 15,
-          ),
-        ),
+        child: label,
       ),
     );
-  }
-}
-
-extension _Let<T> on T? {
-  void let(void Function(T it) f) {
-    final self = this;
-    if (self != null) f(self);
   }
 }
