@@ -41,7 +41,7 @@ export default function ProfileSection() {
         )}
       </div>
 
-      <div className="font-medium">{user.nickname}</div>
+      <div className="font-medium text-foreground">{user.nickname}</div>
 
       <div
         id="user-profile-description"

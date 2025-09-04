@@ -15,7 +15,7 @@ export default function MyProfilePage() {
         <div
           role="tablist"
           aria-label="Profile tabs"
-          className="flex text-sm font-bold text-neutral-400"
+          className="flex text-sm font-bold text-foreground-muted"
         >
           {tabs.map((label, idx) => (
             <button
@@ -62,7 +62,7 @@ export default function MyProfilePage() {
           role="tabpanel"
           aria-labelledby="tab-1"
           hidden={activeIndex !== 1}
-          className="w-full max-w-[800px] mx-auto text-neutral-300"
+          className="w-full max-w-[800px] mx-auto text-foreground-muted"
         >
           {t('my_inventory_coming_soon')}
         </section>

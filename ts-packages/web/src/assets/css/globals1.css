@@ -4,7 +4,7 @@
 @custom-variant light (&:where([data-theme=light], [data-theme=light] *));
 
 /* ===============================
-   Palette (Raw base colors) - NEVER USE THESE DIRECTLY
+   Palette (Raw base colors)
    =============================== */
 @theme static {
   /* Neutrals */
@@ -17,9 +17,11 @@
   --gray-800: #262626;
   --gray-900: #171717;
   --gray-950: #0a0a0a;
-
-  --bg-dark: #1D1D1D;
+  
+  --modal-text:#000203;
+  --bg-dark: #1e1e1e;
   --bg-component-dark: #191919;
+
 
   /* Brand & Accent */
   --brand-primary: #fcb300;
@@ -31,6 +33,11 @@
   /* Special */
   --pink-transparent-10: #db27801a; /* 10% opacity pink */
   --blue-selection: #003366;
+
+  /* Table light colors */
+  --table-light-border: #e0e0e0;
+  --table-light-hover: #f8f8f8;
+  --table-light-selection: #f0f7ff;
 
   /* UI Grays */
   --ui-gray-30: #aeaeae;
@@ -45,58 +52,27 @@
   --role-copyright-static: #9095a1;
 }
 
-
 /* ===============================
    Roles (Dark = default)
    =============================== */
 @theme static {
-  /* --- NEW SEMANTIC TOKENS (PHASE 1) --- */
-  /* Use these for all new development */
-  --background: var(--bg-dark); /* --color-background */
-
-   /* NEW: Semantic Text Tokens */
-   --foreground: var(--gray-50);        /* High emphasis (Titles, important text) */
-   --foreground-muted: var(--gray-400); /* Medium emphasis (Body text, descriptions) */
-   --foreground-more-muted: var(--gray-600); /* Low emphasis (Placeholders, disabled text) */
- 
-
-  --card: var(--bg-component-dark); /* --color-component-bg */
-  --card-foreground: var(--gray-400);
-  --primary: var(--brand-primary);
-  --primary-foreground: #000000;  
-
-  --accent: var(--accent-green);
-  --accent-foreground: #000000;
-  --accent-hover: #282828; 
-  --destructive: var(--accent-pink);
-  --destructive-foreground: #ffffff;
-  --border: var(--ui-gray-80);
-  --ring: var(--brand-primary);
-  --input: var(--ui-gray-80);
-
-  /* --- LEGACY TOKENS (DO NOT USE FOR NEW CODE) --- */
-  /* These are now aliases for the new tokens or old values. */
-  --color-neutral-400: var(--foreground-muted);
-  --color-neutral-600: var(--foreground-more-muted);
-  
-  --color-background: var(--background);
-  --color-component-bg: var(--card);
-  --color-primary: var(--primary);
+  --color-background: var(--bg-dark);
+  --color-component-bg: var(--bg-component-dark);
+  --color-primary: var(--brand-primary);
   --color-secondary: var(--brand-secondary);
-  --color-supportive: var(--accent);
+  --color-modal-text: var(--modal-text);
+  --color-supportive: var(--accent-green);
   --color-against: var(--accent-pink-light);
+
   --color-footer: var(--bg-component-dark);
   --color-tag: var(--role-tag-static);
   --color-mission-title: var(--role-mission-static);
-  --color-btn-hover: var(--accent-hover);
-  --color-tab-hover: var(--accent-hover);
+  --color-btn-hover: #282828;
+  --color-tab-hover: #282828;
   --color-web-bg: var(--gray-950);
   --color-copyright: var(--role-copyright-static);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-  --color-error: var(--destructive);
 
-  /* Table roles (dark default) - These are already semantic! */
+  /* Table roles (dark default) */
   --table-bg: var(--bg-dark);
   --table-border: #444444;
   --table-header-bg: #2d2d2d;
@@ -106,39 +82,32 @@
   --table-row-hover-bg: #222222;
   --table-cell-fg: #e0e0e0;
   --table-selection-bg: var(--blue-selection);
+
+  /* Shadcn roles */
+  --color-input: var(--ui-gray-80);
+  --color-ring: var(--brand-primary);
+  --color-error: var(--accent-pink);
 }
 
 /* ===============================
    Light Theme Overrides
    =============================== */
 [data-theme="light"] {
-  /* --- NEW SEMANTIC TOKENS (PHASE 1) --- */
-  --background: var(--gray-50);
+  --color-background: var(--gray-50);
+  --color-component-bg: var(--gray-100);
+  --color-primary: var(--brand-primary);
+  --color-secondary: var(--brand-secondary);
 
-  --card: var(--gray-100);
-  --card-foreground: var(--gray-800);
-  --border: var(--table-light-border);
-  --input: #e0e0e0;
-  --accent-hover: #e5e5e5;
-
-
-  /* NEW: Semantic Text Tokens for Light Mode */
-  --foreground: var(--gray-800);       /* High emphasis becomes dark */
-  --foreground-muted: var(--gray-600); /* Muted becomes a darker gray */
-  --foreground-more-muted: var(--gray-400); /* Low emphasis becomes a lighter gray */
-
-  /* --- LEGACY TOKENS (DO NOT USE FOR NEW CODE) --- */
-  --color-background: var(--background);
-  --color-component-bg: var(--card);
-  --color-custom-white: var(--gray-800); /* Text becomes dark in light mode */
-  --color-neutral-900: var(--gray-50); /* Background becomes white in light mode */
-
-  --color-neutral-400: var(--foreground-more-muted); /* Note the flip! */
-  --color-neutral-600: var(--foreground-muted);
+  --color-supportive: var(--accent-green);
+  --color-against: var(--accent-pink-light);
 
   --color-footer: var(--gray-900);
-  --color-btn-hover: var(--accent-hover); 
-  --color-tab-hover: var(--accent-hover);
+  --color-tag: var(--role-tag-static);
+  --color-mission-title: var(--role-mission-static);
+  --color-btn-hover: #282828;
+  --color-tab-hover: #282828;
+  --color-web-bg: var(--gray-950);
+  --color-copyright: var(--role-copyright-static);
 
   /* Table roles (light overrides) */
   --table-bg: var(--gray-50);
@@ -168,11 +137,11 @@
 }
 
 /* ===============================
-   Legacy Aliases (for backwards compat) - AVOID USING
+   Legacy Aliases (for backwards compat)
    =============================== */
 @theme static {
-  --color-custom-white: var(--foreground); /* Now maps to semantic foreground */
-  --color-neutral-900: var(--background); /* Now maps to semantic background */
+  --color-custom-white: var(--gray-50);
+  --color-neutral-900: var(--gray-900);
   --color-neutral-80: var(--gray-80);
   --color-neutral-400: var(--gray-400);
   --color-neutral-500: var(--gray-500);
@@ -181,13 +150,18 @@
   --color-neutral-800: var(--gray-800);
 }
 
+[data-theme="light"] {
+  --color-custom-white: var(--gray-800);
+  --color-neutral-900: var(--gray-50);
+
+}
 
 /* ===============================
    Base HTML + Utilities
    =============================== */
 html {
-  background-color: var(--background); /* Uses new semantic token */
-  color: var(--foreground-muted); /* Uses new semantic token */
+  background-color: var(--color-background);
+  color: var(--gray-400);
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
@@ -221,7 +195,7 @@ button, a {
 }
 
 /* ===============================
-   Table (ProseMirror / Tiptap) - PERFECT EXAMPLE!
+   Table (ProseMirror / Tiptap)
    =============================== */
 .tiptap-table {
   border-collapse: collapse;
@@ -264,11 +238,7 @@ button, a {
    Misc Components
    =============================== */
 .sidemenu-link {
-  @apply flex flex-row items-center gap-1 px-1 py-2 rounded-md font-bold text-sm;
-
-  &:hover {
-    background-color: var(--accent-hover); /* Use the new semantic token */
-  }
+  @apply flex flex-row items-center gap-1 px-1 py-2 rounded-md font-bold text-sm hover:bg-gray-600;
 }
 
 .med-16 {
@@ -276,8 +246,7 @@ button, a {
 }
 
 .feed-content h2 {
-  @apply text-base font-bold  mb-2 mt-4;
-  color: var(--foreground);
+  @apply text-base font-bold text-white mb-2 mt-4;
 }
 
 .rule-with-text {
@@ -324,20 +293,4 @@ button, a {
 }
 .custom-toast-body {
   padding: 0 !important;
-}
-
-
-
-@layer utilities {
-  .text-foreground {
-    @apply text-[var(--foreground)];
-  }
-
-  .text-foreground-muted {
-    @apply text-[var(--foreground-muted)];
-  }
-
-  .text-foreground-more-muted {
-    @apply text-[var(--foreground-more-muted)];
-  }
 }

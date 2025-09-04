@@ -192,7 +192,7 @@ export function FeedBody({
           {onboard && <OnboardingTag />}
         </div>
       </Row>
-      <h2 className="w-full line-clamp-2 font-bold text-xl/[25px] tracking-[0.5px] align-middle text-white px-5">
+      <h2 className="w-full line-clamp-2 font-bold text-xl/[25px] tracking-[0.5px] align-middle text-foreground px-5">
         {title}
       </h2>
       <Row className="justify-between items-center px-5">
