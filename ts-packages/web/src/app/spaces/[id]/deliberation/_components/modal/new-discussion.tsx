@@ -9,6 +9,7 @@ import { DiscussionInfo } from '../../types';
 import TimeDropdown from '@/components/time-dropdown';
 import CalendarDropdown from '@/components/calendar-dropdown';
 import { showErrorToast } from '@/lib/toast';
+import { useTranslations } from 'next-intl';
 
 export default function NewDiscussion({
   discussion,
@@ -17,6 +18,7 @@ export default function NewDiscussion({
   discussion: DiscussionInfo;
   onadd: (discussion: DiscussionInfo) => void;
 }) {
+  const t = useTranslations('DeliberationSpace');
   const popup = usePopup();
   const [title, setTitle] = useState(discussion.name);
   const [description, setDescription] = useState(discussion.description);
@@ -32,11 +34,11 @@ export default function NewDiscussion({
     <div className="max-w-[900px] w-full">
       <div className="flex flex-col py-2.5 gap-[5px]">
         <label className="flex flex-row justify-start items-center text-[15px]/[28px] text-neutral-400 font-bold  gap-1">
-          Title <span className="text-error">*</span>
+          {t('title')} <span className="text-error">*</span>
         </label>
         <Input
           className="px-5 py-[10.5px] bg-transparent border border-btn-o font-medium text-[15px]/[22.5px] placeholder:text-neutral-600 text-white"
-          placeholder="Input your discussion name."
+          placeholder={t('title_hint')}
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           maxLength={100}
@@ -48,11 +50,11 @@ export default function NewDiscussion({
 
       <div className="flex flex-col py-2.5 gap-[5px]">
         <label className="text-[15px]/[28px] text-neutral-400 font-bold">
-          Description
+          {t('description')}
         </label>
         <Textarea
           className="px-5 py-[10.5px] bg-transparent border border-btn-o font-normal text-sm placeholder:text-neutral-600 text-white max-h-[100px] overflow-y-auto"
-          placeholder="What is the purpose of your discussion?"
+          placeholder={t('description_hint')}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           maxLength={100}
@@ -64,7 +66,7 @@ export default function NewDiscussion({
 
       <div className="flex flex-col py-2.5 gap-[5px]">
         <label className="flex flex-row justify-start items-center text-[15px]/[28px] text-neutral-400 font-bold  gap-1">
-          Date <span className="text-error">*</span>
+          {t('date')} <span className="text-error">*</span>
         </label>
         <div className="flex flex-row gap-2.5 items-center">
           <CalendarDropdown
@@ -187,11 +189,11 @@ export default function NewDiscussion({
                   }}
                 />,
               )
-              .withTitle('New Discussion')
+              .withTitle(t('new_discussion'))
               .withoutBackdropClose();
           }}
         >
-          {'Continue'}
+          {t('continue')}
         </button>
       </div>
     </div>

@@ -6,6 +6,7 @@ import { Internet } from '@/components/icons';
 import { showErrorToast } from '@/lib/toast';
 import TimeDropdown from '@/components/time-dropdown';
 import CalendarDropdown from '@/components/calendar-dropdown';
+import { useTranslations } from 'next-intl';
 
 export default function SetSchedulePopup({
   startedAt,
@@ -16,12 +17,13 @@ export default function SetSchedulePopup({
   endedAt: number;
   onconfirm: (startDate: number, endDate: number) => void;
 }) {
+  const t = useTranslations('PollSpace');
   // const [autoSchedule, setAutoSchedule] = useState(true);
 
   // const initialDate = Math.floor(Date.now());
 
   const [sessions, setSessions] = useState([
-    { label: 'Poll', start: startedAt * 1000, end: endedAt * 1000 },
+    { label: t('poll'), start: startedAt * 1000, end: endedAt * 1000 },
   ]);
 
   const handleChange = (index: number, key: 'start' | 'end', value: number) => {
@@ -33,7 +35,7 @@ export default function SetSchedulePopup({
   const handleConfirm = () => {
     for (const s of sessions) {
       if (s.start >= s.end) {
-        showErrorToast('The start date must be earlier than the end date.');
+        showErrorToast(t('start_date_warning'));
         return;
       }
     }
@@ -43,7 +45,9 @@ export default function SetSchedulePopup({
 
   return (
     <div className="w-full max-w-[900px] bg-[#1E1E1E] p-8 rounded-2xl">
-      <div className="text-2xl font-bold text-white mb-6">Set Schedule</div>
+      <div className="text-2xl font-bold text-white mb-6">
+        {t('set_schedule')}
+      </div>
 
       {sessions.map((session, index) => (
         <div key={session.label} className="mb-5">
@@ -59,9 +63,7 @@ export default function SetSchedulePopup({
               value={session.start}
               onChange={(v) => {
                 if (v > session.end) {
-                  showErrorToast(
-                    'The start date must be earlier than the end date.',
-                  );
+                  showErrorToast(t('start_date_warning'));
                   return;
                 }
                 handleChange(index, 'start', Math.floor(v));
@@ -71,9 +73,7 @@ export default function SetSchedulePopup({
               value={session.start}
               onChange={(v) => {
                 if (v > session.end) {
-                  showErrorToast(
-                    'The start date must be earlier than the end date.',
-                  );
+                  showErrorToast(t('start_date_warning'));
                   return;
                 }
 
@@ -87,9 +87,7 @@ export default function SetSchedulePopup({
               value={session.end}
               onChange={(v) => {
                 if (v < session.start) {
-                  showErrorToast(
-                    'The end date must be later than the start date.',
-                  );
+                  showErrorToast(t('end_date_warning'));
                   return;
                 }
 
@@ -100,9 +98,7 @@ export default function SetSchedulePopup({
               value={session.end}
               onChange={(v) => {
                 if (v < session.start) {
-                  showErrorToast(
-                    'The end date must be later than the start date.',
-                  );
+                  showErrorToast(t('end_date_warning'));
                   return;
                 }
 
@@ -146,7 +142,7 @@ export default function SetSchedulePopup({
           onClick={handleConfirm}
           className="w-fit px-10 py-[14.5px] rounded-[10px] bg-primary hover:bg-hover text-black text-bold text-base hover:text-black cursor-pointer"
         >
-          Confirm
+          {t('confirm')}
         </button>
       </div>
     </div>
