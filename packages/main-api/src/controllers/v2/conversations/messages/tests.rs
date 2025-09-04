@@ -96,7 +96,7 @@ mod tests {
 
         let message_id: i64 = sqlx::query_scalar(
             r#"
-            INSERT INTO messages (html_content, status, sender_id, conversation_id, seq_id, created_at, updated_at)
+            INSERT INTO messages (html_contents, status, sender_id, conversation_id, seq_id, created_at, updated_at)
             VALUES ($1, $2, $3, $4, $5, EXTRACT(EPOCH FROM NOW())::bigint * 1000, EXTRACT(EPOCH FROM NOW())::bigint * 1000)
             RETURNING id
             "#,
@@ -106,10 +106,6 @@ mod tests {
         .bind(sender_id)
         .bind(conversation_id)
         .bind(next_seq_id)
-        .bind(content)
-        .bind(MessageStatus::Sent as i32)
-        .bind(sender_id)
-        .bind(conversation_id)
         .fetch_one(&mut *tx)
         .await
         .unwrap();
@@ -146,10 +142,10 @@ mod tests {
         )
         .await;
 
-        let html_content = format!("Test message content {}", now);
+        let html_contents = format!("Test message content {}", now);
 
         let req = AddMessageRequest {
-            html_content: html_content.clone(),
+            html_contents: html_contents.clone(),
             conversation_id: Some(conversation.id),
             recipient_id: None,
         };
@@ -166,7 +162,7 @@ mod tests {
         assert!(result.is_ok());
         let response = result.unwrap().0;
 
-        assert_eq!(response.message.html_content, html_content);
+        assert_eq!(response.message.html_contents, html_contents);
         assert_eq!(response.message.sender_id, user.id);
         assert_eq!(response.message.conversation_id, conversation.id);
         assert_eq!(response.message.status, MessageStatus::Sent);
@@ -192,10 +188,10 @@ mod tests {
         )
         .await;
 
-        let html_content = format!("Test channel message {}", now);
+        let html_contents = format!("Test channel message {}", now);
 
         let req = AddMessageRequest {
-            html_content: html_content.clone(),
+            html_contents: html_contents.clone(),
             conversation_id: Some(conversation.id),
             recipient_id: None,
         };
@@ -212,7 +208,7 @@ mod tests {
         assert!(result.is_ok());
         let response = result.unwrap().0;
 
-        assert_eq!(response.message.html_content, html_content);
+        assert_eq!(response.message.html_contents, html_contents);
         assert_eq!(response.message.sender_id, user.id);
         assert_eq!(response.message.conversation_id, conversation.id);
     }
@@ -226,10 +222,10 @@ mod tests {
         let user2_id = Uuid::new_v4().to_string();
         let user2 = setup_test_user(&user2_id, &pool).await.unwrap();
 
-        let html_content = format!("Test direct message {}", now);
+        let html_contents = format!("Test direct message {}", now);
 
         let req = AddMessageRequest {
-            html_content: html_content.clone(),
+            html_contents: html_contents.clone(),
             conversation_id: None,
             recipient_id: Some(user2.id),
         };
@@ -252,7 +248,7 @@ mod tests {
         assert!(result.is_ok());
         let response = result.unwrap().0;
 
-        assert_eq!(response.message.html_content, html_content);
+        assert_eq!(response.message.html_contents, html_contents);
         assert_eq!(response.message.sender_id, user.id);
         assert_eq!(response.message.status, MessageStatus::Sent);
 
@@ -302,10 +298,10 @@ mod tests {
         )
         .await;
 
-        let html_content = format!("Test direct message in existing conversation {}", now);
+        let html_contents = format!("Test direct message in existing conversation {}", now);
 
         let req = AddMessageRequest {
-            html_content: html_content.clone(),
+            html_contents: html_contents.clone(),
             conversation_id: None,
             recipient_id: Some(user2.id),
         };
@@ -324,7 +320,7 @@ mod tests {
 
         // Should use existing conversation, not create a new one
         assert_eq!(response.message.conversation_id, existing_conversation.id);
-        assert_eq!(response.message.html_content, html_content);
+        assert_eq!(response.message.html_contents, html_contents);
         assert_eq!(response.message.sender_id, user.id);
     }
 
@@ -351,7 +347,7 @@ mod tests {
         .await;
 
         let req = AddMessageRequest {
-            html_content: "Unauthorized message".to_string(),
+            html_contents: "Unauthorized message".to_string(),
             conversation_id: Some(conversation.id),
             recipient_id: None,
         };
@@ -376,7 +372,7 @@ mod tests {
         let TestContext { user, pool, .. } = setup().await.unwrap();
 
         let req = AddMessageRequest {
-            html_content: "Test message".to_string(),
+            html_contents: "Test message".to_string(),
             conversation_id: Some(999999), // Non-existent conversation
             recipient_id: None,
         };
@@ -398,7 +394,7 @@ mod tests {
         let TestContext { user, pool, .. } = setup().await.unwrap();
 
         let req = AddMessageRequest {
-            html_content: "Test message".to_string(),
+            html_contents: "Test message".to_string(),
             conversation_id: None,
             recipient_id: Some(999999), // Non-existent user
         };
@@ -420,7 +416,7 @@ mod tests {
         let TestContext { user, pool, .. } = setup().await.unwrap();
 
         let req = AddMessageRequest {
-            html_content: "Message to self".to_string(),
+            html_contents: "Message to self".to_string(),
             conversation_id: None,
             recipient_id: Some(user.id), // Same as sender
         };
@@ -443,7 +439,7 @@ mod tests {
 
         // Test empty content
         let req = AddMessageRequest {
-            html_content: "".to_string(),
+            html_contents: "".to_string(),
             conversation_id: Some(1),
             recipient_id: None,
         };
@@ -462,7 +458,7 @@ mod tests {
         // Test content too long (10000+ characters)
         let long_content = "a".repeat(10001);
         let req = AddMessageRequest {
-            html_content: long_content,
+            html_contents: long_content,
             conversation_id: Some(1),
             recipient_id: None,
         };
@@ -480,7 +476,7 @@ mod tests {
 
         // Test missing both conversation_id and recipient_id
         let req = AddMessageRequest {
-            html_content: "Valid content".to_string(),
+            html_contents: "Valid content".to_string(),
             conversation_id: None,
             recipient_id: None,
         };
@@ -521,7 +517,7 @@ mod tests {
 
         // Add first message
         let req1 = AddMessageRequest {
-            html_content: "First message".to_string(),
+            html_contents: "First message".to_string(),
             conversation_id: Some(conversation.id),
             recipient_id: None,
         };
@@ -540,7 +536,7 @@ mod tests {
 
         // Add second message
         let req2 = AddMessageRequest {
-            html_content: "Second message".to_string(),
+            html_contents: "Second message".to_string(),
             conversation_id: Some(conversation.id),
             recipient_id: None,
         };
@@ -870,11 +866,11 @@ mod tests {
             create_test_message(&pool, conversation.id, user.id, "Existing message").await;
 
         // Start polling from after the existing message
-        let since_timestamp = existing_message.created_at;
+        let since_id = existing_message.id;
 
         let query = PollMessagesQuery {
             conversation_id: conversation.id,
-            since: Some(since_timestamp),
+            since_id: Some(since_id),
             timeout_seconds: Some(3), // Longer timeout to allow polling to catch the new message
         };
 
@@ -907,8 +903,8 @@ mod tests {
 
         assert_eq!(response.has_new_messages, true);
         assert_eq!(response.messages.len(), 1);
-        assert_eq!(response.messages[0].html_content, "New message");
-        assert!(response.messages[0].created_at > since_timestamp);
+        assert_eq!(response.messages[0].html_contents, "New message");
+        assert!(response.messages[0].id > since_id);
     }
 
     #[tokio::test]
@@ -932,8 +928,8 @@ mod tests {
 
         let query = PollMessagesQuery {
             conversation_id: conversation.id,
-            since: Some(chrono::Utc::now().timestamp_millis()),
-            timeout_seconds: Some(1), // Short timeout
+            since_id: Some(999999999), // High ID value to ensure no messages are newer
+            timeout_seconds: Some(1),  // Short timeout
         };
 
         let start = std::time::Instant::now();
@@ -980,7 +976,7 @@ mod tests {
 
         let query = PollMessagesQuery {
             conversation_id: conversation.id,
-            since: Some(0),
+            since_id: Some(0),
             timeout_seconds: Some(1),
         };
 
@@ -1019,7 +1015,7 @@ mod tests {
 
         let query = PollMessagesQuery {
             conversation_id: conversation.id,
-            since: None,           // Should default to 0
+            since_id: None,        // Should default to 0
             timeout_seconds: None, // Should default to 30
         };
 
@@ -1087,7 +1083,7 @@ mod tests {
             .await
             .unwrap();
 
-        assert_eq!(cleared_message.html_content, "");
+        assert_eq!(cleared_message.html_contents, "");
         assert_eq!(cleared_message.seq_id, message.seq_id); // seq_id should remain
         assert_eq!(cleared_message.conversation_id, message.conversation_id);
     }
@@ -1163,7 +1159,7 @@ mod tests {
 
         // Test add message without auth
         let req = AddMessageRequest {
-            html_content: format!("Test {}", now),
+            html_contents: format!("Test {}", now),
             conversation_id: Some(1),
             recipient_id: None,
         };
@@ -1196,7 +1192,7 @@ mod tests {
         // Test poll messages without auth
         let query = PollMessagesQuery {
             conversation_id: 1,
-            since: Some(0),
+            since_id: Some(0),
             timeout_seconds: Some(1),
         };
 

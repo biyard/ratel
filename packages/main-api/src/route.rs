@@ -155,7 +155,7 @@ pub async fn route(
             controllers::m1::MenaceController::route(pool.clone())?,
         )
         .native_route("/v2/users/logout", npost(logout_handler))
-        // Conversation routes
+
         .route(
             "/conversations",
             post_with(
@@ -168,7 +168,7 @@ pub async fn route(
             .with_state(pool.clone()),
         )
         .route(
-            "/conversations",
+            "/v2/conversations",
             get_with(
                 get_conversations_handler,
                 api_docs!(
@@ -179,7 +179,7 @@ pub async fn route(
             .with_state(pool.clone()),
         )
         .route(
-            "/conversations/:id",
+            "/v2/conversations/:id",
             get_with(
                 get_conversation_by_id_handler,
                 api_docs!(
@@ -190,7 +190,7 @@ pub async fn route(
             .with_state(pool.clone()),
         )
         .route(
-            "/conversations/:conversation_id/messages",
+            "/v2/conversations/:conversation_id/messages",
             post_with(
                 add_message_handler,
                 api_docs!("Add Message", "Add a new message to a conversation"),
@@ -198,7 +198,7 @@ pub async fn route(
             .with_state(pool.clone()),
         )
         .route(
-            "/conversations/:conversation_id/messages",
+            "/v2/conversations/:conversation_id/messages",
             get_with(
                 get_messages_handler,
                 api_docs!(
@@ -209,7 +209,7 @@ pub async fn route(
             .with_state(pool.clone()),
         )
         .route(
-            "/conversations/:conversation_id/messages/poll",
+            "/v2/conversations/:conversation_id/messages/poll",
             get_with(
                 poll_messages_handler,
                 api_docs!(
@@ -220,7 +220,7 @@ pub async fn route(
             .with_state(pool.clone()),
         )
         .route(
-            "/conversations/:conversation_id/messages/:message_id/clear",
+            "/v2/messages/:message_id/clear",
             post_with(
                 clear_message_handler,
                 api_docs!(

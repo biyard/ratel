@@ -53,7 +53,7 @@ pub async fn clear_message_handler(
     sqlx::query(
         r#"
         UPDATE messages 
-        SET html_content = '', updated_at = EXTRACT(EPOCH FROM NOW())::bigint * 1000
+        SET html_contents = '', updated_at = EXTRACT(EPOCH FROM NOW())::bigint * 1000
         WHERE id = $1
         "#,
     )
