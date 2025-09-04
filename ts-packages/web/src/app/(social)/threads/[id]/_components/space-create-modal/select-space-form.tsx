@@ -4,7 +4,7 @@ import { Space, SpaceType } from '@/lib/api/models/spaces';
 import { noticeSpaceCreateRequest } from '@/lib/api/models/notice';
 
 import { Discuss, Palace, Mega, Vote } from '@/components/icons';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 
 import { LoadablePrimaryButton } from '@/components/button/primary-button';
 import { apiFetch } from '@/lib/api/apiFetch';
@@ -18,6 +18,7 @@ import SpaceConfigForm from './space-config-form';
 import RadioButton from '@/components/radio-button';
 import { Cube } from '@/assets/icons/shopping';
 import { useTranslations } from 'next-intl';
+
 interface SpaceFormProps {
   type: SpaceType;
   Icon: React.JSX.Element;
@@ -75,12 +76,14 @@ const SpaceForms: SpaceFormProps[] = [
   //   disabled: true,
   // },
 ];
+
 export default function SelectSpaceForm({ feed_id }: { feed_id: number }) {
   const [isLoading, setLoading] = useState(false);
   const [selectedType, setSelectedType] = useState<SpaceType | null>(null);
   const [showConfigForm, setShowConfigForm] = useState(false);
   const router = useRouter();
   const popup = usePopup();
+  const t = useTranslations('SpaceForms');
 
   // Update popup title based on current form state
   useEffect(() => {
@@ -96,7 +99,7 @@ export default function SelectSpaceForm({ feed_id }: { feed_id: number }) {
     }, 10);
 
     return () => clearTimeout(timeoutId);
-  }, [showConfigForm, popup]);
+  }, [showConfigForm, popup, t]);
 
   const handleSend = async () => {
     if (!selectedType) return;
@@ -122,9 +125,9 @@ export default function SelectSpaceForm({ feed_id }: { feed_id: number }) {
     }
   };
 
-  const handleSpaceTypeSelect = (type: SpaceType) => {
+  const handleSpaceTypeSelect = useCallback((type: SpaceType) => {
     setSelectedType(type);
-  };
+  }, []);
 
   const handleCreateSpace = async (spaceType: SpaceType) => {
     setLoading(true);
@@ -174,6 +177,59 @@ export default function SelectSpaceForm({ feed_id }: { feed_id: number }) {
     setShowConfigForm(false);
   };
 
+  const SpaceForm = useMemo(
+    () =>
+      function SpaceFormInner({
+        form,
+        selected,
+        onClick,
+      }: {
+        form: SpaceFormProps;
+        selected: boolean;
+        onClick: () => void;
+      }) {
+        const tt = useTranslations('SpaceForms');
+        const disabled =
+          form.disabled || (form.experiment && !config.experiment);
+
+        return (
+          <div
+            className={`flex flex-row gap-2.5 justify-center items-center w-full p-5 border rounded-[10px] ${
+              selected ? 'border-primary' : 'border-neutral-800'
+            } ${disabled ? 'opacity-50 cursor-not-allowed' : ''} `}
+            onClick={() => {
+              if (!disabled) onClick();
+            }}
+          >
+            <div className="size-8 [&>svg]:size-8">{form.Icon}</div>
+            <div className="flex flex-col flex-1 gap-1">
+              <span className="font-bold text-[15px]/[20px] text-white">
+                {tt(form.labelKey)}
+              </span>
+              <span className="font-normal text-[15px]/[24px] text-neutral-300">
+                {tt(form.descKey)}
+              </span>
+            </div>
+            <RadioButton selected={selected} onClick={onClick} />
+          </div>
+        );
+      },
+    [],
+  );
+
+  const renderedForms = useMemo(
+    () =>
+      SpaceForms.map((form) => (
+        <SpaceForm
+          key={form.type}
+          form={form}
+          selected={selectedType === form.type}
+          onClick={() => handleSpaceTypeSelect(form.type)}
+        />
+      )),
+    [selectedType, handleSpaceTypeSelect, SpaceForm],
+  );
+
   // Show configuration form for Notice spaces
   if (showConfigForm && !!selectedType) {
     return (
@@ -196,14 +252,7 @@ export default function SelectSpaceForm({ feed_id }: { feed_id: number }) {
   return (
     <div className="mobile:w-[400px] max-mobile:w-full">
       <div className="flex flex-col gap-2.5 p-1.5">
-        {SpaceForms.map((form) => (
-          <SpaceForm
-            key={form.type}
-            form={form}
-            selected={selectedType === form.type}
-            onClick={() => handleSpaceTypeSelect(form.type)}
-          />
-        ))}
+        {renderedForms}
         <LoadablePrimaryButton
           className="w-full mt-4"
           disabled={!selectedType}
@@ -213,39 +262,6 @@ export default function SelectSpaceForm({ feed_id }: { feed_id: number }) {
           Send
         </LoadablePrimaryButton>
       </div>
-    </div>
-  );
-}
-
-function SpaceForm({
-  form,
-  selected,
-  onClick,
-}: {
-  form: SpaceFormProps;
-  selected: boolean;
-  onClick: () => void;
-}) {
-  const t = useTranslations('SpaceForms');
-  const disabled = form.disabled || (form.experiment && !config.experiment);
-
-  return (
-    <div
-      className={`flex flex-row gap-2.5 justify-center items-center w-full p-5 border rounded-[10px] ${selected ? 'border-primary' : 'border-neutral-800'} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}} `}
-      onClick={() => {
-        if (!disabled) onClick();
-      }}
-    >
-      <div className="size-8 [&>svg]:size-8">{form.Icon}</div>
-      <div className="flex flex-col flex-1 gap-1">
-        <span className="font-bold text-[15px]/[20px] text-white">
-          {t(form.labelKey)}
-        </span>
-        <span className="font-normal text-[15px]/[24px] text-neutral-300">
-          {t(form.descKey)}
-        </span>
-      </div>
-      <RadioButton selected={selected} onClick={onClick} />
     </div>
   );
 }
