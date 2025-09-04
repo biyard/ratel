@@ -72,8 +72,10 @@ pub async fn poll_messages_handler(
 
     let since_id = query.since_id.unwrap_or(0);
 
-    // Set timeout
-    let timeout_duration = Duration::from_secs(query.timeout_seconds.unwrap_or(30));
+    // Set timeout with clamping to prevent connection hogging
+    // Clamp to [1, 60] seconds
+    let timeout_secs = query.timeout_seconds.unwrap_or(30).min(60).max(1);
+    let timeout_duration = Duration::from_secs(timeout_secs);
 
     // Implement proper timeout with polling
     let start_time = tokio::time::Instant::now();
@@ -86,7 +88,11 @@ pub async fn poll_messages_handler(
                 messages_query = messages_query.id_greater_than(since_id);
             }
 
+            // Limit batch size to prevent loading too many messages at once
+            const MAX_BATCH: i32 = 200;
             let new_messages = messages_query
+                .limit(MAX_BATCH)
+                .order_by_created_at_asc()
                 .query()
                 .map(Message::from)
                 .fetch_all(&pool)

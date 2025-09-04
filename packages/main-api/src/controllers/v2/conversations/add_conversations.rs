@@ -9,6 +9,8 @@ use dto::{
 };
 use validator::Validate;
 
+use std::collections::HashSet;
+
 use crate::utils::users::extract_user_id;
 
 #[derive(
@@ -92,14 +94,14 @@ pub async fn create_conversation_handler(
         )
         .await?;
 
-    // Add other participants using ORM
-    for participant_id in req.participant_ids {
-        // Skip if same as creator
-        if participant_id == user_id {
-            continue;
-        }
 
-        // Verify participant user exists using ORM query
+    let unique_ids: HashSet<i64> = req
+        .participant_ids
+        .into_iter()
+        .filter(|&id| id != user_id)
+        .collect();
+    for participant_id in unique_ids {
+
         let user_exists = User::query_builder()
             .id_equals(participant_id)
             .query()
@@ -111,7 +113,6 @@ pub async fn create_conversation_handler(
             return Err(Error::NotFound);
         }
 
-        // Add participant using ORM
         participant_repo
             .insert_with_tx(
                 &mut *tx,
@@ -122,7 +123,6 @@ pub async fn create_conversation_handler(
             .await?;
     }
 
-    // Commit transaction
     tx.commit().await?;
 
     tracing::debug!(
