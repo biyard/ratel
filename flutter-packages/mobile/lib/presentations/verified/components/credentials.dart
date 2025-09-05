@@ -40,10 +40,21 @@ class _CredentialsState extends State<Credentials> {
     if (label == 'Passport') {
       for (var i = 0; i < widget.credentials.length; i++) {
         final credential = widget.credentials[i];
-
         if (credential.label == 'Birth Date' ||
             credential.label == 'Country' ||
             credential.label == 'Gender') {
+          cred = true;
+          break;
+        }
+      }
+    }
+
+    if (label == 'Medical check-up certificate') {
+      for (var i = 0; i < widget.credentials.length; i++) {
+        final credential = widget.credentials[i];
+        if (credential.label == 'Height' ||
+            credential.label == 'Weight' ||
+            credential.label == 'Bmi') {
           cred = true;
           break;
         }
@@ -121,6 +132,61 @@ class _CredentialsState extends State<Credentials> {
     logger.d("metamask wallet: $addr");
     setState(() => crypto = true);
     _collapseSheet();
+  }
+
+  Widget _verifyRow(VerifyItem it, bool verified) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xffffffff).withAlpha(12),
+        borderRadius: BorderRadius.circular(5),
+        border: Border.all(color: AppColors.neutral700, width: 1),
+      ),
+      child: SizedBox(
+        height: 68,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      it.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                        height: 1.1,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      it.subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 11,
+                        height: 1.3,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              verified
+                  ? SvgPicture.asset(Assets.verified)
+                  : SvgPicture.asset(Assets.send),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -207,7 +273,6 @@ class _CredentialsState extends State<Credentials> {
               ],
             ),
           ),
-
           Positioned(
             left: 0,
             right: 0,
@@ -215,7 +280,6 @@ class _CredentialsState extends State<Credentials> {
             height: MediaQuery.of(context).padding.bottom,
             child: const ColoredBox(color: AppColors.panelBg),
           ),
-
           DraggableScrollableSheet(
             controller: _dragCtrl,
             initialChildSize: _minSize,
@@ -255,7 +319,6 @@ class _CredentialsState extends State<Credentials> {
                               child: InkWell(
                                 onTap: () async {
                                   if (verified) return;
-
                                   if (it.title == "Crypto Wallet") {
                                     await _handleCryptoTap();
                                   } else if (it.title == 'Passport') {
@@ -266,44 +329,7 @@ class _CredentialsState extends State<Credentials> {
                                     _collapseSheet();
                                   }
                                 },
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: const Color(
-                                      0xffffffff,
-                                    ).withAlpha(12),
-                                    borderRadius: BorderRadius.circular(5),
-                                    border: Border.all(
-                                      color: AppColors.neutral700,
-                                      width: 1,
-                                    ),
-                                  ),
-                                  child: ListTile(
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 20,
-                                    ),
-                                    title: Text(
-                                      it.title,
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 12,
-                                        height: 1.1,
-                                      ),
-                                    ),
-                                    subtitle: Text(
-                                      it.subtitle,
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w500,
-                                        fontSize: 11,
-                                        height: 1.3,
-                                      ),
-                                    ),
-                                    trailing: verified
-                                        ? SvgPicture.asset(Assets.verified)
-                                        : SvgPicture.asset(Assets.send),
-                                  ),
-                                ),
+                                child: _verifyRow(it, verified),
                               ),
                             );
                           }, childCount: _items.length),
