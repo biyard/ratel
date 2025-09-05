@@ -1,6 +1,15 @@
 import 'package:ratel/exports.dart';
 
-enum VerifiedStep { myCredential, info, countryCheck, capture, review }
+enum VerifiedStep {
+  myCredential,
+  medicalInfo,
+  info,
+  countryCheck,
+  medicalCapture,
+  capture,
+  medicalReview,
+  review,
+}
 
 class VerifiedController extends BaseController {
   Rx<int> userId = 0.obs;
@@ -13,6 +22,10 @@ class VerifiedController extends BaseController {
   final nationality = ''.obs;
   final expire = ''.obs;
   final gender = ''.obs;
+
+  final bmi = 0.0.obs;
+  final height = 0.0.obs;
+  final weight = 0.0.obs;
 
   final RxList<VerifiedModel> credentials = <VerifiedModel>[
     VerifiedModel(
@@ -93,6 +106,25 @@ class VerifiedController extends BaseController {
         break;
       case VerifiedStep.review:
         break;
+      default:
+        step.value = VerifiedStep.info;
+        break;
+    }
+  }
+
+  void medicalNext() {
+    switch (step.value) {
+      case VerifiedStep.myCredential:
+        step.value = VerifiedStep.medicalInfo;
+        break;
+      case VerifiedStep.medicalInfo:
+        step.value = VerifiedStep.medicalCapture;
+        break;
+      case VerifiedStep.medicalCapture:
+        step.value = VerifiedStep.medicalReview;
+        break;
+      default:
+        break;
     }
   }
 
@@ -116,6 +148,15 @@ class VerifiedController extends BaseController {
         break;
       case VerifiedStep.myCredential:
         Get.rootDelegate.offNamed(AppRoutes.mainScreen);
+        break;
+      case VerifiedStep.medicalInfo:
+        step.value = VerifiedStep.myCredential;
+        break;
+      case VerifiedStep.medicalCapture:
+        step.value = VerifiedStep.medicalInfo;
+        break;
+      case VerifiedStep.medicalReview:
+        step.value = VerifiedStep.medicalCapture;
         break;
     }
   }

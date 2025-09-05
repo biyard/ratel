@@ -1,9 +1,13 @@
 import 'package:ratel/exports.dart';
+import 'package:ratel/presentations/verified/components/step_medical_capture.dart';
+import 'package:ratel/presentations/verified/components/step_medical_info.dart';
+import 'package:ratel/presentations/verified/components/step_medical_review.dart';
 import 'package:ratel/presentations/verified/components/step_review.dart';
 import 'package:ratel/presentations/verified/components/step_capture.dart';
 import 'package:ratel/presentations/verified/components/step_country.dart';
 import 'package:ratel/presentations/verified/components/step_info.dart';
 import 'package:ratel/presentations/verified/components/credentials.dart';
+import 'package:ratel/services/documents/secure_medical_store.dart';
 
 class VerifiedScreen extends GetWidget<VerifiedController> {
   const VerifiedScreen({super.key});
@@ -27,6 +31,7 @@ class VerifiedScreen extends GetWidget<VerifiedController> {
           credentials: controller.credentials.value,
           did: controller.didId.value,
           onNext: controller.next,
+          onMedical: controller.medicalNext,
         );
       case VerifiedStep.info:
         return StepInfo(onSkip: controller.back, onNext: controller.next);
@@ -70,6 +75,45 @@ class VerifiedScreen extends GetWidget<VerifiedController> {
           nationality: controller.nationality.value,
           expire: controller.expire.value,
           gender: controller.gender.value,
+          onRecapture: controller.back,
+          onDone: controller.goMain,
+        );
+      case VerifiedStep.medicalInfo:
+        return StepMedicalInfo(
+          onSkip: controller.back,
+          onNext: controller.medicalNext,
+        );
+      case VerifiedStep.medicalCapture:
+        return MedicalCapture(
+          onPrev: controller.back,
+          onNext: controller.medicalNext,
+          onParsed: (info) async {
+            controller.bmi.value = info.bmi;
+            controller.height.value = info.height;
+            controller.weight.value = info.weight;
+
+            final store = SecureMedicalStore();
+            await store.saveFromMedical(controller.userId.value, info);
+
+            final hasBmi = await store.s.containsKey(
+              key: 'medical_bmi ${controller.userId.value}',
+              aOptions: SecurePassportStore.aOpts,
+              iOptions: SecurePassportStore.iOpts,
+            );
+            final all = await store.s.readAll(
+              aOptions: SecurePassportStore.aOpts,
+              iOptions: SecurePassportStore.iOpts,
+            );
+            logger.d('contains birth=$hasBmi, all=$all');
+
+            controller.medicalNext();
+          },
+        );
+      default:
+        return StepMedicalReview(
+          height: 171.2,
+          weight: 70,
+          bmi: 23.0,
           onRecapture: controller.back,
           onDone: controller.goMain,
         );

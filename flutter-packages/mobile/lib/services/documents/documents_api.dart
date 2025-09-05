@@ -80,4 +80,24 @@ class DocumentsApi extends GetConnect {
     logger.d('uploadPassportKey response: $data');
     return PassportInfo.fromJson(data);
   }
+
+  Future<MedicalInfo> uploadMedicalKeys(List<String> keys) async {
+    final uri = Uri.parse(
+      apiEndpoint,
+    ).resolve('/v2/verifiable-credentials/medical');
+    final body = {'document_keys': keys};
+
+    final res = await post(uri.toString(), body);
+    if (!res.isOk) {
+      logger.e('uploadMedicalKeys failed: ${res.statusCode} ${res.bodyString}');
+      throw Exception('Medical key submit failed (${res.statusCode}).');
+    }
+
+    final Map<String, dynamic> data = (res.body is Map)
+        ? (res.body as Map).cast<String, dynamic>()
+        : jsonDecode(res.bodyString ?? '{}') as Map<String, dynamic>;
+
+    logger.d('uploadMedicalKeys response: $data');
+    return MedicalInfo.fromJson(data);
+  }
 }
