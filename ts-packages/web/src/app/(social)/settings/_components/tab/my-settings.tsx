@@ -49,7 +49,7 @@ export default function MySettings() {
           onCancel={() => popup.close()}
         />,
       )
-      .withoutClose()
+      .withTitle('Theme');
   };
 
   return (
@@ -66,7 +66,7 @@ export default function MySettings() {
           
           {/* theme box controller */}
           <SpecBox
-            left_text={'Theme'}
+            left_text="Theme"
             action_text={currentThemeLabel}
             onClick={handleChangeTheme}
           />
@@ -87,7 +87,7 @@ function SpecBox({
 }) {
   return (
     <div className="flex items-center justify-between border border-neutral-800 px-4 py-8 rounded-md">
-      <p className="text-lg font-bold text-sm text-white">{left_text}</p>
+      <p className="text-lg font-bold text-sm text-foreground">{left_text}</p>
 
       <button
         className="flex items-center gap-2 text-primary cursor-pointer"

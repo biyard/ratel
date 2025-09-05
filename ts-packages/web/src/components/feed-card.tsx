@@ -252,7 +252,7 @@ export function IconText({
 }: React.HTMLAttributes<HTMLDivElement> & { children: React.ReactNode }) {
   return (
     <Row
-      className={`justify-center items-center gap-1.25 text-white font-normal text-[15px] px-4 py-5 ${className || ''}`}
+      className={`justify-center items-center gap-1.25 text-foreground font-normal text-[15px] px-4 py-5 ${className || ''}`}
       {...props}
     >
       {children}

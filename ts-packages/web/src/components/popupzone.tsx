@@ -38,7 +38,7 @@ export const PopupZone = () => {
       }}
     >
       <div
-        className={`relative rounded-[20px] p-[25px] min-w-[300px] max-mobile:!w-full max-mobile:!mx-[20px] bg-bg ${overflow ? 'overflow-visible' : 'overflow-hidden'}`}
+        className={`relative rounded-[20px] p-[25px] min-w-[300px] max-mobile:!w-full max-mobile:!mx-[20px] bg-popover ${overflow ? 'overflow-visible' : 'overflow-hidden'}`}
         style={{
           boxShadow: '0px 0px 100px rgba(255, 206, 71, 0.25)',
         }}
