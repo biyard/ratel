@@ -1,6 +1,7 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
+
 @custom-variant light (&:where([data-theme=light], [data-theme=light] *));
 
 /* ===============================
@@ -54,14 +55,18 @@
   /* Use these for all new development */
   --background: var(--bg-dark); /* --color-background */
 
-   /* NEW: Semantic Text Tokens */
-   --foreground: var(--gray-50);        /* High emphasis (Titles, important text) */
-   --foreground-muted: var(--gray-400); /* Medium emphasis (Body text, descriptions) */
-   --foreground-more-muted: var(--gray-600); /* Low emphasis (Placeholders, disabled text) */
- 
+  /* NEW: Semantic Text Tokens */
+  --foreground: var(--gray-50);        /* High emphasis (Titles, important text) */
+  --foreground-muted: var(--gray-400); /* Medium emphasis (Body text, descriptions) */
+  --foreground-more-muted: var(--gray-600); /* Low emphasis (Placeholders, disabled text) */
+  
+  --popover: #1A1A1A; /* Your dark theme value */
+  --popover-foreground: #000203; /* Text color on popover */
 
   --card: var(--bg-component-dark); /* --color-component-bg */
   --card-foreground: var(--gray-400);
+  --card-foreground-muted: var(--gray-600);
+  --card-foreground-more-muted: var(--gray-800);
   --primary: var(--brand-primary);
   --primary-foreground: #000000;  
 
@@ -117,15 +122,23 @@
 
   --card: var(--gray-100);
   --card-foreground: var(--gray-800);
+  --card-foreground-muted: var(--gray-600);
+  --card-foreground-more-muted: var(--gray-400);
   --border: var(--table-light-border);
   --input: #e0e0e0;
   --accent-hover: #e5e5e5;
+  --popover: var(--gray-50); 
+  --popover-foreground: #000203; 
 
+  
 
   /* NEW: Semantic Text Tokens for Light Mode */
   --foreground: var(--gray-800);       /* High emphasis becomes dark */
   --foreground-muted: var(--gray-600); /* Muted becomes a darker gray */
   --foreground-more-muted: var(--gray-400); /* Low emphasis becomes a lighter gray */
+
+
+
 
   /* --- LEGACY TOKENS (DO NOT USE FOR NEW CODE) --- */
   --color-background: var(--background);
@@ -339,5 +352,30 @@ button, a {
 
   .text-foreground-more-muted {
     @apply text-[var(--foreground-more-muted)];
+  }
+
+  .bg-popover {
+    @apply bg-[var(--popover)];
+  }
+
+
+  .text-popover-foreground {
+    @apply text-[var(--popover-foreground)];
+  }
+
+  .bg-card {
+    @apply bg-[var(--card)];
+  }
+
+  .bg-card-foreground {
+    @apply bg-[var(--card-foreground)];
+  }
+
+  .bg-card-foreground-muted {
+    @apply bg-[var(--card-foreground-muted)];
+  }
+
+  .bg-card-foreground-more-muted {
+    @apply bg-[var(--card-foreground-more-muted)];
   }
 }

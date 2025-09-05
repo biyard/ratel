@@ -28,8 +28,8 @@ export default function MyProfilePage() {
               className={
                 'group flex-1 flex flex-col items-center justify-center py-3 transition-colors ' +
                 (activeIndex === idx
-                  ? 'text-neutral-100'
-                  : 'hover:text-neutral-200')
+                  ? 'text-foreground'
+                  : 'hover:text-foreground')
               }
               type="button"
             >
