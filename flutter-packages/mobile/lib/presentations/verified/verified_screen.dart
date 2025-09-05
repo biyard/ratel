@@ -86,7 +86,6 @@ class VerifiedScreen extends GetWidget<VerifiedController> {
       case VerifiedStep.medicalCapture:
         return MedicalCapture(
           onPrev: controller.back,
-          onNext: controller.medicalNext,
           onParsed: (info) async {
             controller.bmi.value = info.bmi;
             controller.height.value = info.height;

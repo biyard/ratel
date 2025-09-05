@@ -7,11 +7,9 @@ class MedicalCapture extends StatefulWidget {
   const MedicalCapture({
     super.key,
     required this.onPrev,
-    required this.onNext,
     required this.onParsed,
   });
   final VoidCallback onPrev;
-  final VoidCallback onNext;
   final Future<void> Function(MedicalInfo info) onParsed;
 
   @override
@@ -91,9 +89,7 @@ class _MedicalCaptureState extends State<MedicalCapture> {
         await _controller!.stopImageStream();
       }
     } catch (_) {}
-    // await _captureAndSend();
-
-    widget.onNext();
+    await _captureAndSend();
   }
 
   @override
@@ -148,7 +144,7 @@ class _MedicalCaptureState extends State<MedicalCapture> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  "Please check if the icon below is present on your Medical Check-up Certificate.\n\nCertificates must clearly display the certificate number, hospital name, and your name/date of birth to be verified.",
+                  "Certificates must clearly display the certificate number, hospital name, and your name/date of birth to be verified.",
                   style: TextStyle(
                     color: AppColors.neutral300,
                     fontSize: 12,
