@@ -1,7 +1,7 @@
 use crate::{
     config,
     utils::{
-        aws::{BedrockClient, RekognitionClient, S3Client, TextractClient},
+        aws::{BedrockClient, BedrockModel, RekognitionClient, S3Client, TextractClient},
         users::extract_user_id,
     },
 };
@@ -100,7 +100,7 @@ pub async fn extract_passport_info_handler(
 ) -> Result<Json<PassportResponse>> {
     extract_user_id(&state.pool, auth).await?;
     let passport_info = worker(&state, &req).await;
-    if let Err(e) = state.s3_client.delete_object(&req.key).await {
+    if let Err(e) = state.s3_client.delete_objects(vec![req.key.clone()]).await {
         tracing::error!("Failed to delete S3 object {}: {:?}", &req.key, e);
     }
     Ok(Json(PassportResponse {
@@ -198,7 +198,10 @@ Date of expiry
         merged_text
     );
 
-    let text = state.bedrock_client.send_message(prompt).await?;
+    let text = state
+        .bedrock_client
+        .send_message(BedrockModel::NovaMicro, prompt, None)
+        .await?;
     let json_str = extract_json(&text).ok_or_else(|| {
         tracing::error!("Failed to extract JSON from Bedrock response: {}", text);
         Error::PassportVerificationFailed("Failed to extract JSON from response".to_string())
