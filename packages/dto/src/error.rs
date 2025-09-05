@@ -248,7 +248,7 @@ pub enum Error {
     SprintLeagueUpdateFailed,
 
     PassportVerificationFailed(String),
-
+    MedicalInfoExtractionFailed(String),
     AwsRekognitionError(String),
     AwsTextractError(String),
     AwsBedrockError(String),
