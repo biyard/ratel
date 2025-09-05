@@ -68,6 +68,7 @@ pub mod controllers {
         }
 
         pub mod documents {
+            pub mod extract_medical_info;
             pub mod extract_passport_info;
             pub mod upload_private_image;
         }

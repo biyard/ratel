@@ -16,6 +16,8 @@ use crate::utils::aws::S3Client;
 pub struct CreatePrivateImageQueryParams {
     #[schemars(description = "Number of S3 presigned URLs to create")]
     pub total_size: Option<i32>,
+    #[schemars(description = "Category for the images, e.g., 'passport', 'medical'")]
+    pub category: Option<String>,
 }
 
 #[derive(
@@ -43,9 +45,10 @@ pub async fn upload_private_image_handler(
     State(state): State<UploadPrivateImageState>,
     Query(params): Query<CreatePrivateImageQueryParams>,
 ) -> Result<Json<CreatePrivateImageResponse>> {
+    let prefix = params.category.unwrap_or("passport".into());
     let res = state
         .s3_client
-        .get_put_object_uri(params.total_size, Some("passport"), None)
+        .get_put_object_uri(params.total_size, Some(&prefix), Some(3600))
         .await?;
     let presigned_uris = res
         .into_iter()
