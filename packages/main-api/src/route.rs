@@ -42,6 +42,7 @@ use crate::{
             },
             dashboards::get_dashboard::get_dashboard_handler,
             documents::{
+                extract_medical_info::{MedicalHandlerState, extract_medical_info_handler},
                 extract_passport_info::{PassportHandlerState, extract_passport_info_handler},
                 upload_private_image::{UploadPrivateImageState, upload_private_image_handler},
             },
@@ -460,6 +461,21 @@ pub async fn route(
                 ),
             )
             .with_state(UploadPrivateImageState {
+                s3_client: private_s3_client.clone(),
+            }),
+        )
+        .route(
+            "/v2/verifiable-credentials/medical",
+            post_with(
+                extract_medical_info_handler,
+                api_docs!(
+                    "Extract Information from Medical Image",
+                    r#"This endpoint allows you to extract medical information from an image."#
+                ),
+            )
+            .with_state(MedicalHandlerState {
+                pool: pool.clone(),
+                bedrock_client: bedrock_client.clone(),
                 s3_client: private_s3_client.clone(),
             }),
         )
