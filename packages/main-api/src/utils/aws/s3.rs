@@ -1,5 +1,9 @@
 use aws_config::Region;
-use aws_sdk_s3::{Client, Config, config::Credentials};
+use aws_sdk_s3::{
+    Client, Config,
+    config::Credentials,
+    types::{Delete, ObjectIdentifier},
+};
 use dto::{Error, Result};
 
 use crate::config;
@@ -14,6 +18,30 @@ pub struct PutObjectResult {
 pub struct S3Client {
     pub client: Client,
     bucket_name: String,
+}
+
+pub enum S3ContentType {
+    Jpeg,
+    Png,
+    Pdf,
+}
+
+impl From<&str> for S3ContentType {
+    fn from(s: &str) -> Self {
+        match s {
+            "image/jpeg" => S3ContentType::Jpeg,
+            "image/jpg" => S3ContentType::Jpeg,
+            "image/png" => S3ContentType::Png,
+            "application/pdf" => S3ContentType::Pdf,
+            _ => S3ContentType::Png,
+        }
+    }
+}
+
+pub struct S3Object {
+    pub key: String,
+    pub data: Vec<u8>,
+    pub content_type: Option<S3ContentType>,
 }
 
 impl S3Client {
@@ -35,6 +63,30 @@ impl S3Client {
             client,
             bucket_name: bucket_name.to_string(),
         }
+    }
+
+    pub async fn get_object_bytes(&self, key: &str) -> Result<S3Object> {
+        let res = self
+            .client
+            .get_object()
+            .bucket(&self.bucket_name)
+            .key(key)
+            .send()
+            .await
+            .map_err(|e| {
+                tracing::error!("Failed to get object {}", e.to_string());
+                Error::AssetError(e.to_string())
+            })?;
+        let content_type = res.content_type().as_deref().map(S3ContentType::from);
+        let data = res.body.collect().await.map_err(|e| {
+            tracing::error!("Failed to read object body {}", e.to_string());
+            Error::AssetError(e.to_string())
+        })?;
+        Ok(S3Object {
+            key: key.to_string(),
+            data: data.to_vec(),
+            content_type,
+        })
     }
 
     pub async fn get_put_object_uri(
@@ -83,17 +135,35 @@ impl S3Client {
 
         Ok(result)
     }
-    pub async fn delete_object(&self, key: &str) -> Result<()> {
+    pub async fn delete_objects(&self, keys: Vec<String>) -> Result<()> {
+        let objects = keys
+            .into_iter()
+            .filter_map(|key| match ObjectIdentifier::builder().key(key).build() {
+                Ok(obj) => Some(obj),
+                Err(e) => {
+                    tracing::error!("Failed to create ObjectIdentifier {}", e.to_string());
+                    None
+                }
+            })
+            .collect::<Vec<_>>();
+        let delete = Delete::builder()
+            .set_objects(Some(objects))
+            .build()
+            .map_err(|e| {
+                tracing::error!("Failed to create Delete {}", e.to_string());
+                Error::AssetError(e.to_string())
+            })?;
         self.client
-            .delete_object()
+            .delete_objects()
             .bucket(&self.bucket_name)
-            .key(key)
+            .delete(delete)
             .send()
             .await
             .map_err(|e| {
                 tracing::error!("Failed to delete object {}", e.to_string());
                 Error::AssetError(e.to_string())
             })?;
+
         Ok(())
     }
 }
