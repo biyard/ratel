@@ -24,9 +24,10 @@ pub struct Config {
     pub watermark_sqs_url: &'static str,
     pub from_email: &'static str,
     pub telegram_token: &'static str,
+    pub telegram_bot_url: &'static str,
     pub noncelab_token: &'static str,
     pub did: DidConfig,
-    pub bedrock_model_id: &'static str,
+    pub bedrock: BedrockConfig,
     pub private_bucket_name: &'static str,
 }
 
@@ -62,6 +63,11 @@ pub struct BucketConfig {
     pub name: &'static str,
     pub asset_dir: &'static str,
     pub expire: u64,
+}
+#[derive(Debug)]
+pub struct BedrockConfig {
+    pub nova_micro_model_id: &'static str,
+    pub nova_lite_model_id: &'static str,
 }
 
 impl Default for Config {
@@ -110,6 +116,7 @@ impl Default for Config {
             slack_channel_monitor: option_env!("SLACK_CHANNEL_MONITOR")
                 .expect("SLACK_CHANNEL_MONITOR is required"),
             telegram_token: option_env!("TELEGRAM_TOKEN").expect("You must set TELEGRAM_TOKEN"),
+            telegram_bot_url: option_env!("TELEGRAM_BOT_URL").expect("You must set TELEGRAM_BOT_URL"),
             noncelab_token: option_env!("NONCELAB_TOKEN").expect("You must set NONCELAB_TOKEN"),
             did: DidConfig {
                 bbs_bls_x: option_env!("BBS_BLS_X").expect("You must set BBS_BLS_X"),
@@ -122,7 +129,10 @@ impl Default for Config {
                 p256_crv: option_env!("P256_CRV").expect("You must set P256_CRV"),
             },
             private_bucket_name: option_env!("PRIVATE_BUCKET_NAME").expect("You must set PRIVATE_BUCKET_NAME"),
-            bedrock_model_id: option_env!("BEDROCK_MODEL_ID").expect("You must set BEDROCK_MODEL_ID"),
+            bedrock: BedrockConfig {
+                nova_micro_model_id: option_env!("NOVA_MICRO_MODEL_ID").expect("You must set NOVA_MICRO_MODEL_ID"),
+                nova_lite_model_id: option_env!("NOVA_LITE_MODEL_ID").expect("You must set NOVA_LITE_MODEL_ID"),
+            },
         }
     }
 }
