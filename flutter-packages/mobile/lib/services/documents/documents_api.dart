@@ -54,7 +54,7 @@ class DocumentsApi extends GetConnect {
   Future<void> putToS3(String url, Uint8List bytes) async {
     final put = await http.put(
       Uri.parse(url),
-      // headers: {'Content-Type': 'image/jpeg'},
+      headers: {'Content-Type': 'image/jpeg'},
       body: bytes,
     );
     if (put.statusCode < 200 || put.statusCode >= 300) {
