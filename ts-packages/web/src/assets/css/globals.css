@@ -387,7 +387,7 @@ a {
   }
 
   .text-card-more-muted {
-    color: var(--card-more-muted);
+    color: var(--card-foreground-more-muted);
   }
 
   /* Background colors */
