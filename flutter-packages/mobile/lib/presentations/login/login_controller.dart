@@ -43,17 +43,20 @@ class LoginController extends BaseController {
   }
 
   Future<void> signInWithGoogle() async {
+    final auth = Get.find<AuthService>();
     if (isBusy.value) return;
     isBusy.value = true;
-    try {
-      final signIn = await ByFirebase().signIn();
-      logger.d("user: ${signIn}");
-    } catch (e, st) {
-      logger.e('Google Sign-In error: ${e}');
-      Biyard.error('Google Sign-In', '$e');
-    } finally {
-      isBusy.value = false;
-    }
+
+    final signIn = await auth.connectToGoogle("");
+    logger.d("user: ${signIn}");
+    // try {
+
+    // } catch (e, st) {
+    //   logger.e('Google Sign-In error: ${e}');
+    //   Biyard.error('Google Sign-In', '$e');
+    // } finally {
+    //   isBusy.value = false;
+    // }
   }
 
   void goToSignup() {

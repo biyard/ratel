@@ -33,6 +33,30 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.0"
+  agent_dart:
+    dependency: "direct main"
+    description:
+      name: agent_dart
+      sha256: "30f19500d33b8030482b30a7308d1992c1511d80485c3425d477274a6b47681b"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.0-dev.40"
+  agent_dart_base:
+    dependency: transitive
+    description:
+      name: agent_dart_base
+      sha256: ae9c8974f026bb119f214d41ba571b6ebddde1362c27bc14b92b56b01b020fab
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.0-dev.35"
+  agent_dart_ffi:
+    dependency: transitive
+    description:
+      name: agent_dart_ffi
+      sha256: bc6a446d53b0810dd0c4085dca2e87fee55fe68d4d83d2a21e9497a552caab26
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.0-dev.36"
   analyzer:
     dependency: transitive
     description:
@@ -97,6 +121,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.1"
+  bip32:
+    dependency: transitive
+    description:
+      name: bip32
+      sha256: "54787cd7a111e9d37394aabbf53d1fc5e2e0e0af2cd01c459147a97c0e3f8a97"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.0"
+  bip39:
+    dependency: transitive
+    description:
+      name: bip39
+      sha256: de1ee27ebe7d96b84bb3a04a4132a0a3007dcdd5ad27dd14aa87a29d97c45edc
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.6"
   boolean_selector:
     dependency: transitive
     description:
@@ -110,6 +150,14 @@ packages:
     description:
       name: bs58
       sha256: "3ed24dadf386ca749ff50af678be1131ef569a3583a6f37b87b90c032270c767"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.2"
+  bs58check:
+    dependency: transitive
+    description:
+      name: bs58check
+      sha256: c4a164d42b25c2f6bc88a8beccb9fc7d01440f3c60ba23663a20a70faf484ea9
       url: "https://pub.dev"
     source: hosted
     version: "1.0.2"
@@ -185,6 +233,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.3.5"
+  cbor:
+    dependency: transitive
+    description:
+      name: cbor
+      sha256: "1e0094d5f034c9dfc23f46cf8f8550da1d537c6f5c4ca196a7e02de80d7bbd55"
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.1.0"
   characters:
     dependency: transitive
     description:
@@ -841,6 +897,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.4.1"
+  hex:
+    dependency: transitive
+    description:
+      name: hex
+      sha256: "4e7cd54e4b59ba026432a6be2dd9d96e4c5205725194997193bf871703b82c4a"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.2.0"
   html:
     dependency: transitive
     description:
@@ -1329,6 +1393,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.5.1"
+  protobuf:
+    dependency: transitive
+    description:
+      name: protobuf
+      sha256: "68645b24e0716782e58948f8467fd42a880f255096a821f9e7d0ec625b00c84d"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.1.0"
   pub_semver:
     dependency: transitive
     description:
@@ -1353,6 +1425,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.0.3"
+  recase:
+    dependency: transitive
+    description:
+      name: recase
+      sha256: e4eb4ec2dcdee52dcf99cb4ceabaffc631d7424ee55e56f280bc039737f89213
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.1.0"
   reown_appkit:
     dependency: "direct main"
     description:
@@ -1694,6 +1774,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.6.11"
+  tuple:
+    dependency: transitive
+    description:
+      name: tuple
+      sha256: a97ce2013f240b2f3807bcbaf218765b6f301c3eff91092bcfa23a039e7dd151
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.2"
   typed_data:
     dependency: transitive
     description:
@@ -1774,6 +1862,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.5.1"
+  validators:
+    dependency: transitive
+    description:
+      name: validators
+      sha256: "884515951f831a9c669a41ed6c4d3c61c2a0e8ec6bca761a4480b28e99cecf5d"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.0.0"
   vector_graphics:
     dependency: transitive
     description:
