@@ -8,7 +8,6 @@ import { ApolloProvider } from '@apollo/client';
 import { hydrate, QueryClientProvider } from '@tanstack/react-query';
 import { getQueryClient } from './getQueryClient';
 
-
 export default function Providers({
   children,
   dehydratedState,
