@@ -111,9 +111,9 @@ class VerifiedScreen extends GetWidget<VerifiedController> {
         );
       default:
         return StepMedicalReview(
-          height: 171.2,
-          weight: 70,
-          bmi: 23.0,
+          height: controller.height.value,
+          weight: controller.weight.value,
+          bmi: controller.bmi.value,
           onRecapture: controller.back,
           onDone: controller.goMain,
         );
