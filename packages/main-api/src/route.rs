@@ -1,6 +1,8 @@
 use std::sync::Arc;
 
 use bdk::prelude::*;
+use tower_http::trace::TraceLayer;
+use tracing::Level;
 
 use crate::{
     controllers::{
@@ -17,6 +19,15 @@ use crate::{
                 follow::connection_follow_handler, network::list_connections_handler,
                 search::list_connections_by_keyword_handler,
             },
+            conversations::{
+                add_conversations::create_conversation_handler,
+                get_conversation_by_id::get_conversation_by_id_handler,
+                get_conversations::get_conversations_handler,
+                messages::{
+                    add_messages::add_message_handler, clear_message::clear_message_handler,
+                    get_messages::get_messages_handler, poll_messages::poll_messages_handler,
+                },
+            },
             dagits::{
                 add_oracle::add_oracle_handler,
                 artworks::{
@@ -31,6 +42,7 @@ use crate::{
             },
             dashboards::get_dashboard::get_dashboard_handler,
             documents::{
+                extract_medical_info::{MedicalHandlerState, extract_medical_info_handler},
                 extract_passport_info::{PassportHandlerState, extract_passport_info_handler},
                 upload_private_image::{UploadPrivateImageState, upload_private_image_handler},
             },
@@ -44,6 +56,11 @@ use crate::{
             notifications::{
                 get_notifications::get_notifications_handler,
                 mark_all_read::mark_all_notifications_read_handler,
+            },
+            oauth::{
+                approve::approve_handler, authorize::authorize_handler,
+                oauth_authorization_server::oauth_authorization_server_handler,
+                register::register_handler, token::token_handler,
             },
             oracles::create_oracle::create_oracle_handler,
             spaces::{delete_space::delete_space_handler, get_my_space::get_my_space_controller},
@@ -146,6 +163,80 @@ pub async fn route(
             controllers::m1::MenaceController::route(pool.clone())?,
         )
         .native_route("/v2/users/logout", npost(logout_handler))
+        .route(
+            "/v2/conversations",
+            post_with(
+                create_conversation_handler,
+                api_docs!(
+                    "Create Conversation",
+                    "Create a new group or channel conversation"
+                ),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/v2/conversations",
+            get_with(
+                get_conversations_handler,
+                api_docs!(
+                    "Get Conversations",
+                    "Retrieve user's conversations with pagination"
+                ),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/v2/conversations/:conversation_id",
+            get_with(
+                get_conversation_by_id_handler,
+                api_docs!(
+                    "Get Conversation by ID",
+                    "Retrieve a specific conversation by ID"
+                ),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/v2/conversations/:conversation_id/messages",
+            post_with(
+                add_message_handler,
+                api_docs!("Add Message", "Add a new message to a conversation"),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/v2/conversations/:conversation_id/messages",
+            get_with(
+                get_messages_handler,
+                api_docs!(
+                    "Get Messages",
+                    "Retrieve messages from a conversation with pagination"
+                ),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/v2/conversations/:conversation_id/messages/poll",
+            get_with(
+                poll_messages_handler,
+                api_docs!(
+                    "Poll Messages",
+                    "Long poll for new messages in a conversation"
+                ),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/v2/messages/:message_id/clear",
+            post_with(
+                clear_message_handler,
+                api_docs!(
+                    "Clear Message",
+                    "Clear the content of a message (soft delete)"
+                ),
+            )
+            .with_state(pool.clone()),
+        )
         .route(
             "/v2/industries/select-topics",
             post_with(
@@ -374,13 +465,28 @@ pub async fn route(
             }),
         )
         .route(
+            "/v2/verifiable-credentials/medical",
+            post_with(
+                extract_medical_info_handler,
+                api_docs!(
+                    "Extract Information from Medical Image",
+                    r#"This endpoint allows you to extract medical information from an image."#
+                ),
+            )
+            .with_state(MedicalHandlerState {
+                pool: pool.clone(),
+                bedrock_client: bedrock_client.clone(),
+                s3_client: private_s3_client.clone(),
+            }),
+        )
+        .route(
             "/v2/documents/passport",
             post_with(
                 extract_passport_info_handler,
                 api_docs!(
                     "Extract Information from Passport Image",
                     r#"This endpoint allows you to extract passport information from an image.
-                
+
                 **Authorization header required**"#
                 ),
             )
@@ -426,6 +532,40 @@ pub async fn route(
             )
             .with_state(pool.clone()),
         )
+        .native_route(
+            "/v2/oauth/register",
+            npost(register_handler)
+                .options(register_handler)
+                .with_state(pool.clone()),
+        )
+        .native_route(
+            "/v2/oauth/approve",
+            npost(approve_handler)
+                .options(approve_handler)
+                .with_state(pool.clone()),
+        )
+        .native_route(
+            "/v2/oauth/authorize",
+            nget(authorize_handler).with_state(pool.clone()),
+        )
+        .native_route(
+            "/v2/oauth/token",
+            npost(token_handler)
+                .options(token_handler)
+                .with_state(pool.clone()),
+        )
+        .route(
+            "/.well-known/oauth-authorization-server",
+            get_with(
+                oauth_authorization_server_handler,
+                api_docs!(
+                    "Authorization Server Metadata",
+                    "Retrieve OAuth 2.0 Authorization Server Metadata"
+                ),
+            )
+            .options(oauth_authorization_server_handler)
+            .with_state(pool.clone()),
+        )
         .route(
             "/m2/noncelab/users",
             post_with(
@@ -434,13 +574,36 @@ pub async fn route(
                     RegisterUserResponse,
                     "Register users by Noncelab",
                     r#"This endpoint allows you to register users by Noncelab.
-                    
+
                     **Authorization header required**
-                    
+
                     `Authorization: Bearer <token>`"#
                 ),
             )
             .with_state(pool.clone()),
         )
-        .native_route("/.well-known/did.json", nget(get_did_document_handler)))
+        .native_route("/.well-known/did.json", nget(get_did_document_handler))
+        .layer(
+            TraceLayer::new_for_http()
+                .make_span_with(|request: &axum::http::Request<_>| {
+                    tracing::span!(
+                        Level::INFO,
+                        "request",
+                        method = %request.method(),
+                        uri = %request.uri(),
+                        version = ?request.version()
+                    )
+                })
+                .on_response(
+                    |response: &axum::http::Response<_>,
+                     latency: std::time::Duration,
+                     _span: &tracing::Span| {
+                        tracing::info!(
+                            status = %response.status(),
+                            latency = ?latency,
+                            "response generated"
+                        )
+                    },
+                ),
+        ))
 }

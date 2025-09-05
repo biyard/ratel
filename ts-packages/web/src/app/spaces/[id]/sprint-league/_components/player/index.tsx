@@ -14,6 +14,7 @@ import IsolatedCharacter from '../animation/isolated-character';
 
 import { pixiAssetManager } from '../animation/assets';
 import { useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 
 export const BasePlayerImages: PlayerImages[] = [
   {
@@ -58,6 +59,7 @@ export const BasePlayerImages: PlayerImages[] = [
 ];
 
 export default function PlayerEdit({ isEdit }: { isEdit: boolean }) {
+  const t = useTranslations('SprintSpace');
   const updatePlayer = useSprintLeagueStore((s) => s.updatePlayer);
   const storePlayers = useSprintLeagueStore((s) => s.players);
   const popup = usePopup();
@@ -110,7 +112,7 @@ export default function PlayerEdit({ isEdit }: { isEdit: boolean }) {
     <BlackBox>
       <div className="w-full flex flex-col gap-8">
         <div className="font-bold text-white text-[15px]/[20px]">
-          Sprint Players
+          {t('sprint_players')}
         </div>
         <div className="flex flex-col gap-10 w-full">
           {Object.values(storePlayers).map((player) => (
@@ -120,12 +122,16 @@ export default function PlayerEdit({ isEdit }: { isEdit: boolean }) {
                   id={player.id}
                   isEdit={isEdit}
                   handleSelect={() => {
-                    openCharacterSelectModal(popup, (images: PlayerImages) => {
-                      updatePlayer(player.id, {
-                        ...player,
-                        player_images: images,
-                      });
-                    });
+                    openCharacterSelectModal(
+                      t,
+                      popup,
+                      (images: PlayerImages) => {
+                        updatePlayer(player.id, {
+                          ...player,
+                          player_images: images,
+                        });
+                      },
+                    );
                   }}
                   alias={`${player.player_images.alias}`}
                 />
@@ -173,6 +179,7 @@ function PlayerSelector({
   alias: string;
   handleSelect: () => void;
 }) {
+  const t = useTranslations('SprintSpace');
   const isEmpty = alias.startsWith('_');
   return (
     <div className="relative bg-neutral-800 rounded-lg">
@@ -183,7 +190,7 @@ function PlayerSelector({
           className="z-1 absolute -translate-x-1/2 -translate-y-3/4 top-3/4 left-1/2"
           onClick={handleSelect}
         >
-          Select Character
+          {t('select_character')}
         </Button>
       )}
       <div className="aspect-square size-75 rounded-lg overflow-hidden relative">
