@@ -43,4 +43,12 @@ class SecurePassportStore {
     logger.d("Read from secure store: birth=$birth, country=$country");
     return (birth: birth, country: country, gender: gender);
   }
+
+  Future<void> clear(int userId) async {
+    await Future.wait([
+      s.delete(key: "$_kBirth $userId"),
+      s.delete(key: "$_kCountry $userId"),
+      s.delete(key: "$_kGender $userId"),
+    ]);
+  }
 }

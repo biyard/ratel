@@ -2,23 +2,19 @@ import 'package:ratel/exports.dart';
 import 'package:ratel/presentations/verified/components/utils/review_field.dart';
 import 'package:ratel/presentations/verified/components/utils/review_label.dart';
 
-class StepReview extends StatelessWidget {
-  const StepReview({
+class StepMedicalReview extends StatelessWidget {
+  const StepMedicalReview({
     super.key,
-    required this.name,
-    required this.birth,
-    required this.nationality,
-    required this.expire,
-    required this.gender,
+    required this.height,
+    required this.weight,
+    required this.bmi,
     required this.onRecapture,
     required this.onDone,
   });
 
-  final String name;
-  final String birth;
-  final String nationality;
-  final String expire;
-  final String gender;
+  final double height;
+  final double weight;
+  final double bmi;
   final VoidCallback onRecapture;
   final VoidCallback onDone;
 
@@ -67,7 +63,7 @@ class StepReview extends StatelessWidget {
                     ),
                   ),
                   const Text(
-                    "We never save your privacy (including passport, birth date and so on) into our server.\n"
+                    "We never save your privacy into our server.\n"
                     "It will only be utilized to create anonymous credential called SSI (self-sovereign identity).",
                     style: TextStyle(
                       color: AppColors.neutral300,
@@ -80,20 +76,14 @@ class StepReview extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       6.vgap,
-                      label('Name'),
-                      field(name),
+                      label('Height (cm)'),
+                      field(height.toString()),
                       12.vgap,
-                      label('Birth date'),
-                      field(birth),
+                      label('Weight (kg)'),
+                      field(weight.toString()),
                       12.vgap,
-                      label('Nationality'),
-                      field(nationality),
-                      12.vgap,
-                      label('Expiration date'),
-                      field(expire),
-                      12.vgap,
-                      label('Gender'),
-                      field(gender),
+                      label('BMI (kg/m²)'),
+                      field(bmi.toString()),
                     ],
                   ),
                   24.vgap,
