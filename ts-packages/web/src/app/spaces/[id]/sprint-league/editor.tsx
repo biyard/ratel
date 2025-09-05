@@ -100,16 +100,7 @@ export function SprintLeagueEditor({ spaceId }: { spaceId: number }) {
     }
 
     initialize(sprintLeague.players);
-    // const timer = setTimeout(() => {
-    //   if (storedPlayers && Object.keys(storedPlayers).length > 0) {
-    //     return;
-    //   }
-    //   initialize(sprintLeague?.players ?? []);
-    // }, 1000);
-    // return () => {
-    //   clearTimeout(timer);
-    // };
-  }, [sprintLeague?.players, initialize]);
+  }, [sprintLeague?.players, initialize, spaceId]);
 
   useEffect(() => {
     if (isEdit) {
