@@ -61,6 +61,8 @@ class _MedicalCaptureState extends State<MedicalCapture> {
       final bytes = await compressJpeg(raw);
       final presign = await _api.getPresigned();
       await _api.putToS3(presign.url, bytes);
+
+      logger.d("presigned key: ${presign.key}");
       final info = await _api.uploadMedicalKeys([presign.key]);
       if (!mounted) return;
       setState(() {

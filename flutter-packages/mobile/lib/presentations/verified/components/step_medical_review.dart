@@ -1,4 +1,6 @@
 import 'package:ratel/exports.dart';
+import 'package:ratel/presentations/verified/components/utils/review_field.dart';
+import 'package:ratel/presentations/verified/components/utils/review_label.dart';
 
 class StepMedicalReview extends StatelessWidget {
   const StepMedicalReview({
@@ -132,32 +134,6 @@ class StepMedicalReview extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-
-  Padding label(String t) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 3),
-      child: Text(
-        t,
-        style: const TextStyle(
-          color: AppColors.neutral400,
-          fontSize: 11,
-          height: 1.45,
-          fontWeight: FontWeight.w400,
-        ),
-      ),
-    );
-  }
-
-  AppTextField field(String v) {
-    return AppTextField(
-      hint: v,
-      controller: TextEditingController(text: v),
-      onChanged: (_) {},
-      keyboardType: TextInputType.text,
-      obscureText: false,
-      readOnly: true,
     );
   }
 }
