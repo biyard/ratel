@@ -63,7 +63,7 @@ export default function MySettings() {
             action_text={actionText}
             onClick={handleChangeLanguage}
           />
-          
+
           {/* theme box controller */}
           <SpecBox
             left_text="Theme"

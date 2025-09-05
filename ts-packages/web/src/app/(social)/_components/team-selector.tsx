@@ -58,12 +58,14 @@ export default function TeamSelector({ onSelect, team }: TeamSelectorProps) {
           <span className="font-bold text-[18px] text-foreground">
             {teams[selectedIndex].nickname}
           </span>
-          <ChevronDown size={16} className='text-foreground' />
+          <ChevronDown size={16} className="text-foreground" />
         </button>
       </DropdownMenuTrigger>
 
       <DropdownMenuContent className="w-[var(--radix-dropdown-menu-trigger-width)] bg-background">
-        <DropdownMenuLabel className="text-foreground-muted">{t('teams')}</DropdownMenuLabel>
+        <DropdownMenuLabel className="text-foreground-muted">
+          {t('teams')}
+        </DropdownMenuLabel>
         <DropdownMenuGroup>
           {teams.map((team, index) => {
             return team.nickname != '' ? (
