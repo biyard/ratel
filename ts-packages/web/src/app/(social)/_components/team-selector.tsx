@@ -55,15 +55,15 @@ export default function TeamSelector({ onSelect, team }: TeamSelectorProps) {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button className="w-full flex items-center justify-between px-2 py-2 focus:outline-none">
-          <span className="font-bold text-[18px] text-white">
+          <span className="font-bold text-[18px] text-foreground">
             {teams[selectedIndex].nickname}
           </span>
-          <ChevronDown size={16} />
+          <ChevronDown size={16} className='text-foreground' />
         </button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent className="w-[var(--radix-dropdown-menu-trigger-width)] bg-bg">
-        <DropdownMenuLabel>{t('teams')}</DropdownMenuLabel>
+      <DropdownMenuContent className="w-[var(--radix-dropdown-menu-trigger-width)] bg-background">
+        <DropdownMenuLabel className="text-foreground-muted">{t('teams')}</DropdownMenuLabel>
         <DropdownMenuGroup>
           {teams.map((team, index) => {
             return team.nickname != '' ? (
@@ -95,7 +95,7 @@ export default function TeamSelector({ onSelect, team }: TeamSelectorProps) {
                   ) : (
                     <div className="w-6 h-6 rounded-full border border-neutral-500 bg-neutral-600" />
                   )}
-                  <span>{team.nickname}</span>
+                  <span className="text-foreground-muted">{team.nickname}</span>
                 </Link>
               </DropdownMenuItem>
             ) : (
@@ -111,7 +111,7 @@ export default function TeamSelector({ onSelect, team }: TeamSelectorProps) {
               popup.open(<TeamCreationPopup />).withTitle(t('create_new_team'));
             }}
           >
-            <span>{t('create_team')}</span>
+            <span className="text-foreground-muted">{t('create_team')}</span>
           </DropdownMenuItem>
 
           <DropdownMenuItem
@@ -121,7 +121,7 @@ export default function TeamSelector({ onSelect, team }: TeamSelectorProps) {
               userInfo.refetch();
             }}
           >
-            <span>{t('logout')}</span>
+            <span className="text-foreground-muted">{t('logout')}</span>
           </DropdownMenuItem>
         </DropdownMenuGroup>
       </DropdownMenuContent>
