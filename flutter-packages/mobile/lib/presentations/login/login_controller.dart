@@ -44,11 +44,22 @@ class LoginController extends BaseController {
 
   Future<void> signInWithGoogle() async {
     final auth = Get.find<AuthService>();
+    final api = Get.find<AuthApi>();
     if (isBusy.value) return;
     isBusy.value = true;
 
     final signIn = await auth.connectToGoogle("");
     logger.d("user: ${signIn}");
+
+    final pk = auth.privateKey ?? "";
+
+    final res = await api.socialLogin(auth.email ?? "", pk);
+
+    if (res != null) {
+      Get.rootDelegate.offNamed(AppRoutes.mainScreen);
+    } else {
+      Biyard.error("Failed to login", "Login failed. Please try again later.");
+    }
     // try {
 
     // } catch (e, st) {
