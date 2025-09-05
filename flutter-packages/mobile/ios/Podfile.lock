@@ -1,4 +1,6 @@
 PODS:
+  - agent_dart (1.0.0):
+    - Flutter
   - AppAuth (1.7.6):
     - AppAuth/Core (= 1.7.6)
     - AppAuth/ExternalUserAgent (= 1.7.6)
@@ -306,6 +308,7 @@ PODS:
     - FlutterMacOS
 
 DEPENDENCIES:
+  - agent_dart (from `.symlinks/plugins/agent_dart/ios`)
   - appcheck (from `.symlinks/plugins/appcheck/ios`)
   - camera_avfoundation (from `.symlinks/plugins/camera_avfoundation/ios`)
   - coinbase_wallet_sdk (from `.symlinks/plugins/coinbase_wallet_sdk/ios`)
@@ -373,6 +376,8 @@ SPEC REPOS:
     - SwiftyGif
 
 EXTERNAL SOURCES:
+  agent_dart:
+    :path: ".symlinks/plugins/agent_dart/ios"
   appcheck:
     :path: ".symlinks/plugins/appcheck/ios"
   camera_avfoundation:
@@ -427,6 +432,7 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/webview_flutter_wkwebview/darwin"
 
 SPEC CHECKSUMS:
+  agent_dart: 0a02f15e81e2cd29ee559fa519aa368a529c453c
   AppAuth: d4f13a8fe0baf391b2108511793e4b479691fb73
   appcheck: 3c94d0ffc94bd639938cac7427d5b13df2795404
   AppCheckCore: cc8fd0a3a230ddd401f326489c99990b013f0c4f

@@ -1,3 +1,5 @@
+import 'package:ratel/exports.dart';
+
 class File {
   final String id;
   final String name;

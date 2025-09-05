@@ -209,12 +209,9 @@ class ByFirebase extends GetxService {
             '925748630857-gla98vdbf4th33ahd0shlsu47qnp0u90.apps.googleusercontent.com',
         scopes: [
           // "email",
-          // 'https://www.googleapis.com/auth/drive.appdata',
+          'https://www.googleapis.com/auth/drive.appdata',
         ],
       );
-
-      await googleSignIn.disconnect();
-      await googleSignIn.signOut();
 
       GoogleSignInAccount? googleUser = await googleSignIn.signIn();
 

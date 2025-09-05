@@ -11,13 +11,17 @@ class DriveApi extends GetConnect {
   }
 
   Future<FileList?> listFiles(String accessToken) async {
-    String uri = "$base/files";
+    final String fileName = Config.env;
+    logger.d("list files: $accessToken");
+    String uri = "$base/files?q=${fileName}";
     final response = await get(
       uri,
       headers: {'Authorization': 'Bearer $accessToken'},
       query: {'spaces': 'appDataFolder'},
       decoder: (map) => FileList.fromJson(map),
     );
+
+    logger.d("file responses: $response");
 
     if (response.statusCode == 200) {
       return response.body;

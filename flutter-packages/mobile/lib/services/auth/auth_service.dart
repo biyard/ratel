@@ -1,6 +1,9 @@
 import 'dart:convert';
 
+import 'package:crypto/crypto.dart' as crypto;
+import 'package:cryptography/cryptography.dart' as cg;
 import 'package:ratel/exports.dart';
+import 'package:ratel/services/auth/ic_principal.dart';
 import 'package:ratel/services/rust/rust_service.dart';
 
 class AuthService extends GetxService {
@@ -33,9 +36,11 @@ class AuthService extends GetxService {
     logger.d('accessToken $accessToken');
 
     final token = await firebase.idToken();
-    logger.d('idToken token');
+
     idToken = token;
     provider = 'google';
+
+    logger.d('idToken token: ${idToken}');
 
     if (idToken == null && idToken == '') {
       Biyard.error("connect-to-google", "failed to get idToken");
@@ -62,15 +67,11 @@ class AuthService extends GetxService {
       final file = await api.uploadFile(accessToken ?? "", encodedPk);
       logger.d("Uploaded new file: ${file.id} ${file.name}");
 
-      final identity = await rust.createIdentity(encodedPk);
+      final p = await IcpPrincipalAgent.fromPkcs8Base64(encodedPk);
 
-      logger.d(
-        "identity: ${identity.address} privateKey: ${identity.privateKey} publicKey: ${identity.publicKey}",
-      );
+      logger.d("identity: ${p}");
 
-      principal = identity.address;
-      privateKey = identity.privateKey;
-      publicKey = identity.publicKey;
+      principal = p;
 
       return; //return Signup Event, private key
     } else {
@@ -84,117 +85,21 @@ class AuthService extends GetxService {
         }
         logger.d("Found existing file: ${file.id} $contents");
 
-        final identity = await rust.createIdentity(contents);
+        final p = await IcpPrincipalAgent.fromPkcs8Base64(contents);
+        logger.d('principal(google signed in): $p');
 
-        logger.d(
-          "identity: ${identity.address} privateKey: ${identity.privateKey} publicKey: ${identity.publicKey}",
-        );
+        // logger.d(
+        //   "identity: ${identity.address} privateKey: ${identity.privateKey} publicKey: ${identity.publicKey}",
+        // );
 
-        principal = identity.address;
-        privateKey = identity.privateKey;
-        publicKey = identity.publicKey;
+        principal = p;
+        // privateKey = identity.privateKey;
+        // publicKey = identity.publicKey;
 
         return; //return Login Event, contents
       }
     }
   }
-
-  // Future<String?> trySetupFromPrivateKey(String base64Pkcs8) async {
-  //   try {
-  //     final pkcs8Bytes = base64.decode(base64Pkcs8);
-  //     logger.d("bytes decoded: ${pkcs8Bytes.length}");
-
-  //     final keyPair = await _keyPairFromPkcs8Bytes(pkcs8Bytes);
-  //     if (keyPair == null) {
-  //       throw Exception("Failed to parse PKCS#8 or construct key pair");
-  //     }
-
-  //     privateKey = base64Pkcs8;
-  //     final pubKey = await keyPair.extractPublicKey();
-  //     publicKey = base64.encode(pubKey.bytes);
-  //     logger.d("Public key encoded: $publicKey");
-
-  //     if (publicKey != null) {
-  //       principal = getPrincipal();
-  //       logger.d("Principal: $principal");
-  //     }
-
-  //     return principal;
-  //   } catch (e, st) {
-  //     logger.e("trySetupFromPrivateKey error: $e\n$st");
-  //     return null;
-  //   }
-  // }
-
-  // Future<SimpleKeyPairData?> _keyPairFromPkcs8Bytes(Uint8List bytes) async {
-  //   try {
-  //     final parser = ASN1Parser(bytes);
-  //     final seq = parser.nextObject() as ASN1Sequence;
-
-  //     final outerOctet = seq.elements![2] as ASN1OctetString;
-
-  //     final innerParser = ASN1Parser(outerOctet.valueBytes!);
-  //     final innerOctet = innerParser.nextObject() as ASN1OctetString;
-  //     final seed = innerOctet.valueBytes!;
-
-  //     if (seed.length != 32) {
-  //       throw Exception("Seed must be exactly 32 bytes. Got ${seed.length}");
-  //     }
-
-  //     final algorithm = Ed25519();
-  //     final keyPair = await algorithm.newKeyPairFromSeed(seed);
-  //     return keyPair as SimpleKeyPairData;
-  //   } catch (e, st) {
-  //     logger.e("Failed to parse PKCS#8: $e\n$st");
-  //     return null;
-  //   }
-  // }
-
-  // String getPrincipal() {
-  //   final decoded = base64.decode(publicKey!);
-
-  //   final hash = sha224.convert(decoded).bytes;
-  //   final principalBytes = Uint8List.fromList([0x02, ...hash]);
-
-  //   final checksum = getCrc32(principalBytes);
-  //   final checksumBytes = Uint8List(4)
-  //     ..buffer.asByteData().setUint32(0, checksum, Endian.little);
-
-  //   final combined = Uint8List.fromList([...checksumBytes, ...principalBytes]);
-  //   final text = base32.encode(combined).toLowerCase();
-
-  //   final buffer = StringBuffer();
-  //   for (int i = 0; i < text.length; i++) {
-  //     if (i != 0 && i % 5 == 0) buffer.write('-');
-  //     buffer.write(text[i]);
-  //   }
-
-  //   return buffer.toString();
-  // }
-
-  // Future<SimpleKeyPair?> initOrGetIdentity(Uint8List? inputPkcs8) async {
-  //   if (pkcs8 == null && inputPkcs8 != null) {
-  //     String encoded = base64.encode(inputPkcs8);
-  //     pkcs8 = encoded;
-  //   }
-  //   return await getIdentity();
-  // }
-
-  // Future<SimpleKeyPair?> getIdentity() async {
-  //   if (pkcs8 != null) {
-  //     try {
-  //       final decoded = base64.decode(pkcs8!);
-  //       final seed = decoded.sublist(0, 32);
-  //       final keyPair = await Ed25519().newKeyPairFromSeed(seed);
-  //       return keyPair;
-  //     } catch (e) {
-  //       logger.d("Could not read the key pair: $e");
-  //       return null;
-  //     }
-  //   } else {
-  //     return null;
-  //   }
-  // }
 }
 
 // class Crc32 {
