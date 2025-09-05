@@ -65,6 +65,8 @@ class VerifiedScreen extends GetWidget<VerifiedController> {
             );
             logger.d('contains birth=$hasBirth, all=$all');
 
+            controller.upsertPassportFromInfo(info);
+
             controller.next();
           },
         );
@@ -91,20 +93,21 @@ class VerifiedScreen extends GetWidget<VerifiedController> {
             controller.height.value = info.height;
             controller.weight.value = info.weight;
 
-            // final store = SecureMedicalStore();
-            // await store.saveFromMedical(controller.userId.value, info);
+            final store = SecureMedicalStore();
+            await store.saveFromMedical(controller.userId.value, info);
 
-            // final hasBmi = await store.s.containsKey(
-            //   key: 'medical_bmi ${controller.userId.value}',
-            //   aOptions: SecurePassportStore.aOpts,
-            //   iOptions: SecurePassportStore.iOpts,
-            // );
-            // final all = await store.s.readAll(
-            //   aOptions: SecurePassportStore.aOpts,
-            //   iOptions: SecurePassportStore.iOpts,
-            // );
-            // logger.d('contains birth=$hasBmi, all=$all');
+            final hasBmi = await store.s.containsKey(
+              key: 'medical_bmi ${controller.userId.value}',
+              aOptions: SecurePassportStore.aOpts,
+              iOptions: SecurePassportStore.iOpts,
+            );
+            final all = await store.s.readAll(
+              aOptions: SecurePassportStore.aOpts,
+              iOptions: SecurePassportStore.iOpts,
+            );
+            logger.d('contains birth=$hasBmi, all=$all');
 
+            controller.upsertMedicalFromInfo(info);
             controller.medicalNext();
           },
         );
