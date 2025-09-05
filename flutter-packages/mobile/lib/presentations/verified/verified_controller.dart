@@ -1,4 +1,5 @@
 import 'package:ratel/exports.dart';
+import 'package:ratel/services/documents/secure_medical_store.dart';
 
 enum VerifiedStep {
   myCredential,
@@ -42,11 +43,39 @@ class VerifiedController extends BaseController {
       "https://metadata.ratel.foundation/1aae7a4ecfd33cfcf8bbd0a3f540b4562be19e6c.jpg";
   static const _metaGender =
       "https://metadata.ratel.foundation/46cac616c26546e62a9ce3ea614d47f7ce5e2369.jpg";
+  static const _metaHeight = 'https://metadata.ratel.foundation/height.png';
+  static const _metaWeight = 'https://metadata.ratel.foundation/weight.png';
+  static const _metaBmi = 'https://metadata.ratel.foundation/bmi.png';
 
   @override
   void onInit() {
     super.onInit();
+    // removeFromSecure();
     applyFromSecure();
+  }
+
+  void upsertPassportFromInfo(PassportInfo info) {
+    final birth = fmtYmd(info.birthDate);
+    final country = mapNationality(info.nationality);
+    final gender = info.gender;
+
+    _upsert('Birth Date', birth, _metaBirth);
+    _upsert('Country', country, _metaCountry);
+    _upsert('Gender', gender, _metaGender);
+
+    credentials.refresh();
+  }
+
+  void upsertMedicalFromInfo(MedicalInfo info) {
+    final height = info.height;
+    final weight = info.weight;
+    final bmi = info.bmi;
+
+    _upsert('Height', height.toString(), _metaHeight);
+    _upsert('Weight', weight.toString(), _metaWeight);
+    _upsert('Bmi', bmi.toString(), _metaBmi);
+
+    credentials.refresh();
   }
 
   void _upsert(String label, String? value, String metadata) {
@@ -60,6 +89,13 @@ class VerifiedController extends BaseController {
     }
   }
 
+  Future<void> removeFromSecure() async {
+    final userApi = Get.find<UserApi>();
+    final item = await userApi.getUserInfo();
+    userId(item.id);
+    await SecurePassportStore().clear(item.id);
+  }
+
   Future<void> applyFromSecure() async {
     final userApi = Get.find<UserApi>();
     final item = await userApi.getUserInfo();
@@ -68,6 +104,11 @@ class VerifiedController extends BaseController {
     _upsert('Birth Date', d.birth, _metaBirth);
     _upsert('Country', mapNationality(d.country ?? ''), _metaCountry);
     _upsert('Gender', d.gender, _metaGender);
+
+    final d2 = await SecureMedicalStore().read(item.id);
+    _upsert('Height', d2.height.toString(), _metaHeight);
+    _upsert('Weight', d2.weight.toString(), _metaWeight);
+    _upsert('Bmi', d2.bmi.toString(), _metaBmi);
   }
 
   String mapNationality(String codeOrName) {
