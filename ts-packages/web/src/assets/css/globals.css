@@ -1,89 +1,114 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
-
 @custom-variant light (&:where([data-theme=light], [data-theme=light] *));
 
-/* ===============================
-   Palette (Raw base colors) - NEVER USE THESE DIRECTLY
-   =============================== */
+/* ==========================================================================
+   DESIGN TOKENS - CORE FOUNDATION
+   ========================================================================== */
+
+/* ----------------------------
+   COLOR PALETTE (Raw values)
+   NEVER use these directly in components
+   ---------------------------- */
 @theme static {
-  /* Neutrals */
+  /* Neutral grayscale */
   --gray-50: #ffffff;
   --gray-80: #6b6b6b;
   --gray-100: #fafafa;
   --gray-400: #a1a1a1;
+  --gray-300: #D4D4D4;
   --gray-600: #525252;
   --gray-700: #404040;
   --gray-800: #262626;
   --gray-900: #171717;
   --gray-950: #0a0a0a;
 
+  /* Base backgrounds */
   --bg-dark: #1D1D1D;
   --bg-component-dark: #191919;
 
-  /* Brand & Accent */
+  /* Brand colors */
   --brand-primary: #fcb300;
   --brand-secondary: #777677;
+  
+  /* Accent colors */
   --accent-pink: #db2780;
   --accent-pink-light: #ff9eee;
   --accent-green: #6eedd8;
 
-  /* Special */
-  --pink-transparent-10: #db27801a; /* 10% opacity pink */
+  /* Special utilities */
+  --pink-transparent-10: #db27801a;
   --blue-selection: #003366;
 
-  /* UI Grays */
+  /* UI-specific grays */
   --ui-gray-30: #aeaeae;
   --ui-gray-50: #777677;
   --ui-gray-70: #464646;
   --ui-gray-80: #323232;
   --ui-gray-cg-30: #aeb8b8;
 
-  /* Static UI roles */
+  /* Static roles (don't change with theme) */
   --role-tag-static: #dee1e6;
   --role-mission-static: #dee1e6;
   --role-copyright-static: #9095a1;
 }
 
-
-/* ===============================
-   Roles (Dark = default)
-   =============================== */
+/* ----------------------------
+   SEMANTIC TOKENS (Dark theme defaults)
+   These define the visual language of the application
+   ---------------------------- */
 @theme static {
-  /* --- NEW SEMANTIC TOKENS (PHASE 1) --- */
-  /* Use these for all new development */
-  --background: var(--bg-dark); /* --color-background */
-
-  /* NEW: Semantic Text Tokens */
-  --foreground: var(--gray-50);        /* High emphasis (Titles, important text) */
-  --foreground-muted: var(--gray-400); /* Medium emphasis (Body text, descriptions) */
-  --foreground-more-muted: var(--gray-600); /* Low emphasis (Placeholders, disabled text) */
+  /* Core surfaces */
+  --background: var(--bg-dark);
+  --card: var(--bg-component-dark);
+  --popover: #1A1A1A;
   
-  --popover: #1A1A1A; /* Your dark theme value */
-  --popover-foreground: #000203; /* Text color on popover */
-
-  --card: var(--bg-component-dark); /* --color-component-bg */
+  /* Text hierarchy */
+  --foreground: var(--gray-50);
+  --foreground-muted: var(--gray-400);
+  --foreground-more-muted: var(--gray-600);
+  --foreground-inverted: var(--gray-50); 
+  --popover-foreground: #000203;
   --card-foreground: var(--gray-400);
   --card-foreground-muted: var(--gray-600);
   --card-foreground-more-muted: var(--gray-800);
+  --card-meta: var(--gray-300); 
+  
+  /* Actions and states */
   --primary: var(--brand-primary);
-  --primary-foreground: #000000;  
-
+  --primary-foreground: #000000;
   --accent: var(--accent-green);
   --accent-foreground: #000000;
-  --accent-hover: #282828; 
+  --accent-hover: #282828;
   --destructive: var(--accent-pink);
   --destructive-foreground: #ffffff;
-  --border: var(--ui-gray-80);
-  --ring: var(--brand-primary);
+  
+  /* Forms and inputs */
   --input: var(--ui-gray-80);
+  --ring: var(--brand-primary);
+  
+  /* Borders and dividers */
+  --border: var(--ui-gray-80);
+  --border-separator: var(--gray-800);
+  --border-subtle: #464646;
+  
+  /* Table styles */
+  --table-bg: var(--bg-dark);
+  --table-border: #444444;
+  --table-header-bg: #2d2d2d;
+  --table-header-fg: #f0f0f0;
+  --table-row-bg: #1a1a1a;
+  --table-row-alt-bg: #222222;
+  --table-row-hover-bg: #222222;
+  --table-cell-fg: #e0e0e0;
+  --table-selection-bg: var(--blue-selection);
 
-  /* --- LEGACY TOKENS (DO NOT USE FOR NEW CODE) --- */
-  /* These are now aliases for the new tokens or old values. */
+  /* ================================
+     LEGACY TOKENS (Deprecated - for migration only)
+     ================================ */
   --color-neutral-400: var(--foreground-muted);
   --color-neutral-600: var(--foreground-more-muted);
-  
   --color-background: var(--background);
   --color-component-bg: var(--card);
   --color-primary: var(--primary);
@@ -100,60 +125,40 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-error: var(--destructive);
-
-  /* Table roles (dark default) - These are already semantic! */
-  --table-bg: var(--bg-dark);
-  --table-border: #444444;
-  --table-header-bg: #2d2d2d;
-  --table-header-fg: #f0f0f0;
-  --table-row-bg: #1a1a1a;
-  --table-row-alt-bg: #222222;
-  --table-row-hover-bg: #222222;
-  --table-cell-fg: #e0e0e0;
-  --table-selection-bg: var(--blue-selection);
 }
 
-/* ===============================
-   Light Theme Overrides
-   =============================== */
+/* ----------------------------
+   LIGHT THEME OVERRIDES
+   ---------------------------- */
 [data-theme="light"] {
-  /* --- NEW SEMANTIC TOKENS (PHASE 1) --- */
+  /* Core surfaces */
   --background: var(--gray-50);
-
   --card: var(--gray-100);
+  --popover: var(--gray-50);
+  
+  /* Text hierarchy */
+  --foreground: var(--gray-800);
+  --foreground-muted: var(--gray-600);
+  --foreground-more-muted: var(--gray-400);
+  --foreground-inverted: var(--gray-700); 
+  --popover-foreground: #000203;
   --card-foreground: var(--gray-800);
   --card-foreground-muted: var(--gray-600);
   --card-foreground-more-muted: var(--gray-400);
-  --border: var(--table-light-border);
-  --input: #e0e0e0;
-  --accent-hover: #e5e5e5;
-  --popover: var(--gray-50); 
-  --popover-foreground: #000203; 
-
+  --card-meta: var(--gray-600); 
   
-
-  /* NEW: Semantic Text Tokens for Light Mode */
-  --foreground: var(--gray-800);       /* High emphasis becomes dark */
-  --foreground-muted: var(--gray-600); /* Muted becomes a darker gray */
-  --foreground-more-muted: var(--gray-400); /* Low emphasis becomes a lighter gray */
-
-
-
-
-  /* --- LEGACY TOKENS (DO NOT USE FOR NEW CODE) --- */
-  --color-background: var(--background);
-  --color-component-bg: var(--card);
-  --color-custom-white: var(--gray-800); /* Text becomes dark in light mode */
-  --color-neutral-900: var(--gray-50); /* Background becomes white in light mode */
-
-  --color-neutral-400: var(--foreground-more-muted); /* Note the flip! */
-  --color-neutral-600: var(--foreground-muted);
-
-  --color-footer: var(--gray-900);
-  --color-btn-hover: var(--accent-hover); 
-  --color-tab-hover: var(--accent-hover);
-
-  /* Table roles (light overrides) */
+  /* Actions and states */
+  --accent-hover: #e5e5e5;
+  
+  /* Forms and inputs */
+  --input: #e0e0e0;
+  --border: var(--table-light-border);
+  
+  /* Borders and dividers */
+  --border-separator: #E5E5E5;
+  --border-subtle: var(--gray-700);
+  
+  /* Table styles */
   --table-bg: var(--gray-50);
   --table-border: var(--table-light-border);
   --table-header-bg: var(--gray-100);
@@ -163,11 +168,24 @@
   --table-row-hover-bg: var(--table-light-hover);
   --table-cell-fg: #333333;
   --table-selection-bg: var(--table-light-selection);
+
+  /* ================================
+     LEGACY TOKEN OVERRIDES
+     ================================ */
+  --color-background: var(--background);
+  --color-component-bg: var(--card);
+  --color-custom-white: var(--gray-800);
+  --color-neutral-900: var(--gray-50);
+  --color-neutral-400: var(--foreground-more-muted);
+  --color-neutral-600: var(--foreground-muted);
+  --color-footer: var(--gray-900);
+  --color-btn-hover: var(--accent-hover);
+  --color-tab-hover: var(--accent-hover);
 }
 
-/* ===============================
-   Layout Breakpoints + Containers
-   =============================== */
+/* ----------------------------
+   LAYOUT TOKENS
+   ---------------------------- */
 @theme static {
   --breakpoint-desktop: 1177px;
   --breakpoint-tablet: 900px;
@@ -180,12 +198,12 @@
   --container-sm-mobile: 380px;
 }
 
-/* ===============================
-   Legacy Aliases (for backwards compat) - AVOID USING
-   =============================== */
+/* ----------------------------
+   LEGACY ALIASES (Avoid using in new code)
+   ---------------------------- */
 @theme static {
-  --color-custom-white: var(--foreground); /* Now maps to semantic foreground */
-  --color-neutral-900: var(--background); /* Now maps to semantic background */
+  --color-custom-white: var(--foreground);
+  --color-neutral-900: var(--background);
   --color-neutral-80: var(--gray-80);
   --color-neutral-400: var(--gray-400);
   --color-neutral-500: var(--gray-500);
@@ -194,13 +212,13 @@
   --color-neutral-800: var(--gray-800);
 }
 
+/* ==========================================================================
+   GLOBAL STYLES
+   ========================================================================== */
 
-/* ===============================
-   Base HTML + Utilities
-   =============================== */
 html {
-  background-color: var(--background); /* Uses new semantic token */
-  color: var(--foreground-muted); /* Uses new semantic token */
+  background-color: var(--background);
+  color: var(--foreground-muted);
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
@@ -233,9 +251,13 @@ button, a {
   }
 }
 
-/* ===============================
-   Table (ProseMirror / Tiptap) - PERFECT EXAMPLE!
-   =============================== */
+/* ==========================================================================
+   COMPONENT STYLES
+   ========================================================================== */
+
+/* ----------------------------
+   Table (ProseMirror / Tiptap)
+   ---------------------------- */
 .tiptap-table {
   border-collapse: collapse;
   width: 100%;
@@ -273,14 +295,14 @@ button, a {
   background-color: var(--table-row-hover-bg) !important;
 }
 
-/* ===============================
-   Misc Components
-   =============================== */
+/* ----------------------------
+   UI Components
+   ---------------------------- */
 .sidemenu-link {
   @apply flex flex-row items-center gap-1 px-1 py-2 rounded-md font-bold text-sm;
 
   &:hover {
-    background-color: var(--accent-hover); /* Use the new semantic token */
+    background-color: var(--accent-hover);
   }
 }
 
@@ -289,7 +311,7 @@ button, a {
 }
 
 .feed-content h2 {
-  @apply text-base font-bold  mb-2 mt-4;
+  @apply text-base font-bold mb-2 mt-4;
   color: var(--foreground);
 }
 
@@ -309,9 +331,9 @@ button, a {
   margin: 0 1rem;
 }
 
-/* ===============================
-   Scrollbar / Editor / Toast
-   =============================== */
+/* ----------------------------
+   Utilities
+   ---------------------------- */
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
@@ -329,7 +351,7 @@ button, a {
   padding-left: 1.5rem;
 }
 
-/* toast-overrides.css */
+/* Toast overrides */
 .custom-toast-wrapper {
   background: transparent !important;
   box-shadow: none !important;
@@ -339,43 +361,29 @@ button, a {
   padding: 0 !important;
 }
 
-
-
+/* ==========================================================================
+   TAILWIND UTILITIES FOR SEMANTIC TOKENS
+   ========================================================================== */
 @layer utilities {
-  .text-foreground {
-    @apply text-[var(--foreground)];
-  }
+  /* Text colors */
+  .text-foreground { color: var(--foreground); }
+  .text-foreground-muted { color: var(--foreground-muted); }
+  .text-foreground-more-muted { color: var(--foreground-more-muted); }
+  .text-popover-foreground { color: var(--popover-foreground); }
+  .text-foreground-inverted { color: var(--foreground-inverted); }
+  .text-card-meta { color: var(--card-meta); }
 
-  .text-foreground-muted {
-    @apply text-[var(--foreground-muted)];
-  }
-
-  .text-foreground-more-muted {
-    @apply text-[var(--foreground-more-muted)];
-  }
-
-  .bg-popover {
-    @apply bg-[var(--popover)];
-  }
-
-
-  .text-popover-foreground {
-    @apply text-[var(--popover-foreground)];
-  }
-
-  .bg-card {
-    @apply bg-[var(--card)];
-  }
-
-  .bg-card-foreground {
-    @apply bg-[var(--card-foreground)];
-  }
-
-  .bg-card-foreground-muted {
-    @apply bg-[var(--card-foreground-muted)];
-  }
-
-  .bg-card-foreground-more-muted {
-    @apply bg-[var(--card-foreground-more-muted)];
-  }
+  .text-card-more-muted { color: var(--card-more-muted); }
+  
+  /* Background colors */
+  .bg-popover { background-color: var(--popover); }
+  .bg-card { background-color: var(--card); }
+  .bg-card-foreground { background-color: var(--card-foreground); }
+  .bg-card-foreground-muted { background-color: var(--card-foreground-muted); }
+  .bg-card-foreground-more-muted { background-color: var(--card-foreground-more-muted); }
+  .bg-accent { background-color: var(--accent); }
+  
+  /* Border colors */
+  .border-separator { border-color: var(--border-separator); }
+  .border-subtle { border-color: var(--border-subtle); }
 }

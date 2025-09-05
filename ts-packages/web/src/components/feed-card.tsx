@@ -225,7 +225,7 @@ export function FeedContents({
   return (
     <div className="text-white">
       <p
-        className="feed-content font-normal text-[15px]/[24px] align-middle tracking-[0.5px] text-c-wg-30 px-5"
+        className="feed-content text-card-meta font-normal text-[15px]/[24px] align-middle tracking-[0.5px] px-5"
         dangerouslySetInnerHTML={{ __html: sanitized }}
       ></p>
 
@@ -270,7 +270,7 @@ export function UserBadge({
   name: string;
 }) {
   return (
-    <Row className="w-fit items-center med-16 text-white">
+    <Row className="w-fit items-center med-16 text-foreground">
       <Image
         src={profile_url}
         alt="User Profile"
@@ -298,7 +298,7 @@ export function SpaceTag() {
 
 export function IndustryTag({ industry }: { industry: string }) {
   return (
-    <span className="rounded-sm border border-c-wg-70 px-2 text-xs/[25px] font-semibold align-middle uppercase">
+    <span className="rounded-sm border border-subtle px-2 text-xs/[25px] font-semibold text-foreground-inverted align-middle uppercase">
       {industry}
     </span>
   );
