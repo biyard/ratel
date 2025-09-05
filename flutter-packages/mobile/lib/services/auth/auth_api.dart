@@ -224,6 +224,51 @@ class AuthApi extends GetConnect {
     return loginRes;
   }
 
+  Future<LoginResult?> socialLogin(String email, String pkcs8B64) async {
+    await ensureLoggedOut();
+
+    final uri = Uri.parse(apiEndpoint)
+        .resolve('/v1/users')
+        .replace(queryParameters: <String, String>{'action': 'login'});
+
+    final authHeader = await _buildUserSigHeaderFromPkcs8(pkcs8B64);
+
+    final res = await get(
+      uri.toString(),
+      headers: _noCookieJson(auth: authHeader),
+    );
+
+    logger.d("response body: ${res.body}");
+
+    if (!res.isOk) return null;
+
+    final cookies = _extractCookies(res.headers ?? {});
+    final sidName = _sidKeyStorage;
+    final authName = _authKeyStorage;
+
+    if (cookies[sidName] != null) _cookieJar[sidName] = cookies[sidName]!;
+    if (cookies[authName] != null) _cookieJar[authName] = cookies[authName]!;
+
+    if (cookies[sidName] != null) {
+      await _secure.write(key: sidName, value: cookies[sidName]!);
+    }
+    if (cookies[authName] != null) {
+      await _secure.write(key: authName, value: cookies[authName]!);
+    }
+
+    logger.d('cookie jar updated: $_cookieJar');
+
+    logger.d("cookie: ${cookies}");
+
+    await AuthDb.save(email, cookies[sidName], cookies[authName]);
+
+    return LoginResult(
+      body: res.body,
+      sid: cookies[sidName],
+      authToken: cookies[authName],
+    );
+  }
+
   Future<dynamic> loginWithPassword(String email, String password) async {
     await ensureLoggedOut();
     final hashed = '0x${sha256Hex(password)}';
@@ -324,6 +369,26 @@ class AuthApi extends GetConnect {
     await _secure.delete(key: _sidKeyStorage);
     await _secure.delete(key: _authKeyStorage);
     logger.d('session cleared');
+  }
+
+  Future<String> _buildUserSigHeaderFromPkcs8(String pkcs8B64) async {
+    final pair = await _pairFromPkcs8B64(pkcs8B64);
+    return _buildUserSigHeader(pair);
+  }
+
+  Future<cg.SimpleKeyPair> _pairFromPkcs8B64(String b64) async {
+    final der = base64Decode(b64);
+    final seed = _extractSeed32FromPkcs8(der);
+    return cg.Ed25519().newKeyPairFromSeed(seed);
+  }
+
+  Uint8List _extractSeed32FromPkcs8(Uint8List der) {
+    for (int i = 0; i + 34 <= der.length; i++) {
+      if (der[i] == 0x04 && der[i + 1] == 0x20) {
+        return Uint8List.fromList(der.sublist(i + 2, i + 34));
+      }
+    }
+    throw ArgumentError('Ed25519 seed not found in PKCS#8');
   }
 }
 

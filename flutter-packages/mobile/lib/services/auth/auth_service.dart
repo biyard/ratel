@@ -54,7 +54,7 @@ class AuthService extends GetxService {
     profileUrl = user?.photoURL;
   }
 
-  Future<dynamic> requestToFirebase(String? accessToken) async {
+  Future<String> requestToFirebase(String? accessToken) async {
     final api = DriveApi();
 
     final files = await api.listFiles(accessToken ?? "");
@@ -72,8 +72,9 @@ class AuthService extends GetxService {
       logger.d("identity: ${p}");
 
       principal = p;
+      privateKey = encodedPk;
 
-      return; //return Signup Event, private key
+      return encodedPk; //return Signup Event, private key
     } else {
       final file = files.files.firstWhereOrNull((f) => f.name == Config.env);
       if (file == null) {
@@ -93,10 +94,11 @@ class AuthService extends GetxService {
         // );
 
         principal = p;
+        privateKey = contents;
         // privateKey = identity.privateKey;
         // publicKey = identity.publicKey;
 
-        return; //return Login Event, contents
+        return contents; //return Login Event, contents
       }
     }
   }
