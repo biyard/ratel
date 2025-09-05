@@ -1,52 +1,51 @@
 'use client';
 
-import React from 'react';
+import { useTranslations } from 'next-intl';
 
-export interface SaveFirstModalProps {
-  onJustPublish: () => void;
-  onSaveAndPublish: () => void;
-}
-
-export default function SaveFirstModal({
+export default function SaveThenPublishPopup({
   onJustPublish,
   onSaveAndPublish,
-}: SaveFirstModalProps) {
+}: {
+  onJustPublish: () => void;
+  onSaveAndPublish: () => void;
+}) {
+  const t = useTranslations('NoticeSpace');
+
   return (
     <div className="w-[500px] flex flex-col">
       {/* Header */}
       <div className="text-center font-bold text-white text-[24px] mb-6 mt-2">
-        Save first, make public?
+        {t('save_first_title')}
       </div>
 
       {/* Body */}
       <div className="text-center font-medium text-neutral-400 text-base mb-8">
-        Looks like you haven't saved yet.
+        {t('unsaved_desc_line1')}
         <br />
-        Want to save your changes before going public,
+        {t('unsaved_desc_line2')}
         <br />
-        or skip it and publish anyway?
+        {t('unsaved_desc_line3')}
         <br />
         <br />
-        Once made public, this Space will be visible to everyone and cannot be
-        made private again.
+        {t.rich('public_warning_rich', {
+          b: (chunks) => <span className="font-bold">{chunks}</span>,
+        })}
       </div>
 
       {/* Buttons */}
       <div className="flex flex-row justify-center gap-4">
-        {/* Left button - transparent background like space selection form */}
         <button
           onClick={onJustPublish}
           className="flex-1 py-[14.5px] bg-transparent font-bold text-white text-base rounded-[10px] hover:bg-neutral-800 transition-colors"
         >
-          Just Publish
+          {t('just_publish')}
         </button>
 
-        {/* Right button - primary background */}
         <button
           onClick={onSaveAndPublish}
           className="flex-1 py-[14.5px] bg-primary font-bold text-black text-base rounded-[10px] hover:bg-primary/90 transition-colors"
         >
-          Save & Publish
+          {t('save_and_publish')}
         </button>
       </div>
     </div>

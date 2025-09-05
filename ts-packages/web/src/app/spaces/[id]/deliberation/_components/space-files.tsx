@@ -22,6 +22,7 @@ import {
   Word,
   Zip,
 } from '@/components/icons';
+import { useTranslations } from 'next-intl';
 
 export interface SpaceFilesProps {
   isEdit?: boolean;
@@ -36,6 +37,7 @@ export default function SpaceFiles({
   onremove = () => {},
   onadd = () => {},
 }: SpaceFilesProps) {
+  const t = useTranslations('DeliberationSpace');
   const handlePdfDownload = async (file: FileInfo) => {
     await downloadPdfFromUrl({
       url: file.url ?? '',
@@ -47,7 +49,7 @@ export default function SpaceFiles({
       <div className="flex flex-col w-full gap-5">
         <div className="flex flex-row w-full justify-between items-start ">
           <div className="font-bold text-white text-[15px]/[20px]">
-            Attached Files
+            {t('attached_files')}
           </div>
 
           {isEdit ? (
@@ -60,7 +62,9 @@ export default function SpaceFiles({
             >
               <div className="cursor-pointer flex flex-row w-fit gap-1 items-center bg-white rounded-[6px] px-[14px] py-[8px] hover:bg-neutral-300">
                 <Upload className="w-5 h-5 stroke-neutral-500" />
-                <div className="font-bold text-sm text-[#000203]">Upload</div>
+                <div className="font-bold text-sm text-[#000203]">
+                  {t('upload')}
+                </div>
               </div>
             </FileUploaderMetadata>
           ) : (

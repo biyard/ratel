@@ -4,8 +4,10 @@ import { BoosterType } from '@/lib/api/models/notice';
 import { Trophy } from '@/assets/icons/game';
 import useSpaceById from '@/hooks/use-space-by-id';
 import { RewardMenu, TimelineMenu } from '../../../_components/side-menu';
+import { useTranslations } from 'next-intl';
 
 export default function SpaceSideMenu({ spaceId }: { spaceId: number }) {
+  const s = useTranslations('SprintSpace');
   const { data: space } = useSpaceById(spaceId);
 
   const boosterType = space.booster_type ?? BoosterType.NoBoost;
@@ -16,7 +18,7 @@ export default function SpaceSideMenu({ spaceId }: { spaceId: number }) {
   const modifierItem = {
     icon: <Trophy className="[&>*]:stroke-(--color-primary)" />,
     multiple: 1,
-    text: 'Boosting',
+    text: s('boosting'),
     color: 'primary',
   };
   switch (boosterType) {
@@ -38,8 +40,8 @@ export default function SpaceSideMenu({ spaceId }: { spaceId: number }) {
         isEditing={false}
         handleSetting={handleRewardSetting}
         rewardItems={[
-          { amount: 1000, text: 'Reposting' },
-          { amount: 10000, text: 'Voting' },
+          { amount: 1000, text: s('reposting') },
+          { amount: 10000, text: s('voting') },
         ]}
         modifierItems={[modifierItem]}
       />
@@ -47,9 +49,9 @@ export default function SpaceSideMenu({ spaceId }: { spaceId: number }) {
         isEditing={false}
         handleSetting={handleTimelineSetting}
         items={[
-          { label: 'Created', time: createdAt },
-          { label: 'Start', time: startedAt },
-          { label: 'End', time: endedAt },
+          { label: s('created'), time: createdAt },
+          { label: s('start'), time: startedAt },
+          { label: s('end'), time: endedAt },
         ]}
       />
     </div>
