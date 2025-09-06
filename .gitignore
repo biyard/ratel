@@ -29,3 +29,6 @@ benchmark/**/*.jtl
 benchmark/**/*.csv
 .projectile
 /.pnpm-store/
+/cdk/.next/
+/cdk/public/
+/packages/main-api/run-target/
