@@ -1,4 +1,4 @@
-FROM node:22.14
+FROM node:22.14 AS builder
 WORKDIR /app
 ARG NEXT_PUBLIC_LOG_LEVEL
 ARG NEXT_PUBLIC_FIREBASE_API_KEY
@@ -34,8 +34,20 @@ RUN corepack enable
 RUN corepack prepare pnpm@10.15.0 --activate
 RUN pnpm install
 WORKDIR /app/ts-packages/web
-RUN pnpm build
 ENV NODE_ENV=production
+RUN pnpm build
+
+FROM node:22.14-slim AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /app/ts-packages/web/.next/standalone ./
+COPY --from=builder /app/ts-packages/web/.next/static ./ts-packages/web/.next/static
+COPY --from=builder /app/ts-packages/web/public ./ts-packages/web/public
+
+WORKDIR /app/ts-packages/web
+ENV PORT=8080
 
 EXPOSE 8080
-CMD ["pnpm", "start", "-p", "8080"]
+CMD ["node", "server.js"]
