@@ -51,7 +51,7 @@ export default function ParticipantsPanel({
 
   return (
     <div
-      className={`fixed top-0 right-0 h-full w-[280px] z-30 bg-[#2d2d2d] shadow-lg border-l border-neutral-800 transform transition-all duration-300 ${
+      className={`h-full w-[320px] z-200 bg-[#2d2d2d] shadow-lg border-l border-neutral-800 transform transition-all duration-300 z-200 ${
         visible ? 'translate-x-0' : 'translate-x-full'
       }`}
     >
@@ -81,16 +81,19 @@ export default function ParticipantsPanel({
               className="flex flex-row w-full justify-between items-center"
             >
               <div className="flex flex-row w-fit items-center gap-1">
-                {participant.profile_url ? (
+                {participant.profile_url && participant.profile_url !== '' ? (
                   <Image
                     width={30}
                     height={30}
-                    src={participant.profile_url || '/default-profile.png'}
+                    src={participant.profile_url}
                     alt={`${participant.username}'s profile`}
-                    className="w-[30px] h-[30px] object-cover rounded-full"
+                    className="w-7.5 h-7.5 object-cover rounded-full"
                   />
                 ) : (
-                  <div className="w-8 h-8 bg-neutral-500 rounded-full" />
+                  <div
+                    className="w-7.5 h-7.5 bg-neutral-500 rounded-full"
+                    style={{ flexShrink: 0 }}
+                  />
                 )}
                 <div className="font-medium text-white text-sm">
                   {participant.username}

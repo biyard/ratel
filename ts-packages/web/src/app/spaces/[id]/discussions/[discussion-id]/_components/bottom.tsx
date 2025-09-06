@@ -40,7 +40,7 @@ export default function Bottom({
 }) {
   return (
     <div className="flex flex-row w-full min-h-[70px] justify-between items-center bg-neutral-900 px-10 py-2.5 border-b border-neutral-800">
-      <div className="flex flex-row gap-5 w-[80px]">
+      <div className="flex flex-row gap-5 flex-1 justify-start">
         <IconLabel
           icon={
             isAudioOn ? (
@@ -69,7 +69,7 @@ export default function Bottom({
         />
       </div>
 
-      <div className="flex flex-row w-fit gap-5">
+      <div className="flex flex-row flex-1 gap-5 justify-center">
         <IconLabel
           icon={<ZoomParticipants />}
           label="Participants"
@@ -98,7 +98,7 @@ export default function Bottom({
         />
       </div>
 
-      <div className="flex flex-row w-[80px] gap-5">
+      <div className="flex flex-row flex-1 gap-5 justify-end">
         <IconLabel
           icon={<ZoomClose className="w-6 h-6" />}
           label="End"

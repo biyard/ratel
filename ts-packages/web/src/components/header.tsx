@@ -13,28 +13,30 @@ import Link from 'next/link';
 import Profile from './profile';
 import { LoginModal } from './popup/login-popup';
 import { usePopup } from '@/lib/contexts/popup-service';
-import { logger } from '@/lib/logger';
 import { route } from '@/route';
 import { config } from '@/config';
 import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { UserType } from '@/lib/api/models/user';
 import LoginIcon from '@/assets/icons/login.svg';
+import { useTranslations } from 'next-intl';
 export interface HeaderProps {
   mobileExtends: boolean;
   setMobileExtends: (extend: boolean) => void;
 }
 
 function Header(props: HeaderProps) {
+  const t = useTranslations('Nav');
   const popup = usePopup();
 
   const { data } = useSuspenseUserInfo();
-  const loggedIn = data && data.user_type !== UserType.Individual;
-
-  logger.debug('Header data:', data);
+  const loggedIn =
+    data &&
+    (data.user_type === UserType.Individual ||
+      data.user_type === UserType.Team);
 
   const navItems = [
     {
-      name: 'Home',
+      name: t('home'),
       icon: (
         <HomeIcon
           className="group-hover:[&>path]:stroke-white transition-all"
@@ -47,7 +49,7 @@ function Header(props: HeaderProps) {
       authorized: false,
     },
     {
-      name: 'Explore',
+      name: t('explore'),
       icon: (
         <InternetIcon
           className="group-hover:[&>path]:stroke-white group-hover:[&>circle]:stroke-white transition-all"
@@ -60,7 +62,7 @@ function Header(props: HeaderProps) {
       authorized: false,
     },
     {
-      name: 'My Network',
+      name: t('my_network'),
       icon: (
         <UserGroupIcon
           className="group-hover:[&>path]:stroke-white transition-all"
@@ -73,7 +75,7 @@ function Header(props: HeaderProps) {
       authorized: true,
     },
     {
-      name: 'Message',
+      name: t('message'),
       icon: (
         <RoundBubbleIcon
           className="group-hover:[&>path]:stroke-white transition-all"
@@ -86,7 +88,7 @@ function Header(props: HeaderProps) {
       authorized: true,
     },
     {
-      name: 'Notification',
+      name: t('notification'),
       icon: (
         <BellIcon
           className="group-hover:[&>path]:stroke-white transition-all"
@@ -94,14 +96,14 @@ function Header(props: HeaderProps) {
           height="24"
         />
       ),
-      visible: config.experiment,
+      visible: true,
       href: route.notifications(),
       authorized: true,
     },
   ];
 
   return (
-    <header className="border-b border-neutral-800 px-2.5 py-2.5 flex items-center justify-center !bg-bg">
+    <header className="border-b border-neutral-800 px-2.5 py-2.5 flex items-center justify-center !bg-bg h-[var(--header-height)]">
       <nav className="flex items-center justify-between mx-2.5 gap-12.5 w-full max-w-desktop">
         <div className="flex items-center gap-5">
           <Link
@@ -110,7 +112,7 @@ function Header(props: HeaderProps) {
               props.setMobileExtends(false);
             }}
           >
-            <Logo width="54" height="54" />
+            <Logo className="mobile:size-12 size-13.5" />
           </Link>
         </div>
 
@@ -146,7 +148,7 @@ function Header(props: HeaderProps) {
             >
               <LoginIcon className="size-6 group-hover:[&>path]:stroke-white" />
               <span className="whitespace-nowrap text-neutral-500 group-hover:text-white text-[15px] font-medium transition-all">
-                Sign In
+                {t('signIn')}
               </span>
             </button>
           )}

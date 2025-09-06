@@ -3,7 +3,7 @@ pub mod bills;
 // pub mod patrons;
 // pub mod topics;
 mod advocacy_campaigns;
-mod assets;
+pub mod assets;
 mod auth;
 mod bots;
 mod election_pledges;
@@ -13,6 +13,7 @@ mod me;
 mod my_networks;
 mod network;
 mod news;
+mod notifications;
 mod presidential_candidates;
 mod promotions;
 mod quizzes;
@@ -101,5 +102,9 @@ pub async fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Ro
         .nest(
             "/my-networks",
             my_networks::MynetworkController::new(pool.clone()).route()?,
+        )
+        .nest(
+            "/notifications",
+            notifications::NotificationController::new(pool.clone()).route()?,
         ))
 }

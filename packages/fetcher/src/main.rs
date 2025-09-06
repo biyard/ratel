@@ -1,7 +1,7 @@
 mod config;
 mod controllers;
-mod modules;
-mod utils;
+// mod modules;
+// mod utils;
 
 use bdk::prelude::{
     by_axum::{auth::authorization_middleware, axum::Router, axum::middleware},
@@ -77,7 +77,7 @@ async fn api_main() -> Result<Router> {
 async fn main() -> Result<()> {
     let app = api_main().await?;
 
-    let port = option_env!("PORT").unwrap_or("3000");
+    let port = option_env!("PORT").unwrap_or("4000");
     let listener = TcpListener::bind(format!("0.0.0.0:{}", port))
         .await
         .unwrap();

@@ -61,6 +61,7 @@ import { checkString } from '@/lib/string-filter-utils';
 import { showErrorToast } from '@/lib/toast';
 import { postByUserIdQk } from '@/app/(social)/_hooks/use-posts';
 import { useTeamByUsername } from '../../_hooks/use-team';
+import { useTranslations } from 'next-intl';
 
 export const editorTheme = {
   ltr: 'text-left',
@@ -173,6 +174,7 @@ function EditorRefPlugin({
 }
 
 export function CreatePost() {
+  const t = useTranslations('Team');
   const {
     expand,
     setExpand,
@@ -278,15 +280,17 @@ export function CreatePost() {
         {/* Header */}
         <div className="flex items-center p-4 justify-between">
           <div className="flex items-center gap-3">
-            <div className="size-6 rounded-full">
+            {userInfo?.profile_url && userInfo?.profile_url !== '' ? (
               <Image
-                width={40}
-                height={40}
-                src={userInfo?.profile_url || '/default-profile.png'}
+                width={24}
+                height={24}
+                src={userInfo?.profile_url}
                 alt="Profile"
-                className="w-full h-full object-cover"
+                className="w-6 h-6 object-cover"
               />
-            </div>
+            ) : (
+              <div className="w-6 h-6 rounded-full border border-neutral-500 bg-neutral-600" />
+            )}
             <div className="flex items-center gap-2">
               <span className="text-white font-medium text-lg">
                 {userInfo?.nickname || 'Anonymous'}
@@ -307,7 +311,7 @@ export function CreatePost() {
           <div className="px-4 pt-4">
             <input
               type="text"
-              placeholder="Write a title..."
+              placeholder={t('write_title')}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className="w-full bg-transparent text-white text-xl font-semibold placeholder-neutral-500 outline-none border-none"
@@ -322,7 +326,7 @@ export function CreatePost() {
               }
               placeholder={
                 <div className="absolute top-0 text-neutral-500 pointer-events-none select-none">
-                  Type here, Use Markdown, BB code, or HTML to format.
+                  {t('write_content')}
                 </div>
               }
               ErrorBoundary={LexicalErrorBoundary}

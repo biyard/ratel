@@ -31,7 +31,6 @@ export interface Team {
   updated_at: number;
 
   nickname: string;
-  email: string;
   profile_url?: string;
   user_type: UserType;
 

@@ -4,7 +4,7 @@ use validator::Validate;
 use crate::*;
 
 #[derive(Validate)]
-#[api_model(base = "/v1/feeds", table = feeds,  action_by_id = [delete, publish, like(value = bool)])]
+#[api_model(base = "/v1/feeds", table = feeds,  action_by_id = [delete, publish, like(value = bool), unrepost])]
 pub struct Feed {
     #[api_model(summary, primary_key)]
     pub id: i64,
@@ -19,26 +19,26 @@ pub struct Feed {
     #[api_model(summary, many_to_one = users, action = [create_draft, repost], query_action = posts_by_user_id)]
     pub user_id: i64,
 
-    #[api_model(summary, many_to_one = industries, action_by_id = [update])]
+    #[api_model(summary, many_to_one = industries, action_by_id = [update, edit])]
     pub industry_id: i64,
 
     // parent feed ID
-    #[api_model(summary, nullable, indexed, action = [comment, repost], action_by_id = [update])]
+    #[api_model(summary, nullable, indexed, action = [comment, repost], action_by_id = [update, edit])]
     pub parent_id: Option<i64>,
 
-    #[api_model(summary, nullable, indexed, action = [repost], action_by_id = [update])]
+    #[api_model(summary, nullable, indexed, action = [repost], action_by_id = [update, edit])]
     pub quote_feed_id: Option<i64>,
 
     // Post
-    #[api_model(summary, nullable, action_by_id = [update])]
+    #[api_model(summary, nullable, action_by_id = [update, edit])]
     pub title: Option<String>,
 
-    #[api_model(summary, action = [comment, repost], action_by_id = [update])]
+    #[api_model(summary, action = [comment, repost], action_by_id = [update, edit])]
     pub html_contents: String,
 
-    #[api_model(version = v0.2, summary, action_by_id = [update])]
+    #[api_model(version = v0.2, summary, action_by_id = [update, edit])]
     pub url: Option<String>,
-    #[api_model(version = v0.2, summary, type = INTEGER, action_by_id = [update])]
+    #[api_model(version = v0.2, summary, type = INTEGER, action_by_id = [update, edit])]
     #[serde(default)]
     pub url_type: UrlType,
 
@@ -48,19 +48,23 @@ pub struct Feed {
     // Reply
 
     // Repost
-    #[api_model(summary, one_to_many = spaces, foreign_key = feed_id)]
+    #[api_model(summary, one_to_many = spaces, foreign_key = feed_id, nested)]
     pub spaces: Vec<Space>,
 
-    #[api_model(summary, many_to_many = feed_users, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = feed_id, aggregator = count, unique)]
+    #[api_model(summary, many_to_many = feed_users, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = feed_id, aggregator = count)]
+    #[serde(default)]
     pub likes: i64,
 
     #[api_model(summary, many_to_many = feed_users, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = feed_id, aggregator = exist)]
+    #[serde(default)]
     pub is_liked: bool,
 
     #[api_model(summary, one_to_many = feeds, foreign_key = parent_id, aggregator=count)]
+    #[serde(default)]
     pub comments: i64,
 
     #[api_model(summary, one_to_many = feeds, foreign_key = parent_id, nested)]
+    #[serde(default)]
     pub comment_list: Vec<Comment>,
 
     #[api_model(version = v0.1, summary, type = JSONB, action_by_id = [update])]
@@ -69,7 +73,7 @@ pub struct Feed {
     #[api_model(version = v0.1, summary)]
     #[serde(default)]
     pub rewards: i64,
-    #[api_model(version = v0.1, summary)]
+    #[api_model(summary, many_to_many = feed_shares, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = feed_id, aggregator = count)]
     #[serde(default)]
     pub shares: i64,
 
@@ -78,10 +82,16 @@ pub struct Feed {
     pub status: FeedStatus,
 
     #[api_model(one_to_many = users, reference_key = user_id, foreign_key = id, summary)]
+    #[serde(default)]
     pub author: Vec<FeedAuthor>,
 
     #[api_model(one_to_many = industries, reference_key = industry_id, foreign_key = id, summary)]
+    #[serde(default)]
     pub industry: Vec<Industry>,
+
+    #[api_model(summary, many_to_many = feed_bookmark_users, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = feed_id, aggregator = exist)]
+    #[serde(default)]
+    pub is_bookmarked: bool,
 
     #[api_model(one_to_many = onboards, foreign_key = meta_id, summary, aggregator = exist)]
     #[serde(default)]

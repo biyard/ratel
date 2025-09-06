@@ -13,7 +13,7 @@ use by_axum::{
 use by_types::QueryResponse;
 use dto::*;
 
-use crate::utils::users::extract_user_id;
+use crate::utils::{referal_code::generate_referral_code, users::extract_user_id};
 
 #[derive(
     Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
@@ -105,6 +105,9 @@ impl TeamController {
                 username,
                 "".to_string(),
                 Membership::Free,
+                generate_referral_code(),
+                None,
+                None,
             )
             .await
             .map_err(|e| {

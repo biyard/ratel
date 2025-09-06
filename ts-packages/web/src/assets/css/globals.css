@@ -1,6 +1,22 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
+@custom-variant light (&:where([data-theme=light], [data-theme=light] *));
+
+@theme static {
+  --color-background: #1e1e1e;
+  --color-component-bg: #191919;
+  --color-custom-white: #ffffff;
+  --color-neutral-900: #171717;
+}
+
+[data-theme='light'] {
+  --color-background: #f5f5f5;
+  --color-component-bg: #fafafa;
+  --color-custom-white: #262626;
+  --color-neutral-900: #ffffff;
+}
+
 html {
   background-color: var(--color-background);
   color: var(--color-neutral-400);
@@ -63,6 +79,8 @@ a {
   --color-tag: #dee1e6;
   --color-component-bg: #191919;
 
+  --color-web-bg: #0a0a0a;
+
   --breakpoint-desktop: 1177px;
   --breakpoint-tablet: 900px;
   --breakpoint-mobile: 500px;
@@ -105,4 +123,112 @@ a {
   flex: 1;
   border-top: 1px solid var(--color-c-wg-80);
   margin: 0 1rem;
+}
+
+:root {
+  --header-height: 88px;
+}
+
+@media (max-width: 500px) {
+  :root {
+    --header-height: 54px;
+  }
+}
+
+/* Repost Editor toolbar styles */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.ProseMirror ul {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+}
+
+.ProseMirror ol {
+  list-style-type: decimal;
+  padding-left: 1.5rem;
+}
+
+/* Table container */
+.tiptap-table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1rem 0;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px #e0e0e0;
+}
+
+/* Table header */
+.tiptap-table-header {
+  background-color: #f5f5f5 !important; /* Light gray */
+  color: #333 !important; /* Dark gray text */
+  font-weight: 600;
+  text-align: left;
+  border: 1px solid #d0d0d0 !important; /* Slightly darker border */
+  padding: 10px 12px;
+}
+
+/* Table cells */
+.tiptap-table-cell {
+  background-color: white !important;
+  color: #333 !important; /* Dark gray text */
+  border: 1px solid #e0e0e0 !important; /* Light gray border */
+  padding: 8px 12px;
+  vertical-align: top;
+}
+
+/* Alternating row colors */
+.tiptap-table-row:nth-child(even) .tiptap-table-cell {
+  background-color: #fafafa !important; /* Very light gray for even rows */
+}
+
+/* Selected cell styling */
+.tiptap-table .selectedCell {
+  background-color: #f0f7ff !important;
+}
+
+/* Hover effects */
+.tiptap-table-row:hover .tiptap-table-cell {
+  background-color: #f8f8f8 !important;
+}
+
+/* Dark mode compatibility */
+.dark .tiptap-table {
+  box-shadow: 0 0 0 1px #444;
+}
+
+.dark .tiptap-table-header {
+  background-color: #2d2d2d !important; /* Dark gray */
+  color: #f0f0f0 !important;
+  border-color: #444 !important;
+}
+
+.dark .tiptap-table-cell {
+  background-color: #1a1a1a !important;
+  color: #e0e0e0 !important;
+  border-color: #444 !important;
+}
+
+.dark .tiptap-table-row:nth-child(even) .tiptap-table-cell {
+  background-color: #222 !important;
+}
+
+.dark .tiptap-table .selectedCell {
+  background-color: #003366 !important; /* Darker blue for selection */
+}
+
+/* toast-overrides.css */
+.custom-toast-wrapper {
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+.custom-toast-body {
+  padding: 0 !important;
 }

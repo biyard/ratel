@@ -1,5 +1,5 @@
 ENV ?= dev
-BASE_DOMAIN ?=
+BASE_DOMAIN ?= ratel.foundation
 DOMAIN ?= $(ENV).$(BASE_DOMAIN)
 
 HOSTED_ZONE_ID ?= $(shell aws route53 list-hosted-zones-by-name --dns-name $(BASE_DOMAIN) --query "HostedZones[0].Id" --output text | cut -d'/' -f3)
@@ -16,7 +16,10 @@ AWS_ACCOUNT_ID ?= $(shell aws sts get-caller-identity --query "Account" --output
 VPC_ID ?= $(shell aws ec2 describe-vpcs --query "Vpcs[0].VpcId" --output json | tr -d \")
 API_PREFIX ?=
 
-STACK ?= $(PROJECT)-$(SERVICE)-$(ENV)-stack
+STACK ?= ratel-dev-stack
+
+WEB_REPO_NAME ?= ratel/web
+ECR_NAME ?= $(shell aws ecr describe-repositories --repository-names $(WEB_REPO_NAME)  --query "repositories[0].repositoryUri" --output text)
 
 ifeq ($(ENABLE_DOCKER),true)
 	DOCKER_COMMAND_SUFFUIX = -docker
@@ -24,8 +27,12 @@ endif
 
 BUILD_CDK_ENV ?= AWS_ACCESS_KEY_ID=$(ACCESS_KEY_ID) AWS_SECRET_ACCESS_KEY=$(SECRET_ACCESS_KEY) AWS_REGION=$(REGION) DOMAIN=$(DOMAIN) TABLE_NAME=$(TABLE_NAME) WORKSPACE_ROOT=$(WORKSPACE_ROOT) SERVICE=$(SERVICE) VPC_ID=$(VPC_ID) AWS_ACCOUNT_ID=$(AWS_ACCOUNT_ID) COMMIT=$(COMMIT) ENV=$(ENV) ENABLE_S3=$(ENABLE_S3) ENABLE_DYNAMO=$(ENABLE_DYNAMO) ENABLE_FARGATE=$(ENABLE_FARGATE) ENABLE_LAMBDA=$(ENABLE_LAMBDA) ENABLE_OPENSEARCH=$(ENABLE_OPENSEARCH) BASE_DOMAIN=$(BASE_DOMAIN) PROJECT=$(PROJECT) STACK=$(STACK) HOSTED_ZONE_ID=$(HOSTED_ZONE_ID)
 
-run:
-	cd packages/$(SERVICE) && make run
+
+.build/evm-keys:
+	docker run --rm -it ghcr.io/foundry-rs/foundry:latest "cast wallet new --json" > .build/evm-keys.json
+
+run: .build/evm-keys
+	docker-compose up -d  --remove-orphans
 
 serve:
 	cd packages/$(SERVICE) && make serve
@@ -58,6 +65,20 @@ build: clean
 
 deps/rust-sdk/cdk/node_modules:
 	cd deps/rust-sdk/cdk && npm install
+
+cdk/.next:
+	docker create --name web-container $(ECR_NAME):$(COMMIT)
+	docker cp web-container:/app/ts-packages/web/.next cdk/.next
+	docker rm -f web-container
+
+cdk/public:
+	cp -r ts-packages/web/public cdk/public
+
+cdk-deploy-v2:
+	cd cdk && npm i
+	cd cdk && $(BUILD_CDK_ENV) npm run build
+	cd cdk && $(BUILD_CDK_ENV) cdk synth
+	cd cdk && $(BUILD_CDK_ENV) cdk deploy --require-approval never $(AWS_FLAG) --all --concurrency 3
 
 cdk-deploy: deps/rust-sdk/cdk/node_modules
 	cd deps/rust-sdk/cdk && $(BUILD_CDK_ENV) CODE_PATH=$(PWD)/.build/$(SERVICE) npm run build

@@ -2,6 +2,9 @@ mod verification;
 
 use crate::by_axum::axum::extract::Path;
 use crate::by_axum::axum::routing::post;
+use crate::utils::referal_code::generate_referral_code;
+use crate::utils::telegram::validate_telegram_raw;
+use base64::{Engine as _, engine::general_purpose};
 use bdk::prelude::*;
 use by_axum::auth::Authorization;
 use by_axum::axum::{
@@ -90,13 +93,18 @@ impl UserControllerV1 {
         Extension(auth): Extension<Option<Authorization>>,
         Json(body): Json<UserAction>,
     ) -> Result<Json<User>> {
+        tracing::debug!("act_user: {:?}", body);
         let principal = extract_principal(&ctrl.pool, auth).await?;
+        tracing::debug!("principal: {:?}", principal);
 
         body.validate()?;
+
+        tracing::debug!("validation success");
 
         match body {
             UserAction::Signup(req) => ctrl.signup(req, principal).await,
             UserAction::UpdateEvmAddress(req) => ctrl.update_evm_address(req, principal).await,
+            UserAction::UpdateTelegramId(req) => ctrl.update_telegram_id(req, principal).await,
             UserAction::EmailSignup(req) => ctrl.email_signup(req, principal).await,
         }
     }
@@ -116,6 +124,8 @@ impl UserControllerV1 {
 
         match req.action {
             Some(UserReadActionType::FindByEmail) => ctrl.find_by_email(req).await,
+            Some(UserReadActionType::FindByUsername) => ctrl.find_by_username(req).await,
+            Some(UserReadActionType::FindByPhoneNumber) => ctrl.find_by_phone_number(req).await,
             Some(UserReadActionType::CheckEmail) => ctrl.check_email(req).await,
             Some(UserReadActionType::UserInfo) => {
                 req.principal = Some(principal);
@@ -128,6 +138,9 @@ impl UserControllerV1 {
             Some(UserReadActionType::LoginByPassword) => {
                 tracing::debug!("login with password: {:?}", req);
                 ctrl.login_with_password(req, session).await
+            }
+            Some(UserReadActionType::LoginByTelegram) => {
+                ctrl.login_with_telegram(req, session).await
             }
             None | Some(UserReadActionType::ByPrincipal) => Err(Error::BadRequest)?,
         }
@@ -180,6 +193,40 @@ impl UserControllerV1 {
         Ok(Json(user))
     }
 
+    pub async fn login_with_telegram(
+        &self,
+        req: UserReadAction,
+        session: Session,
+    ) -> Result<Json<User>> {
+        tracing::debug!("login with telegram raw: {:?}", req);
+
+        if req.telegram_raw.is_none() {
+            return Err(Error::BadRequest);
+        }
+        tracing::debug!("telegram raw: {:?}", req.telegram_raw);
+        let raw = general_purpose::STANDARD
+            .decode(req.telegram_raw.as_ref().unwrap())
+            .map_err(|_| Error::BadRequest)?;
+        let decoded_string = String::from_utf8(raw).map_err(|_| Error::BadRequest)?;
+        let telegram_id = validate_telegram_raw(&Some(decoded_string));
+        if telegram_id.is_none() {
+            return Err(Error::Unauthorized);
+        }
+        let user = User::query_builder()
+            .telegram_id_equals(telegram_id.unwrap())
+            .query()
+            .map(User::from)
+            .fetch_one(&self.pool)
+            .await?;
+        let user_session = UserSession {
+            user_id: user.id,
+            principal: user.principal.clone(),
+            email: user.email.clone(),
+        };
+        session.insert("user_session", &user_session).await?;
+        Ok(Json(user))
+    }
+
     #[instrument]
     pub async fn update_evm_address(
         &self,
@@ -205,11 +252,39 @@ impl UserControllerV1 {
     }
 
     #[instrument]
+    pub async fn update_telegram_id(
+        &self,
+        req: UserUpdateTelegramIdRequest,
+        principal: String,
+    ) -> Result<Json<User>> {
+        tracing::debug!("update_telegram_id: {:?} {:?}", req, principal);
+        let user = User::query_builder()
+            .principal_equals(principal)
+            .query()
+            .map(User::from)
+            .fetch_one(&self.pool)
+            .await?;
+        let telegram_id = validate_telegram_raw(&req.telegram_raw);
+        if telegram_id.is_none() {
+            return Err(Error::BadRequest);
+        }
+        let user = self
+            .users
+            .update(
+                user.id,
+                UserRepositoryUpdateRequest::new().with_telegram_id(telegram_id.unwrap()),
+            )
+            .await?;
+
+        Ok(Json(user))
+    }
+
+    #[instrument]
     pub async fn signup(&self, req: UserSignupRequest, principal: String) -> Result<Json<User>> {
         if req.term_agreed == false {
             return Err(Error::BadRequest);
         }
-
+        let telegram_id = validate_telegram_raw(&req.telegram_raw);
         if let Ok(user) = User::query_builder()
             .principal_equals(principal.clone())
             .user_type_equals(UserType::Anonymous)
@@ -253,6 +328,9 @@ impl UserControllerV1 {
                 req.evm_address,
                 "".to_string(),
                 Membership::Free,
+                generate_referral_code(),
+                None,
+                telegram_id,
             )
             .await?;
 
@@ -267,7 +345,7 @@ impl UserControllerV1 {
         if req.term_agreed == false {
             return Err(Error::BadRequest);
         }
-
+        let telegram_id = validate_telegram_raw(&req.telegram_raw);
         if let Ok(user) = User::query_builder()
             .principal_equals(principal.clone())
             .user_type_equals(UserType::Anonymous)
@@ -311,6 +389,9 @@ impl UserControllerV1 {
                 "".to_string(),
                 req.password,
                 Membership::Free,
+                generate_referral_code(),
+                None,
+                telegram_id,
             )
             .await?;
 
@@ -330,6 +411,58 @@ impl UserControllerV1 {
             .fetch_one(&self.pool)
             .await
             .map_err(|_| Error::NotFound)?;
+
+        Ok(Json(user))
+    }
+
+    #[instrument]
+    async fn find_by_username(
+        &self,
+        UserReadAction { username, .. }: UserReadAction,
+    ) -> Result<Json<User>> {
+        tracing::debug!("find user by username: {:?}", username);
+        let username = username.ok_or(Error::InvalidUsername)?;
+        let user = match User::query_builder()
+            .username_equals(username)
+            .query()
+            .map(User::from)
+            .fetch_one(&self.pool)
+            .await
+        {
+            Ok(v) => v,
+            Err(e) => {
+                tracing::error!("failed to find user by username: {:?}", e);
+                return Err(Error::NotFound);
+            }
+        };
+
+        tracing::debug!("found user: {:?}", user);
+
+        Ok(Json(user))
+    }
+
+    #[instrument]
+    async fn find_by_phone_number(
+        &self,
+        UserReadAction { phone, .. }: UserReadAction,
+    ) -> Result<Json<User>> {
+        tracing::debug!("find user by phone number: {:?}", phone);
+        let phone_number = phone.ok_or(Error::InvalidPhoneNumber)?;
+        let user = match User::query_builder()
+            .phone_number_equals(phone_number)
+            .query()
+            .map(User::from)
+            .fetch_one(&self.pool)
+            .await
+        {
+            Ok(v) => v,
+            Err(e) => {
+                tracing::error!("failed to find user by phone number: {:?}", e);
+                return Err(Error::NotFound);
+            }
+        };
+
+        tracing::debug!("found user: {:?}", user);
 
         Ok(Json(user))
     }
@@ -375,6 +508,18 @@ impl UserControllerV1 {
             .fetch_one(&self.pool)
             .await
             .map_err(|_| Error::NotFound)?;
+
+        let user = if user.referral_code.is_empty() {
+            let referral_code = generate_referral_code();
+            self.users
+                .update(
+                    user.id,
+                    UserRepositoryUpdateRequest::new().with_referral_code(referral_code),
+                )
+                .await?
+        } else {
+            user
+        };
 
         Ok(Json(user))
     }

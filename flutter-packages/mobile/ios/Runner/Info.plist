@@ -33,12 +33,35 @@
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>metamask</string>
+		<string>https</string>
+	</array>
+	<key>CFBundleURLTypes</key>
+	<array>
+	<dict>
+		<key>CFBundleTypeRole</key>
+		<string>Editor</string>
+		<key>CFBundleURLName</key>
+		<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+		<key>CFBundleURLSchemes</key>
+		<array>
+		<string>ratelapp</string>
+		</array>
+	</dict>
+	</array>
+
 	<key>NSCameraUsageDescription</key>
-	<string>This app needs camera access</string>
+	<string>Camera is required for verification.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>This app needs microphone access</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>This app needs location access</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Allow access to your photo library so you can select and upload images within the app.</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>

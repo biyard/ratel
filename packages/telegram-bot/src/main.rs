@@ -1,13 +1,53 @@
 mod config;
 
-use teloxide::{
-    prelude::*,
-    types::{
-        InlineKeyboardButton, InlineKeyboardMarkup, MessageEntityKind, MessageKind,
-        MessageNewChatMembers,
-    },
+mod notify;
+
+use notify::notify_handler;
+
+mod telegram_handler;
+use std::sync::Arc;
+use telegram_handler::{set_command, telegram_handler};
+
+use base64::{Engine, engine::general_purpose};
+use serde::Serialize;
+
+use dto::{
+    Result, TelegramSubscribe,
+    by_axum::{self, axum::routing::post},
+    by_types::DatabaseConfig,
+    sqlx::{PgPool, migrate, postgres::PgPoolOptions},
 };
+use teloxide::{Bot, dispatching::UpdateFilterExt, dptree, prelude::Dispatcher, types::Update};
+use tokio::net::TcpListener;
 use tracing_subscriber::EnvFilter;
+
+macro_rules! migrate {
+    ($pool:ident, $($table:ident),* $(,)?) => {
+        {
+            $(
+                let t = $table::get_repository($pool.clone());
+                t.create_this_table().await?;
+            )*
+            $(
+                let t = $table::get_repository($pool.clone());
+                t.create_related_tables().await?;
+            )*
+        }
+    };
+}
+
+pub async fn migration(pool: &PgPool) -> Result<()> {
+    tracing::info!("Running migration");
+
+    migrate!(pool, TelegramSubscribe);
+    Ok(())
+}
+
+#[derive(Clone)]
+struct AppState {
+    pool: PgPool,
+    bot: Bot,
+}
 
 #[tokio::main]
 async fn main() {
@@ -23,58 +63,80 @@ async fn main() {
     tracing::debug!("Configuration: {:?}", conf.env);
     tracing::debug!("Starting throw dice bot...");
 
+    let pool = if let DatabaseConfig::Postgres { url, pool_size } = conf.database {
+        PgPoolOptions::new()
+            .max_connections(pool_size)
+            .connect(url)
+            .await
+            .expect("Failed to connect to the database")
+    } else {
+        panic!("Database is not initialized. Call init() first.");
+    };
+
+    migration(&pool).await.expect("Failed to run migrations");
+
     let bot = Bot::new(conf.telegram_token);
 
-    teloxide::repl(bot, |bot: Bot, msg: Message| async move {
-        tracing::debug!("Received message: {:?}", msg);
-        let me = bot.get_me().await?;
-        let bot_username = me.user.username.unwrap();
+    let state = Arc::new(AppState {
+        pool: pool.clone(),
+        bot: bot.clone(),
+    });
+    let app = by_axum::axum::Router::new()
+        .route("/notify", post(notify_handler))
+        .with_state(state);
 
-        let chat_id = msg.chat.id;
+    let port = option_env!("PORT").unwrap_or("3000");
+    let listener = TcpListener::bind(format!("0.0.0.0:{}", port))
+        .await
+        .unwrap();
+    tracing::info!("listening on {}", listener.local_addr().unwrap());
+    let axum_server = by_axum::serve(listener, app);
+    set_command(bot.clone()).await;
 
-        match &msg.kind {
-            MessageKind::NewChatMembers(MessageNewChatMembers { new_chat_members }) => {
-                for user in new_chat_members {
-                    if !user.is_bot {
-                        bot.send_message(chat_id, format!("Welcome, {}!", user.first_name))
-                            .await?;
-                    }
-                }
-            }
+    let handler = Update::filter_message().endpoint(telegram_handler);
 
-            _ => {
-                tracing::debug!("Received non-text message");
+    let mut binding = Dispatcher::builder(bot, handler)
+        .dependencies(dptree::deps![pool])
+        .enable_ctrlc_handler()
+        .build();
+    let teloxide_dispatcher = binding.dispatch();
+
+    tokio::select! {
+        result = teloxide_dispatcher => {
+            tracing::info!("Teloxide dispatcher finished: {:?}", result);
+        }
+        result = axum_server => {
+            if let Err(e) = result {
+                tracing::error!("Axum server has failed: {}", e);
+            } else {
+                tracing::info!("Axum server finished successfully");
             }
         }
+    }
 
-        if let Some(entities) = msg.entities() {
-            for entity in entities {
-                if let MessageEntityKind::Mention = entity.kind {
-                    let mention_text =
-                        &msg.text().unwrap()[entity.offset..(entity.offset + entity.length)];
-                    if mention_text == format!("@{}", bot_username) {
-                        tracing::debug!("Bot was mentioned in the message");
-                        let url = "https://t.me/crypto_ratel_bot/spaces?startapp"
-                            .parse()
-                            .unwrap();
-                        tracing::debug!("Sending web app link to the user {:?}", url);
+    tracing::info!("Application shutting down...");
+}
 
-                        let keyboard = InlineKeyboardMarkup::new([[InlineKeyboardButton::url(
-                            "🧩 미니앱 실행".to_string(),
-                            url,
-                        )]]);
+#[derive(Serialize)]
+pub struct TgWebParams {
+    pub command: TgWebCommand,
+}
 
-                        bot.send_message(chat_id, "여기를 눌러 미니앱을 실행하세요 🧩")
-                            .reply_markup(keyboard)
-                            .await?;
+#[derive(Serialize)]
+pub enum TgWebCommand {
+    Subscribe { chat_id: i64, lang: Option<String> },
+    SprintLeague { space_id: i64 },
+}
 
-                        break;
-                    }
-                }
-            }
-        }
-
-        Ok(())
-    })
-    .await;
+pub fn generate_link(web_command: TgWebCommand) -> String {
+    let params = TgWebParams {
+        command: web_command,
+    };
+    let json_string = serde_json::to_string(&params).unwrap();
+    let b64_string = general_purpose::STANDARD.encode(json_string);
+    format!(
+        "{}/app?startapp={}",
+        config::get().telegram_mini_app_uri,
+        b64_string
+    )
 }

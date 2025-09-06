@@ -1,8 +1,8 @@
-use std::{error::Error as StdError, str::FromStr};
+use std::error::Error as StdError;
 
 use serde::{Deserialize, Serialize};
 
-use bdk::prelude::{dioxus::CapturedError, *};
+use bdk::prelude::*;
 
 #[derive(Debug, Serialize)]
 pub struct ServiceException {
@@ -22,9 +22,13 @@ impl StdError for ServiceException {}
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum Error {
     InvalidAction,
+    InvalidPhoneNumberFormat,
     UpdateNotAllowed,
     Unknown(String),
     Klaytn(String),
+    InvalidUserQuery(String),
+
+    DbPoolTimeout,
 
     #[translate(en = "Could not find any resource", ko = "리소스를 찾을 수 없습니다.")]
     NotFound,
@@ -46,6 +50,16 @@ pub enum Error {
         ko = "유효한 이메일을 입력해야 합니다."
     )]
     InvalidEmail,
+    #[translate(
+        en = "You must pass a valid username",
+        ko = "유효한 유저명을 입력해야 합니다."
+    )]
+    InvalidUsername,
+    #[translate(
+        en = "You must pass a valid phone number",
+        ko = "유효한 폰번호를 입력해야 합니다."
+    )]
+    InvalidPhoneNumber,
     #[translate(
         en = "You must pass a valid principal",
         ko = "유효한 계정 주소를 입력해야 합니다."
@@ -216,6 +230,28 @@ pub enum Error {
     SESServiceError(String),
     #[translate(ko = "인증코드가 잘못되었습니다.", en = "Invalid verification code.")]
     InvalidVerificationCode,
+
+    ServerError(String),
+
+    #[translate(en = "Invalid Payload")]
+    InvalidPayload,
+
+    #[translate(
+        en = "Failed to create sprint league",
+        ko = "스프린트 리그 생성에 실패했습니다."
+    )]
+    SprintLeagueCreationFailed,
+    #[translate(
+        en = "Failed to update sprint league",
+        ko = "스프린트 리그 업데이트에 실패했습니다."
+    )]
+    SprintLeagueUpdateFailed,
+
+    PassportVerificationFailed(String),
+    MedicalInfoExtractionFailed(String),
+    AwsRekognitionError(String),
+    AwsTextractError(String),
+    AwsBedrockError(String),
 }
 
 impl<E: StdError + 'static> From<E> for Error {
@@ -227,19 +263,6 @@ impl<E: StdError + 'static> From<E> for Error {
 impl Into<ServiceException> for Error {
     fn into(self) -> ServiceException {
         ServiceException { inner: self }
-    }
-}
-
-impl Into<CapturedError> for Error {
-    fn into(self) -> CapturedError {
-        CapturedError::from_str(&self.to_string())
-            .expect("Failed to convert Error to CapturedError. This should not happen.")
-    }
-}
-
-impl Into<RenderError> for Error {
-    fn into(self) -> RenderError {
-        RenderError::Aborted(self.into())
     }
 }
 
@@ -255,10 +278,17 @@ unsafe impl Sync for Error {}
 #[cfg(feature = "server")]
 impl by_axum::axum::response::IntoResponse for Error {
     fn into_response(self) -> by_axum::axum::response::Response {
-        (
-            by_axum::axum::http::StatusCode::BAD_REQUEST,
-            by_axum::axum::Json(self),
-        )
-            .into_response()
+        match self {
+            Error::Unauthorized => (
+                by_axum::axum::http::StatusCode::UNAUTHORIZED,
+                by_axum::axum::Json(self),
+            )
+                .into_response(),
+            _ => (
+                by_axum::axum::http::StatusCode::BAD_REQUEST,
+                by_axum::axum::Json(self),
+            )
+                .into_response(),
+        }
     }
 }

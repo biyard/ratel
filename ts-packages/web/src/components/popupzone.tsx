@@ -1,11 +1,21 @@
 'use client';
 import { usePopup } from '@/lib/contexts/popup-service';
-import React from 'react';
+import React, { useEffect } from 'react';
 import RemoveIcon from '@/assets/icons/remove.svg';
 
 export const PopupZone = () => {
   const popup = usePopup();
   const popupData = popup.popup;
+
+  useEffect(() => {
+    if (popupData) {
+      document.body.style.overflow = 'hidden';
+    }
+
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, [popupData]);
 
   if (!popupData) return null;
 
@@ -14,12 +24,13 @@ export const PopupZone = () => {
     title,
     content,
     closable = true,
+    overflow = false,
     backdropClosable = true,
   } = popupData;
 
   return (
     <div
-      className="fixed top-0 left-0 w-screen h-screen bg-popup-background backdrop-blur-[10px] flex justify-center items-center z-[101]"
+      className="fixed top-0 left-0 w-screen h-screen bg-popup-background backdrop-blur-[10px] flex justify-center items-center z-[101] bg-no-s"
       onClick={() => {
         if (backdropClosable) {
           popup.close();
@@ -27,7 +38,7 @@ export const PopupZone = () => {
       }}
     >
       <div
-        className="relative rounded-[20px] p-[25px] min-w-[300px] max-mobile:!w-full max-mobile:!mx-[20px] bg-bg overflow-hidden"
+        className={`relative rounded-[20px] p-[25px] min-w-[300px] max-mobile:!w-full max-mobile:!mx-[20px] bg-bg ${overflow ? 'overflow-visible' : 'overflow-hidden'}`}
         style={{
           boxShadow: '0px 0px 100px rgba(255, 206, 71, 0.25)',
         }}

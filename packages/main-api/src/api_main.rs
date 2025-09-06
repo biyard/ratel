@@ -1,4 +1,15 @@
-use crate::{config, controllers, route::route};
+use std::env;
+
+use crate::{
+    config, controllers,
+    route::route,
+    utils::{
+        aws::{BedrockClient, RekognitionClient, S3Client, TextractClient},
+        mcp_middleware::mcp_middleware,
+        sqs_client,
+    },
+};
+
 use bdk::prelude::{by_axum::axum::Router, *};
 use by_axum::axum::middleware;
 use by_types::DatabaseConfig;
@@ -7,6 +18,7 @@ use dto::{
         auth::{authorization_middleware, generate_jwt, set_auth_token_key},
         axum::{extract::Request, http::Response, middleware::Next},
     },
+    sqlx::PgPool,
     *,
 };
 use sqlx::postgres::PgPoolOptions;
@@ -49,10 +61,15 @@ pub async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         ElectionPledge,
         ElectionPledgeLike,
         Industry,
+        UserIndustry,
         Feed,
         FeedUser,
+        FeedShare,
         RedeemCode,
         Space,
+        SpaceLikeUser,
+        FeedBookmarkUser,
+        SpaceShareUser,
         Survey,
         SurveyResponse,
         SpaceDraft,
@@ -65,6 +82,9 @@ pub async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         SpaceHolder,
         SpaceGroup,
         SpaceMember,
+        SprintLeague,
+        SprintLeaguePlayer,
+        SprintLeagueVote,
         TeamMember,
         News,
         Quiz,
@@ -78,10 +98,31 @@ pub async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         EventLog,
         Badge,
         UserBadge,
+        UserPoint,
         SpaceBadge,
         Onboard,
         Mynetwork,
+        ConnectionInvitationDecline,
+        UserSuggestionDismissal,
         Verification,
+        Notification,
+        NoticeQuizAnswer,
+        NoticeQuizAttempt,
+        TelegramSubscribe,
+        Dagit,
+        Artwork,
+        Oracle,
+        DagitOracle,
+        DagitArtwork,
+        Consensus,
+        ConsensusVote,
+        ArtworkCertification,
+        ArtworkDetail,
+        Conversation,
+        Message,
+        ConversationParticipant,
+        AuthClient,
+        AuthCode,
     );
 
     if Industry::query_builder()
@@ -120,6 +161,9 @@ pub async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
                 "0x000".to_string(),
                 "password".to_string(),
                 Membership::Free,
+                "".to_string(),
+                None,
+                None,
             )
             .await?;
     }
@@ -147,20 +191,50 @@ pub async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
     Ok(())
 }
 
+pub async fn db_init(url: &'static str, max_conn: u32) -> Result<PgPool> {
+    let url = if let Ok(host) = env::var("PGHOST") {
+        let url = if let Some(at_pos) = url.rfind('@') {
+            let (before_at, after_at) = url.split_at(at_pos + 1);
+            if let Some(slash_pos) = after_at.find('/') {
+                let (_, after_slash) = after_at.split_at(slash_pos);
+                format!("{}{}{}", before_at, host, after_slash)
+            } else {
+                url.to_string()
+            }
+        } else {
+            url.to_string()
+        };
+        url
+    } else {
+        url.to_string()
+    };
+
+    tracing::debug!("Connecting to database at {}", url);
+
+    let pool = PgPoolOptions::new()
+        .max_connections(max_conn)
+        .connect(&url)
+        .await?;
+
+    Ok(pool)
+}
+
 pub async fn api_main() -> Result<Router> {
     let app = by_axum::new();
     let conf = config::get();
     by_axum::auth::set_auth_config(conf.auth.clone());
-    tracing::debug!("config: {:?}", conf);
+
     let auth_token_key = format!("{}_auth_token", conf.env);
     let auth_token_key = Box::leak(Box::new(auth_token_key));
     set_auth_token_key(auth_token_key);
 
     let pool = if let DatabaseConfig::Postgres { url, pool_size } = conf.database {
-        PgPoolOptions::new()
-            .max_connections(pool_size)
-            .connect(url)
-            .await?
+        let pool = db_init(url, pool_size).await?;
+        tracing::info!(
+            "Connected to Postgres at {}",
+            pool.connect_options().get_host()
+        );
+        pool
     } else {
         panic!("Database is not initialized. Call init() first.");
     };
@@ -175,6 +249,12 @@ pub async fn api_main() -> Result<Router> {
         }
     }
 
+    let sqs_client = sqs_client::SqsClient::new().await;
+    let bedrock_client = BedrockClient::new();
+    let rek_client = RekognitionClient::new();
+    let textract_client = TextractClient::new();
+    let private_s3_client = S3Client::new(conf.private_bucket_name);
+    let metadata_s3_client = S3Client::new(conf.bucket.name);
     let is_local = conf.env == "local";
     let session_layer = SessionManagerLayer::new(session_store)
         .with_secure(!is_local)
@@ -191,13 +271,24 @@ pub async fn api_main() -> Result<Router> {
                 .checked_add(Duration::days(30))
                 .unwrap(),
         ));
-    let mcp_router =
-        by_axum::axum::Router::new().nest_service("/mcp", controllers::mcp::route().await?);
-    let api_router = route(pool.clone())
-        .await?
-        .layer(middleware::from_fn(authorization_middleware))
-        .layer(session_layer)
-        .layer(middleware::from_fn(cookie_middleware));
+    let mcp_router = by_axum::axum::Router::new()
+        .nest_service("/mcp", controllers::mcp::route(pool.clone()).await?)
+        .layer(middleware::from_fn(mcp_middleware));
+    // let bot = teloxide::Bot::new(conf.telegram_token);
+    // let bot = std::sync::Arc::new(bot);
+    let api_router = route(
+        pool.clone(),
+        sqs_client,
+        bedrock_client,
+        rek_client,
+        textract_client,
+        metadata_s3_client,
+        private_s3_client,
+    )
+    .await?
+    .layer(middleware::from_fn(authorization_middleware))
+    .layer(session_layer)
+    .layer(middleware::from_fn(cookie_middleware));
 
     let app = app.merge(mcp_router).merge(api_router);
     Ok(app)

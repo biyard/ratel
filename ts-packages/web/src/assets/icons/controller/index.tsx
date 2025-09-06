@@ -1,0 +1,10 @@
+export { default as Backward } from './backward.svg';
+export { default as CirclePlay } from './circle-play.svg';
+export { default as CirclrPause } from './circlr-pause.svg';
+export { default as FastBackward } from './fast-backward.svg';
+export { default as FastForward } from './fast-forward.svg';
+export { default as Forward } from './forward.svg';
+export { default as Pause } from './pause.svg';
+export { default as Play } from './play.svg';
+export { default as SkipToNext } from './skip-to-next.svg';
+export { default as SkipToPrevious } from './skip-to-previous.svg';

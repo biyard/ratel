@@ -12,6 +12,8 @@ import { checkEmailRequest } from '@/lib/api/models/group';
 import clsx from 'clsx';
 import { logger } from '@/lib/logger';
 import { checkString } from '@/lib/string-filter-utils';
+import { showErrorToast } from '@/lib/toast';
+import { useTranslations } from 'next-intl';
 
 export default function InviteMemberPopup({
   team_id,
@@ -22,6 +24,7 @@ export default function InviteMemberPopup({
   groups: Group[];
   onclick: (group_id: number, users: number[]) => void;
 }) {
+  const t = useTranslations('Team');
   const { post, get } = useApiCall();
   const [groupIndex, setGroupIndex] = useState(0);
   const [selectedGroup, setSelectedGroup] = useState(groups[0]);
@@ -33,34 +36,51 @@ export default function InviteMemberPopup({
 
   const setValue = async (value: string, isEnter: boolean) => {
     if (value.includes(',') || isEnter) {
-      const emails = value
+      const identifiers = value
         .split(',')
-        .map((email) => email.trim())
-        .filter((email) => email !== '');
+        .map((v) => v.trim())
+        .filter((v) => v !== '');
 
-      for (const email of emails) {
-        const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-        if (checkString(email) || !isValidEmail) {
-          continue;
-        }
+      for (const input of identifiers) {
+        if (checkString(input)) continue;
 
-        const data = await get(ratelApi.users.getUserByEmail(email));
-        const result = await post(
-          ratelApi.groups.check_email(team_id, selectedGroup.id),
-          checkEmailRequest(email),
-        );
+        const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input);
+        const isPhone = /^\+?[0-9]\d{7,14}$/.test(input);
 
-        if (data) {
-          const exists = selectedUsers.some((u) => u.id === data.id);
-          if (!exists) {
-            const value: boolean = !result ? true : false;
-            setSelectedUsers((prev) => [...prev, data]);
-            setIsError((prevErrors) => [...prevErrors, value]);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let data: any = null;
 
-            if (value) {
-              setErrorCount((prev) => Math.max(prev + 1, 0));
-            }
+        try {
+          if (isEmail) {
+            data = await get(ratelApi.users.getUserByEmail(input));
+          } else if (isPhone) {
+            data = await get(ratelApi.users.getUserByPhoneNumber(input));
+          } else {
+            data = await get(ratelApi.users.getUserByUsername(input));
           }
+
+          if (data) {
+            const exists = selectedUsers.some((u) => u.id === data.id);
+            if (!exists) {
+              const result = await post(
+                ratelApi.groups.check_email(team_id, selectedGroup.id),
+                checkEmailRequest(input),
+              );
+
+              const value: boolean = !result && isEmail ? true : false;
+              setSelectedUsers((prev) => [...prev, data]);
+              setIsError((prev) => [...prev, value]);
+
+              if (value) {
+                setErrorCount((prev) => Math.max(prev + 1, 0));
+              }
+            }
+          } else {
+            showErrorToast(t('invalid_user'));
+          }
+        } catch (err) {
+          logger.error('failed to search user with error: ', err);
+          showErrorToast(t('failed_search_user'));
         }
       }
 
@@ -74,7 +94,7 @@ export default function InviteMemberPopup({
     <div className="flex flex-col w-[900px] min-h-[400px] max-w-[900px] min-w-[400px] max-mobile:!w-full max-mobile:!max-w-full gap-5">
       <div className="flex flex-col w-full gap-[10px]">
         <div className="font-bold text-[15px]/[28px] text-neutral-400">
-          Select the group
+          {t('select_group')}
         </div>
         <SelectBox
           groups={groups}
@@ -87,14 +107,12 @@ export default function InviteMemberPopup({
 
       <div className="flex flex-col w-full">
         <div className="font-bold text-[15px]/[28px] text-neutral-400">
-          Input User Email
+          {t('email_label')}
         </div>
         <div className="mt-[10px]">
           <SearchInput
             value={searchValue}
-            placeholder={
-              'Input the value (ex: example@example.com, example2@example.com, example3@example.com)'
-            }
+            placeholder={t('email_hint')}
             setValue={async (value) => {
               setValue(value, false);
             }}
@@ -157,6 +175,7 @@ function InviteMemberButton({
   isError: boolean;
   onclick: () => void;
 }) {
+  const t = useTranslations('Team');
   const containerClass = clsx(
     'flex flex-row w-full justify-center items-center my-[15px] py-[15px] rounded-lg font-bold text-[#000203] text-base',
     isError ? 'cursor-not-allowed bg-neutral-500' : 'cursor-pointer bg-primary',
@@ -171,7 +190,7 @@ function InviteMemberButton({
           }
         }}
       >
-        Send
+        {t('send')}
       </div>
 
       {isError && (
@@ -206,7 +225,7 @@ function SelectedUserInfo({
       <Clear
         width={24}
         height={24}
-        className="w-6 h-6 cursor-pointer"
+        className="w-6 h-6 cursor-pointer [&>path]:stroke-neutral-800"
         onClick={onremove}
       />
     </div>
