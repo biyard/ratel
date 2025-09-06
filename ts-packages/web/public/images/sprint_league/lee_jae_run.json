@@ -1,0 +1,181 @@
+{
+  "frames": {
+    "lee_jae_frame_0": {
+      "frame": {
+        "x": 1,
+        "y": 1,
+        "w": 276,
+        "h": 276
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 276,
+        "h": 276
+      },
+      "sourceSize": {
+        "w": 276,
+        "h": 276
+      },
+      "duration": 100
+    },
+    "lee_jae_frame_1": {
+      "frame": {
+        "x": 278,
+        "y": 1,
+        "w": 276,
+        "h": 276
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 276,
+        "h": 276
+      },
+      "sourceSize": {
+        "w": 276,
+        "h": 276
+      },
+      "duration": 100
+    },
+    "lee_jae_frame_2": {
+      "frame": {
+        "x": 555,
+        "y": 1,
+        "w": 276,
+        "h": 276
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 276,
+        "h": 276
+      },
+      "sourceSize": {
+        "w": 276,
+        "h": 276
+      },
+      "duration": 100
+    },
+    "lee_jae_frame_3": {
+      "frame": {
+        "x": 832,
+        "y": 1,
+        "w": 276,
+        "h": 276
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 276,
+        "h": 276
+      },
+      "sourceSize": {
+        "w": 276,
+        "h": 276
+      },
+      "duration": 100
+    },
+    "lee_jae_frame_4": {
+      "frame": {
+        "x": 1,
+        "y": 278,
+        "w": 276,
+        "h": 276
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 276,
+        "h": 276
+      },
+      "sourceSize": {
+        "w": 276,
+        "h": 276
+      },
+      "duration": 100
+    },
+    "lee_jae_frame_5": {
+      "frame": {
+        "x": 278,
+        "y": 278,
+        "w": 276,
+        "h": 276
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 276,
+        "h": 276
+      },
+      "sourceSize": {
+        "w": 276,
+        "h": 276
+      },
+      "duration": 100
+    },
+    "lee_jae_frame_6": {
+      "frame": {
+        "x": 555,
+        "y": 278,
+        "w": 276,
+        "h": 276
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 276,
+        "h": 276
+      },
+      "sourceSize": {
+        "w": 276,
+        "h": 276
+      },
+      "duration": 100
+    },
+    "lee_jae_frame_7": {
+      "frame": {
+        "x": 832,
+        "y": 278,
+        "w": 276,
+        "h": 276
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 276,
+        "h": 276
+      },
+      "sourceSize": {
+        "w": 276,
+        "h": 276
+      },
+      "duration": 100
+    }
+  },
+  "meta": {
+    "image": "/lee_jae_run.webp",
+    "version": "1.0",
+    "size": {
+      "w": 1109,
+      "h": 555
+    },
+    "scale": "1"
+  }
+}

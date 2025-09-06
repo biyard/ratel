@@ -51,7 +51,7 @@ impl SpaceRedeemCodeController {
             .map(RedeemCode::from)
             .fetch_optional(&self.pool)
             .await?;
-        let space = Space::query_builder()
+        let space = Space::query_builder(user.id)
             .id_equals(meta_id)
             .query()
             .map(Space::from)

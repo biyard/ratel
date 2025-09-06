@@ -51,6 +51,7 @@ jobs:
           OPENAPI_KEY: ${{ secrets.OPENAPI_KEY }}
           AUTH_SECRET_KEY: ${{ secrets.AUTH_SECRET_KEY }}
           JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
+
           BASE_DOMAIN: ratel.foundation
           MIGRATE: false
           ENABLE_S3: false
@@ -65,6 +66,13 @@ jobs:
           KAIA_OWNER_KEY: ${{ secrets.PROD_KAIA_OWNER_KEY }}
           KAIA_OWNER_ADDR: ${{ secrets.PROD_KAIA_OWNER_KEY_ADDR }}
           KAIA_ENDPOINT: https://public-en.node.kaia.io
+
+          NONCELAB_TOKEN: ${{ secrets.NONCELAB_TOKEN }}
+
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_BOT_URL: https://telegram-bot.ratel.foundation
+
+
         run: |
           npm i -g aws-cdk
           make deploy

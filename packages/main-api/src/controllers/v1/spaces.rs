@@ -2,10 +2,17 @@ mod badges;
 mod comments;
 mod discussions;
 mod meeting;
+mod notice_quiz_answers;
+mod notice_quiz_attempts;
 mod redeem_codes;
 mod responses;
+mod sprint_leagues;
 
+use std::collections::{HashMap, HashSet};
+
+use crate::config;
 use crate::security::check_perm;
+use crate::utils::aws_media_convert::merge_recording_chunks;
 use crate::utils::users::extract_user_id_with_no_error;
 use crate::{by_axum::axum::extract::Query, utils::users::extract_user_id};
 use bdk::prelude::*;
@@ -26,13 +33,16 @@ pub struct SpacePath {
 #[derive(Clone, Debug)]
 pub struct SpaceController {
     repo: SpaceRepository,
+    feed_repo: FeedRepository,
     space_member_repo: SpaceMemberRepository,
     discussion_repo: DiscussionRepository,
     discussion_member_repo: DiscussionMemberRepository,
     elearning_repo: ElearningRepository,
     survey_repo: SurveyRepository,
+    space_group_repo: SpaceGroupRepository,
     space_draft_repo: SpaceDraftRepository,
     pool: sqlx::Pool<sqlx::Postgres>,
+    notice_answer_repo: NoticeQuizAnswerRepository,
 }
 
 impl SpaceController {
@@ -41,69 +51,221 @@ impl SpaceController {
         tracing::debug!("user id: {:?}", user_id);
         // tracing::debug!("user: {:?}", user);
 
-        let mut space = Space::query_builder()
+        let mut space = Space::query_builder(user_id)
             .id_equals(id)
             .discussions_builder(Discussion::query_builder())
             .comments_builder(SpaceComment::query_builder())
             .feed_comments_builder(SpaceComment::query_builder())
+            .sprint_leagues_builder(
+                SprintLeague::query_builder(user_id)
+                    .players_builder(SprintLeaguePlayer::query_builder()),
+            )
             .query()
             .map(Space::from)
             .fetch_one(&self.pool)
             .await?;
 
+        // Access control for notice spaces
+        if space.space_type == SpaceType::Notice {
+            let is_owner = user_id == space.owner_id;
+
+            match space.status {
+                SpaceStatus::Draft => {
+                    // Draft notice spaces: only owner has access
+                    if !is_owner {
+                        tracing::warn!(
+                            "Access denied for user {} to draft notice space {} - only owner allowed",
+                            user_id,
+                            id
+                        );
+                        return Err(Error::Unauthorized);
+                    }
+                }
+                _ => {
+                    // published spaces
+                    match space.publishing_scope {
+                        PublishingScope::Private => {
+                            // Private: only space members can access
+                            let is_member = if user_id != 0 {
+                                SpaceMember::query_builder()
+                                    .space_id_equals(id)
+                                    .user_id_equals(user_id)
+                                    .query()
+                                    .map(SpaceMember::from)
+                                    .fetch_optional(&self.pool)
+                                    .await?
+                                    .is_some()
+                            } else {
+                                false
+                            };
+
+                            if !is_owner && !is_member {
+                                tracing::warn!(
+                                    "Access denied for user {} to private notice space {} - not owner or member",
+                                    user_id,
+                                    id
+                                );
+                                return Err(Error::Unauthorized);
+                            }
+                        }
+                        PublishingScope::Public => {
+                            // Public: all users can access (no additional checks needed)
+                            tracing::debug!(
+                                "Allowing access to public notice space {} for user {}",
+                                id,
+                                user_id
+                            );
+                        }
+                    }
+                }
+            }
+        }
+
         let user_response = if user_id != 0 {
-            SurveyResponse::query_builder()
-                .space_id_equals(id)
-                .user_id_equals(user_id)
-                .survey_type_equals(SurveyType::Survey)
-                .query()
-                .map(Into::into)
-                .fetch_optional(&self.pool)
-                .await?
-                .map_or_else(Vec::new, |res| vec![res])
+            let mut res: Vec<SurveyResponse> = vec![];
+
+            if space.space_type == SpaceType::Deliberation {
+                res = SurveyResponse::query_builder()
+                    .space_id_equals(id)
+                    .user_id_equals(user_id)
+                    .survey_type_equals(SurveyType::Survey)
+                    .query()
+                    .map(Into::into)
+                    .fetch_optional(&self.pool)
+                    .await?
+                    .map_or_else(Vec::new, |res| vec![res]);
+            } else {
+                let response: Vec<SurveyResponse> = SurveyResponse::query_builder()
+                    .space_id_equals(id)
+                    .user_id_equals(user_id)
+                    .order_by_created_at_desc()
+                    .survey_type_equals(SurveyType::Sample)
+                    .query()
+                    .map(Into::into)
+                    .fetch_optional(&self.pool)
+                    .await?
+                    .map_or_else(Vec::new, |res| vec![res]);
+
+                if !response.is_empty() {
+                    res = vec![response[0].clone()];
+                }
+            }
+
+            res
         } else {
             Vec::new()
         };
 
-        let responses = SurveyResponse::query_builder()
-            .space_id_equals(id)
-            .survey_type_equals(SurveyType::Survey)
-            .query()
-            .map(Into::into)
-            .fetch_all(&self.pool)
-            .await?;
+        let responses: Vec<SurveyResponse> = if space.space_type == SpaceType::Deliberation {
+            SurveyResponse::query_builder()
+                .space_id_equals(id)
+                .survey_type_equals(SurveyType::Survey)
+                .query()
+                .map(Into::into)
+                .fetch_all(&self.pool)
+                .await?
+        } else {
+            let sql = r#"
+                SELECT DISTINCT ON (user_id) *
+                FROM survey_responses
+                WHERE space_id = $1 AND survey_type = $2
+                ORDER BY user_id, created_at DESC
+            "#;
+
+            let response: Vec<SurveyResponse> = sqlx::query(sql)
+                .bind(id)
+                .bind(SurveyType::Sample)
+                .map(SurveyResponse::from)
+                .fetch_all(&self.pool)
+                .await?;
+
+            response
+        };
+
+        let discussions = space.discussions;
+
+        let mut updated_discussions = Vec::with_capacity(discussions.len());
+        let mut tx = self.pool.begin().await?;
+
+        for mut discussion in discussions {
+            let meeting_id = discussion.meeting_id.clone().unwrap_or_default();
+            let pipeline_arn = discussion.media_pipeline_arn.clone().unwrap_or_default();
+            let record = discussion.record.clone();
+
+            let record = merge_recording_chunks(&meeting_id, pipeline_arn, record).await;
+
+            if record.is_some() {
+                match self
+                    .discussion_repo
+                    .update_with_tx(
+                        &mut *tx,
+                        discussion.id,
+                        DiscussionRepositoryUpdateRequest {
+                            record: record.clone(),
+                            ..Default::default()
+                        },
+                    )
+                    .await
+                {
+                    Ok(v) => tracing::debug!("success to update discussion record: {:?}", v),
+                    Err(e) => {
+                        tracing::error!("failed to update discussion record with error: {:?}", e)
+                    }
+                };
+
+                discussion.record = record;
+            }
+
+            updated_discussions.push(discussion);
+        }
+
+        tx.commit().await?;
 
         space.user_responses = user_response;
         space.responses = responses;
-        // if let Ok(user) = user {
-        //     let redeem_codes = RedeemCode::query_builder()
-        //         .user_id_equals(user.id)
-        //         .meta_id_equals(id)
-        //         .query()
-        //         .map(RedeemCode::from)
-        //         .fetch_optional(&mut *tx)
-        //         .await?;
-        //     if redeem_codes.is_some() {
-        //         space.codes = vec![redeem_codes.unwrap()];
-        //     } else {
-        //         let redeem_code_repo = RedeemCode::get_repository(self.pool.clone());
-        //         let mut codes = vec![];
-        //         for _ in 0..space.num_of_redeem_codes {
-        //             let id = Uuid::new_v4().to_string();
-        //             codes.push(id);
-        //         }
-        //         let res = redeem_code_repo
-        //             .insert_with_tx(&mut *tx, user.id, id, codes, vec![])
-        //             .await?;
-        //         if res.is_none() {
-        //             tracing::error!("failed to insert redeem codes for space {id}");
-        //             return Err(Error::RedeemCodeCreationFailure);
-        //         } else {
-        //             space.codes = vec![res.unwrap()];
-        //         }
-        //     }
-        // }
+        space.discussions = updated_discussions;
+
         Ok(space)
+    }
+
+    async fn like_space(&self, id: i64, auth: Option<Authorization>, value: bool) -> Result<Space> {
+        let user_id = extract_user_id(&self.pool, auth).await?;
+        let repo = SpaceLikeUser::get_repository(self.pool.clone());
+        if !value {
+            let space_user = SpaceLikeUser::query_builder()
+                .space_id_equals(id)
+                .user_id_equals(user_id)
+                .query()
+                .map(SpaceLikeUser::from)
+                .fetch_optional(&self.pool)
+                .await?;
+            if let Some(space_user) = space_user {
+                repo.delete(space_user.id).await?;
+            }
+        } else {
+            repo.insert(id, user_id).await?;
+        }
+
+        Ok(Space::default())
+    }
+
+    async fn share_space(&self, id: i64, auth: Option<Authorization>) -> Result<Space> {
+        let user_id = extract_user_id(&self.pool, auth).await?;
+        let repo = SpaceShareUser::get_repository(self.pool.clone());
+
+        let space_user = SpaceShareUser::query_builder()
+            .space_id_equals(id)
+            .user_id_equals(user_id)
+            .query()
+            .map(SpaceShareUser::from)
+            .fetch_optional(&self.pool)
+            .await?;
+
+        if space_user.is_none() {
+            repo.insert(id, user_id).await?;
+        }
+
+        Ok(Space::default())
     }
 
     async fn posting_space(&self, space_id: i64, auth: Option<Authorization>) -> Result<Space> {
@@ -111,7 +273,7 @@ impl SpaceController {
             .await
             .unwrap_or_default();
 
-        let space = Space::query_builder()
+        let space = Space::query_builder(user_id)
             .id_equals(space_id)
             .query()
             .map(Space::from)
@@ -164,6 +326,32 @@ impl SpaceController {
             }
         };
 
+        if space.space_type == SpaceType::SprintLeague {
+            let client = reqwest::Client::new();
+            let payload =
+                TelegramNotificationPayload::SprintLeague(SprintLeaguePayload { space_id });
+            let res = client
+                .post(format!("{}/{}", config::get().telegram_bot_url, "notify"))
+                .json(&payload)
+                .send()
+                .await;
+            match res {
+                Ok(_) => {
+                    tracing::debug!(
+                        "Successfully sent Telegram notification for space {}",
+                        space_id
+                    );
+                }
+                Err(e) => {
+                    tracing::error!(
+                        "Failed to send Telegram notification for space {}: {}",
+                        space_id,
+                        e
+                    );
+                }
+            };
+        }
+
         let surveys = Survey::query_builder()
             .space_id_equals(space_id)
             .query()
@@ -214,13 +402,24 @@ impl SpaceController {
             drafts,
             started_at,
             ended_at,
+            publishing_scope,
+            quiz,
         }: SpaceUpdateSpaceRequest,
     ) -> Result<Space> {
         let user_id = extract_user_id(&self.pool, auth.clone())
             .await
             .unwrap_or_default();
+        // Validate quiz if provided
+        if let Some(ref quiz_data) = quiz {
+            if !quiz_data.questions.is_empty() {
+                if let Err(e) = Self::validate_notice_quiz_request(&quiz_data.questions) {
+                    tracing::error!("Quiz validation failed for space {}: {:?}", space_id, e);
+                    return Err(e);
+                }
+            }
+        }
 
-        let space = Space::query_builder()
+        let space = Space::query_builder(user_id)
             .id_equals(space_id)
             .query()
             .map(Space::from)
@@ -230,6 +429,28 @@ impl SpaceController {
                 tracing::error!("failed to get a space {space_id}: {e}");
                 Error::FeedInvalidQuoteSpaceId
             })?;
+
+        // Block quiz editing when space is InProgress
+        let quiz = if space.status == SpaceStatus::InProgress {
+            tracing::warn!(
+                "Blocking quiz update for space {} - status is InProgress",
+                space_id
+            );
+            None
+        } else {
+            quiz
+        };
+
+        // Prevent changing from Public back to Private
+        if space.publishing_scope == PublishingScope::Public
+            && publishing_scope == PublishingScope::Private
+        {
+            tracing::error!(
+                "Cannot change space {} from Public to Private publishing scope",
+                space_id
+            );
+            return Err(Error::InvalidInputValue);
+        }
 
         let feed = Feed::query_builder(user_id)
             .id_equals(space.feed_id)
@@ -254,72 +475,147 @@ impl SpaceController {
 
         let mut tx = self.pool.begin().await?;
 
-        let res = self
+        // notice quiz
+        // If quiz is provided, save the quiz with answers and convert to read-only version for space
+        let notice_quiz_for_space = if let Some(ref quiz_data) = quiz {
+            if !quiz_data.questions.is_empty() {
+                // Convert new NoticeQuizRequest format to entities with UUID generation
+                let (converted_quiz, answer_data) = convert_notice_quiz_request(quiz_data);
+
+                // Check if answer already exists for this space
+                let existing_answer = NoticeQuizAnswer::query_builder()
+                    .space_id_equals(space_id)
+                    .query()
+                    .map(NoticeQuizAnswer::from)
+                    .fetch_optional(&self.pool)
+                    .await?;
+
+                // Save or update answers in the notice_quiz_answers table
+                let save_result = if let Some(existing) = existing_answer {
+                    // For update, we need to create a new update request
+                    let update_request = NoticeQuizAnswerRepositoryUpdateRequest {
+                        answers: Some(answer_data.clone()),
+                        ..Default::default()
+                    };
+                    self.notice_answer_repo
+                        .update(existing.id, update_request)
+                        .await
+                        .map(|_| ())
+                } else {
+                    // For insert using manual parameter approach
+                    self.notice_answer_repo
+                        .insert(space_id, answer_data.clone())
+                        .await
+                        .map(|_| ())
+                };
+
+                match save_result {
+                    Ok(_) => {
+                        tracing::debug!(
+                            "Successfully saved notice quiz answers for space {}",
+                            space_id
+                        );
+                    }
+                    Err(e) => {
+                        tracing::error!(
+                            "Failed to save notice quiz answers for space {}: {}",
+                            space_id,
+                            e
+                        );
+                        tx.rollback().await?;
+                        return Err(Error::DatabaseException(e.to_string()));
+                    }
+                }
+
+                // Return the converted quiz for the space (read-only version)
+                converted_quiz
+            } else {
+                // Empty quiz provided, clear the quiz
+                vec![]
+            }
+        } else {
+            // No quiz provided, don't update quiz field (keep existing)
+            space.notice_quiz
+        };
+
+        let res = match self
             .repo
             .update_with_tx(
                 &mut *tx,
                 space_id,
                 SpaceRepositoryUpdateRequest {
-                    title: title,
-                    html_contents: Some(html_contents),
+                    title: title.clone(),
+                    html_contents: Some(html_contents.clone()),
                     files: Some(files),
                     started_at,
                     ended_at,
+                    publishing_scope: Some(publishing_scope),
+                    notice_quiz: if quiz.is_some() {
+                        Some(notice_quiz_for_space)
+                    } else {
+                        None
+                    },
+                    ..Default::default()
+                },
+            )
+            .await
+        {
+            Ok(space) => space,
+            Err(e) => {
+                tracing::error!("Failed to update space {}: {}", space_id, e);
+                tx.rollback().await?;
+                return Err(Error::BadRequest);
+            }
+        };
+
+        let feed_id = res.clone().unwrap_or_default().feed_id;
+
+        let _ = self
+            .feed_repo
+            .update_with_tx(
+                &mut *tx,
+                feed_id,
+                FeedRepositoryUpdateRequest {
+                    title: title,
+                    html_contents: Some(html_contents),
                     ..Default::default()
                 },
             )
             .await?;
 
-        let discs = Discussion::query_builder()
+        // discussion
+        let existing_discs = Discussion::query_builder()
             .space_id_equals(space_id)
             .query()
             .map(Discussion::from)
             .fetch_all(&self.pool.clone())
             .await?;
 
-        for disc in discs {
-            match self.discussion_repo.delete_with_tx(&mut *tx, disc.id).await {
-                Ok(_) => {}
-                Err(e) => {
-                    tx.rollback().await?;
-                    return Err(e);
-                }
-            }
+        let mut existing_map: HashMap<i64, Discussion> = HashMap::new();
+        for disc in &existing_discs {
+            existing_map.insert(disc.id, disc.clone());
         }
 
-        for discussion in discussions {
-            let participants = discussion.participants;
+        let mut received_ids = HashSet::new();
 
-            let discussion = match self
-                .discussion_repo
-                .insert_with_tx(
-                    &mut *tx,
-                    space_id,
-                    user_id,
-                    discussion.started_at,
-                    discussion.ended_at,
-                    discussion.name,
-                    discussion.description,
-                    None,
-                    "".to_string(),
-                    None,
-                )
-                .await
-            {
-                Ok(v) => v,
-                Err(e) => {
-                    tx.rollback().await?;
-                    return Err(e);
-                }
-            }
-            .unwrap_or_default();
+        for new_disc in discussions {
+            let participants = new_disc.participants;
+            if let Some(id) = new_disc.discussion_id {
+                received_ids.insert(id);
 
-            let discussion_id = discussion.id;
-
-            for participant_id in participants {
                 let _ = match self
-                    .discussion_member_repo
-                    .insert_with_tx(&mut *tx, discussion_id, participant_id)
+                    .discussion_repo
+                    .update_with_tx(
+                        &mut *tx,
+                        id,
+                        DiscussionRepositoryUpdateRequest {
+                            name: Some(new_disc.name),
+                            description: Some(new_disc.description),
+                            started_at: Some(new_disc.started_at),
+                            ended_at: Some(new_disc.ended_at),
+                            ..Default::default()
+                        },
+                    )
                     .await
                 {
                     Ok(_) => {}
@@ -328,8 +624,63 @@ impl SpaceController {
                         return Err(e);
                     }
                 };
+
+                let ps = DiscussionParticipant::query_builder()
+                    .discussion_id_equals(id)
+                    .query()
+                    .map(DiscussionParticipant::from)
+                    .fetch_all(&self.pool.clone())
+                    .await?;
+
+                for p in ps {
+                    self.discussion_member_repo
+                        .delete_with_tx(&mut *tx, p.id)
+                        .await?;
+                }
+
+                for pid in participants {
+                    self.discussion_member_repo
+                        .insert_with_tx(&mut *tx, id, pid)
+                        .await?;
+                }
+            } else {
+                let inserted = self
+                    .discussion_repo
+                    .insert_with_tx(
+                        &mut *tx,
+                        space_id,
+                        user_id,
+                        new_disc.started_at,
+                        new_disc.ended_at,
+                        new_disc.name,
+                        new_disc.description,
+                        None,
+                        "".to_string(),
+                        None,
+                        None,
+                    )
+                    .await?
+                    .unwrap_or_default();
+
+                let new_id = inserted.id;
+
+                for pid in participants {
+                    self.discussion_member_repo
+                        .insert_with_tx(&mut *tx, new_id, pid)
+                        .await?;
+                }
             }
         }
+
+        for old_disc in existing_discs {
+            if !received_ids.contains(&old_disc.id) {
+                self.discussion_repo
+                    .delete_with_tx(&mut *tx, old_disc.id)
+                    .await?;
+            }
+        }
+
+        //
 
         let es = Elearning::query_builder()
             .space_id_equals(space_id)
@@ -482,6 +833,9 @@ impl SpaceController {
             feed_id,
             user_ids,
             num_of_redeem_codes,
+            booster_type,
+            started_at,
+            ended_at,
         }: SpaceCreateSpaceRequest,
     ) -> Result<Space> {
         let _ = space_type;
@@ -500,16 +854,9 @@ impl SpaceController {
                 Error::FeedInvalidQuoteId
             })?;
 
-        let user = check_perm(
-            &self.pool,
-            auth,
-            RatelResource::Post {
-                team_id: feed.user_id,
-            },
-            GroupPermission::WritePosts,
-        )
-        .await?;
         let mut tx = self.pool.begin().await?;
+
+        let author_id = feed.author[0].id;
 
         let res = self
             .repo
@@ -518,14 +865,17 @@ impl SpaceController {
                 feed.title,
                 feed.html_contents,
                 space_type,
-                user.id,
+                author_id,
                 feed.industry_id,
-                None,
-                None,
+                started_at,
+                ended_at,
                 feed_id,
                 SpaceStatus::Draft,
                 feed.files,
                 num_of_redeem_codes,
+                Vec::new(),
+                booster_type,
+                PublishingScope::Private,
             )
             .await
             .map_err(|e| {
@@ -550,24 +900,350 @@ impl SpaceController {
                     Error::SpaceWritePostError
                 })?;
         }
+
         tx.commit().await?;
 
         Ok(res)
+    }
+
+    async fn delete_space(
+        &self,
+        space_id: i64,
+        auth: Option<Authorization>,
+        confirmation: SpaceDeleteConfirmation,
+    ) -> Result<()> {
+        let user_id = extract_user_id(&self.pool, auth.clone()).await?;
+
+        // Get the space to verify existence and fetch feed ID
+        let space = self.get_space_by_id(auth.clone(), space_id).await?;
+
+        // Verify confirmation
+        if !confirmation.confirmation {
+            tracing::error!("Delete operation cancelled - user did not confirm");
+            return Err(Error::BadRequest);
+        }
+
+        // Verify space name matches exactly
+        let space_title = space.title.clone().unwrap_or_default();
+        if confirmation.space_name != space_title {
+            tracing::error!(
+                "Space name verification failed - expected '{}' got '{}'",
+                space_title,
+                confirmation.space_name
+            );
+            return Err(Error::BadRequest);
+        }
+
+        let feed = Feed::query_builder(user_id)
+            .id_equals(space.feed_id)
+            .query()
+            .map(Feed::from)
+            .fetch_one(&self.pool)
+            .await?;
+
+        // Check permissions
+        check_perm(
+            &self.pool,
+            auth,
+            RatelResource::Post {
+                team_id: feed.user_id,
+            },
+            GroupPermission::WritePosts,
+        )
+        .await?;
+
+        let mut tx = self.pool.begin().await?;
+
+        // === DELETE DISCUSSIONS + MEMBERS ===
+        let discussions = Discussion::query_builder()
+            .space_id_equals(space_id)
+            .query()
+            .map(Discussion::from)
+            .fetch_all(&self.pool)
+            .await?;
+
+        for discussion in discussions {
+            let participants = DiscussionParticipant::query_builder()
+                .discussion_id_equals(discussion.id)
+                .query()
+                .map(DiscussionParticipant::from)
+                .fetch_all(&self.pool)
+                .await?;
+
+            for participant in participants {
+                self.discussion_member_repo
+                    .delete_with_tx(&mut *tx, participant.id)
+                    .await?;
+            }
+
+            self.discussion_repo
+                .delete_with_tx(&mut *tx, discussion.id)
+                .await?;
+        }
+
+        // === DELETE SURVEY RESPONSES FIRST, THEN SURVEYS ===
+        let surveys = Survey::query_builder()
+            .space_id_equals(space_id)
+            .query()
+            .map(Survey::from)
+            .fetch_all(&self.pool)
+            .await?;
+
+        let response_repo = SurveyResponse::get_repository(self.pool.clone());
+        for survey in &surveys {
+            // Delete all responses for this survey first
+            let responses = SurveyResponse::query_builder()
+                .survey_id_equals(survey.id)
+                .query()
+                .map(SurveyResponse::from)
+                .fetch_all(&self.pool)
+                .await?;
+            for resp in responses {
+                response_repo.delete_with_tx(&mut *tx, resp.id).await?;
+            }
+        }
+
+        // surveys themselves
+        for survey in surveys {
+            self.survey_repo.delete_with_tx(&mut *tx, survey.id).await?;
+        }
+
+        // === DELETE ELEARNING ===
+        let elearnings = Elearning::query_builder()
+            .space_id_equals(space_id)
+            .query()
+            .map(Elearning::from)
+            .fetch_all(&self.pool)
+            .await?;
+
+        for elearning in elearnings {
+            self.elearning_repo
+                .delete_with_tx(&mut *tx, elearning.id)
+                .await?;
+        }
+
+        // === DELETE SPACE MEMBERS ===
+        let members = SpaceMember::query_builder()
+            .space_id_equals(space_id)
+            .query()
+            .map(SpaceMember::from)
+            .fetch_all(&self.pool)
+            .await?;
+
+        for member in members {
+            self.space_member_repo
+                .delete_with_tx(&mut *tx, member.id)
+                .await?;
+        }
+
+        // === DELETE SPACE DRAFT ===
+        let drafts = SpaceDraft::query_builder()
+            .space_id_equals(space_id)
+            .query()
+            .map(SpaceDraft::from)
+            .fetch_all(&self.pool)
+            .await?;
+
+        for draft in drafts {
+            self.space_draft_repo
+                .delete_with_tx(&mut *tx, draft.id)
+                .await?;
+        }
+
+        // ===  DELETE SpaceLikeUser / SpaceShareUser  ===
+        let like_repo = SpaceLikeUser::get_repository(self.pool.clone());
+        let share_repo = SpaceShareUser::get_repository(self.pool.clone());
+
+        let likes = SpaceLikeUser::query_builder()
+            .space_id_equals(space_id)
+            .query()
+            .map(SpaceLikeUser::from)
+            .fetch_all(&self.pool)
+            .await?;
+
+        for like in likes {
+            like_repo.delete_with_tx(&mut *tx, like.id).await?;
+        }
+
+        let shares = SpaceShareUser::query_builder()
+            .space_id_equals(space_id)
+            .query()
+            .map(SpaceShareUser::from)
+            .fetch_all(&self.pool)
+            .await?;
+
+        for share in shares {
+            share_repo.delete_with_tx(&mut *tx, share.id).await?;
+        }
+
+        // === DELETE SPACE GROUPS ===
+        let groups = SpaceGroup::query_builder()
+            .space_id_equals(space_id)
+            .query()
+            .map(SpaceGroup::from)
+            .fetch_all(&self.pool)
+            .await?;
+        for group in groups {
+            self.space_group_repo
+                .delete_with_tx(&mut *tx, group.id)
+                .await?; // Changed to use self.space_group_repo
+        }
+
+        // === DELETE SPACE COMMENTS ===
+        // let comment_repo = SpaceComment::get_repository(self.pool.clone());
+        // let comments = SpaceComment::query_builder()
+        //     // .space_id_equals(space_id)
+        //     .id_equals(space_id)
+        //     .query()
+        //     .map(SpaceComment::from)
+        //     .fetch_all(&self.pool)
+        //     .await?;
+        // for comment in comments {
+        //     comment_repo.delete_with_tx(&mut *tx, comment.id).await?;
+        // }
+
+        let comment_repo = SpaceComment::get_repository(self.pool.clone());
+        let comments = SpaceComment::query_builder()
+            .parent_id_equals(space.feed_id) // Comments are related through the feed
+            .query()
+            .map(SpaceComment::from)
+            .fetch_all(&self.pool)
+            .await?;
+        for comment in comments {
+            comment_repo.delete_with_tx(&mut *tx, comment.id).await?;
+        }
+
+        // === DELETE NOTICE QUIZ ANSWERS ===
+        let quiz_answer_repo = NoticeQuizAnswer::get_repository(self.pool.clone());
+        let quiz_answers = NoticeQuizAnswer::query_builder()
+            .space_id_equals(space_id)
+            .query()
+            .map(NoticeQuizAnswer::from)
+            .fetch_all(&self.pool)
+            .await?;
+        for ans in quiz_answers {
+            quiz_answer_repo.delete_with_tx(&mut *tx, ans.id).await?;
+        }
+
+        // === DELETE NOTICE QUIZ ATTEMPTS ===
+        let quiz_attempt_repo = NoticeQuizAttempt::get_repository(self.pool.clone());
+        let quiz_attempts = NoticeQuizAttempt::query_builder()
+            .space_id_equals(space_id)
+            .query()
+            .map(NoticeQuizAttempt::from)
+            .fetch_all(&self.pool)
+            .await?;
+        for att in quiz_attempts {
+            quiz_attempt_repo.delete_with_tx(&mut *tx, att.id).await?;
+        }
+
+        // ===  DELETE THE SPACE ITSELF ===
+        self.repo.delete_with_tx(&mut *tx, space_id).await?;
+
+        tx.commit().await?;
+        Ok(())
+    }
+
+    /// Helper function to validate quiz requests (with correct answers)
+    fn validate_notice_quiz_request(quiz: &[NoticeQuestionRequest]) -> Result<()> {
+        for (question_index, question) in quiz.iter().enumerate() {
+            // Check if question title is not empty
+            let question_title = question.title.trim();
+            if question_title.is_empty() {
+                tracing::error!("Question {} title cannot be empty", question_index + 1);
+                return Err(Error::InvalidInputValue);
+            }
+
+            // Check if each question has more than 2 options
+            if question.options.len() < 2 {
+                tracing::error!(
+                    "Question {} has only {} options, minimum 2 required",
+                    question_index + 1,
+                    question.options.len()
+                );
+                return Err(Error::InvalidInputValue);
+            }
+
+            // Check if each question has no more than 4 options
+            if question.options.len() > 4 {
+                tracing::error!(
+                    "Question {} has {} options, maximum 4 allowed",
+                    question_index + 1,
+                    question.options.len()
+                );
+                return Err(Error::InvalidInputValue);
+            }
+
+            // Check if all option contents are unique within the question
+            let mut option_contents = HashSet::new();
+            let mut selected_count = 0;
+            for (option_index, option) in question.options.iter().enumerate() {
+                let content = option.content.trim();
+
+                // Check for empty content
+                if content.is_empty() {
+                    tracing::error!(
+                        "Question {} option {} cannot be empty",
+                        question_index + 1,
+                        option_index + 1
+                    );
+                    return Err(Error::InvalidInputValue);
+                }
+
+                if !option_contents.insert(content.to_lowercase()) {
+                    tracing::error!(
+                        "Question {} has duplicate option content: '{}'",
+                        question_index + 1,
+                        content
+                    );
+                    return Err(Error::InvalidInputValue);
+                }
+
+                // Count correct options (is_correct)
+                if option.is_correct {
+                    selected_count += 1;
+                }
+            }
+
+            // Check if exactly one option is selected
+            if selected_count == 0 {
+                tracing::error!(
+                    "Question {} must have exactly one selected option, but has none",
+                    question_index + 1
+                );
+                return Err(Error::InvalidInputValue);
+            }
+
+            if selected_count > 1 {
+                tracing::error!(
+                    "Question {} must have exactly one selected option, but has {}",
+                    question_index + 1,
+                    selected_count
+                );
+                return Err(Error::InvalidInputValue);
+            }
+        }
+
+        Ok(())
     }
 }
 
 impl SpaceController {
     pub fn new(pool: sqlx::Pool<sqlx::Postgres>) -> Self {
         let repo = Space::get_repository(pool.clone());
+        let feed_repo = Feed::get_repository(pool.clone());
         let space_member_repo = SpaceMember::get_repository(pool.clone());
         let space_draft_repo = SpaceDraft::get_repository(pool.clone());
         let discussion_repo = Discussion::get_repository(pool.clone());
         let discussion_member_repo = DiscussionMember::get_repository(pool.clone());
         let elearning_repo = Elearning::get_repository(pool.clone());
         let survey_repo = Survey::get_repository(pool.clone());
+        let notice_answer_repo = NoticeQuizAnswer::get_repository(pool.clone());
+        let space_group_repo = SpaceGroup::get_repository(pool.clone());
 
         Self {
             repo,
+            feed_repo,
             pool,
             discussion_repo,
             discussion_member_repo,
@@ -575,6 +1251,8 @@ impl SpaceController {
             survey_repo,
             space_member_repo,
             space_draft_repo,
+            notice_answer_repo,
+            space_group_repo,
         }
     }
 
@@ -615,6 +1293,20 @@ impl SpaceController {
             .nest(
                 "/:space-id/redeem-codes",
                 redeem_codes::SpaceRedeemCodeController::new(self.pool.clone()).route(),
+            )
+            .nest(
+                "/:space-id/sprint-leagues",
+                sprint_leagues::SprintLeagueController::new(self.pool.clone()).route(),
+            )
+            .nest(
+                "/:space-id/notice-quiz-attempts",
+                notice_quiz_attempts::SpaceNoticeQuizAttemptController::new(self.pool.clone())
+                    .route(),
+            )
+            .nest(
+                "/:space-id/notice-quiz-answers",
+                notice_quiz_answers::SpaceNoticeQuizAnswersController::new(self.pool.clone())
+                    .route(),
             ))
     }
 
@@ -654,6 +1346,16 @@ impl SpaceController {
         let feed = match body {
             SpaceByIdAction::UpdateSpace(param) => ctrl.update_space(id, auth, param).await?,
             SpaceByIdAction::PostingSpace(_) => ctrl.posting_space(id, auth).await?,
+            SpaceByIdAction::Like(req) => ctrl.like_space(id, auth, req.value).await?,
+            SpaceByIdAction::Share(_) => ctrl.share_space(id, auth).await?,
+            SpaceByIdAction::Delete(request) => {
+                let confirmation = SpaceDeleteConfirmation {
+                    confirmation: request.confirmation,
+                    space_name: request.space_name,
+                };
+                ctrl.delete_space(id, auth, confirmation).await?;
+                Space::default() // return a default (empty) Space object as JSON
+            }
         };
 
         Ok(Json(feed))

@@ -5,14 +5,22 @@ import React, { useContext, useMemo } from 'react';
 import TeamProfile from './team-profile';
 import Link from 'next/link';
 import { route } from '@/route';
-import { Home, UserGroup, Settings, User, Post } from '@/components/icons';
+import {
+  Home,
+  UserGroup,
+  Settings,
+  EditContent,
+  Folder,
+} from '@/components/icons';
 import { TeamContext } from '@/lib/contexts/team-context';
+import { useTranslations } from 'next-intl';
 
 export interface TeamSidemenuProps {
   username: string;
 }
 
 export default function TeamSidemenu({ username }: TeamSidemenuProps) {
+  const t = useTranslations('Team');
   const { teams } = useContext(TeamContext);
   const team = useMemo(() => {
     return teams.find((t) => t.username === username);
@@ -32,26 +40,26 @@ export default function TeamSidemenu({ username }: TeamSidemenuProps) {
           className="sidemenu-link"
         >
           <Home />
-          <span>Home</span>
+          <span>{t('home')}</span>
         </Link>
         <Link href={route.teamDrafts(team.username)} className="sidemenu-link">
-          <Post className="w-[24px] h-[24px]" />
-          <span>Drafts</span>
+          <EditContent className="w-6 h-6 [&>path]:stroke-neutral-500" />
+          <span>{t('drafts')}</span>
         </Link>
         <Link href={route.teamGroups(team.username)} className="sidemenu-link">
-          <UserGroup />
-          <span>Groups</span>
+          <Folder className="w-6 h-6 [&>path]:stroke-neutral-500" />
+          <span>{t('manage_group')}</span>
         </Link>
         <Link href={route.teamMembers(team.username)} className="sidemenu-link">
-          <User className="w-[24px] h-[24px]" />
-          <span>Members</span>
+          <UserGroup className="w-6 h-6" />
+          <span>{t('members')}</span>
         </Link>
         <Link
           href={route.teamSettings(team.username)}
           className="sidemenu-link"
         >
-          <Settings className="w-[24px] h-[24px]" />
-          <span>Settings</span>
+          <Settings className="w-6 h-6" />
+          <span>{t('settings')}</span>
         </Link>
       </nav>
 

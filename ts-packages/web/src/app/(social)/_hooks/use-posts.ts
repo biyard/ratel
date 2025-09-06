@@ -3,6 +3,7 @@ import { QueryResponse } from '@/lib/api/models/common';
 import { Feed, FeedStatus } from '@/lib/api/models/feeds';
 import { useApiCall } from '@/lib/api/use-send';
 import {
+  useSuspenseInfiniteQuery,
   useSuspenseQuery,
   UseSuspenseQueryResult,
 } from '@tanstack/react-query';
@@ -11,6 +12,22 @@ import {
   QK_GET_POSTS,
   QK_GET_POSTS_BY_USER_ID,
 } from '@/constants';
+
+export const usePostInfinite = (size = 10) => {
+  const { get } = useApiCall();
+
+  return useSuspenseInfiniteQuery<QueryResponse<Feed>, Error>({
+    queryKey: [QK_GET_POSTS],
+    queryFn: async ({ pageParam = 1 }) => {
+      return get(ratelApi.feeds.getPosts(pageParam as number, size));
+    },
+    getNextPageParam: (lastPage, allPages) => {
+      return lastPage.items.length === size ? allPages.length + 1 : undefined;
+    },
+    initialPageParam: 1,
+    refetchOnWindowFocus: false,
+  });
+};
 
 export function usePost(
   page: number,

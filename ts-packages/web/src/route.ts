@@ -19,11 +19,19 @@ export const route = {
   teamMembers: (username: string) => `/teams/${username}/members`,
   teamSettings: (username: string) => `/teams/${username}/settings`,
   teamDrafts: (username: string) => `/teams/${username}/drafts`,
+  space: (spaceId: number) => `/spaces/${spaceId}`,
   commiteeSpaceById: (spaceId: number) => `/spaces/${spaceId}`,
   deliberationSpaceById: (spaceId: number) => `/spaces/${spaceId}`,
+  noticeSpaceById: (spaceId: number) => `/spaces/${spaceId}`,
   threadByFeedId: (feedId: number) => {
     return `/threads/${feedId}`;
   },
   discussionById: (spaceId: number, discussionId: number) =>
     `/spaces/${spaceId}/discussions/${discussionId}`,
+
+  telegramSprintLeague: (space_id: number) =>
+    `/telegram/sprint-league/${space_id}`,
+  telegramSubscribe: (chat_id: number, lang?: string) => {
+    return `/telegram/subscribe?chat_id=${chat_id}${lang ? `&lang=${lang}` : ''}`;
+  },
 };

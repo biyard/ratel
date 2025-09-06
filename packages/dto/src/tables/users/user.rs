@@ -2,6 +2,7 @@ use by_types::QueryResponse;
 
 use bdk::prelude::*;
 
+use crate::Industry;
 use crate::{Badge, Group};
 
 use super::Follower;
@@ -9,7 +10,7 @@ use super::Team;
 use crate::GroupRepositoryQueryBuilder;
 
 #[derive(validator::Validate)]
-#[api_model(base = "/v1/users", read_action = user_info, table = users, iter_type=QueryResponse)]
+#[api_model(base = "/v1/users", read_action = [user_info], table = users, action = [signup(telegram_raw = Option<String>), email_signup(telegram_raw = Option<String>), update_telegram_id(telegram_raw = Option<String>)], iter_type=QueryResponse)]
 pub struct User {
     #[api_model(primary_key)]
     pub id: i64,
@@ -26,7 +27,7 @@ pub struct User {
     #[validate(email)]
     pub email: String,
     #[api_model(action = [signup, email_signup], nullable, action_by_id = edit_profile)]
-    #[validate(url)]
+    // #[validate(url)]
     pub profile_url: String,
 
     #[api_model(action = [signup, email_signup])]
@@ -38,7 +39,7 @@ pub struct User {
     pub user_type: UserType,
     #[api_model(version = v0.1, indexed)]
     pub parent_id: Option<i64>,
-    #[api_model(action = [signup, email_signup], version = v0.1, indexed, unique)]
+    #[api_model(action = [signup, email_signup], read_action = [find_by_username], version = v0.1, indexed, unique)]
     #[serde(default)]
     pub username: String,
 
@@ -86,6 +87,33 @@ pub struct User {
     #[api_model(version = v0.5, type = INTEGER)]
     #[serde(default)]
     pub membership: Membership,
+
+    #[api_model(one_to_many = user_points, foreign_key = user_id, aggregator = sum(amount))]
+    pub points: i64,
+
+    #[api_model(version = v0.6, unique, indexed)]
+    #[serde(default)]
+    pub referral_code: String,
+
+    #[api_model(version = v0.9, unique)]
+    #[serde(default)]
+    pub phone_number: Option<String>,
+
+    #[api_model(read_action = find_by_phone_number, skip)]
+    #[serde(default)]
+    pub phone: String,
+
+    #[api_model(version = v0.8, unique)]
+    #[serde(default)]
+    pub telegram_id: Option<i64>,
+
+    #[api_model(read_action = login_by_telegram, skip)]
+    #[serde(default)]
+    pub telegram_raw: String,
+
+    #[api_model(one_to_many = user_industries, foreign_table_name = industries, foreign_primary_key = industry_id, foreign_reference_key = user_id)]
+    #[serde(default)]
+    pub industry: Vec<Industry>,
 }
 
 impl User {

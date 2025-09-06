@@ -21,8 +21,10 @@ import { checkLowerAlphaNumeric } from '@/lib/valid-utils';
 import { useApolloClient } from '@apollo/client';
 import React, { useState } from 'react';
 import Image from 'next/image';
+import { useTranslations } from 'next-intl';
 
 export default function TeamCreationPopup() {
+  const t = useTranslations('Home');
   const popup = usePopup();
   const { post } = useApiCall();
   const client = useApolloClient();
@@ -101,7 +103,7 @@ export default function TeamCreationPopup() {
           />
         ) : (
           <button className="w-40 h-40 rounded-full bg-c-wg-80 text-sm font-semibold flex items-center justify-center text-c-wg-50">
-            Upload logo
+            {t('upload_logo')}
           </button>
         )}
       </FileUploader>
@@ -109,7 +111,7 @@ export default function TeamCreationPopup() {
       <Col className="w-full gap-2.5">
         <Input
           type="text"
-          placeholder="Team display name"
+          placeholder={t('team_display_name')}
           onInput={handleNickname}
         />
         <Col className="gap-0.25">
@@ -120,7 +122,7 @@ export default function TeamCreationPopup() {
             <Input
               type="text"
               className="pl-8"
-              placeholder="Team ID (ex. ratel)"
+              placeholder={`${t('team_id')} (ex. ratel)`}
               onChange={handleUsername}
               aria-invalid={invalid !== undefined}
             />
@@ -132,7 +134,7 @@ export default function TeamCreationPopup() {
           )}
         </Col>
         <Textarea
-          placeholder="Please type description of your team."
+          placeholder={t('team_description')}
           onChange={handleContents}
         />
       </Col>
@@ -142,7 +144,7 @@ export default function TeamCreationPopup() {
           className="w-full"
           onClick={() => popup.close()}
         >
-          Cancel
+          {t('cancel')}
         </Button>
         <Button
           className={
@@ -155,7 +157,7 @@ export default function TeamCreationPopup() {
           variant={'rounded_primary'}
           onClick={handleCreate}
         >
-          Create
+          {t('create')}
         </Button>
       </Row>
     </div>

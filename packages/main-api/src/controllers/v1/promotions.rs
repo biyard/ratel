@@ -287,7 +287,6 @@ mod tests {
                 UrlType::None,
                 vec![],
                 0,
-                0,
                 FeedStatus::Published,
             )
             .await

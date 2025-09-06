@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { GroupPermission } from '@/lib/api/models/group';
 import { checkString } from '@/lib/string-filter-utils';
 import { showErrorToast } from '@/lib/toast';
+import { useTranslations } from 'next-intl';
 import React, { useState } from 'react';
 
 const PERMISSION_GROUPS: Record<
@@ -99,6 +100,7 @@ function CreateButton({
   isEnabled: boolean;
   onClick: () => void;
 }) {
+  const t = useTranslations('Team');
   return (
     <div
       className={`${isEnabled ? 'cursor-pointer bg-primary' : 'cursor-not-allowed bg-neutral-300'} flex flex-row w-fit h-fit px-[40px] py-[15px] rounded-[10px] font-bold text-bg text-base`}
@@ -106,7 +108,7 @@ function CreateButton({
         onClick();
       }}
     >
-      Create
+      {t('create')}
     </div>
   );
 }
@@ -124,6 +126,7 @@ function GroupPermissionSelector({
   groupNameRequired: boolean;
   groupImageRequired: boolean;
 }) {
+  const t = useTranslations('Team');
   const hasPermission = (perm: GroupPermission) =>
     groupPermissions.includes(perm);
 
@@ -147,7 +150,7 @@ function GroupPermissionSelector({
   return (
     <div className="flex flex-col w-full gap-6">
       <div className="text-[15px]/[28px] font-bold text-neutral-400">
-        Permissions
+        {t('permission')}
       </div>
 
       <div className="h-[400px] overflow-y-auto px-[10px]">
@@ -165,7 +168,7 @@ function GroupPermissionSelector({
                 </div>
                 <div className="flex items-center gap-1">
                   <span className="text-sm/[20px] font-semibold text-neutral-400">
-                    Select all
+                    {t('select_all')}
                   </span>
                   <CustomCheckbox
                     checked={allChecked}
@@ -202,15 +205,15 @@ function GroupPermissionSelector({
       <div className="mt-[20px]">
         {groupNameRequired ? (
           <div className="font-normal text-[#ef4444] text-sm">
-            You should set group name.
+            {t('group_name_required')}
           </div>
         ) : groupImageRequired ? (
           <div className="font-normal text-[#ef4444] text-sm">
-            You should set group image.
+            {t('group_image_required')}
           </div>
         ) : isError ? (
           <div className="font-normal text-[#ef4444] text-sm">
-            You should select at least one option.
+            {t('group_option_required')}
           </div>
         ) : null}
       </div>
@@ -225,17 +228,18 @@ function GroupDescription({
   groupDescription: string;
   setGroupDescription: (groupDescription: string) => void;
 }) {
+  const t = useTranslations('Team');
   return (
     <div className="flex flex-col w-full justify-start items-start gap-[5px]">
       <div className="font-bold text-[15px]/[28px] text-neutral-400">
-        Description
+        {t('description')}
       </div>
 
       <Textarea
         value={groupDescription}
         onChange={(e) => setGroupDescription(e.target.value)}
         maxLength={100}
-        placeholder="What is the purpose of your group?"
+        placeholder={t('description_hint')}
         className="w-full px-5 py-[10px] rounded-[8px] border border-[#464646] bg-transparent text-white placeholder:text-neutral-600 text-sm outline-none resize-none"
       />
 
@@ -253,11 +257,12 @@ function GroupName({
   groupName: string;
   setGroupName: (groupName: string) => void;
 }) {
+  const t = useTranslations('Team');
   return (
     <div className="flex flex-col w-full justify-start items-start gap-[5px]">
       <div className="flex flex-row gap-1 items-center">
         <div className="font-bold text-[15px]/[28px] text-neutral-400">
-          Group name
+          {t('group_name')}
         </div>
         <div className="font-normal text-base/[24px] text-[#eb5757]">*</div>
       </div>
@@ -267,7 +272,7 @@ function GroupName({
         value={groupName}
         onChange={(e) => setGroupName(e.target.value)}
         maxLength={100}
-        placeholder="Input your group name."
+        placeholder={t('group_name_hint')}
         className="w-full px-5 py-[10.5px] rounded-[8px] border border-[#464646] bg-transparent text-white placeholder:text-neutral-600 text-[15px]/[22.5px] outline-none"
       />
 

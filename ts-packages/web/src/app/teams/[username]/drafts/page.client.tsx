@@ -16,8 +16,10 @@ import CreatePostButton from '../_components/create-post-button';
 import { useApiCall } from '@/lib/api/use-send';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { removeDraftRequest } from '@/lib/api/models/feeds/update-draft-request';
+import { useTranslations } from 'next-intl';
 
 export default function TeamPostsPage({ username }: { username: string }) {
+  const t = useTranslations('Team');
   const { post } = useApiCall();
   const query = useTeamByUsername(username);
   const team = query.data;
@@ -110,7 +112,7 @@ export default function TeamPostsPage({ username }: { username: string }) {
           </Col>
         ) : (
           <div className="flex flex-row w-full h-fit justify-start items-center px-[16px] py-[20px] border border-gray-500 rounded-[8px] font-medium text-base text-gray-500">
-            No drafts available
+            {t('no_drafts_available')}
           </div>
         )}
       </div>

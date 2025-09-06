@@ -1,5 +1,6 @@
 name: ratel
-description: "A new Flutter project."
+description: "The first platform connecting South Korea’s citizens with lawmakers to drive institutional reform for the crypto industry.Are you with us ?"
+
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: "none" # Remove this line if you wish to publish to pub.dev
@@ -16,7 +17,7 @@ publish_to: "none" # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.0.0+6
+version: 1.0.0+7
 
 environment:
   sdk: ^3.8.1
@@ -35,7 +36,7 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   get: ^4.6.5
-  connectivity_plus: ^4.0.2
+  connectivity_plus: ^6.1.1
   flutter_svg: ^2.0.7
   logger: ^2.4.0
   firebase_auth: ^5.0.0
@@ -46,13 +47,14 @@ dependencies:
       url: https://github.com/victor138128/flutterfire.git
       path: packages/firebase_analytics/firebase_analytics
       ref: main
+  flutter_html: ^3.0.0
   sign_in_with_apple: ^7.0.1
   googleapis: ^11.4.0
   google_sign_in: ^6.1.5
   extension_google_sign_in_as_googleapis_auth: ^2.0.11
   googleapis_auth: ^1.4.1
   loading_indicator: ^3.1.1
-  http: ^0.13.0
+  http: ^1.1.2
   http_parser: ^4.0.2
   cryptography: ^2.7.0
   flutter_secure_storage: ^9.0.0
@@ -62,6 +64,20 @@ dependencies:
   archive: ^3.3.2
   flutter_rust_bridge: ^2.10.0
   webview_flutter: ^4.2.2
+  url_launcher: ^6.3.0
+  open_filex: ^4.5.0
+  intl: ^0.20.2
+  dotted_border: ^3.1.0
+  image_picker: ^1.0.7
+  file_picker: ^10.3.1
+  camera: ^0.11.2
+  permission_handler: ^12.0.1
+  reown_appkit: ^1.5.0
+  sqflite: ^2.4.2
+  flutter_slidable: ^4.0.1
+  path: ^1.9.1
+  flutter_image_compress: ^2.4.0
+  google_mlkit_text_recognition: ^0.15.0
 
 dev_dependencies:
   flutter_test:
