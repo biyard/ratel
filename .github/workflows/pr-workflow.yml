@@ -18,22 +18,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 10
-          run_install: true
-
-      - name: Run ESLint
-        run: pnpm lint
-
       - name: Build
-        run: make build
+        env:
+          ECR_NAME: ratel.foundation/ratel/web
+        run: make docker.build
 
   test-with-server:
     runs-on: ubuntu-latest
@@ -88,17 +76,29 @@ jobs:
           JWT_SECRET_KEY: ${{ secrets.DEV_JWT_SECRET }}
           SLACK_CHANNEL_SPONSOR: ${{ secrets.DEV_SLACK }}
           US_CONGRESS_KEY: ${{ secrets.US_CONGRESS_KEY }}
+          BBS_BLS_X: ${{ secrets.BBS_BLS_X }}
+          BBS_BLS_Y: ${{ secrets.BBS_BLS_Y }}
+          BBS_BLS_D: ${{ secrets.BBS_BLS_D }}
+          BBS_BLS_CRV: ${{ secrets.BBS_BLS_CRV }}
+          P256_X: ${{ secrets.P256_X }}
+          P256_Y: ${{ secrets.P256_Y }}
+          P256_D: ${{ secrets.P256_D }}
+          P256_CRV: ${{ secrets.P256_CRV }}
 
-          KAIA_FEEPAYER_KEY: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
-          KAIA_FEEPAYER_ADDR: "0x742d35Cc6634C0532925a3b8D72C1a6C4A2c4c8f"
-          KAIA_OWNER_KEY: "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
-          KAIA_OWNER_ADDR: "0x8ba1f109551bD432803012645Hac136c1c5c45e3"
-          KAIA_ENDPOINT: https://public-en.node.kaia.io
+          KAIA_ENDPOINT: https://public-en-kairos.node.kaia.io
+          KAIA_FEEPAYER_KEY: ${{ secrets.DEV_KAIA_KEY }}
+          KAIA_FEEPAYER_ADDR: ${{ secrets.DEV_KAIA_ADDR }}
+          KAIA_OWNER_KEY: ${{ secrets.DEV_KAIA_KEY }}
+          KAIA_OWNER_ADDR: ${{ secrets.DEV_KAIA_ADDR }}
         run: |
-          cd packages/main-api  && make test
+          cd packages/main-api && make test
 
   main-api:
     runs-on: ubuntu-22.04
+
+    defaults:
+      run:
+        working-directory: packages/main-api
 
     steps:
       - uses: actions/checkout@v3
@@ -125,8 +125,9 @@ jobs:
           ENV: dev
           SERVICE: main-api
           DOMAIN: api.dev.ratel.foundation
+          ECR_NAME: ratel.foundation/ratel/main-api
         run: |
-          make build
+          make docker.build
 
   fetcher:
     runs-on: ubuntu-latest

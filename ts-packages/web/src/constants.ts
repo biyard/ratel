@@ -9,6 +9,7 @@ export const QK_ASSETS_GET_PRESIGNED_URL = 'assets-get-presigned-url';
 export const QK_GET_POSTS = 'get-posts';
 export const QK_GET_POSTS_BY_USER_ID = 'get-posts-by-user-id';
 export const QK_GET_FEED_BY_FEED_ID = 'get-feeds-by-feed-id';
+export const QK_GET_NOTIFICATIONS = 'get-notifications';
 
 export const QK_GET_NETWORK = 'get-networks';
 
@@ -27,3 +28,19 @@ export const QK_GET_USER_BADGE = 'get-user-badge';
 export const QK_GET_PROMOTION = 'get-promotion';
 export const QK_GET_TOTAL_USER = 'get-total-users';
 export const QK_GET_USER_BY_EMAIL = 'get-user-by-emails';
+
+// Quiz-related query keys
+export const QK_LATEST_QUIZ_ATTEMPT = 'latest-quiz-attempt';
+export const QK_QUIZ_ATTEMPTS = 'quiz-attempts';
+export const QK_QUIZ_ATTEMPT = 'quiz-attempt';
+export const QK_QUIZ = 'quiz';
+export const QK_QUIZ_ANSWERS = 'quiz-answers';
+
+export const QK_GET_SPACE = 'get-spaces';
+export const QK_GET_FEED = 'get-feeds';
+
+export const QK_GET_SPRINT_LEAGUE = 'get-sprint-leagues';
+
+export const QK_GET_DAGIT = 'get-dagit';
+export const QK_GET_ARTWORK = 'get-artwork';
+export const QK_GET_ARTWORK_CERTIFICATE = 'get-artwork-certificate';

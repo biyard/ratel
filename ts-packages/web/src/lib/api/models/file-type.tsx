@@ -21,6 +21,7 @@ export enum FileType {
 
   // Video
   MP4 = 'mp4',
+  MOV = 'mov',
 
   // Etc
   PPTX = 'pptx',

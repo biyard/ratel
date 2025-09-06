@@ -21,6 +21,9 @@ pub struct SurveyResponse {
 
     #[api_model(many_to_one = surveys)]
     pub survey_id: i64,
+    #[api_model(skip, action = respond_answer)]
+    #[serde(default)]
+    pub survey_id_param: Option<i64>,
     #[api_model(summary, action = [respond_answer], type = INTEGER)]
     pub survey_type: SurveyType,
 }
@@ -39,8 +42,11 @@ pub enum SurveyType {
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 #[serde(rename_all = "snake_case", tag = "answer_type")]
 pub enum Answer {
-    SingleChoice { answer: i32 },
-    MultipleChoice { answer: Vec<i32> },
-    ShortAnswer { answer: String },
-    Subjective { answer: String },
+    SingleChoice { answer: Option<i32> },
+    MultipleChoice { answer: Option<Vec<i32>> },
+    ShortAnswer { answer: Option<String> },
+    Subjective { answer: Option<String> },
+    Checkbox { answer: Option<Vec<i32>> },
+    Dropdown { answer: Option<i32> },
+    LinearScale { answer: Option<i32> },
 }

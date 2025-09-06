@@ -1,0 +1,34 @@
+[package]
+name = "image-worker"
+version = "0.1.0"
+authors.workspace = true
+description.workspace = true
+edition.workspace = true
+repository.workspace = true
+license.workspace = true
+
+[dependencies]
+dto = { workspace = true, features = ["server"] }
+serde.workspace = true
+serde_json.workspace = true
+
+bdk = { workspace = true, features = ["be"] }
+tokio = { version = "1.47.1", features = ["full"] }
+tracing = "0.1.41"
+tracing-subscriber = "0.3.19"
+
+uuid = { version = "1.10.1", features = ["v4"] }
+aws-config = "1.5.10"
+aws-sdk-s3 = "1.74.0"
+aws-sdk-sqs = "1.81.0"
+base64 = "0.22.1"
+photon-rs = { version = "0.3.2", git = "https://github.com/silvia-odwyer/photon" }
+
+lambda_runtime = { version = "0.14.3" }
+aws_lambda_events = { version = "0.17.0", features = ["sqs"] }
+
+
+[features]
+default = []
+server = ["default"]
+lambda = ["bdk/lambda"]

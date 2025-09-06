@@ -18,6 +18,7 @@ import Link from 'next/link';
 import { route } from '@/route';
 import { logger } from '@/lib/logger';
 import TeamCreationPopup from '@/app/(social)/_popups/team-creation-popup';
+import { useTranslations } from 'next-intl';
 
 interface ProfileProps {
   profileUrl?: string;
@@ -25,6 +26,7 @@ interface ProfileProps {
 }
 
 export default function Profile({ profileUrl, name }: ProfileProps) {
+  const t = useTranslations('Home');
   const { teams, selectedIndex, setSelectedTeam } = useContext(TeamContext);
   const team = useMemo(() => teams[selectedIndex], [teams, selectedIndex]);
   const userInfo = useUserInfo();
@@ -44,16 +46,16 @@ export default function Profile({ profileUrl, name }: ProfileProps) {
       <DropdownMenuTrigger asChild className="focus-visible:outline-none">
         <button className="w-full flex items-center justify-between">
           <div className="flex flex-col items-center justify-center p-2.5 group">
-            {profileUrl ? (
+            {profileUrl && profileUrl !== '' ? (
               <Image
-                src={profileUrl || '/default-profile.png'}
+                src={profileUrl}
                 alt="User Profile"
                 width={24}
                 height={24}
-                className="rounded-full object-cover"
+                className="rounded-full object-cover w-6 h-6"
               />
             ) : (
-              <div className="w-[24px] h-[24px] bg-neutral-500 rounded-full" />
+              <div className="w-6 h-6 bg-neutral-500 rounded-full" />
             )}
 
             <span className="text-neutral-500 group-hover:text-white text-[15px] font-medium transition-colors">
@@ -68,7 +70,7 @@ export default function Profile({ profileUrl, name }: ProfileProps) {
         className="w-[250px] h-fit rounded-lg border border-primary p-[10px] bg-bg z-20"
       >
         <DropdownMenuLabel className="text-xs text-neutral-400 px-2 py-1">
-          Teams
+          {t('teams')}
         </DropdownMenuLabel>
 
         <DropdownMenuGroup>
@@ -90,13 +92,17 @@ export default function Profile({ profileUrl, name }: ProfileProps) {
                   handleTeamSelect(index);
                 }}
               >
-                <Image
-                  src={team.profile_url || '/default-profile.png'}
-                  alt={team.nickname}
-                  width={24}
-                  height={24}
-                  className="rounded-full object-cover object-top"
-                />
+                {team.profile_url && team.profile_url !== '' ? (
+                  <Image
+                    src={team.profile_url}
+                    alt={team.nickname}
+                    width={24}
+                    height={24}
+                    className="w-6 h-6 rounded-full object-cover object-top"
+                  />
+                ) : (
+                  <div className="w-6 h-6 bg-neutral-500 rounded-full" />
+                )}
                 <span className="text-sm text-white truncate">
                   {team.nickname}
                 </span>
@@ -115,7 +121,7 @@ export default function Profile({ profileUrl, name }: ProfileProps) {
             }}
             className="w-full px-2 py-1.5 hover:bg-transparent rounded-md text-sm text-white cursor-pointer focus-visible:outline-none"
           >
-            <span>Create a team</span>
+            <span>{t('create_team')}</span>
           </DropdownMenuItem>
 
           <DropdownMenuItem
@@ -125,7 +131,7 @@ export default function Profile({ profileUrl, name }: ProfileProps) {
             }}
             className="w-full px-2 py-1.5 hover:bg-transparent rounded-md text-sm text-white cursor-pointer focus-visible:outline-none"
           >
-            <span>Log out</span>
+            <span>{t('logout')}</span>
           </DropdownMenuItem>
         </DropdownMenuGroup>
       </DropdownMenuContent>

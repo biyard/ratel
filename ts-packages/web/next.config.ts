@@ -1,4 +1,7 @@
 import type { NextConfig } from 'next';
+import createNextIntlPlugin from 'next-intl/plugin';
+
+const withNextIntl = createNextIntlPlugin();
 
 const nextConfig: NextConfig = {
   eslint: {
@@ -32,6 +35,7 @@ const nextConfig: NextConfig = {
 
   webpack: (config) => {
     const fileLoaderRule = config.module.rules.find(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (rule: { test: { test: (arg0: string) => any } }) =>
         rule.test?.test?.('.svg'),
     );
@@ -63,4 +67,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withNextIntl(nextConfig);

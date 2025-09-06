@@ -47,6 +47,9 @@ pub async fn setup_test_admin(id: &str, pool: &sqlx::Pool<sqlx::Postgres>) -> Re
             format!("0x{}", id),
             "".to_string(), // password
             Membership::Free,
+            format!("ref-admin-{}", id), // unique referral code for admin
+            None,
+            None,
         )
         .await?
         .unwrap();
@@ -84,6 +87,9 @@ pub async fn setup_test_user(id: &str, pool: &sqlx::Pool<sqlx::Postgres>) -> Res
             format!("0x{}", id),
             "".to_string(), // password
             Membership::Free,
+            format!("ref-admin-{}", id), // unique referral code for admin
+            None,
+            None,
         )
         .await?;
 

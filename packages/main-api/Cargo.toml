@@ -13,6 +13,7 @@ serde_json.workspace = true
 
 bdk = { workspace = true, features = ["be"] }
 
+regex = "1"
 tokio = { version = "1.40.0", features = ["full"] }
 tower = "0.5.1"
 chrono = "0.4.39"
@@ -32,11 +33,29 @@ aws-sdk-s3 = "1.74.0"
 aws-sdk-chimesdkmeetings = "1.63.0"
 aws-sdk-chimesdkmediapipelines = "1.75.0"
 aws-sdk-mediaconvert = "1.82.0"
+aws-sdk-sqs = "1.81.0"
 
-rmcp = { version = "0.1.5", git = "https://github.com/modelcontextprotocol/rust-sdk", features = ["server", "transport-io", "transport-streamable-http-server", "transport-sse-server"] }
+rmcp = { version = "0.6.1", git = "https://github.com/modelcontextprotocol/rust-sdk", features = [
+    "server",
+    "transport-streamable-http-server",
+    "transport-worker",
+
+    "macros",
+] }
 aws-sdk-sesv2 = "1.83.0"
 rand = "0.9.1"
-
+url = "2.5.4"
+hmac = "0.12.1"
+base64 = "0.22.1"
+teloxide = "0.17.0"
+photon-rs = { version = "0.3.2", git = "https://github.com/silvia-odwyer/photon" }
+aws-sdk-rdsdata = "1.83.0"
+# ssi = { version = "0.12.0", features = ["w3c", "bbs"] }
+multibase = "0.9.1"
+aws-sdk-bedrockruntime = "1.103.0"
+aws-sdk-rekognition = "1.85.0"
+aws-sdk-textract = "1.82.0"
+tower-http = "0.6.6"
 
 [dev-dependencies]
 rest-api = { workspace = true, features = ["test"] }

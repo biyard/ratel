@@ -5,4 +5,7 @@ export interface AssetPresignedUris {
   uris: string[];
   total_count: number;
   file_type: FileType;
+
+  upload_id?: string;
+  key?: string;
 }

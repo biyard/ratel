@@ -1,4 +1,5 @@
 use crate::utils::users::extract_user_id;
+use crate::utils::notifications::send_notification;
 
 use by_axum::auth::Authorization;
 
@@ -53,17 +54,38 @@ impl MynetworkController {
             return Err(Error::AlreadyFollowing);
         }
 
-        // Create the network relationship
+        // Start a transaction for atomic operation
+        let mut tx = self.pool.begin().await?;
 
+        // Create the network relationship with transaction
         let network = self
             .repo
-            .insert(follower_id, to_be_followed)
+            .insert_with_tx(tx.as_mut(), follower_id, to_be_followed)
             .await
             .map_err(|e| {
                 tracing::error!("failed to insert follower: {:?}", e);
-
                 Error::DatabaseException(e.to_string())
+            })?
+            .ok_or_else(|| {
+                tracing::error!("Insert operation returned None");
+                Error::DatabaseException("Insert operation failed".to_string())
             })?;
+
+        // Send ConnectNetwork notification to the user being followed using the same transaction
+        let notification_data = NotificationData::ConnectNetwork {
+            requester_id: follower_id,
+            image_url: "".to_string(), // TODO: Could fetch follower's profile image
+            description: "Someone has started following you".to_string(),
+        };
+        
+        if let Err(e) = send_notification(&self.pool, &mut tx, to_be_followed, notification_data).await {
+            tracing::error!("Failed to send ConnectNetwork notification to user {}: {:?}", to_be_followed, e);
+            // Don't fail the entire operation if notification fails - just log the error
+            // The transaction will still commit the main follow operation
+        }
+
+        // Commit the transaction
+        tx.commit().await?;
 
         Ok(network)
     }

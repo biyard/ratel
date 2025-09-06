@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 
 abstract class AppColors {
+  // New Themes
+  static const Color bg = Color(0xFF0A0A0A);
+  static const Color primary = Color(0xfffcb300);
+
   static const Color textPrimaryColor = Color(0xff000000);
   static const Color keyColor = textPrimaryColor;
 
+  static const Color indigo950 = Color(0xff1e1b4b);
   static const Color black = Color(0xff000203);
-  static const Color primary = Color(0xfffcb300);
-  static const Color secondary = Color(0x00777677);
+  static const Color secondary = Color(0x00d4d4d4);
 
   static const Color textPrimary = Color(0xffffffff);
   static const Color textSecondary = Color(0xffa1a1a1);
@@ -36,6 +40,8 @@ abstract class AppColors {
   static const Color btnOText = Color(0xffffffff);
   static const Color btnOHoverText = Color(0xffffffff);
 
+  static const Color panelBg = Color(0xff3a3a3e);
+  static const Color iconPrimary = Color(0xff979797);
   static const Color btnHover = Color(0xffcabf00);
   static const Color btnCWg30 = Color(0xffaeaeae);
   static const Color btnCWg50 = Color(0xff777677);
@@ -44,19 +50,21 @@ abstract class AppColors {
   static const Color btnCCg30 = Color(0xffaeb8b8);
   static const Color footer = Color(0xff191919);
   static const Color copyright = Color(0xff9095a1);
+  static const Color neutral70 = Color(0xffaeaaab);
   static const Color neutral80 = Color(0xff6b6b6b);
+  static const Color neutral300 = Color(0xffd4d4d4);
   static const Color neutral400 = Color(0xffa1a1a1);
   static const Color neutral500 = Color(0xff737373);
   static const Color neutral600 = Color(0xff525252);
   static const Color neutral700 = Color(0xff404040);
   static const Color neutral800 = Color(0xff262626);
+  static const Color neutral900 = Color(0xff171717);
   static const Color cC20 = Color(0xff6eedd8);
   static const Color cP20 = Color(0xffff9eee);
   static const Color cP50 = Color(0xffdb2780);
   static const Color cP5010 = Color(0xdb27801a);
   static const Color supportive = Color(0xff6eedd8);
   static const Color against = Color(0xffff9eee);
-  static const Color bg = Color(0xff1a1a1a);
   static const Color tabHover = Color(0xff282828);
   static const Color missionTitle = Color(0xffdee1e6);
   static const Color tag = Color(0xffdee1e6);

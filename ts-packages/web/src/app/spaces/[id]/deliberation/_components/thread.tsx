@@ -1,31 +1,18 @@
 'use client';
 
 import React from 'react';
-import SpaceHeader from '../../_components/space_header';
-import SpaceContents from '../../_components/space_contents';
-import SpaceFiles from './space_files';
+import SpaceContents from '../../_components/space-contents';
+import SpaceFiles from './space-files';
 import { FileInfo } from '@/lib/api/models/feeds';
 import { useDeliberationSpaceContext } from '../provider.client';
 
 export default function ThreadPage() {
-  const {
-    isEdit,
-    title,
-    setTitle,
-    thread,
-    setThread,
-    handleGoBack,
-    userType,
-    proposerImage,
-    proposerName,
-    createdAt,
-    status,
-  } = useDeliberationSpaceContext();
+  const { isEdit, thread, handleUpdateThread } = useDeliberationSpaceContext();
 
   return (
     <div className="flex flex-row w-full gap-5">
       <div className="flex flex-col w-full">
-        <SpaceHeader
+        {/* <SpaceHeader
           isEdit={isEdit}
           title={title}
           status={status}
@@ -35,13 +22,13 @@ export default function ThreadPage() {
           createdAt={createdAt}
           onback={handleGoBack}
           setTitle={setTitle}
-        />
-        <div className="flex flex-col w-full mt-7.5 gap-2.5">
+        /> */}
+        <div className="flex flex-col w-full gap-2.5">
           <SpaceContents
             isEdit={isEdit}
             htmlContents={thread.html_contents}
             setContents={(html_contents: string) => {
-              setThread({
+              handleUpdateThread({
                 ...thread,
                 html_contents,
               });
@@ -53,13 +40,13 @@ export default function ThreadPage() {
             onremove={(index: number) => {
               const newFiles = [...thread.files];
               newFiles.splice(index, 1);
-              setThread({
+              handleUpdateThread({
                 ...thread,
                 files: newFiles,
               });
             }}
             onadd={(file: FileInfo) => {
-              setThread({
+              handleUpdateThread({
                 ...thread,
                 files: [...thread.files, file],
               });
