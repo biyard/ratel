@@ -24,6 +24,7 @@ export interface GlobalAccelStackProps extends StackProps {
   // DNS host like "dev.ratel.foundation"
   fullDomainName: string;
   commit: string;
+  stage: string;
 }
 
 export class GlobalAccelStack extends Stack {
@@ -32,11 +33,12 @@ export class GlobalAccelStack extends Stack {
   constructor(scope: Construct, id: string, props: GlobalAccelStackProps) {
     super(scope, id, { ...props, crossRegionReferences: true });
 
-    const { euAlb, usAlb, krAlb, fullDomainName, commit } = props;
+    const { euAlb, usAlb, krAlb, fullDomainName, commit, stage } = props;
 
     const webDomain = fullDomainName;
     const apiDomain = `api.${fullDomainName}`;
     const albDomain = `alb.${fullDomainName}`;
+    const imageCachePolicy = `NextImageCachePolicy-${stage}`;
 
     // Root hosted zone derived from fullDomainName (e.g., ratel.foundation)
     const baseDomain = "ratel.foundation";
@@ -122,9 +124,9 @@ export class GlobalAccelStack extends Stack {
 
     const nextImageCachePolicy = new cloudfront.CachePolicy(
       this,
-      "NextImageCachePolicy",
+      imageCachePolicy,
       {
-        cachePolicyName: "NextImageCachePolicy",
+        cachePolicyName: imageCachePolicy,
         defaultTtl: cdk.Duration.days(1),
         minTtl: cdk.Duration.seconds(60),
         maxTtl: cdk.Duration.days(365),

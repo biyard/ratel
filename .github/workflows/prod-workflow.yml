@@ -39,6 +39,8 @@ jobs:
           PGHOST_EU: ${{ secrets.PGHOST_EU }}
           PGHOST_US: ${{ secrets.PGHOST_US }}
           PGHOST_AP: ${{ secrets.PGHOST_AP }}
+          DOMAIN: ratel.foundation
+          STACK: ratel-prod-stack
         run: |
           npm i -g aws-cdk
           tar xzvf next.tar.gz
