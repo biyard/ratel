@@ -627,6 +627,6 @@ jobs:
       - name: Git pr release action
         uses: grassedge/git-pr-release-action@v1.0
         with:
-          base: stg
+          base: main
           head: dev
           token: ${{ secrets.GITHUB_TOKEN }}
