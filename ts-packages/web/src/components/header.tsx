@@ -4,9 +4,6 @@ import React from 'react';
 import Logo from '@/assets/icons/logo.svg';
 import HomeIcon from '@/assets/icons/home.svg';
 import UserGroupIcon from '@/assets/icons/user-group.svg';
-import InternetIcon from '@/assets/icons/internet.svg';
-import RoundBubbleIcon from '@/assets/icons/round-bubble.svg';
-import BellIcon from '@/assets/icons/bell.svg';
 import Hamburger from '@/assets/icons/hamburger.svg';
 import CloseIcon from '@/assets/icons/remove.svg';
 import Link from 'next/link';
@@ -14,7 +11,6 @@ import Profile from './profile';
 import { LoginModal } from './popup/login-popup';
 import { usePopup } from '@/lib/contexts/popup-service';
 import { route } from '@/route';
-import { config } from '@/config';
 import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { UserType } from '@/lib/api/models/user';
 import LoginIcon from '@/assets/icons/login.svg';
@@ -48,19 +44,19 @@ function Header(props: HeaderProps) {
       href: route.home(),
       authorized: false,
     },
-    {
-      name: t('explore'),
-      icon: (
-        <InternetIcon
-          className="group-hover:[&>path]:stroke-white group-hover:[&>circle]:stroke-white transition-all"
-          width="24"
-          height="24"
-        />
-      ),
-      visible: config.experiment,
-      href: route.explore(),
-      authorized: false,
-    },
+    /* {
+     *   name: t('explore'),
+     *   icon: (
+     *     <InternetIcon
+     *       className="group-hover:[&>path]:stroke-white group-hover:[&>circle]:stroke-white transition-all"
+     *       width="24"
+     *       height="24"
+     *     />
+     *   ),
+     *   visible: config.experiment,
+     *   href: route.explore(),
+     *   authorized: false,
+     * }, */
     {
       name: t('my_network'),
       icon: (
@@ -74,32 +70,32 @@ function Header(props: HeaderProps) {
       href: route.myNetwork(),
       authorized: true,
     },
-    {
-      name: t('message'),
-      icon: (
-        <RoundBubbleIcon
-          className="group-hover:[&>path]:stroke-white transition-all"
-          width="24"
-          height="24"
-        />
-      ),
-      visible: config.experiment,
-      href: route.messages(),
-      authorized: true,
-    },
-    {
-      name: t('notification'),
-      icon: (
-        <BellIcon
-          className="group-hover:[&>path]:stroke-white transition-all"
-          width="24"
-          height="24"
-        />
-      ),
-      visible: true,
-      href: route.notifications(),
-      authorized: true,
-    },
+    /* {
+     *   name: t('message'),
+     *   icon: (
+     *     <RoundBubbleIcon
+     *       className="group-hover:[&>path]:stroke-white transition-all"
+     *       width="24"
+     *       height="24"
+     *     />
+     *   ),
+     *   visible: config.experiment,
+     *   href: route.messages(),
+     *   authorized: true,
+     * },
+     * {
+     *   name: t('notification'),
+     *   icon: (
+     *     <BellIcon
+     *       className="group-hover:[&>path]:stroke-white transition-all"
+     *       width="24"
+     *       height="24"
+     *     />
+     *   ),
+     *   visible: true,
+     *   href: route.notifications(),
+     *   authorized: true,
+     * }, */
   ];
 
   return (
