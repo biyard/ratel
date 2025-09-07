@@ -49,6 +49,9 @@ export class DaemonStack {
         fetcherRepository,
         props.commit,
       ),
+      logging: new ecs.AwsLogDriver({
+        streamPrefix: `ratel-${process.env.ENV}-fetcher`,
+      }),
     });
 
     fetcherContainer.addPortMappings({
@@ -68,6 +71,9 @@ export class DaemonStack {
           telegramBotRepository,
           props.commit,
         ),
+        logging: new ecs.AwsLogDriver({
+          streamPrefix: `ratel-${process.env.ENV}-telegram-bot`,
+        }),
       },
     );
 
