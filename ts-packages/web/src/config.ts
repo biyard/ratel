@@ -37,7 +37,9 @@ export const config: Config = {
   firebase_measurement_id:
     process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID || '',
   api_url:
-    process.env.NEXT_PUBLIC_API_URL || 'https://api.dev.ratel.foundation',
+    process.env.API_URL ||
+    process.env.NEXT_PUBLIC_API_URL ||
+    'https://api.dev.ratel.foundation',
 
   log_level: process.env.NEXT_PUBLIC_LOG_LEVEL || 'info',
   sign_domain: process.env.NEXT_PUBLIC_SIGN_DOMAIN || 'dev.ratel.foundation',
