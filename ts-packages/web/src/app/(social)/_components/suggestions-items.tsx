@@ -8,6 +8,7 @@ type SuggestionItemProps = {
     profile_url?: string;
     user_type: UserType;
     username: string;
+    nickname: string;
     email: string;
   };
   onFollow: (userId: number) => void;
@@ -29,7 +30,7 @@ export default function SuggestionItem({
             width={32}
             height={32}
             src={user.profile_url}
-            alt={`${user.username}'s profile`}
+            alt={`${user.nickname}'s profile`}
             className={`w-8 h-8 object-cover ${imageClass}`}
           />
         ) : (
@@ -37,7 +38,7 @@ export default function SuggestionItem({
         )}
         <div className="flex-1">
           <div className="font-medium text-base text-white">
-            {user.username}
+            {user.nickname}
           </div>
 
           <button
