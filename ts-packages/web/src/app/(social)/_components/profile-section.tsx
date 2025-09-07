@@ -1,6 +1,5 @@
 'use client';
 import React, { useContext, useMemo } from 'react';
-import Image from 'next/image';
 import TeamSelector from './team-selector';
 import UserTier from './UserTier';
 import UserBadges from './user-badges';
@@ -29,7 +28,7 @@ export default function ProfileSection() {
 
       <div className="relative">
         {user?.profile_url && user?.profile_url !== '' ? (
-          <Image
+          <img
             src={user?.profile_url}
             alt={user?.nickname ?? 'team profile'}
             width={80}
