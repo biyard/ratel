@@ -30,7 +30,7 @@ import { useTranslations } from 'next-intl';
 
 export interface FeedCardProps {
   id: number;
-  industry?: string;
+  industry: string;
   title: string;
   contents: string;
   author_profile_url: string;
@@ -171,7 +171,6 @@ export default function FeedCard(props: FeedCardProps) {
 }
 
 export function FeedBody({
-  industry,
   title,
   contents,
   author_name,
@@ -188,7 +187,8 @@ export function FeedBody({
       <Row className="justify-between px-5">
         <div className="flex flex-row justify-start items-center gap-2.5">
           {space_id && space_type ? <SpaceTag /> : <></>}
-          {industry && <IndustryTag industry={industry} />}
+          {/* FIXME: Currently, all posts are labeled as CRYPTO. */}
+          {/* <IndustryTag industry={industry} /> */}
           {onboard && <OnboardingTag />}
         </div>
       </Row>
