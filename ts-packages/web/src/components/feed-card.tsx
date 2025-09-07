@@ -30,7 +30,7 @@ import { useTranslations } from 'next-intl';
 
 export interface FeedCardProps {
   id: number;
-  industry: string;
+  industry?: string;
   title: string;
   contents: string;
   author_profile_url: string;
@@ -84,7 +84,7 @@ export default function FeedCard(props: FeedCardProps) {
     setLocalLikes(props.likes);
     setLocalIsLiked(props.is_liked);
     setLocalShares(props.shares);
-  }, [props.likes, props.is_liked]);
+  }, [props.likes, props.is_liked, props.shares]);
 
   const handleLike = async (value: boolean) => {
     if (isProcessing) return; // Prevent multiple clicks
@@ -188,7 +188,7 @@ export function FeedBody({
       <Row className="justify-between px-5">
         <div className="flex flex-row justify-start items-center gap-2.5">
           {space_id && space_type ? <SpaceTag /> : <></>}
-          <IndustryTag industry={industry} />
+          {industry && <IndustryTag industry={industry} />}
           {onboard && <OnboardingTag />}
         </div>
       </Row>
