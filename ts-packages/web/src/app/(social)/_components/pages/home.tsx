@@ -77,6 +77,7 @@ export default function Home({
       author_type: item.author?.[0]?.user_type || UserType.Anonymous,
       space_id: item.spaces?.[0]?.id || 0,
       space_type: item.spaces?.[0]?.space_type || 0,
+      booster_type: item.spaces?.[0]?.booster_type,
       likes: item.likes,
       is_liked: item.is_liked,
       comments: item.comments,
