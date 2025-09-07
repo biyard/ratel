@@ -86,6 +86,7 @@ services:
     environment:
       PORT: 8080
       API_URL: "http://main-api:3000"
+      GRAPHQL_URL: "http://hasura:8080/v1/graphql"
     ports:
       - "8080:8080"
     networks:
@@ -139,6 +140,38 @@ services:
         condition: service_started
     networks:
       - ratel-network
+
+  # Playwright E2E Testing
+  playwright:
+    image: mcr.microsoft.com/playwright:v1.49.0-jammy
+    working_dir: /app
+    volumes:
+      - .:/app
+      - playwright-cache:/home/pwuser/.cache
+    environment:
+      CI: "true"
+      PLAYWRIGHT_BASE_URL: "http://web:8080"
+    command: >
+      sh -c "
+        echo 'Waiting for web service to be ready...' &&
+        until curl -s http://web:8080 > /dev/null 2>&1; do
+          sleep 2
+        done &&
+        echo 'Installing dependencies...' &&
+        cd ts-packages/web &&
+        npm install &&
+        echo 'Running Playwright tests...' &&
+        npm run test:e2e
+      "
+    depends_on:
+      web:
+        condition: service_started
+      main-api:
+        condition: service_healthy
+    networks:
+      - ratel-network
+    profiles:
+      - testing
 
 
   # # Fetcher Service
@@ -200,3 +233,7 @@ services:
 networks:
   ratel-network:
     driver: bridge
+
+volumes:
+  playwright-cache:
+    driver: local

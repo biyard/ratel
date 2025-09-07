@@ -24,6 +24,10 @@ export enum Env {
   Prod = 'prod',
 }
 
+const enableServerConfig =
+  process.env.NEXT_PUBLIC_ENABLE_SERVER_CONFIG === 'true';
+console.log('Enable server config:', enableServerConfig);
+
 export const config: Config = {
   env: (process.env.NEXT_PUBLIC_ENV || 'dev') as Env,
   firebase_api_key: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || '',
@@ -36,17 +40,24 @@ export const config: Config = {
   firebase_app_id: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || '',
   firebase_measurement_id:
     process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID || '',
-  api_url:
-    process.env.API_URL ||
-    process.env.NEXT_PUBLIC_API_URL ||
-    'https://api.dev.ratel.foundation',
 
   log_level: process.env.NEXT_PUBLIC_LOG_LEVEL || 'info',
   sign_domain: process.env.NEXT_PUBLIC_SIGN_DOMAIN || 'dev.ratel.foundation',
   experiment: process.env.NEXT_PUBLIC_EXPERIMENT === 'true',
-  graphql_url:
-    process.env.NEXT_PUBLIC_GRAPHQL_URL ||
-    'https://graphql.dev.ratel.foundation/v1/graphql',
 
   version: process.env.NEXT_PUBLIC_VERSION || 'unknown',
+
+  // Server-customizable configuration
+  api_url:
+    (enableServerConfig
+      ? process.env.API_URL || process.env.NEXT_PUBLIC_API_URL
+      : process.env.NEXT_PUBLIC_API_URL) || 'https://api.dev.ratel.foundation',
+
+  graphql_url:
+    (enableServerConfig
+      ? process.env.GRAPHQL_URL || process.env.NEXT_PUBLIC_GRAPHQL_URL
+      : process.env.NEXT_PUBLIC_GRAPHQL_URL) ||
+    'https://graphql.dev.ratel.foundation/v1/graphql',
 };
+
+console.log('Config:', config);

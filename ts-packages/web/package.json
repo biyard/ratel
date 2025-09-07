@@ -8,7 +8,11 @@
     "start": "next start",
     "lint": "next lint",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "test:e2e": "playwright test",
+    "test:e2e:debug": "playwright test --debug",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:report": "playwright show-report"
   },
   "dependencies": {
     "@apollo/client": "^3.13.8",
@@ -83,6 +87,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@pixi/devtools": "^2.0.1",
+    "@playwright/test": "^1.49.0",
     "@storybook/addon-docs": "^9.0.0",
     "@storybook/addon-links": "^9.0.0",
     "@storybook/nextjs": "^9.0.0",
