@@ -84,7 +84,6 @@ Our ultimate goal is to create a **fair, transparent, and innovation-friendly cr
 
 ### Built With
 
-* ![Dioxus](https://img.shields.io/badge/dioxus-0.6.3-blue)
 * ![Axum](https://img.shields.io/badge/axum-0.8.2-blue)
 * ![Tailwindcss](https://img.shields.io/badge/tailwindcss-v4.0-blue)
 
@@ -106,16 +105,11 @@ This is an example of how to list things you need to use the software and how to
   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
   ```
 
-* Dioxus
-  - Refer to [Dioxus getting started](https://dioxuslabs.com/learn/0.6/getting_started/#install-cargo-binstall)
-  ``` sh
-  cargo install cargo-binstall
-  cargo binstall dioxus-cli
-  ```
-
 ### Building
 
-Coming soon
+``` sh
+make run
+```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -207,7 +201,6 @@ Distributed under the Unlicense License. See `LICENSE.txt` for more information.
 Use this space to list resources you find helpful and would like to give credit to. I've included a few of my favorites to kick things off!
 
 * [Rust](https://www.rust-lang.org/)
-* [Dioxus](https://dioxuslabs.com/)
 * [Axum](https://github.com/tokio-rs/axum)
 * [Tailwindcss](https://tailwindcss.com/)
 

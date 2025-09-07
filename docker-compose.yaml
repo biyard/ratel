@@ -1,7 +1,7 @@
 services:
   # Database
   postgres:
-    image: postgres:15
+    image: postgres:16
     restart: always
     environment:
       POSTGRES_USER: postgres
@@ -19,8 +19,14 @@ services:
     networks:
       - ratel-network
 
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 9000:8080
+
   postgres-init:
-    image: postgres:15
+    image: postgres:16
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -28,6 +34,11 @@ services:
     volumes:
       - ./:/app
     command: psql postgresql://postgres:postgres@postgres:5432/ratel -f /app/scripts/init.sql
+    healthcheck:
+      test: ["CMD", "test", "-f", "/tmp/init-complete"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
     depends_on:
       postgres:
         condition: service_healthy
@@ -51,9 +62,16 @@ services:
       - .:/app
     working_dir: /app
     command: ["bash", "scripts/api-entrypoint.sh"]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/version || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     depends_on:
       postgres:
         condition: service_healthy
+      postgres-init:
+        condition: service_completed_successfully
     networks:
       - ratel-network
 
@@ -67,32 +85,60 @@ services:
     command: ["bash", "scripts/web-entrypoint.sh"]
     environment:
       PORT: 8080
+      API_URL: "http://main-api:3000"
     ports:
       - "8080:8080"
     networks:
       - ratel-network
 
   # # Hasura GraphQL Engine
-  # hasura:
-  #   image: hasura/graphql-engine:v2.40.0
-  #   restart: unless-stopped
-  #   ports:
-  #     - "28080:8080"
-  #   environment:
-  #     HASURA_GRAPHQL_METADATA_DATABASE_URL: postgres://postgres:postgres@postgres:5432/ratel
-  #     HASURA_GRAPHQL_DATABASE_URL: postgres://postgres:postgres@postgres:5432/ratel
-  #     HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
-  #     HASURA_GRAPHQL_DEV_MODE: "true"
-  #     HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup, http-log, webhook-log, websocket-log, query-log
-  #     HASURA_GRAPHQL_ADMIN_SECRET: ratel_admin_secret
-  #     HASURA_GRAPHQL_AUTH_HOOK: http://main-api:3000/v1/auth/hasura
-  #     HASURA_GRAPHQL_AUTH_HOOK_MODE: POST
-  #     HASURA_GRAPHQL_LOG_LEVEL: debug
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-  #   networks:
-  #     - ratel-network
+  hasura:
+    image: hasura/graphql-engine:v2.40.0
+    restart: unless-stopped
+    ports:
+      - "28080:8080"
+    environment:
+      HASURA_GRAPHQL_METADATA_DATABASE_URL: postgres://postgres:postgres@postgres:5432/ratel
+      HASURA_GRAPHQL_DATABASE_URL: postgres://postgres:postgres@postgres:5432/ratel
+      HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
+      HASURA_GRAPHQL_DEV_MODE: "true"
+      HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup, http-log, webhook-log, websocket-log, query-log
+      HASURA_GRAPHQL_ADMIN_SECRET: ratel_admin_secret
+      HASURA_GRAPHQL_AUTH_HOOK: http://main-api:3000/v1/auth/hasura
+      HASURA_GRAPHQL_AUTH_HOOK_MODE: POST
+      HASURA_GRAPHQL_LOG_LEVEL: debug
+    depends_on:
+      postgres:
+        condition: service_healthy
+      main-api:
+        condition: service_healthy
+    networks:
+      - ratel-network
+
+  # Hasura table tracker
+  hasura-init:
+    image: hasura/graphql-engine:v2.40.0
+    environment:
+      HASURA_GRAPHQL_ENDPOINT: http://hasura:8080
+      HASURA_GRAPHQL_ADMIN_SECRET: ratel_admin_secret
+    command: >
+      sh -c "
+        echo 'Waiting for Hasura to be ready...' &&
+        until curl -s http://hasura:8080/healthz > /dev/null 2>&1; do
+          sleep 2
+        done &&
+        echo 'Tracking all tables in ratel database...' &&
+        curl -X POST http://hasura:8080/v1/metadata \
+          -H 'Content-Type: application/json' \
+          -H 'X-Hasura-Admin-Secret: ratel_admin_secret' \
+          -d '{\"type\": \"pg_track_all_tables\", \"args\": {\"source\": \"default\"}}' &&
+        echo 'All tables tracked successfully'
+      "
+    depends_on:
+      hasura:
+        condition: service_started
+    networks:
+      - ratel-network
 
 
   # # Fetcher Service
