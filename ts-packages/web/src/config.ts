@@ -26,7 +26,6 @@ export enum Env {
 
 const enableServerConfig =
   process.env.NEXT_PUBLIC_ENABLE_SERVER_CONFIG === 'true';
-console.log('Enable server config:', enableServerConfig);
 
 export const config: Config = {
   env: (process.env.NEXT_PUBLIC_ENV || 'dev') as Env,
@@ -59,5 +58,3 @@ export const config: Config = {
       : process.env.NEXT_PUBLIC_GRAPHQL_URL) ||
     'https://graphql.dev.ratel.foundation/v1/graphql',
 };
-
-console.log('Config:', config);
