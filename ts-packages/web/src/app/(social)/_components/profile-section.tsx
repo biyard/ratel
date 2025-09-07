@@ -1,8 +1,7 @@
 'use client';
 import React, { useContext, useMemo } from 'react';
-import Image from 'next/image';
 import TeamSelector from './team-selector';
-import UserTier from './UserTier';
+import Image from 'next/image';
 import UserBadges from './user-badges';
 import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { TeamContext } from '@/lib/contexts/team-context';
@@ -49,7 +48,7 @@ export default function ProfileSection() {
         dangerouslySetInnerHTML={{ __html: user.html_contents }}
       />
 
-      <UserTier />
+      {/* <UserTier /> */}
       <UserBadges badges={user.badges ? user.badges : []} />
       <UserFollows
         followers_count={user.followers_count}

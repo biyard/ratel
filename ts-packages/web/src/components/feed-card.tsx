@@ -27,6 +27,7 @@ import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { Loader2 } from 'lucide-react';
 import { logger } from '@/lib/logger';
 import { useTranslations } from 'next-intl';
+import { BoosterType } from '@/lib/api/models/notice';
 
 export interface FeedCardProps {
   id: number;
@@ -47,6 +48,7 @@ export interface FeedCardProps {
 
   space_id?: number;
   space_type?: SpaceType;
+  booster_type?: BoosterType;
   author_id: number;
   user_id: number;
   onboard: boolean;
@@ -84,7 +86,7 @@ export default function FeedCard(props: FeedCardProps) {
     setLocalLikes(props.likes);
     setLocalIsLiked(props.is_liked);
     setLocalShares(props.shares);
-  }, [props.likes, props.is_liked]);
+  }, [props.likes, props.is_liked, props.shares]);
 
   const handleLike = async (value: boolean) => {
     if (isProcessing) return; // Prevent multiple clicks
@@ -171,7 +173,6 @@ export default function FeedCard(props: FeedCardProps) {
 }
 
 export function FeedBody({
-  industry,
   title,
   contents,
   author_name,
@@ -188,7 +189,8 @@ export function FeedBody({
       <Row className="justify-between px-5">
         <div className="flex flex-row justify-start items-center gap-2.5">
           {space_id && space_type ? <SpaceTag /> : <></>}
-          <IndustryTag industry={industry} />
+          {/* FIXME: Currently, all posts are labeled as CRYPTO. */}
+          {/* <IndustryTag industry={industry} /> */}
           {onboard && <OnboardingTag />}
         </div>
       </Row>
@@ -337,6 +339,7 @@ interface FeedFooterProps extends Omit<FeedCardProps, 'onRepostThought'> {
 export function FeedFooter({
   space_id,
   space_type,
+  booster_type,
   likes,
   comments,
   rewards,
@@ -422,10 +425,12 @@ export function FeedFooter({
           <CommentIcon />
           {convertNumberToString(comments)}
         </IconText>
-        <IconText>
-          <Rewards />
-          {convertNumberToString(rewards)}
-        </IconText>
+        {booster_type && (
+          <IconText>
+            <Rewards />
+            {convertNumberToString(rewards)}
+          </IconText>
+        )}
 
         <IconText>
           <DropdownMenu modal={false}>
