@@ -27,6 +27,7 @@ import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { Loader2 } from 'lucide-react';
 import { logger } from '@/lib/logger';
 import { useTranslations } from 'next-intl';
+import { BoosterType } from '@/lib/api/models/notice';
 
 export interface FeedCardProps {
   id: number;
@@ -47,6 +48,7 @@ export interface FeedCardProps {
 
   space_id?: number;
   space_type?: SpaceType;
+  booster_type?: BoosterType;
   author_id: number;
   user_id: number;
   onboard: boolean;
@@ -337,6 +339,7 @@ interface FeedFooterProps extends Omit<FeedCardProps, 'onRepostThought'> {
 export function FeedFooter({
   space_id,
   space_type,
+  booster_type,
   likes,
   comments,
   rewards,
@@ -422,10 +425,12 @@ export function FeedFooter({
           <CommentIcon />
           {convertNumberToString(comments)}
         </IconText>
-        <IconText>
-          <Rewards />
-          {convertNumberToString(rewards)}
-        </IconText>
+        {booster_type && (
+          <IconText>
+            <Rewards />
+            {convertNumberToString(rewards)}
+          </IconText>
+        )}
 
         <IconText>
           <DropdownMenu modal={false}>
