@@ -252,6 +252,9 @@ pub enum Error {
     AwsRekognitionError(String),
     AwsTextractError(String),
     AwsBedrockError(String),
+    DynamoDbError(String),
+    DynamoDbSerializationError(String),
+    DynamoDbTableNotFound(String),
 }
 
 impl<E: StdError + 'static> From<E> for Error {
