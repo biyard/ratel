@@ -24,6 +24,7 @@ import { TeamContext } from '@/lib/contexts/team-context';
 import { useUserInfo } from '@/app/(social)/_hooks/user';
 import { getTimeAgo } from '@/lib/time-utils';
 import { useTranslations } from 'next-intl';
+import { convertNumberToString } from '@/lib/number-utils';
 
 export interface SpaceHeaderProps {
   title: string;
@@ -174,28 +175,28 @@ export default function SpaceHeader({
           <div className="flex flex-row w-fit gap-1 items-center">
             <ThumbUp width={20} height={20} />
             <div className="font-medium text-[15px] text-white">
-              {likes ?? 0}
+              {convertNumberToString(likes)}
             </div>
           </div>
 
           <div className="flex flex-row w-fit gap-1 items-center">
             <CommentIcon width={20} height={20} />
             <div className="font-medium text-[15px] text-white">
-              {comments ?? 0}
+              {convertNumberToString(comments)}
             </div>
           </div>
 
           <div className="flex flex-row w-fit gap-1 items-center">
             <Rewards width={20} height={20} />
             <div className="font-medium text-[15px] text-white">
-              {rewards ?? 0}
+              {convertNumberToString(rewards)}
             </div>
           </div>
 
           <div className="flex flex-row w-fit gap-1 items-center">
             <Share2 width={20} height={20} />
             <div className="font-medium text-[15px] text-white">
-              {shares ?? 0}
+              {convertNumberToString(shares)}
             </div>
           </div>
 

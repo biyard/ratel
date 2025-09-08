@@ -254,7 +254,7 @@ export function IconText({
 }: React.HTMLAttributes<HTMLDivElement> & { children: React.ReactNode }) {
   return (
     <Row
-      className={`justify-center items-center gap-1.25 text-white font-normal text-[15px] px-4 py-5 ${className || ''}`}
+      className={`inline-flex items-center gap-1.5 whitespace-nowrap leading-none text-white text-[15px] px-3 py-3 ${className || ''}`}
       {...props}
     >
       {children}
@@ -319,7 +319,7 @@ export function JoinNowButton({ onClick }: { onClick: () => void }) {
   return (
     <Button
       variant="rounded_primary"
-      className="cursor-pointer flex flex-row w-fit px-5 py-3 bg-primary rounded-[10px] font-bold text-[#000203] text-[15px]"
+      className="cursor-pointer flex my-2.5 flex-row w-fit px-5 py-3 bg-primary rounded-[10px] font-bold text-[#000203] text-[15px]"
       onClick={(e) => {
         e.stopPropagation();
         e.preventDefault();
