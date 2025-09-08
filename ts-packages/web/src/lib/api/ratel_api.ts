@@ -253,12 +253,15 @@ export const ratelApi = {
       `/v1/feeds?param-type=query&bookmark=${page}&size=${size}`,
 
     listPostsByUserId: (
-      user_id: number,
-      status?: FeedStatus,
       page: number,
       size: number,
+      user_id?: number,
+      status?: FeedStatus,
     ) => {
-      let url = `/v2/feeds?user-id=${user_id}&page=${page}&size=${size}`;
+      let url = `/v2/feeds?page=${page}&size=${size}`;
+      if (user_id) {
+        url += `&user_id=${user_id}`;
+      }
       if (status) {
         url += `&status=${status}`;
       }

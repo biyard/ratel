@@ -39,9 +39,14 @@ import {
 import { HexColorPicker } from 'react-colorful';
 import { useUserInfo } from '../../_hooks/user';
 
-import { PostType, Status, usePostDraft } from './provider';
+import { PostType, Status, usePostEditorContext } from './provider';
 
-export { PostType, Status, usePostDraft, PostDraftProvider } from './provider';
+export {
+  PostType,
+  Status,
+  usePostEditorContext,
+  PostEditorProvider,
+} from './provider';
 
 export const editorTheme = {
   ltr: 'text-left',
@@ -54,8 +59,6 @@ export const editorTheme = {
     strikethrough: 'line-through',
     underlineStrikethrough: 'underline line-through',
   },
-  placeholder:
-    'absolute top-0 left-0 text-neutral-500 pointer-events-none select-none inline-block',
 };
 
 function EditorRefPlugin({
@@ -70,30 +73,17 @@ function EditorRefPlugin({
   return null;
 }
 
-export function CreatePost() {
-  const t = useTranslations('Home');
-
-  const {
-    expand,
-    toggleExpand,
-    content,
-    updateContent,
-    status,
-    isSubmitDisabled,
-    postType,
-    updatePostType,
-    title,
-    updateTitle,
-    image,
-    updateImage,
-
-    handlePublishDraft,
-  } = usePostDraft();
-
-  const { data: userInfo, isLoading } = useUserInfo();
+function Editor({
+  placeholder,
+  content,
+  updateContent,
+}: {
+  placeholder: string;
+  content: string | null;
+  updateContent: (content: string) => void;
+}) {
   const editorRef = useRef<LexicalEditor | null>(null);
   const isLoadingContent = useRef(false);
-
   const handleLexicalChange = (
     editorState: EditorState,
     editor: LexicalEditor,
@@ -106,7 +96,6 @@ export function CreatePost() {
       }
     });
   };
-
   const createEditorStateFromHTML = useCallback(
     (editor: LexicalEditor, htmlString: string) => {
       if (!htmlString) {
@@ -128,14 +117,6 @@ export function CreatePost() {
     },
     [],
   );
-
-  const editorConfig = {
-    namespace: 'CreatePostEditor',
-    theme: editorTheme,
-    onError(error: Error) {
-      console.error(error);
-    },
-  };
 
   useEffect(() => {
     const editor = editorRef.current;
@@ -163,9 +144,60 @@ export function CreatePost() {
   }, [editorRef, content, createEditorStateFromHTML]);
 
   return (
-    <div
-      className={`flex flex-col w-full ${isLoading || !expand ? 'hidden' : 'block'}`}
-    >
+    <>
+      <RichTextPlugin
+        contentEditable={
+          <ContentEditable className="outline-none resize-none w-full min-h-[60px]" />
+        }
+        placeholder={
+          <div className="absolute top-2 left-5 text-neutral-500 pointer-events-none select-none">
+            {placeholder}
+          </div>
+        }
+        ErrorBoundary={LexicalErrorBoundary}
+      />
+      <OnChangePlugin onChange={handleLexicalChange} />
+
+      <HistoryPlugin />
+      <EditorRefPlugin
+        setEditorRef={(editor) => (editorRef.current = editor)}
+      />
+    </>
+  );
+}
+export function CreatePost() {
+  const t = useTranslations('Home');
+
+  const {
+    expand,
+    toggleExpand,
+    content,
+    updateContent,
+    status,
+    isSubmitDisabled,
+    postType,
+    updatePostType,
+    title,
+    updateTitle,
+    image,
+    updateImage,
+
+    handlePublishDraft,
+  } = usePostEditorContext();
+
+  const { data: userInfo, isLoading } = useUserInfo();
+  const editorConfig = {
+    namespace: 'CreatePostEditor',
+    theme: editorTheme,
+    onError(error: Error) {
+      console.error(error);
+    },
+  };
+  if (isLoading || !expand) {
+    return null;
+  }
+  return (
+    <div className={`flex flex-col w-full`}>
       <LexicalComposer initialConfig={editorConfig}>
         <div className="w-full bg-component-bg border-t-6 border-x border-b border-primary rounded-t-lg overflow-hidden">
           {/* Header */}
@@ -216,22 +248,10 @@ export function CreatePost() {
 
               {/* Lexical Content Area */}
               <div className="px-4 pt-2 min-h-[80px] relative text-neutral-300 text-[15px] leading-relaxed">
-                <RichTextPlugin
-                  contentEditable={
-                    <ContentEditable className="outline-none resize-none w-full min-h-[60px]" />
-                  }
-                  placeholder={
-                    <div className="absolute top-0 text-neutral-500 pointer-events-none select-none">
-                      {t('write_content')}
-                    </div>
-                  }
-                  ErrorBoundary={LexicalErrorBoundary}
-                />
-                <OnChangePlugin onChange={handleLexicalChange} />
-
-                <HistoryPlugin />
-                <EditorRefPlugin
-                  setEditorRef={(editor) => (editorRef.current = editor)}
+                <Editor
+                  content={content}
+                  updateContent={updateContent}
+                  placeholder={t('write_content')}
                 />
               </div>
 
@@ -295,7 +315,40 @@ export function CreatePost() {
               </div>
             </>
           ) : (
-            <ArtworkPost />
+            <>
+              <ArtworkPost />
+              <div className="flex items-center justify-end p-4 text-neutral-400">
+                <div className="flex items-center gap-4">
+                  {/* Status indicator */}
+                  {status === Status.Saving && (
+                    <div className="flex items-center gap-2 text-sm text-neutral-400">
+                      <Loader2 className="animate-spin" size={16} />
+                      <span>Saving...</span>
+                    </div>
+                  )}
+                  {/* {status === 'error' && (
+                    <span className="text-sm text-red-500">Save failed</span>
+                  )} */}
+
+                  <Button
+                    variant="rounded_primary"
+                    size="default"
+                    onClick={async () => {
+                      console.log('Publish button clicked');
+                      await handlePublishDraft();
+                    }}
+                    disabled={isSubmitDisabled || status !== Status.Idle}
+                    className="gap-2"
+                  >
+                    {status !== Status.Idle ? (
+                      <Loader2 className="animate-spin" />
+                    ) : (
+                      <UserCircleIcon />
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </>
           )}
         </div>
       </LexicalComposer>
@@ -340,7 +393,9 @@ function ArtworkPost() {
     updateSize,
     image,
     updateImage,
-  } = usePostDraft();
+  } = usePostEditorContext();
+
+  const t = useTranslations('Home');
 
   const [showColorPicker, setShowColorPicker] = useState(false);
 
@@ -381,12 +436,22 @@ function ArtworkPost() {
           onChange={(e) => updateArtistName(e.target.value)}
         />
         <label htmlFor="description">Description</label>
-        <Input
+        <div
+          id="description"
+          className="min-h-[80px] relative rounded-md bg-input/30 border border-input px-3 py-1 "
+        >
+          <Editor
+            content={content}
+            updateContent={updateContent}
+            placeholder={t('write_content')}
+          />
+        </div>
+        {/* <Input
           id="description"
           placeholder="Enter description"
           value={content || ''}
           onChange={(e) => updateContent(e.target.value)}
-        />
+        /> */}
         <label htmlFor="size">Size</label>
         <Input
           id="size"
