@@ -122,7 +122,7 @@ function Header(props: HeaderProps) {
           </Link>
         </div>
 
-        <div className="flex items-center gap-2.5 max-tablet:hidden">
+        <div className="flex items-center justify-center gap-2.5 max-tablet:hidden">
           {navItems.map((item, index) => (
             <Link
               key={`nav-item-${index}`}
@@ -137,6 +137,36 @@ function Header(props: HeaderProps) {
               </span>
             </Link>
           ))}
+
+          <button
+            className="group cursor-pointer font-bold text-neutral-500 text-[15px] flex flex-col items-center justify-center group p-2.5"
+            onClick={() => {
+              if (locale == 'en') {
+                handleChangeLanguage('ko');
+              } else {
+                handleChangeLanguage('en');
+              }
+            }}
+          >
+            <div
+              className="cursor-pointer w-fit h-fit"
+              onClick={() => {
+                handleChangeLanguage('ko');
+              }}
+            >
+              <div className="flex flex-col w-fit justify-center items-center h-6">
+                {locale == 'en' ? (
+                  <Us className="cursor-pointer rounded-full w-4 h-4 object-cover" />
+                ) : (
+                  <Kr className="cursor-pointer rounded-full w-4 h-4 object-cover" />
+                )}
+              </div>
+              <span className="whitespace-nowrap text-neutral-500 group-hover:text-white text-[15px] font-medium transition-all">
+                {' '}
+                {locale == 'en' ? 'En' : 'Ko'}
+              </span>
+            </div>
+          </button>
 
           {data &&
           (data.user_type === UserType.Individual ||
@@ -157,26 +187,6 @@ function Header(props: HeaderProps) {
                 {t('signIn')}
               </span>
             </button>
-          )}
-
-          {locale == 'en' ? (
-            <div
-              className="cursor-pointer w-fit h-fit ml-3"
-              onClick={() => {
-                handleChangeLanguage('ko');
-              }}
-            >
-              <Us className="cursor-pointer rounded-full w-8 h-8 object-cover" />
-            </div>
-          ) : (
-            <div
-              className="cursor-pointer w-fit h-fit ml-3"
-              onClick={() => {
-                handleChangeLanguage('en');
-              }}
-            >
-              <Kr className="cursor-pointer rounded-full w-8 h-8 object-cover" />
-            </div>
           )}
         </div>
 
