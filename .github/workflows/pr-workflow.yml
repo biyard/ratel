@@ -200,20 +200,22 @@ jobs:
       #   uses: mxschmitt/action-tmate@v3
       #   with:
       #     limit-access-to-actor: true
-
-      - name: Install dependencies
+      - name: Setup pnpm
         run: |
-          mkdir .build
           corepack enable
           corepack prepare pnpm@10.15.0 --activate
-
-          make run
 
       - name: Install dependencies
         run: pnpm i
 
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps chromium
+
+      - name: Setup local servers
+        run: |
+          mkdir .build
+
+          make run
 
       - name: Start test services with Docker Compose
         run: |
@@ -228,7 +230,7 @@ jobs:
         run: |
           # Create test results directory
           mkdir -p test-results
-          
+
           # Run Playwright tests
           make test
         continue-on-error: true
