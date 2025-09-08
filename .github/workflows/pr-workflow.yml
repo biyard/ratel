@@ -86,10 +86,10 @@ jobs:
           P256_CRV: ${{ secrets.P256_CRV }}
 
           KAIA_ENDPOINT: https://public-en-kairos.node.kaia.io
-          KAIA_FEEPAYER_KEY: ${{ secrets.DEV_KAIA_KEY }}
-          KAIA_FEEPAYER_ADDR: ${{ secrets.DEV_KAIA_ADDR }}
-          KAIA_OWNER_KEY: ${{ secrets.DEV_KAIA_KEY }}
-          KAIA_OWNER_ADDR: ${{ secrets.DEV_KAIA_ADDR }}
+          KAIA_FEEPAYER_KEY: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+          KAIA_FEEPAYER_ADDR: 0xFEEDFACE1234567890abcdef0123456789abcdef
+          KAIA_OWNER_KEY: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+          KAIA_OWNER_ADDR: 0xDEADBEEF1234567890abcdef0123456789abcdef
         run: |
           cd packages/main-api && make test
 
