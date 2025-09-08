@@ -38,7 +38,6 @@ interface LabeledInputProps {
   value: string;
   onInput: (text: string) => void;
   warning?: string;
-  children?: React.ReactNode;
 }
 
 const UserSetupPopup = ({
@@ -195,10 +194,13 @@ const UserSetupPopup = ({
 
             <Row>
               <input
+                type="email"
                 className="w-full outline-none px-5 h-11 text-white text-base placeholder-gray-500 font-medium border rounded-lg border-gray-600"
                 disabled={email !== '' || isValidEmail}
-                name={t('username')}
+                name="email"
+                aria-label="email"
                 autoComplete="email"
+                placeholder={t('email')}
                 value={emailState}
                 onChange={(e) => {
                   setEmailState(e.target.value);
@@ -245,6 +247,9 @@ const UserSetupPopup = ({
               <input
                 className="w-full outline-none px-5 h-11 text-white text-base placeholder-gray-500 font-medium border rounded-lg border-gray-600"
                 type="password"
+                name="password"
+                aria-label="password"
+                placeholder={t('password')}
                 value={password}
                 onChange={(e) => {
                   const val = e.target.value;
@@ -366,7 +371,6 @@ const LabeledInput = ({
   placeholder,
   value,
   onInput,
-  children,
   warning = '',
 }: LabeledInputProps) => (
   <div className="w-full flex flex-col items-start gap-[5px]">
@@ -376,11 +380,10 @@ const LabeledInput = ({
       className="w-full outline-none px-5 text-white text-base placeholder-gray-500 font-medium border rounded-lg border-gray-600"
       style={{ height: 50 }}
       placeholder={placeholder}
+      aria-label={labelName}
       value={value}
       onChange={(e) => onInput(e.target.value)}
-    >
-      {children}
-    </input>
+    />
     {warning !== '' && <span className="text-sm text-c-p-50">{warning}</span>}
   </div>
 );
