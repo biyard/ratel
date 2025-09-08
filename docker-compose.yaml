@@ -66,7 +66,7 @@ services:
       test: ["CMD-SHELL", "curl -f http://localhost:3000/version || exit 1"]
       interval: 30s
       timeout: 10s
-      retries: 3
+      retries: 100
     depends_on:
       postgres:
         condition: service_healthy
