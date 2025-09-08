@@ -85,6 +85,7 @@ jobs:
           P256_D: ${{ secrets.P256_D }}
           P256_CRV: ${{ secrets.P256_CRV }}
 
+          # Kaia blockchain config (test values)
           KAIA_ENDPOINT: https://public-en-kairos.node.kaia.io
           KAIA_FEEPAYER_KEY: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
           KAIA_FEEPAYER_ADDR: "0xFEEDFACE1234567890abcdef0123456789abcdef"
