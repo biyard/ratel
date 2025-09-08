@@ -196,10 +196,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y postgresql-client
 
-      - name: Initialize Database
-        run: |
-          psql postgresql://postgres:postgres@localhost:5432/ratel -f ./deps/rust-sdk/fixtures/sql/init.sql
-
       - name: Setup SSH session with tmate
         uses: mxschmitt/action-tmate@v3
         with:
@@ -212,7 +208,7 @@ jobs:
         run: pnpm i
 
       - name: Install Playwright Browsers
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install
 
       - name: Start test services with Docker Compose
         run: |
