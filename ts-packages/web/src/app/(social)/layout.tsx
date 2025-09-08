@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import UserSidemenu from './_components/user-sidemenu';
 import Loading from '../loading';
-import { CreatePost, PostDraftProvider } from './_components/create-post';
+import { CreatePost, PostEditorProvider } from './_components/post-editor';
 import { CreateRePost, RePostDraftProvider } from './_components/create-repost';
 import Provider from './providers';
 
@@ -22,7 +22,7 @@ export default async function SocialLayout({
               </div>
             }
           >
-            <PostDraftProvider>
+            <PostEditorProvider>
               <RePostDraftProvider>
                 {children}
 
@@ -33,7 +33,7 @@ export default async function SocialLayout({
                   </div>
                 </div>
               </RePostDraftProvider>
-            </PostDraftProvider>
+            </PostEditorProvider>
           </Suspense>
         </div>
       </div>

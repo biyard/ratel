@@ -36,7 +36,7 @@ import {
 import { useApiCall } from '@/lib/api/use-send';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { showSuccessToast, showErrorToast } from '@/lib/toast';
-import { usePostDraft } from '@/app/(social)/_components/create-post';
+import { usePostEditorContext } from '@/app/(social)/_components/post-editor';
 import { convertNumberToString } from '@/lib/number-utils';
 import { useTranslations } from 'next-intl';
 import { BoosterType } from '@/lib/api/models/notice';
@@ -52,7 +52,7 @@ export default function Header({ post_id }: { post_id: number }) {
   const author_id = post?.author[0].id;
   const [selectedTeam, setSelectedTeam] = useState<boolean>(false);
   const { post: apiPost } = useApiCall();
-  const { loadDraft } = usePostDraft();
+  const { openPostEditorPopup } = usePostEditorContext();
 
   const space_id = post?.spaces[0]?.id;
   const is_boost =
@@ -96,7 +96,7 @@ export default function Header({ post_id }: { post_id: number }) {
 
   const handleEditPost = async () => {
     try {
-      await loadDraft(post_id);
+      await openPostEditorPopup(post_id);
     } catch (error) {
       console.error('Failed to load draft for editing:', error);
       showErrorToast(t('failed_edit_post_message'));

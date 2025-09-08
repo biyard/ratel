@@ -1,6 +1,6 @@
 import { Feed, FeedStatus, FeedType, UrlType } from '@/lib/api/models/feeds';
 import { checkString } from '@/lib/string-filter-utils';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import {
   createContext,
   useCallback,
@@ -31,9 +31,9 @@ export enum PostType {
 }
 
 const AUTO_SAVE_DELAY = 5000; // ms
-export interface PostDraftContextType {
-  openCreatePostPopup: () => void;
-  openCreatePostPopupWithDraft: (id: number) => Promise<void>;
+export interface PostEditorContextType {
+  openPostEditorPopup: (postId?: number) => Promise<void>;
+  // openPostEditorPopupWithState: (id: number) => Promise<void>;
 
   expand: boolean;
   toggleExpand: () => void;
@@ -60,9 +60,9 @@ export interface PostDraftContextType {
   status: Status;
 }
 
-export const PostDraftContext = createContext<PostDraftContextType | undefined>(
-  undefined,
-);
+export const PostDraftContext = createContext<
+  PostEditorContextType | undefined
+>(undefined);
 export async function createDraft(user_id: number): Promise<number> {
   const res = await apiFetch<Feed>(
     `${config.api_url}${ratelApi.feeds.createDraft()}`,
@@ -121,7 +121,11 @@ async function publishDraft(id: number): Promise<void> {
     }),
   });
 }
-export function PostDraftProvider({ children }: { children: React.ReactNode }) {
+export function PostEditorProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const { data: user } = useUserInfo();
   const { selectedTeam } = useTeamContext();
   /*
@@ -130,6 +134,8 @@ export function PostDraftProvider({ children }: { children: React.ReactNode }) {
     if Not Logged in, use `0` as targetId
   */
   const targetId = selectedTeam?.id || user?.id || 0;
+
+  const pathname = usePathname();
 
   //Interal State
   const router = useRouter();
@@ -156,10 +162,10 @@ export function PostDraftProvider({ children }: { children: React.ReactNode }) {
         ? true
         : artistName && backgroundColor && size && image),
   );
-  console.log('isAllFieldsFilled', isAllFieldsFilled);
   const resetState = useCallback(() => {
     setExpand(false);
     setDraftId(null);
+    setContent(null);
     setTitle('');
     setImage(null);
     setStatus(Status.Idle);
@@ -171,7 +177,7 @@ export function PostDraftProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const updateTitle = (newTitle: string) => {
-    if (newTitle && newTitle.trim() !== '') {
+    if (newTitle) {
       setTitle(newTitle);
       setIsModified(true);
     }
@@ -181,7 +187,7 @@ export function PostDraftProvider({ children }: { children: React.ReactNode }) {
     if (newContent && newContent.trim() !== '') {
       setContent(newContent);
       setIsModified(true);
-    } else if (newContent === null) {
+    } else if (newContent === null || newContent.trim() === '') {
       setContent(null);
     }
   };
@@ -194,20 +200,20 @@ export function PostDraftProvider({ children }: { children: React.ReactNode }) {
   const updateImage = (newImage: string | null) => {
     if (newImage === null) {
       setImage(null);
-    } else if (newImage && newImage.trim() !== '') {
+    } else if (newImage) {
       setImage(newImage);
       setIsModified(true);
     }
   };
 
   const updateBackgroundColor = (newBackgroundColor: string | null) => {
-    if (newBackgroundColor && newBackgroundColor.trim() !== '') {
+    if (newBackgroundColor) {
       setBackgroundColor(newBackgroundColor);
       setIsModified(true);
     }
   };
   const updateArtistName = (newArtistName: string | null) => {
-    if (newArtistName && newArtistName.trim() !== '') {
+    if (newArtistName) {
       setArtistName(newArtistName);
       setIsModified(true);
     }
@@ -219,15 +225,16 @@ export function PostDraftProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const openCreatePostPopup = async () => {
-    resetState();
-    setExpand(true);
-  };
-
-  const openCreatePostPopupWithDraft = async (id: number) => {
+  const openPostEditorPopup = async (id?: number) => {
+    if (!id) {
+      resetState();
+      setExpand(true);
+      return;
+    }
     if (status === Status.Loading) {
       return;
     }
+    resetState();
     setStatus(Status.Loading);
     try {
       const draft = await loadDraft(id);
@@ -257,14 +264,14 @@ export function PostDraftProvider({ children }: { children: React.ReactNode }) {
   };
 
   const handleUpdateDraft = useCallback(async () => {
-    let draft_id: number;
+    let id: number;
     if (!draftId) {
-      draft_id = await createDraft(targetId);
-      setDraftId(draft_id);
+      id = await createDraft(targetId);
+      setDraftId(id);
     } else {
-      draft_id = draftId;
+      id = draftId;
     }
-    await updateDraft(draft_id, {
+    await updateDraft(id, {
       title,
       html_contents: content || undefined,
       url: image || undefined,
@@ -280,6 +287,7 @@ export function PostDraftProvider({ children }: { children: React.ReactNode }) {
             }
           : undefined,
     });
+    return id;
   }, [
     draftId,
     title,
@@ -301,6 +309,7 @@ export function PostDraftProvider({ children }: { children: React.ReactNode }) {
     try {
       await handleUpdateDraft();
       invalidatePostQuery(targetId, FeedStatus.Draft);
+      setIsModified(false);
     } catch (error) {
       console.error(error);
       throw new Error('Failed to auto save draft');
@@ -316,14 +325,12 @@ export function PostDraftProvider({ children }: { children: React.ReactNode }) {
     return () => clearInterval(timeoutId);
   }, [autoSaveDraft]);
 
+  useEffect(() => {
+    resetState();
+  }, [pathname, resetState]);
+
   const handlePublishDraft = useCallback(async () => {
-    console.log(
-      'handlePublishDraft called',
-      status,
-      draftId,
-      isAllFieldsFilled,
-    );
-    if (status !== Status.Idle || !draftId || !isAllFieldsFilled) {
+    if (status !== Status.Idle || !isAllFieldsFilled) {
       return;
     }
     setStatus(Status.Publishing);
@@ -332,10 +339,10 @@ export function PostDraftProvider({ children }: { children: React.ReactNode }) {
       if (checkString(title) || checkString(content || '')) {
         throw new Error('Please remove the test keyword');
       }
-      await handleUpdateDraft();
+      const draftId = await handleUpdateDraft();
       await publishDraft(draftId);
-      invalidatePostQuery(targetId);
       router.push(route.threadByFeedId(draftId));
+      invalidatePostQuery(targetId);
       resetState();
     } catch {
       throw new Error('Failed to publish draft');
@@ -344,7 +351,6 @@ export function PostDraftProvider({ children }: { children: React.ReactNode }) {
     }
   }, [
     content,
-    draftId,
     handleUpdateDraft,
     isAllFieldsFilled,
     resetState,
@@ -354,9 +360,8 @@ export function PostDraftProvider({ children }: { children: React.ReactNode }) {
     title,
   ]);
 
-  const contextValue: PostDraftContextType = {
-    openCreatePostPopup,
-    openCreatePostPopupWithDraft,
+  const contextValue: PostEditorContextType = {
+    openPostEditorPopup,
 
     expand,
     toggleExpand,
@@ -387,236 +392,10 @@ export function PostDraftProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-export const usePostDraft = () => {
+export const usePostEditorContext = () => {
   const context = useContext(PostDraftContext);
   if (context === undefined) {
     throw new Error('usePostDraft must be used within a PostDraftProvider');
   }
   return context;
 };
-
-//   const loadDraft = useCallback(
-//     async (id: number) => {
-//       setStatus(DraftStatus.Loading);
-
-//       try {
-//         const draft: Feed = await get(ratelApi.feeds.getFeedsByFeedId(id));
-//         const draftTitle = draft.title || '';
-//         const draftContent = draft.html_contents || '';
-//         const draftImage =
-//           draft.url && draft.url_type === UrlType.Image ? draft.url : null;
-//         const isPublished = draft.status === FeedStatus.Published;
-
-//         // Reset content first to clear the editor
-//         setContent(null);
-
-//         // React 18+ automatically batches these state updates
-//         setDraftId(draft.id);
-//         setTitle(draftTitle);
-//         setImage(draftImage);
-
-//         setContent(draftContent);
-//         setExpand(true);
-//       } catch (error: unknown) {
-//         logger.error('Failed to load draft:', error);
-//         setStatus('error');
-//       } finally {
-//         setStatus('idle');
-//       }
-//     },
-//     [get],
-//   );
-
-//   const saveDraft = useCallback(
-//     async (
-//       currentTitle: string,
-//       currentContent: string,
-//       currentImage: string | null,
-//     ) => {
-//       if (status === 'saving' || status === 'creating' || !user) return;
-
-//       if (!currentTitle.trim()) return;
-
-//       const lastSaved = lastSavedRef.current;
-//       const hasChanges =
-//         currentTitle !== lastSaved.title ||
-//         currentContent !== lastSaved.content ||
-//         currentImage !== lastSaved.image;
-
-//       if (!hasChanges) return;
-
-//       const isCreating = !draftId;
-//       setStatus(isCreating ? 'creating' : 'saving');
-
-//       try {
-//         let currentDraftId = draftId;
-
-//         if (checkString(currentTitle) || checkString(currentContent)) {
-//           showErrorToast('Please remove the test keyword');
-//           return;
-//         }
-
-//         if (isCreating) {
-//           const data: Feed = await post(
-//             ratelApi.feeds.createDraft(),
-//             createDraftRequest(FeedType.Post, user.id),
-//           );
-//           currentDraftId = data.id;
-//           setDraftId(currentDraftId);
-//         }
-
-//         if (currentDraftId) {
-//           let url = '';
-//           let url_type = UrlType.None;
-//           if (currentImage) {
-//             url = currentImage;
-//             url_type = UrlType.Image;
-//           }
-
-//           if (isPublishedPost) {
-//             await post(
-//               ratelApi.feeds.editPost(currentDraftId),
-//               editPostRequest(
-//                 currentContent,
-//                 1,
-//                 currentTitle,
-//                 0,
-//                 [],
-//                 url,
-//                 url_type,
-//               ),
-//             );
-//           } else {
-//             await post(
-//               ratelApi.feeds.updateDraft(currentDraftId),
-//               updateDraftRequest(
-//                 currentContent,
-//                 1,
-//                 currentTitle,
-//                 0,
-//                 [],
-//                 url,
-//                 url_type,
-//                 postType === PostType.Artwork
-//                   ? FeedType.Artwork
-//                   : FeedType.Post,
-//               ),
-//             );
-//           }
-
-//           lastSavedRef.current = {
-//             title: currentTitle,
-//             content: currentContent,
-//             image: currentImage,
-//           };
-//         }
-
-//         refetchDrafts();
-//       } catch (error: unknown) {
-//         logger.error('Failed to save draft:', error);
-//         setStatus('error');
-//       } finally {
-//         setStatus('idle');
-//       }
-//     },
-//     [draftId, user, post, refetchDrafts, status, isPublishedPost],
-//   );
-
-//   useEffect(() => {
-//     // Only auto-save for drafts, not published posts
-//     if (!title.trim() && !content?.trim()) return;
-//     if (status !== 'idle' || isPublishedPost) return;
-
-//     const lastSaved = lastSavedRef.current;
-//     const hasChanges =
-//       title !== lastSaved.title ||
-//       content !== lastSaved.content ||
-//       image !== lastSaved.image;
-
-//     if (!hasChanges || content === null) return;
-
-//     const AUTO_SAVE_DELAY = 1500; // ms
-//     const timeoutId = setTimeout(() => {
-//       saveDraft(title, content, image);
-//     }, AUTO_SAVE_DELAY);
-
-//     return () => clearTimeout(timeoutId);
-//   }, [title, content, image, status, saveDraft, isPublishedPost]);
-
-//   const publishPost = useCallback(async () => {
-//     if (checkString(title) || checkString(content ?? '')) {
-//       showErrorToast('Please remove the test keyword');
-//       return;
-//     }
-
-//     if (!draftId || !title.trim() || status !== 'idle' || content == null) {
-//       return;
-//     }
-
-//     setStatus('publishing');
-
-//     try {
-//       await saveDraft(title, content, image);
-
-//       await post(ratelApi.feeds.publishDraft(draftId), {
-//         publish: {},
-//       });
-
-//       router.push(route.threadByFeedId(draftId));
-//       resetState();
-//       setExpand(false);
-//       refetchDrafts();
-//     } catch (error: unknown) {
-//       logger.error('Failed to publish post:', error);
-//       setStatus('error');
-//     } finally {
-//       setStatus('idle');
-//     }
-//   }, [
-//     draftId,
-//     title,
-//     content,
-//     image,
-//     status,
-//     saveDraft,
-//     post,
-//     resetState,
-//     refetchDrafts,
-//     router,
-//   ]);
-
-//   const savePost = useCallback(async () => {
-//     if (checkString(title) || checkString(content ?? '')) {
-//       showErrorToast('Please remove the test keyword');
-//       return;
-//     }
-
-//     if (!draftId || !title.trim() || status !== 'idle' || content == null) {
-//       return;
-//     }
-
-//     try {
-//       await saveDraft(title, content, image);
-
-//       // Invalidate the specific feed query to refetch updated data
-//       queryClient.invalidateQueries({
-//         queryKey: [QK_GET_FEED_BY_FEED_ID, draftId],
-//       });
-
-//       // Close the editor and reset state
-//       setExpand(false);
-//       resetState();
-//     } catch (error: unknown) {
-//       logger.error('Failed to save post changes:', error);
-//     }
-//   }, [
-//     draftId,
-//     title,
-//     content,
-//     image,
-//     status,
-//     saveDraft,
-//     queryClient,
-//     setExpand,
-//     resetState,
-//   ]);
