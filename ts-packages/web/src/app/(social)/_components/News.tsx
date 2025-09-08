@@ -1,4 +1,5 @@
 'use client';
+import { LoadingIndicator } from '@/app/loading';
 import { Col } from '@/components/ui/col';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { useSuspenseQuery } from '@apollo/client';
@@ -24,7 +25,7 @@ const Error: ErrorComponent = ({ error }) => {
 export default function Wrapper() {
   return (
     <ErrorBoundary errorComponent={Error}>
-      <Suspense fallback={<div>Loading...</div>}>
+      <Suspense fallback={<LoadingIndicator />}>
         <News />
       </Suspense>
     </ErrorBoundary>

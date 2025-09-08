@@ -15,6 +15,7 @@ import { ChevronDoubleDownIcon } from '@heroicons/react/20/solid';
 import { cn } from '@/lib/utils';
 import { useEffect, useRef, useState } from 'react';
 import { logger } from '@/lib/logger';
+import { useTranslations } from 'next-intl';
 
 interface CommentProps {
   comment: CommentType;
@@ -23,6 +24,7 @@ interface CommentProps {
 }
 
 export default function Comment({ comment, onSubmit, onLike }: CommentProps) {
+  const t = useTranslations('Threads');
   const [expand, setExpand] = useState(false);
   const [showReplies, setShowReplies] = useState(false);
   return (
@@ -95,7 +97,7 @@ export default function Comment({ comment, onSubmit, onLike }: CommentProps) {
                 setShowReplies(!showReplies);
               }}
             >
-              {`${comment.num_of_replies ?? 0} ${comment.num_of_replies <= 1 ? 'Reply' : 'Replies'}`}
+              {`${comment.num_of_replies ?? 0} ${comment.num_of_replies <= 1 ? t('reply') : t('replies')}`}
               {comment.num_of_replies > 0 && (
                 <ChevronDown
                   width={24}
@@ -113,7 +115,7 @@ export default function Comment({ comment, onSubmit, onLike }: CommentProps) {
               className="flex gap-2 cursor-pointer justify-center items-center"
             >
               <BendArrowRight width={24} height={24} />
-              Reply
+              {t('reply')}
             </div>
           </div>
           {/* Like Button */}
@@ -195,6 +197,7 @@ export function NewComment({
   onClose: () => void;
   onSubmit?: (content: string) => Promise<void>;
 }) {
+  const t = useTranslations('Threads');
   const [isLoading, setLoading] = useState(false);
   const [disabled, setDisabled] = useState(true);
   const editorRef = useRef<LexicalHtmlEditorRef>(null);
@@ -231,6 +234,7 @@ export function NewComment({
     >
       <div className="flex-1">
         <LexicalHtmlEditor
+          placeholder={t('contents_hint')}
           className={className}
           ref={editorRef}
           onChange={(content) => {

@@ -1,8 +1,11 @@
+use std::env;
+
 use crate::{
     config, controllers,
     route::route,
     utils::{
         aws::{BedrockClient, RekognitionClient, S3Client, TextractClient},
+        mcp_middleware::mcp_middleware,
         sqs_client,
     },
 };
@@ -15,6 +18,7 @@ use dto::{
         auth::{authorization_middleware, generate_jwt, set_auth_token_key},
         axum::{extract::Request, http::Response, middleware::Next},
     },
+    sqlx::PgPool,
     *,
 };
 use sqlx::postgres::PgPoolOptions;
@@ -113,7 +117,12 @@ pub async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         Consensus,
         ConsensusVote,
         ArtworkCertification,
-        ArtworkDetail
+        ArtworkDetail,
+        Conversation,
+        Message,
+        ConversationParticipant,
+        AuthClient,
+        AuthCode,
     );
 
     if Industry::query_builder()
@@ -142,7 +151,8 @@ pub async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
                 "ServiceAdmin".to_string(),
                 "user-principal-1".to_string(),
                 "".to_string(),
-                "profile_url".to_string(),
+                "https://metadata.ratel.foundation/metadata/0faf45ec-35e1-40e9-bff2-c61bb52c7d19"
+                    .to_string(),
                 true,
                 true,
                 UserType::Individual,
@@ -182,6 +192,34 @@ pub async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
     Ok(())
 }
 
+pub async fn db_init(url: &'static str, max_conn: u32) -> Result<PgPool> {
+    let url = if let Ok(host) = env::var("PGHOST") {
+        let url = if let Some(at_pos) = url.rfind('@') {
+            let (before_at, after_at) = url.split_at(at_pos + 1);
+            if let Some(slash_pos) = after_at.find('/') {
+                let (_, after_slash) = after_at.split_at(slash_pos);
+                format!("{}{}{}", before_at, host, after_slash)
+            } else {
+                url.to_string()
+            }
+        } else {
+            url.to_string()
+        };
+        url
+    } else {
+        url.to_string()
+    };
+
+    tracing::debug!("Connecting to database at {}", url);
+
+    let pool = PgPoolOptions::new()
+        .max_connections(max_conn)
+        .connect(&url)
+        .await?;
+
+    Ok(pool)
+}
+
 pub async fn api_main() -> Result<Router> {
     let app = by_axum::new();
     let conf = config::get();
@@ -190,27 +228,17 @@ pub async fn api_main() -> Result<Router> {
     let auth_token_key = format!("{}_auth_token", conf.env);
     let auth_token_key = Box::leak(Box::new(auth_token_key));
     set_auth_token_key(auth_token_key);
-    tracing::info!("Before Pool creation");
+
     let pool = if let DatabaseConfig::Postgres { url, pool_size } = conf.database {
-        let res = PgPoolOptions::new()
-            .max_connections(pool_size)
-            .connect_lazy(url);
-        // .connect(url)
-        // .await;
-        match res {
-            Ok(pool) => {
-                tracing::info!("Postgres pool created successfully");
-                pool
-            }
-            Err(e) => {
-                tracing::error!("Failed to create Postgres pool: {:?}", e);
-                return Err(e.into());
-            }
-        }
+        let pool = db_init(url, pool_size).await?;
+        tracing::info!(
+            "Connected to Postgres at {}",
+            pool.connect_options().get_host()
+        );
+        pool
     } else {
         panic!("Database is not initialized. Call init() first.");
     };
-    tracing::info!("After Pool creation");
 
     let session_store = PostgresStore::new(pool.clone());
     if conf.migrate {
@@ -244,8 +272,9 @@ pub async fn api_main() -> Result<Router> {
                 .checked_add(Duration::days(30))
                 .unwrap(),
         ));
-    let mcp_router =
-        by_axum::axum::Router::new().nest_service("/mcp", controllers::mcp::route().await?);
+    let mcp_router = by_axum::axum::Router::new()
+        .nest_service("/mcp", controllers::mcp::route(pool.clone()).await?)
+        .layer(middleware::from_fn(mcp_middleware));
     // let bot = teloxide::Bot::new(conf.telegram_token);
     // let bot = std::sync::Arc::new(bot);
     let api_router = route(

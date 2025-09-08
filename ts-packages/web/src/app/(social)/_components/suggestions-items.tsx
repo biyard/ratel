@@ -1,6 +1,8 @@
 import Image from 'next/image';
 import { UserType } from '@/lib/api/models/user';
 import { useTranslations } from 'next-intl';
+import Link from 'next/link';
+import { route } from '@/route';
 
 type SuggestionItemProps = {
   user: {
@@ -8,6 +10,7 @@ type SuggestionItemProps = {
     profile_url?: string;
     user_type: UserType;
     username: string;
+    nickname: string;
     email: string;
   };
   onFollow: (userId: number) => void;
@@ -29,16 +32,18 @@ export default function SuggestionItem({
             width={32}
             height={32}
             src={user.profile_url}
-            alt={`${user.username}'s profile`}
+            alt={`${user.nickname}'s profile`}
             className={`w-8 h-8 object-cover ${imageClass}`}
           />
         ) : (
           <div className={`w-8 h-8 bg-neutral-500 ${imageClass}`} />
         )}
         <div className="flex-1">
-          <div className="font-medium text-base text-white">
-            {user.username}
-          </div>
+          <Link href={route.teamByUsername(user.username)}>
+            <div className="font-medium text-base text-white">
+              {user.nickname}
+            </div>
+          </Link>
 
           <button
             className="font-bold text-xs text-white rounded-full bg-neutral-700 px-4 py-2 mt-2 hover:bg-neutral-600 transition-colors"

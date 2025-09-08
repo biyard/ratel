@@ -16,8 +16,10 @@ import { useUserInfo } from '@/app/(social)/_hooks/user';
 import { TeamContext } from '@/lib/contexts/team-context';
 import { usePopup } from '@/lib/contexts/popup-service';
 import SetSchedulePopup from '../../_components/modal/set-schedule';
+import { useTranslations } from 'next-intl';
 
 export default function SpaceSideMenu() {
+  const t = useTranslations('DeliberationSpace');
   const popup = usePopup();
   const {
     isEdit,
@@ -59,7 +61,7 @@ export default function SpaceSideMenu() {
             }}
           >
             <File className="[&>path]:stroke-neutral-80 w-5 h-5" />
-            <div className="font-bold text-white text-sm">Summary</div>
+            <div className="font-bold text-white text-sm">{t('summary')}</div>
           </div>
 
           <div
@@ -69,7 +71,9 @@ export default function SpaceSideMenu() {
             }}
           >
             <Discuss className="w-5 h-5" />
-            <div className="font-bold text-white text-sm">Deliberation</div>
+            <div className="font-bold text-white text-sm">
+              {t('deliberation')}
+            </div>
           </div>
 
           <div
@@ -79,7 +83,7 @@ export default function SpaceSideMenu() {
             }}
           >
             <Vote className="[&>path]:stroke-neutral-80 w-5 h-5" />
-            <div className="font-bold text-white text-sm">Poll</div>
+            <div className="font-bold text-white text-sm">{t('poll')}</div>
           </div>
 
           <div
@@ -89,7 +93,9 @@ export default function SpaceSideMenu() {
             }}
           >
             <CheckCircle className="[&>path]:stroke-neutral-80 w-5 h-5" />
-            <div className="font-bold text-white text-sm">Recommendation</div>
+            <div className="font-bold text-white text-sm">
+              {t('recommendation')}
+            </div>
           </div>
 
           {(space.author.some((a) => a.id === userId) || selectedTeam) &&
@@ -105,7 +111,9 @@ export default function SpaceSideMenu() {
                 }}
               >
                 <PieChart1 className="[&>path]:stroke-neutral-80 w-5 h-5" />
-                <div className="font-bold text-white text-sm">Analyze</div>
+                <div className="font-bold text-white text-sm">
+                  {t('analyze')}
+                </div>
               </div>
             )}
         </div>
@@ -115,7 +123,7 @@ export default function SpaceSideMenu() {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-1 text-neutral-400 font-semibold text-[14px]">
               <Clock width={20} height={20} />
-              Timeline
+              {t('timeline')}
             </div>
             {isEdit ? (
               <div
@@ -149,12 +157,12 @@ export default function SpaceSideMenu() {
 
           <div className="flex flex-col pl-3.25 gap-5">
             {[
-              { label: 'Created', date: createdAt },
+              { label: t('created'), date: createdAt },
               deliberationEndedAt
-                ? { label: 'Deliberation', date: deliberationEndedAt }
+                ? { label: t('deliberation'), date: deliberationEndedAt }
                 : null,
-              { label: 'Poll Open', date: startedAt },
-              { label: 'Poll Close', date: endedAt },
+              { label: t('poll_open'), date: startedAt },
+              { label: t('poll_close'), date: endedAt },
             ]
               .filter(
                 (item): item is { label: string; date: number } =>

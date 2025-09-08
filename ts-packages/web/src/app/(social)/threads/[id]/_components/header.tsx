@@ -16,7 +16,7 @@ import {
   CommentIcon,
   Rewards,
   Shares,
-  Lock,
+  // Lock,
 } from '@/components/icons';
 import Link from 'next/link';
 import { route } from '@/route';
@@ -38,8 +38,11 @@ import { ratelApi } from '@/lib/api/ratel_api';
 import { showSuccessToast, showErrorToast } from '@/lib/toast';
 import { usePostDraft } from '@/app/(social)/_components/create-post';
 import { convertNumberToString } from '@/lib/number-utils';
+import { useTranslations } from 'next-intl';
+import { BoosterType } from '@/lib/api/models/notice';
 
 export default function Header({ post_id }: { post_id: number }) {
+  const t = useTranslations('Threads');
   const { data: post } = useFeedByID(post_id);
   const popup = usePopup();
   const router = useRouter();
@@ -52,6 +55,10 @@ export default function Header({ post_id }: { post_id: number }) {
   const { loadDraft } = usePostDraft();
 
   const space_id = post?.spaces[0]?.id;
+  const is_boost =
+    post?.spaces[0]?.id &&
+    post?.spaces[0]?.booster_type &&
+    post?.spaces[0]?.booster_type != BoosterType.NoBoost;
 
   const user_id = user.data ? user.data.id : 0;
 
@@ -72,17 +79,17 @@ export default function Header({ post_id }: { post_id: number }) {
     popup
       .open(<SpaceCreateModal feed_id={post_id} />)
       .withoutBackdropClose()
-      .withTitle('Select a Space Type');
+      .withTitle(t('select_space_type'));
   };
 
   const handleDeletePost = async () => {
     try {
       await apiPost(ratelApi.feeds.removeDraft(post_id), { delete: {} });
-      showSuccessToast('Post deleted successfully');
+      showSuccessToast(t('success_delete_post_message'));
       router.push('/'); // Navigate to homepage after successful deletion
     } catch (error) {
       console.error('Failed to delete post:', error);
-      showErrorToast('Failed to delete post. Please try again.');
+      showErrorToast(t('failed_delete_post_message'));
       // Remain on the feed page on failure
     }
   };
@@ -92,7 +99,7 @@ export default function Header({ post_id }: { post_id: number }) {
       await loadDraft(post_id);
     } catch (error) {
       console.error('Failed to load draft for editing:', error);
-      showErrorToast('Failed to load post for editing. Please try again.');
+      showErrorToast(t('failed_edit_post_message'));
     }
   };
 
@@ -127,7 +134,7 @@ export default function Header({ post_id }: { post_id: number }) {
       setLocalIsLiked(post.is_liked || false);
       setLocalLikes(post.likes || 0);
       console.error('Failed to update like:', error);
-      showErrorToast('Failed to update like. Please try again.');
+      showErrorToast(t('failed_like_post_message'));
     } finally {
       setIsLikeProcessing(false);
     }
@@ -145,33 +152,33 @@ export default function Header({ post_id }: { post_id: number }) {
           {space_id ? (
             <Link href={target ?? ''}>
               <Button variant="rounded_secondary" className="max-tablet:hidden">
-                Join Space
+                {t('join_space')}
               </Button>
             </Link>
           ) : isPostOwner ? (
             <>
               <Button
                 variant="rounded_secondary"
-                className="rounded-md max-tablet:hidden text-lg px-3 py-1.5"
+                className="rounded-md max-tablet:hidden text-sm px-3 py-1.5"
                 onClick={handleEditPost}
               >
                 <Edit className="!size-5" />
-                Edit
+                {t('edit')}
               </Button>
-              <Button
+              {/* <Button
                 variant="rounded_secondary"
                 className="rounded-md max-tablet:hidden text-lg px-3 py-1.5"
               >
                 <UnlockPublic className="!size-5 [&>path]:stroke-black" />
-                Make Public
-              </Button>
+                {t('make_public')}
+              </Button> */}
               <Button
                 variant="rounded_primary"
                 onClick={handleCreateSpace}
-                className="max-tablet:hidden bg-[#FCB300] hover:bg-[#FCB300]/80 text-lg px-3 py-1.5"
+                className="max-tablet:hidden bg-[#FCB300] hover:bg-[#FCB300]/80 text-sm px-3 py-1.5"
               >
                 <Palace className="!size-5" />
-                Create a Space
+                {t('create_space')}
               </Button>
             </>
           ) : (
@@ -200,7 +207,7 @@ export default function Header({ post_id }: { post_id: number }) {
                     <DropdownMenuItem asChild>
                       <Link href={target ?? ''}>
                         <button className="flex items-center w-full px-4 py-2 text-sm text-white hover:bg-gray-700 cursor-pointer">
-                          Join Space
+                          {t('join_space')}
                         </button>
                       </Link>
                     </DropdownMenuItem>
@@ -212,22 +219,22 @@ export default function Header({ post_id }: { post_id: number }) {
                           className="flex items-center w-full px-4 py-2 text-sm text-white hover:bg-gray-700 cursor-pointer"
                         >
                           <Palace className="w-4 h-4 [&>path]:stroke-white" />
-                          Create a Space
+                          {t('create_space')}
                         </button>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
                         <button
                           onClick={handleEditPost}
-                          className="flex items-center w-full px-4 py-2 text-sm text-white hover:bg-gray-700 cursor-pointer"
+                          className="flex items-center w-full px-4 py-2 font-bold text-sm text-white hover:bg-gray-700 cursor-pointer"
                         >
                           <Edit className="w-4 h-4" />
-                          Edit
+                          {t('edit')}
                         </button>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
-                        <button className="flex items-center w-full px-4 py-2 text-sm text-white hover:bg-gray-700 cursor-pointer">
+                        <button className="flex items-center w-full px-4 py-2 font-bold text-sm text-white hover:bg-gray-700 cursor-pointer">
                           <UnlockPublic className="w-4 h-4 [&>path]:stroke-white" />
-                          Make Public
+                          {t('make_public')}
                         </button>
                       </DropdownMenuItem>
                     </>
@@ -242,7 +249,7 @@ export default function Header({ post_id }: { post_id: number }) {
                       className="flex items-center w-full px-4 py-2 text-sm text-red-400 hover:bg-gray-700 cursor-pointer"
                     >
                       <Trash2 className="w-4 h-4" />
-                      Delete
+                      {t('delete')}
                     </button>
                   </DropdownMenuItem>
                 )}
@@ -278,41 +285,45 @@ export default function Header({ post_id }: { post_id: number }) {
             <ThumbUp
               className={
                 localIsLiked
-                  ? 'size-7 [&>path]:fill-primary [&>path]:stroke-primary'
-                  : 'size-7 text-gray-400'
+                  ? 'size-5 [&>path]:fill-primary [&>path]:stroke-primary'
+                  : 'size-5 text-gray-400'
               }
             />
-            <span className="text-base text-white">
+            <span className="text-[15px] text-white">
               {convertNumberToString(localLikes)}
             </span>
           </button>
           <div className="flex items-center gap-1">
-            <CommentIcon className="size-7 text-gray-400" />
-            <span className="text-base text-white">
+            <CommentIcon className="size-5 text-gray-400" />
+            <span className="text-[15px] text-white">
               {convertNumberToString(post?.comments || 0)}
             </span>
           </div>
+          {is_boost ? (
+            <div className="flex items-center gap-1">
+              <Rewards className="size-5 text-gray-400" />
+              <span className="text-[15px] text-white">
+                {convertNumberToString(post?.rewards || 0)}
+              </span>
+            </div>
+          ) : (
+            <></>
+          )}
           <div className="flex items-center gap-1">
-            <Rewards className="size-7 text-gray-400" />
-            <span className="text-base text-white">
-              {convertNumberToString(post?.rewards || 0)}
-            </span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Shares className="size-7 text-gray-400" />
-            <span className="text-base text-white">
+            <Shares className="size-5 text-gray-400" />
+            <span className="text-[15px] text-white">
               {convertNumberToString(post?.shares || 0)}
             </span>
           </div>
-          <div className="flex items-center gap-1">
+          {/* <div className="flex items-center gap-1">
             <Lock className="size-7 text-gray-400" />
-            <span className="text-base text-white">Private</span>
-          </div>
+            <span className="text-base text-white">{t('private')}</span>
+          </div> */}
         </div>
       </div>
 
       <div>
-        <h2 className="text-2xl font-bold">{post?.title}</h2>
+        <h2 className="text-xl font-bold">{post?.title}</h2>
       </div>
       <div className="flex flex-row justify-between">
         <ProposerProfile

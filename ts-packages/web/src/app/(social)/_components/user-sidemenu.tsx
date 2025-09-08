@@ -2,20 +2,18 @@
 import React from 'react';
 import ProfileSection from './profile-section';
 
-import RecentActivities from './RecentActivities';
-import Spaces from './Spaces';
-import Saved from './Saved';
-import { useUserInfo } from '@/lib/api/hooks/users';
 import Link from 'next/link';
 import { route } from '@/route';
 import { Post, Draft, Settings } from '@/components/icons';
 import { UserType } from '@/lib/api/models/user';
 import { useTranslations } from 'next-intl';
+import { useUserInfo } from '@/lib/api/hooks/users';
 // import DevTools from './dev-tools';
 
 export default function UserSidemenu() {
   const t = useTranslations('Home');
   const { data: user, isLoading } = useUserInfo();
+
   if (
     isLoading ||
     !user ||
@@ -45,12 +43,6 @@ export default function UserSidemenu() {
       </nav>
 
       {/* <DevTools /> */}
-
-      <RecentActivities />
-
-      <Spaces />
-
-      <Saved />
     </div>
   );
 }

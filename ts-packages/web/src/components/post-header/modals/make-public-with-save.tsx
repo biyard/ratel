@@ -1,11 +1,9 @@
 'use client';
 
-// https://www.figma.com/design/YaLSz7dzRingD7CipyaC47/Ratel?node-id=4014-115291&t=riEhxEnpWA7Fr3v9-4
-
 import { Button } from '@/components/ui/button';
 import { usePopup } from '@/lib/contexts/popup-service';
-
 import React from 'react';
+import { useTranslations } from 'next-intl';
 
 export const openModal = (
   popup: ReturnType<typeof usePopup>,
@@ -28,7 +26,6 @@ export const openModal = (
         makePublicWithSave={() => {
           void (async () => {
             try {
-              // Save first, then publish
               await saveSpace();
               await makePublic();
               popup.close();
@@ -48,21 +45,24 @@ export default function MakePublicWithSavingModal({
   makePublic: () => void | Promise<void>;
   makePublicWithSave: () => void | Promise<void>;
 }) {
+  const t = useTranslations('SprintSpace');
+
   return (
     <div className="max-w-125 flex flex-col mt-6 gap-6">
       <div className="text-center font-bold text-white text-[24px]">
-        Save first, make public?
+        {t('make_public_save_title')}
       </div>
+
       <div className="text-center font-medium text-neutral-400 text-[16px]">
-        Looks like you haven’t saved yet.
+        {t('unsaved_notice_line1')}
         <br />
-        Want to save your changes before going public.
+        {t('unsaved_notice_line2')}
         <br />
-        or skip it and publish anyway?
+        {t('unsaved_notice_line3')}
         <br />
         <br />
-        Once made public, this Space will be visible to everyone and
-        <span className="font-bold">cannot be made private again.</span>
+        {t('make_public_desc_line1')} {t('make_public_desc_line2_prefix')}{' '}
+        <span className="font-bold">{t('make_public_desc_line2_strong')}</span>
       </div>
 
       <div className="flex flex-row gap-4 h-12">
@@ -70,17 +70,15 @@ export default function MakePublicWithSavingModal({
           variant="outline"
           onClick={makePublic}
           className="flex-1/3 border-transparent"
-          // className="px-10 py-[14.5px] bg-transparent font-bold text-base text-neutral-400"
         >
-          Just Publish
+          {t('just_publish')}
         </Button>
         <Button
           variant="default"
           onClick={makePublicWithSave}
           className="flex-2/3 bg-primary"
-          // className="w-full py-[14.5px] bg-primary font-bold text-black text-base rounded-[10px]"
         >
-          Save & Publish
+          {t('save_and_publish')}
         </Button>
       </div>
     </div>
