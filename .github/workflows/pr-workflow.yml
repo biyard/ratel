@@ -261,7 +261,7 @@ jobs:
           timeout 60s bash -c 'until curl -f http://localhost:8080 2>/dev/null; do sleep 5; echo "Waiting for web..."; done' || echo "Web health check failed"
           
           echo "Service status check:"
-          curl -I http://localhost:3000/health || echo "Main API not responding"
+          curl -I http://localhost:3000/version || echo "Main API not responding"
           curl -I http://localhost:8080 || echo "Web frontend not responding"
 
       - name: Run Playwright Tests
