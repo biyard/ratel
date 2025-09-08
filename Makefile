@@ -31,7 +31,7 @@ BUILD_CDK_ENV ?= AWS_ACCESS_KEY_ID=$(ACCESS_KEY_ID) AWS_SECRET_ACCESS_KEY=$(SECR
 .build/evm-keys:
 	docker run --rm -it ghcr.io/foundry-rs/foundry:latest "cast wallet new --json" > .build/evm-keys.json
 
-run: .build/evm-keys node_modules
+run: .build/evm-keys
 	docker-compose up -d  --remove-orphans
 
 serve:
