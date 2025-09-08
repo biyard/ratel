@@ -65,11 +65,11 @@ export default function MySettings() {
           />
 
           {/* theme box controller */}
-          <SpecBox
+          {/* <SpecBox
             left_text="Theme"
             action_text={currentThemeLabel}
             onClick={handleChangeTheme}
-          />
+          /> */}
         </div>
       </section>
     </div>
