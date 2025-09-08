@@ -184,21 +184,6 @@ jobs:
   playwright-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: ratel
-        options: >
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
 
     steps:
       - uses: actions/checkout@v4
@@ -239,17 +224,13 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Start test services with Docker Compose
-        env:
-          DATABASE_TYPE: postgres
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/ratel
-          MIGRATE: "true"
         run: |
           # Use Docker Compose to start services
           docker-compose up -d
           
           # Wait for services to be ready
           echo "Waiting for services to start..."
-          sleep 30
+          sleep 60
           
           # Check service health
           timeout 60s bash -c 'until curl -f http://localhost:3000/version 2>/dev/null; do sleep 5; echo "Waiting for API..."; done' || echo "API health check failed"
