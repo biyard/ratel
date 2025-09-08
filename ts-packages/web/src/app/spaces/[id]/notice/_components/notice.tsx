@@ -7,16 +7,20 @@ import { useUserInfo } from '@/app/(social)/_hooks/user';
 import SpaceContents from '../../_components/space-contents';
 import QuizBuilderUI, { Question } from './quiz-builder-ui';
 
-export default function NoticePage() {
+type NoticePageProps = {
+  onSubmitQuiz?: (questions: Question[]) => Promise<void>;
+};
+
+const NoticePage: React.FC<NoticePageProps> = ({ onSubmitQuiz }) => {
   const {
     isEdit,
     htmlContent,
     setHtmlContent,
     quizQuestions,
     setQuizQuestions,
-    handleSubmitQuiz,
     space,
   } = useNoticeSpaceContext();
+
   const { spaceId } = useSpaceByIdContext();
   const { data: userInfo } = useUserInfo();
 
@@ -32,14 +36,13 @@ export default function NoticePage() {
         <SpaceContents
           isEdit={isEdit}
           htmlContents={htmlContent}
-          setContents={(content) => setHtmlContent(content)}
+          setContents={setHtmlContent}
         />
-
         <QuizBuilderUI
           isEditMode={isEdit}
           questions={quizQuestions}
           onQuestionsChange={handleQuestionsChange}
-          onSubmitQuiz={handleSubmitQuiz}
+          onSubmitQuiz={onSubmitQuiz}
           spaceId={spaceId}
           userId={userInfo?.id}
           isOwner={isOwner}
@@ -48,4 +51,6 @@ export default function NoticePage() {
       </div>
     </div>
   );
-}
+};
+
+export default NoticePage;

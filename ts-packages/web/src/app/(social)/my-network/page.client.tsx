@@ -1,8 +1,8 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useNetwork } from '../_hooks/use-network';
 import { logger } from '@/lib/logger';
-import { Industry } from '@/lib/api/models/industry';
+// import { Industry } from '@/lib/api/models/industry';
 import { Follower } from '@/lib/api/models/network';
 import { UserType } from '@/lib/api/models/user';
 import Image from 'next/image';
@@ -13,7 +13,9 @@ import { followRequest } from '@/lib/api/models/networks/follow';
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { checkString } from '@/lib/string-filter-utils';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import Link from 'next/link';
+import { route } from '@/route';
+// import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function MyNetwork() {
   const { post } = useApiCall();
@@ -38,9 +40,9 @@ export default function MyNetwork() {
   logger.debug('query response of networks', networkData);
   return (
     <div className="flex flex-col w-full gap-3">
-      <SelectedIndustry
+      {/* <SelectedIndustry
         industries={networkData ? networkData.industries : []}
-      />
+      /> */}
       <FollowingContents
         label="Suggested teams"
         users={
@@ -99,7 +101,7 @@ function FollowButton({ onClick }: { onClick: () => void }) {
         onClick();
       }}
     >
-      <Add className="w-[15px] h-[15px]" />
+      <Add className="w-[15px] h-[15px] [&>path]:stroke-neutral-800 [&>path]:stroke-1" />
       <div className="font-bold text-[#000203] text-xs">Follow</div>
     </div>
   );
@@ -150,12 +152,11 @@ function FollowingContents({
                 )}
 
                 <div className="flex flex-col">
-                  <div className="font-semibold text-white text-sm/[20px]">
-                    {user.nickname}
-                  </div>
-                  <div className="font-medium text-neutral-500 text-[12px]">
-                    @{user.username}
-                  </div>
+                  <Link href={route.teamByUsername(user.username)}>
+                    <div className="font-semibold text-white text-sm/[20px]">
+                      {user.nickname}
+                    </div>
+                  </Link>
                 </div>
               </div>
 
@@ -180,73 +181,73 @@ function FollowingContents({
   );
 }
 
-function SelectedIndustry({ industries }: { industries: Industry[] }) {
-  const PAGE_SIZE = 5;
-  const [selectedIndustry, setSelectedIndustry] = useState('ALL');
-  const [page, setPage] = useState(0);
+// function SelectedIndustry({ industries }: { industries: Industry[] }) {
+//   const PAGE_SIZE = 5;
+//   const [selectedIndustry, setSelectedIndustry] = useState('ALL');
+//   const [page, setPage] = useState(0);
 
-  const totalPages = Math.ceil(industries.length / PAGE_SIZE);
-  const visibleItems = industries.slice(
-    page * PAGE_SIZE,
-    (page + 1) * PAGE_SIZE,
-  );
+//   const totalPages = Math.ceil(industries.length / PAGE_SIZE);
+//   const visibleItems = industries.slice(
+//     page * PAGE_SIZE,
+//     (page + 1) * PAGE_SIZE,
+//   );
 
-  return (
-    <div className="flex items-center gap-2">
-      {page > 0 && (
-        <ChevronLeft
-          className="cursor-pointer stroke-neutral-500"
-          onClick={() => setPage((prev) => Math.max(prev - 1, 0))}
-        ></ChevronLeft>
-      )}
+//   return (
+//     <div className="flex items-center gap-2">
+//       {page > 0 && (
+//         <ChevronLeft
+//           className="cursor-pointer stroke-neutral-500"
+//           onClick={() => setPage((prev) => Math.max(prev - 1, 0))}
+//         ></ChevronLeft>
+//       )}
 
-      <div className="flex gap-2 flex-1 flex-wrap">
-        <IndustryLabel
-          name="ALL"
-          selected={selectedIndustry === 'ALL'}
-          setSelectedIndustry={() => setSelectedIndustry('ALL')}
-        />
-        {visibleItems.map((industry) => {
-          const name = industry.name.toUpperCase();
-          return (
-            <IndustryLabel
-              key={name}
-              name={name}
-              selected={selectedIndustry === name}
-              setSelectedIndustry={() => setSelectedIndustry(name)}
-            />
-          );
-        })}
-      </div>
+//       <div className="flex gap-2 flex-1 flex-wrap">
+//         <IndustryLabel
+//           name="ALL"
+//           selected={selectedIndustry === 'ALL'}
+//           setSelectedIndustry={() => setSelectedIndustry('ALL')}
+//         />
+//         {visibleItems.map((industry) => {
+//           const name = industry.name.toUpperCase();
+//           return (
+//             <IndustryLabel
+//               key={name}
+//               name={name}
+//               selected={selectedIndustry === name}
+//               setSelectedIndustry={() => setSelectedIndustry(name)}
+//             />
+//           );
+//         })}
+//       </div>
 
-      {page < totalPages - 1 && (
-        <ChevronRight
-          className="cursor-pointer stroke-neutral-500"
-          onClick={() => setPage((prev) => Math.min(prev + 1, totalPages - 1))}
-        ></ChevronRight>
-      )}
-    </div>
-  );
-}
+//       {page < totalPages - 1 && (
+//         <ChevronRight
+//           className="cursor-pointer stroke-neutral-500"
+//           onClick={() => setPage((prev) => Math.min(prev + 1, totalPages - 1))}
+//         ></ChevronRight>
+//       )}
+//     </div>
+//   );
+// }
 
-function IndustryLabel({
-  name,
-  selected,
-  setSelectedIndustry,
-}: {
-  name: string;
-  selected: boolean;
-  setSelectedIndustry: (name: string) => void;
-}) {
-  return (
-    <div
-      className="cursor-pointer flex flex-row w-fit h-fit px-2.5 py-2 rounded-lg font-semibold text-white text-sm/[20px] whitespace-nowrap border border-neutral-700 bg-transparent hover:bg-neutral-700 aria-selected:border-none aria-selected:bg-neutral-700"
-      aria-selected={selected}
-      onClick={() => {
-        setSelectedIndustry(name);
-      }}
-    >
-      {name}
-    </div>
-  );
-}
+// function IndustryLabel({
+//   name,
+//   selected,
+//   setSelectedIndustry,
+// }: {
+//   name: string;
+//   selected: boolean;
+//   setSelectedIndustry: (name: string) => void;
+// }) {
+//   return (
+//     <div
+//       className="cursor-pointer flex flex-row w-fit h-fit px-2.5 py-2 rounded-lg font-semibold text-white text-sm/[20px] whitespace-nowrap border border-neutral-700 bg-transparent hover:bg-neutral-700 aria-selected:border-none aria-selected:bg-neutral-700"
+//       aria-selected={selected}
+//       onClick={() => {
+//         setSelectedIndustry(name);
+//       }}
+//     >
+//       {name}
+//     </div>
+//   );
+// }
