@@ -13,6 +13,7 @@ import { useUserInfo } from '@/lib/api/hooks/users';
 export default function UserSidemenu() {
   const t = useTranslations('Home');
   const { data: user, isLoading } = useUserInfo();
+
   if (
     isLoading ||
     !user ||
