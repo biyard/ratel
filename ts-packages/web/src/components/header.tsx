@@ -14,7 +14,9 @@ import { route } from '@/route';
 import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { UserType } from '@/lib/api/models/user';
 import LoginIcon from '@/assets/icons/login.svg';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
+import { Us } from './icons';
+import { Kr } from '@/assets/icons/flags';
 export interface HeaderProps {
   mobileExtends: boolean;
   setMobileExtends: (extend: boolean) => void;
@@ -23,6 +25,7 @@ export interface HeaderProps {
 function Header(props: HeaderProps) {
   const t = useTranslations('Nav');
   const popup = usePopup();
+  const locale = useLocale() as 'en' | 'ko';
 
   const { data } = useSuspenseUserInfo();
   const loggedIn =
@@ -147,6 +150,12 @@ function Header(props: HeaderProps) {
                 {t('signIn')}
               </span>
             </button>
+          )}
+
+          {locale == 'en' ? (
+            <Us className="cursor-pointer rounded-full w-8 h-8" />
+          ) : (
+            <Kr className="cursor-pointer rounded-full w-8 h-8" />
           )}
         </div>
 
