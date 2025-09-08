@@ -14,7 +14,10 @@ import { route } from '@/route';
 import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { UserType } from '@/lib/api/models/user';
 import LoginIcon from '@/assets/icons/login.svg';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
+import { Us } from './icons';
+import { Kr } from '@/assets/icons/flags';
+import { useRouter } from 'next/navigation';
 export interface HeaderProps {
   mobileExtends: boolean;
   setMobileExtends: (extend: boolean) => void;
@@ -23,12 +26,19 @@ export interface HeaderProps {
 function Header(props: HeaderProps) {
   const t = useTranslations('Nav');
   const popup = usePopup();
+  const router = useRouter();
+  const locale = useLocale() as 'en' | 'ko';
 
   const { data } = useSuspenseUserInfo();
   const loggedIn =
     data &&
     (data.user_type === UserType.Individual ||
       data.user_type === UserType.Team);
+
+  const handleChangeLanguage = (newLocale: string) => {
+    document.cookie = `locale=${newLocale}; path=/; max-age=31536000; samesite=lax`;
+    router.refresh();
+  };
 
   const navItems = [
     {
@@ -147,6 +157,26 @@ function Header(props: HeaderProps) {
                 {t('signIn')}
               </span>
             </button>
+          )}
+
+          {locale == 'en' ? (
+            <div
+              className="cursor-pointer w-fit h-fit ml-3"
+              onClick={() => {
+                handleChangeLanguage('ko');
+              }}
+            >
+              <Us className="cursor-pointer rounded-full w-8 h-8 object-cover" />
+            </div>
+          ) : (
+            <div
+              className="cursor-pointer w-fit h-fit ml-3"
+              onClick={() => {
+                handleChangeLanguage('en');
+              }}
+            >
+              <Kr className="cursor-pointer rounded-full w-8 h-8 object-cover" />
+            </div>
           )}
         </div>
 
