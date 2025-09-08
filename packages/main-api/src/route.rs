@@ -63,6 +63,7 @@ use crate::{
                 register::register_handler, token::token_handler,
             },
             oracles::create_oracle::create_oracle_handler,
+            posts::update_post::update_post_handler,
             spaces::{delete_space::delete_space_handler, get_my_space::get_my_space_controller},
             telegram::subscribe::telegram_subscribe_handler,
             users::{find_user::find_user_handler, logout::logout_handler},
@@ -529,6 +530,14 @@ pub async fn route(
                     "Mark All Notifications Read",
                     "Mark all notifications as read for the authenticated user."
                 ),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/v2/feeds/:id",
+            post_with(
+                update_post_handler,
+                api_docs!("Update Post", "Update an existing post with new details"),
             )
             .with_state(pool.clone()),
         )
