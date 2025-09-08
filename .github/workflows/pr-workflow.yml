@@ -191,18 +191,6 @@ jobs:
           submodules: recursive
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'npm'
-
-      - uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          components: clippy, rustfmt
-          target: wasm32-unknown-unknown
-          toolchain: stable
-
       - name: Install system dependencies
         run: |
           sudo apt-get update
@@ -218,22 +206,18 @@ jobs:
           limit-access-to-actor: true
 
       - name: Install dependencies
-        run: npm ci
+        run: docker-compose up -d
+
+      - name: Install dependencies
+        run: pnpm i
 
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps chromium
 
       - name: Start test services with Docker Compose
         run: |
-          # Use Docker Compose to start services
-          docker-compose up -d
-          
-          # Wait for services to be ready
-          echo "Waiting for services to start..."
-          sleep 60
-          
           # Check service health
-          timeout 60s bash -c 'until curl -f http://localhost:3000/version 2>/dev/null; do sleep 5; echo "Waiting for API..."; done' || echo "API health check failed"
+          timeout 300s bash -c 'until curl -f http://localhost:3000/version 2>/dev/null; do sleep 5; echo "Waiting for API..."; done' || echo "API health check failed"
           timeout 60s bash -c 'until curl -f http://localhost:8080 2>/dev/null; do sleep 5; echo "Waiting for web..."; done' || echo "Web health check failed"
           
           echo "Service status check:"
