@@ -725,7 +725,7 @@ export default function QuizBuilderUI({
           </div>
         )}
 
-        {!isEditMode && questions.length > 0 && onSubmitQuiz && !isOwner && (
+        {!isEditMode && questions.length > 0 && onSubmitQuiz && (
           <div className="flex justify-end mt-4">
             {latestAttempt && latestAttempt.is_successful ? (
               <div className="px-6 py-[14.5px] bg-green-600/20 border border-green-500/30 font-semibold text-green-400 text-base rounded-[10px]">
