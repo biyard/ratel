@@ -13,6 +13,8 @@ import { followRequest } from '@/lib/api/models/networks/follow';
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { checkString } from '@/lib/string-filter-utils';
+import Link from 'next/link';
+import { route } from '@/route';
 // import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function MyNetwork() {
@@ -99,7 +101,7 @@ function FollowButton({ onClick }: { onClick: () => void }) {
         onClick();
       }}
     >
-      <Add className="w-[15px] h-[15px]" />
+      <Add className="w-[15px] h-[15px] [&>path]:stroke-neutral-800 [&>path]:stroke-1" />
       <div className="font-bold text-[#000203] text-xs">Follow</div>
     </div>
   );
@@ -150,12 +152,11 @@ function FollowingContents({
                 )}
 
                 <div className="flex flex-col">
-                  <div className="font-semibold text-white text-sm/[20px]">
-                    {user.nickname}
-                  </div>
-                  <div className="font-medium text-neutral-500 text-[12px]">
-                    @{user.username}
-                  </div>
+                  <Link href={route.teamByUsername(user.username)}>
+                    <div className="font-semibold text-white text-sm/[20px]">
+                      {user.nickname}
+                    </div>
+                  </Link>
                 </div>
               </div>
 
