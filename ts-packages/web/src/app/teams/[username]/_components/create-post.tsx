@@ -23,7 +23,6 @@ import DoubleArrowDown from '@/assets/icons/double-arrow-down.svg';
 import UserCircleIcon from '@/assets/icons/user-circle.svg';
 import Certified from '@/assets/icons/certified.svg';
 import { cn } from '@/lib/utils';
-import { useUserInfo } from '@/lib/api/hooks/users';
 
 import { LexicalComposer } from '@lexical/react/LexicalComposer';
 import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin';
@@ -49,10 +48,7 @@ import FileUploader from '@/components/file-uploader';
 import { logger } from '@/lib/logger';
 import { useApiCall } from '@/lib/api/use-send';
 import { ratelApi } from '@/lib/api/ratel_api';
-import {
-  updateDraftRequest,
-  UrlType,
-} from '@/lib/api/models/feeds/update-draft-request';
+import { updateDraftRequest } from '@/lib/api/models/feeds/update-draft-request';
 import { Feed, FeedStatus, FeedType } from '@/lib/api/models/feeds';
 import Image from 'next/image';
 import { createDraftRequest } from '@/lib/api/models/feeds/create-draft';
@@ -62,6 +58,7 @@ import { showErrorToast } from '@/lib/toast';
 import { postByUserIdQk } from '@/app/(social)/_hooks/use-posts';
 import { useTeamByUsername } from '../../_hooks/use-team';
 import { useTranslations } from 'next-intl';
+import { useUserInfo } from '@/app/(social)/_hooks/user';
 
 export const editorTheme = {
   ltr: 'text-left',
@@ -208,12 +205,6 @@ export function CreatePost() {
   const removeImage = () => {
     setImage(null);
   };
-
-  const isSubmitDisabled =
-    !title.trim() ||
-    checkString(title) ||
-    checkString(content ?? '') ||
-    status !== 'idle';
 
   const createEditorStateFromHTML = useCallback(
     (editor: LexicalEditor, htmlString: string) => {

@@ -2,9 +2,9 @@ import { Suspense } from 'react';
 import Loading from '@/app/loading';
 import { logger } from '@/lib/logger';
 import TeamSidemenu from './_components/team-sidemenu';
-import { CreatePost, PostDraftProvider } from './_components/create-post';
+// import { CreatePost, PostDraftProvider } from './_components/create-post';
 import Provider from './providers';
-import { RePostDraftProvider } from '@/app/(social)/_components/create-repost';
+// import { RePostDraftProvider } from '@/app/(social)/_components/create-repost';
 
 export interface TeamLayoutProps {
   params: Promise<{ username: string }>;
@@ -32,17 +32,8 @@ export default async function TeamLayout({
               </div>
             }
           >
-            <PostDraftProvider username={username}>
-              <RePostDraftProvider>
-                {children}
-
-                <div className="fixed bottom-0 left-0 right-0 z-10 flex flex-row items-center justify-center">
-                  <div className="max-w-desktop w-full">
-                    <CreatePost />
-                  </div>
-                </div>
-              </RePostDraftProvider>
-            </PostDraftProvider>
+            {/* <RePostDraftProvider></RePostDraftProvider> */}
+            {children}
           </Suspense>
         </div>
       </div>
