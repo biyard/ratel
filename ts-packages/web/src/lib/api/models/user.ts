@@ -93,6 +93,7 @@ export interface TotalUser {
   updated_at: number;
 
   nickname: string;
+  html_contents: string;
   username: string;
   profile_url: string;
 
