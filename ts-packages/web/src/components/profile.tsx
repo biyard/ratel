@@ -67,7 +67,7 @@ export default function Profile({ profileUrl, name }: ProfileProps) {
 
       <DropdownMenuContent
         align="end"
-        className="w-[250px] h-fit rounded-lg border border-primary p-[10px] bg-bg z-20"
+        className="w-[250px] h-fit rounded-lg border border-primary p-[10px] bg-bg z-999"
       >
         <DropdownMenuLabel className="text-xs text-neutral-400 px-2 py-1">
           {t('teams')}
