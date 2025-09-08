@@ -139,6 +139,7 @@ export default function ClientProviders({
         username: member.username,
         profile_url: member.profile_url ?? '',
         user_type: UserType.Individual,
+        html_contents: '',
       })),
     })),
 
