@@ -87,6 +87,7 @@ export default function FeedCard(props: FeedCardProps) {
     setLocalIsLiked(props.is_liked);
     setLocalShares(props.shares);
   }, [props.likes, props.is_liked, props.shares]);
+  }, [props.likes, props.is_liked, props.shares]);
 
   const handleLike = async (value: boolean) => {
     if (isProcessing) return; // Prevent multiple clicks
@@ -194,7 +195,7 @@ export function FeedBody({
           {onboard && <OnboardingTag />}
         </div>
       </Row>
-      <h2 className="w-full line-clamp-2 font-bold text-xl/[25px] tracking-[0.5px] align-middle text-white px-5">
+      <h2 className="w-full line-clamp-2 font-bold text-xl/[25px] tracking-[0.5px] align-middle text-foreground px-5">
         {title}
       </h2>
       <Row className="justify-between items-center px-5">
@@ -227,7 +228,7 @@ export function FeedContents({
   return (
     <div className="text-white">
       <p
-        className="feed-content font-normal text-[15px]/[24px] align-middle tracking-[0.5px] text-c-wg-30 px-5"
+        className="feed-content text-card-meta font-normal text-[15px]/[24px] align-middle tracking-[0.5px] px-5"
         dangerouslySetInnerHTML={{ __html: sanitized }}
       ></p>
 
@@ -254,7 +255,7 @@ export function IconText({
 }: React.HTMLAttributes<HTMLDivElement> & { children: React.ReactNode }) {
   return (
     <Row
-      className={`inline-flex items-center gap-1.5 whitespace-nowrap leading-none text-white text-[15px] px-3 py-3 ${className || ''}`}
+      className={`justify-center items-center gap-1.25 text-foreground font-normal text-[15px] px-4 py-5 ${className || ''}`}
       {...props}
     >
       {children}
@@ -272,7 +273,7 @@ export function UserBadge({
   name: string;
 }) {
   return (
-    <Row className="w-fit items-center med-16 text-white">
+    <Row className="w-fit items-center med-16 text-foreground">
       <Image
         src={profile_url}
         alt="User Profile"
@@ -300,7 +301,7 @@ export function SpaceTag() {
 
 export function IndustryTag({ industry }: { industry: string }) {
   return (
-    <span className="rounded-sm border border-c-wg-70 px-2 text-xs/[25px] font-semibold align-middle uppercase">
+    <span className="rounded-sm border border-subtle px-2 text-xs/[25px] font-semibold text-foreground-inverted align-middle uppercase">
       {industry}
     </span>
   );
