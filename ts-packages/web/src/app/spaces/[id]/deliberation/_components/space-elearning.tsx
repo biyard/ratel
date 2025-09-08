@@ -10,8 +10,10 @@ import { ArrowRight, Upload } from 'lucide-react';
 import { downloadPdfFromUrl } from '@/lib/pdf-utils';
 import { CircleClose } from '@/components/icons';
 import { useDeliberationSpaceContext } from '../provider.client';
+import { useTranslations } from 'next-intl';
 
 export default function SpaceElearning() {
+  const t = useTranslations('DeliberationSpace');
   const { isEdit, deliberation, handleUpdateDeliberation } =
     useDeliberationSpaceContext();
   const elearnings = deliberation.elearnings;
@@ -28,7 +30,7 @@ export default function SpaceElearning() {
       <div className="flex flex-col w-full gap-5">
         <div className="flex flex-row w-full justify-between items-start ">
           <div className="font-bold text-white text-[15px]/[20px]">
-            e-Learnings
+            {t('elearnings')}
           </div>
 
           {isEdit ? (
@@ -44,7 +46,9 @@ export default function SpaceElearning() {
             >
               <div className="cursor-pointer flex flex-row w-fit gap-1 items-center bg-white rounded-[6px] px-[14px] py-[8px] hover:bg-neutral-300">
                 <Upload className="w-5 h-5 stroke-neutral-500" />
-                <div className="font-bold text-sm text-black">Upload</div>
+                <div className="font-bold text-sm text-black">
+                  {t('upload')}
+                </div>
               </div>
             </FileUploaderMetadata>
           ) : (
@@ -120,6 +124,7 @@ function EBook({ file, onClick }: { file: FileInfo; onClick: () => void }) {
 }
 
 function ReadButton({ onClick }: { onClick: () => void }) {
+  const t = useTranslations('DeliberationSpace');
   return (
     <div
       className="cursor-pointer flex flex-row items-center w-fit h-fit px-5 py-2.5 gap-2.5 bg-white hover:bg-neutral-300 rounded-lg"
@@ -127,7 +132,7 @@ function ReadButton({ onClick }: { onClick: () => void }) {
         onClick();
       }}
     >
-      <div className="font-bold text-[#000203] text-sm">Read</div>
+      <div className="font-bold text-[#000203] text-sm">{t('read')}</div>
       <ArrowRight className="stroke-black stroke-3 w-[15px] h-[15px]" />
     </div>
   );
@@ -140,11 +145,14 @@ function EditableFile({
   file: FileInfo;
   onclick: () => void;
 }) {
+  const t = useTranslations('DeliberationSpace');
   return (
     <div className="cursor-pointer flex flex-row justify-start items-center w-full py-5 gap-2 bg-transparent rounded-[8px] mt-[10px]">
       <div className="flex flex-col w-full justify-start items-start gap-1">
         <div className="font-normal text-sm text-neutral-400">
-          {file.ext === 'MP4' || file.ext === 'MOV' ? 'eLearning' : 'eBook'}
+          {file.ext === 'MP4' || file.ext === 'MOV'
+            ? t('elearning')
+            : t('ebook')}
         </div>
         <div className="font-bold text-lg text-neutral-300">{file.name}</div>
       </div>

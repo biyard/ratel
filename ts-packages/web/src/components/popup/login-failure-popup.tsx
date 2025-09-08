@@ -3,6 +3,7 @@
 import React from 'react';
 import AlertCircle from '@/assets/icons/alert-circle.svg';
 import { LoginPopupFooter } from './login-popup-footer';
+import { useTranslations } from 'next-intl';
 
 interface LoginFailurePopupProps {
   id?: string;
@@ -23,7 +24,8 @@ export const LoginFailurePopup = ({
   onRetry,
 }: LoginFailurePopupProps) => {
   // const keyPair = useEd25519KeyPair();
-  const failureMsg = `Failed to connect to ${serviceName}.\nWould you like to try again?`;
+  const t = useTranslations('Signup');
+  const failureMsg = t('failureMsg', { serviceName });
 
   return (
     <div id={id} className="w-100 max-mobile:!w-full gap-[35px] mt-[35px]">

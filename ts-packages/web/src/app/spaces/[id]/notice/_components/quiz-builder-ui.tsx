@@ -47,6 +47,7 @@ import QuizSubmitForm from './modal/quiz-submit-form';
 import { useNoticeNotification } from './notifications';
 import { calculateRewardWithPenalties } from '../_utils/reward-calculator';
 import { useNoticeSpace } from '../provider.client';
+import { useTranslations } from 'next-intl';
 
 export interface Option {
   id: string;
@@ -80,9 +81,7 @@ export function convertQuizQuestionToQuestion(
   return {
     id: quizQuestion.id || id,
     title: quizQuestion.title,
-    imageUrls: quizQuestion.images
-      .map((img) => img.url)
-      .filter((url): url is string => url !== null),
+    imageUrls: quizQuestion.images.filter((url) => url !== null && url !== ''),
     options: quizQuestion.options.map((option, index) => ({
       id: option.id || `option-${Date.now()}-${index}`,
       text: option.content,
@@ -125,6 +124,7 @@ export default function QuizBuilderUI({
   isOwner,
   spaceStatus,
 }: QuizBuilderProps) {
+  const t = useTranslations('NoticeSpace');
   const popup = usePopup();
 
   // Check if quiz editing should be disabled (when space is InProgress)
@@ -301,7 +301,7 @@ export default function QuizBuilderUI({
     if (!onSubmitQuiz) return;
 
     if (!isOwner && !validateAllQuestionsAnswered()) {
-      showErrorToast('Please answer all questions before submitting.');
+      showErrorToast(t('answer_question_required'));
       return;
     }
 
@@ -311,15 +311,11 @@ export default function QuizBuilderUI({
       );
 
       if (!hasCorrectAnswers) {
-        showErrorToast(
-          'Please define correct answers for all questions before submission.',
-        );
+        showErrorToast(t('correct_answer_required'));
         return;
       }
 
-      showErrorToast(
-        'Please save your quiz before submission becomes available.',
-      );
+      showErrorToast(t('quiz_save_required'));
       return;
     }
 
@@ -327,7 +323,7 @@ export default function QuizBuilderUI({
       await onSubmitQuiz(questions);
       // Success notification is handled by the provider
     } catch {
-      showErrorToast('Failed to submit quiz. Please try again.');
+      showErrorToast(t('failed_save_quiz'));
     }
   };
 
@@ -383,7 +379,7 @@ export default function QuizBuilderUI({
           if (q.id === questionId) {
             // Limit to maximum 2 images
             if (q.imageUrls.length >= 2) {
-              showErrorToast('Maximum 2 images allowed per question');
+              showErrorToast(t('image_limit_warning'));
               return q;
             }
             return { ...q, imageUrls: [...q.imageUrls, imageUrl] };
@@ -426,7 +422,7 @@ export default function QuizBuilderUI({
                 ...q.options,
                 {
                   id: `option-${Date.now()}`,
-                  text: 'New Option',
+                  text: '',
                   isCorrect: false,
                   isSelected: false,
                 },
@@ -652,10 +648,11 @@ export default function QuizBuilderUI({
             <div className="mb-6 pt-4">
               <h3 className="text-xl font-semibold text-white flex items-center justify-between">
                 <div>
-                  Attempt #{nextAttemptNumber > 3 ? 3 : nextAttemptNumber}
+                  {t('attempt')} #
+                  {nextAttemptNumber > 3 ? 3 : nextAttemptNumber}
                   {nextAttemptNumber > 3 && (
                     <span className="text-red-400 text-sm ml-2">
-                      (Max reached)
+                      ({t('max_reached')})
                     </span>
                   )}
                 </div>
@@ -706,8 +703,7 @@ export default function QuizBuilderUI({
           </SortableContext>
         ) : (
           <div className="bg-[var(--color-component-bg)] rounded-[10px] p-4 mb-4 text-center py-8 text-white/70">
-            No quiz questions yet. Click the button below to add your first
-            question.
+            {t('no_quiz_warning')}
           </div>
         )}
 
@@ -733,18 +729,18 @@ export default function QuizBuilderUI({
           <div className="flex justify-end mt-4">
             {latestAttempt && latestAttempt.is_successful ? (
               <div className="px-6 py-[14.5px] bg-green-600/20 border border-green-500/30 font-semibold text-green-400 text-base rounded-[10px]">
-                ✓ Passed
+                ✓ {t('passed')}
               </div>
             ) : nextAttemptNumber > 3 ? (
               <div className="px-6 py-[14.5px] bg-red-600/20 border border-red-500/30 font-semibold text-red-400 text-base rounded-[10px]">
-                Maximum attempts reached (3/3)
+                {t('maximum_attempts_reached')} (3/3)
               </div>
             ) : (
               <button
                 onClick={handleSubmitClick}
                 className="px-6 py-[14.5px] bg-primary font-bold text-black text-base rounded-[10px] hover:bg-primary/90 transition-colors"
               >
-                Submit
+                {t('submit')}
               </button>
             )}
           </div>
@@ -783,6 +779,7 @@ function QuestionCard({
   onToggleCorrect: (optionId: string) => void;
   onToggleSelected: (optionId: string) => void;
 }) {
+  const t = useTranslations('NoticeSpace');
   const {
     attributes,
     listeners,
@@ -842,7 +839,7 @@ function QuestionCard({
                 opacity: isQuizEditingDisabled ? 0.5 : 1,
               }}
               className="title-input flex-1 px-3 rounded-md text-white focus:outline-none focus:ring-1 focus:ring-white/50"
-              placeholder="Title"
+              placeholder={t('title')}
               spellCheck={false}
             />
             <div className="relative">
@@ -959,11 +956,11 @@ function QuestionCard({
               <div className="mr-1.5">
                 <Add className="w-5 h-5 stroke-[currentColor]" />
               </div>
-              Add Option
+              {t('add_option')}
             </button>
           ) : (
             <span className="text-sm text-[var(--color-neutral-500)]">
-              Maximum 4 options
+              {t('maximum_option')}
             </span>
           )}
 
@@ -977,7 +974,7 @@ function QuestionCard({
               cursor: isQuizEditingDisabled ? 'not-allowed' : 'pointer',
             }}
           >
-            Delete
+            {t('delete')}
             <div className="ml-1.5">
               <Delete2 className="w-5 h-5 stroke-[currentColor]" />
             </div>
@@ -1009,6 +1006,7 @@ function OptionItem({
   onToggleSelected: () => void;
   onRemove: () => void;
 }) {
+  const t = useTranslations('NoticeSpace');
   const {
     attributes,
     listeners,
@@ -1103,7 +1101,7 @@ function OptionItem({
           disabled={isQuizEditingDisabled}
           className="flex-1 bg-transparent border-b-0 px-2 py-1 text-white focus:outline-none focus:border-b-2 focus:border-white"
           style={{ opacity: isQuizEditingDisabled ? 0.5 : 1 }}
-          placeholder="Option text"
+          placeholder={t('option')}
         />
       ) : (
         <span

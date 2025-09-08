@@ -1,12 +1,18 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
+import { logger } from './lib/logger';
 
 export function middleware(req: NextRequest) {
+  const start = Date.now();
+  logger.info(`${req.method} ${req.url}`);
   let sessionId = req.cookies.get('nx_session_id')?.value;
   const exists = sessionId !== undefined;
 
   if (req.method === 'OPTIONS') {
+    const latency = Date.now() - start;
+    logger.info(`OPTIONS ${req.url} - ${latency}ms`);
+
     return new NextResponse(null, {
       status: 200,
       headers: {
@@ -33,6 +39,8 @@ export function middleware(req: NextRequest) {
       sameSite: 'lax',
     });
   }
+  const latency = Date.now() - start;
+  logger.info(`${req.method} ${req.url} - ${latency}ms`);
 
   return res;
 }

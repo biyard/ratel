@@ -8,11 +8,13 @@ class Credentials extends StatefulWidget {
     super.key,
     required this.credentials,
     required this.did,
+    required this.onMedical,
     required this.onNext,
   });
 
   final List<VerifiedModel> credentials;
   final String did;
+  final VoidCallback onMedical;
   final VoidCallback onNext;
 
   @override
@@ -28,11 +30,39 @@ class _CredentialsState extends State<Credentials> {
 
   final _dragCtrl = DraggableScrollableController();
 
-  bool hasCredential(String label) => widget.credentials.any(
-    (e) => (label == "Crypto Wallet")
-        ? crypto
-        : (e.label.toLowerCase() == label.toLowerCase()),
-  );
+  bool hasCredential(String label) {
+    if (label == 'Crypto Wallet') {
+      return crypto;
+    }
+
+    var cred = false;
+
+    if (label == 'Passport') {
+      for (var i = 0; i < widget.credentials.length; i++) {
+        final credential = widget.credentials[i];
+        if (credential.label == 'Birth Date' ||
+            credential.label == 'Country' ||
+            credential.label == 'Gender') {
+          cred = true;
+          break;
+        }
+      }
+    }
+
+    if (label == 'Medical check-up certificate') {
+      for (var i = 0; i < widget.credentials.length; i++) {
+        final credential = widget.credentials[i];
+        if (credential.label == 'Height' ||
+            credential.label == 'Weight' ||
+            credential.label == 'Bmi') {
+          cred = true;
+          break;
+        }
+      }
+    }
+
+    return cred;
+  }
 
   void _openSheet() {
     _dragCtrl.animateTo(
@@ -77,17 +107,9 @@ class _CredentialsState extends State<Credentials> {
   }
 
   List<VerifyItem> get _items => const [
-    VerifyItem('Region', 'Social identity'),
-    VerifyItem('Company', 'DID or Employment'),
-    VerifyItem('Occuption', 'Current job or role for matching'),
-    VerifyItem('Annual Salary', 'Revenue certificate or incoming bank account'),
-
-    VerifyItem('Crypto Tax', 'Shows the tax rate on crypto holdings'),
-    VerifyItem('Crypto Wallet', 'Indicates possession'),
-    VerifyItem('Birth Date', 'Social identity or passport'),
-    VerifyItem('Gender', 'Medical checkup certificate or Social identity'),
-
-    VerifyItem('Country', 'Social identity or passport'),
+    VerifyItem('Passport', 'Name, Gender, Birth, Place of Birth, Nationality'),
+    VerifyItem('Metamask', 'Wallet address, Token & NFT holdings, ENS'),
+    VerifyItem('Medical check-up certificate', 'BMI, Height, Weight'),
   ];
 
   Future<void> _handleCryptoTap() async {
@@ -110,6 +132,61 @@ class _CredentialsState extends State<Credentials> {
     logger.d("metamask wallet: $addr");
     setState(() => crypto = true);
     _collapseSheet();
+  }
+
+  Widget _verifyRow(VerifyItem it, bool verified) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xffffffff).withAlpha(12),
+        borderRadius: BorderRadius.circular(5),
+        border: Border.all(color: AppColors.neutral700, width: 1),
+      ),
+      child: SizedBox(
+        height: 68,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      it.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                        height: 1.1,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      it.subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 11,
+                        height: 1.3,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              verified
+                  ? SvgPicture.asset(Assets.verified)
+                  : SvgPicture.asset(Assets.send),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -196,7 +273,6 @@ class _CredentialsState extends State<Credentials> {
               ],
             ),
           ),
-
           Positioned(
             left: 0,
             right: 0,
@@ -204,7 +280,6 @@ class _CredentialsState extends State<Credentials> {
             height: MediaQuery.of(context).padding.bottom,
             child: const ColoredBox(color: AppColors.panelBg),
           ),
-
           DraggableScrollableSheet(
             controller: _dragCtrl,
             initialChildSize: _minSize,
@@ -243,55 +318,18 @@ class _CredentialsState extends State<Credentials> {
                               padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
                               child: InkWell(
                                 onTap: () async {
-                                  logger.d("hello");
                                   if (verified) return;
-                                  logger.d("hi");
-
                                   if (it.title == "Crypto Wallet") {
                                     await _handleCryptoTap();
-                                  } else {
+                                  } else if (it.title == 'Passport') {
                                     widget.onNext();
+                                    _collapseSheet();
+                                  } else {
+                                    widget.onMedical();
                                     _collapseSheet();
                                   }
                                 },
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: const Color(
-                                      0xffffffff,
-                                    ).withAlpha(12),
-                                    borderRadius: BorderRadius.circular(5),
-                                    border: Border.all(
-                                      color: AppColors.neutral700,
-                                      width: 1,
-                                    ),
-                                  ),
-                                  child: ListTile(
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 20,
-                                    ),
-                                    title: Text(
-                                      it.title,
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 12,
-                                        height: 1.1,
-                                      ),
-                                    ),
-                                    subtitle: Text(
-                                      it.subtitle,
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w500,
-                                        fontSize: 11,
-                                        height: 1.3,
-                                      ),
-                                    ),
-                                    trailing: verified
-                                        ? SvgPicture.asset(Assets.verified)
-                                        : SvgPicture.asset(Assets.send),
-                                  ),
-                                ),
+                                child: _verifyRow(it, verified),
                               ),
                             );
                           }, childCount: _items.length),
