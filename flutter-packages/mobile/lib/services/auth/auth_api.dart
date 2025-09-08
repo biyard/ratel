@@ -174,6 +174,54 @@ class AuthApi extends GetConnect {
     await AuthDb.clear();
   }
 
+  Future<dynamic> socialSignup(
+    String email,
+    String displayName,
+    String userName,
+    String profileUrl,
+    bool agree,
+    String pkcs8B64,
+  ) async {
+    await ensureLoggedOut();
+
+    final uri = Uri.parse(apiEndpoint)
+        .resolve('/v1/users')
+        .replace(queryParameters: <String, String>{'action': 'signup'});
+
+    logger.d("signup url: $uri pk: ${pkcs8B64}");
+
+    final authHeader = await _buildUserSigHeaderFromPkcs8(pkcs8B64);
+    final body = {
+      'signup': {
+        'nickname': displayName,
+        'email': email,
+        'profile_url': profileUrl,
+        'term_agreed': agree,
+        'informed_agreed': false,
+        'username': userName,
+        'evm_address': '',
+        'telegram_raw': '',
+      },
+    };
+
+    logger.d("login header: $authHeader");
+
+    final res = await post(
+      uri.toString(),
+      body,
+      headers: _noCookieJson(auth: authHeader),
+    );
+
+    logger.d("signup response status: ${res.statusCode}");
+    logger.d("signup response body: ${res.body}");
+
+    if (!res.isOk) return null;
+
+    final loginRes = await socialLogin(email, pkcs8B64);
+
+    return loginRes;
+  }
+
   Future<dynamic> signup(
     String email,
     String password,

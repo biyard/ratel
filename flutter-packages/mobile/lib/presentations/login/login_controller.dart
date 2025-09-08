@@ -5,6 +5,8 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:ratel/exports.dart';
 
 class LoginController extends BaseController {
+  final signupService = Get.find<SignupService>();
+
   final emailCtrl = TextEditingController();
   final passwordCtrl = TextEditingController();
 
@@ -49,17 +51,30 @@ class LoginController extends BaseController {
     isBusy.value = true;
 
     final signIn = await auth.connectToGoogle("");
-    logger.d("user: ${signIn}");
+    final neededSignup = auth.neededSignup;
 
-    final pk = auth.privateKey ?? "";
+    if (!neededSignup) {
+      logger.d("user: ${signIn}");
 
-    final res = await api.socialLogin(auth.email ?? "", pk);
+      final pk = auth.privateKey ?? "";
 
-    if (res != null) {
-      Get.rootDelegate.offNamed(AppRoutes.mainScreen);
+      logger.d("pk: ${auth.privateKey}");
+
+      final res = await api.socialLogin(auth.email ?? "", pk);
+
+      if (res != null) {
+        Get.rootDelegate.offNamed(AppRoutes.mainScreen);
+      } else {
+        Biyard.error(
+          "Failed to login",
+          "Login failed. Please try again later.",
+        );
+      }
     } else {
-      Biyard.error("Failed to login", "Login failed. Please try again later.");
+      signupService.email(auth.email);
+      Get.rootDelegate.toNamed(AppRoutes.setupProfileScreen);
     }
+
     // try {
 
     // } catch (e, st) {
