@@ -44,7 +44,7 @@ export default function Profile({ profileUrl, name }: ProfileProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild className="focus-visible:outline-none">
-        <button className="w-full flex items-center justify-between">
+        <button className="w-fit flex items-center justify-between">
           <div className="flex flex-col items-center justify-center p-2.5 group">
             {profileUrl && profileUrl !== '' ? (
               <Image
