@@ -1,10 +1,10 @@
-# Allowlist for test KAIA keys and addresses in PR workflow
-[[allowlist]]
+# Allowlist for test KAIA keys and addresses in PR workflow only
+[allowlist]
 description = "Test Kaia private keys and addresses in GitHub Actions"
 paths = [
-    '''.github/workflows/pr-workflow.yml''',
+    ".github/workflows/pr-workflow.yml"
 ]
 regexes = [
-    '''0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef''',
-    '''0xFEEDFACE1234567890abcdef0123456789abcdef''',
+    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+    "0xFEEDFACE1234567890abcdef0123456789abcdef"
 ]
