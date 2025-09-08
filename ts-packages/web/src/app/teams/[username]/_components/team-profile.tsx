@@ -30,6 +30,7 @@ export default function TeamProfile({ team }: TeamProfileProps) {
   const followings = userInfo.followings;
 
   const isFollowing = followings.some((f: { id: number }) => f.id === team.id);
+  const enableFollowbutton = team.id != userInfo.id;
 
   const handleFollow = async (userId: number) => {
     await post(ratelApi.networks.follow(userId), followRequest());
@@ -64,35 +65,35 @@ export default function TeamProfile({ team }: TeamProfileProps) {
         dangerouslySetInnerHTML={{ __html: team.html_contents }}
       />
 
-      {!isFollowing ? (
-        <FollowButton
-          onClick={async () => {
-            try {
-              await handleFollow(team.id);
-              data.refetch();
-
-              showSuccessToast('success to follow user');
-            } catch (err) {
-              showErrorToast('failed to follow user');
-              logger.error('failed to follow user with error: ', err);
-            }
-          }}
-        />
-      ) : (
-        <UnFollowButton
-          onClick={async () => {
-            try {
-              await handleUnFollow(team.id);
-              data.refetch();
-
-              showSuccessToast('success to unfollow user');
-            } catch (err) {
-              showErrorToast('failed to unfollow user');
-              logger.error('failed to unfollow user with error: ', err);
-            }
-          }}
-        />
-      )}
+      {enableFollowbutton ? (
+        !isFollowing ? (
+          <FollowButton
+            onClick={async () => {
+              try {
+                await handleFollow(team.id);
+                await data.refetch();
+                showSuccessToast('success to follow user');
+              } catch (err) {
+                showErrorToast('failed to follow user');
+                logger.error('failed to follow user with error: ', err);
+              }
+            }}
+          />
+        ) : (
+          <UnFollowButton
+            onClick={async () => {
+              try {
+                await handleUnFollow(team.id);
+                await data.refetch();
+                showSuccessToast('success to unfollow user');
+              } catch (err) {
+                showErrorToast('failed to unfollow user');
+                logger.error('failed to unfollow user with error: ', err);
+              }
+            }}
+          />
+        )
+      ) : null}
     </div>
   );
 }
