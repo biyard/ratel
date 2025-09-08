@@ -247,6 +247,9 @@ pub enum Error {
     )]
     SprintLeagueUpdateFailed,
 
+    #[translate(en = "Failed to reward")]
+    FailedReward,
+
     PassportVerificationFailed(String),
     MedicalInfoExtractionFailed(String),
     AwsRekognitionError(String),

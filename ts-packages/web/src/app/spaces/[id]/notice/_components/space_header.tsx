@@ -174,28 +174,28 @@ export default function SpaceHeader({
           <div className="flex flex-row w-fit gap-1 items-center">
             <ThumbUp width={20} height={20} />
             <div className="font-medium text-[15px] text-white">
-              {likes ?? 0}
+              {likes.toLocaleString() ?? '0'}
             </div>
           </div>
 
           <div className="flex flex-row w-fit gap-1 items-center">
             <CommentIcon width={20} height={20} />
             <div className="font-medium text-[15px] text-white">
-              {comments ?? 0}
+              {comments.toLocaleString() ?? '0'}
             </div>
           </div>
 
           <div className="flex flex-row w-fit gap-1 items-center">
             <Rewards width={20} height={20} />
             <div className="font-medium text-[15px] text-white">
-              {rewards ?? 0}
+              {rewards.toLocaleString() ?? '0'}
             </div>
           </div>
 
           <div className="flex flex-row w-fit gap-1 items-center">
             <Share2 width={20} height={20} />
             <div className="font-medium text-[15px] text-white">
-              {shares ?? 0}
+              {shares.toLocaleString() ?? '0'}
             </div>
           </div>
 
