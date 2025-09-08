@@ -167,7 +167,7 @@ export default function SpaceHeader({
 
       <div className="flex flex-row w-full justify-between items-center">
         <div className="flex flex-row w-fit gap-2.5 items-center">
-          <SpaceType />
+          {/* <SpaceType /> */}
           {status == SpaceStatus.InProgress ? <Onboard /> : <></>}
         </div>
 
@@ -294,10 +294,10 @@ function Onboard() {
   );
 }
 
-function SpaceType() {
-  return (
-    <div className="flex flex-row w-fit h-fit px-2 bg-transparent rounded-sm border border-c-wg-70 font-semibold text-white text-xs/[25px]">
-      Crypto
-    </div>
-  );
-}
+// function SpaceType() {
+//   return (
+//     <div className="flex flex-row w-fit h-fit px-2 bg-transparent rounded-sm border border-c-wg-70 font-semibold text-white text-xs/[25px]">
+//       Crypto
+//     </div>
+//   );
+// }
