@@ -52,7 +52,12 @@ export default function CreateGroupPopup({
   const [isError, setIsError] = useState(false);
 
   return (
-    <div className="flex flex-col w-[900px] max-w-[900px] min-w-[400px] max-h-[700px] max-mobile:!w-full max-mobile:!max-w-full gap-5 overflow-y-auto px-[20px]">
+    <div
+      className="flex flex-col w-[900px] max-w-[900px] min-w-[400px]
+    max-h-[700px] max-mobile:!w-full max-mobile:!max-w-full
+    gap-5 overflow-y-auto px-[20px]
+    custom-scrollbar"
+    >
       <GroupName groupName={groupName} setGroupName={setGroupName} />
       <GroupDescription
         groupDescription={groupDescription}
