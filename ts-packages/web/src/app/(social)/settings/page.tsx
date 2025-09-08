@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl';
 
 export default function MyProfilePage() {
   const t = useTranslations('Settings');
-  const tabs = [t('my_info'), t('my_inventory'), t('settings')] as const;
+  const tabs = [t('my_info'), t('settings')] as const;
   const [activeIndex, setActiveIndex] = React.useState(0);
 
   return (
@@ -57,7 +57,7 @@ export default function MyProfilePage() {
           <MyInfo />
         </section>
 
-        <section
+        {/* <section
           id="panel-1"
           role="tabpanel"
           aria-labelledby="tab-1"
@@ -65,13 +65,13 @@ export default function MyProfilePage() {
           className="w-full max-w-[800px] mx-auto text-neutral-300"
         >
           {t('my_inventory_coming_soon')}
-        </section>
+        </section> */}
 
         <section
           id="panel-2"
           role="tabpanel"
           aria-labelledby="tab-2"
-          hidden={activeIndex !== 2}
+          hidden={activeIndex !== 1}
           className="w-full max-w-[800px] mx-auto"
         >
           <MySettings />
