@@ -97,6 +97,10 @@ pub mod controllers {
             pub mod register;
             pub mod token;
         }
+
+        pub mod posts {
+            pub mod update_post;
+        }
     }
     pub mod m2 {
         pub mod noncelab {
