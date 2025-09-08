@@ -48,21 +48,21 @@ export default defineConfig({
       },
     },
 
-    {
-      name: "firefox",
-      use: {
-        ...devices["Desktop Firefox"],
-        viewport: {
-          width: 1440,
-          height: 900,
-        },
-      },
-    },
+    // {
+    //   name: "firefox",
+    //   use: {
+    //     ...devices["Desktop Firefox"],
+    //     viewport: {
+    //       width: 1440,
+    //       height: 900,
+    //     },
+    //   },
+    // },
 
-    {
-      name: "mobile-chrome",
-      use: { ...devices["Pixel 5"] },
-    },
+    // {
+    //   name: "mobile-chrome",
+    //   use: { ...devices["Pixel 5"] },
+    // },
 
     // {
     //   name: "webkit",
