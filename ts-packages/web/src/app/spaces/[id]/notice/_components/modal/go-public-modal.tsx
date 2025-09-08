@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import React from 'react';
 
 export interface GoPublicModalProps {
@@ -11,17 +12,17 @@ export default function GoPublicModal({
   onCancel,
   onGoPublic,
 }: GoPublicModalProps) {
+  const t = useTranslations('NoticeSpace');
   return (
     <div className="w-[500px] flex flex-col">
       {/* Header */}
       <div className="text-center font-bold text-white text-[24px] mb-6 mt-2">
-        You're About to Go Public
+        {t('go_public_title')}
       </div>
 
       {/* Body */}
       <div className="text-center font-medium text-neutral-400 text-base mb-8">
-        Once made public, this Space will be visible to everyone and cannot be
-        made private again.
+        {t('go_public_desc')}
       </div>
 
       {/* Buttons */}
@@ -31,7 +32,7 @@ export default function GoPublicModal({
           onClick={onCancel}
           className="flex-1 py-[14.5px] bg-transparent font-bold text-white text-base rounded-[10px] hover:bg-neutral-800 transition-colors"
         >
-          Cancel
+          {t('cancel')}
         </button>
 
         {/* Right button - primary background */}
@@ -39,7 +40,7 @@ export default function GoPublicModal({
           onClick={onGoPublic}
           className="flex-1 py-[14.5px] bg-primary font-bold text-black text-base rounded-[10px] hover:bg-primary/90 transition-colors"
         >
-          Go Public
+          {t('go_public')}
         </button>
       </div>
     </div>

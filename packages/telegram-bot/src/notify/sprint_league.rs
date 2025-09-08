@@ -116,7 +116,7 @@ fn sprint_league_templates(
 <b>⏱️ Period</b>
 <code>{}</code> - <code>{}(UTC)</code>
 
-<b>🏃 Participants</b>
+<b>🏃 Players</b>
 - {}
 - {}
 - {}
@@ -138,7 +138,7 @@ fn sprint_league_templates(
 <b>⏱️ 기간</b>
 <code>{}</code> - <code>{}(UTC)</code>
 
-<b>🏃 참여자</b>
+<b>🏃 Players</b>
 - {}
 - {}
 - {}

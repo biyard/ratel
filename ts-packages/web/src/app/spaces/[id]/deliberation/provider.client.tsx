@@ -38,6 +38,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { QK_GET_SPACE_BY_SPACE_ID } from '@/constants';
 import { useFeedByID } from '@/app/(social)/_hooks/feed';
 import { MappedResponse, Poll, SurveyAnswer } from '../type';
+import { useTranslations } from 'next-intl';
 
 type ContextType = {
   spaceId: number;
@@ -90,6 +91,7 @@ export default function ClientProviders({
 }: {
   children: React.ReactNode;
 }) {
+  const t = useTranslations('DeliberationSpace');
   const queryClient = useQueryClient();
   const { spaceId } = useSpaceByIdContext();
   const data = useSpaceById(spaceId);
@@ -137,6 +139,7 @@ export default function ClientProviders({
         username: member.username,
         profile_url: member.profile_url ?? '',
         user_type: UserType.Individual,
+        html_contents: '',
       })),
     })),
 
@@ -187,14 +190,12 @@ export default function ClientProviders({
           share: {},
         });
         if (res) {
-          showInfoToast('The space URL has been copied to your clipboard.');
+          showInfoToast(t('success_share_info'));
           data.refetch();
         }
       } catch (error) {
         logger.error('Failed to share space with error: ', error);
-        showErrorToast(
-          'Unable to share space at this time. Please try again later.',
-        );
+        showErrorToast(t('failed_share_info'));
       }
     });
   };
@@ -213,9 +214,7 @@ export default function ClientProviders({
       }
     } catch (error) {
       logger.error('Failed to like user with error: ', error);
-      showErrorToast(
-        'Unable to register your like at this time. Please try again later.',
-      );
+      showErrorToast(t('failed_like_info'));
     }
   };
 
@@ -275,7 +274,7 @@ export default function ClientProviders({
     }
 
     if (!isCheck) {
-      showErrorToast('Please fill in all required values.');
+      showErrorToast(t('all_input_required'));
       return;
     }
 
@@ -289,11 +288,9 @@ export default function ClientProviders({
         queryKey: [QK_GET_SPACE_BY_SPACE_ID, spaceId],
       });
       router.refresh();
-      showSuccessToast('Your response has been saved successfully.');
+      showSuccessToast(t('success_save_response'));
     } catch (err) {
-      showErrorToast(
-        'There was a problem saving your response. Please try again later.',
-      );
+      showErrorToast(t('failed_save_response'));
       logger.error('failed to create response with error: ', err);
     }
   };
@@ -310,9 +307,9 @@ export default function ClientProviders({
       router.refresh();
       data.refetch();
 
-      showSuccessToast('Your space has been posted successfully.');
+      showSuccessToast(t('success_post_space'));
     } catch (err) {
-      showErrorToast('Failed to post the space. Please try again.');
+      showErrorToast(t('failed_post_space'));
       logger.error('failed to posting space with error: ', err);
     }
   };
@@ -323,7 +320,7 @@ export default function ClientProviders({
 
   const handleViewRecord = async (discussionId: number, record: string) => {
     const response = await fetch(record);
-    if (!response.ok) throw new Error('failed to download files');
+    if (!response.ok) throw new Error(t('failed_download_files'));
 
     const blob = await response.blob();
     const blobUrl = URL.createObjectURL(blob);
@@ -480,18 +477,18 @@ export default function ClientProviders({
         confirmation: true,
         space_name: space.title,
       });
-      showSuccessToast('Space deleted successfully');
+      showSuccessToast(t('success_delete_space'));
       router.push('/');
     } catch (error) {
       logger.debug('Failed to delete space:', error);
       logger.error('Error deleting space:', error);
-      showErrorToast('Failed to delete space. Please try again later.');
+      showErrorToast(t('failed_delete_space'));
     }
   };
 
   const handleSave = async () => {
     if (checkString(title) || checkString(thread.html_contents)) {
-      showErrorToast('Please remove any test-related keywords before saving.');
+      showErrorToast(t('remove_test_keyword'));
       setIsEdit(false);
       return;
     }
@@ -503,20 +500,20 @@ export default function ClientProviders({
         const q = question[j];
 
         if (q.title === '') {
-          showErrorToast('Please fill in the question title.');
+          showErrorToast(t('question_title_required'));
           return;
         }
 
         if (q.answer_type === 'checkbox' || q.answer_type === 'dropdown') {
           if (q.options.length < 2) {
-            showErrorToast('questions must have at least two options.');
+            showErrorToast(t('more_option_required'));
             return;
           }
         }
 
         if (q.answer_type === 'linear_scale') {
           if (q.max_label === '' || q.min_label === '') {
-            showErrorToast('Please fill in the labels for the linear scale.');
+            showErrorToast(t('fill_label_required'));
             return;
           }
         }
@@ -560,10 +557,10 @@ export default function ClientProviders({
       router.refresh();
       data.refetch();
 
-      showSuccessToast('Space has been updated successfully.');
+      showSuccessToast(t('success_update_space'));
       setIsEdit(false);
     } catch (err) {
-      showErrorToast('Failed to update the space. Please try again.');
+      showErrorToast(t('failed_update_space'));
       logger.error('failed to update space with error: ', err);
       setIsEdit(false);
     }

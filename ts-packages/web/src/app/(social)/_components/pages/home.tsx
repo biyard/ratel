@@ -11,8 +11,6 @@ import { UserType } from '@/lib/api/models/user';
 
 import Loading from '@/app/loading';
 import { Space } from '@/lib/api/models/spaces';
-import { usePromotion } from '@/lib/api/ratel_api';
-import { useFeedByID } from '../../_hooks/use-feed';
 import { usePostInfinite } from '../../_hooks/use-posts';
 import FeedEndMessage from '../feed-end-message';
 import FeedEmptyState from '../feed-empty-state';
@@ -21,6 +19,8 @@ import BlackBox from '../black-box';
 import PromotionCard from '../promotion-card';
 import News from '../News';
 import Suggestions from '../suggestions';
+import { Promotion } from '@/lib/api/models/promotion';
+import { Feed } from '@/lib/api/models/feeds';
 
 export const SIZE = 10;
 
@@ -47,9 +47,13 @@ export interface Post {
   spaces: Space[];
 }
 
-export default function Home() {
-  const { data: promotion } = usePromotion();
-  const { data: feed } = useFeedByID(promotion.feed_id);
+export default function Home({
+  promotion,
+  feed,
+}: {
+  promotion: Promotion | undefined | null;
+  feed: Feed | undefined | null;
+}) {
   const { data: userInfo } = useSuspenseUserInfo();
   const userId = userInfo?.id || 0;
 
@@ -61,6 +65,8 @@ export default function Home() {
   const posts = data?.pages.flatMap((page) => page.items) || [];
 
   const filteredFeeds = posts
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .filter((item) => Number((item as any).feed_type) !== 2)
     .map((item) => ({
       id: item.id,
       industry: item.industry?.[0]?.name || '',
@@ -73,6 +79,7 @@ export default function Home() {
       author_type: item.author?.[0]?.user_type || UserType.Anonymous,
       space_id: item.spaces?.[0]?.id || 0,
       space_type: item.spaces?.[0]?.space_type || 0,
+      booster_type: item.spaces?.[0]?.booster_type,
       likes: item.likes,
       is_liked: item.is_liked,
       comments: item.comments,
@@ -134,9 +141,11 @@ export default function Home() {
       <aside className="w-70 pl-4 max-tablet:!hidden" aria-label="Sidebar">
         <CreatePostButton />
 
-        <BlackBox>
-          <PromotionCard promotion={promotion} feed={feed} />
-        </BlackBox>
+        {promotion && feed && (
+          <BlackBox>
+            <PromotionCard promotion={promotion} feed={feed} />
+          </BlackBox>
+        )}
 
         <News />
         <div className="mt-[10px]">

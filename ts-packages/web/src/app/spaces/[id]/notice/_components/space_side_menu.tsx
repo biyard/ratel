@@ -11,6 +11,7 @@ import Clear from '@/assets/icons/clear.svg';
 import Fire from '@/assets/icons/fire.svg';
 import Trophy from '@/assets/icons/trophy.svg';
 import HexDown from '@/assets/icons/hex-down.svg';
+import Remove from '@/assets/icons/remove.svg';
 import { Add } from '@/components/icons';
 import { Settings } from 'lucide-react';
 // import { File, Mega } from '@/components/icons';
@@ -27,8 +28,10 @@ import {
 import { usePopup } from '@/lib/contexts/popup-service';
 import SetSchedulePopup from './modal/set_schedule';
 import { useQuizDataRefresh } from '@/hooks/use-quiz-updates';
+import { useTranslations } from 'next-intl';
 
 export default function SpaceSideMenu() {
+  const t = useTranslations('NoticeSpace');
   const popup = usePopup();
   const {
     startedAt,
@@ -69,11 +72,11 @@ export default function SpaceSideMenu() {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-1 text-neutral-400 font-semibold text-[14px]">
               <History width={28} height={28} />
-              Reward
+              {t('reward')}
               {latestAttempt && attemptsData && (
                 <span className="text-xs font-normal text-gray-500 ml-2">
                   (#{attemptsData.total_count} -{' '}
-                  {latestAttempt.is_successful ? 'Correct' : 'Wrong'})
+                  {latestAttempt.is_successful ? t('correct') : t('wrong')})
                 </span>
               )}
             </div>
@@ -84,8 +87,13 @@ export default function SpaceSideMenu() {
             {[
               {
                 label: getRewardAmount(currentSpace?.booster_type),
-                description: 'Correct',
+                description: t('correct'),
                 icon: Add,
+              },
+              {
+                label: '- 50%',
+                description: 'Per Incorrect',
+                icon: Remove,
               },
             ].map((item) => (
               <div className="flex gap-2" key={item.label}>
@@ -151,7 +159,7 @@ export default function SpaceSideMenu() {
                   className="font-bold text-[13px]"
                   style={{ color: 'var(--color-primary)' }}
                 >
-                  Boosting
+                  {t('boosting')}
                 </span>
               </div>
             );
@@ -195,7 +203,7 @@ export default function SpaceSideMenu() {
                     className="font-bold text-[13px]"
                     style={{ color: '#EF4444' }}
                   >
-                    Penalty
+                    {t('penalty')}
                   </span>
                 </div>,
               );
@@ -208,7 +216,7 @@ export default function SpaceSideMenu() {
           <div className="flex flex-col pl-1">
             <div className="border-t border-[var(--color-neutral-700)]/50 pt-2 pb-0"></div>
             <div className="flex items-center gap-1 text-neutral-400 font-semibold text-[14px] mb-2">
-              Total Estimated Value
+              {t('total_estimated_value')}
             </div>
             {(() => {
               // Calculate total estimated value using shared utility
@@ -238,7 +246,7 @@ export default function SpaceSideMenu() {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-1 text-neutral-400 font-semibold text-[14px]">
               <Info width={28} height={28} />
-              Scoring Rules
+              {t('scoring_rules')}
             </div>
           </div>
 
@@ -246,17 +254,17 @@ export default function SpaceSideMenu() {
             {[
               {
                 label: getRewardAmount(currentSpace?.booster_type),
-                description: 'Correct Attempt',
+                description: t('correct_attempt'),
                 icon: Check,
               },
               {
                 label: '-50%',
-                description: 'Wrong Attempt',
+                description: t('wrong_attempt'),
                 icon: Clear,
               },
               {
                 label: getBoosterText(currentSpace?.booster_type),
-                description: 'Boosting',
+                description: t('boosting'),
                 icon: Fire,
               },
             ].map((item) => (
@@ -287,7 +295,7 @@ export default function SpaceSideMenu() {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-1 text-neutral-400 font-semibold text-[14px]">
               <Clock width={28} height={28} />
-              Timeline
+              {t('timeline')}
             </div>
             {isEdit ? (
               <div
@@ -321,9 +329,9 @@ export default function SpaceSideMenu() {
 
           <div className="flex flex-col pl-3.25 gap-5">
             {[
-              { label: 'Created', date: createdAt },
-              { label: 'Start', date: startedAt },
-              { label: 'End', date: endedAt },
+              { label: t('created'), date: createdAt },
+              { label: t('start'), date: startedAt },
+              { label: t('end'), date: endedAt },
             ].map((item) => (
               <div className="flex flex-col gap-1" key={item.label}>
                 <div className="font-medium text-white text-[15px]/[12px]">

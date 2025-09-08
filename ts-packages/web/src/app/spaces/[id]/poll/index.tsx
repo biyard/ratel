@@ -16,6 +16,7 @@ import { PollTab } from './types';
 import { SpaceProvider } from '../_components/header/provider';
 import { PollAnalyzePage } from './_components/analyze-tab';
 import { PollSurveyPage } from './_components/survey-tab';
+import { useTranslations } from 'next-intl';
 
 export default function PollSpacePage() {
   return (
@@ -26,6 +27,7 @@ export default function PollSpacePage() {
 }
 
 function Page() {
+  const t = useTranslations('Space');
   const space = useDeliberationSpace();
   const feed = useDeliberationFeed(space.feed_id);
   const context = usePollSpaceContext();
@@ -43,7 +45,7 @@ function Page() {
     !space.author.some((a) => a.id === userId) &&
     !selectedTeam
   ) {
-    return <div>No Authorized User</div>;
+    return <div>{t('no_authorized_user')}</div>;
   }
 
   return (

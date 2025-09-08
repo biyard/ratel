@@ -8,9 +8,11 @@ import { writeCommentRequest } from '@/lib/api/models/feeds/comment';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { useApiCall } from '@/lib/api/use-send';
 import { logger } from '@/lib/logger';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 
 export default function ThreadComment({ post_id }: { post_id: number }) {
+  const t = useTranslations('Threads');
   const isLogin = useLoggedIn();
   const { data: feed, refetch } = useFeedByID(post_id);
   const [expand, setExpand] = useState(false);
@@ -53,7 +55,7 @@ export default function ThreadComment({ post_id }: { post_id: number }) {
           />
           <span className="text-base/6 font-medium">
             {(feed?.comments ?? 0).toLocaleString()}{' '}
-            {(feed?.comments ?? 0) > 1 ? 'Replies' : 'Reply'}
+            {(feed?.comments ?? 0) > 1 ? t('replies') : t('reply')}
           </span>
         </div>
         {isLogin && (
@@ -69,7 +71,7 @@ export default function ThreadComment({ post_id }: { post_id: number }) {
                   className="[&>path]:stroke-neutral-500"
                 />
                 <span className="text-neutral-500 text-[15px]/[24px] font-medium">
-                  Share your thoughts...
+                  {t('share_your_thoughts')}
                 </span>
               </button>
             )}

@@ -1,11 +1,12 @@
 // mod assembly_members;
-mod bills;
-mod ch;
-mod eu;
-mod hk;
+// mod bills;
+// mod ch;
+// mod eu;
+// mod hk;
+// mod us;
+
 mod log;
 mod spaces;
-mod us;
 
 use bdk::prelude::*;
 
@@ -25,41 +26,41 @@ use reqwest::StatusCode;
 
 pub async fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Router> {
     Ok(by_axum::axum::Router::new()
-        .nest(
-            "/bills",
-            bills::BillWriterController::new(pool.clone())
-                .await
-                .route()?,
-        )
+        // .nest(
+        //     "/bills",
+        //     bills::BillWriterController::new(pool.clone())
+        //         .await
+        //         .route()?,
+        // )
         .nest("/logs", logs::LogController::new(pool.clone()).route()?)
         // .nest(
         //     "/assembly-members",
         //     assembly_members::AssemblyMemberController::new(pool).route()?,
         // )
-        .nest(
-            "/us/bills",
-            us::bills::USBillWriterController::new(pool.clone())
-                .await
-                .route()?,
-        )
-        .nest(
-            "/hk/bills",
-            hk::bills::HKBillWriterController::new(pool.clone())
-                .await
-                .route()?,
-        )
-        .nest(
-            "/ch/bills",
-            ch::bills::CHBillWriterController::new(pool.clone())
-                .await
-                .route()?,
-        )
-        .nest(
-            "/eu/bills",
-            eu::bills::EUBillWriterController::new(pool.clone())
-                .await
-                .route()?,
-        )
+        // .nest(
+        //     "/us/bills",
+        //     us::bills::USBillWriterController::new(pool.clone())
+        //         .await
+        //         .route()?,
+        // )
+        // .nest(
+        //     "/hk/bills",
+        //     hk::bills::HKBillWriterController::new(pool.clone())
+        //         .await
+        //         .route()?,
+        // )
+        // .nest(
+        //     "/ch/bills",
+        //     ch::bills::CHBillWriterController::new(pool.clone())
+        //         .await
+        //         .route()?,
+        // )
+        // .nest(
+        //     "/eu/bills",
+        //     eu::bills::EUBillWriterController::new(pool.clone())
+        //         .await
+        //         .route()?,
+        // )
         .nest(
             "/spaces",
             spaces::SpaceController::new(pool.clone()).await.route()?,

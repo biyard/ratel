@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import React from 'react';
 
 export default function SummaryReport({
@@ -11,6 +12,7 @@ export default function SummaryReport({
   startDate: number;
   endDate: number;
 }) {
+  const t = useTranslations('PollSpace');
   const now = Math.floor(Date.now() / 1000);
   const timeLeft = endDate - now;
 
@@ -26,10 +28,10 @@ export default function SummaryReport({
 
   return (
     <div className="flex flex-row w-full justify-start items-center gap-[10px]">
-      <SummaryBox label="Participants" value={responseCount.toString()} />
-      <SummaryBox label="Remainings" value={dueDate} />
+      <SummaryBox label={t('participants')} value={responseCount.toString()} />
+      <SummaryBox label={t('remainings')} value={dueDate} />
       {(startDate > 0 || endDate > 0) && (
-        <SummaryBox label="Date" value={dateRange} />
+        <SummaryBox label={t('date')} value={dateRange} />
       )}
     </div>
   );

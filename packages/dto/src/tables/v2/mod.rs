@@ -27,3 +27,18 @@ pub use consensus::*;
 
 mod user;
 pub use user::*;
+
+mod conversations;
+pub use conversations::*;
+
+pub mod conversation_participants;
+pub use conversation_participants::*;
+
+mod messages;
+pub use messages::*;
+
+mod auth_clients;
+pub use auth_clients::*;
+
+mod auth_codes;
+pub use auth_codes::*;
