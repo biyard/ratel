@@ -9,7 +9,7 @@ use by_axum::{
     },
 };
 use by_types::QueryResponse;
-use dto::{*};
+use dto::*;
 use sqlx::postgres::PgRow;
 
 #[derive(
@@ -83,9 +83,7 @@ impl SpaceNoticeQuizAttemptController {
 
         let auth = auth.ok_or(Error::Unauthorized)?;
 
-        Ok(Json(
-            ctrl.get_attempts(space_id, Some(auth)).await?,
-        ))
+        Ok(Json(ctrl.get_attempts(space_id, Some(auth)).await?))
     }
 
     pub async fn submit_answers(
@@ -94,6 +92,8 @@ impl SpaceNoticeQuizAttemptController {
         Extension(auth): Extension<Option<Authorization>>,
         Json(body): Json<SubmitAnswersRequest>,
     ) -> Result<Json<NoticeQuizAttempt>> {
+        let mut tx = ctrl.pool.begin().await.unwrap();
+
         tracing::debug!(
             "submit_answers space_id: {}, answers: {:?}",
             space_id,
@@ -160,8 +160,83 @@ impl SpaceNoticeQuizAttemptController {
         // Insert the quiz attempt with results using manual parameter approach
         let attempt_repo = NoticeQuizAttempt::get_repository(ctrl.pool.clone());
         let quiz_attempt = attempt_repo
-            .insert(space_id, user_id, body.answers, is_successful)
-            .await?;
+            .insert_with_tx(&mut *tx, space_id, user_id, body.answers, is_successful)
+            .await?
+            .unwrap_or_default();
+
+        // giving reward
+        if is_successful {
+            let space = Space::query_builder(user_id)
+                .id_equals(space_id)
+                .query()
+                .map(Space::from)
+                .fetch_optional(&ctrl.pool)
+                .await?
+                .ok_or(Error::NotFound)?;
+
+            let feed = Feed::query_builder(user_id)
+                .id_equals(space.feed_id)
+                .query()
+                .map(Feed::from)
+                .fetch_optional(&ctrl.pool)
+                .await?
+                .ok_or(Error::NotFound)?;
+
+            //calculate reward
+            let mut quiz_reward = 10000;
+
+            let booster = space.booster_type;
+            let user_reward_repo = UserPoint::get_repository(ctrl.pool.clone());
+            let feed_repo = Feed::get_repository(ctrl.pool.clone());
+
+            if booster.is_some() {
+                let booster = booster.unwrap();
+                if booster == BoosterType::X2 {
+                    quiz_reward *= 2;
+                } else if booster == BoosterType::X10 {
+                    quiz_reward *= 10;
+                } else if booster == BoosterType::X100 {
+                    quiz_reward *= 100;
+                }
+            }
+
+            for _ in 0..failed_attempts_count {
+                quiz_reward /= 2;
+            }
+
+            let res = user_reward_repo
+                .insert_with_tx(
+                    &mut *tx,
+                    quiz_reward,
+                    "Notice Boosting Reward".to_string(),
+                    user_id,
+                )
+                .await;
+
+            if let Err(e) = res {
+                tracing::error!(
+                    "Failed to give reward to user {}: {:?} (amount: {})",
+                    user_id,
+                    e,
+                    quiz_reward
+                );
+
+                return Err(Error::FailedReward);
+            }
+
+            let feed_reward = feed.rewards + quiz_reward;
+
+            let _ = feed_repo
+                .update_with_tx(
+                    &mut *tx,
+                    space.feed_id,
+                    FeedRepositoryUpdateRequest {
+                        rewards: Some(feed_reward),
+                        ..Default::default()
+                    },
+                )
+                .await?;
+        }
 
         tracing::info!(
             "Quiz attempt created for user {} in space {} with result: {} correct out of {} questions",
@@ -170,6 +245,8 @@ impl SpaceNoticeQuizAttemptController {
             correct_count,
             total_questions
         );
+
+        tx.commit().await?;
 
         Ok(Json(quiz_attempt))
     }

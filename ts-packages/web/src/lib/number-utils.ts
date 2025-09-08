@@ -11,7 +11,7 @@ export function convertNumberToString(value: number): string {
     return value.toFixed(0);
   }
 
-  return value.toFixed(1) + ' ' + suffixes[i - 1];
+  return value.toFixed(0) + ' ' + suffixes[i - 1];
 }
 
 export function formatNumberWithCommas(value: number): string {

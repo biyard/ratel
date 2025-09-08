@@ -172,7 +172,11 @@ export default function ClientProviders({
   const status = space?.status ?? SpaceStatus.Draft;
 
   const handleGoBack = () => {
-    window.history.back();
+    if (isEdit) {
+      setIsEdit(false);
+    } else {
+      window.history.back();
+    }
   };
 
   const handleLike = () => {
