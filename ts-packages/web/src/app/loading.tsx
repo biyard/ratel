@@ -15,3 +15,14 @@ export default function Loading({ className }: { className?: string }) {
     </div>
   );
 }
+
+export function LoadingIndicator({ className }: { className?: string }) {
+  return (
+    <DotLottieReact
+      className={cn('max-w-50 max-h-50', className)}
+      src="/animations/loading.json"
+      loop
+      autoplay
+    />
+  );
+}

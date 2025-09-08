@@ -34,6 +34,7 @@ import {
   SaveButton,
 } from '@/components/post-header/buttons';
 import { useEditCoordinatorStore } from '../space-store';
+import { useTranslations } from 'next-intl';
 
 function SpaceModifySection({
   spaceId,
@@ -48,6 +49,7 @@ function SpaceModifySection({
   authorId: number;
   onEdit: () => void;
 }) {
+  const s = useTranslations('SprintSpace');
   const router = useRouter();
   const popup = usePopup();
 
@@ -96,7 +98,7 @@ function SpaceModifySection({
   };
 
   const handlePublishSpaceModal = () => {
-    openPublishSpaceModal(popup, handlePublish);
+    openPublishSpaceModal(popup, handlePublish, s('publish'));
   };
 
   const handleGoBack = () => {

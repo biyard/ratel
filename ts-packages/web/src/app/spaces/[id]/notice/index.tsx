@@ -1,11 +1,7 @@
 'use client';
 
 import React, { useContext } from 'react';
-import {
-  useNoticeFeed,
-  useNoticeSpace,
-  useNoticeSpaceContext,
-} from './provider.client';
+import { useNoticeSpace, useNoticeSpaceContext } from './provider.client';
 import { NoticeNotificationProvider } from './_components/notifications';
 
 import ClientProviders from './provider.client';
@@ -20,6 +16,8 @@ import { SpaceType, SpaceStatus } from '@/lib/api/models/spaces';
 import { PublishingScope } from '@/lib/api/models/notice';
 import { TeamContext } from '@/lib/contexts/team-context';
 import { useUserInfo } from '@/app/(social)/_hooks/user';
+import { useTranslations } from 'next-intl';
+import { useFeedById } from '@/lib/api/ratel_api';
 
 export default function NoticeSpacePage() {
   return (
@@ -32,8 +30,10 @@ export default function NoticeSpacePage() {
 }
 
 function Page() {
+  const t = useTranslations('Space');
   const space = useNoticeSpace();
-  const feed = useNoticeFeed(space.feed_id);
+  const data = useFeedById(space.feed_id);
+  const feed = data.data;
   const popup = usePopup();
   const {
     isEdit,
@@ -52,6 +52,7 @@ function Page() {
     handleLike,
     handleShare,
     handlePublishWithScope,
+    handleSubmitQuiz,
     setTitle,
     // setSelectedType,
   } = useNoticeSpaceContext();
@@ -69,7 +70,7 @@ function Page() {
     !space.author.some((a) => a.id === userId) &&
     !selectedTeam
   ) {
-    return <div>No Authorized User</div>;
+    return <div>{t('no_authorized_user')}</div>;
   }
 
   const handlePost = async () => {
@@ -162,7 +163,12 @@ function Page() {
         <div className="flex-1 flex w-full">
           <div className="flex flex-row w-full gap-5">
             {/* For now, show our custom notice page */}
-            <NoticePage />
+            <NoticePage
+              onSubmitQuiz={async (questions) => {
+                await handleSubmitQuiz(questions);
+                data.refetch();
+              }}
+            />
             <SpaceSideMenu />
           </div>
         </div>

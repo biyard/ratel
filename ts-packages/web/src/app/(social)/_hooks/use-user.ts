@@ -36,3 +36,17 @@ export function useUserByEmail(
 
   return query;
 }
+
+export function useUserByUsername(
+  username: string,
+): UseSuspenseQueryResult<TotalUser> {
+  const { get } = useApiCall();
+
+  const query = useSuspenseQuery({
+    queryKey: [QK_GET_USER_BY_EMAIL],
+    queryFn: () => get(ratelApi.users.getUserByUsername(username)),
+    refetchOnWindowFocus: false,
+  });
+
+  return query;
+}

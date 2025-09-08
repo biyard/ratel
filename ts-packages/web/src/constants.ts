@@ -28,6 +28,7 @@ export const QK_GET_USER_BADGE = 'get-user-badge';
 export const QK_GET_PROMOTION = 'get-promotion';
 export const QK_GET_TOTAL_USER = 'get-total-users';
 export const QK_GET_USER_BY_EMAIL = 'get-user-by-emails';
+export const QK_GET_USER_BY_USERNAME = 'get-user-by-usernames';
 
 // Quiz-related query keys
 export const QK_LATEST_QUIZ_ATTEMPT = 'latest-quiz-attempt';

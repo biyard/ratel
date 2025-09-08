@@ -15,6 +15,7 @@ import { logger } from '@/lib/logger';
 import { useRouter } from 'next/navigation';
 import { route } from '@/route';
 import { useSprintLeagueSpaceMutation } from '@/hooks/use-sprint-league';
+import { useTranslations } from 'next-intl';
 
 interface SpaceConfigFormProps {
   spaceType: SpaceType;
@@ -39,6 +40,7 @@ export default function SpaceConfigForm({
   onBack,
   onConfirm,
 }: SpaceConfigFormProps) {
+  const t = useTranslations('SpaceForms');
   const popup = usePopup();
   const router = useRouter();
   // Initial date setup - 1 hour from now and 2 hours from now
@@ -183,7 +185,7 @@ export default function SpaceConfigForm({
             <ArrowLeft className="w-7 h-7 text-[var(--color-neutral-500)]" />
           </button>
           <h2 className="text-xl sm:text-3xl font-semibold text-white">
-            Set a Notice Space
+            {t('notice_title')}
           </h2>
         </div>
         <button
@@ -197,21 +199,21 @@ export default function SpaceConfigForm({
       {/* Warning Message */}
       <div className="text-base text-gray-300">
         <p>
-          Once the {getSpaceTypeTitle(spaceType)} Space is created,{' '}
-          <span className="font-semibold text-white">
-            the booster settings cannot be changed.
-          </span>
+          {t.rich('notice_description_1', {
+            spaceType: getSpaceTypeTitle(spaceType),
+            b: (chunks) => (
+              <span className="font-semibold text-white">{chunks}</span>
+            ),
+          })}
         </p>
-        <p className="mt-0.5">
-          Please make sure everything is correct before confirming.
-        </p>
+        <p className="mt-0.5">{t('notice_description_2')}</p>
       </div>
 
       {/* Date and Time Section */}
       <div className="flex flex-col gap-3">
         <div className="flex items-center gap-1">
           <label className="text-base font-medium text-neutral-400 py-1">
-            Date
+            {t('date')}
           </label>
           <span className="text-red-500 text-base">*</span>
         </div>
@@ -271,7 +273,9 @@ export default function SpaceConfigForm({
 
       {/* Boost Section */}
       <div className="flex flex-col gap-3">
-        <h3 className="text-base font-semibold text-neutral-400 py-1">Boost</h3>
+        <h3 className="text-base font-semibold text-neutral-400 py-1">
+          {t('boost')}
+        </h3>
 
         <div className="flex items-start gap-2">
           <input
@@ -295,14 +299,16 @@ export default function SpaceConfigForm({
               htmlFor="activateBooster"
               className="text-base font-medium text-white cursor-pointer"
             >
-              Activate Booster
+              {t('active_booster')}
             </label>
             <p className="text-base text-neutral-300 mt-0.5">
-              If a booster is used, only Ratel subscribers will earn boosted
-              points based on the multiplier when the sprint ends. If you're
-              interested in a subscription, please{' '}
-              <button className="text-neutral-300 underline">contact</button> us
-              for more details.
+              {t.rich('active_booster_desc', {
+                btn: (chunks) => (
+                  <button className="text-neutral-300 underline">
+                    {chunks}
+                  </button>
+                ),
+              })}
             </p>
           </div>
         </div>
@@ -310,7 +316,7 @@ export default function SpaceConfigForm({
         {formConfig.activateBooster && (
           <div className="ml-7 flex flex-col gap-2">
             <label className="text-base font-medium text-white py-1">
-              Booster
+              {t('booster')}
             </label>
             <div className="relative">
               <div
@@ -420,7 +426,7 @@ export default function SpaceConfigForm({
             onClick={handleSubmit}
             isLoading={isLoading}
           >
-            Create
+            {t('create')}
           </LoadablePrimaryButton>
         </div>
       </div>

@@ -19,6 +19,8 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Build
+        env:
+          ECR_NAME: ratel.foundation/ratel/web
         run: make docker.build
 
   test-with-server:
@@ -123,6 +125,7 @@ jobs:
           ENV: dev
           SERVICE: main-api
           DOMAIN: api.dev.ratel.foundation
+          ECR_NAME: ratel.foundation/ratel/main-api
         run: |
           make docker.build
 

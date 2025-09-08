@@ -6,6 +6,7 @@ pub mod email;
 pub mod middlewares;
 pub mod notifications;
 pub mod openapi;
+pub mod parse_json;
 pub mod rds_client;
 pub mod referal_code;
 pub mod s3_upload;
@@ -15,3 +16,5 @@ pub mod users;
 pub mod wallets;
 
 pub mod aws;
+
+pub mod mcp_middleware;

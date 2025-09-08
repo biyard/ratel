@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { PublishingScope } from '@/lib/api/models/notice';
 import Lock from '@/assets/icons/lock.svg';
 import Internet from '@/assets/icons/internet.svg';
+import { useTranslations } from 'next-intl';
 
 export interface PublishFormProps {
   onPublish: (scope: PublishingScope) => void;
@@ -14,6 +15,7 @@ export default function PublishForm({
   onPublish,
   currentScope,
 }: PublishFormProps) {
+  const t = useTranslations('NoticeSpace');
   const [selectedScope, setSelectedScope] = useState<PublishingScope>(
     currentScope === PublishingScope.Public
       ? PublishingScope.Public
@@ -33,7 +35,7 @@ export default function PublishForm({
         {/* Header */}
         <div className="mb-6">
           <div className="font-bold text-white text-[24px]">
-            Publish this Space
+            {t('publish_space')}
           </div>
         </div>
 
@@ -60,7 +62,7 @@ export default function PublishForm({
                     wasPublishedAsPublic ? 'text-neutral-500' : 'text-white'
                   }`}
                 >
-                  Private Publish
+                  {t('private_publish')}
                 </div>
                 <div
                   className={`text-sm mt-1 ${
@@ -70,8 +72,8 @@ export default function PublishForm({
                   }`}
                 >
                   {wasPublishedAsPublic
-                    ? 'Cannot change back to private once published publicly.'
-                    : 'Only your team members will be able to access this space.'}
+                    ? t('private_publish_desc_1')
+                    : t('private_publish_desc_2')}
                 </div>
               </div>
               <div
@@ -107,10 +109,10 @@ export default function PublishForm({
               <Internet width={24} height={24} className="text-neutral-400" />
               <div className="flex-1">
                 <div className="font-bold text-white text-lg">
-                  Public Publish
+                  {t('public_publish')}
                 </div>
                 <div className="text-neutral-400 text-sm mt-1">
-                  Anyone can access and participate in this space.
+                  {t('public_publish_desc')}
                 </div>
               </div>
               <div
@@ -137,7 +139,7 @@ export default function PublishForm({
           onClick={handleSubmit}
           className="w-full py-[14.5px] bg-primary font-bold text-black text-base rounded-[10px] hover:bg-primary/90 transition-colors"
         >
-          Publish
+          {t('publish')}
         </button>
       </div>
     </div>

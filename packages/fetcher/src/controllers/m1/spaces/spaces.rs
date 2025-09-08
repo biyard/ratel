@@ -7,8 +7,6 @@ use bdk::prelude::*;
 use dto::{sqlx::PgPool, *};
 use tokio::time::sleep;
 
-use crate::config;
-
 #[derive(Clone, Debug)]
 pub struct SpaceController {
     repo: SpaceRepository,
@@ -16,17 +14,6 @@ pub struct SpaceController {
 }
 
 static INSTANCE: OnceLock<bool> = OnceLock::new();
-
-async fn notify_telegram(payload: TelegramNotificationPayload) -> Result<()> {
-    let client = reqwest::Client::new();
-    let telegram_notification_url = config::get().telegram_notification_url;
-    client
-        .post(format!("{}/{}", telegram_notification_url, "notify"))
-        .json(&payload)
-        .send()
-        .await?;
-    Ok(())
-}
 
 impl SpaceController {
     pub async fn new(pool: PgPool) -> Self {
@@ -40,8 +27,10 @@ impl SpaceController {
                 tracing::error!("Failed to initialize INSTANCE on {e:?}");
             }
             tokio::spawn(async move {
-                let _ = tokio::join!(arc_ctrl.finish_spaces(), arc_ctrl.start_spaces());
-                sleep(Duration::from_secs(60)).await;
+                loop {
+                    let _ = arc_ctrl.finish_spaces().await;
+                    sleep(Duration::from_secs(10)).await;
+                }
             });
         }
 
@@ -100,82 +89,12 @@ impl SpaceController {
 
         Ok(())
     }
-    async fn start_spaces(&self) -> Result<(i32, i32)> {
-        let now = chrono::Utc::now().timestamp();
-
-        // Start Space
-        // Now - 60 seconds
-        let spaces = Space::query_builder(0)
-            .started_at_between(now - 60, now)
-            .status_equals(SpaceStatus::Draft)
-            .query()
-            .map(Space::from)
-            .fetch_all(&self.pool.clone())
-            .await?;
-        let mut result = (0, 0);
-        for space in spaces {
-            let res = self
-                .repo
-                .update(
-                    space.id,
-                    SpaceRepositoryUpdateRequest {
-                        status: Some(SpaceStatus::InProgress),
-                        ..Default::default()
-                    },
-                )
-                .await;
-            if let Err(e) = res {
-                tracing::error!("Failed to update space {}: {:?}", space.id, e);
-                result.1 += 1;
-                continue;
-            } else {
-                result.0 += 1;
-            }
-            match space.space_type {
-                SpaceType::SprintLeague => {
-                    let ctrl = SprintLeagueController {
-                        pool: self.pool.clone(),
-                    };
-                    if let Err(e) = ctrl.notify(space.id).await {
-                        tracing::error!("Failed to notify for space {}: {:?}", space.id, e);
-                        continue;
-                    }
-                }
-                _ => {}
-            }
-        }
-
-        Ok(result)
-    }
 }
 
 pub struct SprintLeagueController {
     pool: PgPool,
 }
 impl SprintLeagueController {
-    pub async fn notify(&self, space_id: i64) -> Result<()> {
-        let space = Space::query_builder(0)
-            .id_equals(space_id)
-            .query()
-            .map(Space::from)
-            .fetch_one(&self.pool)
-            .await?;
-        let _sprint_league = SprintLeague::query_builder(0)
-            .space_id_equals(space.id)
-            .query()
-            .map(SprintLeague::from)
-            .fetch_one(&self.pool)
-            .await?;
-
-        // Notify Telegram
-        let payload =
-            TelegramNotificationPayload::SprintLeague(SprintLeaguePayload { space_id: space.id });
-
-        if let Err(e) = notify_telegram(payload).await {
-            tracing::error!("Failed to notify Telegram: {}", e);
-        }
-        Ok(())
-    }
     pub async fn reward(&self, space_id: i64) -> Result<()> {
         let space = Space::query_builder(0)
             .sprint_leagues_builder(

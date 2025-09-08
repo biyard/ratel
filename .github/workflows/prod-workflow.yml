@@ -9,37 +9,83 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [main-api, nextjs-web, telegram-bot, fetcher]
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          ssh-key: ${{ secrets.PULL_KEY_REPO }}
+      - name: Download Next.js CDK .next
+        uses: actions/download-artifact@v4
+        with:
+          name: nextjs-web-cdk-next-${{ github.sha }}
+          path: ./
+      - uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+      # - name: Setup SSH session with tmate
+      #   uses: mxschmitt/action-tmate@v3
+      #   with:
+      #     limit-access-to-actor: true
+      - name: Deploy
+        env:
+          REGION: ap-northeast-2
+          ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          PGHOST_EU: ${{ secrets.PGHOST_EU }}
+          PGHOST_US: ${{ secrets.PGHOST_US }}
+          PGHOST_AP: ${{ secrets.PGHOST_AP }}
+          DOMAIN: ratel.foundation
+          STACK: ratel-prod-stack
+          ENV: prod
+        run: |
+          npm i -g aws-cdk
+          tar xzvf next.tar.gz
+          make cdk/public
+          make cdk-deploy-v2
+
   main-api:
     runs-on: ubuntu-22.04
+    defaults:
+      run:
+        working-directory: packages/main-api
 
     steps:
       - uses: actions/checkout@v3
         with:
           submodules: recursive
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
-
+      - name: Cache builder
+        id: main-api-build-cache
+        uses: actions/cache@v3
+        with:
+          key: main-api-build-cache
+          path: |
+            packages/main-api/target
       - uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-northeast-2
-
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           components: clippy, rustfmt
           target: wasm32-unknown-unknown
           toolchain: stable
-
       - uses: cargo-bins/cargo-binstall@main
       - name: Install toml-cli
         run: |
           cargo binstall toml-cli --force
-
       - name: Deploy APIs
         env:
           REGION: ap-northeast-2
           ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
           ENV: prod
           RUST_LOG: info
           SERVICE: main-api
@@ -51,50 +97,61 @@ jobs:
           AUTH_SECRET_KEY: ${{ secrets.AUTH_SECRET_KEY }}
           JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
 
-          BASE_DOMAIN: ratel.foundation
           MIGRATE: false
-          ENABLE_S3: false
-          ENABLE_LAMBDA: true
           BUCKET_NAME: metadata.ratel.foundation
           SLACK_CHANNEL_SPONSOR: ${{ secrets.SLACK_CHANNEL_SPONSOR }}
-          US_CONGRESS_KEY: ${{ secrets.US_CONGRESS_KEY }}
           SLACK_CHANNEL_ABUSING: ${{ secrets.SLACK_CHANNEL_ABUSING }}
+
+          KAIA_ENDPOINT: https://public-en.node.kaia.io
           KAIA_FEEPAYER_KEY: ${{ secrets.PROD_KAIA_FEEPAYER_KEY }}
           KAIA_FEEPAYER_ADDR: ${{ secrets.PROD_KAIA_FEEPAYER_ADDR }}
           KAIA_OWNER_KEY: ${{ secrets.PROD_KAIA_OWNER_KEY }}
           KAIA_OWNER_ADDR: ${{ secrets.PROD_KAIA_OWNER_KEY_ADDR }}
-          KAIA_ENDPOINT: https://public-en.node.kaia.io
+
+          NONCELAB_TOKEN: ${{ secrets.NONCELAB_TOKEN }}
 
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
-          NONCELAB_TOKEN: ${{ secrets.NONCELAB_TOKEN }}
+          TELEGRAM_BOT_URL: https://api.ratel.foundation
+
+          BBS_BLS_X: ${{ secrets.BBS_BLS_X }}
+          BBS_BLS_Y: ${{ secrets.BBS_BLS_Y }}
+          BBS_BLS_D: ${{ secrets.BBS_BLS_D }}
+          BBS_BLS_CRV: ${{ secrets.BBS_BLS_CRV }}
+
+          P256_X: ${{ secrets.P256_X }}
+          P256_Y: ${{ secrets.P256_Y }}
+          P256_D: ${{ secrets.P256_D }}
+          P256_CRV: ${{ secrets.P256_CRV }}
+
         run: |
-          npm i -g aws-cdk
-          make deploy
+          make docker.build
+          make docker.login
+          make docker.push
 
   fetcher:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/fetcher
     steps:
       - uses: actions/checkout@v3
         with:
           submodules: recursive
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
-
       - uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-northeast-2
-
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           components: clippy, rustfmt
           target: wasm32-unknown-unknown
           toolchain: stable
-
+      - uses: cargo-bins/cargo-binstall@main
       - name: Install dependencies
         run: |
-          cargo install toml-cli
-
+          cargo binstall toml-cli
       - name: Cache builder
         id: fetcher-build-cache
         uses: actions/cache@v3
@@ -102,62 +159,48 @@ jobs:
           key: fetcher-build-cache
           path: |
             packages/fetcher/target
-
       - name: Deploy APIs
         env:
           REGION: ap-northeast-2
           ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
           ENV: prod
           RUST_LOG: info
-          SERVICE: fetcher
-          DOMAIN: fetcher-api.ratel.foundation
-          AUTH_DOMAIN: ratel.foundation
           DATABASE_TYPE: postgres
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          OPENAPI_KEY: ${{ secrets.OPENAPI_KEY }}
-          AUTH_SECRET_KEY: ${{ secrets.AUTH_SECRET_KEY }}
-          JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
-          SERVER_KEY: ${{ secrets.AUTH_SECRET_KEY }}
-          SLACK_CHANNEL_BILL: ${{ secrets.SLACK_CHANNEL_BILL }}
-          BASE_DOMAIN: ratel.foundation
-          REPO_NAME: ratel/fetcher
-          US_CONGRESS_KEY: ${{ secrets.US_CONGRESS_KEY }}
           RPC_ENDPOINT: https://public-en.node.kaia.io
-          TELEGRAM_NOTIFICATION_URL: https://telegram-bot.ratel.foundation
           MIGRATE: false
-          ENABLE_S3: false
-          ENABLE_FARGATE: true
-          ENABLE_LAMBDA: false
         run: |
-          npm i -g aws-cdk
-          make deploy
+          make docker.build
+          make docker.login
+          make docker.push
 
   telegram-bot:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/telegram-bot
+
     steps:
       - uses: actions/checkout@v3
         with:
           submodules: recursive
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
-
       - uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-northeast-2
-
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           components: clippy, rustfmt
           target: wasm32-unknown-unknown
           toolchain: stable
-
       - uses: cargo-bins/cargo-binstall@main
       - name: Install dependencies
         run: |
           cargo binstall toml-cli
-
       - name: Cache builder
         id: telegram-bot-build-cache
         uses: actions/cache@v3
@@ -165,29 +208,68 @@ jobs:
           key: telegram-bot-build-cache
           path: |
             packages/telegram-bot/target
-
       - name: Deploy APIs
         env:
           REGION: ap-northeast-2
           ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
           ENV: prod
           RUST_LOG: info
-          SERVICE: telegram-bot
-          DOMAIN: telegram-bot.ratel.foundation
           DATABASE_TYPE: postgres
-
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
-          TELEGRAM_MINI_APP_URI: https://t.me/crypto_ratel_bot?startapp
-          BASE_DOMAIN: ratel.foundation
-          REPO_NAME: ratel/telegram-bot
+          TELEGRAM_MINI_APP_URI: https://t.me/crypto_ratel_bot
 
           MIGRATE: false
-          ENABLE_S3: false
-          ENABLE_FARGATE: true
-          ENABLE_LAMBDA: false
         run: |
-          npm i -g aws-cdk
-          make deploy
+
+          make docker.build
+          make docker.login
+          make docker.push
+
+  nextjs-web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ts-packages/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+      - name: Build
+        env:
+          REGION: ap-northeast-2
+          NEXT_PUBLIC_LOG_LEVEL: info
+          NEXT_PUBLIC_FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
+          NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET:  ${{ secrets.FIREBASE_STORAGE_BUCKET }}
+          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
+          NEXT_PUBLIC_FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
+          NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID:  ${{ secrets.FIREBASE_MEASUREMENT_ID }}
+
+          NEXT_PUBLIC_ENV: prod
+          NEXT_PUBLIC_SIGN_DOMAIN: ratel.foundation
+          NEXT_PUBLIC_API_URL: https://api.ratel.foundation
+          NEXT_PUBLIC_EXPERIMENT: true
+          NEXT_PUBLIC_GRAPHQL_URL: https://graphql.ratel.foundation/v1/graphql
+
+        run: |
+            make docker.build
+            make docker.login
+            make docker.push
+            cd ../..
+            make cdk/.next
+            tar czvf next.tar.gz cdk/.next
+
+      - name: Upload Next.js CDK .next
+        uses: actions/upload-artifact@v4
+        with:
+          name: nextjs-web-cdk-next-${{ github.sha }}
+          path: ${{ github.workspace }}/next.tar.gz
+          if-no-files-found: error
+          retention-days: 7

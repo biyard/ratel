@@ -9,6 +9,7 @@ import Image from 'next/image';
 import LinearScaleSelection from './_component/linear-scale-selection';
 import ObjectiveOption from './_component/objective-option';
 import LabelSwitchButton from './_component/label-switch-button';
+import { useTranslations } from 'next-intl';
 
 export default function SurveyQuestionEditor({
   index,
@@ -50,6 +51,7 @@ export default function SurveyQuestionEditor({
   }) => void;
   onremove?: (index: number) => void;
 }) {
+  const t = useTranslations('PollSpace');
   const [questionType, setQuestionType] = useState<AnswerType>(answerType);
   const [questionTitle, setQuestionTitle] = useState(title);
   const [questionOptions, setQuestionOptions] = useState<string[]>(
@@ -165,7 +167,7 @@ export default function SurveyQuestionEditor({
           <Input
             className="bg-neutral-800 border border-neutral-700 rounded-lg w-full px-4 !py-5.5 font-medium text-[15px]/[22.5px] text-white placeholder:text-neutral-600 "
             type="text"
-            placeholder="Title"
+            placeholder={t('title_hint')}
             value={questionTitle}
             onChange={(e) => handleTitleChange(e.target.value)}
           />
@@ -224,7 +226,7 @@ export default function SurveyQuestionEditor({
               <LabelSwitchButton
                 bgColor="bg-blue-500"
                 textColor="text-blue-500"
-                label="Multiple selection"
+                label={t('multiple_selection')}
                 value={isMulti ?? false}
                 onChange={handleMultiChange}
               />
@@ -232,7 +234,7 @@ export default function SurveyQuestionEditor({
             <LabelSwitchButton
               bgColor="bg-red-500"
               textColor="text-red-500"
-              label="Required"
+              label={t('required')}
               value={isRequired ?? false}
               onChange={handleRequiredChange}
             />
@@ -241,7 +243,7 @@ export default function SurveyQuestionEditor({
               onClick={() => onremove?.(index)}
             >
               <div className="text-[15px] text-neutral-500 font-medium cursor-pointer">
-                Delete
+                {t('delete')}
               </div>
               <Trash2 className="w-4.5 h-4.5 stroke-neutral-500 cursor-pointer" />
             </div>
