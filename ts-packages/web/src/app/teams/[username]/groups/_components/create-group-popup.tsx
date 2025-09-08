@@ -153,7 +153,7 @@ function GroupPermissionSelector({
         {t('permission')}
       </div>
 
-      <div className="h-[400px] overflow-y-auto px-[10px]">
+      <div className="px-[10px]">
         {Object.entries(PERMISSION_GROUPS).map(([groupName, perms], idx) => {
           const allChecked = perms.every((p) => hasPermission(p.value));
           return (
