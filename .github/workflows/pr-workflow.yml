@@ -196,10 +196,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y docker-compose
 
-      - name: Setup SSH session with tmate
-        uses: mxschmitt/action-tmate@v3
-        with:
-          limit-access-to-actor: true
+      # - name: Setup SSH session with tmate
+      #   uses: mxschmitt/action-tmate@v3
+      #   with:
+      #     limit-access-to-actor: true
 
       - name: Install dependencies
         run: |
@@ -213,14 +213,11 @@ jobs:
         run: pnpm i
 
       - name: Install Playwright Browsers
-        run: npx playwright install
+        run: npx playwright install --with-deps chromium
 
       - name: Start test services with Docker Compose
         run: |
           # Check service health
-          timeout 300s bash -c 'until curl -f http://localhost:3000/version 2>/dev/null; do sleep 5; echo "Waiting for API..."; done' || echo "API health check failed"
-          timeout 60s bash -c 'until curl -f http://localhost:8080 2>/dev/null; do sleep 5; echo "Waiting for web..."; done' || echo "Web health check failed"
-          
           echo "Service status check:"
           curl -I http://localhost:3000/version || echo "Main API not responding"
           curl -I http://localhost:8080 || echo "Web frontend not responding"
@@ -233,7 +230,7 @@ jobs:
           mkdir -p test-results
           
           # Run Playwright tests
-          npx playwright test --reporter=html,line
+          make test
         continue-on-error: true
 
       - name: Upload test results
