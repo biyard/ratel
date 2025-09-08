@@ -194,7 +194,7 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y postgresql-client
+          sudo apt-get install -y docker-compose
 
       - name: Setup SSH session with tmate
         uses: mxschmitt/action-tmate@v3
@@ -202,7 +202,12 @@ jobs:
           limit-access-to-actor: true
 
       - name: Install dependencies
-        run: docker-compose up -d
+        run: |
+          mkdir .build
+          corepack enable
+          corepack prepare pnpm@10.15.0 --activate
+
+          make run
 
       - name: Install dependencies
         run: pnpm i
