@@ -1,18 +1,12 @@
 // login_controller.dart
-import 'dart:io';
-
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:ratel/exports.dart';
 
 class LoginController extends BaseController {
   final signupService = Get.find<SignupService>();
-
   final emailCtrl = TextEditingController();
   final passwordCtrl = TextEditingController();
-
   final isBusy = false.obs;
   final showPassword = false.obs;
-
   final email = ''.obs;
   final password = ''.obs;
 
@@ -21,12 +15,12 @@ class LoginController extends BaseController {
   void toggleShowPassword() => showPassword.toggle();
 
   Future<void> signIn() async {
-    final auth = AuthApi();
+    final auth = Get.find<AuthApi>();
     if (isBusy.value || !isFormValid) return;
     isBusy.value = true;
     try {
+      await auth.clearSession();
       final res = await auth.loginWithPassword(email.value, password.value);
-
       if (res != null) {
         Get.rootDelegate.offNamed(AppRoutes.mainScreen);
       } else {
@@ -40,49 +34,35 @@ class LoginController extends BaseController {
     }
   }
 
-  Future<void> signInWithApple() async {
-    logger.d("apple login clicked");
-  }
+  Future<void> signInWithApple() async {}
 
   Future<void> signInWithGoogle() async {
-    final auth = Get.find<AuthService>();
+    final authService = Get.find<AuthService>();
     final api = Get.find<AuthApi>();
     if (isBusy.value) return;
     isBusy.value = true;
-
-    final signIn = await auth.connectToGoogle("");
-    final neededSignup = auth.neededSignup;
-
-    if (!neededSignup) {
-      logger.d("user: ${signIn}");
-
-      final pk = auth.privateKey ?? "";
-
-      logger.d("pk: ${auth.privateKey}");
-
-      final res = await api.socialLogin(auth.email ?? "", pk);
-
-      if (res != null) {
-        Get.rootDelegate.offNamed(AppRoutes.mainScreen);
+    try {
+      await api.clearSession();
+      await authService.connectToGoogle("");
+      final neededSignup = authService.neededSignup;
+      if (!neededSignup) {
+        final pk = authService.privateKey ?? "";
+        final res = await api.socialLogin(authService.email ?? "", pk);
+        if (res != null) {
+          Get.rootDelegate.offNamed(AppRoutes.mainScreen);
+        } else {
+          Biyard.error(
+            "Failed to login",
+            "Login failed. Please try again later.",
+          );
+        }
       } else {
-        Biyard.error(
-          "Failed to login",
-          "Login failed. Please try again later.",
-        );
+        signupService.email(authService.email);
+        Get.rootDelegate.toNamed(AppRoutes.setupProfileScreen);
       }
-    } else {
-      signupService.email(auth.email);
-      Get.rootDelegate.toNamed(AppRoutes.setupProfileScreen);
+    } finally {
+      isBusy.value = false;
     }
-
-    // try {
-
-    // } catch (e, st) {
-    //   logger.e('Google Sign-In error: ${e}');
-    //   Biyard.error('Google Sign-In', '$e');
-    // } finally {
-    //   isBusy.value = false;
-    // }
   }
 
   void goToSignup() {
