@@ -180,3 +180,124 @@ jobs:
         run: |
           npm i -g aws-cdk
           cd packages/fetcher && make docker.build
+
+  playwright-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test
+        options: >
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      
+      redis:
+        image: redis:7
+        options: >
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          ssh-key: ${{ secrets.PULL_KEY_REPO }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          components: clippy, rustfmt
+          target: wasm32-unknown-unknown
+          toolchain: stable
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Initialize Database
+        run: |
+          psql postgresql://postgres:postgres@localhost:5432/ratel -f ./deps/rust-sdk/fixtures/sql/init.sql
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Start test services with Docker Compose
+        env:
+          DATABASE_TYPE: postgres
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/ratel
+          MIGRATE: "true"
+        run: |
+          # Use Docker Compose to start services
+          docker-compose up -d
+          
+          # Wait for services to be ready
+          echo "Waiting for services to start..."
+          sleep 30
+          
+          # Check service health
+          timeout 60s bash -c 'until curl -f http://localhost:3000/version 2>/dev/null; do sleep 5; echo "Waiting for API..."; done' || echo "API health check failed"
+          timeout 60s bash -c 'until curl -f http://localhost:8080 2>/dev/null; do sleep 5; echo "Waiting for web..."; done' || echo "Web health check failed"
+          
+          echo "Service status check:"
+          curl -I http://localhost:3000/health || echo "Main API not responding"
+          curl -I http://localhost:8080 || echo "Web frontend not responding"
+
+      - name: Run Playwright Tests
+        env:
+          CI: true
+        run: |
+          # Create test results directory
+          mkdir -p test-results
+          
+          # Run Playwright tests
+          npx playwright test --reporter=html,line
+        continue-on-error: true
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-test-results
+          path: |
+            test-results/
+            playwright-report/
+          retention-days: 30
+
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-screenshots-${{ github.sha }}
+          path: test-results/**/
+          retention-days: 30
+
+      - name: Show test logs on failure
+        if: failure()
+        run: |
+          echo "=== Docker Compose Services ==="
+          docker-compose ps
+          echo ""
+          echo "=== Docker Compose Logs ==="
+          docker-compose logs --tail=50
