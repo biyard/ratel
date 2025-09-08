@@ -435,7 +435,10 @@ export function FeedFooter({
         <IconText>
           <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
-              <button onClick={(e) => e.stopPropagation()}>
+              <button
+                className="flex flex-row w-fit justify-center items-center gap-1.25"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <Shares />
                 {convertNumberToString(shares)}
               </button>
