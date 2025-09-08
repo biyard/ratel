@@ -17,6 +17,7 @@ import LoginIcon from '@/assets/icons/login.svg';
 import { useLocale, useTranslations } from 'next-intl';
 import { Us } from './icons';
 import { Kr } from '@/assets/icons/flags';
+import { useRouter } from 'next/navigation';
 export interface HeaderProps {
   mobileExtends: boolean;
   setMobileExtends: (extend: boolean) => void;
@@ -25,6 +26,7 @@ export interface HeaderProps {
 function Header(props: HeaderProps) {
   const t = useTranslations('Nav');
   const popup = usePopup();
+  const router = useRouter();
   const locale = useLocale() as 'en' | 'ko';
 
   const { data } = useSuspenseUserInfo();
@@ -32,6 +34,11 @@ function Header(props: HeaderProps) {
     data &&
     (data.user_type === UserType.Individual ||
       data.user_type === UserType.Team);
+
+  const handleChangeLanguage = (newLocale: string) => {
+    document.cookie = `locale=${newLocale}; path=/; max-age=31536000; samesite=lax`;
+    router.refresh();
+  };
 
   const navItems = [
     {
@@ -153,9 +160,23 @@ function Header(props: HeaderProps) {
           )}
 
           {locale == 'en' ? (
-            <Us className="cursor-pointer rounded-full w-8 h-8" />
+            <div
+              className="cursor-pointer w-fit h-fit ml-3"
+              onClick={() => {
+                handleChangeLanguage('ko');
+              }}
+            >
+              <Us className="cursor-pointer rounded-full w-8 h-8 object-cover" />
+            </div>
           ) : (
-            <Kr className="cursor-pointer rounded-full w-8 h-8" />
+            <div
+              className="cursor-pointer w-fit h-fit ml-3"
+              onClick={() => {
+                handleChangeLanguage('en');
+              }}
+            >
+              <Kr className="cursor-pointer rounded-full w-8 h-8 object-cover" />
+            </div>
           )}
         </div>
 
