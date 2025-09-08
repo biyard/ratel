@@ -44,7 +44,7 @@ export default function Profile({ profileUrl, name }: ProfileProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild className="focus-visible:outline-none">
-        <button className="w-full flex items-center justify-between">
+        <button className="w-fit flex items-center justify-between">
           <div className="flex flex-col items-center justify-center p-2.5 group">
             {profileUrl && profileUrl !== '' ? (
               <Image
@@ -67,7 +67,7 @@ export default function Profile({ profileUrl, name }: ProfileProps) {
 
       <DropdownMenuContent
         align="end"
-        className="w-[250px] h-fit rounded-lg border border-primary p-[10px] bg-bg z-20"
+        className="w-[250px] h-fit rounded-lg border border-primary p-[10px] bg-bg z-999"
       >
         <DropdownMenuLabel className="text-xs text-neutral-400 px-2 py-1">
           {t('teams')}

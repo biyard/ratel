@@ -1,4 +1,5 @@
 'use client';
+import Image from 'next/image';
 import React, { useContext, useMemo } from 'react';
 // import { Users, MessageSquare } from 'lucide-react';
 // import { Team } from '@/lib/api/models/team';
@@ -14,20 +15,105 @@ import {
 } from '@/components/icons';
 import { TeamContext } from '@/lib/contexts/team-context';
 import { useTranslations } from 'next-intl';
+import { useUserByUsername } from '@/app/(social)/_hooks/use-user';
+import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
+import { ratelApi } from '@/lib/api/ratel_api';
+import { useApiCall } from '@/lib/api/use-send';
+import FollowButton from './follow-button';
+import UnFollowButton from './unfollow-button';
+import { showErrorToast, showSuccessToast } from '@/lib/toast';
+import { logger } from '@/lib/logger';
+import {
+  followRequest,
+  unfollowRequest,
+} from '@/lib/api/models/networks/follow';
 
 export interface TeamSidemenuProps {
   username: string;
 }
 
 export default function TeamSidemenu({ username }: TeamSidemenuProps) {
+  const { post } = useApiCall();
   const t = useTranslations('Team');
   const { teams } = useContext(TeamContext);
   const team = useMemo(() => {
     return teams.find((t) => t.username === username);
   }, [teams, username]);
 
-  if (!team) {
+  const { data: user } = useUserByUsername(username);
+  const data = useSuspenseUserInfo();
+  const userInfo = data.data;
+  const followings = userInfo.followings;
+  const isFollowing = followings.some((f: { id: number }) => f.id === user.id);
+
+  const handleFollow = async (userId: number) => {
+    await post(ratelApi.networks.follow(userId), followRequest());
+  };
+
+  const handleUnFollow = async (userId: number) => {
+    await post(ratelApi.networks.unfollow(userId), unfollowRequest());
+  };
+
+  if (!team && !user) {
     return <></>;
+  }
+
+  if (!team) {
+    return (
+      <div className="flex flex-col gap-5 px-4 py-5 rounded-[10px] bg-component-bg min-w-[250px] h-fit">
+        <div className="relative">
+          {user?.profile_url && user?.profile_url !== '' ? (
+            <Image
+              src={user?.profile_url}
+              alt={user?.nickname ?? 'team profile'}
+              width={80}
+              height={80}
+              className="w-20 h-20 rounded-full border-2 object-cover object-top"
+            />
+          ) : (
+            <div className="w-20 h-20 rounded-full border border-neutral-500 bg-neutral-600" />
+          )}
+        </div>
+
+        <div className="font-medium">{user.nickname}</div>
+
+        <div
+          id="user-profile-description"
+          className="text-xs text-gray-400"
+          dangerouslySetInnerHTML={{ __html: user.html_contents }}
+        />
+
+        {!isFollowing ? (
+          <FollowButton
+            onClick={async () => {
+              try {
+                await handleFollow(user.id);
+                data.refetch();
+
+                showSuccessToast('success to follow user');
+              } catch (err) {
+                showErrorToast('failed to follow user');
+                logger.error('failed to follow user with error: ', err);
+              }
+            }}
+          />
+        ) : (
+          <UnFollowButton
+            onClick={async () => {
+              try {
+                await handleUnFollow(user.id);
+                data.refetch();
+
+                showSuccessToast('success to unfollow user');
+              } catch (err) {
+                showErrorToast('failed to unfollow user');
+                logger.error('failed to unfollow user with error: ', err);
+              }
+            }}
+          />
+        )}
+      </div>
+    );
   }
 
   return (
