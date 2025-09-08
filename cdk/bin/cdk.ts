@@ -8,7 +8,7 @@ const stackName = process.env.STACK;
 
 const env = process.env.ENV || "dev";
 // Common host
-const host = "dev.ratel.foundation";
+const host = process.env.DOMAIN || "dev.ratel.foundation";
 
 // --- Regional stacks (ALB + Fargate) ---
 const kr = new RegionalServiceStack(app, `ratel-${env}-svc-ap-northeast-2`, {
@@ -57,5 +57,6 @@ new GlobalAccelStack(app, "GlobalAccel", {
   euAlb: eu.alb,
   usAlb: us.alb,
   krAlb: kr.alb,
+  stage: env,
   commit: process.env.COMMIT!,
 });

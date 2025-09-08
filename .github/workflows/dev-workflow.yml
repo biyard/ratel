@@ -39,6 +39,8 @@ jobs:
           PGHOST_EU: ${{ secrets.DEV_PGHOST_EU }}
           PGHOST_US: ${{ secrets.DEV_PGHOST_US }}
           PGHOST_AP: ${{ secrets.DEV_PGHOST_AP }}
+          DOMAIN: dev.ratel.foundation
+          STACK: ratel-dev-stack
         run: |
           npm i -g aws-cdk
           tar xzvf next.tar.gz
@@ -145,6 +147,7 @@ jobs:
           REGION: ap-northeast-2
           ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
           ENV: dev
           RUST_LOG: debug
           SERVICE: main-api
@@ -155,32 +158,33 @@ jobs:
           OPENAPI_KEY: ${{ secrets.OPENAPI_KEY }}
           AUTH_SECRET_KEY: ${{ secrets.DEV_AUTH_SECRET_KEY }}
           JWT_SECRET_KEY: ${{ secrets.DEV_JWT_SECRET_KEY }}
-          BASE_DOMAIN: ratel.foundation
+
           MIGRATE: false
-          ENABLE_S3: false
-          ENABLE_LAMBDA: true
+          BUCKET_NAME: metadata.ratel.foundation
           SLACK_CHANNEL_SPONSOR: ${{ secrets.DEV_SLACK }}
-          US_CONGRESS_KEY: ${{ secrets.US_CONGRESS_KEY }}
           SLACK_CHANNEL_ABUSING: ${{ secrets.DEV_SLACK }}
+
           KAIA_ENDPOINT: https://public-en-kairos.node.kaia.io
           KAIA_FEEPAYER_KEY: ${{ secrets.DEV_KAIA_KEY }}
           KAIA_FEEPAYER_ADDR: ${{ secrets.DEV_KAIA_ADDR }}
           KAIA_OWNER_KEY: ${{ secrets.DEV_KAIA_KEY }}
           KAIA_OWNER_ADDR: ${{ secrets.DEV_KAIA_ADDR }}
-          RDS_RESOURCE_ARN: ${{ secrets.RDS_RESOURCE_ARN }}
-          RDS_SECRET_ARN: ${{ secrets.RDS_SECRET_ARN }}
+
           NONCELAB_TOKEN: ${{ secrets.NONCELAB_TOKEN }}
+
+          TELEGRAM_TOKEN: ${{ secrets.DEV_TELEGRAM_TOKEN }}
+          TELEGRAM_BOT_URL: https://telegram-bot.dev.ratel.foundation
+
           BBS_BLS_X: ${{ secrets.BBS_BLS_X }}
           BBS_BLS_Y: ${{ secrets.BBS_BLS_Y }}
           BBS_BLS_D: ${{ secrets.BBS_BLS_D }}
           BBS_BLS_CRV: ${{ secrets.BBS_BLS_CRV }}
+
           P256_X: ${{ secrets.P256_X }}
           P256_Y: ${{ secrets.P256_Y }}
           P256_D: ${{ secrets.P256_D }}
           P256_CRV: ${{ secrets.P256_CRV }}
-          
-          TELEGRAM_TOKEN: ${{ secrets.DEV_TELEGRAM_TOKEN }}
-          TELEGRAM_BOT_URL: https://telegram-bot.dev.ratel.foundation
+
         run: |
           make docker.build
           make docker.login
@@ -270,23 +274,17 @@ jobs:
       - name: Deploy APIs
         env:
           REGION: ap-northeast-2
-          STACK: ratel-telegram-bot-dev-stack
           ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
           ENV: dev
           RUST_LOG: info
-          SERVICE: telegram-bot
-          DOMAIN: telegram-bot.dev.ratel.foundation
           DATABASE_TYPE: postgres
           DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
           TELEGRAM_TOKEN: ${{ secrets.DEV_TELEGRAM_TOKEN }}
           TELEGRAM_MINI_APP_URI: https://t.me/crypto_ratel_dev_bot
-          BASE_DOMAIN: ratel.foundation
-          REPO_NAME: ratel/telegram-bot
+
           MIGRATE: false
-          ENABLE_S3: false
-          ENABLE_FARGATE: true
-          ENABLE_LAMBDA: false
         run: |
           make docker.build
           make docker.login
@@ -326,29 +324,15 @@ jobs:
       - name: Deploy APIs
         env:
           REGION: ap-northeast-2
-          STACK: ratel-fetcher-dev-stack
           ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
           ENV: dev
           RUST_LOG: info
-          SERVICE: fetcher
-          DOMAIN: fetcher-api.dev.ratel.foundation
-          AUTH_DOMAIN: dev.ratel.foundation
           DATABASE_TYPE: postgres
           DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
-          OPENAPI_KEY: ${{ secrets.OPENAPI_KEY }}
-          AUTH_SECRET_KEY: ${{ secrets.DEV_AUTH_SECRET_KEY }}
-          JWT_SECRET_KEY: ${{ secrets.DEV_JWT_SECRET_KEY }}
-          SERVER_KEY: ${{ secrets.DEV_AUTH_SECRET_KEY }}
-          SLACK_CHANNEL_BILL: ${{ secrets.DEV_SLACK }}
-          BASE_DOMAIN: ratel.foundation
-          REPO_NAME: ratel/fetcher
-          US_CONGRESS_KEY: ${{ secrets.US_CONGRESS_KEY }}
           RPC_ENDPOINT: https://public-en-kairos.node.kaia.io
           MIGRATE: false
-          ENABLE_S3: false
-          ENABLE_FARGATE: true
-          ENABLE_LAMBDA: false
         run: |
           make docker.build
           make docker.login
@@ -643,6 +627,6 @@ jobs:
       - name: Git pr release action
         uses: grassedge/git-pr-release-action@v1.0
         with:
-          base: stg
+          base: main
           head: dev
           token: ${{ secrets.GITHUB_TOKEN }}

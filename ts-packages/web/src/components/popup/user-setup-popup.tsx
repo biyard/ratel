@@ -168,7 +168,7 @@ const UserSetupPopup = ({
       id={id}
       className="h-150 tablet:h-full max-h-screen overflow-y-scroll w-full mt-8.75 scrollbar-hide"
     >
-      <div className="flex flex-col max-w-100 w-full gap-4 tablet:gap-8.75 overflow-y-scroll">
+      <div className="flex flex-col max-w-100 w-full gap-4 tablet:gap-8.75 max-mobile:overflow-y-scroll">
         <FileUploader onUploadSuccess={handleProfileUrl}>
           <div className="group relative flex items-center justify-center size-40 max-mobile:size-20 mx-auto">
             <Image
