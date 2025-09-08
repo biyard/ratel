@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import Image from 'next/image';
 import { Team } from '@/lib/api/models/team';
 import TeamSelector from '@/app/(social)/_components/team-selector';
@@ -11,7 +11,8 @@ import {
 } from '@/lib/api/models/networks/follow';
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import { logger } from '@/lib/logger';
-import { useTranslations } from 'next-intl';
+import FollowButton from './follow-button';
+import UnFollowButton from './unfollow-button';
 
 export interface TeamProfileProps {
   team?: Team;
@@ -92,41 +93,6 @@ export default function TeamProfile({ team }: TeamProfileProps) {
           }}
         />
       )}
-    </div>
-  );
-}
-
-function UnFollowButton({ onClick }: { onClick: () => void }) {
-  const t = useTranslations('Team');
-  const [isHovered, setIsHovered] = useState(false);
-
-  return (
-    <div
-      className="cursor-pointer flex flex-row w-fit h-fit px-[10px] py-[5px] bg-transparent border border-neutral-700 hover:border-[#ff4d4f] hover:bg-[#ffe3e3] rounded-[50px]"
-      onClick={onClick}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      <div
-        className={`font-bold  ${isHovered ? 'text-[#ff4d4f]' : 'text-neutral-700'} text-xs`}
-      >
-        {isHovered ? t('unfollow') : t('following')}
-      </div>
-    </div>
-  );
-}
-
-function FollowButton({ onClick }: { onClick: () => void }) {
-  const t = useTranslations('Team');
-
-  return (
-    <div
-      className="cursor-pointer flex flex-row w-fit h-fit px-[10px] py-[5px] bg-white hover:bg-gray-300 rounded-[50px]"
-      onClick={() => {
-        onClick();
-      }}
-    >
-      <div className="font-bold text-[#000203] text-xs">{t('follow')}</div>
     </div>
   );
 }
