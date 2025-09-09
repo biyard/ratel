@@ -58,7 +58,7 @@ export default function CreateArtworkModal({
             <Image src={file.url} alt={file.name} fill />
           ) : (
             <div className="flex items-center justify-center w-full h-full border border-dashed rounded">
-              <span className="text-sm text-white">No Image Uploaded</span>
+              <span className="text-sm text-foreground">No Image Uploaded</span>
             </div>
           )}
         </div>
