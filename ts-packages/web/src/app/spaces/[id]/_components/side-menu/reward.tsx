@@ -69,7 +69,7 @@ function RewardItem({ amount, text }: RewardProps) {
     <div className="flex flex-row w-full gap-2.5 text-[12px]/[12px] text-neutral-500">
       <span>+</span>
       <div className="flex flex-col gap-1">
-        <span className="text-white text-[15px]/[12px] font-medium">
+        <span className="text-foreground text-[15px]/[12px] font-medium">
           {amount.toLocaleString()} P
         </span>
         <span>{text}</span>

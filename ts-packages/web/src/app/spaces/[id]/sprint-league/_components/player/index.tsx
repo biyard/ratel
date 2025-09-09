@@ -140,7 +140,7 @@ export default function PlayerEdit({ isEdit }: { isEdit: boolean }) {
                 <Input
                   disabled={!isEdit}
                   contentEditable={isEdit}
-                  className="w-full text-[15px]/[23px] px-4 py-6"
+                  className="w-full text-[15px]/[23px] px-4 py-6 text-foreground"
                   value={player.name}
                   onChange={(e) => {
                     updatePlayer(player.id, {
@@ -152,7 +152,7 @@ export default function PlayerEdit({ isEdit }: { isEdit: boolean }) {
                 <Textarea
                   disabled={!isEdit}
                   contentEditable={isEdit}
-                  className="flex-1"
+                  className="flex-1 text-foreground"
                   value={player.description || ''}
                   onChange={(e) =>
                     updatePlayer(player.id, {
@@ -182,7 +182,7 @@ function PlayerSelector({
   const t = useTranslations('SprintSpace');
   const isEmpty = alias.startsWith('_');
   return (
-    <div className="relative bg-neutral-800 rounded-lg">
+    <div className="relative bg-neutral-800 light:bg-transparent border light:border-neutral-300 rounded-lg">
       {isEdit && (
         <Button
           variant="default"

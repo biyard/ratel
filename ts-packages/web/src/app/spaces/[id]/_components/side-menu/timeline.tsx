@@ -40,8 +40,11 @@ export default function TimelineMenu({
         </div>
         <div className="flex flex-col pl-3.25 gap-5">
           {sortedItems.map((item) => (
-            <div className="flex flex-col gap-1 text-white" key={item.label}>
-              <div className="font-medium text-white text-[15px]/[12px]">
+            <div
+              className="flex flex-col gap-1 text-foreground"
+              key={item.label}
+            >
+              <div className="font-medium text-foreground text-[15px]/[12px]">
                 {item.label}
               </div>
               <div className="font-medium text-neutral-80 text-xs/[12px]">
