@@ -45,7 +45,7 @@ function Header(props: HeaderProps) {
       name: t('home'),
       icon: (
         <HomeIcon
-          className="group-hover:[&>path]:stroke-white transition-all"
+          className="group-hover:[&>path]:stroke-icon-hover transition-all"
           width="24"
           height="24"
         />
@@ -71,7 +71,7 @@ function Header(props: HeaderProps) {
       name: t('my_network'),
       icon: (
         <UserGroupIcon
-          className="group-hover:[&>path]:stroke-white transition-all"
+          className="group-hover:[&>path]:stroke-icon-hover transition-all"
           width="24"
           height="24"
         />
@@ -109,7 +109,7 @@ function Header(props: HeaderProps) {
   ];
 
   return (
-    <header className="border-b border-separator px-2.5 py-2.5 flex items-center justify-center !bg-bg h-[var(--header-height)]">
+    <header className="border-b border-neutral-800 light:border-[#e5e5e5] px-2.5 py-2.5 flex items-center justify-center !bg-bg h-[var(--header-height)] z-999">
       <nav className="flex items-center justify-between mx-2.5 gap-12.5 w-full max-w-desktop">
         <div className="flex items-center gap-5">
           <Link
@@ -131,7 +131,7 @@ function Header(props: HeaderProps) {
               hidden={!item.visible || (item.authorized && !loggedIn)}
             >
               {item.icon}
-              <span className="whitespace-nowrap text-neutral-500 group-hover:text-white text-[15px] font-medium transition-all">
+              <span className="whitespace-nowrap text-neutral-500 group-hover:text-icon-hover text-[15px] font-medium transition-all">
                 {' '}
                 {item.name}{' '}
               </span>
@@ -161,7 +161,7 @@ function Header(props: HeaderProps) {
                   <Kr className="cursor-pointer rounded-full w-4 h-4 object-cover" />
                 )}
               </div>
-              <span className="whitespace-nowrap text-neutral-500 group-hover:text-white text-[15px] font-medium transition-all">
+              <span className="whitespace-nowrap text-neutral-500 group-hover:text-icon-hover text-[15px] font-medium transition-all">
                 {' '}
                 {locale == 'en' ? 'En' : 'Ko'}
               </span>
@@ -183,7 +183,7 @@ function Header(props: HeaderProps) {
               }}
             >
               <LoginIcon className="size-6 group-hover:[&>path]:stroke-white" />
-              <span className="whitespace-nowrap text-neutral-500 group-hover:text-white text-[15px] font-medium transition-all">
+              <span className="whitespace-nowrap text-neutral-500 group-hover:text-icon-hover text-[15px] font-medium transition-all">
                 {t('signIn')}
               </span>
             </button>

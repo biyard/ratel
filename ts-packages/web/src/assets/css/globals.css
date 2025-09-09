@@ -81,6 +81,7 @@
   --accent: var(--accent-green);
   --accent-foreground: #000000;
   --accent-hover: #282828;
+
   --destructive: var(--accent-pink);
   --destructive-foreground: #ffffff;
 
@@ -107,7 +108,12 @@
   /* ================================
      LEGACY TOKENS (Deprecated - for migration only)
      ================================ */
+  --color-home-side: #ffffff;
+  --color-home-side-text: #1d1d1d;
+  --color-hover: #282828;
+  --color-icon-hover: #ffffff;
   --color-neutral-400: var(--foreground-muted);
+  --color-neutral-500: var(--foreground-more-muted);
   --color-neutral-600: var(--foreground-more-muted);
   --color-background: var(--background);
   --color-component-bg: var(--card);
@@ -172,12 +178,17 @@
   /* ================================
      LEGACY TOKEN OVERRIDES
      ================================ */
+  --color-home-side: #fcb300;
+  --color-home-side-text: #262626;
+  --color-hover: #e5e5e5;
+  --color-icon-hover: #e5e5e5;
   --color-background: var(--background);
   --color-component-bg: var(--card);
   --color-custom-white: var(--gray-800);
   --color-neutral-900: var(--gray-50);
   --color-neutral-400: var(--foreground-more-muted);
-  --color-neutral-600: var(--foreground-muted);
+  --color-neutral-500: var(--foreground-more-muted);
+  --color-neutral-600: #d9d9d9;
   --color-footer: var(--gray-900);
   --color-btn-hover: var(--accent-hover);
   --color-tab-hover: var(--accent-hover);

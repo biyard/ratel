@@ -61,7 +61,7 @@ export default function Suggestions() {
 
   return (
     <BlackBox>
-      <h3 className="font-medium mb-3">{t('suggested')}</h3>
+      <h3 className="font-medium mb-3 text-foreground">{t('suggested')}</h3>
       <div className="flex flex-col gap-[35px]">
         {suggestions.map((user) => (
           <SuggestionItem key={user.id} user={user} onFollow={handleFollow} />
