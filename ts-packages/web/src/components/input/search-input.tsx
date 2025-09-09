@@ -22,7 +22,7 @@ export default function SearchInput({
       value={value}
       onChange={(e) => setValue(e.target.value)}
       onKeyDown={handleKeyDown}
-      className="bg-transparent text-white placeholder:text-neutral-500 border border-[#464646] text-base outline-none w-full focus:border focus:border-primary p-[10px] rounded-sm"
+      className="bg-transparent text-foreground placeholder:text-neutral-500 border border-[#464646] text-base outline-none w-full focus:border focus:border-primary p-[10px] rounded-sm"
     />
   );
 }

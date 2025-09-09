@@ -32,14 +32,14 @@ export default function LocaleModal({
             <button
               key={opt.value}
               onClick={() => setSelected(opt.value)}
-              className="flex items-center gap-3 w-full text-left px-3 py-3 rounded-[10px] hover:bg-neutral-800 transition-colors"
+              className={`flex items-center gap-3 w-full text-left px-3 py-3 rounded-[10px] transition-colors border ${isSelected ? ' border-neutral-400' : 'border-transparent'}`}
             >
               <span className="w-5 flex items-center justify-center">
                 {isSelected && (
                   <CheckCircle className="h-4.5 w-4.5 [&>circle]:hidden [&>path]:stroke-primary" />
                 )}
               </span>
-              <span className="text-white font-medium text-sm/[16px]">
+              <span className="text-foreground font-medium text-sm/[16px]">
                 {opt.label}
               </span>
             </button>
@@ -50,7 +50,7 @@ export default function LocaleModal({
       <div className="flex items-center justify-end gap-4 mt-6 px-5 pb-2">
         <button
           onClick={onCancel}
-          className="px-6 py-[12px] bg-transparent font-bold text-base text-neutral-400 hover:text-white transition-colors"
+          className="px-6 py-[12px] bg-transparent font-bold text-base text-neutral-400 hover:text-hover transition-colors"
         >
           {t('cancel')}
         </button>

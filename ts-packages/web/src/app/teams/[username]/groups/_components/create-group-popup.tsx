@@ -183,7 +183,7 @@ function GroupPermissionSelector({
               </div>
 
               {/* Individual Toggles */}
-              <div className="flex flex-col border-neutral-800 divide-y divide-neutral-800">
+              <div className="flex flex-col border-neutral-800 divide-y divide-neutral-800 light:divide-[#e5e5e5]">
                 {perms.map((perm) => {
                   const active = hasPermission(perm.value);
                   return (
@@ -191,7 +191,7 @@ function GroupPermissionSelector({
                       key={perm.value}
                       className="flex justify-between items-center py-2 h-[55px]"
                     >
-                      <span className="text-[15px]/[24px] font-normal text-white">
+                      <span className="text-[15px]/[24px] font-normal text-foreground">
                         {perm.label}
                       </span>
                       <Switch
@@ -245,7 +245,7 @@ function GroupDescription({
         onChange={(e) => setGroupDescription(e.target.value)}
         maxLength={100}
         placeholder={t('description_hint')}
-        className="w-full px-5 py-[10px] rounded-[8px] border border-[#464646] bg-transparent text-white placeholder:text-neutral-600 text-sm outline-none resize-none"
+        className="w-full px-5 py-[10px] rounded-[8px] border border-[#464646] bg-transparent text-foreground placeholder:text-neutral-600 text-sm outline-none resize-none"
       />
 
       <div className="w-full text-right text-[15px]/[22.5px] text-neutral-600">
@@ -278,7 +278,7 @@ function GroupName({
         onChange={(e) => setGroupName(e.target.value)}
         maxLength={100}
         placeholder={t('group_name_hint')}
-        className="w-full px-5 py-[10.5px] rounded-[8px] border border-[#464646] bg-transparent text-white placeholder:text-neutral-600 text-[15px]/[22.5px] outline-none"
+        className="w-full px-5 py-[10.5px] rounded-[8px] border border-[#464646] bg-transparent text-foreground placeholder:text-neutral-600 text-[15px]/[22.5px] outline-none"
       />
 
       <div className="w-full text-right text-[15px]/[22.5px] text-neutral-600">{`${groupName.length}/100`}</div>
