@@ -18,7 +18,7 @@ impl DynamoClient {
         // Check for local development
         let mut builder = Config::builder();
         
-        if let Some(dynamo_url) = option_env!("DYNAMO_URL") {
+        if let Some(dynamo_url) = option_env!("AWS_ENDPOINT_URL_DYNAMODB") {
             if dynamo_url.contains("localhost") {
                 // Use test credentials for localhost
                 builder = builder
