@@ -23,13 +23,15 @@ export default function TabMenu<T>({
             key={item.label}
             type="button"
             data-active={activeTab === item.tab}
-            className={`cursor-pointer flex flex-row gap-3 items-center px-1 py-2 rounded-sm data-[active=true]:bg-neutral-800`}
+            className={`cursor-pointer flex flex-row gap-3 items-center px-1 py-2 rounded-sm data-[active=true]:bg-neutral-800 light:data-[active=true]:bg-neutral-300`}
             onClick={() => {
               onClick(item.tab);
             }}
           >
             {item.icon}
-            <div className="font-bold text-white text-sm">{item.label}</div>
+            <div className="font-bold text-foreground text-sm">
+              {item.label}
+            </div>
           </button>
         ))}
       </div>
