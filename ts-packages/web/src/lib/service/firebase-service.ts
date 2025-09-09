@@ -97,9 +97,7 @@ if (isFirebaseConfigValid) {
     provider = null;
   }
 } else {
-  logger.warn(
-    '🔥 Skipping Firebase initialization due to invalid configuration'
-  );
+  logger.warn('🔥 Skipping Firebase initialization');
 }
 
 export enum EventType {
@@ -222,9 +220,7 @@ export const onUserChanged = (
   cb: (user: User | null) => void,
 ): (() => void) => {
   if (!auth) {
-    logger.warn(
-      '🔥 Cannot observe user changes: Firebase auth not initialized'
-    );
+    logger.warn('🔥 Firebase auth not initialized');
     // Return a no-op function
     return () => {};
   }
