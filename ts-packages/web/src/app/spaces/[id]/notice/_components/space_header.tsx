@@ -24,6 +24,7 @@ import { TeamContext } from '@/lib/contexts/team-context';
 import { useUserInfo } from '@/app/(social)/_hooks/user';
 import { getTimeAgo } from '@/lib/time-utils';
 import { useTranslations } from 'next-intl';
+import { convertNumberToString } from '@/lib/number-utils';
 
 export interface SpaceHeaderProps {
   title: string;
@@ -166,7 +167,7 @@ export default function SpaceHeader({
 
       <div className="flex flex-row w-full justify-between items-center">
         <div className="flex flex-row w-fit gap-2.5 items-center">
-          <SpaceType />
+          {/* <SpaceType /> */}
           {status == SpaceStatus.InProgress ? <Onboard /> : <></>}
         </div>
 
@@ -174,28 +175,28 @@ export default function SpaceHeader({
           <div className="flex flex-row w-fit gap-1 items-center">
             <ThumbUp width={20} height={20} />
             <div className="font-medium text-[15px] text-white">
-              {likes ?? 0}
+              {convertNumberToString(likes)}
             </div>
           </div>
 
           <div className="flex flex-row w-fit gap-1 items-center">
             <CommentIcon width={20} height={20} />
             <div className="font-medium text-[15px] text-white">
-              {comments ?? 0}
+              {convertNumberToString(comments)}
             </div>
           </div>
 
           <div className="flex flex-row w-fit gap-1 items-center">
             <Rewards width={20} height={20} />
             <div className="font-medium text-[15px] text-white">
-              {rewards ?? 0}
+              {convertNumberToString(rewards)}
             </div>
           </div>
 
           <div className="flex flex-row w-fit gap-1 items-center">
             <Share2 width={20} height={20} />
             <div className="font-medium text-[15px] text-white">
-              {shares ?? 0}
+              {convertNumberToString(shares)}
             </div>
           </div>
 
@@ -293,10 +294,10 @@ function Onboard() {
   );
 }
 
-function SpaceType() {
-  return (
-    <div className="flex flex-row w-fit h-fit px-2 bg-transparent rounded-sm border border-c-wg-70 font-semibold text-white text-xs/[25px]">
-      Crypto
-    </div>
-  );
-}
+// function SpaceType() {
+//   return (
+//     <div className="flex flex-row w-fit h-fit px-2 bg-transparent rounded-sm border border-c-wg-70 font-semibold text-white text-xs/[25px]">
+//       Crypto
+//     </div>
+//   );
+// }

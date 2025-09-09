@@ -102,7 +102,7 @@ export function PostInfoSection({
   return (
     <div className="flex flex-row w-full justify-between items-center">
       <div className="flex flex-row w-fit gap-2.5 items-center">
-        <SpaceType />
+        {/* <SpaceType /> */}
         {!isDraft ? <Onboard /> : <></>}
       </div>
       <div className="flex flex-row w-fit gap-5 [&>*>svg>*]:stroke-neutral-500 [&>*>svg]:size-5">
@@ -206,10 +206,10 @@ function Onboard() {
 }
 
 // FIXME: use Industry ID.
-function SpaceType() {
-  return (
-    <div className="flex flex-row w-fit h-fit px-2 bg-transparent rounded-sm border border-c-wg-70 font-semibold text-white text-xs/[25px]">
-      Crypto
-    </div>
-  );
-}
+// function SpaceType() {
+//   return (
+//     <div className="flex flex-row w-fit h-fit px-2 bg-transparent rounded-sm border border-c-wg-70 font-semibold text-white text-xs/[25px]">
+//       Crypto
+//     </div>
+//   );
+// }

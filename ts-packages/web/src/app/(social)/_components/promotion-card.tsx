@@ -29,7 +29,7 @@ export default function PromotionCard({ promotion, feed }: PromotionCardProps) {
 
   return (
     <div className="flex flex-col gap-2.5">
-      <h3 className="font-bold text-white text-[15px]/[20px]">
+      <h3 className="font-bold text-foreground text-[15px]/[20px]">
         {t('hot_promotion')}
       </h3>
       <Link
@@ -46,7 +46,7 @@ export default function PromotionCard({ promotion, feed }: PromotionCardProps) {
           priority
         />
         <div>
-          <div className="font-medium text-white text-base/[25px]">
+          <div className="font-medium text-foreground text-base/[25px]">
             {promotion.name}
           </div>
         </div>
