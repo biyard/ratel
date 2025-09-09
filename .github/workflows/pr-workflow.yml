@@ -197,10 +197,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y docker-compose
 
-      # - name: Setup SSH session with tmate
-      #   uses: mxschmitt/action-tmate@v3
-      #   with:
-      #     limit-access-to-actor: true
       - name: Setup pnpm
         run: |
           corepack enable
@@ -217,6 +213,11 @@ jobs:
           mkdir .build
 
           make run
+
+      - name: Setup SSH session with tmate
+        uses: mxschmitt/action-tmate@v3
+        with:
+          limit-access-to-actor: true
 
       - name: Start test services with Docker Compose
         run: |
