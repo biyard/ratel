@@ -14,14 +14,46 @@ pub struct DynamoClient {
 impl DynamoClient {
     pub fn new(table_name: &str) -> Self {
         let conf = config::get();
-        let aws_config = Config::builder()
-            .credentials_provider(Credentials::new(
-                conf.aws.access_key_id,
-                conf.aws.secret_access_key,
-                None,
-                None,
-                "dynamo",
-            ))
+        
+        // Check for local development
+        let mut builder = Config::builder();
+        
+        if let Some(dynamo_url) = option_env!("DYNAMO_URL") {
+            if dynamo_url.contains("localhost") {
+                // Use test credentials for localhost
+                builder = builder
+                    .credentials_provider(Credentials::new(
+                        "test",
+                        "test", 
+                        None,
+                        None,
+                        "dynamo",
+                    ))
+                    .endpoint_url(dynamo_url);
+            } else {
+                // Use production credentials
+                builder = builder
+                    .credentials_provider(Credentials::new(
+                        conf.aws.access_key_id,
+                        conf.aws.secret_access_key,
+                        None,
+                        None,
+                        "dynamo",
+                    ));
+            }
+        } else {
+            // Use production credentials
+            builder = builder
+                .credentials_provider(Credentials::new(
+                    conf.aws.access_key_id,
+                    conf.aws.secret_access_key,
+                    None,
+                    None,
+                    "dynamo",
+                ));
+        }
+        
+        let aws_config = builder
             .region(Region::new(conf.aws.region))
             .behavior_version_latest()
             .build();

@@ -5,17 +5,19 @@ use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DynamoProfile {
-    // DynamoDB Keys
+
     pub pk: String, // USER#{user_id}
     pub sk: String, // PROFILE
 
-    // Update-syntax fields (frequently updated)
+
     pub user_id: i64,
     pub profile_url: Option<String>,
     pub display_name: Option<String>,
     pub bio: Option<String>,
     pub updated_at: i64,
 }
+
+
 
 impl DynamoProfile {
     pub fn new(user_id: i64) -> Self {
