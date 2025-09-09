@@ -61,7 +61,7 @@ function DiscussionSchedules() {
     <div className="flex flex-col gap-2.5">
       <BlackBox>
         <div className="flex flex-col w-full gap-5">
-          <div className="font-bold text-white text-[15px]/[20px]">
+          <div className="font-bold text-foreground text-[15px]/[20px]">
             {t('discussions')}
           </div>
           <div className="flex flex-col w-full gap-2.5">
@@ -156,15 +156,15 @@ export function DiscussionRoom({
 
       <div className="flex flex-col flex-1 h-full justify-between items-start">
         <div className="flex flex-col flex-1 gap-1">
-          <div className="text-sm text-neutral-400 font-normal">
+          <div className="text-sm text-neutral-400 light:text-[#737373] font-normal">
             {statusLabel}
           </div>
-          <div className="text-lg text-white font-bold">{title}</div>
-          <div className="text-sm text-[#6d6d6d] font-normal">
+          <div className="text-lg text-foreground font-bold">{title}</div>
+          <div className="text-sm text-[#6d6d6d] light:text-[#737373] font-normal">
             {formattedDate}
           </div>
           <div
-            className="text-sm text-neutral-400 font-normal overflow-hidden text-ellipsis"
+            className="text-sm text-neutral-400 light:text-[#737373] font-normal overflow-hidden text-ellipsis"
             style={{
               display: '-webkit-box',
               WebkitLineClamp: 2,
@@ -273,7 +273,7 @@ function EditableDiscussion() {
     <BlackBox>
       <div className="flex flex-col w-full gap-5">
         <div className="flex flex-row w-full justify-between items-center">
-          <div className="font-bold text-white text-[15px]/[20px]">
+          <div className="font-bold text-foreground text-[15px]/[20px]">
             {t('discussions')}
           </div>
 
@@ -331,7 +331,7 @@ function AddDiscussion({ onadd }: { onadd: () => void }) {
       onClick={() => {
         onadd();
       }}
-      className="cursor-pointer flex flex-row w-fit px-[14px] py-[8px] gap-1 bg-white rounded-[6px] hover:bg-neutral-300"
+      className="cursor-pointer flex flex-row w-fit px-[14px] py-[8px] gap-1 bg-white border border-transparent light:bg-transparent light:border-neutral-300 rounded-[6px] hover:bg-neutral-300"
     >
       <Add className="w-5 h-5 stroke-neutral-500 text-neutral-500" />
       <span className=" text-[#000203] font-bold text-sm">
@@ -422,15 +422,15 @@ function EditableDiscussionInfo({
 
         <div className="flex flex-col flex-1 h-full justify-between items-start">
           <div className="flex flex-col flex-1 gap-1">
-            <div className="text-sm text-neutral-400 font-normal">
+            <div className="text-sm text-neutral-400 light:text-[#737373] font-normal">
               {statusLabel}
             </div>
-            <div className="text-lg text-white font-bold">{title}</div>
-            <div className="text-sm text-[#6d6d6d] font-normal">
+            <div className="text-lg text-foreground font-bold">{title}</div>
+            <div className="text-sm text-[#6d6d6d] light:text-[#737373] font-normal">
               {formattedDate}
             </div>
             <div
-              className="text-sm text-neutral-400 font-normal overflow-hidden text-ellipsis"
+              className="text-sm text-neutral-400 light:text-[#737373] font-normal overflow-hidden text-ellipsis"
               style={{
                 display: '-webkit-box',
                 WebkitLineClamp: 2,

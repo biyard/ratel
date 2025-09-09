@@ -27,7 +27,7 @@ export default function Wrapper({
 
   return (
     <div>
-      <div className="flex flex-row w-full mt-1.75 mb-3.75 font-semibold text-base/[22.5px] text-white gap-1">
+      <div className="flex flex-row w-full mt-1.75 mb-3.75 font-semibold text-base/[22.5px] text-foreground gap-1">
         <div className={isRequired ? 'text-[#ff6467]' : 'text-blue-500'}>
           [{isRequired ? t('required') : t('optional')}]
         </div>

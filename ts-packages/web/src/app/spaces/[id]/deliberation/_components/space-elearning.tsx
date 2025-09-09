@@ -29,7 +29,7 @@ export default function SpaceElearning() {
     <BlackBox>
       <div className="flex flex-col w-full gap-5">
         <div className="flex flex-row w-full justify-between items-start ">
-          <div className="font-bold text-white text-[15px]/[20px]">
+          <div className="font-bold text-foreground text-[15px]/[20px]">
             {t('elearnings')}
           </div>
 
@@ -44,7 +44,7 @@ export default function SpaceElearning() {
                 });
               }}
             >
-              <div className="cursor-pointer flex flex-row w-fit gap-1 items-center bg-white rounded-[6px] px-[14px] py-[8px] hover:bg-neutral-300">
+              <div className="cursor-pointer flex flex-row w-fit gap-1 items-center bg-white border border-transparent light:bg-transparent light:border-neutral-300 rounded-[6px] px-[14px] py-[8px] hover:bg-neutral-300">
                 <Upload className="w-5 h-5 stroke-neutral-500" />
                 <div className="font-bold text-sm text-black">
                   {t('upload')}
@@ -80,7 +80,7 @@ export default function SpaceElearning() {
                     />
 
                     {index !== elearnings.length - 1 ? (
-                      <div className="flex flex-row w-full h-0.25 bg-neutral-800" />
+                      <div className="flex flex-row w-full h-0.25 bg-neutral-800 light:bg-[#e5e5e5]" />
                     ) : (
                       <></>
                     )}
@@ -109,12 +109,12 @@ export default function SpaceElearning() {
 //FIXME: implement pdf reader
 function EBook({ file, onClick }: { file: FileInfo; onClick: () => void }) {
   return (
-    <div className="flex flex-row justify-between items-center pb-2.5 border-b border-b-neutral-800">
+    <div className="flex flex-row justify-between items-center pb-2.5 border-b border-b-neutral-800 light:border-b-[#e5e5e5]">
       <div className="flex flex-col gap-1">
-        <div className="font-normal text-neutral-400 text-sm">
+        <div className="font-normal text-neutral-400 light:text-[#737373] text-sm">
           {file.ext === 'MP4' || file.ext === 'MOV' ? 'eLearning' : 'eBook'}
         </div>
-        <div className="font-bold text-white text-lg">
+        <div className="font-bold text-foreground text-lg">
           {file.name.replace(/\.[^/.]+$/, '')}
         </div>
       </div>
@@ -127,7 +127,7 @@ function ReadButton({ onClick }: { onClick: () => void }) {
   const t = useTranslations('DeliberationSpace');
   return (
     <div
-      className="cursor-pointer flex flex-row items-center w-fit h-fit px-5 py-2.5 gap-2.5 bg-white hover:bg-neutral-300 rounded-lg"
+      className="cursor-pointer flex flex-row items-center w-fit h-fit px-5 py-2.5 gap-2.5 bg-white border border-transparent light:bg-transparent light:border-neutral-300 hover:bg-neutral-300 rounded-lg"
       onClick={() => {
         onClick();
       }}
@@ -154,7 +154,9 @@ function EditableFile({
             ? t('elearning')
             : t('ebook')}
         </div>
-        <div className="font-bold text-lg text-neutral-300">{file.name}</div>
+        <div className="font-bold text-lg text-neutral-300 light:text-[#737373]">
+          {file.name}
+        </div>
       </div>
       <div className="w-fit h-fit cursor-pointer" onClick={onclick}>
         <CircleClose className="w-4.5 h-4.5" fill="white" />

@@ -165,7 +165,7 @@ export default function SurveyQuestionEditor({
         <div className="flex gap-2 max-tablet:flex-col">
           <AnswerTypeSelect value={questionType} onChange={handleTypeChange} />
           <Input
-            className="bg-neutral-800 border border-neutral-700 rounded-lg w-full px-4 !py-5.5 font-medium text-[15px]/[22.5px] text-white placeholder:text-neutral-600 "
+            className="bg-input-box-bg border border-input-box-border rounded-lg w-full px-4 !py-5.5 font-medium text-[15px]/[22.5px] text-foreground placeholder:text-neutral-600 "
             type="text"
             placeholder={t('title_hint')}
             value={questionTitle}
@@ -177,7 +177,7 @@ export default function SurveyQuestionEditor({
           questionType === 'multiple_choice' ||
           questionType === 'linear_scale' ? (
             <FileUploader onUploadSuccess={handleImageChange}>
-              <div className="cursor-pointer flex flex-row w-fit h-fit p-[10.59px] bg-white rounded-lg">
+              <div className="cursor-pointer flex flex-row w-fit h-fit p-[10.59px] bg-white border border-transparent light:border-[#e5e5e5] rounded-lg">
                 <Image2 className="w-[22.81px] h-[22.81px] " />
               </div>
             </FileUploader>

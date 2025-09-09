@@ -31,11 +31,11 @@ export default function ObjectiveOption({
           <DialPad2 className="w-6 h-6" />
 
           {questionType == 'checkbox' && (
-            <div className="w-6 h-6 rounded-sm border border-c-wg-50" />
+            <div className="w-6 h-6 rounded-sm border border-c-wg-50 light:border-[#e5e5e5]" />
           )}
 
           <Input
-            className="border-b border-transparent !border-b-white focus:!border-transparent focus:rounded-md font-normal text-base/[24px] placeholder:text-neutral-600 text-neutral-300 rounded-none"
+            className="border-b border-transparent !border-b-white focus:!border-transparent focus:rounded-md font-normal text-base/[24px] placeholder:text-neutral-600 text-neutral-300 light:text-foreground rounded-none"
             type="text"
             placeholder={t('option_hint')}
             value={opt}

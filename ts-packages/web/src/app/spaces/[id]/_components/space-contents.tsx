@@ -22,8 +22,14 @@ export default function SpaceContents({
         dangerouslySetInnerHTML={{ __html: htmlContents }}
       />
       <style jsx global>{`
-        .rich-content {
+        html.dark .rich-content {
           color: #d4d4d4;
+        }
+        html:not(.dark) .rich-content {
+          color: #525252;
+        }
+
+        .rich-content {
           font-size: 15px;
           line-height: 24px;
         }
@@ -41,11 +47,9 @@ export default function SpaceContents({
         .rich-content h1 {
           font-size: 28px;
         }
-
         .rich-content h2 {
           font-size: 22px;
         }
-
         .rich-content h3 {
           font-size: 18px;
         }
@@ -57,11 +61,9 @@ export default function SpaceContents({
         .rich-content strong {
           font-weight: bold;
         }
-
         .rich-content em {
           font-style: italic;
         }
-
         .rich-content u {
           text-decoration: underline;
         }
@@ -71,13 +73,11 @@ export default function SpaceContents({
           margin-left: 20px;
           margin-bottom: 20px;
         }
-
         .rich-content ol {
           list-style-type: decimal;
           margin-left: 20px;
           margin-bottom: 20px;
         }
-
         .rich-content li {
           margin-bottom: 5px;
         }
