@@ -44,14 +44,9 @@ jobs:
       localstack:
         image: localstack/localstack:latest
         env:
-          SERVICES: dynamodb
-          DEBUG: 1
-          DATA_DIR: /tmp/localstack/data
-        options: >-
-          --health-cmd "curl -f http://localhost:4566/health || exit 1"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+          DEFAULT_REGION: ap-northeast-2
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
         ports:
           - 4566:4566
 
