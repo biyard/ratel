@@ -150,12 +150,20 @@ export default function FeedCard(props: FeedCardProps) {
     setExpand(true);
   };
 
+  const handleCardClick = () => {
+    if (props.space_id) {
+      // Navigate to space page if post has a space
+      router.push(route.space(props.space_id));
+    } else {
+      // Navigate to thread page if post doesn't have a space
+      router.push(route.threadByFeedId(props.id));
+    }
+  };
+
   return (
     <Col
       className={`cursor-pointer border rounded-[10px] border-neutral-700`}
-      onClick={() => {
-        router.push(route.threadByFeedId(props.id));
-      }}
+      onClick={handleCardClick}
     >
       <FeedBody {...props} />
       <FeedFooter
