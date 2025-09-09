@@ -33,7 +33,7 @@ export default function ThemeModal({
             key={opt.value}
             onClick={() => setSelectedTheme(opt.value)}
             className={`flex items-center justify-between px-5 py-4 text-left transition-colors rounded-[10px] light:bg-white
-              ${selectedTheme === opt.value ? 'border border-neutral-400' : 'border border-0'}
+              ${selectedTheme === opt.value ? 'border border-neutral-400 light:border-primary light:bg-primary/10' : 'border border-transparent light:border-neutral-400'}
              `}
           >
             <span className="text-foreground">{opt.label}</span>

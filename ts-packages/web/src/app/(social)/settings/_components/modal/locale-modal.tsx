@@ -32,7 +32,7 @@ export default function LocaleModal({
             <button
               key={opt.value}
               onClick={() => setSelected(opt.value)}
-              className={`flex items-center gap-3 w-full text-left px-3 py-3 rounded-[10px] transition-colors border ${isSelected ? ' border-neutral-400' : 'border-transparent'}`}
+              className={`flex items-center gap-3 w-full text-left px-3 py-3 rounded-[10px] transition-colors border ${isSelected ? ' border-neutral-400 light:border-primary light:bg-primary/10' : 'border-transparent light:border-neutral-400'}`}
             >
               <span className="w-5 flex items-center justify-center">
                 {isSelected && (
