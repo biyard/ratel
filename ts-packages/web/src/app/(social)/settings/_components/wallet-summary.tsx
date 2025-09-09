@@ -40,7 +40,7 @@ export default function WalletSummary({ onUpdate }: WalletSummaryProps) {
               className="w-10 h-10 bg-[#D9D9D9] rounded-full p-2"
               alt="MetaMask"
             />
-            <div className="font-semibold">
+            <div className="font-semibold text-foreground">
               <div>MetaMask</div>
               <div className="mt-1 flex items-center space-x-2 text-sm text-gray-400">
                 {address ? (
@@ -64,7 +64,11 @@ export default function WalletSummary({ onUpdate }: WalletSummaryProps) {
           </div>
 
           {address && (
-            <Button variant={'default'} onClick={() => onUpdate?.(address)}>
+            <Button
+              variant={'default'}
+              className="light:bg-primary light:text-white"
+              onClick={() => onUpdate?.(address)}
+            >
               {t('save')}
             </Button>
           )}
