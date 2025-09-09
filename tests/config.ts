@@ -9,6 +9,10 @@ export const CONFIGS = {
   PLAYWRIGHT: {
     TIMEOUT: timeout,
     NAVIGATION_TIME_OUT: timeout,
-    BASE_URL: "http://localhost:8080",
+    BASE_URL: "http://localhost:3000",
+  },
+  SECRETS: {
+    password: process.env.PASSWORD,
+    testemail: process.env.EMAIL
   },
 };
