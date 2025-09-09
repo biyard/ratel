@@ -125,7 +125,7 @@ function ToolbarPlugin({
   };
 
   return (
-    <div className="flex shrink-0 items-center gap-4 [&>button]:size-6 [&>button]:rounded [&>button]:hover:bg-neutral-700">
+    <div className="flex shrink-0 items-center gap-4 [&>button]:size-6 [&>button]:rounded [&>button]:hover:bg-hover">
       <button
         onClick={() => formatText('bold')}
         className={cn(isBold && 'bg-neutral-600 text-white')}
@@ -265,7 +265,7 @@ export const LexicalHtmlEditor = forwardRef<
     <div className={cn('flex flex-col min-h-50 p-4', className)}>
       <LexicalComposer initialConfig={editorConfig}>
         {/* Lexical Content Area */}
-        <div className="relative flex flex-1 text-neutral-300 ">
+        <div className="relative flex flex-1 text-foreground ">
           <RichTextPlugin
             contentEditable={
               <ContentEditable className="outline-none resize-none w-full flex-1" />

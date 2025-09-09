@@ -12,10 +12,10 @@ import {
 } from '../lexical/lexical-html-editor';
 import { validateString } from '@/lib/string-filter-utils';
 import { ChevronDoubleDownIcon } from '@heroicons/react/20/solid';
-import { cn } from '@/lib/utils';
 import { useEffect, useRef, useState } from 'react';
 import { logger } from '@/lib/logger';
 import { useTranslations } from 'next-intl';
+import { Button } from '../ui/button';
 
 interface CommentProps {
   comment: CommentType;
@@ -28,7 +28,7 @@ export default function Comment({ comment, onSubmit, onLike }: CommentProps) {
   const [expand, setExpand] = useState(false);
   const [showReplies, setShowReplies] = useState(false);
   return (
-    <div className="flex flex-col gap-[14px] pb-5 border-b border-b-neutral-800">
+    <div className="flex flex-col gap-[14px] pb-5 border-b border-b-neutral-800 light:border-b-[#e5e5e5]">
       <div className="flex flex-row gap-2 items-center">
         {comment.author[0].profile_url ? (
           <Image
@@ -43,7 +43,7 @@ export default function Comment({ comment, onSubmit, onLike }: CommentProps) {
         )}
 
         <div className="flex flex-col gap-[2px]">
-          <div className="font-semibold text-neutral-300 text-[15px]/[15px]">
+          <div className="font-semibold text-neutral-300 light:text-foreground text-[15px]/[15px]">
             {comment.author[0].nickname ?? ''}
           </div>
           <div className="font-semibold text-xs/[20px] text-[#6d6d6d]">
@@ -112,7 +112,7 @@ export default function Comment({ comment, onSubmit, onLike }: CommentProps) {
                 setExpand((prev) => !prev);
                 setShowReplies(true);
               }}
-              className="flex gap-2 cursor-pointer justify-center items-center"
+              className="flex gap-2 cursor-pointer justify-center items-center light:text-[#d4d4d4]"
             >
               <BendArrowRight width={24} height={24} />
               {t('reply')}
@@ -146,7 +146,7 @@ export default function Comment({ comment, onSubmit, onLike }: CommentProps) {
             {comment.replies.map((reply) => (
               <div
                 key={reply.id}
-                className="flex flex-col gap-2 p-5 rounded-lg bg-neutral-800"
+                className="flex flex-col gap-2 p-5 rounded-lg bg-reply-box border border-transparent light:border-primary"
               >
                 <div className="flex flex-row gap-2 items-center">
                   {reply.author?.[0]?.profile_url ? (
@@ -244,18 +244,19 @@ export function NewComment({
       </div>
       <div className="p-3 flex flex-col justify-between">
         <button className="p-1 flex flex-row justify-center" onClick={onClose}>
-          <ChevronDoubleDownIcon width={24} height={24} />
+          <ChevronDoubleDownIcon
+            width={24}
+            height={24}
+            className="[&>path]:light:stroke-neutral-600"
+          />
         </button>
         <div>
-          <button
+          <Button
+            variant="rounded_primary"
+            size="default"
             onClick={handleSubmit}
             disabled={disabled}
-            className={cn(
-              'flex items-center gap-2 p-2 rounded-full font-medium text-sm transition-all',
-              !disabled
-                ? 'bg-primary text-black hover:bg-primary/50'
-                : 'bg-neutral-700 text-neutral-500 cursor-not-allowed',
-            )}
+            className="gap-2"
           >
             {isLoading ? (
               <Loader2 className="animate-spin size-6" />
@@ -266,7 +267,7 @@ export function NewComment({
                 className="[&>path]:stroke-black [&>line]:stroke-black"
               />
             )}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

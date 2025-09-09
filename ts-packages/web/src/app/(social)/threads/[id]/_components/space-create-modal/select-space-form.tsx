@@ -194,8 +194,8 @@ export default function SelectSpaceForm({ feed_id }: { feed_id: number }) {
 
         return (
           <div
-            className={`flex flex-row gap-2.5 justify-center items-center w-full p-5 border rounded-[10px] ${
-              selected ? 'border-primary' : 'border-neutral-800'
+            className={`flex flex-row gap-2.5 justify-center items-center w-full p-5 border rounded-[10px] bg-create-space-bg ${
+              selected ? 'border-primary' : 'border-create-space-border'
             } ${disabled ? 'opacity-50 cursor-not-allowed' : ''} `}
             onClick={() => {
               if (!disabled) onClick();
@@ -203,10 +203,10 @@ export default function SelectSpaceForm({ feed_id }: { feed_id: number }) {
           >
             <div className="size-8 [&>svg]:size-8">{form.Icon}</div>
             <div className="flex flex-col flex-1 gap-1">
-              <span className="font-bold text-[15px]/[20px] text-white">
+              <span className="font-bold text-[15px]/[20px] text-foreground">
                 {tt(form.labelKey)}
               </span>
-              <span className="font-normal text-[15px]/[24px] text-neutral-300">
+              <span className="font-normal text-[15px]/[24px] text-create-space-desc">
                 {tt(form.descKey)}
               </span>
             </div>
