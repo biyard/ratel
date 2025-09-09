@@ -176,7 +176,9 @@ export default function InviteMemberPopup({
           selectedUsers.forEach((u) => ids.add(u.id));
           newlyAdded.forEach((u) => ids.add(u.id));
 
-          if (errorCount != 0) onclick(selectedGroup.id, Array.from(ids));
+          if (errorCount == 0) {
+            onclick(selectedGroup.id, Array.from(ids));
+          }
         }}
       />
     </div>

@@ -32,8 +32,8 @@ export default function ThemeModal({
           <button
             key={opt.value}
             onClick={() => setSelectedTheme(opt.value)}
-            className={`flex items-center justify-between px-5 py-4 text-left transition-colors rounded-[10px] bg-card-foreground-more-muted
-              ${selectedTheme === opt.value ? 'border border-neutral-400' : 'border border-0 '}
+            className={`flex items-center justify-between px-5 py-4 text-left transition-colors rounded-[10px] light:bg-white
+              ${selectedTheme === opt.value ? 'border border-neutral-400' : 'border border-0'}
              `}
           >
             <span className="text-foreground">{opt.label}</span>
