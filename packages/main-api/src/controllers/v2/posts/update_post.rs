@@ -34,19 +34,12 @@ pub struct UpdatePostRequest {
     pub rewards: Option<i64>,
 }
 
-#[derive(
-    Debug, Clone, Serialize, Deserialize, PartialEq, Default, aide::OperationIo, JsonSchema,
-)]
-pub struct CreateDraftResponse {
-    pub post_id: i64,
-}
-
 pub async fn update_post_handler(
     Extension(auth): Extension<Option<Authorization>>,
     State(pool): State<PgPool>,
     Path(params): Path<UpdatePostParams>,
     Json(req): Json<UpdatePostRequest>,
-) -> Result<Json<CreateDraftResponse>> {
+) -> Result<Json<Post>> {
     /*
     Permission Check
 
@@ -57,7 +50,7 @@ pub async fn update_post_handler(
             &pool,
             auth,
             RatelResource::Post { team_id: team_id },
-            GroupPermission::EditPosts,
+            GroupPermission::WritePendingPosts,
         )
         .await?;
         (user, team_id)
@@ -80,25 +73,26 @@ pub async fn update_post_handler(
     }
 
     let repo = Post::get_repository(pool.clone());
-    repo.update(
-        post.id,
-        PostRepositoryUpdateRequest {
-            feed_type: req.feed_type,
-            industry_id: req.industry_id,
-            title: req.title,
-            html_contents: req.html_contents,
-            url: req.url,
-            url_type: req.url_type,
-            files: req.files,
-            artwork_metadata: req.artwork_metadata,
-            rewards: req.rewards,
-            user_id: None,
-            parent_id: None,
-            quote_feed_id: None,
-            status: None,
-        },
-    )
-    .await?;
+    let res = repo
+        .update(
+            post.id,
+            PostRepositoryUpdateRequest {
+                feed_type: req.feed_type,
+                industry_id: req.industry_id,
+                title: req.title,
+                html_contents: req.html_contents,
+                url: req.url,
+                url_type: req.url_type,
+                files: req.files,
+                artwork_metadata: req.artwork_metadata,
+                rewards: req.rewards,
+                user_id: None,
+                parent_id: None,
+                quote_feed_id: None,
+                status: None,
+            },
+        )
+        .await?;
 
-    Ok(Json(CreateDraftResponse { post_id: post.id }))
+    Ok(Json(res))
 }

@@ -99,6 +99,7 @@ pub mod controllers {
         }
 
         pub mod posts {
+            pub mod get_post;
             pub mod list_posts;
             pub mod update_post;
         }
