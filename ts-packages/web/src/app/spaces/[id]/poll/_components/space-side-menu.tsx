@@ -1,6 +1,6 @@
 'use client';
 
-import BlackBox from '@/app/(social)/_components/black-box';
+import SpaceBlackBox from '@/app/(social)/_components/space-black-box';
 import { getTimeWithFormat } from '@/lib/time-utils';
 import React, { useContext } from 'react';
 import Clock from '@/assets/icons/clock.svg';
@@ -40,37 +40,39 @@ export default function SpaceSideMenu() {
 
   return (
     <div className="flex flex-col max-w-[250px] max-tablet:!hidden w-full gap-[10px]">
-      <BlackBox>
+      <SpaceBlackBox>
         <div className="flex flex-col gap-2.5 w-full">
           <div
-            className={`cursor-pointer flex flex-row gap-1 items-center px-1 py-2 rounded-sm ${selectedType == PollTab.POLL ? 'bg-neutral-800' : ''}`}
+            className={`cursor-pointer flex flex-row gap-1 items-center px-1 py-2 rounded-sm ${selectedType == PollTab.POLL ? 'bg-neutral-800 light:bg-[#f5f5f5]' : ''}`}
             onClick={() => {
               handleUpdateSelectedType(PollTab.POLL);
             }}
           >
             <Vote className="[&>path]:stroke-neutral-80 w-5 h-5" />
-            <div className="font-bold text-white text-sm">{t('poll')}</div>
+            <div className="font-bold text-foreground text-sm">{t('poll')}</div>
           </div>
 
           {(space.author.some((a) => a.id === userId) || selectedTeam) &&
             status == SpaceStatus.InProgress && (
               <div
                 className={`cursor-pointer flex flex-row gap-1 items-center px-1 py-2 rounded-sm ${
-                  selectedType == PollTab.ANALYZE ? 'bg-neutral-800' : ''
+                  selectedType == PollTab.ANALYZE
+                    ? 'bg-neutral-800 light:bg-[#f5f5f5]'
+                    : ''
                 }`}
                 onClick={() => {
                   handleUpdateSelectedType(PollTab.ANALYZE);
                 }}
               >
                 <PieChart1 className="[&>path]:stroke-neutral-80 w-5 h-5" />
-                <div className="font-bold text-white text-sm">
+                <div className="font-bold text-foreground text-sm">
                   {t('analyze')}
                 </div>
               </div>
             )}
         </div>
-      </BlackBox>
-      <BlackBox>
+      </SpaceBlackBox>
+      <SpaceBlackBox>
         <div className="w-full text-sm text-white">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-1 text-neutral-400 font-semibold text-[14px]">
@@ -119,7 +121,7 @@ export default function SpaceSideMenu() {
               )
               .map((item) => (
                 <div className="flex flex-col gap-1" key={item.label}>
-                  <div className="font-medium text-white text-[15px]/[12px]">
+                  <div className="font-medium text-foreground text-[15px]/[12px]">
                     {item.label}
                   </div>
                   <div className="font-medium text-neutral-80 text-xs/[12px]">
@@ -129,7 +131,7 @@ export default function SpaceSideMenu() {
               ))}
           </div>
         </div>
-      </BlackBox>
+      </SpaceBlackBox>
     </div>
   );
 }
