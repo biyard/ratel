@@ -1,23 +1,26 @@
 'use client';
 
+import { config } from '@/config';
 import ChevronRight from '@/assets/icons/chevron-right.svg';
 import { usePopup } from '@/lib/contexts/popup-service';
 import React from 'react';
 import LocaleModal from '../modal/locale-modal';
 import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
+import ThemeModal from '../modal/theme-modal';
+import { useTheme } from 'next-themes';
 
 export default function MySettings() {
   const t = useTranslations('Settings');
   const popup = usePopup();
   const router = useRouter();
   const locale = useLocale() as 'en' | 'ko';
-  /* const { theme, setTheme } = useTheme(); */
+  const { theme, setTheme } = useTheme();
 
   const actionText = locale === 'ko' ? 'Korean' : 'English';
 
-  /* const currentThemeLabel =
-   *   theme === 'light' ? 'Light' : theme === 'dark' ? 'Dark' : 'System'; */
+  const currentThemeLabel =
+    theme === 'light' ? 'Light' : theme === 'dark' ? 'Dark' : 'Dark';
 
   const handleChangeLanguage = () => {
     popup
@@ -35,20 +38,20 @@ export default function MySettings() {
       .withTitle(t('select_language'));
   };
 
-  /* const handleChangeTheme = () => {
-   *   popup
-   *     .open(
-   *       <ThemeModal
-   *         initialTheme={(theme as 'light' | 'dark' | 'system') ?? 'system'}
-   *         onSave={(newTheme) => {
-   *           setTheme(newTheme);
-   *           popup.close();
-   *         }}
-   *         onCancel={() => popup.close()}
-   *       />,
-   *     )
-   *     .withTitle('Theme');
-   * }; */
+  const handleChangeTheme = () => {
+    popup
+      .open(
+        <ThemeModal
+          initialTheme={(theme as 'light' | 'dark' | 'system') ?? 'system'}
+          onSave={(newTheme) => {
+            setTheme(newTheme);
+            popup.close();
+          }}
+          onCancel={() => popup.close()}
+        />,
+      )
+      .withTitle('Theme');
+  };
 
   return (
     <div className="w-full max-w-[800px] mx-auto flex flex-col gap-6 px-4 md:px-0">
@@ -63,11 +66,15 @@ export default function MySettings() {
           />
 
           {/* theme box controller */}
-          {/* <SpecBox
-            left_text="Theme"
-            action_text={currentThemeLabel}
-            onClick={handleChangeTheme}
-          /> */}
+          {config.env == 'local' ? (
+            <SpecBox
+              left_text="Theme"
+              action_text={currentThemeLabel}
+              onClick={handleChangeTheme}
+            />
+          ) : (
+            <></>
+          )}
         </div>
       </section>
     </div>
