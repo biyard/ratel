@@ -1,6 +1,6 @@
 'use client';
 
-import BlackBox from '@/app/(social)/_components/black-box';
+import SpaceBlackBox from '@/app/(social)/_components/space-black-box';
 import { getTimeWithFormat } from '@/lib/time-utils';
 import React from 'react';
 import Clock from '@/assets/icons/clock.svg';
@@ -67,8 +67,8 @@ export default function SpaceSideMenu() {
 
   return (
     <div className="flex flex-col max-w-[250px] max-tablet:!hidden w-full gap-[10px]">
-      <BlackBox>
-        <div className="w-full text-sm text-white">
+      <SpaceBlackBox>
+        <div className="w-full text-sm text-foreground">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-1 text-neutral-400 font-semibold text-[14px]">
               <History width={28} height={28} />
@@ -105,7 +105,7 @@ export default function SpaceSideMenu() {
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <div className="font-medium text-white text-[15px]/[12px]">
+                  <div className="font-medium text-foreground text-[15px]/[12px]">
                     {item.label}
                   </div>
                   <div className="font-medium text-neutral-80 text-xs/[12px]">
@@ -232,17 +232,17 @@ export default function SpaceSideMenu() {
               );
 
               return (
-                <div className="font-medium text-white text-[18px]/[16px]">
+                <div className="font-medium text-foreground text-[18px]/[16px]">
                   +{finalValue.toLocaleString()} P
                 </div>
               );
             })()}
           </div>
         </div>
-      </BlackBox>
+      </SpaceBlackBox>
 
-      <BlackBox>
-        <div className="w-full text-sm text-white">
+      <SpaceBlackBox>
+        <div className="w-full text-sm text-foreground">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-1 text-neutral-400 font-semibold text-[14px]">
               <Info width={28} height={28} />
@@ -277,7 +277,7 @@ export default function SpaceSideMenu() {
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <div className="font-medium text-white text-[15px]/[12px]">
+                  <div className="font-medium text-foreground text-[15px]/[12px]">
                     {item.label}
                   </div>
                   <div className="font-medium text-neutral-80 text-xs/[12px]">
@@ -288,10 +288,10 @@ export default function SpaceSideMenu() {
             ))}
           </div>
         </div>
-      </BlackBox>
+      </SpaceBlackBox>
 
-      <BlackBox>
-        <div className="w-full text-sm text-white">
+      <SpaceBlackBox>
+        <div className="w-full text-sm text-foreground">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-1 text-neutral-400 font-semibold text-[14px]">
               <Clock width={28} height={28} />
@@ -334,7 +334,7 @@ export default function SpaceSideMenu() {
               { label: t('end'), date: endedAt },
             ].map((item) => (
               <div className="flex flex-col gap-1" key={item.label}>
-                <div className="font-medium text-white text-[15px]/[12px]">
+                <div className="font-medium text-foreground text-[15px]/[12px]">
                   {item.label}
                 </div>
                 <div className="font-medium text-neutral-80 text-xs/[12px]">
@@ -344,7 +344,7 @@ export default function SpaceSideMenu() {
             ))}
           </div>
         </div>
-      </BlackBox>
+      </SpaceBlackBox>
     </div>
   );
 }

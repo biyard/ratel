@@ -14,11 +14,11 @@ export default function QuizSubmitForm({ onSubmit }: QuizSubmitFormProps) {
 
   return (
     <div className="w-[500px] flex flex-col mt-2">
-      <div className="text-center font-bold text-white text-[24px] mb-6">
+      <div className="text-center font-bold text-create-space-label text-[24px] mb-6">
         {t('quiz_submit_title')}
       </div>
 
-      <div className="text-center font-medium text-neutral-400 text-base">
+      <div className="text-center font-medium text-create-space-desc text-base">
         {t.rich('quiz_submit_desc_line1', {
           b: (chunks) => (
             <span className="text-red-500 font-bold">{chunks}</span>
@@ -30,7 +30,7 @@ export default function QuizSubmitForm({ onSubmit }: QuizSubmitFormProps) {
         })}
         <br />
         <br />
-        <span className="text-white text-lg font-medium">
+        <span className="text-create-space-desc text-lg font-medium">
           {t('quiz_submit_cta_question')}
         </span>
       </div>
@@ -38,7 +38,7 @@ export default function QuizSubmitForm({ onSubmit }: QuizSubmitFormProps) {
       <div className="flex flex-row justify-end gap-4 mt-8.75">
         <button
           onClick={() => popup.close()}
-          className="min-w-30 px-10 py-[14.5px] bg-transparent font-bold text-base text-neutral-400"
+          className="px-10 py-[14.5px] bg-transparent font-bold text-base light:bg-neutral-300 light:rounded-lg text-neutral-400"
         >
           {t('cancel')}
         </button>
