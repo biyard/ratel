@@ -272,7 +272,7 @@ export const LoginModal = ({
     >
       <Col className="gap-4">
         <Row className="justify-start items-center text-sm gap-1">
-          <label className="text-white font-medium">{t('new_user')}</label>
+          <label className="text-foreground font-medium">{t('new_user')}</label>
           <button
             className="text-primary/70 hover:text-primary"
             onClick={handleSignUp}
@@ -287,7 +287,7 @@ export const LoginModal = ({
             name="username"
             autoComplete="email"
             placeholder={t('email_address_hint')}
-            className="w-full bg-[#000203] rounded-[10px] px-5 py-5.5 text-white font-light"
+            className="w-full bg-input-box-bg border border-input-box-border rounded-[10px] px-5 py-5.5 text-foreground font-light"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             onKeyDown={(e) => {
