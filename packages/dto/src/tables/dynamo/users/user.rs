@@ -2,12 +2,13 @@ use crate::{Error, Result};
 use aws_sdk_dynamodb::types::AttributeValue;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use super::UserSortKey;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DynamoUser {
     // DynamoDB Keys
     pub pk: String, // USER#{user_id}
-    pub sk: String, // USER
+    pub sk: UserSortKey, // USER
 
     // Basic User fields (not frequently updated)
     pub user_id: i64,
@@ -32,7 +33,7 @@ impl DynamoUser {
 
         Self {
             pk: format!("USER#{}", user_id),
-            sk: "USER".to_string(),
+            sk: UserSortKey::User,
             user_id,
             telegram_id,
             evm_address,
@@ -47,7 +48,7 @@ impl DynamoUser {
         let mut item = HashMap::new();
 
         item.insert("PK".to_string(), AttributeValue::S(self.pk.clone()));
-        item.insert("SK".to_string(), AttributeValue::S(self.sk.clone()));
+        item.insert("SK".to_string(), AttributeValue::S(self.sk.to_string()));
 
         // Basic User fields
         item.insert(
@@ -122,7 +123,7 @@ impl DynamoUser {
 
         Ok(Self {
             pk: get_string("PK")?,
-            sk: get_string("SK")?,
+            sk: UserSortKey::from(get_string("SK")?.as_str()),
             user_id: get_number("user_id")?,
             telegram_id: get_optional_string("telegram_id"),
             evm_address: get_optional_string("evm_address"),
