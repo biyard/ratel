@@ -39,7 +39,7 @@ pub struct Post {
     #[api_model(type = INTEGER)]
     pub url_type: UrlType,
 
-    #[api_model(one_to_many = spaces, foreign_key = feed_id)]
+    #[api_model(one_to_many = spaces, foreign_key = feed_id, nested)]
     pub space: Vec<Space>,
 
     #[api_model(many_to_many = feed_users, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = feed_id, aggregator = count)]
