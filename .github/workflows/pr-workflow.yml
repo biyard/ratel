@@ -41,6 +41,20 @@ jobs:
         ports:
           - 5432:5432
 
+      localstack:
+        image: localstack/localstack:latest
+        env:
+          SERVICES: dynamodb
+          DEBUG: 1
+          DATA_DIR: /tmp/localstack/data
+        options: >-
+          --health-cmd "curl -f http://localhost:4566/health || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 4566:4566
+
     steps:
       - uses: actions/checkout@v3
         with:
@@ -64,6 +78,7 @@ jobs:
           RUSTFLAGS: "-A warnings"
           DATABASE_TYPE: postgres
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
+          DYNAMO_URL: http://localhost:4566
           ENV: "dev"
           DOMAIN: "dev.ratel.foundation"
           OPENAPI_KEY: ${{ secrets.OPENAPI_KEY }}
