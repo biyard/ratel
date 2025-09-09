@@ -151,7 +151,8 @@ pub async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
                 "ServiceAdmin".to_string(),
                 "user-principal-1".to_string(),
                 "".to_string(),
-                "profile_url".to_string(),
+                "https://metadata.ratel.foundation/metadata/0faf45ec-35e1-40e9-bff2-c61bb52c7d19"
+                    .to_string(),
                 true,
                 true,
                 UserType::Individual,

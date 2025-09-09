@@ -34,7 +34,12 @@ export default function InviteMemberPopup({
   const [searchValue, setSearchValue] = useState('');
   const [errorCount, setErrorCount] = useState(0);
 
-  const setValue = async (value: string, isEnter: boolean) => {
+  const setValue = async (
+    value: string,
+    isEnter: boolean,
+  ): Promise<TotalUser[]> => {
+    const added: TotalUser[] = [];
+
     if (value.includes(',') || isEnter) {
       const identifiers = value
         .split(',')
@@ -67,13 +72,16 @@ export default function InviteMemberPopup({
                 checkEmailRequest(input),
               );
 
-              const value: boolean = !result && isEmail ? true : false;
-              setSelectedUsers((prev) => [...prev, data]);
-              setIsError((prev) => [...prev, value]);
+              const valueIsError: boolean = !result && isEmail ? true : false;
 
-              if (value) {
+              setSelectedUsers((prev) => [...prev, data]);
+              setIsError((prev) => [...prev, valueIsError]);
+
+              if (valueIsError) {
                 setErrorCount((prev) => Math.max(prev + 1, 0));
               }
+
+              added.push(data);
             }
           } else {
             showErrorToast(t('invalid_user'));
@@ -88,6 +96,8 @@ export default function InviteMemberPopup({
     } else {
       setSearchValue(value);
     }
+
+    return added;
   };
 
   return (
@@ -114,10 +124,10 @@ export default function InviteMemberPopup({
             value={searchValue}
             placeholder={t('email_hint')}
             setValue={async (value) => {
-              setValue(value, false);
+              await setValue(value, false);
             }}
             onenter={async () => {
-              setValue(searchValue, true);
+              await setValue(searchValue, true);
             }}
           />
         </div>
@@ -159,9 +169,14 @@ export default function InviteMemberPopup({
 
       <InviteMemberButton
         isError={errorCount != 0}
-        onclick={() => {
-          const selectedUserIds = selectedUsers.map((user) => user.id);
-          onclick(selectedGroup.id, selectedUserIds);
+        onclick={async () => {
+          const newlyAdded = await setValue(searchValue, true);
+
+          const ids = new Set<number>();
+          selectedUsers.forEach((u) => ids.add(u.id));
+          newlyAdded.forEach((u) => ids.add(u.id));
+
+          if (errorCount != 0) onclick(selectedGroup.id, Array.from(ids));
         }}
       />
     </div>

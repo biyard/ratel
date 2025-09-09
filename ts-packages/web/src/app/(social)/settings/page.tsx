@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl';
 
 export default function MyProfilePage() {
   const t = useTranslations('Settings');
-  const tabs = [t('my_info'), t('my_inventory'), t('settings')] as const;
+  const tabs = [t('my_info'), t('settings')] as const;
   const [activeIndex, setActiveIndex] = React.useState(0);
 
   return (
@@ -15,7 +15,7 @@ export default function MyProfilePage() {
         <div
           role="tablist"
           aria-label="Profile tabs"
-          className="flex text-sm font-bold text-neutral-400"
+          className="flex text-sm font-bold text-foreground-muted"
         >
           {tabs.map((label, idx) => (
             <button
@@ -28,8 +28,8 @@ export default function MyProfilePage() {
               className={
                 'group flex-1 flex flex-col items-center justify-center py-3 transition-colors ' +
                 (activeIndex === idx
-                  ? 'text-neutral-100'
-                  : 'hover:text-neutral-200')
+                  ? 'text-foreground'
+                  : 'hover:text-foreground')
               }
               type="button"
             >
@@ -57,21 +57,21 @@ export default function MyProfilePage() {
           <MyInfo />
         </section>
 
-        <section
+        {/* <section
           id="panel-1"
           role="tabpanel"
           aria-labelledby="tab-1"
           hidden={activeIndex !== 1}
-          className="w-full max-w-[800px] mx-auto text-neutral-300"
+          className="w-full max-w-[800px] mx-auto text-foreground-muted"
         >
           {t('my_inventory_coming_soon')}
-        </section>
+        </section> */}
 
         <section
           id="panel-2"
           role="tabpanel"
           aria-labelledby="tab-2"
-          hidden={activeIndex !== 2}
+          hidden={activeIndex !== 1}
           className="w-full max-w-[800px] mx-auto"
         >
           <MySettings />
