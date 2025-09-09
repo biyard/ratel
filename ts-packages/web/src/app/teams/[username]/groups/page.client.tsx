@@ -105,7 +105,7 @@ export default function TeamGroups({ username }: { username: string }) {
 function ListGroups({ groups }: { groups: Group[] }) {
   const t = useTranslations('Team');
   return (
-    <div className="flex flex-col w-full px-4 py-5 gap-[10px] bg-[#191919] rounded-lg">
+    <div className="flex flex-col w-full px-4 py-5 gap-[10px] bg-component-bg rounded-lg">
       {groups
         .filter((d) => !checkString(d.name))
         .map((group) => (
@@ -116,7 +116,7 @@ function ListGroups({ groups }: { groups: Group[] }) {
             <Folder className="w-12 h-12 stroke-neutral-400" />
 
             <div className="flex flex-col justify-between items-start">
-              <div className="font-bold text-white text-base/[20px]">
+              <div className="font-bold text-foreground text-base/[20px]">
                 {group.name}
               </div>
               <div className="font-semibold text-neutral-400 text-sm/[20px]">
@@ -148,11 +148,11 @@ function CreateGroupButton({ onClick }: { onClick: () => void }) {
   const t = useTranslations('Team');
   return (
     <div
-      className="cursor-pointer flex flex-row w-fit justify-start items-center px-4 py-3 bg-white rounded-[100px] gap-1"
+      className="cursor-pointer flex flex-row w-fit justify-start items-center px-4 py-3 bg-white border border-foreground rounded-[100px] gap-1"
       onClick={onClick}
     >
       <Edit1 className="w-4 h-4" />
-      <div className="font-bold text-base/[22px] text-neutral-900">
+      <div className="font-bold text-base/[22px] text-neutral-900 light:text-black">
         {t('create_group')}
       </div>
     </div>

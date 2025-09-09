@@ -21,7 +21,7 @@ export default function TeamMembers({ username }: { username: string }) {
   const team = query.data;
 
   return (
-    <div className="flex flex-col w-full max-w-[1152px] px-4 py-5 gap-[10px] bg-[#191919] rounded-lg h-fit">
+    <div className="flex flex-col w-full max-w-[1152px] px-4 py-5 gap-[10px] bg-component-bg rounded-lg h-fit">
       {members.map((member) => (
         <div
           key={member.id}
@@ -34,7 +34,7 @@ export default function TeamMembers({ username }: { username: string }) {
             {!member.profile_url ||
             member.profile_url.includes('test') ||
             member.profile_url === '' ? (
-              <div className="w-12 h-12 rounded-full bg-neutral-500" />
+              <div className="w-12 h-12 rounded-full bg-neutral-600" />
             ) : (
               <Image
                 src={member.profile_url}
@@ -46,7 +46,7 @@ export default function TeamMembers({ username }: { username: string }) {
             )}
 
             <div className="flex flex-col justify-between items-start flex-1 min-w-0">
-              <div className="font-bold text-white text-base/[20px]">
+              <div className="font-bold text-foreground text-base/[20px]">
                 {member.username}
               </div>
               <div className="font-semibold text-neutral-400 text-sm/[20px]">
@@ -64,7 +64,7 @@ export default function TeamMembers({ username }: { username: string }) {
               .map((group) => (
                 <div
                   key={group.id}
-                  className="flex flex-row w-fit h-fit px-[5px] py-[3px] border border-neutral-800 bg-black rounded-lg font-medium text-base text-white"
+                  className="flex flex-row w-fit h-fit px-[5px] py-[3px] border border-neutral-800 bg-black light:bg-neutral-600 light:border-transparent rounded-lg font-medium text-base text-white"
                 >
                   {group.name}
                 </div>
