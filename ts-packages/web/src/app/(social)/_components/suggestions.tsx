@@ -69,7 +69,7 @@ export default function Suggestions() {
       </div>
       <Link
         href={route.myNetwork()}
-        className="mt-5 text-xs text-gray-400 flex items-center hover:text-gray-300 transition-colors"
+        className="mt-5 text-xs text-foreground-muted flex items-center hover:text-card-meta transition-colors"
         aria-label="View all suggestions"
       >
         <span>{t('view_all')}</span>
