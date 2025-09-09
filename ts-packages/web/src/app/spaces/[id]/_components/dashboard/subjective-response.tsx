@@ -36,7 +36,7 @@ export default function SubjectiveResponse({
         {validAnswers.map((answer, idx) => (
           <div
             key={idx}
-            className="px-4 py-2 bg-neutral-700 rounded-md text-sm text-neutral-300 whitespace-pre-wrap"
+            className="px-4 py-2 bg-input-box-bg border border-input-box-border light:border-foreground rounded-md text-sm text-foreground whitespace-pre-wrap"
           >
             {answer}
           </div>

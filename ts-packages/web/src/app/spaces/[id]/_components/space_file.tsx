@@ -22,7 +22,7 @@ export default function SpaceFile({
 }) {
   return (
     <div
-      className={`cursor-pointer flex flex-row justify-start items-center w-full gap-2 p-4 bg-neutral-800 rounded-[8px]`}
+      className={`cursor-pointer flex flex-row justify-start items-center w-full gap-2 p-4 bg-neutral-800 light:bg-transparent border border-transparent light:border-neutral-300 rounded-[8px]`}
       onClick={onClick}
     >
       <div className="[&>svg]:size-9">

@@ -13,11 +13,11 @@ export default function GoPublicPopup({
   const t = useTranslations('Space');
   return (
     <div className="w-[500px] flex flex-col mt-6">
-      <div className="text-center font-bold text-white text-[24px] mb-6">
+      <div className="text-center font-bold text-create-space-label text-[24px] mb-6">
         {t('make_public_title')}
       </div>
 
-      <div className="text-center font-medium text-neutral-400 text-base">
+      <div className="text-center font-medium text-create-space-desc text-base">
         {t.rich('make_public_desc_line1')}
         <br />
         {t.rich('make_public_desc_line2', {

@@ -117,6 +117,12 @@
   --color-create-space-border: #262626;
   --color-create-space-desc: #525252;
   --color-create-space-label: #a1a1a1;
+
+  --color-space-box-bg: #191919;
+  --color-space-box-border: var(--background);
+  --color-button-border: #ffffff;
+  --color-input-box-bg: #262626;
+  --color-input-box-border: #404040;
   --color-neutral-400: var(--foreground-muted);
   --color-neutral-500: var(--foreground-more-muted);
   --color-neutral-600: var(--foreground-more-muted);
@@ -193,6 +199,12 @@
   --color-create-space-border: #d4d4d4;
   --color-create-space-desc: #525252;
   --color-create-space-label: #a1a1a1;
+
+  --color-space-box-bg: #ffffff;
+  --color-space-box-border: #e5e5e5;
+  --color-button-border: #e5e5e5;
+  --color-input-box-bg: #fafafa;
+  --color-input-box-border: #e5e5e5;
   --color-foreground: var(--foreground);
   --color-background: var(--background);
   --color-component-bg: var(--card);

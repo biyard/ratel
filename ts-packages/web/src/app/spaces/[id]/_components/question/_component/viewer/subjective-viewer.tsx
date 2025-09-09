@@ -43,7 +43,7 @@ export default function SubjectiveViewer({
         <Input
           type="text"
           placeholder={t('subjective_hint')}
-          className="bg-neutral-800 border border-neutral-700 text-base text-white placeholder:text-neutral-600 px-4 py-3 rounded-lg focus:outline-none focus:border-yellow-500"
+          className=" bg-input-box-bg border border-input-box-border light:border-foreground text-base text-foreground placeholder:text-neutral-600 px-4 py-3 rounded-lg focus:outline-none focus:border-yellow-500"
           value={
             selected?.answer_type === 'short_answer'
               ? (selected.answer ?? '')
@@ -56,7 +56,7 @@ export default function SubjectiveViewer({
         <Textarea
           rows={7}
           placeholder={t('subjective_hint')}
-          className="bg-neutral-800 min-h-[185px] border border-neutral-700 text-base text-white placeholder:text-neutral-600 px-4 py-3 rounded-lg focus:outline-none focus:border-yellow-500"
+          className="bg-input-box-bg border border-input-box-border light:border-foreground min-h-[185px]  text-base text-foreground placeholder:text-neutral-600 px-4 py-3 rounded-lg focus:outline-none focus:border-yellow-500"
           value={
             selected?.answer_type === 'subjective'
               ? (selected.answer ?? '')

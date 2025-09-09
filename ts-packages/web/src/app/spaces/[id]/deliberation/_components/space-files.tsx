@@ -48,7 +48,7 @@ export default function SpaceFiles({
     <BlackBox>
       <div className="flex flex-col w-full gap-5">
         <div className="flex flex-row w-full justify-between items-start ">
-          <div className="font-bold text-white text-[15px]/[20px]">
+          <div className="font-bold text-foreground text-[15px]/[20px]">
             {t('attached_files')}
           </div>
 
@@ -60,7 +60,7 @@ export default function SpaceFiles({
                 onadd(file);
               }}
             >
-              <div className="cursor-pointer flex flex-row w-fit gap-1 items-center bg-white rounded-[6px] px-[14px] py-[8px] hover:bg-neutral-300">
+              <div className="cursor-pointer flex flex-row w-fit gap-1 items-center bg-white border border-button-border rounded-[6px] px-[14px] py-[8px] hover:bg-neutral-300">
                 <Upload className="w-5 h-5 stroke-neutral-500" />
                 <div className="font-bold text-sm text-[#000203]">
                   {t('upload')}
@@ -114,7 +114,7 @@ function EditableFile({
   onclick: () => void;
 }) {
   return (
-    <div className="cursor-pointer flex flex-row justify-start items-center w-full gap-2 p-4 bg-neutral-800 rounded-[8px]">
+    <div className="cursor-pointer flex flex-row justify-start items-center w-full gap-2 p-4 bg-neutral-800 border border-transparent light:bg-transparent light:border-neutral-300 rounded-[8px]">
       <div className="[&>svg]:size-9">
         {file.ext === 'JPG' ? (
           <Jpg />

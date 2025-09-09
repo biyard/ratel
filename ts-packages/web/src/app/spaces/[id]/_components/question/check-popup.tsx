@@ -11,7 +11,7 @@ export default function CheckPopup({
   return (
     <div className="w-full max-w-[450px] px-[20px]">
       <div className="flex flex-col gap-[40px]">
-        <div className="font-semibold text-base text-white">
+        <div className="font-semibold text-base text-create-space-desc">
           For the integrity and security of the vote, all submissions are
           anonymous and final. Votes cannot be changed once cast, and we
           appreciate your understanding in ensuring reliable results.
