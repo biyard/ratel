@@ -56,7 +56,9 @@ export default function MySettings() {
   return (
     <div className="w-full max-w-[800px] mx-auto flex flex-col gap-6 px-4 md:px-0">
       <section className="bg-component-bg p-4 md:p-6 rounded-lg">
-        <h2 className="text-lg font-bold mb-4 text-white">{t('appearance')}</h2>
+        <h2 className="text-lg font-bold mb-4 text-foreground">
+          {t('appearance')}
+        </h2>
 
         <div className="flex flex-col gap-4">
           <SpecBox
@@ -66,7 +68,7 @@ export default function MySettings() {
           />
 
           {/* theme box controller */}
-          {config.env == 'local' ? (
+          {config.env == 'dev' ? (
             <SpecBox
               left_text="Theme"
               action_text={currentThemeLabel}

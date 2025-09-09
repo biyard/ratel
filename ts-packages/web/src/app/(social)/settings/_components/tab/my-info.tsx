@@ -58,16 +58,30 @@ export default function MyInfo() {
 
       <Col className="w-full gap-2.5">
         <Row className="max-tablet:flex-col">
-          <label className="w-40 font-bold">{t('username')}</label>
-          <Input type="text" disabled value={`@${user?.username}`} />
+          <label className="w-40 font-bold text-foreground">
+            {t('username')}
+          </label>
+          <Input
+            type="text"
+            disabled
+            className="text-foreground"
+            value={`@${user?.username}`}
+          />
         </Row>
         <Row className="max-tablet:flex-col">
-          <label className="w-40 font-bold">{t('evm_address')}</label>
+          <label className="w-40 font-bold text-foreground">
+            {t('evm_address')}
+          </label>
           <Row>
-            <Input type="text" disabled value={`${user?.evm_address}`} />
+            <Input
+              type="text"
+              className="text-foreground"
+              disabled
+              value={`${user?.evm_address}`}
+            />
             <Button
               variant={'rounded_secondary'}
-              className="py-0 rounded-sm"
+              className="py-0 rounded-sm light:bg-primary"
               onClick={() => handleShowWalletConnect(!showWalletConnect)}
             >
               {showWalletConnect ? t('hide') : t('change')}
@@ -95,18 +109,24 @@ export default function MyInfo() {
         </Row>
 
         <Row className="max-tablet:flex-col">
-          <label className="w-40 font-bold">{t('display_name')}</label>
+          <label className="w-40 font-bold text-foreground">
+            {t('display_name')}
+          </label>
           <Input
             type="text"
             placeholder={t('display_name')}
+            className="text-foreground"
             value={nickname}
             onInput={handleNickname}
           />
         </Row>
         <Col>
-          <label className="w-40 font-bold">{t('description')}</label>
+          <label className="w-40 font-bold text-foreground">
+            {t('description')}
+          </label>
           <Textarea
             placeholder={t('description_hint')}
+            className="text-foreground"
             value={htmlContents}
             onChange={handleContents}
           />
