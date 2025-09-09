@@ -157,9 +157,11 @@ export default function SelectSpaceForm({ feed_id }: { feed_id: number }) {
         logger.debug('Space created successfully:', res.data.id);
         if (res.data.space_type === SpaceType.Deliberation) {
           router.push(route.deliberationSpaceById(res.data.id));
+        } else if (res.data.space_type === SpaceType.Poll) {
+          router.push(route.space(res.data.id));
         }
-        popup.close();
       }
+      popup.close();
     } catch (error) {
       logger.error('Error creating space:', error);
     } finally {
