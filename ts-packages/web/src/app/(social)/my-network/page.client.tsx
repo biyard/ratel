@@ -96,7 +96,7 @@ export default function MyNetwork() {
 function FollowButton({ onClick }: { onClick: () => void }) {
   return (
     <div
-      className="cursor-pointer flex flex-row w-fit h-fit px-[10px] py-[5px] bg-white hover:bg-gray-300 rounded-[50px]"
+      className="cursor-pointer flex flex-row w-fit h-fit px-[10px] py-[5px] bg-white light:bg-neutral-300 hover:bg-gray-300 rounded-[50px]"
       onClick={() => {
         onClick();
       }}
@@ -117,8 +117,10 @@ function FollowingContents({
   follow: (userId: number) => void;
 }) {
   return (
-    <div className="flex flex-col w-full rounded-lg bg-[#191919] px-4 py-5 gap-2.5">
-      <div className="font-semibold text-white text-base/[20px]">{label}</div>
+    <div className="flex flex-col w-full rounded-lg bg-component-bg px-4 py-5 gap-2.5">
+      <div className="font-semibold text-foreground text-base/[20px]">
+        {label}
+      </div>
       <div className="flex flex-col">
         {users.map((user) => (
           <div
@@ -153,7 +155,7 @@ function FollowingContents({
 
                 <div className="flex flex-col">
                   <Link href={route.teamByUsername(user.username)}>
-                    <div className="font-semibold text-white text-sm/[20px]">
+                    <div className="font-semibold text-foreground text-sm/[20px]">
                       {user.nickname}
                     </div>
                   </Link>
@@ -169,7 +171,7 @@ function FollowingContents({
 
             <div
               id="user-profile-description"
-              className="font-medium text-[12px] text-neutral-300 line-clamp-3 overflow-hidden"
+              className="font-medium text-[12px] text-neutral-300 light:text-foreground line-clamp-3 overflow-hidden"
               dangerouslySetInnerHTML={{
                 __html: user.html_contents,
               }}
