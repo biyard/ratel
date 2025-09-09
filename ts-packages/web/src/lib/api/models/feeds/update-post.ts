@@ -1,10 +1,6 @@
 import { ArtworkMetadata, FeedType, FileInfo, UrlType } from '../feeds';
 
-export interface removeDraftRequest {
-  delete: object;
-}
-
-export interface updateDraftRequest {
+export interface UpdatePostRequest {
   html_contents: string;
   feed_type: FeedType | null;
   industry_id: number | null;
@@ -16,7 +12,7 @@ export interface updateDraftRequest {
   artwork_metadata: ArtworkMetadata | null;
 }
 
-export function updateDraftRequest(
+export function updatePostRequest(
   html_contents: string,
   industry_id: number | null = null,
   title: string,
@@ -26,7 +22,7 @@ export function updateDraftRequest(
   url_type: UrlType = UrlType.None,
   feed_type: FeedType | null = null,
   artwork_metadata: ArtworkMetadata | null = null,
-): updateDraftRequest {
+): UpdatePostRequest {
   return {
     html_contents,
     feed_type,
@@ -37,11 +33,5 @@ export function updateDraftRequest(
     url,
     url_type,
     artwork_metadata,
-  };
-}
-
-export function removeDraftRequest(): removeDraftRequest {
-  return {
-    delete: {},
   };
 }

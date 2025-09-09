@@ -11,12 +11,11 @@ import {
 import { apiFetch } from '@/lib/api/apiFetch';
 import { config } from '@/config';
 import { ratelApi } from '@/lib/api/ratel_api';
-import { updateDraftRequest } from '@/lib/api/models/feeds/update-draft-request';
 import { route } from '@/route';
-import { createDraftRequest } from '@/lib/api/models/feeds/create-draft';
 import { useUserInfo } from '../../_hooks/user';
-import { invalidateQuery as invalidatePostQuery } from '@/hooks/use-post';
 import { useTeamContext } from '@/lib/contexts/team-context';
+import { useDraftMutations } from '@/hooks/feeds/use-create-feed-mutation';
+import { UpdatePostRequest } from '@/lib/api/models/feeds/update-post';
 
 export enum Status {
   Idle = 'Idle',
@@ -54,7 +53,7 @@ export interface PostEditorContextType {
   size: string | null;
   updateSize: (size: string | null) => void;
 
-  handlePublishDraft: () => Promise<void>;
+  handleUpdate: () => Promise<void>;
 
   isSubmitDisabled: boolean;
   status: Status;
@@ -63,26 +62,10 @@ export interface PostEditorContextType {
 export const PostDraftContext = createContext<
   PostEditorContextType | undefined
 >(undefined);
-export async function createDraft(user_id: number): Promise<number> {
-  const res = await apiFetch<Feed>(
-    `${config.api_url}${ratelApi.feeds.createDraft()}`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(createDraftRequest(FeedType.Post, user_id)),
-    },
-  );
-  if (!res.data) {
-    throw new Error('Failed to create draft');
-  }
-  return res.data.id;
-}
 
 async function loadDraft(id: number): Promise<Feed> {
   const res = await apiFetch<Feed>(
-    `${config.api_url}${ratelApi.feeds.getFeedsByFeedId(id)}`,
+    `${config.api_url}${ratelApi.feeds.getFeed(id)}`,
   );
   if (!res.data) {
     throw new Error('Draft not found');
@@ -90,37 +73,6 @@ async function loadDraft(id: number): Promise<Feed> {
   return res.data;
 }
 
-async function updateDraft(
-  post_id: number,
-  req: Partial<updateDraftRequest>,
-): Promise<Feed> {
-  const res = await apiFetch<Feed>(
-    `${config.api_url}${ratelApi.feeds.updateDraft(post_id)}`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(req),
-    },
-  );
-  if (!res.data) {
-    throw new Error('Failed to update draft');
-  }
-  return res.data;
-}
-
-async function publishDraft(id: number): Promise<void> {
-  await apiFetch(`${config.api_url}${ratelApi.feeds.publishDraft(id)}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      publish: {},
-    }),
-  });
-}
 export function PostEditorProvider({
   children,
 }: {
@@ -128,6 +80,7 @@ export function PostEditorProvider({
 }) {
   const { data: user } = useUserInfo();
   const { selectedTeam } = useTeamContext();
+  const { createDraft, updateDraft, publishDraft } = useDraftMutations();
   /*
     If Team is selected, use `team_id` as targetId
     Otherwise, use `user_id` as targetId
@@ -141,7 +94,7 @@ export function PostEditorProvider({
   const router = useRouter();
   const [expand, setExpand] = useState(false);
   const [status, setStatus] = useState<Status>(Status.Idle);
-  const [draftId, setDraftId] = useState<number | null>(null);
+  const [feed, setFeed] = useState<Feed | null>(null);
   const [postType, setPostType] = useState<PostType>(PostType.General);
   const [isModified, setIsModified] = useState(false);
 
@@ -164,7 +117,7 @@ export function PostEditorProvider({
   );
   const resetState = useCallback(() => {
     setExpand(false);
-    setDraftId(null);
+    setFeed(null);
     setContent(null);
     setTitle('');
     setImage(null);
@@ -177,19 +130,13 @@ export function PostEditorProvider({
   }, []);
 
   const updateTitle = (newTitle: string) => {
-    if (newTitle) {
-      setTitle(newTitle);
-      setIsModified(true);
-    }
+    setTitle(newTitle);
+    setIsModified(true);
   };
 
   const updateContent = (newContent: string | null) => {
-    if (newContent && newContent.trim() !== '') {
-      setContent(newContent);
-      setIsModified(true);
-    } else if (newContent === null || newContent.trim() === '') {
-      setContent(null);
-    }
+    setContent(newContent);
+    setIsModified(true);
   };
 
   const updatePostType = (type: PostType) => {
@@ -198,31 +145,23 @@ export function PostEditorProvider({
   };
 
   const updateImage = (newImage: string | null) => {
-    if (newImage === null) {
-      setImage(null);
-    } else if (newImage) {
-      setImage(newImage);
-      setIsModified(true);
-    }
+    setImage(newImage);
+    setIsModified(true);
   };
 
   const updateBackgroundColor = (newBackgroundColor: string | null) => {
     if (newBackgroundColor) {
       setBackgroundColor(newBackgroundColor);
-      setIsModified(true);
     }
+    setIsModified(true);
   };
   const updateArtistName = (newArtistName: string | null) => {
-    if (newArtistName) {
-      setArtistName(newArtistName);
-      setIsModified(true);
-    }
+    setArtistName(newArtistName);
+    setIsModified(true);
   };
   const updateSize = (newSize: string | null) => {
-    if (newSize && newSize.trim() !== '') {
-      setSize(newSize);
-      setIsModified(true);
-    }
+    setSize(newSize);
+    setIsModified(true);
   };
 
   const openPostEditorPopup = async (id?: number) => {
@@ -238,7 +177,7 @@ export function PostEditorProvider({
     setStatus(Status.Loading);
     try {
       const draft = await loadDraft(id);
-      setDraftId(draft.id);
+      setFeed(draft);
       setTitle(draft.title || '');
       if (draft.url_type === UrlType.Image && draft.url) {
         setImage(draft.url);
@@ -250,6 +189,8 @@ export function PostEditorProvider({
           ? PostType.Artwork
           : PostType.General,
       );
+      console.log('DRAFT META', draft.artwork_metadata);
+
       if (draft.feed_type === FeedType.Artwork && draft.artwork_metadata) {
         setArtistName(draft.artwork_metadata.artist_name || null);
         setBackgroundColor(draft.artwork_metadata.background_color);
@@ -265,13 +206,15 @@ export function PostEditorProvider({
 
   const handleUpdateDraft = useCallback(async () => {
     let id: number;
-    if (!draftId) {
-      id = await createDraft(targetId);
-      setDraftId(id);
+    if (!feed) {
+      const newFeed = await createDraft.mutateAsync(targetId);
+      id = newFeed.id;
+      setFeed(newFeed);
     } else {
-      id = draftId;
+      id = feed.id;
     }
-    await updateDraft(id, {
+
+    const req: Partial<UpdatePostRequest> = {
       title,
       html_contents: content || undefined,
       url: image || undefined,
@@ -286,10 +229,15 @@ export function PostEditorProvider({
               size: size || '',
             }
           : undefined,
+    };
+
+    await updateDraft.mutateAsync({
+      postId: id,
+      req,
     });
     return id;
   }, [
-    draftId,
+    feed,
     title,
     content,
     image,
@@ -297,6 +245,8 @@ export function PostEditorProvider({
     artistName,
     backgroundColor,
     size,
+    updateDraft,
+    createDraft,
     targetId,
   ]);
   const autoSaveDraft = useCallback(async () => {
@@ -308,7 +258,6 @@ export function PostEditorProvider({
 
     try {
       await handleUpdateDraft();
-      invalidatePostQuery(targetId, FeedStatus.Draft);
       setIsModified(false);
     } catch (error) {
       console.error(error);
@@ -316,7 +265,7 @@ export function PostEditorProvider({
     } finally {
       setStatus(Status.Idle);
     }
-  }, [status, isModified, handleUpdateDraft, targetId]);
+  }, [status, isModified, handleUpdateDraft]);
 
   useEffect(() => {
     const timeoutId = setInterval(async () => {
@@ -329,7 +278,7 @@ export function PostEditorProvider({
     resetState();
   }, [pathname, resetState]);
 
-  const handlePublishDraft = useCallback(async () => {
+  const handleUpdate = useCallback(async () => {
     if (status !== Status.Idle || !isAllFieldsFilled) {
       return;
     }
@@ -339,24 +288,33 @@ export function PostEditorProvider({
       if (checkString(title) || checkString(content || '')) {
         throw new Error('Please remove the test keyword');
       }
-      const draftId = await handleUpdateDraft();
-      await publishDraft(draftId);
-      router.push(route.threadByFeedId(draftId));
-      invalidatePostQuery(targetId);
+      const finalDraftId = await handleUpdateDraft();
+      if (feed?.status !== FeedStatus.Published) {
+        await publishDraft.mutateAsync(
+          {
+            draftId: finalDraftId,
+          },
+          {
+            onSuccess: () => {
+              router.push(route.threadByFeedId(finalDraftId));
+              resetState();
+            },
+          },
+        );
+      }
       resetState();
     } catch {
       throw new Error('Failed to publish draft');
-    } finally {
-      setStatus(Status.Idle);
     }
   }, [
     content,
+    feed?.status,
     handleUpdateDraft,
     isAllFieldsFilled,
+    publishDraft,
     resetState,
     router,
     status,
-    targetId,
     title,
   ]);
 
@@ -380,7 +338,7 @@ export function PostEditorProvider({
     size,
     updateSize,
 
-    handlePublishDraft,
+    handleUpdate,
     isSubmitDisabled: !isAllFieldsFilled,
     status,
   };
@@ -395,7 +353,9 @@ export function PostEditorProvider({
 export const usePostEditorContext = () => {
   const context = useContext(PostDraftContext);
   if (context === undefined) {
-    throw new Error('usePostDraft must be used within a PostDraftProvider');
+    throw new Error(
+      'usePostEditorContext must be used within a PostEditorProvider',
+    );
   }
   return context;
 };

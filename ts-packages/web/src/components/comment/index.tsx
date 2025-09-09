@@ -4,7 +4,7 @@ import { getTimeAgo } from '@/lib/time-utils';
 import Image from 'next/image';
 import { ChevronDown, Loader2 } from 'lucide-react';
 import { BendArrowRight, CommentIcon, ThumbUp } from '@/components/icons';
-import { Comment as CommentType } from '@/lib/api/models/feeds';
+import { Comment as CommentType, FeedType } from '@/lib/api/models/feeds';
 import LexicalHtmlViewer from '@/components/lexical/lexical-html-viewer';
 import {
   LexicalHtmlEditor,
@@ -16,17 +16,34 @@ import { cn } from '@/lib/utils';
 import { useEffect, useRef, useState } from 'react';
 import { logger } from '@/lib/logger';
 import { useTranslations } from 'next-intl';
+import { useLikeFeedMutation } from '@/hooks/feeds/use-like-feed-mutation';
 
 interface CommentProps {
   comment: CommentType;
-  onSubmit?: (comment_id: number, content: string) => Promise<void>;
-  onLike?: (comment_id: number, value: boolean) => Promise<void>;
+  onSubmit?: (
+    postId: number,
+    commentId: number,
+    content: string,
+  ) => Promise<void>;
 }
 
-export default function Comment({ comment, onSubmit, onLike }: CommentProps) {
+export default function Comment({ comment, onSubmit }: CommentProps) {
   const t = useTranslations('Threads');
   const [expand, setExpand] = useState(false);
   const [showReplies, setShowReplies] = useState(false);
+
+  const { mutateAsync, isPending } = useLikeFeedMutation();
+
+  const handleLike = async (next: boolean) => {
+    if (!isPending) {
+      await mutateAsync({
+        next,
+        feedId: comment.id,
+        feedType: FeedType.Reply,
+        parentId: comment.parent_id || undefined,
+      });
+    }
+  };
   return (
     <div className="flex flex-col gap-[14px] pb-5 border-b border-b-neutral-800">
       <div className="flex flex-row gap-2 items-center">
@@ -122,9 +139,7 @@ export default function Comment({ comment, onSubmit, onLike }: CommentProps) {
           <button
             className="flex flex-row gap-2 justify-center items-center"
             onClick={async () => {
-              if (onLike) {
-                await onLike(comment.id, !comment.is_liked);
-              }
+              handleLike(!comment.is_liked);
             }}
           >
             <ThumbUp
@@ -177,8 +192,8 @@ export default function Comment({ comment, onSubmit, onLike }: CommentProps) {
             className="min-h-30"
             onClose={() => setExpand(false)}
             onSubmit={async (content) => {
-              if (onSubmit) {
-                await onSubmit(comment.id, content);
+              if (onSubmit && comment.parent_id) {
+                await onSubmit(comment.parent_id, comment.id, content);
               }
             }}
           />

@@ -49,8 +49,6 @@ export default function TeamSelector({ onSelect, team }: TeamSelectorProps) {
     return <div />;
   }
 
-  logger.debug('TeamSelector groups:', teams);
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
