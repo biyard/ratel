@@ -17,7 +17,7 @@ import { PublishingScope } from '@/lib/api/models/notice';
 import { TeamContext } from '@/lib/contexts/team-context';
 import { useUserInfo } from '@/app/(social)/_hooks/user';
 import { useTranslations } from 'next-intl';
-import { useFeedById } from '@/lib/api/ratel_api';
+import useFeedById from '@/hooks/feeds/use-feed-by-id';
 
 export default function NoticeSpacePage() {
   return (

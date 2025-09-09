@@ -74,10 +74,12 @@ function EditorRefPlugin({
 }
 
 function Editor({
+  disabled,
   placeholder,
   content,
   updateContent,
 }: {
+  disabled: boolean;
   placeholder: string;
   content: string | null;
   updateContent: (content: string) => void;
@@ -147,7 +149,10 @@ function Editor({
     <>
       <RichTextPlugin
         contentEditable={
-          <ContentEditable className="outline-none resize-none w-full min-h-[60px]" />
+          <ContentEditable
+            disabled={disabled}
+            className="outline-none resize-none w-full min-h-[60px]"
+          />
         }
         placeholder={
           <div className="absolute top-2 left-5 text-neutral-500 pointer-events-none select-none">
@@ -165,6 +170,14 @@ function Editor({
     </>
   );
 }
+const editorConfig = {
+  namespace: 'CreatePostEditor',
+  theme: editorTheme,
+  onError(error: Error) {
+    console.error(error);
+  },
+};
+
 export function CreatePost() {
   const t = useTranslations('Home');
 
@@ -182,176 +195,166 @@ export function CreatePost() {
     image,
     updateImage,
 
-    handlePublishDraft,
+    handleUpdate,
   } = usePostEditorContext();
 
   const { data: userInfo, isLoading } = useUserInfo();
-  const editorConfig = {
-    namespace: 'CreatePostEditor',
-    theme: editorTheme,
-    onError(error: Error) {
-      console.error(error);
-    },
-  };
+
   if (isLoading || !expand) {
     return null;
   }
   return (
     <div className={`flex flex-col w-full`}>
-      <LexicalComposer initialConfig={editorConfig}>
-        <div className="w-full bg-component-bg border-t-6 border-x border-b border-primary rounded-t-lg overflow-hidden">
-          {/* Header */}
-          <div className="flex items-center p-4 justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex flex-row items-center gap-2">
-                {userInfo?.profile_url && userInfo?.profile_url !== '' ? (
-                  <Image
-                    width={24}
-                    height={24}
-                    src={userInfo?.profile_url}
-                    alt="Profile"
-                    className="w-6 h-6 object-cover rounded-full"
-                  />
-                ) : (
-                  <div className="w-6 h-6 rounded-full border border-neutral-500 bg-neutral-600" />
-                )}
-                <div className="flex items-center gap-2">
-                  <span className="text-white font-medium text-lg">
-                    {userInfo?.nickname || 'Anonymous'}
-                  </span>
-                </div>
-                <Certified className="size-5" />
+      <div className="w-full bg-component-bg border-t-6 border-x border-b border-primary rounded-t-lg overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center p-4 justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex flex-row items-center gap-2">
+              {userInfo?.profile_url && userInfo?.profile_url !== '' ? (
+                <Image
+                  width={24}
+                  height={24}
+                  src={userInfo?.profile_url}
+                  alt="Profile"
+                  className="w-6 h-6 object-cover rounded-full"
+                />
+              ) : (
+                <div className="w-6 h-6 rounded-full border border-neutral-500 bg-neutral-600" />
+              )}
+              <div className="flex items-center gap-2">
+                <span className="text-white font-medium text-lg">
+                  {userInfo?.nickname || 'Anonymous'}
+                </span>
               </div>
-              <SelectPostType
-                postType={postType}
-                setPostType={updatePostType}
+              <Certified className="size-5" />
+            </div>
+            <SelectPostType postType={postType} setPostType={updatePostType} />
+          </div>
+          <div className={cn('cursor-pointer')} onClick={toggleExpand}>
+            <DoubleArrowDown />
+          </div>
+        </div>
+        {postType === PostType.General ? (
+          <LexicalComposer initialConfig={editorConfig}>
+            {/* Title input */}
+            <div className="px-4 pt-4">
+              <input
+                type="text"
+                placeholder={t('write_title')}
+                value={title}
+                onChange={(e) => {
+                  updateTitle(e.target.value);
+                }}
+                className="w-full bg-transparent text-white text-xl font-semibold placeholder-neutral-500 outline-none border-none"
               />
             </div>
-            <div className={cn('cursor-pointer')} onClick={toggleExpand}>
-              <DoubleArrowDown />
+
+            {/* Lexical Content Area */}
+            <div className="px-4 pt-2 min-h-[80px] relative text-neutral-300 text-[15px] leading-relaxed">
+              <Editor
+                disabled={false}
+                content={content}
+                updateContent={updateContent}
+                placeholder={t('write_content')}
+              />
             </div>
-          </div>
-          {postType === PostType.General ? (
-            <>
-              {/* Title input */}
-              <div className="px-4 pt-4">
-                <input
-                  type="text"
-                  placeholder={t('write_title')}
-                  value={title}
-                  onChange={(e) => {
-                    updateTitle(e.target.value);
-                  }}
-                  className="w-full bg-transparent text-white text-xl font-semibold placeholder-neutral-500 outline-none border-none"
-                />
-              </div>
 
-              {/* Lexical Content Area */}
-              <div className="px-4 pt-2 min-h-[80px] relative text-neutral-300 text-[15px] leading-relaxed">
-                <Editor
-                  content={content}
-                  updateContent={updateContent}
-                  placeholder={t('write_content')}
-                />
-              </div>
-
-              {/* Image previews */}
-              {image && (
-                <div className="px-4 pt-2">
-                  <div className="flex flex-wrap gap-2">
-                    <div className="relative size-16">
-                      <Image
-                        width={64}
-                        height={64}
-                        src={image}
-                        alt={`Uploaded image`}
-                        className="object-cover rounded-lg border border-neutral-600"
-                      />
-                      <button
-                        onClick={() => updateImage(null)}
-                        className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-600 rounded-full flex items-center justify-center text-white text-xs hover:bg-red-700 border-2 border-component-bg"
-                        aria-label={`Remove uploaded image`}
-                      >
-                        <X size={12} />
-                      </button>
-                    </div>
+            {/* Image previews */}
+            {image && (
+              <div className="px-4 pt-2">
+                <div className="flex flex-wrap gap-2">
+                  <div className="relative size-16">
+                    <Image
+                      width={64}
+                      height={64}
+                      src={image}
+                      alt={`Uploaded image`}
+                      className="object-cover rounded-lg border border-neutral-600"
+                    />
+                    <button
+                      onClick={() => updateImage(null)}
+                      className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-600 rounded-full flex items-center justify-center text-white text-xs hover:bg-red-700 border-2 border-component-bg"
+                      aria-label={`Remove uploaded image`}
+                    >
+                      <X size={12} />
+                    </button>
                   </div>
                 </div>
-              )}
+              </div>
+            )}
 
-              {/* Bottom toolbar */}
-              <div className="flex items-center justify-between p-4 text-neutral-400">
-                <ToolbarPlugin onImageUpload={(url) => updateImage(url)} />
+            {/* Bottom toolbar */}
+            <div className="flex items-center justify-between p-4 text-neutral-400">
+              <ToolbarPlugin onImageUpload={(url) => updateImage(url)} />
 
-                <div className="flex items-center gap-4">
-                  {/* Status indicator */}
-                  {status === Status.Saving && (
-                    <div className="flex items-center gap-2 text-sm text-neutral-400">
-                      <Loader2 className="animate-spin" size={16} />
-                      <span>Saving...</span>
-                    </div>
-                  )}
-                  {/* {status === 'error' && (
+              <div className="flex items-center gap-4">
+                {/* Status indicator */}
+                {status === Status.Saving && (
+                  <div className="flex items-center gap-2 text-sm text-neutral-400">
+                    <Loader2 className="animate-spin" size={16} />
+                    <span>Saving...</span>
+                  </div>
+                )}
+                {/* {status === 'error' && (
                     <span className="text-sm text-red-500">Save failed</span>
                   )} */}
 
-                  <Button
-                    variant="rounded_primary"
-                    size="default"
-                    onClick={async () => {
-                      console.log('Publish button clicked');
-                      await handlePublishDraft();
-                    }}
-                    disabled={isSubmitDisabled || status !== Status.Idle}
-                    className="gap-2"
-                  >
-                    {status !== Status.Idle ? (
-                      <Loader2 className="animate-spin" />
-                    ) : (
-                      <UserCircleIcon />
-                    )}
-                  </Button>
-                </div>
-              </div>
-            </>
-          ) : (
-            <>
-              <ArtworkPost />
-              <div className="flex items-center justify-end p-4 text-neutral-400">
-                <div className="flex items-center gap-4">
-                  {/* Status indicator */}
-                  {status === Status.Saving && (
-                    <div className="flex items-center gap-2 text-sm text-neutral-400">
-                      <Loader2 className="animate-spin" size={16} />
-                      <span>Saving...</span>
-                    </div>
+                <Button
+                  variant="rounded_primary"
+                  size="default"
+                  onClick={async () => {
+                    console.log('Publish button clicked');
+                    await handleUpdate();
+                  }}
+                  disabled={isSubmitDisabled || status !== Status.Idle}
+                  className="gap-2"
+                >
+                  {status !== Status.Idle ? (
+                    <Loader2 className="animate-spin" />
+                  ) : (
+                    <UserCircleIcon />
                   )}
-                  {/* {status === 'error' && (
+                </Button>
+              </div>
+            </div>
+          </LexicalComposer>
+        ) : (
+          <>
+            <EditableArtworkPost />
+            <div className="flex items-center justify-end p-4 text-neutral-400">
+              <div className="flex items-center gap-4">
+                {/* Status indicator */}
+                {status === Status.Saving && (
+                  <div className="flex items-center gap-2 text-sm text-neutral-400">
+                    <Loader2 className="animate-spin" size={16} />
+                    <span>Saving...</span>
+                  </div>
+                )}
+                {/* {status === 'error' && (
                     <span className="text-sm text-red-500">Save failed</span>
                   )} */}
 
-                  <Button
-                    variant="rounded_primary"
-                    size="default"
-                    onClick={async () => {
-                      console.log('Publish button clicked');
-                      await handlePublishDraft();
-                    }}
-                    disabled={isSubmitDisabled || status !== Status.Idle}
-                    className="gap-2"
-                  >
-                    {status !== Status.Idle ? (
-                      <Loader2 className="animate-spin" />
-                    ) : (
-                      <UserCircleIcon />
-                    )}
-                  </Button>
-                </div>
+                <Button
+                  variant="rounded_primary"
+                  size="default"
+                  onClick={async () => {
+                    console.log('Publish button clicked');
+                    await handleUpdate();
+                  }}
+                  disabled={isSubmitDisabled || status !== Status.Idle}
+                  className="gap-2"
+                >
+                  {status !== Status.Idle ? (
+                    <Loader2 className="animate-spin" />
+                  ) : (
+                    <UserCircleIcon />
+                  )}
+                </Button>
               </div>
-            </>
-          )}
-        </div>
-      </LexicalComposer>
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }
@@ -378,7 +381,8 @@ function SelectPostType({
     </Select>
   );
 }
-function ArtworkPost() {
+
+function EditableArtworkPost() {
   const {
     title,
     updateTitle,
@@ -395,11 +399,62 @@ function ArtworkPost() {
     updateImage,
   } = usePostEditorContext();
 
+  return (
+    <ArtworkPost
+      editMode={true}
+      title={title}
+      updateTitle={updateTitle}
+      content={content}
+      updateContent={updateContent}
+      artistName={artistName}
+      updateArtistName={updateArtistName}
+      backgroundColor={backgroundColor}
+      updateBackgroundColor={updateBackgroundColor}
+      size={size}
+      updateSize={updateSize}
+      image={image}
+      updateImage={updateImage}
+    />
+  );
+}
+
+export function ArtworkPost({
+  editMode = true,
+  title,
+  updateTitle = () => {},
+  content,
+  updateContent = () => {},
+
+  artistName,
+  updateArtistName = () => {},
+  backgroundColor,
+  updateBackgroundColor = () => {},
+  size,
+  updateSize = () => {},
+  image,
+  updateImage = () => {},
+}: {
+  editMode?: boolean;
+
+  title: string | null;
+  updateTitle?: (title: string) => void;
+  content: string | null;
+  updateContent?: (content: string) => void;
+  artistName: string | null;
+  updateArtistName?: (name: string) => void;
+  backgroundColor: string;
+  updateBackgroundColor?: (color: string) => void;
+  size: string | null;
+  updateSize?: (size: string) => void;
+  image: string | null;
+  updateImage?: (image: string | null) => void;
+}) {
   const t = useTranslations('Home');
 
   const [showColorPicker, setShowColorPicker] = useState(false);
 
   const handleImageUpload = () => {
+    if (!editMode) return;
     const handleFileChange = (event: Event) => {
       const target = event.target as HTMLInputElement;
       const file = target.files?.[0];
@@ -426,6 +481,7 @@ function ArtworkPost() {
           id="artwork"
           placeholder="Enter artwork name"
           value={title || ''}
+          disabled={!editMode}
           onChange={(e) => updateTitle(e.target.value)}
         />
         <label htmlFor="artistName">Artist Name</label>
@@ -433,6 +489,7 @@ function ArtworkPost() {
           id="artistName"
           placeholder="Enter artist name"
           value={artistName || ''}
+          disabled={!editMode}
           onChange={(e) => updateArtistName(e.target.value)}
         />
         <label htmlFor="description">Description</label>
@@ -440,21 +497,19 @@ function ArtworkPost() {
           id="description"
           className="min-h-[80px] relative rounded-md bg-input/30 border border-input px-3 py-1 "
         >
-          <Editor
-            content={content}
-            updateContent={updateContent}
-            placeholder={t('write_content')}
-          />
+          <LexicalComposer initialConfig={editorConfig}>
+            <Editor
+              disabled={!editMode}
+              content={content}
+              updateContent={updateContent}
+              placeholder={t('write_content')}
+            />
+          </LexicalComposer>
         </div>
-        {/* <Input
-          id="description"
-          placeholder="Enter description"
-          value={content || ''}
-          onChange={(e) => updateContent(e.target.value)}
-        /> */}
         <label htmlFor="size">Size</label>
         <Input
           id="size"
+          disabled={!editMode}
           placeholder="Enter size"
           value={size || ''}
           onChange={(e) => updateSize(e.target.value)}
@@ -462,10 +517,15 @@ function ArtworkPost() {
         <label htmlFor="backgroundColor">Background Color</label>
         <div className="relative">
           <Button
+            className="disabled:opacity-100"
+            style={{ backgroundColor: !editMode ? backgroundColor : undefined }}
+            disabled={!editMode}
             onClick={() => setShowColorPicker(!showColorPicker)}
             size="sm"
           >
-            <span>Select Background Color</span>
+            <span>
+              {!editMode ? backgroundColor : 'Select Background Color'}
+            </span>
           </Button>
           {showColorPicker && (
             <div className="absolute z-10 p-4 bg-neutral-600 bottom-0 left-0 flex flex-col gap-2 justify-center items-center">
@@ -484,10 +544,10 @@ function ArtworkPost() {
         </div>
       </div>
 
-      <div className="flex-1">
+      <div className="flex-1 p-2" style={{ backgroundColor }}>
         <button
+          disabled={!editMode}
           onClick={handleImageUpload}
-          style={{ backgroundColor }}
           className="relative w-full h-full p-4 flex items-center justify-center"
         >
           {image ? (

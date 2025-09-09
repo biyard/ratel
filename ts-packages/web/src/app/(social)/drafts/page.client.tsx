@@ -2,7 +2,7 @@
 import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import React, { useCallback, useRef } from 'react';
 import { Col } from '@/components/ui/col';
-import { FeedStatus } from '@/lib/api/models/feeds';
+import { FeedStatus, FeedType } from '@/lib/api/models/feeds';
 import { usePostEditorContext } from '../_components/post-editor';
 import CreatePostButton from '../_components/create-post-button';
 import { Row } from '@/components/ui/row';
@@ -10,7 +10,8 @@ import { FeedContents, UserBadge } from '@/components/feed-card';
 import { UserType } from '@/lib/api/models/user';
 import TimeAgo from '@/components/time-ago';
 import { Delete2 } from '@/components/icons';
-import { usePostInfiniteQuery, usePostMutation } from '@/hooks/use-post';
+import useInfiniteFeeds from '@/hooks/feeds/use-feeds-infinite-query';
+import { useDeleteFeedMutation } from '@/hooks/feeds/use-delete-feed-mutation';
 
 export default function DraftPage() {
   const { data: user } = useSuspenseUserInfo();
@@ -20,12 +21,20 @@ export default function DraftPage() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = usePostInfiniteQuery(user_id, FeedStatus.Draft);
+  } = useInfiniteFeeds(user_id, FeedStatus.Draft);
 
   const { openPostEditorPopup } = usePostEditorContext();
-  const { delete: deleteDraft } = usePostMutation(user_id, FeedStatus.Draft);
-  const removeDraft = async (post_id: number) => {
-    await deleteDraft.mutateAsync(post_id);
+  const { mutateAsync } = useDeleteFeedMutation();
+  const removeDraft = async (
+    feedId: number,
+    feedType: FeedType,
+    parentId?: number,
+  ) => {
+    await mutateAsync({
+      feedId: feedId,
+      feedType: feedType,
+      parentId: parentId,
+    });
   };
   const observer = useRef<IntersectionObserver | null>(null);
   const lastPostRef = useCallback(
@@ -74,7 +83,11 @@ export default function DraftPage() {
                     e.preventDefault();
                     e.stopPropagation();
 
-                    await removeDraft(post.id);
+                    await removeDraft(
+                      post.id,
+                      post.feed_type,
+                      post.parent_id ?? undefined,
+                    );
                   }}
                 >
                   {
