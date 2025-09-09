@@ -14,12 +14,12 @@ export default function SaveThenPublishPopup({
   return (
     <div className="w-[500px] flex flex-col">
       {/* Header */}
-      <div className="text-center font-bold text-white text-[24px] mb-6 mt-2">
+      <div className="text-center font-bold text-create-space-label text-[24px] mb-6 mt-2">
         {t('save_first_title')}
       </div>
 
       {/* Body */}
-      <div className="text-center font-medium text-neutral-400 text-base mb-8">
+      <div className="text-center font-medium text-create-space-desc text-base mb-8">
         {t('unsaved_desc_line1')}
         <br />
         {t('unsaved_desc_line2')}
@@ -36,7 +36,7 @@ export default function SaveThenPublishPopup({
       <div className="flex flex-row justify-center gap-4">
         <button
           onClick={onJustPublish}
-          className="flex-1 py-[14.5px] bg-transparent font-bold text-white text-base rounded-[10px] hover:bg-neutral-800 transition-colors"
+          className="flex-1 py-[14.5px] bg-transparent font-bold light:bg-neutral-300 text-white text-base rounded-[10px] hover:bg-neutral-800 transition-colors"
         >
           {t('just_publish')}
         </button>

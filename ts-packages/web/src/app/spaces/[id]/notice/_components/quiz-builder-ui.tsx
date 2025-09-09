@@ -639,14 +639,14 @@ export default function QuizBuilderUI({
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="text-white w-full flex flex-col">
+      <div className="text-foreground w-full flex flex-col">
         {!isEditMode &&
           questions.length > 0 &&
           spaceId &&
           userId &&
           !isOwner && (
             <div className="mb-6 pt-4">
-              <h3 className="text-xl font-semibold text-white flex items-center justify-between">
+              <h3 className="text-xl font-semibold text-foreground flex items-center justify-between">
                 <div>
                   {t('attempt')} #
                   {nextAttemptNumber > 3 ? 3 : nextAttemptNumber}
@@ -702,7 +702,7 @@ export default function QuizBuilderUI({
             </div>
           </SortableContext>
         ) : (
-          <div className="bg-[var(--color-component-bg)] rounded-[10px] p-4 mb-4 text-center py-8 text-white/70">
+          <div className="bg-[var(--color-component-bg)] rounded-[10px] p-4 mb-4 text-center py-8 text-foreground">
             {t('no_quiz_warning')}
           </div>
         )}
@@ -818,7 +818,7 @@ function QuestionCard({
     >
       {isEditMode && !isQuizEditingDisabled && (
         <div className="flex justify-center mb-2">
-          <div className="text-white/50 cursor-move">
+          <div className="text-foreground cursor-move">
             <DialPad className="w-5 h-5" />
           </div>
         </div>
@@ -833,12 +833,10 @@ function QuestionCard({
               onChange={(e) => onUpdateTitle(e.target.value)}
               disabled={isQuizEditingDisabled}
               style={{
-                backgroundColor: 'var(--color-neutral-800)',
-                border: '1px solid var(--color-neutral-700)',
                 height: '40px',
                 opacity: isQuizEditingDisabled ? 0.5 : 1,
               }}
-              className="title-input flex-1 px-3 rounded-md text-white focus:outline-none focus:ring-1 focus:ring-white/50"
+              className="bg-input-box-bg border border-input-box-border light:border-foreground text-foreground title-input flex-1 px-3 rounded-md focus:outline-none focus:ring-1 focus:ring-white/50"
               placeholder={t('title')}
               spellCheck={false}
             />
@@ -889,7 +887,7 @@ function QuestionCard({
                 {isEditMode && !isQuizEditingDisabled && (
                   <button
                     onClick={() => onRemoveImage(index)}
-                    className="absolute top-2 right-2 bg-black/60 rounded-full p-1 text-white/90 hover:bg-black/80"
+                    className="absolute top-2 right-2 bg-black/60 rounded-full p-1 text-foreground hover:bg-black/80"
                     aria-label={`Remove image ${index + 1}`}
                   >
                     <svg
@@ -1038,7 +1036,7 @@ function OptionItem({
       {...(isEditMode && !isQuizEditingDisabled ? listeners : {})}
     >
       {isEditMode && !isQuizEditingDisabled && (
-        <div className="text-white/50 cursor-move mr-1">
+        <div className="text-foreground cursor-move mr-1">
           <DialPad2 className="w-4 h-4" />
         </div>
       )}
@@ -1052,10 +1050,10 @@ function OptionItem({
           isEditMode
             ? option.isCorrect
               ? 'bg-[var(--color-primary)] border-[var(--color-primary)]'
-              : 'border-white/30'
+              : 'border-white/30 light:border-neutral-300'
             : option.isSelected
               ? 'bg-[var(--color-primary)] border-[var(--color-primary)]'
-              : 'border-white/30 hover:border-white/50'
+              : 'border-white/30 light:border-neutral-300 hover:border-white/50'
         }`}
         onClick={
           isEditMode && isQuizEditingDisabled
@@ -1099,7 +1097,7 @@ function OptionItem({
           value={option.text}
           onChange={(e) => onUpdateText(e.target.value)}
           disabled={isQuizEditingDisabled}
-          className="flex-1 bg-transparent border-b-0 px-2 py-1 text-white focus:outline-none focus:border-b-2 focus:border-white"
+          className="flex-1 bg-transparent border-b-0 px-2 py-1 text-foreground focus:outline-none focus:border-b-2 focus:border-white"
           style={{ opacity: isQuizEditingDisabled ? 0.5 : 1 }}
           placeholder={t('option')}
         />
