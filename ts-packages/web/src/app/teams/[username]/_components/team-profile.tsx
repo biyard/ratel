@@ -57,7 +57,7 @@ export default function TeamProfile({ team }: TeamProfileProps) {
         )}
       </div>
 
-      <div className="font-medium">{team.nickname}</div>
+      <div className="font-medium text-foreground">{team.nickname}</div>
 
       <div
         id="user-profile-description"

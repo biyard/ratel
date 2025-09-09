@@ -4,7 +4,7 @@ import { Col } from '@/components/ui/col';
 import { logger } from '@/lib/logger';
 import { FeedStatus } from '@/lib/api/models/feeds';
 import { Row } from '@/components/ui/row';
-import { FeedContents, IndustryTag, UserBadge } from '@/components/feed-card';
+import { FeedContents, UserBadge } from '@/components/feed-card';
 import { UserType } from '@/lib/api/models/user';
 import TimeAgo from '@/components/time-ago';
 import { Delete2 } from '@/components/icons';
@@ -72,9 +72,6 @@ export default function TeamPostsPage({ username }: { username: string }) {
                   }}
                 >
                   <Row className="justify-between px-5 items-center">
-                    <Row>
-                      <IndustryTag industry={'CRYPTO'} />
-                    </Row>
                     <Row
                       className="cursor-pointer w-[21px] h-[21px]"
                       onClick={async (e) => {
@@ -94,8 +91,12 @@ export default function TeamPostsPage({ username }: { username: string }) {
                     </Row>
                   </Row>
                   <div className="flex flex-row items-center gap-1 w-full line-clamp-2 font-bold text-xl/[25px] tracking-[0.5px] align-middle text-white px-5">
-                    <div className="text-sm font-normal">(Draft)</div>
-                    <div className="font-normal">{props.title}</div>
+                    <div className="text-sm font-normal text-foreground">
+                      (Draft)
+                    </div>
+                    <div className="font-normal text-foreground">
+                      {props.title}
+                    </div>
                   </div>
                   <Row className="justify-between items-center px-5">
                     <UserBadge

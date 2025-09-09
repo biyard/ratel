@@ -68,7 +68,7 @@ export default function MySettings() {
           />
 
           {/* theme box controller */}
-          {config.env == 'dev' ? (
+          {config.env == 'local' ? (
             <SpecBox
               left_text="Theme"
               action_text={currentThemeLabel}

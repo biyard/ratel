@@ -123,26 +123,35 @@ export default function TeamSidemenu({ username }: TeamSidemenuProps) {
       <nav className="py-5 px-3 w-full rounded-[10px] bg-component-bg">
         <Link
           href={route.teamByUsername(team.username)}
-          className="sidemenu-link"
+          className="sidemenu-link text-foreground"
         >
           <Home />
           <span>{t('home')}</span>
         </Link>
-        <Link href={route.teamDrafts(team.username)} className="sidemenu-link">
+        <Link
+          href={route.teamDrafts(team.username)}
+          className="sidemenu-link text-foreground"
+        >
           <EditContent className="w-6 h-6 [&>path]:stroke-neutral-500" />
           <span>{t('drafts')}</span>
         </Link>
-        <Link href={route.teamGroups(team.username)} className="sidemenu-link">
+        <Link
+          href={route.teamGroups(team.username)}
+          className="sidemenu-link text-foreground"
+        >
           <Folder className="w-6 h-6 [&>path]:stroke-neutral-500" />
           <span>{t('manage_group')}</span>
         </Link>
-        <Link href={route.teamMembers(team.username)} className="sidemenu-link">
+        <Link
+          href={route.teamMembers(team.username)}
+          className="sidemenu-link text-foreground"
+        >
           <UserGroup className="w-6 h-6" />
           <span>{t('members')}</span>
         </Link>
         <Link
           href={route.teamSettings(team.username)}
-          className="sidemenu-link"
+          className="sidemenu-link text-foreground"
         >
           <Settings className="w-6 h-6" />
           <span>{t('settings')}</span>

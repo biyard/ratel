@@ -6,7 +6,7 @@ export default function FollowButton({ onClick }: { onClick: () => void }) {
 
   return (
     <div
-      className="cursor-pointer flex flex-row w-fit h-fit px-[10px] py-[5px] bg-white hover:bg-gray-300 rounded-[50px]"
+      className="cursor-pointer flex flex-row w-fit h-fit px-[10px] py-[5px] bg-white light:bg-primary hover:bg-gray-300 rounded-[50px]"
       onClick={() => {
         onClick();
       }}
