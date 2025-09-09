@@ -2,12 +2,13 @@ use crate::{Error, Result};
 use aws_sdk_dynamodb::types::AttributeValue;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use super::UserSortKey;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DynamoProfile {
 
     pub pk: String, // USER#{user_id}
-    pub sk: String, // PROFILE
+    pub sk: UserSortKey, // PROFILE
 
 
     pub user_id: i64,
@@ -25,7 +26,7 @@ impl DynamoProfile {
 
         Self {
             pk: format!("USER#{}", user_id),
-            sk: "PROFILE".to_string(),
+            sk: UserSortKey::Profile,
             user_id,
             profile_url: None,
             display_name: None,
@@ -38,7 +39,7 @@ impl DynamoProfile {
         let mut item = HashMap::new();
 
         item.insert("PK".to_string(), AttributeValue::S(self.pk.clone()));
-        item.insert("SK".to_string(), AttributeValue::S(self.sk.clone()));
+        item.insert("SK".to_string(), AttributeValue::S(self.sk.to_string()));
         item.insert(
             "user_id".to_string(),
             AttributeValue::N(self.user_id.to_string()),
@@ -96,7 +97,7 @@ impl DynamoProfile {
 
         Ok(Self {
             pk: get_string("PK")?,
-            sk: get_string("SK")?,
+            sk: UserSortKey::from(get_string("SK")?.as_str()),
             user_id: get_number("user_id")?,
             profile_url: get_optional_string("profile_url"),
             display_name: get_optional_string("display_name"),
