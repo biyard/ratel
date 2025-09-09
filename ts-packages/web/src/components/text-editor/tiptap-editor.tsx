@@ -43,7 +43,6 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
           resizable: true,
           HTMLAttributes: {
             class: 'tiptap-table',
-            style: 'border: 1px solid #e0e0e0;',
           },
         }),
         TableRow.configure({
@@ -54,14 +53,11 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
         TableHeader.configure({
           HTMLAttributes: {
             class: 'tiptap-table-header',
-            style: 'background-color: #f5f5f5;',
           },
         }),
         TableCell.configure({
           HTMLAttributes: {
             class: 'tiptap-table-cell',
-            style:
-              'background-color: #fcb300; color: #333; border: 1px solid #e0e0e0;',
           },
         }),
         Link.configure({
@@ -71,11 +67,11 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
       ],
       content,
       editable,
-      onUpdate: ({ editor }) => {
+      onUpdate: ({ editor }: { editor: Editor }) => {
         const html = editor.getHTML();
         onUpdate?.(html);
       },
-    });
+    }) as Editor | null;
 
     useImperativeHandle<Editor | null, Editor | null>(ref, () => editor, [
       editor,

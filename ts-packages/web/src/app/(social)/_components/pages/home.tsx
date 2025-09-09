@@ -65,6 +65,8 @@ export default function Home({
   const posts = data?.pages.flatMap((page) => page.items) || [];
 
   const filteredFeeds = posts
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .filter((item) => Number((item as any).feed_type) !== 2)
     .map((item) => ({
       id: item.id,
       industry: item.industry?.[0]?.name || '',

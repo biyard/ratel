@@ -14,7 +14,10 @@ import { route } from '@/route';
 import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { UserType } from '@/lib/api/models/user';
 import LoginIcon from '@/assets/icons/login.svg';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
+import { Us } from './icons';
+import { Kr } from '@/assets/icons/flags';
+import { useRouter } from 'next/navigation';
 export interface HeaderProps {
   mobileExtends: boolean;
   setMobileExtends: (extend: boolean) => void;
@@ -23,12 +26,19 @@ export interface HeaderProps {
 function Header(props: HeaderProps) {
   const t = useTranslations('Nav');
   const popup = usePopup();
+  const router = useRouter();
+  const locale = useLocale() as 'en' | 'ko';
 
   const { data } = useSuspenseUserInfo();
   const loggedIn =
     data &&
     (data.user_type === UserType.Individual ||
       data.user_type === UserType.Team);
+
+  const handleChangeLanguage = (newLocale: string) => {
+    document.cookie = `locale=${newLocale}; path=/; max-age=31536000; samesite=lax`;
+    router.refresh();
+  };
 
   const navItems = [
     {
@@ -99,7 +109,7 @@ function Header(props: HeaderProps) {
   ];
 
   return (
-    <header className="border-b border-neutral-800 px-2.5 py-2.5 flex items-center justify-center !bg-bg h-[var(--header-height)]">
+    <header className="border-b border-separator px-2.5 py-2.5 flex items-center justify-center !bg-bg h-[var(--header-height)]">
       <nav className="flex items-center justify-between mx-2.5 gap-12.5 w-full max-w-desktop">
         <div className="flex items-center gap-5">
           <Link
@@ -112,7 +122,7 @@ function Header(props: HeaderProps) {
           </Link>
         </div>
 
-        <div className="flex items-center gap-2.5 max-tablet:hidden">
+        <div className="flex items-center justify-center gap-2.5 max-tablet:hidden">
           {navItems.map((item, index) => (
             <Link
               key={`nav-item-${index}`}
@@ -127,6 +137,36 @@ function Header(props: HeaderProps) {
               </span>
             </Link>
           ))}
+
+          <button
+            className="group cursor-pointer font-bold text-neutral-500 text-[15px] flex flex-col items-center justify-center group p-2.5"
+            onClick={() => {
+              if (locale == 'en') {
+                handleChangeLanguage('ko');
+              } else {
+                handleChangeLanguage('en');
+              }
+            }}
+          >
+            <div
+              className="cursor-pointer w-fit h-fit"
+              onClick={() => {
+                handleChangeLanguage('ko');
+              }}
+            >
+              <div className="flex flex-col w-fit justify-center items-center h-6">
+                {locale == 'en' ? (
+                  <Us className="cursor-pointer rounded-full w-4 h-4 object-cover" />
+                ) : (
+                  <Kr className="cursor-pointer rounded-full w-4 h-4 object-cover" />
+                )}
+              </div>
+              <span className="whitespace-nowrap text-neutral-500 group-hover:text-white text-[15px] font-medium transition-all">
+                {' '}
+                {locale == 'en' ? 'En' : 'Ko'}
+              </span>
+            </div>
+          </button>
 
           {data &&
           (data.user_type === UserType.Individual ||
