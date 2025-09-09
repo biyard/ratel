@@ -63,7 +63,7 @@ export default function ThreadComment({ post_id }: { post_id: number }) {
             {!expand && (
               <button
                 onClick={() => setExpand(true)}
-                className="flex flex-row w-full px-3.5 py-2 gap-2 bg-neutral-800 border border-neutral-700 items-center rounded-lg"
+                className="flex flex-row w-full px-3.5 py-2 gap-2 bg-component-bg border border-neutral-700 light:border-transparent items-center rounded-lg"
               >
                 <CommentIcon
                   width={24}
