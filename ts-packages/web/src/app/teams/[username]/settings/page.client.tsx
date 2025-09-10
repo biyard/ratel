@@ -92,34 +92,34 @@ export default function SettingsPage({ username }: { username: string }) {
 
       <Col className="w-full gap-2.5">
         <Row className="max-tablet:flex-col">
-          <label className="w-40 font-bold text-foreground">
+          <label className="w-40 font-bold text-text-primary">
             {t('username')}
           </label>
           <Input
             type="text"
-            className="text-foreground"
+            className="text-text-primary bg-input-box-bg border border-input-box-border"
             disabled
             value={`@${team?.username}`}
           />
         </Row>
         <Row className="max-tablet:flex-col">
-          <label className="w-40 font-bold text-foreground">
+          <label className="w-40 font-bold text-text-primary">
             {t('display_name')}
           </label>
           <Input
             type="text"
-            className="text-foreground"
+            className="text-text-primary bg-input-box-bg border border-input-box-border"
             placeholder={t('display_name_hint')}
             value={nickname}
             onInput={handleNickname}
           />
         </Row>
         <Col>
-          <label className="w-40 font-bold text-foreground">
+          <label className="w-40 font-bold text-text-primary">
             {t('description')}
           </label>
           <Textarea
-            className="text-foreground"
+            className="text-text-primary bg-input-box-bg border border-input-box-border"
             placeholder={t('team_description_hint')}
             value={htmlContents}
             onChange={handleContents}

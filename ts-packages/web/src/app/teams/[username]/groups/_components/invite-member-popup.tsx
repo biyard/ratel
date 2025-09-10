@@ -103,7 +103,7 @@ export default function InviteMemberPopup({
   return (
     <div className="flex flex-col w-[900px] min-h-[400px] max-w-[900px] min-w-[400px] max-mobile:!w-full max-mobile:!max-w-full gap-5">
       <div className="flex flex-col w-full gap-[10px]">
-        <div className="font-bold text-[15px]/[28px] text-neutral-400">
+        <div className="font-bold text-[15px]/[28px] text-modal-label-text">
           {t('select_group')}
         </div>
         <SelectBox
@@ -116,7 +116,7 @@ export default function InviteMemberPopup({
       </div>
 
       <div className="flex flex-col w-full">
-        <div className="font-bold text-[15px]/[28px] text-neutral-400">
+        <div className="font-bold text-[15px]/[28px] text-modal-label-text">
           {t('email_label')}
         </div>
         <div className="mt-[10px]">

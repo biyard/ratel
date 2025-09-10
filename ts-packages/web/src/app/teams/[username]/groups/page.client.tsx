@@ -111,15 +111,15 @@ function ListGroups({ groups }: { groups: Group[] }) {
         .map((group) => (
           <div
             key={group.id}
-            className="flex flex-row w-full h-fit gap-[15px] bg-transparent rounded-sm border border-neutral-800 p-5"
+            className="flex flex-row w-full h-fit gap-[15px] bg-transparent rounded-sm border border-card-enable-border p-5"
           >
             <Folder className="w-12 h-12 stroke-neutral-400" />
 
             <div className="flex flex-col justify-between items-start">
-              <div className="font-bold text-foreground text-base/[20px]">
+              <div className="font-bold text-text-primary text-base/[20px]">
                 {group.name}
               </div>
-              <div className="font-semibold text-neutral-400 text-sm/[20px]">
+              <div className="font-semibold text-desc-text text-sm/[20px]">
                 {group.member_count} {t('member')}
               </div>
             </div>
