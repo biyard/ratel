@@ -265,7 +265,7 @@ export const LexicalHtmlEditor = forwardRef<
     <div className={cn('flex flex-col min-h-50 p-4', className)}>
       <LexicalComposer initialConfig={editorConfig}>
         {/* Lexical Content Area */}
-        <div className="relative flex flex-1 text-foreground ">
+        <div className="relative flex flex-1 text-text-primary">
           <RichTextPlugin
             contentEditable={
               <ContentEditable className="outline-none resize-none w-full flex-1" />

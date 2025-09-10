@@ -28,7 +28,7 @@ export default function Comment({ comment, onSubmit, onLike }: CommentProps) {
   const [expand, setExpand] = useState(false);
   const [showReplies, setShowReplies] = useState(false);
   return (
-    <div className="flex flex-col gap-[14px] pb-5 border-b border-b-neutral-800 light:border-b-[#e5e5e5]">
+    <div className="flex flex-col gap-[14px] pb-5 border-b border-b-divider">
       <div className="flex flex-row gap-2 items-center">
         {comment.author[0].profile_url ? (
           <Image
@@ -39,14 +39,14 @@ export default function Comment({ comment, onSubmit, onLike }: CommentProps) {
             className="rounded-full object-cover object-top"
           />
         ) : (
-          <div className="w-[40px] h-[40px] rounded-full bg-neutral-500" />
+          <div className="w-[40px] h-[40px] rounded-full bg-profile-bg" />
         )}
 
         <div className="flex flex-col gap-[2px]">
-          <div className="font-semibold text-neutral-300 light:text-foreground text-[15px]/[15px]">
+          <div className="font-semibold text-title-text text-[15px]/[15px]">
             {comment.author[0].nickname ?? ''}
           </div>
-          <div className="font-semibold text-xs/[20px] text-[#6d6d6d]">
+          <div className="font-semibold text-xs/[20px] text-time-text">
             {getTimeAgo(comment.created_at)}
           </div>
         </div>
@@ -112,9 +112,13 @@ export default function Comment({ comment, onSubmit, onLike }: CommentProps) {
                 setExpand((prev) => !prev);
                 setShowReplies(true);
               }}
-              className="flex gap-2 cursor-pointer justify-center items-center light:text-[#d4d4d4]"
+              className="flex gap-2 cursor-pointer justify-center items-center text-text-primary"
             >
-              <BendArrowRight width={24} height={24} />
+              <BendArrowRight
+                width={24}
+                height={24}
+                className="[&>path]:stroke-text-primary"
+              />
               {t('reply')}
             </div>
           </div>
@@ -133,10 +137,10 @@ export default function Comment({ comment, onSubmit, onLike }: CommentProps) {
               className={
                 comment.is_liked
                   ? '[&>path]:fill-primary [&>path]:stroke-primary'
-                  : '[&>path]:stroke-[#aeaaab]'
+                  : '[&>path]:stroke-comment-icon'
               }
             />
-            <div className="font-medium text-base/[24px] text-[#aeaaab] ">
+            <div className="font-medium text-base/[24px] text-comment-icon-text ">
               {comment.num_of_likes ?? 0}
             </div>
           </button>
@@ -146,7 +150,7 @@ export default function Comment({ comment, onSubmit, onLike }: CommentProps) {
             {comment.replies.map((reply) => (
               <div
                 key={reply.id}
-                className="flex flex-col gap-2 p-5 rounded-lg bg-reply-box border border-transparent light:border-primary"
+                className="flex flex-col gap-2 p-5 rounded-lg bg-reply-box border border-transparent"
               >
                 <div className="flex flex-row gap-2 items-center">
                   {reply.author?.[0]?.profile_url ? (
@@ -158,11 +162,11 @@ export default function Comment({ comment, onSubmit, onLike }: CommentProps) {
                       className="rounded-full object-cover object-top"
                     />
                   ) : (
-                    <div className="w-[40px] h-[40px] rounded-full bg-neutral-500" />
+                    <div className="w-[40px] h-[40px] bg-profile-bg" />
                   )}
 
                   <div className="flex flex-col gap-[2px]">
-                    <div className="font-semibold text-neutral-300 text-[15px]/[15px]">
+                    <div className="font-semibold text-title-text text-[15px]/[15px]">
                       {reply.author?.[0]?.nickname ?? ''}
                     </div>
                   </div>
@@ -230,7 +234,7 @@ export function NewComment({
   return (
     <div
       ref={ref}
-      className="flex w-full bg-neutral-900 border rounded-lg border-primary max-w-desktop"
+      className="flex w-full bg-comment-box-bg border rounded-lg border-primary max-w-desktop"
     >
       <div className="flex-1">
         <LexicalHtmlEditor
@@ -247,7 +251,7 @@ export function NewComment({
           <ChevronDoubleDownIcon
             width={24}
             height={24}
-            className="[&>path]:light:stroke-neutral-600"
+            className="[&>path]:light:stroke-write-comment-box-icon"
           />
         </button>
         <div>

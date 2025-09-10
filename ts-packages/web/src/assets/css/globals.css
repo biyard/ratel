@@ -161,14 +161,19 @@
   --color-unfollow-button-bg: #191919;
   --color-unfollow-button-text: #404040;
   --color-unfollow-button-border: #404040;
-
+  --color-back-icon: #ffffff;
+  --color-icon: #737373;
+  --color-title-text: #d4d4d4;
   --color-desc-text: #d4d4d4;
+  --color-time-text: #6d6d6d;
   --color-divider: #262626;
   --color-enable-button-bg: #fcb300;
   --color-enable-button-white-text: #ffffff;
   --color-enable-button-text: #000203;
   --color-disable-button-bg: var(--gray-600);
   --color-disable-button-white-text: #ffffff;
+  --color-button-bg: #ffffff;
+  --color-button-text: #18181b;
 
   --color-menu-text: #737373;
   --color-tab-label: #a1a1a1;
@@ -186,6 +191,13 @@
   --color-input-box-bg: #1a1a1a;
   --color-input-box-border: #464646;
   --color-hover: #282828;
+  --color-write-comment-box-bg: #262626;
+  --color-write-comment-box-border: #404040;
+  --color-write-comment-box-icon: #737373;
+  --color-write-comment-box-text: #737373;
+  --color-comment-icon: #aeaaab;
+  --color-comment-icon-text: #a1a1a1;
+  --color-comment-box-bg: #171717;
 
   --color-cancel-button-bg: #1a1a1a;
   --color-cancel-button-text: #a1a1a1;
@@ -283,19 +295,25 @@
   --color-unfollow-button-bg: #ffffff;
   --color-unfollow-button-text: #000203;
   --color-unfollow-button-border: #000203;
+  --color-title-text: #262626;
   --color-desc-text: #525252;
+  --color-time-text: #6d6d6d;
   --color-divider: #e5e5e5;
   --color-enable-button-bg: #fcb300;
   --color-enable-button-white-text: #ffffff;
   --color-enable-button-text: #000203;
   --color-disable-button-bg: var(--gray-600);
   --color-disable-button-white-text: #ffffff;
+  --color-button-bg: #f5f5f5;
+  --color-button-text: #18181b;
   --color-menu-text: #737373;
   --color-tab-label: #a1a1a1;
   --color-setting-card-border: #e5e5e5;
   --color-modal-card-bg: #fafafa;
   --color-modal-card-border: #d4d4d4;
   --color-modal-label-text: #a1a1a1;
+  --color-back-icon: #737373;
+  --color-icon: #737373;
 
   --color-label-color-bg: #fcb300;
   --color-label-color-border: #fcb300;
@@ -306,6 +324,13 @@
   --color-input-box-bg: #fafafa;
   --color-input-box-border: #e5e5e5;
   --color-hover: #e5e5e5;
+  --color-write-comment-box-bg: #e5e5e5;
+  --color-write-comment-box-border: #d4d4d4;
+  --color-write-comment-box-icon: #737373;
+  --color-write-comment-box-text: #a3a3a3;
+  --color-comment-icon: #737373;
+  --color-comment-icon-text: #404040;
+  --color-comment-box-bg: #ffffff;
 
   --color-cancel-button-bg: #ffffff;
   --color-cancel-button-text: #a3a3a3;
