@@ -6,7 +6,6 @@ import { noticeSpaceCreateRequest } from '@/lib/api/models/notice';
 import { Discuss, Palace, Mega, Vote } from '@/components/icons';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 
-import { LoadablePrimaryButton } from '@/components/button/primary-button';
 import { apiFetch } from '@/lib/api/apiFetch';
 import { config } from '@/config';
 import { ratelApi } from '@/lib/api/ratel_api';
@@ -194,8 +193,9 @@ export default function SelectSpaceForm({ feed_id }: { feed_id: number }) {
 
         return (
           <div
-            className={`flex flex-row gap-2.5 justify-center items-center w-full p-5 border rounded-[10px] ${selected ? 'border-primary' : 'border-neutral-800'
-              } ${disabled ? 'opacity-50 cursor-not-allowed' : ''} `}
+            className={`flex flex-row gap-2.5 justify-center items-center w-full p-5 border rounded-[10px] transition-colors
+              ${selected ? 'border-primary' : 'border-neutral-800'}
+              ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-primary'}`}
             onClick={() => {
               if (!disabled) onClick();
             }}
@@ -252,18 +252,14 @@ export default function SelectSpaceForm({ feed_id }: { feed_id: number }) {
     <div className="mobile:w-[400px] max-mobile:w-full">
       <div className="flex flex-col gap-2.5 p-1.5">
         {renderedForms}
-        {/* <LoadablePrimaryButton
-          className="w-full mt-4"
-          disabled={!selectedType}
-          onClick={handleSend}
-          isLoading={isLoading}
-        >
-          Send
-        </LoadablePrimaryButton> */}
 
         <div className="flex flex-row gap-2.5">
         <button
-          // onClick={onClose}
+          type="button"
+          onClick={() => {
+            setSelectedType(null);
+            popup.close();
+          }}
           className="min-w-50 px-10 py-[14.5px] bg-transparent font-bold text-base text-neutral-400 hover:text-white transition-colors"
         >
           Cancel
