@@ -157,7 +157,7 @@ export default function SurveyQuestionEditor({
   };
 
   return (
-    <div className="flex flex-col w-full bg-component-bg rounded-[10px] px-4 pb-5 pt-1">
+    <div className="flex flex-col w-full bg-card-bg-secondary border border-card-border rounded-[10px] px-4 pb-5 pt-1">
       <div className="flex flex-row w-full justify-center items-center mb-2.5">
         <DialPad className="w-6 h-6" />
       </div>
@@ -165,7 +165,7 @@ export default function SurveyQuestionEditor({
         <div className="flex gap-2 max-tablet:flex-col">
           <AnswerTypeSelect value={questionType} onChange={handleTypeChange} />
           <Input
-            className="bg-input-box-bg border border-input-box-border rounded-lg w-full px-4 !py-5.5 font-medium text-[15px]/[22.5px] text-foreground placeholder:text-neutral-600 "
+            className="bg-input-box-bg border border-input-box-border rounded-lg w-full px-4 !py-5.5 font-medium text-[15px]/[22.5px] text-text-primary placeholder:text-neutral-600 "
             type="text"
             placeholder={t('title_hint')}
             value={questionTitle}
@@ -245,7 +245,7 @@ export default function SurveyQuestionEditor({
               <div className="text-[15px] text-neutral-500 font-medium cursor-pointer">
                 {t('delete')}
               </div>
-              <Trash2 className="w-4.5 h-4.5 stroke-neutral-500 cursor-pointer" />
+              <Trash2 className="w-4.5 h-4.5 stroke-white light:stroke-neutral-500 cursor-pointer" />
             </div>
           </div>
         </div>

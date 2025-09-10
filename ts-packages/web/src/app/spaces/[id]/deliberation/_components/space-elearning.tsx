@@ -26,10 +26,10 @@ export default function SpaceElearning() {
   };
 
   return (
-    <BlackBox>
+    <BlackBox isWhite={true}>
       <div className="flex flex-col w-full gap-5">
         <div className="flex flex-row w-full justify-between items-start ">
-          <div className="font-bold text-foreground text-[15px]/[20px]">
+          <div className="font-bold text-text-primary text-[15px]/[20px]">
             {t('elearnings')}
           </div>
 
@@ -44,8 +44,8 @@ export default function SpaceElearning() {
                 });
               }}
             >
-              <div className="cursor-pointer flex flex-row w-fit gap-1 items-center bg-white border border-transparent light:bg-transparent light:border-neutral-300 rounded-[6px] px-[14px] py-[8px] hover:bg-neutral-300">
-                <Upload className="w-5 h-5 stroke-neutral-500" />
+              <div className="cursor-pointer flex flex-row w-fit gap-1 items-center bg-white light:bg-card-bg border border-card-border hover:bg-white/80 light:hover:bg-card-bg/50 rounded-[6px] px-[14px] py-[8px]">
+                <Upload className="w-5 h-5 stroke-neutral-600" />
                 <div className="font-bold text-sm text-black">
                   {t('upload')}
                 </div>
@@ -127,7 +127,7 @@ function ReadButton({ onClick }: { onClick: () => void }) {
   const t = useTranslations('DeliberationSpace');
   return (
     <div
-      className="cursor-pointer flex flex-row items-center w-fit h-fit px-5 py-2.5 gap-2.5 bg-white border border-transparent light:bg-transparent light:border-neutral-300 hover:bg-neutral-300 rounded-lg"
+      className="cursor-pointer flex flex-row items-center w-fit h-fit px-5 py-2.5 gap-2.5  bg-white light:bg-card-bg border border-card-border hover:bg-white/80 light:hover:bg-card-bg/50 rounded-lg"
       onClick={() => {
         onClick();
       }}
@@ -149,12 +149,12 @@ function EditableFile({
   return (
     <div className="cursor-pointer flex flex-row justify-start items-center w-full py-5 gap-2 bg-transparent rounded-[8px] mt-[10px]">
       <div className="flex flex-col w-full justify-start items-start gap-1">
-        <div className="font-normal text-sm text-neutral-400">
+        <div className="font-normal text-sm text-time-text">
           {file.ext === 'MP4' || file.ext === 'MOV'
             ? t('elearning')
             : t('ebook')}
         </div>
-        <div className="font-bold text-lg text-neutral-300 light:text-[#737373]">
+        <div className="font-bold text-lg text-neutral-300 light:text-text-primary">
           {file.name}
         </div>
       </div>

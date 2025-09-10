@@ -33,7 +33,7 @@ export default function AnswerTypeSelect({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value as AnswerType)}
-        className="appearance-none border border-btn-o focus:border-primary px-5 py-[10.5px] min-w-[260px] font-medium text-[15px]/[22.5px] text-neutral-600 rounded-lg"
+        className="appearance-none border border-input-box-border bg-card-bg focus:border-primary px-5 py-[10.5px] min-w-[260px] font-medium text-[15px]/[22.5px] text-neutral-600 rounded-lg"
       >
         {(Object.entries(AnswerTypeLabels) as [AnswerType, string][])
           .filter(

@@ -45,13 +45,13 @@ export default function SetSchedulePopup({
 
   return (
     <div className="w-full max-w-[900px] p-8 rounded-2xl">
-      <div className="text-2xl font-bold text-create-space-label mb-6">
+      <div className="text-2xl font-bold text-modal-label-text mb-6">
         {t('set_schedule')}
       </div>
 
       {sessions.map((session, index) => (
         <div key={session.label} className="mb-5">
-          <div className="flex items-center text-neutral-400 text-[15px]/[28px] font-bold mb-1.25">
+          <div className="flex items-center text-modal-label-text text-[15px]/[28px] font-bold mb-1.25">
             {session.label}{' '}
             {session.label !== 'Start' && (
               <span className="ml-1 text-error text-[15px] text-center">*</span>
@@ -106,7 +106,7 @@ export default function SetSchedulePopup({
               }}
             />
 
-            <div className="flex flex-row items-center w-fit border border-[#525252] bg-create-space-bg light:border-create-space-border rounded-lg px-5 py-[10.5px] gap-2.5 mt-2 sm:mt-0">
+            <div className="flex flex-row items-center w-fit border border-select-date-border bg-select-date-bg rounded-lg px-5 py-[10.5px] gap-2.5 mt-2 sm:mt-0">
               <div className="font-medium text-[15px]/[22.5px] text-neutral-600">
                 Pacific Time
               </div>

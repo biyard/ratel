@@ -35,20 +35,20 @@ export default function DeleteSpacePopup({
 
   return (
     <div className="w-[500px] flex flex-col mt-6">
-      <div className="text-center font-bold text-create-space-label text-[24px] mb-6">
+      <div className="text-center font-bold text-modal-label-text text-[24px] mb-6">
         {t.rich('delete_title', {
           name: () => <span>'{spaceName}'</span>,
         })}
       </div>
 
-      <div className="text-center font-medium text-create-space-desc text-base mb-6">
+      <div className="text-center font-medium text-desc-text text-base mb-6">
         {t('delete_warning')}
       </div>
 
       <div className="mb-6">
         <label
           htmlFor="spaceNameVerification"
-          className="block text-create-space-desc text-sm mb-2"
+          className="block text-desc-text text-sm mb-2"
         >
           {t('delete_label')}
         </label>
@@ -57,7 +57,7 @@ export default function DeleteSpacePopup({
           type="text"
           value={inputValue}
           onChange={handleInputChange}
-          className="w-full p-3 bg-input-box-bg border border-input-box-border light:border-foreground rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+          className="w-full p-3 bg-input-box-bg border border-input-box-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           placeholder={t('delete_placeholder', { spaceName })}
         />
       </div>
@@ -65,7 +65,7 @@ export default function DeleteSpacePopup({
       <div className="flex flex-row justify-end gap-4 mt-4">
         <button
           onClick={onClose}
-          className="min-w-30 px-10 py-[14.5px] bg-transparent font-bold text-base text-neutral-400 hover:text-white light:hover:text-hover transition-colors"
+          className="min-w-30 px-10 py-[14.5px] bg-cancel-button-bg font-bold text-base text-cancel-button-text hover:text-white light:hover:text-hover transition-colors"
         >
           {t('cancel')}
         </button>

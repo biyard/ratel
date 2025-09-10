@@ -178,7 +178,7 @@ export default function SurveyViewer({
         }
 
         return (
-          <BlackBox key={index}>
+          <BlackBox key={index} isWhite={true}>
             <div className="flex flex-col w-full gap-2.5">
               {(q.answer_type === 'single_choice' ||
                 q.answer_type === 'multiple_choice' ||
@@ -262,7 +262,7 @@ export default function SurveyViewer({
                     }}
                   />,
                 )
-                .withTitle('Please check again before voting.');
+                .withTitle(t('check_title'));
             } else {
               handleSend();
             }

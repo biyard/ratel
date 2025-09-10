@@ -35,7 +35,7 @@ export default function ObjectiveOption({
           )}
 
           <Input
-            className="border-b border-transparent !border-b-white focus:!border-transparent focus:rounded-md font-normal text-base/[24px] placeholder:text-neutral-600 text-neutral-300 light:text-foreground rounded-none"
+            className="border-b border-transparent !border-b-white focus:!border-transparent focus:rounded-md font-normal text-base/[24px] placeholder:text-neutral-600 text-neutral-300 light:text-text-primary rounded-none"
             type="text"
             placeholder={t('option_hint')}
             value={opt}

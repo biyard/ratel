@@ -121,9 +121,7 @@
   --color-space-box-border: var(--background);
   --color-button-border: #ffffff;
   --color-input-box-bg: #262626;
-  --color-input-box-border: #404040;
   --color-neutral-400: var(--foreground-muted);
-  --color-neutral-500: var(--foreground-more-muted);
   --color-neutral-600: var(--foreground-more-muted);
   --color-foreground: var(--foreground);
   --color-background: var(--background);
@@ -145,8 +143,10 @@
 
   --color-bg: #1d1d1d;
   --color-card-bg: #191919;
+  --color-card-bg-secondary: #191919;
   --color-card-enable-border: #404040;
   --color-card-border: #191919;
+  --color-card-border-secondary: #191919;
   --color-text-primary: #ffffff;
   --color-text-secondary: #f9fafb;
   --color-text-third: #171717;
@@ -179,6 +179,7 @@
   --color-disable-button-white-text: #ffffff;
   --color-button-bg: #ffffff;
   --color-button-text: #18181b;
+  --color-neutral-500: #737373;
 
   --color-menu-text: #737373;
   --color-tab-label: #a1a1a1;
@@ -268,24 +269,23 @@
   --color-space-box-bg: #ffffff;
   --color-space-box-border: #e5e5e5;
   --color-button-border: #e5e5e5;
-  --color-input-box-bg: #fafafa;
-  --color-input-box-border: #e5e5e5;
   --color-foreground: var(--foreground);
   --color-background: var(--background);
   --color-component-bg: var(--card);
   --color-custom-white: var(--gray-800);
   --color-neutral-900: var(--gray-50);
   --color-neutral-400: var(--foreground-more-muted);
-  --color-neutral-500: var(--foreground-more-muted);
-  --color-neutral-600: #d9d9d9;
+
   --color-footer: var(--gray-900);
   --color-btn-hover: var(--accent-hover);
   --color-tab-hover: var(--accent-hover);
 
   --color-bg: #f5f5f5;
   --color-card-bg: #fafafa;
+  --color-card-bg-secondary: #ffffff;
   --color-card-enable-border: #e5e5e5;
   --color-card-border: #e5e5e5;
+  --color-card-border-secondary: #e5e5e5;
   --color-text-primary: #262626;
   --color-text-secondary: #262626;
   --color-text-third: #262626;
@@ -323,6 +323,7 @@
   --color-select-date-bg: #f5f5f5;
   --color-select-date-border: #d4d4d4;
   --color-select-booster-bg: #fafafa;
+  --color-neutral-500: #737373;
 
   --color-label-color-bg: #fcb300;
   --color-label-color-border: #fcb300;

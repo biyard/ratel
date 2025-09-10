@@ -16,22 +16,21 @@ export default function SpaceContents({
   setContents = () => {},
 }: SpaceContentsProps) {
   const html = (
-    <BlackBox>
+    <BlackBox isWhite={true}>
       <div
         className="rich-content"
         dangerouslySetInnerHTML={{ __html: htmlContents }}
       />
       <style jsx global>{`
-        html.dark .rich-content {
-          color: #d4d4d4;
-        }
-        html:not(.dark) .rich-content {
-          color: #525252;
-        }
-
         .rich-content {
+          color: #525252;
           font-size: 15px;
           line-height: 24px;
+        }
+
+        html.dark .rich-content,
+        html[data-theme='dark'] .rich-content {
+          color: #d4d4d4 !important;
         }
 
         .rich-content h1,
@@ -43,7 +42,6 @@ export default function SpaceContents({
           font-weight: 700;
           margin-bottom: 20px;
         }
-
         .rich-content h1 {
           font-size: 28px;
         }
@@ -57,7 +55,6 @@ export default function SpaceContents({
         .rich-content p {
           margin-bottom: 20px;
         }
-
         .rich-content strong {
           font-weight: bold;
         }

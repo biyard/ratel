@@ -33,11 +33,11 @@ export default function NewDiscussion({
   return (
     <div className="max-w-[900px] w-full">
       <div className="flex flex-col py-2.5 gap-[5px]">
-        <label className="flex flex-row justify-start items-center text-[15px]/[28px] text-create-space-label font-bold  gap-1">
+        <label className="flex flex-row justify-start items-center text-[15px]/[28px] text-modal-label-text font-bold  gap-1">
           {t('title')} <span className="text-error">*</span>
         </label>
         <Input
-          className="px-5 py-[10.5px] bg-transparent border border-btn-o font-medium text-[15px]/[22.5px] placeholder:text-neutral-600 text-foreground"
+          className="px-5 py-[10.5px] bg-input-box-bg border border-input-box-border font-medium text-[15px]/[22.5px] placeholder:text-neutral-600 text-text-primary"
           placeholder={t('title_hint')}
           value={title}
           onChange={(e) => setTitle(e.target.value)}
@@ -49,11 +49,11 @@ export default function NewDiscussion({
       </div>
 
       <div className="flex flex-col py-2.5 gap-[5px]">
-        <label className="text-[15px]/[28px] font-bold text-create-space-label">
+        <label className="text-[15px]/[28px] font-bold text-modal-label-text">
           {t('description')}
         </label>
         <Textarea
-          className="px-5 py-[10.5px] bg-transparent border border-btn-o font-normal text-sm placeholder:text-neutral-600 text-foreground max-h-[100px] overflow-y-auto"
+          className="px-5 py-[10.5px] bg-input-box-bg border border-input-box-border font-normal text-sm placeholder:text-neutral-600 text-text-primary max-h-[100px] overflow-y-auto"
           placeholder={t('description_hint')}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
@@ -65,7 +65,7 @@ export default function NewDiscussion({
       </div>
 
       <div className="flex flex-col py-2.5 gap-[5px]">
-        <label className="flex flex-row justify-start items-center text-[15px]/[28px]font-bold  gap-1 text-create-space-label">
+        <label className="flex flex-row justify-start items-center text-[15px]/[28px]font-bold  gap-1 text-modal-label-text">
           {t('date')} <span className="text-error">*</span>
         </label>
         <div className="flex flex-row gap-2.5 items-center">
@@ -138,7 +138,7 @@ export default function NewDiscussion({
               setEndTime(newEnd);
             }}
           />
-          <div className="flex flex-row items-center w-fit border border-[#525252] bg-create-space-bg light:border-create-space-border rounded-lg px-5 py-[10.5px] gap-2.5 mt-2 sm:mt-0">
+          <div className="flex flex-row items-center w-fit border border-select-date-border bg-select-date-bg rounded-lg px-5 py-[10.5px] gap-2.5 mt-2 sm:mt-0">
             <div className="font-medium text-[15px]/[22.5px] text-neutral-600">
               Pacific Time
             </div>
