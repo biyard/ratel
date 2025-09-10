@@ -108,7 +108,6 @@ pub async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         Notification,
         NoticeQuizAnswer,
         NoticeQuizAttempt,
-        TelegramSubscribe,
         Dagit,
         Artwork,
         Oracle,
@@ -123,6 +122,7 @@ pub async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         ConversationParticipant,
         AuthClient,
         AuthCode,
+        TelegramChannel,
     );
 
     if Industry::query_builder()
