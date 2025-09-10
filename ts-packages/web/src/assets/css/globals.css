@@ -209,6 +209,7 @@
   --color-cancel-button-text: #a1a1a1;
   --color-submit-button-bg: #fcb300;
   --color-submit-button-text: #1d1d1d;
+  --color-space-side-label: #737373;
 }
 
 /* ----------------------------
@@ -346,6 +347,7 @@
   --color-cancel-button-text: #a3a3a3;
   --color-submit-button-bg: #fcb300;
   --color-submit-button-text: #1d1d1d;
+  --color-space-side-label: #262626;
 }
 
 /* ----------------------------
