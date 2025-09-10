@@ -334,6 +334,15 @@ export const ratelApi = {
   telegram: {
     subscribe: () => '/v2/telegram/subscribe',
   },
+  home: {
+    getHomeData: (feedLimit?: number, newsLimit?: number) => {
+      const params = new URLSearchParams();
+      if (feedLimit) params.append('feed_limit', feedLimit.toString());
+      if (newsLimit) params.append('news_limit', newsLimit.toString());
+      const queryString = params.toString();
+      return `/wg/home${queryString ? `?${queryString}` : ''}`;
+    },
+  },
   graphql: {
     listNews: (size: number) => {
       return {

@@ -13,18 +13,20 @@ import {
   QK_GET_POSTS_BY_USER_ID,
 } from '@/constants';
 
-export const usePostInfinite = (size = 10) => {
+export const usePostInfinite = (size = 10, initialPage = 1) => {
   const { get } = useApiCall();
 
   return useSuspenseInfiniteQuery<QueryResponse<Feed>, Error>({
-    queryKey: [QK_GET_POSTS],
-    queryFn: async ({ pageParam = 1 }) => {
+    queryKey: [QK_GET_POSTS, initialPage],
+    queryFn: async ({ pageParam = initialPage }) => {
       return get(ratelApi.feeds.getPosts(pageParam as number, size));
     },
     getNextPageParam: (lastPage, allPages) => {
-      return lastPage.items.length === size ? allPages.length + 1 : undefined;
+      return lastPage.items.length === size
+        ? initialPage - 1 + allPages.length + 1
+        : undefined;
     },
-    initialPageParam: 1,
+    initialPageParam: initialPage,
     refetchOnWindowFocus: false,
   });
 };
