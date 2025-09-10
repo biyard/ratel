@@ -99,10 +99,10 @@
       "label": "d.AGIT",
       "desc": "Create d.AGIT space for managing artworks"
     },
-
-    "notice_title": "Set a Notice Space",
-    "notice_description_1": "Once the {spaceType} Space is created, <b>the booster settings cannot be changed.</b>",
-    "notice_description_2": "Please make sure everything is correct before confirming.",
+    "SetBoostModal": {
+      "title": "Set a Boost",
+      "description": "Once the {spaceType} Space is created, <b>the booster settings cannot be changed.</b> Please make sure everything is correct before confirming."
+    },
 
     "date": "Date",
     "boost": "Boost",
