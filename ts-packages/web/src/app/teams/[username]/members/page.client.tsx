@@ -21,11 +21,11 @@ export default function TeamMembers({ username }: { username: string }) {
   const team = query.data;
 
   return (
-    <div className="flex flex-col w-full max-w-[1152px] px-4 py-5 gap-[10px] bg-component-bg rounded-lg h-fit">
+    <div className="flex flex-col w-full max-w-[1152px] px-4 py-5 gap-[10px] bg-card-bg border border-card-border rounded-lg h-fit">
       {members.map((member) => (
         <div
           key={member.id}
-          className="flex flex-col w-full h-fit gap-[15px] bg-transparent rounded-sm border border-neutral-800 p-5"
+          className="flex flex-col w-full h-fit gap-[15px] bg-transparent rounded-sm border border-card-border p-5"
         >
           <div
             key={member.id}
@@ -34,7 +34,7 @@ export default function TeamMembers({ username }: { username: string }) {
             {!member.profile_url ||
             member.profile_url.includes('test') ||
             member.profile_url === '' ? (
-              <div className="w-12 h-12 rounded-full bg-neutral-600" />
+              <div className="w-12 h-12 rounded-full bg-profile-bg" />
             ) : (
               <Image
                 src={member.profile_url}
@@ -46,10 +46,10 @@ export default function TeamMembers({ username }: { username: string }) {
             )}
 
             <div className="flex flex-col justify-between items-start flex-1 min-w-0">
-              <div className="font-bold text-foreground text-base/[20px]">
+              <div className="font-bold text-text-primary text-base/[20px]">
                 {member.username}
               </div>
-              <div className="font-semibold text-neutral-400 text-sm/[20px]">
+              <div className="font-semibold text-desc-text text-sm/[20px]">
                 {member.nickname}
               </div>
             </div>

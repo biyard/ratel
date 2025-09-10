@@ -9,13 +9,13 @@ export default function CreatePostButton() {
   const { newDraft } = usePostDraft();
   return (
     <div
-      className="cursor-pointer flex flex-row w-full justify-start items-center gap-1 bg-home-side rounded-[100px] px-4 py-3 mb-[10px]"
+      className="cursor-pointer flex flex-row w-full justify-start items-center gap-1 bg-button-bg rounded-[100px] px-4 py-3 mb-[10px]"
       onClick={() => {
         newDraft();
       }}
     >
-      <Edit1 className="w-4 h-4 [&>path]:stroke-home-side-text" />
-      <div className="font-bold text-base/[22px] text-home-side-text">
+      <Edit1 className="w-4 h-4 [&>path]:stroke-text-third" />
+      <div className="font-bold text-base/[22px] text-text-third">
         {t('create_post')}
       </div>
     </div>

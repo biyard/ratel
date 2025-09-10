@@ -155,6 +155,13 @@
   --color-more-text: #a1a1a1;
   --color-follow-button-bg: #404040;
   --color-follow-button-text: #ffffff;
+  --color-follow-button-bg-secondary: #ffffff;
+  --color-follow-button-text-secondary: #000203;
+  --color-follow-button-border: #ffffff;
+  --color-unfollow-button-bg: #191919;
+  --color-unfollow-button-text: #404040;
+  --color-unfollow-button-border: #404040;
+
   --color-desc-text: #d4d4d4;
   --color-divider: #262626;
   --color-enable-button-bg: #fcb300;
@@ -168,6 +175,7 @@
   --color-setting-card-border: #262626;
   --color-modal-card-bg: #1a1a1a;
   --color-modal-card-border: #262626;
+  --color-modal-label-text: #a1a1a1;
 
   --color-label-color-bg: #1d1d1d;
   --color-label-color-border: #fcb300;
@@ -175,6 +183,8 @@
   --color-label-bg: #1d1d1d;
   --color-label-border: #464646;
   --color-label-text: #ffffff;
+  --color-input-box-bg: #1a1a1a;
+  --color-input-box-border: #464646;
   --color-hover: #282828;
 
   --color-cancel-button-bg: #1a1a1a;
@@ -267,6 +277,12 @@
   --color-more-text: #737373;
   --color-follow-button-bg: #404040;
   --color-follow-button-text: #ffffff;
+  --color-follow-button-bg-secondary: #fcb300;
+  --color-follow-button-text-secondary: #000203;
+  --color-follow-button-border: #fcb300;
+  --color-unfollow-button-bg: #ffffff;
+  --color-unfollow-button-text: #000203;
+  --color-unfollow-button-border: #000203;
   --color-desc-text: #525252;
   --color-divider: #e5e5e5;
   --color-enable-button-bg: #fcb300;
@@ -279,6 +295,7 @@
   --color-setting-card-border: #e5e5e5;
   --color-modal-card-bg: #fafafa;
   --color-modal-card-border: #d4d4d4;
+  --color-modal-label-text: #a1a1a1;
 
   --color-label-color-bg: #fcb300;
   --color-label-color-border: #fcb300;
@@ -286,6 +303,8 @@
   --color-label-bg: #ffffff;
   --color-label-border: #404040;
   --color-label-text: #404040;
+  --color-input-box-bg: #fafafa;
+  --color-input-box-border: #e5e5e5;
   --color-hover: #e5e5e5;
 
   --color-cancel-button-bg: #ffffff;

@@ -154,7 +154,7 @@ function GroupPermissionSelector({
 
   return (
     <div className="flex flex-col w-full gap-6">
-      <div className="text-[15px]/[28px] font-bold text-neutral-400">
+      <div className="text-[15px]/[28px] font-bold text-modal-label-text">
         {t('permission')}
       </div>
 
@@ -168,11 +168,11 @@ function GroupPermissionSelector({
             >
               {/* Header */}
               <div className="flex justify-between items-center mb-1">
-                <div className="text-sm/[20px] font-semibold text-neutral-400">
+                <div className="text-sm/[20px] font-semibold text-modal-label-text">
                   {groupName}
                 </div>
                 <div className="flex items-center gap-1">
-                  <span className="text-sm/[20px] font-semibold text-neutral-400">
+                  <span className="text-sm/[20px] font-semibold text-modal-label-text">
                     {t('select_all')}
                   </span>
                   <CustomCheckbox
@@ -183,7 +183,7 @@ function GroupPermissionSelector({
               </div>
 
               {/* Individual Toggles */}
-              <div className="flex flex-col border-neutral-800 divide-y divide-neutral-800 light:divide-[#e5e5e5]">
+              <div className="flex flex-col border-neutral-800 divide-y divide-divider">
                 {perms.map((perm) => {
                   const active = hasPermission(perm.value);
                   return (
@@ -191,7 +191,7 @@ function GroupPermissionSelector({
                       key={perm.value}
                       className="flex justify-between items-center py-2 h-[55px]"
                     >
-                      <span className="text-[15px]/[24px] font-normal text-foreground">
+                      <span className="text-[15px]/[24px] font-normal text-text-primary">
                         {perm.label}
                       </span>
                       <Switch
@@ -236,7 +236,7 @@ function GroupDescription({
   const t = useTranslations('Team');
   return (
     <div className="flex flex-col w-full justify-start items-start gap-[5px]">
-      <div className="font-bold text-[15px]/[28px] text-neutral-400">
+      <div className="font-bold text-[15px]/[28px] text-modal-label-text">
         {t('description')}
       </div>
 
@@ -245,7 +245,7 @@ function GroupDescription({
         onChange={(e) => setGroupDescription(e.target.value)}
         maxLength={100}
         placeholder={t('description_hint')}
-        className="w-full px-5 py-[10px] rounded-[8px] border border-[#464646] bg-transparent text-foreground placeholder:text-neutral-600 text-sm outline-none resize-none"
+        className="w-full px-5 py-[10px] rounded-[8px] border border-input-box-border bg-input-box-bg text-text-primary placeholder:text-neutral-600 text-sm outline-none resize-none"
       />
 
       <div className="w-full text-right text-[15px]/[22.5px] text-neutral-600">
@@ -266,7 +266,7 @@ function GroupName({
   return (
     <div className="flex flex-col w-full justify-start items-start gap-[5px]">
       <div className="flex flex-row gap-1 items-center">
-        <div className="font-bold text-[15px]/[28px] text-neutral-400">
+        <div className="font-bold text-[15px]/[28px] text-modal-label-text">
           {t('group_name')}
         </div>
         <div className="font-normal text-base/[24px] text-[#eb5757]">*</div>
@@ -278,7 +278,7 @@ function GroupName({
         onChange={(e) => setGroupName(e.target.value)}
         maxLength={100}
         placeholder={t('group_name_hint')}
-        className="w-full px-5 py-[10.5px] rounded-[8px] border border-[#464646] bg-transparent text-foreground placeholder:text-neutral-600 text-[15px]/[22.5px] outline-none"
+        className="w-full px-5 py-[10.5px] rounded-[8px] border border-input-box-border bg-input-box-bg text-text-primary placeholder:text-neutral-600 text-[15px]/[22.5px] outline-none"
       />
 
       <div className="w-full text-right text-[15px]/[22.5px] text-neutral-600">{`${groupName.length}/100`}</div>

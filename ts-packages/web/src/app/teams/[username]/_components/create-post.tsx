@@ -277,7 +277,7 @@ export function CreatePost() {
 
   return (
     <LexicalComposer initialConfig={editorConfig}>
-      <div className="w-full bg-neutral-900 border-t-6 border-x border-b border-primary rounded-t-lg overflow-hidden">
+      <div className="w-full bg-card-bg border-t-6 border-x border-b border-primary rounded-t-lg overflow-hidden">
         {/* Header */}
         <div className="flex items-center p-4 justify-between">
           <div className="flex items-center gap-3">
@@ -290,10 +290,10 @@ export function CreatePost() {
                 className="w-6 h-6 object-cover"
               />
             ) : (
-              <div className="w-6 h-6 rounded-full border border-neutral-500 bg-neutral-600" />
+              <div className="w-6 h-6 rounded-full bg-profile-bg" />
             )}
             <div className="flex items-center gap-2">
-              <span className="text-foreground font-medium text-lg">
+              <span className="text-text-primary font-medium text-lg">
                 {userInfo?.nickname || 'Anonymous'}
               </span>
             </div>
@@ -303,7 +303,7 @@ export function CreatePost() {
             className={cn('cursor-pointer')}
             onClick={() => setExpand(!expand)}
           >
-            <DoubleArrowDown className="[&>path]:stroke-white [&>path]:light:stroke-[#262626]" />
+            <DoubleArrowDown className="[&>path]:stroke-text-primary" />
           </div>
         </div>
 
@@ -315,12 +315,12 @@ export function CreatePost() {
               placeholder={t('write_title')}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full bg-transparent text-foreground text-xl font-semibold placeholder-neutral-500 outline-none border-none"
+              className="w-full bg-transparent text-text-primary text-xl font-semibold placeholder-neutral-500 outline-none border-none"
             />
           </div>
 
           {/* Lexical Content Area */}
-          <div className="px-4 pt-2 min-h-[80px] relative text-foreground text-[15px] leading-relaxed">
+          <div className="px-4 pt-2 min-h-[80px] relative text-text-primary text-[15px] leading-relaxed">
             <RichTextPlugin
               contentEditable={
                 <ContentEditable className="outline-none resize-none w-full min-h-[60px]" />
@@ -354,7 +354,7 @@ export function CreatePost() {
                   />
                   <button
                     onClick={removeImage}
-                    className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-600 rounded-full flex items-center justify-center text-white text-xs hover:bg-red-700 border-2 border-neutral-900"
+                    className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-600 rounded-full flex items-center justify-center text-white text-xs hover:bg-red-700 border-2 border-component-bg"
                     aria-label={`Remove uploaded image`}
                   >
                     <X size={12} />
