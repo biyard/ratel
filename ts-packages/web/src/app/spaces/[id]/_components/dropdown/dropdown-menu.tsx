@@ -78,7 +78,7 @@ export default function DropdownMenu({
   };
 
   return (
-    <div className="w-56 bg-neutral-800 light:bg-white text-foreground rounded-lg shadow-lg py-2  space-y-1">
+    <div className="w-56 bg-neutral-800 light:bg-white text-text-primary rounded-lg shadow-lg py-2  space-y-1">
       {menuItems.map((item, index) => (
         <div
           key={index}
@@ -93,7 +93,7 @@ export default function DropdownMenu({
               : undefined
           }
           onKeyDown={(e) => handleKeyDown(e, item.action, item.disabled)}
-          className={`px-4 py-2 hover:bg-hover rounded-md text-foreground text-sm font-semibold ${
+          className={`px-4 py-2 hover:bg-hover rounded-md text-text-primary text-sm font-semibold ${
             item.disabled ? 'cursor-not-allowed' : 'cursor-pointer'
           }`}
           aria-disabled={item.disabled}

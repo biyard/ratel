@@ -472,7 +472,11 @@
     "more_option_required": "옵션을 2개 이상 선택해주세요.",
     "fill_label_required": "레이블을 채워주세요.",
     "success_update_space": "스페이스를 성공적으로 업데이트했습니다.",
-    "failed_update_space": "스페이스 업데이트에 실패했습니다. 잠시 후 다시 시도해주세요."
+    "failed_update_space": "스페이스 업데이트에 실패했습니다. 잠시 후 다시 시도해주세요.",
+
+    "check_title": "투표하기 전 다시 확인해주세요.",
+    "check_desc": "투표의 공정성과 보안을 위해 모든 투표는 익명으로 처리되며 최종적으로 처리됩니다. 투표 결과는 한 번 제출된 후에는 변경할 수 없으므로, 신뢰할 수 있는 결과를 보장하기 위해 양해해 주시기 바랍니다.",
+    "cancel": "취소"
   },
   "Space": {
     "unsupported_space_type": "지원되지 않는 스페이스 유형입니다.",

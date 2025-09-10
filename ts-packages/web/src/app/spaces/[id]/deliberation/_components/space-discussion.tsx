@@ -59,9 +59,9 @@ function DiscussionSchedules() {
 
   return (
     <div className="flex flex-col gap-2.5">
-      <BlackBox>
+      <BlackBox isWhite={true}>
         <div className="flex flex-col w-full gap-5">
-          <div className="font-bold text-foreground text-[15px]/[20px]">
+          <div className="font-bold text-text-primary text-[15px]/[20px]">
             {t('discussions')}
           </div>
           <div className="flex flex-col w-full gap-2.5">
@@ -203,7 +203,7 @@ function ViewRecord({ onClick }: { onClick: () => void }) {
   const t = useTranslations('DeliberationSpace');
   return (
     <div
-      className="cursor-pointer flex flex-row items-center w-fit h-fit px-5 py-2.5 gap-2.5 bg-white hover:bg-neutral-300 rounded-lg"
+      className="cursor-pointer flex flex-row items-center w-fit h-fit px-5 py-2.5 gap-2.5 bg-white light:bg-card-bg border border-card-border hover:bg-white/80 light:hover:bg-card-bg/50 rounded-lg"
       onClick={() => {
         onClick();
       }}
@@ -215,10 +215,10 @@ function ViewRecord({ onClick }: { onClick: () => void }) {
 }
 
 function JoinButton({ onClick }: { onClick: () => void }) {
-  const t = useTranslations('join');
+  const t = useTranslations('DeliberationSpace');
   return (
     <div
-      className="cursor-pointer flex flex-row items-center w-fit h-fit px-5 py-2.5 gap-2.5 bg-white hover:bg-neutral-300 rounded-lg"
+      className="cursor-pointer flex flex-row items-center w-fit h-fit px-5 py-2.5 gap-2.5 bg-white light:bg-card-bg border border-card-border hover:bg-white/80 light:hover:bg-card-bg/50 rounded-lg"
       onClick={() => {
         onClick();
       }}
@@ -270,10 +270,10 @@ function EditableDiscussion() {
   };
 
   return (
-    <BlackBox>
+    <BlackBox isWhite={true}>
       <div className="flex flex-col w-full gap-5">
         <div className="flex flex-row w-full justify-between items-center">
-          <div className="font-bold text-foreground text-[15px]/[20px]">
+          <div className="font-bold text-text-primary text-[15px]/[20px]">
             {t('discussions')}
           </div>
 
@@ -331,9 +331,9 @@ function AddDiscussion({ onadd }: { onadd: () => void }) {
       onClick={() => {
         onadd();
       }}
-      className="cursor-pointer flex flex-row w-fit px-[14px] py-[8px] gap-1 bg-white border border-transparent light:bg-transparent light:border-neutral-300 rounded-[6px] hover:bg-neutral-300"
+      className="cursor-pointer flex flex-row w-fit px-[14px] py-[8px] gap-1 bg-white light:bg-card-bg border border-card-border rounded-[6px] hover:bg-white/80 light:hover:bg-card-bg/50"
     >
-      <Add className="w-5 h-5 stroke-neutral-500 text-neutral-500" />
+      <Add className="w-5 h-5 stroke-neutral-600 text-neutral-600" />
       <span className=" text-[#000203] font-bold text-sm">
         {t('add_discussion')}
       </span>
@@ -425,7 +425,7 @@ function EditableDiscussionInfo({
             <div className="text-sm text-neutral-400 light:text-[#737373] font-normal">
               {statusLabel}
             </div>
-            <div className="text-lg text-foreground font-bold">{title}</div>
+            <div className="text-lg text-text-primary font-bold">{title}</div>
             <div className="text-sm text-[#6d6d6d] light:text-[#737373] font-normal">
               {formattedDate}
             </div>

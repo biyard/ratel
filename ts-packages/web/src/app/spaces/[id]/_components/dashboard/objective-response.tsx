@@ -96,7 +96,7 @@ export default function ObjectiveResponse({
 
   return (
     <div className="w-full p-5 bg-transparent rounded-xl flex flex-col gap-5 border border-neutral-500">
-      <div className="flex items-center justify-between border-b border-neutral-500 pb-2">
+      <div className="flex items-center justify-between border-b border-input-box-border pb-2">
         <div className="text-base font-semibold text-neutral-400">
           {question.title}
         </div>

@@ -41,7 +41,7 @@ function SummaryBox({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex flex-col w-fit h-fit px-[24px] py-[18px] bg-transparent border border-neutral-500 justify-center items-center gap-2.5 rounded-lg">
       <div className="text-sm font-semibold text-neutral-400">{label}</div>
-      <div className="text-base font-bold text-foreground">{value}</div>
+      <div className="text-base font-bold text-text-primary">{value}</div>
     </div>
   );
 }

@@ -80,7 +80,7 @@ export default function ObjectiveViewer({
                   disabled={isCompleted}
                 />
               </div>
-              <div className="font-normal text-neutral-300 light:text-foreground text-[15px]/[22.5px]">
+              <div className="font-normal text-neutral-300 light:text-text-primary text-[15px]/[22.5px]">
                 {opt}
               </div>
             </div>
