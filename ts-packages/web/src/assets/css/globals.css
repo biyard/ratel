@@ -110,7 +110,6 @@
      ================================ */
   --color-home-side: #ffffff;
   --color-home-side-text: #1d1d1d;
-  --color-hover: #282828;
   --color-icon-hover: #ffffff;
   --color-reply-box: #262626;
   --color-create-space-bg: #1a1a1a;
@@ -159,8 +158,16 @@
   --color-desc-text: #d4d4d4;
   --color-divider: #262626;
   --color-enable-button-bg: #fcb300;
+  --color-enable-button-white-text: #ffffff;
   --color-enable-button-text: #000203;
+  --color-disable-button-bg: var(--gray-600);
+  --color-disable-button-white-text: #ffffff;
+
   --color-menu-text: #737373;
+  --color-tab-label: #a1a1a1;
+  --color-setting-card-border: #262626;
+  --color-modal-card-bg: #1a1a1a;
+  --color-modal-card-border: #262626;
 
   --color-label-color-bg: #1d1d1d;
   --color-label-color-border: #fcb300;
@@ -168,6 +175,12 @@
   --color-label-bg: #1d1d1d;
   --color-label-border: #464646;
   --color-label-text: #ffffff;
+  --color-hover: #282828;
+
+  --color-cancel-button-bg: #1a1a1a;
+  --color-cancel-button-text: #a1a1a1;
+  --color-submit-button-bg: #fcb300;
+  --color-submit-button-text: #1d1d1d;
 }
 
 /* ----------------------------
@@ -217,7 +230,7 @@
      ================================ */
   --color-home-side: #fcb300;
   --color-home-side-text: #262626;
-  --color-hover: #e5e5e5;
+
   --color-icon-hover: #e5e5e5;
   --color-reply-box: #ffffff;
   --color-create-space-bg: #fafafa;
@@ -257,8 +270,15 @@
   --color-desc-text: #525252;
   --color-divider: #e5e5e5;
   --color-enable-button-bg: #fcb300;
+  --color-enable-button-white-text: #ffffff;
   --color-enable-button-text: #000203;
+  --color-disable-button-bg: var(--gray-600);
+  --color-disable-button-white-text: #ffffff;
   --color-menu-text: #737373;
+  --color-tab-label: #a1a1a1;
+  --color-setting-card-border: #e5e5e5;
+  --color-modal-card-bg: #fafafa;
+  --color-modal-card-border: #d4d4d4;
 
   --color-label-color-bg: #fcb300;
   --color-label-color-border: #fcb300;
@@ -266,6 +286,12 @@
   --color-label-bg: #ffffff;
   --color-label-border: #404040;
   --color-label-text: #404040;
+  --color-hover: #e5e5e5;
+
+  --color-cancel-button-bg: #ffffff;
+  --color-cancel-button-text: #a3a3a3;
+  --color-submit-button-bg: #fcb300;
+  --color-submit-button-text: #1d1d1d;
 }
 
 /* ----------------------------

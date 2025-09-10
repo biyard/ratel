@@ -55,8 +55,8 @@ export default function MySettings() {
 
   return (
     <div className="w-full max-w-[800px] mx-auto flex flex-col gap-6 px-4 md:px-0">
-      <section className="bg-component-bg p-4 md:p-6 rounded-lg">
-        <h2 className="text-lg font-bold mb-4 text-foreground">
+      <section className="bg-card-bg border border-card-border p-4 md:p-6 rounded-lg">
+        <h2 className="text-lg font-bold mb-4 text-text-primary">
           {t('appearance')}
         </h2>
 
@@ -93,8 +93,8 @@ function SpecBox({
   onClick?: () => void;
 }) {
   return (
-    <div className="flex items-center justify-between border border-neutral-800 px-4 py-8 rounded-md">
-      <p className="text-lg font-bold text-sm text-foreground">{left_text}</p>
+    <div className="flex items-center justify-between border border-setting-card-border px-4 py-8 rounded-md">
+      <p className="text-base font-bold text-text-primary">{left_text}</p>
 
       <button
         className="flex items-center gap-2 text-primary cursor-pointer"

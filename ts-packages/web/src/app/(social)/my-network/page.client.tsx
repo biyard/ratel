@@ -101,8 +101,8 @@ function FollowButton({ onClick }: { onClick: () => void }) {
         onClick();
       }}
     >
-      <Add className="w-[15px] h-[15px] [&>path]:stroke-neutral-800 [&>path]:stroke-1" />
-      <div className="font-bold text-[#000203] text-xs">Follow</div>
+      <Add className="w-[15px] h-[15px] [&>path]:stroke-enable-button-text [&>path]:stroke-1" />
+      <div className="font-bold text-enable-button-text text-xs">Follow</div>
     </div>
   );
 }
@@ -117,7 +117,7 @@ function FollowingContents({
   follow: (userId: number) => void;
 }) {
   return (
-    <div className="flex flex-col w-full rounded-lg bg-component-bg px-4 py-5 gap-2.5">
+    <div className="flex flex-col w-full rounded-lg bg-card-bg border border-card-border px-4 py-5 gap-2.5">
       <div className="font-semibold text-foreground text-base/[20px]">
         {label}
       </div>
@@ -125,7 +125,7 @@ function FollowingContents({
         {users.map((user) => (
           <div
             key={user.id}
-            className="flex flex-col w-full gap-[5px] px-2.5 py-5 border-b border-b-neutral-800"
+            className="flex flex-col w-full gap-[5px] px-2.5 py-5 border-b border-b-divider"
           >
             <div className="flex flex-row w-full justify-between items-start">
               <div className="flex flex-row w-fit gap-2">
@@ -155,7 +155,7 @@ function FollowingContents({
 
                 <div className="flex flex-col">
                   <Link href={route.teamByUsername(user.username)}>
-                    <div className="font-semibold text-foreground text-sm/[20px]">
+                    <div className="font-semibold text-text-primary text-sm/[20px]">
                       {user.nickname}
                     </div>
                   </Link>
@@ -171,7 +171,7 @@ function FollowingContents({
 
             <div
               id="user-profile-description"
-              className="font-medium text-[12px] text-neutral-300 light:text-foreground line-clamp-3 overflow-hidden"
+              className="font-medium text-[12px] text-desc-text line-clamp-3 overflow-hidden"
               dangerouslySetInnerHTML={{
                 __html: user.html_contents,
               }}
