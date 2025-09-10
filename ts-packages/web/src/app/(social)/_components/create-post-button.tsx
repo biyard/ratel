@@ -12,7 +12,7 @@ export default function CreatePostButton() {
 
   return (
     <div
-      className="cursor-pointer flex flex-row w-full justify-start items-center gap-1 bg-button-bg rounded-[100px] px-4 py-3 mb-[10px] aria-hidden:hidden"
+      className="cursor-pointer flex flex-row w-full justify-start items-center gap-1 bg-create-button-bg rounded-[100px] px-4 py-3 mb-[10px] aria-hidden:hidden"
       aria-hidden={!loggedIn}
       onClick={() => {
         newDraft();

@@ -152,6 +152,7 @@
   --color-text-third: #171717;
   --color-profile-bg: #d9d9d9;
   --color-button-bg: #ffffff;
+  --color-create-button-bg: #ffffff;
   --color-more-text: #a1a1a1;
   --color-follow-button-bg: #404040;
   --color-follow-button-text: #ffffff;
@@ -163,6 +164,10 @@
   --color-unfollow-button-border: #404040;
   --color-back-icon: #ffffff;
   --color-icon: #737373;
+  --color-select-date-bg: #1a1a1a;
+  --color-select-date-border: #262626;
+  --color-select-booster-bg: #1a1a1a;
+
   --color-title-text: #d4d4d4;
   --color-desc-text: #d4d4d4;
   --color-time-text: #6d6d6d;
@@ -305,6 +310,7 @@
   --color-disable-button-bg: var(--gray-600);
   --color-disable-button-white-text: #ffffff;
   --color-button-bg: #f5f5f5;
+  --color-create-button-bg: #fcb300;
   --color-button-text: #18181b;
   --color-menu-text: #737373;
   --color-tab-label: #a1a1a1;
@@ -314,6 +320,9 @@
   --color-modal-label-text: #a1a1a1;
   --color-back-icon: #737373;
   --color-icon: #737373;
+  --color-select-date-bg: #f5f5f5;
+  --color-select-date-border: #d4d4d4;
+  --color-select-booster-bg: #fafafa;
 
   --color-label-color-bg: #fcb300;
   --color-label-color-border: #fcb300;
