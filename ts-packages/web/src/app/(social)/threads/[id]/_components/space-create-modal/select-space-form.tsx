@@ -254,26 +254,27 @@ export default function SelectSpaceForm({ feed_id }: { feed_id: number }) {
         {renderedForms}
 
         <div className="flex flex-row gap-2.5">
-        <button
-          type="button"
-          onClick={() => {
-            setSelectedType(null);
-            popup.close();
-          }}
-          className="min-w-50 px-10 py-[14.5px] bg-transparent font-bold text-base text-neutral-400 hover:text-white transition-colors"
-        >
-          Cancel
-        </button>
-        <button
-          onClick={handleSend}
-          disabled={!selectedType}
-          className={`w-full py-[14.5px] font-bold text-base rounded-[10px] ${selectedType && !isLoading
-              ? 'bg-primary text-black hover:bg-primary/80'
-              : 'bg-neutral-700 text-neutral-500 cursor-not-allowed'
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedType(null);
+              popup.close();
+            }}
+            className="min-w-50 px-10 py-[14.5px] bg-transparent font-bold text-base text-neutral-400 hover:text-white transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSend}
+            disabled={!selectedType}
+            className={`w-full py-[14.5px] font-bold text-base rounded-[10px] ${
+              selectedType && !isLoading
+                ? 'bg-primary text-black hover:bg-primary/80'
+                : 'bg-neutral-700 text-neutral-500 cursor-not-allowed'
             } transition-colors`}
-        >
-          {isLoading ? 'Sending...' : 'Send'}
-        </button>
+          >
+            {isLoading ? 'Sending...' : 'Send'}
+          </button>
         </div>
       </div>
     </div>
