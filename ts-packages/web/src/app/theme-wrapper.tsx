@@ -10,7 +10,7 @@ export default function ThemeWrapper({
   return (
     <ThemeProvider
       attribute="data-theme"
-      defaultTheme="system"
+      defaultTheme="dark"
       enableSystem
       storageKey="theme"
     >

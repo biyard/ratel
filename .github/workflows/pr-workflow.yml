@@ -41,6 +41,16 @@ jobs:
         ports:
           - 5432:5432
 
+      localstack:
+        image: localstack/localstack:3
+        env:
+          DYNAMODB_SHARE_DB: "1"
+          DEFAULT_REGION: ap-northeast-2
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+        ports:
+          - 4566:4566
+
     steps:
       - uses: actions/checkout@v3
         with:
@@ -64,6 +74,7 @@ jobs:
           RUSTFLAGS: "-A warnings"
           DATABASE_TYPE: postgres
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
+          AWS_ENDPOINT_URL_DYNAMODB: http://localhost:4566
           ENV: "dev"
           DOMAIN: "dev.ratel.foundation"
           OPENAPI_KEY: ${{ secrets.OPENAPI_KEY }}
@@ -197,10 +208,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y docker-compose
 
-      # - name: Setup SSH session with tmate
-      #   uses: mxschmitt/action-tmate@v3
-      #   with:
-      #     limit-access-to-actor: true
       - name: Setup pnpm
         run: |
           corepack enable
@@ -218,12 +225,55 @@ jobs:
 
           make run
 
+      # - name: Setup SSH session with tmate
+      #   uses: mxschmitt/action-tmate@v3
+      #   with:
+      #     limit-access-to-actor: true
+
       - name: Start test services with Docker Compose
         run: |
-          # Check service health
-          echo "Service status check:"
-          curl -I http://localhost:3000/version || echo "Main API not responding"
-          curl -I http://localhost:8080 || echo "Web frontend not responding"
+          # Check service health with retry loop and timeout
+          echo "Waiting for services to be ready..."
+
+          # Wait for Main API (120 second timeout)
+          echo "🔄 Checking Main API..."
+          timeout=120
+          interval=30
+          elapsed=0
+          while [ $elapsed -lt $timeout ]; do
+            if curl -f -s http://localhost:3000/version > /dev/null 2>&1; then
+              echo "✅ Main API is responding (took ${elapsed}s)"
+              break
+            fi
+            echo "⏳ Main API not ready yet... (${elapsed}/${timeout}s)"
+            sleep $interval
+            elapsed=$((elapsed + 5))
+          done
+
+          if [ $elapsed -ge $timeout ]; then
+            echo "❌ Main API failed to respond with 200 status within ${timeout}s"
+            exit 1
+          fi
+
+          # Wait for Web frontend (120 second timeout)
+          echo "🔄 Checking Web frontend..."
+          elapsed=0
+          while [ $elapsed -lt $timeout ]; do
+            if curl -f -s http://localhost:8080 > /dev/null 2>&1; then
+              echo "✅ Web frontend is responding (took ${elapsed}s)"
+              break
+            fi
+            echo "⏳ Web frontend not ready yet... (${elapsed}/${timeout}s)"
+            sleep $interval
+            elapsed=$((elapsed + 5))
+          done
+
+          if [ $elapsed -ge $timeout ]; then
+            echo "❌ Web frontend failed to respond with 200 status within ${timeout}s"
+            exit 1
+          fi
+
+          echo "🎉 All services are ready!"
 
       - name: Run Playwright Tests
         env:
