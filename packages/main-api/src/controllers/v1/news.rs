@@ -28,7 +28,7 @@ pub struct NewsController {
 }
 
 impl NewsController {
-    async fn query(
+    pub async fn query(
         &self,
         _auth: Option<Authorization>,
         param: NewsQuery,

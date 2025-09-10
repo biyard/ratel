@@ -14,20 +14,41 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: lts/*
+      - name: Setup pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.15.0 --activate
       - name: Install dependencies
-        run: npm ci
+        run: pnpm i
       - name: Install Playwright Browsers
-        run: npx playwright install --with-deps
+        run: npx playwright install --with-deps chromium
       - name: Run Playwright tests (Skip secret-dependent tests on PRs)
         env:
           WAIT_TIMEOUT: 5000
           VISIBLE_TIMEOUT: 10000
           URL_TIMEOUT: 15000
+          NEXT_PUBLIC_LOG_LEVEL: debug
+          NEXT_PUBLIC_FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
+          NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET:  ${{ secrets.FIREBASE_STORAGE_BUCKET }}
+          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
+          NEXT_PUBLIC_FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
+          NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID:  ${{ secrets.FIREBASE_MEASUREMENT_ID }}
+
+          NEXT_PUBLIC_ENV: dev
+          NEXT_PUBLIC_SIGN_DOMAIN: dev.ratel.foundation
+          NEXT_PUBLIC_API_URL: https://api.dev.ratel.foundation
+          NEXT_PUBLIC_EXPERIMENT: true
+          NEXT_PUBLIC_GRAPHQL_URL: https://graphql.dev.ratel.foundation/v1/graphql
+
+          PLAYWRIGHT_URL: https://dev.ratel.foundation
         run: |
-          npx playwright test
+          # Create test results directory
+          mkdir -p test-results
+
+          # Run Playwright tests
+          make test
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
@@ -40,3 +61,87 @@ jobs:
           name: screenshots
           path: screenshots/
           retention-days: 30
+
+  deploy-report:
+    if: always()
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Download test report artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+        continue-on-error: true
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload to GitHub Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: playwright-report/
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Comment PR with test report link
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const reportUrl = `${{ steps.deployment.outputs.page_url }}`;
+            const runUrl = `https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}`;
+
+            const comment = `## 🎭 Playwright Test Results
+
+            **📊 Test Report:** [View interactive test report](${reportUrl})
+
+            **📁 Test Artifacts:**
+            - Playwright report and screenshots are available in [GitHub Actions artifacts](${runUrl})
+
+            **📋 Test Summary:**
+            - Workflow: Playwright Tests  
+            - Trigger: ${{ github.event_name }}
+            - Commit: ${{ github.sha }}
+            - Status: ${{ needs.test.result }}
+
+            ---
+            *Test report automatically deployed to GitHub Pages*`;
+
+            // Find existing comment to update or create new one
+            const { data: comments } = await github.rest.issues.listComments({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            });
+
+            const existingComment = comments.find(comment => 
+              comment.body.includes('🎭 Playwright Test Results') && 
+              comment.user.type === 'Bot'
+            );
+
+            if (existingComment) {
+              await github.rest.issues.updateComment({
+                comment_id: existingComment.id,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: comment
+              });
+            } else {
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: comment
+              });
+            }

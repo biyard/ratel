@@ -149,7 +149,7 @@ impl PromotionController {
         Ok(res)
     }
 
-    async fn hot_promotion(
+    pub async fn hot_promotion(
         &self,
         _auth: Option<Authorization>,
         _param: PromotionReadAction,
