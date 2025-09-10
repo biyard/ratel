@@ -62,7 +62,6 @@ export interface FeedCardProps {
 }
 
 export default function FeedCard(props: FeedCardProps) {
-  const router = useRouter();
   const { post } = useApiCall();
   const { data: User } = useSuspenseUserInfo();
 
