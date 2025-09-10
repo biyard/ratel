@@ -64,7 +64,6 @@ use crate::{
             },
             oracles::create_oracle::create_oracle_handler,
             spaces::{delete_space::delete_space_handler, get_my_space::get_my_space_controller},
-            telegram::subscribe::telegram_subscribe_handler,
             users::{find_user::find_user_handler, logout::logout_handler},
         },
         well_known::get_did_document::get_did_document_handler,
@@ -72,10 +71,11 @@ use crate::{
     utils::{
         aws::{BedrockClient, RekognitionClient, S3Client, TextractClient},
         sqs_client::SqsClient,
+        telegram::TelegramBot,
     },
 };
 use by_axum::axum;
-use dto::Result;
+use dto::{Result, by_axum::axum::Extension};
 
 use axum::native_routing::get as nget;
 use axum::native_routing::post as npost;
@@ -155,9 +155,15 @@ pub async fn route(
     textract_client: TextractClient,
     _metadata_s3_client: S3Client,
     private_s3_client: S3Client,
+    bot: TelegramBot,
 ) -> Result<by_axum::axum::Router> {
     Ok(by_axum::axum::Router::new()
-        .nest("/v1", controllers::v1::route(pool.clone()).await?)
+        .nest(
+            "/v1",
+            controllers::v1::route(pool.clone())
+                .await?
+                .layer(Extension(Arc::new(bot))),
+        )
         .nest(
             "/m1",
             controllers::m1::MenaceController::route(pool.clone())?,
@@ -497,17 +503,6 @@ pub async fn route(
                 textract_client: textract_client.clone(),
                 s3_client: private_s3_client.clone(),
             }),
-        )
-        .route(
-            "/v2/telegram/subscribe",
-            post_with(
-                telegram_subscribe_handler,
-                api_docs!(
-                    "Subscribe to Telegram",
-                    "This endpoint allows users to subscribe to Telegram notifications."
-                ),
-            )
-            .with_state(pool.clone()),
         )
         .route(
             "/v2/spaces/:space_id/delete",

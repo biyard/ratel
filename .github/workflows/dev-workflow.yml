@@ -173,7 +173,6 @@ jobs:
           NONCELAB_TOKEN: ${{ secrets.NONCELAB_TOKEN }}
 
           TELEGRAM_TOKEN: ${{ secrets.DEV_TELEGRAM_TOKEN }}
-          TELEGRAM_BOT_URL: https://telegram-bot.dev.ratel.foundation
 
           BBS_BLS_X: ${{ secrets.BBS_BLS_X }}
           BBS_BLS_Y: ${{ secrets.BBS_BLS_Y }}
