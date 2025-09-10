@@ -30,7 +30,7 @@ export default async function Page({
   } else if (space.data?.space_type === SpaceType.Notice) {
     return <NoticeSpacePage />;
   } else if (space.data?.space_type === SpaceType.Poll) {
-    return <PollSpacePage />;
+    return <PollSpacePage spaceId={spaceId} />;
   } else if (space.data?.space_type === SpaceType.dAgit) {
     return <DAgitPage spaceId={spaceId} />;
   }

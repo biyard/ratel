@@ -9,3 +9,6 @@ pub use textract::TextractClient;
 
 mod s3;
 pub use s3::{S3Client, S3ContentType, S3Object};
+
+mod dynamo;
+pub use dynamo::{DynamoClient, bool_attr, number_attr, string_attr};
