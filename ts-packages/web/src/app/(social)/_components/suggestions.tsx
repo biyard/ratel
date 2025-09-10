@@ -61,7 +61,7 @@ export default function Suggestions() {
 
   return (
     <BlackBox>
-      <h3 className="font-medium mb-3 text-foreground">{t('suggested')}</h3>
+      <h3 className="font-medium mb-3 text-text-primary">{t('suggested')}</h3>
       <div className="flex flex-col gap-[35px]">
         {suggestions.map((user) => (
           <SuggestionItem key={user.id} user={user} onFollow={handleFollow} />
@@ -69,11 +69,11 @@ export default function Suggestions() {
       </div>
       <Link
         href={route.myNetwork()}
-        className="mt-5 text-xs text-foreground-muted flex items-center hover:text-card-meta transition-colors"
+        className="mt-5 text-xs text-more-text flex items-center hover:text-card-meta transition-colors"
         aria-label="View all suggestions"
       >
         <span>{t('view_all')}</span>
-        <ChevronRight size={14} />
+        <ChevronRight size={14} className="[&>path]:stroke-more-text" />
       </Link>
     </BlackBox>
   );
