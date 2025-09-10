@@ -15,7 +15,7 @@ export default function UserFollows({
   return (
     <div className="flex flex-row w-full justify-around items-center gap-[20px] max-tablet:gap-[10px]">
       <Link
-        className="flex flex-col w-fit justify-start items-center gap-[2px] text-c-wg-50 hover:text-white"
+        className="flex flex-col w-fit justify-start items-center gap-[2px] text-foreground-muted hover:text-foreground"
         href={route.myFollower(RelationType.FOLLOWER)}
       >
         <div className="font-bold text-sm">
@@ -25,7 +25,7 @@ export default function UserFollows({
       </Link>
 
       <Link
-        className="flex flex-col w-fit justify-start items-center gap-[2px] text-c-wg-50 hover:text-white"
+        className="flex flex-col w-fit justify-start items-center gap-[2px] text-foreground-muted hover:text-foreground"
         href={route.myFollower(RelationType.FOLLOWING)}
       >
         <div className="font-bold text-sm">
