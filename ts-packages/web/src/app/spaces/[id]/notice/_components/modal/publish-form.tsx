@@ -34,7 +34,7 @@ export default function PublishForm({
       <div>
         {/* Header */}
         <div className="mb-6">
-          <div className="font-bold text-create-space-label text-[24px]">
+          <div className="font-bold text-modal-label-text text-[24px]">
             {t('publish_space')}
           </div>
         </div>
@@ -61,7 +61,7 @@ export default function PublishForm({
                   className={`font-bold text-lg ${
                     wasPublishedAsPublic
                       ? 'text-neutral-500'
-                      : 'text-foreground'
+                      : 'text-text-primary'
                   }`}
                 >
                   {t('private_publish')}
@@ -110,7 +110,7 @@ export default function PublishForm({
             <div className="flex items-center gap-3">
               <Internet width={24} height={24} className="text-neutral-400" />
               <div className="flex-1">
-                <div className="font-bold text-foreground text-lg">
+                <div className="font-bold text-text-primary text-lg">
                   {t('public_publish')}
                 </div>
                 <div className="text-neutral-400 light:text-[#525252] text-sm mt-1">

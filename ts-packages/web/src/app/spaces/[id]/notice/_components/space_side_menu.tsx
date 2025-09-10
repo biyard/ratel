@@ -1,6 +1,6 @@
 'use client';
 
-import SpaceBlackBox from '@/app/(social)/_components/space-black-box';
+import BlackBox from '@/app/(social)/_components/black-box';
 import { getTimeWithFormat } from '@/lib/time-utils';
 import React from 'react';
 import Clock from '@/assets/icons/clock.svg';
@@ -67,10 +67,10 @@ export default function SpaceSideMenu() {
 
   return (
     <div className="flex flex-col max-w-[250px] max-tablet:!hidden w-full gap-[10px]">
-      <SpaceBlackBox>
-        <div className="w-full text-sm text-foreground">
+      <BlackBox isWhite={true}>
+        <div className="w-full text-sm text-text-primary">
           <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-1 text-neutral-400 font-semibold text-[14px]">
+            <div className="flex items-center gap-1 text-space-side-label font-semibold text-[14px]">
               <History width={28} height={28} />
               {t('reward')}
               {latestAttempt && attemptsData && (
@@ -105,7 +105,7 @@ export default function SpaceSideMenu() {
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <div className="font-medium text-foreground text-[15px]/[12px]">
+                  <div className="font-medium text-text-primary text-[15px]/[12px]">
                     {item.label}
                   </div>
                   <div className="font-medium text-neutral-80 text-xs/[12px]">
@@ -215,7 +215,7 @@ export default function SpaceSideMenu() {
           {/* Total Estimated Value header at bottom */}
           <div className="flex flex-col pl-1">
             <div className="border-t border-[var(--color-neutral-700)]/50 pt-2 pb-0"></div>
-            <div className="flex items-center gap-1 text-neutral-400 font-semibold text-[14px] mb-2">
+            <div className="flex items-center gap-1 text-space-side-label font-semibold text-[14px] mb-2">
               {t('total_estimated_value')}
             </div>
             {(() => {
@@ -232,19 +232,19 @@ export default function SpaceSideMenu() {
               );
 
               return (
-                <div className="font-medium text-foreground text-[18px]/[16px]">
+                <div className="font-medium text-text-primary text-[18px]/[16px]">
                   +{finalValue.toLocaleString()} P
                 </div>
               );
             })()}
           </div>
         </div>
-      </SpaceBlackBox>
+      </BlackBox>
 
-      <SpaceBlackBox>
-        <div className="w-full text-sm text-foreground">
+      <BlackBox isWhite={true}>
+        <div className="w-full text-sm text-text-primary">
           <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-1 text-neutral-400 font-semibold text-[14px]">
+            <div className="flex items-center gap-1 text-space-side-label font-semibold text-[14px]">
               <Info width={28} height={28} />
               {t('scoring_rules')}
             </div>
@@ -277,7 +277,7 @@ export default function SpaceSideMenu() {
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <div className="font-medium text-foreground text-[15px]/[12px]">
+                  <div className="font-medium text-text-primary text-[15px]/[12px]">
                     {item.label}
                   </div>
                   <div className="font-medium text-neutral-80 text-xs/[12px]">
@@ -288,12 +288,12 @@ export default function SpaceSideMenu() {
             ))}
           </div>
         </div>
-      </SpaceBlackBox>
+      </BlackBox>
 
-      <SpaceBlackBox>
-        <div className="w-full text-sm text-foreground">
+      <BlackBox isWhite={true}>
+        <div className="w-full text-sm text-text-primary">
           <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-1 text-neutral-400 font-semibold text-[14px]">
+            <div className="flex items-center gap-1 text-space-side-label font-semibold text-[14px]">
               <Clock width={28} height={28} />
               {t('timeline')}
             </div>
@@ -334,7 +334,7 @@ export default function SpaceSideMenu() {
               { label: t('end'), date: endedAt },
             ].map((item) => (
               <div className="flex flex-col gap-1" key={item.label}>
-                <div className="font-medium text-foreground text-[15px]/[12px]">
+                <div className="font-medium text-text-primary text-[15px]/[12px]">
                   {item.label}
                 </div>
                 <div className="font-medium text-neutral-80 text-xs/[12px]">
@@ -344,7 +344,7 @@ export default function SpaceSideMenu() {
             ))}
           </div>
         </div>
-      </SpaceBlackBox>
+      </BlackBox>
     </div>
   );
 }
