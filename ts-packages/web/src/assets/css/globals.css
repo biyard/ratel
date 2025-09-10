@@ -108,6 +108,7 @@
      LEGACY TOKENS (Deprecated - for migration only)
      ================================ */
   --color-neutral-400: var(--foreground-muted);
+
   --color-neutral-600: var(--foreground-more-muted);
   --color-background: var(--background);
   --color-component-bg: var(--card);
@@ -125,6 +126,8 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-error: var(--destructive);
+  --color-c-wg-70: var(--ui-gray-70);
+  --color-neutral-500: #737373;
 }
 
 /* ----------------------------

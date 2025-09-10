@@ -100,9 +100,10 @@
       "desc": "NFT 발행을 위한 정보를 제출하세요."
     },
 
-    "notice_title": "Notice 스페이스 설정하기",
-    "notice_description_1": "{spaceType} 스페이스를 생성하면, <b>부스터 설정은 변경할 수 없습니다.</b>",
-    "notice_description_2": "확인하기 전에 모든 설정이 정확한지 꼭 확인해주세요.",
+    "SetBoostModal": {
+      "title": "부스트 설정",
+      "description": "{spaceType} 스페이스를 생성하면, <b>부스터 설정은 변경할 수 없습니다.</b> 완료 전에 모든 설정이 정확한지 꼭 확인해주세요."
+    },
 
     "date": "날짜",
     "boost": "부스팅",
