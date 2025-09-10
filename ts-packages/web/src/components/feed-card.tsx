@@ -6,6 +6,7 @@ import { CommentIcon, Palace, Rewards, Shares, ThumbUp } from './icons';
 import { convertNumberToString } from '@/lib/number-utils';
 import TimeAgo from './time-ago';
 import DOMPurify from 'dompurify';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useApiCall } from '@/lib/api/use-send';
 import { ratelApi } from '@/lib/api/ratel_api';
@@ -150,33 +151,35 @@ export default function FeedCard(props: FeedCardProps) {
     setExpand(true);
   };
 
-  const handleCardClick = () => {
-    if (props.space_id) {
-      // Navigate to space page if post has a space
-      router.push(route.space(props.space_id));
-    } else {
-      // Navigate to thread page if post doesn't have a space
-      router.push(route.threadByFeedId(props.id));
-    }
-  };
+  const href = props.space_id
+    ? route.space(props.space_id)
+    : route.threadByFeedId(props.id);
 
   return (
-    <Col
-      className={`cursor-pointer border rounded-[10px] border-neutral-700`}
-      onClick={handleCardClick}
-    >
-      <FeedBody {...props} />
-      <FeedFooter
-        {...props}
-        likes={localLikes}
-        shares={localShares}
-        is_liked={localIsLiked}
-        isLikeProcessing={isProcessing}
-        onLikeClick={handleLike}
-        onRepostThought={handleRepostThought}
-        onRepost={handleRepost}
-      />
-    </Col>
+    <Link href={href}>
+      <a className="block">
+        <Col
+          className={`cursor-pointer border rounded-[10px] border-neutral-700`}
+          onClick={(e) => {
+            // Prevent default behavior as we're handling navigation with Link
+            e.preventDefault();
+            router.push(href);
+          }}
+        >
+          <FeedBody {...props} />
+          <FeedFooter
+            {...props}
+            likes={localLikes}
+            shares={localShares}
+            is_liked={localIsLiked}
+            isLikeProcessing={isProcessing}
+            onLikeClick={handleLike}
+            onRepostThought={handleRepostThought}
+            onRepost={handleRepost}
+          />
+        </Col>
+      </a>
+    </Link>
   );
 }
 
