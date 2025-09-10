@@ -170,6 +170,8 @@ jobs:
           DATABASE_TYPE: postgres
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           RPC_ENDPOINT: https://public-en.node.kaia.io
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+
           MIGRATE: false
         run: |
           make docker.build

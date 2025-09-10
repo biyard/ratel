@@ -1,7 +1,6 @@
 use bdk::prelude::*;
-use serde::{Deserialize, Serialize};
 
-#[api_model(table = telegram_channel)]
+#[api_model(table = telegram_channels)]
 pub struct TelegramChannel {
     #[api_model(primary_key)]
     pub id: i64,
