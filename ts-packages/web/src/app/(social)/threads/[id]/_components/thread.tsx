@@ -31,7 +31,7 @@ export default function Thread({ post_id }: { post_id: number }) {
       {post?.files && post.files.length > 0 && (
         <BlackBox>
           <div className="flex flex-col w-full gap-5">
-            <div className="font-bold text-white text-[15px]/[20px]">
+            <div className="font-bold text-text-primary text-[15px]/[20px]">
               {t('attached_files')}
             </div>
 

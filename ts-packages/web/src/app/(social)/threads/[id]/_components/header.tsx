@@ -146,14 +146,14 @@ export default function Header({ post_id }: { post_id: number }) {
     <div className="flex flex-col w-full gap-2.5">
       <div className="flex flex-row justify-between items-center">
         <button onClick={router.back}>
-          <ArrowLeft className="[&>path]:stroke-foreground" />
+          <ArrowLeft className="[&>path]:stroke-back-icon" />
         </button>
         <div className="flex items-center space-x-2.5">
           {space_id ? (
             <Link href={target ?? ''}>
               <Button
                 variant="rounded_secondary"
-                className="max-tablet:hidden bg-primary"
+                className="max-tablet:hidden bg-submit-button-bg text-submit-button-text"
               >
                 {t('join_space')}
               </Button>
@@ -162,7 +162,7 @@ export default function Header({ post_id }: { post_id: number }) {
             <>
               <Button
                 variant="rounded_secondary"
-                className="rounded-md max-tablet:hidden text-sm px-3 py-1.5 text-black border border-foreground"
+                className="rounded-md max-tablet:hidden text-sm px-3 py-1.5 text-button-text bg-button-bg hover:bg-button-bg/80"
                 onClick={handleEditPost}
               >
                 <Edit className="!size-5" />
@@ -178,7 +178,7 @@ export default function Header({ post_id }: { post_id: number }) {
               <Button
                 variant="rounded_primary"
                 onClick={handleCreateSpace}
-                className="max-tablet:hidden bg-[#FCB300] hover:bg-[#FCB300]/80 text-sm px-3 py-1.5 text-black"
+                className="max-tablet:hidden bg-submit-button-bg hover:bg-submit-button-bg/80 text-sm px-3 py-1.5 text-submit-button-text"
               >
                 <Palace className="!size-5 [&>path]:stroke-black" />
                 {t('create_space')}
@@ -274,7 +274,7 @@ export default function Header({ post_id }: { post_id: number }) {
             </Badge>
           ))}
         </div> */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center justify-end w-full gap-4">
           {/* Feed Stats */}
           <button
             onClick={handleLike}
@@ -289,23 +289,23 @@ export default function Header({ post_id }: { post_id: number }) {
               className={
                 localIsLiked
                   ? 'size-5 [&>path]:fill-primary [&>path]:stroke-primary'
-                  : 'size-5 text-gray-400'
+                  : 'size-5 [&>path]:stroke-icon'
               }
             />
-            <span className="text-[15px] text-foreground">
+            <span className="text-[15px] text-text-primary">
               {convertNumberToString(localLikes)}
             </span>
           </button>
           <div className="flex items-center gap-1">
-            <CommentIcon className="size-5 text-gray-400" />
-            <span className="text-[15px] text-foreground">
+            <CommentIcon className="size-5 [&>path]:stroke-icon" />
+            <span className="text-[15px] text-text-primary">
               {convertNumberToString(post?.comments || 0)}
             </span>
           </div>
           {is_boost ? (
             <div className="flex items-center gap-1">
-              <Rewards className="size-5 text-gray-400" />
-              <span className="text-[15px] text-foreground">
+              <Rewards className="size-5 [&>path]:stroke-icon" />
+              <span className="text-[15px] text-text-primary">
                 {convertNumberToString(post?.rewards || 0)}
               </span>
             </div>
@@ -313,8 +313,8 @@ export default function Header({ post_id }: { post_id: number }) {
             <></>
           )}
           <div className="flex items-center gap-1">
-            <Shares className="size-5 text-gray-400" />
-            <span className="text-[15px] text-foreground">
+            <Shares className="size-5 [&>path]:stroke-icon" />
+            <span className="text-[15px] text-text-primary">
               {convertNumberToString(post?.shares || 0)}
             </span>
           </div>
@@ -326,7 +326,7 @@ export default function Header({ post_id }: { post_id: number }) {
       </div>
 
       <div>
-        <h2 className="text-xl font-bold text-foreground">{post?.title}</h2>
+        <h2 className="text-xl font-bold text-text-primary">{post?.title}</h2>
       </div>
       <div className="flex flex-row justify-between">
         <ProposerProfile
@@ -334,7 +334,7 @@ export default function Header({ post_id }: { post_id: number }) {
           proposerName={post?.author[0]?.nickname ?? ''}
           userType={post?.author[0]?.user_type || UserType.Individual}
         />
-        <div className="font-light text-foreground text-sm/[14px]">
+        <div className="font-light text-text-primary text-sm/[14px]">
           {post?.created_at !== undefined ? getTimeAgo(post.created_at) : ''}
         </div>
       </div>
@@ -366,9 +366,9 @@ export function ProposerProfile({
           }
         />
       ) : (
-        <div className="w-6.25 h-6.25 rounded-full border border-neutral-500 bg-neutral-600" />
+        <div className="w-6.25 h-6.25 rounded-full bg-profile-bg" />
       )}
-      <div className="font-semibold text-foreground text-sm/[20px]">
+      <div className="font-semibold text-text-primary text-sm/[20px]">
         {proposerName}
       </div>
       <BadgeIcon />
