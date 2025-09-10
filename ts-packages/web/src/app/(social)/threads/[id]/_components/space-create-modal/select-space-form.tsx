@@ -146,12 +146,17 @@ export default function SelectSpaceForm({ feed_id }: { feed_id: number }) {
   };
 
   const handleSend = async () => {
-    if (!selectedType) return;
+    // Re-entrancy guard
+    if (isLoading || selectedType === null) {
+      return;
+    }
 
-    if (isBoosterEnabled) {
-      setShowConfigForm(true);
-    } else {
-      try {
+    try {
+      setLoading(true);
+
+      if (isBoosterEnabled) {
+        setShowConfigForm(true);
+      } else {
         await handleCreateSpace({
           spaceType: selectedType,
           feedId: feed_id,
@@ -160,9 +165,12 @@ export default function SelectSpaceForm({ feed_id }: { feed_id: number }) {
           endedAt: null,
           boosterType: null,
         });
-      } catch (error) {
-        logger.error('Error handling space creation:', error);
       }
+    } catch (error) {
+      logger.error('Error in handleSend:', error);
+      showErrorToast('Failed to process request');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -267,17 +275,17 @@ export default function SelectSpaceForm({ feed_id }: { feed_id: number }) {
               setSelectedType(null);
               popup.close();
             }}
-            className="min-w-50 px-10 py-[14.5px] bg-transparent font-bold text-base text-neutral-400 hover:text-white transition-colors"
+            className="min-w-[50px] px-10 py-[14.5px] bg-transparent font-bold text-base text-neutral-400 hover:text-white transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={handleSend}
-            disabled={!selectedType}
+            disabled={isLoading || selectedType === null}
             className={`w-full py-[14.5px] font-bold text-base rounded-[10px] ${
-              selectedType && !isLoading
+              selectedType !== null && !isLoading
                 ? 'bg-primary text-black hover:bg-primary/80'
-                : 'bg-neutral-700 text-neutral-500 cursor-not-allowed'
+                : 'bg-neutral-800 text-neutral-700 cursor-not-allowed'
             } transition-colors`}
           >
             {isLoading ? 'Sending...' : 'Send'}
