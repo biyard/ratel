@@ -156,30 +156,21 @@ export default function FeedCard(props: FeedCardProps) {
     : route.threadByFeedId(props.id);
 
   return (
-    <Link href={href}>
-      <a className="block">
-        <Col
-          className={`cursor-pointer border rounded-[10px] border-neutral-700`}
-          onClick={(e) => {
-            // Prevent default behavior as we're handling navigation with Link
-            e.preventDefault();
-            router.push(href);
-          }}
-        >
-          <FeedBody {...props} />
-          <FeedFooter
-            {...props}
-            likes={localLikes}
-            shares={localShares}
-            is_liked={localIsLiked}
-            isLikeProcessing={isProcessing}
-            onLikeClick={handleLike}
-            onRepostThought={handleRepostThought}
-            onRepost={handleRepost}
-          />
-        </Col>
-      </a>
-    </Link>
+    <Col className="relative border rounded-[10px] border-neutral-700">
+      <Link href={href} className="block">
+        <FeedBody {...props} />
+      </Link>
+      <FeedFooter
+        {...props}
+        likes={localLikes}
+        shares={localShares}
+        is_liked={localIsLiked}
+        isLikeProcessing={isProcessing}
+        onLikeClick={handleLike}
+        onRepostThought={handleRepostThought}
+        onRepost={handleRepost}
+      />
+    </Col>
   );
 }
 
