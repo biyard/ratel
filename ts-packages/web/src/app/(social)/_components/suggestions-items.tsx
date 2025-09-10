@@ -33,15 +33,15 @@ export default function SuggestionItem({
             className={`w-8 h-8 object-cover ${imageClass}`}
           />
         ) : (
-          <div className={`w-8 h-8 bg-neutral-600 ${imageClass}`} />
+          <div className={`w-8 h-8 bg-profile-bg ${imageClass}`} />
         )}
         <div className="flex-1">
-          <div className="font-medium text-base text-foreground">
+          <div className="font-medium text-base text-text-primary">
             {user.username}
           </div>
 
           <button
-            className="font-bold text-xs text-white rounded-full bg-neutral-700 px-4 py-2 mt-2 hover:bg-neutral-600 transition-colors"
+            className="font-bold text-xs text-follow-button-text rounded-full bg-follow-button-bg px-4 py-2 mt-2 hover:bg-follow-button-bg/80 transition-colors"
             onClick={() => onFollow(user.id)}
             aria-label={`Follow ${user.username}`}
           >
