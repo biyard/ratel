@@ -6,7 +6,6 @@ import { BoosterType } from '@/lib/api/models/notice';
 import { Discuss, Palace, Mega, Vote } from '@/components/icons';
 import { useState, useMemo, useCallback } from 'react';
 
-import { apiFetch } from '@/lib/api/apiFetch';
 import { config } from '@/config';
 import { route } from '@/route';
 import { useRouter } from 'next/navigation';
