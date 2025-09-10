@@ -4,7 +4,6 @@ import { useInView } from 'react-intersection-observer';
 
 import FeedCard from '@/components/feed-card';
 import { Col } from '@/components/ui/col';
-import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 
 import { checkString } from '@/lib/string-filter-utils';
 import { UserType } from '@/lib/api/models/user';
@@ -17,10 +16,9 @@ import FeedEmptyState from '../feed-empty-state';
 import CreatePostButton from '../create-post-button';
 import BlackBox from '../black-box';
 import PromotionCard from '../promotion-card';
-import News from '../News';
-import Suggestions from '../suggestions';
-import { Promotion } from '@/lib/api/models/promotion';
-import { Feed } from '@/lib/api/models/feeds';
+import HomeNews from '../home-news';
+import HomeSuggestions from '../home-suggestions';
+import { HomeGatewayResponse } from '@/lib/api/models/home';
 
 export const SIZE = 10;
 
@@ -48,26 +46,29 @@ export interface Post {
 }
 
 export default function Home({
-  promotion,
-  feed,
+  homeData,
 }: {
-  promotion: Promotion | undefined | null;
-  feed: Feed | undefined | null;
+  homeData: HomeGatewayResponse | null;
 }) {
-  const { data: userInfo } = useSuspenseUserInfo();
-  const userId = userInfo?.id || 0;
+  // Get user info from homeData instead of separate API call
+  const userId = homeData?.user_info?.id || 0;
 
   const { ref, inView } = useInView({ threshold: 0.5 });
 
+  // Get initial feeds from homeData, then use infinite query for pagination
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
-    usePostInfinite(SIZE);
+    usePostInfinite(SIZE, homeData?.feeds ? 2 : 1); // Start from page 2 if we have server data
 
-  const posts = data?.pages.flatMap((page) => page.items) || [];
+  // If we have server data, use it as the first page, otherwise use client data
+  const allPosts = homeData?.feeds
+    ? [...homeData.feeds, ...(data?.pages.flatMap((page) => page.items) || [])]
+    : data?.pages.flatMap((page) => page.items) || [];
 
-  const filteredFeeds = posts
+  const filteredFeeds = allPosts
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .filter((item) => Number((item as any).feed_type) !== 2)
-    .map((item) => ({
+    .filter((item: any) => Number(item.feed_type) !== 2)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .map((item: any) => ({
       id: item.id,
       industry: item.industry?.[0]?.name || '',
       title: item.title!,
@@ -141,15 +142,15 @@ export default function Home({
       <aside className="w-70 pl-4 max-tablet:!hidden" aria-label="Sidebar">
         <CreatePostButton />
 
-        {promotion && feed && (
+        {homeData?.promotions && (
           <BlackBox>
-            <PromotionCard promotion={promotion} feed={feed} />
+            <PromotionCard promotion={homeData.promotions} feed={undefined} />
           </BlackBox>
         )}
 
-        <News />
+        <HomeNews newsData={homeData?.news || []} />
         <div className="mt-[10px]">
-          <Suggestions />
+          <HomeSuggestions suggestedUsers={homeData?.suggested_users || []} />
         </div>
       </aside>
     </div>
