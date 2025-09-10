@@ -4,7 +4,6 @@ import { useInView } from 'react-intersection-observer';
 
 import FeedCard from '@/components/feed-card';
 import { Col } from '@/components/ui/col';
-import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 
 import { checkString } from '@/lib/string-filter-utils';
 import { UserType } from '@/lib/api/models/user';
@@ -51,8 +50,8 @@ export default function Home({
 }: {
   homeData: HomeGatewayResponse | null;
 }) {
-  const { data: userInfo } = useSuspenseUserInfo();
-  const userId = userInfo?.id || 0;
+  // Get user info from homeData instead of separate API call
+  const userId = homeData?.user_info?.id || 0;
 
   const { ref, inView } = useInView({ threshold: 0.5 });
 
