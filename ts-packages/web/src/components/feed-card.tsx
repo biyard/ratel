@@ -194,7 +194,7 @@ export function FeedBody({
           {onboard && <OnboardingTag />}
         </div>
       </Row>
-      <h2 className="w-full line-clamp-2 font-bold text-xl/[25px] tracking-[0.5px] align-middle text-white px-5">
+      <h2 className="w-full line-clamp-2 font-bold text-xl/[25px] tracking-[0.5px] align-middle text-foreground px-5">
         {title}
       </h2>
       <Row className="justify-between items-center px-5">
@@ -225,7 +225,7 @@ export function FeedContents({
   }, [contents]);
 
   return (
-    <div className="text-white">
+    <div className="text-foreground">
       <p
         className="feed-content font-normal text-[15px]/[24px] align-middle tracking-[0.5px] text-c-wg-30 px-5"
         dangerouslySetInnerHTML={{ __html: sanitized }}
@@ -254,7 +254,7 @@ export function IconText({
 }: React.HTMLAttributes<HTMLDivElement> & { children: React.ReactNode }) {
   return (
     <Row
-      className={`inline-flex items-center gap-1.5 whitespace-nowrap leading-none text-white text-[15px] px-3 py-3 ${className || ''}`}
+      className={`inline-flex items-center gap-1.5 whitespace-nowrap leading-none text-foreground text-[15px] px-3 py-3 ${className || ''}`}
       {...props}
     >
       {children}
@@ -272,7 +272,7 @@ export function UserBadge({
   name: string;
 }) {
   return (
-    <Row className="w-fit items-center med-16 text-white">
+    <Row className="w-fit items-center med-16 text-foreground">
       <Image
         src={profile_url}
         alt="User Profile"
@@ -308,7 +308,7 @@ export function IndustryTag({ industry }: { industry: string }) {
 
 export function OnboardingTag() {
   return (
-    <span className="rounded-sm bg-primary text-white px-2 text-xs/[25px] font-semibold align-middle uppercase">
+    <span className="rounded-sm bg-primary text-foreground px-2 text-xs/[25px] font-semibold align-middle uppercase">
       Onboard
     </span>
   );
@@ -451,7 +451,7 @@ export function FeedFooter({
                 <button
                   onClick={handleRepostWithThoughts}
                   disabled={isReposting}
-                  className="flex items-center gap-3 w-full px-4 py-2 rounded hover:bg-neutral-700 transition-colors text-white text-lg font-semibold"
+                  className="flex items-center gap-3 w-full px-4 py-2 rounded hover:bg-neutral-700 transition-colors text-foreground text-lg font-semibold"
                 >
                   {isReposting ? <Loader2 /> : <Edit1 />}
                   {t('repost_with_your_thoughts')}
@@ -462,7 +462,7 @@ export function FeedFooter({
                 <button
                   onClick={handleRepost}
                   disabled={isReposting}
-                  className="flex items-center gap-3 w-full px-4 py-2 rounded hover:bg-neutral-700 transition-colors text-white text-lg font-semibold"
+                  className="flex items-center gap-3 w-full px-4 py-2 rounded hover:bg-neutral-700 transition-colors text-foreground text-lg font-semibold"
                 >
                   {isReposting ? <Loader2 /> : <Shares />}
                   {t('repost')}
