@@ -1,7 +1,12 @@
 #!/bin/bash
 
-echo "Generating .env.local from environment variables..."
+# Check if .env.local already exists
+if [ -f ".env.local" ]; then
+  echo "✅ .env.local already exists, skipping setup."
+  exit 0
+fi
 
+echo "Generating .env.local from environment variables..."
 
 cat > .env.local <<EOL
 NEXT_PUBLIC_ENV=${ENV}
