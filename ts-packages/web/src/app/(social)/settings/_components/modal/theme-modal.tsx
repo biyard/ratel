@@ -6,12 +6,14 @@ import CheckCircle from '@/assets/icons/check-circle.svg';
 export interface ThemeModalProps {
   onCancel: () => void;
   onSave: (theme: 'dark' | 'light' | 'system') => void;
+  onPreview: (theme: 'dark' | 'light' | 'system') => void;
   initialTheme?: 'dark' | 'light' | 'system';
 }
 
 export default function ThemeModal({
   onCancel,
   onSave,
+  onPreview,
   initialTheme = 'dark',
 }: ThemeModalProps) {
   const [selectedTheme, setSelectedTheme] = useState<
@@ -31,7 +33,10 @@ export default function ThemeModal({
         {options.map((opt) => (
           <button
             key={opt.value}
-            onClick={() => setSelectedTheme(opt.value)}
+            onClick={() => {
+              onPreview(opt.value);
+              setSelectedTheme(opt.value);
+            }}
             className={`flex items-center justify-between px-5 py-4 text-left transition-colors rounded-[10px] light:bg-white
               ${selectedTheme === opt.value ? 'border border-neutral-400 light:border-primary light:bg-primary/10' : 'border-modal-card-border bg-modal-card-bg'}
              `}

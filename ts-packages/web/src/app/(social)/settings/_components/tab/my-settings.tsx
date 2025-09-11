@@ -54,24 +54,35 @@ export default function MySettings() {
       .withTitle(t('select_language'));
   };
 
-  const initialTheme: 'light' | 'dark' | 'system' =
-    data?.theme === ThemeType.Light
-      ? 'light'
-      : data?.theme === ThemeType.Dark
-        ? 'dark'
-        : 'system';
-
   const handleChangeTheme = () => {
+    const initialTheme: 'light' | 'dark' | 'system' =
+      data?.theme === ThemeType.Light
+        ? 'light'
+        : data?.theme === ThemeType.Dark
+          ? 'dark'
+          : 'system';
+    const prevTheme = initialTheme;
+
     popup
       .open(
         <ThemeModal
           initialTheme={initialTheme}
+          onPreview={async (newTheme) => {
+            await changeTheme(newTheme);
+            await qc.invalidateQueries({ queryKey: [QK_USERS_GET_INFO] });
+          }}
           onSave={async (newTheme) => {
             await changeTheme(newTheme);
             await qc.invalidateQueries({ queryKey: [QK_USERS_GET_INFO] });
             popup.close();
           }}
-          onCancel={() => popup.close()}
+          onCancel={() => {
+            changeTheme(prevTheme)
+              .then(() =>
+                qc.invalidateQueries({ queryKey: [QK_USERS_GET_INFO] }),
+              )
+              .finally(() => popup.close());
+          }}
         />,
       )
       .withTitle('Theme');
