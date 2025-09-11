@@ -9,14 +9,14 @@ class Survey extends StatefulWidget {
 }
 
 class _SurveyState extends State<Survey> {
-  late final SpaceController controller;
+  late final DeliberationSpaceController controller;
   late final List<ChoiceQuestionModel> singleChoiceQs;
   late final List<SingleChoiceAnswer> answers;
 
   @override
   void initState() {
     super.initState();
-    controller = Get.find<SpaceController>();
+    controller = Get.find<DeliberationSpaceController>();
     final all = controller.questions.value;
     singleChoiceQs = all
         .where((q) => q.type == AnswerType.singleChoice)
