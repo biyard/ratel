@@ -114,7 +114,7 @@ function EBook({ file, onClick }: { file: FileInfo; onClick: () => void }) {
         <div className="font-normal text-neutral-400 light:text-[#737373] text-sm">
           {file.ext === 'MP4' || file.ext === 'MOV' ? 'eLearning' : 'eBook'}
         </div>
-        <div className="font-bold text-foreground text-lg">
+        <div className="font-bold text-text-primary text-lg">
           {file.name.replace(/\.[^/.]+$/, '')}
         </div>
       </div>

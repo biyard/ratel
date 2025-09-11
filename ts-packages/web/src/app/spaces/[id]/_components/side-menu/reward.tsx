@@ -32,7 +32,7 @@ export default function RewardMenu({
 }) {
   const s = useTranslations('SprintSpace');
   return (
-    <BlackBox>
+    <BlackBox isWhite={true}>
       <div className="flex flex-col w-full text-neutral-500 gap-5">
         <div className="flex flex-row font-bold text-sm justify-between">
           <div className="flex flex-row gap-2">
@@ -69,7 +69,7 @@ function RewardItem({ amount, text }: RewardProps) {
     <div className="flex flex-row w-full gap-2.5 text-[12px]/[12px] text-neutral-500">
       <span>+</span>
       <div className="flex flex-col gap-1">
-        <span className="text-foreground text-[15px]/[12px] font-medium">
+        <span className="text-text-primary text-[15px]/[12px] font-medium">
           {amount.toLocaleString()} P
         </span>
         <span>{text}</span>

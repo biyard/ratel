@@ -159,7 +159,7 @@ export function DiscussionRoom({
           <div className="text-sm text-neutral-400 light:text-[#737373] font-normal">
             {statusLabel}
           </div>
-          <div className="text-lg text-foreground font-bold">{title}</div>
+          <div className="text-lg text-text-primary font-bold">{title}</div>
           <div className="text-sm text-[#6d6d6d] light:text-[#737373] font-normal">
             {formattedDate}
           </div>

@@ -33,7 +33,7 @@ export const LoaderPopup = ({
         </div>
       </div>
 
-      <div className="justify-center text-center text-foreground font-bold text-base/6">
+      <div className="justify-center text-center text-text-primary font-bold text-base/6">
         {description}
       </div>
 

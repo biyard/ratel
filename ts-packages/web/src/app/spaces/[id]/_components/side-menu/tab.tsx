@@ -29,7 +29,7 @@ export default function TabMenu<T>({
             }}
           >
             {item.icon}
-            <div className="font-bold text-foreground text-sm">
+            <div className="font-bold text-text-primary text-sm">
               {item.label}
             </div>
           </button>

@@ -59,7 +59,7 @@ function ArtworkViewer({
   return (
     <div className="flex flex-col gap-4 border border-primary rounded p-4">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold flex flex-row gap-2 items-center text-foreground">
+        <h3 className="text-lg font-semibold flex flex-row gap-2 items-center text-text-primary">
           {artwork.title}
           {artwork.is_certified && <Certified />}
           {isTemporary && ' (Temporary)'}
@@ -96,7 +96,7 @@ function ArtworkViewer({
             />
           )}
           {!artwork.file.url && !showOriginal && (
-            <span className="w-full flex text-center text-foreground">
+            <span className="w-full flex text-center text-text-primary">
               No Thumbnail Available
             </span>
           )}
@@ -205,7 +205,7 @@ export default function Artworks({ spaceId }: { spaceId: number }) {
   return (
     <div className="flex flex-col gap-10">
       <div className="flex flex-row justify-between items-center">
-        <h2 className="text-xl font-bold text-foreground">
+        <h2 className="text-xl font-bold text-text-primary">
           Total Artworks :{' '}
           {(artworks.length + insertedArtworks.length).toLocaleString()}
         </h2>

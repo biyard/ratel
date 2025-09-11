@@ -25,7 +25,7 @@ export default function LinearScaleSelection({
         <div className="bg-input-box-bg border border-input-box-border rounded-md px-3 py-2 text-text-primary text-sm text-start min-w-20 ">
           {minValue}
         </div>
-        <span className="text-foreground text-sm">~</span>
+        <span className="text-text-primary text-sm">~</span>
         <div className="relative inline-block min-w-20">
           <Select
             value={maxValue}
