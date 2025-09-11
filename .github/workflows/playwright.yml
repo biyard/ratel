@@ -5,6 +5,8 @@ on:
     workflows: ["Dev deploy"]
     types:
       - completed
+    branches:
+      - dev
 
 jobs:
   test:
