@@ -1,3 +1,4 @@
+'use client';
 import React, { useCallback } from 'react';
 import SuggestionItem from './suggestions-items';
 import BlackBox from './black-box';
@@ -26,15 +27,15 @@ export default function HomeSuggestions({
     async (userId: number) => {
       try {
         await post(ratelApi.networks.follow(userId), followRequest());
-        showSuccessToast('Successfully followed user');
+        showSuccessToast(t('follow_success'));
         // Note: In the server-side approach, we might want to trigger a refresh
         // or update the local state differently
       } catch (err) {
-        showErrorToast('Failed to follow user');
+        showErrorToast(t('follow_failed'));
         logger.error('Failed to follow user:', err);
       }
     },
-    [post],
+    [post, t],
   );
 
   // Don't render if no suggestions
@@ -42,7 +43,6 @@ export default function HomeSuggestions({
     return null;
   }
 
-  // Take maximum 3 suggestions for display (matching original behavior)
   const displaySuggestions = suggestedUsers.slice(0, 3);
 
   return (

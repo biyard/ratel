@@ -1,8 +1,10 @@
+'use client';
 import { Col } from '@/components/ui/col';
 import { NewsSummary } from '@/lib/api/models/home';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import React from 'react';
+import DOMPurify from 'dompurify';
 
 interface HomeNewsProps {
   newsData: NewsSummary[];
@@ -39,9 +41,11 @@ export default function HomeNews({ newsData }: HomeNewsProps) {
             <div
               className="text-sm/[20px] align-middle font-light line-clamp-2 whitespace-normal text-card-meta"
               dangerouslySetInnerHTML={{
-                __html: item.html_content || '',
+                __html: DOMPurify.sanitize(item.html_content ?? '', {
+                  USE_PROFILES: { html: true },
+                }),
               }}
-            ></div>
+            />
           </Col>
         ))}
       </Col>
