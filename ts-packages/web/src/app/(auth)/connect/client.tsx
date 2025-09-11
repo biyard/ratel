@@ -27,14 +27,30 @@ function updateTelegramId(token: string) {
   );
 }
 
-export default function Client() {
-  const { redirectUrl, service, token } = useAuthStore();
+export default function Client({
+  redirectUrl,
+  service,
+  token,
+}: {
+  redirectUrl?: string;
+  service?: Service;
+  token?: string;
+}) {
+  const {
+    redirectUrl: prevRedirectUrl,
+    service: prevService,
+    token: prevToken,
+  } = useAuthStore();
 
   const t = useTranslations('Connect');
   const [isLoading, setIsLoading] = useState(false);
 
   const router = useRouter();
-  if (!service) {
+
+  const finalService = service ? service : prevService;
+  const finalRedirectUrl = redirectUrl ? redirectUrl : prevRedirectUrl;
+  const finalToken = token ? token : prevToken;
+  if (!finalService) {
     router.push(route.home());
     return null;
   }
@@ -42,15 +58,15 @@ export default function Client() {
   const handleConfirm = async () => {
     setIsLoading(true);
     try {
-      switch (service) {
+      switch (finalService) {
         case Service.Telegram:
-          if (!token) {
+          if (!finalToken) {
             throw new Error('Missing token for linking Telegram account');
           }
-          await updateTelegramId(token);
+          await updateTelegramId(finalToken);
           break;
       }
-      if (redirectUrl) {
+      if (finalRedirectUrl) {
         // const isIOSTelegramInAppBrowser =
         //   navigator.userAgent.includes('iPhone') &&
         //   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -69,7 +85,7 @@ export default function Client() {
           postEvent('web_app_close', {});
           window.close();
         } else {
-          window.open(redirectUrl, '_blank', 'noopener,noreferrer');
+          window.open(finalRedirectUrl, '_blank', 'noopener,noreferrer');
           setTimeout(() => {
             window.close();
           }, 100);
@@ -97,10 +113,10 @@ export default function Client() {
     <div className="flex flex-col items-center justify-center w-full max-w-md p-8 mx-auto mt-10 border rounded-lg shadow-lg">
       <TelegramIcon width={60} height={60} className="mb-4 text-blue-500" />
       <h1 className="text-2xl font-bold text-center mb-2">
-        {t('title', { service: service })}
+        {t('title', { service: finalService })}
       </h1>
       <p className="text-center text-gray-600 mb-8">
-        {t('description', { service: service })}
+        {t('description', { service: finalService })}
       </p>
 
       <div className="flex flex-col w-full gap-4">

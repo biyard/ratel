@@ -2,6 +2,7 @@ import { isLoggedIn } from '@/lib/auth';
 import { route } from '@/route';
 import { redirect } from 'next/navigation';
 import Client from './client';
+import { Service } from '../store';
 
 export default async function ConnectPage({
   searchParams,
@@ -9,7 +10,6 @@ export default async function ConnectPage({
   searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const isLogin = await isLoggedIn();
-  console.log('connect page isLogin', isLogin);
   const paramsObj = searchParams ? await searchParams : {};
   if (!isLogin) {
     let url;
@@ -30,5 +30,20 @@ export default async function ConnectPage({
     redirect(url);
   }
 
-  return <Client />;
+  const redirectUrl =
+    typeof paramsObj.redirectUrl === 'string'
+      ? paramsObj.redirectUrl
+      : undefined;
+
+  const serviceParam =
+    typeof paramsObj.service === 'string'
+      ? (paramsObj.service as Service)
+      : undefined;
+
+  const token =
+    typeof paramsObj.token === 'string' ? paramsObj.token : undefined;
+
+  return (
+    <Client redirectUrl={redirectUrl} service={serviceParam} token={token} />
+  );
 }
