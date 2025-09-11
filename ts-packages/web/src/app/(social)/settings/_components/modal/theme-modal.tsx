@@ -37,7 +37,7 @@ export default function ThemeModal({
               onPreview(opt.value);
               setSelectedTheme(opt.value);
             }}
-            className={`flex items-center justify-between px-5 py-4 text-left transition-colors rounded-[10px] light:bg-white
+            className={`flex items-center justify-between px-5 py-4 text-left rounded-[10px] light:bg-white
               ${selectedTheme === opt.value ? 'border border-neutral-400 light:border-primary light:bg-primary/10' : 'border-modal-card-border bg-modal-card-bg'}
              `}
           >
