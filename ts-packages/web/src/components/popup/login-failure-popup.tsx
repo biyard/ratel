@@ -31,7 +31,7 @@ export const LoginFailurePopup = ({
     <div id={id} className="w-100 max-mobile:!w-full gap-[35px] mt-[35px]">
       <div className="flex flex-col gap-[8px] mb-[8px]">
         <div
-          className="w-full flex flex-row pl-5 py-5.5 bg-component-bg border-[1px] rounded-[10px] justify-start items-center gap-4.25 cursor-pointer border-c-p-50"
+          className="w-full flex flex-row pl-5 py-5.5 bg-card-bg border border-neutral-100 light:border-card-border rounded-[10px] justify-start items-center gap-4.25 cursor-pointer border-c-p-50"
           onClick={onRetry}
         >
           {logoOrigin}

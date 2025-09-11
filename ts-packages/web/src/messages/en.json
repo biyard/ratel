@@ -28,7 +28,7 @@
   "Signup": {
     "signing_in": "Signing you in...",
     "welcome_title": "Welcome to Ratel!",
-    "welcome_description": "Policy is shaped by civic engagement—when we speak up, policymakers listen. Ratel gives you a platform to take action and shape crypto policy. Your voice matters, so make it heard and help secure a bright future for crypto.",
+    "welcome_description": "Policy is shaped by civic engagement—when we speak up, policymakers listen. \nRatel gives you a platform to take action and shape crypto policy. \nYour voice matters, so make it heard and help secure a bright future for crypto.",
     "failureMsg": "Failed to connect to {serviceName}.\nWould you like to try again?",
     "login_failed": "Login failed",
     "telegram_login_failed_description": "Telegram authentication failed",
