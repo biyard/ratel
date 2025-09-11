@@ -49,11 +49,11 @@ export default function MakePublicWithSavingModal({
 
   return (
     <div className="max-w-125 flex flex-col mt-6 gap-6">
-      <div className="text-center font-bold text-white text-[24px]">
+      <div className="text-center font-bold text-modal-label-text text-[24px]">
         {t('make_public_save_title')}
       </div>
 
-      <div className="text-center font-medium text-neutral-400 text-[16px]">
+      <div className="text-center font-medium text-desc-text text-[16px]">
         {t('unsaved_notice_line1')}
         <br />
         {t('unsaved_notice_line2')}
@@ -69,7 +69,7 @@ export default function MakePublicWithSavingModal({
         <Button
           variant="outline"
           onClick={makePublic}
-          className="flex-1/3 border-transparent"
+          className="flex-1/3 border-transparent bg-cancel-button-bg text-cancel-button-text hover:bg-hover"
         >
           {t('just_publish')}
         </Button>

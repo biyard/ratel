@@ -17,6 +17,7 @@
   --gray-80: #6b6b6b;
   --gray-100: #fafafa;
   --gray-400: #a1a1a1;
+  --gray-500: #737373;
   --gray-300: #d4d4d4;
   --gray-600: #525252;
   --gray-700: #404040;
@@ -122,7 +123,7 @@
   --color-button-border: #ffffff;
   --color-input-box-bg: #262626;
   --color-neutral-400: var(--foreground-muted);
-
+  --color-neutral-500: var(--gray-500);
   --color-neutral-600: var(--foreground-more-muted);
   --color-foreground: var(--foreground);
   --color-background: var(--background);
@@ -180,7 +181,6 @@
   --color-disable-button-white-text: #ffffff;
   --color-button-bg: #ffffff;
   --color-button-text: #18181b;
-  --color-neutral-500: #737373;
 
   --color-menu-text: #737373;
   --color-tab-label: #a1a1a1;
@@ -212,7 +212,6 @@
   --color-submit-button-text: #1d1d1d;
   --color-space-side-label: #737373;
   --color-c-wg-70: var(--ui-gray-70);
-  --color-neutral-500: #737373;
 }
 
 /* ----------------------------
@@ -327,7 +326,6 @@
   --color-select-date-bg: #f5f5f5;
   --color-select-date-border: #d4d4d4;
   --color-select-booster-bg: #fafafa;
-  --color-neutral-500: #737373;
 
   --color-label-color-bg: #fcb300;
   --color-label-color-border: #fcb300;
