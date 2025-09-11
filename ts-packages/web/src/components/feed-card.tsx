@@ -302,7 +302,7 @@ export function SpaceTag() {
 
 export function IndustryTag({ industry }: { industry: string }) {
   return (
-    <span className="rounded-sm border border-label-border bg-label-bg text-label-text px-2 text-xs/[25px] font-semibold align-middle uppercase">
+    <span className="rounded-sm border border-label-color-border-secondary bg-label-color-bg-secondary text-label-text px-2 text-xs/[25px] font-semibold align-middle uppercase">
       {industry}
     </span>
   );
