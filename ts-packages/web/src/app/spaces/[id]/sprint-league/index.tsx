@@ -5,7 +5,6 @@ import Header from '../_components/common-header';
 import { SSRHydration } from '@/lib/query-utils';
 import { SprintLeagueEditor } from './editor';
 import SpaceSideMenu from './_components/side-menu';
-import Base from './_components/konva';
 export default async function SprintLeaguePage({
   space_id,
 }: {
@@ -25,8 +24,7 @@ export default async function SprintLeaguePage({
       <div className="flex flex-row w-full gap-5">
         <div className="flex flex-col w-full min-h-full gap-6.25">
           <Header />
-          <Base />
-          {/* <SprintLeagueEditor spaceId={space_id} /> */}
+          <SprintLeagueEditor spaceId={space_id} />
         </div>
         <SpaceSideMenu spaceId={space_id} />
       </div>

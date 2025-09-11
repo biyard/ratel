@@ -1,22 +1,18 @@
 'use client';
 
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect } from 'react';
 import {
   useEditCoordinatorStore,
   type CommonEditableData,
 } from '../space-store';
 import { useSprintLeagueStore } from './sprint-league-store';
-import useSpaceById, {
-  useShareSpace,
-  useUpdateSpace,
-} from '@/hooks/use-space-by-id';
+import useSpaceById, { useUpdateSpace } from '@/hooks/use-space-by-id';
 import { useSprintLeagueSpaceByIdMutation } from '@/hooks/use-sprint-league-by-id';
 import { SpaceStatus, spaceUpdateRequest } from '@/lib/api/models/spaces';
 import SpaceContents from '../_components/space-contents';
 import PlayerEdit from './_components/player';
-import SprintLeagueGame, {
-  Status as GameStatus,
-} from './_components/animation';
+
+import SprintLeagueGame, { Status as GameStatus } from './_components/konva';
 
 export function SprintLeagueEditor({ spaceId }: { spaceId: number }) {
   const { isEdit, setPageSaveHandler, updateCommonData } =
@@ -32,8 +28,6 @@ export function SprintLeagueEditor({ spaceId }: { spaceId: number }) {
     votePlayer: { mutateAsync: votePlayerMutateAsync },
     updatePlayer: { mutateAsync: updatePlayerMutateAsync },
   } = useSprintLeagueSpaceByIdMutation(spaceId);
-
-  const { mutateAsync: shareSpaceMutateAsync } = useShareSpace(space.id);
 
   const storedPlayers = useSprintLeagueStore((state) => state.players);
   const saveHandler = useCallback(
@@ -108,10 +102,6 @@ export function SprintLeagueEditor({ spaceId }: { spaceId: number }) {
     }
   }, [isEdit, setPageSaveHandler, saveHandler]);
 
-  const handleRepost = async () => {
-    await shareSpaceMutateAsync();
-  };
-
   const handleVote = async (playerId: number) => {
     await votePlayerMutateAsync({
       playerId,
@@ -119,7 +109,6 @@ export function SprintLeagueEditor({ spaceId }: { spaceId: number }) {
     });
   };
 
-  const ref = useRef<HTMLDivElement | null>(null);
   return (
     <>
       <SpaceContents
@@ -131,23 +120,18 @@ export function SprintLeagueEditor({ spaceId }: { spaceId: number }) {
       />
 
       <div className="w-full h-full flex justify-center top-0 left-0 bg-black max-mobile:absolute max-mobile:overflow-hidden max-mobile:h-100vh max-mobile:w-100vw">
-        <div
-          ref={ref}
-          className="min-w-[360px] max-w-[1080px] h-auto aspect-[36/64]"
-        >
+        <div className="min-w-[360px] max-w-[1080px] h-auto aspect-[36/64]">
           <SprintLeagueGame
-            ref={ref}
-            disabled={isDraft}
-            initStatus={
+            initialStatus={
               space.status === SpaceStatus.Finish
                 ? GameStatus.GAME_END
                 : sprintLeague?.is_voted
                   ? GameStatus.AFTER_VOTE
-                  : GameStatus.BEFORE_VOTE
+                  : GameStatus.BEFORE_START
             }
             players={Object.values(storedPlayers)}
             onVote={handleVote}
-            onRepost={handleRepost}
+            disabled={isDraft}
           />
         </div>
       </div>
