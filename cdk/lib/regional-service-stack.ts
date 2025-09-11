@@ -50,7 +50,7 @@ export class RegionalServiceStack extends Stack {
     const baseDomain = "ratel.foundation";
 
     // 1) VPC across 2+ AZs
-    const vpc = new ec2.Vpc(this, "Vpc", { maxAzs: 2, natGateways: 1 });
+    const vpc = ec2.Vpc.fromLookup(this, "Vpc", { isDefault: true });
 
     // 2) ECS Cluster
     const cluster = new ecs.Cluster(this, "Cluster", { vpc });
