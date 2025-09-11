@@ -27,7 +27,6 @@ export function PollSurveyPage({ space }: { space: Space }) {
           handleSend={async () => {
             await mutateAsync({
               spaceId: space.id,
-              surveyId: space.surveys?.[0]?.id,
               questions: survey.surveys[0].questions,
               answer,
             });

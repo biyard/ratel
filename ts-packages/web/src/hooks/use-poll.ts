@@ -11,7 +11,6 @@ import { showErrorToast, showSuccessToast } from '@/lib/toast';
 
 export async function responseAnswer(
   spaceId: number,
-  surveyId: number,
   answers: Answer[],
 ): Promise<void> {
   await apiFetch(
@@ -21,7 +20,7 @@ export async function responseAnswer(
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(surveyResponseCreateRequest(answers, 1, surveyId)),
+      body: JSON.stringify(surveyResponseCreateRequest(answers, 1)),
     },
   );
 }
@@ -32,7 +31,6 @@ export function usePollMutation() {
   const mutation = useMutation({
     mutationFn: async ({
       spaceId,
-      surveyId,
       questions,
       answer,
     }: {
@@ -58,7 +56,7 @@ export function usePollMutation() {
         };
       });
 
-      await responseAnswer(spaceId, surveyId, processedAnswers);
+      await responseAnswer(spaceId, processedAnswers);
       return spaceId;
     },
     onSuccess: (spaceId) => {
