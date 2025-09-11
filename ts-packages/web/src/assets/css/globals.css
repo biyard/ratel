@@ -537,19 +537,19 @@ a {
    ========================================================================== */
 @layer utilities {
   /* Text colors */
-  .text-foreground {
+  .text-text-primary {
     color: var(--foreground);
   }
-  .text-foreground-muted {
+  .text-text-primary-muted {
     color: var(--foreground-muted);
   }
-  .text-foreground-more-muted {
+  .text-text-primary-more-muted {
     color: var(--foreground-more-muted);
   }
   .text-popover-foreground {
     color: var(--popover-foreground);
   }
-  .text-foreground-inverted {
+  .text-text-primary-inverted {
     color: var(--foreground-inverted);
   }
   .text-card-meta {

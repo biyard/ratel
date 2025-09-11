@@ -57,7 +57,7 @@ export default function DeleteSpacePopup({
           type="text"
           value={inputValue}
           onChange={handleInputChange}
-          className="w-full p-3 bg-input-box-bg border border-input-box-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+          className="w-full p-3 bg-input-box-bg border border-input-box-border rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-primary"
           placeholder={t('delete_placeholder', { spaceName })}
         />
       </div>

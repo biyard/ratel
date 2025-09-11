@@ -27,7 +27,7 @@ export default function UserSidemenu() {
       <ProfileSection />
 
       {/* Navigation */}
-      <nav className="py-5 px-3 w-full rounded-[10px] bg-card-bg border border-card-border text-foreground">
+      <nav className="py-5 px-3 w-full rounded-[10px] bg-card-bg border border-card-border text-text-primary">
         <Link
           href={route.myPosts()}
           className="sidemenu-link text-text-primary"

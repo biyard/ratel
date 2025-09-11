@@ -61,7 +61,7 @@ export default function MyFollower({ type }: { type: RelationType }) {
           <ArrowLeft width={24} height={24} />
         </div>
 
-        <div className="font-semibold text-foreground text-[20px]">
+        <div className="font-semibold text-text-primary text-[20px]">
           My Network
         </div>
       </div>
@@ -176,7 +176,7 @@ function FollowingInfo({
                   )}
 
                   <div className="flex flex-col">
-                    <div className="font-semibold text-foreground text-sm/[20px]">
+                    <div className="font-semibold text-text-primary text-sm/[20px]">
                       {user.nickname}
                     </div>
                     <div className="font-medium text-neutral-500 text-[12px]">
@@ -204,7 +204,7 @@ function FollowingInfo({
 
               <div
                 id="user-profile-description"
-                className="font-medium text-[12px] text-neutral-300 light:text-foreground"
+                className="font-medium text-[12px] text-neutral-300 light:text-text-primary"
                 dangerouslySetInnerHTML={{ __html: user.html_contents }}
               />
             </div>
@@ -262,7 +262,7 @@ function SelectedType({
   return (
     <div className="flex flex-row w-full justify-center items-center">
       <div
-        className={`cursor-pointer flex flex-col w-[180px] h-[35px] justify-start items-center text-foreground text-base ${
+        className={`cursor-pointer flex flex-col w-[180px] h-[35px] justify-start items-center text-text-primary text-base ${
           selectedType === FollowTab.FOLLOWERS
             ? 'border-b border-b-neutral-500 font-semibold'
             : 'border-none font-normal'
@@ -272,7 +272,7 @@ function SelectedType({
         {FollowTab.FOLLOWERS}
       </div>
       <div
-        className={`cursor-pointer flex flex-col w-[180px] h-[35px] justify-start items-center  text-foreground text-base ${
+        className={`cursor-pointer flex flex-col w-[180px] h-[35px] justify-start items-center  text-text-primary text-base ${
           selectedType === FollowTab.FOLLOWINGS
             ? 'border-b border-b-neutral-500 font-semibold'
             : 'border-none font-normal'

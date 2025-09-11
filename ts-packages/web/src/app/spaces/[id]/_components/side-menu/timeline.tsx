@@ -20,7 +20,7 @@ export default function TimelineMenu({
   const s = useTranslations('SprintSpace');
   const sortedItems = [...items].sort((a, b) => a.time - b.time);
   return (
-    <BlackBox>
+    <BlackBox isWhite={true}>
       <div className="flex flex-col w-full text-neutral-500 gap-5">
         <div className="flex flex-row font-bold text-sm justify-between">
           <div className="flex flex-row gap-2">
@@ -41,10 +41,10 @@ export default function TimelineMenu({
         <div className="flex flex-col pl-3.25 gap-5">
           {sortedItems.map((item) => (
             <div
-              className="flex flex-col gap-1 text-foreground"
+              className="flex flex-col gap-1 text-text-primary"
               key={item.label}
             >
-              <div className="font-medium text-foreground text-[15px]/[12px]">
+              <div className="font-medium text-text-primary text-[15px]/[12px]">
                 {item.label}
               </div>
               <div className="font-medium text-neutral-80 text-xs/[12px]">

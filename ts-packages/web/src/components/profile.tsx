@@ -69,7 +69,7 @@ export default function Profile({ profileUrl, name }: ProfileProps) {
         align="end"
         className="w-[250px] h-fit rounded-lg border border-primary bg-background p-[10px] bg-bg z-999"
       >
-        <DropdownMenuLabel className="text-xs text-foreground-muted px-2 py-1">
+        <DropdownMenuLabel className="text-xs text-text-primary-muted px-2 py-1">
           {t('teams')}
         </DropdownMenuLabel>
 
@@ -103,7 +103,7 @@ export default function Profile({ profileUrl, name }: ProfileProps) {
                 ) : (
                   <div className="w-6 h-6 bg-neutral-600 rounded-full" />
                 )}
-                <span className="text-sm text-foreground-muted truncate">
+                <span className="text-sm text-text-primary-muted truncate">
                   {team.nickname}
                 </span>
               </Link>
@@ -119,7 +119,7 @@ export default function Profile({ profileUrl, name }: ProfileProps) {
               logger.debug('Create team clicked');
               popup.open(<TeamCreationPopup />).withTitle('Create a new team');
             }}
-            className="w-full px-2 py-1.5 hover:bg-hover rounded-md text-sm text-foreground-muted cursor-pointer focus-visible:outline-none"
+            className="w-full px-2 py-1.5 hover:bg-hover rounded-md text-sm text-text-primary-muted cursor-pointer focus-visible:outline-none"
           >
             <span>{t('create_team')}</span>
           </DropdownMenuItem>
@@ -129,7 +129,7 @@ export default function Profile({ profileUrl, name }: ProfileProps) {
               logout();
               userInfo.refetch();
             }}
-            className="w-full px-2 py-1.5 hover:bg-hover rounded-md text-sm text-foreground-muted cursor-pointer focus-visible:outline-none"
+            className="w-full px-2 py-1.5 hover:bg-hover rounded-md text-sm text-text-primary-muted cursor-pointer focus-visible:outline-none"
           >
             <span>{t('logout')}</span>
           </DropdownMenuItem>

@@ -54,7 +54,7 @@ function CardItem({
     >
       <div className="size-8 [&>svg]:size-8">{data.Icon}</div>
       <div className="flex flex-col flex-1 gap-1">
-        <span className="font-bold text-[15px]/[20px] text-foreground svg">
+        <span className="font-bold text-[15px]/[20px] text-text-primary svg">
           {data.label}
         </span>
         <span className="font-normal text-[15px]/6 min-h-12 text-neutral-400 light:text-[#525252] line-clamp-2">

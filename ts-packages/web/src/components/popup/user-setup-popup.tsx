@@ -209,7 +209,7 @@ const UserSetupPopup = ({
               {email === '' && (
                 <Button
                   variant={'rounded_secondary'}
-                  className="rounded-sm border border-transparent light:border-neutral-300 light:text-foreground"
+                  className="rounded-sm border border-transparent light:border-neutral-300 light:text-text-primary"
                   onClick={handleSendCode}
                 >
                   {t('send')}
@@ -222,7 +222,7 @@ const UserSetupPopup = ({
               aria-hidden={!sentCode || isValidEmail}
             >
               <input
-                className="bg-input-box-bg border border-input-box-border w-full outline-none px-5 h-11 text-foreground text-base placeholder-gray-500 font-medium rounded-lg"
+                className="bg-input-box-bg border border-input-box-border w-full outline-none px-5 h-11 text-text-primary text-base placeholder-gray-500 font-medium rounded-lg"
                 value={authCode}
                 onChange={(e) => {
                   setAuthCode(e.target.value);
@@ -230,7 +230,7 @@ const UserSetupPopup = ({
               />
               <Button
                 variant={'rounded_secondary'}
-                className="rounded-sm border border-transparent light:border-neutral-300 light:text-foreground"
+                className="rounded-sm border border-transparent light:border-neutral-300 light:text-text-primary"
                 onClick={handleVerify}
               >
                 {t('verify')}
@@ -245,7 +245,7 @@ const UserSetupPopup = ({
                 </span>
               </div>
               <input
-                className="bg-input-box-bg border border-input-box-border w-full outline-none px-5 h-11 text-foreground text-base placeholder-gray-500 font-medium rounded-lg"
+                className="bg-input-box-bg border border-input-box-border w-full outline-none px-5 h-11 text-text-primary text-base placeholder-gray-500 font-medium rounded-lg"
                 type="password"
                 name="password"
                 aria-label="password"
@@ -377,7 +377,7 @@ const LabeledInput = ({
     <div className="text-c-cg-30 font-bold text-base/7">{labelName}</div>
     <input
       type="text"
-      className="bg-input-box-bg border border-input-box-border w-full outline-none px-5 text-foreground text-base placeholder-gray-500 font-medium rounded-lg"
+      className="bg-input-box-bg border border-input-box-border w-full outline-none px-5 text-text-primary text-base placeholder-gray-500 font-medium rounded-lg"
       style={{ height: 50 }}
       placeholder={placeholder}
       aria-label={labelName}

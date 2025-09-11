@@ -118,7 +118,7 @@ function FollowingContents({
 }) {
   return (
     <div className="flex flex-col w-full rounded-lg bg-card-bg border border-card-border px-4 py-5 gap-2.5">
-      <div className="font-semibold text-foreground text-base/[20px]">
+      <div className="font-semibold text-text-primary text-base/[20px]">
         {label}
       </div>
       <div className="flex flex-col">

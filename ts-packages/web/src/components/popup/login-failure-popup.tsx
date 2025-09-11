@@ -36,7 +36,7 @@ export const LoginFailurePopup = ({
         >
           {logoOrigin}
           <div className="flex flex-col gap-[3px]">
-            <span className="text-foreground text-base/4.75 font-semibold">
+            <span className="text-text-primary text-base/4.75 font-semibold">
               {msg}
             </span>
           </div>
