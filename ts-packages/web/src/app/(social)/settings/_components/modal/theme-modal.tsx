@@ -6,12 +6,14 @@ import CheckCircle from '@/assets/icons/check-circle.svg';
 export interface ThemeModalProps {
   onCancel: () => void;
   onSave: (theme: 'dark' | 'light' | 'system') => void;
+  onPreview: (theme: 'dark' | 'light' | 'system') => void;
   initialTheme?: 'dark' | 'light' | 'system';
 }
 
 export default function ThemeModal({
   onCancel,
   onSave,
+  onPreview,
   initialTheme = 'dark',
 }: ThemeModalProps) {
   const [selectedTheme, setSelectedTheme] = useState<
@@ -31,12 +33,15 @@ export default function ThemeModal({
         {options.map((opt) => (
           <button
             key={opt.value}
-            onClick={() => setSelectedTheme(opt.value)}
-            className={`flex items-center justify-between px-5 py-4 text-left transition-colors rounded-[10px] bg-card-foreground-more-muted
-              ${selectedTheme === opt.value ? 'border border-neutral-400' : 'border border-0 '}
+            onClick={() => {
+              onPreview(opt.value);
+              setSelectedTheme(opt.value);
+            }}
+            className={`flex items-center justify-between px-5 py-4 text-left transition-colors rounded-[10px] light:bg-white
+              ${selectedTheme === opt.value ? 'border border-neutral-400 light:border-primary light:bg-primary/10' : 'border-modal-card-border bg-modal-card-bg'}
              `}
           >
-            <span className="text-foreground">{opt.label}</span>
+            <span className="text-text-primary">{opt.label}</span>
             {selectedTheme === opt.value && (
               <CheckCircle className="h-5 w-5 [&>circle]:hidden [&>path]:stroke-primary" />
             )}
@@ -48,13 +53,13 @@ export default function ThemeModal({
       <div className="flex flex-row justify-end gap-4 mt-4">
         <button
           onClick={onCancel}
-          className="px-10 py-[14.5px] bg-transparent font-bold text-base text-foreground-muted hover:text-foreground transition-colors"
+          className="px-10 py-[14.5px] bg-cancel-button-bg font-bold text-base text-cancel-button-text hover:text-cancel-button-text/80 transition-colors"
         >
           Cancel
         </button>
         <button
           onClick={() => onSave(selectedTheme)}
-          className="w-full py-[14.5px] font-bold text-base text-popover-foreground rounded-[10px] bg-primary"
+          className="w-full py-[14.5px] font-bold text-base text-submit-button-text rounded-[10px] bg-submit-button-bg hover:bg-submit-button-bg/80"
         >
           Save
         </button>

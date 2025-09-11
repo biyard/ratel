@@ -40,7 +40,7 @@ export default function SetSchedulePopup({
 
   return (
     <div className="w-full max-w-[900px] bg-[var(--color-background)] p-8 rounded-2xl">
-      <div className="text-2xl font-bold text-white mb-6">
+      <div className="text-2xl font-bold text-text-primary mb-6">
         {t('set_notice_schedule')}
       </div>
 
@@ -80,12 +80,12 @@ export default function SetSchedulePopup({
               }}
             />
 
-            <div className="flex flex-row items-center w-fit border border-c-wg-70 rounded-lg px-5 py-[10.5px] gap-2.5">
+            <div className="flex flex-row items-center w-fit border border-[#525252] bg-create-space-bg light:border-create-space-border rounded-lg px-5 py-[10.5px] gap-2.5 mt-2 sm:mt-0">
               <div className="font-medium text-[15px]/[22.5px] text-neutral-600">
                 Pacific Time
               </div>
               <Internet
-                className="w-5 h-5 [&>path]:stroke-neutral-500 [&>circle]:stroke-neutral-500"
+                className="w-5 h-5 [&>path]:stroke-neutral-600 [&>circle]:stroke-neutral-600"
                 width="20"
                 height="20"
               />

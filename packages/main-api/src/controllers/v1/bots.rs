@@ -100,6 +100,7 @@ impl BotController {
                 username,
                 "".to_string(),
                 user.membership,
+                None,
                 generate_referral_code(),
                 None,
                 None,

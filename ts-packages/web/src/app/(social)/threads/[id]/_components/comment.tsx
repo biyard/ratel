@@ -47,11 +47,11 @@ export default function ThreadComment({ post_id }: { post_id: number }) {
   return (
     <>
       <div className="flex flex-col gap-2.5">
-        <div className="flex flex-row text-white gap-2 ">
+        <div className="flex flex-row text-text-primary gap-2 ">
           <CommentIcon
             width={24}
             height={24}
-            className="[&>path]:stroke-white [&>line]:stroke-white"
+            className="[&>path]:stroke-text-primary [&>line]:stroke-text-primary"
           />
           <span className="text-base/6 font-medium">
             {(feed?.comments ?? 0).toLocaleString()}{' '}
@@ -63,14 +63,14 @@ export default function ThreadComment({ post_id }: { post_id: number }) {
             {!expand && (
               <button
                 onClick={() => setExpand(true)}
-                className="flex flex-row w-full px-3.5 py-2 gap-2 bg-neutral-800 border border-neutral-700 items-center rounded-lg"
+                className="flex flex-row w-full px-3.5 py-2 gap-2 bg-write-comment-box-bg border border-write-comment-box-border items-center rounded-lg"
               >
                 <CommentIcon
                   width={24}
                   height={24}
-                  className="[&>path]:stroke-neutral-500"
+                  className="[&>path]:stroke-write-comment-box-icon"
                 />
-                <span className="text-neutral-500 text-[15px]/[24px] font-medium">
+                <span className="text-write-comment-box-text text-[15px]/[24px] font-medium">
                   {t('share_your_thoughts')}
                 </span>
               </button>
