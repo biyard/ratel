@@ -1,6 +1,5 @@
 'use client';
 
-import BlackBox from '@/app/(social)/_components/black-box';
 import FileUploaderMetadata from '@/components/file-uploader-metadata';
 import { FileInfo } from '@/lib/api/models/feeds';
 import { checkString } from '@/lib/string-filter-utils';
@@ -11,6 +10,7 @@ import { downloadPdfFromUrl } from '@/lib/pdf-utils';
 import { CircleClose } from '@/components/icons';
 import { useDeliberationSpaceContext } from '../provider.client';
 import { useTranslations } from 'next-intl';
+import BorderSpaceCard from '@/app/(social)/_components/border-space-card';
 
 export default function SpaceElearning() {
   const t = useTranslations('DeliberationSpace');
@@ -26,7 +26,7 @@ export default function SpaceElearning() {
   };
 
   return (
-    <BlackBox isWhite={true}>
+    <BorderSpaceCard>
       <div className="flex flex-col w-full gap-5">
         <div className="flex flex-row w-full justify-between items-start ">
           <div className="font-bold text-text-primary text-[15px]/[20px]">
@@ -102,7 +102,7 @@ export default function SpaceElearning() {
           </div>
         )}
       </div>
-    </BlackBox>
+    </BorderSpaceCard>
   );
 }
 

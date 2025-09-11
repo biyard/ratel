@@ -1,5 +1,4 @@
 import React from 'react';
-import BlackBox from '@/app/(social)/_components/black-box';
 import { Answer } from '@/lib/api/models/response';
 import { usePopup } from '@/lib/contexts/popup-service';
 import CheckPopup from './check-popup';
@@ -12,6 +11,7 @@ import LinearScaleViewer from './_component/viewer/linear-scale-viewer';
 import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { Poll, SurveyAnswer } from '../../type';
 import { useTranslations } from 'next-intl';
+import BorderSpaceCard from '@/app/(social)/_components/border-space-card';
 
 interface Question {
   title: string;
@@ -168,7 +168,7 @@ export default function SurveyViewer({
         }
 
         return (
-          <BlackBox key={index} isWhite={true}>
+          <BorderSpaceCard key={index}>
             <div className="flex flex-col w-full gap-2.5">
               {(q.answer_type === 'single_choice' ||
                 q.answer_type === 'multiple_choice' ||
@@ -229,7 +229,7 @@ export default function SurveyViewer({
                 />
               )}
             </div>
-          </BlackBox>
+          </BorderSpaceCard>
         );
       })}
 

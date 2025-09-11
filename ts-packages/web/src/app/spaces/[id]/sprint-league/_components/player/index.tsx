@@ -1,6 +1,5 @@
 'use client';
 
-import BlackBox from '@/app/(social)/_components/black-box';
 import Image from 'next/image';
 import unknown from '@/assets/images/unknown.png';
 import { Button } from '@/components/ui/button';
@@ -15,6 +14,7 @@ import IsolatedCharacter from '../animation/isolated-character';
 import { pixiAssetManager } from '../animation/assets';
 import { useEffect } from 'react';
 import { useTranslations } from 'next-intl';
+import BorderSpaceCard from '@/app/(social)/_components/border-space-card';
 
 export const BasePlayerImages: PlayerImages[] = [
   {
@@ -109,7 +109,7 @@ export default function PlayerEdit({ isEdit }: { isEdit: boolean }) {
   }, [storePlayers]);
 
   return (
-    <BlackBox>
+    <BorderSpaceCard>
       <div className="w-full flex flex-col gap-8">
         <div className="font-bold text-white text-[15px]/[20px]">
           {t('sprint_players')}
@@ -166,7 +166,7 @@ export default function PlayerEdit({ isEdit }: { isEdit: boolean }) {
           ))}
         </div>
       </div>
-    </BlackBox>
+    </BorderSpaceCard>
   );
 }
 function PlayerSelector({
