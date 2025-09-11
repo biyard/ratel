@@ -97,10 +97,11 @@ function FollowButton({
       className={`cursor-pointer flex flex-row w-fit h-fit px-[10px] py-[5px] border rounded-[50px]
       ${
         isFollowing
-          ? 'bg-gray-200 border-gray-300'
+          ? 'bg-gray-200 border-gray-300 pointer-events-none opacity-70'
           : 'bg-white border-white hover:bg-gray-300'
       }`}
-      onClick={onClick}
+      onClick={isFollowing ? undefined : onClick}
+      aria-disabled={isFollowing}
     >
       {!isFollowing && (
         <Add className="w-[15px] h-[15px] [&>path]:stroke-[#000203]" />
@@ -124,11 +125,12 @@ function FollowingContents({
   const [followedUsers, setFollowedUsers] = useState<number[]>([]);
 
   const handleFollowClick = async (userId: number) => {
+    if (followedUsers.includes(userId)) return;
     try {
       await follow(userId);
       setFollowedUsers((prev) => [...prev, userId]);
     } catch (err) {
-      console.log(err);
+      logger.error('follow failed', err);
     }
   };
 
