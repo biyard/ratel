@@ -130,7 +130,7 @@ export function SprintLeagueEditor({ spaceId }: { spaceId: number }) {
         }
       />
 
-      <div className="w-full h-full flex justify-center items-center top-0 left-0 bg-bg max-mobile:absolute max-mobile:overflow-hidden max-mobile:h-100vh max-mobile:w-100vw">
+      <div className="w-full h-full flex justify-center top-0 left-0 bg-black max-mobile:absolute max-mobile:overflow-hidden max-mobile:h-100vh max-mobile:w-100vw">
         <div
           ref={ref}
           className="min-w-[360px] max-w-[1080px] h-auto aspect-[36/64]"
