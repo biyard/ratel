@@ -28,7 +28,7 @@
   "Signup": {
     "signing_in": "Signing you in...",
     "welcome_title": "Welcome to Ratel!",
-    "welcome_description": "Policy is shaped by civic engagement—when we speak up, policymakers listen. Ratel gives you a platform to take action and shape crypto policy. Your voice matters, so make it heard and help secure a bright future for crypto.",
+    "welcome_description": "Policy is shaped by civic engagement—when we speak up, policymakers listen. \nRatel gives you a platform to take action and shape crypto policy. \nYour voice matters, so make it heard and help secure a bright future for crypto.",
     "failureMsg": "Failed to connect to {serviceName}.\nWould you like to try again?",
     "login_failed": "Login failed",
     "telegram_login_failed_description": "Telegram authentication failed",
@@ -472,7 +472,11 @@
     "more_option_required": "questions must have at least two options.",
     "fill_label_required": "Please fill in the labels for the linear scale.",
     "success_update_space": "Space has been updated successfully.",
-    "failed_update_space": "Failed to update the space. Please try again."
+    "failed_update_space": "Failed to update the space. Please try again.",
+
+    "check_title": "Please check again before voting.",
+    "check_desc": "For the integrity and security of the vote, all submissions are anonymous and final. Votes cannot be changed once cast, and we appreciate your understanding in ensuring reliable results.",
+    "cancel": "cancel"
   },
   "Space": {
     "unsupported_space_type": "Unsupported space type",

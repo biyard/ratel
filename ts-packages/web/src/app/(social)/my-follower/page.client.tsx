@@ -58,10 +58,16 @@ export default function MyFollower({ type }: { type: RelationType }) {
             router.back();
           }}
         >
-          <ArrowLeft width={24} height={24} />
+          <ArrowLeft
+            width={24}
+            height={24}
+            className="[&>path]:stroke-text-primary"
+          />
         </div>
 
-        <div className="font-semibold text-white text-[20px]">My Network</div>
+        <div className="font-semibold text-text-primary text-[20px]">
+          My Network
+        </div>
       </div>
 
       <SelectedType
@@ -139,13 +145,13 @@ function FollowingInfo({
   followings?: number[];
 }) {
   return (
-    <div className="flex flex-col w-full rounded-lg bg-[#191919] px-4 py-5 gap-2.5">
+    <div className="flex flex-col w-full rounded-lg bg-card-bg border border-card-border px-4 py-5 gap-2.5">
       {users.length != 0 ? (
         <div className="flex flex-col">
           {users.map((user, index) => (
             <div
               key={user.id}
-              className="flex flex-col w-full gap-[5px] px-2.5 py-5 border-b border-b-neutral-800"
+              className="flex flex-col w-full gap-[5px] px-2.5 py-5 border-b border-b-neutral-800 light:border-b-[#e5e5e5]"
             >
               <div className="flex flex-row w-full justify-between items-start">
                 <div className="flex flex-row w-fit gap-2">
@@ -174,7 +180,7 @@ function FollowingInfo({
                   )}
 
                   <div className="flex flex-col">
-                    <div className="font-semibold text-white text-sm/[20px]">
+                    <div className="font-semibold text-text-primary text-sm/[20px]">
                       {user.nickname}
                     </div>
                     <div className="font-medium text-neutral-500 text-[12px]">
@@ -202,7 +208,7 @@ function FollowingInfo({
 
               <div
                 id="user-profile-description"
-                className="font-medium text-[12px] text-neutral-300"
+                className="font-medium text-[12px] text-neutral-300 light:text-text-primary"
                 dangerouslySetInnerHTML={{ __html: user.html_contents }}
               />
             </div>
@@ -220,12 +226,12 @@ function FollowingInfo({
 function FollowButton({ onClick }: { onClick: () => void }) {
   return (
     <div
-      className="cursor-pointer flex flex-row w-fit h-fit px-[10px] py-[5px] bg-white hover:bg-gray-300 rounded-[50px]"
+      className="cursor-pointer flex flex-row w-fit h-fit px-[10px] py-[5px] border border-white bg-white hover:bg-gray-300 light:bg-transparent light:border-[#000203] rounded-[50px]"
       onClick={() => {
         onClick();
       }}
     >
-      <Add className="w-[15px] h-[15px]" />
+      <Add className="w-[15px] h-[15px] [&>path]:stroke-[#000203]" />
       <div className="font-bold text-[#000203] text-xs">Follow</div>
     </div>
   );
@@ -260,7 +266,7 @@ function SelectedType({
   return (
     <div className="flex flex-row w-full justify-center items-center">
       <div
-        className={`cursor-pointer flex flex-col w-[180px] h-[35px] justify-start items-center text-white text-base ${
+        className={`cursor-pointer flex flex-col w-[180px] h-[35px] justify-start items-center text-text-primary text-base ${
           selectedType === FollowTab.FOLLOWERS
             ? 'border-b border-b-neutral-500 font-semibold'
             : 'border-none font-normal'
@@ -270,7 +276,7 @@ function SelectedType({
         {FollowTab.FOLLOWERS}
       </div>
       <div
-        className={`cursor-pointer flex flex-col w-[180px] h-[35px] justify-start items-center  text-white text-base ${
+        className={`cursor-pointer flex flex-col w-[180px] h-[35px] justify-start items-center  text-text-primary text-base ${
           selectedType === FollowTab.FOLLOWINGS
             ? 'border-b border-b-neutral-500 font-semibold'
             : 'border-none font-normal'

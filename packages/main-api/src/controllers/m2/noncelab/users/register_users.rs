@@ -69,6 +69,7 @@ pub async fn register_users_by_noncelab_handler(
             "".to_string(),
             "".to_string(),
             Membership::Free,
+            None,
             "".to_string(),
             Some(req.phone_number),
             None,
