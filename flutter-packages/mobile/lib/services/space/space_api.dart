@@ -148,6 +148,7 @@ class SpaceApi extends GetConnect {
         feedId: 0,
         title: "",
         htmlContents: "",
+        spaceType: 0,
         files: [],
         discussions: [],
         elearnings: [],
@@ -157,7 +158,7 @@ class SpaceApi extends GetConnect {
       );
     }
 
-    logger.d("space info: ${res.body["user_responses"]}");
+    logger.d("space info: ${res.body}");
     final item = res.body;
 
     final List<FileModel> files = [];
@@ -257,11 +258,14 @@ class SpaceApi extends GetConnect {
       );
     }
 
+    logger.d("space type: ${item["space_type"]}");
+
     return SpaceModel(
       id: int.parse(item["id"].toString()),
       feedId: int.parse(item["feed_id"].toString()),
       title: item["title"] ?? "",
       htmlContents: item["html_contents"] ?? "",
+      spaceType: item["space_type"] ?? 0,
       files: files,
       discussions: discussions,
       elearnings: elearnings,
