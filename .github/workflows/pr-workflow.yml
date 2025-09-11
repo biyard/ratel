@@ -3,6 +3,7 @@ name: PR Testing
 on:
   pull_request:
     types: [opened, synchronize, reopened]
+    branches: [ dev ]
 
 env:
   CARGO_TERM_COLOR: always
