@@ -4,6 +4,7 @@ pub mod controllers {
     pub mod v1;
     pub mod v2 {
         pub mod users {
+            pub mod connect_telegram;
             pub mod find_user;
             pub mod logout;
         }
@@ -93,6 +94,11 @@ pub mod controllers {
             pub mod oauth_authorization_server;
             pub mod register;
             pub mod token;
+        }
+
+        pub mod telegram {
+            pub mod get_telegram_info;
+            pub mod verify_telegram_raw;
         }
     }
     pub mod m2 {

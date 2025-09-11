@@ -3,7 +3,7 @@ mod verification;
 use crate::by_axum::axum::extract::Path;
 use crate::by_axum::axum::routing::post;
 use crate::utils::referal_code::generate_referral_code;
-use crate::utils::telegram::validate_telegram_raw;
+use crate::utils::telegram::parse_telegram_raw;
 use base64::{Engine as _, engine::general_purpose};
 use bdk::prelude::*;
 use by_axum::auth::Authorization;
@@ -208,12 +208,10 @@ impl UserControllerV1 {
             .decode(req.telegram_raw.as_ref().unwrap())
             .map_err(|_| Error::BadRequest)?;
         let decoded_string = String::from_utf8(raw).map_err(|_| Error::BadRequest)?;
-        let telegram_id = validate_telegram_raw(&Some(decoded_string));
-        if telegram_id.is_none() {
-            return Err(Error::Unauthorized);
-        }
+        let telegram_user = parse_telegram_raw(decoded_string)?;
+
         let user = User::query_builder()
-            .telegram_id_equals(telegram_id.unwrap())
+            .telegram_id_equals(telegram_user.id)
             .query()
             .map(User::from)
             .fetch_one(&self.pool)
@@ -264,15 +262,15 @@ impl UserControllerV1 {
             .map(User::from)
             .fetch_one(&self.pool)
             .await?;
-        let telegram_id = validate_telegram_raw(&req.telegram_raw);
-        if telegram_id.is_none() {
+        if req.telegram_raw.is_none() {
             return Err(Error::BadRequest);
         }
+        let telegram_user = parse_telegram_raw(req.telegram_raw.unwrap())?;
         let user = self
             .users
             .update(
                 user.id,
-                UserRepositoryUpdateRequest::new().with_telegram_id(telegram_id.unwrap()),
+                UserRepositoryUpdateRequest::new().with_telegram_id(telegram_user.id),
             )
             .await?;
 
@@ -284,7 +282,6 @@ impl UserControllerV1 {
         if req.term_agreed == false {
             return Err(Error::BadRequest);
         }
-        let telegram_id = validate_telegram_raw(&req.telegram_raw);
         if let Ok(user) = User::query_builder()
             .principal_equals(principal.clone())
             .user_type_equals(UserType::Anonymous)
@@ -330,7 +327,7 @@ impl UserControllerV1 {
                 Membership::Free,
                 generate_referral_code(),
                 None,
-                telegram_id,
+                None,
             )
             .await?;
 
@@ -345,7 +342,6 @@ impl UserControllerV1 {
         if req.term_agreed == false {
             return Err(Error::BadRequest);
         }
-        let telegram_id = validate_telegram_raw(&req.telegram_raw);
         if let Ok(user) = User::query_builder()
             .principal_equals(principal.clone())
             .user_type_equals(UserType::Anonymous)
@@ -391,7 +387,7 @@ impl UserControllerV1 {
                 Membership::Free,
                 generate_referral_code(),
                 None,
-                telegram_id,
+                None,
             )
             .await?;
 

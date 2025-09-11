@@ -64,7 +64,14 @@ use crate::{
             },
             oracles::create_oracle::create_oracle_handler,
             spaces::{delete_space::delete_space_handler, get_my_space::get_my_space_controller},
-            users::{find_user::find_user_handler, logout::logout_handler},
+            telegram::{
+                get_telegram_info::get_telegram_info_handler,
+                verify_telegram_raw::verify_telegram_raw_handler,
+            },
+            users::{
+                connect_telegram::connect_telegram_handler, find_user::find_user_handler,
+                logout::logout_handler,
+            },
         },
         well_known::get_did_document::get_did_document_handler,
     },
@@ -369,6 +376,29 @@ pub async fn route(
                     "Get User",
                     "Retrieve users with username or phone number or email"
                 ),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/v2/users/telegram",
+            post_with(
+                connect_telegram_handler,
+                api_docs!("Update User Telegram Id", "Connect User with Telegram"),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/v2/telegram",
+            post_with(
+                verify_telegram_raw_handler,
+                api_docs!(
+                    "Verify Telegram Raw Data",
+                    "Verify Telegram Raw Data and return token for future connection"
+                ),
+            )
+            .get_with(
+                get_telegram_info_handler,
+                api_docs!("Get Telegram Info", "Get Telegram Info from token"),
             )
             .with_state(pool.clone()),
         )
