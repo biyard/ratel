@@ -65,6 +65,7 @@ use crate::{
             oracles::create_oracle::create_oracle_handler,
             spaces::{delete_space::delete_space_handler, get_my_space::get_my_space_controller},
             telegram::subscribe::telegram_subscribe_handler,
+            themes::change_theme::change_theme_handler,
             users::{find_user::find_user_handler, logout::logout_handler},
         },
         well_known::get_did_document::get_did_document_handler,
@@ -372,6 +373,14 @@ pub async fn route(
             get_with(
                 get_dashboard_handler,
                 api_docs!("Get Dashboards", "Retrieve dashboard in a service"),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/v2/themes",
+            post_with(
+                change_theme_handler,
+                api_docs!("Change Theme", "Change Users Theme Information"),
             )
             .with_state(pool.clone()),
         )

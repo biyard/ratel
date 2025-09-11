@@ -1,12 +1,12 @@
 'use client';
 
-import BlackBox from '@/app/(social)/_components/black-box';
 import { usePostByFeedId } from '@/app/(social)/_hooks/use-posts';
 import { useSpaceBySpaceId } from '@/app/(social)/_hooks/use-spaces';
 import { getTimeWithFormat } from '@/lib/time-utils';
 import React from 'react';
 import Clock from '@/assets/icons/clock.svg';
 import Image from 'next/image';
+import BorderSpaceCard from '@/app/(social)/_components/border-space-card';
 
 export default function SpaceSideMenu({ spaceId }: { spaceId: number }) {
   const { data: space } = useSpaceBySpaceId(spaceId);
@@ -27,7 +27,7 @@ export default function SpaceSideMenu({ spaceId }: { spaceId: number }) {
         <div className="w-6 h-6 rounded-[10px] border border-neutral-500 bg-neutral-600" />
       )}
 
-      <BlackBox>
+      <BorderSpaceCard>
         <div className="flex flex-col gap-5">
           <div className="flex flex-row gap-1 items-center">
             <Clock width={20} height={20} />
@@ -40,7 +40,7 @@ export default function SpaceSideMenu({ spaceId }: { spaceId: number }) {
             {getTimeWithFormat(space.created_at)}
           </div>
         </div>
-      </BlackBox>
+      </BorderSpaceCard>
     </div>
   );
 }
