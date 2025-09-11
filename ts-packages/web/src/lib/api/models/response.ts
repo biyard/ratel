@@ -24,20 +24,17 @@ export interface SurveyResponseCreateRequest {
   respond_answer: {
     answers: Answer[];
     survey_type: SurveyType;
-    survey_id_param: number | null;
   };
 }
 
 export function surveyResponseCreateRequest(
   answer: Answer[],
   survey_type: SurveyType = 2,
-  survey_id_param: number | null = null,
 ): SurveyResponseCreateRequest {
   return {
     respond_answer: {
       answers: answer,
       survey_type,
-      survey_id_param,
     },
   };
 }
