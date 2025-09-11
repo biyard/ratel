@@ -124,6 +124,7 @@ pub async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         AuthClient,
         AuthCode,
         TelegramChannel,
+        TelegramToken,
     );
 
     if Industry::query_builder()

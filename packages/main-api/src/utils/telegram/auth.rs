@@ -1,22 +1,22 @@
 use crate::config;
+use dto::Result;
 use ethers::core::k256::sha2::Sha256;
 use hmac::{Hmac, Mac};
 use serde::Deserialize;
 
 // https://core.telegram.org/bots/webapps#validating-data-received-via-the-mini-app
 
-pub fn validate_telegram_raw(telegram_raw: &Option<String>) -> Option<i64> {
-    tracing::debug!("Validating Telegram raw: {:?}", telegram_raw);
-    let raw = telegram_raw.as_ref().filter(|s| !s.is_empty())?;
-
+pub fn parse_telegram_raw(telegram_raw: String) -> Result<TelegramUser> {
     let config = config::get();
     let telegram_token = config.telegram_token;
 
     let validation_result = (|| {
-        let mut params: Vec<(String, String)> = url::form_urlencoded::parse(raw.as_bytes())
-            .into_owned()
-            .collect();
+        let mut params: Vec<(String, String)> =
+            url::form_urlencoded::parse(telegram_raw.as_bytes())
+                .into_owned()
+                .collect();
         tracing::debug!("Telegram raw params: {:?}", params);
+
         let received_hash = params
             .iter()
             .position(|(key, _)| key == "hash")
@@ -58,10 +58,18 @@ pub fn validate_telegram_raw(telegram_raw: &Option<String>) -> Option<i64> {
         }
     })();
 
+    if let Some(validation_result) = validation_result {
+    } else {
     validation_result
 }
+    }
+}
 
-#[derive(Deserialize)]
-struct TelegramUser {
-    id: i64,
+#[derive(Debug, Deserialize)]
+pub struct TelegramUser {
+    pub id: i64,
+    pub username: Option<String>,
+    pub first_name: Option<String>,
+    pub last_name: Option<String>,
+    pub photo_url: Option<String>,
 }

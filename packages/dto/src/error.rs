@@ -255,6 +255,9 @@ pub enum Error {
     AwsRekognitionError(String),
     AwsTextractError(String),
     AwsBedrockError(String),
+
+    DuplicatedTelegramUser,
+    InvalidTelegramData,
 }
 
 impl<E: StdError + 'static> From<E> for Error {
