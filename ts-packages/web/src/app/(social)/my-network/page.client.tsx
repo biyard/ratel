@@ -96,13 +96,13 @@ export default function MyNetwork() {
 function FollowButton({ onClick }: { onClick: () => void }) {
   return (
     <div
-      className="cursor-pointer flex flex-row w-fit h-fit px-[10px] py-[5px] bg-white light:bg-neutral-300 hover:bg-gray-300 rounded-[50px]"
+      className="cursor-pointer flex flex-row w-fit h-fit px-[10px] py-[5px] border border-white bg-white hover:bg-gray-300 light:bg-transparent light:border-[#000203] rounded-[50px]"
       onClick={() => {
         onClick();
       }}
     >
-      <Add className="w-[15px] h-[15px] [&>path]:stroke-enable-button-text [&>path]:stroke-1" />
-      <div className="font-bold text-enable-button-text text-xs">Follow</div>
+      <Add className="w-[15px] h-[15px] [&>path]:stroke-[#000203]" />
+      <div className="font-bold text-[#000203] text-xs">Follow</div>
     </div>
   );
 }
