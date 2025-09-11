@@ -23,7 +23,16 @@
     "terms_of_service": "Terms of Service",
     "invalid_email_format": "Please enter a valid email address.",
     "unregistered_email": "This email is not registered.",
-    "invalid_password_format": "Password must contain letters, numbers, and special characters (min 8 chars)."
+    "invalid_password_format": "Password must contain letters, numbers, and special characters (min 8 chars).",
+
+    "GoogleLogin": {
+      "label": "Sign in with Google",
+      "loading_description": "Signing in with Google..."
+    },
+    "EmailLogin": {
+      "label": "Sign in with Email",
+      "loading_description": "Signing in with Email..."
+    }
   },
   "Signup": {
     "signing_in": "Signing you in...",
@@ -52,8 +61,56 @@
     "display_name_warning": "Please remove the test keyword from your display name.",
     "invalid_username_format": "Only numbers, lowercase letters, -, _ and more than one character can be entered.",
     "user_name_warning": "Please remove the test keyword from your username.",
-    "already_exists_user": "This username is already taken."
+    "already_exists_user": "This username is already taken.",
+
+    "sign_in": "Sign in",
+
+    "CommonError": {
+      "test_word": "Please remove the <b>test</b> keyword",
+      "required": "{fieldName} is required."
+    },
+    "Email": {
+      "label": "Email",
+      "placeholder": "Enter your email address",
+      "error": {
+        "invalid": "Please enter a valid email address.",
+        "unregistered": "This email is not registered."
+      },
+      "send_button_label": "Send"
+    },
+    "Code": {
+      "placeholder": "Enter the verification code",
+      "error": {
+        "invalid": "The verification code is incorrect or has expired."
+      },
+      "verify_button_label": "Verify"
+    },
+    "Username": {
+      "label": "User Name",
+      "placeholder": "Enter your user name"
+    },
+    "Nickname": {
+      "label": "Nick Name",
+      "placeholder": "Enter your nickname",
+      "error": {
+        "invalid": "Only numbers, lowercase letters, -, _ and more than one character can be entered."
+      }
+    },
+    "Password": {
+      "label": "Password",
+      "placeholder": "Enter your password",
+      "error": {
+        "required": "Password is required.",
+        "invalid": "Password must contain letters, numbers, and special characters (min 8 chars)."
+      }
+    },
+    "Term": {
+      "error": {
+        "required": "You must agree to the Terms of Service to proceed."
+      }
+    }
   },
+
   "Threads": {
     "edit": "Edit",
     "make_public": "Make Public",
@@ -523,5 +580,17 @@
     "language": "Language",
     "select_language": "Select a language",
     "cancel": "Cancel"
+  },
+
+  "Connect": {
+    "title": "Connect to {service}",
+    "description": "Do you want to connect your {service} account to Ratel?",
+    "ConfirmButton": {
+      "label": "Connect",
+      "loading": "Connecting..."
+    },
+    "CancelButton": {
+      "label": "Cancel"
+    }
   }
 }
