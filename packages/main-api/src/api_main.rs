@@ -163,6 +163,7 @@ pub async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
                 "0x000".to_string(),
                 "password".to_string(),
                 Membership::Free,
+                None,
                 "".to_string(),
                 None,
                 None,

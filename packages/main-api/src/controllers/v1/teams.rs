@@ -105,6 +105,7 @@ impl TeamController {
                 username,
                 "".to_string(),
                 Membership::Free,
+                None,
                 generate_referral_code(),
                 None,
                 None,
