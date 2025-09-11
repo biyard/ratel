@@ -39,21 +39,21 @@ export default async function RootLayout({
         <link rel="icon" href="/logos/favicon.ico" />
       </head>
       <body className={`${raleway.variable} antialiased bg-bg`}>
-        <ThemeWrapper>
-          <NextIntlClientProvider locale={locale} messages={messages}>
-            <CookieProvider>
-              <Providers dehydratedState={dehydratedState}>
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <CookieProvider>
+            <Providers dehydratedState={dehydratedState}>
+              <ThemeWrapper>
                 <HydrationBoundary state={dehydratedState}>
                   <ReferralHandler />
                   <ClientLayout>{children}</ClientLayout>
                   <PopupZone />
                 </HydrationBoundary>
                 <ReactQueryDevtools initialIsOpen={false} />
-              </Providers>
-            </CookieProvider>
-            <ToastContainer />
-          </NextIntlClientProvider>
-        </ThemeWrapper>
+              </ThemeWrapper>
+            </Providers>
+          </CookieProvider>
+          <ToastContainer />
+        </NextIntlClientProvider>
       </body>
     </html>
   );

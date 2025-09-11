@@ -1,8 +1,6 @@
 import Image from 'next/image';
 import { UserType } from '@/lib/api/models/user';
 import { useTranslations } from 'next-intl';
-import Link from 'next/link';
-import { route } from '@/route';
 
 type SuggestionItemProps = {
   user: {
@@ -10,7 +8,6 @@ type SuggestionItemProps = {
     profile_url?: string;
     user_type: UserType;
     username: string;
-    nickname: string;
     email: string;
   };
   onFollow: (userId: number) => void;
@@ -32,21 +29,19 @@ export default function SuggestionItem({
             width={32}
             height={32}
             src={user.profile_url}
-            alt={`${user.nickname}'s profile`}
+            alt={`${user.username}'s profile`}
             className={`w-8 h-8 object-cover ${imageClass}`}
           />
         ) : (
-          <div className={`w-8 h-8 bg-neutral-500 ${imageClass}`} />
+          <div className={`w-8 h-8 bg-profile-bg ${imageClass}`} />
         )}
         <div className="flex-1">
-          <Link href={route.teamByUsername(user.username)}>
-            <div className="font-medium text-base text-white">
-              {user.nickname}
-            </div>
-          </Link>
+          <div className="font-medium text-base text-text-primary">
+            {user.username}
+          </div>
 
           <button
-            className="font-bold text-xs text-white rounded-full bg-neutral-700 px-4 py-2 mt-2 hover:bg-neutral-600 transition-colors"
+            className="font-bold text-xs text-follow-button-text rounded-full bg-follow-button-bg px-4 py-2 mt-2 hover:bg-follow-button-bg/80 transition-colors"
             onClick={() => onFollow(user.id)}
             aria-label={`Follow ${user.username}`}
           >

@@ -1,4 +1,4 @@
-import BlackBox from '@/app/(social)/_components/black-box';
+import BorderSpaceCard from '@/app/(social)/_components/border-space-card';
 import { Settings2 } from '@/assets/icons/settings';
 import { Clock } from '@/assets/icons/time';
 import { getTimeWithFormat } from '@/lib/time-utils';
@@ -20,7 +20,7 @@ export default function TimelineMenu({
   const s = useTranslations('SprintSpace');
   const sortedItems = [...items].sort((a, b) => a.time - b.time);
   return (
-    <BlackBox>
+    <BorderSpaceCard>
       <div className="flex flex-col w-full text-neutral-500 gap-5">
         <div className="flex flex-row font-bold text-sm justify-between">
           <div className="flex flex-row gap-2">
@@ -40,8 +40,11 @@ export default function TimelineMenu({
         </div>
         <div className="flex flex-col pl-3.25 gap-5">
           {sortedItems.map((item) => (
-            <div className="flex flex-col gap-1 text-white" key={item.label}>
-              <div className="font-medium text-white text-[15px]/[12px]">
+            <div
+              className="flex flex-col gap-1 text-text-primary"
+              key={item.label}
+            >
+              <div className="font-medium text-text-primary text-[15px]/[12px]">
                 {item.label}
               </div>
               <div className="font-medium text-neutral-80 text-xs/[12px]">
@@ -51,6 +54,6 @@ export default function TimelineMenu({
           ))}
         </div>
       </div>
-    </BlackBox>
+    </BorderSpaceCard>
   );
 }

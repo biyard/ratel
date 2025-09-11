@@ -97,6 +97,10 @@ pub mod controllers {
             pub mod register;
             pub mod token;
         }
+
+        pub mod themes {
+            pub mod change_theme;
+        }
     }
     pub mod m2 {
         pub mod noncelab {
