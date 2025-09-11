@@ -49,19 +49,16 @@ pub fn parse_telegram_raw(telegram_raw: String) -> Result<TelegramUser> {
                 .into_iter()
                 .find(|(key, _)| key == "user")
                 .map(|(_, value)| value)?;
-
-            serde_json::from_str::<TelegramUser>(&user_str)
-                .map(|user| user.id)
-                .ok()
+            serde_json::from_str::<TelegramUser>(&user_str).ok()
         } else {
             None
         }
     })();
 
     if let Some(validation_result) = validation_result {
+        Ok(validation_result)
     } else {
-    validation_result
-}
+        return Err(dto::Error::InvalidTelegramData);
     }
 }
 
