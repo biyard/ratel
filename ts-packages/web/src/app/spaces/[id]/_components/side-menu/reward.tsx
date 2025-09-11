@@ -1,4 +1,4 @@
-import BlackBox from '@/app/(social)/_components/black-box';
+import BorderSpaceCard from '@/app/(social)/_components/border-space-card';
 import { RewardCoin } from '@/assets/icons/money-payment';
 import { Settings2 } from '@/assets/icons/settings';
 import { useTranslations } from 'next-intl';
@@ -32,7 +32,7 @@ export default function RewardMenu({
 }) {
   const s = useTranslations('SprintSpace');
   return (
-    <BlackBox isWhite={true}>
+    <BorderSpaceCard>
       <div className="flex flex-col w-full text-neutral-500 gap-5">
         <div className="flex flex-row font-bold text-sm justify-between">
           <div className="flex flex-row gap-2">
@@ -60,7 +60,7 @@ export default function RewardMenu({
           ))}
         </div>
       </div>
-    </BlackBox>
+    </BorderSpaceCard>
   );
 }
 

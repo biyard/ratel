@@ -1,4 +1,4 @@
-import BlackBox from '@/app/(social)/_components/black-box';
+import BorderSpaceCard from '@/app/(social)/_components/border-space-card';
 
 interface TabMenuItem<T> {
   icon: React.ReactNode;
@@ -16,7 +16,7 @@ export default function TabMenu<T>({
   activeTab: T;
 }) {
   return (
-    <BlackBox>
+    <BorderSpaceCard>
       <div className="flex flex-col gap-2.5 w-full">
         {items.map((item) => (
           <button
@@ -35,6 +35,6 @@ export default function TabMenu<T>({
           </button>
         ))}
       </div>
-    </BlackBox>
+    </BorderSpaceCard>
   );
 }

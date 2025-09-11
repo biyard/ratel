@@ -1,11 +1,11 @@
 'use client';
 
 import { useFeedByID } from '@/app/(social)/_hooks/feed';
-import BlackBox from '@/app/(social)/_components/black-box';
 import Image from 'next/image';
 import { File } from '@/components/file';
 import LexicalHtmlViewer from '../../../../../components/lexical/lexical-html-viewer';
 import { useTranslations } from 'next-intl';
+import DisableBorderCard from '@/app/(social)/_components/disable-border-card';
 
 export default function Thread({ post_id }: { post_id: number }) {
   const t = useTranslations('Threads');
@@ -13,7 +13,7 @@ export default function Thread({ post_id }: { post_id: number }) {
 
   return (
     <div className="flex flex-col w-full gap-2.5">
-      <BlackBox>
+      <DisableBorderCard>
         <div className="flex flex-col gap-5 w-full">
           <LexicalHtmlViewer htmlString={post?.html_contents || ''} />
           {post?.url && (
@@ -27,9 +27,9 @@ export default function Thread({ post_id }: { post_id: number }) {
             </div>
           )}
         </div>
-      </BlackBox>
+      </DisableBorderCard>
       {post?.files && post.files.length > 0 && (
-        <BlackBox>
+        <DisableBorderCard>
           <div className="flex flex-col w-full gap-5">
             <div className="font-bold text-text-primary text-[15px]/[20px]">
               {t('attached_files')}
@@ -41,7 +41,7 @@ export default function Thread({ post_id }: { post_id: number }) {
               ))}
             </div>
           </div>
-        </BlackBox>
+        </DisableBorderCard>
       )}
     </div>
   );

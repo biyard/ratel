@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import SuggestionItem from './suggestions-items';
-import BlackBox from './black-box';
 import Link from 'next/link';
 import { route } from '@/route';
 import { ChevronRight } from 'lucide-react';
@@ -11,6 +10,7 @@ import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import { logger } from '@/lib/logger';
 import { Follower } from '@/lib/api/models/network';
 import { useTranslations } from 'next-intl';
+import DisableBorderCard from './disable-border-card';
 
 export default function Suggestions() {
   const t = useTranslations('Home');
@@ -60,7 +60,7 @@ export default function Suggestions() {
   }
 
   return (
-    <BlackBox>
+    <DisableBorderCard>
       <h3 className="font-medium mb-3 text-text-primary">{t('suggested')}</h3>
       <div className="flex flex-col gap-[35px]">
         {suggestions.map((user) => (
@@ -75,6 +75,6 @@ export default function Suggestions() {
         <span>{t('view_all')}</span>
         <ChevronRight size={14} className="[&>path]:stroke-more-text" />
       </Link>
-    </BlackBox>
+    </DisableBorderCard>
   );
 }

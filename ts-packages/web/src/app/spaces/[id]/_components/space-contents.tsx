@@ -1,8 +1,8 @@
 'use client';
 
-import BlackBox from '@/app/(social)/_components/black-box';
 import React from 'react';
 import TextEditor from '@/components/text-editor/text-editor';
+import BorderSpaceCard from '@/app/(social)/_components/border-space-card';
 
 export interface SpaceContentsProps {
   isEdit?: boolean;
@@ -16,7 +16,7 @@ export default function SpaceContents({
   setContents = () => {},
 }: SpaceContentsProps) {
   const html = (
-    <BlackBox isWhite={true}>
+    <BorderSpaceCard>
       <div
         className="rich-content"
         dangerouslySetInnerHTML={{ __html: htmlContents }}
@@ -79,7 +79,7 @@ export default function SpaceContents({
           margin-bottom: 5px;
         }
       `}</style>
-    </BlackBox>
+    </BorderSpaceCard>
   );
 
   return isEdit ? (

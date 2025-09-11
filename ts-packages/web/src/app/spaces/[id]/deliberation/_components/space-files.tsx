@@ -1,6 +1,5 @@
 'use client';
 
-import BlackBox from '@/app/(social)/_components/black-box';
 import { FileInfo } from '@/lib/api/models/feeds';
 import React from 'react';
 
@@ -23,6 +22,7 @@ import {
   Zip,
 } from '@/components/icons';
 import { useTranslations } from 'next-intl';
+import BorderSpaceCard from '@/app/(social)/_components/border-space-card';
 
 export interface SpaceFilesProps {
   isEdit?: boolean;
@@ -45,7 +45,7 @@ export default function SpaceFiles({
     });
   };
   return (
-    <BlackBox isWhite={true}>
+    <BorderSpaceCard>
       <div className="flex flex-col w-full gap-5">
         <div className="flex flex-row w-full justify-between items-start ">
           <div className="font-bold text-text-primary text-[15px]/[20px]">
@@ -102,7 +102,7 @@ export default function SpaceFiles({
           </div>
         )}
       </div>
-    </BlackBox>
+    </BorderSpaceCard>
   );
 }
 

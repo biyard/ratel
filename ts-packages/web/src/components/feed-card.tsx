@@ -152,7 +152,7 @@ export default function FeedCard(props: FeedCardProps) {
 
   return (
     <Col
-      className={`cursor-pointer border rounded-[10px] border-card-enable-border bg-card-bg`}
+      className={`cursor-pointer border rounded-[10px] bg-card-bg-secondary border border-card-enable-border`}
       onClick={() => {
         router.push(route.threadByFeedId(props.id));
       }}

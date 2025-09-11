@@ -1,7 +1,6 @@
 'use client';
 
 import Image from 'next/image';
-import BlackBox from '@/app/(social)/_components/black-box';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { format } from 'date-fns';
 
@@ -24,6 +23,7 @@ import {
   useDeliberationSpaceContext,
 } from '../provider.client';
 import { useTranslations } from 'next-intl';
+import BorderSpaceCard from '@/app/(social)/_components/border-space-card';
 
 export default function SpaceDiscussion() {
   const { isEdit } = useDeliberationSpaceContext();
@@ -59,7 +59,7 @@ function DiscussionSchedules() {
 
   return (
     <div className="flex flex-col gap-2.5">
-      <BlackBox isWhite={true}>
+      <BorderSpaceCard>
         <div className="flex flex-col w-full gap-5">
           <div className="font-bold text-text-primary text-[15px]/[20px]">
             {t('discussions')}
@@ -92,7 +92,7 @@ function DiscussionSchedules() {
             ))}
           </div>
         </div>
-      </BlackBox>
+      </BorderSpaceCard>
     </div>
   );
 }
@@ -270,7 +270,7 @@ function EditableDiscussion() {
   };
 
   return (
-    <BlackBox isWhite={true}>
+    <BorderSpaceCard>
       <div className="flex flex-col w-full gap-5">
         <div className="flex flex-row w-full justify-between items-center">
           <div className="font-bold text-text-primary text-[15px]/[20px]">
@@ -320,7 +320,7 @@ function EditableDiscussion() {
           />
         ))}
       </div>
-    </BlackBox>
+    </BorderSpaceCard>
   );
 }
 

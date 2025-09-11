@@ -1,6 +1,5 @@
 'use client';
 
-import BlackBox from '@/app/(social)/_components/black-box';
 import { getTimeWithFormat } from '@/lib/time-utils';
 import React from 'react';
 import Clock from '@/assets/icons/clock.svg';
@@ -29,6 +28,7 @@ import { usePopup } from '@/lib/contexts/popup-service';
 import SetSchedulePopup from './modal/set_schedule';
 import { useQuizDataRefresh } from '@/hooks/use-quiz-updates';
 import { useTranslations } from 'next-intl';
+import BorderSpaceCard from '@/app/(social)/_components/border-space-card';
 
 export default function SpaceSideMenu() {
   const t = useTranslations('NoticeSpace');
@@ -67,7 +67,7 @@ export default function SpaceSideMenu() {
 
   return (
     <div className="flex flex-col max-w-[250px] max-tablet:!hidden w-full gap-[10px]">
-      <BlackBox isWhite={true}>
+      <BorderSpaceCard>
         <div className="w-full text-sm text-text-primary">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-1 text-space-side-label font-semibold text-[14px]">
@@ -239,9 +239,9 @@ export default function SpaceSideMenu() {
             })()}
           </div>
         </div>
-      </BlackBox>
+      </BorderSpaceCard>
 
-      <BlackBox isWhite={true}>
+      <BorderSpaceCard>
         <div className="w-full text-sm text-text-primary">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-1 text-space-side-label font-semibold text-[14px]">
@@ -288,9 +288,9 @@ export default function SpaceSideMenu() {
             ))}
           </div>
         </div>
-      </BlackBox>
+      </BorderSpaceCard>
 
-      <BlackBox isWhite={true}>
+      <BorderSpaceCard>
         <div className="w-full text-sm text-text-primary">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-1 text-space-side-label font-semibold text-[14px]">
@@ -344,7 +344,7 @@ export default function SpaceSideMenu() {
             ))}
           </div>
         </div>
-      </BlackBox>
+      </BorderSpaceCard>
     </div>
   );
 }
