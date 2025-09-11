@@ -14,8 +14,8 @@ import { usePostInfinite } from '../../_hooks/use-posts';
 import FeedEndMessage from '../feed-end-message';
 import FeedEmptyState from '../feed-empty-state';
 import CreatePostButton from '../create-post-button';
-import BlackBox from '../black-box';
 import PromotionCard from '../promotion-card';
+
 import HomeNews from '../home-news';
 import HomeSuggestions from '../home-suggestions';
 import { HomeGatewayResponse } from '@/lib/api/models/home';
@@ -142,6 +142,7 @@ export default function Home({
       <aside className="w-70 pl-4 max-tablet:!hidden" aria-label="Sidebar">
         <CreatePostButton />
 
+
         {homeData?.promotions && (
           <BlackBox>
             <PromotionCard promotion={homeData.promotions} feed={undefined} />
@@ -149,6 +150,7 @@ export default function Home({
         )}
 
         <HomeNews newsData={homeData?.news || []} />
+        
         <div className="mt-[10px]">
           <HomeSuggestions suggestedUsers={homeData?.suggested_users || []} />
         </div>

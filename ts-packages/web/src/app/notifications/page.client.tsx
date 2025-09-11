@@ -6,7 +6,6 @@ import { Check } from 'lucide-react';
 import { useInView } from 'react-intersection-observer';
 import News from '@/app/(social)/_components/News';
 import Suggestions from '@/app/(social)/_components/suggestions';
-import BlackBox from '@/app/(social)/_components/black-box';
 import PromotionCard from '@/app/(social)/_components/promotion-card';
 import { Col } from '@/components/ui/col';
 import { useApiCall } from '@/lib/api/use-send';
@@ -23,6 +22,7 @@ import {
 import { useNotificationsInfinite } from '@/hooks/use-notifications';
 import NotificationDropdown from './notification-dropdown';
 import NotificationReadStatus from './notification-read-status';
+import DisableBorderCard from '../(social)/_components/disable-border-card';
 
 const NotificationTab = {
   NOTIFICATIONS: 'Notifications',
@@ -63,9 +63,9 @@ export default function NotificationPage() {
         <aside className="w-70 pl-4 max-tablet:!hidden" aria-label="Sidebar">
           {/* <CreatePostButton /> */}
 
-          <BlackBox>
+          <DisableBorderCard>
             <PromotionCard promotion={promotion} feed={feed} />
-          </BlackBox>
+          </DisableBorderCard>
 
           <News />
           <div className="mt-[10px]">
