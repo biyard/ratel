@@ -1,7 +1,7 @@
 'use client';
 import React, { useCallback } from 'react';
 import SuggestionItem from './suggestions-items';
-import BlackBox from './black-box';
+import DisableBorderCard from './disable-border-card';
 import Link from 'next/link';
 import { route } from '@/route';
 import { ChevronRight } from 'lucide-react';
@@ -46,7 +46,7 @@ export default function HomeSuggestions({
   const displaySuggestions = suggestedUsers.slice(0, 3);
 
   return (
-    <BlackBox>
+    <DisableBorderCard>
       <h3 className="font-medium mb-3">{t('suggested')}</h3>
       <div className="flex flex-col gap-[35px]">
         {displaySuggestions.map((user) => (
@@ -61,6 +61,6 @@ export default function HomeSuggestions({
         <span>{t('view_all')}</span>
         <ChevronRight size={14} />
       </Link>
-    </BlackBox>
+    </DisableBorderCard>
   );
 }
