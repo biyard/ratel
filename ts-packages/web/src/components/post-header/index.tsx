@@ -109,7 +109,7 @@ export function PostInfoSection({
       </div>
       <div className="flex flex-row w-fit gap-5 [&>*>svg>*]:stroke-neutral-500 [&>*>svg]:size-5">
         <div className="flex flex-row w-fit gap-1 items-center">
-          <ThumbsUp />
+          <ThumbsUp className="[&>path]:stroke-neutral-500" />
           <div className="font-medium text-[15px] text-text-primary">
             {likes}
           </div>
