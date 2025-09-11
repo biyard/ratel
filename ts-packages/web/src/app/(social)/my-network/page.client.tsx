@@ -28,7 +28,7 @@ export default function MyNetwork() {
     return () => clearTimeout(timer);
   }, [network]);
 
- const handleFollow = async (userId: number) => {
+  const handleFollow = async (userId: number) => {
     await post(ratelApi.networks.follow(userId), followRequest());
   };
 
@@ -121,7 +121,6 @@ function FollowingContents({
   users: Follower[];
   follow: (userId: number) => Promise<void>;
 }) {
-
   const [followedUsers, setFollowedUsers] = useState<number[]>([]);
 
   const handleFollowClick = async (userId: number) => {
@@ -129,7 +128,7 @@ function FollowingContents({
       await follow(userId);
       setFollowedUsers((prev) => [...prev, userId]);
     } catch (err) {
-      console.log(err)
+      console.log(err);
     }
   };
 
@@ -201,7 +200,6 @@ function FollowingContents({
     </div>
   );
 }
-
 
 // function SelectedIndustry({ industries }: { industries: Industry[] }) {
 //   const PAGE_SIZE = 5;
