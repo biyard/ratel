@@ -16,7 +16,7 @@ export default function GoPublicModal({
   return (
     <div className="w-[500px] flex flex-col">
       {/* Header */}
-      <div className="text-center font-bold text-modal-label-text text-[24px] mb-6 mt-2">
+      <div className="text-center font-bold text-text-primary text-[24px] mb-6 mt-2">
         {t('go_public_title')}
       </div>
 

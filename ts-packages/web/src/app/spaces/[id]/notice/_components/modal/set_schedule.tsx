@@ -40,7 +40,7 @@ export default function SetSchedulePopup({
 
   return (
     <div className="w-full max-w-[900px] bg-[var(--color-background)] p-8 rounded-2xl">
-      <div className="text-2xl font-bold text-create-space-label mb-6">
+      <div className="text-2xl font-bold text-text-primary mb-6">
         {t('set_notice_schedule')}
       </div>
 

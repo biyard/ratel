@@ -14,7 +14,7 @@ export default function SaveThenPublishPopup({
   return (
     <div className="w-[500px] flex flex-col">
       {/* Header */}
-      <div className="text-center font-bold text-label-text text-[24px] mb-6 mt-2">
+      <div className="text-center font-bold text-text-primary text-[24px] mb-6 mt-2">
         {t('save_first_title')}
       </div>
 

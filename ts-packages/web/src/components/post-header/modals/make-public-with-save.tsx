@@ -49,7 +49,7 @@ export default function MakePublicWithSavingModal({
 
   return (
     <div className="max-w-125 flex flex-col mt-6 gap-6">
-      <div className="text-center font-bold text-modal-label-text text-[24px]">
+      <div className="text-center font-bold text-text-primary text-[24px]">
         {t('make_public_save_title')}
       </div>
 

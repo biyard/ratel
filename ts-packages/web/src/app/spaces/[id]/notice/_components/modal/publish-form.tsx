@@ -34,7 +34,7 @@ export default function PublishForm({
       <div>
         {/* Header */}
         <div className="mb-6">
-          <div className="font-bold text-modal-label-text text-[24px]">
+          <div className="font-bold text-text-primary text-[24px]">
             {t('publish_space')}
           </div>
         </div>
@@ -48,7 +48,7 @@ export default function PublishForm({
                 ? 'border-neutral-600 bg-neutral-900 cursor-not-allowed opacity-50'
                 : selectedScope === PublishingScope.Private
                   ? 'border-primary bg-neutral-800 light:bg-primary/10 cursor-pointer'
-                  : 'border-neutral-700 hover:border-neutral-600 cursor-pointer'
+                  : 'border-neutral-700 light:border-neutral-300 light:hover:border-neutral-300 hover:border-neutral-600 cursor-pointer'
             }`}
             onClick={() =>
               !wasPublishedAsPublic && setSelectedScope(PublishingScope.Private)
@@ -103,7 +103,7 @@ export default function PublishForm({
             className={`p-4 rounded-lg border-2 cursor-pointer transition-colors ${
               selectedScope === PublishingScope.Public
                 ? 'border-primary bg-neutral-800 light:bg-primary/10'
-                : 'border-neutral-700 hover:border-neutral-600'
+                : 'border-neutral-700 hover:border-neutral-600 light:border-neutral-300 light:hover:border-neutral-300'
             }`}
             onClick={() => setSelectedScope(PublishingScope.Public)}
           >
