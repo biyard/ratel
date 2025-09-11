@@ -192,8 +192,8 @@
   --color-label-color-bg: #1d1d1d;
   --color-label-color-border: #fcb300;
   --color-label-color-text: #fcb300;
-  --color-label-bg: #1d1d1d;
-  --color-label-border: #464646;
+  --color-label-color-bg-secondary: #ffffff;
+  --color-label-color-border-secondary: #404040;
   --color-label-text: #ffffff;
   --color-input-box-bg: #1a1a1a;
   --color-input-box-border: #464646;
@@ -330,8 +330,8 @@
   --color-label-color-bg: #fcb300;
   --color-label-color-border: #fcb300;
   --color-label-color-text: #ffffff;
-  --color-label-bg: #ffffff;
-  --color-label-border: #404040;
+  --color-label-color-bg-secondary: #ffffff;
+  --color-label-color-border-secondary: #404040;
   --color-label-text: #404040;
   --color-input-box-bg: #fafafa;
   --color-input-box-border: #e5e5e5;
