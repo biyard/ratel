@@ -29,5 +29,125 @@
   "hosted-zone:account=385474633683:domainName=ratel.foundation:region=ap-northeast-2": {
     "Id": "/hostedzone/Z0577765JDCTI15L7B84",
     "Name": "ratel.foundation."
+  },
+  "vpc-provider:account=385474633683:filter.isDefault=true:region=ap-northeast-2:returnAsymmetricSubnets=true": {
+    "vpcId": "vpc-0aca7693d1cd6c011",
+    "vpcCidrBlock": "172.31.0.0/16",
+    "ownerAccountId": "385474633683",
+    "availabilityZones": [],
+    "subnetGroups": [
+      {
+        "name": "Public",
+        "type": "Public",
+        "subnets": [
+          {
+            "subnetId": "subnet-0d73437aa2037b47f",
+            "cidr": "172.31.0.0/20",
+            "availabilityZone": "ap-northeast-2a",
+            "routeTableId": "rtb-0786dd82377fc660f"
+          },
+          {
+            "subnetId": "subnet-06ef7c9174ffd694a",
+            "cidr": "172.31.16.0/20",
+            "availabilityZone": "ap-northeast-2b",
+            "routeTableId": "rtb-0786dd82377fc660f"
+          },
+          {
+            "subnetId": "subnet-0882b34f6885fe108",
+            "cidr": "172.31.32.0/20",
+            "availabilityZone": "ap-northeast-2c",
+            "routeTableId": "rtb-0786dd82377fc660f"
+          },
+          {
+            "subnetId": "subnet-0cac2e441a59e2884",
+            "cidr": "172.31.48.0/20",
+            "availabilityZone": "ap-northeast-2d",
+            "routeTableId": "rtb-0786dd82377fc660f"
+          }
+        ]
+      }
+    ]
+  },
+  "vpc-provider:account=385474633683:filter.isDefault=true:region=eu-central-1:returnAsymmetricSubnets=true": {
+    "vpcId": "vpc-034a79a75aab7a2c1",
+    "vpcCidrBlock": "172.31.0.0/16",
+    "ownerAccountId": "385474633683",
+    "availabilityZones": [],
+    "subnetGroups": [
+      {
+        "name": "Public",
+        "type": "Public",
+        "subnets": [
+          {
+            "subnetId": "subnet-081974d8d2c95452b",
+            "cidr": "172.31.16.0/20",
+            "availabilityZone": "eu-central-1a",
+            "routeTableId": "rtb-008736afd79b0ad20"
+          },
+          {
+            "subnetId": "subnet-0ec07cd98d16fdbf3",
+            "cidr": "172.31.32.0/20",
+            "availabilityZone": "eu-central-1b",
+            "routeTableId": "rtb-008736afd79b0ad20"
+          },
+          {
+            "subnetId": "subnet-08061f7dd31be08e9",
+            "cidr": "172.31.0.0/20",
+            "availabilityZone": "eu-central-1c",
+            "routeTableId": "rtb-008736afd79b0ad20"
+          }
+        ]
+      }
+    ]
+  },
+  "vpc-provider:account=385474633683:filter.isDefault=true:region=us-east-1:returnAsymmetricSubnets=true": {
+    "vpcId": "vpc-00157ee7779f4096b",
+    "vpcCidrBlock": "172.31.0.0/16",
+    "ownerAccountId": "385474633683",
+    "availabilityZones": [],
+    "subnetGroups": [
+      {
+        "name": "Public",
+        "type": "Public",
+        "subnets": [
+          {
+            "subnetId": "subnet-05a727a39c81924f3",
+            "cidr": "172.31.16.0/20",
+            "availabilityZone": "us-east-1a",
+            "routeTableId": "rtb-04dbfcfb23d073390"
+          },
+          {
+            "subnetId": "subnet-0d3837b467522b1cc",
+            "cidr": "172.31.32.0/20",
+            "availabilityZone": "us-east-1b",
+            "routeTableId": "rtb-04dbfcfb23d073390"
+          },
+          {
+            "subnetId": "subnet-0483b2af933409e53",
+            "cidr": "172.31.0.0/20",
+            "availabilityZone": "us-east-1c",
+            "routeTableId": "rtb-04dbfcfb23d073390"
+          },
+          {
+            "subnetId": "subnet-074d8fab0ae4c0f63",
+            "cidr": "172.31.80.0/20",
+            "availabilityZone": "us-east-1d",
+            "routeTableId": "rtb-04dbfcfb23d073390"
+          },
+          {
+            "subnetId": "subnet-03f563fc2d3b4273a",
+            "cidr": "172.31.48.0/20",
+            "availabilityZone": "us-east-1e",
+            "routeTableId": "rtb-04dbfcfb23d073390"
+          },
+          {
+            "subnetId": "subnet-0771174b6cc73c15a",
+            "cidr": "172.31.64.0/20",
+            "availabilityZone": "us-east-1f",
+            "routeTableId": "rtb-04dbfcfb23d073390"
+          }
+        ]
+      }
+    ]
   }
 }

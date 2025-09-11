@@ -31,34 +31,28 @@ export interface RegionalServiceStackProps extends StackProps {
   maxCapacity?: number;
   enableDaemon?: boolean;
   pghost: string;
+
+  apiDomain: string;
+  baseDomain: string;
 }
 
 export class RegionalServiceStack extends Stack {
-  public readonly alb: elbv2.ApplicationLoadBalancer;
-  public readonly distribution: cloudfront.Distribution;
-
   constructor(scope: Construct, id: string, props: RegionalServiceStackProps) {
     super(scope, id, { ...props, crossRegionReferences: true });
 
+    const { apiDomain, baseDomain } = props;
+    const zone = route53.HostedZone.fromLookup(this, "RootZone", {
+      domainName: baseDomain,
+    });
     const domain = props.fullDomainName;
     const healthPath = props.healthCheckPath ?? "/version";
     const apiRepoName = props.apiRepoName ?? "ratel/main-api";
     const webRepoName = props.webRepoName ?? "ratel/web";
     const minCapacity = props.minCapacity ?? 2;
     const maxCapacity = props.maxCapacity ?? 50;
-    const albDomain = `alb.${domain}`;
-    const baseDomain = "ratel.foundation";
 
-    // 1) VPC across 2+ AZs
     const vpc = ec2.Vpc.fromLookup(this, "Vpc", { isDefault: true });
-
-    // 2) ECS Cluster
     const cluster = new ecs.Cluster(this, "Cluster", { vpc });
-
-    // 3) Route53 Hosted Zone lookup for "ratel.foundation"
-    const rootZone = route53.HostedZone.fromLookup(this, "RootZone", {
-      domainName: baseDomain,
-    });
 
     // 4) Task execution role
     const taskExecutionRole = new iam.Role(this, "TaskExecutionRole", {
@@ -69,18 +63,6 @@ export class RegionalServiceStack extends Stack {
       iam.ManagedPolicy.fromAwsManagedPolicyName(
         "service-role/AmazonECSTaskExecutionRolePolicy",
       ),
-    );
-
-    taskExecutionRole.addToPolicy(
-      new iam.PolicyStatement({
-        actions: [
-          "ecr:GetAuthorizationToken",
-          "ecr:BatchCheckLayerAvailability",
-          "ecr:GetDownloadUrlForLayer",
-          "ecr:BatchGetImage",
-        ],
-        resources: ["*"],
-      }),
     );
 
     // 5) Task Definition with multiple containers
@@ -147,6 +129,7 @@ export class RegionalServiceStack extends Stack {
       desiredCount: minCapacity,
       maxHealthyPercent: 200,
       minHealthyPercent: minCapacity === 1 ? 0 : 50,
+      assignPublicIp: true,
     });
 
     // 7) Auto Scaling
@@ -213,21 +196,19 @@ export class RegionalServiceStack extends Stack {
         },
       },
     );
+    const cert = new acm.Certificate(this, "Cert", {
+      domainName: apiDomain,
+      validation: acm.CertificateValidation.fromDns(zone),
+    });
 
-    this.alb = new elbv2.ApplicationLoadBalancer(this, "ALB", {
+    const alb = new elbv2.ApplicationLoadBalancer(this, "ALB", {
       vpc,
       internetFacing: true,
     });
 
-    const albCert = new acm.Certificate(this, "AlbCert", {
-      domainName: albDomain,
-      subjectAlternativeNames: [],
-      validation: acm.CertificateValidation.fromDns(rootZone),
-    });
-
-    const listener = this.alb.addListener("HttpsListener", {
+    const listener = alb.addListener("HttpsListener", {
       port: 443,
-      certificates: [albCert],
+      certificates: [cert],
       open: true,
     });
 
@@ -249,20 +230,20 @@ export class RegionalServiceStack extends Stack {
       ],
       targetGroups: [apiTargetGroup],
     });
-    const d = albDomain.replace(`.${baseDomain}`, "");
+    const d = apiDomain.replace(`.${baseDomain}`, "");
     const regionalDomain = `${this.region}.${d}`;
     new route53.ARecord(this, "AlbAliasV4", {
-      zone: rootZone,
+      zone: zone,
       recordName: regionalDomain,
       target: route53.RecordTarget.fromAlias(
-        new r53Targets.LoadBalancerTarget(this.alb),
+        new r53Targets.LoadBalancerTarget(alb),
       ),
     });
     new route53.AaaaRecord(this, "AlbAliasV6", {
-      zone: rootZone,
+      zone: zone,
       recordName: regionalDomain,
       target: route53.RecordTarget.fromAlias(
-        new r53Targets.LoadBalancerTarget(this.alb),
+        new r53Targets.LoadBalancerTarget(alb),
       ),
     });
 
@@ -276,8 +257,33 @@ export class RegionalServiceStack extends Stack {
       });
     }
 
-    // Outputs
-    this.exportValue(this.alb.loadBalancerDnsName, { name: `${id}-AlbDns` });
-    this.exportValue(domain, { name: `${id}-CustomDomain` });
+    const region = this.region;
+    const rid = region;
+
+    new route53.CfnRecordSet(this, `LatencyA-${rid}`, {
+      hostedZoneId: zone.hostedZoneId,
+      name: apiDomain,
+      type: "A",
+      setIdentifier: `alb-${rid}`,
+      region,
+      aliasTarget: {
+        dnsName: alb.loadBalancerDnsName,
+        hostedZoneId: alb.loadBalancerCanonicalHostedZoneId,
+        evaluateTargetHealth: false,
+      },
+    });
+
+    new route53.CfnRecordSet(this, `LatencyAAAA-${rid}`, {
+      hostedZoneId: zone.hostedZoneId,
+      name: apiDomain,
+      type: "AAAA",
+      setIdentifier: `alb6-${rid}`,
+      region,
+      aliasTarget: {
+        dnsName: alb.loadBalancerDnsName,
+        hostedZoneId: alb.loadBalancerCanonicalHostedZoneId,
+        evaluateTargetHealth: false,
+      },
+    });
   }
 }
