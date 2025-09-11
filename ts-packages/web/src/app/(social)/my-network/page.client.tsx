@@ -21,16 +21,14 @@ export default function MyNetwork() {
   const network = useNetwork();
   const networkData = network.data;
 
-  // Refetch network once on mount
   useEffect(() => {
     const timer = setTimeout(() => {
       network.refetch();
     }, 0);
     return () => clearTimeout(timer);
-  }, []);
+  }, [network]);
 
-  // handle API follow call
-  const handleFollow = async (userId: number) => {
+\  const handleFollow = async (userId: number) => {
     await post(ratelApi.networks.follow(userId), followRequest());
   };
 
@@ -87,7 +85,6 @@ export default function MyNetwork() {
   );
 }
 
-/* ---------------- FOLLOW BUTTON ---------------- */
 function FollowButton({
   isFollowing,
   onClick,
@@ -115,7 +112,6 @@ function FollowButton({
   );
 }
 
-/* ---------------- FOLLOWING CONTENTS ---------------- */
 function FollowingContents({
   label,
   users,
@@ -125,7 +121,7 @@ function FollowingContents({
   users: Follower[];
   follow: (userId: number) => Promise<void>;
 }) {
-  // Track which users have been followed in this session
+
   const [followedUsers, setFollowedUsers] = useState<number[]>([]);
 
   const handleFollowClick = async (userId: number) => {
@@ -133,7 +129,7 @@ function FollowingContents({
       await follow(userId);
       setFollowedUsers((prev) => [...prev, userId]);
     } catch (err) {
-      // error is already handled by parent follow()
+      console.log(err)
     }
   };
 
@@ -151,7 +147,6 @@ function FollowingContents({
               className="flex flex-col w-full gap-[5px] px-2.5 py-5 border-b border-b-divider"
             >
               <div className="flex flex-row w-full justify-between items-start">
-                {/* Profile section */}
                 <div className="flex flex-row w-fit gap-2">
                   {user.user_type == UserType.Team ? (
                     user.profile_url ? (
@@ -186,14 +181,12 @@ function FollowingContents({
                   </div>
                 </div>
 
-                {/* Follow button */}
                 <FollowButton
                   isFollowing={isFollowing}
                   onClick={() => handleFollowClick(user.id)}
                 />
               </div>
 
-              {/* Description */}
               <div
                 id="user-profile-description"
                 className="font-medium text-[12px] text-desc-text line-clamp-3 overflow-hidden"
