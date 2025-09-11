@@ -100,7 +100,7 @@ export default function MySettings() {
             action_text={actionText}
             onClick={handleChangeLanguage}
           />
-          {config.env === 'dev' && (
+          {config.env === 'local' && (
             <SpecBox
               left_text="Theme"
               action_text={currentThemeLabel}
