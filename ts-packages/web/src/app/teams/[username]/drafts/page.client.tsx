@@ -4,7 +4,7 @@ import { Col } from '@/components/ui/col';
 import { logger } from '@/lib/logger';
 import { FeedStatus } from '@/lib/api/models/feeds';
 import { Row } from '@/components/ui/row';
-import { FeedContents, IndustryTag, UserBadge } from '@/components/feed-card';
+import { FeedContents, UserBadge } from '@/components/feed-card';
 import { UserType } from '@/lib/api/models/user';
 import TimeAgo from '@/components/time-ago';
 import { Delete2 } from '@/components/icons';
@@ -63,7 +63,7 @@ export default function TeamPostsPage({ username }: { username: string }) {
               .map((props) => (
                 <Col
                   key={props.id}
-                  className="cursor-pointer pt-5 pb-2.5 bg-component-bg rounded-lg"
+                  className="cursor-pointer pt-5 pb-2.5 bg-card-bg border border-card-border rounded-lg"
                   onClick={(evt) => {
                     loadDraft(props.id);
                     setExpand(true);
@@ -72,9 +72,6 @@ export default function TeamPostsPage({ username }: { username: string }) {
                   }}
                 >
                   <Row className="justify-between px-5 items-center">
-                    <Row>
-                      <IndustryTag industry={'CRYPTO'} />
-                    </Row>
                     <Row
                       className="cursor-pointer w-[21px] h-[21px]"
                       onClick={async (e) => {
@@ -94,10 +91,14 @@ export default function TeamPostsPage({ username }: { username: string }) {
                     </Row>
                   </Row>
                   <div className="flex flex-row items-center gap-1 w-full line-clamp-2 font-bold text-xl/[25px] tracking-[0.5px] align-middle text-white px-5">
-                    <div className="text-sm font-normal">(Draft)</div>
-                    <div className="font-normal">{props.title}</div>
+                    <div className="text-sm font-normal text-text-primary">
+                      (Draft)
+                    </div>
+                    <div className="font-normal text-text-primary">
+                      {props.title}
+                    </div>
                   </div>
-                  <Row className="justify-between items-center px-5">
+                  <Row className="justify-between items-center px-5 text-text-primary">
                     <UserBadge
                       profile_url={team.profile_url ?? ''}
                       name={team.nickname}
@@ -111,7 +112,7 @@ export default function TeamPostsPage({ username }: { username: string }) {
               ))}
           </Col>
         ) : (
-          <div className="flex flex-row w-full h-fit justify-start items-center px-[16px] py-[20px] border border-gray-500 rounded-[8px] font-medium text-base text-gray-500">
+          <div className="flex flex-row w-full h-fit justify-start items-center px-[16px] py-[20px] border border-gray-500 rounded-[8px] font-medium text-base text-text-primary">
             {t('no_drafts_available')}
           </div>
         )}

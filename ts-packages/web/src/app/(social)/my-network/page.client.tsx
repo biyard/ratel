@@ -96,12 +96,12 @@ export default function MyNetwork() {
 function FollowButton({ onClick }: { onClick: () => void }) {
   return (
     <div
-      className="cursor-pointer flex flex-row w-fit h-fit px-[10px] py-[5px] bg-white hover:bg-gray-300 rounded-[50px]"
+      className="cursor-pointer flex flex-row w-fit h-fit px-[10px] py-[5px] border border-white bg-white hover:bg-gray-300 light:bg-transparent light:border-[#000203] rounded-[50px]"
       onClick={() => {
         onClick();
       }}
     >
-      <Add className="w-[15px] h-[15px] [&>path]:stroke-neutral-800 [&>path]:stroke-1" />
+      <Add className="w-[15px] h-[15px] [&>path]:stroke-[#000203]" />
       <div className="font-bold text-[#000203] text-xs">Follow</div>
     </div>
   );
@@ -117,13 +117,15 @@ function FollowingContents({
   follow: (userId: number) => void;
 }) {
   return (
-    <div className="flex flex-col w-full rounded-lg bg-[#191919] px-4 py-5 gap-2.5">
-      <div className="font-semibold text-white text-base/[20px]">{label}</div>
+    <div className="flex flex-col w-full rounded-lg bg-card-bg border border-card-border px-4 py-5 gap-2.5">
+      <div className="font-semibold text-text-primary text-base/[20px]">
+        {label}
+      </div>
       <div className="flex flex-col">
         {users.map((user) => (
           <div
             key={user.id}
-            className="flex flex-col w-full gap-[5px] px-2.5 py-5 border-b border-b-neutral-800"
+            className="flex flex-col w-full gap-[5px] px-2.5 py-5 border-b border-b-divider"
           >
             <div className="flex flex-row w-full justify-between items-start">
               <div className="flex flex-row w-fit gap-2">
@@ -153,7 +155,7 @@ function FollowingContents({
 
                 <div className="flex flex-col">
                   <Link href={route.teamByUsername(user.username)}>
-                    <div className="font-semibold text-white text-sm/[20px]">
+                    <div className="font-semibold text-text-primary text-sm/[20px]">
                       {user.nickname}
                     </div>
                   </Link>
@@ -169,7 +171,7 @@ function FollowingContents({
 
             <div
               id="user-profile-description"
-              className="font-medium text-[12px] text-neutral-300 line-clamp-3 overflow-hidden"
+              className="font-medium text-[12px] text-desc-text line-clamp-3 overflow-hidden"
               dangerouslySetInnerHTML={{
                 __html: user.html_contents,
               }}

@@ -88,6 +88,10 @@ pub struct User {
     #[serde(default)]
     pub membership: Membership,
 
+    #[api_model(version = v1.0, type = INTEGER)]
+    #[serde(default)]
+    pub theme: Option<Theme>,
+
     #[api_model(one_to_many = user_points, foreign_key = user_id, aggregator = sum(amount))]
     pub points: i64,
 
@@ -148,4 +152,16 @@ pub enum Membership {
     Paid3 = 4,
     #[translate(en = "Admin", ko = "관리자")]
     Admin = 99,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub enum Theme {
+    #[default]
+    #[translate(en = "light", ko = "light")]
+    Light = 1,
+    #[translate(en = "dark", ko = "dark")]
+    Dark = 2,
+    #[translate(en = "system", ko = "system")]
+    SystemDefault = 3,
 }
