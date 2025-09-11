@@ -11,7 +11,6 @@ export function PollSurveyPage({ space }: { space: Space }) {
   const { survey, answer, updateSurvey, updateAnswer } = usePollStore();
   const { status, started_at, ended_at } = space;
   const { mutateAsync } = usePollMutation();
-  console.log('space', space);
   return (
     <div className="flex flex-col w-full">
       <div className="flex flex-col gap-2.5">

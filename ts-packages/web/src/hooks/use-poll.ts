@@ -35,7 +35,6 @@ export function usePollMutation() {
       answer,
     }: {
       spaceId: number;
-      surveyId: number;
       questions: Question[];
       answer: SurveyAnswer;
     }) => {
