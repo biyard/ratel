@@ -17,7 +17,7 @@ export const usePostInfinite = (size = 10, initialPage = 1) => {
   const { get } = useApiCall();
 
   return useSuspenseInfiniteQuery<QueryResponse<Feed>, Error>({
-    queryKey: [QK_GET_POSTS, initialPage],
+    queryKey: [QK_GET_POSTS, size],
     queryFn: async ({ pageParam = initialPage }) => {
       return get(ratelApi.feeds.getPosts(pageParam as number, size));
     },

@@ -191,12 +191,12 @@ export async function prefetchPostInfinite(pageSize: number) {
   };
 
   queryClient.setQueryData<InfiniteData<QueryResponse<Feed>>>(
-    [QK_GET_POSTS],
+    [QK_GET_POSTS, pageSize],
     infiniteData,
   );
 
   return {
-    key: [QK_GET_POSTS],
+    key: [QK_GET_POSTS, pageSize],
     data: infiniteData,
   };
 }

@@ -58,12 +58,9 @@ export default function Home({
 
   // Get initial feeds from homeData, then use infinite query for pagination
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
-    usePostInfinite(SIZE, homeData?.feeds ? 2 : 1); // Start from page 2 if we have server data
+    usePostInfinite(SIZE);
 
-  // If we have server data, use it as the first page, otherwise use client data
-  const allPosts = homeData?.feeds
-    ? [...homeData.feeds, ...(data?.pages.flatMap((page) => page.items) || [])]
-    : data?.pages.flatMap((page) => page.items) || [];
+  const allPosts = data?.pages.flatMap((page) => page.items) || [];
 
   const filteredFeeds = allPosts
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

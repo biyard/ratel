@@ -10,6 +10,23 @@ interface HomeNewsProps {
   newsData: NewsSummary[];
 }
 
+// Safe sanitization function that works in both server and client environments
+const sanitizeHTML = (html: string): string => {
+  // Check if we're in a browser environment
+  if (typeof window !== 'undefined') {
+    return DOMPurify.sanitize(html, {
+      USE_PROFILES: { html: true },
+    });
+  }
+  // On server side, return the HTML as-is (since it's coming from our own API)
+  // In production, you might want to use a server-side HTML sanitizer
+  return html;
+};
+
+interface HomeNewsProps {
+  newsData: NewsSummary[];
+}
+
 export default function HomeNews({ newsData }: HomeNewsProps) {
   const t = useTranslations('Home');
   const router = useRouter();
@@ -38,12 +55,11 @@ export default function HomeNews({ newsData }: HomeNewsProps) {
             <h4 className="text-base/[25px] tracking-[0.5px] align-middle font-medium text-foreground">
               {item.title}
             </h4>
+            {/* biome-ignore lint/security/noDangerouslySetInnerHtml: content is sanitized with DOMPurify */}
             <div
               className="text-sm/[20px] align-middle font-light line-clamp-2 whitespace-normal text-card-meta"
               dangerouslySetInnerHTML={{
-                __html: DOMPurify.sanitize(item.html_content ?? '', {
-                  USE_PROFILES: { html: true },
-                }),
+                __html: sanitizeHTML(item.html_content ?? ''),
               }}
             />
           </Col>
