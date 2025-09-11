@@ -23,7 +23,7 @@ export default function ProfileSection() {
   };
 
   return (
-    <div className="flex flex-col gap-5 px-4 py-5 rounded-[10px] bg-card">
+    <div className="flex flex-col gap-5 px-4 py-5 rounded-[10px] bg-card-bg border border-card-border">
       <TeamSelector onSelect={handleTeamSelect} team={team} />
 
       <div className="relative">
@@ -36,15 +36,15 @@ export default function ProfileSection() {
             className="w-20 h-20 rounded-full border-2 object-cover object-top"
           />
         ) : (
-          <div className="w-20 h-20 rounded-full border border-neutral-500 bg-foreground-muted" />
+          <div className="w-20 h-20 rounded-full border border-neutral-500 bg-profile-bg" />
         )}
       </div>
 
-      <div className="font-medium text-foreground">{user.nickname}</div>
+      <div className="font-medium text-text-secondary">{user.nickname}</div>
 
       <div
         id="user-profile-description"
-        className="text-xs text-foreground-muted"
+        className="text-xs text-text-secondary"
         dangerouslySetInnerHTML={{ __html: user.html_contents }}
       />
 

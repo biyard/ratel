@@ -182,7 +182,7 @@ impl SurveyResponseController {
                 space_id,
                 user_id,
                 answers,
-                survey_id_param.unwrap_or_default(),
+                survey_id_param.ok_or(Error::MissingParam("survey_id".to_string()))?,
                 survey_type,
             )
             .await?;
