@@ -22,12 +22,14 @@ import {
 } from './ui/dropdown-menu';
 import { Edit1 } from './icons';
 import { useRepostDraft } from '@/app/(social)/_components/create-repost';
+import { usePostDraft } from '@/app/(social)/_components/create-post';
 import { showSuccessToast, showErrorToast } from './custom-toast/toast';
 import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { Loader2 } from 'lucide-react';
 import { logger } from '@/lib/logger';
 import { useTranslations } from 'next-intl';
 import { BoosterType } from '@/lib/api/models/notice';
+
 
 export interface FeedCardProps {
   id: number;
@@ -58,6 +60,7 @@ export interface FeedCardProps {
   onLikeClick?: (value: boolean) => void;
   refetch?: () => void;
   isLikeProcessing?: boolean;
+  handleEditPost?: () => void;
 }
 
 export default function FeedCard(props: FeedCardProps) {
@@ -70,6 +73,8 @@ export default function FeedCard(props: FeedCardProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [localShares, setLocalShares] = useState(props.shares);
 
+  const t = useTranslations('Feeds');
+
   const {
     setAuthorName,
     setIndustry,
@@ -80,6 +85,8 @@ export default function FeedCard(props: FeedCardProps) {
     setExpand,
     setAuthorId,
   } = useRepostDraft();
+
+  const { loadDraft } = usePostDraft();
 
   // Sync with props when they change
   useEffect(() => {
@@ -150,6 +157,16 @@ export default function FeedCard(props: FeedCardProps) {
     setExpand(true);
   };
 
+
+  const handleEditPost = async () => {
+    try {
+      await loadDraft(props.id);
+    } catch (error) {
+      console.error('Failed to load draft for editing:', error);
+      showErrorToast(t('failed_edit_post_message'));
+    }
+  };
+
   return (
     <Col
       className={`cursor-pointer border rounded-[10px] border-neutral-700`}
@@ -183,6 +200,7 @@ export function FeedBody({
   space_id,
   space_type,
   onboard,
+  handleEditPost,
 }: FeedCardProps) {
   return (
     <Col className="pt-5 pb-2.5">
@@ -192,6 +210,10 @@ export function FeedBody({
           {/* FIXME: Currently, all posts are labeled as CRYPTO. */}
           {/* <IndustryTag industry={industry} /> */}
           {onboard && <OnboardingTag />}
+        </div>
+
+        <div>
+         <EditButton onClick={handleEditPost} />
         </div>
       </Row>
       <h2 className="w-full line-clamp-2 font-bold text-xl/[25px] tracking-[0.5px] align-middle text-foreground px-5">
@@ -303,6 +325,18 @@ export function IndustryTag({ industry }: { industry: string }) {
     <span className="rounded-sm border border-c-wg-70 px-2 text-xs/[25px] font-semibold align-middle uppercase">
       {industry}
     </span>
+  );
+}
+
+export function EditButton({ onClick }: { onClick?: () => void }) {
+  return (
+    <button onClick={(e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      onClick?.();
+    }}>
+      <Edit1 />
+    </button>
   );
 }
 
