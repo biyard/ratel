@@ -14,7 +14,7 @@ export default function QuizSubmitForm({ onSubmit }: QuizSubmitFormProps) {
 
   return (
     <div className="w-[500px] flex flex-col mt-2">
-      <div className="text-center font-bold text-modal-label-text text-[24px] mb-6">
+      <div className="text-center font-bold text-text-primary text-[24px] mb-6">
         {t('quiz_submit_title')}
       </div>
 

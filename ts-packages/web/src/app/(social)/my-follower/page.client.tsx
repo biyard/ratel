@@ -58,7 +58,11 @@ export default function MyFollower({ type }: { type: RelationType }) {
             router.back();
           }}
         >
-          <ArrowLeft width={24} height={24} />
+          <ArrowLeft
+            width={24}
+            height={24}
+            className="[&>path]:stroke-text-primary"
+          />
         </div>
 
         <div className="font-semibold text-text-primary text-[20px]">
@@ -141,7 +145,7 @@ function FollowingInfo({
   followings?: number[];
 }) {
   return (
-    <div className="flex flex-col w-full rounded-lg bg-component-bg px-4 py-5 gap-2.5">
+    <div className="flex flex-col w-full rounded-lg bg-card-bg border border-card-border px-4 py-5 gap-2.5">
       {users.length != 0 ? (
         <div className="flex flex-col">
           {users.map((user, index) => (
