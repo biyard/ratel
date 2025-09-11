@@ -7,28 +7,24 @@ import Clock from '@/assets/icons/clock.svg';
 import { PieChart1, Vote } from '@/components/icons';
 import { Settings } from 'lucide-react';
 import { SpaceStatus } from '@/lib/api/models/spaces';
-import { useDeliberationSpace, usePollSpaceContext } from '../provider.client';
 import { useUserInfo } from '@/app/(social)/_hooks/user';
 import { TeamContext } from '@/lib/contexts/team-context';
 import { usePopup } from '@/lib/contexts/popup-service';
-import { PollTab } from '../types';
 import SetSchedulePopup from '../../_components/modal/set-schedule';
 import { useTranslations } from 'next-intl';
+import useSpaceById from '@/hooks/use-space-by-id';
+import { useEditCoordinatorStore } from '../../space-store';
+import { Tab, usePollStore } from '../store';
 
-export default function SpaceSideMenu() {
+export default function SpaceSideMenu({ spaceId }: { spaceId: number }) {
   const t = useTranslations('PollSpace');
   const popup = usePopup();
-  const {
-    isEdit,
-    selectedType,
-    handleUpdateSelectedType,
-    startedAt,
-    endedAt,
-    status,
-    handleUpdateEndDate,
-    handleUpdateStartDate,
-  } = usePollSpaceContext();
-  const space = useDeliberationSpace();
+  const { data: space } = useSpaceById(spaceId);
+  const { status } = space;
+  const { isEdit } = useEditCoordinatorStore();
+  const started_at = space?.started_at || 0;
+  const ended_at = space?.ended_at || 0;
+  const { activeTab, changeTab } = usePollStore();
   const { teams } = useContext(TeamContext);
   const authorId = space?.author[0].id;
 
@@ -43,9 +39,9 @@ export default function SpaceSideMenu() {
       <BlackBox isWhite={true}>
         <div className="flex flex-col gap-2.5 w-full">
           <div
-            className={`cursor-pointer flex flex-row gap-1 items-center px-1 py-2 rounded-sm ${selectedType == PollTab.POLL ? 'bg-neutral-800 light:bg-[#f5f5f5]' : ''}`}
+            className={`cursor-pointer flex flex-row gap-1 items-center px-1 py-2 rounded-sm ${activeTab == Tab.Poll ? 'bg-neutral-800 light:bg-[#f5f5f5]' : ''}`}
             onClick={() => {
-              handleUpdateSelectedType(PollTab.POLL);
+              changeTab(Tab.Poll);
             }}
           >
             <Vote className="[&>path]:stroke-neutral-80 w-5 h-5" />
@@ -58,12 +54,12 @@ export default function SpaceSideMenu() {
             status == SpaceStatus.InProgress && (
               <div
                 className={`cursor-pointer flex flex-row gap-1 items-center px-1 py-2 rounded-sm ${
-                  selectedType == PollTab.ANALYZE
+                  activeTab == Tab.Analyze
                     ? 'bg-neutral-800 light:bg-[#f5f5f5]'
                     : ''
                 }`}
                 onClick={() => {
-                  handleUpdateSelectedType(PollTab.ANALYZE);
+                  changeTab(Tab.Analyze);
                 }}
               >
                 <PieChart1 className="[&>path]:stroke-neutral-80 w-5 h-5" />
@@ -88,11 +84,12 @@ export default function SpaceSideMenu() {
                   popup
                     .open(
                       <SetSchedulePopup
-                        startedAt={startedAt}
-                        endedAt={endedAt}
+                        startedAt={started_at}
+                        endedAt={ended_at}
                         onconfirm={(startDate: number, endDate: number) => {
-                          handleUpdateStartDate(Math.floor(startDate / 1000));
-                          handleUpdateEndDate(Math.floor(endDate / 1000));
+                          console.log('startDate, endDate', startDate, endDate);
+                          // handleUpdateStartDate(Math.floor(startDate / 1000));
+                          // handleUpdateEndDate(Math.floor(endDate / 1000));
                           popup.close();
                         }}
                       />,
@@ -114,8 +111,8 @@ export default function SpaceSideMenu() {
           <div className="flex flex-col pl-3.25 gap-5">
             {[
               { label: t('created'), date: createdAt },
-              { label: t('poll_open'), date: startedAt },
-              { label: t('poll_close'), date: endedAt },
+              { label: t('poll_open'), date: started_at },
+              { label: t('poll_close'), date: ended_at },
             ]
               .filter(
                 (item): item is { label: string; date: number } =>

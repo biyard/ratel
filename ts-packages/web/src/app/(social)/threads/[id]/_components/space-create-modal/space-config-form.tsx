@@ -1,27 +1,29 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
-import { createSpaceRequest, Space, SpaceType } from '@/lib/api/models/spaces';
-import { BoosterType, noticeSpaceCreateRequest } from '@/lib/api/models/notice';
+import React, { useState } from 'react';
+import { SpaceType } from '@/lib/api/models/spaces';
+import { BoosterType } from '@/lib/api/models/notice';
 import { LoadablePrimaryButton } from '@/components/button/primary-button';
-import { ArrowLeft, Internet, Fire, Remove } from '@/components/icons';
+import { ArrowLeft, Internet, Fire } from '@/components/icons';
 import TimeDropdown from '@/components/time-dropdown';
 import CalendarDropdown from '@/components/calendar-dropdown';
-import { apiFetch } from '@/lib/api/apiFetch';
-import { config } from '@/config';
-import { ratelApi } from '@/lib/api/ratel_api';
-import { usePopup } from '@/lib/contexts/popup-service';
-import { logger } from '@/lib/logger';
-import { useRouter } from 'next/navigation';
-import { route } from '@/route';
-import { useSprintLeagueSpaceMutation } from '@/hooks/use-sprint-league';
 import { useTranslations } from 'next-intl';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from '@radix-ui/react-dropdown-menu';
 
 interface SpaceConfigFormProps {
   spaceType: SpaceType;
-  feedId: number;
+  isLoading: boolean;
   onBack: () => void;
-  onConfirm: () => void;
+  onConfirm: (
+    startedAt: number,
+    endedAt: number,
+    boosterType: BoosterType,
+  ) => Promise<void>;
 }
 
 export interface SpaceConfig {
@@ -36,13 +38,12 @@ export interface SpaceConfig {
 
 export default function SpaceConfigForm({
   spaceType,
-  feedId,
+  isLoading,
   onBack,
   onConfirm,
 }: SpaceConfigFormProps) {
   const t = useTranslations('SpaceForms');
-  const popup = usePopup();
-  const router = useRouter();
+
   // Initial date setup - 1 hour from now and 2 hours from now
   const now = new Date();
   const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
@@ -65,102 +66,17 @@ export default function SpaceConfigForm({
     boosterType: BoosterType.X10,
   });
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [isBoosterDropdownOpen, setIsBoosterDropdownOpen] = useState(false);
-
-  // References for click outside detection
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const toggleButtonRef = useRef<HTMLDivElement>(null);
-
-  // Effect to handle clicks outside the dropdown
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        toggleButtonRef.current &&
-        !dropdownRef.current.contains(event.target as Node) &&
-        !toggleButtonRef.current.contains(event.target as Node)
-      ) {
-        setIsBoosterDropdownOpen(false);
-      }
-    };
-
-    // Add event listener when dropdown is open
-    if (isBoosterDropdownOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    // Clean up
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isBoosterDropdownOpen]);
-  const { create } = useSprintLeagueSpaceMutation();
   const handleSubmit = async () => {
-    setIsLoading(true);
-    try {
-      // Convert milliseconds to seconds for API
-      const startedAt = Math.floor(startTimestamp / 1000);
-      const endedAt = Math.floor(endTimestamp / 1000);
+    // Convert milliseconds to seconds for API
+    const startedAt = Math.floor(startTimestamp / 1000);
+    const endedAt = Math.floor(endTimestamp / 1000);
 
-      // Set booster type based on user selection
-      const boosterType = formConfig.activateBooster
-        ? formConfig.boosterType
-        : BoosterType.NoBoost;
-      let data: Space | null = null;
-      if (spaceType === SpaceType.SprintLeague) {
-        data = await create.mutateAsync({
-          spaceReq: createSpaceRequest(
-            spaceType,
-            feedId,
-            [],
-            0,
-            startedAt,
-            endedAt,
-            boosterType,
-          ),
-        });
-      } else {
-        const res = await apiFetch<Space>(
-          `${config.api_url}${ratelApi.spaces.createSpace()}`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(
-              noticeSpaceCreateRequest(
-                spaceType,
-                feedId,
-                [],
-                0,
-                startedAt,
-                endedAt,
-                boosterType,
-              ),
-            ),
-          },
-        );
-        data = res.data;
-      }
-      if (data) {
-        logger.debug(
-          `${getSpaceTypeTitle(spaceType)} space created successfully:`,
-          data.id,
-        );
-        // Navigate to the new notice space page
-        router.push(route.noticeSpaceById(data.id));
-        popup.close();
-        onConfirm();
-      }
-    } catch (error) {
-      logger.error(
-        `Error creating ${getSpaceTypeTitle(spaceType)} space:`,
-        error,
-      );
-    } finally {
-      setIsLoading(false);
-    }
+    // Set booster type based on user selection
+    const boosterType = formConfig.activateBooster
+      ? formConfig.boosterType
+      : BoosterType.NoBoost;
+
+    onConfirm(startedAt, endedAt, boosterType);
   };
 
   const getSpaceTypeTitle = (type: SpaceType) => {
@@ -171,21 +87,27 @@ export default function SpaceConfigForm({
         return 'Deliberation';
       case SpaceType.SprintLeague:
         return 'Sprint League';
+      case SpaceType.Poll:
+        return 'Poll';
+      case SpaceType.dAgit:
+        return 'd.AGIT';
+      case SpaceType.Nft:
+        return 'NFT';
       default:
         return 'Space';
     }
   };
 
   return (
-    <div className="flex flex-col gap-4 w-full max-w-[906px] max-h-[550px] overflow-y-auto pt-1 pr-1 pb-1 pl-1 px-4 sm:px-1">
+    <div className="-mt-16 flex flex-col gap-4 w-full max-w-[906px] overflow-y-auto pt-1 pr-1 pb-1 pl-1 px-4 sm:px-1">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <button onClick={onBack} className="p-1 rounded-md transition-colors">
-            <ArrowLeft className="w-7 h-7 text-[var(--color-neutral-500)]" />
+            <ArrowLeft className="w-7 h-7 text-neutral-500" />
           </button>
-          <h2 className="text-xl sm:text-3xl font-semibold text-text-primary">
-            {t('notice_title')}
+          {/* <h2 className="text-xl sm:text-3xl font-semibold text-white">
+            {t('SetBoostModal.title')}
           </h2>
         </div>
         <button
@@ -193,20 +115,21 @@ export default function SpaceConfigForm({
           className="p-1 hover:bg-gray-800 rounded-md transition-colors"
         >
           <Remove className="w-7 h-7 text-[var(--color-neutral-500)]" />
-        </button>
+        </button> */}
+        </div>
       </div>
 
       {/* Warning Message */}
-      <div className="text-base text-create-space-desc">
+
+      <div className="text-base text-create-space-desc pt-5">
         <p>
-          {t.rich('notice_description_1', {
+          {t.rich('SetBoostModal.description', {
             spaceType: getSpaceTypeTitle(spaceType),
             b: (chunks) => (
               <span className="font-semibold text-desc-text">{chunks}</span>
             ),
           })}
         </p>
-        <p className="mt-0.5">{t('notice_description_2')}</p>
       </div>
 
       {/* Date and Time Section */}
@@ -255,6 +178,7 @@ export default function SpaceConfigForm({
           </div>
 
           {/* Timezone */}
+          {/* FIXME: use variable, not value color */}
           <div className="flex flex-row items-center w-fit border border-select-date-border bg-select-date-bg rounded-lg px-5 py-[10.5px] gap-2.5 mt-2 sm:mt-0">
             <div className="font-medium text-[15px]/[22.5px] text-neutral-600">
               Pacific Time
@@ -313,101 +237,64 @@ export default function SpaceConfigForm({
             <label className="text-base font-medium text-text-primary py-1">
               {t('booster')}
             </label>
-            <div className="relative">
-              <div
-                ref={toggleButtonRef}
-                className="border border-select-date-border bg-select-booster-bg text-text-primary pl-14 pr-10 py-3 rounded-md focus:outline-none focus-within:ring-2 focus-within:ring-primary w-full text-base font-medium cursor-pointer z-10"
-                onClick={() => setIsBoosterDropdownOpen(!isBoosterDropdownOpen)}
-                tabIndex={0}
-              >
-                <div className="flex items-center justify-between">
-                  <span>
-                    Booster x{' '}
-                    {/* Get the multiplier value from the enum key name */}
-                    {Object.entries(BoosterType)
-                      .find(
-                        ([, value]) => value === formConfig.boosterType,
-                      )?.[0]
-                      ?.replace('X', '') || ''}
-                  </span>
-                  <svg
-                    className={`w-8 h-8 text-[var(--color-secondary)] transition-transform duration-200 ${isBoosterDropdownOpen ? 'rotate-180' : ''}`}
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M7 10l5 5 5-5z" />
-                  </svg>
-                </div>
-                <Fire className="absolute left-5 top-1/2 transform -translate-y-1/2 w-6 h-6 text-[var(--color-primary)] pointer-events-none" />
 
-                {/* Dropdown Menu */}
-                {isBoosterDropdownOpen && (
-                  <div
-                    ref={dropdownRef}
-                    className="fixed border border-[var(--color-c-wg-70)] rounded-md overflow-hidden shadow-lg z-[9999] min-w-[200px]"
-                    style={{
-                      top: toggleButtonRef.current
-                        ? toggleButtonRef.current.getBoundingClientRect()
-                            .bottom +
-                          4 +
-                          window.scrollY
-                        : 0,
-                      left: toggleButtonRef.current
-                        ? toggleButtonRef.current.getBoundingClientRect().left +
-                          window.scrollX
-                        : 0,
-                      width: toggleButtonRef.current
-                        ? toggleButtonRef.current.offsetWidth
-                        : 'auto',
-                      backgroundColor: 'var(--color-background)',
-                    }}
-                  >
-                    {Object.entries(BoosterType)
-                      // Filter out NoBoost and non-numeric keys (we only want the enum values)
-                      .filter(
-                        ([, value]) =>
-                          typeof value === 'number' &&
-                          value !== BoosterType.NoBoost,
-                      )
-                      .map(([key, value], index, array) => {
-                        // Get the multiplier from the enum key (X2, X10, X100)
-                        const multiplier = key.replace('X', '');
-
-                        return (
-                          <React.Fragment key={value}>
-                            <div
-                              className={`px-4 py-3 hover:bg-black/10 flex items-center w-full text-text-primary z-0 ${formConfig.boosterType === value ? 'bg-black/10' : ''}`}
-                              style={{
-                                backgroundColor: 'var(--color-background)',
-                              }}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setFormConfig({
-                                  ...formConfig,
-                                  boosterType: value as BoosterType,
-                                });
-                                setIsBoosterDropdownOpen(false);
-                              }}
-                            >
-                              <Fire className="w-5 h-5 mr-3 text-[var(--color-primary)]" />
-                              <span>Booster x {multiplier}</span>
-                            </div>
-                            {/* Add separator if not the last item */}
-                            {index < array.length - 1 && (
-                              <div
-                                className="mx-0 border-t border-[var(--color-neutral-700)] h-[1px] w-full"
-                                style={{
-                                  backgroundColor: 'var(--color-background)',
-                                }}
-                              ></div>
-                            )}
-                          </React.Fragment>
-                        );
-                      })}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="border border-[var(--color-c-wg-70)] bg-transparent text-text-primary pl-14 pr-4 py-3 rounded-md focus:outline-none focus:ring-2 focus:ring-primary w-full text-base font-medium cursor-pointer relative z-1"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-text-primary">
+                      Booster x{' '}
+                      {Object.entries(BoosterType)
+                        .find(
+                          ([, value]) => value === formConfig.boosterType,
+                        )?.[0]
+                        ?.replace('X', '') || ''}
+                    </span>
+                    <svg
+                      className="w-8 h-8 text-[var(--color-secondary)]"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M7 10l5 5 5-5z" />
+                    </svg>
                   </div>
-                )}
-              </div>
-            </div>
+                  <Fire className="absolute left-5 top-1/2 transform -translate-y-1/2 w-6 h-6 text-[var(--color-primary)] pointer-events-none" />
+                </button>
+              </DropdownMenuTrigger>
+
+              <DropdownMenuContent
+                align="start"
+                className="w-[var(--radix-dropdown-menu-trigger-width)] bg-[var(--color-background)] border-[var(--color-c-wg-70)] text-text-primary"
+              >
+                {Object.entries(BoosterType)
+                  .filter(
+                    ([, value]) =>
+                      typeof value === 'number' &&
+                      value !== BoosterType.NoBoost,
+                  )
+                  .map(([key, value]) => {
+                    const multiplier = key.replace('X', '');
+                    return (
+                      <DropdownMenuItem
+                        key={value}
+                        onSelect={() => {
+                          setFormConfig({
+                            ...formConfig,
+                            boosterType: value as BoosterType,
+                          });
+                        }}
+                        className={`px-4 py-3 hover:bg-black/10 flex items-center w-full ${formConfig.boosterType === value ? 'bg-black/10' : ''}`}
+                      >
+                        <Fire className="w-5 h-5 mr-3 text-[var(--color-primary)]" />
+                        <span>Booster x {multiplier}</span>
+                      </DropdownMenuItem>
+                    );
+                  })}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         )}
       </div>

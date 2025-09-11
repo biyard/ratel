@@ -28,8 +28,6 @@ interface Question {
 
 export default function SurveyViewer({
   isEdit,
-  startDate,
-  endDate,
   survey,
   answer,
   status,
@@ -50,6 +48,7 @@ export default function SurveyViewer({
   const t = useTranslations('PollSpace');
   const { data: userInfo } = useSuspenseUserInfo();
   const userId = userInfo?.id || 0;
+
   const members = space.discussions.flatMap((discussion) => discussion.members);
   const isMember = members.some((member) => member.id === userId);
 
@@ -58,20 +57,11 @@ export default function SurveyViewer({
   const questions: Question[] =
     survey.surveys.length != 0 ? survey.surveys[0].questions : [];
 
-  const now = Math.floor(Date.now() / 1000);
-  const isLive = startDate <= now && now <= endDate;
   const popup = usePopup();
   const is_completed = answer.is_completed;
   const answers: Answer[] = answer.answers;
 
-  logger.debug(
-    'is completed:',
-    is_completed,
-    ' status:',
-    status,
-    'isLive:',
-    isLive,
-  );
+  logger.debug('is completed:', is_completed, ' status:', status);
 
   const handleSelect = (
     qIdx: number,
@@ -244,7 +234,7 @@ export default function SurveyViewer({
       })}
 
       <div
-        className={`flex flex-row w-full justify-end ${is_completed || status != SpaceStatus.InProgress || isEdit || !isLive || questions.length == 0 || (!isMember && spaceType === SpaceType.Deliberation) ? 'hidden' : ''}`}
+        className={`flex flex-row w-full justify-end ${is_completed || userId === 0 || status != SpaceStatus.InProgress || isEdit || questions.length == 0 || (!isMember && spaceType === SpaceType.Deliberation) ? 'hidden' : ''}`}
       >
         <div
           className="cursor-pointer flex flex-row w-[180px] h-fit py-[14px] px-[40px] justify-center items-center bg-primary hover:opacity-70 rounded-lg font-bold text-[15px] text-[#000203]"
