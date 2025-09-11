@@ -96,7 +96,7 @@ class _SurveyTile extends StatelessWidget {
   Widget build(BuildContext context) {
     const title = 'Final survey';
     final questionsCnt = model.questions.length;
-    final spaceController = Get.find<SpaceController>();
+    final spaceController = Get.find<DeliberationSpaceController>();
 
     return InkWell(
       onTap: _tappable
