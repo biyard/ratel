@@ -17,7 +17,7 @@ export default function CustomCheckbox({
       onClick={onChange}
       aria-pressed={checked}
       className={`w-6 h-6 flex items-center justify-center border
-        ${disabled ? 'bg-neutral-500 border-transparent' : checked ? 'bg-yellow-500 border-transparent' : 'bg-transparent border-neutral-500'}
+        ${disabled ? 'bg-neutral-500 border-transparent light:bg-primary' : checked ? 'bg-yellow-500 border-transparent' : 'bg-transparent border-neutral-500'}
         ${isRounded ? 'rounded-full' : 'rounded-sm'}
         transition-colors duration-150 `}
     >

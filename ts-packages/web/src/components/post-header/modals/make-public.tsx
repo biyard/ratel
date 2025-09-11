@@ -30,11 +30,11 @@ export default function MakePublicModal({
 
   return (
     <div className="max-w-125 flex flex-col mt-6 gap-6">
-      <div className="text-center font-bold text-white text-[24px]">
+      <div className="text-center font-bold text-modal-label-text text-[24px]">
         {t('make_public_title')}
       </div>
 
-      <div className="text-center font-medium text-neutral-400 text-base">
+      <div className="text-center font-medium text-desc-text text-base">
         {t('make_public_desc_line1')}
         <br />
         {t('make_public_desc_line2_prefix')}{' '}
@@ -44,7 +44,7 @@ export default function MakePublicModal({
       <div className="flex flex-row gap-4 h-12">
         <Button
           variant="outline"
-          className="flex-1/3 border-transparent"
+          className="flex-1/3 border-transparent bg-cancel-button-bg text-cancel-button-text hover:bg-hover"
           onClick={onCancel}
         >
           {t('cancel')}
