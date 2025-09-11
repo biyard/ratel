@@ -453,7 +453,7 @@ export function FeedFooter({
                 <button
                   onClick={handleRepostWithThoughts}
                   disabled={isReposting}
-                  className="flex items-center gap-3 w-full px-4 py-2 rounded hover:bg-neutral-700 transition-colors text-text-primary text-lg font-semibold"
+                  className="flex items-center gap-3 w-full px-4 py-2 rounded hover:bg-hover transition-colors text-text-primary text-lg font-semibold"
                 >
                   {isReposting ? <Loader2 /> : <Edit1 />}
                   {t('repost_with_your_thoughts')}
@@ -464,7 +464,7 @@ export function FeedFooter({
                 <button
                   onClick={handleRepost}
                   disabled={isReposting}
-                  className="flex items-center gap-3 w-full px-4 py-2 rounded hover:bg-neutral-700 transition-colors text-text-primary text-lg font-semibold"
+                  className="flex items-center gap-3 w-full px-4 py-2 rounded hover:bg-hover transition-colors text-text-primary text-lg font-semibold"
                 >
                   {isReposting ? <Loader2 /> : <Shares />}
                   {t('repost')}

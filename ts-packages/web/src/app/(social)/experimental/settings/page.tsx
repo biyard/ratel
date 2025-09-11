@@ -1,12 +1,8 @@
 'use client';
-
-import { config } from '@/config';
 import { usePopup } from '@/lib/contexts/popup-service';
 import React from 'react';
-import LocaleModal from '../modal/locale-modal';
 import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
-import ThemeModal from '../modal/theme-modal';
 import { useApiCall } from '@/lib/api/use-send';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { ChangeThemeRequest } from '@/lib/api/models/themes/theme';
@@ -14,9 +10,11 @@ import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { ThemeType } from '@/lib/api/models/user';
 import { useQueryClient } from '@tanstack/react-query';
 import { QK_USERS_GET_INFO } from '@/constants';
-import SpecBox from '@/app/(social)/_components/spec-box';
+import LocaleModal from '../../settings/_components/modal/locale-modal';
+import ThemeModal from '../../settings/_components/modal/theme-modal';
+import SpecBox from '../../_components/spec-box';
 
-export default function MySettings() {
+export default function ExperimentalSettingsPage() {
   const { post } = useApiCall();
   const { data } = useSuspenseUserInfo();
   const t = useTranslations('Settings');
@@ -100,13 +98,13 @@ export default function MySettings() {
             action_text={actionText}
             onClick={handleChangeLanguage}
           />
-          {config.env === 'local' && (
+          {
             <SpecBox
               left_text="Theme"
               action_text={currentThemeLabel}
               onClick={handleChangeTheme}
             />
-          )}
+          }
         </div>
       </section>
     </div>
