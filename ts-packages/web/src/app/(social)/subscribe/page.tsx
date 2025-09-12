@@ -1,4 +1,7 @@
 'use client';
+import { config } from '@/config';
+import { ratelApi } from '@/lib/api/ratel_api';
+import { useApiCall } from '@/lib/api/use-send';
 import { useTranslations } from 'next-intl';
 import React from 'react';
 
@@ -10,6 +13,10 @@ interface PlanProps {
   chip: string;
   features: string[];
 }
+
+type CardProps = PlanProps & {
+  onClick?: () => Promise<void> | void;
+};
 
 const plans: PlanProps[] = [
   {
@@ -54,7 +61,31 @@ const plans: PlanProps[] = [
 ];
 
 export default function SubscribePage() {
+  const { post } = useApiCall();
   const t = useTranslations('Subscribe');
+
+  if (config.env !== 'local') {
+    return (
+      <div className="text-text-primary text-base font-medium">
+        not implemented page
+      </div>
+    );
+  }
+
+  const handleSubscribeClick = async (i: number) => {
+    const subscribeType =
+      plans[i].title === 'Personal'
+        ? 'personal'
+        : plans[i].title === 'Business'
+          ? 'business'
+          : 'enterprise';
+
+    const res = await post(ratelApi.binances.createSubscription(), {
+      subscribe_type: subscribeType,
+    });
+
+    if (res?.checkout_url) window.location.href = res.checkout_url;
+  };
 
   return (
     <div className="w-full h-fit bg-card-bg border-card-border px-4 py-12">
@@ -71,7 +102,7 @@ export default function SubscribePage() {
 
         <div className="mt-8 grid w-full grid-cols-1 gap-6 md:grid-cols-3">
           {plans.map((p, i) => (
-            <Card key={i} {...p} />
+            <Card key={i} {...p} onClick={() => handleSubscribeClick(i)} />
           ))}
         </div>
 
@@ -83,7 +114,7 @@ export default function SubscribePage() {
   );
 }
 
-function Card({ title, price, bg, text, chip, features }: PlanProps) {
+function Card({ title, price, bg, text, chip, features, onClick }: CardProps) {
   const isDark = text === 'text-white';
   return (
     <div className={`relative overflow-hidden rounded-[24px] ${bg}`}>
@@ -97,11 +128,7 @@ function Card({ title, price, bg, text, chip, features }: PlanProps) {
           {features.map((f, i) => (
             <li key={i} className="flex items-start gap-3">
               <CheckIcon
-                className={`mt-0.5 size-5 shrink-0 rounded-full p-[2px] ${
-                  isDark
-                    ? 'text-white bg-white/20'
-                    : 'text-emerald-600 bg-black/10'
-                }`}
+                className={`mt-0.5 size-5 shrink-0 rounded-full p-[2px] ${isDark ? 'text-white bg-white/20' : 'text-emerald-600 bg-black/10'}`}
               />
               <span className={isDark ? 'text-white/90' : 'text-[#000203]'}>
                 {f}
@@ -112,6 +139,7 @@ function Card({ title, price, bg, text, chip, features }: PlanProps) {
 
         <button
           type="button"
+          onClick={onClick}
           className={`mt-6 inline-flex w-full items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold shadow transition ${
             isDark
               ? 'bg-white/90 text-[#000203] hover:bg-white'

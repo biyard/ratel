@@ -5,6 +5,7 @@ use by_types::config::*;
 pub struct Config {
     pub env: &'static str,
     pub domain: &'static str,
+    pub redirect_domain: &'static str,
     pub openapi_key: &'static str,
     pub openapi_url: &'static str,
     pub binance_api_key: &'static str,
@@ -78,6 +79,7 @@ impl Default for Config {
             },
             from_email: option_env!("FROM_EMAIL").unwrap_or("no-reply@ratel.foundation"),
             env: option_env!("ENV").expect("You must set ENV"),
+            redirect_domain: option_env!("REDIRECT_DOMAIN").unwrap_or("https://dev.ratel.foundation"),
             domain: option_env!("DOMAIN").expect("You must set DOMAIN"),
             openapi_key: option_env!("OPENAPI_KEY").expect("OPENAPI_KEY is required"),
             openapi_url: "https://open.assembly.go.kr/portal/openapi/",
