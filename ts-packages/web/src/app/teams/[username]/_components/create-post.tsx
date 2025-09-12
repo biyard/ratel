@@ -62,6 +62,7 @@ import { showErrorToast } from '@/lib/toast';
 import { postByUserIdQk } from '@/app/(social)/_hooks/use-posts';
 import { useTeamByUsername } from '../../_hooks/use-team';
 import { useTranslations } from 'next-intl';
+import { Button } from '@/components/ui/button';
 
 export const editorTheme = {
   ltr: 'text-left',
@@ -125,7 +126,7 @@ function ToolbarPlugin({
   };
 
   return (
-    <div className="flex items-center gap-4 [&>button]:size-6 [&>button]:rounded [&>button]:hover:bg-neutral-700">
+    <div className="flex items-center gap-4 [&>button]:size-6 [&>button]:rounded [&>button]:hover:bg-hover">
       <button
         onClick={() => formatText('bold')}
         className={cn(isBold && 'bg-neutral-600 text-white')}
@@ -276,7 +277,7 @@ export function CreatePost() {
 
   return (
     <LexicalComposer initialConfig={editorConfig}>
-      <div className="w-full bg-neutral-900 border-t-6 border-x border-b border-primary rounded-t-lg overflow-hidden">
+      <div className="w-full bg-card-bg border-t-6 border-x border-b border-primary rounded-t-lg overflow-hidden">
         {/* Header */}
         <div className="flex items-center p-4 justify-between">
           <div className="flex items-center gap-3">
@@ -289,10 +290,10 @@ export function CreatePost() {
                 className="w-6 h-6 object-cover"
               />
             ) : (
-              <div className="w-6 h-6 rounded-full border border-neutral-500 bg-neutral-600" />
+              <div className="w-6 h-6 rounded-full bg-profile-bg" />
             )}
             <div className="flex items-center gap-2">
-              <span className="text-white font-medium text-lg">
+              <span className="text-text-primary font-medium text-lg">
                 {userInfo?.nickname || 'Anonymous'}
               </span>
             </div>
@@ -302,7 +303,7 @@ export function CreatePost() {
             className={cn('cursor-pointer')}
             onClick={() => setExpand(!expand)}
           >
-            <DoubleArrowDown />
+            <DoubleArrowDown className="[&>path]:stroke-text-primary" />
           </div>
         </div>
 
@@ -314,12 +315,12 @@ export function CreatePost() {
               placeholder={t('write_title')}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full bg-transparent text-white text-xl font-semibold placeholder-neutral-500 outline-none border-none"
+              className="w-full bg-transparent text-text-primary text-xl font-semibold placeholder-neutral-500 outline-none border-none"
             />
           </div>
 
           {/* Lexical Content Area */}
-          <div className="px-4 pt-2 min-h-[80px] relative text-neutral-300 text-[15px] leading-relaxed">
+          <div className="px-4 pt-2 min-h-[80px] relative text-text-primary text-[15px] leading-relaxed">
             <RichTextPlugin
               contentEditable={
                 <ContentEditable className="outline-none resize-none w-full min-h-[60px]" />
@@ -353,7 +354,7 @@ export function CreatePost() {
                   />
                   <button
                     onClick={removeImage}
-                    className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-600 rounded-full flex items-center justify-center text-white text-xs hover:bg-red-700 border-2 border-neutral-900"
+                    className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-600 rounded-full flex items-center justify-center text-white text-xs hover:bg-red-700 border-2 border-component-bg"
                     aria-label={`Remove uploaded image`}
                   >
                     <X size={12} />
@@ -379,22 +380,19 @@ export function CreatePost() {
                 <span className="text-sm text-red-500">Error saving!</span>
               )}
 
-              <button
+              <Button
+                variant="rounded_primary"
+                size="default"
                 onClick={publishPost}
                 disabled={isSubmitDisabled}
-                className={cn(
-                  'flex items-center gap-2 p-3 rounded-full font-medium text-sm transition-all',
-                  !isSubmitDisabled
-                    ? 'bg-primary text-black hover:bg-primary/50'
-                    : 'bg-neutral-700 text-neutral-500 cursor-not-allowed',
-                )}
+                className="gap-2"
               >
                 {status === 'publishing' ? (
                   <Loader2 className="animate-spin" />
                 ) : (
                   <UserCircleIcon />
                 )}
-              </button>
+              </Button>
             </div>
           </div>
         </>
