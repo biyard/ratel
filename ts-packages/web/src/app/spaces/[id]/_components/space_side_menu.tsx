@@ -1,17 +1,17 @@
 'use client';
 
-import { usePostByFeedId } from '@/app/(social)/_hooks/use-posts';
 import { useSpaceBySpaceId } from '@/app/(social)/_hooks/use-spaces';
 import { getTimeWithFormat } from '@/lib/time-utils';
 import React from 'react';
 import Clock from '@/assets/icons/clock.svg';
 import Image from 'next/image';
+import useFeedById from '@/hooks/feeds/use-feed-by-id';
 import BorderSpaceCard from '@/app/(social)/_components/border-space-card';
 
 export default function SpaceSideMenu({ spaceId }: { spaceId: number }) {
   const { data: space } = useSpaceBySpaceId(spaceId);
 
-  const { data: feed } = usePostByFeedId(space?.feed_id);
+  const { data: feed } = useFeedById(space?.feed_id);
 
   return (
     <div className="flex flex-col max-w-[250px] max-tablet:!hidden w-full gap-2.5">

@@ -1,32 +1,27 @@
 'use client';
 
-import { useFeedByID } from '@/app/(social)/_hooks/feed';
 import Image from 'next/image';
 import { File } from '@/components/file';
 import LexicalHtmlViewer from '../../../../../components/lexical/lexical-html-viewer';
 import { useTranslations } from 'next-intl';
+import { Feed, FeedType } from '@/lib/api/models/feeds';
+import useFeedById from '@/hooks/feeds/use-feed-by-id';
+import { ArtworkPost } from '@/app/(social)/_components/post-editor';
 import DisableBorderCard from '@/app/(social)/_components/disable-border-card';
 
-export default function Thread({ post_id }: { post_id: number }) {
+export default function Thread({ postId }: { postId: number }) {
   const t = useTranslations('Threads');
-  const { data: post } = useFeedByID(post_id);
+
+  const { data: post } = useFeedById(postId);
 
   return (
     <div className="flex flex-col w-full gap-2.5">
       <DisableBorderCard>
-        <div className="flex flex-col gap-5 w-full">
-          <LexicalHtmlViewer htmlString={post?.html_contents || ''} />
-          {post?.url && (
-            <div className="relative h-72 w-full rounded-[10px]">
-              <Image
-                fill
-                className="object-contain"
-                src={post.url}
-                alt={post.title || 'Post Image'}
-              />
-            </div>
-          )}
-        </div>
+        {post?.feed_type === FeedType.Artwork ? (
+          <Artwork post={post} />
+        ) : (
+          <GeneralPost post={post} />
+        )}
       </DisableBorderCard>
       {post?.files && post.files.length > 0 && (
         <DisableBorderCard>
@@ -42,6 +37,44 @@ export default function Thread({ post_id }: { post_id: number }) {
             </div>
           </div>
         </DisableBorderCard>
+      )}
+    </div>
+  );
+}
+
+function Artwork({ post }: { post: Feed }) {
+  const artworkMetadata = post.artwork_metadata;
+  if (!artworkMetadata) {
+    return null;
+  }
+
+  return (
+    <div className="w-full h-full">
+      <ArtworkPost
+        editMode={false}
+        title={post.title || ''}
+        content={post.html_contents || ''}
+        image={post.url || ''}
+        artistName={artworkMetadata.artist_name}
+        backgroundColor={artworkMetadata.background_color}
+        size={artworkMetadata.size}
+      />
+    </div>
+  );
+}
+function GeneralPost({ post }: { post: Feed }) {
+  return (
+    <div className="flex flex-col gap-5 w-full">
+      <LexicalHtmlViewer htmlString={post.html_contents || ''} />
+      {post.url && (
+        <div className="relative h-72 w-full rounded-[10px]">
+          <Image
+            fill
+            className="object-contain"
+            src={post.url}
+            alt={post.title || 'Post Image'}
+          />
+        </div>
       )}
     </div>
   );
