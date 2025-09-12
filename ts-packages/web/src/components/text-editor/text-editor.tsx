@@ -99,7 +99,7 @@ export default function TextEditor({
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setDropdownOpen((prev) => !prev)}
-            className="px-3 py-1 rounded bg-[#f5f5f5] text-sm text-text-primary"
+            className="px-3 py-1 rounded bg-card-bg-secondary  text-sm text-text-primary"
           >
             {headingLabel()}
           </button>
