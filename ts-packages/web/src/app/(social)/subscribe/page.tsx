@@ -1,10 +1,10 @@
 'use client';
+import { useTranslations } from 'next-intl';
 import React from 'react';
 
 interface PlanProps {
   title: string;
   price: number;
-  accent: string;
   bg: string;
   text: string;
   chip: string;
@@ -14,11 +14,10 @@ interface PlanProps {
 const plans: PlanProps[] = [
   {
     title: 'Personal',
-    price: 19,
-    accent: 'from-amber-500 to-amber-400',
+    price: 20,
     bg: 'bg-white',
-    text: 'text-zinc-800',
-    chip: 'text-amber-500',
+    text: 'text-[#000203]',
+    chip: 'text-primary',
     features: [
       'Business Solutions',
       'Regular News Update',
@@ -28,8 +27,7 @@ const plans: PlanProps[] = [
   },
   {
     title: 'Business',
-    price: 39,
-    accent: 'from-sky-500 to-sky-400',
+    price: 50,
     bg: 'bg-[#2A4D73]',
     text: 'text-white',
     chip: 'text-white',
@@ -41,9 +39,8 @@ const plans: PlanProps[] = [
     ],
   },
   {
-    title: 'Startup',
-    price: 49,
-    accent: 'from-fuchsia-500 to-fuchsia-400',
+    title: 'Enterprise',
+    price: 100,
     bg: 'bg-[#7E4774]',
     text: 'text-white',
     chip: 'text-white',
@@ -56,20 +53,20 @@ const plans: PlanProps[] = [
   },
 ];
 
-export default function PricingCardsDark() {
+export default function SubscribePage() {
+  const t = useTranslations('Subscribe');
+
   return (
-    <div className="min-h-screen w-full bg-[#0B0D10] text-zinc-200 px-4 py-12">
+    <div className="w-full h-fit bg-card-bg border-card-border px-4 py-12">
       <div className="mx-auto max-w-6xl">
         <div className="text-center">
-          <div className="mx-auto inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-zinc-400">
-            전 세계에서 애용하는 프리미엄
+          <div className="mx-auto inline-flex items-center rounded-full bg-follow-button-bg px-3 py-1 text-xs text-follow-button-text">
+            {t('subscribe_desc_1')}
           </div>
-          <h2 className="mt-4 text-2xl font-semibold text-white">
-            수백 만명이 선택한 Ratel 프리미엄으로 앞서가세요.
+          <h2 className="mt-4 text-2xl font-semibold text-text-primary">
+            {t('subscribe_desc_2')}
           </h2>
-          <p className="mt-2 text-sm text-zinc-400">
-            지금 1개월 무료 이용을 시작하세요.
-          </p>
+          <p className="mt-2 text-sm text-desc-text">{t('subscribe_desc_3')}</p>
         </div>
 
         <div className="mt-8 grid w-full grid-cols-1 gap-6 md:grid-cols-3">
@@ -78,24 +75,18 @@ export default function PricingCardsDark() {
           ))}
         </div>
 
-        <div className="mt-8 flex items-center justify-center gap-3 text-xs text-zinc-500">
-          <span>계획은 언제든 변경 또는 취소할 수 있습니다.</span>
+        <div className="mt-8 flex items-center justify-center gap-3 text-xs text-desc-text">
+          <span>{t('subscribe_info')}</span>
         </div>
       </div>
     </div>
   );
 }
 
-function Card({ title, price, accent, bg, text, chip, features }: PlanProps) {
+function Card({ title, price, bg, text, chip, features }: PlanProps) {
   const isDark = text === 'text-white';
   return (
-    <div
-      className={`relative overflow-hidden rounded-[24px] shadow-xl ring-1 ring-black/10 ${bg}`}
-    >
-      <div
-        className={`pointer-events-none absolute inset-x-0 top-0 h-2 bg-gradient-to-r ${accent}`}
-      />
-
+    <div className={`relative overflow-hidden rounded-[24px] ${bg}`}>
       <div className={`p-6 ${text}`}>
         <h3 className="text-base font-semibold">{title}</h3>
         <div className="mt-2 flex items-baseline gap-1">
@@ -112,7 +103,7 @@ function Card({ title, price, accent, bg, text, chip, features }: PlanProps) {
                     : 'text-emerald-600 bg-black/10'
                 }`}
               />
-              <span className={isDark ? 'text-white/90' : 'text-zinc-700'}>
+              <span className={isDark ? 'text-white/90' : 'text-[#000203]'}>
                 {f}
               </span>
             </li>
@@ -123,8 +114,8 @@ function Card({ title, price, accent, bg, text, chip, features }: PlanProps) {
           type="button"
           className={`mt-6 inline-flex w-full items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold shadow transition ${
             isDark
-              ? 'bg-white/90 text-zinc-900 hover:bg-white'
-              : 'bg-amber-500 text-black hover:bg-amber-400'
+              ? 'bg-white/90 text-[#000203] hover:bg-white'
+              : 'bg-primary text-black hover:bg-primary/80'
           }`}
         >
           Select
