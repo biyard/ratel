@@ -166,6 +166,7 @@ jobs:
 
           BINANCE_API_KEY: ${{ secrets.DEV_BINANCE_API_KEY }}
           BINANCE_SECRET_KEY: ${{ secrets.DEV_BINANCE_SECRET_KEY }}
+          REDIRECT_DOMAIN: https://dev.ratel.foundation
 
           KAIA_ENDPOINT: https://public-en-kairos.node.kaia.io
           KAIA_FEEPAYER_KEY: ${{ secrets.DEV_KAIA_KEY }}

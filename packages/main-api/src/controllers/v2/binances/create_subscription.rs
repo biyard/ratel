@@ -7,8 +7,29 @@ use dto::{
 };
 use rand::{Rng, distr::Alphanumeric};
 
-use crate::{config, utils::wallets::sign_for_binance::sign_for_binance};
+use crate::{
+    config,
+    utils::{users::extract_user_id, wallets::sign_for_binance::sign_for_binance},
+};
 
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    serde::Serialize,
+    serde::Deserialize,
+    Default,
+    dto::JsonSchema,
+)]
+#[serde(rename_all = "lowercase")]
+pub enum SubscribeType {
+    #[default]
+    Personal = 1,
+    Business = 2,
+    Enterprise = 3,
+}
 #[derive(
     Debug,
     Clone,
@@ -22,12 +43,8 @@ use crate::{config, utils::wallets::sign_for_binance::sign_for_binance};
 pub struct SubscribeRequest {
     // #[schemars(description = "User Email Address")]
     // pub user_account: String, // exp: user123@ratel.app
-    #[schemars(description = "Subscribe Plan Title (ex) RATEL_PRO)")]
-    pub plan_code: String, // exp: RATEL_PRO
-    #[schemars(description = "Subscription Fee")]
-    pub amount_usdt: f64, // subscription fee
-                          // #[schemars(description = "Start Subscription Date")]
-                          // pub start_ms_utc: i64, // firstDeductTime
+    #[schemars(description = "Subscribe Type (1: Personal, 2: Business, 3: Enterprise)")]
+    pub subscribe_type: SubscribeType,
 }
 
 #[derive(
@@ -49,34 +66,56 @@ pub struct SubscribeResponse {
 }
 
 pub async fn create_subscription_handler(
-    Extension(_auth): Extension<Option<Authorization>>,
-    State(_pool): State<Pool<Postgres>>,
+    Extension(auth): Extension<Option<Authorization>>,
+    State(pool): State<Pool<Postgres>>,
     Json(req): Json<SubscribeRequest>,
 ) -> Result<Json<SubscribeResponse>> {
+    let _user_id = extract_user_id(&pool, auth).await?;
+
     let conf = config::get();
 
     let base = conf.binance_base_url;
     let api_key = conf.binance_api_key;
     let secret = conf.binance_secret_key;
 
+    let base_domain = conf.redirect_domain;
+
+    let plan_code = if req.subscribe_type == SubscribeType::Personal {
+        "RATEL_PERSONAL"
+    } else if req.subscribe_type == SubscribeType::Enterprise {
+        "RATEL_ENTERPRISE"
+    } else {
+        "RATEL_BUSINESS"
+    };
+
+    let amount_usdt = if req.subscribe_type == SubscribeType::Personal {
+        20
+    } else if req.subscribe_type == SubscribeType::Business {
+        50
+    } else {
+        100
+    };
+
     // let mut rnd = [0u8; 6];
     // rand::rng().fill(&mut rnd);
     // let rnd_tag = hex::encode(rnd);
 
-    let merchant_trade_no = gen_merchant_trade_no(&req.plan_code);
-    tracing::debug!("merchant no: {:?}", merchant_trade_no);
+    let merchant_trade_no = gen_merchant_trade_no(&plan_code);
+    tracing::debug!("merchant no: {:?} {:?}", merchant_trade_no, base_domain);
     // let merchant_contract_code = format!("contract_{}", rnd_tag);
 
     let body = serde_json::json!({
       "env": { "terminalType": "WEB" },
       "merchantTradeNo": merchant_trade_no,
-      "orderAmount": req.amount_usdt,
+      "orderAmount": amount_usdt,
       "currency": "USDT",
-      "description": format!("{} Subscription", req.plan_code),
+      "description": format!("{} Subscription", plan_code),
       "goodsDetails": [{
         "goodsType": "02", "goodsCategory": "Z000",
-        "referenceGoodsId": req.plan_code, "goodsName": req.plan_code
+        "referenceGoodsId": plan_code, "goodsName": plan_code
       }],
+      "returnUrl": base_domain,
+      "cancelUrl": base_domain,
     //   "directDebitContract": { "merchantContractCode": merchant_contract_code, "serviceName": "Ratel Pro", "scenarioCode": "SUBSCRIPTION", "singleUpperLimit": 200.0, "periodic": true, "cycleDebitFixed": true, "cycleType": "MONTH", "cycleValue": 1, "firstDeductTime": req.start_ms_utc, "merchantAccountNo": req.user_account }
     });
 
