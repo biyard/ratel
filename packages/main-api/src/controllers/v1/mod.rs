@@ -19,7 +19,7 @@ mod promotions;
 // mod quizzes;
 mod spaces;
 pub mod subscriptions;
-pub mod supports;
+// pub mod supports;
 mod teams;
 mod totals;
 pub mod users;
@@ -87,10 +87,10 @@ pub async fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Ro
         .nest("/teams", teams::TeamController::new(pool.clone()).route()?)
         .nest("/feeds", feeds::FeedController::new(pool.clone()).route()?)
         .nest("/users", users::UserControllerV1::route(pool.clone())?)
-        .nest(
-            "/supports",
-            supports::SupportController::route(pool.clone())?,
-        )
+        // .nest(
+        //     "/supports",
+        //     supports::SupportController::route(pool.clone())?,
+        // )
         .nest(
             "/subscriptions",
             subscriptions::SubscriptionController::new(pool.clone()).route(),
