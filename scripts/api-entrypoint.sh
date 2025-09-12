@@ -32,8 +32,6 @@ export KAIA_OWNER_KEY=$KEY
 export KAIA_FEEPAYER_ADDR=$ADDR
 export KAIA_FEEPAYER_KEY=$KEY
 
-export TELEGRAM_TOKEN=dummy
-
 export BBS_BLS_X=dummy
 export BBS_BLS_Y=dummy
 export BBS_BLS_D=dummy

@@ -24,14 +24,10 @@ pub struct Vote {
     pub user_id: i64,
 }
 
-#[derive(
-    Debug, Clone, Eq, PartialEq, Default, by_macros::ApiModel, dioxus_translate::Translate, Copy,
-)]
+#[derive(Debug, Clone, Eq, PartialEq, Default, by_macros::ApiModel, Copy)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub enum VoteOption {
     #[default]
-    #[translate(ko = "긍정", en = "Supportive")]
     Supportive = 1,
-    #[translate(ko = "부정", en = "Against")]
     Against = 2,
 }
