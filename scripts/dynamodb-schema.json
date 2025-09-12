@@ -50,7 +50,7 @@
           "KeyType": "HASH"
         },
         {
-          "AttributeName": "created_at",
+          "AttributeName": "sk",
           "KeyType": "RANGE"
         }
       ],

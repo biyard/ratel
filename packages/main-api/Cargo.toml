@@ -5,6 +5,7 @@ authors.workspace = true
 description.workspace = true
 edition.workspace = true
 repository.workspace = true
+default-run = "main-api"
 
 [dependencies]
 dto = { workspace = true, features = ["server"] }
@@ -57,6 +58,10 @@ aws-sdk-rekognition = "1.85.0"
 aws-sdk-textract = "1.82.0"
 tower-http = "0.6.6"
 aws-sdk-dynamodb = "1.92.0"
+
+[[bin]]
+name = "main-api"
+path = "src/main.rs"
 
 [dev-dependencies]
 rest-api = { workspace = true, features = ["test"] }
