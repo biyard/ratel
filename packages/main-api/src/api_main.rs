@@ -8,6 +8,7 @@ use crate::{
         dynamo_migrate::{create_dynamo_tables, get_user_tables},
         mcp_middleware::mcp_middleware,
         sqs_client,
+        telegram::TelegramBot,
     },
 };
 
@@ -109,7 +110,6 @@ pub async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         Notification,
         NoticeQuizAnswer,
         NoticeQuizAttempt,
-        TelegramSubscribe,
         Dagit,
         Artwork,
         Oracle,
@@ -124,6 +124,7 @@ pub async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         ConversationParticipant,
         AuthClient,
         AuthCode,
+        TelegramChannel,
     );
 
     if Industry::query_builder()
@@ -283,8 +284,9 @@ pub async fn api_main() -> Result<Router> {
     let mcp_router = by_axum::axum::Router::new()
         .nest_service("/mcp", controllers::mcp::route(pool.clone()).await?)
         .layer(middleware::from_fn(mcp_middleware));
-    // let bot = teloxide::Bot::new(conf.telegram_token);
-    // let bot = std::sync::Arc::new(bot);
+    let bot = TelegramBot::new(conf.telegram_token).await?;
+    // FIXME: Is this the correct way to inject and pass the states into the route?
+    // find better way to  management Axum's state or dependency injection for better modularity and testability.
     let api_router = route(
         pool.clone(),
         sqs_client,
@@ -293,6 +295,7 @@ pub async fn api_main() -> Result<Router> {
         textract_client,
         metadata_s3_client,
         private_s3_client,
+        bot,
     )
     .await?
     .layer(middleware::from_fn(authorization_middleware))

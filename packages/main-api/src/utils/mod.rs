@@ -13,6 +13,7 @@ pub mod referal_code;
 pub mod s3_upload;
 pub mod sqs_client;
 pub mod telegram;
+pub mod time;
 pub mod users;
 pub mod wallets;
 
