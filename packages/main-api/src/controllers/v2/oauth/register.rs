@@ -13,6 +13,7 @@ use crate::{
         response_type::ResponseType,
         scope::{Scope, deserialize_scope_vec},
     },
+    services::dual_write::DualWriteService
 };
 
 #[derive(
@@ -83,7 +84,7 @@ pub async fn register_handler(
             .into_response();
     };
 
-    let repo = AuthClient::get_repository(pool)
+    let client_result = AuthClient::get_repository(pool)
         .insert(
             client_id.clone(),
             client_secret.clone(),
@@ -91,15 +92,26 @@ pub async fn register_handler(
             vec![],
         )
         .await;
-    if repo.is_err() {
-        return (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(serde_json::json!({
-                "error": "server_error",
-                "error_description": "failed to register client"
-            })),
-        )
-            .into_response();
+    
+    match client_result {
+        Ok(auth_client) => {
+            // Dual-write to DynamoDB
+            let dual_write_service = DualWriteService::new();
+            if let Err(e) = dual_write_service.write_auth_client(&auth_client).await {
+                tracing::error!("Failed to write auth client to DynamoDB during registration: {:?}", e);
+                // Don't fail the registration if DynamoDB write fails
+            }
+        }
+        Err(_) => {
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(serde_json::json!({
+                    "error": "server_error",
+                    "error_description": "failed to register client"
+                })),
+            )
+                .into_response();
+        }
     }
 
     let response = ClientRegistrationResponse {

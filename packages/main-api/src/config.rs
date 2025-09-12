@@ -27,6 +27,7 @@ pub struct Config {
     pub did: DidConfig,
     pub bedrock: BedrockConfig,
     pub private_bucket_name: &'static str,
+    pub dual_write: DualWriteConfig,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -60,6 +61,12 @@ pub struct BucketConfig {
 pub struct BedrockConfig {
     pub nova_micro_model_id: &'static str,
     pub nova_lite_model_id: &'static str,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct DualWriteConfig {
+    pub enabled: bool,
+    pub table_name: &'static str,
 }
 
 impl Default for Config {
@@ -119,6 +126,12 @@ impl Default for Config {
             bedrock: BedrockConfig {
                 nova_micro_model_id: option_env!("NOVA_MICRO_MODEL_ID").expect("You must set NOVA_MICRO_MODEL_ID"),
                 nova_lite_model_id: option_env!("NOVA_LITE_MODEL_ID").expect("You must set NOVA_LITE_MODEL_ID"),
+            },
+            dual_write: DualWriteConfig {
+                enabled: option_env!("DUAL_WRITE_ENABLED")
+                    .map(|s| s.parse::<bool>().unwrap_or(false))
+                    .unwrap_or(false),
+                table_name: option_env!("DUAL_WRITE_TABLE_NAME").unwrap_or("ratel-main"),
             },
         }
     }

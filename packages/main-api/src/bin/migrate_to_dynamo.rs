@@ -22,13 +22,13 @@ async fn main() -> Result<()> {
         "migrate" => run_full_migration().await,
         "resume" => {
             let migration_id = args.get(2).ok_or_else(|| {
-                dto::Error::InvalidInputValue("Migration ID required for resume".to_string())
+                dto::Error::Unknown("Migration ID required for resume".to_string())
             })?;
             resume_migration(migration_id).await
         }
         "status" => {
             let migration_id = args.get(2).ok_or_else(|| {
-                dto::Error::InvalidInputValue("Migration ID required for status check".to_string())
+                dto::Error::Unknown("Migration ID required for status check".to_string())
             })?;
             check_migration_status(migration_id).await
         }
@@ -188,12 +188,12 @@ async fn check_migration_status(migration_id: &str) -> Result<()> {
 
 async fn save_migration_state(state: &main_api::etl::MigrationState) -> Result<()> {
     let state_json = serde_json::to_string_pretty(state)
-        .map_err(|e| dto::Error::SerializationError(format!("Failed to serialize state: {}", e)))?;
+        .map_err(|e| dto::Error::DynamoDbSerializationError(format!("Failed to serialize state: {}", e)))?;
     
     let filename = format!("migration_state_{}.json", state.migration_id);
     tokio::fs::write(&filename, state_json)
         .await
-        .map_err(|e| dto::Error::IoError(format!("Failed to save state file: {}", e)))?;
+        .map_err(|e| dto::Error::ServerError(format!("Failed to save state file: {}", e)))?;
     
     info!("Migration state saved to: {}", filename);
     Ok(())
@@ -203,10 +203,10 @@ async fn load_migration_state(migration_id: &str) -> Result<main_api::etl::Migra
     let filename = format!("migration_state_{}.json", migration_id);
     let state_json = tokio::fs::read_to_string(&filename)
         .await
-        .map_err(|e| dto::Error::IoError(format!("Failed to load state file {}: {}", filename, e)))?;
+        .map_err(|e| dto::Error::ServerError(format!("Failed to load state file {}: {}", filename, e)))?;
     
     let state: main_api::etl::MigrationState = serde_json::from_str(&state_json)
-        .map_err(|e| dto::Error::SerializationError(format!("Failed to deserialize state: {}", e)))?;
+        .map_err(|e| dto::Error::JsonDeserializeError(format!("Failed to deserialize state: {}", e)))?;
     
     Ok(state)
 }
@@ -216,7 +216,7 @@ async fn get_database_pool(database_url: &str) -> Result<sqlx::PgPool> {
     
     let pool = sqlx::PgPool::connect(database_url)
         .await
-        .map_err(|e| dto::Error::DatabaseError(format!("Failed to connect to database: {}", e)))?;
+        .map_err(|e| dto::Error::DatabaseException(format!("Failed to connect to database: {}", e)))?;
     
     info!("Database connection established");
     Ok(pool)
