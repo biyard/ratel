@@ -4,9 +4,11 @@ use dto::{
 };
 use std::{collections::HashMap, time::SystemTime};
 
-use crate::api_main::migration;
+use crate::{
+    api_main::{self, migration},
+    config,
+};
 
-use super::*;
 use rest_api::ApiService;
 
 pub struct TestContext {
@@ -47,7 +49,7 @@ pub async fn setup_test_admin(id: &str, pool: &sqlx::Pool<sqlx::Postgres>) -> Re
             format!("0x{}", id),
             "".to_string(), // password
             Membership::Free,
-            None,
+            Some(Theme::Dark),
             format!("ref-admin-{}", id), // unique referral code for admin
             None,
             None,
@@ -88,7 +90,7 @@ pub async fn setup_test_user(id: &str, pool: &sqlx::Pool<sqlx::Postgres>) -> Res
             format!("0x{}", id),
             "".to_string(), // password
             Membership::Free,
-            None,
+            Some(Theme::Dark),
             format!("ref-admin-{}", id), // unique referral code for admin
             None,
             None,
@@ -151,35 +153,76 @@ pub async fn setup() -> Result<TestContext> {
         panic!("Database is not initialized. Call init() first.");
     };
 
-    let _ = sqlx::query(
-        r#"
-        CREATE OR REPLACE FUNCTION set_updated_at()
-            RETURNS TRIGGER AS $$
-            BEGIN
-                NEW.updated_at := EXTRACT(EPOCH FROM now()); -- seconds
-                RETURN NEW;
-            END;
-        $$ LANGUAGE plpgsql;
-        "#,
-    )
-    .execute(&pool)
-    .await;
+    if option_env!("TEST_MIGRATE")
+        .map(|s| s.parse::<bool>().unwrap_or(true))
+        .unwrap_or(false)
+    {
+        migration(&pool).await?;
 
-    let _ = sqlx::query(
-        r#"
-        CREATE OR REPLACE FUNCTION set_created_at()
-            RETURNS TRIGGER AS $$
-            BEGIN
-                NEW.created_at := EXTRACT(EPOCH FROM now()); -- seconds
-                RETURN NEW;
-            END;
-        $$ LANGUAGE plpgsql;
-        "#,
-    )
-    .execute(&pool)
-    .await;
+        if Industry::query_builder()
+            .id_equals(1)
+            .query()
+            .map(Industry::from)
+            .fetch_optional(&pool)
+            .await?
+            .is_none()
+        {
+            Industry::get_repository(pool.clone())
+                .insert("Crypto".to_string())
+                .await?;
+        }
 
-    let _ = migration(&pool).await;
+        if User::query_builder()
+            .id_equals(1)
+            .query()
+            .map(User::from)
+            .fetch_optional(&pool)
+            .await?
+            .is_none()
+        {
+            User::get_repository(pool.clone())
+            .insert(
+                "ServiceAdmin".to_string(),
+                "user-principal-1".to_string(),
+                "".to_string(),
+                "https://metadata.ratel.foundation/metadata/0faf45ec-35e1-40e9-bff2-c61bb52c7d19"
+                    .to_string(),
+                true,
+                true,
+                UserType::Individual,
+                None,
+                "admin".to_string(),
+                "".to_string(),
+                "0x000".to_string(),
+                "password".to_string(),
+                Membership::Free,
+                Some(Theme::Dark),
+                "".to_string(),
+                None,
+                None,
+            )
+            .await?;
+        }
+
+        if Group::query_builder()
+            .id_equals(1)
+            .query()
+            .map(Group::from)
+            .fetch_optional(&pool)
+            .await?
+            .is_none()
+        {
+            Group::get_repository(pool.clone())
+                .insert(
+                    "ServiceAdmin".to_string(),
+                    "".to_string(),
+                    "".to_string(),
+                    1,
+                    0xffffffffffffffffu64 as i64,
+                )
+                .await?;
+        }
+    }
 
     let id = uuid::Uuid::new_v4().to_string();
     let user = setup_test_user(&id, &pool).await.unwrap();

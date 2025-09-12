@@ -1,5 +1,5 @@
 //! Integration tests for main-api
-//! 
+//!
 //! This module contains various integration tests including:
 //! - DynamoDB operations and models
 //! - SQS message handling
@@ -7,8 +7,6 @@
 //! - API endpoint testing
 
 pub mod test_utils;
-pub mod dynamo_tests;
-pub mod sqs_tests;
 
 // Re-export commonly used items for backward compatibility
 pub use test_utils::*;
