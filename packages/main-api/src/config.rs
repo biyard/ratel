@@ -5,10 +5,6 @@ use by_types::config::*;
 pub struct Config {
     pub env: &'static str,
     pub domain: &'static str,
-    pub openapi_key: &'static str,
-    pub openapi_url: &'static str,
-    pub assembly_system_url: &'static str,
-    pub assembly_detail_url: &'static str,
     pub aws: AwsConfig,
     pub bucket: BucketConfig,
     pub database: DatabaseConfig,
@@ -74,7 +70,7 @@ impl Default for Config {
         Config {
             watermark_sqs_url: option_env!("WATERMARK_QUEUE_URL").expect("You must set WATERMARK_QUEUE_URL"),
             kaia: KaiaConfig {
-                endpoint: option_env!("KAIA_ENDPOINT").expect("You must set KAIA_ENDPOINT"),
+                endpoint: option_env!("KAIA_ENDPOINT").unwrap_or("https://public-en-kairos.node.kaia.io"),
                 owner_key: option_env!("KAIA_OWNER_KEY").expect("You must set KAIA_OWNER_KEY"),
                 owner_address: option_env!("KAIA_OWNER_ADDR").expect("You must set KAIA_OWNER_ADDRESS"),
                 feepayer_key: option_env!("KAIA_FEEPAYER_KEY").expect("You must set KAIA_FEEPAYER_KEY"),
@@ -83,13 +79,15 @@ impl Default for Config {
             from_email: option_env!("FROM_EMAIL").unwrap_or("no-reply@ratel.foundation"),
             env: option_env!("ENV").expect("You must set ENV"),
             domain: option_env!("DOMAIN").expect("You must set DOMAIN"),
-            openapi_key: option_env!("OPENAPI_KEY").expect("OPENAPI_KEY is required"),
-            openapi_url: "https://open.assembly.go.kr/portal/openapi/",
-            assembly_system_url: "https://likms.assembly.go.kr/filegate/servlet/FileGate",
-            assembly_detail_url: "https://likms.assembly.go.kr/bill/billDetail.do",
             signing_domain: option_env!("AUTH_DOMAIN").expect("AUTH_DOMAIN is required"),
             aws: AwsConfig::default(),
-            database: DatabaseConfig::default(),
+            database: DatabaseConfig::Postgres {
+                url: option_env!("DATABASE_URL").unwrap_or("postgresql://postgres:postgres@localhost:5432/ratel"),
+                pool_size: option_env!("DATABASE_POOL_SIZE")
+                    .unwrap_or("10".into())
+                    .parse()
+                    .expect("DATABASE_POOL_SIZE must be a number")
+            },
             auth: AuthConfig::default(),
             bucket: BucketConfig {
                 name: option_env!("BUCKET_NAME").expect("You must set BUCKET_NAME"),

@@ -64,7 +64,7 @@ pub enum DatabaseConfig {
 impl Default for DatabaseConfig {
     fn default() -> Self {
         match option_env!("DATABASE_TYPE")
-            .expect("You must set DATABASE_TYPE")
+            .unwrap_or("postgres")
             .to_lowercase()
             .as_str()
         {
