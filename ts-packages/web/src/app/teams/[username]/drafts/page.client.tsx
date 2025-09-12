@@ -46,7 +46,7 @@ export default function TeamDraftPage({
     threshold: 1,
   });
 
-  const { mutateAsync } = useDeleteFeedMutation();
+  const { mutateAsync } = useDeleteFeedMutation(team.id, FeedStatus.Draft);
 
   const removeDraft = async (
     feedId: number,

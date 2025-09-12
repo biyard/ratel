@@ -18,7 +18,7 @@ export default function ThreadComment({ postId }: { postId: number }) {
   const { data: user } = useSuspenseUserInfo();
   const {
     createComment: { mutateAsync },
-  } = useDraftMutations();
+  } = useDraftMutations(user?.id || 0);
   const handleSubmit = async (
     postId: number,
     parentId: number,

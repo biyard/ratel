@@ -24,7 +24,7 @@ export default function DraftPage() {
   } = useInfiniteFeeds(user_id, FeedStatus.Draft);
 
   const { openPostEditorPopup } = usePostEditorContext();
-  const { mutateAsync } = useDeleteFeedMutation();
+  const { mutateAsync } = useDeleteFeedMutation(user_id, FeedStatus.Draft);
   const removeDraft = async (
     feedId: number,
     feedType: FeedType,
@@ -120,7 +120,7 @@ export default function DraftPage() {
       </div>
 
       <div
-        className={`z-50 max-tablet:fixed max-tablet:bottom-4 max-tablet:right-4 tablet:w-80 tablet:pl-4 tablet:static`}
+        className={`max-tablet:fixed max-tablet:bottom-4 max-tablet:right-4 tablet:w-80 tablet:pl-4 tablet:static`}
       >
         <CreatePostButton />
       </div>

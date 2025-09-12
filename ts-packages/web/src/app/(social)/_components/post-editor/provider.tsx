@@ -80,13 +80,15 @@ export function PostEditorProvider({
 }) {
   const { data: user } = useUserInfo();
   const { selectedTeam } = useTeamContext();
-  const { createDraft, updateDraft, publishDraft } = useDraftMutations();
+  const targetId = selectedTeam?.id || user?.id || 0;
+
+  const { createDraft, updateDraft, publishDraft } =
+    useDraftMutations(targetId);
   /*
     If Team is selected, use `team_id` as targetId
     Otherwise, use `user_id` as targetId
     if Not Logged in, use `0` as targetId
   */
-  const targetId = selectedTeam?.id || user?.id || 0;
 
   const pathname = usePathname();
 
@@ -163,7 +165,6 @@ export function PostEditorProvider({
     setSize(newSize);
     setIsModified(true);
   };
-
   const openPostEditorPopup = async (id?: number) => {
     if (!id) {
       resetState();
@@ -275,6 +276,12 @@ export function PostEditorProvider({
   }, [autoSaveDraft]);
 
   useEffect(() => {
+    if (!expand) {
+      resetState();
+    }
+  }, [expand, resetState]);
+
+  useEffect(() => {
     resetState();
   }, [pathname, resetState]);
 
@@ -290,17 +297,19 @@ export function PostEditorProvider({
       }
       const finalDraftId = await handleUpdateDraft();
       if (feed?.status !== FeedStatus.Published) {
-        await publishDraft.mutateAsync(
-          {
-            draftId: finalDraftId,
-          },
-          {
-            onSuccess: () => {
-              router.push(route.threadByFeedId(finalDraftId));
-              resetState();
-            },
-          },
-        );
+        await publishDraft.mutateAsync({ draftId: finalDraftId });
+        router.push(route.threadByFeedId(finalDraftId));
+        // await publishDraft.mutateAsync(
+        //   {
+        //     draftId: finalDraftId,
+        //   },
+        //   {
+        //     onSuccess: () => {
+        //       router.push(route.threadByFeedId(finalDraftId));
+        //       resetState();
+        //     },
+        //   },
+        // );
       }
       resetState();
     } catch {

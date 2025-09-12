@@ -1,7 +1,7 @@
 import { useMutation, InfiniteData } from '@tanstack/react-query';
 import { getQueryClient } from '@/providers/getQueryClient';
 import { feedKeys } from '@/constants';
-import { Feed, FeedType } from '@/lib/api/models/feeds'; // FeedType 추가
+import { Feed, FeedStatus, FeedType } from '@/lib/api/models/feeds'; // FeedType 추가
 import { showErrorToast } from '@/lib/toast';
 import { apiFetch } from '@/lib/api/apiFetch';
 import { ratelApi } from '@/lib/api/ratel_api';
@@ -24,7 +24,7 @@ export async function deleteFeed(feedId: number): Promise<void> {
   }
 }
 
-export function useDeleteFeedMutation() {
+export function useDeleteFeedMutation(status: FeedStatus, targetId: number) {
   const queryClient = getQueryClient();
 
   return useMutation({
@@ -60,7 +60,10 @@ export function useDeleteFeedMutation() {
       }
 
       const detailQueryKey = feedKeys.detail(feedId);
-      const listQueryKey = feedKeys.lists();
+      const listQueryKey = feedKeys.list({
+        userId: targetId,
+        status,
+      });
 
       await queryClient.cancelQueries({ queryKey: detailQueryKey });
       await queryClient.cancelQueries({ queryKey: listQueryKey });

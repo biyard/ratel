@@ -39,6 +39,7 @@ import { BoosterType } from '@/lib/api/models/notice';
 import useFeedById from '@/hooks/feeds/use-feed-by-id';
 import { useLikeFeedMutation } from '@/hooks/feeds/use-like-feed-mutation';
 import { useDeleteFeedMutation } from '@/hooks/feeds/use-delete-feed-mutation';
+import { FeedStatus } from '@/lib/api/models/feeds';
 
 export default function Header({ postId }: { postId: number }) {
   const t = useTranslations('Threads');
@@ -73,7 +74,7 @@ export default function Header({ postId }: { postId: number }) {
   const user_id = user.data ? user.data.id : 0;
 
   const likeMutation = useLikeFeedMutation();
-  const deleteMutation = useDeleteFeedMutation();
+  const deleteMutation = useDeleteFeedMutation(user_id, FeedStatus.Published);
 
   const isPostOwner =
     author_id === user_id || teams.find((team) => team.id === author_id);
