@@ -3,21 +3,32 @@ use dto::{Error, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+use crate::types::dynamo_entity_type::*;
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct BaseModel {
     pub pk: String,
     pub sk: String,
-    pub entity_type: String,
+    #[serde(rename = "type")]
+    pub entity_type: EntityType,
     pub created_at: i64,
     pub updated_at: i64,
     pub gsi1_pk: Option<String>,
     pub gsi1_sk: Option<String>,
     pub gsi2_pk: Option<String>,
     pub gsi2_sk: Option<String>,
+    pub gsi3_pk: Option<String>,
+    pub gsi3_sk: Option<String>,
+    pub gsi4_pk: Option<String>,
+    pub gsi4_sk: Option<String>,
+    pub gsi5_pk: Option<String>,
+    pub gsi5_sk: Option<String>,
+    pub gsi6_pk: Option<String>,
+    pub gsi6_sk: Option<String>,
 }
 
 impl BaseModel {
-    pub fn new(pk: String, sk: String, entity_type: String) -> Self {
+    pub fn new(pk: String, sk: String, entity_type: EntityType) -> Self {
         let now = chrono::Utc::now().timestamp();
         Self {
             pk,
@@ -25,10 +36,7 @@ impl BaseModel {
             entity_type,
             created_at: now,
             updated_at: now,
-            gsi1_pk: None,
-            gsi1_sk: None,
-            gsi2_pk: None,
-            gsi2_sk: None,
+            ..Default::default()
         }
     }
 
@@ -44,16 +52,49 @@ impl BaseModel {
         self
     }
 
+    pub fn with_gsi3(mut self, pk: String, sk: Option<String>) -> Self {
+        self.gsi3_pk = Some(pk);
+        self.gsi3_sk = sk;
+        self
+    }
+
+    pub fn with_gsi4(mut self, pk: String, sk: Option<String>) -> Self {
+        self.gsi4_pk = Some(pk);
+        self.gsi4_sk = sk;
+        self
+    }
+
+    pub fn with_gsi5(mut self, pk: String, sk: Option<String>) -> Self {
+        self.gsi5_pk = Some(pk);
+        self.gsi5_sk = sk;
+        self
+    }
+
+    pub fn with_gsi6(mut self, pk: String, sk: Option<String>) -> Self {
+        self.gsi6_pk = Some(pk);
+        self.gsi6_sk = sk;
+        self
+    }
+
     pub fn update_timestamp(&mut self) {
         self.updated_at = chrono::Utc::now().timestamp();
     }
 }
 
 pub trait DynamoModel {
-    fn to_item(&self) -> Result<HashMap<String, AttributeValue>>;
+    fn to_item(&self) -> Result<HashMap<String, AttributeValue>>
+    where
+        Self: Serialize + Sized,
+    {
+        serde_dynamo::to_item(self).map_err(|e| Error::DynamoDbError(format!("{:?}", e)))
+    }
+
     fn from_item(item: HashMap<String, AttributeValue>) -> Result<Self>
     where
-        Self: Sized;
+        Self: for<'de> Deserialize<'de> + Sized,
+    {
+        serde_dynamo::from_item(item).map_err(|e| Error::DynamoDbError(format!("{:?}", e)))
+    }
     fn pk(&self) -> String;
     fn sk(&self) -> String;
 }
@@ -119,10 +160,7 @@ pub fn extract_optional_number(item: &HashMap<String, AttributeValue>, key: &str
         .and_then(|s| s.parse::<i64>().ok())
 }
 
-pub fn extract_list_strings(
-    item: &HashMap<String, AttributeValue>,
-    key: &str,
-) -> Vec<String> {
+pub fn extract_list_strings(item: &HashMap<String, AttributeValue>, key: &str) -> Vec<String> {
     item.get(key)
         .and_then(|v| v.as_l().ok())
         .map(|list| {

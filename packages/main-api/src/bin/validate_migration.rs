@@ -1,5 +1,16 @@
 use bdk::prelude::*;
-use dto::{Result, User};
+use dto::{Result};
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct SimpleUser {
+    pub id: i64,
+    pub nickname: String,
+    pub email: String,
+    pub username: String,
+    pub created_at: i64,
+    pub updated_at: i64,
+}
 use main_api::{
     models::dynamo::{DynamoUser, DynamoModel},
     utils::aws::DynamoClient,
@@ -139,7 +150,7 @@ async fn validate_record_counts() -> Result<()> {
     if errors == 0 {
         info!("✅ All record counts match!");
     } else {
-        return Err(dto::Error::InvalidInputValue(format!("{} record count mismatches found", errors)));
+        return Err(dto::Error::Unknown(format!("{} record count mismatches found", errors)));
     }
 
     Ok(())
@@ -152,9 +163,16 @@ async fn validate_users() -> Result<()> {
     let dynamo_client = get_dynamo_client().await?;
 
     // Get sample of users from PostgreSQL
-    let pg_users = User::fetch_many(&postgres_pool, "ORDER BY id LIMIT 50")
-        .await
-        .map_err(|e| dto::Error::DatabaseException(format!("Failed to fetch PostgreSQL users: {:?}", e)))?;
+    let pg_user_rows: Vec<(i64, String, String, String, i64, i64)> = sqlx::query_as(
+        "SELECT id, nickname, email, username, created_at, updated_at FROM users ORDER BY id LIMIT 50"
+    )
+    .fetch_all(&postgres_pool)
+    .await
+    .map_err(|e| dto::Error::DatabaseException(format!("Failed to fetch PostgreSQL users: {:?}", e)))?;
+    
+    let pg_users: Vec<SimpleUser> = pg_user_rows.into_iter().map(|(id, nickname, email, username, created_at, updated_at)| {
+        SimpleUser { id, nickname, email, username, created_at, updated_at }
+    }).collect();
 
     let mut errors = 0;
     for pg_user in &pg_users {
@@ -191,7 +209,7 @@ async fn validate_users() -> Result<()> {
     if errors == 0 {
         info!("✅ All {} user records validated successfully!", pg_users.len());
     } else {
-        return Err(dto::Error::InvalidInputValue(format!("{} user validation errors found", errors)));
+        return Err(dto::Error::Unknown(format!("{} user validation errors found", errors)));
     }
 
     Ok(())
@@ -248,7 +266,7 @@ async fn validate_relationships() -> Result<()> {
     if errors == 0 {
         info!("✅ All relationship records validated successfully!");
     } else {
-        return Err(dto::Error::InvalidInputValue(format!("{} relationship validation errors found", errors)));
+        return Err(dto::Error::Unknown(format!("{} relationship validation errors found", errors)));
     }
 
     Ok(())
@@ -261,9 +279,16 @@ async fn validate_sample_records(sample_size: usize) -> Result<()> {
     let dynamo_client = get_dynamo_client().await?;
 
     // Get random sample of users
-    let pg_users = User::fetch_many(&postgres_pool, &format!("ORDER BY RANDOM() LIMIT {}", sample_size))
-        .await
-        .map_err(|e| dto::Error::DatabaseException(format!("Failed to fetch sample users: {:?}", e)))?;
+    let pg_user_rows: Vec<(i64, String, String, String, i64, i64)> = sqlx::query_as(
+        &format!("SELECT id, nickname, email, username, created_at, updated_at FROM users ORDER BY RANDOM() LIMIT {}", sample_size)
+    )
+    .fetch_all(&postgres_pool)
+    .await
+    .map_err(|e| dto::Error::DatabaseException(format!("Failed to fetch sample users: {:?}", e)))?;
+    
+    let pg_users: Vec<SimpleUser> = pg_user_rows.into_iter().map(|(id, nickname, email, username, created_at, updated_at)| {
+        SimpleUser { id, nickname, email, username, created_at, updated_at }
+    }).collect();
 
     let mut errors = 0;
     for (i, pg_user) in pg_users.iter().enumerate() {
@@ -303,13 +328,13 @@ async fn validate_sample_records(sample_size: usize) -> Result<()> {
     if errors == 0 {
         info!("✅ All {} sample records validated successfully!", pg_users.len());
     } else {
-        return Err(dto::Error::InvalidInputValue(format!("{} validation errors found", errors)));
+        return Err(dto::Error::Unknown(format!("{} validation errors found", errors)));
     }
 
     Ok(())
 }
 
-fn validate_user_fields(pg_user: &User, dynamo_user: &DynamoUser) -> bool {
+fn validate_user_fields(pg_user: &SimpleUser, dynamo_user: &DynamoUser) -> bool {
     let mut valid = true;
 
     if pg_user.id != dynamo_user.id {
