@@ -527,5 +527,11 @@
     "language": "Language",
     "select_language": "Select a language",
     "cancel": "Cancel"
+  },
+  "Subscribe": {
+    "subscribe_desc_1": "Premium products loved around the world",
+    "subscribe_desc_2": "Stay ahead with Ratel Premium.",
+    "subscribe_desc_3": "Start using it now.",
+    "subscribe_info": "Plans can be changed or cancelled at any time."
   }
 }
