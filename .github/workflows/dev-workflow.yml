@@ -11,7 +11,7 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    needs: [main-api, nextjs-web, fetcher]
+    needs: [main-api, nextjs-web, fetcher, image-worker]
     steps:
       - uses: actions/checkout@v3
         with:
@@ -578,7 +578,7 @@ jobs:
   create-release-pr:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/dev'
-    needs: [image-worker, android-apk, ios-testflight, deploy]
+    needs: [android-apk, ios-testflight, deploy]
     steps:
       - uses: actions/checkout@v3
         with:

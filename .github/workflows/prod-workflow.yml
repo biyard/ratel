@@ -11,7 +11,7 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    needs: [main-api, nextjs-web, fetcher]
+    needs: [main-api, nextjs-web, fetcher, image-worker]
     steps:
       - uses: actions/checkout@v3
         with:
