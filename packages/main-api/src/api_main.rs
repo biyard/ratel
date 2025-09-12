@@ -5,7 +5,7 @@ use crate::{
     route::route,
     utils::{
         aws::{BedrockClient, RekognitionClient, S3Client, TextractClient},
-        dynamo_migrate::{create_dynamo_tables, get_user_tables},
+        // dynamo_migrate::{create_dynamo_tables, get_user_tables},
         mcp_middleware::mcp_middleware,
         sqs_client,
         telegram::TelegramBot,
@@ -53,15 +53,15 @@ pub async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         User,
         Group,
         GroupMember,
-        AssemblyMember,
-        BillWriter,
+        // AssemblyMember,
+        // BillWriter,
         Vote,
         Proposer,
         Support,
         Subscription,
-        PresidentialCandidate,
-        ElectionPledge,
-        ElectionPledgeLike,
+        // PresidentialCandidate,
+        // ElectionPledge,
+        // ElectionPledgeLike,
         Industry,
         UserIndustry,
         Feed,
@@ -89,14 +89,14 @@ pub async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         SprintLeagueVote,
         TeamMember,
         News,
-        Quiz,
-        QuizResult,
-        ElectionPledgeQuizLike,
-        ElectionPledgeQuizDislike,
+        // Quiz,
+        // QuizResult,
+        // ElectionPledgeQuizLike,
+        // ElectionPledgeQuizDislike,
         Promotion,
-        AdvocacyCampaign,
-        AdvocacyCampaignAuthor,
-        AdvocacyCampaignVoter,
+        // AdvocacyCampaign,
+        // AdvocacyCampaignAuthor,
+        // AdvocacyCampaignVoter,
         EventLog,
         Badge,
         UserBadge,
@@ -127,75 +127,11 @@ pub async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         TelegramChannel,
     );
 
-    if Industry::query_builder()
-        .id_equals(1)
-        .query()
-        .map(Industry::from)
-        .fetch_optional(pool)
-        .await?
-        .is_none()
-    {
-        Industry::get_repository(pool.clone())
-            .insert("Crypto".to_string())
-            .await?;
-    }
-
-    if User::query_builder()
-        .id_equals(1)
-        .query()
-        .map(User::from)
-        .fetch_optional(pool)
-        .await?
-        .is_none()
-    {
-        User::get_repository(pool.clone())
-            .insert(
-                "ServiceAdmin".to_string(),
-                "user-principal-1".to_string(),
-                "".to_string(),
-                "https://metadata.ratel.foundation/metadata/0faf45ec-35e1-40e9-bff2-c61bb52c7d19"
-                    .to_string(),
-                true,
-                true,
-                UserType::Individual,
-                None,
-                "admin".to_string(),
-                "".to_string(),
-                "0x000".to_string(),
-                "password".to_string(),
-                Membership::Free,
-                None,
-                "".to_string(),
-                None,
-                None,
-            )
-            .await?;
-    }
-
-    if Group::query_builder()
-        .id_equals(1)
-        .query()
-        .map(Group::from)
-        .fetch_optional(pool)
-        .await?
-        .is_none()
-    {
-        Group::get_repository(pool.clone())
-            .insert(
-                "ServiceAdmin".to_string(),
-                "".to_string(),
-                "".to_string(),
-                1,
-                0xffffffffffffffffu64 as i64,
-            )
-            .await?;
-    }
-
     // Create DynamoDB tables
-    tracing::info!("Creating DynamoDB tables");
-    let dynamo_tables = get_user_tables();
-    create_dynamo_tables(dynamo_tables).await?;
-    tracing::info!("DynamoDB tables created successfully");
+    // tracing::info!("Creating DynamoDB tables");
+    // let dynamo_tables = get_user_tables();
+    // create_dynamo_tables(dynamo_tables).await?;
+    // tracing::info!("DynamoDB tables created successfully");
 
     tracing::info!("Migration done");
     Ok(())
