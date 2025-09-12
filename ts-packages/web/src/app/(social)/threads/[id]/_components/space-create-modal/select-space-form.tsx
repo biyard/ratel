@@ -1,15 +1,12 @@
 'use client';
 
-import { Space, SpaceType } from '@/lib/api/models/spaces';
-import { noticeSpaceCreateRequest } from '@/lib/api/models/notice';
+import { createSpaceRequest, SpaceType } from '@/lib/api/models/spaces';
+import { BoosterType } from '@/lib/api/models/notice';
 
 import { Discuss, Palace, Mega, Vote } from '@/components/icons';
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 
-import { LoadablePrimaryButton } from '@/components/button/primary-button';
-import { apiFetch } from '@/lib/api/apiFetch';
 import { config } from '@/config';
-import { ratelApi } from '@/lib/api/ratel_api';
 import { route } from '@/route';
 import { useRouter } from 'next/navigation';
 import { usePopup } from '@/lib/contexts/popup-service';
@@ -18,6 +15,9 @@ import SpaceConfigForm from './space-config-form';
 import RadioButton from '@/components/radio-button';
 import { Cube } from '@/assets/icons/shopping';
 import { useTranslations } from 'next-intl';
+import { useSpaceMutation } from '@/hooks/use-space';
+import { showErrorToast } from '@/lib/toast';
+import { useSprintLeagueSpaceMutation } from '@/hooks/use-sprint-league';
 
 interface SpaceFormProps {
   type: SpaceType;
@@ -63,7 +63,7 @@ const SpaceForms: SpaceFormProps[] = [
   },
   {
     type: SpaceType.dAgit,
-    Icon: <Cube />,
+    Icon: <Cube className="[&>path]:stroke-[var(--color-neutral-500)]" />,
     labelKey: 'dAgit.label',
     descKey: 'dAgit.desc',
     disabled: true,
@@ -83,95 +83,100 @@ export default function SelectSpaceForm({ feed_id }: { feed_id: number }) {
   const [showConfigForm, setShowConfigForm] = useState(false);
   const router = useRouter();
   const popup = usePopup();
-  const t = useTranslations('SpaceForms');
 
-  // Update popup title based on current form state
-  useEffect(() => {
-    // Add a small delay to prevent rapid state changes when modal opens
-    const timeoutId = setTimeout(() => {
-      if (showConfigForm) {
-        // Don't set a title for config form - it has its own header
-        // Also disable the close button to remove the X icon
-        popup.withTitle('').withoutClose();
+  const isBoosterEnabled =
+    selectedType === SpaceType.Poll ||
+    selectedType === SpaceType.Notice ||
+    selectedType === SpaceType.SprintLeague;
+
+  const {
+    create: { mutateAsync },
+  } = useSpaceMutation();
+
+  const {
+    create: { mutateAsync: mutateSprintAsync },
+  } = useSprintLeagueSpaceMutation();
+
+  const handleCreateSpace = async ({
+    spaceType,
+    feedId,
+    userIds = [],
+    startedAt = null,
+    endedAt = null,
+    boosterType = null,
+  }: {
+    spaceType: SpaceType;
+    feedId: number;
+    userIds: number[];
+    startedAt: number | null;
+    endedAt: number | null;
+    boosterType: BoosterType | null;
+  }) => {
+    if (isLoading) return;
+    setLoading(true);
+    try {
+      const req = createSpaceRequest(
+        spaceType,
+        feedId,
+        userIds,
+        0,
+        startedAt,
+        endedAt,
+        boosterType,
+      );
+      let spaceId = 0;
+      if (spaceType === SpaceType.SprintLeague) {
+        const space = await mutateSprintAsync({
+          spaceReq: req,
+        });
+        spaceId = space.id;
       } else {
-        popup.withTitle('Select a Space Type');
+        const space = await mutateAsync(req);
+        spaceId = space.id;
       }
-    }, 10);
 
-    return () => clearTimeout(timeoutId);
-  }, [showConfigForm, popup, t]);
+      router.push(route.space(spaceId));
+      popup.close();
+    } catch {
+      logger.error('Error creating space');
+      showErrorToast('Failed to create space');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSend = async () => {
-    if (!selectedType) return;
+    // Re-entrancy guard
+    if (isLoading || selectedType === null) {
+      return;
+    }
 
-    // For all space types, first proceed with direct creation
-    // This avoids immediate rendering of complex components like config form
     try {
-      if (
-        selectedType === SpaceType.Notice ||
-        selectedType === SpaceType.SprintLeague
-      ) {
-        // For Notice space, we'll show config form after a small delay
-        // This prevents the Maximum update depth exceeded error
-        setTimeout(() => {
-          setShowConfigForm(true);
-        }, 10);
+      setLoading(true);
+
+      if (isBoosterEnabled) {
+        setShowConfigForm(true);
       } else {
-        // For other space types, proceed directly with creation
-        await handleCreateSpace(selectedType);
+        await handleCreateSpace({
+          spaceType: selectedType,
+          feedId: feed_id,
+          userIds: [],
+          startedAt: null,
+          endedAt: null,
+          boosterType: null,
+        });
       }
     } catch (error) {
-      logger.error('Error handling space creation:', error);
+      logger.error('Error in handleSend:', error);
+      showErrorToast('Failed to process request');
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleSpaceTypeSelect = useCallback((type: SpaceType) => {
     setSelectedType(type);
   }, []);
-
-  const handleCreateSpace = async (spaceType: SpaceType) => {
-    setLoading(true);
-    try {
-      // For non-Notice spaces, all special fields are null
-      const res = await apiFetch<Space>(
-        `${config.api_url}${ratelApi.spaces.createSpace()}`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(
-            noticeSpaceCreateRequest(
-              spaceType,
-              feed_id,
-              [],
-              0,
-              null,
-              null,
-              null,
-            ),
-          ),
-        },
-      );
-      if (res.data) {
-        logger.debug('Space created successfully:', res.data.id);
-        if (res.data.space_type === SpaceType.Deliberation) {
-          router.push(route.deliberationSpaceById(res.data.id));
-        }
-        popup.close();
-      }
-    } catch (error) {
-      logger.error('Error creating space:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleConfigConfirm = () => {
-    // Space creation is handled in the config form
-    // Just close the modal and reset state
-    popup.close();
-  };
 
   const handleBackToSelection = () => {
     setShowConfigForm(false);
@@ -194,19 +199,19 @@ export default function SelectSpaceForm({ feed_id }: { feed_id: number }) {
 
         return (
           <div
-            className={`flex flex-row gap-2.5 justify-center items-center w-full p-5 border rounded-[10px] ${
-              selected ? 'border-primary' : 'border-neutral-800'
-            } ${disabled ? 'opacity-50 cursor-not-allowed' : ''} `}
+            className={`flex flex-row gap-2.5 justify-center items-center w-full p-5 border rounded-[10px] transition-colors
+              ${selected ? 'border-primary' : 'border-modal-card-border'}
+              ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-primary'}`}
             onClick={() => {
               if (!disabled) onClick();
             }}
           >
             <div className="size-8 [&>svg]:size-8">{form.Icon}</div>
             <div className="flex flex-col flex-1 gap-1">
-              <span className="font-bold text-[15px]/[20px] text-white">
+              <span className="font-bold text-[15px]/[20px] text-text-primary">
                 {tt(form.labelKey)}
               </span>
-              <span className="font-normal text-[15px]/[24px] text-neutral-300">
+              <span className="font-normal text-[15px]/[24px] text-desc-text">
                 {tt(form.descKey)}
               </span>
             </div>
@@ -239,9 +244,18 @@ export default function SelectSpaceForm({ feed_id }: { feed_id: number }) {
         {showConfigForm && (
           <SpaceConfigForm
             spaceType={selectedType}
-            feedId={feed_id}
             onBack={handleBackToSelection}
-            onConfirm={handleConfigConfirm}
+            onConfirm={(startedAt, endedAt, boosterType) => {
+              return handleCreateSpace({
+                spaceType: selectedType,
+                feedId: feed_id,
+                userIds: [],
+                startedAt,
+                endedAt,
+                boosterType,
+              });
+            }}
+            isLoading={isLoading}
           />
         )}
       </div>
@@ -253,14 +267,30 @@ export default function SelectSpaceForm({ feed_id }: { feed_id: number }) {
     <div className="mobile:w-[400px] max-mobile:w-full">
       <div className="flex flex-col gap-2.5 p-1.5">
         {renderedForms}
-        <LoadablePrimaryButton
-          className="w-full mt-4"
-          disabled={!selectedType}
-          onClick={handleSend}
-          isLoading={isLoading}
-        >
-          Send
-        </LoadablePrimaryButton>
+
+        <div className="flex flex-row gap-2.5">
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedType(null);
+              popup.close();
+            }}
+            className="min-w-[50px] px-10 py-[14.5px] bg-transparent font-bold text-base text-neutral-400 hover:text-white transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSend}
+            disabled={isLoading || selectedType === null}
+            className={`w-full py-[14.5px] font-bold text-base rounded-[10px] ${
+              selectedType !== null && !isLoading
+                ? 'bg-primary text-black hover:bg-primary/80'
+                : 'bg-neutral-800 text-neutral-700 cursor-not-allowed'
+            } transition-colors`}
+          >
+            {isLoading ? 'Sending...' : 'Send'}
+          </button>
+        </div>
       </div>
     </div>
   );

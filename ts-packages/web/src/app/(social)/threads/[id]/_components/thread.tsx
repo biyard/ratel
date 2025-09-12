@@ -1,6 +1,5 @@
 'use client';
 
-import BlackBox from '@/app/(social)/_components/black-box';
 import Image from 'next/image';
 import { File } from '@/components/file';
 import LexicalHtmlViewer from '../../../../../components/lexical/lexical-html-viewer';
@@ -8,6 +7,8 @@ import { useTranslations } from 'next-intl';
 import { Feed, FeedType } from '@/lib/api/models/feeds';
 import useFeedById from '@/hooks/feeds/use-feed-by-id';
 import { ArtworkPost } from '@/app/(social)/_components/post-editor';
+import DisableBorderCard from '@/app/(social)/_components/disable-border-card';
+
 export default function Thread({ postId }: { postId: number }) {
   const t = useTranslations('Threads');
 
@@ -15,17 +16,17 @@ export default function Thread({ postId }: { postId: number }) {
 
   return (
     <div className="flex flex-col w-full gap-2.5">
-      <BlackBox>
+      <DisableBorderCard>
         {post?.feed_type === FeedType.Artwork ? (
           <Artwork post={post} />
         ) : (
           <GeneralPost post={post} />
         )}
-      </BlackBox>
+      </DisableBorderCard>
       {post?.files && post.files.length > 0 && (
-        <BlackBox>
+        <DisableBorderCard>
           <div className="flex flex-col w-full gap-5">
-            <div className="font-bold text-white text-[15px]/[20px]">
+            <div className="font-bold text-text-primary text-[15px]/[20px]">
               {t('attached_files')}
             </div>
 
@@ -35,7 +36,7 @@ export default function Thread({ postId }: { postId: number }) {
               ))}
             </div>
           </div>
-        </BlackBox>
+        </DisableBorderCard>
       )}
     </div>
   );

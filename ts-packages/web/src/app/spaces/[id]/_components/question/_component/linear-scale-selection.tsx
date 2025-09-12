@@ -22,10 +22,10 @@ export default function LinearScaleSelection({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-row items-center gap-2">
-        <div className="bg-neutral-800 border-none rounded-md px-3 py-2 text-white text-sm text-start min-w-20 ">
+        <div className="bg-input-box-bg border border-input-box-border rounded-md px-3 py-2 text-text-primary text-sm text-start min-w-20 ">
           {minValue}
         </div>
-        <span className="text-white text-sm">~</span>
+        <span className="text-text-primary text-sm">~</span>
         <div className="relative inline-block min-w-20">
           <Select
             value={maxValue}
@@ -39,11 +39,11 @@ export default function LinearScaleSelection({
 
       <div className="flex flex-col justify-start items-start">
         <div className="flex flex-row items-center justify-start gap-5 w-80 mb-3">
-          <span className="font-medium text-white text-sm w-5 text-center">
+          <span className="font-medium text-text-primary text-sm w-5 text-center">
             {minValue}
           </span>
           <Input
-            className="border-b border-transparent !border-b-white focus:!border-transparent focus:rounded-md font-normal text-base/[24px] placeholder:text-neutral-600 text-neutral-300 rounded-none"
+            className="border-b border-transparent !border-b-white focus:!border-transparent focus:rounded-md font-normal text-base/[24px] placeholder:text-neutral-600 text-neutral-300 light:text-text-primary rounded-none"
             placeholder={t('label_hint')}
             value={labels[minValue] || ''}
             onChange={(e) => {
@@ -54,11 +54,11 @@ export default function LinearScaleSelection({
         </div>
 
         <div className="flex flex-row items-center justify-start gap-5 w-80">
-          <span className="font-medium text-white text-sm w-5 text-center">
+          <span className="font-medium text-text-primary text-sm w-5 text-center">
             {maxValue}
           </span>
           <Input
-            className="border-b border-transparent !border-b-white focus:!border-transparent focus:rounded-md font-normal text-base/[24px] placeholder:text-neutral-600 text-neutral-300 rounded-none"
+            className="border-b border-transparent !border-b-white focus:!border-transparent focus:rounded-md font-normal text-base/[24px] placeholder:text-neutral-600 text-neutral-300 light:text-text-primary rounded-none"
             placeholder={t('label_hint')}
             value={labels[maxValue] || ''}
             onChange={(e) => {

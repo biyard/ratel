@@ -10,7 +10,6 @@ import { UserType } from '@/lib/api/models/user';
 import { Space } from '@/lib/api/models/spaces';
 import FeedEndMessage from '../feed-end-message';
 import CreatePostButton from '../create-post-button';
-import BlackBox from '../black-box';
 import PromotionCard from '../promotion-card';
 import News from '../News';
 import Suggestions from '../suggestions';
@@ -18,6 +17,7 @@ import { Promotion } from '@/lib/api/models/promotion';
 import { Feed, FeedStatus } from '@/lib/api/models/feeds';
 import useInfiniteFeeds from '@/hooks/feeds/use-feeds-infinite-query';
 import { useObserver } from '@/hooks/use-observer';
+import DisableBorderCard from '../disable-border-card';
 
 export const SIZE = 10;
 
@@ -56,7 +56,7 @@ export default function Home({
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useInfiniteFeeds(0, FeedStatus.Published);
-
+  console.log('data', data);
   const handleIntersect = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
@@ -87,8 +87,6 @@ export default function Home({
               author_type={post?.author?.[0]?.user_type || UserType.Anonymous}
               author_id={post?.author?.[0]?.id || 0}
               user_id={userId}
-              //FIXME: use mutation to update...
-              refetch={() => {}}
               id={post.id}
               industry={post.industry?.[0]?.name || ''}
               title={post.title || ''}
@@ -99,6 +97,9 @@ export default function Home({
               rewards={post.rewards || 0}
               shares={post.shares || 0}
               onboard={post.onboard || false}
+              space_id={post.space?.[0]?.id}
+              space_type={post.space?.[0]?.space_type}
+              booster_type={post.space?.[0]?.booster_type}
             />
           ))}
 
@@ -115,12 +116,14 @@ export default function Home({
         <CreatePostButton />
 
         {promotion && feed && (
-          <BlackBox>
+          <DisableBorderCard>
             <PromotionCard promotion={promotion} feed={feed} />
-          </BlackBox>
+          </DisableBorderCard>
         )}
 
-        <News />
+        <div className="mt-[10px]">
+          <News />
+        </div>
         <div className="mt-[10px]">
           <Suggestions />
         </div>

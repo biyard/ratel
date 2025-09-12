@@ -5,8 +5,10 @@ use crate::{
     route::route,
     utils::{
         aws::{BedrockClient, RekognitionClient, S3Client, TextractClient},
+        // dynamo_migrate::{create_dynamo_tables, get_user_tables},
         mcp_middleware::mcp_middleware,
         sqs_client,
+        telegram::TelegramBot,
     },
 };
 
@@ -51,15 +53,15 @@ pub async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         User,
         Group,
         GroupMember,
-        AssemblyMember,
-        BillWriter,
+        // AssemblyMember,
+        // BillWriter,
         Vote,
         Proposer,
         Support,
         Subscription,
-        PresidentialCandidate,
-        ElectionPledge,
-        ElectionPledgeLike,
+        // PresidentialCandidate,
+        // ElectionPledge,
+        // ElectionPledgeLike,
         Industry,
         UserIndustry,
         Feed,
@@ -87,14 +89,14 @@ pub async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         SprintLeagueVote,
         TeamMember,
         News,
-        Quiz,
-        QuizResult,
-        ElectionPledgeQuizLike,
-        ElectionPledgeQuizDislike,
+        // Quiz,
+        // QuizResult,
+        // ElectionPledgeQuizLike,
+        // ElectionPledgeQuizDislike,
         Promotion,
-        AdvocacyCampaign,
-        AdvocacyCampaignAuthor,
-        AdvocacyCampaignVoter,
+        // AdvocacyCampaign,
+        // AdvocacyCampaignAuthor,
+        // AdvocacyCampaignVoter,
         EventLog,
         Badge,
         UserBadge,
@@ -108,7 +110,6 @@ pub async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         Notification,
         NoticeQuizAnswer,
         NoticeQuizAttempt,
-        TelegramSubscribe,
         Dagit,
         Artwork,
         Oracle,
@@ -124,70 +125,14 @@ pub async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         AuthClient,
         AuthCode,
         Post,
+        TelegramChannel,
     );
 
-    if Industry::query_builder()
-        .id_equals(1)
-        .query()
-        .map(Industry::from)
-        .fetch_optional(pool)
-        .await?
-        .is_none()
-    {
-        Industry::get_repository(pool.clone())
-            .insert("Crypto".to_string())
-            .await?;
-    }
-
-    if User::query_builder()
-        .id_equals(1)
-        .query()
-        .map(User::from)
-        .fetch_optional(pool)
-        .await?
-        .is_none()
-    {
-        User::get_repository(pool.clone())
-            .insert(
-                "ServiceAdmin".to_string(),
-                "user-principal-1".to_string(),
-                "".to_string(),
-                "https://metadata.ratel.foundation/metadata/0faf45ec-35e1-40e9-bff2-c61bb52c7d19"
-                    .to_string(),
-                true,
-                true,
-                UserType::Individual,
-                None,
-                "admin".to_string(),
-                "".to_string(),
-                "0x000".to_string(),
-                "password".to_string(),
-                Membership::Free,
-                "".to_string(),
-                None,
-                None,
-            )
-            .await?;
-    }
-
-    if Group::query_builder()
-        .id_equals(1)
-        .query()
-        .map(Group::from)
-        .fetch_optional(pool)
-        .await?
-        .is_none()
-    {
-        Group::get_repository(pool.clone())
-            .insert(
-                "ServiceAdmin".to_string(),
-                "".to_string(),
-                "".to_string(),
-                1,
-                0xffffffffffffffffu64 as i64,
-            )
-            .await?;
-    }
+    // Create DynamoDB tables
+    // tracing::info!("Creating DynamoDB tables");
+    // let dynamo_tables = get_user_tables();
+    // create_dynamo_tables(dynamo_tables).await?;
+    // tracing::info!("DynamoDB tables created successfully");
 
     tracing::info!("Migration done");
     Ok(())
@@ -276,8 +221,9 @@ pub async fn api_main() -> Result<Router> {
     let mcp_router = by_axum::axum::Router::new()
         .nest_service("/mcp", controllers::mcp::route(pool.clone()).await?)
         .layer(middleware::from_fn(mcp_middleware));
-    // let bot = teloxide::Bot::new(conf.telegram_token);
-    // let bot = std::sync::Arc::new(bot);
+    let bot = TelegramBot::new(conf.telegram_token).await?;
+    // FIXME: Is this the correct way to inject and pass the states into the route?
+    // find better way to  management Axum's state or dependency injection for better modularity and testability.
     let api_router = route(
         pool.clone(),
         sqs_client,
@@ -286,6 +232,7 @@ pub async fn api_main() -> Result<Router> {
         textract_client,
         metadata_s3_client,
         private_s3_client,
+        bot,
     )
     .await?
     .layer(middleware::from_fn(authorization_middleware))

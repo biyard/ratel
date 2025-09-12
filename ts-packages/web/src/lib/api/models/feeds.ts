@@ -48,6 +48,7 @@ export interface Feed {
   author: [User];
   industry: [Industry];
   spaces: [Space];
+  space: [Space];
   onboard?: boolean;
 
   artwork_metadata?: ArtworkMetadata;

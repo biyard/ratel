@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import SuggestionItem from './suggestions-items';
-import BlackBox from './black-box';
 import Link from 'next/link';
 import { route } from '@/route';
 import { ChevronRight } from 'lucide-react';
@@ -11,6 +10,7 @@ import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import { logger } from '@/lib/logger';
 import { Follower } from '@/lib/api/models/network';
 import { useTranslations } from 'next-intl';
+import DisableBorderCard from './disable-border-card';
 
 export default function Suggestions() {
   const t = useTranslations('Home');
@@ -60,8 +60,8 @@ export default function Suggestions() {
   }
 
   return (
-    <BlackBox>
-      <h3 className="font-medium mb-3">{t('suggested')}</h3>
+    <DisableBorderCard>
+      <h3 className="font-medium mb-3 text-text-primary">{t('suggested')}</h3>
       <div className="flex flex-col gap-[35px]">
         {suggestions.map((user) => (
           <SuggestionItem key={user.id} user={user} onFollow={handleFollow} />
@@ -69,12 +69,12 @@ export default function Suggestions() {
       </div>
       <Link
         href={route.myNetwork()}
-        className="mt-5 text-xs text-gray-400 flex items-center hover:text-gray-300 transition-colors"
+        className="mt-5 text-xs text-more-text flex items-center hover:text-card-meta transition-colors"
         aria-label="View all suggestions"
       >
         <span>{t('view_all')}</span>
-        <ChevronRight size={14} />
+        <ChevronRight size={14} className="[&>path]:stroke-more-text" />
       </Link>
-    </BlackBox>
+    </DisableBorderCard>
   );
 }

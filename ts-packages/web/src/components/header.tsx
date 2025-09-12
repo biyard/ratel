@@ -45,7 +45,7 @@ function Header(props: HeaderProps) {
       name: t('home'),
       icon: (
         <HomeIcon
-          className="group-hover:[&>path]:stroke-white transition-all"
+          className="group-hover:[&>path]:stroke-menu-text/80 transition-all"
           width="24"
           height="24"
         />
@@ -71,7 +71,7 @@ function Header(props: HeaderProps) {
       name: t('my_network'),
       icon: (
         <UserGroupIcon
-          className="group-hover:[&>path]:stroke-white transition-all"
+          className="group-hover:[&>path]:stroke-menu-text/80 transition-all"
           width="24"
           height="24"
         />
@@ -109,7 +109,7 @@ function Header(props: HeaderProps) {
   ];
 
   return (
-    <header className="border-b border-neutral-800 px-2.5 py-2.5 flex items-center justify-center !bg-bg h-[var(--header-height)] z-999">
+    <header className="border-b border-divider px-2.5 py-2.5 flex items-center justify-center !bg-bg h-[var(--header-height)] z-999">
       <nav className="flex items-center justify-between mx-2.5 gap-12.5 w-full max-w-desktop">
         <div className="flex items-center gap-5">
           <Link
@@ -131,7 +131,7 @@ function Header(props: HeaderProps) {
               hidden={!item.visible || (item.authorized && !loggedIn)}
             >
               {item.icon}
-              <span className="whitespace-nowrap text-neutral-500 group-hover:text-white text-[15px] font-medium transition-all">
+              <span className="whitespace-nowrap text-menu-text group-hover:text-menu-text/80 text-[15px] font-medium transition-all">
                 {' '}
                 {item.name}{' '}
               </span>
@@ -139,7 +139,7 @@ function Header(props: HeaderProps) {
           ))}
 
           <button
-            className="group cursor-pointer font-bold text-neutral-500 text-[15px] flex flex-col items-center justify-center group p-2.5"
+            className="group cursor-pointer font-bold text-menu-text text-[15px] flex flex-col items-center justify-center group p-2.5"
             onClick={() => {
               if (locale == 'en') {
                 handleChangeLanguage('ko');
@@ -161,7 +161,7 @@ function Header(props: HeaderProps) {
                   <Kr className="cursor-pointer rounded-full w-4 h-4 object-cover" />
                 )}
               </div>
-              <span className="whitespace-nowrap text-neutral-500 group-hover:text-white text-[15px] font-medium transition-all">
+              <span className="whitespace-nowrap text-menu-text group-hover:text-menu-text/80 text-[15px] font-medium transition-all">
                 {' '}
                 {locale == 'en' ? 'En' : 'Ko'}
               </span>
@@ -174,7 +174,7 @@ function Header(props: HeaderProps) {
             <Profile profileUrl={data.profile_url} name={data.nickname} />
           ) : (
             <button
-              className="group cursor-pointer font-bold text-neutral-500 text-[15px] flex flex-col items-center justify-center group p-2.5"
+              className="group cursor-pointer font-bold text-menu-text text-[15px] flex flex-col items-center justify-center group p-2.5"
               onClick={() => {
                 popup
                   .open(<LoginModal />)
@@ -182,8 +182,8 @@ function Header(props: HeaderProps) {
                   .withoutBackdropClose();
               }}
             >
-              <LoginIcon className="size-6 group-hover:[&>path]:stroke-white" />
-              <span className="whitespace-nowrap text-neutral-500 group-hover:text-white text-[15px] font-medium transition-all">
+              <LoginIcon className="size-6 group-hover:[&>path]:stroke-menu-text/80" />
+              <span className="whitespace-nowrap text-menu-text group-hover:text-menu-text/80 text-[15px] font-medium transition-all">
                 {t('signIn')}
               </span>
             </button>
