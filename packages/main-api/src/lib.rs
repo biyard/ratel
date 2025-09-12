@@ -95,6 +95,12 @@ pub mod controllers {
             pub mod token;
         }
 
+        pub mod posts {
+            pub mod get_post;
+            pub mod list_posts;
+            pub mod update_post;
+        }
+
         pub mod themes {
             pub mod change_theme;
         }

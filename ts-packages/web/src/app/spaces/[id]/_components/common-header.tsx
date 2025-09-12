@@ -16,7 +16,7 @@ import { useContext } from 'react';
 import { useUserInfo } from '@/app/(social)/_hooks/user';
 import { SpaceStatus } from '@/lib/api/models/spaces';
 import { PublishingScope } from '@/lib/api/models/notice';
-import useFeedById from '@/hooks/use-feed-by-id';
+import useFeedById from '@/hooks/feeds/use-feed-by-id';
 import { useParams, useRouter } from 'next/navigation';
 import {
   openModal as openPublishSpaceModal,

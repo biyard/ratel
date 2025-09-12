@@ -1,6 +1,5 @@
 'use client';
 
-import { useFeedByID } from '@/app/(social)/_hooks/feed';
 import { ArrowLeft, Palace } from '@/components/icons';
 // import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -22,10 +21,9 @@ import Link from 'next/link';
 import { route } from '@/route';
 import { usePopup } from '@/lib/contexts/popup-service';
 import SpaceCreateModal from './space-create-modal';
-import { SpaceType } from '@/lib/api/models/spaces';
 import { useRouter } from 'next/navigation';
 import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
-import { useContext, useState, useEffect } from 'react';
+import { useContext } from 'react';
 import { TeamContext } from '@/lib/contexts/team-context';
 import {
   DropdownMenu,
@@ -33,114 +31,86 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useApiCall } from '@/lib/api/use-send';
-import { ratelApi } from '@/lib/api/ratel_api';
-import { showSuccessToast, showErrorToast } from '@/lib/toast';
-import { usePostDraft } from '@/app/(social)/_components/create-post';
+import { usePostEditorContext } from '@/app/(social)/_components/post-editor';
 import { convertNumberToString } from '@/lib/number-utils';
 import { useTranslations } from 'next-intl';
 import { BoosterType } from '@/lib/api/models/notice';
 
-export default function Header({ post_id }: { post_id: number }) {
+import useFeedById from '@/hooks/feeds/use-feed-by-id';
+import { useLikeFeedMutation } from '@/hooks/feeds/use-like-feed-mutation';
+import { useDeleteFeedMutation } from '@/hooks/feeds/use-delete-feed-mutation';
+import { FeedStatus } from '@/lib/api/models/feeds';
+
+export default function Header({ postId }: { postId: number }) {
   const t = useTranslations('Threads');
-  const { data: post } = useFeedByID(post_id);
   const popup = usePopup();
   const router = useRouter();
   const { teams } = useContext(TeamContext);
+  const { data: post } = useFeedById(postId);
+
   const user = useSuspenseUserInfo();
 
-  const author_id = post?.author[0].id;
-  const [selectedTeam, setSelectedTeam] = useState<boolean>(false);
-  const { post: apiPost } = useApiCall();
-  const { loadDraft } = usePostDraft();
+  let author_id: number | undefined;
+  if (post?.author && post.author.length > 0) {
+    author_id = post.author[0]?.id;
+  }
 
-  const space_id = post?.spaces[0]?.id;
-  const is_boost =
-    post?.spaces[0]?.id &&
-    post?.spaces[0]?.booster_type &&
-    post?.spaces[0]?.booster_type != BoosterType.NoBoost;
+  const { openPostEditorPopup } = usePostEditorContext();
+
+  let space_id: number | null = null;
+  let is_boost = false;
+  let target = '';
+
+  if (post.spaces?.length > 1) {
+    const space = post.spaces[0];
+    console.log('space', space);
+    space_id = space.id;
+    is_boost = Boolean(
+      space?.booster_type && space?.booster_type != BoosterType.NoBoost,
+    );
+    target = route.space(space_id);
+  }
 
   const user_id = user.data ? user.data.id : 0;
 
-  useEffect(() => {
-    const index = teams.findIndex((t) => t.id === author_id);
-    setSelectedTeam(index !== -1);
-  }, [teams, author_id]);
+  const likeMutation = useLikeFeedMutation();
+  const deleteMutation = useDeleteFeedMutation(user_id, FeedStatus.Published);
 
-  let target;
-  if (space_id) {
-    if (post.spaces[0].space_type === SpaceType.Deliberation) {
-      target = route.deliberationSpaceById(space_id);
-    } else {
-      target = route.commiteeSpaceById(space_id);
-    }
-  }
+  const isPostOwner =
+    author_id === user_id || teams.find((team) => team.id === author_id);
+
   const handleCreateSpace = () => {
     popup
-      .open(<SpaceCreateModal feed_id={post_id} />)
+      .open(<SpaceCreateModal feed_id={postId} />)
       .withoutBackdropClose()
       .withTitle(t('select_space_type'));
   };
 
-  const handleDeletePost = async () => {
-    try {
-      await apiPost(ratelApi.feeds.removeDraft(post_id), { delete: {} });
-      showSuccessToast(t('success_delete_post_message'));
-      router.push('/'); // Navigate to homepage after successful deletion
-    } catch (error) {
-      console.error('Failed to delete post:', error);
-      showErrorToast(t('failed_delete_post_message'));
-      // Remain on the feed page on failure
+  const handleDelete = async () => {
+    if (!deleteMutation.isPending) {
+      await deleteMutation.mutateAsync({
+        feedId: postId,
+        feedType: post.feed_type,
+        parentId: undefined,
+      });
+      router.push(route.home());
+    }
+  };
+
+  const handleLike = async (next: boolean) => {
+    if (!likeMutation.isPending) {
+      await likeMutation.mutateAsync({
+        feedId: postId,
+        feedType: post.feed_type,
+        next,
+        parentId: undefined,
+      });
     }
   };
 
   const handleEditPost = async () => {
-    try {
-      await loadDraft(post_id);
-    } catch (error) {
-      console.error('Failed to load draft for editing:', error);
-      showErrorToast(t('failed_edit_post_message'));
-    }
+    await openPostEditorPopup(postId);
   };
-
-  // Like functionality state and handlers
-  const [localLikes, setLocalLikes] = useState(post?.likes || 0);
-  const [localIsLiked, setLocalIsLiked] = useState(post?.is_liked || false);
-  const [isLikeProcessing, setIsLikeProcessing] = useState(false);
-
-  useEffect(() => {
-    setLocalLikes(post?.likes || 0);
-    setLocalIsLiked(post?.is_liked || false);
-  }, [post?.likes, post?.is_liked]);
-
-  const handleLike = async () => {
-    if (isLikeProcessing || !post) return; // Prevent multiple clicks
-
-    const newValue = !localIsLiked;
-
-    // Set processing state and optimistic update
-    setIsLikeProcessing(true);
-    setLocalIsLiked(newValue);
-    setLocalLikes((prev) => (newValue ? prev + 1 : prev - 1));
-
-    try {
-      await apiPost(ratelApi.feeds.likePost(post.id), {
-        like: { value: newValue },
-      });
-
-      // Success - no notification needed, visual feedback is enough
-    } catch (error) {
-      // Revert optimistic update on error
-      setLocalIsLiked(post.is_liked || false);
-      setLocalLikes(post.likes || 0);
-      console.error('Failed to update like:', error);
-      showErrorToast(t('failed_like_post_message'));
-    } finally {
-      setIsLikeProcessing(false);
-    }
-  };
-
-  const isPostOwner = author_id === user_id || selectedTeam;
 
   return (
     <div className="flex flex-col w-full gap-2.5">
@@ -207,7 +177,7 @@ export default function Header({ post_id }: { post_id: number }) {
                 {/* Mobile-only menu items */}
                 <div className="hidden max-tablet:block">
                   {space_id ? (
-                    <DropdownMenuItem asChild>
+                    <DropdownMenuItem>
                       <Link href={target ?? ''}>
                         <button className="flex items-center w-full px-4 py-2 text-sm text-white hover:bg-gray-700 cursor-pointer">
                           {t('join_space')}
@@ -216,7 +186,7 @@ export default function Header({ post_id }: { post_id: number }) {
                     </DropdownMenuItem>
                   ) : isPostOwner ? (
                     <>
-                      <DropdownMenuItem asChild>
+                      <DropdownMenuItem>
                         <button
                           onClick={handleCreateSpace}
                           className="flex items-center w-full px-4 py-2 text-sm text-white hover:bg-gray-700 cursor-pointer"
@@ -225,7 +195,7 @@ export default function Header({ post_id }: { post_id: number }) {
                           {t('create_space')}
                         </button>
                       </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
+                      <DropdownMenuItem>
                         <button
                           onClick={handleEditPost}
                           className="flex items-center w-full px-4 py-2 font-bold text-sm text-white hover:bg-gray-700 cursor-pointer"
@@ -234,7 +204,7 @@ export default function Header({ post_id }: { post_id: number }) {
                           {t('edit')}
                         </button>
                       </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
+                      <DropdownMenuItem>
                         <button className="flex items-center w-full px-4 py-2 font-bold text-sm text-white hover:bg-gray-700 cursor-pointer">
                           <UnlockPublic className="w-4 h-4 [&>path]:stroke-white" />
                           {t('make_public')}
@@ -246,9 +216,9 @@ export default function Header({ post_id }: { post_id: number }) {
 
                 {/* Always visible delete option for post owners */}
                 {isPostOwner && (
-                  <DropdownMenuItem asChild>
+                  <DropdownMenuItem>
                     <button
-                      onClick={handleDeletePost}
+                      onClick={handleDelete}
                       className="flex items-center w-full px-4 py-2 text-sm text-red-400 hover:bg-gray-700 cursor-pointer"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -277,36 +247,32 @@ export default function Header({ post_id }: { post_id: number }) {
         <div className="flex items-center justify-end w-full gap-4">
           {/* Feed Stats */}
           <button
-            onClick={handleLike}
-            disabled={isLikeProcessing}
-            className={`flex items-center gap-1 transition-colors ${
-              isLikeProcessing
-                ? 'cursor-not-allowed opacity-50'
-                : 'cursor-pointer'
-            }`}
+            onClick={() => handleLike(!post.is_liked)}
+            disabled={likeMutation.isPending}
+            className={`flex items-center gap-1 transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-50`}
           >
             <ThumbUp
               className={
-                localIsLiked
+                post.is_liked
                   ? 'size-5 [&>path]:fill-primary [&>path]:stroke-primary'
                   : 'size-5 [&>path]:stroke-icon'
               }
             />
             <span className="text-[15px] text-text-primary">
-              {convertNumberToString(localLikes)}
+              {convertNumberToString(post.likes || 0)}
             </span>
           </button>
           <div className="flex items-center gap-1">
             <CommentIcon className="size-5 [&>path]:stroke-icon" />
             <span className="text-[15px] text-text-primary">
-              {convertNumberToString(post?.comments || 0)}
+              {convertNumberToString(post.comments || 0)}
             </span>
           </div>
           {is_boost ? (
             <div className="flex items-center gap-1">
               <Rewards className="size-5 [&>path]:stroke-icon" />
               <span className="text-[15px] text-text-primary">
-                {convertNumberToString(post?.rewards || 0)}
+                {convertNumberToString(post.rewards || 0)}
               </span>
             </div>
           ) : (
@@ -315,7 +281,7 @@ export default function Header({ post_id }: { post_id: number }) {
           <div className="flex items-center gap-1">
             <Shares className="size-5 [&>path]:stroke-icon" />
             <span className="text-[15px] text-text-primary">
-              {convertNumberToString(post?.shares || 0)}
+              {convertNumberToString(post.shares || 0)}
             </span>
           </div>
           {/* <div className="flex items-center gap-1">
@@ -326,16 +292,16 @@ export default function Header({ post_id }: { post_id: number }) {
       </div>
 
       <div>
-        <h2 className="text-xl font-bold text-text-primary">{post?.title}</h2>
+        <h2 className="text-xl font-bold text-text-primary">{post.title}</h2>
       </div>
       <div className="flex flex-row justify-between">
         <ProposerProfile
-          profileUrl={post?.author[0]?.profile_url ?? ''}
-          proposerName={post?.author[0]?.nickname ?? ''}
-          userType={post?.author[0]?.user_type || UserType.Individual}
+          profileUrl={post.author[0]?.profile_url ?? ''}
+          proposerName={post.author[0]?.nickname ?? ''}
+          userType={post.author[0]?.user_type || UserType.Individual}
         />
         <div className="font-light text-text-primary text-sm/[14px]">
-          {post?.created_at !== undefined ? getTimeAgo(post.created_at) : ''}
+          {post.created_at !== undefined ? getTimeAgo(post.created_at) : ''}
         </div>
       </div>
     </div>

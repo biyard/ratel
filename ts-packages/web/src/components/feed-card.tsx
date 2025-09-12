@@ -56,7 +56,6 @@ export interface FeedCardProps {
   onRepostThought?: () => void;
   onRepost?: (e: React.MouseEvent) => void;
   onLikeClick?: (value: boolean) => void;
-  refetch?: () => void;
   isLikeProcessing?: boolean;
 }
 
@@ -103,7 +102,6 @@ export default function FeedCard(props: FeedCardProps) {
 
       // Success - trigger callbacks
       props.onLikeClick?.(value);
-      props.refetch?.();
     } catch (error) {
       // Revert optimistic update on error
       setLocalIsLiked(props.is_liked);
@@ -130,7 +128,6 @@ export default function FeedCard(props: FeedCardProps) {
 
       setLocalShares((prev) => prev + 1);
       showSuccessToast('Reposted successfully');
-      props.refetch?.();
     } catch (error) {
       logger.error('Failed to repost:', error);
       showErrorToast('Failed to repost');
@@ -152,7 +149,7 @@ export default function FeedCard(props: FeedCardProps) {
 
   return (
     <Col
-      className={`cursor-pointer border rounded-[10px] bg-card-bg-secondary border border-card-enable-border`}
+      className={`cursor-pointer rounded-[10px] bg-card-bg-secondary border border-card-enable-border`}
       onClick={() => {
         router.push(route.threadByFeedId(props.id));
       }}
