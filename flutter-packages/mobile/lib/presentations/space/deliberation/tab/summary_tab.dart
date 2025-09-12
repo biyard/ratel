@@ -102,7 +102,7 @@ class _FilePill extends StatelessWidget {
 
     return InkWell(
       onTap: () async {
-        final ctrl = Get.find<SpaceController>();
+        final ctrl = Get.find<DeliberationSpaceController>();
 
         await ctrl.downloadFileFromUrl(url: file.url, fileName: file.name);
       },

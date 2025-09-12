@@ -27,16 +27,22 @@ export default function UserSidemenu() {
       <ProfileSection />
 
       {/* Navigation */}
-      <nav className="py-5 px-3 w-full rounded-[10px] bg-card text-foreground">
-        <Link href={route.myPosts()} className="sidemenu-link">
+      <nav className="py-5 px-3 w-full rounded-[10px] bg-card-bg border border-card-border text-text-primary">
+        <Link
+          href={route.myPosts()}
+          className="sidemenu-link text-text-primary"
+        >
           <Post className="w-[24px] h-[24px]" />
           <span>{t('my_posts')}</span>
         </Link>
-        <Link href={route.drafts()} className="sidemenu-link">
+        <Link href={route.drafts()} className="sidemenu-link text-text-primary">
           <Draft className="w-[24px] h-[24px]" />
           <span>{t('drafts')}</span>
         </Link>
-        <Link href={route.settings()} className="sidemenu-link">
+        <Link
+          href={route.settings()}
+          className="sidemenu-link text-text-primary"
+        >
           <Settings className="w-[24px] h-[24px]" />
           <span>{t('settings')}</span>
         </Link>

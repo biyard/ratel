@@ -43,7 +43,7 @@ export const PopupZone = () => {
       }}
     >
       <div
-        className={`relative rounded-[20px] p-[25px] min-w-[300px] max-mobile:!w-full max-mobile:!mx-[20px] bg-popover text-foreground ${overflow ? 'overflow-visible' : 'overflow-hidden'}`}
+        className={`relative rounded-[20px] p-[25px] min-w-[300px] max-mobile:!w-full max-mobile:!mx-[20px] bg-popover text-text-primary ${overflow ? 'overflow-visible' : 'overflow-hidden'}`}
         style={{
           boxShadow: '0px 0px 100px rgba(255, 206, 71, 0.25)',
         }}
@@ -65,13 +65,13 @@ export const PopupZone = () => {
           {title && (
             <div
               id="popup-title"
-              className="text-[20px] font-bold text-foreground"
+              className="text-[20px] font-bold text-text-primary"
             >
               {title}
             </div>
           )}
           {description && (
-            <div id="popup-description" className="text-foreground-muted">
+            <div id="popup-description" className="text-text-primary-muted">
               {description}
             </div>
           )}
