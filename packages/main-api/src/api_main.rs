@@ -126,6 +126,7 @@ pub async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         AuthCode,
         Post,
         TelegramChannel,
+        TelegramToken,
     );
 
     // Create DynamoDB tables
