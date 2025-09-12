@@ -94,6 +94,7 @@ pub enum Error {
     ApiEmptyRow,
 
     BadRequest,
+    HMacInitError(String),
     JsonDeserializeError(String),
     WalletNotFound,
     WalletError(String),
@@ -226,6 +227,7 @@ impl Display for Error {
             Error::InvalidPhoneNumber => write!(f, "Invalid phone number"),
             Error::InvalidPrinciapl => write!(f, "Invalid principal"),
             Error::DuplicatedTeamName => write!(f, "Duplicated team name"),
+            Error::HMacInitError(msg) => write!(f, "Initialize HMac error: {}", msg),
             Error::VerifyException(msg) => write!(f, "Verify exception: {}", msg),
             Error::SignException => write!(f, "Sign exception"),
             Error::DatabaseException(msg) => write!(f, "Database exception: {}", msg),
@@ -241,13 +243,19 @@ impl Display for Error {
             Error::UsCongressApiError(msg) => write!(f, "US Congress API error: {}", msg),
             Error::UsCongressApiRequestError => write!(f, "US Congress API request error"),
             Error::HkOpenDataApiError(msg) => write!(f, "HK Open Data API error: {}", msg),
-            Error::HkOpenDataApiResponseParsingError => write!(f, "HK Open Data API response parsing error"),
+            Error::HkOpenDataApiResponseParsingError => {
+                write!(f, "HK Open Data API response parsing error")
+            }
             Error::HkOpenDataApiRequestError => write!(f, "HK Open Data API request error"),
             Error::ChOpenDataApiError(msg) => write!(f, "CH Open Data API error: {}", msg),
-            Error::ChOpenDataApiResponseParsingError => write!(f, "CH Open Data API response parsing error"),
+            Error::ChOpenDataApiResponseParsingError => {
+                write!(f, "CH Open Data API response parsing error")
+            }
             Error::ChOpenDataApiRequestError => write!(f, "CH Open Data API request error"),
             Error::EuOpenDataApiError(msg) => write!(f, "EU Open Data API error: {}", msg),
-            Error::EuOpenDataApiResponseParsingError => write!(f, "EU Open Data API response parsing error"),
+            Error::EuOpenDataApiResponseParsingError => {
+                write!(f, "EU Open Data API response parsing error")
+            }
             Error::EuOpenDataApiRequestError => write!(f, "EU Open Data API request error"),
             Error::EuOpenDataFetchError(errors) => {
                 write!(f, "EU Open Data fetch error: {:?}", errors)
@@ -289,7 +297,9 @@ impl Display for Error {
             Error::RedeemCodeNotFound => write!(f, "Redeem code not found"),
             Error::DiscussionInsertFailed => write!(f, "Discussion insert failed"),
             Error::DiscussionNotFound => write!(f, "Discussion not found"),
-            Error::DiscussionCreateUserFailed(msg) => write!(f, "Discussion create user failed: {}", msg),
+            Error::DiscussionCreateUserFailed(msg) => {
+                write!(f, "Discussion create user failed: {}", msg)
+            }
             Error::UpdateDiscussionError(msg) => write!(f, "Update discussion error: {}", msg),
             Error::PipelineNotFound => write!(f, "Pipeline not found"),
             Error::AlreadyFollowing => write!(f, "Already following"),
@@ -300,13 +310,19 @@ impl Display for Error {
             Error::SprintLeagueCreationFailed => write!(f, "Sprint league creation failed"),
             Error::SprintLeagueUpdateFailed => write!(f, "Sprint league update failed"),
             Error::FailedReward => write!(f, "Failed reward"),
-            Error::PassportVerificationFailed(msg) => write!(f, "Passport verification failed: {}", msg),
-            Error::MedicalInfoExtractionFailed(msg) => write!(f, "Medical info extraction failed: {}", msg),
+            Error::PassportVerificationFailed(msg) => {
+                write!(f, "Passport verification failed: {}", msg)
+            }
+            Error::MedicalInfoExtractionFailed(msg) => {
+                write!(f, "Medical info extraction failed: {}", msg)
+            }
             Error::AwsRekognitionError(msg) => write!(f, "AWS Rekognition error: {}", msg),
             Error::AwsTextractError(msg) => write!(f, "AWS Textract error: {}", msg),
             Error::AwsBedrockError(msg) => write!(f, "AWS Bedrock error: {}", msg),
             Error::DynamoDbError(msg) => write!(f, "DynamoDB error: {}", msg),
-            Error::DynamoDbSerializationError(msg) => write!(f, "DynamoDB serialization error: {}", msg),
+            Error::DynamoDbSerializationError(msg) => {
+                write!(f, "DynamoDB serialization error: {}", msg)
+            }
             Error::DynamoDbTableNotFound(msg) => write!(f, "DynamoDB table not found: {}", msg),
         }
     }

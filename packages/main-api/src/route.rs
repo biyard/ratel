@@ -7,10 +7,14 @@ use tracing::Level;
 use crate::{
     controllers::{
         self,
-        m2::noncelab::users::register_users::{
-            RegisterUserResponse, register_users_by_noncelab_handler,
+        m2::{
+            binances::get_merchant_balance::binance_merchant_balance_handler,
+            noncelab::users::register_users::{
+                RegisterUserResponse, register_users_by_noncelab_handler,
+            },
         },
         v2::{
+            binances::create_subscription::create_subscription_handler,
             bookmarks::{
                 add_bookmark::add_bookmark_handler, list_bookmarks::get_bookmarks_handler,
                 remove_bookmark::remove_bookmark_handler,
@@ -170,6 +174,17 @@ pub async fn route(
             controllers::m1::MenaceController::route(pool.clone())?,
         )
         .native_route("/v2/users/logout", npost(logout_handler))
+        .route(
+            "/v2/subscriptions",
+            post_with(
+                create_subscription_handler,
+                api_docs!(
+                    "Create Subscription",
+                    "Create subscription in ratel and get a QR code"
+                ),
+            )
+            .with_state(pool.clone()),
+        )
         .route(
             "/v2/conversations",
             post_with(
@@ -568,6 +583,17 @@ pub async fn route(
                 ),
             )
             .options(oauth_authorization_server_handler)
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/m2/binances/balance",
+            get_with(
+                binance_merchant_balance_handler,
+                api_docs!(
+                    "Query Owner Balance",
+                    "Query Owner Balance from inner owner wallet address"
+                ),
+            )
             .with_state(pool.clone()),
         )
         .route(
