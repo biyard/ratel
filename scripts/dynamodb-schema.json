@@ -1,0 +1,95 @@
+{
+  "TableName": "ratel-local",
+  "AttributeDefinitions": [
+    {
+      "AttributeName": "pk",
+      "AttributeType": "S"
+    },
+    {
+      "AttributeName": "sk",
+      "AttributeType": "S"
+    },
+    {
+      "AttributeName": "type",
+      "AttributeType": "S"
+    },
+    {
+      "AttributeName": "gsi1_pk",
+      "AttributeType": "S"
+    },
+    {
+      "AttributeName": "gsi1_sk",
+      "AttributeType": "S"
+    },
+    {
+      "AttributeName": "gsi2_pk",
+      "AttributeType": "S"
+    },
+    {
+      "AttributeName": "gsi2_sk",
+      "AttributeType": "S"
+    }
+  ],
+  "KeySchema": [
+    {
+      "AttributeName": "pk",
+      "KeyType": "HASH"
+    },
+    {
+      "AttributeName": "sk",
+      "KeyType": "RANGE"
+    }
+  ],
+  "BillingMode": "PAY_PER_REQUEST",
+  "GlobalSecondaryIndexes": [
+    {
+      "IndexName": "type-index",
+      "KeySchema": [
+        {
+          "AttributeName": "type",
+          "KeyType": "HASH"
+        },
+        {
+          "AttributeName": "created_at",
+          "KeyType": "RANGE"
+        }
+      ],
+      "Projection": {
+        "ProjectionType": "ALL"
+      }
+    },
+
+    {
+      "IndexName": "gsi1-index",
+      "KeySchema": [
+        {
+          "AttributeName": "gsi1_pk",
+          "KeyType": "HASH"
+        },
+        {
+          "AttributeName": "gsi1_sk",
+          "KeyType": "RANGE"
+        }
+      ],
+      "Projection": {
+        "ProjectionType": "ALL"
+      }
+    },
+    {
+      "IndexName": "gsi2-index",
+      "KeySchema": [
+        {
+          "AttributeName": "gsi2_pk",
+          "KeyType": "HASH"
+        },
+        {
+          "AttributeName": "gsi2_sk",
+          "KeyType": "RANGE"
+        }
+      ],
+      "Projection": {
+        "ProjectionType": "ALL"
+      }
+    }
+  ]
+}
