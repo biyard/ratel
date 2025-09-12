@@ -6,6 +6,7 @@ import { Col } from '@/components/ui/col';
 import { QueryResponse } from '@/lib/api/models/common';
 import { Feed, FeedStatus } from '@/lib/api/models/feeds';
 import React from 'react';
+import { usePostDraft } from '@/app/(social)/_components/create-post';
 
 interface TeamHomeProps {
   userId: number;
@@ -51,6 +52,17 @@ export default function TeamHome({
     spaces: item.spaces || [],
   }));
 
+  const { loadDraft } = usePostDraft();
+
+  const handleEdit = (id: number) => async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await loadDraft(id);
+    } catch (error) {
+      console.error('Failed to load draft for editing:', error);
+    }
+  };
+
   return (
     <div className="flex-1 flex max-mobile:px-[10px]">
       {feeds.length !== 0 ? (
@@ -60,6 +72,7 @@ export default function TeamHome({
               key={`feed-${props.id}`}
               user_id={userId ?? 0}
               refetch={() => posts.refetch()}
+              onEdit={handleEdit(props.id)}
               {...props}
             />
           ))}

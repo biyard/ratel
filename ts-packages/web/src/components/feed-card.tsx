@@ -22,7 +22,6 @@ import {
 } from './ui/dropdown-menu';
 import { Edit1 } from './icons';
 import { useRepostDraft } from '@/app/(social)/_components/create-repost';
-import { usePostDraft } from '@/app/(social)/_components/create-post';
 import { showSuccessToast, showErrorToast } from './custom-toast/toast';
 import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { Loader2 } from 'lucide-react';
@@ -59,7 +58,7 @@ export interface FeedCardProps {
   onLikeClick?: (value: boolean) => void;
   refetch?: () => void;
   isLikeProcessing?: boolean;
-  handleEditPost?: () => void;
+  onEdit?: (e: React.MouseEvent) => void | Promise<void>;
   currentUserId?: number;
 }
 
@@ -86,7 +85,6 @@ export default function FeedCard(props: FeedCardProps) {
     setAuthorId,
   } = useRepostDraft();
 
-  const { loadDraft } = usePostDraft();
 
   // Sync with props when they change
   useEffect(() => {
@@ -157,12 +155,12 @@ export default function FeedCard(props: FeedCardProps) {
     setExpand(true);
   };
 
-  const handleEditPost = async () => {
-    try {
-      await loadDraft(props.id);
-    } catch (error) {
-      console.error('Failed to load draft for editing:', error);
-      showErrorToast(t('failed_edit_post_message'));
+  const handleEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (props.onEdit) {
+      props.onEdit(e);
+    } else {
+      console.warn('No onEdit handler provided to FeedCard');
     }
   };
 
@@ -174,13 +172,30 @@ export default function FeedCard(props: FeedCardProps) {
       }}
     >
       <FeedBody
-        {...props}
-        handleEditPost={handleEditPost}
+        id={props.id}
+        industry={props.industry}
+        title={props.title}
+        contents={props.contents}
+        author_profile_url={props.author_profile_url}
+        author_name={props.author_name}
+        author_type={props.author_type}
+        url={props.url}
+        created_at={props.created_at}
+        author_id={props.author_id}
+        user_id={props.user_id}
+        onboard={props.onboard}
+        space_id={props.space_id}
+        space_type={props.space_type}
+        onEdit={props.onEdit}
         currentUserId={User?.id}
       />
       <FeedFooter
-        {...props}
+        space_id={props.space_id}
+        space_type={props.space_type}
+        booster_type={props.booster_type}
         likes={localLikes}
+        comments={props.comments}
+        rewards={props.rewards}
         shares={localShares}
         is_liked={localIsLiked}
         isLikeProcessing={isProcessing}
@@ -192,11 +207,27 @@ export default function FeedCard(props: FeedCardProps) {
   );
 }
 
-interface FeedBodyProps extends Omit<FeedCardProps, 'currentUserId'> {
+interface FeedBodyProps {
+  id: number;
+  industry: string;
+  title: string;
+  contents: string;
+  author_profile_url: string;
+  author_name: string;
+  author_type: UserType;
+  url?: string;
+  created_at: number;
+  author_id: number;
+  user_id: number;
+  onboard: boolean;
+  space_id?: number;
+  space_type?: SpaceType;
   currentUserId?: number;
+  onEdit?: (e: React.MouseEvent) => void | Promise<void>;
 }
 
 export function FeedBody({
+  id,
   title,
   contents,
   author_name,
@@ -207,8 +238,9 @@ export function FeedBody({
   space_id,
   space_type,
   onboard,
-  handleEditPost,
+  onEdit = () => {},
   author_id,
+  user_id,
   currentUserId,
 }: FeedBodyProps) {
   return (
@@ -222,8 +254,8 @@ export function FeedBody({
         </div>
 
         <div>
-          {currentUserId === author_id && handleEditPost && (
-            <EditButton onClick={handleEditPost} />
+          {currentUserId === author_id && (
+            <EditButton onClick={onEdit} />
           )}
         </div>
       </Row>
@@ -339,16 +371,17 @@ export function IndustryTag({ industry }: { industry: string }) {
   );
 }
 
-export function EditButton({ onClick }: { onClick?: () => void }) {
+interface EditButtonProps {
+  onClick?: (e: React.MouseEvent) => void;
+}
+
+export function EditButton({ onClick }: EditButtonProps) {
   return (
     <button
-      onClick={(e) => {
-        e.stopPropagation();
-        e.preventDefault();
-        onClick?.();
-      }}
+      onClick={onClick}
+      className="rounded-full p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800"
     >
-      <Edit1 />
+      <Edit1 className="w-4 h-4" />
     </button>
   );
 }
@@ -378,9 +411,19 @@ export function JoinNowButton({ onClick }: { onClick: () => void }) {
   );
 }
 
-interface FeedFooterProps extends Omit<FeedCardProps, 'onRepostThought'> {
+interface FeedFooterProps {
+  space_id?: number;
+  space_type?: SpaceType;
+  booster_type?: BoosterType;
+  likes: number;
+  comments: number;
+  rewards: number;
+  shares: number;
+  is_liked: boolean;
+  onLikeClick?: (value: boolean) => void;
+  isLikeProcessing?: boolean;
+  onRepost?: (e: React.MouseEvent) => void;
   onRepostThought?: () => void;
-  // isLikeProcessing?: boolean;
 }
 
 export function FeedFooter({
