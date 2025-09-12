@@ -22,7 +22,7 @@ pub struct Config {
     pub kaia: KaiaConfig,
     pub watermark_sqs_url: &'static str,
     pub from_email: &'static str,
-    pub telegram_token: &'static str,
+    pub telegram_token: Option<&'static str>,
     pub noncelab_token: &'static str,
     pub did: DidConfig,
     pub bedrock: BedrockConfig,
@@ -110,7 +110,7 @@ impl Default for Config {
                 .expect("SLACK_CHANNEL_ABUSING is required"),
             slack_channel_monitor: option_env!("SLACK_CHANNEL_MONITOR")
                 .expect("SLACK_CHANNEL_MONITOR is required"),
-            telegram_token: option_env!("TELEGRAM_TOKEN").expect("You must set TELEGRAM_TOKEN"),
+            telegram_token: option_env!("TELEGRAM_TOKEN"),
             noncelab_token: option_env!("NONCELAB_TOKEN").expect("You must set NONCELAB_TOKEN"),
             did: DidConfig {
                 bbs_bls_x: option_env!("BBS_BLS_X").expect("You must set BBS_BLS_X"),

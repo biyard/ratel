@@ -167,14 +167,14 @@ pub async fn route(
     textract_client: TextractClient,
     _metadata_s3_client: S3Client,
     private_s3_client: S3Client,
-    bot: TelegramBot,
+    bot: Option<TelegramBot>,
 ) -> Result<by_axum::axum::Router> {
     Ok(by_axum::axum::Router::new()
         .nest(
             "/v1",
             controllers::v1::route(pool.clone())
                 .await?
-                .layer(Extension(Arc::new(bot))),
+                .layer(Extension(bot.map(Arc::new))),
         )
         .nest(
             "/m1",
