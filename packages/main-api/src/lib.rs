@@ -96,6 +96,10 @@ pub mod controllers {
             pub mod token;
         }
 
+        pub mod themes {
+            pub mod change_theme;
+        }
+
         pub mod telegram {
             pub mod get_telegram_info;
             pub mod verify_telegram_raw;

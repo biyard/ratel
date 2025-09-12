@@ -1,20 +1,20 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:ratel/exports.dart';
-import 'package:ratel/presentations/space/tab/deliberation_tab.dart';
-import 'package:ratel/presentations/space/tab/elearning_tab.dart';
-import 'package:ratel/presentations/space/tab/poll_tab.dart';
-import 'package:ratel/presentations/space/tab/summary_tab.dart';
-import 'package:ratel/presentations/space/tab/survey_tab.dart';
+import 'package:ratel/presentations/space/deliberation/tab/deliberation_tab.dart';
+import 'package:ratel/presentations/space/deliberation/tab/elearning_tab.dart';
+import 'package:ratel/presentations/space/deliberation/tab/poll_tab.dart';
+import 'package:ratel/presentations/space/deliberation/tab/summary_tab.dart';
+import 'package:ratel/presentations/space/deliberation/tab/survey_tab.dart';
 
-class SpaceScreen extends GetWidget<SpaceController> {
-  const SpaceScreen({super.key});
+class DeliberationSpaceScreen extends GetWidget<DeliberationSpaceController> {
+  const DeliberationSpaceScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     const double kSheetMinSize = 0.15;
 
-    return Layout<SpaceController>(
+    return Layout<DeliberationSpaceController>(
       scrollable: false,
       child: Obx(
         () => Stack(

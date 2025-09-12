@@ -1,6 +1,5 @@
 'use client';
 
-import BlackBox from '@/app/(social)/_components/black-box';
 import { FileInfo } from '@/lib/api/models/feeds';
 import React from 'react';
 
@@ -23,6 +22,7 @@ import {
   Zip,
 } from '@/components/icons';
 import { useTranslations } from 'next-intl';
+import BorderSpaceCard from '@/app/(social)/_components/border-space-card';
 
 export interface SpaceFilesProps {
   isEdit?: boolean;
@@ -45,10 +45,10 @@ export default function SpaceFiles({
     });
   };
   return (
-    <BlackBox>
+    <BorderSpaceCard>
       <div className="flex flex-col w-full gap-5">
         <div className="flex flex-row w-full justify-between items-start ">
-          <div className="font-bold text-white text-[15px]/[20px]">
+          <div className="font-bold text-text-primary text-[15px]/[20px]">
             {t('attached_files')}
           </div>
 
@@ -60,8 +60,8 @@ export default function SpaceFiles({
                 onadd(file);
               }}
             >
-              <div className="cursor-pointer flex flex-row w-fit gap-1 items-center bg-white rounded-[6px] px-[14px] py-[8px] hover:bg-neutral-300">
-                <Upload className="w-5 h-5 stroke-neutral-500" />
+              <div className="cursor-pointer flex flex-row w-fit gap-1 items-center bg-white border border-button-border rounded-[6px] px-[14px] py-[8px] hover:bg-neutral-300">
+                <Upload className="w-5 h-5 [&>path]:stroke-neutral-600" />
                 <div className="font-bold text-sm text-[#000203]">
                   {t('upload')}
                 </div>
@@ -102,7 +102,7 @@ export default function SpaceFiles({
           </div>
         )}
       </div>
-    </BlackBox>
+    </BorderSpaceCard>
   );
 }
 
@@ -114,7 +114,7 @@ function EditableFile({
   onclick: () => void;
 }) {
   return (
-    <div className="cursor-pointer flex flex-row justify-start items-center w-full gap-2 p-4 bg-neutral-800 rounded-[8px]">
+    <div className="cursor-pointer flex flex-row justify-start items-center w-full gap-2 p-4 bg-[#262626] light:bg-card-bg border border-card-border rounded-[8px]">
       <div className="[&>svg]:size-9">
         {file.ext === 'JPG' ? (
           <Jpg />
@@ -137,10 +137,10 @@ function EditableFile({
         )}
       </div>
       <div className="flex flex-col w-full justify-start items-start gap-2">
-        <div className="font-semibold text-xs/[18px] text-neutral-400">
+        <div className="font-semibold text-xs/[18px] text-text-primary">
           {file.name}
         </div>
-        <div className="font-normal text-[10px]/[16px] text-[#6d6d6d]">
+        <div className="font-normal text-[10px]/[16px] text-time-text">
           {file.size}
         </div>
       </div>
