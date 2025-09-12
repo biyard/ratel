@@ -445,7 +445,6 @@ services:
         echo '✅ All integration tests completed successfully!'
       "
 
-
 networks:
   ratel-network:
     driver: bridge
