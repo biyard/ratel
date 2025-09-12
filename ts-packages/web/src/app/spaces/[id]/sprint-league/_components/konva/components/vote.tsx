@@ -73,7 +73,7 @@ export default function VoteItem({
   const { offsetX, offsetY } = centerOffset(imageToUse);
 
   return (
-    <Group ref={groupRef} onClick={onClick} x={x}>
+    <Group ref={groupRef} onClick={onClick} onTap={onClick} x={x}>
       <KonvaImage
         ref={imgRef}
         image={imageToUse}
