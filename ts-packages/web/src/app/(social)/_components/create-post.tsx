@@ -208,7 +208,9 @@ export function CreatePost() {
             </div>
             <div
               className={cn('cursor-pointer')}
-              onClick={() => setExpand(!expand)}
+              onClick={() => {
+                setExpand(!expand);
+              }}
             >
               <DoubleArrowDown className="[&>path]:stroke-text-primary" />
             </div>
