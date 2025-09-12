@@ -1,0 +1,27 @@
+[package]
+name = "rest-api"
+version = "0.1.10"
+edition = "2021"
+description = "Library for REST API"
+license = "Apache-2.0"
+keywords = ["web", "rest-api"]
+repository = "https://github.com/biyard/rust-sdk/tree/main/packages/rest-api"
+
+[dependencies]
+base64 = "0.22.1"
+candid = "0.10.11"
+chrono = "0.4.39"
+reqwest.workspace = true
+ring = "0.17.14"
+serde = "1.0.217"
+simple_asn1 = "0.6.3"
+tracing = "0.1.41"
+
+tokio = { version = "1.43.0", optional = true }
+
+[dev-dependencies]
+tokio = { version = "1.43.0", features = ["full"] }
+
+[features]
+default = []
+test = ["tokio"]

@@ -27,9 +27,6 @@ pub mod controllers {
             pub mod get_notifications;
             pub mod mark_all_read;
         }
-        pub mod telegram {
-            pub mod subscribe;
-        }
 
         pub mod dashboards {
             pub mod get_dashboard;
@@ -96,6 +93,12 @@ pub mod controllers {
             pub mod oauth_authorization_server;
             pub mod register;
             pub mod token;
+        }
+
+        pub mod posts {
+            pub mod get_post;
+            pub mod list_posts;
+            pub mod update_post;
         }
 
         pub mod themes {

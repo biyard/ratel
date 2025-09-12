@@ -19,12 +19,6 @@ services:
     networks:
       - ratel-network
 
-  adminer:
-    image: adminer
-    restart: always
-    ports:
-      - 9000:8080
-
   postgres-init:
     image: postgres:16
     environment:
@@ -53,13 +47,17 @@ services:
       - "3000:3000"
     environment:
       ENV: dev
-      DATABASE_URL: postgres://postgres:postgres@postgres:5432/ratel
+      DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/ratel}
       MIGRATE: "true"
       AWS_REGION: us-east-1
       AWS_ACCESS_KEY_ID: "aws-access-key-id"
       AWS_SECRET_ACCESS_KEY: "aws-secret-access-key"
+      TELEGRAM_TOKEN: ${TELEGRAM_TOKEN}
     volumes:
       - .:/app
+      - ./.build/target:/app/target
+      - ./.build/main-api/target:/app/packages/main-api/target
+
     working_dir: /app
     command: ["bash", "scripts/api-entrypoint.sh"]
     healthcheck:
@@ -86,6 +84,11 @@ services:
       - .:/app
     working_dir: /app
     command: ["bash", "scripts/web-entrypoint.sh"]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/api/version || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 100
     environment:
       PORT: 8080
       API_URL: "http://main-api:3000"
@@ -102,8 +105,8 @@ services:
     ports:
       - "28080:8080"
     environment:
-      HASURA_GRAPHQL_METADATA_DATABASE_URL: postgres://postgres:postgres@postgres:5432/ratel
-      HASURA_GRAPHQL_DATABASE_URL: postgres://postgres:postgres@postgres:5432/ratel
+      HASURA_GRAPHQL_METADATA_DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/ratel}
+      HASURA_GRAPHQL_DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/ratel}
       HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
       HASURA_GRAPHQL_DEV_MODE: "true"
       HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup, http-log, webhook-log, websocket-log, query-log
@@ -151,59 +154,110 @@ services:
     ports:
       - "4566:4566"
     environment:
-      - SERVICES=dynamodb
+      - SERVICES=dynamodb,s3
       - DYNAMODB_SHARE_DB=1
-
-  # Playwright E2E Testing
-  playwright:
-    image: mcr.microsoft.com/playwright:v1.49.0-jammy
-    working_dir: /app
-    volumes:
-      - .:/app
-      - playwright-cache:/home/pwuser/.cache
-    environment:
-      CI: "true"
-      PLAYWRIGHT_BASE_URL: "http://web:8080"
-    command: >
-      sh -c "
-        echo 'Waiting for web service to be ready...' &&
-        until curl -s http://web:8080 > /dev/null 2>&1; do
-          sleep 2
-        done &&
-        echo 'Installing dependencies...' &&
-        cd ts-packages/web &&
-        npm install &&
-        echo 'Running Playwright tests...' &&
-        npm run test:e2e
-      "
-    depends_on:
-      web:
-        condition: service_started
-      main-api:
-        condition: service_healthy
     networks:
       - ratel-network
-    profiles:
-      - testing
 
+  # DynamoDB initialization
+  dynamodb-init:
+    image: amazon/aws-cli:latest
+    environment:
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_DEFAULT_REGION=us-east-1
+    volumes:
+      - ./scripts:/scripts
+    command: >
+      sh -c "
+        echo 'Waiting for LocalStack to be ready...' &&
+        until aws --endpoint-url=http://localstack:4566 dynamodb list-tables > /dev/null 2>&1; do
+          sleep 2
+        done &&
+        echo 'Creating ${DYNAMODB_TABLE_NAME:-ratel-local} table with GSIs...' &&
+        aws --endpoint-url=http://localstack:4566 dynamodb create-table \
+          --cli-input-json file:///scripts/dynamodb-schema.json \
+          --table-name ${DYNAMODB_TABLE_NAME:-ratel-local} &&
+        echo 'ratel-local table and GSIs created successfully'
+      "
+    depends_on:
+      - localstack
+    networks:
+      - ratel-network
 
-  # # Fetcher Service
-  # fetcher:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile.fetcher
-  #   restart: unless-stopped
-  #   ports:
-  #     - "3001:3000"
+  # DynamoDB Admin GUI
+  dynamodb-admin:
+    image: aaronshaf/dynamodb-admin:latest
+    ports:
+      - "8081:8001"
+    environment:
+      - DYNAMO_ENDPOINT=http://localstack:4566
+    depends_on:
+      - dynamodb-init
+    networks:
+      - ratel-network
+
+  # Playwright E2E Testing
+  # playwright:
+  #   image: mcr.microsoft.com/playwright:v1.49.0-jammy
+  #   working_dir: /app
+  #   volumes:
+  #     - .:/app
+  #     - playwright-cache:/home/pwuser/.cache
   #   environment:
-  #     ENV: dev
-  #     RUST_LOG: debug
-  #     DATABASE_URL: postgres://postgres:postgres@postgres:5432/ratel
+  #     CI: "true"
+  #     PLAYWRIGHT_BASE_URL: "http://web:8080"
+  #   command: >
+  #     sh -c "
+  #       echo 'Waiting for web service to be ready...' &&
+  #       until curl -s http://web:8080 > /dev/null 2>&1; do
+  #         sleep 2
+  #       done &&
+  #       echo 'Installing dependencies...' &&
+  #       cd ts-packages/web &&
+  #       npm install &&
+  #       echo 'Running Playwright tests...' &&
+  #       npm run test:e2e
+  #     "
   #   depends_on:
-  #     postgres:
+  #     web:
+  #       condition: service_started
+  #     main-api:
   #       condition: service_healthy
   #   networks:
   #     - ratel-network
+  #   profiles:
+  #     - testing
+
+
+  # # Fetcher Service
+  fetcher:
+    image: rust:1.89
+    restart: always
+    ports:
+      - "3001:3001"
+    volumes:
+      - .:/app
+      - ./.build/target:/app/target
+      - ./.build/fetcher/target:/app/packages/fetcher/target
+    working_dir: /app
+    environment:
+      ENV: dev
+      RUST_LOG: debug
+      PORT: 3001
+      DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/ratel}
+      TELEGRAM_TOKEN: ${TELEGRAM_TOKEN}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["bash", "scripts/fetcher-entrypoint.sh"]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3001/version || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 100
+    networks:
+      - ratel-network
 
   # # Image Worker Service
   # image-worker:
@@ -222,25 +276,6 @@ services:
   #     - ./uploads:/app/uploads
   #   networks:
   #     - ratel-network
-
-  # # Telegram Bot Service (optional)
-  # telegram-bot:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile.telegram-bot
-  #   restart: unless-stopped
-  #   environment:
-  #     ENV: dev
-  #     RUST_LOG: debug
-  #     TELEGRAM_TOKEN: ${TELEGRAM_TOKEN:-}
-  #     DATABASE_URL: postgres://postgres:postgres@postgres:5432/ratel
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-  #   networks:
-  #     - ratel-network
-  #   profiles:
-  #     - telegram
 
 
 networks:
