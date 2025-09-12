@@ -26,7 +26,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: image-worker-${{ github.sha }}
-          path: ${{ github.workspace }}/.build/image-worker/bootstrap
+          path: ${{ github.workspace }}/.build/image-worker
       - uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
