@@ -8,7 +8,7 @@ pub struct Config {
     pub migrate: bool,
     pub rpc_endpoint: &'static str,
 
-    pub telegram_token: &'static str,
+    pub telegram_token: Option<&'static str>,
 }
 
 impl Default for Config {
@@ -19,7 +19,7 @@ impl Default for Config {
                 .map(|s| s.parse::<bool>().unwrap_or(false))
                 .unwrap_or(false),
             rpc_endpoint: option_env!("RPC_ENDPOINT").expect("RPC_ENDPOINT is required"),
-            telegram_token: option_env!("TELEGRAM_TOKEN").expect("TELEGRAM_TOKEN is required"),
+            telegram_token: option_env!("TELEGRAM_TOKEN"),
         }
     }
 }

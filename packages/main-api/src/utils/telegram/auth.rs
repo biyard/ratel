@@ -10,7 +10,7 @@ pub fn validate_telegram_raw(telegram_raw: &Option<String>) -> Option<i64> {
     let raw = telegram_raw.as_ref().filter(|s| !s.is_empty())?;
 
     let config = config::get();
-    let telegram_token = config.telegram_token;
+    let telegram_token = config.telegram_token?;
 
     let validation_result = (|| {
         let mut params: Vec<(String, String)> = url::form_urlencoded::parse(raw.as_bytes())
