@@ -6,6 +6,7 @@ import { CommentIcon, Palace, Rewards, Shares, ThumbUp } from './icons';
 import { convertNumberToString } from '@/lib/number-utils';
 import TimeAgo from './time-ago';
 import DOMPurify from 'dompurify';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useApiCall } from '@/lib/api/use-send';
 import { ratelApi } from '@/lib/api/ratel_api';
@@ -60,7 +61,6 @@ export interface FeedCardProps {
 }
 
 export default function FeedCard(props: FeedCardProps) {
-  const router = useRouter();
   const { post } = useApiCall();
   const { data: User } = useSuspenseUserInfo();
 
@@ -147,14 +147,15 @@ export default function FeedCard(props: FeedCardProps) {
     setExpand(true);
   };
 
+  const href = props.space_id
+    ? route.space(props.space_id)
+    : route.threadByFeedId(props.id);
+
   return (
-    <Col
-      className={`cursor-pointer rounded-[10px] bg-card-bg-secondary border border-card-enable-border`}
-      onClick={() => {
-        router.push(route.threadByFeedId(props.id));
-      }}
-    >
-      <FeedBody {...props} />
+    <Col className="relative rounded-[10px] bg-card-bg-secondary border border-card-enable-border">
+      <Link href={href} className="block">
+        <FeedBody {...props} />
+      </Link>
       <FeedFooter
         {...props}
         likes={localLikes}
