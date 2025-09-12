@@ -18,6 +18,7 @@ import CreatePostButton from '../create-post-button';
 import BlackBox from '../black-box';
 import PromotionCard from '../promotion-card';
 import News from '../News';
+import { usePostDraft } from '../create-post';
 import Suggestions from '../suggestions';
 import { Promotion } from '@/lib/api/models/promotion';
 import { Feed } from '@/lib/api/models/feeds';
@@ -103,6 +104,17 @@ export default function Home({
     }
   }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
+  const { loadDraft } = usePostDraft();
+
+  const handleEdit = (id: number) => async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await loadDraft(id);
+    } catch (error) {
+      console.error('Failed to load draft for editing:', error);
+    }
+  };
+
   return (
     <div className="flex-1 flex relative">
       <Col className="flex-1 flex max-mobile:px-[10px]">
@@ -113,6 +125,7 @@ export default function Home({
                 key={`feed-${props.id}`}
                 user_id={userId}
                 refetch={() => {}}
+                onEdit={handleEdit(props.id)}
                 {...props}
               />
             ))}
