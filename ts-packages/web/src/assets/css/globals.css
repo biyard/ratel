@@ -205,6 +205,8 @@
   --color-comment-icon: #aeaaab;
   --color-comment-icon-text: #a1a1a1;
   --color-comment-box-bg: #171717;
+  --color-disabled-button-bg: #404040;
+  --color-disabled-button-text: #737373;
 
   --color-cancel-button-bg: #1a1a1a;
   --color-cancel-button-text: #a1a1a1;
@@ -343,6 +345,8 @@
   --color-comment-icon: #737373;
   --color-comment-icon-text: #404040;
   --color-comment-box-bg: #ffffff;
+  --color-disabled-button-bg: #d9d9d9;
+  --color-disabled-button-text: var(--gray-600);
 
   --color-cancel-button-bg: #ffffff;
   --color-cancel-button-text: #a3a3a3;

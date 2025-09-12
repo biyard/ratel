@@ -1,8 +1,7 @@
 'use client';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNetwork } from '../_hooks/use-network';
 import { logger } from '@/lib/logger';
-// import { Industry } from '@/lib/api/models/industry';
 import { Follower } from '@/lib/api/models/network';
 import { UserType } from '@/lib/api/models/user';
 import Image from 'next/image';
@@ -15,13 +14,10 @@ import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { checkString } from '@/lib/string-filter-utils';
 import Link from 'next/link';
 import { route } from '@/route';
-// import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function MyNetwork() {
   const { post } = useApiCall();
-
   const data = useSuspenseUserInfo();
-
   const network = useNetwork();
   const networkData = network.data;
 
@@ -29,20 +25,17 @@ export default function MyNetwork() {
     const timer = setTimeout(() => {
       network.refetch();
     }, 0);
-
     return () => clearTimeout(timer);
-  }, []);
+  }, [network]);
 
   const handleFollow = async (userId: number) => {
     await post(ratelApi.networks.follow(userId), followRequest());
   };
 
   logger.debug('query response of networks', networkData);
+
   return (
     <div className="flex flex-col w-full gap-3">
-      {/* <SelectedIndustry
-        industries={networkData ? networkData.industries : []}
-      /> */}
       <FollowingContents
         label="Suggested teams"
         users={
@@ -58,14 +51,14 @@ export default function MyNetwork() {
             await handleFollow(userId);
             data.refetch();
             network.refetch();
-
-            showSuccessToast('success to follow user');
+            showSuccessToast('Successfully followed user');
           } catch (err) {
-            showErrorToast('failed to follow user');
+            showErrorToast('Failed to follow user');
             logger.error('failed to follow user with error: ', err);
           }
         }}
       />
+
       <FollowingContents
         label="Suggested users"
         users={
@@ -81,10 +74,9 @@ export default function MyNetwork() {
             await handleFollow(userId);
             data.refetch();
             network.refetch();
-
-            showSuccessToast('success to follow user');
+            showSuccessToast('Successfully followed user');
           } catch (err) {
-            showErrorToast('failed to follow user');
+            showErrorToast('Failed to follow user');
             logger.error('failed to follow user with error: ', err);
           }
         }}
@@ -93,16 +85,30 @@ export default function MyNetwork() {
   );
 }
 
-function FollowButton({ onClick }: { onClick: () => void }) {
+function FollowButton({
+  isFollowing,
+  onClick,
+}: {
+  isFollowing: boolean;
+  onClick: () => void;
+}) {
   return (
     <div
-      className="cursor-pointer flex flex-row w-fit h-fit px-[10px] py-[5px] border border-white bg-white hover:bg-gray-300 light:bg-transparent light:border-[#000203] rounded-[50px]"
-      onClick={() => {
-        onClick();
-      }}
+      className={`cursor-pointer flex flex-row w-fit h-fit px-[10px] py-[5px] border rounded-[50px]
+      ${
+        isFollowing
+          ? 'bg-gray-200 border-gray-300 pointer-events-none opacity-70'
+          : 'bg-white border-white hover:bg-gray-300'
+      }`}
+      onClick={isFollowing ? undefined : onClick}
+      aria-disabled={isFollowing}
     >
-      <Add className="w-[15px] h-[15px] [&>path]:stroke-[#000203]" />
-      <div className="font-bold text-[#000203] text-xs">Follow</div>
+      {!isFollowing && (
+        <Add className="w-[15px] h-[15px] [&>path]:stroke-[#000203]" />
+      )}
+      <div className="font-bold text-[#000203] text-xs">
+        {isFollowing ? 'Following' : 'Follow'}
+      </div>
     </div>
   );
 }
@@ -114,70 +120,84 @@ function FollowingContents({
 }: {
   label: string;
   users: Follower[];
-  follow: (userId: number) => void;
+  follow: (userId: number) => Promise<void>;
 }) {
+  const [followedUsers, setFollowedUsers] = useState<number[]>([]);
+
+  const handleFollowClick = async (userId: number) => {
+    if (followedUsers.includes(userId)) return;
+    try {
+      await follow(userId);
+      setFollowedUsers((prev) => [...prev, userId]);
+    } catch (err) {
+      logger.error('follow failed', err);
+    }
+  };
+
   return (
     <div className="flex flex-col w-full rounded-lg bg-card-bg border border-card-border px-4 py-5 gap-2.5">
       <div className="font-semibold text-text-primary text-base/[20px]">
         {label}
       </div>
       <div className="flex flex-col">
-        {users.map((user) => (
-          <div
-            key={user.id}
-            className="flex flex-col w-full gap-[5px] px-2.5 py-5 border-b border-b-divider"
-          >
-            <div className="flex flex-row w-full justify-between items-start">
-              <div className="flex flex-row w-fit gap-2">
-                {user.user_type == UserType.Team ? (
-                  user.profile_url && user.profile_url !== '' ? (
+        {users.map((user) => {
+          const isFollowing = followedUsers.includes(user.id);
+          return (
+            <div
+              key={user.id}
+              className="flex flex-col w-full gap-[5px] px-2.5 py-5 border-b border-b-divider"
+            >
+              <div className="flex flex-row w-full justify-between items-start">
+                <div className="flex flex-row w-fit gap-2">
+                  {user.user_type == UserType.Team ? (
+                    user.profile_url ? (
+                      <Image
+                        width={32}
+                        height={32}
+                        src={user.profile_url}
+                        alt="Profile"
+                        className="w-8 h-8 rounded-lg object-cover"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 rounded-lg bg-neutral-500" />
+                    )
+                  ) : user.profile_url ? (
                     <Image
                       width={32}
                       height={32}
                       src={user.profile_url}
                       alt="Profile"
-                      className="w-8 h-8 rounded-lg object-cover"
+                      className="w-8 h-8 rounded-full object-cover"
                     />
                   ) : (
-                    <div className="w-8 h-8 rounded-lg bg-neutral-500" />
-                  )
-                ) : user.profile_url && user.profile_url !== '' ? (
-                  <Image
-                    width={32}
-                    height={32}
-                    src={user.profile_url}
-                    alt="Profile"
-                    className="w-8 h-8 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="w-8 h-8 rounded-full bg-neutral-500" />
-                )}
+                    <div className="w-8 h-8 rounded-full bg-neutral-500" />
+                  )}
 
-                <div className="flex flex-col">
-                  <Link href={route.teamByUsername(user.username)}>
-                    <div className="font-semibold text-text-primary text-sm/[20px]">
-                      {user.nickname}
-                    </div>
-                  </Link>
+                  <div className="flex flex-col">
+                    <Link href={route.teamByUsername(user.username)}>
+                      <div className="font-semibold text-text-primary text-sm/[20px]">
+                        {user.nickname}
+                      </div>
+                    </Link>
+                  </div>
                 </div>
+
+                <FollowButton
+                  isFollowing={isFollowing}
+                  onClick={() => handleFollowClick(user.id)}
+                />
               </div>
 
-              <FollowButton
-                onClick={() => {
-                  follow(user.id);
+              <div
+                id="user-profile-description"
+                className="font-medium text-[12px] text-desc-text line-clamp-3 overflow-hidden"
+                dangerouslySetInnerHTML={{
+                  __html: user.html_contents,
                 }}
               />
             </div>
-
-            <div
-              id="user-profile-description"
-              className="font-medium text-[12px] text-desc-text line-clamp-3 overflow-hidden"
-              dangerouslySetInnerHTML={{
-                __html: user.html_contents,
-              }}
-            />
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

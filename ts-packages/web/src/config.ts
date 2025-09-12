@@ -13,7 +13,7 @@ type Config = {
   sign_domain: string;
   experiment: boolean;
   graphql_url: string;
-
+  telegram_botname: string;
   version: string;
 };
 
@@ -57,4 +57,7 @@ export const config: Config = {
       ? process.env.GRAPHQL_URL || process.env.NEXT_PUBLIC_GRAPHQL_URL
       : process.env.NEXT_PUBLIC_GRAPHQL_URL) ||
     'https://graphql.dev.ratel.foundation/v1/graphql',
+
+  telegram_botname:
+    process.env.NEXT_PUBLIC_TELEGRAM_BOTNAME || 'cryto_ratel_dev_bot',
 };

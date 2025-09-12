@@ -327,6 +327,7 @@ jobs:
           NEXT_PUBLIC_API_URL: https://api.dev.ratel.foundation
           NEXT_PUBLIC_EXPERIMENT: true
           NEXT_PUBLIC_GRAPHQL_URL: https://graphql.dev.ratel.foundation/v1/graphql
+          NEXT_PUBLIC_TELEGRAM_BOTNAME: crypto_ratel_dev_bot
 
         run: |
             make docker.build
