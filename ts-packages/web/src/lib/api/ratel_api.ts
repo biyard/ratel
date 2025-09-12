@@ -188,10 +188,11 @@ export const ratelApi = {
     editProfile: (user_id: number) => `/v1/users/${user_id}`,
     updateEvmAddress: () => '/v1/users',
 
-    updateTelegramId: () => '/v1/users',
+    updateTelegramId: () => '/v2/users/telegram',
 
     sendVerificationCode: () => '/v1/users/verifications',
   },
+
   assets: {
     getPresignedUrl: (file_type: FileType, total_count = 1) =>
       `/v1/assets?action=get-presigned-uris&file_type=${file_type}&total_count=${total_count}`,
@@ -352,7 +353,7 @@ export const ratelApi = {
       `/v2/dagits/${spaceId}/artworks/${artworkId}/vote`,
   },
   telegram: {
-    subscribe: () => '/v2/telegram/subscribe',
+    verifyTelegramRaw: () => `/v2/telegram`,
   },
   graphql: {
     listNews: (size: number) => {
