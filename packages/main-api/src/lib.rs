@@ -98,12 +98,19 @@ pub mod controllers {
         pub mod themes {
             pub mod change_theme;
         }
+
+        pub mod binances {
+            pub mod create_subscription;
+        }
     }
     pub mod m2 {
         pub mod noncelab {
             pub mod users {
                 pub mod register_users;
             }
+        }
+        pub mod binances {
+            pub mod get_merchant_balance;
         }
     }
     pub mod well_known {
