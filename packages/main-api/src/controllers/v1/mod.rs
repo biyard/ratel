@@ -1,12 +1,12 @@
-pub mod assembly_members;
-pub mod bills;
+// pub mod assembly_members;
+// pub mod bills;
 // pub mod patrons;
 // pub mod topics;
-mod advocacy_campaigns;
+// mod advocacy_campaigns;
 pub mod assets;
 mod auth;
 mod bots;
-mod election_pledges;
+// mod election_pledges;
 pub mod feeds;
 mod landing;
 mod me;
@@ -14,12 +14,12 @@ mod my_networks;
 mod network;
 mod news;
 mod notifications;
-mod presidential_candidates;
+// mod presidential_candidates;
 mod promotions;
-mod quizzes;
+// mod quizzes;
 mod spaces;
 pub mod subscriptions;
-pub mod supports;
+// pub mod supports;
 mod teams;
 mod totals;
 pub mod users;
@@ -36,10 +36,27 @@ pub async fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Ro
     let conf = config::get();
     Ok(by_axum::axum::Router::new()
         .nest("/auth", auth::AuthController::new(pool.clone()).route()?)
-        .nest(
-            "/advocacy-campaigns",
-            advocacy_campaigns::AdvocacyCampaignController::new(pool.clone()).route()?,
-        )
+        // .nest(
+        //     "/advocacy-campaigns",
+        //     advocacy_campaigns::AdvocacyCampaignController::new(pool.clone()).route()?,
+        // )
+        // .nest(
+        //     "/quizzes",
+        //     quizzes::QuizController::new(pool.clone()).route()?,
+        // )
+        // .nest(
+        //     "/election-pledges",
+        //     election_pledges::ElectionPledgeController::new(pool.clone()).route()?,
+        // )
+        // .nest(
+        //     "/presidential-candidates",
+        //     presidential_candidates::PresidentialCandidateController::new(pool.clone()).route()?,
+        // )
+        // .nest(
+        //     "/assembly-members",
+        //     assembly_members::AssemblyMemberControllerV1::route(pool.clone())?,
+        // )
+        // .nest("/bills", bills::BillController::new(pool.clone()).route())
         .nest("/me", me::MeController::new(pool.clone()).route()?)
         .nest(
             "/spaces",
@@ -65,32 +82,15 @@ pub async fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Ro
             "/promotions",
             promotions::PromotionController::new(pool.clone()).route()?,
         )
-        .nest(
-            "/quizzes",
-            quizzes::QuizController::new(pool.clone()).route()?,
-        )
         .nest("/news", news::NewsController::new(pool.clone()).route()?)
         .nest("/bots", bots::BotController::new(pool.clone()).route()?)
         .nest("/teams", teams::TeamController::new(pool.clone()).route()?)
         .nest("/feeds", feeds::FeedController::new(pool.clone()).route()?)
-        .nest(
-            "/election-pledges",
-            election_pledges::ElectionPledgeController::new(pool.clone()).route()?,
-        )
-        .nest(
-            "/presidential-candidates",
-            presidential_candidates::PresidentialCandidateController::new(pool.clone()).route()?,
-        )
         .nest("/users", users::UserControllerV1::route(pool.clone())?)
-        .nest(
-            "/assembly-members",
-            assembly_members::AssemblyMemberControllerV1::route(pool.clone())?,
-        )
-        .nest("/bills", bills::BillController::new(pool.clone()).route())
-        .nest(
-            "/supports",
-            supports::SupportController::route(pool.clone())?,
-        )
+        // .nest(
+        //     "/supports",
+        //     supports::SupportController::route(pool.clone())?,
+        // )
         .nest(
             "/subscriptions",
             subscriptions::SubscriptionController::new(pool.clone()).route(),
