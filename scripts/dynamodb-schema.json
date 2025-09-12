@@ -90,6 +90,70 @@
       "Projection": {
         "ProjectionType": "ALL"
       }
+    },
+    {
+      "IndexName": "gsi3-index",
+      "KeySchema": [
+        {
+          "AttributeName": "gsi3_pk",
+          "KeyType": "HASH"
+        },
+        {
+          "AttributeName": "gsi3_sk",
+          "KeyType": "RANGE"
+        }
+      ],
+      "Projection": {
+        "ProjectionType": "ALL"
+      }
+    },
+    {
+      "IndexName": "gsi4-index",
+      "KeySchema": [
+        {
+          "AttributeName": "gsi4_pk",
+          "KeyType": "HASH"
+        },
+        {
+          "AttributeName": "gsi4_sk",
+          "KeyType": "RANGE"
+        }
+      ],
+      "Projection": {
+        "ProjectionType": "ALL"
+      }
+    },
+    {
+      "IndexName": "gsi5-index",
+      "KeySchema": [
+        {
+          "AttributeName": "gsi5_pk",
+          "KeyType": "HASH"
+        },
+        {
+          "AttributeName": "gsi5_sk",
+          "KeyType": "RANGE"
+        }
+      ],
+      "Projection": {
+        "ProjectionType": "ALL"
+      }
+    },
+    {
+      "IndexName": "gsi6-index",
+      "KeySchema": [
+        {
+          "AttributeName": "gsi6_pk",
+          "KeyType": "HASH"
+        },
+        {
+          "AttributeName": "gsi6_sk",
+          "KeyType": "RANGE"
+        }
+      ],
+      "Projection": {
+        "ProjectionType": "ALL"
+      }
     }
   ]
 }

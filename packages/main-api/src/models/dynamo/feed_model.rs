@@ -1,13 +1,15 @@
 use super::base_model::*;
-use aws_sdk_dynamodb::types::AttributeValue;
-use dto::{Error, Result, Feed, FeedType, FeedStatus, UrlType, File, FeedBookmarkUser};
+use super::serde_helpers as sh;
+use crate::types::dynamo_entity_type::EntityType;
+use dto::{Feed, FeedType, FeedStatus, UrlType, File, FeedBookmarkUser};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DynamoFeed {
+    #[serde(flatten)]
     pub base: BaseModel,
     pub id: i64,
+    #[serde(with = "sh::feed_type_num")]
     pub feed_type: FeedType,
     pub user_id: i64,
     pub industry_id: i64,
@@ -16,9 +18,11 @@ pub struct DynamoFeed {
     pub title: Option<String>,
     pub html_contents: String,
     pub url: Option<String>,
+    #[serde(with = "sh::url_type_num")]
     pub url_type: UrlType,
     pub files: Vec<File>,
     pub rewards: i64,
+    #[serde(with = "sh::feed_status_num")]
     pub status: FeedStatus,
     pub likes: i64,
     pub comments: i64,
@@ -38,7 +42,7 @@ impl DynamoFeed {
         let sk = METADATA_SK.to_string();
         
         // Create base model with GSIs for different access patterns
-        let base = BaseModel::new(pk, sk, "FEED".to_string())
+        let base = BaseModel::new(pk, sk, EntityType::Feed)
             .with_gsi1(format!("{}#{}", USER_PREFIX, feed.user_id), Some(format!("FEED#{}", feed.created_at)))
             .with_gsi2(format!("{}#{}", INDUSTRY_PREFIX, feed.industry_id), Some(format!("FEED#{}", feed.created_at)));
 
@@ -79,155 +83,6 @@ impl DynamoFeed {
 }
 
 impl DynamoModel for DynamoFeed {
-    fn to_item(&self) -> Result<HashMap<String, AttributeValue>> {
-        let mut item = HashMap::new();
-        
-        // Base model fields
-        item.insert("pk".to_string(), string_attr(&self.base.pk));
-        item.insert("sk".to_string(), string_attr(&self.base.sk));
-        item.insert("type".to_string(), string_attr(&self.base.entity_type));
-        item.insert("created_at".to_string(), number_attr(self.base.created_at));
-        item.insert("updated_at".to_string(), number_attr(self.base.updated_at));
-        
-        if let Some(ref gsi1_pk) = self.base.gsi1_pk {
-            item.insert("gsi1_pk".to_string(), string_attr(gsi1_pk));
-        }
-        if let Some(ref gsi1_sk) = self.base.gsi1_sk {
-            item.insert("gsi1_sk".to_string(), string_attr(gsi1_sk));
-        }
-        if let Some(ref gsi2_pk) = self.base.gsi2_pk {
-            item.insert("gsi2_pk".to_string(), string_attr(gsi2_pk));
-        }
-        if let Some(ref gsi2_sk) = self.base.gsi2_sk {
-            item.insert("gsi2_sk".to_string(), string_attr(gsi2_sk));
-        }
-
-        // Feed-specific fields
-        item.insert("id".to_string(), number_attr(self.id));
-        item.insert("feed_type".to_string(), number_attr(self.feed_type as i64));
-        item.insert("user_id".to_string(), number_attr(self.user_id));
-        item.insert("industry_id".to_string(), number_attr(self.industry_id));
-        
-        if let Some(parent_id) = self.parent_id {
-            item.insert("parent_id".to_string(), number_attr(parent_id));
-        }
-        
-        if let Some(quote_feed_id) = self.quote_feed_id {
-            item.insert("quote_feed_id".to_string(), number_attr(quote_feed_id));
-        }
-        
-        if let Some(ref title) = self.title {
-            item.insert("title".to_string(), string_attr(title));
-        }
-        
-        item.insert("html_contents".to_string(), string_attr(&self.html_contents));
-        
-        if let Some(ref url) = self.url {
-            item.insert("url".to_string(), string_attr(url));
-        }
-        
-        item.insert("url_type".to_string(), number_attr(self.url_type as i64));
-        
-        // Serialize files as JSON
-        let files_json = serde_json::to_string(&self.files)
-            .map_err(|e| Error::DynamoDbError(format!("Failed to serialize files: {}", e)))?;
-        item.insert("files".to_string(), string_attr(&files_json));
-        
-        item.insert("rewards".to_string(), number_attr(self.rewards));
-        item.insert("status".to_string(), number_attr(self.status as i64));
-        item.insert("likes".to_string(), number_attr(self.likes));
-        item.insert("comments".to_string(), number_attr(self.comments));
-        item.insert("shares".to_string(), number_attr(self.shares));
-        item.insert("is_liked".to_string(), bool_attr(self.is_liked));
-        item.insert("is_bookmarked".to_string(), bool_attr(self.is_bookmarked));
-        item.insert("onboard".to_string(), bool_attr(self.onboard));
-        
-        // Denormalized fields
-        item.insert("author_nickname".to_string(), string_attr(&self.author_nickname));
-        
-        if let Some(ref author_profile_url) = self.author_profile_url {
-            item.insert("author_profile_url".to_string(), string_attr(author_profile_url));
-        }
-        
-        item.insert("industry_name".to_string(), string_attr(&self.industry_name));
-
-        Ok(item)
-    }
-
-    fn from_item(item: HashMap<String, AttributeValue>) -> Result<Self> {
-        let pk = extract_string(&item, "pk")?;
-        let sk = extract_string(&item, "sk")?;
-        let entity_type = extract_string(&item, "type")?;
-        let created_at = extract_number(&item, "created_at")?;
-        let updated_at = extract_number(&item, "updated_at")?;
-        
-        let base = BaseModel {
-            pk,
-            sk,
-            entity_type,
-            created_at,
-            updated_at,
-            gsi1_pk: extract_optional_string(&item, "gsi1_pk"),
-            gsi1_sk: extract_optional_string(&item, "gsi1_sk"),
-            gsi2_pk: extract_optional_string(&item, "gsi2_pk"),
-            gsi2_sk: extract_optional_string(&item, "gsi2_sk"),
-        };
-
-        let feed_type_num = extract_number(&item, "feed_type")?;
-        let feed_type = match feed_type_num {
-            1 => FeedType::Post,
-            2 => FeedType::Reply,
-            3 => FeedType::Repost,
-            4 => FeedType::DocReview,
-            _ => FeedType::Post,
-        };
-
-        let url_type_num = extract_number(&item, "url_type")?;
-        let url_type = match url_type_num {
-            0 => UrlType::None,
-            1 => UrlType::Image,
-            _ => UrlType::None,
-        };
-
-        let status_num = extract_number(&item, "status")?;
-        let status = match status_num {
-            1 => FeedStatus::Draft,
-            2 => FeedStatus::Published,
-            _ => FeedStatus::Published,
-        };
-
-        // Deserialize files from JSON
-        let files_json = extract_string(&item, "files")?;
-        let files: Vec<File> = serde_json::from_str(&files_json)
-            .map_err(|e| Error::DynamoDbError(format!("Failed to deserialize files: {}", e)))?;
-
-        Ok(Self {
-            base,
-            id: extract_number(&item, "id")?,
-            feed_type,
-            user_id: extract_number(&item, "user_id")?,
-            industry_id: extract_number(&item, "industry_id")?,
-            parent_id: extract_optional_number(&item, "parent_id"),
-            quote_feed_id: extract_optional_number(&item, "quote_feed_id"),
-            title: extract_optional_string(&item, "title"),
-            html_contents: extract_string(&item, "html_contents")?,
-            url: extract_optional_string(&item, "url"),
-            url_type,
-            files,
-            rewards: extract_number(&item, "rewards")?,
-            status,
-            likes: extract_number(&item, "likes")?,
-            comments: extract_number(&item, "comments")?,
-            shares: extract_number(&item, "shares")?,
-            is_liked: extract_bool(&item, "is_liked")?,
-            is_bookmarked: extract_bool(&item, "is_bookmarked")?,
-            onboard: extract_bool(&item, "onboard")?,
-            author_nickname: extract_string(&item, "author_nickname")?,
-            author_profile_url: extract_optional_string(&item, "author_profile_url"),
-            industry_name: extract_string(&item, "industry_name")?,
-        })
-    }
-
     fn pk(&self) -> String {
         self.base.pk.clone()
     }
@@ -239,6 +94,7 @@ impl DynamoModel for DynamoFeed {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FeedComment {
+    #[serde(flatten)]
     pub base: BaseModel,
     pub parent_feed_id: i64,
     pub comment_feed_id: i64,
@@ -254,7 +110,7 @@ impl FeedComment {
         let pk = format!("{}#{}", FEED_PREFIX, parent_feed_id);
         let sk = format!("{}#{}#{}", COMMENT_PREFIX, chrono::Utc::now().timestamp(), comment_feed_id);
         
-        let base = BaseModel::new(pk, sk, "FEED_COMMENT".to_string())
+        let base = BaseModel::new(pk, sk, EntityType::Comment)
             .with_gsi1(format!("{}#{}", USER_PREFIX, user_id), Some(format!("COMMENT#{}", chrono::Utc::now().timestamp())));
 
         Self {
@@ -271,67 +127,6 @@ impl FeedComment {
 }
 
 impl DynamoModel for FeedComment {
-    fn to_item(&self) -> Result<HashMap<String, AttributeValue>> {
-        let mut item = HashMap::new();
-        
-        item.insert("pk".to_string(), string_attr(&self.base.pk));
-        item.insert("sk".to_string(), string_attr(&self.base.sk));
-        item.insert("type".to_string(), string_attr(&self.base.entity_type));
-        item.insert("created_at".to_string(), number_attr(self.base.created_at));
-        item.insert("updated_at".to_string(), number_attr(self.base.updated_at));
-        
-        if let Some(ref gsi1_pk) = self.base.gsi1_pk {
-            item.insert("gsi1_pk".to_string(), string_attr(gsi1_pk));
-        }
-        if let Some(ref gsi1_sk) = self.base.gsi1_sk {
-            item.insert("gsi1_sk".to_string(), string_attr(gsi1_sk));
-        }
-        
-        item.insert("parent_feed_id".to_string(), number_attr(self.parent_feed_id));
-        item.insert("comment_feed_id".to_string(), number_attr(self.comment_feed_id));
-        item.insert("user_id".to_string(), number_attr(self.user_id));
-        item.insert("html_contents".to_string(), string_attr(&self.html_contents));
-        item.insert("likes".to_string(), number_attr(self.likes));
-        item.insert("author_nickname".to_string(), string_attr(&self.author_nickname));
-        
-        if let Some(ref url) = self.author_profile_url {
-            item.insert("author_profile_url".to_string(), string_attr(url));
-        }
-
-        Ok(item)
-    }
-
-    fn from_item(item: HashMap<String, AttributeValue>) -> Result<Self> {
-        let pk = extract_string(&item, "pk")?;
-        let sk = extract_string(&item, "sk")?;
-        let entity_type = extract_string(&item, "type")?;
-        let created_at = extract_number(&item, "created_at")?;
-        let updated_at = extract_number(&item, "updated_at")?;
-        
-        let base = BaseModel {
-            pk,
-            sk,
-            entity_type,
-            created_at,
-            updated_at,
-            gsi1_pk: extract_optional_string(&item, "gsi1_pk"),
-            gsi1_sk: extract_optional_string(&item, "gsi1_sk"),
-            gsi2_pk: extract_optional_string(&item, "gsi2_pk"),
-            gsi2_sk: extract_optional_string(&item, "gsi2_sk"),
-        };
-
-        Ok(Self {
-            base,
-            parent_feed_id: extract_number(&item, "parent_feed_id")?,
-            comment_feed_id: extract_number(&item, "comment_feed_id")?,
-            user_id: extract_number(&item, "user_id")?,
-            html_contents: extract_string(&item, "html_contents")?,
-            likes: extract_number(&item, "likes")?,
-            author_nickname: extract_string(&item, "author_nickname")?,
-            author_profile_url: extract_optional_string(&item, "author_profile_url"),
-        })
-    }
-
     fn pk(&self) -> String {
         self.base.pk.clone()
     }
@@ -343,6 +138,7 @@ impl DynamoModel for FeedComment {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FeedLike {
+    #[serde(flatten)]
     pub base: BaseModel,
     pub feed_id: i64,
     pub user_id: i64,
@@ -356,7 +152,7 @@ impl FeedLike {
         let sk = format!("{}#{}", LIKE_PREFIX, user_id);
         let liked_at = chrono::Utc::now().timestamp();
         
-        let base = BaseModel::new(pk, sk, "FEED_LIKE".to_string())
+        let base = BaseModel::new(pk, sk, EntityType::Like)
             .with_gsi1(format!("{}#{}", USER_PREFIX, user_id), Some(format!("FEED_LIKE#{}", liked_at)));
 
         Self {
@@ -370,58 +166,6 @@ impl FeedLike {
 }
 
 impl DynamoModel for FeedLike {
-    fn to_item(&self) -> Result<HashMap<String, AttributeValue>> {
-        let mut item = HashMap::new();
-        
-        item.insert("pk".to_string(), string_attr(&self.base.pk));
-        item.insert("sk".to_string(), string_attr(&self.base.sk));
-        item.insert("type".to_string(), string_attr(&self.base.entity_type));
-        item.insert("created_at".to_string(), number_attr(self.base.created_at));
-        item.insert("updated_at".to_string(), number_attr(self.base.updated_at));
-        
-        if let Some(ref gsi1_pk) = self.base.gsi1_pk {
-            item.insert("gsi1_pk".to_string(), string_attr(gsi1_pk));
-        }
-        if let Some(ref gsi1_sk) = self.base.gsi1_sk {
-            item.insert("gsi1_sk".to_string(), string_attr(gsi1_sk));
-        }
-        
-        item.insert("feed_id".to_string(), number_attr(self.feed_id));
-        item.insert("user_id".to_string(), number_attr(self.user_id));
-        item.insert("user_nickname".to_string(), string_attr(&self.user_nickname));
-        item.insert("liked_at".to_string(), number_attr(self.liked_at));
-
-        Ok(item)
-    }
-
-    fn from_item(item: HashMap<String, AttributeValue>) -> Result<Self> {
-        let pk = extract_string(&item, "pk")?;
-        let sk = extract_string(&item, "sk")?;
-        let entity_type = extract_string(&item, "type")?;
-        let created_at = extract_number(&item, "created_at")?;
-        let updated_at = extract_number(&item, "updated_at")?;
-        
-        let base = BaseModel {
-            pk,
-            sk,
-            entity_type,
-            created_at,
-            updated_at,
-            gsi1_pk: extract_optional_string(&item, "gsi1_pk"),
-            gsi1_sk: extract_optional_string(&item, "gsi1_sk"),
-            gsi2_pk: extract_optional_string(&item, "gsi2_pk"),
-            gsi2_sk: extract_optional_string(&item, "gsi2_sk"),
-        };
-
-        Ok(Self {
-            base,
-            feed_id: extract_number(&item, "feed_id")?,
-            user_id: extract_number(&item, "user_id")?,
-            user_nickname: extract_string(&item, "user_nickname")?,
-            liked_at: extract_number(&item, "liked_at")?,
-        })
-    }
-
     fn pk(&self) -> String {
         self.base.pk.clone()
     }
@@ -433,6 +177,7 @@ impl DynamoModel for FeedLike {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FeedBookmark {
+    #[serde(flatten)]
     pub base: BaseModel,
     pub feed_id: i64,
     pub user_id: i64,
@@ -446,7 +191,7 @@ impl FeedBookmark {
         let sk = format!("{}#{}", BOOKMARK_PREFIX, user_id);
         let bookmarked_at = chrono::Utc::now().timestamp();
         
-        let base = BaseModel::new(pk, sk, "FEED_BOOKMARK".to_string())
+        let base = BaseModel::new(pk, sk, EntityType::Bookmark)
             .with_gsi1(format!("{}#{}", USER_PREFIX, user_id), Some(format!("FEED_BOOKMARK#{}", bookmarked_at)));
 
         Self {
@@ -460,58 +205,6 @@ impl FeedBookmark {
 }
 
 impl DynamoModel for FeedBookmark {
-    fn to_item(&self) -> Result<HashMap<String, AttributeValue>> {
-        let mut item = HashMap::new();
-        
-        item.insert("pk".to_string(), string_attr(&self.base.pk));
-        item.insert("sk".to_string(), string_attr(&self.base.sk));
-        item.insert("type".to_string(), string_attr(&self.base.entity_type));
-        item.insert("created_at".to_string(), number_attr(self.base.created_at));
-        item.insert("updated_at".to_string(), number_attr(self.base.updated_at));
-        
-        if let Some(ref gsi1_pk) = self.base.gsi1_pk {
-            item.insert("gsi1_pk".to_string(), string_attr(gsi1_pk));
-        }
-        if let Some(ref gsi1_sk) = self.base.gsi1_sk {
-            item.insert("gsi1_sk".to_string(), string_attr(gsi1_sk));
-        }
-        
-        item.insert("feed_id".to_string(), number_attr(self.feed_id));
-        item.insert("user_id".to_string(), number_attr(self.user_id));
-        item.insert("user_nickname".to_string(), string_attr(&self.user_nickname));
-        item.insert("bookmarked_at".to_string(), number_attr(self.bookmarked_at));
-
-        Ok(item)
-    }
-
-    fn from_item(item: HashMap<String, AttributeValue>) -> Result<Self> {
-        let pk = extract_string(&item, "pk")?;
-        let sk = extract_string(&item, "sk")?;
-        let entity_type = extract_string(&item, "type")?;
-        let created_at = extract_number(&item, "created_at")?;
-        let updated_at = extract_number(&item, "updated_at")?;
-        
-        let base = BaseModel {
-            pk,
-            sk,
-            entity_type,
-            created_at,
-            updated_at,
-            gsi1_pk: extract_optional_string(&item, "gsi1_pk"),
-            gsi1_sk: extract_optional_string(&item, "gsi1_sk"),
-            gsi2_pk: extract_optional_string(&item, "gsi2_pk"),
-            gsi2_sk: extract_optional_string(&item, "gsi2_sk"),
-        };
-
-        Ok(Self {
-            base,
-            feed_id: extract_number(&item, "feed_id")?,
-            user_id: extract_number(&item, "user_id")?,
-            user_nickname: extract_string(&item, "user_nickname")?,
-            bookmarked_at: extract_number(&item, "bookmarked_at")?,
-        })
-    }
-
     fn pk(&self) -> String {
         self.base.pk.clone()
     }
