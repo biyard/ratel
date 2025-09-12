@@ -1,6 +1,12 @@
 'use client';
-import { ShapeArrowDown } from '@/components/icons';
 import React from 'react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 export type AnswerType =
   | 'single_choice'
@@ -29,27 +35,21 @@ export default function AnswerTypeSelect({
   onChange: (val: AnswerType) => void;
 }) {
   return (
-    <div className="relative w-75">
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value as AnswerType)}
-        className="appearance-none border border-btn-o focus:border-primary px-5 py-[10.5px] min-w-[260px] font-medium text-[15px]/[22.5px] text-neutral-600 rounded-lg"
-      >
+    <Select value={value} onValueChange={onChange}>
+      <SelectTrigger className="border-input-box-border bg-card-bg focus:border-primary px-5 py-[10.5px] min-w-[260px] font-medium text-[15px]/[22.5px] text-neutral-600 rounded-lg focus:ring-primary !h-full">
+        <SelectValue placeholder="Select an answer type" />
+      </SelectTrigger>
+      <SelectContent>
         {(Object.entries(AnswerTypeLabels) as [AnswerType, string][])
           .filter(
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            ([_, label]) =>
-              label !== 'Single Choice Question' &&
-              label !== 'Multiple Choice Question',
+            ([key]) => key !== 'single_choice' && key !== 'multiple_choice',
           )
           .map(([key, label]) => (
-            <option key={key} value={key}>
+            <SelectItem key={key} value={key} className="text-neutral-600">
               {label}
-            </option>
+            </SelectItem>
           ))}
-      </select>
-
-      <ShapeArrowDown className="pointer-events-none absolute right-[16px] top-1/2 transform -translate-y-1/2 text-neutral-500 w-5 h-5" />
-    </div>
+      </SelectContent>
+    </Select>
   );
 }

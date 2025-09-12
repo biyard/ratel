@@ -115,12 +115,15 @@ export default function Header({ postId }: { postId: number }) {
     <div className="flex flex-col w-full gap-2.5">
       <div className="flex flex-row justify-between items-center">
         <button onClick={router.back}>
-          <ArrowLeft />
+          <ArrowLeft className="[&>path]:stroke-back-icon" />
         </button>
         <div className="flex items-center space-x-2.5">
           {space_id ? (
             <Link href={target ?? ''}>
-              <Button variant="rounded_secondary" className="max-tablet:hidden">
+              <Button
+                variant="rounded_secondary"
+                className="max-tablet:hidden bg-submit-button-bg text-submit-button-text"
+              >
                 {t('join_space')}
               </Button>
             </Link>
@@ -128,7 +131,7 @@ export default function Header({ postId }: { postId: number }) {
             <>
               <Button
                 variant="rounded_secondary"
-                className="rounded-md max-tablet:hidden text-sm px-3 py-1.5"
+                className="rounded-md max-tablet:hidden text-sm px-3 py-1.5 text-button-text bg-button-bg hover:bg-button-bg/80"
                 onClick={handleEditPost}
               >
                 <Edit className="!size-5" />
@@ -144,9 +147,9 @@ export default function Header({ postId }: { postId: number }) {
               <Button
                 variant="rounded_primary"
                 onClick={handleCreateSpace}
-                className="max-tablet:hidden bg-[#FCB300] hover:bg-[#FCB300]/80 text-sm px-3 py-1.5"
+                className="max-tablet:hidden bg-submit-button-bg hover:bg-submit-button-bg/80 text-sm px-3 py-1.5 text-submit-button-text"
               >
-                <Palace className="!size-5" />
+                <Palace className="!size-5 [&>path]:stroke-black" />
                 {t('create_space')}
               </Button>
             </>
@@ -159,7 +162,7 @@ export default function Header({ postId }: { postId: number }) {
             <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild>
                 <button
-                  className="p-1 hover:bg-gray-700 rounded-full focus:outline-none transition-colors"
+                  className="p-1 hover:bg-hover rounded-full focus:outline-none transition-colors"
                   aria-haspopup="true"
                   aria-label="Post options"
                 >
@@ -168,7 +171,7 @@ export default function Header({ postId }: { postId: number }) {
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="end"
-                className="w-40 bg-[#404040] border-gray-700 transition ease-out duration-100"
+                className="w-40 border-gray-700 transition ease-out duration-100"
               >
                 {/* Mobile-only menu items */}
                 <div className="hidden max-tablet:block">
@@ -240,7 +243,7 @@ export default function Header({ postId }: { postId: number }) {
             </Badge>
           ))}
         </div> */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center justify-end w-full gap-4">
           {/* Feed Stats */}
           <button
             onClick={() => handleLike(!post.is_liked)}
@@ -251,23 +254,23 @@ export default function Header({ postId }: { postId: number }) {
               className={
                 post.is_liked
                   ? 'size-5 [&>path]:fill-primary [&>path]:stroke-primary'
-                  : 'size-5 text-gray-400'
+                  : 'size-5 [&>path]:stroke-icon'
               }
             />
-            <span className="text-[15px] text-white">
+            <span className="text-[15px] text-text-primary">
               {convertNumberToString(post.likes || 0)}
             </span>
           </button>
           <div className="flex items-center gap-1">
-            <CommentIcon className="size-5 text-gray-400" />
-            <span className="text-[15px] text-white">
+            <CommentIcon className="size-5 [&>path]:stroke-icon" />
+            <span className="text-[15px] text-text-primary">
               {convertNumberToString(post.comments || 0)}
             </span>
           </div>
           {is_boost ? (
             <div className="flex items-center gap-1">
-              <Rewards className="size-5 text-gray-400" />
-              <span className="text-[15px] text-white">
+              <Rewards className="size-5 [&>path]:stroke-icon" />
+              <span className="text-[15px] text-text-primary">
                 {convertNumberToString(post.rewards || 0)}
               </span>
             </div>
@@ -275,8 +278,8 @@ export default function Header({ postId }: { postId: number }) {
             <></>
           )}
           <div className="flex items-center gap-1">
-            <Shares className="size-5 text-gray-400" />
-            <span className="text-[15px] text-white">
+            <Shares className="size-5 [&>path]:stroke-icon" />
+            <span className="text-[15px] text-text-primary">
               {convertNumberToString(post.shares || 0)}
             </span>
           </div>
@@ -288,7 +291,7 @@ export default function Header({ postId }: { postId: number }) {
       </div>
 
       <div>
-        <h2 className="text-xl font-bold">{post.title}</h2>
+        <h2 className="text-xl font-bold text-text-primary">{post.title}</h2>
       </div>
       <div className="flex flex-row justify-between">
         <ProposerProfile
@@ -296,7 +299,7 @@ export default function Header({ postId }: { postId: number }) {
           proposerName={post.author[0]?.nickname ?? ''}
           userType={post.author[0]?.user_type || UserType.Individual}
         />
-        <div className="font-light text-white text-sm/[14px]">
+        <div className="font-light text-text-primary text-sm/[14px]">
           {post.created_at !== undefined ? getTimeAgo(post.created_at) : ''}
         </div>
       </div>
@@ -328,9 +331,9 @@ export function ProposerProfile({
           }
         />
       ) : (
-        <div className="w-6.25 h-6.25 rounded-full border border-neutral-500 bg-neutral-600" />
+        <div className="w-6.25 h-6.25 rounded-full bg-profile-bg" />
       )}
-      <div className="font-semibold text-white text-sm/[20px]">
+      <div className="font-semibold text-text-primary text-sm/[20px]">
         {proposerName}
       </div>
       <BadgeIcon />

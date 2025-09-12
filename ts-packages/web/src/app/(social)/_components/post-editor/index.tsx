@@ -205,7 +205,7 @@ export function CreatePost() {
   }
   return (
     <div className={`flex flex-col w-full`}>
-      <div className="w-full bg-component-bg border-t-6 border-x border-b border-primary rounded-t-lg overflow-hidden">
+      <div className="w-full bg-card-bg border-t-6 border-x border-b border-primary rounded-t-lg overflow-hidden">
         {/* Header */}
         <div className="flex items-center p-4 justify-between">
           <div className="flex items-center gap-3">
@@ -219,10 +219,10 @@ export function CreatePost() {
                   className="w-6 h-6 object-cover rounded-full"
                 />
               ) : (
-                <div className="w-6 h-6 rounded-full border border-neutral-500 bg-neutral-600" />
+                <div className="w-6 h-6 rounded-full bg-profile-bg" />
               )}
               <div className="flex items-center gap-2">
-                <span className="text-white font-medium text-lg">
+                <span className="text-text-primary font-medium text-lg">
                   {userInfo?.nickname || 'Anonymous'}
                 </span>
               </div>
@@ -231,7 +231,7 @@ export function CreatePost() {
             <SelectPostType postType={postType} setPostType={updatePostType} />
           </div>
           <div className={cn('cursor-pointer')} onClick={toggleExpand}>
-            <DoubleArrowDown />
+            <DoubleArrowDown className="[&>path]:stroke-text-primary" />
           </div>
         </div>
         {postType === PostType.General ? (
@@ -245,12 +245,12 @@ export function CreatePost() {
                 onChange={(e) => {
                   updateTitle(e.target.value);
                 }}
-                className="w-full bg-transparent text-white text-xl font-semibold placeholder-neutral-500 outline-none border-none"
+                className="w-full bg-transparent text-text-primary text-xl font-semibold placeholder-neutral-500 outline-none border-none"
               />
             </div>
 
             {/* Lexical Content Area */}
-            <div className="px-4 pt-2 min-h-[80px] relative text-neutral-300 text-[15px] leading-relaxed">
+            <div className="px-4 pt-2 min-h-[80px] relative text-text-primary text-[15px] leading-relaxed">
               <Editor
                 disabled={false}
                 content={content}
@@ -303,7 +303,6 @@ export function CreatePost() {
                   variant="rounded_primary"
                   size="default"
                   onClick={async () => {
-                    console.log('Publish button clicked');
                     await handleUpdate();
                   }}
                   disabled={isSubmitDisabled || status !== Status.Idle}

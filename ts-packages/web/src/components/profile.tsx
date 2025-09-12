@@ -58,7 +58,7 @@ export default function Profile({ profileUrl, name }: ProfileProps) {
               <div className="w-6 h-6 bg-neutral-500 rounded-full" />
             )}
 
-            <span className="text-neutral-500 group-hover:text-white text-[15px] font-medium transition-colors">
+            <span className="text-menu-text group-hover:text-menu-text/80 text-[15px] font-medium transition-colors">
               {name || 'Unknown User'}
             </span>
           </div>
@@ -67,9 +67,9 @@ export default function Profile({ profileUrl, name }: ProfileProps) {
 
       <DropdownMenuContent
         align="end"
-        className="w-[250px] h-fit rounded-lg border border-primary p-[10px] bg-bg z-999"
+        className="w-[250px] h-fit rounded-lg border border-primary bg-background p-[10px] bg-bg z-999"
       >
-        <DropdownMenuLabel className="text-xs text-neutral-400 px-2 py-1">
+        <DropdownMenuLabel className="text-xs text-text-primary-muted px-2 py-1">
           {t('teams')}
         </DropdownMenuLabel>
 
@@ -78,7 +78,7 @@ export default function Profile({ profileUrl, name }: ProfileProps) {
             <DropdownMenuItem
               key={`team-select-menu-${team.id}`}
               asChild
-              className="w-full px-2 py-1.5 hover:bg-transparent rounded-md cursor-pointer focus-visible:outline-none"
+              className="w-full px-2 py-1.5 hover:bg-hover rounded-md cursor-pointer focus-visible:outline-none"
             >
               <Link
                 href={
@@ -101,9 +101,9 @@ export default function Profile({ profileUrl, name }: ProfileProps) {
                     className="w-6 h-6 rounded-full object-cover object-top"
                   />
                 ) : (
-                  <div className="w-6 h-6 bg-neutral-500 rounded-full" />
+                  <div className="w-6 h-6 bg-neutral-600 rounded-full" />
                 )}
-                <span className="text-sm text-white truncate">
+                <span className="text-sm text-text-primary-muted truncate">
                   {team.nickname}
                 </span>
               </Link>
@@ -111,7 +111,7 @@ export default function Profile({ profileUrl, name }: ProfileProps) {
           ))}
         </DropdownMenuGroup>
 
-        <DropdownMenuSeparator className="my-2 bg-neutral-700 h-px" />
+        <DropdownMenuSeparator className="my-2 bg-neutral-700 light:bg-[#e5e5e5] h-px" />
 
         <DropdownMenuGroup>
           <DropdownMenuItem
@@ -119,7 +119,7 @@ export default function Profile({ profileUrl, name }: ProfileProps) {
               logger.debug('Create team clicked');
               popup.open(<TeamCreationPopup />).withTitle('Create a new team');
             }}
-            className="w-full px-2 py-1.5 hover:bg-transparent rounded-md text-sm text-white cursor-pointer focus-visible:outline-none"
+            className="w-full px-2 py-1.5 hover:bg-hover rounded-md text-sm text-text-primary-muted cursor-pointer focus-visible:outline-none"
           >
             <span>{t('create_team')}</span>
           </DropdownMenuItem>
@@ -129,7 +129,7 @@ export default function Profile({ profileUrl, name }: ProfileProps) {
               logout();
               userInfo.refetch();
             }}
-            className="w-full px-2 py-1.5 hover:bg-transparent rounded-md text-sm text-white cursor-pointer focus-visible:outline-none"
+            className="w-full px-2 py-1.5 hover:bg-hover rounded-md text-sm text-text-primary-muted cursor-pointer focus-visible:outline-none"
           >
             <span>{t('logout')}</span>
           </DropdownMenuItem>

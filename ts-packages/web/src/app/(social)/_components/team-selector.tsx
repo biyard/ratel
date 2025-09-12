@@ -53,20 +53,22 @@ export default function TeamSelector({ onSelect, team }: TeamSelectorProps) {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button className="w-full flex items-center justify-between px-2 py-2 focus:outline-none">
-          <span className="font-bold text-[18px] text-white">
+          <span className="font-bold text-[18px] text-text-primary">
             {teams[selectedIndex].nickname}
           </span>
-          <ChevronDown size={16} />
+          <ChevronDown size={16} className="text-text-primary" />
         </button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent className="w-[var(--radix-dropdown-menu-trigger-width)] bg-bg">
-        <DropdownMenuLabel>{t('teams')}</DropdownMenuLabel>
+      <DropdownMenuContent className="w-[var(--radix-dropdown-menu-trigger-width)] bg-background">
+        <DropdownMenuLabel className="text-text-primary">
+          {t('teams')}
+        </DropdownMenuLabel>
         <DropdownMenuGroup>
           {teams.map((team, index) => {
             return team.nickname != '' ? (
               <DropdownMenuItem
-                className="focus:bg-accent focus:text-accent-foreground data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 dark:data-[variant=destructive]:focus:bg-destructive/20 data-[variant=destructive]:focus:text-destructive data-[variant=destructive]:*:[svg]:!text-destructive [&_svg:not([class*='text-'])]:text-muted-foreground relative flex cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[inset]:pl-8 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 w-full flex flex-row items-center gap-2 px-2 py-2 hover:bg-neutral-800 cursor-pointer"
+                className="focus:bg-accent focus:text-text-primary data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 dark:data-[variant=destructive]:focus:bg-destructive/20 data-[variant=destructive]:focus:text-destructive data-[variant=destructive]:*:[svg]:!text-destructive [&_svg:not([class*='text-'])]:text-text-primary relative flex cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[inset]:pl-8 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 w-full flex flex-row items-center gap-2 px-2 py-2 hover:bg-hover cursor-pointer"
                 key={`team-select-menu-${team.id}`}
                 asChild
               >
@@ -91,9 +93,9 @@ export default function TeamSelector({ onSelect, team }: TeamSelectorProps) {
                       className="w-6 h-6 rounded-full object-cover object-top"
                     />
                   ) : (
-                    <div className="w-6 h-6 rounded-full border border-neutral-500 bg-neutral-600" />
+                    <div className="w-6 h-6 rounded-full border border-neutral-600 bg-neutral-600" />
                   )}
-                  <span>{team.nickname}</span>
+                  <span className="text-text-primary">{team.nickname}</span>
                 </Link>
               </DropdownMenuItem>
             ) : (
@@ -109,7 +111,9 @@ export default function TeamSelector({ onSelect, team }: TeamSelectorProps) {
               popup.open(<TeamCreationPopup />).withTitle(t('create_new_team'));
             }}
           >
-            <span>{t('create_team')}</span>
+            <span className="text-text-primary hover:bg-hover">
+              {t('create_team')}
+            </span>
           </DropdownMenuItem>
 
           <DropdownMenuItem
@@ -119,7 +123,9 @@ export default function TeamSelector({ onSelect, team }: TeamSelectorProps) {
               userInfo.refetch();
             }}
           >
-            <span>{t('logout')}</span>
+            <span className="text-text-primary hover:bg-hover">
+              {t('logout')}
+            </span>
           </DropdownMenuItem>
         </DropdownMenuGroup>
       </DropdownMenuContent>

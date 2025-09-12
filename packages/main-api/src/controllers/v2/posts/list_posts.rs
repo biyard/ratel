@@ -61,7 +61,11 @@ pub async fn list_posts_handler(
     };
 
     let builder = if let Some(user_id) = params.user_id {
-        builder.user_id_equals(user_id)
+        if user_id != 0 {
+            builder.user_id_equals(user_id)
+        } else {
+            builder
+        }
     } else {
         builder
     };

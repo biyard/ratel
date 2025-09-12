@@ -53,7 +53,7 @@ export default function DraftPage() {
 
   if (drafts.pages.length === 0) {
     return (
-      <div className="flex flex-row w-full h-fit justify-start items-center px-[16px] py-[20px] border border-gray-500 rounded-[8px] font-medium text-base text-gray-500">
+      <div className="flex flex-row w-full h-fit justify-start items-center px-[16px] py-[20px] border border-gray-500 rounded-[8px] font-medium text-base text-text-primary">
         No drafts available
       </div>
     );
@@ -66,7 +66,7 @@ export default function DraftPage() {
           {flattedDrafts.map((post) => (
             <Col
               key={post.id}
-              className="cursor-pointer pt-5 pb-2.5 bg-component-bg rounded-lg"
+              className="cursor-pointer pt-5 pb-2.5 bg-card-bg border border-card-enable-border rounded-lg"
               onClick={async (evt) => {
                 await openPostEditorPopup(post.id);
                 evt.preventDefault();
@@ -99,7 +99,7 @@ export default function DraftPage() {
                   }
                 </Row>
               </Row>
-              <div className="flex flex-row items-center gap-1 w-full line-clamp-2 font-bold text-xl/[25px] tracking-[0.5px] align-middle text-white px-5">
+              <div className="flex flex-row items-center gap-1 w-full line-clamp-2 font-bold text-xl/[25px] tracking-[0.5px] align-middle text-text-primary px-5">
                 <div className="text-sm font-normal">(Draft)</div>
                 <div className="font-normal">{post.title}</div>
               </div>

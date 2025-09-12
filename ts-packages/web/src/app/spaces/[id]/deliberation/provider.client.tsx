@@ -1,3 +1,4 @@
+//TODO: REMOVE THIS FILE
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
@@ -96,8 +97,6 @@ export default function ClientProviders({
   const { spaceId } = useSpaceByIdContext();
   const data = useSpaceById(spaceId);
   const space = data.data;
-
-  logger.debug('spaces: ', space);
 
   const [selectedType, setSelectedType] = useState<DeliberationTabType>(
     DeliberationTab.SUMMARY,
@@ -645,7 +644,7 @@ export function useDeliberationFeed(feedId: number): Feed {
   return feed;
 }
 
-function mapResponses(
+export function mapResponses(
   questions: Question[],
   responses: SurveyResponse[],
 ): MappedResponse[] {

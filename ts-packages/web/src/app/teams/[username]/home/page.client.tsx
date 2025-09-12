@@ -46,8 +46,6 @@ export default function TeamHome({ teamId }: TeamHomeProps) {
             author_type={post?.author?.[0]?.user_type || UserType.Anonymous}
             author_id={post?.author?.[0]?.id || 0}
             user_id={post.user_id || 0}
-            //FIXME: use mutation to update...
-            refetch={() => {}}
             id={post.id}
             industry={post.industry?.[0]?.name || ''}
             title={post.title || ''}
@@ -58,28 +56,15 @@ export default function TeamHome({ teamId }: TeamHomeProps) {
             rewards={post.rewards || 0}
             shares={post.shares || 0}
             onboard={post.onboard || false}
+            space_id={post.space?.[0]?.id}
+            space_type={post.space?.[0]?.space_type}
+            booster_type={post.space?.[0]?.booster_type}
           />
         ))}
 
         <div ref={observerRef} />
         {!hasNextPage && <FeedEndMessage />}
       </Col>
-      {/* {feeds.length !== 0 ? (
-        <Col className="flex-1">
-          {feeds.map((props) => (
-            <FeedCard
-              key={`feed-${props.id}`}
-              user_id={userId ?? 0}
-              refetch={() => posts.refetch()}
-              {...props}
-            />
-          ))}
-        </Col>
-      ) : (
-        <div className="flex flex-row w-full h-fit justify-start items-center px-[16px] py-[20px] border border-gray-500 rounded-[8px] font-medium text-base text-gray-500">
-          Feeds data is empty
-        </div>
-      )} */}
     </div>
   );
 }

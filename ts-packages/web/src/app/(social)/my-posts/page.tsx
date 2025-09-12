@@ -48,8 +48,6 @@ export default function MyPostsPage() {
               author_type={post?.author?.[0]?.user_type || UserType.Anonymous}
               author_id={post?.author?.[0]?.id || 0}
               user_id={userId}
-              //FIXME: use mutation to update...
-              refetch={() => {}}
               id={post.id}
               industry={post.industry?.[0]?.name || ''}
               title={post.title || ''}
@@ -60,6 +58,9 @@ export default function MyPostsPage() {
               rewards={post.rewards || 0}
               shares={post.shares || 0}
               onboard={post.onboard || false}
+              space_id={post.space?.[0]?.id}
+              space_type={post.space?.[0]?.space_type}
+              booster_type={post.space?.[0]?.booster_type}
             />
           ))}
 

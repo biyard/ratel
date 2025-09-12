@@ -76,7 +76,7 @@ export default function TeamDraftPage({
           {flattedDrafts.map((post) => (
             <Col
               key={post.id}
-              className="cursor-pointer pt-5 pb-2.5 bg-component-bg rounded-lg"
+              className="cursor-pointer pt-5 pb-2.5 bg-card-bg border border-card-border rounded-lg"
               onClick={async (evt) => {
                 await openPostEditorPopup(post.id);
                 evt.preventDefault();
@@ -110,10 +110,14 @@ export default function TeamDraftPage({
                 </Row>
               </Row>
               <div className="flex flex-row items-center gap-1 w-full line-clamp-2 font-bold text-xl/[25px] tracking-[0.5px] align-middle text-white px-5">
-                <div className="text-sm font-normal">(Draft)</div>
-                <div className="font-normal">{post.title}</div>
+                <div className="text-sm font-normal text-text-primary">
+                  (Draft)
+                </div>
+                <div className="font-normal text-text-primary">
+                  {post.title}
+                </div>
               </div>
-              <Row className="justify-between items-center px-5">
+              <Row className="justify-between items-center px-5 text-text-primary">
                 <UserBadge
                   profile_url={team.profile_url ?? ''}
                   name={team.nickname}
