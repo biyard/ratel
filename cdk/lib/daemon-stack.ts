@@ -24,7 +24,7 @@ export class DaemonStack {
 
     const taskDefinition = new ecs.TaskDefinition(
       scope,
-      "DaemonTaskDefinition",
+      "FetcherTasksDefinition",
       {
         compatibility: ecs.Compatibility.FARGATE,
         cpu: "256",
