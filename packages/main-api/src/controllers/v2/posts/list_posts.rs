@@ -1,7 +1,7 @@
 use bdk::prelude::*;
 
 use dto::{
-    FeedStatus, FeedType, GroupPermission, Post, RatelResource, Result, aide,
+    FeedStatus, FeedType, GroupPermission, Post, RatelResource, Result, SpaceStatus, aide,
     by_axum::{
         auth::Authorization,
         axum::{
@@ -31,8 +31,9 @@ pub async fn list_posts_handler(
     let size = params.size.unwrap_or(10);
     let page = params.page.unwrap_or(1);
 
-    let user = extract_user(&pool, auth.clone()).await;
-    let user_id = user.unwrap_or_default().id;
+    let user = extract_user(&pool, auth.clone()).await.unwrap_or_default();
+    let user_id = user.id;
+    let teams = user.teams;
 
     if let Some(query_user_id) = params.user_id {
         tracing::debug!(
@@ -80,5 +81,23 @@ pub async fn list_posts_handler(
         .fetch_all(&pool)
         .await?;
 
+    let posts = posts
+        .into_iter()
+        .map(|mut post| {
+            let space = post.space.get(0);
+            if let Some(space) = space {
+                // Check SpaceStatus::Draft and author is user or author is in user's teams
+                if space.status == SpaceStatus::Draft
+                    && space.author.get(0).is_some_and(|author| {
+                        author.id == user_id && teams.iter().any(|t| t.id == author.id)
+                    })
+                {
+                    post.space = vec![];
+                }
+            }
+
+            post
+        })
+        .collect::<Vec<Post>>();
     Ok(Json(posts))
 }

@@ -1,7 +1,7 @@
 import { useMutation, InfiniteData } from '@tanstack/react-query';
 import { getQueryClient } from '@/providers/getQueryClient';
 import { feedKeys } from '@/constants';
-import { Feed, FeedType } from '@/lib/api/models/feeds';
+import { Feed, FeedStatus, FeedType } from '@/lib/api/models/feeds';
 import { showErrorToast } from '@/lib/toast';
 import { apiFetch } from '@/lib/api/apiFetch';
 import { ratelApi } from '@/lib/api/ratel_api';
@@ -80,16 +80,19 @@ export async function createComment(
   });
 }
 
-export function useDraftMutations() {
+export function useDraftMutations(targetId: number) {
   const queryClient = getQueryClient();
 
   const createMutation = useMutation({
     mutationFn: (userId: number) => createDraft(userId),
     onSuccess: (newDraft) => {
       queryClient.setQueryData(feedKeys.detail(newDraft.id), newDraft);
-
+      const listQueryKey = feedKeys.list({
+        userId: targetId,
+        status: FeedStatus.Draft,
+      });
       queryClient.setQueriesData<InfiniteData<Feed[]>>(
-        { queryKey: feedKeys.lists() },
+        { queryKey: listQueryKey },
         (oldData) => {
           if (!oldData) return oldData;
           const newPages = [...oldData.pages];
@@ -115,7 +118,10 @@ export function useDraftMutations() {
 
     onMutate: async ({ postId, req }) => {
       const detailQueryKey = feedKeys.detail(postId);
-      const listQueryKey = feedKeys.lists();
+      const listQueryKey = feedKeys.list({
+        userId: targetId,
+        status: FeedStatus.Draft,
+      });
 
       await queryClient.cancelQueries({ queryKey: detailQueryKey });
       await queryClient.cancelQueries({ queryKey: listQueryKey });
@@ -124,7 +130,6 @@ export function useDraftMutations() {
       const previousFeedLists = queryClient.getQueriesData<
         InfiniteData<Feed[]>
       >({ queryKey: listQueryKey });
-
       queryClient.setQueryData<Feed>(detailQueryKey, (old) =>
         old
           ? {
