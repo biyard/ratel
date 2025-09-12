@@ -30,7 +30,6 @@ import { logger } from '@/lib/logger';
 import { useTranslations } from 'next-intl';
 import { BoosterType } from '@/lib/api/models/notice';
 
-
 export interface FeedCardProps {
   id: number;
   industry: string;
@@ -61,6 +60,7 @@ export interface FeedCardProps {
   refetch?: () => void;
   isLikeProcessing?: boolean;
   handleEditPost?: () => void;
+  currentUserId?: number;
 }
 
 export default function FeedCard(props: FeedCardProps) {
@@ -157,7 +157,6 @@ export default function FeedCard(props: FeedCardProps) {
     setExpand(true);
   };
 
-
   const handleEditPost = async () => {
     try {
       await loadDraft(props.id);
@@ -174,7 +173,11 @@ export default function FeedCard(props: FeedCardProps) {
         router.push(route.threadByFeedId(props.id));
       }}
     >
-      <FeedBody {...props} />
+      <FeedBody
+        {...props}
+        handleEditPost={handleEditPost}
+        currentUserId={User?.id}
+      />
       <FeedFooter
         {...props}
         likes={localLikes}
@@ -189,6 +192,10 @@ export default function FeedCard(props: FeedCardProps) {
   );
 }
 
+interface FeedBodyProps extends Omit<FeedCardProps, 'currentUserId'> {
+  currentUserId?: number;
+}
+
 export function FeedBody({
   title,
   contents,
@@ -201,7 +208,9 @@ export function FeedBody({
   space_type,
   onboard,
   handleEditPost,
-}: FeedCardProps) {
+  author_id,
+  currentUserId,
+}: FeedBodyProps) {
   return (
     <Col className="pt-5 pb-2.5">
       <Row className="justify-between px-5">
@@ -213,7 +222,9 @@ export function FeedBody({
         </div>
 
         <div>
-         <EditButton onClick={handleEditPost} />
+          {currentUserId === author_id && handleEditPost && (
+            <EditButton onClick={handleEditPost} />
+          )}
         </div>
       </Row>
       <h2 className="w-full line-clamp-2 font-bold text-xl/[25px] tracking-[0.5px] align-middle text-foreground px-5">
@@ -330,11 +341,13 @@ export function IndustryTag({ industry }: { industry: string }) {
 
 export function EditButton({ onClick }: { onClick?: () => void }) {
   return (
-    <button onClick={(e) => {
-      e.stopPropagation();
-      e.preventDefault();
-      onClick?.();
-    }}>
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        onClick?.();
+      }}
+    >
       <Edit1 />
     </button>
   );
