@@ -36,7 +36,7 @@ export default function ClientLayout({
   }, [mobileExtends]);
 
   const linkClass =
-    'font-bold text-neutral-500 text-[20px] hover:text-primary flex flex-row w-full justify-center items-center';
+    'font-bold text-menu-text text-[20px] hover:text-menu-text/80 flex flex-row w-full justify-center items-center';
 
   return (
     <>

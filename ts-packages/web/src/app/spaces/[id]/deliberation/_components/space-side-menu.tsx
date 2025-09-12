@@ -1,6 +1,5 @@
 'use client';
 
-import BlackBox from '@/app/(social)/_components/black-box';
 import { getTimeWithFormat } from '@/lib/time-utils';
 import React, { useContext } from 'react';
 import Clock from '@/assets/icons/clock.svg';
@@ -17,6 +16,7 @@ import { TeamContext } from '@/lib/contexts/team-context';
 import { usePopup } from '@/lib/contexts/popup-service';
 import SetSchedulePopup from '../../_components/modal/set-schedule';
 import { useTranslations } from 'next-intl';
+import BorderSpaceCard from '@/app/(social)/_components/border-space-card';
 
 export default function SpaceSideMenu() {
   const t = useTranslations('DeliberationSpace');
@@ -52,48 +52,52 @@ export default function SpaceSideMenu() {
 
   return (
     <div className="flex flex-col max-w-[250px] max-tablet:!hidden w-full gap-[10px]">
-      <BlackBox>
+      <BorderSpaceCard>
         <div className="flex flex-col gap-2.5 w-full">
           <div
-            className={`cursor-pointer flex flex-row w-full gap-1 items-center px-1 py-2 rounded-sm ${selectedType == DeliberationTab.SUMMARY ? 'bg-neutral-800' : ''}`}
+            className={`cursor-pointer flex flex-row w-full gap-1 items-center px-1 py-2 rounded-sm ${selectedType == DeliberationTab.SUMMARY ? 'bg-neutral-800 light:bg-[#f5f5f5]' : ''}`}
             onClick={() => {
               handleUpdateSelectedType(DeliberationTab.SUMMARY);
             }}
           >
             <File className="[&>path]:stroke-neutral-80 w-5 h-5" />
-            <div className="font-bold text-white text-sm">{t('summary')}</div>
+            <div className="font-bold text-text-primary text-sm">
+              {t('summary')}
+            </div>
           </div>
 
           <div
-            className={`cursor-pointer flex flex-row gap-1 items-center px-1 py-2 rounded-sm ${selectedType == DeliberationTab.DELIBERATION ? 'bg-neutral-800' : ''}`}
+            className={`cursor-pointer flex flex-row gap-1 items-center px-1 py-2 rounded-sm ${selectedType == DeliberationTab.DELIBERATION ? 'bg-neutral-800 light:bg-[#f5f5f5]' : ''}`}
             onClick={() => {
               handleUpdateSelectedType(DeliberationTab.DELIBERATION);
             }}
           >
             <Discuss className="w-5 h-5" />
-            <div className="font-bold text-white text-sm">
+            <div className="font-bold text-text-primary text-sm">
               {t('deliberation')}
             </div>
           </div>
 
           <div
-            className={`cursor-pointer flex flex-row gap-1 items-center px-1 py-2 rounded-sm ${selectedType == DeliberationTab.POLL ? 'bg-neutral-800' : ''}`}
+            className={`cursor-pointer flex flex-row gap-1 items-center px-1 py-2 rounded-sm ${selectedType == DeliberationTab.POLL ? 'bg-neutral-800 light:bg-[#f5f5f5]' : ''}`}
             onClick={() => {
               handleUpdateSelectedType(DeliberationTab.POLL);
             }}
           >
             <Vote className="[&>path]:stroke-neutral-80 w-5 h-5" />
-            <div className="font-bold text-white text-sm">{t('poll')}</div>
+            <div className="font-bold text-text-primary text-sm">
+              {t('poll')}
+            </div>
           </div>
 
           <div
-            className={`cursor-pointer flex flex-row gap-1 items-center px-1 py-2 rounded-sm ${selectedType == DeliberationTab.RECOMMANDATION ? 'bg-neutral-800' : ''}`}
+            className={`cursor-pointer flex flex-row gap-1 items-center px-1 py-2 rounded-sm ${selectedType == DeliberationTab.RECOMMANDATION ? 'bg-neutral-800 light:bg-[#f5f5f5]' : ''}`}
             onClick={() => {
               handleUpdateSelectedType(DeliberationTab.RECOMMANDATION);
             }}
           >
             <CheckCircle className="[&>path]:stroke-neutral-80 w-5 h-5" />
-            <div className="font-bold text-white text-sm">
+            <div className="font-bold text-text-primary text-sm">
               {t('recommendation')}
             </div>
           </div>
@@ -103,7 +107,7 @@ export default function SpaceSideMenu() {
               <div
                 className={`cursor-pointer flex flex-row gap-1 items-center px-1 py-2 rounded-sm ${
                   selectedType == DeliberationTab.ANALYZE
-                    ? 'bg-neutral-800'
+                    ? 'bg-neutral-800 light:bg-[#f5f5f5]'
                     : ''
                 }`}
                 onClick={() => {
@@ -111,17 +115,17 @@ export default function SpaceSideMenu() {
                 }}
               >
                 <PieChart1 className="[&>path]:stroke-neutral-80 w-5 h-5" />
-                <div className="font-bold text-white text-sm">
+                <div className="font-bold text-text-primary text-sm">
                   {t('analyze')}
                 </div>
               </div>
             )}
         </div>
-      </BlackBox>
-      <BlackBox>
+      </BorderSpaceCard>
+      <BorderSpaceCard>
         <div className="w-full text-sm text-white">
           <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-1 text-neutral-400 font-semibold text-[14px]">
+            <div className="flex items-center gap-1 text-neutral-400 light:text-neutral-800 font-semibold text-[14px]">
               <Clock width={20} height={20} />
               {t('timeline')}
             </div>
@@ -170,7 +174,7 @@ export default function SpaceSideMenu() {
               )
               .map((item) => (
                 <div className="flex flex-col gap-1" key={item.label}>
-                  <div className="font-medium text-white text-[15px]/[12px]">
+                  <div className="font-medium text-text-primary text-[15px]/[12px]">
                     {item.label}
                   </div>
                   <div className="font-medium text-neutral-80 text-xs/[12px]">
@@ -180,7 +184,7 @@ export default function SpaceSideMenu() {
               ))}
           </div>
         </div>
-      </BlackBox>
+      </BorderSpaceCard>
     </div>
   );
 }

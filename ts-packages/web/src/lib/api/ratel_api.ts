@@ -230,6 +230,9 @@ export const ratelApi = {
   news: {
     getNewsDetails: (news_id: number) => `/v1/news/${news_id}`,
   },
+  themes: {
+    changeTheme: () => '/v2/themes',
+  },
   feeds: {
     comment: () => '/v1/feeds',
     writePost: () => '/v1/feeds',

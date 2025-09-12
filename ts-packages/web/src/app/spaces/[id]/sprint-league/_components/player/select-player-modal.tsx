@@ -64,7 +64,7 @@ export default function PlayerSelectModal({
           <div
             key={alias}
             aria-selected={value === alias}
-            className="aria-selected:border-primary hover:bg-black border border-transparent hover:border-primary rounded-2xl cursor-pointer aspect-square overflow-hidden"
+            className="aria-selected:border-primary hover:bg-black border border-transparent hover:border-primary light:hover:bg-primary/10 rounded-2xl cursor-pointer aspect-square overflow-hidden"
             onClick={() => {
               setValue(alias);
             }}

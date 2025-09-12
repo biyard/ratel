@@ -15,12 +15,12 @@ import { usePostInfinite } from '../../_hooks/use-posts';
 import FeedEndMessage from '../feed-end-message';
 import FeedEmptyState from '../feed-empty-state';
 import CreatePostButton from '../create-post-button';
-import BlackBox from '../black-box';
 import PromotionCard from '../promotion-card';
 import News from '../News';
 import Suggestions from '../suggestions';
 import { Promotion } from '@/lib/api/models/promotion';
 import { Feed } from '@/lib/api/models/feeds';
+import DisableBorderCard from '../disable-border-card';
 
 export const SIZE = 10;
 
@@ -142,12 +142,14 @@ export default function Home({
         <CreatePostButton />
 
         {promotion && feed && (
-          <BlackBox>
+          <DisableBorderCard>
             <PromotionCard promotion={promotion} feed={feed} />
-          </BlackBox>
+          </DisableBorderCard>
         )}
 
-        <News />
+        <div className="mt-[10px]">
+          <News />
+        </div>
         <div className="mt-[10px]">
           <Suggestions />
         </div>

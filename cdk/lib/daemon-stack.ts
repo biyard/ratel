@@ -59,6 +59,7 @@ export class DaemonStack {
       desiredCount: 1,
       maxHealthyPercent: 100,
       minHealthyPercent: 0,
+      assignPublicIp: true,
     });
   }
 }

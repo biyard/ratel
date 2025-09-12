@@ -272,9 +272,11 @@ export const LoginModal = ({
     >
       <Col className="gap-4">
         <Row className="justify-start items-center text-sm gap-1">
-          <label className="text-white font-medium">{t('new_user')}</label>
+          <label className="text-text-primary font-medium">
+            {t('new_user')}
+          </label>
           <button
-            className="text-primary/70 hover:text-primary"
+            className="text-primary/70 light:text-primary hover:text-primary"
             onClick={handleSignUp}
           >
             {t('create_account')}
@@ -287,7 +289,7 @@ export const LoginModal = ({
             name="username"
             autoComplete="email"
             placeholder={t('email_address_hint')}
-            className="w-full bg-[#000203] rounded-[10px] px-5 py-5.5 text-white font-light"
+            className="w-full bg-input-box-bg border border-input-box-border rounded-[10px] px-5 py-5.5 text-text-primary font-light"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             onKeyDown={(e) => {
@@ -307,7 +309,7 @@ export const LoginModal = ({
           <Input
             type="password"
             placeholder={t('password_hint')}
-            className="w-full bg-[#000203] rounded-[10px] px-5 py-5.5 text-white font-light"
+            className="w-full rounded-[10px] px-5 py-5.5 font-light"
             value={password}
             onChange={(e) => handleChangePassword(e.target.value)}
           />
@@ -319,7 +321,7 @@ export const LoginModal = ({
         <Row className="justify-end items-center text-sm">
           <Button
             variant={'rounded_secondary'}
-            className="text-xs py-1.5 px-4"
+            className="text-xs py-1.5 px-4 light:bg-neutral-600"
             onClick={handleContinue}
           >
             {showPassword ? t('sign_in') : t('continue')}

@@ -34,7 +34,7 @@ export default function PublishForm({
       <div>
         {/* Header */}
         <div className="mb-6">
-          <div className="font-bold text-white text-[24px]">
+          <div className="font-bold text-text-primary text-[24px]">
             {t('publish_space')}
           </div>
         </div>
@@ -47,8 +47,8 @@ export default function PublishForm({
               wasPublishedAsPublic
                 ? 'border-neutral-600 bg-neutral-900 cursor-not-allowed opacity-50'
                 : selectedScope === PublishingScope.Private
-                  ? 'border-primary bg-neutral-800 cursor-pointer'
-                  : 'border-neutral-700 hover:border-neutral-600 cursor-pointer'
+                  ? 'border-primary bg-neutral-800 light:bg-primary/10 cursor-pointer'
+                  : 'border-neutral-700 light:border-neutral-300 light:hover:border-neutral-300 hover:border-neutral-600 cursor-pointer'
             }`}
             onClick={() =>
               !wasPublishedAsPublic && setSelectedScope(PublishingScope.Private)
@@ -59,7 +59,9 @@ export default function PublishForm({
               <div className="flex-1">
                 <div
                   className={`font-bold text-lg ${
-                    wasPublishedAsPublic ? 'text-neutral-500' : 'text-white'
+                    wasPublishedAsPublic
+                      ? 'text-neutral-500'
+                      : 'text-text-primary'
                   }`}
                 >
                   {t('private_publish')}
@@ -68,7 +70,7 @@ export default function PublishForm({
                   className={`text-sm mt-1 ${
                     wasPublishedAsPublic
                       ? 'text-neutral-600'
-                      : 'text-neutral-400'
+                      : 'text-neutral-400 light:text-[#525252]'
                   }`}
                 >
                   {wasPublishedAsPublic
@@ -100,18 +102,18 @@ export default function PublishForm({
           <div
             className={`p-4 rounded-lg border-2 cursor-pointer transition-colors ${
               selectedScope === PublishingScope.Public
-                ? 'border-primary bg-neutral-800'
-                : 'border-neutral-700 hover:border-neutral-600'
+                ? 'border-primary bg-neutral-800 light:bg-primary/10'
+                : 'border-neutral-700 hover:border-neutral-600 light:border-neutral-300 light:hover:border-neutral-300'
             }`}
             onClick={() => setSelectedScope(PublishingScope.Public)}
           >
             <div className="flex items-center gap-3">
               <Internet width={24} height={24} className="text-neutral-400" />
               <div className="flex-1">
-                <div className="font-bold text-white text-lg">
+                <div className="font-bold text-text-primary text-lg">
                   {t('public_publish')}
                 </div>
-                <div className="text-neutral-400 text-sm mt-1">
+                <div className="text-neutral-400 light:text-[#525252] text-sm mt-1">
                   {t('public_publish_desc')}
                 </div>
               </div>
