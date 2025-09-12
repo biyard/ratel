@@ -17,12 +17,14 @@ function ButtonBase({ imageUrl, disabled, ...props }: ButtonBaseProps) {
   if (!image) {
     return null;
   }
-  const { x, ...rest } = props;
+  const { x, onClick, ...rest } = props;
   return (
     <Group x={x}>
       <KonvaImage
         image={image}
         {...rest}
+        onTap={onClick}
+        onClick={disabled ? undefined : onClick}
         onMouseEnter={(e) => {
           const stage = e.target.getStage();
           if (stage && stage.container().style) {

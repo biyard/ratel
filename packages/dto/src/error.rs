@@ -325,6 +325,8 @@ impl Display for Error {
                 write!(f, "DynamoDB serialization error: {}", msg)
             }
             Error::DynamoDbTableNotFound(msg) => write!(f, "DynamoDB table not found: {}", msg),
+            //FIXME
+            _ => write!(f, "Unhandled error variant"),
         }
     }
 }
