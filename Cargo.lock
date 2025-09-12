@@ -3400,6 +3400,7 @@ dependencies = [
  "scraper",
  "serde",
  "serde_json",
+ "teloxide 0.17.0",
  "tokio",
  "tracing",
 ]
@@ -8343,6 +8344,7 @@ dependencies = [
  "serde",
  "serde_json",
  "teloxide-core 0.13.0",
+ "teloxide-macros",
  "thiserror 2.0.12",
  "tokio",
  "tokio-stream",
