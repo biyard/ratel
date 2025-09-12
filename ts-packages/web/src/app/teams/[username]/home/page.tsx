@@ -1,19 +1,11 @@
-// import News from './_components/News';
-// import { CreatePost } from './_components/create-post';
-// import { useApiCall } from '@/lib/api/use-send';
-// import { ratelApi } from '@/lib/api/ratel_api';
-// import {
-//   UrlType,
-//   writePostRequest,
-// } from '@/lib/api/models/feeds/write-post-request';
 import { Metadata } from 'next';
 import TeamHome from './page.client';
 import { client } from '@/lib/apollo';
 import { ratelApi } from '@/lib/api/ratel_api';
-import { Feed, FeedStatus } from '@/lib/api/models/feeds';
-import { callByServer } from '@/lib/api/call-by-server';
-import { QueryResponse } from '@/lib/api/models/common';
+import { prefetchInfiniteFeeds } from '@/hooks/feeds/use-feeds-infinite-query';
+import { FeedStatus } from '@/lib/api/models/feeds';
 
+//FIXME: add Metadata
 export const metadata: Metadata = {
   title: 'Ratel',
   description:
@@ -58,13 +50,10 @@ export default async function Page({ params }: Props) {
     // FIXME: fix this to use not-found.tsx
     return <div className="text-center">Team not found</div>;
   }
+  console.log('users', users[0]);
+  await Promise.allSettled([
+    prefetchInfiniteFeeds(users[0].id, FeedStatus.Published),
+  ]);
 
-  const userId = users[0].id;
-  const { get } = callByServer();
-
-  const posts: QueryResponse<Feed> = await get(
-    ratelApi.feeds.getPostsByUserId(userId, 1, 20, FeedStatus.Published),
-  );
-
-  return <TeamHome userId={userId} posts={posts} />;
+  return <TeamHome teamId={users[0].id} />;
 }

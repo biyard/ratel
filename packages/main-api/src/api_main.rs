@@ -124,6 +124,7 @@ pub async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         ConversationParticipant,
         AuthClient,
         AuthCode,
+        Post,
         TelegramChannel,
     );
 
