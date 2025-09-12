@@ -19,7 +19,7 @@ impl Default for Config {
                 .map(|s| s.parse::<bool>().unwrap_or(false))
                 .unwrap_or(false),
             rpc_endpoint: option_env!("RPC_ENDPOINT").expect("RPC_ENDPOINT is required"),
-            telegram_token: option_env!("TELEGRAM_TOKEN"),
+            telegram_token: option_env!("TELEGRAM_TOKEN").filter(|s| !s.is_empty()),
         }
     }
 }

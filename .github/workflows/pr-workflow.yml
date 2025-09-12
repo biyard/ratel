@@ -68,7 +68,7 @@ jobs:
 
       - name: Initialize Database SQL
         run: |
-          psql postgresql://postgres:postgres@localhost:5432/test -f ./deps/rust-sdk/fixtures/sql/init.sql
+          psql postgresql://postgres:postgres@localhost:5432/test -f ./scripts/init.sql
 
       - name: test
         env:
