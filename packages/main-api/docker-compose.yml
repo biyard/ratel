@@ -27,3 +27,12 @@ services:
       HASURA_GRAPHQL_ENABLED_LOG_TYPES: "startup,http-log,webhook-log,query-log"
       HASURA_GRAPHQL_LOG_LEVEL: debug
       HASURA_GRAPHQL_DEV_MODE: true
+
+  localstack:
+    hostname: "localstack"
+    image: "localstack/localstack"
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=dynamodb
+      - DYNAMODB_SHARE_DB=1 

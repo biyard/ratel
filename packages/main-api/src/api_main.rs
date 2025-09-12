@@ -5,6 +5,7 @@ use crate::{
     route::route,
     utils::{
         aws::{BedrockClient, RekognitionClient, S3Client, TextractClient},
+        dynamo_migrate::{create_dynamo_tables, get_user_tables},
         mcp_middleware::mcp_middleware,
         sqs_client,
         telegram::TelegramBot,
@@ -163,6 +164,7 @@ pub async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
                 "0x000".to_string(),
                 "password".to_string(),
                 Membership::Free,
+                None,
                 "".to_string(),
                 None,
                 None,
@@ -188,6 +190,12 @@ pub async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
             )
             .await?;
     }
+
+    // Create DynamoDB tables
+    tracing::info!("Creating DynamoDB tables");
+    let dynamo_tables = get_user_tables();
+    create_dynamo_tables(dynamo_tables).await?;
+    tracing::info!("DynamoDB tables created successfully");
 
     tracing::info!("Migration done");
     Ok(())

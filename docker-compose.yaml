@@ -144,6 +144,16 @@ services:
     networks:
       - ratel-network
 
+  # LocalStack for AWS service emulation for DynamoDB
+  localstack:
+    hostname: "localstack"
+    image: "localstack/localstack"
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=dynamodb
+      - DYNAMODB_SHARE_DB=1
+
   # Playwright E2E Testing
   playwright:
     image: mcr.microsoft.com/playwright:v1.49.0-jammy

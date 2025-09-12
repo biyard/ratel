@@ -94,6 +94,7 @@ mod tests {
                 format!("0x{:40x}", now + 2), // unique evm_address
                 "".to_string(),               // password
                 Membership::Free,
+                None,
                 generate_referral_code(),
                 None,
                 None,
@@ -124,6 +125,7 @@ mod tests {
                 format!("0x{:40x}2", now + 2), // unique evm_address
                 "".to_string(),                // password
                 Membership::Free,
+                None,
                 generate_referral_code(),
                 None,
                 None,
@@ -160,6 +162,7 @@ mod tests {
                 format!("0x{:40x}3", now + 3), // unique evm_address
                 "".to_string(),                // password
                 Membership::Free,
+                None,
                 generate_referral_code(),
                 None,
                 None,
