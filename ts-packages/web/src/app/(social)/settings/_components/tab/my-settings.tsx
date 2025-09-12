@@ -1,6 +1,5 @@
 'use client';
 
-import { config } from '@/config';
 import { usePopup } from '@/lib/contexts/popup-service';
 import React from 'react';
 import LocaleModal from '../modal/locale-modal';
@@ -100,13 +99,13 @@ export default function MySettings() {
             action_text={actionText}
             onClick={handleChangeLanguage}
           />
-          {config.env === 'local' && (
+          {
             <SpecBox
               left_text="Theme"
               action_text={currentThemeLabel}
               onClick={handleChangeTheme}
             />
-          )}
+          }
         </div>
       </section>
     </div>
