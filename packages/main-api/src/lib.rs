@@ -117,6 +117,7 @@ pub mod models;
 pub mod route;
 pub mod security;
 pub mod utils;
+pub mod etl;
 
 pub use bdk::prelude::*;
 pub use dto::*;
