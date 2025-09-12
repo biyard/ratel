@@ -42,3 +42,6 @@ pub use auth_clients::*;
 
 mod auth_codes;
 pub use auth_codes::*;
+
+mod telegram_channels;
+pub use telegram_channels::*;

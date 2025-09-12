@@ -8,7 +8,8 @@ import 'dart:io' as io;
 
 enum SpaceTab { summary, deliberation, elearning, poll }
 
-class SpaceController extends BaseController {
+class DeliberationSpaceController extends BaseController {
+  final spaceService = Get.find<SpaceService>();
   final spaceApi = Get.find<SpaceApi>();
   final userApi = Get.find<UserApi>();
 
@@ -22,6 +23,7 @@ class SpaceController extends BaseController {
     feedId: 0,
     title: "",
     htmlContents: "",
+    spaceType: 0,
     files: [],
     discussions: [],
     elearnings: [],
@@ -73,9 +75,7 @@ class SpaceController extends BaseController {
     if (isLoading) {
       showLoading();
     }
-    final item = await spaceApi.getSpaceById(spaceId);
-    logger.d("surveys: ${item.surveys}");
-    space(item);
+    space(spaceService.space.value);
 
     final userRes = await userApi.getUserInfo();
     user(userRes);

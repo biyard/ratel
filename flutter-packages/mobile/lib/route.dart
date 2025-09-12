@@ -1,4 +1,5 @@
 import 'package:ratel/exports.dart';
+import 'package:ratel/middlewares/space_middleware.dart';
 
 class AppRoutes {
   static const String mainScreen = '/dashboard';
@@ -23,7 +24,11 @@ class AppRoutes {
   static const String bookmark = '/bookmark';
 
   static const String notification = "/dashboard/notification";
+  static const String error = '/error';
   static spaceWithId(int id) => '/space/$id';
+  static deliberationSpaceWithId(int id) => '/space/$id/deliberation';
+  static noticeSpaceWithId(int id) => '/space/$id/notice';
+  static notFoundSpaceWithId(int id) => '/space/$id/not-found';
   static draftWithId(int id) => '/draft/$id';
 
   static List<GetPage> pages = [
@@ -38,12 +43,29 @@ class AppRoutes {
     ),
     GetPage(
       name: '/space/:id',
-      page: () => SpaceScreen(),
-      binding: SpaceBinding(),
+      page: () => Container(),
       customTransition: SlideOverTransition(),
       transitionDuration: const Duration(milliseconds: 300),
+      middlewares: [SpaceMiddleware()],
       opaque: true,
       curve: Curves.easeOutCubic,
+      children: [
+        GetPage(
+          name: "/deliberation",
+          page: () => DeliberationSpaceScreen(),
+          binding: DeliberationSpaceBinding(),
+        ),
+        GetPage(
+          name: "/notice",
+          page: () => NoticeSpaceScreen(),
+          binding: NoticeSpaceBinding(),
+        ),
+        GetPage(
+          name: "/not-found",
+          page: () => NotFoundSpaceScreen(),
+          binding: NotFoundSpaceBinding(),
+        ),
+      ],
     ),
     GetPage(
       name: '/draft/:id',

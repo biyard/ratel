@@ -67,7 +67,7 @@ class _ELearningItem extends StatelessWidget {
       onTap: () async {
         if (model.files.isEmpty) return;
         final f = model.files.first;
-        final ctrl = Get.find<SpaceController>();
+        final ctrl = Get.find<DeliberationSpaceController>();
         await ctrl.downloadFileFromUrl(url: f.url, fileName: f.name);
       },
       child: Container(
