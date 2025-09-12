@@ -24,10 +24,24 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: ratel
+      POSTGRES_DB: postgres
+      PGPASSWORD: postgres
     volumes:
-      - ./:/app
-    command: psql postgresql://postgres:postgres@postgres:5432/ratel -f /app/scripts/init.sql
+      - ./scripts:/scripts
+    command: >
+      sh -c "
+        echo 'Waiting for PostgreSQL to be ready...' &&
+        until pg_isready -h postgres -U postgres; do
+          sleep 2
+        done &&
+        echo 'Creating ratel database...' &&
+        psql -h postgres -U postgres -d postgres -c 'CREATE DATABASE ratel;' || echo 'Database might already exist' &&
+        echo 'Running init.sql...' &&
+        psql -h postgres -U postgres -d ratel -f /scripts/init.sql &&
+        echo 'Database initialization completed' &&
+        touch /tmp/init-complete &&
+        sleep infinity
+      "
     healthcheck:
       test: ["CMD", "test", "-f", "/tmp/init-complete"]
       interval: 5s
@@ -69,7 +83,7 @@ services:
       postgres:
         condition: service_healthy
       postgres-init:
-        condition: service_completed_successfully
+        condition: service_healthy
     networks:
       - ratel-network
 
@@ -154,8 +168,9 @@ services:
     ports:
       - "4566:4566"
     environment:
-      - SERVICES=dynamodb,s3
+      - SERVICES=dynamodb,s3,sqs
       - DYNAMODB_SHARE_DB=1
+      - SQS_ENDPOINT_STRATEGY=off
     networks:
       - ratel-network
 
@@ -171,13 +186,11 @@ services:
     command: >
       sh -c "
         echo 'Waiting for LocalStack to be ready...' &&
-        until aws --endpoint-url=http://localstack:4566 dynamodb list-tables > /dev/null 2>&1; do
+        until aws --endpoint-url=http://localstack:4566 dynamodb list-tables >/dev/null 2>&1; do
           sleep 2
         done &&
-        echo 'Creating ${DYNAMODB_TABLE_NAME:-ratel-local} table with GSIs...' &&
-        aws --endpoint-url=http://localstack:4566 dynamodb create-table \
-          --cli-input-json file:///scripts/dynamodb-schema.json \
-          --table-name ${DYNAMODB_TABLE_NAME:-ratel-local} &&
+        echo 'Creating ratel-local table with GSIs...' &&
+        aws --endpoint-url=http://localstack:4566 dynamodb create-table --cli-input-json file:///scripts/dynamodb-schema.json &&
         echo 'ratel-local table and GSIs created successfully'
       "
     depends_on:
@@ -194,6 +207,33 @@ services:
       - DYNAMO_ENDPOINT=http://localstack:4566
     depends_on:
       - dynamodb-init
+    networks:
+      - ratel-network
+
+  # SQS initialization
+  sqs-init:
+    image: amazon/aws-cli:latest
+    environment:
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_DEFAULT_REGION=us-east-1
+    volumes:
+      - ./scripts:/scripts
+    command: >
+      sh -c "
+        echo 'Waiting for LocalStack to be ready...' &&
+        until aws --endpoint-url=http://localstack:4566 sqs list-queues >/dev/null 2>&1; do
+          sleep 2
+        done &&
+        echo 'Creating SQS queues...' &&
+        aws --endpoint-url=http://localstack:4566 sqs create-queue \
+          --queue-name watermark-queue &&
+        aws --endpoint-url=http://localstack:4566 sqs create-queue \
+          --queue-name artwork-image-queue &&
+        echo 'SQS queues created successfully'
+      "
+    depends_on:
+      - localstack
     networks:
       - ratel-network
 
@@ -276,6 +316,134 @@ services:
   #     - ./uploads:/app/uploads
   #   networks:
   #     - ratel-network
+
+  # Testing Services
+  # Main API Testing Service
+  main-api-test:
+    image: rust:1.89
+    volumes:
+      - .:/app
+      - ./.build/target:/app/target
+      - ./.build/main-api/target:/app/packages/main-api/target
+    working_dir: /app/packages/main-api
+    environment:
+      ENV: test
+      RUST_LOG: debug
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/ratel
+      AWS_ENDPOINT_URL_DYNAMODB: http://localstack:4566
+      AWS_ENDPOINT_URL_SQS: http://localstack:4566
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      AWS_REGION: us-east-1
+      DUAL_WRITE_ENABLED: "true"
+      DUAL_WRITE_TABLE_NAME: ratel-test
+      DYNAMODB_TABLE_NAME: ratel-test
+      TELEGRAM_TOKEN: ""
+    depends_on:
+      postgres:
+        condition: service_healthy
+      postgres-init:
+        condition: service_healthy
+      localstack:
+        condition: service_started
+      dynamodb-init:
+        condition: service_completed_successfully
+      sqs-init:
+        condition: service_completed_successfully
+    networks:
+      - ratel-network
+    profiles:
+      - testing
+    command: >
+      sh -c "
+        echo 'Installing test dependencies...' &&
+        cargo install cargo-binstall &&
+        cargo binstall --no-confirm cargo-watch &&
+        echo 'Running DynamoDB and SQS integration tests...' &&
+        RUST_LOG=debug cargo test tests::dynamo_tests --features integration-tests -- --nocapture &&
+        RUST_LOG=debug cargo test tests::sqs_tests --features integration-tests -- --nocapture &&
+        echo 'All integration tests completed!'
+      "
+
+  # Playwright Testing Service  
+  playwright-test:
+    image: mcr.microsoft.com/playwright:v1.49.0-jammy
+    working_dir: /app
+    volumes:
+      - .:/app
+      - playwright-cache:/home/pwuser/.cache
+    environment:
+      CI: "true"
+      PLAYWRIGHT_BASE_URL: "http://web:8080"
+      # Test environment variables
+      WAIT_TIMEOUT: 5000
+      VISIBLE_TIMEOUT: 10000
+      URL_TIMEOUT: 15000
+      NEXT_PUBLIC_LOG_LEVEL: debug
+    depends_on:
+      web:
+        condition: service_healthy
+      main-api:
+        condition: service_healthy
+      hasura:
+        condition: service_started
+    networks:
+      - ratel-network
+    profiles:
+      - testing
+    command: >
+      sh -c "
+        echo 'Waiting for services to be ready...' &&
+        sleep 30 &&
+        echo 'Installing dependencies...' &&
+        npm install &&
+        echo 'Running Playwright tests...' &&
+        npm test
+      "
+
+  # Combined Testing Service (runs both main-api tests and playwright)
+  integration-test:
+    image: node:22.14
+    working_dir: /app
+    volumes:
+      - .:/app
+      - ./.build/node_modules:/app/node_modules
+      - ./.build/target:/app/target
+    environment:
+      CI: "true"
+      PLAYWRIGHT_BASE_URL: "http://web:8080"
+      # Database and AWS settings for tests
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/ratel
+      AWS_ENDPOINT_URL_DYNAMODB: http://localstack:4566
+      AWS_ENDPOINT_URL_SQS: http://localstack:4566
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      AWS_REGION: us-east-1
+    depends_on:
+      web:
+        condition: service_healthy
+      main-api:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      localstack:
+        condition: service_started
+    networks:
+      - ratel-network
+    profiles:
+      - testing
+    command: >
+      sh -c "
+        echo '🚀 Starting comprehensive integration tests...' &&
+        echo '📦 Installing dependencies...' &&
+        npm install &&
+        npx playwright install --with-deps chromium &&
+        echo '⏳ Waiting for all services to be fully ready...' &&
+        sleep 60 &&
+        echo '🧪 Running Playwright end-to-end tests...' &&
+        npm test &&
+        echo '✅ All integration tests completed successfully!'
+      "
 
 
 networks:
