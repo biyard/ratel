@@ -15,7 +15,7 @@ export default function MyProfilePage() {
         <div
           role="tablist"
           aria-label="Profile tabs"
-          className="flex text-sm font-bold text-neutral-400"
+          className="flex text-sm font-bold text-text-primary"
         >
           {tabs.map((label, idx) => (
             <button
@@ -26,10 +26,10 @@ export default function MyProfilePage() {
               aria-selected={activeIndex === idx}
               onClick={() => setActiveIndex(idx)}
               className={
-                'group flex-1 flex flex-col items-center justify-center py-3 transition-colors ' +
+                'group flex-1 flex flex-col items-center justify-center py-3 transition-colors text-tab-label' +
                 (activeIndex === idx
-                  ? 'text-neutral-100'
-                  : 'hover:text-neutral-200')
+                  ? 'text-tab-label/80'
+                  : 'hover:text-tab-label/80')
               }
               type="button"
             >
@@ -62,7 +62,7 @@ export default function MyProfilePage() {
           role="tabpanel"
           aria-labelledby="tab-1"
           hidden={activeIndex !== 1}
-          className="w-full max-w-[800px] mx-auto text-neutral-300"
+          className="w-full max-w-[800px] mx-auto text-text-primary-muted"
         >
           {t('my_inventory_coming_soon')}
         </section> */}

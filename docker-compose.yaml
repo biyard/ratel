@@ -66,7 +66,7 @@ services:
       test: ["CMD-SHELL", "curl -f http://localhost:3000/version || exit 1"]
       interval: 30s
       timeout: 10s
-      retries: 3
+      retries: 100
     depends_on:
       postgres:
         condition: service_healthy
@@ -80,6 +80,9 @@ services:
     image: node:22.14
     restart: always
     volumes:
+      - ./.build/node_modules:/app/node_modules
+      - ./.build/web_node_modules:/app/ts-packages/web/node_modules
+      - ./.build/pnpm-store:/app/.pnpm-store
       - .:/app
     working_dir: /app
     command: ["bash", "scripts/web-entrypoint.sh"]
@@ -140,6 +143,16 @@ services:
         condition: service_started
     networks:
       - ratel-network
+
+  # LocalStack for AWS service emulation for DynamoDB
+  localstack:
+    hostname: "localstack"
+    image: "localstack/localstack"
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=dynamodb
+      - DYNAMODB_SHARE_DB=1
 
   # Playwright E2E Testing
   playwright:

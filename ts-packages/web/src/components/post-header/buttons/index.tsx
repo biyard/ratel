@@ -100,7 +100,7 @@ function MakePublicButton({ onClick }: { onClick: () => void }) {
 function BackButton({ onClick }: { onClick: () => void }) {
   return (
     <div className="cursor-pointer w-fit h-fit" onClick={onClick}>
-      <ArrowLeft className="size-6 [&>path]:stroke-white" />
+      <ArrowLeft className="size-6 [&>path]:stroke-foreground" />
     </div>
   );
 }
