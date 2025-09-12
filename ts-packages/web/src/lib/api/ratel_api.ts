@@ -236,7 +236,7 @@ export const ratelApi = {
     comment: () => '/v1/feeds',
     writePost: () => '/v1/feeds',
     createDraft: () => '/v1/feeds',
-    updateDraft: (post_id: number) => `/v1/feeds/${post_id}`,
+    updateDraft: (post_id: number) => `/v2/feeds/${post_id}`,
     editPost: (post_id: number) => `/v1/feeds/${post_id}`,
     publishDraft: (post_id: number) => `/v1/feeds/${post_id}`,
     removeDraft: (post_id: number) => `/v1/feeds/${post_id}?action=delete`,
@@ -254,6 +254,23 @@ export const ratelApi = {
     getFeedsByFeedId: (feed_id: number) => `/v1/feeds/${feed_id}`,
     getPosts: (page: number, size: number) =>
       `/v1/feeds?param-type=query&bookmark=${page}&size=${size}`,
+
+    getFeed: (post_id: number) => `/v2/feeds/${post_id}`,
+    getFeeds: (
+      page: number,
+      size: number,
+      user_id?: number,
+      status?: FeedStatus,
+    ) => {
+      let url = `/v2/feeds?page=${page}&size=${size}`;
+      if (user_id) {
+        url += `&user_id=${user_id}`;
+      }
+      if (status) {
+        url += `&status=${status}`;
+      }
+      return url;
+    },
   },
   redeems: {
     useRedeemCode: (redeem_id: number) => `/v1/redeems/${redeem_id}`,

@@ -74,6 +74,10 @@ cdk/.next:
 cdk/public:
 	cp -r ts-packages/web/public cdk/public
 
+cdk/.build/%/bootstrap:
+	mkdir -p cdk/.build/$*
+	cp .build/$*/bootstrap cdk/.build/$*/bootstrap
+
 cdk-deploy-v2:
 	cd cdk && npm i
 	cd cdk && $(BUILD_CDK_ENV) npm run build
