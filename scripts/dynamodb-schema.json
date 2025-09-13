@@ -1,5 +1,5 @@
 {
-  "TableName": "ratel-local",
+  "TableName": "ratel-local-main",
   "AttributeDefinitions": [
     {
       "AttributeName": "pk",
