@@ -6,6 +6,7 @@ import { CommentIcon, Palace, Rewards, Shares, ThumbUp } from './icons';
 import { convertNumberToString } from '@/lib/number-utils';
 import TimeAgo from './time-ago';
 import DOMPurify from 'dompurify';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useApiCall } from '@/lib/api/use-send';
 import { ratelApi } from '@/lib/api/ratel_api';
@@ -56,14 +57,12 @@ export interface FeedCardProps {
   onRepostThought?: () => void;
   onRepost?: (e: React.MouseEvent) => void;
   onLikeClick?: (value: boolean) => void;
-  refetch?: () => void;
   isLikeProcessing?: boolean;
   onEdit?: (e: React.MouseEvent) => void | Promise<void>;
   currentUserId?: number;
 }
 
 export default function FeedCard(props: FeedCardProps) {
-  const router = useRouter();
   const { post } = useApiCall();
   const { data: User } = useSuspenseUserInfo();
 
@@ -108,7 +107,6 @@ export default function FeedCard(props: FeedCardProps) {
 
       // Success - trigger callbacks
       props.onLikeClick?.(value);
-      props.refetch?.();
     } catch (error) {
       // Revert optimistic update on error
       setLocalIsLiked(props.is_liked);
@@ -135,7 +133,6 @@ export default function FeedCard(props: FeedCardProps) {
 
       setLocalShares((prev) => prev + 1);
       showSuccessToast('Reposted successfully');
-      props.refetch?.();
     } catch (error) {
       logger.error('Failed to repost:', error);
       showErrorToast('Failed to repost');
@@ -155,40 +152,15 @@ export default function FeedCard(props: FeedCardProps) {
     setExpand(true);
   };
 
-  // const handleEdit = (e: React.MouseEvent) => {
-  //   e.stopPropagation();
-  //   if (props.onEdit) {
-  //     props.onEdit(e);
-  //   } else {
-  //     console.warn('No onEdit handler provided to FeedCard');
-  //   }
-  // };
+  const href = props.space_id
+    ? route.space(props.space_id)
+    : route.threadByFeedId(props.id);
 
   return (
-    <Col
-      className={`cursor-pointer border rounded-[10px] border-neutral-700`}
-      onClick={() => {
-        router.push(route.threadByFeedId(props.id));
-      }}
-    >
-      <FeedBody
-        id={props.id}
-        industry={props.industry}
-        title={props.title}
-        contents={props.contents}
-        author_profile_url={props.author_profile_url}
-        author_name={props.author_name}
-        author_type={props.author_type}
-        url={props.url}
-        created_at={props.created_at}
-        author_id={props.author_id}
-        user_id={props.user_id}
-        onboard={props.onboard}
-        space_id={props.space_id}
-        space_type={props.space_type}
-        onEdit={props.onEdit}
-        currentUserId={User?.id}
-      />
+    <Col className="relative rounded-[10px] bg-card-bg-secondary border border-card-enable-border">
+      <Link href={href} className="block">
+        <FeedBody {...props} />
+      </Link>
       <FeedFooter
         space_id={props.space_id}
         space_type={props.space_type}
@@ -258,7 +230,7 @@ export function FeedBody({
           )}
         </div>
       </Row>
-      <h2 className="w-full line-clamp-2 font-bold text-xl/[25px] tracking-[0.5px] align-middle text-foreground px-5">
+      <h2 className="w-full line-clamp-2 font-bold text-xl/[25px] tracking-[0.5px] align-middle text-text-primary px-5">
         {title}
       </h2>
       <Row className="justify-between items-center px-5">
@@ -289,7 +261,7 @@ export function FeedContents({
   }, [contents]);
 
   return (
-    <div className="text-foreground">
+    <div className="text-desc-text">
       <p
         className="feed-content font-normal text-[15px]/[24px] align-middle tracking-[0.5px] text-c-wg-30 px-5"
         dangerouslySetInnerHTML={{ __html: sanitized }}
@@ -318,7 +290,7 @@ export function IconText({
 }: React.HTMLAttributes<HTMLDivElement> & { children: React.ReactNode }) {
   return (
     <Row
-      className={`inline-flex items-center gap-1.5 whitespace-nowrap leading-none text-foreground text-[15px] px-3 py-3 ${className || ''}`}
+      className={`inline-flex items-center gap-1.5 whitespace-nowrap leading-none text-text-primary text-[15px] px-3 py-3 ${className || ''}`}
       {...props}
     >
       {children}
@@ -336,7 +308,7 @@ export function UserBadge({
   name: string;
 }) {
   return (
-    <Row className="w-fit items-center med-16 text-foreground">
+    <Row className="w-fit items-center med-16 text-text-primary">
       <Image
         src={profile_url}
         alt="User Profile"
@@ -355,16 +327,18 @@ export function UserBadge({
 
 export function SpaceTag() {
   return (
-    <span className="flex flex-row justify-start items-center px-2 border border-primary/50 bg-primary gap-1 rounded-sm">
-      <Palace className="w-3.5 h-3.5 [&>path]:stroke-web-bg [&_g>path:nth-child(n+2)]:stroke-web-bg" />
-      <div className="font-semibold text-xs/[25px] text-web-bg">SPACE</div>
+    <span className="flex flex-row justify-start items-center px-2 border border-label-color-border bg-label-color-bg gap-1 rounded-sm">
+      <Palace className="w-3.5 h-3.5 [&>path]:stroke-label-color-text [&_g>path:nth-child(n+2)]:stroke-web-bg" />
+      <div className="font-semibold text-xs/[25px] text-label-color-text">
+        SPACE
+      </div>
     </span>
   );
 }
 
 export function IndustryTag({ industry }: { industry: string }) {
   return (
-    <span className="rounded-sm border border-c-wg-70 px-2 text-xs/[25px] font-semibold align-middle uppercase">
+    <span className="rounded-sm border border-label-color-border-secondary bg-label-color-bg-secondary text-label-text px-2 text-xs/[25px] font-semibold align-middle uppercase">
       {industry}
     </span>
   );
@@ -387,7 +361,7 @@ export function EditButton({ onClick }: EditButtonProps) {
 
 export function OnboardingTag() {
   return (
-    <span className="rounded-sm bg-primary text-foreground px-2 text-xs/[25px] font-semibold align-middle uppercase">
+    <span className="rounded-sm bg-label-color-bg border border-label-color-border text-label-color-text px-2 text-xs/[25px] font-semibold align-middle uppercase">
       Onboard
     </span>
   );
@@ -398,7 +372,7 @@ export function JoinNowButton({ onClick }: { onClick: () => void }) {
   return (
     <Button
       variant="rounded_primary"
-      className="cursor-pointer flex my-2.5 flex-row w-fit px-5 py-3 bg-primary rounded-[10px] font-bold text-[#000203] text-[15px]"
+      className="cursor-pointer bg-enable-button-bg hover:bg-enable-button-bg/80 flex my-2.5 flex-row w-fit px-5 py-3 rounded-[10px] font-bold text-enable-button-text text-[15px]"
       onClick={(e) => {
         e.stopPropagation();
         e.preventDefault();
@@ -470,7 +444,7 @@ export function FeedFooter({
 
   return (
     <Row
-      className={`items-center justify-between border-t w-full px-5 ${space_id && space_type ? 'border-primary/10' : 'border-neutral-800'} `}
+      className={`items-center justify-between border-t w-full px-5 ${space_id && space_type ? 'border-divider' : 'border-divider'} `}
     >
       {space_id && space_type ? (
         <JoinNowButton
@@ -540,7 +514,7 @@ export function FeedFooter({
                 <button
                   onClick={handleRepostWithThoughts}
                   disabled={isReposting}
-                  className="flex items-center gap-3 w-full px-4 py-2 rounded hover:bg-neutral-700 transition-colors text-foreground text-lg font-semibold"
+                  className="flex items-center gap-3 w-full px-4 py-2 rounded hover:bg-hover transition-colors text-text-primary text-lg font-semibold"
                 >
                   {isReposting ? <Loader2 /> : <Edit1 />}
                   {t('repost_with_your_thoughts')}
@@ -551,7 +525,7 @@ export function FeedFooter({
                 <button
                   onClick={handleRepost}
                   disabled={isReposting}
-                  className="flex items-center gap-3 w-full px-4 py-2 rounded hover:bg-neutral-700 transition-colors text-foreground text-lg font-semibold"
+                  className="flex items-center gap-3 w-full px-4 py-2 rounded hover:bg-hover transition-colors text-text-primary text-lg font-semibold"
                 >
                   {isReposting ? <Loader2 /> : <Shares />}
                   {t('repost')}

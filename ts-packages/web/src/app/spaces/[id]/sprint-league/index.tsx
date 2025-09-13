@@ -1,5 +1,5 @@
 import { getOption as getSpaceByIdOption } from '@/hooks/use-space-by-id';
-import { getOption as getFeedByIdOption } from '@/hooks/use-feed-by-id';
+import { getOption as getFeedByIdOption } from '@/hooks/feeds/use-feed-by-id';
 import { getQueryClient } from '@/providers/getQueryClient';
 import Header from '../_components/common-header';
 import { SSRHydration } from '@/lib/query-utils';

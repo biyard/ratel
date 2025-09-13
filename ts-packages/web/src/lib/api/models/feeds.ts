@@ -1,7 +1,17 @@
-import { UrlType } from './feeds/update-draft-request';
 import { Industry } from './industry';
 import { Space } from './spaces';
 import { User } from './user';
+
+export enum UrlType {
+  None = 0,
+  Image = 1,
+}
+
+export interface ArtworkMetadata {
+  artist_name: string;
+  size: string;
+  background_color: string;
+}
 
 export interface Feed {
   id: number;
@@ -38,7 +48,10 @@ export interface Feed {
   author: [User];
   industry: [Industry];
   spaces: [Space];
+  space: [Space];
   onboard?: boolean;
+
+  artwork_metadata?: ArtworkMetadata;
 }
 
 export interface Comment {
@@ -63,6 +76,7 @@ export interface Reply {
   author: [User];
 }
 export enum FeedType {
+  Artwork = 0,
   Post = 1,
   Reply = 2,
   Repost = 3,

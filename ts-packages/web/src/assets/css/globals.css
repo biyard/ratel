@@ -17,6 +17,7 @@
   --gray-80: #6b6b6b;
   --gray-100: #fafafa;
   --gray-400: #a1a1a1;
+  --gray-500: #737373;
   --gray-300: #d4d4d4;
   --gray-600: #525252;
   --gray-700: #404040;
@@ -81,6 +82,7 @@
   --accent: var(--accent-green);
   --accent-foreground: #000000;
   --accent-hover: #282828;
+
   --destructive: var(--accent-pink);
   --destructive-foreground: #ffffff;
 
@@ -107,9 +109,23 @@
   /* ================================
      LEGACY TOKENS (Deprecated - for migration only)
      ================================ */
-  --color-neutral-400: var(--foreground-muted);
+  --color-home-side: #ffffff;
+  --color-home-side-text: #1d1d1d;
+  --color-icon-hover: #ffffff;
+  --color-reply-box: #262626;
+  --color-create-space-bg: #1a1a1a;
+  --color-create-space-border: #262626;
+  --color-create-space-desc: #525252;
+  --color-create-space-label: #a1a1a1;
 
+  --color-space-box-bg: #191919;
+  --color-space-box-border: var(--background);
+  --color-button-border: #ffffff;
+  --color-input-box-bg: #262626;
+  --color-neutral-400: var(--foreground-muted);
+  --color-neutral-500: var(--gray-500);
   --color-neutral-600: var(--foreground-more-muted);
+  --color-foreground: var(--foreground);
   --color-background: var(--background);
   --color-component-bg: var(--card);
   --color-primary: var(--primary);
@@ -126,8 +142,78 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-error: var(--destructive);
+
+  --color-bg: #1d1d1d;
+  --color-card-bg: #191919;
+  --color-card-bg-secondary: #191919;
+  --color-card-enable-border: #404040;
+  --color-card-border: #191919;
+  --color-card-border-secondary: #191919;
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #f9fafb;
+  --color-text-third: #171717;
+  --color-profile-bg: #d9d9d9;
+  --color-button-bg: #ffffff;
+  --color-create-button-bg: #ffffff;
+  --color-more-text: #a1a1a1;
+  --color-follow-button-bg: #404040;
+  --color-follow-button-text: #ffffff;
+  --color-follow-button-bg-secondary: #ffffff;
+  --color-follow-button-text-secondary: #000203;
+  --color-follow-button-border: #ffffff;
+  --color-unfollow-button-bg: #191919;
+  --color-unfollow-button-text: #404040;
+  --color-unfollow-button-border: #404040;
+  --color-back-icon: #ffffff;
+  --color-icon: #737373;
+  --color-select-date-bg: #1a1a1a;
+  --color-select-date-border: #262626;
+  --color-select-booster-bg: #1a1a1a;
+
+  --color-title-text: #d4d4d4;
+  --color-desc-text: #d4d4d4;
+  --color-time-text: #6d6d6d;
+  --color-divider: #262626;
+  --color-enable-button-bg: #fcb300;
+  --color-enable-button-white-text: #ffffff;
+  --color-enable-button-text: #000203;
+  --color-disable-button-bg: var(--gray-600);
+  --color-disable-button-white-text: #ffffff;
+  --color-button-bg: #ffffff;
+  --color-button-text: #18181b;
+
+  --color-menu-text: #737373;
+  --color-tab-label: #a1a1a1;
+  --color-setting-card-border: #262626;
+  --color-modal-card-bg: #1a1a1a;
+  --color-modal-card-border: #262626;
+  --color-modal-label-text: #a1a1a1;
+
+  --color-label-color-bg: #1d1d1d;
+  --color-label-color-border: #fcb300;
+  --color-label-color-text: #fcb300;
+  --color-label-color-bg-secondary: #ffffff;
+  --color-label-color-border-secondary: #404040;
+  --color-label-text: #ffffff;
+  --color-input-box-bg: #1a1a1a;
+  --color-input-box-border: #464646;
+  --color-hover: #282828;
+  --color-write-comment-box-bg: #262626;
+  --color-write-comment-box-border: #404040;
+  --color-write-comment-box-icon: #737373;
+  --color-write-comment-box-text: #737373;
+  --color-comment-icon: #aeaaab;
+  --color-comment-icon-text: #a1a1a1;
+  --color-comment-box-bg: #171717;
+  --color-disabled-button-bg: #404040;
+  --color-disabled-button-text: #737373;
+
+  --color-cancel-button-bg: #1a1a1a;
+  --color-cancel-button-text: #a1a1a1;
+  --color-submit-button-bg: #fcb300;
+  --color-submit-button-text: #1d1d1d;
+  --color-space-side-label: #737373;
   --color-c-wg-70: var(--ui-gray-70);
-  --color-neutral-500: #737373;
 }
 
 /* ----------------------------
@@ -175,15 +261,98 @@
   /* ================================
      LEGACY TOKEN OVERRIDES
      ================================ */
+  --color-home-side: #fcb300;
+  --color-home-side-text: #262626;
+
+  --color-icon-hover: #e5e5e5;
+  --color-reply-box: #ffffff;
+  --color-create-space-bg: #fafafa;
+  --color-create-space-border: #d4d4d4;
+  --color-create-space-desc: #525252;
+  --color-create-space-label: #a1a1a1;
+
+  --color-space-box-bg: #ffffff;
+  --color-space-box-border: #e5e5e5;
+  --color-button-border: #e5e5e5;
+  --color-foreground: var(--foreground);
   --color-background: var(--background);
   --color-component-bg: var(--card);
   --color-custom-white: var(--gray-800);
   --color-neutral-900: var(--gray-50);
   --color-neutral-400: var(--foreground-more-muted);
-  --color-neutral-600: var(--foreground-muted);
+
   --color-footer: var(--gray-900);
   --color-btn-hover: var(--accent-hover);
   --color-tab-hover: var(--accent-hover);
+
+  --color-bg: #f5f5f5;
+  --color-card-bg: #fafafa;
+  --color-card-bg-secondary: #ffffff;
+  --color-card-enable-border: #e5e5e5;
+  --color-card-border: #e5e5e5;
+  --color-card-border-secondary: #e5e5e5;
+  --color-text-primary: #262626;
+  --color-text-secondary: #262626;
+  --color-text-third: #262626;
+  --color-profile-bg: #d9d9d9;
+  --color-button-bg: #fcb300;
+  --color-more-text: #737373;
+  --color-follow-button-bg: #404040;
+  --color-follow-button-text: #ffffff;
+  --color-follow-button-bg-secondary: #fcb300;
+  --color-follow-button-text-secondary: #000203;
+  --color-follow-button-border: #fcb300;
+  --color-unfollow-button-bg: #ffffff;
+  --color-unfollow-button-text: #000203;
+  --color-unfollow-button-border: #000203;
+  --color-title-text: #262626;
+  --color-desc-text: #525252;
+  --color-time-text: #6d6d6d;
+  --color-divider: #e5e5e5;
+  --color-enable-button-bg: #fcb300;
+  --color-enable-button-white-text: #ffffff;
+  --color-enable-button-text: #000203;
+  --color-disable-button-bg: var(--gray-600);
+  --color-disable-button-white-text: #ffffff;
+  --color-button-bg: #f5f5f5;
+  --color-create-button-bg: #fcb300;
+  --color-button-text: #18181b;
+  --color-menu-text: #737373;
+  --color-tab-label: #a1a1a1;
+  --color-setting-card-border: #e5e5e5;
+  --color-modal-card-bg: #fafafa;
+  --color-modal-card-border: #d4d4d4;
+  --color-modal-label-text: #a1a1a1;
+  --color-back-icon: #737373;
+  --color-icon: #737373;
+  --color-select-date-bg: #f5f5f5;
+  --color-select-date-border: #d4d4d4;
+  --color-select-booster-bg: #fafafa;
+
+  --color-label-color-bg: #fcb300;
+  --color-label-color-border: #fcb300;
+  --color-label-color-text: #ffffff;
+  --color-label-color-bg-secondary: #ffffff;
+  --color-label-color-border-secondary: #404040;
+  --color-label-text: #404040;
+  --color-input-box-bg: #fafafa;
+  --color-input-box-border: #e5e5e5;
+  --color-hover: #e5e5e5;
+  --color-write-comment-box-bg: #e5e5e5;
+  --color-write-comment-box-border: #d4d4d4;
+  --color-write-comment-box-icon: #737373;
+  --color-write-comment-box-text: #a3a3a3;
+  --color-comment-icon: #737373;
+  --color-comment-icon-text: #404040;
+  --color-comment-box-bg: #ffffff;
+  --color-disabled-button-bg: #d9d9d9;
+  --color-disabled-button-text: var(--gray-600);
+
+  --color-cancel-button-bg: #ffffff;
+  --color-cancel-button-text: #a3a3a3;
+  --color-submit-button-bg: #fcb300;
+  --color-submit-button-text: #1d1d1d;
+  --color-space-side-label: #262626;
 }
 
 /* ----------------------------
@@ -370,19 +539,19 @@ a {
    ========================================================================== */
 @layer utilities {
   /* Text colors */
-  .text-foreground {
+  .text-text-primary {
     color: var(--foreground);
   }
-  .text-foreground-muted {
+  .text-text-primary-muted {
     color: var(--foreground-muted);
   }
-  .text-foreground-more-muted {
+  .text-text-primary-more-muted {
     color: var(--foreground-more-muted);
   }
   .text-popover-foreground {
     color: var(--popover-foreground);
   }
-  .text-foreground-inverted {
+  .text-text-primary-inverted {
     color: var(--foreground-inverted);
   }
   .text-card-meta {

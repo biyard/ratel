@@ -11,7 +11,7 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    needs: [main-api, nextjs-web, telegram-bot, fetcher]
+    needs: [main-api, nextjs-web, fetcher, image-worker]
     steps:
       - uses: actions/checkout@v3
         with:
@@ -22,6 +22,11 @@ jobs:
         with:
           name: nextjs-web-cdk-next-${{ github.sha }}
           path: ./
+      - name: Download image worker
+        uses: actions/download-artifact@v4
+        with:
+          name: image-worker-${{ github.sha }}
+          path: ${{ github.workspace }}/.build/image-worker
       - uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -45,6 +50,7 @@ jobs:
           npm i -g aws-cdk
           tar xzvf next.tar.gz
           make cdk/public
+          make cdk/.build/image-worker/bootstrap
           make cdk-deploy-v2
 
   test-with-server:
@@ -173,7 +179,6 @@ jobs:
           NONCELAB_TOKEN: ${{ secrets.NONCELAB_TOKEN }}
 
           TELEGRAM_TOKEN: ${{ secrets.DEV_TELEGRAM_TOKEN }}
-          TELEGRAM_BOT_URL: https://telegram-bot.dev.ratel.foundation
 
           BBS_BLS_X: ${{ secrets.BBS_BLS_X }}
           BBS_BLS_Y: ${{ secrets.BBS_BLS_Y }}
@@ -192,6 +197,9 @@ jobs:
 
   image-worker:
     runs-on: ubuntu-22.04
+    defaults:
+      run:
+        working-directory: packages/image-worker
     steps:
       - uses: actions/checkout@v3
         with:
@@ -221,7 +229,6 @@ jobs:
       - name: Deploy APIs
         env:
           REGION: ap-northeast-2
-          STACK: ratel-image-worker-dev-stack
           ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           ENV: dev
@@ -229,66 +236,17 @@ jobs:
           SERVICE: image-worker
           DATABASE_TYPE: postgres
           DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
-          BASE_DOMAIN: ratel.foundation
-          MIGRATE: false
-          ENABLE_S3: false
-          ENABLE_LAMBDA: false
-          ENABLE_SQS_WORKER: true
-          ENABLE_CDN: false
-        run: |
-          npm i -g aws-cdk
-          make deploy
-
-  telegram-bot:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: packages/telegram-bot
-
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: recursive
-          ssh-key: ${{ secrets.PULL_KEY_REPO }}
-      - uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ap-northeast-2
-      - uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          components: clippy, rustfmt
-          target: wasm32-unknown-unknown
-          toolchain: stable
-      - uses: cargo-bins/cargo-binstall@main
-      - name: Install dependencies
-        run: |
-          cargo binstall toml-cli
-      - name: Cache builder
-        id: telegram-bot-build-cache
-        uses: actions/cache@v3
-        with:
-          key: telegram-bot-build-cache
-          path: |
-            packages/telegram-bot/target
-      - name: Deploy APIs
-        env:
-          REGION: ap-northeast-2
-          ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-
-          ENV: dev
-          RUST_LOG: info
-          DATABASE_TYPE: postgres
-          DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
-          TELEGRAM_TOKEN: ${{ secrets.DEV_TELEGRAM_TOKEN }}
-          TELEGRAM_MINI_APP_URI: https://t.me/crypto_ratel_dev_bot
-
           MIGRATE: false
         run: |
-          make docker.build
-          make docker.login
-          make docker.push
+          make build
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: image-worker-${{ github.sha }}
+          path: ${{ github.workspace }}/.build/image-worker/bootstrap
+          if-no-files-found: error
+          retention-days: 7
 
   fetcher:
     runs-on: ubuntu-latest
@@ -332,6 +290,8 @@ jobs:
           DATABASE_TYPE: postgres
           DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
           RPC_ENDPOINT: https://public-en-kairos.node.kaia.io
+          TELEGRAM_TOKEN: ${{ secrets.DEV_TELEGRAM_TOKEN }}
+
           MIGRATE: false
         run: |
           make docker.build
@@ -367,6 +327,7 @@ jobs:
           NEXT_PUBLIC_API_URL: https://api.dev.ratel.foundation
           NEXT_PUBLIC_EXPERIMENT: true
           NEXT_PUBLIC_GRAPHQL_URL: https://graphql.dev.ratel.foundation/v1/graphql
+          NEXT_PUBLIC_TELEGRAM_BOTNAME: crypto_ratel_dev_bot
 
         run: |
             make docker.build
@@ -618,7 +579,7 @@ jobs:
   create-release-pr:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/dev'
-    needs: [image-worker, android-apk, ios-testflight, deploy]
+    needs: [android-apk, ios-testflight, deploy]
     steps:
       - uses: actions/checkout@v3
         with:

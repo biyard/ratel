@@ -121,12 +121,12 @@ export default function SpaceConfigForm({
 
       {/* Warning Message */}
 
-      <div className="text-base text-gray-300 pt-5">
+      <div className="text-base text-create-space-desc pt-5">
         <p>
           {t.rich('SetBoostModal.description', {
             spaceType: getSpaceTypeTitle(spaceType),
             b: (chunks) => (
-              <span className="font-semibold text-white">{chunks}</span>
+              <span className="font-semibold text-desc-text">{chunks}</span>
             ),
           })}
         </p>
@@ -135,7 +135,7 @@ export default function SpaceConfigForm({
       {/* Date and Time Section */}
       <div className="flex flex-col gap-3">
         <div className="flex items-center gap-1">
-          <label className="text-base font-medium text-neutral-400 py-1">
+          <label className="text-base font-medium text-modal-label-text py-1">
             {t('date')}
           </label>
           <span className="text-red-500 text-base">*</span>
@@ -147,22 +147,23 @@ export default function SpaceConfigForm({
             <CalendarDropdown
               value={startTimestamp}
               onChange={(timestamp) => {
+                const delta = endTimestamp - startTimestamp;
                 setStartTimestamp(timestamp);
+                setEndTimestamp(timestamp + delta);
               }}
             />
             <TimeDropdown
               value={startTimestamp}
               onChange={(timestamp) => {
+                const delta = endTimestamp - startTimestamp;
                 setStartTimestamp(timestamp);
+                setEndTimestamp(timestamp + delta);
               }}
             />
           </div>
 
           {/* Separator */}
           <div className="w-[15px] h-0.25 bg-neutral-600 self-center hidden sm:block" />
-          <div className="text-center text-neutral-400 text-sm sm:hidden">
-            to
-          </div>
 
           {/* End Time and Date */}
           <div className="flex items-center gap-2">
@@ -182,18 +183,22 @@ export default function SpaceConfigForm({
 
           {/* Timezone */}
           {/* FIXME: use variable, not value color */}
-          <div className="flex flex-row items-center w-fit border border-[#464646] rounded-lg px-5 py-[10.5px] gap-2.5 mt-2 sm:mt-0">
+          <div className="flex flex-row items-center w-fit border border-select-date-border bg-select-date-bg rounded-lg px-5 py-[10.5px] gap-2.5 mt-2 sm:mt-0">
             <div className="font-medium text-[15px]/[22.5px] text-neutral-600">
               Pacific Time
             </div>
-            <Internet className="size-5" />
+            <Internet
+              className="w-5 h-5 [&>path]:stroke-neutral-600 [&>circle]:stroke-neutral-600"
+              width="20"
+              height="20"
+            />
           </div>
         </div>
       </div>
 
       {/* Boost Section */}
       <div className="flex flex-col gap-3">
-        <h3 className="text-base font-semibold text-neutral-400 py-1">
+        <h3 className="text-base font-semibold text-modal-label-text py-1">
           {t('boost')}
         </h3>
 
@@ -217,16 +222,14 @@ export default function SpaceConfigForm({
           <div className="flex-1">
             <label
               htmlFor="activateBooster"
-              className="text-base font-medium text-white cursor-pointer"
+              className="text-base font-medium text-text-primary cursor-pointer"
             >
               {t('active_booster')}
             </label>
-            <p className="text-base text-neutral-300 mt-0.5">
+            <p className="text-base text-desc-text mt-0.5">
               {t.rich('active_booster_desc', {
                 btn: (chunks) => (
-                  <button className="text-neutral-300 underline">
-                    {chunks}
-                  </button>
+                  <button className="text-desc-text underline">{chunks}</button>
                 ),
               })}
             </p>
@@ -235,7 +238,7 @@ export default function SpaceConfigForm({
 
         {formConfig.activateBooster && (
           <div className="ml-7 flex flex-col gap-2">
-            <label className="text-base font-medium text-white py-1">
+            <label className="text-base font-medium text-text-primary py-1">
               {t('booster')}
             </label>
 
@@ -243,10 +246,10 @@ export default function SpaceConfigForm({
               <DropdownMenuTrigger asChild>
                 <button
                   type="button"
-                  className="border border-[var(--color-c-wg-70)] bg-transparent text-white pl-14 pr-4 py-3 rounded-md focus:outline-none focus:ring-2 focus:ring-primary w-full text-base font-medium cursor-pointer relative z-1"
+                  className="border border-[var(--color-c-wg-70)] bg-transparent text-text-primary pl-14 pr-4 py-3 rounded-md focus:outline-none focus:ring-2 focus:ring-primary w-full text-base font-medium cursor-pointer relative z-1"
                 >
                   <div className="flex items-center justify-between">
-                    <span>
+                    <span className="text-text-primary">
                       Booster x{' '}
                       {Object.entries(BoosterType)
                         .find(
@@ -268,7 +271,7 @@ export default function SpaceConfigForm({
 
               <DropdownMenuContent
                 align="start"
-                className="w-[var(--radix-dropdown-menu-trigger-width)] bg-[var(--color-background)] border-[var(--color-c-wg-70)] text-white"
+                className="w-[var(--radix-dropdown-menu-trigger-width)] bg-[var(--color-background)] border-[var(--color-c-wg-70)] text-text-primary"
               >
                 {Object.entries(BoosterType)
                   .filter(
@@ -301,7 +304,7 @@ export default function SpaceConfigForm({
       </div>
 
       {/* Create Button */}
-      <div className="border-t border-[var(--color-neutral-700)]/50 pt-5 pb-1">
+      <div className="border-t border-divider pt-5 pb-1">
         <div className="flex justify-end">
           <LoadablePrimaryButton
             className="rounded-md w-[132px] h-[48px] flex items-center justify-center font-raleway font-bold text-[16px] leading-[100%] tracking-normal text-center cursor-pointer"

@@ -63,19 +63,31 @@ use crate::{
                 register::register_handler, token::token_handler,
             },
             oracles::create_oracle::create_oracle_handler,
+            posts::{
+                get_post::get_post_handler, list_posts::list_posts_handler,
+                update_post::update_post_handler,
+            },
             spaces::{delete_space::delete_space_handler, get_my_space::get_my_space_controller},
-            telegram::subscribe::telegram_subscribe_handler,
-            users::{find_user::find_user_handler, logout::logout_handler},
+            telegram::{
+                get_telegram_info::get_telegram_info_handler,
+                verify_telegram_raw::verify_telegram_raw_handler,
+            },
+            themes::change_theme::change_theme_handler,
+            users::{
+                connect_telegram::connect_telegram_handler, find_user::find_user_handler,
+                logout::logout_handler,
+            },
         },
         well_known::get_did_document::get_did_document_handler,
     },
     utils::{
         aws::{BedrockClient, RekognitionClient, S3Client, TextractClient},
         sqs_client::SqsClient,
+        telegram::TelegramBot,
     },
 };
 use by_axum::axum;
-use dto::Result;
+use dto::{Result, by_axum::axum::Extension};
 
 use axum::native_routing::get as nget;
 use axum::native_routing::post as npost;
@@ -155,9 +167,15 @@ pub async fn route(
     textract_client: TextractClient,
     _metadata_s3_client: S3Client,
     private_s3_client: S3Client,
+    bot: TelegramBot,
 ) -> Result<by_axum::axum::Router> {
     Ok(by_axum::axum::Router::new()
-        .nest("/v1", controllers::v1::route(pool.clone()).await?)
+        .nest(
+            "/v1",
+            controllers::v1::route(pool.clone())
+                .await?
+                .layer(Extension(Arc::new(bot))),
+        )
         .nest(
             "/m1",
             controllers::m1::MenaceController::route(pool.clone())?,
@@ -367,10 +385,41 @@ pub async fn route(
             .with_state(pool.clone()),
         )
         .route(
+            "/v2/users/telegram",
+            post_with(
+                connect_telegram_handler,
+                api_docs!("Update User Telegram Id", "Connect User with Telegram"),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/v2/telegram",
+            post_with(
+                verify_telegram_raw_handler,
+                api_docs!(
+                    "Verify Telegram Raw Data",
+                    "Verify Telegram Raw Data and return token for future connection"
+                ),
+            )
+            .get_with(
+                get_telegram_info_handler,
+                api_docs!("Get Telegram Info", "Get Telegram Info from token"),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
             "/v2/dashboards",
             get_with(
                 get_dashboard_handler,
                 api_docs!("Get Dashboards", "Retrieve dashboard in a service"),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/v2/themes",
+            post_with(
+                change_theme_handler,
+                api_docs!("Change Theme", "Change Users Theme Information"),
             )
             .with_state(pool.clone()),
         )
@@ -499,17 +548,6 @@ pub async fn route(
             }),
         )
         .route(
-            "/v2/telegram/subscribe",
-            post_with(
-                telegram_subscribe_handler,
-                api_docs!(
-                    "Subscribe to Telegram",
-                    "This endpoint allows users to subscribe to Telegram notifications."
-                ),
-            )
-            .with_state(pool.clone()),
-        )
-        .route(
             "/v2/spaces/:space_id/delete",
             post_with(
                 delete_space_handler,
@@ -528,6 +566,29 @@ pub async fn route(
                 api_docs!(
                     "Mark All Notifications Read",
                     "Mark all notifications as read for the authenticated user."
+                ),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/v2/feeds/:id",
+            post_with(
+                update_post_handler,
+                api_docs!("Update Post", "Update an existing post with new details"),
+            )
+            .get_with(
+                get_post_handler,
+                api_docs!("Get Post", "Retrieve a specific post by ID"),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/v2/feeds",
+            get_with(
+                list_posts_handler,
+                api_docs!(
+                    "List Posts",
+                    "Retrieve a paginated list of posts with optional filters"
                 ),
             )
             .with_state(pool.clone()),

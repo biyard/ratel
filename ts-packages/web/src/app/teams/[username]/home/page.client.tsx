@@ -1,87 +1,70 @@
 'use client';
-import { Post } from '@/app/(social)/_components/pages/home';
-import { usePostByUserId } from '@/app/(social)/_hooks/use-posts';
+import FeedEndMessage from '@/app/(social)/_components/feed-end-message';
 import FeedCard from '@/components/feed-card';
 import { Col } from '@/components/ui/col';
-import { QueryResponse } from '@/lib/api/models/common';
-import { Feed, FeedStatus } from '@/lib/api/models/feeds';
-import React from 'react';
-import { usePostDraft } from '@/app/(social)/_components/create-post';
+import useInfiniteFeeds from '@/hooks/feeds/use-feeds-infinite-query';
+import { useObserver } from '@/hooks/use-observer';
+import { FeedStatus } from '@/lib/api/models/feeds';
+import { UserType } from '@/lib/api/models/user';
+import React, { useCallback } from 'react';
 
 interface TeamHomeProps {
-  userId: number;
-  posts: QueryResponse<Feed>;
+  teamId: number;
 }
 
-export default function TeamHome({
-  userId,
-  posts: initialData,
-}: TeamHomeProps) {
-  const posts = usePostByUserId(
-    userId ?? 0,
-    1,
-    20,
-    FeedStatus.Published,
-    initialData,
-  );
-  const data = posts.data;
+export default function TeamHome({ teamId }: TeamHomeProps) {
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useInfiniteFeeds(teamId, FeedStatus.Published);
 
-  const items = (data?.items ?? []).filter(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (item) => Number((item as any).feed_type) !== 2,
-  );
-
-  const feeds: Post[] = items.map((item) => ({
-    id: item.id,
-    industry: item.industry[0].name,
-    title: item.title!,
-    contents: item.html_contents,
-    url: item.url,
-    author_id: Number(item.author[0].id),
-    author_profile_url: item.author[0].profile_url!,
-    author_name: item.author[0].nickname,
-    author_type: item.author[0].user_type,
-
-    likes: item.likes,
-    is_liked: item.is_liked,
-    comments: item.comments,
-    rewards: item.rewards,
-    shares: item.shares,
-    created_at: item.created_at,
-    onboard: item.onboard || false,
-    spaces: item.spaces || [],
-  }));
-
-  const { loadDraft } = usePostDraft();
-
-  const handleEdit = (id: number) => async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    try {
-      await loadDraft(id);
-    } catch (error) {
-      console.error('Failed to load draft for editing:', error);
+  const handleIntersect = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
     }
-  };
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+  const observerRef = useObserver<HTMLDivElement>(handleIntersect, {
+    threshold: 1,
+  });
+
+  if (data.pages.length === 0) {
+    return (
+      <div className="flex flex-row w-full h-fit justify-start items-center px-[16px] py-[20px] border border-gray-500 rounded-[8px] font-medium text-base text-gray-500">
+        No drafts available
+      </div>
+    );
+  }
+  const flattedPosts = data?.pages.flatMap((page) => page) ?? [];
 
   return (
     <div className="flex-1 flex max-mobile:px-[10px]">
-      {feeds.length !== 0 ? (
-        <Col className="flex-1">
-          {feeds.map((props) => (
-            <FeedCard
-              key={`feed-${props.id}`}
-              user_id={userId ?? 0}
-              refetch={() => posts.refetch()}
-              onEdit={handleEdit(props.id)}
-              {...props}
-            />
-          ))}
-        </Col>
-      ) : (
-        <div className="flex flex-row w-full h-fit justify-start items-center px-[16px] py-[20px] border border-gray-500 rounded-[8px] font-medium text-base text-gray-500">
-          Feeds data is empty
-        </div>
-      )}
+      <Col className="flex-1">
+        {flattedPosts.map((post) => (
+          <FeedCard
+            key={`feed-${post.id}`}
+            contents={post.html_contents || ''}
+            author_profile_url={post?.author?.[0]?.profile_url || ''}
+            author_name={post?.author?.[0]?.nickname || ''}
+            author_type={post?.author?.[0]?.user_type || UserType.Anonymous}
+            author_id={post?.author?.[0]?.id || 0}
+            user_id={post.user_id || 0}
+            id={post.id}
+            industry={post.industry?.[0]?.name || ''}
+            title={post.title || ''}
+            created_at={post.created_at || 0}
+            likes={post.likes || 0}
+            is_liked={post.is_liked || false}
+            comments={post.comments || 0}
+            rewards={post.rewards || 0}
+            shares={post.shares || 0}
+            onboard={post.onboard || false}
+            space_id={post.space?.[0]?.id}
+            space_type={post.space?.[0]?.space_type}
+            booster_type={post.space?.[0]?.booster_type}
+          />
+        ))}
+
+        <div ref={observerRef} />
+        {!hasNextPage && <FeedEndMessage />}
+      </Col>
     </div>
   );
 }

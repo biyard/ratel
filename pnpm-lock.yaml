@@ -74,8 +74,8 @@ importers:
         specifier: ^5.79.0
         version: 5.81.5(react@19.1.0)
       '@telegram-apps/sdk-react':
-        specifier: ^3.3.6
-        version: 3.3.6(@types/react@19.1.8)(react@19.1.0)(typescript@5.8.3)
+        specifier: ^3.3.7
+        version: 3.3.7(@types/react@19.1.8)(react@19.1.0)(typescript@5.8.3)
       '@tiptap/extension-collaboration':
         specifier: ^2.26.1
         version: 2.26.1(@tiptap/core@2.26.1(@tiptap/pm@2.26.1))(@tiptap/pm@2.26.1)(y-prosemirror@1.3.7(prosemirror-model@1.25.1)(prosemirror-state@1.4.3)(prosemirror-view@1.40.0)(y-protocols@1.0.6(yjs@13.6.27))(yjs@13.6.27))
@@ -157,6 +157,9 @@ importers:
       graphql:
         specifier: ^16.11.0
         version: 16.11.0
+      konva:
+        specifier: ^10.0.2
+        version: 10.0.2
       lexical:
         specifier: ^0.32.1
         version: 0.32.1
@@ -193,6 +196,9 @@ importers:
       react-intersection-observer:
         specifier: ^9.16.0
         version: 9.16.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      react-konva:
+        specifier: ^19.0.10
+        version: 19.0.10(@types/react@19.1.8)(konva@10.0.2)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       react-toastify:
         specifier: ^11.0.5
         version: 11.0.5(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -205,6 +211,9 @@ importers:
       tailwind-merge:
         specifier: ^3.3.0
         version: 3.3.1
+      use-image:
+        specifier: ^1.1.4
+        version: 1.1.4(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       uuid:
         specifier: ^11.1.0
         version: 11.1.0
@@ -1010,6 +1019,10 @@ packages:
 
   '@babel/runtime@7.27.6':
     resolution: {integrity: sha512-vbavdySgbTTrmFE+EsiqUTzlOr5bzlnJtUv9PynGCAKvfQqjIXbvFdumPM/GxMDfyuGMJaJAU6TO4zc1Jf1i8Q==}
+    engines: {node: '>=6.9.0'}
+
+  '@babel/runtime@7.28.4':
+    resolution: {integrity: sha512-Q/N6JNWvIvPnLDvjlE1OUBLPQHH6l3CltCEsHIujp45zQUSSh8K+gHnaEX45yAT1nyngnINhvWtzN+Nb9D8RAQ==}
     engines: {node: '>=6.9.0'}
 
   '@babel/template@7.27.2':
@@ -2882,14 +2895,14 @@ packages:
     peerDependencies:
       react: ^18 || ^19
 
-  '@telegram-apps/bridge@2.10.3':
-    resolution: {integrity: sha512-mjbpxynr6g5EOQlpxuKQxDN+UTrtKLWBfJQs8BLQX0dkZVL+r7nQNAVzY2NtJHLUUCA+eUccq+yF7NkesnY46g==}
+  '@telegram-apps/bridge@2.11.0':
+    resolution: {integrity: sha512-kBZjWRRp/lxKeQ8r8cDWUY9EjxUtyeh/9xTQjsjuGRsCR5XTO1cyVbvcvqzHn53csGx3aBs+fOR3Pk3b6w2JHg==}
 
   '@telegram-apps/navigation@1.0.14':
     resolution: {integrity: sha512-bqNgF/J8Po7ZtsELm3E1a6aPr7awwxO3sIqD8J6u12urOlGoW5+1KxKKbkPa58mgXuQdsltd8apI+OVy0IYiUA==}
 
-  '@telegram-apps/sdk-react@3.3.6':
-    resolution: {integrity: sha512-v9y2eKoDmud04XNXEELnrE23lWN/Nav+Idfvzo+ilXU+bg8VDIYpECiGwfTUS50nZsJowrtcWOc/TystsZMYKA==}
+  '@telegram-apps/sdk-react@3.3.7':
+    resolution: {integrity: sha512-GaIr1dYpQiyCb/JzmP7j87rwQbXNwgb1LZSLJd/Jotyo9ELrO8Qcw+RIi3+/fnSLtmqIhk/Xs153KayPT688hA==}
     peerDependencies:
       '@types/react': ^17.0.0 || ^18.0.0 || ^19.0.0
       react: ^17.0.0 || ^18.0.0 || ^19.0.0
@@ -2897,8 +2910,8 @@ packages:
       '@types/react':
         optional: true
 
-  '@telegram-apps/sdk@3.11.4':
-    resolution: {integrity: sha512-en2yRVhKJwzKfT4TOAG8fwaZHAqB2CfMCE0AY7mx55+UKlPCDdRN2BVUOxdYabUoxglJUquCUpNWr4TXIeAfng==}
+  '@telegram-apps/sdk@3.11.5':
+    resolution: {integrity: sha512-PwOvmfyYIoszqQK7WuxUyTKn6utSBiOVg0P/EeI6WblV4yKTPa7zHEBNbIjlCV3jk40oe0ACN0iH8GUVeP+RQw==}
 
   '@telegram-apps/signals@1.1.2':
     resolution: {integrity: sha512-1P1kdCLX7MfETGPxH7f3UZKIsdE7Tz5S7QmN4Km1sbYQMakD5Bi1NecSMR7/wnHp50gWMI1JzENcMtCEmouhSg==}
@@ -3233,6 +3246,11 @@ packages:
 
   '@types/react-reconciler@0.28.9':
     resolution: {integrity: sha512-HHM3nxyUZ3zAylX8ZEyrDNd2XZOnQ0D5XfunJF5FLQnZbHHYq4UWvW1QfelQNXv1ICNkwYhfxjwfnqivYB6bFg==}
+    peerDependencies:
+      '@types/react': '*'
+
+  '@types/react-reconciler@0.32.1':
+    resolution: {integrity: sha512-RsqPttsBQ+6af0nATFXJJpemYQH7kL9+xLNm1z+0MjQFDKBZDM2R6SBrjdvRmHu9i9fM6povACj57Ft+pKRNOA==}
     peerDependencies:
       '@types/react': '*'
 
@@ -5133,6 +5151,9 @@ packages:
   keyv@4.5.4:
     resolution: {integrity: sha512-oxVHkHR/EJf2CNXnWxRLW6mg7JyCCUcG0DtEGmL2ctUo1PNTin1PUil+r/+4r5MpVgC/fn1kjsx7mjSujKqIpw==}
 
+  konva@10.0.2:
+    resolution: {integrity: sha512-NrZED6YG5BX5h3Xu8EZgLqhQ/+ZhxANYXmlIhMOfpBf+0ToExcdwE+Y46LyJOO/JR7FVeR3YTqon3eirnuo44A==}
+
   language-subtag-registry@0.3.23:
     resolution: {integrity: sha512-0K65Lea881pHotoGEa5gDlMxt3pctLi2RplBb7Ezh4rRdLEOtgi7n4EwK9lamnUCkKBqaeKRVebTq6BAxSkpXQ==}
 
@@ -5149,6 +5170,11 @@ packages:
 
   lib0@0.2.109:
     resolution: {integrity: sha512-jP0gbnyW0kwlx1Atc4dcHkBbrVAkdHjuyHxtClUPYla7qCmwIif1qZ6vQeJdR5FrOVdn26HvQT0ko01rgW7/Xw==}
+    engines: {node: '>=16'}
+    hasBin: true
+
+  lib0@0.2.114:
+    resolution: {integrity: sha512-gcxmNFzA4hv8UYi8j43uPlQ7CGcyMJ2KQb5kZASw6SnAKAf10hK12i2fjrS3Cl/ugZa5Ui6WwIu1/6MIXiHttQ==}
     engines: {node: '>=16'}
     hasBin: true
 
@@ -5896,6 +5922,13 @@ packages:
   react-is@17.0.2:
     resolution: {integrity: sha512-w2GsyukL62IJnlaff/nRegPQR94C/XXamvMWmSHRJ4y7Ts/4ocGRmTHvOs8PSE6pB3dWOrD/nueuU5sduBsQ4w==}
 
+  react-konva@19.0.10:
+    resolution: {integrity: sha512-tJID7bungYs8ri5McjjlHWCniQMAasiNkTgATd8OJEnLrz3B7S5JN7nFkNfWETIHPx9rEN3gc+kQg32RhdZJcw==}
+    peerDependencies:
+      konva: ^8.0.1 || ^7.2.5 || ^9.0.0 || ^10.0.0
+      react: ^18.3.1 || ^19.0.0
+      react-dom: ^18.3.1 || ^19.0.0
+
   react-popper@2.3.0:
     resolution: {integrity: sha512-e1hj8lL3uM+sgSR4Lxzn5h1GxBlpa4CQz0XLF8kx4MDrDRWY0Ena4c97PUeSX9i5W3UAfDP0z0FXCTQkoXUl3Q==}
     peerDependencies:
@@ -5908,6 +5941,12 @@ packages:
     engines: {node: '>=0.10.0'}
     peerDependencies:
       react: ^19.0.0
+
+  react-reconciler@0.32.0:
+    resolution: {integrity: sha512-2NPMOzgTlG0ZWdIf3qG+dcbLSoAc/uLfOwckc3ofy5sSK0pLJqnQLpUFxvGcN2rlXSjnVtGeeFLNimCQEj5gOQ==}
+    engines: {node: '>=0.10.0'}
+    peerDependencies:
+      react: ^19.1.0
 
   react-redux@9.2.0:
     resolution: {integrity: sha512-ROY9fvHhwOD9ySfrF0wmvu//bKCQ6AeZZq1nJNtbDC+kk5DuSuNX/n6YWYF/SYy7bSba4D4FSz8DJeKY/S/r+g==}
@@ -6624,6 +6663,12 @@ packages:
     peerDependenciesMeta:
       '@types/react':
         optional: true
+
+  use-image@1.1.4:
+    resolution: {integrity: sha512-P+swhszzHHgEb2X2yQ+vQNPCq/8Ks3hyfdXAVN133pvnvK7UK++bUaZUa5E+A3S02Mw8xOCBr9O6CLhk2fjrWA==}
+    peerDependencies:
+      react: '>=16.8.0'
+      react-dom: '>=16.8.0'
 
   use-intl@4.3.5:
     resolution: {integrity: sha512-qyL1TZNesVbzj/75ZbYsi+xzNSiFqp5rIVsiAN0JT8rPMSjX0/3KQz76aJIrngI1/wIQdVYFVdImWh5yAv+dWA==}
@@ -8036,6 +8081,8 @@ snapshots:
       - supports-color
 
   '@babel/runtime@7.27.6': {}
+
+  '@babel/runtime@7.28.4': {}
 
   '@babel/template@7.27.2':
     dependencies:
@@ -10152,7 +10199,7 @@ snapshots:
       '@tanstack/query-core': 5.81.5
       react: 19.1.0
 
-  '@telegram-apps/bridge@2.10.3(typescript@5.8.3)':
+  '@telegram-apps/bridge@2.11.0(typescript@5.8.3)':
     dependencies:
       '@telegram-apps/signals': 1.1.2
       '@telegram-apps/toolkit': 2.1.3
@@ -10167,18 +10214,18 @@ snapshots:
 
   '@telegram-apps/navigation@1.0.14': {}
 
-  '@telegram-apps/sdk-react@3.3.6(@types/react@19.1.8)(react@19.1.0)(typescript@5.8.3)':
+  '@telegram-apps/sdk-react@3.3.7(@types/react@19.1.8)(react@19.1.0)(typescript@5.8.3)':
     dependencies:
-      '@telegram-apps/sdk': 3.11.4(typescript@5.8.3)
+      '@telegram-apps/sdk': 3.11.5(typescript@5.8.3)
       react: 19.1.0
     optionalDependencies:
       '@types/react': 19.1.8
     transitivePeerDependencies:
       - typescript
 
-  '@telegram-apps/sdk@3.11.4(typescript@5.8.3)':
+  '@telegram-apps/sdk@3.11.5(typescript@5.8.3)':
     dependencies:
-      '@telegram-apps/bridge': 2.10.3(typescript@5.8.3)
+      '@telegram-apps/bridge': 2.11.0(typescript@5.8.3)
       '@telegram-apps/navigation': 1.0.14
       '@telegram-apps/signals': 1.1.2
       '@telegram-apps/toolkit': 2.1.3
@@ -10207,7 +10254,7 @@ snapshots:
   '@testing-library/dom@10.4.0':
     dependencies:
       '@babel/code-frame': 7.27.1
-      '@babel/runtime': 7.27.6
+      '@babel/runtime': 7.28.4
       '@types/aria-query': 5.0.4
       aria-query: 5.3.0
       chalk: 4.1.2
@@ -10548,6 +10595,10 @@ snapshots:
       '@types/react': 19.1.8
 
   '@types/react-reconciler@0.28.9(@types/react@19.1.8)':
+    dependencies:
+      '@types/react': 19.1.8
+
+  '@types/react-reconciler@0.32.1(@types/react@19.1.8)':
     dependencies:
       '@types/react': 19.1.8
 
@@ -12767,6 +12818,8 @@ snapshots:
     dependencies:
       json-buffer: 3.0.1
 
+  konva@10.0.2: {}
+
   language-subtag-registry@0.3.23: {}
 
   language-tags@1.0.9:
@@ -12781,6 +12834,10 @@ snapshots:
   lexical@0.32.1: {}
 
   lib0@0.2.109:
+    dependencies:
+      isomorphic.js: 0.2.5
+
+  lib0@0.2.114:
     dependencies:
       isomorphic.js: 0.2.5
 
@@ -13581,6 +13638,18 @@ snapshots:
 
   react-is@17.0.2: {}
 
+  react-konva@19.0.10(@types/react@19.1.8)(konva@10.0.2)(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
+    dependencies:
+      '@types/react-reconciler': 0.32.1(@types/react@19.1.8)
+      its-fine: 2.0.0(@types/react@19.1.8)(react@19.1.0)
+      konva: 10.0.2
+      react: 19.1.0
+      react-dom: 19.1.0(react@19.1.0)
+      react-reconciler: 0.32.0(react@19.1.0)
+      scheduler: 0.26.0
+    transitivePeerDependencies:
+      - '@types/react'
+
   react-popper@2.3.0(@popperjs/core@2.11.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
     dependencies:
       '@popperjs/core': 2.11.8
@@ -13593,6 +13662,11 @@ snapshots:
     dependencies:
       react: 19.1.0
       scheduler: 0.25.0
+
+  react-reconciler@0.32.0(react@19.1.0):
+    dependencies:
+      react: 19.1.0
+      scheduler: 0.26.0
 
   react-redux@9.2.0(@types/react@19.1.8)(react@19.1.0)(redux@5.0.1):
     dependencies:
@@ -14430,6 +14504,11 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.1.8
 
+  use-image@1.1.4(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
+    dependencies:
+      react: 19.1.0
+      react-dom: 19.1.0(react@19.1.0)
+
   use-intl@4.3.5(react@19.1.0):
     dependencies:
       '@formatjs/fast-memoize': 2.2.7
@@ -14643,7 +14722,7 @@ snapshots:
 
   y-prosemirror@1.3.7(prosemirror-model@1.25.1)(prosemirror-state@1.4.3)(prosemirror-view@1.40.0)(y-protocols@1.0.6(yjs@13.6.27))(yjs@13.6.27):
     dependencies:
-      lib0: 0.2.109
+      lib0: 0.2.114
       prosemirror-model: 1.25.1
       prosemirror-state: 1.4.3
       prosemirror-view: 1.40.0
@@ -14652,7 +14731,7 @@ snapshots:
 
   y-protocols@1.0.6(yjs@13.6.27):
     dependencies:
-      lib0: 0.2.109
+      lib0: 0.2.114
       yjs: 13.6.27
 
   y18n@5.0.8: {}

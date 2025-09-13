@@ -1,0 +1,18 @@
+[package]
+name = "dioxus-translate"
+version = "0.1.5"
+authors.workspace = true
+edition.workspace = true
+description = "Libraries for internalization on Dioxus"
+license = "MIT"
+keywords = ["dioxus", "web", "i18n", "translate"]
+repository = "https://github.com/biyard/rust-sdk/tree/main/packages/dioxus-translate"
+
+[dependencies]
+dioxus-translate-macro.workspace = true
+dioxus-translate-types.workspace = true
+serde.workspace = true
+schemars = "0.8.21"
+
+[features]
+ko = ["dioxus-translate-types/ko","dioxus-translate-macro/ko"]

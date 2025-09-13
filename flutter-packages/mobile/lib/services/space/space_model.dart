@@ -1,3 +1,5 @@
+import 'package:ratel/utils/logger/logger.dart';
+
 typedef Json = Map<String, dynamic>;
 
 class MySpaceModel {
@@ -53,6 +55,7 @@ class SpaceModel {
   final int feedId;
   final String title;
   final String htmlContents;
+  final int spaceType;
   final List<FileModel> files;
   final List<DiscussionModel> discussions;
   final List<ElearningModel> elearnings;
@@ -65,6 +68,7 @@ class SpaceModel {
     required this.feedId,
     required this.title,
     required this.htmlContents,
+    required this.spaceType,
     required this.files,
     required this.discussions,
     required this.elearnings,
@@ -77,11 +81,14 @@ class SpaceModel {
     List<T> _list<T>(String k, T Function(Json) f) =>
         (j[k] as List? ?? const []).whereType<Json>().map(f).toList();
 
+    logger.d("space type: ${j['space_type']}");
+
     return SpaceModel(
       id: (j['id'] ?? 0) as int,
       feedId: (j['feed_id'] ?? 0) as int,
       title: (j['title'] ?? '') as String,
       htmlContents: (j['html_contents'] ?? j['htmlContents'] ?? '') as String,
+      spaceType: (j['space_type'] ?? '0') as int,
       files: _list('files', FileModel.fromJson),
       discussions: _list('discussions', DiscussionModel.fromJson),
       elearnings: _list('elearnings', ElearningModel.fromJson),

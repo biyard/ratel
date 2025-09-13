@@ -23,12 +23,21 @@
     "terms_of_service": "서비스 정책",
     "invalid_email_format": "유효한 이메일 주소를 입력해주세요.",
     "unregistered_email": "등록되지 않은 이메일입니다.",
-    "invalid_password_format": "비밀번호는 문자, 숫자, 특수문자를 포함하여 최소 8자 이상 입력되어야 합니다."
+    "invalid_password_format": "비밀번호는 문자, 숫자, 특수문자를 포함하여 최소 8자 이상 입력되어야 합니다.",
+
+    "GoogleLogin": {
+      "label": "Sign in with Google",
+      "loading_description": "Signing in with Google..."
+    },
+    "EmailLogin": {
+      "label": "Sign in with Email",
+      "loading_description": "Signing in with Email..."
+    }
   },
   "Signup": {
     "signing_in": "로그인 중...",
     "welcome_title": "Ratel에 오신 것을 환영합니다!",
-    "welcome_description": "정책은 시민 참여를 통해 형성됩니다. 우리가 목소리를 내면 정책 입안자들은 경청합니다. Ratel은 여러분이 직접 행동하고 암호화폐 정책을 수립할 수 있는 플랫폼을 제공합니다. 여러분의 목소리는 소중합니다. 목소리를 내고 암호화폐의 밝은 미래를 만들어 나가세요.",
+    "welcome_description": "정책은 시민 참여를 통해 형성됩니다. \n우리가 목소리를 내면 정책 입안자들은 경청합니다. \nRatel은 여러분이 직접 행동하고 암호화폐 정책을 수립할 수 있는 플랫폼을 제공합니다. \n여러분의 목소리는 소중합니다. 목소리를 내고 암호화폐의 밝은 미래를 만들어 나가세요.",
     "failureMsg": "{serviceName} 연결에 실패했어요.\n다시 시도할까요?",
     "login_failed": "로그인 실패",
     "telegram_login_failed_description": "텔레그램 인증에 실패하셨습니다.",
@@ -52,7 +61,54 @@
     "display_name_warning": "이름에서 테스트 키워드를 제거해 주세요.",
     "invalid_username_format": "숫자, 소문자, -, _ 및 두 개 이상의 문자만 입력할 수 있습니다.",
     "user_name_warning": "사용자 이름에서 테스트 키워드를 제거해 주세요.",
-    "already_exists_user": "이미 존재하는 이름입니다."
+    "already_exists_user": "이미 존재하는 이름입니다.",
+
+    "sign_in": "로그인",
+
+    "CommonError": {
+      "test_word": "<b>테스트</b> 키워드를 제거해주세요.",
+      "required": "{fieldName}은(는) 필수 항목입니다."
+    },
+    "Email": {
+      "label": "이메일",
+      "placeholder": "이메일 주소를 입력하세요.",
+      "error": {
+        "invalid": "유효한 이메일 주소를 입력해주세요.",
+        "unregistered": "등록되지 않은 이메일입니다."
+      },
+      "send_button_label": "전송"
+    },
+    "Code": {
+      "placeholder": "인증 코드를 입력하세요.",
+      "error": {
+        "invalid": "인증 코드가 올바르지 않거나 만료되었습니다."
+      },
+      "verify_button_label": "인증"
+    },
+    "Username": {
+      "label": "사용자 이름",
+      "placeholder": "사용자 이름을 입력하세요."
+    },
+    "Nickname": {
+      "label": "닉네임",
+      "placeholder": "닉네임을 입력하세요.",
+      "error": {
+        "invalid": "숫자, 소문자, -, _ 및 두 글자 이상만 입력할 수 있습니다."
+      }
+    },
+    "Password": {
+      "label": "비밀번호",
+      "placeholder": "비밀번호를 입력하세요.",
+      "error": {
+        "required": "비밀번호는 필수 항목입니다.",
+        "invalid": "비밀번호는 문자, 숫자, 특수문자를 포함하여 최소 8자 이상이어야 합니다."
+      }
+    },
+    "Term": {
+      "error": {
+        "required": "서비스 이용약관에 동의해야 진행할 수 있습니다."
+      }
+    }
   },
   "Threads": {
     "edit": "편집하기",
@@ -473,7 +529,11 @@
     "more_option_required": "옵션을 2개 이상 선택해주세요.",
     "fill_label_required": "레이블을 채워주세요.",
     "success_update_space": "스페이스를 성공적으로 업데이트했습니다.",
-    "failed_update_space": "스페이스 업데이트에 실패했습니다. 잠시 후 다시 시도해주세요."
+    "failed_update_space": "스페이스 업데이트에 실패했습니다. 잠시 후 다시 시도해주세요.",
+
+    "check_title": "투표하기 전 다시 확인해주세요.",
+    "check_desc": "투표의 공정성과 보안을 위해 모든 투표는 익명으로 처리되며 최종적으로 처리됩니다. 투표 결과는 한 번 제출된 후에는 변경할 수 없으므로, 신뢰할 수 있는 결과를 보장하기 위해 양해해 주시기 바랍니다.",
+    "cancel": "취소"
   },
   "Space": {
     "unsupported_space_type": "지원되지 않는 스페이스 유형입니다.",
@@ -524,5 +584,17 @@
     "language": "언어",
     "select_language": "언어 선택",
     "cancel": "취소"
+  },
+
+  "Connect": {
+    "title": "{service}에 연결",
+    "description": "당신의 {service} 계정을 Ratel에 연결하시겠습니까?",
+    "ConfirmButton": {
+      "label": "연결",
+      "loading": "연결 중..."
+    },
+    "CancelButton": {
+      "label": "취소"
+    }
   }
 }

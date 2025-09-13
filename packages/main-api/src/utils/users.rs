@@ -35,6 +35,7 @@ pub async fn extract_user_with_allowing_anonymous(
                             principal.clone(),
                             "".to_string(),
                             Membership::Free,
+                            None,
                             "".to_string(),
                             None,
                             None,
@@ -122,8 +123,6 @@ pub async fn extract_user_with_options(
             return Err(Error::Unauthorized);
         }
     };
-
-    tracing::debug!("authorized user_id: {:?}", user);
 
     Ok(user)
 }

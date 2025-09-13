@@ -4,6 +4,7 @@ pub mod controllers {
     pub mod v1;
     pub mod v2 {
         pub mod users {
+            pub mod connect_telegram;
             pub mod find_user;
             pub mod logout;
         }
@@ -26,9 +27,6 @@ pub mod controllers {
         pub mod notifications {
             pub mod get_notifications;
             pub mod mark_all_read;
-        }
-        pub mod telegram {
-            pub mod subscribe;
         }
 
         pub mod dashboards {
@@ -96,6 +94,21 @@ pub mod controllers {
             pub mod oauth_authorization_server;
             pub mod register;
             pub mod token;
+        }
+
+        pub mod posts {
+            pub mod get_post;
+            pub mod list_posts;
+            pub mod update_post;
+        }
+
+        pub mod themes {
+            pub mod change_theme;
+        }
+
+        pub mod telegram {
+            pub mod get_telegram_info;
+            pub mod verify_telegram_raw;
         }
     }
     pub mod m2 {
