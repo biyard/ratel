@@ -12,7 +12,6 @@ import FeedEndMessage from '../feed-end-message';
 import CreatePostButton from '../create-post-button';
 import PromotionCard from '../promotion-card';
 import News from '../News';
-import { usePostDraft } from '../create-post';
 import Suggestions from '../suggestions';
 import { Promotion } from '@/lib/api/models/promotion';
 import { Feed, FeedStatus } from '@/lib/api/models/feeds';

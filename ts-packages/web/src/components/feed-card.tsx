@@ -29,6 +29,7 @@ import { Loader2 } from 'lucide-react';
 import { logger } from '@/lib/logger';
 import { useTranslations } from 'next-intl';
 import { BoosterType } from '@/lib/api/models/notice';
+import { usePostEditorContext } from '@/app/(social)/_components/post-editor';
 
 export interface FeedCardProps {
   id: number;
@@ -59,19 +60,20 @@ export interface FeedCardProps {
   onLikeClick?: (value: boolean) => void;
   isLikeProcessing?: boolean;
   onEdit?: (e: React.MouseEvent) => void | Promise<void>;
-  currentUserId?: number;
 }
 
 export default function FeedCard(props: FeedCardProps) {
   const { post } = useApiCall();
   const { data: User } = useSuspenseUserInfo();
 
+  const { openPostEditorPopup } = usePostEditorContext();
+
   const [localLikes, setLocalLikes] = useState(props.likes);
   const [localIsLiked, setLocalIsLiked] = useState(props.is_liked);
   const [isProcessing, setIsProcessing] = useState(false);
   const [localShares, setLocalShares] = useState(props.shares);
 
-  const t = useTranslations('Feeds');
+  // const t = useTranslations('Feeds');
 
   const {
     setAuthorName,
@@ -83,7 +85,6 @@ export default function FeedCard(props: FeedCardProps) {
     setExpand,
     setAuthorId,
   } = useRepostDraft();
-
 
   // Sync with props when they change
   useEffect(() => {
@@ -152,6 +153,16 @@ export default function FeedCard(props: FeedCardProps) {
     setExpand(true);
   };
 
+  const handleEditPost = (postId: number) => async (e: React.MouseEvent) => {
+    e?.preventDefault();
+    e?.stopPropagation();
+    try {
+      await openPostEditorPopup(postId);
+    } catch (error) {
+      console.error('Error editing post:', error);
+    }
+  };
+
   const href = props.space_id
     ? route.space(props.space_id)
     : route.threadByFeedId(props.id);
@@ -159,7 +170,7 @@ export default function FeedCard(props: FeedCardProps) {
   return (
     <Col className="relative rounded-[10px] bg-card-bg-secondary border border-card-enable-border">
       <Link href={href} className="block">
-        <FeedBody {...props} />
+        <FeedBody {...props} onEdit={handleEditPost(props.id)} />
       </Link>
       <FeedFooter
         space_id={props.space_id}
@@ -199,7 +210,6 @@ interface FeedBodyProps {
 }
 
 export function FeedBody({
-  id,
   title,
   contents,
   author_name,
@@ -212,7 +222,7 @@ export function FeedBody({
   onboard,
   onEdit = () => {},
   author_id,
-  currentUserId,
+  user_id,
 }: FeedBodyProps) {
   return (
     <Col className="pt-5 pb-2.5">
@@ -224,11 +234,7 @@ export function FeedBody({
           {onboard && <OnboardingTag />}
         </div>
 
-        <div>
-          {currentUserId === author_id && (
-            <EditButton onClick={onEdit} />
-          )}
-        </div>
+        <div>{user_id === author_id && <EditButton onClick={onEdit} />}</div>
       </Row>
       <h2 className="w-full line-clamp-2 font-bold text-xl/[25px] tracking-[0.5px] align-middle text-text-primary px-5">
         {title}
@@ -351,7 +357,11 @@ interface EditButtonProps {
 export function EditButton({ onClick }: EditButtonProps) {
   return (
     <button
-      onClick={onClick}
+      onClick={(e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        onClick?.(e);
+      }}
       className="rounded-full p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800"
     >
       <Edit1 className="w-4 h-4" />
