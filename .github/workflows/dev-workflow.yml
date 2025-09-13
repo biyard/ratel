@@ -190,6 +190,7 @@ jobs:
           P256_D: ${{ secrets.P256_D }}
           P256_CRV: ${{ secrets.P256_CRV }}
 
+          DYNAMO_TABLE_PREFIX: ratel-dev
         run: |
           make docker.build
           make docker.login

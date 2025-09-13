@@ -273,7 +273,7 @@ impl SpaceController {
         &self,
         space_id: i64,
         auth: Option<Authorization>,
-        bot: Arc<TelegramBot>,
+        bot: Option<Arc<TelegramBot>>,
     ) -> Result<Space> {
         let user_id = extract_user_id(&self.pool, auth.clone())
             .await
@@ -333,28 +333,32 @@ impl SpaceController {
         };
         // FIXME: Add Publish Scope Check logic
         if space.space_type == SpaceType::SprintLeague {
-            let chat_ids = TelegramChannel::query_builder()
-                .query()
-                .map(TelegramChannel::from)
-                .fetch_all(&self.pool.clone())
-                .await
-                .unwrap_or_default()
-                .into_iter()
-                .map(|channel| channel.chat_id)
-                .collect::<Vec<i64>>();
-            let content = format!(
-                "🏁 A new Sprint League has started: *{}*!\n\nJoin now and compete with others to climb the leaderboard. Don't miss out on the fun and excitement!",
-                space.title.clone().unwrap_or_default(),
-            );
-            bot.send_message(
-                chat_ids,
-                &content,
-                Some(TelegramButton {
-                    text: "🔗 Participate Now!".to_string(),
-                    command: TelegramWebCommand::OpenSpacePage { space_id },
-                }),
-            )
-            .await?;
+            if let Some(bot) = bot {
+                let chat_ids = TelegramChannel::query_builder()
+                    .query()
+                    .map(TelegramChannel::from)
+                    .fetch_all(&self.pool.clone())
+                    .await
+                    .unwrap_or_default()
+                    .into_iter()
+                    .map(|channel| channel.chat_id)
+                    .collect::<Vec<i64>>();
+                let content = format!(
+                    "🏁 A new Sprint League has started: *{}*!\n\nJoin now and compete with others to climb the leaderboard. Don't miss out on the fun and excitement!",
+                    space.title.clone().unwrap_or_default(),
+                );
+                bot.send_message(
+                    chat_ids,
+                    &content,
+                    Some(TelegramButton {
+                        text: "🔗 Participate Now!".to_string(),
+                        command: TelegramWebCommand::OpenSpacePage { space_id },
+                    }),
+                )
+                .await?;
+            } else {
+                tracing::warn!("Telegram bot not available, skipping sprint league notification for space {}", space_id);
+            }
             // let client = reqwest::Client::new();
             // let payload =
             //     TelegramNotificationPayload::SprintLeague(SprintLeaguePayload { space_id });
@@ -1367,7 +1371,7 @@ impl SpaceController {
     pub async fn act_space_by_id(
         State(ctrl): State<SpaceController>,
         Extension(auth): Extension<Option<Authorization>>,
-        Extension(bot): Extension<Arc<TelegramBot>>,
+        Extension(bot): Extension<Option<Arc<TelegramBot>>>,
         Path(SpacePath { id }): Path<SpacePath>,
         Json(body): Json<SpaceByIdAction>,
     ) -> Result<Json<Space>> {

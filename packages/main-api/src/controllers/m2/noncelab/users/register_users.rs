@@ -1,4 +1,5 @@
 use crate::config;
+use crate::services::dual_write::DualWriteService;
 use crate::sqlx::Pool;
 use crate::sqlx::Postgres;
 use bdk::prelude::*;
@@ -75,6 +76,13 @@ pub async fn register_users_by_noncelab_handler(
             None,
         )
         .await?;
+
+    // Dual-write to DynamoDB
+    let dual_write_service = DualWriteService::new();
+    if let Err(e) = dual_write_service.write_user(&user).await {
+        tracing::error!("Failed to write user to DynamoDB during registration: {:?}", e);
+        // Don't fail the registration if DynamoDB write fails
+    }
 
     Ok(Json(RegisterUserResponse {
         user_id: user.id,

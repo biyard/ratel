@@ -4,11 +4,25 @@ use bdk::prelude::*;
 use tower_http::trace::TraceLayer;
 use tracing::Level;
 
+use by_axum::{
+    auth::Authorization,
+    axum::{
+        body::Body,
+        extract::Request,
+        http::Response,
+        middleware::{self, Next},
+    },
+};
+use reqwest::StatusCode;
+
 use crate::{
     controllers::{
         self,
-        m2::noncelab::users::register_users::{
-            RegisterUserResponse, register_users_by_noncelab_handler,
+        m2::{
+            migration::postgres_to_dynamodb::{migrate_users_handler, migration_stats_handler},
+            noncelab::users::register_users::{
+                RegisterUserResponse, register_users_by_noncelab_handler,
+            },
         },
         v2::{
             bookmarks::{
@@ -93,45 +107,6 @@ use axum::native_routing::get as nget;
 use axum::native_routing::post as npost;
 use axum::routing::{get_with, post_with};
 
-// macro_rules! wrap_api {
-//     (
-//         $method:expr,
-//         $handler:expr,
-//         $success_ty:ty,
-//         $summary:expr,
-//         $description:expr
-//     ) => {
-//         $method($handler, |op| {
-//             op.summary($summary)
-//                 .description($description)
-//                 .response_with::<200, axum::Json<$success_ty>, _>(|res| {
-//                     res.description("Success response")
-//                 })
-//                 .response_with::<400, axum::Json<dto::Error>, _>(|res| {
-//                     res.description("Incorrect or invalid requests")
-//                         .example(dto::Error::UserAlreadyExists)
-//                 })
-//         })
-//     };
-// }
-
-// macro_rules! post_api {
-//     (
-//         $handler:expr,
-//         $success_ty:ty,
-//         $summary:expr,
-//         $description:expr
-//     ) => {
-//         wrap_api!(
-//             axum::routing::post_with,
-//             $handler,
-//             $success_ty,
-//             $summary,
-//             $description
-//         )
-//     };
-// }
-
 macro_rules! api_docs {
     ($success_ty:ty, $summary:expr, $description:expr) => {
         |op| {
@@ -167,18 +142,74 @@ pub async fn route(
     textract_client: TextractClient,
     _metadata_s3_client: S3Client,
     private_s3_client: S3Client,
-    bot: TelegramBot,
+    bot: Option<TelegramBot>,
 ) -> Result<by_axum::axum::Router> {
     Ok(by_axum::axum::Router::new()
+        // For Admin routes
+        .route(
+            "/m2/noncelab/users",
+            post_with(
+                register_users_by_noncelab_handler,
+                api_docs!(
+                    RegisterUserResponse,
+                    "Register users by Noncelab",
+                    r#"This endpoint allows you to register users by Noncelab.
+
+                    **Authorization header required**
+
+                    `Authorization: Bearer <token>`"#
+                ),
+            )
+            .with_state(pool.clone()),
+        )
+        // Migration routes
+        .route(
+            "/m2/migration/users",
+            get_with(
+                migrate_users_handler,
+                api_docs!(
+                    "Migrate Users",
+                    r#"Migrate users from PostgreSQL to DynamoDB.
+                    
+                    **Query Parameters:**
+                    - `batch_size`: Number of users to migrate (default: 100, max: 1000)
+                    - `start_user_id`: Starting user ID for batch migration
+                    - `user_id`: Specific user ID to migrate (overrides batch)
+                    - `dry_run`: Validate migration without writing to DynamoDB
+                    
+                    **Authorization header required**
+                    
+                    `Authorization: Bearer <token>`"#
+                ),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/m2/migration/stats",
+            get_with(
+                migration_stats_handler,
+                api_docs!(
+                    "Migration Statistics",
+                    r#"Get migration statistics including:
+                    - Total users in PostgreSQL
+                    - Total users in DynamoDB
+                    - Pending migration count
+                    - Last migrated user ID
+                    
+                    **Authorization header required**
+                    
+                    `Authorization: Bearer <token>`"#
+                ),
+            )
+            .with_state(pool.clone()),
+        )
+        .layer(middleware::from_fn(authorize_admin))
+        // For user routes
         .nest(
             "/v1",
             controllers::v1::route(pool.clone())
                 .await?
-                .layer(Extension(Arc::new(bot))),
-        )
-        .nest(
-            "/m1",
-            controllers::m1::MenaceController::route(pool.clone())?,
+                .layer(Extension(bot.map(Arc::new))),
         )
         .native_route("/v2/users/logout", npost(logout_handler))
         .route(
@@ -381,8 +412,7 @@ pub async fn route(
                     "Get User",
                     "Retrieve users with username or phone number or email"
                 ),
-            )
-            .with_state(pool.clone()),
+            ),
         )
         .route(
             "/v2/users/telegram",
@@ -627,22 +657,6 @@ pub async fn route(
             .options(oauth_authorization_server_handler)
             .with_state(pool.clone()),
         )
-        .route(
-            "/m2/noncelab/users",
-            post_with(
-                register_users_by_noncelab_handler,
-                api_docs!(
-                    RegisterUserResponse,
-                    "Register users by Noncelab",
-                    r#"This endpoint allows you to register users by Noncelab.
-
-                    **Authorization header required**
-
-                    `Authorization: Bearer <token>`"#
-                ),
-            )
-            .with_state(pool.clone()),
-        )
         .native_route("/.well-known/did.json", nget(get_did_document_handler))
         .layer(
             TraceLayer::new_for_http()
@@ -667,4 +681,15 @@ pub async fn route(
                     },
                 ),
         ))
+}
+
+pub async fn authorize_admin(
+    req: Request,
+    next: Next,
+) -> std::result::Result<Response<Body>, StatusCode> {
+    tracing::debug!("Authorization admin");
+    match req.extensions().get::<Option<Authorization>>() {
+        Some(Some(Authorization::SecretApiKey)) => Ok(next.run(req).await),
+        _ => Err(StatusCode::UNAUTHORIZED),
+    }
 }
