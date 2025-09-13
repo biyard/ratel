@@ -1,5 +1,7 @@
+pub type Result<T> = dto::Result<T>;
+pub type Error = dto::Error;
+
 pub mod controllers {
-    pub mod m1;
     pub mod mcp;
     pub mod v1;
     pub mod v2 {
@@ -116,6 +118,9 @@ pub mod controllers {
             pub mod users {
                 pub mod register_users;
             }
+        }
+        pub mod migration {
+            pub mod postgres_to_dynamodb;
         }
     }
     pub mod well_known {
