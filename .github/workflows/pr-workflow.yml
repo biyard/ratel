@@ -310,11 +310,9 @@ jobs:
 
       - name: Setup test environment
         env:
-          GITHUB_SHA: ${{ github.sha }}
+          COMMIT: pr-${{ github.sha }}
         run: |
-          mkdir -p .build
-          # Use docker-compose.test.yaml for testing with pre-built images
-          docker-compose -f docker-compose.test.yaml up -d
+          docker-compose --profile testing up -d
 
       # - name: Setup SSH session with tmate
       #   uses: mxschmitt/action-tmate@v3
