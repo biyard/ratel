@@ -155,14 +155,14 @@ export default function FeedCard(props: FeedCardProps) {
     setExpand(true);
   };
 
-  const handleEdit = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (props.onEdit) {
-      props.onEdit(e);
-    } else {
-      console.warn('No onEdit handler provided to FeedCard');
-    }
-  };
+  // const handleEdit = (e: React.MouseEvent) => {
+  //   e.stopPropagation();
+  //   if (props.onEdit) {
+  //     props.onEdit(e);
+  //   } else {
+  //     console.warn('No onEdit handler provided to FeedCard');
+  //   }
+  // };
 
   return (
     <Col
@@ -240,7 +240,6 @@ export function FeedBody({
   onboard,
   onEdit = () => {},
   author_id,
-  user_id,
   currentUserId,
 }: FeedBodyProps) {
   return (
