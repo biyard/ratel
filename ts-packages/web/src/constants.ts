@@ -38,10 +38,38 @@ export const QK_QUIZ = 'quiz';
 export const QK_QUIZ_ANSWERS = 'quiz-answers';
 
 export const QK_GET_SPACE = 'get-spaces';
-export const QK_GET_FEED = 'get-feeds';
 
 export const QK_GET_SPRINT_LEAGUE = 'get-sprint-leagues';
 
 export const QK_GET_DAGIT = 'get-dagit';
 export const QK_GET_ARTWORK = 'get-artwork';
 export const QK_GET_ARTWORK_CERTIFICATE = 'get-artwork-certificate';
+
+function sortObjectKeys<T extends object>(obj: T): T {
+  const sortedKeys = Object.keys(obj).sort() as Array<keyof T>;
+  return sortedKeys.reduce((result, key) => {
+    result[key] = obj[key];
+    return result;
+  }, {} as T);
+}
+
+// Use This Pattern
+const QK_FEEDS = 'feeds';
+
+export const feedKeys = {
+  all: [QK_FEEDS] as const,
+  lists: () => [...feedKeys.all, 'list'] as const,
+  list: (filters: object) => {
+    // 빈 필터 객체는 제외하여 불필요한 복잡성을 줄입니다.
+    const nonNullFilters = Object.fromEntries(
+      Object.entries(filters).filter(([, value]) => value != null),
+    );
+    return [...feedKeys.lists(), sortObjectKeys(nonNullFilters)] as const;
+  },
+  details: () => [...feedKeys.all, 'detail'] as const,
+  detail: (id: number) => [...feedKeys.details(), id] as const,
+};
+
+// Example Usage
+// feedKeys.list({ feed_type: 'news', industry_id: 5 });
+// feedKeys.detail(1);

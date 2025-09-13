@@ -86,7 +86,7 @@ export default function SpaceHeader({
         <div className="flex flex-row items-center gap-1 text-sm text-c-wg-50 cursor-pointer">
           {isEdit ? (
             <div className="cursor-pointer w-fit h-fit" onClick={onback}>
-              <ArrowLeft size={24} className="w-6 h-6 stroke-white" />
+              <ArrowLeft size={24} className="w-6 h-6 stroke-foreground" />
             </div>
           ) : (
             <></>
@@ -174,28 +174,28 @@ export default function SpaceHeader({
         <div className="flex flex-row w-fit gap-5">
           <div className="flex flex-row w-fit gap-1 items-center">
             <ThumbUp width={20} height={20} />
-            <div className="font-medium text-[15px] text-white">
+            <div className="font-medium text-[15px] text-text-primary">
               {convertNumberToString(likes)}
             </div>
           </div>
 
           <div className="flex flex-row w-fit gap-1 items-center">
             <CommentIcon width={20} height={20} />
-            <div className="font-medium text-[15px] text-white">
+            <div className="font-medium text-[15px] text-text-primary">
               {convertNumberToString(comments)}
             </div>
           </div>
 
           <div className="flex flex-row w-fit gap-1 items-center">
             <Rewards width={20} height={20} />
-            <div className="font-medium text-[15px] text-white">
+            <div className="font-medium text-[15px] text-text-primary">
               {convertNumberToString(rewards)}
             </div>
           </div>
 
           <div className="flex flex-row w-fit gap-1 items-center">
             <Share2 width={20} height={20} />
-            <div className="font-medium text-[15px] text-white">
+            <div className="font-medium text-[15px] text-text-primary">
               {convertNumberToString(shares)}
             </div>
           </div>
@@ -203,21 +203,21 @@ export default function SpaceHeader({
           {status === SpaceStatus.Draft ? (
             <div className="flex flex-row w-fit gap-1 items-center">
               <Lock className="w-5 h-5" />
-              <div className="font-normal text-white text-[15px]">
+              <div className="font-normal text-text-primary text-[15px]">
                 {t('draft')}
               </div>
             </div>
           ) : status === SpaceStatus.InProgress && isPrivatelyPublished ? (
             <div className="flex flex-row w-fit gap-1 items-center">
               <Lock className="w-5 h-5" />
-              <div className="font-normal text-white text-[15px]">
+              <div className="font-normal text-text-primary text-[15px]">
                 {t('private')}
               </div>
             </div>
           ) : (
             <div className="flex flex-row w-fit gap-1 items-center">
               <Unlock2 className="w-5 h-5" />
-              <div className="font-normal text-white text-[15px]">
+              <div className="font-normal text-text-primary text-[15px]">
                 {t('public')}
               </div>
             </div>
@@ -229,7 +229,7 @@ export default function SpaceHeader({
         {isEdit ? (
           <>
             <Input
-              className="border-b border-transparent !border-b-white focus:!border-transparent focus:rounded-md font-bold text-white text-[24px]/[30px] placeholder:text-neutral-300 placeholder:font-medium rounded-none"
+              className="border-b border-transparent !border-b-white focus:!border-transparent focus:rounded-md font-bold text-text-primary text-[24px]/[30px] placeholder:text-neutral-300 placeholder:font-medium rounded-none"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Input title."
@@ -237,7 +237,7 @@ export default function SpaceHeader({
           </>
         ) : (
           <div className="flex flex-row w-full justify-between items-center">
-            <div className="font-bold text-white text-[20px]/[30px]">
+            <div className="font-bold text-text-primary text-[20px]/[30px]">
               {title}
             </div>
 
@@ -270,11 +270,11 @@ export default function SpaceHeader({
           ) : (
             <div className="w-6 h-6 rounded-full border border-neutral-500 bg-neutral-600" />
           )}
-          <span className="text-white font-medium">{proposerName}</span>
+          <span className="text-text-primary font-medium">{proposerName}</span>
           <Badge />
         </div>
 
-        <div className="font-light text-white text-sm">
+        <div className="font-light text-text-primary text-sm">
           {getTimeAgo(createdAt)}
         </div>
       </div>

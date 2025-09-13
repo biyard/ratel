@@ -25,6 +25,7 @@ uuid = { version = "1.0", features = ["v4", "serde"] }
 
 bdk = { workspace = true, features = ["be"] }
 sqlx = { workspace = true }
+aws-sdk-dynamodb = "1.92.0"
 
 [features]
 default = ["server"]

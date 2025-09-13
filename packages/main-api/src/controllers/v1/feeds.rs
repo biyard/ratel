@@ -14,7 +14,7 @@ use sqlx::postgres::PgRow;
 
 use crate::{
     security::check_perm,
-    utils::users::{extract_user, extract_user_id, extract_user_with_options},
+    utils::users::{extract_user, extract_user_id},
 };
 
 #[derive(
@@ -38,12 +38,12 @@ impl FeedController {
         param: FeedQuery,
     ) -> Result<QueryResponse<FeedSummary>> {
         let mut total_count = 0;
-        let user = extract_user_with_options(&self.pool, auth.clone(), false)
+        let user = extract_user(&self.pool, auth.clone())
             .await
             .unwrap_or_default();
         let user_id = user.id;
         let teams = user.teams;
-        let feed_type = param.feed_type.unwrap_or(FeedType::Post);
+
         let status = if let Some(status) = param.status {
             if status == FeedStatus::Draft {
                 check_perm(
@@ -60,13 +60,20 @@ impl FeedController {
         } else {
             FeedStatus::Published
         };
-        let feeds: Vec<FeedSummary> = FeedSummary::query_builder(user_id)
-            .feed_type_equals(feed_type)
+
+        let builder = FeedSummary::query_builder(user_id)
             .spaces_builder(Space::query_builder(user_id))
-            .status_equals(status)
             .limit(param.size())
             .page(param.page())
-            .order_by_created_at_desc()
+            .status_equals(status)
+            .order_by_created_at_desc();
+
+        let builder = match param.feed_type {
+            Some(feed_type) => builder.feed_type_equals(feed_type),
+            None => builder.feed_type_between(FeedType::Artwork, FeedType::Post),
+        };
+
+        let feeds: Vec<FeedSummary> = builder
             .query()
             .map(|row: PgRow| {
                 use sqlx::Row;

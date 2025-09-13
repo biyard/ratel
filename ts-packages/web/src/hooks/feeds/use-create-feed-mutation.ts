@@ -1,0 +1,247 @@
+import { useMutation, InfiniteData } from '@tanstack/react-query';
+import { getQueryClient } from '@/providers/getQueryClient';
+import { feedKeys } from '@/constants';
+import { Feed, FeedStatus, FeedType } from '@/lib/api/models/feeds';
+import { showErrorToast } from '@/lib/toast';
+import { apiFetch } from '@/lib/api/apiFetch';
+import { ratelApi } from '@/lib/api/ratel_api';
+import { config } from '@/config';
+import { createDraftRequest } from '@/lib/api/models/feeds/create-draft';
+import { writeCommentRequest } from '@/lib/api/models/feeds/comment';
+import { UpdatePostRequest } from '@/lib/api/models/feeds/update-post';
+
+export async function createDraft(user_id: number): Promise<Feed> {
+  const res = await apiFetch<Feed>(
+    `${config.api_url}${ratelApi.feeds.createDraft()}`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(createDraftRequest(FeedType.Post, user_id)),
+    },
+  );
+  if (!res.data) {
+    throw new Error('Failed to create draft');
+  }
+  return res.data;
+}
+
+export async function updatePost(
+  post_id: number,
+  req: Partial<UpdatePostRequest>,
+): Promise<Feed> {
+  const res = await apiFetch<Feed>(
+    `${config.api_url}${ratelApi.feeds.updateDraft(post_id)}`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(req),
+    },
+  );
+  if (!res.data) {
+    throw new Error('Failed to update draft');
+  }
+  return res.data;
+}
+
+export async function publishDraft(id: number): Promise<Feed> {
+  const res = await apiFetch<Feed>(
+    `${config.api_url}${ratelApi.feeds.publishDraft(id)}`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        publish: {},
+      }),
+    },
+  );
+  if (!res.data) {
+    throw new Error('Failed to publish draft');
+  }
+  return res.data;
+}
+
+export async function createComment(
+  userId: number,
+  parentId: number,
+  content: string,
+) {
+  await apiFetch(`${config.api_url}${ratelApi.feeds.comment()}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(writeCommentRequest(content, userId, parentId)),
+  });
+}
+
+export function useDraftMutations(targetId: number) {
+  const queryClient = getQueryClient();
+
+  const createMutation = useMutation({
+    mutationFn: (userId: number) => createDraft(userId),
+    onSuccess: (newDraft) => {
+      queryClient.setQueryData(feedKeys.detail(newDraft.id), newDraft);
+      const listQueryKey = feedKeys.list({
+        userId: targetId,
+        status: FeedStatus.Draft,
+      });
+      queryClient.setQueriesData<InfiniteData<Feed[]>>(
+        { queryKey: listQueryKey },
+        (oldData) => {
+          if (!oldData) return oldData;
+          const newPages = [...oldData.pages];
+          newPages[0] = [newDraft, ...newPages[0]];
+          return { ...oldData, pages: newPages };
+        },
+      );
+    },
+    onError: (error: Error) => {
+      //FIXME: i18n
+      showErrorToast(error.message || 'Failed to create draft');
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({
+      postId,
+      req,
+    }: {
+      postId: number;
+      req: Partial<UpdatePostRequest>;
+    }) => updatePost(postId, req),
+
+    onMutate: async ({ postId, req }) => {
+      const detailQueryKey = feedKeys.detail(postId);
+      const listQueryKey = feedKeys.list({
+        userId: targetId,
+        status: FeedStatus.Draft,
+      });
+
+      await queryClient.cancelQueries({ queryKey: detailQueryKey });
+      await queryClient.cancelQueries({ queryKey: listQueryKey });
+
+      const previousFeedDetail = queryClient.getQueryData<Feed>(detailQueryKey);
+      const previousFeedLists = queryClient.getQueriesData<
+        InfiniteData<Feed[]>
+      >({ queryKey: listQueryKey });
+      queryClient.setQueryData<Feed>(detailQueryKey, (old) =>
+        old
+          ? {
+              ...old,
+              html_contents: req.html_contents ?? old.html_contents,
+              title: req.title ?? old.title,
+              url:
+                req.url !== undefined
+                  ? req.url === null
+                    ? old.url
+                    : req.url
+                  : old.url,
+              url_type: req.url_type ?? old.url_type,
+              feed_type: req.feed_type ?? old.feed_type,
+              artwork_metadata: req.artwork_metadata ?? old.artwork_metadata,
+            }
+          : undefined,
+      );
+
+      queryClient.setQueriesData<InfiniteData<Feed[]>>(
+        { queryKey: listQueryKey },
+        (oldData) => {
+          if (!oldData) return oldData;
+          const newPages = oldData.pages.map((page) =>
+            page.map((post) =>
+              post.id === postId
+                ? {
+                    ...post,
+                    html_contents: req.html_contents ?? post.html_contents,
+                    title: req.title ?? post.title,
+                    url:
+                      req.url !== undefined
+                        ? req.url === null
+                          ? post.url
+                          : req.url
+                        : post.url,
+                    url_type: req.url_type ?? post.url_type,
+                    feed_type: req.feed_type ?? post.feed_type,
+                    artwork_metadata:
+                      req.artwork_metadata ?? post.artwork_metadata,
+                  }
+                : post,
+            ),
+          );
+          return { ...oldData, pages: newPages };
+        },
+      );
+
+      return { previousFeedDetail, previousFeedLists };
+    },
+    onError: (error, variables, context) => {
+      if (context?.previousFeedDetail) {
+        queryClient.setQueryData(
+          feedKeys.detail(variables.postId),
+          context.previousFeedDetail,
+        );
+      }
+      if (context?.previousFeedLists) {
+        context.previousFeedLists.forEach(([key, data]) => {
+          queryClient.setQueryData(key, data);
+        });
+      }
+      showErrorToast(error.message || 'Failed to update draft');
+    },
+    onSettled: (data, error, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: feedKeys.detail(variables.postId),
+      });
+      queryClient.invalidateQueries({ queryKey: feedKeys.lists() });
+    },
+  });
+
+  const publishMutation = useMutation({
+    mutationFn: async ({ draftId }: { draftId: number }) => {
+      await publishDraft(draftId);
+      return draftId;
+    },
+    onSuccess: (draftId: number) => {
+      queryClient.invalidateQueries({ queryKey: feedKeys.lists() });
+      queryClient.invalidateQueries({
+        queryKey: feedKeys.detail(draftId),
+      });
+    },
+    onError: (error: Error) => {
+      showErrorToast(error.message || 'Failed to publish draft');
+    },
+  });
+
+  const commentMutation = useMutation({
+    mutationFn: ({
+      userId,
+      parentId,
+      content,
+    }: {
+      userId: number;
+      parentId: number;
+      postId: number;
+      content: string;
+    }) => createComment(userId, parentId, content),
+    onSuccess: (_, { postId }) => {
+      queryClient.invalidateQueries({
+        queryKey: feedKeys.detail(postId),
+      });
+    },
+    onError: (error: Error) => {
+      showErrorToast(error.message || 'Failed to create comment');
+    },
+  });
+  return {
+    createDraft: createMutation,
+    updateDraft: updateMutation,
+    publishDraft: publishMutation,
+    createComment: commentMutation,
+  };
+}

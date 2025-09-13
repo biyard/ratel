@@ -50,7 +50,7 @@ export default function MyInfo() {
             className="w-40 h-40 rounded-full object-cover cursor-pointer"
           />
         ) : (
-          <button className="w-40 h-40 rounded-full bg-c-wg-80 text-sm font-semibold flex items-center justify-center text-c-wg-50">
+          <button className="w-40 h-40 rounded-full bg-c-wg-80 text-sm font-semibold flex items-center justify-center text-text-primary">
             {t('upload_logo')}
           </button>
         )}
@@ -58,16 +58,30 @@ export default function MyInfo() {
 
       <Col className="w-full gap-2.5">
         <Row className="max-tablet:flex-col">
-          <label className="w-40 font-bold">{t('username')}</label>
-          <Input type="text" disabled value={`@${user?.username}`} />
+          <label className="w-40 font-bold text-text-primary">
+            {t('username')}
+          </label>
+          <Input
+            type="text"
+            disabled
+            className="text-text-primary"
+            value={`@${user?.username}`}
+          />
         </Row>
         <Row className="max-tablet:flex-col">
-          <label className="w-40 font-bold">{t('evm_address')}</label>
+          <label className="w-40 font-bold text-text-primary">
+            {t('evm_address')}
+          </label>
           <Row>
-            <Input type="text" disabled value={`${user?.evm_address}`} />
+            <Input
+              type="text"
+              className="text-text-primary"
+              disabled
+              value={`${user?.evm_address}`}
+            />
             <Button
               variant={'rounded_secondary'}
-              className="py-0 rounded-sm"
+              className="py-0 rounded-sm bg-enable-button-bg text-enable-button-white-text hover:bg-enable-button-bg/80"
               onClick={() => handleShowWalletConnect(!showWalletConnect)}
             >
               {showWalletConnect ? t('hide') : t('change')}
@@ -95,18 +109,24 @@ export default function MyInfo() {
         </Row>
 
         <Row className="max-tablet:flex-col">
-          <label className="w-40 font-bold">{t('display_name')}</label>
+          <label className="w-40 font-bold text-text-primary">
+            {t('display_name')}
+          </label>
           <Input
             type="text"
             placeholder={t('display_name')}
+            className="text-text-primary"
             value={nickname}
             onInput={handleNickname}
           />
         </Row>
         <Col>
-          <label className="w-40 font-bold">{t('description')}</label>
+          <label className="w-40 font-bold text-text-primary">
+            {t('description')}
+          </label>
           <Textarea
             placeholder={t('description_hint')}
+            className="text-text-primary"
             value={htmlContents}
             onChange={handleContents}
           />
@@ -115,8 +135,8 @@ export default function MyInfo() {
           <Button
             className={
               checkString(nickname) || checkString(htmlContents)
-                ? 'cursor-not-allowed bg-neutral-600'
-                : 'cursor-pointer bg-primary'
+                ? 'cursor-not-allowed bg-disable-button-bg text-disable-button-white-text'
+                : 'cursor-pointer bg-enable-button-bg text-enable-button-white-text'
             }
             variant={'rounded_primary'}
             onClick={async () => {
