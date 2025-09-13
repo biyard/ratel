@@ -50,7 +50,8 @@ impl Default for AuthConfig {
 pub enum DatabaseConfig {
     DynamoDb {
         aws: AwsConfig,
-        table_name: &'static str,
+        endpoint: Option<&'static str>,
+        table_prefix: &'static str,
     },
     Postgres {
         url: &'static str,
@@ -70,7 +71,8 @@ impl Default for DatabaseConfig {
         {
             "dynamo" | "dynamodb" => DatabaseConfig::DynamoDb {
                 aws: AwsConfig::default(),
-                table_name: option_env!("TABLE_NAME").expect("You must set TABLE_NAME"),
+                endpoint: option_env!("DYNAMODB_ENDPOINT"),
+                table_prefix: option_env!("TABLE_PREFIX").expect("You must set TABLE_PREFIX"),
             },
             "rds" | "postgres" => DatabaseConfig::Postgres {
                 url: option_env!("DATABASE_URL").expect("You must set DATABASE_URL"),

@@ -168,6 +168,7 @@ jobs:
           ECR_NAME: main-api
           COMMIT: pr-${{ github.sha }}
           MIGRATE: true
+          DYNAMO_TABLE_PREFIX: ratel-local
         run: |
           # Build and tag image
           make docker.build
