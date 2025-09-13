@@ -176,8 +176,6 @@ export const ratelApi = {
       `/v1/users?action=login-by-password&email=${encodeURIComponent(email)}&password=${password}`,
     loginWithTelegram: (raw: string) =>
       `/v1/users?action=login-by-telegram&telegram_raw=${raw}`,
-    getTotalInfo: (page: number, size: number) =>
-      `/v1/totals?param-type=query&bookmark=${page}&size=${size}`,
     getUserInfo: () => '/v1/users?action=user-info',
     getUserByEmail: (email: string) => `/v2/users?email=${email}`,
     getUserByUsername: (username: string) => `/v2/users?username=${username}`,
