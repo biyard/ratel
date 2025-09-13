@@ -54,7 +54,7 @@ jobs:
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: test
+          POSTGRES_DB: ratel
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -67,7 +67,7 @@ jobs:
         image: localstack/localstack:3
         env:
           DYNAMODB_SHARE_DB: "1"
-          DEFAULT_REGION: ap-northeast-2
+          DEFAULT_REGION: us-east-1
           AWS_ACCESS_KEY_ID: test
           AWS_SECRET_ACCESS_KEY: test
         ports:
@@ -89,27 +89,25 @@ jobs:
 
       - name: Initialize Database
         run: |
-          psql postgresql://postgres:postgres@localhost:5432/test -f ./scripts/init.sql
+          psql postgresql://postgres:postgres@localhost:5432/ratel -f ./scripts/init.sql
           aws --endpoint-url=http://localstack:4566 dynamodb create-table --cli-input-json file:///scripts/dynamodb-schema.json
 
       - name: test
         env:
           RUSTFLAGS: "-A warnings"
           DATABASE_TYPE: postgres
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
-          AWS_ENDPOINT_URL_DYNAMODB: http://localhost:4566
+          DATABASE_URL: postgresql://postgres:postgres@postgres:5432/ratel
+          DYNAMODB_ENDPOINT: http://localstack:4566
           ENV: "dev"
           DOMAIN: "dev.ratel.foundation"
-          OPENAPI_KEY: ${{ secrets.OPENAPI_KEY }}
           AUTH_SECRET_KEY: ${{ secrets.DEV_AUTH_SECRET_KEY }}
           BASE_DOMAIN: "ratel.foundation"
           AUTH_DOMAIN: "ratel.foundation"
-          AWS_REGION: ap-northeast-2
+          AWS_REGION: us-east-1
           AWS_ACCESS_KEY_ID: test
           AWS_SECRET_ACCESS_KEY: test
           JWT_SECRET_KEY: ${{ secrets.DEV_JWT_SECRET }}
           SLACK_CHANNEL_SPONSOR: ${{ secrets.DEV_SLACK }}
-          US_CONGRESS_KEY: ${{ secrets.US_CONGRESS_KEY }}
           BBS_BLS_X: ${{ secrets.BBS_BLS_X }}
           BBS_BLS_Y: ${{ secrets.BBS_BLS_Y }}
           BBS_BLS_D: ${{ secrets.BBS_BLS_D }}
@@ -176,7 +174,7 @@ jobs:
 
           # Save image to cache
           docker save $ECR_NAME:$COMMIT | gzip > /tmp/main-api-image.tar.gz
-          echo "image=$ECR_NAME:$COMMIT >> $GITHUB_OUTPUT
+          echo "image=$ECR_NAME:$COMMIT" >> $GITHUB_OUTPUT
 
       - name: Cache Docker image
         uses: actions/cache@v4
@@ -210,14 +208,6 @@ jobs:
       - name: Install dependencies
         run: |
           cargo binstall toml-cli
-
-      - name: Cache builder
-        id: fetcher-build-cache
-        uses: actions/cache@v3
-        with:
-          key: fetcher-build-cache
-          path: |
-            packages/fetcher/target
 
       - name: Build and cache Docker image
         id: build

@@ -8,7 +8,7 @@ use serde::Deserialize;
 
 pub fn parse_telegram_raw(telegram_raw: String) -> Result<TelegramUser> {
     let config = config::get();
-    let telegram_token = config.telegram_token?;
+    let telegram_token = config.telegram_token.unwrap_or_default();
 
     let validation_result = (|| {
         let mut params: Vec<(String, String)> =
