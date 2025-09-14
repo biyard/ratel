@@ -1,9 +1,10 @@
-import { getFeedById, getSpaceById } from '@/lib/api/ratel_api.server';
+import { getSpaceById } from '@/lib/api/ratel_api.server';
 import { Metadata } from 'next';
 import React, { Suspense } from 'react';
 import Provider from './providers';
 import striptags from 'striptags';
 import Loading from '@/app/loading';
+import { getFeedById } from '@/hooks/feeds/use-feed-by-id';
 
 export async function generateMetadata({
   params,

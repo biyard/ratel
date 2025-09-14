@@ -150,7 +150,7 @@ export function CreateRePost() {
           </div>
 
           <div className="flex items-center space-x-4">
-            <div className="p-4 rounded-lg flex w-[320px] justify-between border border-[0.5px] border-[#262626]">
+            <div className="p-4 rounded-lg flex w-[320px] justify-between border-[0.5px] border-[#262626]">
               <p className="text-left text-white text-lg">{industry}</p>
             </div>
 

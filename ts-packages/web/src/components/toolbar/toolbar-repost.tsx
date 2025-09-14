@@ -206,7 +206,7 @@ export default function ToolbarPlugin({
               </button>
               <button
                 onClick={() => editor.chain().focus().unsetHighlight().run()}
-                className="px-2 py-1 bg-gray-500 bg-neutral-800 font-bold text-white rounded"
+                className="px-2 py-1  bg-neutral-800 font-bold text-white rounded"
               >
                 Reset
               </button>
@@ -296,7 +296,7 @@ export default function ToolbarPlugin({
             </div>
             <button
               onClick={insertTable}
-              className="w-full py-1 bg-primary text-white rounded hover:bg-primary/50 text-neutral-800"
+              className="w-full py-1 bg-primary rounded hover:bg-primary/50 text-neutral-800"
             >
               Insert Table
             </button>

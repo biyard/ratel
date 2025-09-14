@@ -10,13 +10,13 @@ import { UserType } from '@/lib/api/models/user';
 
 import Loading from '@/app/loading';
 import { Space } from '@/lib/api/models/spaces';
-import { usePostInfinite } from '../../_hooks/use-posts';
+import useInfiniteFeeds from '@/hooks/feeds/use-feeds-infinite-query';
+import { FeedStatus } from '@/lib/api/models/feeds';
 import FeedEndMessage from '../feed-end-message';
 import FeedEmptyState from '../feed-empty-state';
 import CreatePostButton from '../create-post-button';
-import PromotionCard from '../promotion-card';
 import DisableBorderCard from '../disable-border-card';
-
+import PromotionCard from '../promotion-card';
 import HomeNews from '../home-news';
 import HomeSuggestions from '../home-suggestions';
 import { HomeGatewayResponse } from '@/lib/api/models/home';
@@ -58,9 +58,15 @@ export default function Home({
 
   // Get initial feeds from homeData, then use infinite query for pagination
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
-    usePostInfinite(SIZE);
+    useInfiniteFeeds(userId, FeedStatus.Published, SIZE);
 
-  const allPosts = data?.pages.flatMap((page) => page.items) || [];
+  // If we have server data, merge it with client data
+  // Take first 10 from homeData, then continue with pagination
+  const clientPosts = data?.pages.flatMap((page) => page) || [];
+  const allPosts =
+    homeData?.feeds && homeData.feeds.length > 0
+      ? [...homeData.feeds.slice(0, SIZE), ...clientPosts.slice(SIZE)]
+      : clientPosts;
 
   const filteredFeeds = allPosts
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -147,7 +153,6 @@ export default function Home({
         )}
 
         <HomeNews newsData={homeData?.news || []} />
-
         <div className="mt-[10px]">
           <HomeSuggestions suggestedUsers={homeData?.suggested_users || []} />
         </div>
