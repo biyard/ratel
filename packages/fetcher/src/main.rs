@@ -1,13 +1,13 @@
 mod config;
 mod controllers;
-// mod modules;
-// mod utils;
 
+use crate::controllers::telegram::*;
 use bdk::prelude::{
     by_axum::{auth::authorization_middleware, axum::Router, axum::middleware},
     *,
 };
-use dto::*;
+use dto::{sqlx::PgPool, *};
+use teloxide::{Bot, dispatching::UpdateFilterExt, dptree, prelude::Dispatcher, types::Update};
 use tokio::net::TcpListener;
 
 macro_rules! migrate {
@@ -30,11 +30,6 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
 
     migrate!(
         pool,
-        BillWriter,
-        USBillWriter,
-        HKBillWriter,
-        CHBillWriter,
-        EUBillWriter,
         EventLog,
         Space,
         SpaceComment,
@@ -42,18 +37,33 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         SpaceMember,
         SpaceContract,
         SpaceHolder,
+        TelegramChannel
     );
 
     tracing::info!("Migration done");
     Ok(())
 }
 
-async fn api_main() -> Result<Router> {
+async fn api_main(pool: &PgPool) -> Result<Router> {
     let app = by_axum::new();
     let conf = config::get();
     tracing::debug!("config: {:?}", conf);
 
-    let pool = if let by_types::DatabaseConfig::Postgres { url, pool_size } = conf.database {
+    if conf.migrate {
+        migration(pool).await?;
+    }
+
+    let app = app
+        .nest("/m1", controllers::m1::route(pool.clone()).await?)
+        .layer(middleware::from_fn(authorization_middleware));
+
+    Ok(app)
+}
+
+#[tokio::main]
+async fn main() -> Result<()> {
+    let pool = if let by_types::DatabaseConfig::Postgres { url, pool_size } = config::get().database
+    {
         sqlx::postgres::PgPoolOptions::new()
             .max_connections(pool_size)
             .connect(url)
@@ -62,28 +72,40 @@ async fn api_main() -> Result<Router> {
         panic!("Database is not initialized. Call init() first.");
     };
 
-    if conf.migrate {
-        migration(&pool).await?;
-    }
+    let bot = Bot::new(config::get().telegram_token);
+    set_command(bot.clone()).await;
 
-    let app = app
-        .nest("/m1", controllers::m1::route(pool).await?)
-        .layer(middleware::from_fn(authorization_middleware));
+    let handler = dptree::entry()
+        .branch(Update::filter_message().endpoint(message_handler))
+        .branch(Update::filter_my_chat_member().endpoint(member_update_handler));
 
-    Ok(app)
-}
+    let mut binding = Dispatcher::builder(bot, handler)
+        .dependencies(dptree::deps![pool.clone()])
+        .enable_ctrlc_handler()
+        .build();
 
-#[tokio::main]
-async fn main() -> Result<()> {
-    let app = api_main().await?;
+    let teloxide_dispatcher = binding.dispatch();
+
+    let app = api_main(&pool).await?;
 
     let port = option_env!("PORT").unwrap_or("4000");
     let listener = TcpListener::bind(format!("0.0.0.0:{}", port))
         .await
         .unwrap();
+    let axum_server = by_axum::serve(listener, app);
 
-    tracing::info!("listening on {}", listener.local_addr().unwrap());
-    by_axum::serve(listener, app).await.unwrap();
+    tokio::select! {
+        result = teloxide_dispatcher => {
+            tracing::info!("Teloxide dispatcher finished: {:?}", result);
+        }
+        result = axum_server => {
+            if let Err(e) = result {
+                tracing::error!("Axum server has failed: {}", e);
+            } else {
+                tracing::info!("Axum server finished successfully");
+            }
+        }
+    }
 
     Ok(())
 }
@@ -104,15 +126,7 @@ pub mod tests {
     }
 
     pub async fn setup() -> Result<TestContext> {
-        let app = api_main().await?;
-        let now = SystemTime::now()
-            .duration_since(SystemTime::UNIX_EPOCH)
-            .unwrap()
-            .as_nanos() as u64;
-
         let conf = config::get();
-        tracing::debug!("config: {:?}", conf);
-
         let pool = if let DatabaseConfig::Postgres { url, pool_size } = conf.database {
             PgPoolOptions::new()
                 .max_connections(pool_size)
@@ -122,6 +136,14 @@ pub mod tests {
         } else {
             panic!("Database is not initialized. Call init() first.");
         };
+
+        let app = api_main(&pool).await?;
+        let now = SystemTime::now()
+            .duration_since(SystemTime::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos() as u64;
+
+        tracing::debug!("config: {:?}", conf);
 
         let _ = sqlx::query(
             r#"
