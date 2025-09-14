@@ -1,6 +1,7 @@
 'use client';
 import { useEffect } from 'react';
 import { useInView } from 'react-intersection-observer';
+import { useQueryClient } from '@tanstack/react-query';
 
 import FeedCard from '@/components/feed-card';
 import { Col } from '@/components/ui/col';
@@ -12,6 +13,7 @@ import Loading from '@/app/loading';
 import { Space } from '@/lib/api/models/spaces';
 import useInfiniteFeeds from '@/hooks/feeds/use-feeds-infinite-query';
 import { FeedStatus } from '@/lib/api/models/feeds';
+import { feedKeys } from '@/constants';
 import FeedEndMessage from '../feed-end-message';
 import FeedEmptyState from '../feed-empty-state';
 import CreatePostButton from '../create-post-button';
@@ -51,22 +53,40 @@ export default function Home({
 }: {
   homeData: HomeGatewayResponse | null;
 }) {
-  // Get user info from homeData instead of separate API call
-  const userId = homeData?.user_info?.id || 0;
+  // Get user info from homeData for FeedCard component
+  const currentUserId = homeData?.user_info?.id || 0;
+  const queryClient = useQueryClient();
 
   const { ref, inView } = useInView({ threshold: 0.5 });
 
-  // Get initial feeds from homeData, then use infinite query for pagination
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
-    useInfiniteFeeds(userId, FeedStatus.Published, SIZE);
+  // Use userId 0 for home page to get all public feeds (anonymous view)
+  const feedUserId = 0;
 
-  // If we have server data, merge it with client data
-  // Take first 10 from homeData, then continue with pagination
-  const clientPosts = data?.pages.flatMap((page) => page) || [];
-  const allPosts =
-    homeData?.feeds && homeData.feeds.length > 0
-      ? [...homeData.feeds.slice(0, SIZE), ...clientPosts.slice(SIZE)]
-      : clientPosts;
+  // Inject homeData feeds as initial page data if available
+  useEffect(() => {
+    if (homeData?.feeds && homeData.feeds.length > 0) {
+      const queryKey = feedKeys.list({
+        userId: feedUserId,
+        status: FeedStatus.Published,
+      });
+      const existingData = queryClient.getQueryData(queryKey);
+
+      // Only set initial data if we don't already have data
+      if (!existingData) {
+        queryClient.setQueryData(queryKey, {
+          pages: [homeData.feeds],
+          pageParams: [1],
+        });
+      }
+    }
+  }, [homeData?.feeds, feedUserId, queryClient]);
+
+  // Get feeds using infinite query with userId 0 to get all public feeds
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
+    useInfiniteFeeds(feedUserId, FeedStatus.Published, SIZE);
+
+  // Use the data from the infinite query directly (it includes homeData if injected)
+  const allPosts = data?.pages.flatMap((page) => page) || [];
 
   const filteredFeeds = allPosts
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -114,7 +134,11 @@ export default function Home({
         {filteredFeeds.length > 0 ? (
           <Col className="flex-1">
             {filteredFeeds.map((props) => (
-              <FeedCard key={`feed-${props.id}`} user_id={userId} {...props} />
+              <FeedCard
+                key={`feed-${props.id}`}
+                user_id={currentUserId}
+                {...props}
+              />
             ))}
 
             {(isLoading || isFetchingNextPage) && (
