@@ -1,27 +1,8 @@
-'use client';
 import { Col } from '@/components/ui/col';
 import { NewsSummary } from '@/lib/api/models/home';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import React from 'react';
-import DOMPurify from 'dompurify';
-
-interface HomeNewsProps {
-  newsData: NewsSummary[];
-}
-
-// Safe sanitization function that works in both server and client environments
-const sanitizeHTML = (html: string): string => {
-  // Check if we're in a browser environment
-  if (typeof window !== 'undefined') {
-    return DOMPurify.sanitize(html, {
-      USE_PROFILES: { html: true },
-    });
-  }
-  // On server side, return the HTML as-is (since it's coming from our own API)
-  // In production, you might want to use a server-side HTML sanitizer
-  return html;
-};
 
 interface HomeNewsProps {
   newsData: NewsSummary[];
@@ -55,13 +36,12 @@ export default function HomeNews({ newsData }: HomeNewsProps) {
             <h4 className="text-base/[25px] tracking-[0.5px] align-middle font-medium text-foreground">
               {item.title}
             </h4>
-            {/* biome-ignore lint/security/noDangerouslySetInnerHtml: content is sanitized with DOMPurify */}
             <div
               className="text-sm/[20px] align-middle font-light line-clamp-2 whitespace-normal text-card-meta"
               dangerouslySetInnerHTML={{
-                __html: sanitizeHTML(item.html_content ?? ''),
+                __html: item.html_content || '',
               }}
-            />
+            ></div>
           </Col>
         ))}
       </Col>

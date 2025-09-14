@@ -114,12 +114,7 @@ export default function Home({
         {filteredFeeds.length > 0 ? (
           <Col className="flex-1">
             {filteredFeeds.map((props) => (
-              <FeedCard
-                key={`feed-${props.id}`}
-                user_id={userId}
-                refetch={() => {}}
-                {...props}
-              />
+              <FeedCard key={`feed-${props.id}`} user_id={userId} {...props} />
             ))}
 
             {(isLoading || isFetchingNextPage) && (
