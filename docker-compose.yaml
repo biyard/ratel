@@ -1,45 +1,30 @@
 services:
-  # Database
-  postgres:
-    image: postgres:16
+  # Production main-api (pre-built image)
+  main-api-testing:
+    image: main-api:${COMMIT}
     restart: always
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: ratel
     ports:
-      - "5432:5432"
-    volumes:
-      - .build/postgres-data:/var/lib/postgresql/data
+      - "3000:3000"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - ratel-network
-
-  postgres-init:
-    image: postgres:16
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: ratel
-    volumes:
-      - ./:/app
-    command: psql postgresql://postgres:postgres@postgres:5432/ratel -f /app/scripts/init.sql
-    healthcheck:
-      test: ["CMD", "test", "-f", "/tmp/init-complete"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/version || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 100
     depends_on:
       postgres:
         condition: service_healthy
+      postgres-init:
+        condition: service_healthy
+      localstack:
+        condition: service_healthy
+      localstack-init:
+        condition: service_completed_successfully
     networks:
       - ratel-network
+    profiles:
+      - testing
 
-  # Main API Service
+  # Development main-api (source code mounting)
   main-api:
     image: rust:1.89
     restart: always
@@ -48,16 +33,16 @@ services:
     environment:
       ENV: dev
       DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/ratel}
+      DYNAMODB_ENDPOINT: http://localstack:4566
       MIGRATE: "true"
       AWS_REGION: us-east-1
-      AWS_ACCESS_KEY_ID: "aws-access-key-id"
-      AWS_SECRET_ACCESS_KEY: "aws-secret-access-key"
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
       TELEGRAM_TOKEN: ${TELEGRAM_TOKEN}
     volumes:
       - .:/app
       - ./.build/target:/app/target
       - ./.build/main-api/target:/app/packages/main-api/target
-
     working_dir: /app
     command: ["bash", "scripts/api-entrypoint.sh"]
     healthcheck:
@@ -69,168 +54,38 @@ services:
       postgres:
         condition: service_healthy
       postgres-init:
+        condition: service_healthy
+      localstack:
+        condition: service_healthy
+      localstack-init:
         condition: service_completed_successfully
     networks:
       - ratel-network
+    profiles:
+      - development
 
-  # Web Frontend
-  web:
-    image: node:22.14
+  # Production fetcher (pre-built image)
+  fetcher-testing:
+    image: fetcher:${COMMIT}
     restart: always
-    volumes:
-      - ./.build/node_modules:/app/node_modules
-      - ./.build/web_node_modules:/app/ts-packages/web/node_modules
-      - ./.build/pnpm-store:/app/.pnpm-store
-      - .:/app
-    working_dir: /app
-    command: ["bash", "scripts/web-entrypoint.sh"]
+    ports:
+      - "3001:3001"
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8080/api/version || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://localhost:3001/version || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 100
-    environment:
-      PORT: 8080
-      API_URL: "http://main-api:3000"
-      GRAPHQL_URL: "http://hasura:8080/v1/graphql"
-    ports:
-      - "8080:8080"
-    networks:
-      - ratel-network
-
-  # # Hasura GraphQL Engine
-  hasura:
-    image: hasura/graphql-engine:v2.40.0
-    restart: unless-stopped
-    ports:
-      - "28080:8080"
-    environment:
-      HASURA_GRAPHQL_METADATA_DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/ratel}
-      HASURA_GRAPHQL_DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/ratel}
-      HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
-      HASURA_GRAPHQL_DEV_MODE: "true"
-      HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup, http-log, webhook-log, websocket-log, query-log
-      HASURA_GRAPHQL_ADMIN_SECRET: ratel_admin_secret
-      HASURA_GRAPHQL_AUTH_HOOK: http://main-api:3000/v1/auth/hasura
-      HASURA_GRAPHQL_AUTH_HOOK_MODE: POST
-      HASURA_GRAPHQL_LOG_LEVEL: debug
     depends_on:
       postgres:
         condition: service_healthy
-      main-api:
+      postgres-init:
         condition: service_healthy
     networks:
       - ratel-network
+    profiles:
+      - testing
 
-  # Hasura table tracker
-  hasura-init:
-    image: hasura/graphql-engine:v2.40.0
-    environment:
-      HASURA_GRAPHQL_ENDPOINT: http://hasura:8080
-      HASURA_GRAPHQL_ADMIN_SECRET: ratel_admin_secret
-    command: >
-      sh -c "
-        echo 'Waiting for Hasura to be ready...' &&
-        until curl -s http://hasura:8080/healthz > /dev/null 2>&1; do
-          sleep 2
-        done &&
-        echo 'Tracking all tables in ratel database...' &&
-        curl -X POST http://hasura:8080/v1/metadata \
-          -H 'Content-Type: application/json' \
-          -H 'X-Hasura-Admin-Secret: ratel_admin_secret' \
-          -d '{\"type\": \"pg_track_all_tables\", \"args\": {\"source\": \"default\"}}' &&
-        echo 'All tables tracked successfully'
-      "
-    depends_on:
-      hasura:
-        condition: service_started
-    networks:
-      - ratel-network
-
-  # LocalStack for AWS service emulation for DynamoDB
-  localstack:
-    hostname: "localstack"
-    image: "localstack/localstack"
-    ports:
-      - "4566:4566"
-    environment:
-      - SERVICES=dynamodb,s3
-      - DYNAMODB_SHARE_DB=1
-    networks:
-      - ratel-network
-
-  # DynamoDB initialization
-  dynamodb-init:
-    image: amazon/aws-cli:latest
-    environment:
-      - AWS_ACCESS_KEY_ID=test
-      - AWS_SECRET_ACCESS_KEY=test
-      - AWS_DEFAULT_REGION=us-east-1
-    volumes:
-      - ./scripts:/scripts
-    command: >
-      sh -c "
-        echo 'Waiting for LocalStack to be ready...' &&
-        until aws --endpoint-url=http://localstack:4566 dynamodb list-tables > /dev/null 2>&1; do
-          sleep 2
-        done &&
-        echo 'Creating ${DYNAMODB_TABLE_NAME:-ratel-local} table with GSIs...' &&
-        aws --endpoint-url=http://localstack:4566 dynamodb create-table \
-          --cli-input-json file:///scripts/dynamodb-schema.json \
-          --table-name ${DYNAMODB_TABLE_NAME:-ratel-local} &&
-        echo 'ratel-local table and GSIs created successfully'
-      "
-    depends_on:
-      - localstack
-    networks:
-      - ratel-network
-
-  # DynamoDB Admin GUI
-  dynamodb-admin:
-    image: aaronshaf/dynamodb-admin:latest
-    ports:
-      - "8081:8001"
-    environment:
-      - DYNAMO_ENDPOINT=http://localstack:4566
-    depends_on:
-      - dynamodb-init
-    networks:
-      - ratel-network
-
-  # Playwright E2E Testing
-  # playwright:
-  #   image: mcr.microsoft.com/playwright:v1.49.0-jammy
-  #   working_dir: /app
-  #   volumes:
-  #     - .:/app
-  #     - playwright-cache:/home/pwuser/.cache
-  #   environment:
-  #     CI: "true"
-  #     PLAYWRIGHT_BASE_URL: "http://web:8080"
-  #   command: >
-  #     sh -c "
-  #       echo 'Waiting for web service to be ready...' &&
-  #       until curl -s http://web:8080 > /dev/null 2>&1; do
-  #         sleep 2
-  #       done &&
-  #       echo 'Installing dependencies...' &&
-  #       cd ts-packages/web &&
-  #       npm install &&
-  #       echo 'Running Playwright tests...' &&
-  #       npm run test:e2e
-  #     "
-  #   depends_on:
-  #     web:
-  #       condition: service_started
-  #     main-api:
-  #       condition: service_healthy
-  #   networks:
-  #     - ratel-network
-  #   profiles:
-  #     - testing
-
-
-  # # Fetcher Service
+  # Development fetcher (source code mounting)
   fetcher:
     image: rust:1.89
     restart: always
@@ -247,41 +102,228 @@ services:
       PORT: 3001
       DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/ratel}
       TELEGRAM_TOKEN: ${TELEGRAM_TOKEN}
-    depends_on:
-      postgres:
-        condition: service_healthy
     command: ["bash", "scripts/fetcher-entrypoint.sh"]
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:3001/version || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 100
+    depends_on:
+      postgres:
+        condition: service_healthy
+      postgres-init:
+        condition: service_healthy
+    networks:
+      - ratel-network
+    profiles:
+      - development
+
+  # Production web (pre-built image)
+  web-testing:
+    image: web:${COMMIT}
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      PORT: 8080
+      API_URL: "http://main-api-testing:3000"
+      GRAPHQL_URL: "http://hasura:8080/v1/graphql"
+      NODE_ENV: test
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/api/version || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 100
+    depends_on:
+      main-api-testing:
+        condition: service_healthy
+    networks:
+      - ratel-network
+    profiles:
+      - testing
+
+  # Development web (source code mounting)
+  web:
+    image: node:22.14
+    restart: always
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./.build/node_modules:/app/node_modules
+      - ./.build/web_node_modules:/app/ts-packages/web/node_modules
+      - ./.build/pnpm-store:/app/.pnpm-store
+      - .:/app
+    working_dir: /app
+    environment:
+      PORT: 8080
+      API_URL: "http://main-api:3000"
+      GRAPHQL_URL: "http://hasura:8080/v1/graphql"
+      NODE_ENV: development
+    command: ["bash", "scripts/web-entrypoint.sh"]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/api/version || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 100
+    depends_on:
+      main-api:
+        condition: service_healthy
+    networks:
+      - ratel-network
+    profiles:
+      - development
+
+  # Database
+  postgres:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ratel
+    volumes:
+      - .build/postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - ratel-network
 
-  # # Image Worker Service
-  # image-worker:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile.image-worker
-  #   restart: unless-stopped
-  #   environment:
-  #     ENV: dev
-  #     RUST_LOG: debug
-  #     AWS_REGION: us-east-1
-  #     # Disable AWS SQS for local development
-  #     AWS_ACCESS_KEY_ID: ""
-  #     AWS_SECRET_ACCESS_KEY: ""
-  #   volumes:
-  #     - ./uploads:/app/uploads
-  #   networks:
-  #     - ratel-network
+  postgres-init:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+      PGPASSWORD: postgres
+    volumes:
+      - ./scripts:/scripts
+    # Command will be overridden in specific compose files
+    healthcheck:
+      test: ["CMD", "test", "-f", "/tmp/init-complete"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    command: >
+      sh -c "
+        echo 'Waiting for PostgreSQL to be ready...' &&
+        until pg_isready -h postgres -U postgres; do
+          sleep 2
+        done &&
+        echo 'Creating ratel database...' &&
+        psql -h postgres -U postgres -d postgres -c 'CREATE DATABASE ratel;' || echo 'Database might already exist' &&
+        echo 'Running init.sql...' &&
+        psql -h postgres -U postgres -d ratel -f /scripts/init.sql &&
+        echo 'Database initialization completed' &&
+        touch /tmp/init-complete &&
+        sleep infinity
+      "
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - ratel-network
 
+  localstack:
+    hostname: localstack
+    image: localstack/localstack
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=dynamodb,s3,sqs
+      - DYNAMODB_SHARE_DB=1
+      - SQS_ENDPOINT_STRATEGY=off
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_DEFAULT_REGION=us-east-1
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - ratel-network
+
+  # DynamoDB initialization
+  localstack-init:
+    image: amazonlinux:2023
+    environment:
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_DEFAULT_REGION=us-east-1
+    volumes:
+      - ./scripts:/scripts
+    networks:
+      - ratel-network
+    command: ["bash", "/scripts/localstack-init-entrypoint.sh"]
+    depends_on:
+      localstack:
+        condition: service_healthy
+
+  dynamodb-admin:
+    image: aaronshaf/dynamodb-admin:latest
+    ports:
+      - "8081:8001"
+    environment:
+      - DYNAMO_ENDPOINT=http://localstack:4566
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_DEFAULT_REGION=us-east-1
+    depends_on:
+      - localstack-init
+    profiles:
+      - admin
+    networks:
+      - ratel-network
+
+  hasura:
+    image: hasura/graphql-engine:v2.40.0
+    restart: unless-stopped
+    ports:
+      - "28080:8080"
+    environment:
+      HASURA_GRAPHQL_METADATA_DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/ratel}
+      HASURA_GRAPHQL_DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/ratel}
+      HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
+      HASURA_GRAPHQL_DEV_MODE: "true"
+      HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup, http-log, webhook-log, websocket-log, query-log
+      HASURA_GRAPHQL_ADMIN_SECRET: ratel_admin_secret
+      HASURA_GRAPHQL_AUTH_HOOK: http://main-api:3000/v1/auth/hasura
+      HASURA_GRAPHQL_AUTH_HOOK_MODE: POST
+      HASURA_GRAPHQL_LOG_LEVEL: debug
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+    depends_on:
+      postgres:
+        condition: service_healthy
+      main-api:
+        condition: service_healthy
+    networks:
+      - ratel-network
+    profiles:
+      - development
+
+  hasura-init:
+    image: hasura/graphql-engine:v2.40.0
+    environment:
+      HASURA_GRAPHQL_ENDPOINT: http://hasura:8080
+      HASURA_GRAPHQL_ADMIN_SECRET: ratel_admin_secret
+    command: ["bash", "/scripts/hasura-init-entrypoint.sh"]
+    networks:
+      - ratel-network
+    depends_on:
+      hasura:
+        condition: service_healthy
+    profiles:
+      - development
 
 networks:
   ratel-network:
     driver: bridge
-
-volumes:
-  playwright-cache:
-    driver: local

@@ -11,7 +11,10 @@ use validator::Validate;
 
 use std::collections::HashSet;
 
-use crate::utils::users::extract_user_id;
+use crate::{
+    utils::users::extract_user_id,
+    services::dual_write::DualWriteService
+};
 
 #[derive(
     Debug,
@@ -124,6 +127,13 @@ pub async fn create_conversation_handler(
     }
 
     tx.commit().await?;
+
+    // Dual-write to DynamoDB
+    let dual_write_service = DualWriteService::new();
+    if let Err(e) = dual_write_service.write_conversation(&conversation).await {
+        tracing::error!("Failed to write conversation to DynamoDB during creation: {:?}", e);
+        // Don't fail the conversation creation if DynamoDB write fails
+    }
 
     tracing::debug!(
         "Successfully created conversation with ID: {}",

@@ -46,7 +46,7 @@ export default function MyProfilePage() {
         </div>
       </div>
 
-      <div className="w-full px-4 md:px-0">
+      <div className="w-full px-4 md:px-0 mr-[10px]">
         <section
           id="panel-0"
           role="tabpanel"
