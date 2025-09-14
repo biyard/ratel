@@ -62,22 +62,35 @@ export default function SetSchedulePopup({
             <CalendarDropdown
               value={session.start}
               onChange={(v) => {
-                if (v > session.end) {
-                  showErrorToast(t('start_date_warning'));
-                  return;
-                }
-                handleChange(index, 'start', Math.floor(v));
+                const delta = session.end - session.start;
+                const nextStart = Math.floor(v);
+                const nextEnd = nextStart + delta;
+                setSessions((prev) => {
+                  const updated = [...prev];
+                  updated[index] = {
+                    ...updated[index],
+                    start: nextStart,
+                    end: nextEnd,
+                  };
+                  return updated;
+                });
               }}
             />
             <TimeDropdown
               value={session.start}
               onChange={(v) => {
-                if (v > session.end) {
-                  showErrorToast(t('start_date_warning'));
-                  return;
-                }
-
-                handleChange(index, 'start', Math.floor(v));
+                const delta = session.end - session.start;
+                const nextStart = Math.floor(v);
+                const nextEnd = nextStart + delta;
+                setSessions((prev) => {
+                  const updated = [...prev];
+                  updated[index] = {
+                    ...updated[index],
+                    start: nextStart,
+                    end: nextEnd,
+                  };
+                  return updated;
+                });
               }}
             />
 

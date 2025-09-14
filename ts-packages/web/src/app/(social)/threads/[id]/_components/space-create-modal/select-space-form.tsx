@@ -285,7 +285,7 @@ export default function SelectSpaceForm({ feed_id }: { feed_id: number }) {
             className={`w-full py-[14.5px] font-bold text-base rounded-[10px] ${
               selectedType !== null && !isLoading
                 ? 'bg-primary text-black hover:bg-primary/80'
-                : 'bg-neutral-800 text-neutral-700 cursor-not-allowed'
+                : 'bg-disabled-button-bg text-disabled-button-text cursor-not-allowed'
             } transition-colors`}
           >
             {isLoading ? 'Sending...' : 'Send'}

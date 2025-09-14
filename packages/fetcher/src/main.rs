@@ -72,20 +72,6 @@ async fn main() -> Result<()> {
         panic!("Database is not initialized. Call init() first.");
     };
 
-    let bot = Bot::new(config::get().telegram_token);
-    set_command(bot.clone()).await;
-
-    let handler = dptree::entry()
-        .branch(Update::filter_message().endpoint(message_handler))
-        .branch(Update::filter_my_chat_member().endpoint(member_update_handler));
-
-    let mut binding = Dispatcher::builder(bot, handler)
-        .dependencies(dptree::deps![pool.clone()])
-        .enable_ctrlc_handler()
-        .build();
-
-    let teloxide_dispatcher = binding.dispatch();
-
     let app = api_main(&pool).await?;
 
     let port = option_env!("PORT").unwrap_or("4000");
@@ -94,16 +80,40 @@ async fn main() -> Result<()> {
         .unwrap();
     let axum_server = by_axum::serve(listener, app);
 
-    tokio::select! {
-        result = teloxide_dispatcher => {
-            tracing::info!("Teloxide dispatcher finished: {:?}", result);
-        }
-        result = axum_server => {
-            if let Err(e) = result {
-                tracing::error!("Axum server has failed: {}", e);
-            } else {
-                tracing::info!("Axum server finished successfully");
+    if let Some(token) = config::get().telegram_token {
+        let bot = Bot::new(token);
+        set_command(bot.clone()).await;
+
+        let handler = dptree::entry()
+            .branch(Update::filter_message().endpoint(message_handler))
+            .branch(Update::filter_my_chat_member().endpoint(member_update_handler));
+
+        let mut dispatcher = Dispatcher::builder(bot, handler)
+            .dependencies(dptree::deps![pool.clone()])
+            .enable_ctrlc_handler()
+            .build();
+
+        let teloxide_dispatcher = dispatcher.dispatch();
+
+        tokio::select! {
+            result = teloxide_dispatcher => {
+                tracing::info!("Teloxide dispatcher finished: {:?}", result);
             }
+            result = axum_server => {
+                if let Err(e) = result {
+                    tracing::error!("Axum server has failed: {}", e);
+                } else {
+                    tracing::info!("Axum server finished successfully");
+                }
+            }
+        }
+    } else {
+        tracing::warn!("TELEGRAM_TOKEN not set, skipping Telegram bot functionality");
+        // Only run the axum server if no telegram dispatcher
+        if let Err(e) = axum_server.await {
+            tracing::error!("Axum server has failed: {}", e);
+        } else {
+            tracing::info!("Axum server finished successfully");
         }
     }
 

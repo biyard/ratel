@@ -190,6 +190,7 @@ jobs:
           P256_D: ${{ secrets.P256_D }}
           P256_CRV: ${{ secrets.P256_CRV }}
 
+          DYNAMO_TABLE_PREFIX: ratel-dev
         run: |
           make docker.build
           make docker.login
@@ -327,6 +328,7 @@ jobs:
           NEXT_PUBLIC_API_URL: https://api.dev.ratel.foundation
           NEXT_PUBLIC_EXPERIMENT: true
           NEXT_PUBLIC_GRAPHQL_URL: https://graphql.dev.ratel.foundation/v1/graphql
+          NEXT_PUBLIC_TELEGRAM_BOTNAME: crypto_ratel_dev_bot
 
         run: |
             make docker.build
