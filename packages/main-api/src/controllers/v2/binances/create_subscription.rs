@@ -34,6 +34,19 @@ pub enum SubscribeType {
     Vip = 4,
     Admin = 5,
 }
+
+impl SubscribeType {
+    pub const fn plan_code(self) -> &'static str {
+        match self {
+            SubscribeType::Free => "RATEL_FREE",
+            SubscribeType::Pro => "RATEL_PRO",
+            SubscribeType::Premium => "RATEL_PREMIUM",
+            SubscribeType::Vip => "RATEL_VIP",
+            SubscribeType::Admin => "RATEL_ADMIN",
+        }
+    }
+}
+
 #[derive(
     Debug,
     Clone,
@@ -86,13 +99,7 @@ pub async fn create_subscription_handler(
 
     let base_domain = conf.binance.redirect_domain;
 
-    let plan_code = match req.subscribe_type {
-        SubscribeType::Free => "RATEL_FREE",
-        SubscribeType::Pro => "RATEL_PRO",
-        SubscribeType::Premium => "RATEL_PREMIUM",
-        SubscribeType::Vip => "RATEL_VIP",
-        _ => "RATEL_ADMIN",
-    };
+    let plan_code = req.subscribe_type.plan_code();
 
     if req.subscribe_type == SubscribeType::Free || req.subscribe_type == SubscribeType::Admin {
         return Ok(Json(SubscribeResponse {
