@@ -3,7 +3,7 @@ use base64::engine::general_purpose::STANDARD as B64;
 use bdk::prelude::*;
 use by_axum::axum::{Extension, Json, body::Bytes, extract::State, http::HeaderMap};
 use dto::{
-    Result,
+    Membership, Result, User, UserRepositoryUpdateRequest,
     by_axum::auth::Authorization,
     sqlx::{Pool, Postgres},
 };
@@ -14,12 +14,13 @@ use crate::{config, utils::wallets::sign_for_binance::sign_for_binance};
 
 pub async fn binance_webhook_handler(
     Extension(_auth): Extension<Option<Authorization>>,
-    State(_pool): State<Pool<Postgres>>,
+    State(pool): State<Pool<Postgres>>,
     headers: HeaderMap,
     body: Bytes,
 ) -> Result<Json<Value>> {
     tracing::debug!("webhook binance called with body: {:?}", body);
 
+    let repo = User::get_repository(pool.clone());
     let conf = config::get();
     let base = conf.binance_base_url;
     let api_key = conf.binance_api_key;
@@ -86,6 +87,17 @@ pub async fn binance_webhook_handler(
         return Err(dto::Error::Unauthorized);
     }
 
+    let biz_status = parse_biz_status(&raw_body).unwrap_or_default();
+    tracing::debug!("biz status: {:?}", biz_status);
+
+    if biz_status != "PAY_SUCCESS" {
+        tracing::info!("binance webhook ignored: biz_status={}", biz_status);
+        return Ok(Json(serde_json::json!({
+            "returnCode": "SUCCESS",
+            "returnMessage": "OK"
+        })));
+    }
+
     let (user_id, plan, binance_user) = parse_ids_and_plan(&raw_body)
         .ok_or_else(|| dto::Error::ServerError("cannot parse userId/plan from payload".into()))?;
 
@@ -95,6 +107,33 @@ pub async fn binance_webhook_handler(
         plan,
         binance_user
     );
+
+    if user_id.is_none() {
+        return Err(dto::Error::NotFound);
+    }
+
+    let user_id: i64 = user_id
+        .unwrap_or_default()
+        .parse::<i64>()
+        .map_err(|e| dto::Error::ServerError(format!("invalid user_id: {e}")))?;
+
+    let subscribe_type = if plan == "RATEL_PRO" {
+        Membership::Paid1
+    } else if plan == "RATEL_PREMIUM" {
+        Membership::Paid2
+    } else {
+        Membership::Paid3
+    };
+
+    let _ = repo
+        .update(
+            user_id,
+            UserRepositoryUpdateRequest {
+                membership: Some(subscribe_type),
+                ..Default::default()
+            },
+        )
+        .await?;
 
     Ok(Json(serde_json::json!({
         "returnCode": "SUCCESS",
@@ -199,6 +238,12 @@ fn verify_rsa_sha256(
     verifier
         .verify(&sig)
         .map_err(|e| format!("verifier verify failed: {e}"))
+}
+
+fn parse_biz_status(raw_body: &str) -> Option<String> {
+    let v: Value = serde_json::from_str(raw_body).ok()?;
+    v.get("bizStatus")
+        .and_then(|x| x.as_str().map(|s| s.to_string()))
 }
 
 fn parse_ids_and_plan(raw_body: &str) -> Option<(Option<String>, String, Option<String>)> {

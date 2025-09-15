@@ -26,9 +26,11 @@ use crate::{
 #[serde(rename_all = "lowercase")]
 pub enum SubscribeType {
     #[default]
-    Personal = 1,
-    Business = 2,
-    Enterprise = 3,
+    Free = 1,
+    Pro = 2,
+    Premium = 3,
+    Vip = 4,
+    Admin = 5,
 }
 #[derive(
     Debug,
@@ -81,17 +83,31 @@ pub async fn create_subscription_handler(
 
     let base_domain = conf.redirect_domain;
 
-    let plan_code = if req.subscribe_type == SubscribeType::Personal {
-        "RATEL_PERSONAL"
-    } else if req.subscribe_type == SubscribeType::Enterprise {
-        "RATEL_ENTERPRISE"
+    let plan_code = if req.subscribe_type == SubscribeType::Free {
+        "RATEL_FREE"
+    } else if req.subscribe_type == SubscribeType::Pro {
+        "RATEL_PRO"
+    } else if req.subscribe_type == SubscribeType::Premium {
+        "RATEL_PREMIUM"
+    } else if req.subscribe_type == SubscribeType::Vip {
+        "RATEL_VIP"
     } else {
-        "RATEL_BUSINESS"
+        "RATEL_ADMIN"
     };
 
-    let amount_usdt = if req.subscribe_type == SubscribeType::Personal {
+    if req.subscribe_type == SubscribeType::Free || req.subscribe_type == SubscribeType::Admin {
+        return Ok(Json(SubscribeResponse {
+            checkout_url: "".to_string(),
+            deeplink: "".to_string(),
+            prepay_id: "".to_string(),
+            qr_content: "".to_string(),
+            qrcode_link: "".to_string(),
+        }));
+    }
+
+    let amount_usdt = if req.subscribe_type == SubscribeType::Pro {
         0.002
-    } else if req.subscribe_type == SubscribeType::Business {
+    } else if req.subscribe_type == SubscribeType::Premium {
         0.005
     } else {
         0.01
