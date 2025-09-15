@@ -1,15 +1,17 @@
 use bdk::prelude::*;
 use by_axum::axum::{Extension, Json, extract::State};
 use dto::{
-    Result,
+    Purchase, Result,
     by_axum::auth::Authorization,
     sqlx::{Pool, Postgres},
 };
-use rand::{Rng, distr::Alphanumeric};
 
 use crate::{
     config,
-    utils::{users::extract_user_id, wallets::sign_for_binance::sign_for_binance},
+    utils::{
+        generate_merchant_trade_no::gen_merchant_trade_no, users::extract_user_id,
+        wallets::sign_for_binance::sign_for_binance,
+    },
 };
 
 #[derive(
@@ -72,6 +74,7 @@ pub async fn create_subscription_handler(
     State(pool): State<Pool<Postgres>>,
     Json(req): Json<SubscribeRequest>,
 ) -> Result<Json<SubscribeResponse>> {
+    let repo = Purchase::get_repository(pool.clone());
     let user_id = extract_user_id(&pool, auth).await?;
 
     let conf = config::get();
@@ -106,11 +109,11 @@ pub async fn create_subscription_handler(
     }
 
     let amount_usdt = if req.subscribe_type == SubscribeType::Pro {
-        0.002
+        20
     } else if req.subscribe_type == SubscribeType::Premium {
-        0.005
+        50
     } else {
-        0.01
+        100
     };
 
     // let mut rnd = [0u8; 6];
@@ -183,6 +186,12 @@ pub async fn create_subscription_handler(
     }
 
     let data = &json["data"];
+    let db_prepay_id: String = data["prepayId"].as_str().unwrap_or_default().to_string();
+
+    let _ = repo
+        .insert(user_id, dto::PurchaseStatus::InProgress, Some(db_prepay_id))
+        .await?;
+
     let out = SubscribeResponse {
         checkout_url: data["checkoutUrl"].as_str().unwrap_or_default().to_string(),
         deeplink: data["deeplink"].as_str().unwrap_or_default().to_string(),
@@ -192,29 +201,4 @@ pub async fn create_subscription_handler(
     };
 
     Ok(Json(out))
-}
-
-fn sanitize_alnum(input: &str) -> String {
-    input
-        .chars()
-        .filter(|c| c.is_ascii_alphanumeric())
-        .collect()
-}
-
-fn gen_merchant_trade_no(plan_code: &str) -> String {
-    let base = sanitize_alnum(plan_code);
-    let rand_tag: String = rand::rng()
-        .sample_iter(&Alphanumeric)
-        .take(10)
-        .map(char::from)
-        .collect();
-
-    let mut mt = format!("{}{}", base, rand_tag);
-    if mt.len() > 32 {
-        mt.truncate(32);
-    }
-    if mt.is_empty() {
-        mt = rand_tag;
-    }
-    mt
 }

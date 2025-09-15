@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import React from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { QK_USERS_GET_INFO } from '@/constants';
+import { showSuccessToast } from '@/lib/toast';
 import { config } from '@/config';
 
 interface PlanProps {
@@ -18,7 +19,10 @@ type CardProps = PlanProps & {
   buttonEnabled: boolean;
   selected: boolean;
   onClick?: () => Promise<void> | void;
+  onUnsubscribe?: () => Promise<void> | void;
 };
+
+const SUPPORT_EMAIL = 'hi@biyard.co';
 
 const plans: PlanProps[] = [
   {
@@ -52,7 +56,7 @@ const plans: PlanProps[] = [
     ],
   },
   {
-    title: 'Vip',
+    title: 'VIP',
     price: 100,
     features: [
       'Business Solutions',
@@ -89,7 +93,7 @@ export default function SubscribePage() {
         : user.membership == 3
           ? 'Premium'
           : user.membership == 4
-            ? 'Vip'
+            ? 'VIP'
             : 'Admin';
 
   if (config.env !== 'local') {
@@ -99,6 +103,16 @@ export default function SubscribePage() {
       </div>
     );
   }
+
+  const handleUnsubscribeClick = async () => {
+    const subject = encodeURIComponent('Refund request');
+    const body = encodeURIComponent(
+      'Please help me with a refund of my current plan.',
+    );
+    window.location.href = `mailto:${SUPPORT_EMAIL}?subject=${subject}&body=${body}`;
+    // await post(ratelApi.binances.unsubscribe(), {});
+    // await qc.invalidateQueries({ queryKey: [QK_USERS_GET_INFO] });
+  };
 
   const handleSubscribeClick = async (i: number) => {
     const subscribeType =
@@ -114,11 +128,12 @@ export default function SubscribePage() {
     if (res?.checkout_url) {
       window.location.href = res.checkout_url;
       await qc.invalidateQueries({ queryKey: [QK_USERS_GET_INFO] });
+      showSuccessToast(t('success_subscribe_info'));
     }
   };
 
   return (
-    <div className="w-full h-fit bg-card-bg border-card-border px-4 py-12">
+    <div className="w-full h-fit bg-card-bg border-card-border px-4 py-12 mt-12.5">
       <div className="mx-auto max-w-6xl">
         <div className="text-center">
           <div className="mx-auto inline-flex items-center rounded-full bg-follow-button-bg px-3 py-1 text-xs text-follow-button-text">
@@ -139,6 +154,7 @@ export default function SubscribePage() {
               }
               selected={p.title == selected}
               onClick={() => handleSubscribeClick(i)}
+              onUnsubscribe={handleUnsubscribeClick}
             />
           ))}
         </div>
@@ -158,10 +174,25 @@ function Card({
   buttonEnabled,
   selected,
   onClick,
+  onUnsubscribe,
 }: CardProps) {
   const t = useTranslations('Subscribe');
   const isRefundable =
-    selected && (title === 'Pro' || title === 'Premium' || title === 'Vip');
+    selected && (title === 'Pro' || title === 'Premium' || title === 'VIP');
+
+  const isAdminCard = title === 'Admin';
+
+  const handlePrimaryClick = () => {
+    if (isAdminCard) {
+      const subject = encodeURIComponent('Suggest New plan inquiry');
+      const body = encodeURIComponent(
+        'I would like to suject a new plan with a price',
+      );
+      window.location.href = `mailto:${SUPPORT_EMAIL}?subject=${subject}&body=${body}`;
+      return;
+    }
+    onClick?.();
+  };
 
   return (
     <div
@@ -188,7 +219,7 @@ function Card({
         {isRefundable ? (
           <button
             type="button"
-            onClick={onClick}
+            onClick={onUnsubscribe}
             className="mt-6 inline-flex w-full items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold shadow transition bg-red-500/90 hover:bg-red-500 text-white"
           >
             {t('unsubscribe')}
@@ -196,7 +227,7 @@ function Card({
         ) : buttonEnabled ? (
           <button
             type="button"
-            onClick={onClick}
+            onClick={handlePrimaryClick}
             className="mt-6 inline-flex w-full items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold shadow transition bg-primary hover:bg-primary/80 text-text-primary"
           >
             {t('select')}

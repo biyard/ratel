@@ -89,6 +89,7 @@ pub async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         SprintLeagueVote,
         TeamMember,
         News,
+        Purchase,
         // Quiz,
         // QuizResult,
         // ElectionPledgeQuizLike,

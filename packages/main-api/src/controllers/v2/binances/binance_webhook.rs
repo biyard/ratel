@@ -3,7 +3,8 @@ use base64::engine::general_purpose::STANDARD as B64;
 use bdk::prelude::*;
 use by_axum::axum::{Extension, Json, body::Bytes, extract::State, http::HeaderMap};
 use dto::{
-    Membership, Result, User, UserRepositoryUpdateRequest,
+    Membership, Purchase, PurchaseRepositoryUpdateRequest, PurchaseStatus, Result, User,
+    UserRepositoryUpdateRequest,
     by_axum::auth::Authorization,
     sqlx::{Pool, Postgres},
 };
@@ -21,6 +22,9 @@ pub async fn binance_webhook_handler(
     tracing::debug!("webhook binance called with body: {:?}", body);
 
     let repo = User::get_repository(pool.clone());
+    let purchase_repo = Purchase::get_repository(pool.clone());
+    let mut tx = pool.begin().await?;
+
     let conf = config::get();
     let base = conf.binance_base_url;
     let api_key = conf.binance_api_key;
@@ -125,8 +129,17 @@ pub async fn binance_webhook_handler(
         Membership::Paid3
     };
 
+    let d = Purchase::query_builder()
+        .order_by_created_at_desc()
+        .user_id_equals(user_id)
+        .query()
+        .map(Purchase::from)
+        .fetch_one(&mut *tx)
+        .await?;
+
     let _ = repo
-        .update(
+        .update_with_tx(
+            &mut *tx,
             user_id,
             UserRepositoryUpdateRequest {
                 membership: Some(subscribe_type),
@@ -134,6 +147,19 @@ pub async fn binance_webhook_handler(
             },
         )
         .await?;
+
+    let _ = purchase_repo
+        .update_with_tx(
+            &mut *tx,
+            d.id,
+            PurchaseRepositoryUpdateRequest {
+                status: Some(PurchaseStatus::Purchased),
+                ..Default::default()
+            },
+        )
+        .await?;
+
+    tx.commit().await?;
 
     Ok(Json(serde_json::json!({
         "returnCode": "SUCCESS",

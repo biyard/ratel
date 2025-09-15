@@ -4,7 +4,7 @@ ENV ?= dev
 REDIRECT_DOMAIN ?= https://dev.ratel.foundation
 AUTH_DOMAIN ?= dev.ratel.foundation
 DOMAIN ?= dev.ratel.foundation
-BINANCE_WEBHOOK ?= https://20e0ea654b53.ngrok-free.app/v2/binances/webhooks 
+BINANCE_WEBHOOK ?= https://api.dev.ratel.foundation/v2/binances/webhooks 
 
 WORKSPACE_ROOT ?= $(PWD)/../..
 AWS_ACCOUNT_ID ?= $(shell aws sts get-caller-identity --query "Account" --output text)

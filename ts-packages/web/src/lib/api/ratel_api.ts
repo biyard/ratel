@@ -234,6 +234,7 @@ export const ratelApi = {
   },
   binances: {
     createSubscription: () => '/v2/binances/subscriptions',
+    unsubscribe: () => '/v2/binances/unsubscribe',
   },
   feeds: {
     comment: () => '/v1/feeds',
