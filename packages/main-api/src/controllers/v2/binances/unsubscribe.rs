@@ -69,9 +69,9 @@ pub async fn unsubscribe_handler(
     };
 
     let conf = config::get();
-    let base = conf.binance_base_url;
-    let api_key = conf.binance_api_key;
-    let secret = conf.binance_secret_key;
+    let base = conf.binance.base_url;
+    let api_key = conf.binance.api_key;
+    let secret = conf.binance.secret_key;
 
     let refund_request_id = gen_merchant_trade_no("REFUND");
     let body = serde_json::json!({

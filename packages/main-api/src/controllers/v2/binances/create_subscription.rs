@@ -79,23 +79,19 @@ pub async fn create_subscription_handler(
 
     let conf = config::get();
 
-    let base = conf.binance_base_url;
-    let api_key = conf.binance_api_key;
-    let secret = conf.binance_secret_key;
-    let binance_webhook = conf.binance_webhook;
+    let base = conf.binance.base_url;
+    let api_key = conf.binance.api_key;
+    let secret = conf.binance.secret_key;
+    let binance_webhook = conf.binance.webhook;
 
-    let base_domain = conf.redirect_domain;
+    let base_domain = conf.binance.redirect_domain;
 
-    let plan_code = if req.subscribe_type == SubscribeType::Free {
-        "RATEL_FREE"
-    } else if req.subscribe_type == SubscribeType::Pro {
-        "RATEL_PRO"
-    } else if req.subscribe_type == SubscribeType::Premium {
-        "RATEL_PREMIUM"
-    } else if req.subscribe_type == SubscribeType::Vip {
-        "RATEL_VIP"
-    } else {
-        "RATEL_ADMIN"
+    let plan_code = match req.subscribe_type {
+        SubscribeType::Free => "RATEL_FREE",
+        SubscribeType::Pro => "RATEL_PRO",
+        SubscribeType::Premium => "RATEL_PREMIUM",
+        SubscribeType::Vip => "RATEL_VIP",
+        _ => "RATEL_ADMIN",
     };
 
     if req.subscribe_type == SubscribeType::Free || req.subscribe_type == SubscribeType::Admin {
@@ -109,11 +105,11 @@ pub async fn create_subscription_handler(
     }
 
     let amount_usdt = if req.subscribe_type == SubscribeType::Pro {
-        0.002
+        20
     } else if req.subscribe_type == SubscribeType::Premium {
-        0.005
+        50
     } else {
-        0.01
+        100
     };
 
     // let mut rnd = [0u8; 6];

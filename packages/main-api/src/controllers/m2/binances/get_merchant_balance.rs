@@ -65,9 +65,9 @@ pub async fn binance_merchant_balance_handler(
 ) -> Result<Json<MerchantBalanceResponse>> {
     let conf = config::get();
 
-    let base = conf.binance_base_url;
-    let api_key = conf.binance_api_key;
-    let secret = conf.binance_secret_key;
+    let base = conf.binance.base_url;
+    let api_key = conf.binance.api_key;
+    let secret = conf.binance.secret_key;
 
     let body_json = serde_json::json!({
         "wallet": req.wallet,
