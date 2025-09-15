@@ -103,6 +103,7 @@ services:
       PORT: 3001
       DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/ratel}
       TELEGRAM_TOKEN: ${TELEGRAM_TOKEN}
+      DYNAMO_TABLE_PREFIX: ratel-local
     command: ["bash", "scripts/fetcher-entrypoint.sh"]
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:3001/version || exit 1"]
