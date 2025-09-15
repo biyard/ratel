@@ -14,7 +14,6 @@ import PlayerEdit from './_components/player';
 
 import SprintLeagueGame, { Status as GameStatus } from './_components/konva';
 import { showErrorToast } from '@/lib/toast';
-import { set } from 'date-fns';
 
 export function SprintLeagueEditor({ spaceId }: { spaceId: number }) {
   const {
