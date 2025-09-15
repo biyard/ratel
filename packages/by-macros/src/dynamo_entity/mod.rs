@@ -4,7 +4,9 @@ use std::collections::HashMap;
 use convert_case::Casing;
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, Attribute, Data, DataStruct, DeriveInput, Fields, Ident, Type};
+use syn::{
+    parse_macro_input, Attribute, Data, DataEnum, DataStruct, DeriveInput, Fields, Ident, Type,
+};
 
 use crate::write_file;
 
@@ -176,22 +178,15 @@ fn parse_fields(ds: &DataStruct, cfg: &StructCfg) -> (Vec<FieldInfo>, HashMap<St
     (out, indice_fn)
 }
 
-pub fn dynamo_entity_impl(input: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(input as DeriveInput);
-    let ident = input.ident.clone();
-    let st_name = input.ident.to_string();
-    let s_cfg = parse_struct_cfg(&input.attrs);
+fn generate_struct_impl(
+    ident: Ident,
+    ds: &DataStruct,
+    s_cfg: StructCfg,
+) -> proc_macro2::TokenStream {
+    let st_name = ident.to_string();
 
-    let (fields, indice_fn) = match &input.data {
-        Data::Struct(ds) => parse_fields(ds, &s_cfg),
-        _ => {
-            return syn::Error::new_spanned(input, "#[derive(DynamoEntity)] only supports structs")
-                .to_compile_error()
-                .into();
-        }
-    };
+    let (fields, indice_fn) = parse_fields(ds, &s_cfg);
 
-    // record default/consts
     let table_suffix = s_cfg.table.clone();
     let table_prefix = s_cfg.table_prefix.clone();
     let result_ty: syn::Type = syn::parse_str(&s_cfg.result_ty).unwrap();
@@ -211,7 +206,7 @@ pub fn dynamo_entity_impl(input: TokenStream) -> TokenStream {
     };
 
     let sk_param = if s_cfg.sk_name.is_some() {
-        quote! { sk: Option<String>, }
+        quote! { sk: Option<impl std::fmt::Display>, }
     } else {
         quote! {}
     };
@@ -221,7 +216,7 @@ pub fn dynamo_entity_impl(input: TokenStream) -> TokenStream {
             if let Some(sk) = sk {
                 req = req.key(
                     Self::sk_field().expect("sk field is required"),
-                    aws_sdk_dynamodb::types::AttributeValue::S(sk),
+                    aws_sdk_dynamodb::types::AttributeValue::S(format!("{}", sk)),
                 );
             }
         }
@@ -312,10 +307,81 @@ pub fn dynamo_entity_impl(input: TokenStream) -> TokenStream {
             }
 
         }
-
-
     };
 
+    out.into()
+}
+
+fn generate_enum_impl(ident: Ident, _ds: &DataEnum, s_cfg: StructCfg) -> proc_macro2::TokenStream {
+    let table_suffix = s_cfg.table.clone();
+    let table_prefix = s_cfg.table_prefix.clone();
+    let result_ty: syn::Type = syn::parse_str(&s_cfg.result_ty).unwrap();
+    let err_ctor: syn::Path = syn::parse_str(&s_cfg.error_ctor).unwrap();
+    let table_lit_str = syn::LitStr::new(
+        &format!("{}-{}", table_prefix, table_suffix),
+        proc_macro2::Span::call_site(),
+    );
+
+    let pk_field_name = syn::LitStr::new(&s_cfg.pk_name, proc_macro2::Span::call_site());
+
+    quote! {
+        impl #ident {
+            pub fn table_name() -> &'static str {
+                #table_lit_str
+            }
+
+            pub fn pk_field() -> &'static str { #pk_field_name }
+
+
+            pub async fn query(
+                cli: &aws_sdk_dynamodb::Client,
+                pk: impl std::fmt::Display,
+            ) -> #result_ty <Vec<#ident>, #err_ctor> {
+                let resp = cli
+                    .query()
+                    .table_name(#table_lit_str)
+                    .key_condition_expression("#pk = :pk")
+                    .expression_attribute_names("#pk", #pk_field_name)
+                    .expression_attribute_values(
+                        ":pk",
+                        aws_sdk_dynamodb::types::AttributeValue::S(pk.to_string()),
+                    )
+                    .send()
+                    .await
+                    .map_err(Into::<aws_sdk_dynamodb::Error>::into)?;
+
+                let items = resp
+                    .items
+                    .unwrap_or_default()
+                    .into_iter()
+                    .map(|item| serde_dynamo::from_item(item).expect("failed to parse item"))
+                    .collect();
+
+                Ok(items)
+            }
+        }
+    }
+}
+
+pub fn dynamo_entity_impl(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    let ident = input.ident.clone();
+    let s_cfg = parse_struct_cfg(&input.attrs);
+
+    let out = match &input.data {
+        Data::Struct(ds) => generate_struct_impl(ident.clone(), ds, s_cfg),
+        Data::Enum(ds) => generate_enum_impl(ident.clone(), ds, s_cfg),
+        _ => {
+            return syn::Error::new_spanned(
+                input,
+                "#[derive(DynamoEntity)] only supports structs and enum",
+            )
+            .to_compile_error()
+            .into();
+        }
+    };
+
+    // record default/consts
     write_file::write_file(ident.to_string(), "dynamo_entities", out.to_string());
 
     out.into()
