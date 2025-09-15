@@ -533,6 +533,7 @@
     "subscribe_desc_2": "Stay ahead with Ratel Premium.",
     "subscribe_desc_3": "Start using it now.",
     "subscribe_info": "Plans can be changed or cancelled at any time.",
-    "select": "Select"
+    "select": "Select",
+    "unsubscribe": "UnSubscribe"
   }
 }

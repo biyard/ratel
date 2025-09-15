@@ -1,5 +1,4 @@
 'use client';
-// import { config } from '@/config';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { useApiCall } from '@/lib/api/use-send';
 import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
@@ -161,6 +160,8 @@ function Card({
   onClick,
 }: CardProps) {
   const t = useTranslations('Subscribe');
+  const isRefundable =
+    selected && (title === 'Pro' || title === 'Premium' || title === 'Vip');
 
   return (
     <div
@@ -184,7 +185,15 @@ function Card({
           ))}
         </ul>
 
-        {buttonEnabled ? (
+        {isRefundable ? (
+          <button
+            type="button"
+            onClick={onClick}
+            className="mt-6 inline-flex w-full items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold shadow transition bg-red-500/90 hover:bg-red-500 text-white"
+          >
+            {t('unsubscribe')}
+          </button>
+        ) : buttonEnabled ? (
           <button
             type="button"
             onClick={onClick}
