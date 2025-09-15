@@ -277,9 +277,9 @@
     "make_public_desc_line2_strong": "cannot be made private again.",
     "cancel": "Cancel",
 
-    "make_public_save_title": "Save first, make public?",
+    "make_public_save_title": "Save first, make publish?",
     "unsaved_notice_line1": "Looks like you haven’t saved yet.",
-    "unsaved_notice_line2": "Want to save your changes before going public.",
+    "unsaved_notice_line2": "Want to save your changes before going publish.",
     "unsaved_notice_line3": "or skip it and publish anyway?",
     "just_publish": "Just Publish",
     "save_and_publish": "Save & Publish",
@@ -596,5 +596,33 @@
     "CancelButton": {
       "label": "Cancel"
     }
+  },
+
+  "SpaceHeader": {
+    "unsave_notice_modal": "Save your changes?",
+    "publish_modal_title": "Publish this space",
+    "make_public_modal_title": "You’re About to Go Public"
+  },
+
+  "SpaceUnsaveModal": {
+    "description": "Looks like you haven’t saved yet.<br></br>Want to save your changes before continuing,<br></br>or skip it and continue anyway?",
+    "button_skip": "Just Publish",
+    "button_save": "Save & Publish"
+  },
+
+  "SpacePublishModal": {
+    "description": "Once published, this Space will be visible to everyone and cannot be made private again.",
+    "public_publish_label": "Public Publish",
+    "public_publish_description": "Anyone can access and participate in this space.",
+    "private_publish_label": "Private Publish",
+    "private_publish_description": "Only your team members will be able to access this space.",
+
+    "button_publish": "Publish"
+  },
+
+  "SpaceMakePublicModal": {
+    "description": "Once made public,<br></br>this Space will be visible to everyone and<br></br><b>cannot be made private again.</b>",
+    "button_cancel": "Cancel",
+    "button_make_public": "Make Public"
   }
 }
