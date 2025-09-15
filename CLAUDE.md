@@ -182,69 +182,251 @@ DTO package is deprecated.
 
 #### Structure attribute
 
-| Attribute  | Description                               | Default                 |
-|:-----------|-------------------------------------------|:------------------------|
-| table      | table name except for prefix              | main                    |
-| prefix_env | Environment variable getting table prefix | DYNAMO_TABLE_PREFIX     |
-| result     | Result type                               | std::result::Result     |
-| error_ctor | Error type                                | aws_sdk_dynamodb::Error |
+- `DYNAMO_TABLE_PREFIX` is required for composing full table name.
+  - For example, if `DYNAMO_TABLE_PREFIX` is set to `ratel-local` when building it, the table name of the entity will be set to `ratel-local-main` as default.
+  - If `table` attribute is set to `users`, the full table name will be `ratel-local-users`.
+
+| Attribute  | Description                                  | Default             |
+|:-----------|----------------------------------------------|:--------------------|
+| table      | table name except for prefix                 | main                |
+| result     | Result type                                  | std::result::Result |
+| error_ctor | Error type                                   | create::Error2      |
+| pk_name    | Partition key name                           | pk                  |
+| sk_name    | (optional) Sort key name (none for removing) | sk                  |
 
 
 #### Field attribute
-| Attribute | Description             |
-|:----------|-------------------------|
-| prefix    | Prefix of indexed value |
-| index     | Index name              |
-| pk        | Partition key of index  |
-| sk        | sort key of index       |
+| Attribute | Description                          |
+|:----------|--------------------------------------|
+| prefix    | Prefix of indexed value              |
+| index     | Index name                           |
+| pk        | Partition key of index               |
+| sk        | sort key of index                    |
+| name      | Function name for querying the index |
 
 #### Usage
 The below code is an example of using DynamoEntity
 - If `DYNAMO_TABLE_PREFIX` environment is set to `ratel-local` and `table` is set to `main`, the practical table name will be `ratel-local-main`.
-- `email` field will be indexedm to `gsi1_pk` field.
-   - the value of `gsi1_pk` field will be `EMAIL#a@example.com` if `email` is `a@example.com`.
-- `value` field will be indexed to `gsi1_sk` field.
-   - Because no prefix is set, `gsi_sk` will be same to `value`.
+- For the first `gsi1-index`, it can be queried by calling `EmailVerification::find_by_email_and_code`.
+  - `email` field will be indexedm to `gsi1_pk` field.
+    - the value of `gsi1_pk` field will be `EMAIL#a@example.com` if `email` is `a@example.com`.
+  - `value` field will be indexed to `gsi1_sk` field.
+    - Because no prefix is set, `gsi1_sk` will be same to `value`.
+- For the second `gsi2-index`, we can query by calling `EmailVerification::find_by_code`.
+  - `gsi2_pk` will be set to naive value of `value`.
+  - `gsi2_sk` will be set to `created_at` with `TS` prefix such as `TS#{created_at}`
 
 ```rust
-#[derive(DynamoEntity)]
-#[dynamo(table = "main", prefix_env = "DYNAMO_TABLE_PREFIX", result = "crate::Result", error_ctor = "crate::Error::DynamoDbError")]
-pub struct Model {
+use bdk::prelude::*;
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Serialize, Deserialize, DynamoEntity)]
+pub struct EmailVerification {
     pub pk: String,
+    pub sk: String,
+    #[dynamo(prefix = "TS", index = "gsi2", sk)]
+    pub created_at: i64,
 
-    #[dynamo(prefix = "EMAIL", index = "gsi1", pk)]
+    #[dynamo(prefix = "EMAIL", name = "find_by_email_and_code", index = "gsi1", pk)]
     pub email: String,
-
     #[dynamo(index = "gsi1", sk)]
+    #[dynamo(index = "gsi2", name = "find_by_code", pk)]
     pub value: String,
-
     pub expired_at: i64,
+    pub attemp_count: i32,
 }
 
-fn main() -> crate::Result<()> {
-    // Creation
-    let model = Model::new();            // = Default::default()
-    model.create(&cli).await?;
+impl EmailVerification {
+    pub fn new(email: String, value: String, expired_at: i64) -> Self {
+        let pk = format!("EMAIL#{}", email);
+        let sk = format!("VERIFICATION#{}", value);
+        let created_at = chrono::Utc::now().timestamp_micros();
 
-    // Updating (PK-only 예시)
-    Model::builder()
-        .with_email("user@example.com".to_string())
-        .with_expired_at(11)
-        .execute(&cli, "PK#123")
-        .await?;
+        Self {
+            pk,
+            sk,
+            email,
+            created_at,
+            value,
+            expired_at,
+            attemp_count: 0,
+        }
+    }
+}
 
-    // Delete
-    Model::delete(&cli, "PK#123").await?;
+#[cfg(test)]
+mod tests {
+    use std::{thread::sleep, time::Duration};
 
-    let got = Model::get(&cli, "PK#123").execute().await?;
+    use super::*;
 
-    let (models, bookmark) = Model::query()
-        .on_gsi("EMAIL#user@example.com".to_string())
-        .with_sk_prefix("{code}".to_string())
-        .with_bookmark(bookmark)
-        .execute(&cli)
-        .await?;
+    #[tokio::test]
+    async fn test_email_verification_new() {
+        let conf = aws_sdk_dynamodb::Config::builder()
+            .credentials_provider(aws_sdk_dynamodb::config::Credentials::new(
+                "test", "test", None, None, "dynamo",
+            ))
+            .region(Some(aws_sdk_dynamodb::config::Region::new("us-east-1")))
+            .endpoint_url("http://localhost:4566")
+            .behavior_version_latest()
+            .build();
 
-    Ok(())
+        let cli = aws_sdk_dynamodb::Client::from_conf(conf);
+        let now = chrono::Utc::now().timestamp();
+        let expired_at = now + 3600; // 1 hour later
+        let email = format!("a+{}@example.com", now);
+
+        let ev = EmailVerification::new(email.to_string(), "aaaa".to_string(), expired_at);
+
+        assert_eq!(EmailVerification::table_name(), "ratel-local-main");
+        assert_eq!(EmailVerification::pk_field(), "pk");
+        assert_eq!(EmailVerification::sk_field(), Some("sk"));
+
+        assert!(
+            ev.create(&cli).await.is_ok(),
+            "failed to create email verification"
+        );
+
+        let fetched_ev = EmailVerification::get(&cli, ev.pk.clone(), Some(ev.sk.clone())).await;
+
+        assert!(fetched_ev.is_ok(), "failed to fetch email verification");
+        let fetched_ev = fetched_ev.unwrap();
+        assert!(fetched_ev.is_some(), "email verification not found");
+        let fetched_ev = fetched_ev.unwrap();
+        assert_eq!(fetched_ev.email, ev.email);
+        assert_eq!(fetched_ev.value, ev.value);
+        assert_eq!(fetched_ev.expired_at, ev.expired_at);
+    }
+
+    #[tokio::test]
+    async fn test_email_verification_delete() {
+        let conf = aws_sdk_dynamodb::Config::builder()
+            .credentials_provider(aws_sdk_dynamodb::config::Credentials::new(
+                "test", "test", None, None, "dynamo",
+            ))
+            .region(Some(aws_sdk_dynamodb::config::Region::new("us-east-1")))
+            .endpoint_url("http://localhost:4566")
+            .behavior_version_latest()
+            .build();
+
+        let cli = aws_sdk_dynamodb::Client::from_conf(conf);
+        let now = chrono::Utc::now().timestamp();
+        let expired_at = now + 3600; // 1 hour later
+        let email = format!("d+{}@example.com", now);
+        let ev = EmailVerification::new(email.to_string(), "aaaa".to_string(), expired_at);
+        assert!(
+            ev.create(&cli).await.is_ok(),
+            "failed to create email verification"
+        );
+        let fetched_ev = EmailVerification::get(&cli, ev.pk.clone(), Some(ev.sk.clone())).await;
+        assert!(fetched_ev.is_ok(), "failed to fetch email verification");
+        let fetched_ev = fetched_ev.unwrap();
+        assert!(fetched_ev.is_some(), "email verification not found");
+        let fetched_ev = fetched_ev.unwrap();
+        assert_eq!(fetched_ev.email, ev.email);
+        assert_eq!(fetched_ev.value, ev.value);
+        assert_eq!(fetched_ev.expired_at, ev.expired_at);
+        assert!(
+            EmailVerification::delete(&cli, ev.pk.clone(), Some(ev.sk.clone()))
+                .await
+                .is_ok(),
+            "failed to delete email verification"
+        );
+        let fetched_ev = EmailVerification::get(&cli, ev.pk.clone(), Some(ev.sk.clone())).await;
+        assert!(fetched_ev.is_ok(), "failed to fetch email verification");
+        let fetched_ev = fetched_ev.unwrap();
+        assert!(fetched_ev.is_none(), "email verification should be deleted");
+    }
+
+    #[tokio::test]
+    async fn test_email_verification_find_by_email_and_code() {
+        let conf = aws_sdk_dynamodb::Config::builder()
+            .credentials_provider(aws_sdk_dynamodb::config::Credentials::new(
+                "test", "test", None, None, "dynamo",
+            ))
+            .region(Some(aws_sdk_dynamodb::config::Region::new("us-east-1")))
+            .endpoint_url("http://localhost:4566")
+            .behavior_version_latest()
+            .build();
+
+        let cli = aws_sdk_dynamodb::Client::from_conf(conf);
+        let now = chrono::Utc::now().timestamp();
+        let expired_at = now + 3600; // 1 hour later
+        for i in 0..5 {
+            let email = format!("l+{now}-{i}@example.com");
+
+            let ev = EmailVerification::new(email.to_string(), "aaaa".to_string(), expired_at);
+            assert!(
+                ev.create(&cli).await.is_ok(),
+                "failed to create email verification"
+            );
+        }
+
+        let fetched_evs = EmailVerification::find_by_email_and_code(
+            &cli,
+            format!("EMAIL#l+{now}-0@example.com"),
+            EmailVerificationQueryOption::builder()
+                .limit(10)
+                .sk("a".to_string()),
+        )
+        .await;
+        assert!(fetched_evs.is_ok(), "failed to find email verification");
+        let (fetched_evs, last_evaluated_key) = fetched_evs.unwrap();
+        assert!(
+            last_evaluated_key.is_none(),
+            "last_evaluated_key should be empty"
+        );
+        assert_eq!(fetched_evs.len(), 1, "should find one email verification");
+        assert_eq!(fetched_evs[0].email, format!("l+{now}-0@example.com"));
+    }
+
+    #[tokio::test]
+    async fn test_email_verification_find_by_code() {
+        let conf = aws_sdk_dynamodb::Config::builder()
+            .credentials_provider(aws_sdk_dynamodb::config::Credentials::new(
+                "test", "test", None, None, "dynamo",
+            ))
+            .region(Some(aws_sdk_dynamodb::config::Region::new("us-east-1")))
+            .endpoint_url("http://localhost:4566")
+            .behavior_version_latest()
+            .build();
+
+        let cli = aws_sdk_dynamodb::Client::from_conf(conf);
+        let now = chrono::Utc::now().timestamp();
+        let expired_at = now + 3600; // 1 hour later
+        for i in 0..5 {
+            let email = format!("c+{now}-{i}@example.com");
+
+            let ev = EmailVerification::new(email.to_string(), "aaaa".to_string(), expired_at);
+            assert!(
+                ev.create(&cli).await.is_ok(),
+                "failed to create email verification"
+            );
+        }
+
+        sleep(Duration::from_millis(500));
+
+        let fetched_evs = EmailVerification::find_by_code(
+            &cli,
+            format!("aaaa"),
+            EmailVerificationQueryOption::builder()
+                .limit(4)
+                .sk("TS".to_string()),
+        )
+        .await;
+        assert!(fetched_evs.is_ok(), "failed to find email verification");
+        let (fetched_evs, last_evaluated_key) = fetched_evs.unwrap();
+
+        println!("fetched_evs: {:?}", fetched_evs.len());
+        assert!(
+            last_evaluated_key.is_some(),
+            "last_evaluated_key should not be empty"
+        );
+        assert_eq!(fetched_evs.len(), 4, "should find one email verification");
+        assert_eq!(fetched_evs[0].email, format!("c+{now}-4@example.com"));
+        assert_eq!(fetched_evs[0].email, format!("c+{now}-3@example.com"));
+        assert_eq!(fetched_evs[0].email, format!("c+{now}-2@example.com"));
+        assert_eq!(fetched_evs[0].email, format!("c+{now}-1@example.com"));
+    }
 }
 ```
