@@ -1,30 +1,40 @@
 'use client';
-import { config } from '@/config';
+// import { config } from '@/config';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { useApiCall } from '@/lib/api/use-send';
+import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { useTranslations } from 'next-intl';
 import React from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { QK_USERS_GET_INFO } from '@/constants';
+import { config } from '@/config';
 
 interface PlanProps {
   title: string;
   price: number;
-  bg: string;
-  text: string;
-  chip: string;
   features: string[];
 }
 
 type CardProps = PlanProps & {
+  buttonEnabled: boolean;
+  selected: boolean;
   onClick?: () => Promise<void> | void;
 };
 
 const plans: PlanProps[] = [
   {
+    title: 'Free',
+    price: 0,
+    features: [
+      'Business Solutions',
+      'Regular News Update',
+      'Live Chat and Support',
+      'Social Media Marketing',
+    ],
+  },
+  {
     title: 'Pro',
     price: 20,
-    bg: 'bg-white',
-    text: 'text-[#000203]',
-    chip: 'text-primary',
     features: [
       'Business Solutions',
       'Regular News Update',
@@ -35,9 +45,6 @@ const plans: PlanProps[] = [
   {
     title: 'Premium',
     price: 50,
-    bg: 'bg-[#2A4D73]',
-    text: 'text-white',
-    chip: 'text-white',
     features: [
       'Business Solutions',
       'Regular News Update',
@@ -48,9 +55,16 @@ const plans: PlanProps[] = [
   {
     title: 'Vip',
     price: 100,
-    bg: 'bg-[#7E4774]',
-    text: 'text-white',
-    chip: 'text-white',
+    features: [
+      'Business Solutions',
+      'Regular News Update',
+      'Live Chat and Support',
+      'Social Media Marketing',
+    ],
+  },
+  {
+    title: 'Admin',
+    price: 0,
     features: [
       'Business Solutions',
       'Regular News Update',
@@ -61,8 +75,23 @@ const plans: PlanProps[] = [
 ];
 
 export default function SubscribePage() {
+  const qc = useQueryClient();
   const { post } = useApiCall();
+  const userInfo = useSuspenseUserInfo();
+  const { data: user } = userInfo;
+
   const t = useTranslations('Subscribe');
+
+  const selected =
+    user.membership == 1
+      ? 'Free'
+      : user.membership == 2
+        ? 'Pro'
+        : user.membership == 3
+          ? 'Premium'
+          : user.membership == 4
+            ? 'Vip'
+            : 'Admin';
 
   if (config.env !== 'local') {
     return (
@@ -83,8 +112,10 @@ export default function SubscribePage() {
     const res = await post(ratelApi.binances.createSubscription(), {
       subscribe_type: subscribeType,
     });
-
-    if (res?.checkout_url) window.location.href = res.checkout_url;
+    if (res?.checkout_url) {
+      window.location.href = res.checkout_url;
+      await qc.invalidateQueries({ queryKey: [QK_USERS_GET_INFO] });
+    }
   };
 
   return (
@@ -99,10 +130,17 @@ export default function SubscribePage() {
           </h2>
           <p className="mt-2 text-sm text-desc-text">{t('subscribe_desc_3')}</p>
         </div>
-
-        <div className="mt-8 grid w-full grid-cols-1 gap-6 md:grid-cols-3">
+        <div className="mt-8 grid w-full grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-5">
           {plans.map((p, i) => (
-            <Card key={i} {...p} onClick={() => handleSubscribeClick(i)} />
+            <Card
+              key={i}
+              {...p}
+              buttonEnabled={
+                (selected == 'Free' || selected == 'Admin') && p.title != 'Free'
+              }
+              selected={p.title == selected}
+              onClick={() => handleSubscribeClick(i)}
+            />
           ))}
         </div>
 
@@ -114,40 +152,55 @@ export default function SubscribePage() {
   );
 }
 
-function Card({ title, price, bg, text, chip, features, onClick }: CardProps) {
-  const isDark = text === 'text-white';
-  return (
-    <div className={`relative overflow-hidden rounded-[24px] ${bg}`}>
-      <div className={`p-6 ${text}`}>
-        <h3 className="text-base font-semibold">{title}</h3>
-        <div className="mt-2 flex items-baseline gap-1">
-          <span className={`text-3xl font-extrabold ${chip}`}>${price}</span>
-        </div>
+function Card({
+  title,
+  price,
+  features,
+  buttonEnabled,
+  selected,
+  onClick,
+}: CardProps) {
+  const t = useTranslations('Subscribe');
 
-        <ul className="mt-5 space-y-3 text-sm/6">
+  return (
+    <div
+      className={`relative overflow-hidden rounded-2xl  ${selected ? 'bg-primary/10' : 'bg-card-bg'} border border-card-enable-border ring-1 ring-white/10`}
+    >
+      <div className="p-6 text-text-primary">
+        <h3 className="text-xl font-semibold tracking-tight">{title}</h3>
+
+        <div className="mt-3 flex items-baseline gap-2">
+          <span className="text-3xl font-extrabold">${price}</span>
+          {/* <span className="text-base font-medium opacity-80">/mo</span> */}
+        </div>
+        {/* <div className="mt-1 text-xs opacity-70">billed yearly</div> */}
+
+        <ul className="mt-6 space-y-3 text-sm/6">
           {features.map((f, i) => (
             <li key={i} className="flex items-start gap-3">
-              <CheckIcon
-                className={`mt-0.5 size-5 shrink-0 rounded-full p-[2px] ${isDark ? 'text-white bg-white/20' : 'text-emerald-600 bg-black/10'}`}
-              />
-              <span className={isDark ? 'text-white/90' : 'text-[#000203]'}>
-                {f}
-              </span>
+              <CheckIcon className="mt-0.5 size-5 shrink-0 rounded-full p-[2px] text-text-primary bg-text-primary/20" />
+              <span className="text-text-primary">{f}</span>
             </li>
           ))}
         </ul>
 
-        <button
-          type="button"
-          onClick={onClick}
-          className={`mt-6 inline-flex w-full items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold shadow transition ${
-            isDark
-              ? 'bg-white/90 text-[#000203] hover:bg-white'
-              : 'bg-primary text-black hover:bg-primary/80'
-          }`}
-        >
-          Select
-        </button>
+        {buttonEnabled ? (
+          <button
+            type="button"
+            onClick={onClick}
+            className="mt-6 inline-flex w-full items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold shadow transition bg-primary hover:bg-primary/80 text-text-primary"
+          >
+            {t('select')}
+          </button>
+        ) : (
+          <button
+            type="button"
+            disabled
+            className="mt-6 inline-flex w-full items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold shadow transition invisible pointer-events-none"
+          >
+            {t('select')}
+          </button>
+        )}
       </div>
     </div>
   );
