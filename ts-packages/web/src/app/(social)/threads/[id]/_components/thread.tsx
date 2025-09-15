@@ -13,7 +13,6 @@ export default function Thread({ postId }: { postId: number }) {
   const t = useTranslations('Threads');
 
   const { data: post } = useFeedById(postId);
-
   return (
     <div className="flex flex-col w-full gap-2.5">
       <DisableBorderCard>
