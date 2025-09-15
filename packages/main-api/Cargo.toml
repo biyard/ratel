@@ -59,6 +59,7 @@ aws-sdk-textract = "1.82.0"
 tower-http = "0.6.6"
 aws-sdk-dynamodb = "1.92.0"
 serde_dynamo = {version = "4.2.14", features = ["aws-sdk-dynamodb+1"] }
+thiserror = "2.0.16"
 
 [[bin]]
 name = "main-api"

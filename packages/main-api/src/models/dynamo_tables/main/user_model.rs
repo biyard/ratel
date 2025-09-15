@@ -1,11 +1,12 @@
 use super::base_model::*;
 use super::serde_helpers as sh;
 use crate::types::dynamo_entity_type::EntityType;
-use dto::{Follower, Membership, Theme, User, UserType};
+use bdk::prelude::*;
+use dto::{Membership, Theme, UserType};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct DynamoUser {
+pub struct User {
     #[serde(flatten)]
     pub base: BaseModel,
     pub id: i64,
@@ -34,11 +35,10 @@ pub struct DynamoUser {
     pub telegram_id: Option<i64>,
 }
 
-impl DynamoUser {
-    pub fn from_postgres_user(user: &User) -> Self {
+impl User {
+    pub fn from_postgres_user(user: &dto::User) -> Self {
         let pk = format!("{}#{}", USER_PREFIX, user.id);
         let sk = METADATA_SK.to_string();
-
         let base = BaseModel::new(pk, sk, EntityType::User)
             .with_gsi1(format!("EMAIL#{}", user.email), None)
             .with_gsi2(format!("USERNAME#{}", user.username), None)
@@ -82,55 +82,9 @@ impl DynamoUser {
             telegram_id: user.telegram_id,
         }
     }
-
-    pub fn to_postgres_user(&self) -> User {
-        User {
-            id: self.id,
-            created_at: self.base.created_at,
-            updated_at: self.base.updated_at,
-            nickname: self.nickname.clone(),
-            principal: self.principal.clone(),
-            email: self.email.clone(),
-            profile_url: self.profile_url.clone().unwrap_or_default(),
-            term_agreed: self.term_agreed,
-            informed_agreed: self.informed_agreed,
-            user_type: self.user_type,
-            parent_id: self.parent_id,
-            username: self.username.clone(),
-            followers_count: self.followers_count,
-            followings_count: self.followings_count,
-            groups: Vec::new(), // Will be loaded separately
-            teams: Vec::new(),  // Will be loaded separately
-            html_contents: self.html_contents.clone(),
-            followers: Vec::new(),  // Will be loaded separately
-            followings: Vec::new(), // Will be loaded separately
-            badges: Vec::new(),     // Will be loaded separately
-            evm_address: self.evm_address.clone(),
-            password: self.password.clone(),
-            membership: self.membership,
-            theme: self.theme,
-            points: self.points,
-            referral_code: self.referral_code.clone(),
-            phone_number: self.phone_number.clone(),
-            phone: self.phone_number.clone().unwrap_or_default(),
-            telegram_id: self.telegram_id,
-            telegram_raw: String::new(), // Not stored in DynamoDB
-            industry: Vec::new(),        // Will be loaded separately
-        }
-    }
-
-    pub fn from_postgres_follower(follower: &Follower) -> UserFollower {
-        // TODO: Fix field access when proper Follower structure is available
-        UserFollower::new(
-            follower.id,
-            1,                     // placeholder follower_id
-            "Unknown".to_string(), // placeholder nickname
-            None,                  // placeholder profile_url
-        )
-    }
 }
 
-impl DynamoModel for DynamoUser {
+impl DynamoModel for User {
     fn pk(&self) -> String {
         self.base.pk.clone()
     }
