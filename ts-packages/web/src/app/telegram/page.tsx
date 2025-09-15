@@ -57,7 +57,6 @@ function getRedirectPath(params: TgWebParams): string {
   return route.home();
 }
 
-
 function TelegramMiniAppMain() {
   const [isLoading, setIsLoading] = useState(true);
   const raw = useRawInitData();
