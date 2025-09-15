@@ -61,8 +61,8 @@ export default function Header({ postId }: { postId: number }) {
   let is_boost = false;
   let target = '';
 
-  if (post.spaces?.length > 1) {
-    const space = post.spaces[0];
+  if (post.space?.length > 1) {
+    const space = post.space[0];
     console.log('space', space);
     space_id = space.id;
     is_boost = Boolean(
