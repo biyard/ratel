@@ -14,7 +14,10 @@ use crate::{
             },
         },
         v2::{
-            binances::create_subscription::create_subscription_handler,
+            binances::{
+                binance_webhook::binance_webhook_handler,
+                create_subscription::create_subscription_handler,
+            },
             bookmarks::{
                 add_bookmark::add_bookmark_handler, list_bookmarks::get_bookmarks_handler,
                 remove_bookmark::remove_bookmark_handler,
@@ -175,12 +178,23 @@ pub async fn route(
         )
         .native_route("/v2/users/logout", npost(logout_handler))
         .route(
-            "/v2/subscriptions",
+            "/v2/binances/subscriptions",
             post_with(
                 create_subscription_handler,
                 api_docs!(
                     "Create Subscription",
                     "Create subscription in ratel and get a QR code"
+                ),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/v2/binances/webhooks",
+            post_with(
+                binance_webhook_handler,
+                api_docs!(
+                    "Create Webhook",
+                    "Create binance payment api webhook handler"
                 ),
             )
             .with_state(pool.clone()),

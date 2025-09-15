@@ -104,6 +104,7 @@ jobs:
 
           BINANCE_API_KEY: ${{ secrets.PROD_BINANCE_API_KEY }}
           BINANCE_SECRET_KEY: ${{ secrets.PROD_BINANCE_SECRET_KEY }}
+          BINANCE_WEBHOOK: https://api.ratel.foundation/v2/binances/webhooks
           REDIRECT_DOMAIN: https://ratel.foundation
 
           KAIA_ENDPOINT: https://public-en.node.kaia.io

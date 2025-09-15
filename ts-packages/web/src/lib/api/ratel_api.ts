@@ -233,7 +233,7 @@ export const ratelApi = {
     changeTheme: () => '/v2/themes',
   },
   binances: {
-    createSubscription: () => '/v2/subscriptions',
+    createSubscription: () => '/v2/binances/subscriptions',
   },
   feeds: {
     comment: () => '/v1/feeds',

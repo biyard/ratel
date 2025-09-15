@@ -100,6 +100,7 @@ pub mod controllers {
         }
 
         pub mod binances {
+            pub mod binance_webhook;
             pub mod create_subscription;
         }
     }
