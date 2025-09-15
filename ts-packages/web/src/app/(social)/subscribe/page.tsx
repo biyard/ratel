@@ -20,7 +20,7 @@ type CardProps = PlanProps & {
 
 const plans: PlanProps[] = [
   {
-    title: 'Personal',
+    title: 'Pro',
     price: 20,
     bg: 'bg-white',
     text: 'text-[#000203]',
@@ -33,7 +33,7 @@ const plans: PlanProps[] = [
     ],
   },
   {
-    title: 'Business',
+    title: 'Premium',
     price: 50,
     bg: 'bg-[#2A4D73]',
     text: 'text-white',
@@ -46,7 +46,7 @@ const plans: PlanProps[] = [
     ],
   },
   {
-    title: 'Enterprise',
+    title: 'Vip',
     price: 100,
     bg: 'bg-[#7E4774]',
     text: 'text-white',
@@ -74,11 +74,11 @@ export default function SubscribePage() {
 
   const handleSubscribeClick = async (i: number) => {
     const subscribeType =
-      plans[i].title === 'Personal'
-        ? 'personal'
-        : plans[i].title === 'Business'
-          ? 'business'
-          : 'enterprise';
+      plans[i].title === 'Pro'
+        ? 'pro'
+        : plans[i].title === 'Premium'
+          ? 'premium'
+          : 'vip';
 
     const res = await post(ratelApi.binances.createSubscription(), {
       subscribe_type: subscribeType,
