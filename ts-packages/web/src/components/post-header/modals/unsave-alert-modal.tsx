@@ -4,66 +4,66 @@ import { Button } from '@/components/ui/button';
 import { usePopup } from '@/lib/contexts/popup-service';
 import React from 'react';
 import { useTranslations } from 'next-intl';
-import { LoadingIndicator } from '@/app/loading';
 
 export const openModal = (
   popup: ReturnType<typeof usePopup>,
-  makePublic: () => Promise<void>,
+  saveSpace: () => Promise<void>,
+  handleNext: () => void,
   title: string,
-) => {
+) =>
   popup
     .open(
-      <MakePublicModal
-        makePublic={makePublic}
-        onCancel={() => popup.close()}
+      <UnsaveAlertModal
+        onSave={saveSpace}
+        handleNext={() => {
+          popup.close();
+          handleNext();
+        }}
       />,
     )
     .withTitle(title)
     .withoutBackdropClose();
-};
 
-export default function MakePublicModal({
-  makePublic,
-  onCancel,
+export default function UnsaveAlertModal({
+  handleNext,
+  onSave,
 }: {
-  makePublic: () => Promise<void>;
-  onCancel: () => void;
+  handleNext: () => void;
+  onSave: () => Promise<void> | void;
 }) {
-  const t = useTranslations('SpaceMakePublicModal');
-  const [loading, setLoading] = React.useState(false);
+  const t = useTranslations('SpaceUnsaveModal');
   return (
     <div className="max-w-125 flex flex-col mt-6 gap-6">
-      <div className="text-center font-medium text-desc-text text-base">
+      <div className="text-center font-medium text-desc-text text-[16px]">
         {t.rich('description', {
-          br: () => <br />,
           b: (chunks) => <span className="font-bold">{chunks}</span>,
+          br: () => <br />,
         })}
       </div>
 
       <div className="flex flex-row gap-4 h-12">
         <Button
           variant="outline"
+          onClick={() => {
+            handleNext();
+          }}
           className="flex-1/3 border-transparent bg-cancel-button-bg text-cancel-button-text hover:bg-hover"
-          onClick={onCancel}
         >
-          {t('button_cancel')}
+          {t('button_skip')}
         </Button>
         <Button
           variant="default"
-          className="flex-2/3 bg-primary"
-          disabled={loading}
           onClick={async () => {
-            setLoading(true);
             try {
-              await makePublic();
+              await onSave();
+              handleNext();
             } catch (error) {
-              console.error('Failed to make space public:', error);
-
-              setLoading(false);
+              console.error('Error saving space:', error);
             }
           }}
+          className="flex-2/3 bg-primary"
         >
-          {!loading ? <>{t('button_make_public')}</> : <LoadingIndicator />}
+          {t('button_save')}
         </Button>
       </div>
     </div>
