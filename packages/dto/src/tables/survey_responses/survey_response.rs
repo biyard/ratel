@@ -21,9 +21,7 @@ pub struct SurveyResponse {
 
     #[api_model(many_to_one = surveys)]
     pub survey_id: i64,
-    #[api_model(skip, action = respond_answer)]
-    #[serde(default)]
-    pub survey_id_param: Option<i64>,
+
     #[api_model(summary, action = [respond_answer], type = INTEGER)]
     pub survey_type: SurveyType,
 }

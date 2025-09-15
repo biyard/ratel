@@ -147,13 +147,17 @@ export default function SpaceConfigForm({
             <CalendarDropdown
               value={startTimestamp}
               onChange={(timestamp) => {
+                const delta = endTimestamp - startTimestamp;
                 setStartTimestamp(timestamp);
+                setEndTimestamp(timestamp + delta);
               }}
             />
             <TimeDropdown
               value={startTimestamp}
               onChange={(timestamp) => {
+                const delta = endTimestamp - startTimestamp;
                 setStartTimestamp(timestamp);
+                setEndTimestamp(timestamp + delta);
               }}
             />
           </div>

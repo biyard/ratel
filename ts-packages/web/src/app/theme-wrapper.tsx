@@ -20,13 +20,16 @@ export default function ThemeWrapper({
           ? 'system'
           : undefined;
 
-  const forced = apiTheme ?? 'system';
+  const forced: 'dark' | 'light' | undefined =
+    apiTheme === 'dark' || apiTheme === 'light' ? apiTheme : undefined;
 
   return (
     <ThemeProvider
       attribute="data-theme"
+      defaultTheme="system"
+      enableSystem
       forcedTheme={forced}
-      enableSystem={false}
+      disableTransitionOnChange
     >
       {children}
     </ThemeProvider>

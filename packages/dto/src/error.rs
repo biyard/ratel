@@ -193,6 +193,9 @@ pub enum Error {
     DynamoDbError(String),
     DynamoDbSerializationError(String),
     DynamoDbTableNotFound(String),
+
+    DuplicatedTelegramUser,
+    InvalidTelegramData,
 }
 
 impl<E: StdError + 'static> From<E> for Error {
@@ -324,6 +327,8 @@ impl Display for Error {
                 write!(f, "DynamoDB serialization error: {}", msg)
             }
             Error::DynamoDbTableNotFound(msg) => write!(f, "DynamoDB table not found: {}", msg),
+            //FIXME
+            _ => write!(f, "Unhandled error variant"),
         }
     }
 }

@@ -109,11 +109,11 @@ pub async fn create_subscription_handler(
     }
 
     let amount_usdt = if req.subscribe_type == SubscribeType::Pro {
-        20
+        0.002
     } else if req.subscribe_type == SubscribeType::Premium {
-        50
+        0.005
     } else {
-        100
+        0.01
     };
 
     // let mut rnd = [0u8; 6];
@@ -121,7 +121,12 @@ pub async fn create_subscription_handler(
     // let rnd_tag = hex::encode(rnd);
 
     let merchant_trade_no = gen_merchant_trade_no(&plan_code);
-    tracing::debug!("merchant no: {:?} {:?}", merchant_trade_no, base_domain);
+    tracing::debug!(
+        "merchant no: {:?} {:?} {:?}",
+        merchant_trade_no,
+        base_domain,
+        binance_webhook
+    );
     // let merchant_contract_code = format!("contract_{}", rnd_tag);
 
     let body = serde_json::json!({

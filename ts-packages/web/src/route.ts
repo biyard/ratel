@@ -10,6 +10,10 @@ export const route = {
   teams: () => '/teams',
   groups: () => '/groups',
 
+  login: () => '/login',
+  signup: () => '/signup',
+  connect: () => `/connect`,
+
   myNetwork: () => '/my-network',
   myFollower: (type: RelationType) => `/my-follower?type=${type}`,
   messages: () => '/messages',

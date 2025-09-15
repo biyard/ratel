@@ -32,7 +32,7 @@ BUILD_CDK_ENV ?= AWS_ACCESS_KEY_ID=$(ACCESS_KEY_ID) AWS_SECRET_ACCESS_KEY=$(SECR
 	docker run --rm ghcr.io/foundry-rs/foundry:latest "cast wallet new --json" > .build/evm-keys.json
 
 run: .build/evm-keys
-	docker-compose up -d  --remove-orphans
+	docker-compose --profile development up -d --remove-orphans
 
 serve:
 	cd packages/$(SERVICE) && make serve
@@ -73,6 +73,10 @@ cdk/.next:
 
 cdk/public:
 	cp -r ts-packages/web/public cdk/public
+
+cdk/.build/%/bootstrap:
+	mkdir -p cdk/.build/$*
+	cp .build/$*/bootstrap cdk/.build/$*/bootstrap
 
 cdk-deploy-v2:
 	cd cdk && npm i

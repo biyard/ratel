@@ -1,49 +1,39 @@
 'use client';
 
-import { useFeedByID } from '@/app/(social)/_hooks/feed';
 import Comment, { NewComment } from '@/components/comment';
 import { CommentIcon } from '@/components/icons';
 import { useLoggedIn, useSuspenseUserInfo } from '@/lib/api/hooks/users';
-import { writeCommentRequest } from '@/lib/api/models/feeds/comment';
-import { ratelApi } from '@/lib/api/ratel_api';
-import { useApiCall } from '@/lib/api/use-send';
-import { logger } from '@/lib/logger';
+// import { writeCommentRequest } from '@/lib/api/models/feeds/comment';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 
-export default function ThreadComment({ post_id }: { post_id: number }) {
+import { useDraftMutations } from '@/hooks/feeds/use-create-feed-mutation';
+import useFeedById from '@/hooks/feeds/use-feed-by-id';
+
+export default function ThreadComment({ postId }: { postId: number }) {
   const t = useTranslations('Threads');
   const isLogin = useLoggedIn();
-  const { data: feed, refetch } = useFeedByID(post_id);
+  const { data: feed } = useFeedById(postId);
   const [expand, setExpand] = useState(false);
-  const { post } = useApiCall();
   const { data: user } = useSuspenseUserInfo();
+  const {
+    createComment: { mutateAsync },
+  } = useDraftMutations(user?.id || 0);
+  const handleSubmit = async (
+    postId: number,
+    parentId: number,
+    content: string,
+  ) => {
+    console.log('USER ID', user.id);
+    await mutateAsync({
+      userId: user.id,
+      postId: postId,
+      parentId: parentId,
+      content: content,
+    });
+    setExpand(false);
+  };
 
-  const handleSubmit = async (post_id: number, content: string) => {
-    try {
-      await post(
-        ratelApi.feeds.comment(),
-        writeCommentRequest(content, user.id, post_id),
-      );
-      refetch();
-    } catch (error) {
-      logger.error('Failed to submit comment:', error);
-    }
-  };
-  const handleLike = async (post_id: number, value: boolean) => {
-    try {
-      const res = await post(ratelApi.feeds.likePost(post_id), {
-        like: {
-          value,
-        },
-      });
-      if (res) {
-        refetch();
-      }
-    } catch (error) {
-      logger.error('Failed to like post:', error);
-    }
-  };
   return (
     <>
       <div className="flex flex-col gap-2.5">
@@ -79,7 +69,7 @@ export default function ThreadComment({ post_id }: { post_id: number }) {
               <NewComment
                 onClose={() => setExpand(false)}
                 onSubmit={async (content) =>
-                  await handleSubmit(post_id, content)
+                  await handleSubmit(postId, postId, content)
                 }
               />
             )}
@@ -87,12 +77,7 @@ export default function ThreadComment({ post_id }: { post_id: number }) {
         )}
       </div>
       {(feed?.comment_list ?? []).map((comment) => (
-        <Comment
-          key={comment.id}
-          comment={comment}
-          onSubmit={handleSubmit}
-          onLike={handleLike}
-        />
+        <Comment key={comment.id} comment={comment} onSubmit={handleSubmit} />
       ))}
     </>
   );

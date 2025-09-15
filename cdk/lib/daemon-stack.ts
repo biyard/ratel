@@ -17,31 +17,30 @@ export interface DaemonStackProps {
 
 export class DaemonStack {
   constructor(scope: RegionalServiceStack, props: DaemonStackProps) {
-    const { vpc, cluster, listener, taskExecutionRole } = props;
-    const healthPath = "/version";
+    const { cluster, taskExecutionRole } = props;
     const fetcherContainerName = "FetcherContainer";
     const fetcherRepoName = "ratel/fetcher";
 
     const taskDefinition = new ecs.TaskDefinition(
       scope,
-      "FetcherTasksDefinition",
+      "DaemonTaskDefinitionV2",
       {
         compatibility: ecs.Compatibility.FARGATE,
         cpu: "256",
         memoryMiB: "512",
         executionRole: taskExecutionRole,
-      }
+      },
     );
 
     const fetcherRepository = Repository.fromRepositoryName(
       scope,
       "fetcherRepository",
-      fetcherRepoName
+      fetcherRepoName,
     );
     const fetcherContainer = taskDefinition.addContainer(fetcherContainerName, {
       image: ecs.ContainerImage.fromEcrRepository(
         fetcherRepository,
-        props.commit
+        props.commit,
       ),
       logging: new ecs.AwsLogDriver({
         streamPrefix: `ratel-${process.env.ENV}-fetcher`,
@@ -53,7 +52,7 @@ export class DaemonStack {
       protocol: ecs.Protocol.TCP,
     });
 
-    const fargate = new ecs.FargateService(scope, "DaemonService", {
+    const fargate = new ecs.FargateService(scope, "DaemonServiceV2", {
       cluster,
       taskDefinition,
       desiredCount: 1,
