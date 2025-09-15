@@ -9,7 +9,7 @@ AWS_ACCOUNT_ID ?= $(shell aws sts get-caller-identity --query "Account" --output
 COMMIT ?= $(shell git rev-parse --short HEAD)
 VERSION ?= $(shell toml get Cargo.toml package.version | tr -d \")
 RUSTFLAGS ?= -D warnings
-API_MODEL_ARTIFACT_DIR ?= $(PWD)/.build/api-models
+API_MODEL_ARTIFACT_DIR ?= $(PWD)/.build
 CARGO_TARGET_DIR ?= $(PWD)/target
 HASURA_GRAPHQL_AUTH_HOOK ?= https://api.dev.ratel.foundation/v1/auth/hasura
 
