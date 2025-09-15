@@ -1,10 +1,11 @@
+use crate::types::*;
 use bdk::prelude::*;
-use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize, Deserialize, DynamoEntity)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity)]
 pub struct EmailVerification {
     pub pk: String,
-    pub sk: String,
+    pub sk: EntityType,
+
     #[dynamo(prefix = "TS", index = "gsi2", sk)]
     pub created_at: i64,
 
@@ -19,8 +20,8 @@ pub struct EmailVerification {
 
 impl EmailVerification {
     pub fn new(email: String, value: String, expired_at: i64) -> Self {
-        let pk = format!("EMAIL#{}", email);
-        let sk = format!("VERIFICATION#{}", value);
+        let pk = Partition::Email.key(&email);
+        let sk = EntityType::EmailVerification;
         let created_at = chrono::Utc::now().timestamp_micros();
 
         Self {
@@ -68,7 +69,7 @@ mod tests {
             "failed to create email verification"
         );
 
-        let fetched_ev = EmailVerification::get(&cli, ev.pk.clone(), Some(ev.sk.clone())).await;
+        let fetched_ev = EmailVerification::get(&cli, ev.pk.clone(), Some(ev.sk)).await;
 
         assert!(fetched_ev.is_ok(), "failed to fetch email verification");
         let fetched_ev = fetched_ev.unwrap();
@@ -99,7 +100,7 @@ mod tests {
             ev.create(&cli).await.is_ok(),
             "failed to create email verification"
         );
-        let fetched_ev = EmailVerification::get(&cli, ev.pk.clone(), Some(ev.sk.clone())).await;
+        let fetched_ev = EmailVerification::get(&cli, ev.pk.clone(), Some(ev.sk)).await;
         assert!(fetched_ev.is_ok(), "failed to fetch email verification");
         let fetched_ev = fetched_ev.unwrap();
         assert!(fetched_ev.is_some(), "email verification not found");
@@ -108,12 +109,12 @@ mod tests {
         assert_eq!(fetched_ev.value, ev.value);
         assert_eq!(fetched_ev.expired_at, ev.expired_at);
         assert!(
-            EmailVerification::delete(&cli, ev.pk.clone(), Some(ev.sk.clone()))
+            EmailVerification::delete(&cli, ev.pk.clone(), Some(ev.sk))
                 .await
                 .is_ok(),
             "failed to delete email verification"
         );
-        let fetched_ev = EmailVerification::get(&cli, ev.pk.clone(), Some(ev.sk.clone())).await;
+        let fetched_ev = EmailVerification::get(&cli, ev.pk.clone(), Some(ev.sk)).await;
         assert!(fetched_ev.is_ok(), "failed to fetch email verification");
         let fetched_ev = fetched_ev.unwrap();
         assert!(fetched_ev.is_none(), "email verification should be deleted");
