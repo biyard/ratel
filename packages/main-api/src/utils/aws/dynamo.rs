@@ -8,7 +8,7 @@ use crate::config;
 #[derive(Debug, Clone)]
 pub struct DynamoClient {
     pub client: Client,
-    table_name: String,
+    pub table_name: String,
 }
 
 impl DynamoClient {

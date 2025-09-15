@@ -27,11 +27,12 @@ pub struct Config {
     pub kaia: KaiaConfig,
     pub watermark_sqs_url: &'static str,
     pub from_email: &'static str,
-    pub telegram_token: &'static str,
+    pub telegram_token: Option<&'static str>,
     pub noncelab_token: &'static str,
     pub did: DidConfig,
     pub bedrock: BedrockConfig,
     pub private_bucket_name: &'static str,
+    pub dual_write: DualWriteConfig,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -67,12 +68,18 @@ pub struct BedrockConfig {
     pub nova_lite_model_id: &'static str,
 }
 
+#[derive(Debug, Clone, Copy)]
+pub struct DualWriteConfig {
+    pub enabled: bool,
+    pub table_name: &'static str,
+}
+
 impl Default for Config {
     fn default() -> Self {
         Config {
             watermark_sqs_url: option_env!("WATERMARK_QUEUE_URL").expect("You must set WATERMARK_QUEUE_URL"),
             kaia: KaiaConfig {
-                endpoint: option_env!("KAIA_ENDPOINT").expect("You must set KAIA_ENDPOINT"),
+                endpoint: option_env!("KAIA_ENDPOINT").unwrap_or("https://public-en-kairos.node.kaia.io"),
                 owner_key: option_env!("KAIA_OWNER_KEY").expect("You must set KAIA_OWNER_KEY"),
                 owner_address: option_env!("KAIA_OWNER_ADDR").expect("You must set KAIA_OWNER_ADDRESS"),
                 feepayer_key: option_env!("KAIA_FEEPAYER_KEY").expect("You must set KAIA_FEEPAYER_KEY"),
@@ -93,7 +100,13 @@ impl Default for Config {
             assembly_detail_url: "https://likms.assembly.go.kr/bill/billDetail.do",
             signing_domain: option_env!("AUTH_DOMAIN").expect("AUTH_DOMAIN is required"),
             aws: AwsConfig::default(),
-            database: DatabaseConfig::default(),
+            database: DatabaseConfig::Postgres {
+                url: option_env!("DATABASE_URL").unwrap_or("postgresql://postgres:postgres@localhost:5432/ratel"),
+                pool_size: option_env!("DATABASE_POOL_SIZE")
+                    .unwrap_or("10".into())
+                    .parse()
+                    .expect("DATABASE_POOL_SIZE must be a number")
+            },
             auth: AuthConfig::default(),
             bucket: BucketConfig {
                 name: option_env!("BUCKET_NAME").expect("You must set BUCKET_NAME"),
@@ -114,7 +127,7 @@ impl Default for Config {
                 .expect("SLACK_CHANNEL_ABUSING is required"),
             slack_channel_monitor: option_env!("SLACK_CHANNEL_MONITOR")
                 .expect("SLACK_CHANNEL_MONITOR is required"),
-            telegram_token: option_env!("TELEGRAM_TOKEN").expect("You must set TELEGRAM_TOKEN"),
+            telegram_token: option_env!("TELEGRAM_TOKEN").filter(|s| !s.is_empty()),
             noncelab_token: option_env!("NONCELAB_TOKEN").expect("You must set NONCELAB_TOKEN"),
             did: DidConfig {
                 bbs_bls_x: option_env!("BBS_BLS_X").expect("You must set BBS_BLS_X"),
@@ -130,6 +143,12 @@ impl Default for Config {
             bedrock: BedrockConfig {
                 nova_micro_model_id: option_env!("NOVA_MICRO_MODEL_ID").expect("You must set NOVA_MICRO_MODEL_ID"),
                 nova_lite_model_id: option_env!("NOVA_LITE_MODEL_ID").expect("You must set NOVA_LITE_MODEL_ID"),
+            },
+            dual_write: DualWriteConfig {
+                enabled: option_env!("DUAL_WRITE_ENABLED")
+                    .map(|s| s.parse::<bool>().unwrap_or(false))
+                    .unwrap_or(false),
+                table_name: option_env!("DUAL_WRITE_TABLE_NAME").unwrap_or("ratel-main"),
             },
         }
     }

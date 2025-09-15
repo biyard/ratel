@@ -4,13 +4,27 @@ use bdk::prelude::*;
 use tower_http::trace::TraceLayer;
 use tracing::Level;
 
+use by_axum::{
+    auth::Authorization,
+    axum::{
+        body::Body,
+        extract::Request,
+        http::Response,
+        middleware::{self, Next},
+    },
+};
+use reqwest::StatusCode;
+
 use crate::{
     controllers::{
         self,
         m2::{
-            binances::get_merchant_balance::binance_merchant_balance_handler,
-            noncelab::users::register_users::{
-                RegisterUserResponse, register_users_by_noncelab_handler,
+            migration::postgres_to_dynamodb::{migrate_users_handler, migration_stats_handler},
+            {
+                binances::get_merchant_balance::binance_merchant_balance_handler,
+                noncelab::users::register_users::{
+                    RegisterUserResponse, register_users_by_noncelab_handler,
+                },
             },
         },
         v2::{
@@ -70,9 +84,20 @@ use crate::{
                 register::register_handler, token::token_handler,
             },
             oracles::create_oracle::create_oracle_handler,
+            posts::{
+                get_post::get_post_handler, list_posts::list_posts_handler,
+                update_post::update_post_handler,
+            },
             spaces::{delete_space::delete_space_handler, get_my_space::get_my_space_controller},
+            telegram::{
+                get_telegram_info::get_telegram_info_handler,
+                verify_telegram_raw::verify_telegram_raw_handler,
+            },
             themes::change_theme::change_theme_handler,
-            users::{find_user::find_user_handler, logout::logout_handler},
+            users::{
+                connect_telegram::connect_telegram_handler, find_user::find_user_handler,
+                logout::logout_handler,
+            },
         },
         well_known::get_did_document::get_did_document_handler,
     },
@@ -88,45 +113,6 @@ use dto::{Result, by_axum::axum::Extension};
 use axum::native_routing::get as nget;
 use axum::native_routing::post as npost;
 use axum::routing::{get_with, post_with};
-
-// macro_rules! wrap_api {
-//     (
-//         $method:expr,
-//         $handler:expr,
-//         $success_ty:ty,
-//         $summary:expr,
-//         $description:expr
-//     ) => {
-//         $method($handler, |op| {
-//             op.summary($summary)
-//                 .description($description)
-//                 .response_with::<200, axum::Json<$success_ty>, _>(|res| {
-//                     res.description("Success response")
-//                 })
-//                 .response_with::<400, axum::Json<dto::Error>, _>(|res| {
-//                     res.description("Incorrect or invalid requests")
-//                         .example(dto::Error::UserAlreadyExists)
-//                 })
-//         })
-//     };
-// }
-
-// macro_rules! post_api {
-//     (
-//         $handler:expr,
-//         $success_ty:ty,
-//         $summary:expr,
-//         $description:expr
-//     ) => {
-//         wrap_api!(
-//             axum::routing::post_with,
-//             $handler,
-//             $success_ty,
-//             $summary,
-//             $description
-//         )
-//     };
-// }
 
 macro_rules! api_docs {
     ($success_ty:ty, $summary:expr, $description:expr) => {
@@ -163,18 +149,74 @@ pub async fn route(
     textract_client: TextractClient,
     _metadata_s3_client: S3Client,
     private_s3_client: S3Client,
-    bot: TelegramBot,
+    bot: Option<TelegramBot>,
 ) -> Result<by_axum::axum::Router> {
     Ok(by_axum::axum::Router::new()
+        // For Admin routes
+        .route(
+            "/m2/noncelab/users",
+            post_with(
+                register_users_by_noncelab_handler,
+                api_docs!(
+                    RegisterUserResponse,
+                    "Register users by Noncelab",
+                    r#"This endpoint allows you to register users by Noncelab.
+
+                    **Authorization header required**
+
+                    `Authorization: Bearer <token>`"#
+                ),
+            )
+            .with_state(pool.clone()),
+        )
+        // Migration routes
+        .route(
+            "/m2/migration/users",
+            get_with(
+                migrate_users_handler,
+                api_docs!(
+                    "Migrate Users",
+                    r#"Migrate users from PostgreSQL to DynamoDB.
+                    
+                    **Query Parameters:**
+                    - `batch_size`: Number of users to migrate (default: 100, max: 1000)
+                    - `start_user_id`: Starting user ID for batch migration
+                    - `user_id`: Specific user ID to migrate (overrides batch)
+                    - `dry_run`: Validate migration without writing to DynamoDB
+                    
+                    **Authorization header required**
+                    
+                    `Authorization: Bearer <token>`"#
+                ),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/m2/migration/stats",
+            get_with(
+                migration_stats_handler,
+                api_docs!(
+                    "Migration Statistics",
+                    r#"Get migration statistics including:
+                    - Total users in PostgreSQL
+                    - Total users in DynamoDB
+                    - Pending migration count
+                    - Last migrated user ID
+                    
+                    **Authorization header required**
+                    
+                    `Authorization: Bearer <token>`"#
+                ),
+            )
+            .with_state(pool.clone()),
+        )
+        .layer(middleware::from_fn(authorize_admin))
+        // For user routes
         .nest(
             "/v1",
             controllers::v1::route(pool.clone())
                 .await?
-                .layer(Extension(Arc::new(bot))),
-        )
-        .nest(
-            "/m1",
-            controllers::m1::MenaceController::route(pool.clone())?,
+                .layer(Extension(bot.map(Arc::new))),
         )
         .native_route("/v2/users/logout", npost(logout_handler))
         .route(
@@ -407,6 +449,28 @@ pub async fn route(
                     "Get User",
                     "Retrieve users with username or phone number or email"
                 ),
+            ),
+        )
+        .route(
+            "/v2/users/telegram",
+            post_with(
+                connect_telegram_handler,
+                api_docs!("Update User Telegram Id", "Connect User with Telegram"),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/v2/telegram",
+            post_with(
+                verify_telegram_raw_handler,
+                api_docs!(
+                    "Verify Telegram Raw Data",
+                    "Verify Telegram Raw Data and return token for future connection"
+                ),
+            )
+            .get_with(
+                get_telegram_info_handler,
+                api_docs!("Get Telegram Info", "Get Telegram Info from token"),
             )
             .with_state(pool.clone()),
         )
@@ -573,6 +637,29 @@ pub async fn route(
             )
             .with_state(pool.clone()),
         )
+        .route(
+            "/v2/feeds/:id",
+            post_with(
+                update_post_handler,
+                api_docs!("Update Post", "Update an existing post with new details"),
+            )
+            .get_with(
+                get_post_handler,
+                api_docs!("Get Post", "Retrieve a specific post by ID"),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/v2/feeds",
+            get_with(
+                list_posts_handler,
+                api_docs!(
+                    "List Posts",
+                    "Retrieve a paginated list of posts with optional filters"
+                ),
+            )
+            .with_state(pool.clone()),
+        )
         .native_route(
             "/v2/oauth/register",
             npost(register_handler)
@@ -618,22 +705,6 @@ pub async fn route(
             )
             .with_state(pool.clone()),
         )
-        .route(
-            "/m2/noncelab/users",
-            post_with(
-                register_users_by_noncelab_handler,
-                api_docs!(
-                    RegisterUserResponse,
-                    "Register users by Noncelab",
-                    r#"This endpoint allows you to register users by Noncelab.
-
-                    **Authorization header required**
-
-                    `Authorization: Bearer <token>`"#
-                ),
-            )
-            .with_state(pool.clone()),
-        )
         .native_route("/.well-known/did.json", nget(get_did_document_handler))
         .layer(
             TraceLayer::new_for_http()
@@ -658,4 +729,15 @@ pub async fn route(
                     },
                 ),
         ))
+}
+
+pub async fn authorize_admin(
+    req: Request,
+    next: Next,
+) -> std::result::Result<Response<Body>, StatusCode> {
+    tracing::debug!("Authorization admin");
+    match req.extensions().get::<Option<Authorization>>() {
+        Some(Some(Authorization::SecretApiKey)) => Ok(next.run(req).await),
+        _ => Err(StatusCode::UNAUTHORIZED),
+    }
 }

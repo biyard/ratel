@@ -11,7 +11,6 @@ import { Col } from '@/components/ui/col';
 import { useApiCall } from '@/lib/api/use-send';
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import { ratelApi, usePromotion } from '@/lib/api/ratel_api';
-import { useFeedByID } from '@/app/(social)/_hooks/use-feed';
 import {
   NotificationType,
   Notification,
@@ -22,6 +21,7 @@ import {
 import { useNotificationsInfinite } from '@/hooks/use-notifications';
 import NotificationDropdown from './notification-dropdown';
 import NotificationReadStatus from './notification-read-status';
+import useFeedById from '@/hooks/feeds/use-feed-by-id';
 import DisableBorderCard from '../(social)/_components/disable-border-card';
 
 const NotificationTab = {
@@ -35,7 +35,7 @@ type NotificationTabType =
 export default function NotificationPage() {
   const router = useRouter();
   const { data: promotion } = usePromotion();
-  const { data: feed } = useFeedByID(promotion.feed_id);
+  const { data: feed } = useFeedById(promotion.feed_id);
   const [filterType, setFilterType] = useState<NotificationsFilter>('all');
 
   const handleTabChange = (newType: NotificationTabType) => {

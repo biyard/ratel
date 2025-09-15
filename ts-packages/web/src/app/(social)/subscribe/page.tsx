@@ -96,13 +96,13 @@ export default function SubscribePage() {
             ? 'VIP'
             : 'Admin';
 
-  if (config.env !== 'local') {
-    return (
-      <div className="text-text-primary text-base font-medium">
-        not implemented page
-      </div>
-    );
-  }
+  //   if (config.env !== 'local') {
+  //     return (
+  //       <div className="text-text-primary text-base font-medium">
+  //         not implemented page
+  //       </div>
+  //     );
+  //   }
 
   const handleUnsubscribeClick = async () => {
     const subject = encodeURIComponent('Refund request');

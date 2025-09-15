@@ -15,3 +15,7 @@ pub mod oauth {
     pub mod response_type;
     pub mod scope;
 }
+
+pub mod dynamo;
+
+pub use dynamo::*;

@@ -1,9 +1,12 @@
+pub type Result<T> = dto::Result<T>;
+pub type Error = dto::Error;
+
 pub mod controllers {
-    pub mod m1;
     pub mod mcp;
     pub mod v1;
     pub mod v2 {
         pub mod users {
+            pub mod connect_telegram;
             pub mod find_user;
             pub mod logout;
         }
@@ -95,8 +98,19 @@ pub mod controllers {
             pub mod token;
         }
 
+        pub mod posts {
+            pub mod get_post;
+            pub mod list_posts;
+            pub mod update_post;
+        }
+
         pub mod themes {
             pub mod change_theme;
+        }
+
+        pub mod telegram {
+            pub mod get_telegram_info;
+            pub mod verify_telegram_raw;
         }
 
         pub mod binances {
@@ -111,6 +125,9 @@ pub mod controllers {
                 pub mod register_users;
             }
         }
+        pub mod migration {
+            pub mod postgres_to_dynamodb;
+        }
         pub mod binances {
             pub mod get_merchant_balance;
         }
@@ -122,9 +139,12 @@ pub mod controllers {
 
 pub mod api_main;
 pub mod config;
+pub mod etl;
 pub mod models;
 pub mod route;
 pub mod security;
+pub mod services;
+pub mod types;
 pub mod utils;
 
 pub use bdk::prelude::*;
