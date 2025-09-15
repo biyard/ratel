@@ -1,6 +1,8 @@
 pub type Result<T> = dto::Result<T>;
 pub type Error = dto::Error;
+pub type Error2 = crate::error::Error;
 
+pub mod error;
 pub mod controllers {
     pub mod mcp;
     pub mod v1;
@@ -134,7 +136,6 @@ pub mod etl;
 pub mod models;
 pub mod route;
 pub mod security;
-pub mod services;
 pub mod types;
 pub mod utils;
 
