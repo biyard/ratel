@@ -26,9 +26,9 @@ pub async fn binance_webhook_handler(
     let mut tx = pool.begin().await?;
 
     let conf = config::get();
-    let base = conf.binance_base_url;
-    let api_key = conf.binance_api_key;
-    let secret = conf.binance_secret_key;
+    let base = conf.binance.base_url;
+    let api_key = conf.binance.api_key;
+    let secret = conf.binance.secret_key;
 
     let ts = get_header(&headers, "BinancePay-Timestamp")?;
     let nonce = get_header(&headers, "BinancePay-Nonce")?;
