@@ -24,9 +24,9 @@ pub struct User {
 
     pub nickname: String,
     pub profile_url: String,
-    #[dynamo(prefix = "PRINCIPAL", name = "find_by_email", index = "gsi1", pk)]
+    #[dynamo(prefix = "EMAIL", name = "find_by_email", index = "gsi1", pk)]
     pub email: String,
-    #[dynamo(prefix = "PRINCIPAL", name = "find_by_username", index = "gsi2", pk)]
+    #[dynamo(prefix = "USERNAME", name = "find_by_username", index = "gsi2", pk)]
     pub username: String,
 
     pub term_agreed: bool,
