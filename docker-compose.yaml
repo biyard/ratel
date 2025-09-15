@@ -39,6 +39,7 @@ services:
       AWS_ACCESS_KEY_ID: test
       AWS_SECRET_ACCESS_KEY: test
       TELEGRAM_TOKEN: ${TELEGRAM_TOKEN}
+      DYNAMO_TABLE_PREFIX: ratel-local
     volumes:
       - .:/app
       - ./.build/target:/app/target
@@ -231,6 +232,7 @@ services:
   localstack:
     hostname: localstack
     image: localstack/localstack
+    restart: always
     ports:
       - "4566:4566"
     environment:
@@ -266,6 +268,7 @@ services:
 
   dynamodb-admin:
     image: aaronshaf/dynamodb-admin:latest
+    restart: always
     ports:
       - "8081:8001"
     environment:
@@ -276,7 +279,7 @@ services:
     depends_on:
       - localstack-init
     profiles:
-      - admin
+      - development
     networks:
       - ratel-network
 
