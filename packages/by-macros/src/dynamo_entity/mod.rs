@@ -1,4 +1,3 @@
-#![allow(dead_code)]
 use std::collections::HashMap;
 
 use convert_case::Casing;
@@ -22,18 +21,23 @@ struct StructCfg {
 
 #[derive(Clone, Debug)]
 struct IndexInfo {
-    name: Option<String>,    // "find_by_email_and_code"
+    #[allow(dead_code)]
+    name: Option<String>, // "find_by_email_and_code"
     base_index_name: String, // "gsi1"
     pk: bool,                // "gsi1_pk"
-    sk: bool,                // "gsi1_sk"
+    #[allow(dead_code)]
+    sk: bool, // "gsi1_sk"
     prefix: Option<String>,  // optional prefix for pk
 }
 
 #[derive(Clone, Debug)]
 struct FieldInfo {
     ident: Ident,
+    #[allow(dead_code)]
     ty: Type,
+    #[allow(dead_code)]
     is_pk: bool,
+    #[allow(dead_code)]
     is_sk: bool,
     // For index mapping:
     // e.g., index="gsi1", pk=true => produce attr "gsi1_pk" with optional "prefix"
@@ -178,6 +182,38 @@ fn parse_fields(ds: &DataStruct, cfg: &StructCfg) -> (Vec<FieldInfo>, HashMap<St
     (out, indice_fn)
 }
 
+fn generate_key_composers(fields: &Vec<FieldInfo>) -> Vec<proc_macro2::TokenStream> {
+    let mut out = vec![];
+
+    for f in fields.iter() {
+        for idx in f.indice.iter() {
+            let idx_base = idx.base_index_name.to_case(convert_case::Case::Snake);
+            let cname = Ident::new(
+                &format!("compose_{}_{}", idx_base, if idx.pk { "pk" } else { "sk" }),
+                proc_macro2::Span::call_site(),
+            );
+
+            let token = if let Some(ref prefix) = idx.prefix {
+                quote! {
+                    pub fn #cname(key: impl std::fmt::Display) -> String {
+                        format!("{}#{}", #prefix, key)
+                    }
+                }
+            } else {
+                quote! {
+                    pub fn #cname(key: impl std::fmt::Display) -> String {
+                        key.to_string()
+                    }
+                }
+            };
+
+            out.push(token);
+        }
+    }
+
+    out.into()
+}
+
 fn generate_struct_impl(
     ident: Ident,
     ds: &DataStruct,
@@ -226,13 +262,17 @@ fn generate_struct_impl(
 
     let st_query_option = generate_query_option(&st_name, &s_cfg);
     let query_fn = generate_query_fn(&st_name, &s_cfg, &fields, &indice_fn);
+    let key_composers = generate_key_composers(&fields);
 
     let out = quote! {
         #st_query_option
 
         #query_fn
 
+
         impl #ident {
+            #(#key_composers)*
+
             pub fn table_name() -> &'static str {
                 #table_lit_str
             }
@@ -261,7 +301,7 @@ fn generate_struct_impl(
 
             pub async fn get(
                 cli: &aws_sdk_dynamodb::Client,
-                pk: String,
+                pk: impl std::fmt::Display,
                 #sk_param
             ) -> #result_ty <Option<Self>, #err_ctor> {
                 let mut req = cli
@@ -269,7 +309,7 @@ fn generate_struct_impl(
                     .table_name(Self::table_name())
                     .key(
                         Self::pk_field(),
-                        aws_sdk_dynamodb::types::AttributeValue::S(pk),
+                        aws_sdk_dynamodb::types::AttributeValue::S(pk.to_string()),
                     );
 
                 #sk_condition
@@ -289,12 +329,12 @@ fn generate_struct_impl(
 
             pub async fn delete(
                 cli: &aws_sdk_dynamodb::Client,
-                pk: String,
+                pk: impl std::fmt::Display,
                 #sk_param
             ) -> #result_ty <(), #err_ctor> {
                 let mut req = cli.delete_item().table_name(Self::table_name()).key(
                     Self::pk_field(),
-                    aws_sdk_dynamodb::types::AttributeValue::S(pk),
+                    aws_sdk_dynamodb::types::AttributeValue::S(pk.to_string()),
                 );
 
                 #sk_condition
@@ -420,14 +460,20 @@ fn generate_query_option(st_name: &str, cfg: &StructCfg) -> proc_macro2::TokenSt
             pub scan_index_forward: bool,
         }
 
-        impl #opt_ident {
-            pub fn builder() -> Self {
+        impl Default for #opt_ident {
+            fn default() -> Self {
                 Self {
                     sk: None,
                     bookmark: None,
                     limit: 10,
                     scan_index_forward: false,
                 }
+            }
+        }
+
+        impl #opt_ident {
+            pub fn builder() -> Self {
+                Self::default()
             }
 
             #sk_fn
@@ -545,19 +591,33 @@ fn generate_index_fn(
         };
 
     };
+    let pk_composer = Ident::new(
+        &format!(
+            "compose_{}_pk",
+            idx_base_name.to_case(convert_case::Case::Snake)
+        ),
+        proc_macro2::Span::call_site(),
+    );
+    let sk_composer = Ident::new(
+        &format!(
+            "compose_{}_sk",
+            idx_base_name.to_case(convert_case::Case::Snake)
+        ),
+        proc_macro2::Span::call_site(),
+    );
 
     let sk_condition = quote! {
         if let Some(sk) = opt.sk {
             req = req
                 .expression_attribute_names("#sk", #idx_sk_var)
-                .expression_attribute_values(":sk", aws_sdk_dynamodb::types::AttributeValue::S(sk.to_string()));
+                .expression_attribute_values(":sk", aws_sdk_dynamodb::types::AttributeValue::S(Self::#sk_composer(sk)));
         }
     };
 
     quote! {
         pub async fn #idx_ident(
             cli: &aws_sdk_dynamodb::Client,
-            pk: String,
+            pk: impl std::fmt::Display,
             opt: #opt_ident,
         ) -> #result_ty <(Vec<Self>, Option<String>), #err_ctor> {
             #key_condition
@@ -567,7 +627,7 @@ fn generate_index_fn(
                 .table_name(Self::table_name())
                 .index_name(#idx_name)
                 .expression_attribute_names("#pk", #idx_pk_var)
-                .expression_attribute_values(":pk", aws_sdk_dynamodb::types::AttributeValue::S(pk));
+                .expression_attribute_values(":pk", aws_sdk_dynamodb::types::AttributeValue::S(Self::#pk_composer(pk)));
 
             #sk_condition
 

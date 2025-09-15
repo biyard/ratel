@@ -87,8 +87,10 @@ impl User {
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity)]
 pub struct UserPrincipal {
     pub pk: String,
+    #[dynamo(index = "gsi1", sk)]
     pub sk: EntityType,
 
+    #[dynamo(name = "find_by_principal", prefix = "PRINCIPAL", index = "gsi1", pk)]
     pub principal: String,
 }
 
@@ -103,8 +105,11 @@ impl UserPrincipal {
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity)]
 pub struct UserEvmAddress {
     pub pk: String,
+
+    #[dynamo(index = "gsi1", sk)]
     pub sk: EntityType,
 
+    #[dynamo(name = "find_by_evm", prefix = "EVM", index = "gsi1", pk)]
     pub evm_address: String,
 }
 
@@ -123,8 +128,16 @@ impl UserEvmAddress {
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity)]
 pub struct UserReferralCode {
     pub pk: String,
+
+    #[dynamo(index = "gsi1", sk)]
     pub sk: EntityType,
 
+    #[dynamo(
+        name = "find_by_referral_code",
+        prefix = "REFERRAL",
+        index = "gsi1",
+        pk
+    )]
     pub referral_code: String,
 }
 
@@ -143,8 +156,10 @@ impl UserReferralCode {
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity)]
 pub struct UserPhoneNumber {
     pub pk: String,
+    #[dynamo(index = "gsi1", sk)]
     pub sk: EntityType,
 
+    #[dynamo(name = "find_by_phone_number", prefix = "PHONE", index = "gsi1", pk)]
     pub phone_number: String,
 }
 
@@ -163,8 +178,11 @@ impl UserPhoneNumber {
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity)]
 pub struct UserTelegram {
     pub pk: String,
+
+    #[dynamo(index = "gsi1", sk)]
     pub sk: EntityType,
 
+    #[dynamo(name = "find_by_telegram_id", prefix = "TELEGRAM", index = "gsi1", pk)]
     pub telegram_id: i64,
     pub telegram_raw: String,
 }
@@ -277,22 +295,67 @@ mod tests {
                     assert_eq!(u.email, user.email);
                 }
                 UserMetadata::UserPrincipal(up) => {
-                    assert_eq!(up.principal, principal);
+                    assert_eq!(up.principal, principal.clone());
                 }
                 UserMetadata::UserEvmAddress(ue) => {
-                    assert_eq!(ue.evm_address, evm_address);
+                    assert_eq!(ue.evm_address, evm_address.clone());
                 }
                 UserMetadata::UserReferralCode(ur) => {
-                    assert_eq!(ur.referral_code, referral_code);
+                    assert_eq!(ur.referral_code, referral_code.clone());
                 }
                 UserMetadata::UserPhoneNumber(upn) => {
-                    assert_eq!(upn.phone_number, phone_number);
+                    assert_eq!(upn.phone_number, phone_number.clone());
                 }
                 UserMetadata::UserTelegram(ut) => {
-                    assert_eq!(ut.telegram_id, telegram_id);
+                    assert_eq!(ut.telegram_id, telegram_id.clone());
                     assert_eq!(ut.telegram_raw, telegram_raw);
                 }
             }
         }
+
+        let (p, _bookmark) =
+            UserPrincipal::find_by_principal(&cli, &principal, UserPrincipalQueryOption::builder())
+                .await
+                .expect("failed to find by principal");
+        assert_eq!(p.len(), 1);
+        assert_eq!(p[0].principal, principal, "{:?}", p);
+
+        let (evm, _bookmark) =
+            UserEvmAddress::find_by_evm(&cli, &evm_address, UserEvmAddressQueryOption::builder())
+                .await
+                .expect("failed to find by evm");
+        assert_eq!(evm.len(), 1);
+        assert_eq!(evm[0].evm_address, evm_address);
+
+        let (referral, _bookmark) = UserReferralCode::find_by_referral_code(
+            &cli,
+            &referral_code,
+            UserReferralCodeQueryOption::builder(),
+        )
+        .await
+        .expect("failed to find by referral code");
+
+        assert_eq!(referral.len(), 1);
+        assert_eq!(referral[0].referral_code, referral_code);
+
+        let (phone, _bookmark) = UserPhoneNumber::find_by_phone_number(
+            &cli,
+            &phone_number,
+            UserPhoneNumberQueryOption::builder(),
+        )
+        .await
+        .expect("failed to find by phone number");
+        assert_eq!(phone.len(), 1);
+        assert_eq!(phone[0].phone_number, phone_number);
+
+        let (telegram, _bookmark) = UserTelegram::find_by_telegram_id(
+            &cli,
+            telegram_id,
+            UserTelegramQueryOption::builder(),
+        )
+        .await
+        .expect("failed to find by telegram id");
+        assert_eq!(telegram.len(), 1);
+        assert_eq!(telegram[0].telegram_id, telegram_id);
     }
 }
