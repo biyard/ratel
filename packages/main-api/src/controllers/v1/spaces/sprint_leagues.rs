@@ -203,13 +203,6 @@ impl SprintLeagueController {
         sprint_league_player_id: i64,
         referral_code: Option<String>,
     ) -> Result<SprintLeague> {
-        check_perm(
-            &self.pool,
-            auth.clone(),
-            RatelResource::Space { space_id },
-            GroupPermission::ManageSpace,
-        )
-        .await?;
         let user_id = extract_user_id(&self.pool, auth).await.unwrap_or_default();
         tracing::debug!(
             "Voting in sprint league: space_id={}, sprint_league_id={}, player_id={}, user_id={}",
