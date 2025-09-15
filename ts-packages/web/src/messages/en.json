@@ -534,6 +534,7 @@
     "subscribe_desc_3": "Start using it now.",
     "subscribe_info": "Plans can be changed or cancelled at any time.",
     "select": "Select",
+    "success_subscribe_info": "Success to subscribe ratel service",
     "unsubscribe": "UnSubscribe"
   }
 }

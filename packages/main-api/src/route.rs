@@ -16,7 +16,7 @@ use crate::{
         v2::{
             binances::{
                 binance_webhook::binance_webhook_handler,
-                create_subscription::create_subscription_handler,
+                create_subscription::create_subscription_handler, unsubscribe::unsubscribe_handler,
             },
             bookmarks::{
                 add_bookmark::add_bookmark_handler, list_bookmarks::get_bookmarks_handler,
@@ -196,6 +196,14 @@ pub async fn route(
                     "Create Webhook",
                     "Create binance payment api webhook handler"
                 ),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/v2/binances/unsubscribe",
+            post_with(
+                unsubscribe_handler,
+                api_docs!("Unsubscribe Service", "Unsubscribe service in ratel"),
             )
             .with_state(pool.clone()),
         )
