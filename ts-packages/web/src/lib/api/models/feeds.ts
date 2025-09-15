@@ -7,10 +7,20 @@ export enum UrlType {
   Image = 1,
 }
 
+export interface ArtworkTrait {
+  trait_type: string;
+  value: string;
+  display_type?: ArtworkTraitDisplayType | null;
+}
+
+export enum ArtworkTraitDisplayType {
+  String = 'string',
+  Color = 'color',
+  Number = 'number',
+}
+
 export interface ArtworkMetadata {
-  artist_name: string;
-  size: string;
-  background_color: string;
+  traits: ArtworkTrait[];
 }
 
 export interface Feed {

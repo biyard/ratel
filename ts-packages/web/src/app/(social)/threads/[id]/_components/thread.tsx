@@ -54,9 +54,7 @@ function Artwork({ post }: { post: Feed }) {
         title={post.title || ''}
         content={post.html_contents || ''}
         image={post.url || ''}
-        artistName={artworkMetadata.artist_name}
-        backgroundColor={artworkMetadata.background_color}
-        size={artworkMetadata.size}
+        traits={artworkMetadata.traits || []}
       />
     </div>
   );

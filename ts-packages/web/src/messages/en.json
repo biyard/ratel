@@ -596,5 +596,16 @@
     "CancelButton": {
       "label": "Cancel"
     }
+  },
+
+  "EditArtworkPost": {
+    "artwork_name": "Artwork Name",
+    "description": "Description",
+    "artist_name": "Artist Name",
+    "background_color": "Background Color",
+    "size": "Size",
+    "year": "Year",
+    "medium": "Medium",
+    "placeholder": "Enter {fieldName}"
   }
 }
