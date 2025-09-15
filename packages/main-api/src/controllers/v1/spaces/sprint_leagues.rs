@@ -131,9 +131,8 @@ impl SprintLeagueController {
         let player_repo = SprintLeaguePlayer::get_repository(self.pool.clone());
 
         let mut tx = self.pool.begin().await?;
-        let sprint_league = repo
-            .insert_with_tx(&mut *tx, space_id, param.reward_amount)
-            .await?;
+
+        let sprint_league = repo.insert_with_tx(&mut *tx, space_id).await?;
         if sprint_league.is_none() {
             return Err(Error::SprintLeagueCreationFailed);
         }
