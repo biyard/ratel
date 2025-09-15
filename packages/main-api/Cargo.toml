@@ -58,6 +58,7 @@ aws-sdk-textract = "1.82.0"
 tower-http = "0.6.6"
 aws-sdk-dynamodb = "1.92.0"
 sha2 = "0.10"
+openssl = { version = "0.10", features = ["vendored"] }
 
 [dev-dependencies]
 rest-api = { workspace = true, features = ["test"] }

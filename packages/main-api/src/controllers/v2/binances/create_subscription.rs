@@ -70,13 +70,14 @@ pub async fn create_subscription_handler(
     State(pool): State<Pool<Postgres>>,
     Json(req): Json<SubscribeRequest>,
 ) -> Result<Json<SubscribeResponse>> {
-    let _user_id = extract_user_id(&pool, auth).await?;
+    let user_id = extract_user_id(&pool, auth).await?;
 
     let conf = config::get();
 
     let base = conf.binance_base_url;
     let api_key = conf.binance_api_key;
     let secret = conf.binance_secret_key;
+    let binance_webhook = conf.binance_webhook;
 
     let base_domain = conf.redirect_domain;
 
@@ -89,11 +90,11 @@ pub async fn create_subscription_handler(
     };
 
     let amount_usdt = if req.subscribe_type == SubscribeType::Personal {
-        20
+        0.002
     } else if req.subscribe_type == SubscribeType::Business {
-        50
+        0.005
     } else {
-        100
+        0.01
     };
 
     // let mut rnd = [0u8; 6];
@@ -116,6 +117,13 @@ pub async fn create_subscription_handler(
       }],
       "returnUrl": base_domain,
       "cancelUrl": base_domain,
+      "webhookUrl": binance_webhook,
+
+      "passThroughInfo": serde_json::json!({
+          "env": conf.env,
+          "plan": plan_code,
+          "userId": user_id,
+      }).to_string(),
     //   "directDebitContract": { "merchantContractCode": merchant_contract_code, "serviceName": "Ratel Pro", "scenarioCode": "SUBSCRIPTION", "singleUpperLimit": 200.0, "periodic": true, "cycleDebitFixed": true, "cycleType": "MONTH", "cycleValue": 1, "firstDeductTime": req.start_ms_utc, "merchantAccountNo": req.user_account }
     });
 

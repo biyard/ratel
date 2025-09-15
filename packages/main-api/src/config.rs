@@ -11,6 +11,7 @@ pub struct Config {
     pub binance_api_key: &'static str,
     pub binance_secret_key: &'static str,
     pub binance_base_url: &'static str,
+    pub binance_webhook: &'static str,
     pub assembly_system_url: &'static str,
     pub assembly_detail_url: &'static str,
     pub aws: AwsConfig,
@@ -85,7 +86,9 @@ impl Default for Config {
             openapi_url: "https://open.assembly.go.kr/portal/openapi/",
             binance_api_key: option_env!("BINANCE_API_KEY").expect("BINANCE_API_KEY is required"),
             binance_secret_key: option_env!("BINANCE_SECRET_KEY").expect("BINANCE_SECRET_KEY is required"),
+            binance_webhook: option_env!("BINANCE_WEBHOOK").unwrap_or("https://api.dev.ratel.foundation/v2/binances/webhooks"),
             binance_base_url: "https://bpay.binanceapi.com/binancepay/openapi",
+            
             assembly_system_url: "https://likms.assembly.go.kr/filegate/servlet/FileGate",
             assembly_detail_url: "https://likms.assembly.go.kr/bill/billDetail.do",
             signing_domain: option_env!("AUTH_DOMAIN").expect("AUTH_DOMAIN is required"),
