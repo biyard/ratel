@@ -24,6 +24,9 @@ pub enum EntityType {
     PostSpace,
 
     Space,
+    SpaceMember,
+    Team,
+    TeamMember,
     Feed,
     Group,
     Discussion,

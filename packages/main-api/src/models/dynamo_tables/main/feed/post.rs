@@ -1,5 +1,5 @@
-use crate::types::*;
 use bdk::prelude::*;
+use crate::types::*;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default)]
 pub struct Post {

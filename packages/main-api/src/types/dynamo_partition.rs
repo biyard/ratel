@@ -14,6 +14,10 @@ pub enum Partition {
     Email(String),
     #[strum(to_string = "FEED#{0}")]
     Feed(String),
+    #[strum(to_string = "SPACE#{0}")]
+    Space(String),
+    #[strum(to_string = "TEAM#{0}")]
+    Team(String),
 }
 
 impl Partition {
@@ -30,6 +34,8 @@ impl FromStr for Partition {
             s if s.starts_with("USER") => Partition::User(s.to_string()),
             s if s.starts_with("EMAIL#") => Partition::Email(s.to_string()),
             s if s.starts_with("FEED#") => Partition::Feed(s.to_string()),
+            s if s.starts_with("SPACE#") => Partition::Space(s.to_string()),
+            s if s.starts_with("TEAM#") => Partition::Team(s.to_string()),
             _ => Err(crate::Error2::InvalidPartitionKey(s.to_string()))?,
         })
     }
