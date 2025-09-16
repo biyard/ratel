@@ -31,7 +31,4 @@ pub struct SprintLeague {
     #[api_model(summary, many_to_many = sprint_league_votes, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = sprint_league_id, aggregator = exist)]
     #[serde(default)]
     pub is_voted: bool,
-
-    #[api_model(action = create)]
-    pub reward_amount: i64,
 }
