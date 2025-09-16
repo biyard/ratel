@@ -1,6 +1,8 @@
 pub type Result<T> = dto::Result<T>;
 pub type Error = dto::Error;
+pub type Error2 = crate::error::Error;
 
+pub mod error;
 pub mod controllers {
     pub mod mcp;
     pub mod v1;
@@ -112,6 +114,20 @@ pub mod controllers {
             pub mod get_telegram_info;
             pub mod verify_telegram_raw;
         }
+
+        pub mod binances {
+            pub mod binance_webhook;
+            pub mod create_subscription;
+            pub mod unsubscribe;
+        }
+    }
+    pub mod v3 {
+        pub mod users {
+            pub mod email_signup;
+            pub mod verify_email;
+            pub mod request_verification_code;
+            pub mod email_login;
+        }
     }
     pub mod m2 {
         pub mod noncelab {
@@ -121,6 +137,9 @@ pub mod controllers {
         }
         pub mod migration {
             pub mod postgres_to_dynamodb;
+        }
+        pub mod binances {
+            pub mod get_merchant_balance;
         }
     }
     pub mod well_known {
@@ -134,7 +153,6 @@ pub mod etl;
 pub mod models;
 pub mod route;
 pub mod security;
-pub mod services;
 pub mod types;
 pub mod utils;
 

@@ -75,7 +75,7 @@ export default function Initial({ spaceId }: { spaceId: number }) {
     const activeTab =
       space.status === SpaceStatus.Finish ? Tab.Analyze : Tab.Poll;
     initialize(survey, answer, activeTab);
-  }, [initialize, space.surveys, space.user_responses]);
+  }, [initialize, space.status, space.surveys, space.user_responses]);
 
   return null;
 }
