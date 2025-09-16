@@ -24,7 +24,6 @@ export default function ThreadComment({ postId }: { postId: number }) {
     parentId: number,
     content: string,
   ) => {
-    console.log('USER ID', user.id);
     await mutateAsync({
       userId: user.id,
       postId: postId,

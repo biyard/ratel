@@ -1,6 +1,7 @@
 import { ArtworkMetadata, FeedType, FileInfo, UrlType } from '../feeds';
 
 export interface UpdatePostRequest {
+  team_id: number | null;
   html_contents: string;
   feed_type: FeedType | null;
   industry_id: number | null;
@@ -22,8 +23,10 @@ export function updatePostRequest(
   url_type: UrlType = UrlType.None,
   feed_type: FeedType | null = null,
   artwork_metadata: ArtworkMetadata | null = null,
+  team_id: number | null = null,
 ): UpdatePostRequest {
   return {
+    team_id,
     html_contents,
     feed_type,
     industry_id,

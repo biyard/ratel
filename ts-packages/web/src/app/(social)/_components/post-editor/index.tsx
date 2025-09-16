@@ -338,7 +338,6 @@ export function CreatePost() {
                   variant="rounded_primary"
                   size="default"
                   onClick={async () => {
-                    console.log('Publish button clicked');
                     await handleUpdate();
                   }}
                   disabled={isSubmitDisabled || status !== Status.Idle}
