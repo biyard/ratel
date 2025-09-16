@@ -2,9 +2,19 @@ use bdk::prelude::*;
 use by_types::config::*;
 
 #[derive(Debug)]
+pub struct BinanceConfig {
+    pub redirect_domain: &'static str,
+    pub api_key: &'static str,
+    pub base_url: &'static str,
+    pub secret_key: &'static str,
+    pub webhook: &'static str,
+}
+
+#[derive(Debug)]
 pub struct Config {
     pub env: &'static str,
     pub domain: &'static str,
+    pub binance: BinanceConfig,
     pub aws: AwsConfig,
     pub bucket: BucketConfig,
     pub database: DatabaseConfig,
@@ -78,6 +88,7 @@ impl Default for Config {
             },
             from_email: option_env!("FROM_EMAIL").unwrap_or("no-reply@ratel.foundation"),
             env: option_env!("ENV").expect("You must set ENV"),
+            binance: BinanceConfig { redirect_domain: option_env!("REDIRECT_DOMAIN").unwrap_or("https://dev.ratel.foundation"), api_key: option_env!("BINANCE_API_KEY").expect("BINANCE_API_KEY is required"), base_url: "https://bpay.binanceapi.com/binancepay/openapi", secret_key: option_env!("BINANCE_SECRET_KEY").expect("BINANCE_SECRET_KEY is required"), webhook: option_env!("BINANCE_WEBHOOK").unwrap_or("https://api.dev.ratel.foundation/v2/binances/webhooks"), },
             domain: option_env!("DOMAIN").expect("You must set DOMAIN"),
             signing_domain: option_env!("AUTH_DOMAIN").expect("AUTH_DOMAIN is required"),
             aws: AwsConfig::default(),

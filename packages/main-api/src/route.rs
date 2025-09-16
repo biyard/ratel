@@ -20,11 +20,18 @@ use crate::{
         self,
         m2::{
             migration::postgres_to_dynamodb::{migrate_users_handler, migration_stats_handler},
-            noncelab::users::register_users::{
-                RegisterUserResponse, register_users_by_noncelab_handler,
+            {
+                binances::get_merchant_balance::binance_merchant_balance_handler,
+                noncelab::users::register_users::{
+                    RegisterUserResponse, register_users_by_noncelab_handler,
+                },
             },
         },
         v2::{
+            binances::{
+                binance_webhook::binance_webhook_handler,
+                create_subscription::create_subscription_handler, unsubscribe::unsubscribe_handler,
+            },
             bookmarks::{
                 add_bookmark::add_bookmark_handler, list_bookmarks::get_bookmarks_handler,
                 remove_bookmark::remove_bookmark_handler,
@@ -212,6 +219,36 @@ pub async fn route(
                 .layer(Extension(bot.map(Arc::new))),
         )
         .native_route("/v2/users/logout", npost(logout_handler))
+        .route(
+            "/v2/binances/subscriptions",
+            post_with(
+                create_subscription_handler,
+                api_docs!(
+                    "Create Subscription",
+                    "Create subscription in ratel and get a QR code"
+                ),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/v2/binances/webhooks",
+            post_with(
+                binance_webhook_handler,
+                api_docs!(
+                    "Create Webhook",
+                    "Create binance payment api webhook handler"
+                ),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/v2/binances/unsubscribe",
+            post_with(
+                unsubscribe_handler,
+                api_docs!("Unsubscribe Service", "Unsubscribe service in ratel"),
+            )
+            .with_state(pool.clone()),
+        )
         .route(
             "/v2/conversations",
             post_with(
@@ -655,6 +692,17 @@ pub async fn route(
                 ),
             )
             .options(oauth_authorization_server_handler)
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/m2/binances/balance",
+            get_with(
+                binance_merchant_balance_handler,
+                api_docs!(
+                    "Query Owner Balance",
+                    "Query Owner Balance from inner owner wallet address"
+                ),
+            )
             .with_state(pool.clone()),
         )
         .native_route("/.well-known/did.json", nget(get_did_document_handler))
