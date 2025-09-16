@@ -44,7 +44,6 @@ function ArtworkViewer({
     voteType: ConsensusVoteType,
   ) => Promise<void>;
 }) {
-  console.log('ArtworkViewer', artwork.file.url);
   const { data: original } = useArtworkDetailById(
     artwork.id,
     !isTemporary && isOwner,

@@ -56,7 +56,6 @@ export default function Home({
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useInfiniteFeeds(0, FeedStatus.Published);
-  console.log('data', data);
   const handleIntersect = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
       fetchNextPage();

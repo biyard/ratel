@@ -141,7 +141,6 @@ function useLoginMutation() {
         throw new Error('Ed25519 key pair is not available');
       }
       const user: AuthUserInfo = await login(ed25519KeyPair);
-      console.log('Authenticated user info:', user);
       if (user.keyPair === null) {
         throw new Error('User key pair is not available');
       }
