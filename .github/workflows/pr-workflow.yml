@@ -233,6 +233,7 @@ jobs:
           ECR_NAME: fetcher
           COMMIT: pr-${{ github.sha }}
           US_CONGRESS_KEY: ${{ secrets.US_CONGRESS_KEY }}
+          DYNAMO_TABLE_PREFIX: ratel-local
         run: |
           npm i -g aws-cdk
           cd packages/fetcher

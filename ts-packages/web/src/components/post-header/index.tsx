@@ -102,40 +102,40 @@ export function PostInfoSection({
 }: PostInfoSectionProps) {
   const t = useTranslations('SprintSpace');
   return (
-    <div className="flex flex-row w-full justify-between items-center">
-      <div className="flex flex-row w-fit gap-2.5 items-center">
+    <div className="flex flex-row w-full justify-between items-center max-mobile:flex-col">
+      <div className="flex flex-row w-full gap-2.5 items-center">
         {/* <SpaceType /> */}
         {!isDraft ? <Onboard /> : <></>}
       </div>
-      <div className="flex flex-row w-fit gap-5 [&>*>svg>*]:stroke-neutral-500 [&>*>svg]:size-5">
-        <div className="flex flex-row w-fit gap-1 items-center">
+      <div className="flex flex-row gap-5 [&>*>svg>*]:stroke-neutral-500 [&>*>svg]:size-5">
+        <div className="flex flex-row gap-1">
           <ThumbsUp className="[&>path]:stroke-neutral-500" />
           <div className="font-medium text-[15px] text-text-primary">
             {likes}
           </div>
         </div>
 
-        <div className="flex flex-row w-fit gap-1 items-center">
+        <div className="flex flex-row gap-1">
           <RoundBubble />
           <div className="font-medium text-[15px] text-text-primary">
             {comments}
           </div>
         </div>
 
-        <div className="flex flex-row w-fit gap-1 items-center">
+        <div className="flex flex-row gap-1">
           <RewardCoin />
           <div className="font-medium text-[15px] text-text-primary">
             {rewards}
           </div>
         </div>
 
-        <div className="flex flex-row w-fit gap-1 items-center">
+        <div className="flex flex-row gap-1">
           <Repost />
           <div className="font-medium text-[15px] text-text-primary">
             {shares}
           </div>
         </div>
-        <div className="flex flex-row w-fit gap-1 items-center">
+        <div className="flex flex-row gap-1">
           {isDraft ? (
             <>
               <File />

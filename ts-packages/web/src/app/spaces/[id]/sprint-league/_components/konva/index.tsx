@@ -52,7 +52,7 @@ export default function Game({
   return (
     <div
       ref={containerRef}
-      className="w-full h-full flex justify-center items-center"
+      className="w-full h-full flex justify-center items-center max-mobile:items-start"
     >
       <Base
         width={adjustedWidth}

@@ -84,13 +84,25 @@ pub struct Post {
     pub onboard: bool,
 
     #[api_model(version = v0.4, type = JSONB)]
+    #[serde(default)]
     pub artwork_metadata: ArtworkMetadata,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Default, Serialize, Deserialize)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct ArtworkMetadata {
-    pub artist_name: String,
-    pub size: String,
-    pub background_color: String,
+    // image : post.url
+    // name: post.title,
+    // description: post.html_contents
+    #[serde(default)]
+    pub traits: Vec<ArtworkTrait>,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Default, Serialize, Deserialize)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct ArtworkTrait {
+    pub trait_type: String,
+    pub value: serde_json::Value,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub display_type: Option<String>,
 }

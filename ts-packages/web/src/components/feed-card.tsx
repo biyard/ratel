@@ -459,11 +459,7 @@ export function FeedFooter({
       {space_id && space_type ? (
         <JoinNowButton
           onClick={() => {
-            if (space_type === SpaceType.Committee) {
-              router.push(route.commiteeSpaceById(space_id ?? 0));
-            } else {
-              router.push(route.deliberationSpaceById(space_id ?? 0));
-            }
+            router.push(route.space(space_id));
           }}
         />
       ) : (
