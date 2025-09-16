@@ -2,13 +2,10 @@ use crate::{models::user::User, types::*};
 use bdk::prelude::*;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default)]
-pub struct PostAuthor {
+pub struct TeamOwner {
     pub pk: Partition,
+    #[dynamo(index = "gsi1", sk)]
     pub sk: EntityType,
-
-    #[dynamo(prefix = "TS", index = "gsi1", sk)]
-    pub created_at: i64,
-    pub updated_at: i64,
 
     pub display_name: String,
     pub profile_url: String,
@@ -18,7 +15,7 @@ pub struct PostAuthor {
     pub user_pk: Partition,
 }
 
-impl PostAuthor {
+impl TeamOwner {
     pub fn new(
         pk: Partition,
         User {
@@ -29,13 +26,9 @@ impl PostAuthor {
             ..
         }: User,
     ) -> Self {
-        let created_at = chrono::Utc::now().timestamp_micros();
-
         Self {
             pk,
-            sk: EntityType::PostAuthor,
-            created_at,
-            updated_at: created_at,
+            sk: EntityType::TeamOwner,
             display_name,
             profile_url,
             username,
