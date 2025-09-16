@@ -23,10 +23,6 @@ const sanitizeHTML = (html: string): string => {
   return html;
 };
 
-interface HomeNewsProps {
-  newsData: NewsSummary[];
-}
-
 export default function HomeNews({ newsData }: HomeNewsProps) {
   const t = useTranslations('Home');
   const router = useRouter();
