@@ -131,9 +131,8 @@ impl SprintLeagueController {
         let player_repo = SprintLeaguePlayer::get_repository(self.pool.clone());
 
         let mut tx = self.pool.begin().await?;
-        let sprint_league = repo
-            .insert_with_tx(&mut *tx, space_id, param.reward_amount)
-            .await?;
+
+        let sprint_league = repo.insert_with_tx(&mut *tx, space_id).await?;
         if sprint_league.is_none() {
             return Err(Error::SprintLeagueCreationFailed);
         }
@@ -203,13 +202,6 @@ impl SprintLeagueController {
         sprint_league_player_id: i64,
         referral_code: Option<String>,
     ) -> Result<SprintLeague> {
-        check_perm(
-            &self.pool,
-            auth.clone(),
-            RatelResource::Space { space_id },
-            GroupPermission::ManageSpace,
-        )
-        .await?;
         let user_id = extract_user_id(&self.pool, auth).await.unwrap_or_default();
         tracing::debug!(
             "Voting in sprint league: space_id={}, sprint_league_id={}, player_id={}, user_id={}",

@@ -585,6 +585,15 @@
     "select_language": "언어 선택",
     "cancel": "취소"
   },
+  "Subscribe": {
+    "subscribe_desc_1": "전 세계에서 애용하는 프리미엄",
+    "subscribe_desc_2": "Ratel 프리미엄으로 앞서가세요.",
+    "subscribe_desc_3": "지금 이용을 시작하세요.",
+    "subscribe_info": "계획은 언제든 변경 또는 취소할 수 있습니다.",
+    "select": "선택",
+    "success_subscribe_info": "라텔 서비스를 성공적으로 구독하셨습니다.",
+    "unsubscribe": "구독 취소"
+  },
 
   "Connect": {
     "title": "{service}에 연결",
@@ -596,5 +605,42 @@
     "CancelButton": {
       "label": "취소"
     }
+  },
+
+  "SpaceHeader": {
+    "unsave_notice_modal": "변경 사항을 저장하시겠습니까?",
+    "publish_modal_title": "스페이스 게시",
+    "make_public_modal_title": "공개 스페이스로 전환"
+  },
+
+  "SpaceUnsaveModal": {
+    "description": "변경 사항을 저장하시겠습니까?",
+    "button_skip": "변경 사항 무시",
+    "button_save": "저장하고 게시"
+  },
+
+  "SpacePublishModal": {
+    "description": "게시하면 이 스페이스는 모두에게 보이게 되며 다시 비공개로 되돌릴 수 없습니다.",
+    "public_publish_label": "공개",
+    "public_publish_description": "누구나 이 스페이스에 접근하고 참여할 수 있습니다.",
+    "private_publish_label": "비공개",
+    "private_publish_description": "팀 구성원만 이 스페이스에 접근할 수 있습니다.",
+    "button_publish": "게시"
+  },
+  "SpaceMakePublicModal": {
+    "description": "공개로 전환하면,<br></br>이 스페이스는 모든 사용자에게 보이게 되며<br></br><b>다시 비공개로 되돌릴 수 없습니다.</b>",
+    "button_cancel": "취소",
+    "button_make_public": "공개로 전환"
+  },
+
+  "EditArtworkPost": {
+    "artwork_name": "작품명",
+    "description": "설명",
+    "artist_name": "작가명",
+    "background_color": "배경색",
+    "size": "크기",
+    "year": "연도",
+    "medium": "재질",
+    "placeholder": "{fieldName}을(를) 입력하세요."
   }
 }

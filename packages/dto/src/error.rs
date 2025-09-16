@@ -94,6 +94,7 @@ pub enum Error {
     ApiEmptyRow,
 
     BadRequest,
+    HMacInitError(String),
     JsonDeserializeError(String),
     WalletNotFound,
     WalletError(String),
@@ -229,6 +230,7 @@ impl Display for Error {
             Error::InvalidPhoneNumber => write!(f, "Invalid phone number"),
             Error::InvalidPrinciapl => write!(f, "Invalid principal"),
             Error::DuplicatedTeamName => write!(f, "Duplicated team name"),
+            Error::HMacInitError(msg) => write!(f, "Initialize HMac error: {}", msg),
             Error::VerifyException(msg) => write!(f, "Verify exception: {}", msg),
             Error::SignException => write!(f, "Sign exception"),
             Error::DatabaseException(msg) => write!(f, "Database exception: {}", msg),

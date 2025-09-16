@@ -140,7 +140,7 @@ impl UserControllerV1 {
                 ctrl.login_with_password(req, session).await
             }
             Some(UserReadActionType::LoginByTelegram) => {
-                ctrl.login_with_telegram(req, session).await
+                ctrl.login_with_telegram(req, principal, session).await
             }
             None | Some(UserReadActionType::ByPrincipal) => Err(Error::BadRequest)?,
         }
@@ -196,9 +196,10 @@ impl UserControllerV1 {
     pub async fn login_with_telegram(
         &self,
         req: UserReadAction,
+        principal: String,
         session: Session,
     ) -> Result<Json<User>> {
-        tracing::debug!("login with telegram raw: {:?}", req);
+        tracing::debug!("login with telegram raw: {:?} {}", req, principal);
 
         if req.telegram_raw.is_none() {
             return Err(Error::BadRequest);
@@ -215,7 +216,49 @@ impl UserControllerV1 {
             .query()
             .map(User::from)
             .fetch_one(&self.pool)
-            .await?;
+            .await;
+        let user = match user {
+            Ok(v) => v,
+            Err(_) => {
+                let temp_user_email = format!("tg_{}@not.valid", telegram_user.id);
+                let res = User::get_repository(self.pool.clone())
+                    .insert(
+                        telegram_user
+                            .username
+                            .unwrap_or(format!("tg_user_{}", telegram_user.id)),
+                        principal,
+                        temp_user_email,
+                        telegram_user.photo_url.unwrap_or_default(),
+                        false,
+                        false,
+                        UserType::Anonymous,
+                        None,
+                        format!(
+                            "{} {}",
+                            telegram_user.first_name.unwrap_or_default(),
+                            telegram_user.last_name.unwrap_or_default()
+                        ),
+                        "".to_string(),
+                        "".to_string(),
+                        "".to_string(),
+                        Membership::Free,
+                        None,
+                        generate_referral_code(),
+                        None,
+                        Some(telegram_user.id),
+                    )
+                    .await;
+
+                match res {
+                    Ok(v) => v,
+                    Err(e) => {
+                        tracing::error!("failed to create user: {:?}", e);
+                        return Err(Error::BadRequest);
+                    }
+                }
+            }
+        };
+        // If user is created, we need to create a session for them
         let user_session = UserSession {
             user_id: user.id,
             principal: user.principal.clone(),

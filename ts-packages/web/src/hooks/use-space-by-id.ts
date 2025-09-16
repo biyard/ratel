@@ -209,7 +209,11 @@ export function useShareSpace(space_id: number) {
     },
   });
 }
-
+// FIXME: this two mutatino hooks have a lot of duplicated code, should be refactored
+// Why we need two separate hooks?
+// Because the API design is not very good, making a draft space public is different from publishing a draft space
+// Making a draft space public means changing its scope to public, which is a simple update operation
+// Publishing a draft space means changing its status from draft to published, which is a more complex operation
 export function usePublishSpace(spaceId: number) {
   const t = useTranslations('SprintSpace');
   const queryClient = getQueryClient();
