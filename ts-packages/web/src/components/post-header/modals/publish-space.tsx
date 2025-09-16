@@ -75,7 +75,7 @@ export default function PublishSpaceModal({
       <Button
         variant="default"
         className="h-12 bg-primary"
-        disabled={!selectedType}
+        disabled={!selectedType || isLoading}
         onClick={async () => {
           if (selectedType) {
             setLoading(true);

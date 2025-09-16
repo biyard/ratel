@@ -138,6 +138,17 @@ impl SprintLeagueController {
             Some(BoosterType::X100) => amount *= 100,
             _ => amount = 0,
         };
+
+        let base = Reward::WinSprintLeague as i64;
+        let amount = match space.booster_type {
+            Some(BoosterType::X2) => base * 2,
+            Some(BoosterType::X10) => base * 10,
+            Some(BoosterType::X100) => base * 100,
+            _ => {
+                tracing::info!("No booster for space {}, no reward given", space.id);
+                return Ok(());
+            }
+        };
         let voters = SprintLeagueVote::query_builder()
             .sprint_league_id_equals(sprint_league.id)
             .sprint_league_player_id_equals(winner)
