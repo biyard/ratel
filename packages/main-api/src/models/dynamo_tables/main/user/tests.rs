@@ -42,7 +42,7 @@ async fn tests_create_user() {
 
     let fetched_user = fetched_user.unwrap();
     assert_eq!(fetched_user.email, user.email);
-    assert_eq!(fetched_user.nickname, user.nickname);
+    assert_eq!(fetched_user.display_name, user.display_name);
     assert_eq!(fetched_user.username, user.username);
 
     // create user principal
