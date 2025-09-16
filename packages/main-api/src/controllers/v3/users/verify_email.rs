@@ -3,11 +3,7 @@ use by_axum::axum::Json;
 use dto::{Error, JsonSchema, Result, aide};
 use validator::Validate;
 
-use crate::config;
-use crate::models::dynamo_tables::main::email_verification::{
-    EmailVerification, EmailVerificationQueryOption,
-};
-use crate::utils::aws::dynamo::DynamoClient;
+use crate::models::dynamo_tables::main::email::*;
 
 #[derive(
     Debug,
@@ -46,12 +42,13 @@ pub struct EmailVerificationResponse {
 }
 
 pub async fn email_verification_handler(
+    by_axum::axum::extract::State(ddb): by_axum::axum::extract::State<
+        std::sync::Arc<aws_sdk_dynamodb::Client>,
+    >,
     Json(req): Json<EmailVerificationRequest>,
 ) -> Result<Json<EmailVerificationResponse>> {
     // Validate the request
     req.validate().map_err(|_| Error::BadRequest)?;
-    let conf = config::get();
-    let dynamo_client = DynamoClient::new(&conf.dual_write.table_name);
 
     let now = std::time::SystemTime::now()
         .duration_since(std::time::SystemTime::UNIX_EPOCH)
@@ -59,7 +56,7 @@ pub async fn email_verification_handler(
         .as_secs() as i64;
 
     let (verification_list, _) = EmailVerification::find_by_email_and_code(
-        &dynamo_client.client,
+        &ddb,
         format!("EMAIL#{}", req.email),
         EmailVerificationQueryOption::builder().sk(req.code),
     )
@@ -78,7 +75,7 @@ pub async fn email_verification_handler(
     }
 
     Ok(Json(EmailVerificationResponse {
-        id: verification.pk.clone(),
+        id: verification.pk.to_string(),
         expired_at: verification.expired_at,
     }))
 }
@@ -86,7 +83,6 @@ pub async fn email_verification_handler(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::models::dynamo_tables::main::email_verification::EmailVerification;
     use std::time::SystemTime;
 
     async fn setup_test_dynamo_client() -> aws_sdk_dynamodb::Client {
