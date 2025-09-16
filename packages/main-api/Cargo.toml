@@ -64,6 +64,8 @@ serde_repr = "0.1.20"
 strum_macros = "0.27.2"
 sha2 = "0.10"
 openssl = { version = "0.10" }
+serde_with = "3.14.0"
+parse-display = "0.10.0"
 
 [[bin]]
 name = "main-api"
