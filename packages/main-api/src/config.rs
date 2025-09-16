@@ -18,6 +18,7 @@ pub struct Config {
     pub aws: AwsConfig,
     pub bucket: BucketConfig,
     pub database: DatabaseConfig,
+    pub dynamodb: DatabaseConfig,
     pub signing_domain: &'static str,
     pub auth: AuthConfig,
     pub migrate: bool,
@@ -98,6 +99,11 @@ impl Default for Config {
                     .unwrap_or("10".into())
                     .parse()
                     .expect("DATABASE_POOL_SIZE must be a number")
+            },
+            dynamodb: DatabaseConfig::DynamoDb {
+                aws: AwsConfig::default(),
+                endpoint: option_env!("DYNAMODB_ENDPOINT"),
+                table_prefix: option_env!("DYNAMO_TABLE_PREFIX").expect("You must set TABLE_PREFIX"),
             },
             auth: AuthConfig::default(),
             bucket: BucketConfig {
