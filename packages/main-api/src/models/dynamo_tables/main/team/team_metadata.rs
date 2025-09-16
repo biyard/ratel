@@ -6,6 +6,5 @@ use bdk::prelude::*;
 pub enum TeamMetadata {
     Team(Team),
     TeamOwner(TeamOwner),
-    TeamMember(TeamMember),
     TeamGroup(TeamGroup),
 }
