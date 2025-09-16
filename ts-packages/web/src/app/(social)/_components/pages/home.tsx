@@ -1,7 +1,6 @@
 'use client';
 import { useEffect } from 'react';
 import { useInView } from 'react-intersection-observer';
-import { useQueryClient } from '@tanstack/react-query';
 
 import FeedCard from '@/components/feed-card';
 import { Col } from '@/components/ui/col';
@@ -11,17 +10,17 @@ import { UserType } from '@/lib/api/models/user';
 
 import Loading from '@/app/loading';
 import { Space } from '@/lib/api/models/spaces';
-import useInfiniteFeeds from '@/hooks/feeds/use-feeds-infinite-query';
-import { FeedStatus } from '@/lib/api/models/feeds';
-import { feedKeys } from '@/constants';
+import { usePostInfinite } from '../../_hooks/use-posts';
 import FeedEndMessage from '../feed-end-message';
 import FeedEmptyState from '../feed-empty-state';
 import CreatePostButton from '../create-post-button';
-import DisableBorderCard from '../disable-border-card';
 import PromotionCard from '../promotion-card';
+import DisableBorderCard from '../disable-border-card';
+
 import HomeNews from '../home-news';
 import HomeSuggestions from '../home-suggestions';
-import { HomeGatewayResponse } from '@/lib/api/models/home';
+import { HomeGatewayResponse, FeedSummary } from '@/lib/api/models/home';
+import { Feed } from '@/lib/api/models/feeds';
 
 export const SIZE = 10;
 
@@ -53,67 +52,49 @@ export default function Home({
 }: {
   homeData: HomeGatewayResponse | null;
 }) {
-  // Get user info from homeData for FeedCard component
-  const currentUserId = homeData?.user_info?.id || 0;
-  const queryClient = useQueryClient();
+  // Get user info from homeData instead of separate API call
+  const userId = homeData?.user_info?.id || 0;
 
   const { ref, inView } = useInView({ threshold: 0.5 });
 
-  // Use userId 0 for home page to get all public feeds (anonymous view)
-  const feedUserId = 0;
-
-  // Inject homeData feeds as initial page data if available
-  useEffect(() => {
-    if (homeData?.feeds && homeData.feeds.length > 0) {
-      const queryKey = feedKeys.list({
-        userId: feedUserId,
-        status: FeedStatus.Published,
-      });
-      const existingData = queryClient.getQueryData(queryKey);
-
-      // Only set initial data if we don't already have data
-      if (!existingData) {
-        queryClient.setQueryData(queryKey, {
-          pages: [homeData.feeds],
-          pageParams: [1],
-        });
-      }
-    }
-  }, [homeData?.feeds, feedUserId, queryClient]);
-
-  // Get feeds using infinite query with userId 0 to get all public feeds
+  // Get initial feeds from homeData, then use infinite query for pagination
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
-    useInfiniteFeeds(feedUserId, FeedStatus.Published, SIZE);
+    usePostInfinite(SIZE, homeData?.feeds ? 2 : 1); // Start from page 2 if we have server data
 
-  // Use the data from the infinite query directly (it includes homeData if injected)
-  const allPosts = data?.pages.flatMap((page) => page) || [];
+  // If we have server data, use it as the first page, otherwise use client data
+  const allPosts: (FeedSummary | Feed)[] = homeData?.feeds
+    ? [...homeData.feeds, ...(data?.pages.flatMap((page) => page.items) || [])]
+    : data?.pages.flatMap((page) => page.items) || [];
 
-  const filteredFeeds = allPosts
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .filter((item: any) => Number(item.feed_type) !== 2)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .map((item: any) => ({
-      id: item.id,
-      industry: item.industry?.[0]?.name || '',
-      title: item.title!,
-      contents: item.html_contents,
-      url: item.url,
-      author_id: item.author?.[0]?.id || 0,
-      author_profile_url: item.author?.[0]?.profile_url || '',
-      author_name: item.author?.[0]?.nickname || '',
-      author_type: item.author?.[0]?.user_type || UserType.Anonymous,
-      space_id: item.spaces?.[0]?.id || 0,
-      space_type: item.spaces?.[0]?.space_type || 0,
-      booster_type: item.spaces?.[0]?.booster_type,
-      likes: item.likes,
-      is_liked: item.is_liked,
-      comments: item.comments,
-      rewards: item.rewards,
-      shares: item.shares,
-      created_at: item.created_at,
-      onboard: item.onboard ?? false,
-      spaces: item.spaces ?? [],
-    }))
+  const filteredFeeds: Post[] = allPosts
+    .filter((item: FeedSummary | Feed) => Number(item.feed_type) !== 2)
+    .map(
+      (item: FeedSummary | Feed): Post => ({
+        id: item.id,
+        industry: ('industry' in item && item.industry?.[0]?.name) || '',
+        title: item.title || '',
+        contents: item.html_contents,
+        url: item.url || undefined,
+        author_id: 'author' in item ? item.author?.[0]?.id || 0 : item.user_id,
+        author_profile_url:
+          'author' in item ? item.author?.[0]?.profile_url || '' : '',
+        author_name: 'author' in item ? item.author?.[0]?.nickname || '' : '',
+        author_type:
+          'author' in item
+            ? item.author?.[0]?.user_type || UserType.Anonymous
+            : UserType.Anonymous,
+        space_id: 'spaces' in item ? item.spaces?.[0]?.id || 0 : 0,
+        space_type: 'spaces' in item ? item.spaces?.[0]?.space_type || 0 : 0,
+        likes: item.likes,
+        is_liked: item.is_liked,
+        comments: item.comments,
+        rewards: item.rewards,
+        shares: item.shares,
+        created_at: item.created_at,
+        onboard: 'onboard' in item ? (item.onboard ?? false) : false,
+        spaces: 'spaces' in item ? (item.spaces ?? []) : [],
+      }),
+    )
     .filter((d) => {
       const hasInvalidString =
         checkString(d.title) ||
@@ -134,11 +115,7 @@ export default function Home({
         {filteredFeeds.length > 0 ? (
           <Col className="flex-1">
             {filteredFeeds.map((props) => (
-              <FeedCard
-                key={`feed-${props.id}`}
-                user_id={currentUserId}
-                {...props}
-              />
+              <FeedCard key={`feed-${props.id}`} user_id={userId} {...props} />
             ))}
 
             {(isLoading || isFetchingNextPage) && (
