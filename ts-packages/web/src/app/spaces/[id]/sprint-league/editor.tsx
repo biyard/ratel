@@ -43,19 +43,11 @@ export function SprintLeagueEditor({ spaceId }: { spaceId: number }) {
       return false;
     }
     for (const player of players) {
-      if (
-        !player.name ||
-        player.name.trim() === '' ||
-        !player.description ||
-        player.description.trim() === ''
-      ) {
+      if (!player.name?.trim() || !player.description?.trim()) {
         showErrorToast('All players must have a name and description.');
         return false;
       }
-      if (
-        !player.player_images.run ||
-        player.player_images.run.image.trim() === ''
-      ) {
+      if (!player.player_images.run.image?.trim()) {
         showErrorToast('All players must have an Character');
         return false;
       }

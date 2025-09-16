@@ -56,7 +56,7 @@ function SpaceModifySection({
     isModified,
     stopEditing,
     triggerGlobalSave: onSave,
-    spacePublishHandler,
+    spacePublishValidator,
   } = useEditCoordinatorStore();
   const { selectedTeam } = useContext(TeamContext);
   const { data: userInfo } = useUserInfo();
@@ -81,7 +81,7 @@ function SpaceModifySection({
 
   const handlePublish = async (type: PublishType) => {
     try {
-      if (!spacePublishHandler()) {
+      if (!spacePublishValidator()) {
         return;
       }
       await publishSpace.mutateAsync(type);
