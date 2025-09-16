@@ -114,6 +114,12 @@ pub mod controllers {
             pub mod get_telegram_info;
             pub mod verify_telegram_raw;
         }
+
+        pub mod binances {
+            pub mod binance_webhook;
+            pub mod create_subscription;
+            pub mod unsubscribe;
+        }
     }
     pub mod m2 {
         pub mod noncelab {
@@ -123,6 +129,9 @@ pub mod controllers {
         }
         pub mod migration {
             pub mod postgres_to_dynamodb;
+        }
+        pub mod binances {
+            pub mod get_merchant_balance;
         }
     }
     pub mod well_known {

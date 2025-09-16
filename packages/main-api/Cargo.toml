@@ -62,6 +62,8 @@ serde_dynamo = {version = "4.2.14", features = ["aws-sdk-dynamodb+1"] }
 thiserror = "2.0.16"
 serde_repr = "0.1.20"
 strum_macros = "0.27.2"
+sha2 = "0.10"
+openssl = { version = "0.10" }
 
 [[bin]]
 name = "main-api"
