@@ -1,7 +1,7 @@
 #! /bin/bash
 
 ## TODO: Setting up KAIA keys
-apt update && apt install -y curl jq
+apt update && apt install -y curl jq perl make gcc g++ pkg-config libssl-dev ca-certificates
 
 export ADDR=$(jq ".[0].address" .build/evm-keys.json | tr -d \")
 export KEY=$(jq ".[0].private_key" .build/evm-keys.json | tr -d \")
@@ -41,6 +41,8 @@ export P256_X=dummy
 export P256_Y=dummy
 export P256_D=dummy
 export P256_CRV=P-256
+
+export OPENSSL_NO_VENDOR=1
 
 cd packages/main-api
 cargo install cargo-binstall
