@@ -15,7 +15,7 @@ pub struct EmailVerification {
     #[dynamo(index = "gsi2", name = "find_by_code", pk)]
     pub value: String,
     pub expired_at: i64,
-    pub attemp_count: i32,
+    pub attempt_count: i32,
 }
 
 impl EmailVerification {
@@ -31,7 +31,7 @@ impl EmailVerification {
             created_at,
             value,
             expired_at,
-            attemp_count: 0,
+            attempt_count: 0,
         }
     }
 }
