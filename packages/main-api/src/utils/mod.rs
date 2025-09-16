@@ -11,6 +11,7 @@ pub mod parse_json;
 pub mod rds_client;
 pub mod referal_code;
 pub mod s3_upload;
+pub mod space_visibility;
 pub mod sqs_client;
 pub mod telegram;
 pub mod time;
