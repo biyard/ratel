@@ -115,6 +115,14 @@ pub mod controllers {
             pub mod verify_telegram_raw;
         }
     }
+    pub mod v3 {
+        pub mod users {
+            pub mod email_signup;
+            pub mod verify_email;
+            pub mod request_verification_code;
+            pub mod email_login;
+        }
+    }
     pub mod m2 {
         pub mod noncelab {
             pub mod users {
