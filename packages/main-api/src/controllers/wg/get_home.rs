@@ -62,42 +62,41 @@ pub async fn get_home_handler(
         None => None,
     };
 
-    // Get Feeds
+    // Create controller instances
     let feeds_obj = feeds::FeedController::new(pool.clone());
-    let feeds_data = feeds_obj
-        .query(
-            auth.clone(),
-            FeedQuery {
-                size: feed_limit,
-                bookmark: Some(String::from("1")),
-                ..Default::default()
-            },
-        )
-        .await?
-        .items;
-
-    // Get Hot Promotion
     let promotions_obj = promotions::PromotionController::new(pool.clone());
-    let promotions_data = promotions_obj
-        .hot_promotion(auth.clone(), PromotionReadAction { action: None })
-        .await
-        .ok();
-
-    // Get News
     let news_obj = news::NewsController::new(pool.clone());
-    let news_data = news_obj
-        .query(
-            auth.clone(),
-            NewsQuery {
-                size: news_limit,
-                bookmark: Some(String::from("1")),
-                ..Default::default()
-            },
-        )
-        .await?
-        .items;
 
-    // Get Suggested Users
+    // Run independent calls in parallel to reduce tail latency
+    let feeds_fut = feeds_obj.query(
+        auth.clone(),
+        FeedQuery {
+            size: feed_limit,
+            bookmark: Some(String::from("1")),
+            ..Default::default()
+        },
+    );
+
+    let promos_fut =
+        promotions_obj.hot_promotion(auth.clone(), PromotionReadAction { action: None });
+
+    let news_fut = news_obj.query(
+        auth.clone(),
+        NewsQuery {
+            size: news_limit,
+            bookmark: Some(String::from("1")),
+            ..Default::default()
+        },
+    );
+
+    // Execute all futures concurrently
+    let (feeds_res, promos_res, news_res) = tokio::try_join!(feeds_fut, promos_fut, news_fut)?;
+
+    let feeds_data = feeds_res.items;
+    let promotions_data = Some(promos_res);
+    let news_data = news_res.items;
+
+    // Get Suggested Users (depends on user auth, so can't be parallelized with others)
     let suggested_users = if let Some(auth) = auth {
         let user_id = extract_user_id(&pool, Some(auth.clone())).await?;
         get_suggested_users(pool.clone(), user_id).await?
