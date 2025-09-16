@@ -8,6 +8,8 @@ use dto::{
     by_axum::auth::Authorization,
     sqlx::{Pool, Postgres},
 };
+use serde::de::Error as DeError;
+use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::Value;
 
 pub async fn binance_webhook_handler(
@@ -48,19 +50,30 @@ pub async fn binance_webhook_handler(
     )
     .await?;
 
-    let biz_status = parse_biz_status(&raw_body).unwrap_or_default();
-    tracing::debug!("biz status: {:?}", biz_status);
+    let notif: BinancePayNotification = serde_json::from_str(raw_body.as_ref())
+        .map_err(|e| dto::Error::ServerError(format!("invalid webhook payload: {e}")))?;
 
-    if biz_status != "PAY_SUCCESS" {
-        tracing::info!("binance webhook ignored: biz_status={}", biz_status);
+    tracing::debug!("parsed notif: {:?}", notif);
+
+    if notif.biz_status != BizStatus::PaySuccess {
+        tracing::info!("binance webhook ignored: biz_status={:?}", notif.biz_status);
         return Ok(Json(serde_json::json!({
             "returnCode": "SUCCESS",
             "returnMessage": "OK"
         })));
     }
 
-    let (user_id, plan, binance_user) = parse_ids_and_plan(&raw_body)
-        .ok_or_else(|| dto::Error::ServerError("cannot parse userId/plan from payload".into()))?;
+    let plan = notif
+        .data
+        .product_name
+        .clone()
+        .or(notif.data.reference_goods_id.clone())
+        .unwrap_or_else(|| "UNKNOWN".to_string());
+
+    let binance_user = notif.data.open_user_id.clone();
+
+    let user_id = extract_user_id_from_data(&notif.data)
+        .ok_or_else(|| dto::Error::ServerError("cannot parse userId from payload".into()))?;
 
     tracing::info!(
         "binance webhook user_id={:?}, plan={:?}, binance_user={:?}",
@@ -69,12 +82,7 @@ pub async fn binance_webhook_handler(
         binance_user
     );
 
-    if user_id.is_none() {
-        return Err(dto::Error::NotFound);
-    }
-
     let user_id: i64 = user_id
-        .unwrap_or_default()
         .parse::<i64>()
         .map_err(|e| dto::Error::ServerError(format!("invalid user_id: {e}")))?;
 
@@ -134,57 +142,97 @@ fn get_header<'a>(headers: &'a HeaderMap, key: &str) -> Result<&'a str> {
         .ok_or_else(|| dto::Error::ServerError(format!("missing header: {key}")))
 }
 
-fn parse_biz_status(raw_body: &str) -> Option<String> {
-    let v: Value = serde_json::from_str(raw_body).ok()?;
-    v.get("bizStatus")
-        .and_then(|x| x.as_str().map(|s| s.to_string()))
+#[derive(Debug, Deserialize, Serialize, PartialEq)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+enum BizStatus {
+    PaySuccess,
+    PayFail,
+    Pending,
+    OrderCancelled,
+    OrderClosed,
+    #[serde(other)]
+    Other,
 }
 
-fn parse_ids_and_plan(raw_body: &str) -> Option<(Option<String>, String, Option<String>)> {
-    let v: Value = serde_json::from_str(raw_body).ok()?;
-    let data_raw = v.get("data")?;
-    let data: Value = match data_raw {
-        Value::String(s) => serde_json::from_str(s).ok()?,
-        Value::Object(_) => data_raw.clone(),
-        _ => return None,
-    };
+#[derive(Debug, Deserialize, Serialize, PartialEq)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+enum BizType {
+    Pay,
+    Refund,
+    #[serde(other)]
+    Other,
+}
 
-    let plan = data
-        .get("productName")
-        .and_then(|x| x.as_str())
-        .map(|s| s.to_string())
-        .or_else(|| {
-            data.get("referenceGoodsId")
-                .and_then(|x| x.as_str().map(|s| s.to_string()))
-        })
-        .unwrap_or_else(|| "UNKNOWN".to_string());
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct NotificationData {
+    #[serde(default)]
+    product_name: Option<String>,
+    #[serde(default)]
+    reference_goods_id: Option<String>,
+    #[serde(default)]
+    open_user_id: Option<String>,
 
-    let binance_user = data
-        .get("openUserId")
-        .and_then(|x| x.as_str().map(|s| s.to_string()));
+    #[serde(default, deserialize_with = "deserialize_maybe_string_value")]
+    pass_through_info: Option<Value>,
+    #[serde(default, deserialize_with = "deserialize_maybe_string_value")]
+    merchant_attach: Option<Value>,
+}
 
-    let attach_obj = data
-        .get("passThroughInfo")
-        .and_then(|att| match att {
-            Value::String(s) => serde_json::from_str::<Value>(s).ok(),
-            Value::Object(_) => Some(att.clone()),
-            _ => None,
-        })
-        .or_else(|| {
-            data.get("merchantAttach").and_then(|att| match att {
-                Value::String(s) => serde_json::from_str::<Value>(s).ok(),
-                Value::Object(_) => Some(att.clone()),
-                _ => None,
-            })
-        });
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct BinancePayNotification {
+    biz_status: BizStatus,
+    biz_type: BizType,
+    biz_id: Option<i64>,
+    biz_id_str: Option<String>,
 
-    let user_id = attach_obj.as_ref().and_then(|inner| {
-        inner.get("userId").and_then(|x| {
+    #[serde(deserialize_with = "deserialize_notification_data")]
+    data: NotificationData,
+}
+
+fn deserialize_notification_data<'de, D>(
+    deserializer: D,
+) -> std::result::Result<NotificationData, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let value: Value = Deserialize::deserialize(deserializer)?;
+    match value {
+        Value::String(s) => serde_json::from_str(&s).map_err(DeError::custom),
+        Value::Object(_) => serde_json::from_value(value).map_err(DeError::custom),
+        _ => Err(DeError::custom("unsupported data format")),
+    }
+}
+
+fn deserialize_maybe_string_value<'de, D>(
+    deserializer: D,
+) -> std::result::Result<Option<Value>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let value: Option<Value> = Option::deserialize(deserializer)?;
+    match value {
+        None => Ok(None),
+        Some(Value::String(s)) => {
+            let v: Value = serde_json::from_str(&s).map_err(DeError::custom)?;
+            Ok(Some(v))
+        }
+        Some(v @ Value::Object(_)) => Ok(Some(v)),
+        Some(other) => Ok(Some(other)),
+    }
+}
+
+fn extract_user_id_from_data(data: &NotificationData) -> Option<String> {
+    fn pick(v: &Value) -> Option<String> {
+        v.get("userId").and_then(|x| {
             x.as_str()
                 .map(|s| s.to_string())
                 .or_else(|| x.as_i64().map(|n| n.to_string()))
         })
-    });
-
-    Some((user_id, plan, binance_user))
+    }
+    data.pass_through_info
+        .as_ref()
+        .and_then(pick)
+        .or_else(|| data.merchant_attach.as_ref().and_then(pick))
 }
