@@ -104,6 +104,7 @@ use crate::{
             verify_email::email_verification_handler,
         },
         well_known::get_did_document::get_did_document_handler,
+        wg::get_home::get_home_handler,
     },
     utils::{
         aws::{BedrockClient, RekognitionClient, S3Client, TextractClient},
@@ -794,7 +795,20 @@ pub async fn route(
                         )
                     },
                 ),
-        ))
+        )
+        .route(
+            "/wg/home",
+            get_with(
+                get_home_handler,
+                api_docs!(
+                    (),
+                    "Get Home Data",
+                    "Retrieve home data including feeds, promotions, and news"
+                ),
+            )
+            .with_state(pool.clone()),
+        )
+    )
 }
 
 pub async fn authorize_admin(
