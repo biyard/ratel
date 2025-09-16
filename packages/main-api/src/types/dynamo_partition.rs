@@ -31,7 +31,7 @@ impl FromStr for Partition {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         Ok(match s {
-            s if s.starts_with("USER") => Partition::User(s.to_string()),
+            s if s.starts_with("USER#") => Partition::User(s.to_string()),
             s if s.starts_with("EMAIL#") => Partition::Email(s.to_string()),
             s if s.starts_with("FEED#") => Partition::Feed(s.to_string()),
             s if s.starts_with("SPACE#") => Partition::Space(s.to_string()),

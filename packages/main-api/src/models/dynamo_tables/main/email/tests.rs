@@ -166,7 +166,7 @@ async fn test_email_verification_find_by_code() {
     );
     assert_eq!(fetched_evs.len(), 4, "should find one email verification");
     assert_eq!(fetched_evs[0].email, format!("c+{now}-4@example.com"));
-    assert_eq!(fetched_evs[0].email, format!("c+{now}-3@example.com"));
-    assert_eq!(fetched_evs[0].email, format!("c+{now}-2@example.com"));
-    assert_eq!(fetched_evs[0].email, format!("c+{now}-1@example.com"));
+    assert_eq!(fetched_evs[1].email, format!("c+{now}-3@example.com"));
+    assert_eq!(fetched_evs[2].email, format!("c+{now}-2@example.com"));
+    assert_eq!(fetched_evs[3].email, format!("c+{now}-1@example.com"));
 }
