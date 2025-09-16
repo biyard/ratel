@@ -14,7 +14,7 @@ pub enum UserMetadata {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default)]
 pub struct User {
-    pub pk: String,
+    pub pk: Partition,
     pub sk: EntityType,
 
     #[dynamo(prefix = "TS", index = "gsi1", sk)]
@@ -60,7 +60,7 @@ impl User {
         password: String,
     ) -> Self {
         let uid = uuid::Uuid::new_v4().to_string();
-        let pk = Partition::User.key(&uid);
+        let pk = Partition::User(uid);
         let sk = EntityType::User;
 
         let now = chrono::Utc::now().timestamp_micros();
@@ -86,7 +86,7 @@ impl User {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity)]
 pub struct UserPrincipal {
-    pub pk: String,
+    pub pk: Partition,
     #[dynamo(index = "gsi1", sk)]
     pub sk: EntityType,
 
@@ -95,7 +95,7 @@ pub struct UserPrincipal {
 }
 
 impl UserPrincipal {
-    pub fn new(pk: String, principal: String) -> Self {
+    pub fn new(pk: Partition, principal: String) -> Self {
         let sk = EntityType::UserPrincipal;
 
         Self { pk, sk, principal }
@@ -104,7 +104,7 @@ impl UserPrincipal {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity)]
 pub struct UserEvmAddress {
-    pub pk: String,
+    pub pk: Partition,
 
     #[dynamo(index = "gsi1", sk)]
     pub sk: EntityType,
@@ -114,7 +114,7 @@ pub struct UserEvmAddress {
 }
 
 impl UserEvmAddress {
-    pub fn new(pk: String, evm_address: String) -> Self {
+    pub fn new(pk: Partition, evm_address: String) -> Self {
         let sk = EntityType::UserEvmAddress;
 
         Self {
@@ -127,7 +127,7 @@ impl UserEvmAddress {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity)]
 pub struct UserReferralCode {
-    pub pk: String,
+    pub pk: Partition,
 
     #[dynamo(index = "gsi1", sk)]
     pub sk: EntityType,
@@ -142,7 +142,7 @@ pub struct UserReferralCode {
 }
 
 impl UserReferralCode {
-    pub fn new(pk: String, referral_code: String) -> Self {
+    pub fn new(pk: Partition, referral_code: String) -> Self {
         let sk = EntityType::UserReferralCode;
 
         Self {
@@ -155,7 +155,7 @@ impl UserReferralCode {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity)]
 pub struct UserPhoneNumber {
-    pub pk: String,
+    pub pk: Partition,
     #[dynamo(index = "gsi1", sk)]
     pub sk: EntityType,
 
@@ -164,7 +164,7 @@ pub struct UserPhoneNumber {
 }
 
 impl UserPhoneNumber {
-    pub fn new(pk: String, phone_number: String) -> Self {
+    pub fn new(pk: Partition, phone_number: String) -> Self {
         let sk = EntityType::UserPhoneNumber;
 
         Self {
@@ -177,7 +177,7 @@ impl UserPhoneNumber {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity)]
 pub struct UserTelegram {
-    pub pk: String,
+    pub pk: Partition,
 
     #[dynamo(index = "gsi1", sk)]
     pub sk: EntityType,
@@ -188,7 +188,7 @@ pub struct UserTelegram {
 }
 
 impl UserTelegram {
-    pub fn new(pk: String, telegram_id: i64, telegram_raw: String) -> Self {
+    pub fn new(pk: Partition, telegram_id: i64, telegram_raw: String) -> Self {
         let sk = EntityType::UserTelegram;
 
         Self {
@@ -236,7 +236,7 @@ mod tests {
         );
 
         let res = user.create(&cli).await;
-        assert!(res.is_ok());
+        assert!(res.is_ok(), "failed to create user {:?}", res.err());
 
         let fetched_user = User::get(&cli, user.pk.clone(), Some(user.sk)).await;
         assert!(fetched_user.is_ok());

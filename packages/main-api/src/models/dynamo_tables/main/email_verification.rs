@@ -3,7 +3,7 @@ use bdk::prelude::*;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity)]
 pub struct EmailVerification {
-    pub pk: String,
+    pub pk: Partition,
     pub sk: EntityType,
 
     #[dynamo(prefix = "TS", index = "gsi2", sk)]
@@ -20,7 +20,7 @@ pub struct EmailVerification {
 
 impl EmailVerification {
     pub fn new(email: String, value: String, expired_at: i64) -> Self {
-        let pk = Partition::Email.key(&email);
+        let pk = Partition::Email(email.clone());
         let sk = EntityType::EmailVerification;
         let created_at = chrono::Utc::now().timestamp_micros();
 
