@@ -92,6 +92,11 @@ use crate::{
                 logout::logout_handler,
             },
         },
+        v3::users::{
+            email_login::v3_login_with_password_handler, email_signup::v3_email_signup_handler,
+            request_verification_code::request_verification_code_handler,
+            verify_email::email_verification_handler,
+        },
         well_known::get_did_document::get_did_document_handler,
     },
     utils::{
@@ -644,6 +649,46 @@ pub async fn route(
             npost(token_handler)
                 .options(token_handler)
                 .with_state(pool.clone()),
+        )
+        .route(
+            "/v3/users/signup",
+            post_with(
+                v3_email_signup_handler,
+                api_docs!(
+                    "V3 User Signup",
+                    "Register a new user with email and password using V3 API"
+                ),
+            ),
+        )
+        .route(
+            "/v3/users/login",
+            post_with(
+                v3_login_with_password_handler,
+                api_docs!(
+                    "V3 User Login",
+                    "Login user with email and password using V3 API"
+                ),
+            ),
+        )
+        .route(
+            "/v3/users/email-verification",
+            post_with(
+                email_verification_handler,
+                api_docs!(
+                    "V3 Email Verification",
+                    "Verify user's email address with verification code"
+                ),
+            ),
+        )
+        .route(
+            "/v3/users/request-verification-code",
+            post_with(
+                request_verification_code_handler,
+                api_docs!(
+                    "V3 Request Verification Code",
+                    "Send verification code to user's email address"
+                ),
+            ),
         )
         .route(
             "/.well-known/oauth-authorization-server",
