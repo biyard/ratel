@@ -4,6 +4,7 @@ mod action;
 mod api_model;
 mod api_model_struct;
 mod dynamo_entity;
+mod dynamo_enum;
 mod enum_prop;
 pub(crate) mod parse_queryable_fields;
 #[cfg(feature = "server")]
@@ -15,6 +16,7 @@ mod write_file;
 
 use api_model::api_model_impl;
 use dynamo_entity::dynamo_entity_impl;
+use dynamo_enum::dynamo_enum_impl;
 use enum_prop::enum_prop_impl;
 use proc_macro::TokenStream;
 use query_display::query_display_impl;
@@ -67,6 +69,18 @@ pub fn dynamo_entity_derive(input: TokenStream) -> TokenStream {
         .with_target(false)
         .try_init();
     dynamo_entity_impl(input)
+}
+
+#[proc_macro_derive(DynamoEnum, attributes(dynamo_enum))]
+pub fn dynamo_enum_derive(input: TokenStream) -> TokenStream {
+    let _ = tracing_subscriber::fmt()
+        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+        .with_file(true)
+        .with_line_number(true)
+        .with_thread_ids(true)
+        .with_target(false)
+        .try_init();
+    dynamo_enum_impl(input)
 }
 
 #[proc_macro_derive(ApiModel)]

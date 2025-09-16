@@ -1,16 +1,17 @@
-use bdk::prelude::*;
 use crate::types::*;
+use bdk::prelude::*;
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Default, DynamoEntity)]
 pub struct Post {
     pub pk: Partition,
+    #[dynamo(index = "gsi1", sk)]
     pub sk: EntityType,
 
-    #[dynamo(prefix = "TS", index = "gsi1", sk)]
+    #[dynamo(prefix = "TS", index = "gsi6", sk)]
     pub created_at: i64,
     pub updated_at: i64,
 
-    #[dynamo(prefix = "INFO", name = "find_by_info", index = "gsi1", pk)]
+    #[dynamo(prefix = "INFO", name = "find_by_info", index = "gsi6", pk)]
     pub title: String,
     pub html_contents: String,
     pub feed_type: FeedType,
@@ -20,6 +21,9 @@ pub struct Post {
     pub likes: i64,
     pub comments: i64,
 
+    #[dynamo(prefix = "SPACE_PK", name = "find_by_space_pk", index = "gsi1", pk)]
+    pub space_pk: Option<Partition>,
+    pub booster: Option<BoosterType>,
     // only for reward spaces
     pub rewards: Option<i64>,
 }
@@ -42,6 +46,16 @@ impl Post {
             likes: 0,
             comments: 0,
             rewards: None,
+            space_pk: None,
+            booster: None,
         }
     }
 }
+
+impl Post {
+    pub fn update_builder() -> PostUpdateBuilder {
+        PostUpdateBuilder {}
+    }
+}
+
+pub struct PostUpdateBuilder {}
