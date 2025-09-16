@@ -8,11 +8,10 @@ use dto::{
 
 use crate::{
     config,
-    utils::{
-        generate_merchant_trade_no::gen_merchant_trade_no, users::extract_user_id,
-        wallets::sign_for_binance::sign_for_binance,
-    },
+    utils::{generate_merchant_trade_no::gen_merchant_trade_no, users::extract_user_id},
 };
+
+use crate::utils::crypto::sign_for_binance;
 
 #[derive(
     Debug,
@@ -155,21 +154,19 @@ pub async fn create_subscription_handler(
     });
 
     let (timestamp_ms, nonce, signature) = sign_for_binance(secret, &body)?;
-
-    let client = reqwest::Client::new();
     let url = format!("{}/v3/order", base);
 
-    let resp = client
-        .post(url)
-        .header("content-type", "application/json")
-        .header("BinancePay-Timestamp", &timestamp_ms)
-        .header("BinancePay-Nonce", &nonce)
-        .header("BinancePay-Certificate-SN", api_key)
-        .header("BinancePay-Signature", &signature)
-        .body(body.to_string())
-        .send()
-        .await
-        .map_err(|e| dto::Error::ServerError(e.to_string()))?;
+    let resp = crate::utils::crypto::apply_binance_headers(
+        reqwest::Client::new().post(url),
+        api_key,
+        &timestamp_ms,
+        &nonce,
+        &signature,
+    )
+    .body(body.to_string())
+    .send()
+    .await
+    .map_err(|e| dto::Error::ServerError(e.to_string()))?;
 
     let status = resp.status();
     let text = resp
