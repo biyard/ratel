@@ -138,11 +138,24 @@ export function PostEditorProvider({
   ]);
 
   const isArtworkRequiredFieldsFilled = Boolean(
-    traits.find((t) => t.trait_type === 'artist_name')?.value.trim() !== '' &&
-      traits.find((t) => t.trait_type === 'background_color')?.value.trim() !==
+    typeof traits.find((t) => t.trait_type === 'artist_name')?.value ===
+      'string' &&
+      (
+        traits.find((t) => t.trait_type === 'artist_name')?.value as string
+      ).trim() !== '' &&
+      typeof traits.find((t) => t.trait_type === 'background_color')?.value ===
+        'string' &&
+      (
+        traits.find((t) => t.trait_type === 'background_color')?.value as string
+      ).trim() !== '' &&
+      typeof traits.find((t) => t.trait_type === 'size')?.value === 'string' &&
+      (traits.find((t) => t.trait_type === 'size')?.value as string).trim() !==
         '' &&
-      traits.find((t) => t.trait_type === 'size')?.value.trim() !== '' &&
-      traits.find((t) => t.trait_type === 'medium')?.value.trim() !== '',
+      typeof traits.find((t) => t.trait_type === 'medium')?.value ===
+        'string' &&
+      (
+        traits.find((t) => t.trait_type === 'medium')?.value as string
+      ).trim() !== '',
   );
   const isAllFieldsFilled = Boolean(
     title &&
@@ -198,7 +211,7 @@ export function PostEditorProvider({
         updatedTraits[traitIndex] = {
           ...updatedTraits[traitIndex],
           value,
-          display_type,
+          display_type: display_type ?? updatedTraits[traitIndex].display_type,
         };
         return updatedTraits;
       } else {
@@ -332,8 +345,8 @@ export function PostEditorProvider({
         throw new Error('Please remove the test keyword');
       }
       let image_url = image;
-      if (image && image.startsWith('data')) {
-        const mime = image.match(/data:(image\/[a-zA-Z]+);base64,/);
+      if (image && image.startsWith('data:')) {
+        const mime = image.match(/^data:([^;]+);base64,/);
         if (mime && mime[1]) {
           const res = await apiFetch<AssetPresignedUris>(
             `${config.api_url}${ratelApi.assets.getPresignedUrl(parseFileType(mime[1]))}`,
@@ -341,7 +354,11 @@ export function PostEditorProvider({
               method: 'GET',
             },
           );
-          if (res.data) {
+          if (
+            res.data &&
+            res.data.presigned_uris?.length > 0 &&
+            res.data.uris?.length > 0
+          ) {
             const blob = await dataUrlToBlob(image);
             await fetch(res.data.presigned_uris[0], {
               method: 'PUT',
@@ -350,7 +367,6 @@ export function PostEditorProvider({
               },
               body: blob,
             });
-            console.log('Uploaded image to S3:', res.data.uris[0]);
             image_url = res.data.uris[0];
           }
         }

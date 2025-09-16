@@ -9,7 +9,7 @@ export enum UrlType {
 
 export interface ArtworkTrait {
   trait_type: string;
-  value: string;
+  value: string | number | boolean | Record<string, unknown> | null;
   display_type?: ArtworkTraitDisplayType | null;
 }
 
