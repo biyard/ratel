@@ -23,8 +23,7 @@ import {
   PublishType,
 } from '@/components/post-header/modals/publish-space';
 import { openModal as openMakePublicModal } from '@/components/post-header/modals/make-public';
-
-import { openModal as openMakePublicWithSaveModal } from '@/components/post-header/modals/make-public-with-save';
+import { openModal as openUnsaveAlertModal } from '@/components/post-header/modals/unsave-alert-modal';
 import { usePopup } from '@/lib/contexts/popup-service';
 import {
   BackButton,
@@ -49,7 +48,6 @@ function SpaceModifySection({
   authorId: number;
   onEdit: () => void;
 }) {
-  const s = useTranslations('SprintSpace');
   const router = useRouter();
   const popup = usePopup();
 
@@ -58,21 +56,34 @@ function SpaceModifySection({
     isModified,
     stopEditing,
     triggerGlobalSave: onSave,
+    spacePublishValidator,
   } = useEditCoordinatorStore();
   const { selectedTeam } = useContext(TeamContext);
   const { data: userInfo } = useUserInfo();
   const hasEditPermission =
     authorId === userInfo?.id || selectedTeam?.id === authorId;
+
+  const publishSpace = usePublishSpace(spaceId);
+  const makeSpacePublic = useMakePublicSpace(spaceId);
+  const t = useTranslations('SpaceHeader');
+  // Save / Publish Flow
+  // Before Publishing
+  // -> If not modified, directly open Publish Modal
+  // -> If modified, open Save Modal and then open Publish Modal
+
+  // After Publishing ( Not Editable )
+  // -> User Only Can Change from Private to Public
+
   const handleSave = async () => {
     if (!isModified) return;
     await onSave();
   };
 
-  const publishSpace = usePublishSpace(spaceId);
-  const makeSpacePublic = useMakePublicSpace(spaceId);
-
   const handlePublish = async (type: PublishType) => {
     try {
+      if (!spacePublishValidator()) {
+        return;
+      }
       await publishSpace.mutateAsync(type);
       popup.close();
     } catch (error) {
@@ -85,20 +96,27 @@ function SpaceModifySection({
       await makeSpacePublic.mutateAsync();
       popup.close();
     } catch (error) {
-      console.error('Failed to make space public:', error);
+      console.error('Failed to make space as public:', error);
     }
   };
 
-  const handleMakePublicModal = () => {
+  const openPublishModal = () => {
     if (isModified) {
-      openMakePublicWithSaveModal(popup, handleMakePublic, handleSave);
+      openUnsaveAlertModal(
+        popup,
+        handleSave,
+        () => {
+          openPublishSpaceModal(popup, handlePublish, t('publish_modal_title'));
+        },
+        t('unsave_notice_modal'),
+      );
     } else {
-      openMakePublicModal(popup, handleMakePublic);
+      openPublishSpaceModal(popup, handlePublish, t('publish_modal_title'));
     }
   };
 
-  const handlePublishSpaceModal = () => {
-    openPublishSpaceModal(popup, handlePublish, s('publish'));
+  const openPublicModal = () => {
+    openMakePublicModal(popup, handleMakePublic, t('make_public_modal_title'));
   };
 
   const handleGoBack = () => {
@@ -127,9 +145,9 @@ function SpaceModifySection({
             <></>
           )}
 
-          {isDraft && <PublishSpaceButton onClick={handlePublishSpaceModal} />}
+          {isDraft && <PublishSpaceButton onClick={openPublishModal} />}
           {!isDraft && !isPublic && (
-            <MakePublicButton onClick={handleMakePublicModal} />
+            <MakePublicButton onClick={openPublicModal} />
           )}
         </div>
       )}
@@ -165,7 +183,7 @@ export default function Header() {
   return (
     <div>
       <SuspenseWrapper>
-        <div className="flex flex-col w-full gap-2.5 mb-10">
+        <div className="flex flex-col w-full gap-2.5">
           <SpaceModifySection
             isDraft={isDraft}
             isPublic={isPublic}

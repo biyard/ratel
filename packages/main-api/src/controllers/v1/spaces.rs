@@ -331,8 +331,12 @@ impl SpaceController {
                 return Err(e);
             }
         };
-        // FIXME: Add Publish Scope Check logic
-        if space.space_type == SpaceType::SprintLeague {
+
+        // When Booster Space
+        if space
+            .booster_type
+            .is_some_and(|v| v != BoosterType::NoBoost)
+        {
             if let Some(bot) = bot {
                 let chat_ids = TelegramChannel::query_builder()
                     .query()
@@ -344,7 +348,14 @@ impl SpaceController {
                     .map(|channel| channel.chat_id)
                     .collect::<Vec<i64>>();
                 let content = format!(
-                    "🏁 A new Sprint League has started: *{}*!\n\nJoin now and compete with others to climb the leaderboard. Don't miss out on the fun and excitement!",
+                    "🏁 A new {} has started: *{}*!\n\nJoin now and compete with others to climb the leaderboard. Don't miss out on the fun and excitement!",
+                    match space.space_type {
+                        SpaceType::SprintLeague => "Sprint League",
+                        SpaceType::Poll => "Poll",
+                        SpaceType::Notice => "Notice",
+                        SpaceType::Deliberation => "Deliberation",
+                        _ => "Event",
+                    },
                     space.title.clone().unwrap_or_default(),
                 );
                 bot.send_message(
@@ -357,7 +368,10 @@ impl SpaceController {
                 )
                 .await?;
             } else {
-                tracing::warn!("Telegram bot not available, skipping sprint league notification for space {}", space_id);
+                tracing::warn!(
+                    "Telegram bot not available, skipping sprint league notification for space {}",
+                    space_id
+                );
             }
             // let client = reqwest::Client::new();
             // let payload =
