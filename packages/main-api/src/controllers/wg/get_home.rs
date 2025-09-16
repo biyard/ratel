@@ -89,12 +89,12 @@ pub async fn get_home_handler(
         },
     );
 
-    // Execute all futures concurrently
-    let (feeds_res, promos_res, news_res) = tokio::try_join!(feeds_fut, promos_fut, news_fut)?;
-
+    // Execute concurrently; only feeds is critical
+    let (feeds_res, promos_res, news_res) = tokio::join!(feeds_fut, promos_fut, news_fut);
+    let feeds_res = feeds_res?;
     let feeds_data = feeds_res.items;
-    let promotions_data = Some(promos_res);
-    let news_data = news_res.items;
+    let promotions_data = promos_res.ok();
+    let news_data = news_res.map(|r| r.items).unwrap_or_default();
 
     // Get Suggested Users (depends on user auth, so can't be parallelized with others)
     let suggested_users = if let Some(auth) = auth {
