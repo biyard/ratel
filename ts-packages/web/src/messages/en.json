@@ -585,6 +585,15 @@
     "select_language": "Select a language",
     "cancel": "Cancel"
   },
+  "Subscribe": {
+    "subscribe_desc_1": "Premium products loved around the world",
+    "subscribe_desc_2": "Stay ahead with Ratel Premium.",
+    "subscribe_desc_3": "Start using it now.",
+    "subscribe_info": "Plans can be changed or cancelled at any time.",
+    "select": "Select",
+    "success_subscribe_info": "Success to subscribe ratel service",
+    "unsubscribe": "UnSubscribe"
+  },
 
   "Connect": {
     "title": "Connect to {service}",
@@ -624,5 +633,16 @@
     "description": "Once made public,<br></br>this Space will be visible to everyone and<br></br><b>cannot be made private again.</b>",
     "button_cancel": "Cancel",
     "button_make_public": "Make Public"
+  },
+
+  "EditArtworkPost": {
+    "artwork_name": "Artwork Name",
+    "description": "Description",
+    "artist_name": "Artist Name",
+    "background_color": "Background Color",
+    "size": "Size",
+    "year": "Year",
+    "medium": "Medium",
+    "placeholder": "Enter {fieldName}"
   }
 }

@@ -40,6 +40,7 @@ import { HexColorPicker } from 'react-colorful';
 import { useUserInfo } from '../../_hooks/user';
 
 import { PostType, Status, usePostEditorContext } from './provider';
+import { ArtworkTrait, ArtworkTraitDisplayType } from '@/lib/api/models/feeds';
 
 export {
   PostType,
@@ -387,15 +388,11 @@ function EditableArtworkPost() {
     updateTitle,
     content,
     updateContent,
-
-    artistName,
-    updateArtistName,
-    backgroundColor,
-    updateBackgroundColor,
-    size,
-    updateSize,
     image,
     updateImage,
+
+    traits,
+    updateTrait,
   } = usePostEditorContext();
 
   return (
@@ -405,12 +402,8 @@ function EditableArtworkPost() {
       updateTitle={updateTitle}
       content={content}
       updateContent={updateContent}
-      artistName={artistName}
-      updateArtistName={updateArtistName}
-      backgroundColor={backgroundColor}
-      updateBackgroundColor={updateBackgroundColor}
-      size={size}
-      updateSize={updateSize}
+      traits={traits}
+      updateTrait={updateTrait}
       image={image}
       updateImage={updateImage}
     />
@@ -423,15 +416,11 @@ export function ArtworkPost({
   updateTitle = () => {},
   content,
   updateContent = () => {},
-
-  artistName,
-  updateArtistName = () => {},
-  backgroundColor,
-  updateBackgroundColor = () => {},
-  size,
-  updateSize = () => {},
   image,
   updateImage = () => {},
+
+  traits,
+  updateTrait = () => {},
 }: {
   editMode?: boolean;
 
@@ -439,16 +428,16 @@ export function ArtworkPost({
   updateTitle?: (title: string) => void;
   content: string | null;
   updateContent?: (content: string) => void;
-  artistName: string | null;
-  updateArtistName?: (name: string) => void;
-  backgroundColor: string;
-  updateBackgroundColor?: (color: string) => void;
-  size: string | null;
-  updateSize?: (size: string) => void;
   image: string | null;
   updateImage?: (image: string | null) => void;
+  traits: ArtworkTrait[];
+  updateTrait?: (
+    trait_type: string,
+    value: string,
+    display_type?: ArtworkTraitDisplayType,
+  ) => void;
 }) {
-  const t = useTranslations('Home');
+  const t = useTranslations('EditArtworkPost');
 
   const [showColorPicker, setShowColorPicker] = useState(false);
 
@@ -472,26 +461,22 @@ export function ArtworkPost({
     input.onchange = handleFileChange;
     input.click();
   };
+  const backgroundColor =
+    String(
+      traits.find((trait) => trait.trait_type === 'background_color')?.value,
+    ) || '#ffffff';
   return (
     <div className="flex flex-row p-5 gap-5">
       <div className="flex-1 flex flex-col gap-4 p-4 [&>label]:text-neutral-50 [&>label]:font-sm">
-        <label htmlFor="artwork">Artwork Name</label>
+        <label htmlFor="artwork">{t('artwork_name')}</label>
         <Input
           id="artwork"
-          placeholder="Enter artwork name"
+          placeholder={t('placeholder', { fieldName: t('artwork_name') })}
           value={title || ''}
           disabled={!editMode}
           onChange={(e) => updateTitle(e.target.value)}
         />
-        <label htmlFor="artistName">Artist Name</label>
-        <Input
-          id="artistName"
-          placeholder="Enter artist name"
-          value={artistName || ''}
-          disabled={!editMode}
-          onChange={(e) => updateArtistName(e.target.value)}
-        />
-        <label htmlFor="description">Description</label>
+        <label htmlFor="description">{t('description')}</label>
         <div
           id="description"
           className="min-h-[80px] relative rounded-md bg-input/30 border border-input px-3 py-1 "
@@ -501,49 +486,87 @@ export function ArtworkPost({
               disabled={!editMode}
               content={content}
               updateContent={updateContent}
-              placeholder={t('write_content')}
+              placeholder={t('placeholder', { fieldName: t('description') })}
             />
           </LexicalComposer>
         </div>
-        <label htmlFor="size">Size</label>
-        <Input
-          id="size"
-          disabled={!editMode}
-          placeholder="Enter size"
-          value={size || ''}
-          onChange={(e) => updateSize(e.target.value)}
-        />
-        <label htmlFor="backgroundColor">Background Color</label>
-        <div className="relative">
-          <Button
-            className="disabled:opacity-100"
-            style={{ backgroundColor: !editMode ? backgroundColor : undefined }}
-            disabled={!editMode}
-            onClick={() => setShowColorPicker(!showColorPicker)}
-            size="sm"
-          >
-            <span>
-              {!editMode ? backgroundColor : 'Select Background Color'}
-            </span>
-          </Button>
-          {showColorPicker && (
-            <div className="absolute z-10 p-4 bg-neutral-600 bottom-0 left-0 flex flex-col gap-2 justify-center items-center">
-              <HexColorPicker
-                color={backgroundColor}
-                onChange={updateBackgroundColor}
-              />
-              <Button
-                className="w-full"
-                onClick={() => setShowColorPicker(false)}
-              >
-                Close
-              </Button>
-            </div>
-          )}
-        </div>
+        {traits.map((trait, index) => {
+          let name = formatTraitType(trait.trait_type);
+          try {
+            name = t(trait.trait_type) || formatTraitType(trait.trait_type);
+          } catch (error) {
+            console.error('Error formatting trait name:', error);
+          }
+
+          switch (trait.display_type) {
+            case null:
+            case undefined:
+            case ArtworkTraitDisplayType.String:
+            case ArtworkTraitDisplayType.Number:
+              return (
+                <div key={index} className="flex flex-col gap-1">
+                  <label htmlFor={`trait-${index}`}>{name}</label>
+                  <Input
+                    id={`trait-${index}`}
+                    placeholder={t('placeholder', { fieldName: name })}
+                    value={String(trait.value)}
+                    disabled={!editMode}
+                    onChange={(e) =>
+                      updateTrait(trait.trait_type, e.target.value)
+                    }
+                  />
+                </div>
+              );
+            case ArtworkTraitDisplayType.Color:
+              return (
+                <div key={index} className="flex flex-col gap-1">
+                  <label htmlFor={`trait-${index}`}>{name} </label>
+                  <div className="relative">
+                    <Button
+                      className="disabled:opacity-100"
+                      style={{
+                        backgroundColor: !editMode
+                          ? backgroundColor
+                          : undefined,
+                      }}
+                      disabled={!editMode}
+                      onClick={() => setShowColorPicker(!showColorPicker)}
+                      size="sm"
+                    >
+                      <span>
+                        {!editMode ? backgroundColor : 'Select ' + name}
+                      </span>
+                    </Button>
+                    {showColorPicker && (
+                      <div className="absolute z-10 p-4 bg-neutral-600 bottom-0 left-0 flex flex-col gap-2 justify-center items-center">
+                        <HexColorPicker
+                          color={backgroundColor}
+                          onChange={(value) =>
+                            updateTrait(
+                              trait.trait_type,
+                              value,
+                              ArtworkTraitDisplayType.Color,
+                            )
+                          }
+                        />
+                        <Button
+                          className="w-full"
+                          onClick={() => setShowColorPicker(false)}
+                        >
+                          Close
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            default:
+              return null;
+          }
+        })}
       </div>
 
-      <div className="flex-1 p-2" style={{ backgroundColor }}>
+      <div className="flex-1" style={{ backgroundColor }}>
         <button
           disabled={!editMode}
           onClick={handleImageUpload}
@@ -572,4 +595,11 @@ export function ArtworkPost({
       </div>
     </div>
   );
+}
+
+export function formatTraitType(traitType: string) {
+  return traitType
+    .split('_')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
 }
