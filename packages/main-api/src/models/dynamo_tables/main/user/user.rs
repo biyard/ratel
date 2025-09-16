@@ -1,5 +1,5 @@
-use bdk::prelude::*;
 use crate::types::*;
+use bdk::prelude::*;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default)]
 pub struct User {
@@ -11,10 +11,11 @@ pub struct User {
     pub created_at: i64,
     pub updated_at: i64,
 
-    pub nickname: String,
+    pub display_name: String,
     pub profile_url: String,
     #[dynamo(prefix = "EMAIL", name = "find_by_email", index = "gsi1", pk)]
     pub email: String,
+    // NOTE: username is linked with gsi2-index of team model.
     #[dynamo(prefix = "USERNAME", name = "find_by_username", index = "gsi2", pk)]
     pub username: String,
 
@@ -59,7 +60,7 @@ impl User {
             sk,
             created_at: now,
             updated_at: now,
-            nickname,
+            display_name: nickname,
             email,
             profile_url,
             term_agreed,
