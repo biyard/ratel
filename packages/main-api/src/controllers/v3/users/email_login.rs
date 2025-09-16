@@ -132,7 +132,7 @@ pub async fn v3_login_with_password_handler(
     // Return the response with basic user information
     let response = UserV3LoginResponse {
         id: dynamo_user.pk.to_string(),
-        nickname: dynamo_user.nickname.clone(),
+        nickname: dynamo_user.display_name.clone(),
         email: dynamo_user.email.clone(),
         username: dynamo_user.username.clone(),
         profile_url: dynamo_user.profile_url.clone(),
