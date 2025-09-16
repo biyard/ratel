@@ -462,8 +462,9 @@ export function ArtworkPost({
     input.click();
   };
   const backgroundColor =
-    traits.find((trait) => trait.trait_type === 'background_color')?.value ||
-    '#ffffff';
+    String(
+      traits.find((trait) => trait.trait_type === 'background_color')?.value,
+    ) || '#ffffff';
   return (
     <div className="flex flex-row p-5 gap-5">
       <div className="flex-1 flex flex-col gap-4 p-4 [&>label]:text-neutral-50 [&>label]:font-sm">
@@ -508,7 +509,7 @@ export function ArtworkPost({
                   <Input
                     id={`trait-${index}`}
                     placeholder={t('placeholder', { fieldName: name })}
-                    value={trait.value}
+                    value={String(trait.value)}
                     disabled={!editMode}
                     onChange={(e) =>
                       updateTrait(trait.trait_type, e.target.value)
