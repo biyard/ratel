@@ -596,5 +596,16 @@
     "CancelButton": {
       "label": "취소"
     }
+  },
+
+  "EditArtworkPost": {
+    "artwork_name": "작품명",
+    "description": "설명",
+    "artist_name": "작가명",
+    "background_color": "배경색",
+    "size": "크기",
+    "year": "연도",
+    "medium": "재질",
+    "placeholder": "{fieldName}을(를) 입력하세요."
   }
 }
