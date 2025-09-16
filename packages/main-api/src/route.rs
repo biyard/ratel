@@ -16,15 +16,14 @@ use by_axum::{
 use reqwest::StatusCode;
 
 use crate::{
+    config,
     controllers::{
         self,
         m2::{
+            binances::get_merchant_balance::binance_merchant_balance_handler,
             migration::postgres_to_dynamodb::{migrate_users_handler, migration_stats_handler},
-            {
-                binances::get_merchant_balance::binance_merchant_balance_handler,
-                noncelab::users::register_users::{
-                    RegisterUserResponse, register_users_by_noncelab_handler,
-                },
+            noncelab::users::register_users::{
+                RegisterUserResponse, register_users_by_noncelab_handler,
             },
         },
         v2::{
@@ -156,6 +155,22 @@ pub async fn route(
     private_s3_client: S3Client,
     bot: Option<TelegramBot>,
 ) -> Result<by_axum::axum::Router> {
+    let conf = config::get();
+
+    let dynamo_conf = aws_sdk_dynamodb::config::Config::builder()
+        .credentials_provider(aws_sdk_dynamodb::config::Credentials::new(
+            conf.aws.access_key_id,
+            conf.aws.secret_access_key,
+            None,
+            None,
+            "dynamo",
+        ))
+        .behavior_version_latest()
+        .build();
+
+    let dynamo_client = aws_sdk_dynamodb::Client::from_conf(dynamo_conf);
+    let dynamo_client = Arc::new(dynamo_client);
+
     Ok(by_axum::axum::Router::new()
         // For Admin routes
         .route(
@@ -687,45 +702,51 @@ pub async fn route(
                 .options(token_handler)
                 .with_state(pool.clone()),
         )
-        .route(
-            "/v3/users/signup",
-            post_with(
-                v3_email_signup_handler,
-                api_docs!(
-                    "V3 User Signup",
-                    "Register a new user with email and password using V3 API"
-                ),
-            ),
-        )
-        .route(
-            "/v3/users/login",
-            post_with(
-                v3_login_with_password_handler,
-                api_docs!(
-                    "V3 User Login",
-                    "Login user with email and password using V3 API"
-                ),
-            ),
-        )
-        .route(
-            "/v3/users/email-verification",
-            post_with(
-                email_verification_handler,
-                api_docs!(
-                    "V3 Email Verification",
-                    "Verify user's email address with verification code"
-                ),
-            ),
-        )
-        .route(
-            "/v3/users/request-verification-code",
-            post_with(
-                request_verification_code_handler,
-                api_docs!(
-                    "V3 Request Verification Code",
-                    "Send verification code to user's email address"
-                ),
-            ),
+        .nest(
+            "/v3",
+            axum::Router::new()
+                .nest(
+                    "/users",
+                    axum::Router::new()
+                        .route(
+                            "/signup",
+                            post_with(
+                                v3_email_signup_handler,
+                                api_docs!(
+                                    "V3 User Signup",
+                                    "Register a new user with email and password using V3 API"
+                                ),
+                            ),
+                        )
+                        .route(
+                            "/login",
+                            post_with(
+                                v3_login_with_password_handler,
+                                api_docs!(
+                                    "V3 User Login",
+                                    "Login user with email and password using V3 API"
+                                ),
+                            ),
+                        )
+                        .route(
+                            "/verifications",
+                            post_with(
+                                email_verification_handler,
+                                api_docs!(
+                                    "V3 Email Verification",
+                                    "Verify user's email address with verification code"
+                                ),
+                            )
+                            .get_with(
+                                request_verification_code_handler,
+                                api_docs!(
+                                    "V3 Request Verification Code",
+                                    "Send verification code to user's email address"
+                                ),
+                            ),
+                        ),
+                )
+                .with_state(dynamo_client),
         )
         .route(
             "/.well-known/oauth-authorization-server",

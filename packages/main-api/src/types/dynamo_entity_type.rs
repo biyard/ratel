@@ -18,7 +18,15 @@ pub enum EntityType {
     UserTelegram,
     EmailVerification,
 
+    // Feed entity types
+    Post,
+    PostAuthor,
+    PostSpace,
+
     Space,
+    SpaceMember,
+    Team,
+    TeamMember,
     Feed,
     Group,
     Discussion,
