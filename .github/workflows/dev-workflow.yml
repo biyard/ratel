@@ -243,6 +243,7 @@ jobs:
           DATABASE_TYPE: postgres
           DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
           MIGRATE: false
+          DYNAMO_TABLE_PREFIX: ratel-dev
         run: |
           make build
 
@@ -298,6 +299,7 @@ jobs:
           RPC_ENDPOINT: https://public-en-kairos.node.kaia.io
           TELEGRAM_TOKEN: ${{ secrets.DEV_TELEGRAM_TOKEN }}
 
+          DYNAMO_TABLE_PREFIX: ratel-dev
           MIGRATE: false
         run: |
           make docker.build
