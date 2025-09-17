@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRawInitData, postEvent } from '@telegram-apps/sdk-react';
 import { useAuth } from '@/lib/contexts/auth-context';
-import { proxy, ratelApi } from '@/lib/api/ratel_api';
+import { proxy } from '@/lib/api/ratel_api';
 import { send } from '@/lib/api/send';
 
 import Loading from '../loading';
@@ -11,9 +11,11 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { decode_base64 } from '@/lib/base64';
 import { route } from '@/route';
 import { TelegramWebCommand, TgWebParams } from '@/types/telegram';
-import { Button } from '@/components/ui/button';
-import { config } from '@/config';
-import { apiFetch } from '@/lib/api/apiFetch';
+import { getKey as getUserQueryKey } from '../(social)/_hooks/user';
+import { getQueryClient } from '@/providers/getQueryClient';
+// import { Button } from '@/components/ui/button';
+// import { config } from '@/config';
+// import { apiFetch } from '@/lib/api/apiFetch';
 
 function useDidMount(): boolean {
   const [didMount, setDidMount] = useState<boolean>(false);
@@ -55,28 +57,14 @@ function getRedirectPath(params: TgWebParams): string {
   return route.home();
 }
 
-function requestTelegramToken(telegramRaw: string) {
-  return apiFetch<{ token: string }>(
-    `${config.api_url}${ratelApi.telegram.verifyTelegramRaw()}`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        telegram_raw: telegramRaw,
-      }),
-    },
-  );
-}
-
 function TelegramMiniAppMain() {
   const [isLoading, setIsLoading] = useState(true);
   const raw = useRawInitData();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const queryClient = getQueryClient();
   const { ed25519KeyPair } = useAuth();
-  const [token, setToken] = useState<string | null>(null);
+  // const [token, setToken] = useState<string | null>(null);
   useEffect(() => {
     const tryLoginWithTelegramRaw = async () => {
       if (!ed25519KeyPair || !raw) {
@@ -87,14 +75,11 @@ function TelegramMiniAppMain() {
         const info = await send(ed25519KeyPair, url, '');
         //If telegram User is not linked with Ratel Service, Open External Browser to Linking
         if (!info) {
-          const res = await requestTelegramToken(raw);
-          if (!res || !res.data) {
-            throw new Error('Failed to get telegram token');
-          }
-          setToken(res.data.token);
           setIsLoading(false);
           return;
         }
+
+        queryClient.refetchQueries({ queryKey: getUserQueryKey() });
         const tgWebAppStartParam = searchParams.get('tgWebAppStartParam');
         if (tgWebAppStartParam) {
           const params = parseTelegramStartParam(tgWebAppStartParam);
@@ -113,37 +98,9 @@ function TelegramMiniAppMain() {
     };
 
     tryLoginWithTelegramRaw();
-  }, [raw, ed25519KeyPair, searchParams, router]);
+  }, [raw, ed25519KeyPair, searchParams, router, queryClient]);
 
   return (
-    <>
-      {isLoading ? (
-        <Loading />
-      ) : (
-        <div className="flex flex-col items-center justify-center w-full h-full">
-          <Button
-            variant="rounded_primary"
-            onClick={() => {
-              let url = `${window.location.origin}${route.login()}?service=Telegram&token=${token}`;
-              let telegramDeepLink = `tg://resolve?domain=${config.telegram_botname}/app&startapp`;
-              const tgWebAppStartParam = searchParams.get('tgWebAppStartParam');
-
-              if (tgWebAppStartParam) {
-                telegramDeepLink += `=${tgWebAppStartParam}`;
-              }
-              url += `&redirectUrl=${encodeURIComponent(telegramDeepLink)}`;
-
-              postEvent('web_app_open_link', {
-                url,
-                try_instant_view: false,
-              });
-              postEvent('web_app_close');
-            }}
-          >
-            Connect Telegram Account
-          </Button>
-        </div>
-      )}
-    </>
+    <>{isLoading ? <Loading /> : <div>Failed to login with telegram</div>}</>
   );
 }

@@ -8,6 +8,7 @@ import SelectableCardList, {
 } from '@/components/selectable-card-list';
 import { usePopup } from '@/lib/contexts/popup-service';
 import { useTranslations } from 'next-intl';
+import { LoadingIndicator } from '@/app/loading';
 
 export enum PublishType {
   Private = 'private',
@@ -22,9 +23,9 @@ export const openModal = (
   popup
     .open(
       <PublishSpaceModal
-        onPublish={async (t) => {
+        onPublish={async (publishType) => {
           try {
-            await onPublish(t);
+            await onPublish(publishType);
             popup.close();
           } catch (error) {
             console.error('Error publishing space:', error);
@@ -32,38 +33,38 @@ export const openModal = (
         }}
       />,
     )
-    .withoutBackdropClose()
-    .withTitle(title);
+    .withTitle(title)
+    .withoutBackdropClose();
 
 export default function PublishSpaceModal({
   onPublish,
 }: {
   onPublish: (type: PublishType) => Promise<void>;
 }) {
-  const t = useTranslations('SprintSpace');
+  const t = useTranslations('SpacePublishModal');
 
   const items: CardItemProps[] = useMemo(
     () => [
       {
         value: PublishType.Private,
         Icon: <Lock2 className="[&>path]:stroke-neutral-500" />,
-        label: `${t('private')} ${t('publish')}`,
-        description: t('private_desc'),
+        label: t('private_publish_label'),
+        description: t('private_publish_description'),
       },
       {
         value: PublishType.Public,
         Icon: (
           <Internet className="[&>path]:stroke-neutral-500 [&>circle]:stroke-neutral-500" />
         ),
-        label: `${t('public')} ${t('publish')}`,
-        description: t('public_desc'),
+        label: t('public_publish_label'),
+        description: t('public_publish_description'),
       },
     ],
     [t],
   );
 
   const [selectedType, setSelectedType] = useState<PublishType | null>(null);
-
+  const [isLoading, setLoading] = useState(false);
   return (
     <div className="max-w-110 flex flex-col gap-6">
       <SelectableCardList
@@ -74,10 +75,25 @@ export default function PublishSpaceModal({
       <Button
         variant="default"
         className="h-12 bg-primary"
-        disabled={!selectedType}
-        onClick={() => selectedType && onPublish(selectedType)}
+        disabled={!selectedType || isLoading}
+        onClick={async () => {
+          if (selectedType) {
+            setLoading(true);
+            try {
+              await onPublish(selectedType);
+            } catch (error) {
+              console.error(error);
+            } finally {
+              setLoading(false);
+            }
+          }
+        }}
       >
-        {t('publish')}
+        {!isLoading ? (
+          t('button_publish')
+        ) : (
+          <LoadingIndicator className="h-12" />
+        )}
       </Button>
     </div>
   );

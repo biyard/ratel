@@ -13,10 +13,15 @@ import SpaceContents from '../_components/space-contents';
 import PlayerEdit from './_components/player';
 
 import SprintLeagueGame, { Status as GameStatus } from './_components/konva';
+import { showErrorToast } from '@/lib/toast';
 
 export function SprintLeagueEditor({ spaceId }: { spaceId: number }) {
-  const { isEdit, setPageSaveHandler, updateCommonData } =
-    useEditCoordinatorStore();
+  const {
+    isEdit,
+    setPageSaveHandler,
+    updateCommonData,
+    setSpacePublishValidator,
+  } = useEditCoordinatorStore();
   const { initialize } = useSprintLeagueStore();
 
   const { data: space } = useSpaceById(spaceId);
@@ -30,6 +35,25 @@ export function SprintLeagueEditor({ spaceId }: { spaceId: number }) {
   } = useSprintLeagueSpaceByIdMutation(spaceId);
 
   const storedPlayers = useSprintLeagueStore((state) => state.players);
+
+  const publishValidator = useCallback(() => {
+    const players = Object.values(useSprintLeagueStore.getState().players);
+    if (players.length === 0) {
+      showErrorToast('At least one player is required to publish.');
+      return false;
+    }
+    for (const player of players) {
+      if (!player.name?.trim() || !player.description?.trim()) {
+        showErrorToast('All players must have a name and description.');
+        return false;
+      }
+      if (!player.player_images.run.image?.trim()) {
+        showErrorToast('All players must have an Character');
+        return false;
+      }
+    }
+    return true;
+  }, []);
   const saveHandler = useCallback(
     async (commonData: Partial<CommonEditableData>) => {
       if (!space) {
@@ -100,7 +124,14 @@ export function SprintLeagueEditor({ spaceId }: { spaceId: number }) {
     if (isEdit) {
       setPageSaveHandler(saveHandler);
     }
-  }, [isEdit, setPageSaveHandler, saveHandler]);
+    setSpacePublishValidator(publishValidator);
+  }, [
+    isEdit,
+    setPageSaveHandler,
+    saveHandler,
+    setSpacePublishValidator,
+    publishValidator,
+  ]);
 
   const handleVote = async (playerId: number) => {
     await votePlayerMutateAsync({
@@ -119,7 +150,7 @@ export function SprintLeagueEditor({ spaceId }: { spaceId: number }) {
         }
       />
 
-      <div className="w-full h-full flex justify-center top-0 left-0 bg-black max-mobile:absolute max-mobile:overflow-hidden max-mobile:h-100vh max-mobile:w-100vw">
+      <div className="w-full h-full flex justify-center top-0 left-0 bg-black max-mobile:absolute max-mobile:overflow-hidden max-mobile:h-screen max-mobile:w-screen">
         <div className="min-w-[360px] max-w-[1080px] h-auto aspect-[36/64]">
           <SprintLeagueGame
             initialStatus={
