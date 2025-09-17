@@ -15,7 +15,7 @@ type State = {
   isModified: boolean;
   commonData: Partial<CommonEditableData> | null;
   pageSaveHandler: PageSaveHandler | null;
-  spacePublishValidator: () => boolean;
+  spacePublishValidatorImpl: () => boolean;
 };
 
 type Actions = {
@@ -25,7 +25,7 @@ type Actions = {
   updateCommonData: (data: Partial<CommonEditableData>) => void;
   triggerGlobalSave: () => Promise<void>;
   setPageSaveHandler: (handler: PageSaveHandler) => void;
-  setSpacePublishValidator: (handler: () => boolean) => void;
+  spacePublishValidator: () => boolean;
 };
 
 const initialState: State = {
@@ -33,7 +33,7 @@ const initialState: State = {
   isModified: false,
   commonData: null,
   pageSaveHandler: null,
-  spacePublishValidator: () => true,
+  spacePublishValidatorImpl: () => true,
 };
 
 export const useEditCoordinatorStore = create<State & Actions>((set, get) => ({
@@ -64,10 +64,11 @@ export const useEditCoordinatorStore = create<State & Actions>((set, get) => ({
       get().stopEditing();
     }
   },
-  setSpacePublishValidator: (handler) =>
-    set({ spacePublishValidator: handler }),
   spacePublishValidator: () => {
-    const { spacePublishValidator } = get();
-    return spacePublishValidator();
+    const { spacePublishValidatorImpl } = get();
+    return spacePublishValidatorImpl();
   },
+
+  setSpacePublishValidator: (handler: any) =>
+    set({ spacePublishValidatorImpl: handler }),
 }));
