@@ -246,7 +246,7 @@ async fn tests_update_user() {
 
     assert!(res.is_ok(), "failed to update");
 
-    let fetched_user = User::get(&cli, user.pk.clone(), Some(user.sk)).await;
+    let fetched_user = User::get(&cli, user.pk.clone(), Some(user.sk.clone())).await;
     assert!(fetched_user.is_ok());
 
     let fetched_user = fetched_user.unwrap();
@@ -257,4 +257,29 @@ async fn tests_update_user() {
     assert_eq!(fetched_user.display_name, new_display_name);
     assert_eq!(fetched_user.username, user.username);
     assert_eq!(fetched_user.followers_count, -1);
+
+    let new_email = format!("mm+{}@example.com", now);
+
+    let res = User::updater(fetched_user.pk, fetched_user.sk)
+        .with_email(new_email.clone())
+        .execute(&cli)
+        .await;
+
+    assert!(res.is_ok(), "failed to update");
+
+    let fetched_user = User::get(&cli, user.pk.clone(), Some(user.sk)).await;
+    assert!(fetched_user.is_ok());
+
+    let fetched_user = fetched_user.unwrap();
+    assert!(fetched_user.is_some());
+
+    let fetched_user = fetched_user.unwrap();
+    assert_eq!(fetched_user.email, new_email);
+
+    let res = User::find_by_email(&cli, new_email.clone(), Default::default()).await;
+
+    assert!(res.is_ok());
+    let (users, _bookmark) = res.unwrap();
+    assert_eq!(users.len(), 1);
+    assert_eq!(users[0].email, new_email);
 }

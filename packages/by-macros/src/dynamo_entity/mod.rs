@@ -346,16 +346,73 @@ fn generate_updater(
             ),
             proc_macro2::Span::call_site(),
         );
+        // Build additional GSI updates for this field (PUT on setter)
+        let mut gsi_put_updates: Vec<proc_macro2::TokenStream> = vec![];
+        for idx in f.indice.iter() {
+            let idx_base_snake = idx.base_index_name.to_case(convert_case::Case::Snake);
+            let composer_ident = Ident::new(
+                &format!(
+                    "compose_{}_{}",
+                    idx_base_snake,
+                    if idx.pk { "pk" } else { "sk" }
+                ),
+                proc_macro2::Span::call_site(),
+            );
+            let idx_key_name = syn::LitStr::new(
+                &format!(
+                    "{}_{}",
+                    idx.base_index_name,
+                    if idx.pk { "pk" } else { "sk" }
+                ),
+                proc_macro2::Span::call_site(),
+            );
+
+            gsi_put_updates.push(quote! {
+                self.m.insert(
+                    #idx_key_name.to_string(),
+                    aws_sdk_dynamodb::types::AttributeValueUpdate::builder()
+                        .value(aws_sdk_dynamodb::types::AttributeValue::S(
+                            #ident::#composer_ident(#var_name.clone())
+                        ))
+                        .action(aws_sdk_dynamodb::types::AttributeAction::Put)
+                        .build(),
+                );
+            });
+        }
+
+        // Build additional GSI updates for this field (DELETE on remove)
+        let mut gsi_delete_updates: Vec<proc_macro2::TokenStream> = vec![];
+        for idx in f.indice.iter() {
+            let idx_key_name = syn::LitStr::new(
+                &format!(
+                    "{}_{}",
+                    idx.base_index_name,
+                    if idx.pk { "pk" } else { "sk" }
+                ),
+                proc_macro2::Span::call_site(),
+            );
+            gsi_delete_updates.push(quote! {
+                self.m.insert(
+                    #idx_key_name.to_string(),
+                    aws_sdk_dynamodb::types::AttributeValueUpdate::builder()
+                        .action(aws_sdk_dynamodb::types::AttributeAction::Delete)
+                        .build(),
+                );
+            });
+        }
+
         // setter
         update_fns.push(quote! {
             pub fn #fn_setter(mut self, #var_name: #var_ty) -> Self {
-                let v = serde_dynamo::to_attribute_value(#var_name)
+                let v = serde_dynamo::to_attribute_value(&#var_name)
                     .expect("failed to serialize field");
                 let v = aws_sdk_dynamodb::types::AttributeValueUpdate::builder()
                     .value(v)
                     .action(aws_sdk_dynamodb::types::AttributeAction::Put)
                     .build();
                 self.m.insert(stringify!(#var_name).to_string(), v);
+                // Update derived GSI attributes for this field
+                #(#gsi_put_updates)*
                 self
             }
         });
@@ -366,6 +423,8 @@ fn generate_updater(
                     .action(aws_sdk_dynamodb::types::AttributeAction::Delete)
                     .build();
                 self.m.insert(stringify!(#var_name).to_string(), v);
+                // Remove derived GSI attributes for this field
+                #(#gsi_delete_updates)*
                 self
             }
         });
