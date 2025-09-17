@@ -1,8 +1,9 @@
 use bdk::prelude::*;
-use by_axum::axum::{Json, extract::Path};
+use by_axum::axum::{Json, extract::{Path, State}};
 use dto::{Result, aide, JsonSchema};
 use serde::{Deserialize, Serialize};
-use std::time::SystemTime;
+use std::{time::SystemTime, sync::Arc};
+use aws_sdk_dynamodb::Client as DynamoClient;
 
 /// Credential Status Response
 /// 
@@ -182,6 +183,7 @@ pub struct StatusHistoryEntry {
 /// Fetches the current status of a verifiable credential by its ID.
 /// This endpoint is used by verifiers to check if a credential is still valid.
 pub async fn get_credential_status_handler(
+    State(_dynamo_client): State<Arc<DynamoClient>>,
     Path(credential_id): Path<String>,
 ) -> Result<Json<CredentialStatusResponse>> {
     tracing::debug!("Fetching status for credential: {}", credential_id);
@@ -191,11 +193,11 @@ pub async fn get_credential_status_handler(
         return Err(dto::Error::Unknown("Invalid credential ID format".to_string()));
     }
     
-    // TODO: Look up the credential in the database
+    // TODO: Look up the credential in DynamoDB
     // This would involve:
-    // 1. Querying the credential metadata table
+    // 1. Querying the IssuedCredential table by credential_id
     // 2. Finding the status_list_index for this credential
-    // 3. Loading the appropriate bitstring status list
+    // 3. Loading the appropriate StatusListCredential from DynamoDB
     // 4. Extracting the bit at the given index
     // 5. Converting bit value to status enum
     
@@ -226,12 +228,16 @@ pub async fn get_credential_status_handler(
 /// Fetches detailed status information including verification details and history.
 /// This endpoint provides more comprehensive information for advanced verifiers.
 pub async fn get_detailed_credential_status_handler(
+    State(dynamo_client): State<Arc<DynamoClient>>,
     Path(credential_id): Path<String>,
 ) -> Result<Json<CredentialStatusDetails>> {
     tracing::debug!("Fetching detailed status for credential: {}", credential_id);
     
     // Get basic status first
-    let basic_status_result = get_credential_status_handler(Path(credential_id.clone())).await?;
+    let basic_status_result = get_credential_status_handler(
+        State(dynamo_client.clone()), 
+        Path(credential_id.clone())
+    ).await?;
     let basic_status = basic_status_result.0;
     
     // TODO: Get additional verification information

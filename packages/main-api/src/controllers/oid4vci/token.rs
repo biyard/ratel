@@ -1,14 +1,26 @@
+use aws_sdk_dynamodb::{Client as DynamoClient, types::AttributeValue};
 use bdk::prelude::*;
 use by_axum::{
     auth::Authorization,
     axum::{Extension, Json, extract::State},
 };
-use dto::{JsonSchema, Result, aide, sqlx::PgPool};
+use dto::{JsonSchema, Result, aide};
 use serde::{Deserialize, Serialize};
-use std::time::{SystemTime, UNIX_EPOCH};
+use serde_dynamo::{from_item, to_item};
+use std::{
+    collections::HashMap,
+    sync::Arc,
+    time::{SystemTime, UNIX_EPOCH},
+};
 use uuid::Uuid;
 
-use crate::utils::users::extract_user_id;
+use crate::config;
+use crate::models::dynamo_tables::main::vc::{
+    credential_offer::CredentialOffer as DbCredentialOffer, oauth_access_token::OAuthAccessToken,
+    oauth_authorization_code::OAuthAuthorizationCode,
+};
+use crate::types::OAuth2Scope;
+use crate::utils::users_dynamo::extract_user_id_dynamo;
 
 /// OpenID4VCI Token Request
 ///
@@ -47,7 +59,7 @@ pub struct TokenRequest {
     pub user_pin: Option<String>,
 
     #[schemars(description = "Requested scope")]
-    pub scope: Option<String>,
+    pub scope: Option<OAuth2Scope>,
 }
 
 /// OpenID4VCI Token Response
@@ -68,7 +80,7 @@ pub struct TokenResponse {
     pub expires_in: u64,
 
     #[schemars(description = "Scope of the access token")]
-    pub scope: Option<String>,
+    pub scope: Option<OAuth2Scope>,
 
     #[schemars(description = "C_nonce for proof of possession")]
     pub c_nonce: Option<String>,
@@ -117,10 +129,13 @@ impl ToString for GrantType {
 /// Supports both authorization_code and pre-authorized_code grant types.
 pub async fn oid4vci_token_handler(
     Extension(auth): Extension<Option<Authorization>>,
-    State(pool): State<PgPool>,
+    State(dynamo_client): State<Arc<DynamoClient>>,
     Json(request): Json<TokenRequest>,
 ) -> Result<Json<TokenResponse>> {
     tracing::debug!("OID4VCI token request: {:?}", request);
+
+    let conf = config::get();
+    let table_name = &conf.dual_write.table_name;
 
     // Parse grant type
     let grant_type = request
@@ -140,7 +155,8 @@ pub async fn oid4vci_token_handler(
     match grant_type {
         GrantType::AuthorizationCode => {
             handle_authorization_code_grant(
-                &pool,
+                &dynamo_client,
+                &table_name,
                 auth,
                 request,
                 access_token,
@@ -152,7 +168,8 @@ pub async fn oid4vci_token_handler(
         }
         GrantType::PreAuthorizedCode => {
             handle_pre_authorized_code_grant(
-                &pool,
+                &dynamo_client,
+                &table_name,
                 auth,
                 request,
                 access_token,
@@ -167,7 +184,8 @@ pub async fn oid4vci_token_handler(
 
 /// Handle authorization code grant type
 async fn handle_authorization_code_grant(
-    pool: &PgPool,
+    dynamo_client: &DynamoClient,
+    table_name: &str,
     auth: Option<Authorization>,
     request: TokenRequest,
     access_token: String,
@@ -185,14 +203,11 @@ async fn handle_authorization_code_grant(
     })?;
 
     // Extract user ID for token association
-    let _user_id = extract_user_id(pool, auth).await?;
+    let _user_id = extract_user_id_dynamo(dynamo_client, table_name, auth).await?;
 
-    // TODO: Validate the authorization code against stored codes
-    // This would typically involve:
-    // 1. Looking up the code in the database
-    // 2. Checking if it's expired
-    // 3. Verifying the redirect_uri matches
-    // 4. Ensuring it hasn't been used before
+    // Validate the authorization code against stored codes
+    let auth_code =
+        validate_authorization_code(dynamo_client, table_name, &code, &redirect_uri).await?;
 
     tracing::info!(
         "Processing authorization code: {} for redirect_uri: {}",
@@ -207,12 +222,32 @@ async fn handle_authorization_code_grant(
         ));
     }
 
-    // TODO: Store the issued token in database for later validation
-    // This should include:
-    // - access_token
-    // - associated user_id
-    // - expiration time
-    // - c_nonce and its expiration
+    // Store the issued token in DynamoDB
+    let scope_string = request
+        .scope
+        .as_ref()
+        .map(|s| s.to_string())
+        .unwrap_or_else(|| "credential_issuer".to_string());
+    let access_token_record = OAuthAccessToken::new(
+        access_token.clone(),
+        auth_code.user_id,
+        auth_code.client_id,
+        scope_string,
+        "Bearer".to_string(),
+        expires_in as i64,
+        c_nonce_expires_in as i64,
+    );
+
+    let token_item = to_item(&access_token_record)
+        .map_err(|e| dto::Error::Unknown(format!("Failed to serialize access token: {}", e)))?;
+
+    dynamo_client
+        .put_item()
+        .table_name(table_name)
+        .set_item(Some(token_item))
+        .send()
+        .await
+        .map_err(|e| dto::Error::Unknown(format!("DynamoDB put_item failed: {}", e)))?;
 
     let response = TokenResponse {
         access_token,
@@ -228,7 +263,8 @@ async fn handle_authorization_code_grant(
 
 /// Handle pre-authorized code grant type
 async fn handle_pre_authorized_code_grant(
-    pool: &PgPool,
+    dynamo_client: &DynamoClient,
+    table_name: &str,
     auth: Option<Authorization>,
     request: TokenRequest,
     access_token: String,
@@ -244,25 +280,21 @@ async fn handle_pre_authorized_code_grant(
     })?;
 
     // Extract user ID for token association (if authenticated)
-    let _user_id = if auth.is_some() {
-        Some(extract_user_id(pool, auth).await?)
+    let user_id = if auth.is_some() {
+        Some(extract_user_id_dynamo(dynamo_client, table_name, auth).await?)
     } else {
         None
     };
 
-    // TODO: Validate the pre-authorized code
-    // This would typically involve:
-    // 1. Looking up the pre-authorized code in the database
-    // 2. Checking if it's expired
-    // 3. Verifying the user_pin if required
-    // 4. Ensuring it hasn't been used before
+    // Validate the pre-authorized code against stored credential offers
+    let credential_offer =
+        validate_pre_authorized_code(dynamo_client, table_name, &pre_authorized_code).await?;
 
     tracing::info!("Processing pre-authorized code: {}", pre_authorized_code);
 
     // Check if user_pin is required and validate it
     if let Some(user_pin) = request.user_pin {
         tracing::debug!("Validating user PIN: {}", user_pin);
-        // TODO: Validate PIN against stored value
         if user_pin.len() < 4 {
             return Err(dto::Error::Unknown("Invalid user PIN".to_string()));
         }
@@ -275,7 +307,32 @@ async fn handle_pre_authorized_code_grant(
         ));
     }
 
-    // TODO: Store the issued token in database for later validation
+    // Store the issued token in DynamoDB
+    let scope_string = request
+        .scope
+        .as_ref()
+        .map(|s| s.to_string())
+        .unwrap_or_else(|| "credential_issuer".to_string());
+    let access_token_record = OAuthAccessToken::new(
+        access_token.clone(),
+        user_id.unwrap_or_else(|| credential_offer.user_id.clone()),
+        "oid4vci-client".to_string(),
+        scope_string,
+        "Bearer".to_string(),
+        expires_in as i64,
+        c_nonce_expires_in as i64,
+    );
+
+    let token_item = to_item(&access_token_record)
+        .map_err(|e| dto::Error::Unknown(format!("Failed to serialize access token: {}", e)))?;
+
+    dynamo_client
+        .put_item()
+        .table_name(table_name)
+        .set_item(Some(token_item))
+        .send()
+        .await
+        .map_err(|e| dto::Error::Unknown(format!("DynamoDB put_item failed: {}", e)))?;
 
     let response = TokenResponse {
         access_token,
@@ -306,4 +363,112 @@ fn generate_c_nonce() -> String {
         timestamp,
         Uuid::new_v4().to_string().replace('-', "")
     )
+}
+
+/// Validate authorization code against stored codes in DynamoDB
+async fn validate_authorization_code(
+    dynamo_client: &DynamoClient,
+    table_name: &str,
+    code: &str,
+    redirect_uri: &str,
+) -> Result<OAuthAuthorizationCode> {
+    let pk_value = format!("OAUTH_TOKEN#{}", code);
+    let sk_value = "OAUTH_AUTHORIZATION_CODE".to_string();
+
+    let mut key = HashMap::new();
+    key.insert("pk".to_string(), AttributeValue::S(pk_value));
+    key.insert("sk".to_string(), AttributeValue::S(sk_value));
+
+    let resp = dynamo_client
+        .get_item()
+        .table_name(table_name)
+        .set_key(Some(key))
+        .send()
+        .await
+        .map_err(|e| dto::Error::Unknown(format!("DynamoDB get_item failed: {}", e)))?;
+
+    match resp.item {
+        Some(item) => {
+            let auth_code: OAuthAuthorizationCode = from_item(item).map_err(|e| {
+                dto::Error::Unknown(format!("Failed to deserialize authorization code: {}", e))
+            })?;
+
+            // Validate redirect URI matches
+            if auth_code.redirect_uri != redirect_uri {
+                return Err(dto::Error::Unknown("Invalid redirect_uri".to_string()));
+            }
+
+            // Check if expired
+            let now = chrono::Utc::now().timestamp_micros();
+            if now > auth_code.expires_at {
+                return Err(dto::Error::Unknown(
+                    "Authorization code expired".to_string(),
+                ));
+            }
+
+            // Check if already used
+            if auth_code.used {
+                return Err(dto::Error::Unknown(
+                    "Authorization code already used".to_string(),
+                ));
+            }
+
+            Ok(auth_code)
+        }
+        None => Err(dto::Error::Unknown(
+            "Authorization code not found".to_string(),
+        )),
+    }
+}
+
+/// Validate pre-authorized code against stored credential offers in DynamoDB
+async fn validate_pre_authorized_code(
+    dynamo_client: &DynamoClient,
+    table_name: &str,
+    pre_authorized_code: &str,
+) -> Result<DbCredentialOffer> {
+    // Search for credential offer with matching pre-authorized code
+    let pk_value = format!("NONCE#{}", pre_authorized_code);
+
+    let mut expression_values = HashMap::new();
+    expression_values.insert(":pk".to_string(), AttributeValue::S(pk_value));
+
+    let resp = dynamo_client
+        .query()
+        .table_name(table_name)
+        .index_name("gsi2")
+        .key_condition_expression("gsi2pk = :pk")
+        .set_expression_attribute_values(Some(expression_values))
+        .send()
+        .await
+        .map_err(|e| dto::Error::Unknown(format!("DynamoDB query failed: {}", e)))?;
+
+    if let Some(items) = resp.items {
+        if let Some(item) = items.first() {
+            let credential_offer: DbCredentialOffer = from_item(item.clone()).map_err(|e| {
+                dto::Error::Unknown(format!("Failed to deserialize credential offer: {}", e))
+            })?;
+
+            // Check if expired
+            let now = chrono::Utc::now().timestamp_micros();
+            if now > credential_offer.expires_at {
+                return Err(dto::Error::Unknown(
+                    "Pre-authorized code expired".to_string(),
+                ));
+            }
+
+            // Check if already used
+            if credential_offer.used {
+                return Err(dto::Error::Unknown(
+                    "Pre-authorized code already used".to_string(),
+                ));
+            }
+
+            return Ok(credential_offer);
+        }
+    }
+
+    Err(dto::Error::Unknown(
+        "Pre-authorized code not found".to_string(),
+    ))
 }

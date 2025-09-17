@@ -3,11 +3,12 @@ use by_axum::{
     auth::Authorization,
     axum::{Extension, Json, extract::State},
 };
-use dto::{Result, aide, JsonSchema, sqlx::PgPool};
+use dto::{Result, aide, JsonSchema};
 use serde::{Deserialize, Serialize};
-use std::time::SystemTime;
+use std::{time::SystemTime, sync::Arc};
+use aws_sdk_dynamodb::Client as DynamoClient;
 
-use crate::utils::users::extract_user_id;
+use crate::utils::users_dynamo::extract_user_id_dynamo;
 
 #[derive(
     Debug,
@@ -168,13 +169,13 @@ pub struct StatusUpdateResult {
 /// Only the credential issuer or authorized parties can update status.
 pub async fn update_credential_status_handler(
     Extension(auth): Extension<Option<Authorization>>,
-    State(pool): State<PgPool>,
+    State(dynamo_client): State<Arc<DynamoClient>>,
     Json(request): Json<StatusUpdateRequest>,
 ) -> Result<Json<StatusUpdateResponse>> {
     tracing::debug!("Status update request: {:?}", request);
     
     // Verify user is authorized to update credential status
-    let user_id = extract_user_id(&pool, auth).await?;
+    let user_id = extract_user_id_dynamo(&dynamo_client, "ratel_dev_main", auth).await?;
     
     // Validate request
     validate_status_update_request(&request)?;
@@ -191,7 +192,7 @@ pub async fn update_credential_status_handler(
         &request.credential_id,
         request.status_list_index,
         &request.status,
-        user_id,
+        &user_id,
         &request.reason,
     ).await?;
     
@@ -226,13 +227,13 @@ pub async fn update_credential_status_handler(
 /// More efficient than individual updates for bulk operations.
 pub async fn batch_update_credential_status_handler(
     Extension(auth): Extension<Option<Authorization>>,
-    State(pool): State<PgPool>,
+    State(dynamo_client): State<Arc<DynamoClient>>,
     Json(request): Json<BatchStatusUpdateRequest>,
 ) -> Result<Json<BatchStatusUpdateResponse>> {
     tracing::debug!("Batch status update request: {} credentials", request.updates.len());
     
     // Verify user is authorized to update credential status
-    let user_id = extract_user_id(&pool, auth).await?;
+    let user_id = extract_user_id_dynamo(&dynamo_client, "ratel_dev_main", auth).await?;
     
     // Validate batch size
     if request.updates.len() > 1000 {
@@ -245,7 +246,7 @@ pub async fn batch_update_credential_status_handler(
     
     // Process each update
     for update_request in request.updates {
-        match process_single_status_update(&update_request, user_id).await {
+        match process_single_status_update(&update_request, &user_id).await {
             Ok(_) => {
                 successful_updates += 1;
                 results.push(StatusUpdateResult {
@@ -307,7 +308,7 @@ async fn update_bitstring_status(
     credential_id: &str,
     status_list_index: u64,
     status: &CredentialStatus,
-    _updated_by: i64,
+    _updated_by: &str,
     _reason: &Option<String>,
 ) -> Result<u64> {
     tracing::debug!(
@@ -339,7 +340,7 @@ async fn update_bitstring_status(
 /// Process a single status update
 async fn process_single_status_update(
     request: &StatusUpdateRequest,
-    _user_id: i64,
+    _user_id: &str,
 ) -> Result<()> {
     // Validate the individual request
     validate_status_update_request(request)?;

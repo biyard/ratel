@@ -9,17 +9,10 @@ use crate::config;
 )]
 pub struct OpenIdCredentialIssuerMetadata {
     pub credential_issuer: String,
-    pub authorization_servers: Vec<String>,
     pub credential_endpoint: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub batch_credential_endpoint: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub deferred_credential_endpoint: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub notification_endpoint: Option<String>,
     pub credentials_supported: Vec<Value>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub display: Option<Vec<Value>>,
+    // #[serde(skip_serializing_if = "Option::is_none")]
+    // pub display: Option<Vec<Value>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub credential_signing_alg_values_supported: Option<Vec<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -104,19 +97,19 @@ pub async fn openid_credential_issuer_handler() -> Result<Json<OpenIdCredentialI
                     ]
                 }
             },
-            "display": [
-                {
-                    "name": "Passport Credential",
-                    "description": "A verifiable credential containing passport information",
-                    "locale": "en-US",
-                    "logo": {
-                        "uri": format!("{}/images/passport-credential-logo.png", base),
-                        "alt_text": "Passport Credential Logo"
-                    },
-                    "background_color": "#1F2937",
-                    "text_color": "#FFFFFF"
-                }
-            ]
+            // "display": [
+            //     {
+            //         "name": "Passport Credential",
+            //         "description": "A verifiable credential containing passport information",
+            //         "locale": "en-US",
+            //         "logo": {
+            //             "uri": format!("{}/images/passport-credential-logo.png", base),
+            //             "alt_text": "Passport Credential Logo"
+            //         },
+            //         "background_color": "#1F2937",
+            //         "text_color": "#FFFFFF"
+            //     }
+            // ]
         }),
         serde_json::json!({
             "format": "jwt_vc_json",
@@ -198,7 +191,7 @@ pub async fn openid_credential_issuer_handler() -> Result<Json<OpenIdCredentialI
         }),
     ];
 
-    let display = vec![serde_json::json!({
+    let _display = vec![serde_json::json!({
         "name": "Ratel Identity Issuer",
         "description": "Decentralized identity credential issuer for the Ratel platform",
         "locale": "en-US",
@@ -212,13 +205,8 @@ pub async fn openid_credential_issuer_handler() -> Result<Json<OpenIdCredentialI
 
     let metadata = OpenIdCredentialIssuerMetadata {
         credential_issuer: format!("https://{}", domain),
-        authorization_servers: vec![format!("https://{}", domain)],
         credential_endpoint: format!("{}/oid4vci/credential", base),
-        batch_credential_endpoint: Some(format!("{}/oid4vci/batch_credential", base)),
-        deferred_credential_endpoint: Some(format!("{}/oid4vci/deferred_credential", base)),
-        notification_endpoint: Some(format!("{}/oid4vci/notification", base)),
         credentials_supported,
-        display: Some(display),
         credential_signing_alg_values_supported: Some(vec![
             "ES256".to_string(),
             "EdDSA".to_string(),

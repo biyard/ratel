@@ -3,12 +3,13 @@ use by_axum::{
     auth::Authorization,
     axum::{Extension, Json, extract::State},
 };
-use dto::{Result, aide, JsonSchema, sqlx::PgPool};
+use dto::{Result, aide, JsonSchema};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-// use std::collections::HashMap;
+use std::sync::Arc;
+use aws_sdk_dynamodb::Client as DynamoClient;
 
-use crate::utils::users::extract_user_id;
+use crate::utils::users_dynamo::extract_user_id_dynamo;
 
 /// Verifiable Presentation Submission Request
 /// 
@@ -220,14 +221,14 @@ pub struct CredentialVerificationResult {
 /// issuer trust, expiration checks, and revocation status.
 pub async fn accept_presentation_handler(
     Extension(auth): Extension<Option<Authorization>>,
-    State(pool): State<PgPool>,
+    State(dynamo_client): State<Arc<DynamoClient>>,
     Json(request): Json<PresentationSubmissionRequest>,
 ) -> Result<Json<PresentationVerificationResponse>> {
     tracing::debug!("Received presentation submission: {:?}", request);
     
     // Extract user ID for audit logging (optional for this endpoint)
     let verifier_id = if auth.is_some() {
-        Some(extract_user_id(&pool, auth).await?)
+        Some(extract_user_id_dynamo(&dynamo_client, "ratel_dev_main", auth).await?)
     } else {
         None
     };
@@ -250,7 +251,7 @@ pub async fn accept_presentation_handler(
     for (index, credential) in vp.verifiable_credential.iter().enumerate() {
         tracing::debug!("Verifying credential {}", index);
         
-        let result = verify_credential(credential, &pool).await?;
+        let result = verify_credential(credential, &dynamo_client).await?;
         
         // Update overall status based on individual results
         if result.status != VerificationStatus::Valid {
@@ -339,7 +340,7 @@ fn verify_presentation_structure(vp: &VerifiablePresentation) -> Result<()> {
 }
 
 /// Verify an individual credential within the presentation
-async fn verify_credential(credential: &Value, _pool: &PgPool) -> Result<CredentialVerificationResult> {
+async fn verify_credential(credential: &Value, _dynamo_client: &Arc<DynamoClient>) -> Result<CredentialVerificationResult> {
     let credential_id = credential.get("id")
         .and_then(|v| v.as_str())
         .unwrap_or("unknown")
