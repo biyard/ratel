@@ -4,11 +4,11 @@ use bdk::prelude::*;
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default)]
 pub struct UserTeam {
     pub pk: Partition,
-    #[dynamo(prefix = "TEAM_PK", index = "gsi1", name = "find_by_team" pk)]
+    #[dynamo(prefix = "TEAM_PK", index = "gsi1", name = "find_by_team", pk)]
     pub sk: EntityType,
 
     // NOTE: Sort teams for a user by last_used_at in descending order.
-    #[dynamo(index = "gsi1", name = "find_by_team", sk)]
+    #[dynamo(index = "gsi1", sk)]
     pub last_used_at: i64,
 
     pub display_name: String,

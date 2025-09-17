@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use convert_case::Casing;
 use proc_macro::TokenStream;
-use quote::{quote, ToTokens};
+use quote::quote;
 use syn::{
     parse_macro_input, Attribute, Data, DataEnum, DataStruct, DeriveInput, Fields, Ident, Type,
 };
