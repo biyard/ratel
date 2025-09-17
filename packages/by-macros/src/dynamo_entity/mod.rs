@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use convert_case::Casing;
 use proc_macro::TokenStream;
-use quote::quote;
+use quote::{quote, ToTokens};
 use syn::{
     parse_macro_input, Attribute, Data, DataEnum, DataStruct, DeriveInput, Fields, Ident, Type,
 };
@@ -63,20 +63,38 @@ impl FieldInfo {
     //         .to_string()
     //         .starts_with("Option <")
     // }
-    // pub fn native_type(&self) -> Ident {
-    //     let ty_str = self.ty.to_token_stream().to_string();
-    //     let ty_str = if self.is_option() {
-    //         ty_str
-    //             .trim_start_matches("Option <")
-    //             .trim_end_matches('>')
-    //             .trim()
-    //             .to_string()
-    //     } else {
-    //         ty_str
-    //     };
+    pub fn native_type(&self) -> Ident {
+        let ty_str = self.ty.to_token_stream().to_string();
+        let ty_str = if self.is_option() {
+            ty_str
+                .trim_start_matches("Option <")
+                .trim_end_matches('>')
+                .trim()
+                .to_string()
+        } else {
+            ty_str
+        };
 
-    //     Ident::new(&ty_str, proc_macro2::Span::call_site())
-    // }
+        Ident::new(&ty_str, proc_macro2::Span::call_site())
+    }
+
+    pub fn is_number_type(&self) -> bool {
+        let ty_str = self.ty.to_token_stream().to_string();
+        matches!(
+            ty_str.as_str(),
+            "i8" | "i16"
+                | "i32"
+                | "i64"
+                | "i128"
+                | "u8"
+                | "u16"
+                | "u32"
+                | "u64"
+                | "u128"
+                | "f32"
+                | "f64"
+        )
+    }
 }
 
 fn parse_struct_cfg(attrs: &[Attribute]) -> StructCfg {
@@ -248,6 +266,247 @@ fn generate_key_composers(fields: &Vec<FieldInfo>) -> Vec<proc_macro2::TokenStre
     out.into()
 }
 
+fn generate_updater(
+    ident: &Ident,
+    s_cfg: &StructCfg,
+    fields: &Vec<FieldInfo>,
+) -> proc_macro2::TokenStream {
+    let st_name = ident.to_string();
+    let updater_name = format!("{}Updater", st_name.to_case(convert_case::Case::Pascal));
+    let updater_ident = Ident::new(&updater_name, proc_macro2::Span::call_site());
+
+    let pk_field = syn::LitStr::new(&s_cfg.pk_name, proc_macro2::Span::call_site());
+    let sk_field = if let Some(ref sk_name) = s_cfg.sk_name {
+        syn::LitStr::new(sk_name, proc_macro2::Span::call_site())
+    } else {
+        syn::LitStr::new("", proc_macro2::Span::call_site())
+    };
+
+    let key_fields = if s_cfg.sk_name.is_some() {
+        quote! {
+            k: std::collections::HashMap<String, aws_sdk_dynamodb::types::AttributeValue>,
+        }
+    } else {
+        quote! {
+            k: std::collections::HashMap<String, aws_sdk_dynamodb::types::AttributeValue>,
+        }
+    };
+
+    let sk_param = if s_cfg.sk_name.is_some() {
+        quote! { sk: impl std::fmt::Display, }
+    } else {
+        quote! {}
+    };
+
+    let sk_key = if s_cfg.sk_name.is_some() {
+        quote! {
+            (
+                #sk_field.to_string(),
+                aws_sdk_dynamodb::types::AttributeValue::S(sk.to_string()),
+            ),
+        }
+    } else {
+        quote! {}
+    };
+
+    let mut update_fns = vec![];
+
+    for f in fields.iter() {
+        if f.is_pk || f.is_sk {
+            continue;
+        }
+        let var_name = &f.ident;
+        let var_ty = f.native_type();
+
+        let fn_setter = Ident::new(
+            &format!(
+                "with_{}",
+                var_name.to_string().to_case(convert_case::Case::Snake)
+            ),
+            proc_macro2::Span::call_site(),
+        );
+        let fn_increase = Ident::new(
+            &format!(
+                "increase_{}",
+                var_name.to_string().to_case(convert_case::Case::Snake)
+            ),
+            proc_macro2::Span::call_site(),
+        );
+        let fn_decrease = Ident::new(
+            &format!(
+                "decrease_{}",
+                var_name.to_string().to_case(convert_case::Case::Snake)
+            ),
+            proc_macro2::Span::call_site(),
+        );
+        let fn_remove = Ident::new(
+            &format!(
+                "remove_{}",
+                var_name.to_string().to_case(convert_case::Case::Snake)
+            ),
+            proc_macro2::Span::call_site(),
+        );
+        // Build additional GSI updates for this field (PUT on setter)
+        let mut gsi_put_updates: Vec<proc_macro2::TokenStream> = vec![];
+        for idx in f.indice.iter() {
+            let idx_base_snake = idx.base_index_name.to_case(convert_case::Case::Snake);
+            let composer_ident = Ident::new(
+                &format!(
+                    "compose_{}_{}",
+                    idx_base_snake,
+                    if idx.pk { "pk" } else { "sk" }
+                ),
+                proc_macro2::Span::call_site(),
+            );
+            let idx_key_name = syn::LitStr::new(
+                &format!(
+                    "{}_{}",
+                    idx.base_index_name,
+                    if idx.pk { "pk" } else { "sk" }
+                ),
+                proc_macro2::Span::call_site(),
+            );
+
+            gsi_put_updates.push(quote! {
+                self.m.insert(
+                    #idx_key_name.to_string(),
+                    aws_sdk_dynamodb::types::AttributeValueUpdate::builder()
+                        .value(aws_sdk_dynamodb::types::AttributeValue::S(
+                            #ident::#composer_ident(#var_name.clone())
+                        ))
+                        .action(aws_sdk_dynamodb::types::AttributeAction::Put)
+                        .build(),
+                );
+            });
+        }
+
+        // Build additional GSI updates for this field (DELETE on remove)
+        let mut gsi_delete_updates: Vec<proc_macro2::TokenStream> = vec![];
+        for idx in f.indice.iter() {
+            let idx_key_name = syn::LitStr::new(
+                &format!(
+                    "{}_{}",
+                    idx.base_index_name,
+                    if idx.pk { "pk" } else { "sk" }
+                ),
+                proc_macro2::Span::call_site(),
+            );
+            gsi_delete_updates.push(quote! {
+                self.m.insert(
+                    #idx_key_name.to_string(),
+                    aws_sdk_dynamodb::types::AttributeValueUpdate::builder()
+                        .action(aws_sdk_dynamodb::types::AttributeAction::Delete)
+                        .build(),
+                );
+            });
+        }
+
+        // setter
+        update_fns.push(quote! {
+            pub fn #fn_setter(mut self, #var_name: #var_ty) -> Self {
+                let v = serde_dynamo::to_attribute_value(&#var_name)
+                    .expect("failed to serialize field");
+                let v = aws_sdk_dynamodb::types::AttributeValueUpdate::builder()
+                    .value(v)
+                    .action(aws_sdk_dynamodb::types::AttributeAction::Put)
+                    .build();
+                self.m.insert(stringify!(#var_name).to_string(), v);
+                // Update derived GSI attributes for this field
+                #(#gsi_put_updates)*
+                self
+            }
+        });
+        // remove
+        update_fns.push(quote! {
+            pub fn #fn_remove(mut self) -> Self {
+                let v = aws_sdk_dynamodb::types::AttributeValueUpdate::builder()
+                    .action(aws_sdk_dynamodb::types::AttributeAction::Delete)
+                    .build();
+                self.m.insert(stringify!(#var_name).to_string(), v);
+                // Remove derived GSI attributes for this field
+                #(#gsi_delete_updates)*
+                self
+            }
+        });
+
+        if !f.is_number_type() {
+            continue;
+        }
+
+        // increase
+        update_fns.push(quote! {
+            pub fn #fn_increase(mut self, by: i64) -> Self {
+                let v = serde_dynamo::to_attribute_value(by)
+                    .expect("failed to serialize field");
+                let v = aws_sdk_dynamodb::types::AttributeValueUpdate::builder()
+                    .value(v)
+                    .action(aws_sdk_dynamodb::types::AttributeAction::Add)
+                    .build();
+                self.m.insert(stringify!(#var_name).to_string(), v);
+                self
+            }
+        });
+        // decrease
+        update_fns.push(quote! {
+            pub fn #fn_decrease(mut self, by: i64) -> Self {
+                let v = serde_dynamo::to_attribute_value(-by)
+                    .expect("failed to serialize field");
+                let v = aws_sdk_dynamodb::types::AttributeValueUpdate::builder()
+                    .value(v)
+                    .action(aws_sdk_dynamodb::types::AttributeAction::Add)
+                    .build();
+                self.m.insert(stringify!(#var_name).to_string(), v);
+                self
+            }
+        });
+    }
+    let err_ctor: syn::Path = syn::parse_str(&s_cfg.error_ctor).unwrap();
+    let result_ty: syn::Type = syn::parse_str(&s_cfg.result_ty).unwrap();
+
+    quote! {
+        pub struct #updater_ident {
+            #key_fields
+            m: std::collections::HashMap<String, aws_sdk_dynamodb::types::AttributeValueUpdate>,
+        }
+
+        impl #ident {
+            pub fn updater(pk: impl std::fmt::Display, #sk_param) -> #updater_ident {
+                let k = std::collections::HashMap::from([
+                    (
+                        #pk_field.to_string(),
+                        aws_sdk_dynamodb::types::AttributeValue::S(pk.to_string()),
+                    ),
+                    #sk_key
+                ]);
+
+                #updater_ident {
+                    m: std::collections::HashMap::new(),
+                    k,
+                }
+            }
+        }
+
+        impl #updater_ident {
+            #(#update_fns)*
+
+            pub async fn execute(
+                self,
+                cli: &aws_sdk_dynamodb::Client,
+            ) -> #result_ty <(), #err_ctor> {
+                cli.update_item()
+                    .table_name(#ident::table_name())
+                    .set_key(Some(self.k))
+                    .set_attribute_updates(Some(self.m))
+                    .send()
+                    .await
+                    .map_err(Into::<aws_sdk_dynamodb::Error>::into)?;
+
+                Ok(())
+            }
+        }
+    }
+}
+
 fn generate_struct_impl(
     ident: Ident,
     ds: &DataStruct,
@@ -297,11 +556,14 @@ fn generate_struct_impl(
     let st_query_option = generate_query_option(&st_name, &s_cfg);
     let query_fn = generate_query_fn(&st_name, &s_cfg, &fields, &indice_fn);
     let key_composers = generate_key_composers(&fields);
+    let updater = generate_updater(&ident, &s_cfg, &fields);
 
     let out = quote! {
         #st_query_option
 
         #query_fn
+
+        #updater
 
 
         impl #ident {
