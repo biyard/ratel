@@ -22,6 +22,7 @@ pub enum EntityType {
     Post,
     PostAuthor, // from User
     PostSpace,
+    PostComment(String), // PostComment should be sorted by timestamp
 
     // Team entity types
     // TEAM_PK index is aligned by gsi1-index
@@ -32,7 +33,7 @@ pub enum EntityType {
     TeamMember(String),
 
     // Space common entity types
-    // SPACE_PK index is aligned by gsi1-index
+    // SPACE_PK index is aligned by gsi2-index
     SpaceCommon,
 
     // Poll Space entity types
