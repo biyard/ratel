@@ -46,8 +46,8 @@ services:
       REDIRECT_DOMAIN: ${REDIRECT_DOMAIN:-http://localhost:3000}
     volumes:
       - .:/app
-      - ./.build/target:/app/target
-      - ./.build/main-api/target:/app/packages/main-api/target
+      # - ./.build/target:/app/target
+      # - ./.build/main-api/target:/app/packages/main-api/target
     working_dir: /app
     command: ["bash", "scripts/api-entrypoint.sh"]
     healthcheck:
@@ -98,8 +98,8 @@ services:
       - "3001:3001"
     volumes:
       - .:/app
-      - ./.build/target:/app/target
-      - ./.build/fetcher/target:/app/packages/fetcher/target
+      # - ./.build/target:/app/target
+      # - ./.build/fetcher/target:/app/packages/fetcher/target
     working_dir: /app
     environment:
       ENV: dev
@@ -252,6 +252,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
+    volumes:
+      - ./.build/localstack-data:/var/lib/localstack
     networks:
       - ratel-network
 
