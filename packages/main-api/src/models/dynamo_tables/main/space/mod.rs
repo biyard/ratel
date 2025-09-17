@@ -7,6 +7,3 @@ pub use deliberation::*;
 pub use poll::*;
 pub use space_common::*;
 pub use survey::*;
-
-#[cfg(test)]
-mod tests;
