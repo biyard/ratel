@@ -1,8 +1,8 @@
-use bdk::prelude::*;
 use crate::types::*;
+use bdk::prelude::*;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default)]
-pub struct PostSpace {
+pub struct SurveySpace {
     pub pk: Partition,
     pub sk: EntityType,
 
@@ -14,13 +14,14 @@ pub struct PostSpace {
     pub info: String,
 }
 
-impl PostSpace {
-    pub fn new(pk: Partition, info: String) -> Self {
+impl SurveySpace {
+    pub fn new(info: String) -> Self {
+        let uid = uuid::Uuid::new_v4().to_string();
         let created_at = chrono::Utc::now().timestamp_micros();
 
         Self {
-            pk,
-            sk: EntityType::PostSpace,
+            pk: Partition::SurveySpace(uid),
+            sk: EntityType::Space,
             created_at,
             updated_at: created_at,
             info,

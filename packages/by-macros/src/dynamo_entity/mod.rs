@@ -45,6 +45,40 @@ struct FieldInfo {
     indice: Vec<IndexInfo>,
 }
 
+impl FieldInfo {
+    pub fn is_option(&self) -> bool {
+        use syn::{Type, TypePath};
+        match &self.ty {
+            Type::Path(TypePath { path, .. }) => path
+                .segments
+                .last()
+                .map(|seg| seg.ident == "Option")
+                .unwrap_or(false),
+            _ => false,
+        }
+    }
+    // pub fn is_option(&self) -> bool {
+    //     self.ty
+    //         .to_token_stream()
+    //         .to_string()
+    //         .starts_with("Option <")
+    // }
+    // pub fn native_type(&self) -> Ident {
+    //     let ty_str = self.ty.to_token_stream().to_string();
+    //     let ty_str = if self.is_option() {
+    //         ty_str
+    //             .trim_start_matches("Option <")
+    //             .trim_end_matches('>')
+    //             .trim()
+    //             .to_string()
+    //     } else {
+    //         ty_str
+    //     };
+
+    //     Ident::new(&ty_str, proc_macro2::Span::call_site())
+    // }
+}
+
 fn parse_struct_cfg(attrs: &[Attribute]) -> StructCfg {
     let mut cfg = StructCfg {
         table: "main".into(),
@@ -529,6 +563,7 @@ fn generate_query_common_fn() -> proc_macro2::TokenStream {
 
 fn get_additional_fields_for_indice(field: &FieldInfo) -> Vec<proc_macro2::TokenStream> {
     let mut out = vec![];
+    let is_option = field.is_option();
 
     for idx in field.indice.iter() {
         let key_name = format!(
@@ -539,18 +574,41 @@ fn get_additional_fields_for_indice(field: &FieldInfo) -> Vec<proc_macro2::Token
         let key_name = syn::LitStr::new(&key_name, proc_macro2::Span::call_site());
         let var_name = &field.ident;
         if let Some(ref prefix) = idx.prefix {
-            out.push(quote! {
-                item.insert(
-                    #key_name.to_string(),
-                    aws_sdk_dynamodb::types::AttributeValue::S(format!("{}#{}", #prefix, self.#var_name)),
-                );
-            });
+            out.push(
+                if is_option {
+                    quote! {
+                        if let Some(ref v) = self.#var_name {
+                            item.insert(
+                                #key_name.to_string(),
+                                aws_sdk_dynamodb::types::AttributeValue::S(format!("{}#{}", #prefix, v)),
+                            );
+                        }
+                    }
+                } else {
+                    quote! {
+                        item.insert(
+                            #key_name.to_string(),
+                            aws_sdk_dynamodb::types::AttributeValue::S(format!("{}#{}", #prefix, self.#var_name)),
+                        );
+                    }
+                });
         } else {
-            out.push(quote! {
-                item.insert(
-                    #key_name.to_string(),
-                    aws_sdk_dynamodb::types::AttributeValue::S(self.#var_name.to_string()),
-                );
+            out.push(if is_option {
+                quote! {
+                    if let Some(ref v) = self.#var_name {
+                        item.insert(
+                            #key_name.to_string(),
+                            aws_sdk_dynamodb::types::AttributeValue::S(v.to_string()),
+                        );
+                    }
+                }
+            } else {
+                quote! {
+                    item.insert(
+                        #key_name.to_string(),
+                        aws_sdk_dynamodb::types::AttributeValue::S(self.#var_name.to_string()),
+                    );
+                }
             });
         };
     }

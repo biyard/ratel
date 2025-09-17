@@ -189,7 +189,7 @@ DTO package is deprecated.
 | Attribute  | Description                                  | Default             |
 |:-----------|----------------------------------------------|:--------------------|
 | table      | table name except for prefix                 | main                |
-| result     | Result type                                  | std::result::Result |
+| result_ty  | Result type                                  | std::result::Result |
 | error_ctor | Error type                                   | create::Error2      |
 | pk_name    | Partition key name                           | pk                  |
 | sk_name    | (optional) Sort key name (none for removing) | sk                  |

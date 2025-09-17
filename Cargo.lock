@@ -4097,6 +4097,7 @@ dependencies = [
  "aws-sdk-textract",
  "base64 0.22.1",
  "bdk",
+ "by-macros",
  "chrono",
  "dto",
  "ethers",
