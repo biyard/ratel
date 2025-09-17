@@ -1,10 +1,7 @@
-use serde::{Deserialize, Serialize};
+use bdk::prelude::*;
+use serde_with::{DeserializeFromStr, SerializeDisplay};
 
-#[derive(
-    Debug, Copy, Clone, Serialize, Deserialize, PartialEq, Eq, Default, strum_macros::Display,
-)]
-#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-#[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
+#[derive(Debug, Clone, SerializeDisplay, DeserializeFromStr, Default, DynamoEnum)]
 pub enum EntityType {
     #[default]
     None,
@@ -17,22 +14,42 @@ pub enum EntityType {
     UserPrincipal,
     UserPhoneNumber,
     UserTelegram,
-    UserTeam,      // from Team
-    UserTeamGroup, // from TeamGroup
+    UserTeam(String),      // from Team
+    UserTeamGroup(String), // from TeamGroup
     EmailVerification,
 
     // Feed entity types
     Post,
     PostAuthor, // from User
     PostSpace,
+    PostComment(String), // PostComment should be sorted by timestamp
 
     // Team entity types
     // TEAM_PK index is aligned by gsi1-index
     // TEAM_GROUP_PK index is aligned by gsi1-index
     Team,
     TeamOwner, // from User
-    TeamGroup,
-    TeamMember,
+    TeamGroup(String),
+    TeamMember(String),
+
+    // Space common entity types
+    // SPACE_PK index is aligned by gsi2-index
+    SpaceCommon,
+
+    // Poll Space entity types
+    PollSpace,
+
+    // Survery space entity types
+    SurveySpace,
+
+    // Deliberation space entity types
+    DeliberationSpace,
+
+    // Sprint league space entity types
+    SprintLeagueSpace,
+
+    // Artwork space entity types
+    ArtworkSpace,
 
     Space,
     SpaceMember,

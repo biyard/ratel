@@ -13,6 +13,7 @@ serde.workspace = true
 serde_json.workspace = true
 
 bdk = { workspace = true, features = ["be"] }
+by-macros = { workspace = true }
 
 regex = "1"
 tokio = { version = "1.40.0", features = ["full"] }

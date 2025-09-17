@@ -170,87 +170,87 @@ pub async fn v3_email_signup_handler(
     Ok(Json(response))
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+// #[cfg(test)]
+// mod tests {
+//     use super::*;
 
-    fn create_valid_signup_request() -> UserV3SignupRequestWithEmail {
-        UserV3SignupRequestWithEmail {
-            nickname: "TestUser".to_string(),
-            email: "test@example.com".to_string(),
-            profile_url: "https://example.com/profile.jpg".to_string(),
-            term_agreed: true,
-            informed_agreed: true,
-            username: "testuser123".to_string(),
-            password: "password123".to_string(),
-            verification_code: "123456".to_string(),
-        }
-    }
+//     fn create_valid_signup_request() -> UserV3SignupRequestWithEmail {
+//         UserV3SignupRequestWithEmail {
+//             nickname: "TestUser".to_string(),
+//             email: "test@example.com".to_string(),
+//             profile_url: "https://example.com/profile.jpg".to_string(),
+//             term_agreed: true,
+//             informed_agreed: true,
+//             username: "testuser123".to_string(),
+//             password: "password123".to_string(),
+//             verification_code: "123456".to_string(),
+//         }
+//     }
 
-    // FIXME: use oneshot instead of direct call
-    // #[tokio::test]
-    // async fn test_signup_success() {
-    //     let req = create_valid_signup_request();
-    //     let auth = None;
+//     // FIXME: use oneshot instead of direct call
+//     // #[tokio::test]
+//     // async fn test_signup_success() {
+//     //     let req = create_valid_signup_request();
+//     //     let auth = None;
 
-    //     // Note: This test would require proper mocking of:
-    //     // - DynamoClient
-    //     // - EmailVerification lookup
-    //     // - DynamoDB user creation
-    //     // - UserPrincipal creation
-    //     let result = v3_email_signup_handler(Extension(auth), Json(req)).await;
+//     //     // Note: This test would require proper mocking of:
+//     //     // - DynamoClient
+//     //     // - EmailVerification lookup
+//     //     // - DynamoDB user creation
+//     //     // - UserPrincipal creation
+//     //     let result = v3_email_signup_handler(Extension(auth), Json(req)).await;
 
-    //     // For now, we test the structure
-    //     assert!(result.is_ok() || result.is_err());
-    // }
+//     //     // For now, we test the structure
+//     //     assert!(result.is_ok() || result.is_err());
+//     // }
 
-    // #[tokio::test]
-    // async fn test_signup_terms_not_agreed() {
-    //     let mut req = create_valid_signup_request();
-    //     req.term_agreed = false;
-    //     let auth = None;
+//     // #[tokio::test]
+//     // async fn test_signup_terms_not_agreed() {
+//     //     let mut req = create_valid_signup_request();
+//     //     req.term_agreed = false;
+//     //     let auth = None;
 
-    //     let result = v3_email_signup_handler(Extension(auth), Json(req)).await;
-    //     assert!(result.is_err());
-    // }
+//     //     let result = v3_email_signup_handler(Extension(auth), Json(req)).await;
+//     //     assert!(result.is_err());
+//     // }
 
-    // #[tokio::test]
-    // async fn test_signup_invalid_email() {
-    //     let mut req = create_valid_signup_request();
-    //     req.email = "invalid-email".to_string();
-    //     let auth = None;
+//     // #[tokio::test]
+//     // async fn test_signup_invalid_email() {
+//     //     let mut req = create_valid_signup_request();
+//     //     req.email = "invalid-email".to_string();
+//     //     let auth = None;
 
-    //     let result = v3_email_signup_handler(Extension(auth), Json(req)).await;
-    //     assert!(result.is_err());
-    // }
+//     //     let result = v3_email_signup_handler(Extension(auth), Json(req)).await;
+//     //     assert!(result.is_err());
+//     // }
 
-    // #[tokio::test]
-    // async fn test_signup_invalid_username() {
-    //     let mut req = create_valid_signup_request();
-    //     req.username = "ab".to_string(); // Too short
-    //     let auth = None;
+//     // #[tokio::test]
+//     // async fn test_signup_invalid_username() {
+//     //     let mut req = create_valid_signup_request();
+//     //     req.username = "ab".to_string(); // Too short
+//     //     let auth = None;
 
-    //     let result = v3_email_signup_handler(Extension(auth), Json(req)).await;
-    //     assert!(result.is_err());
-    // }
+//     //     let result = v3_email_signup_handler(Extension(auth), Json(req)).await;
+//     //     assert!(result.is_err());
+//     // }
 
-    // #[tokio::test]
-    // async fn test_signup_invalid_password() {
-    //     let mut req = create_valid_signup_request();
-    //     req.password = "1234567".to_string(); // Too short
-    //     let auth = None;
+//     // #[tokio::test]
+//     // async fn test_signup_invalid_password() {
+//     //     let mut req = create_valid_signup_request();
+//     //     req.password = "1234567".to_string(); // Too short
+//     //     let auth = None;
 
-    //     let result = v3_email_signup_handler(Extension(auth), Json(req)).await;
-    //     assert!(result.is_err());
-    // }
+//     //     let result = v3_email_signup_handler(Extension(auth), Json(req)).await;
+//     //     assert!(result.is_err());
+//     // }
 
-    // #[tokio::test]
-    // async fn test_signup_invalid_verification_code() {
-    //     let mut req = create_valid_signup_request();
-    //     req.verification_code = "123".to_string(); // Too short
-    //     let auth = None;
+//     // #[tokio::test]
+//     // async fn test_signup_invalid_verification_code() {
+//     //     let mut req = create_valid_signup_request();
+//     //     req.verification_code = "123".to_string(); // Too short
+//     //     let auth = None;
 
-    //     let result = v3_email_signup_handler(Extension(auth), Json(req)).await;
-    //     assert!(result.is_err());
-    // }
-}
+//     //     let result = v3_email_signup_handler(Extension(auth), Json(req)).await;
+//     //     assert!(result.is_err());
+//     // }
+// }
