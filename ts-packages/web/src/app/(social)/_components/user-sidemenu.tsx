@@ -8,11 +8,17 @@ import { Post, Draft, Settings } from '@/components/icons';
 import { UserType } from '@/lib/api/models/user';
 import { useTranslations } from 'next-intl';
 import { useUserInfo } from '@/lib/api/hooks/users';
+import { usePathname } from 'next/navigation';
 // import DevTools from './dev-tools';
 
 export default function UserSidemenu() {
   const t = useTranslations('Home');
   const { data: user, isLoading } = useUserInfo();
+  const pathname = usePathname();
+
+  if (pathname.includes('/subscribe')) {
+    return <div />;
+  }
 
   if (
     isLoading ||

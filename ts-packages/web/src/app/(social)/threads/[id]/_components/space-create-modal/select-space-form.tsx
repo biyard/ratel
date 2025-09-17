@@ -24,18 +24,10 @@ interface SpaceFormProps {
   Icon: React.JSX.Element;
   labelKey: string;
   descKey: string;
-  disabled?: boolean;
   experiment?: boolean;
 }
 
 const SpaceForms: SpaceFormProps[] = [
-  // {
-  //   type: SpaceType.Legislation,
-  //   Icon: <Palace />,
-  //   label: 'Legislation',
-  //   description: 'Propose and decide on new rules or policies.',
-  //   disabled: true,
-  // },
   {
     type: SpaceType.Poll,
     Icon: <Vote />,
@@ -47,6 +39,7 @@ const SpaceForms: SpaceFormProps[] = [
     Icon: <Mega />,
     labelKey: 'notice.label',
     descKey: 'notice.desc',
+    experiment: true,
   },
   {
     type: SpaceType.Deliberation,
@@ -66,15 +59,8 @@ const SpaceForms: SpaceFormProps[] = [
     Icon: <Cube className="[&>path]:stroke-[var(--color-neutral-500)]" />,
     labelKey: 'dAgit.label',
     descKey: 'dAgit.desc',
-    disabled: true,
+    experiment: true,
   },
-  // {
-  //   type: SpaceType.Nft,
-  //   Icon: <Cube />,
-  //   label: 'NFT',
-  //   description: 'Submit information to issue an NFT.',
-  //   disabled: true,
-  // },
 ];
 
 export default function SelectSpaceForm({ feed_id }: { feed_id: number }) {
@@ -194,9 +180,10 @@ export default function SelectSpaceForm({ feed_id }: { feed_id: number }) {
         onClick: () => void;
       }) {
         const tt = useTranslations('SpaceForms');
-        const disabled =
-          form.disabled || (form.experiment && !config.experiment);
-
+        const disabled = form.experiment && !config.experiment;
+        if (disabled) {
+          return null;
+        }
         return (
           <div
             className={`flex flex-row gap-2.5 justify-center items-center w-full p-5 border rounded-[10px] transition-colors
@@ -285,7 +272,7 @@ export default function SelectSpaceForm({ feed_id }: { feed_id: number }) {
             className={`w-full py-[14.5px] font-bold text-base rounded-[10px] ${
               selectedType !== null && !isLoading
                 ? 'bg-primary text-black hover:bg-primary/80'
-                : 'bg-neutral-800 text-neutral-700 cursor-not-allowed'
+                : 'bg-disabled-button-bg text-disabled-button-text cursor-not-allowed'
             } transition-colors`}
           >
             {isLoading ? 'Sending...' : 'Send'}

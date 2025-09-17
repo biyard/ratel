@@ -83,15 +83,15 @@ pub async fn register_handler(
             .into_response();
     };
 
-    let repo = AuthClient::get_repository(pool)
+    if let Err(_) = AuthClient::get_repository(pool)
         .insert(
             client_id.clone(),
             client_secret.clone(),
             req.redirect_uris.clone(),
             vec![],
         )
-        .await;
-    if repo.is_err() {
+        .await
+    {
         return (
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(serde_json::json!({

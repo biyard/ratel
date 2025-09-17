@@ -35,6 +35,8 @@ interface LoginBoxProps {
   label: string;
   onClick: () => void;
 }
+//FIXME: In Telegram MiniApp, google login not working for now.
+//Please use `/login` route instead of LoginPopup in Telegram MiniApp.
 
 export const LoginModal = ({
   id = 'login_popup',
@@ -67,9 +69,7 @@ export const LoginModal = ({
             },
             credentials: 'include',
             body: JSON.stringify({
-              update_telegram_id: {
-                telegram_raw: telegramRaw,
-              },
+              telegram_raw: telegramRaw,
             }),
           },
         );

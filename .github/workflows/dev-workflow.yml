@@ -170,6 +170,11 @@ jobs:
           SLACK_CHANNEL_SPONSOR: ${{ secrets.DEV_SLACK }}
           SLACK_CHANNEL_ABUSING: ${{ secrets.DEV_SLACK }}
 
+          BINANCE_API_KEY: ${{ secrets.DEV_BINANCE_API_KEY }}
+          BINANCE_SECRET_KEY: ${{ secrets.DEV_BINANCE_SECRET_KEY }}
+          BINANCE_WEBHOOK: https://api.dev.ratel.foundation/v2/binances/webhooks
+          REDIRECT_DOMAIN: https://dev.ratel.foundation
+
           KAIA_ENDPOINT: https://public-en-kairos.node.kaia.io
           KAIA_FEEPAYER_KEY: ${{ secrets.DEV_KAIA_KEY }}
           KAIA_FEEPAYER_ADDR: ${{ secrets.DEV_KAIA_ADDR }}
@@ -190,6 +195,7 @@ jobs:
           P256_D: ${{ secrets.P256_D }}
           P256_CRV: ${{ secrets.P256_CRV }}
 
+          DYNAMO_TABLE_PREFIX: ratel-dev
         run: |
           make docker.build
           make docker.login
@@ -237,6 +243,7 @@ jobs:
           DATABASE_TYPE: postgres
           DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
           MIGRATE: false
+          DYNAMO_TABLE_PREFIX: ratel-dev
         run: |
           make build
 
@@ -292,6 +299,7 @@ jobs:
           RPC_ENDPOINT: https://public-en-kairos.node.kaia.io
           TELEGRAM_TOKEN: ${{ secrets.DEV_TELEGRAM_TOKEN }}
 
+          DYNAMO_TABLE_PREFIX: ratel-dev
           MIGRATE: false
         run: |
           make docker.build
@@ -317,24 +325,25 @@ jobs:
           NEXT_PUBLIC_FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
           NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
           NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
-          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET:  ${{ secrets.FIREBASE_STORAGE_BUCKET }}
+          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
           NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
           NEXT_PUBLIC_FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
-          NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID:  ${{ secrets.FIREBASE_MEASUREMENT_ID }}
+          NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: ${{ secrets.FIREBASE_MEASUREMENT_ID }}
 
           NEXT_PUBLIC_ENV: dev
           NEXT_PUBLIC_SIGN_DOMAIN: dev.ratel.foundation
           NEXT_PUBLIC_API_URL: https://api.dev.ratel.foundation
           NEXT_PUBLIC_EXPERIMENT: true
           NEXT_PUBLIC_GRAPHQL_URL: https://graphql.dev.ratel.foundation/v1/graphql
+          NEXT_PUBLIC_TELEGRAM_BOTNAME: crypto_ratel_dev_bot
 
         run: |
-            make docker.build
-            make docker.login
-            make docker.push
-            cd ../..
-            make cdk/.next
-            tar czvf next.tar.gz cdk/.next
+          make docker.build
+          make docker.login
+          make docker.push
+          cd ../..
+          make cdk/.next
+          tar czvf next.tar.gz cdk/.next
 
       - name: Upload Next.js CDK .next
         uses: actions/upload-artifact@v4
