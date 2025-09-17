@@ -102,6 +102,7 @@ export function DiscussionRoom({
   startDate,
   endDate,
   title,
+  status,
   description,
   members,
   record,
@@ -174,7 +175,7 @@ export function DiscussionRoom({
           </div>
         </div>
 
-        {isLive && isMember && (
+        {isLive && isMember && status !== SpaceStatus.Draft && (
           <div className="flex flex-row w-full justify-end">
             <JoinButton
               onClick={() => {

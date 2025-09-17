@@ -586,6 +586,8 @@ impl SpaceController {
             space.notice_quiz
         };
 
+        tracing::debug!("publish space: {:?}", publishing_scope);
+
         let res = match self
             .repo
             .update_with_tx(
