@@ -152,3 +152,109 @@ async fn tests_create_user() {
     assert_eq!(telegram.len(), 1);
     assert_eq!(telegram[0].telegram_id, telegram_id);
 }
+
+#[tokio::test]
+async fn tests_update_user() {
+    let conf = aws_sdk_dynamodb::Config::builder()
+        .credentials_provider(aws_sdk_dynamodb::config::Credentials::new(
+            "test", "test", None, None, "dynamo",
+        ))
+        .region(Some(aws_sdk_dynamodb::config::Region::new("us-east-1")))
+        .endpoint_url("http://localhost:4566")
+        .behavior_version_latest()
+        .build();
+
+    let cli = aws_sdk_dynamodb::Client::from_conf(conf);
+    let now = chrono::Utc::now().timestamp();
+    let _expired_at = now + 3600; // 1 hour later
+    let email = format!("a+{}@example.com", now);
+    let nickname = format!("nickname-{}", now);
+    let profile = "http://example.com/profile.png".to_string();
+    let username = format!("user{}", now);
+
+    let user = User::new(
+        nickname,
+        email,
+        profile,
+        true,
+        true,
+        UserType::Individual,
+        None,
+        username,
+        "password".to_string(),
+    );
+
+    let res = user.create(&cli).await;
+    assert!(res.is_ok(), "failed to create user {:?}", res.err());
+
+    let fetched_user = User::get(&cli, user.pk.clone(), Some(user.sk.clone())).await;
+    assert!(fetched_user.is_ok());
+
+    let fetched_user = fetched_user.unwrap();
+    assert!(fetched_user.is_some());
+
+    let fetched_user = fetched_user.unwrap();
+    assert_eq!(fetched_user.email, user.email);
+    assert_eq!(fetched_user.display_name, user.display_name);
+    assert_eq!(fetched_user.username, user.username);
+    assert_eq!(fetched_user.followers_count, 0);
+
+    let new_display_name = "Modified name";
+    let res = User::updater(fetched_user.pk, fetched_user.sk)
+        .with_display_name(new_display_name.to_string())
+        .increase_followers_count(1)
+        .execute(&cli)
+        .await;
+
+    assert!(res.is_ok(), "failed to update");
+
+    let fetched_user = User::get(&cli, user.pk.clone(), Some(user.sk.clone())).await;
+    assert!(fetched_user.is_ok());
+
+    let fetched_user = fetched_user.unwrap();
+    assert!(fetched_user.is_some());
+
+    let fetched_user = fetched_user.unwrap();
+    assert_eq!(fetched_user.email, user.email);
+    assert_eq!(fetched_user.display_name, new_display_name);
+    assert_eq!(fetched_user.username, user.username);
+    assert_eq!(fetched_user.followers_count, 1);
+
+    let res = User::updater(fetched_user.pk, fetched_user.sk)
+        .decrease_followers_count(1)
+        .execute(&cli)
+        .await;
+
+    assert!(res.is_ok(), "failed to update");
+
+    let fetched_user = User::get(&cli, user.pk.clone(), Some(user.sk.clone())).await;
+    assert!(fetched_user.is_ok());
+
+    let fetched_user = fetched_user.unwrap();
+    assert!(fetched_user.is_some());
+
+    let fetched_user = fetched_user.unwrap();
+    assert_eq!(fetched_user.email, user.email);
+    assert_eq!(fetched_user.display_name, new_display_name);
+    assert_eq!(fetched_user.username, user.username);
+    assert_eq!(fetched_user.followers_count, 0);
+
+    let res = User::updater(fetched_user.pk, fetched_user.sk)
+        .decrease_followers_count(1)
+        .execute(&cli)
+        .await;
+
+    assert!(res.is_ok(), "failed to update");
+
+    let fetched_user = User::get(&cli, user.pk.clone(), Some(user.sk)).await;
+    assert!(fetched_user.is_ok());
+
+    let fetched_user = fetched_user.unwrap();
+    assert!(fetched_user.is_some());
+
+    let fetched_user = fetched_user.unwrap();
+    assert_eq!(fetched_user.email, user.email);
+    assert_eq!(fetched_user.display_name, new_display_name);
+    assert_eq!(fetched_user.username, user.username);
+    assert_eq!(fetched_user.followers_count, -1);
+}
