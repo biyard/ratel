@@ -10,7 +10,6 @@ function Handler() {
 
   useEffect(() => {
     const referralCode = searchParams.get('referral');
-    console.log('Referral code from search params:', referralCode);
     if (referralCode) {
       localStorage.setItem(
         KEY,
@@ -19,8 +18,6 @@ function Handler() {
           timestamp: Date.now(),
         }),
       );
-
-      console.log('Referral code detected:', referralCode);
     }
   }, [searchParams]);
 

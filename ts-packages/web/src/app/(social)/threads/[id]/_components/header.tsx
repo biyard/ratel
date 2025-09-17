@@ -60,8 +60,7 @@ export default function Header({ postId }: { postId: number }) {
   let space_id: number | null = null;
   let is_boost = false;
   let target = '';
-
-  if (post.space?.length > 1) {
+  if (post.space?.length >= 1) {
     const space = post.space[0];
     space_id = space.id;
     is_boost = Boolean(
@@ -69,7 +68,6 @@ export default function Header({ postId }: { postId: number }) {
     );
     target = route.space(space_id);
   }
-
   const user_id = user.data ? user.data.id : 0;
 
   const likeMutation = useLikeFeedMutation();

@@ -8,7 +8,7 @@
 // } from '@/lib/api/models/feeds/write-post-request';
 import { Metadata } from 'next';
 import Home from './_components/pages/home';
-import { getHomeData } from '@/lib/api/ratel_api.server';
+import { getFeedById, getPromotion } from '@/lib/api/ratel_api.server';
 
 export const metadata: Metadata = {
   title: 'Ratel',
@@ -41,7 +41,10 @@ export const metadata: Metadata = {
 };
 
 export default async function Page() {
-  const homeData = await getHomeData(10, 3);
+  const promotion = await getPromotion();
+  const feed = promotion.data
+    ? await getFeedById(promotion.data.feed_id)
+    : undefined;
 
-  return <Home homeData={homeData.data} />;
+  return <Home promotion={promotion.data} feed={feed?.data} />;
 }

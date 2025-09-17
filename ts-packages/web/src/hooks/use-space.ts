@@ -1,4 +1,4 @@
-import { QK_GET_SPACE } from '@/constants';
+import { feedKeys, QK_GET_SPACE } from '@/constants';
 import { apiFetch, FetchResponse } from '@/lib/api/apiFetch';
 import { useMutation } from '@tanstack/react-query';
 import { ratelApi } from '@/lib/api/ratel_api';
@@ -37,9 +37,22 @@ export function useSpaceMutation() {
 
       return data;
     },
-    onSuccess: (space) => {
-      const queryKey = getSpaceByIdQk(space.id);
-      queryClient.invalidateQueries({ queryKey });
+    onSuccess: async (space) => {
+      const feedQueryKey = feedKeys.lists();
+      const postQueryKey = feedKeys.detail(space.feed_id);
+      const spaceQueryKey = getSpaceByIdQk(space.id);
+
+      await queryClient.invalidateQueries({
+        queryKey: feedQueryKey,
+      });
+      await queryClient.invalidateQueries({
+        queryKey: postQueryKey,
+      });
+      await queryClient.invalidateQueries({
+        queryKey: spaceQueryKey,
+      });
+
+      console.log('Space created and related queries invalidated.');
     },
     onError: (error) => {
       showErrorToast(error.message || 'Failed to create space');
