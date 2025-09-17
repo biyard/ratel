@@ -5,9 +5,7 @@ use dto::{Error, JsonSchema, Result, aide};
 use tower_sessions::Session;
 use validator::Validate;
 
-use crate::config;
-use crate::models::dynamo_tables::main::user::User as DynamoUser;
-use crate::utils::aws::dynamo::DynamoClient;
+use crate::models::dynamo_tables::main::user::User;
 
 #[derive(
     Debug,
@@ -61,17 +59,18 @@ pub struct UserV3LoginResponse {
 }
 
 pub async fn v3_login_with_password_handler(
+    by_axum::axum::extract::State(ddb): by_axum::axum::extract::State<
+        std::sync::Arc<aws_sdk_dynamodb::Client>,
+    >,
     Extension(session): Extension<Session>,
     Json(req): Json<UserV3LoginRequest>,
 ) -> Result<Json<UserV3LoginResponse>> {
     // Validate the request
     req.validate().map_err(|_| Error::BadRequest)?;
-    let conf = config::get();
-    let dynamo_client = DynamoClient::new(&conf.dual_write.table_name);
 
     // Find user by email using DynamoDB GSI
-    let (users, _) = DynamoUser::find_by_email(
-        &dynamo_client.client,
+    let (users, _) = User::find_by_email(
+        &ddb,
         &req.email,
         crate::models::dynamo_tables::main::user::UserQueryOption::builder(),
     )
@@ -90,15 +89,13 @@ pub async fn v3_login_with_password_handler(
     }
 
     // Get the user's principal from UserPrincipal table
-    let principals = crate::models::dynamo_tables::main::user::UserMetadata::query(
-        &dynamo_client.client,
-        dynamo_user.pk.clone(),
-    )
-    .await
-    .map_err(|e| {
-        tracing::error!("Failed to find user principal: {:?}", e);
-        Error::NotFound
-    })?;
+    let principals =
+        crate::models::dynamo_tables::main::user::UserMetadata::query(&ddb, dynamo_user.pk.clone())
+            .await
+            .map_err(|e| {
+                tracing::error!("Failed to find user principal: {:?}", e);
+                Error::NotFound
+            })?;
 
     let user_principal = principals
         .into_iter()
@@ -134,8 +131,8 @@ pub async fn v3_login_with_password_handler(
 
     // Return the response with basic user information
     let response = UserV3LoginResponse {
-        id: dynamo_user.pk.clone(),
-        nickname: dynamo_user.nickname.clone(),
+        id: dynamo_user.pk.to_string(),
+        nickname: dynamo_user.display_name.clone(),
         email: dynamo_user.email.clone(),
         username: dynamo_user.username.clone(),
         profile_url: dynamo_user.profile_url.clone(),
