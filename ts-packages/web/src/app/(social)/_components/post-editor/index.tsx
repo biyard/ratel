@@ -466,7 +466,7 @@ export function ArtworkPost({
     ) || '#ffffff';
   return (
     <div className="flex flex-row p-5 gap-5">
-      <div className="flex-1 flex flex-col gap-4 p-4 [&>label]:text-neutral-50 [&>label]:font-sm">
+      <div className="flex-1 flex flex-col gap-4 p-4 [&>label]:text-text-primary [&>label]:font-sm">
         <label htmlFor="artwork">{t('artwork_name')}</label>
         <Input
           id="artwork"
@@ -478,7 +478,7 @@ export function ArtworkPost({
         <label htmlFor="description">{t('description')}</label>
         <div
           id="description"
-          className="min-h-[80px] relative rounded-md bg-input/30 border border-input px-3 py-1 "
+          className="min-h-[80px] relative rounded-md border border-input-box-border bg-input-box-bg text-text-primary px-3 py-1 "
         >
           <LexicalComposer initialConfig={editorConfig}>
             <Editor
@@ -503,7 +503,10 @@ export function ArtworkPost({
             case ArtworkTraitDisplayType.String:
             case ArtworkTraitDisplayType.Number:
               return (
-                <div key={index} className="flex flex-col gap-1">
+                <div
+                  key={index}
+                  className="flex flex-col gap-1 text-text-primary"
+                >
                   <label htmlFor={`trait-${index}`}>{name}</label>
                   <Input
                     id={`trait-${index}`}
