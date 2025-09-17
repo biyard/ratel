@@ -48,8 +48,8 @@ pub enum EntityType {
     // Sprint league space entity types
     SprintLeagueSpace,
 
-    // Arkwork space entity types
-    ArkworkSpace,
+    // Artwork space entity types
+    ArtworkSpace,
 
     Space,
     SpaceMember,
