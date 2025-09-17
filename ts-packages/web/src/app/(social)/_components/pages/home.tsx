@@ -99,6 +99,7 @@ export default function Home({
               space_id={post.space?.[0]?.id}
               space_type={post.space?.[0]?.space_type}
               booster_type={post.space?.[0]?.booster_type}
+              url={post.url || ''}
             />
           ))}
 

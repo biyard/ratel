@@ -43,6 +43,7 @@ export default function MyPostsPage() {
             <FeedCard
               key={`feed-${post.id}`}
               contents={post.html_contents || ''}
+              url={post.url || ''}
               author_profile_url={post?.author?.[0]?.profile_url || ''}
               author_name={post?.author?.[0]?.nickname || ''}
               author_type={post?.author?.[0]?.user_type || UserType.Anonymous}

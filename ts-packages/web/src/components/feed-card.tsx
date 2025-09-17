@@ -315,17 +315,21 @@ export function UserBadge({
 }) {
   return (
     <Row className="w-fit items-center med-16 text-text-primary">
-      <Image
-        src={profile_url}
-        alt="User Profile"
-        width={24}
-        height={24}
-        className={
-          author_type == UserType.Team
-            ? 'w-6 h-6 rounded-sm object-cover'
-            : 'w-6 h-6 rounded-full object-cover'
-        }
-      />
+      {profile_url != '' ? (
+        <Image
+          src={profile_url}
+          alt="User Profile"
+          width={24}
+          height={24}
+          className={
+            author_type == UserType.Team
+              ? 'w-6 h-6 rounded-sm object-cover'
+              : 'w-6 h-6 rounded-full object-cover'
+          }
+        />
+      ) : (
+        <></>
+      )}
       <span>{name}</span>
     </Row>
   );
