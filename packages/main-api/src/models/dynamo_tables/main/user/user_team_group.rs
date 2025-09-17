@@ -27,7 +27,7 @@ impl UserTeamGroup {
     ) -> Self {
         Self {
             pk,
-            sk: EntityType::UserTeamGroup(team_group_pk),
+            sk: EntityType::UserTeamGroup(team_group_pk.to_string()),
             team_group_permissions,
         }
     }

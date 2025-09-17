@@ -35,7 +35,7 @@ impl TeamGroup {
 
         Self {
             pk,
-            sk: EntityType::TeamGroup(creator_pk),
+            sk: EntityType::TeamGroup(creator_pk.to_string()),
             name,
             description,
             created_at: now,
