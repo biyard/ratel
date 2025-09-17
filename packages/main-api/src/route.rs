@@ -470,7 +470,8 @@ pub async fn route(
                     "Get User",
                     "Retrieve users with username or phone number or email"
                 ),
-            ),
+            )
+            .with_state(pool.clone()),
         )
         .route(
             "/v2/users/telegram",
@@ -807,8 +808,7 @@ pub async fn route(
                 ),
             )
             .with_state(pool.clone()),
-        )
-    )
+        ))
 }
 
 pub async fn authorize_admin(
