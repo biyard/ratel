@@ -4101,6 +4101,7 @@ dependencies = [
  "chrono",
  "dto",
  "ethers",
+ "flate2",
  "hex",
  "hmac",
  "multibase",

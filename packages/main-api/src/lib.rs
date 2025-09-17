@@ -123,10 +123,10 @@ pub mod controllers {
     }
     pub mod v3 {
         pub mod users {
-            pub mod email_signup;
-            pub mod verify_email;
-            pub mod request_verification_code;
             pub mod email_login;
+            pub mod email_signup;
+            pub mod request_verification_code;
+            pub mod verify_email;
         }
     }
     pub mod m2 {
@@ -144,6 +144,21 @@ pub mod controllers {
     }
     pub mod well_known {
         pub mod get_did_document;
+        pub mod openid_credential_issuer;
+    }
+    pub mod oid4vci {
+        pub mod credential;
+        pub mod credential_offer;
+        pub mod token;
+    }
+    pub mod vc {
+        pub mod presentations;
+        pub mod status_fetch;
+        pub mod status_update;
+        pub mod verify;
+    }
+    pub mod status {
+        pub mod bitstring_status_list;
     }
     pub mod wg {
         pub mod get_home;
