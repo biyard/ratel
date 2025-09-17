@@ -1,6 +1,6 @@
-pub mod space;
+pub mod space_common;
 
-pub use space::*;
+pub use space_common::*;
 
 #[cfg(test)]
 mod tests;
