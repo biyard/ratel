@@ -47,12 +47,22 @@ struct FieldInfo {
 
 impl FieldInfo {
     pub fn is_option(&self) -> bool {
-        self.ty
-            .to_token_stream()
-            .to_string()
-            .starts_with("Option <")
+        use syn::{Type, TypePath};
+        match &self.ty {
+            Type::Path(TypePath { path, .. }) => path
+                .segments
+                .last()
+                .map(|seg| seg.ident == "Option")
+                .unwrap_or(false),
+            _ => false,
+        }
     }
-
+    // pub fn is_option(&self) -> bool {
+    //     self.ty
+    //         .to_token_stream()
+    //         .to_string()
+    //         .starts_with("Option <")
+    // }
     // pub fn native_type(&self) -> Ident {
     //     let ty_str = self.ty.to_token_stream().to_string();
     //     let ty_str = if self.is_option() {
