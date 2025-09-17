@@ -1,4 +1,5 @@
 use super::*;
+use crate::types::*;
 
 #[tokio::test]
 async fn tests_create_user() {

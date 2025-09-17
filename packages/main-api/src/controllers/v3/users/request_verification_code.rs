@@ -96,44 +96,44 @@ pub async fn request_verification_code_handler(
     }))
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+// #[cfg(test)]
+// mod tests {
+//     use super::*;
 
-    // FIXME: use oneshot
-    // #[tokio::test]
-    // async fn test_request_verification_code_success() {
-    //     let req = RequestVerificationCodeRequest {
-    //         email: "test@example.com".to_string(),
-    //     };
+//     // FIXME: use oneshot
+//     // #[tokio::test]
+//     // async fn test_request_verification_code_success() {
+//     //     let req = RequestVerificationCodeRequest {
+//     //         email: "test@example.com".to_string(),
+//     //     };
 
-    //     // Note: This test would require proper mocking of:
-    //     // - DynamoClient::new()
-    //     // - send_email function
-    //     // - EmailVerification::create
-    //     let result = request_verification_code_handler(Json(req)).await;
+//     //     // Note: This test would require proper mocking of:
+//     //     // - DynamoClient::new()
+//     //     // - send_email function
+//     //     // - EmailVerification::create
+//     //     let result = request_verification_code_handler(Json(req)).await;
 
-    //     // For now, we test the structure
-    //     assert!(result.is_ok() || result.is_err());
-    // }
+//     //     // For now, we test the structure
+//     //     assert!(result.is_ok() || result.is_err());
+//     // }
 
-    // #[tokio::test]
-    // async fn test_request_verification_code_invalid_email() {
-    //     let req = RequestVerificationCodeRequest {
-    //         email: "invalid-email".to_string(),
-    //     };
+//     // #[tokio::test]
+//     // async fn test_request_verification_code_invalid_email() {
+//     //     let req = RequestVerificationCodeRequest {
+//     //         email: "invalid-email".to_string(),
+//     //     };
 
-    //     let result = request_verification_code_handler(Json(req)).await;
-    //     assert!(result.is_err());
-    // }
+//     //     let result = request_verification_code_handler(Json(req)).await;
+//     //     assert!(result.is_err());
+//     // }
 
-    // #[tokio::test]
-    // async fn test_request_verification_code_empty_email() {
-    //     let req = RequestVerificationCodeRequest {
-    //         email: "".to_string(),
-    //     };
+//     // #[tokio::test]
+//     // async fn test_request_verification_code_empty_email() {
+//     //     let req = RequestVerificationCodeRequest {
+//     //         email: "".to_string(),
+//     //     };
 
-    //     let result = request_verification_code_handler(Json(req)).await;
-    //     assert!(result.is_err());
-    // }
-}
+//     //     let result = request_verification_code_handler(Json(req)).await;
+//     //     assert!(result.is_err());
+//     // }
+// }

@@ -1,5 +1,5 @@
-use bdk::prelude::*;
 use super::*;
+use bdk::prelude::*;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity)]
 #[serde(untagged)]
