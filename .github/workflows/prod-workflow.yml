@@ -96,6 +96,7 @@ jobs:
           DATABASE_TYPE: postgres
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           MIGRATE: false
+          DYNAMO_TABLE_PREFIX: ratel-prod
         run: |
           make build
 
@@ -106,7 +107,6 @@ jobs:
           path: ${{ github.workspace }}/.build/image-worker/bootstrap
           if-no-files-found: error
           retention-days: 7
-
 
   main-api:
     runs-on: ubuntu-22.04
@@ -187,6 +187,7 @@ jobs:
           P256_D: ${{ secrets.P256_D }}
           P256_CRV: ${{ secrets.P256_CRV }}
 
+          DYNAMO_TABLE_PREFIX: ratel-prod
         run: |
           make docker.build
           make docker.login
@@ -236,6 +237,7 @@ jobs:
           RPC_ENDPOINT: https://public-en.node.kaia.io
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
 
+          DYNAMO_TABLE_PREFIX: ratel-prod
           MIGRATE: false
         run: |
           make docker.build
