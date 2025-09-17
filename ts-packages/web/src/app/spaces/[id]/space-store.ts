@@ -26,6 +26,8 @@ type Actions = {
   triggerGlobalSave: () => Promise<void>;
   setPageSaveHandler: (handler: PageSaveHandler) => void;
   spacePublishValidator: () => boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  setSpacePublishValidator: (handler: any) => void;
 };
 
 const initialState: State = {
@@ -69,6 +71,7 @@ export const useEditCoordinatorStore = create<State & Actions>((set, get) => ({
     return spacePublishValidatorImpl();
   },
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   setSpacePublishValidator: (handler: any) =>
     set({ spacePublishValidatorImpl: handler }),
 }));
