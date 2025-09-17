@@ -11,6 +11,12 @@ pub enum Partition {
     User(String),
     Email(String),
     Feed(String),
+
+    // Spaces
     Space(String),
+    DeliberationSpace(String),
+    PollSpace(String),
+    SurveySpace(String),
+
     Team(String),
 }
