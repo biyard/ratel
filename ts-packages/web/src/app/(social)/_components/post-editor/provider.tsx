@@ -85,6 +85,7 @@ export function PostEditorProvider({
 }) {
   const { data: user } = useUserInfo();
   const { selectedTeam } = useTeamContext();
+  const teamId = selectedTeam?.id || null;
   const targetId = selectedTeam?.id || user?.id || 0;
 
   const { createDraft, updateDraft, publishDraft } =
@@ -246,7 +247,6 @@ export function PostEditorProvider({
           ? PostType.Artwork
           : PostType.General,
       );
-      console.log('DRAFT META', draft.artwork_metadata);
 
       if (draft.feed_type === FeedType.Artwork && draft.artwork_metadata) {
         setTraits(draft.artwork_metadata.traits || []);
@@ -284,6 +284,7 @@ export function PostEditorProvider({
       await updateDraft.mutateAsync({
         postId: id,
         req,
+        teamId: teamId || undefined,
       });
       return id;
     },
@@ -297,6 +298,7 @@ export function PostEditorProvider({
       updateDraft,
       createDraft,
       targetId,
+      teamId,
     ],
   );
   const autoSaveDraft = useCallback(async () => {
