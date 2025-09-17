@@ -47,6 +47,7 @@ export default function TeamHome({ teamId }: TeamHomeProps) {
             author_id={post?.author?.[0]?.id || 0}
             user_id={post.user_id || 0}
             id={post.id}
+            url={post.url || ''}
             industry={post.industry?.[0]?.name || ''}
             title={post.title || ''}
             created_at={post.created_at || 0}
