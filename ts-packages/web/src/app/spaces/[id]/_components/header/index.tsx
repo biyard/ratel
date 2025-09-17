@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { Input } from '@/components/ui/input';
 import { Space, SpaceStatus } from '@/lib/api/models/spaces';
 import { ArrowLeft, Play, Save } from 'lucide-react';
+import ArrowUp from '@/assets/icons/arrow-up.svg';
 import {
   Edit1,
   Unlock2,
@@ -15,18 +16,21 @@ import {
   CommentIcon,
   Rewards,
   Extra,
+  Internet,
 } from '@/components/icons';
 import { TeamContext } from '@/lib/contexts/team-context';
 import { useUserInfo } from '@/app/(social)/_hooks/user';
 import { getTimeAgo } from '@/lib/time-utils';
 import { usePopup } from '@/lib/contexts/popup-service';
-import GoPublicPopup from '../modal/go-public';
 import { Feed } from '@/lib/api/models/feeds';
 import { useSpaceContext } from './provider';
 import { useDropdown } from '../dropdown/dropdown-service';
 import DropdownMenu from '../dropdown/dropdown-menu';
 import DeleteSpacePopup from '../modal/confirm-delete';
 import { useTranslations } from 'next-intl';
+import PublishForm from '../../notice/_components/modal/publish-form';
+import { PublishingScope } from '@/lib/api/models/notice';
+import GoPublicModal from '../../notice/_components/modal/go-public-modal';
 
 export default function SpaceHeader({
   space,
@@ -42,6 +46,7 @@ export default function SpaceHeader({
 
   const {
     isEdit,
+    isPrivatelyPublished,
     title,
     status,
     userType,
@@ -52,25 +57,39 @@ export default function SpaceHeader({
     handleSave,
     handleEdit,
     handleShare,
-    handlePostingSpace,
+    handlePublishWithScope,
     handleUpdateTitle,
     handleDelete,
   } = context;
 
   const popup = usePopup();
 
-  const handlePost = () => {
-    popup
-      .open(
-        <GoPublicPopup
-          onclose={() => popup.close()}
-          onpublic={async () => {
-            await handlePostingSpace();
-            popup.close();
-          }}
-        />,
-      )
-      .withoutBackdropClose();
+  const handlePost = async () => {
+    if (space.status === SpaceStatus.Draft) {
+      popup
+        .open(
+          <PublishForm
+            onPublish={async (scope: PublishingScope) => {
+              popup.close();
+              await handlePublishWithScope(scope);
+            }}
+            currentScope={space.publishing_scope}
+          />,
+        )
+        .withoutBackdropClose();
+    } else {
+      popup
+        .open(
+          <GoPublicModal
+            onCancel={() => popup.close()}
+            onGoPublic={async () => {
+              popup.close();
+              await handlePublishWithScope(PublishingScope.Public);
+            }}
+          />,
+        )
+        .withoutBackdropClose();
+    }
   };
 
   // Add this new handler function in SpaceHeader
@@ -138,17 +157,34 @@ export default function SpaceHeader({
               </button>
             )}
 
-            {status === SpaceStatus.Draft && (
+            {!isEdit && status === SpaceStatus.Draft && (
               <button
-                className="flex flex-row w-fit px-3.5 py-2 rounded-md bg-white light:border-[#e5e5e5] gap-1"
-                onClick={handlePost}
+                className="flex flex-row w-fit px-3.5 py-2 rounded-md bg-white gap-1"
+                onClick={async () => {
+                  await handlePost();
+                }}
               >
-                <Unlock2 className="stroke-neutral-600 [&>path]:stroke-2 w-5 h-5" />
+                <ArrowUp className="stroke-neutral-500 [&>path]:stroke-2 w-5 h-5" />
                 <div className="font-bold text-zinc-900 text-sm">
-                  {t('make_public')}
+                  {t('publish')}
                 </div>
               </button>
             )}
+            {!isEdit &&
+              status !== SpaceStatus.Draft &&
+              isPrivatelyPublished && (
+                <button
+                  className="flex flex-row w-fit px-3.5 py-2 rounded-md bg-white gap-1"
+                  onClick={async () => {
+                    await handlePost();
+                  }}
+                >
+                  <Internet className="stroke-neutral-500 [&>path]:stroke-2 w-5 h-5" />
+                  <div className="font-bold text-zinc-900 text-sm">
+                    {t('go_public')}
+                  </div>
+                </button>
+              )}
 
             <div className="relative" ref={dropdownRef}>
               <button
