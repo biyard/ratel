@@ -48,8 +48,7 @@ export default async function Layout({
   const spaceId = Number(id);
   return (
     <Provider spaceId={spaceId}>
-      {/* FIXME: remove `min-h-screen`. This class occurs vertical scroll */}
-      <div className="flex flex-col w-full min-h-screen justify-between max-w-desktop mx-auto text-white pt-3 gap-5 max-tablet:px-5 mb-8">
+      <div className="flex flex-col w-full min-h-[100svh] justify-between max-w-desktop mx-auto text-white pt-3 gap-5 max-tablet:px-5 mb-8 max-desktop:max-w-screen">
         <Suspense
           fallback={
             <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center">

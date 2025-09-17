@@ -89,6 +89,7 @@ pub async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         SprintLeagueVote,
         TeamMember,
         News,
+        Purchase,
         // Quiz,
         // QuizResult,
         // ElectionPledgeQuizLike,
@@ -126,6 +127,7 @@ pub async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         AuthCode,
         Post,
         TelegramChannel,
+        TelegramToken,
     );
 
     // Create DynamoDB tables
@@ -221,7 +223,11 @@ pub async fn api_main() -> Result<Router> {
     let mcp_router = by_axum::axum::Router::new()
         .nest_service("/mcp", controllers::mcp::route(pool.clone()).await?)
         .layer(middleware::from_fn(mcp_middleware));
-    let bot = TelegramBot::new(conf.telegram_token).await?;
+    let bot = if let Some(token) = conf.telegram_token {
+        Some(TelegramBot::new(token).await?)
+    } else {
+        None
+    };
     // FIXME: Is this the correct way to inject and pass the states into the route?
     // find better way to  management Axum's state or dependency injection for better modularity and testability.
     let api_router = route(

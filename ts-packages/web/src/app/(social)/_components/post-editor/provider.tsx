@@ -1,4 +1,11 @@
-import { Feed, FeedStatus, FeedType, UrlType } from '@/lib/api/models/feeds';
+import {
+  ArtworkTrait,
+  ArtworkTraitDisplayType,
+  Feed,
+  FeedStatus,
+  FeedType,
+  UrlType,
+} from '@/lib/api/models/feeds';
 import { checkString } from '@/lib/string-filter-utils';
 import { useRouter, usePathname } from 'next/navigation';
 import {
@@ -16,6 +23,8 @@ import { useUserInfo } from '../../_hooks/user';
 import { useTeamContext } from '@/lib/contexts/team-context';
 import { useDraftMutations } from '@/hooks/feeds/use-create-feed-mutation';
 import { UpdatePostRequest } from '@/lib/api/models/feeds/update-post';
+import { dataUrlToBlob, parseFileType } from '@/lib/file-utils';
+import { AssetPresignedUris } from '@/lib/api/models/asset-presigned-uris';
 
 export enum Status {
   Idle = 'Idle',
@@ -46,12 +55,8 @@ export interface PostEditorContextType {
   image: string | null;
   updateImage: (image: string | null) => void;
 
-  artistName: string | null;
-  updateArtistName: (artistName: string | null) => void;
-  backgroundColor: string;
-  updateBackgroundColor: (backgroundColor: string) => void;
-  size: string | null;
-  updateSize: (size: string | null) => void;
+  traits: ArtworkTrait[];
+  updateTrait: (trait_type: string, value: string) => void;
 
   handleUpdate: () => Promise<void>;
 
@@ -80,6 +85,7 @@ export function PostEditorProvider({
 }) {
   const { data: user } = useUserInfo();
   const { selectedTeam } = useTeamContext();
+  const teamId = selectedTeam?.id || null;
   const targetId = selectedTeam?.id || user?.id || 0;
 
   const { createDraft, updateDraft, publishDraft } =
@@ -104,18 +110,60 @@ export function PostEditorProvider({
   const [title, setTitle] = useState('');
   const [content, setContent] = useState<string | null>(null);
   const [image, setImage] = useState<string | null>(null);
-  const [artistName, setArtistName] = useState<string | null>(null);
-  const [backgroundColor, setBackgroundColor] = useState<string>('#ffffff');
-  const [size, setSize] = useState<string | null>(null);
+  // const [artistName, setArtistName] = useState<string | null>(null);
+  // const [backgroundColor, setBackgroundColor] = useState<string>('#ffffff');
+  // const [size, setSize] = useState<string | null>(null);
+  const [traits, setTraits] = useState<ArtworkTrait[]>([
+    {
+      trait_type: 'artist_name',
+      value: '',
+    },
+    {
+      trait_type: 'medium',
+      value: '',
+    },
+    {
+      trait_type: 'year',
+      value: '',
+    },
+    {
+      trait_type: 'size',
+      value: '',
+    },
 
+    {
+      trait_type: 'background_color',
+      value: '#ffffff',
+      display_type: ArtworkTraitDisplayType.Color,
+    },
+  ]);
+
+  const isArtworkRequiredFieldsFilled = Boolean(
+    typeof traits.find((t) => t.trait_type === 'artist_name')?.value ===
+      'string' &&
+      (
+        traits.find((t) => t.trait_type === 'artist_name')?.value as string
+      ).trim() !== '' &&
+      typeof traits.find((t) => t.trait_type === 'background_color')?.value ===
+        'string' &&
+      (
+        traits.find((t) => t.trait_type === 'background_color')?.value as string
+      ).trim() !== '' &&
+      typeof traits.find((t) => t.trait_type === 'size')?.value === 'string' &&
+      (traits.find((t) => t.trait_type === 'size')?.value as string).trim() !==
+        '' &&
+      typeof traits.find((t) => t.trait_type === 'medium')?.value ===
+        'string' &&
+      (
+        traits.find((t) => t.trait_type === 'medium')?.value as string
+      ).trim() !== '',
+  );
   const isAllFieldsFilled = Boolean(
     title &&
       title.trim() !== '' &&
       content &&
       content.trim() !== '' &&
-      (postType !== PostType.Artwork
-        ? true
-        : artistName && backgroundColor && size && image),
+      (postType !== PostType.Artwork ? true : isArtworkRequiredFieldsFilled),
   );
   const resetState = useCallback(() => {
     setExpand(false);
@@ -150,21 +198,30 @@ export function PostEditorProvider({
     setImage(newImage);
     setIsModified(true);
   };
+  const updateTrait = (
+    trait_type: string,
+    value: string,
+    display_type: ArtworkTraitDisplayType = ArtworkTraitDisplayType.String,
+  ) => {
+    setTraits((prevTraits) => {
+      const traitIndex = prevTraits.findIndex(
+        (t) => t.trait_type === trait_type,
+      );
+      if (traitIndex !== -1) {
+        const updatedTraits = [...prevTraits];
+        updatedTraits[traitIndex] = {
+          ...updatedTraits[traitIndex],
+          value,
+          display_type: display_type ?? updatedTraits[traitIndex].display_type,
+        };
+        return updatedTraits;
+      } else {
+        return [...prevTraits, { trait_type, value, display_type }];
+      }
+    });
+    setIsModified(true);
+  };
 
-  const updateBackgroundColor = (newBackgroundColor: string | null) => {
-    if (newBackgroundColor) {
-      setBackgroundColor(newBackgroundColor);
-    }
-    setIsModified(true);
-  };
-  const updateArtistName = (newArtistName: string | null) => {
-    setArtistName(newArtistName);
-    setIsModified(true);
-  };
-  const updateSize = (newSize: string | null) => {
-    setSize(newSize);
-    setIsModified(true);
-  };
   const openPostEditorPopup = async (id?: number) => {
     if (!id) {
       resetState();
@@ -190,12 +247,9 @@ export function PostEditorProvider({
           ? PostType.Artwork
           : PostType.General,
       );
-      console.log('DRAFT META', draft.artwork_metadata);
 
       if (draft.feed_type === FeedType.Artwork && draft.artwork_metadata) {
-        setArtistName(draft.artwork_metadata.artist_name || null);
-        setBackgroundColor(draft.artwork_metadata.background_color);
-        setSize(draft.artwork_metadata.size || null);
+        setTraits(draft.artwork_metadata.traits || []);
       }
       setExpand(true);
     } catch {
@@ -205,51 +259,48 @@ export function PostEditorProvider({
     }
   };
 
-  const handleUpdateDraft = useCallback(async () => {
-    let id: number;
-    if (!feed) {
-      const newFeed = await createDraft.mutateAsync(targetId);
-      id = newFeed.id;
-      setFeed(newFeed);
-    } else {
-      id = feed.id;
-    }
+  const handleUpdateDraft = useCallback(
+    async (image_url?: string | null) => {
+      let id: number;
+      if (!feed) {
+        const newFeed = await createDraft.mutateAsync(targetId);
+        id = newFeed.id;
+        setFeed(newFeed);
+      } else {
+        id = feed.id;
+      }
 
-    const req: Partial<UpdatePostRequest> = {
+      const req: Partial<UpdatePostRequest> = {
+        title,
+        html_contents: content || undefined,
+        url: image_url ? image_url : image || undefined,
+        url_type: image ? UrlType.Image : UrlType.None,
+        feed_type:
+          postType === PostType.Artwork ? FeedType.Artwork : FeedType.Post,
+        artwork_metadata:
+          postType === PostType.Artwork ? { traits } : undefined,
+      };
+
+      await updateDraft.mutateAsync({
+        postId: id,
+        req,
+        teamId: teamId || undefined,
+      });
+      return id;
+    },
+    [
+      feed,
       title,
-      html_contents: content || undefined,
-      url: image || undefined,
-      url_type: image ? UrlType.Image : UrlType.None,
-      feed_type:
-        postType === PostType.Artwork ? FeedType.Artwork : FeedType.Post,
-      artwork_metadata:
-        postType === PostType.Artwork
-          ? {
-              artist_name: artistName || '',
-              background_color: backgroundColor || '',
-              size: size || '',
-            }
-          : undefined,
-    };
-
-    await updateDraft.mutateAsync({
-      postId: id,
-      req,
-    });
-    return id;
-  }, [
-    feed,
-    title,
-    content,
-    image,
-    postType,
-    artistName,
-    backgroundColor,
-    size,
-    updateDraft,
-    createDraft,
-    targetId,
-  ]);
+      content,
+      image,
+      postType,
+      traits,
+      updateDraft,
+      createDraft,
+      targetId,
+      teamId,
+    ],
+  );
   const autoSaveDraft = useCallback(async () => {
     if (status === Status.Saving || isModified === false) {
       return;
@@ -295,21 +346,37 @@ export function PostEditorProvider({
       if (checkString(title) || checkString(content || '')) {
         throw new Error('Please remove the test keyword');
       }
-      const finalDraftId = await handleUpdateDraft();
+      let image_url = image;
+      if (image && image.startsWith('data:')) {
+        const mime = image.match(/^data:([^;]+);base64,/);
+        if (mime && mime[1]) {
+          const res = await apiFetch<AssetPresignedUris>(
+            `${config.api_url}${ratelApi.assets.getPresignedUrl(parseFileType(mime[1]))}`,
+            {
+              method: 'GET',
+            },
+          );
+          if (
+            res.data &&
+            res.data.presigned_uris?.length > 0 &&
+            res.data.uris?.length > 0
+          ) {
+            const blob = await dataUrlToBlob(image);
+            await fetch(res.data.presigned_uris[0], {
+              method: 'PUT',
+              headers: {
+                'Content-Type': mime[1],
+              },
+              body: blob,
+            });
+            image_url = res.data.uris[0];
+          }
+        }
+      }
+      const finalDraftId = await handleUpdateDraft(image_url);
       if (feed?.status !== FeedStatus.Published) {
         await publishDraft.mutateAsync({ draftId: finalDraftId });
         router.push(route.threadByFeedId(finalDraftId));
-        // await publishDraft.mutateAsync(
-        //   {
-        //     draftId: finalDraftId,
-        //   },
-        //   {
-        //     onSuccess: () => {
-        //       router.push(route.threadByFeedId(finalDraftId));
-        //       resetState();
-        //     },
-        //   },
-        // );
       }
       resetState();
     } catch {
@@ -319,6 +386,7 @@ export function PostEditorProvider({
     content,
     feed?.status,
     handleUpdateDraft,
+    image,
     isAllFieldsFilled,
     publishDraft,
     resetState,
@@ -340,13 +408,8 @@ export function PostEditorProvider({
     updateImage,
     postType,
     updatePostType,
-    artistName,
-    updateArtistName,
-    backgroundColor,
-    updateBackgroundColor,
-    size,
-    updateSize,
-
+    traits,
+    updateTrait,
     handleUpdate,
     isSubmitDisabled: !isAllFieldsFilled,
     status,

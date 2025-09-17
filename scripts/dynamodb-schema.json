@@ -1,5 +1,5 @@
 {
-  "TableName": "ratel-local",
+  "TableName": "ratel-local-main",
   "AttributeDefinitions": [
     {
       "AttributeName": "pk",
@@ -28,6 +28,38 @@
     {
       "AttributeName": "gsi2_sk",
       "AttributeType": "S"
+    },
+    {
+      "AttributeName": "gsi3_pk",
+      "AttributeType": "S"
+    },
+    {
+      "AttributeName": "gsi3_sk",
+      "AttributeType": "S"
+    },
+    {
+      "AttributeName": "gsi4_pk",
+      "AttributeType": "S"
+    },
+    {
+      "AttributeName": "gsi4_sk",
+      "AttributeType": "S"
+    },
+    {
+      "AttributeName": "gsi5_pk",
+      "AttributeType": "S"
+    },
+    {
+      "AttributeName": "gsi5_sk",
+      "AttributeType": "S"
+    },
+    {
+      "AttributeName": "gsi6_pk",
+      "AttributeType": "S"
+    },
+    {
+      "AttributeName": "gsi6_sk",
+      "AttributeType": "S"
     }
   ],
   "KeySchema": [
@@ -50,7 +82,7 @@
           "KeyType": "HASH"
         },
         {
-          "AttributeName": "created_at",
+          "AttributeName": "sk",
           "KeyType": "RANGE"
         }
       ],
@@ -84,6 +116,70 @@
         },
         {
           "AttributeName": "gsi2_sk",
+          "KeyType": "RANGE"
+        }
+      ],
+      "Projection": {
+        "ProjectionType": "ALL"
+      }
+    },
+    {
+      "IndexName": "gsi3-index",
+      "KeySchema": [
+        {
+          "AttributeName": "gsi3_pk",
+          "KeyType": "HASH"
+        },
+        {
+          "AttributeName": "gsi3_sk",
+          "KeyType": "RANGE"
+        }
+      ],
+      "Projection": {
+        "ProjectionType": "ALL"
+      }
+    },
+    {
+      "IndexName": "gsi4-index",
+      "KeySchema": [
+        {
+          "AttributeName": "gsi4_pk",
+          "KeyType": "HASH"
+        },
+        {
+          "AttributeName": "gsi4_sk",
+          "KeyType": "RANGE"
+        }
+      ],
+      "Projection": {
+        "ProjectionType": "ALL"
+      }
+    },
+    {
+      "IndexName": "gsi5-index",
+      "KeySchema": [
+        {
+          "AttributeName": "gsi5_pk",
+          "KeyType": "HASH"
+        },
+        {
+          "AttributeName": "gsi5_sk",
+          "KeyType": "RANGE"
+        }
+      ],
+      "Projection": {
+        "ProjectionType": "ALL"
+      }
+    },
+    {
+      "IndexName": "gsi6-index",
+      "KeySchema": [
+        {
+          "AttributeName": "gsi6_pk",
+          "KeyType": "HASH"
+        },
+        {
+          "AttributeName": "gsi6_sk",
           "KeyType": "RANGE"
         }
       ],

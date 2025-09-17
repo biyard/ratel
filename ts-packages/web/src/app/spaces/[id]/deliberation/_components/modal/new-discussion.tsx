@@ -184,7 +184,6 @@ export default function NewDiscussion({
                   reminderEnabled={reminderEnabled}
                   users={discussion.participants}
                   onadd={(discussion: DiscussionInfo) => {
-                    console.log('Hello!!');
                     onadd(discussion);
                     popup.close();
                   }}

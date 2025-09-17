@@ -1,7 +1,7 @@
 use bdk::prelude::*;
 
 use dto::{
-    FeedStatus, FeedType, GroupPermission, Post, RatelResource, Result, SpaceStatus, aide,
+    FeedStatus, FeedType, GroupPermission, Post, RatelResource, Result, Space, aide,
     by_axum::{
         auth::Authorization,
         axum::{
@@ -13,7 +13,13 @@ use dto::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::{security::check_perm, utils::users::extract_user};
+use crate::{
+    security::check_perm,
+    utils::{
+        space_visibility::{ViewerCtx, scope_space_opt_to_vec},
+        users::extract_user,
+    },
+};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, aide::OperationIo, JsonSchema)]
 pub struct ListPostsQueryParams {
@@ -71,7 +77,7 @@ pub async fn list_posts_handler(
         builder
     };
 
-    let posts: Vec<Post> = builder
+    let mut posts: Vec<Post> = builder
         .limit(size)
         .page(page)
         .feed_type_between(FeedType::Artwork, FeedType::Post)
@@ -81,23 +87,42 @@ pub async fn list_posts_handler(
         .fetch_all(&pool)
         .await?;
 
-    let posts = posts
-        .into_iter()
-        .map(|mut post| {
-            let space = post.space.get(0);
-            if let Some(space) = space {
-                // Check SpaceStatus::Draft and author is user or author is in user's teams
-                if space.status == SpaceStatus::Draft
-                    && space.author.get(0).is_some_and(|author| {
-                        author.id == user_id && teams.iter().any(|t| t.id == author.id)
-                    })
-                {
-                    post.space = vec![];
-                }
-            }
+    //FIXME: Currently, `Post::query_builder(user_id).space_builder(Space::query_builder()) ` does not work properly.
+    // So, we need to fetch Space separately.
+    // this bug should be fixed in the future.
+    // Same issue with `get_post_handler`
+    let viewer_ctx = ViewerCtx {
+        user_id,
+        team_ids: teams.iter().map(|t| t.id).collect(),
+    };
+    for post in &mut posts {
+        let space = Space::query_builder(user_id)
+            .feed_id_equals(post.id)
+            .query()
+            .map(Space::from)
+            .fetch_optional(&pool)
+            .await?;
 
-            post
-        })
-        .collect::<Vec<Post>>();
+        post.space = scope_space_opt_to_vec(space, &viewer_ctx);
+    }
+
+    // let posts = posts
+    //     .into_iter()
+    //     .map(|mut post| {
+    //         let space = post.space.get(0);
+    //         if let Some(space) = space {
+    //             // Check SpaceStatus::Draft and author is user or author is in user's teams
+    //             if space.status == SpaceStatus::Draft
+    //                 && space.author.get(0).is_some_and(|author| {
+    //                     author.id == user_id && teams.iter().any(|t| t.id == author.id)
+    //                 })
+    //             {
+    //                 post.space = vec![];
+    //             }
+    //         }
+
+    //         post
+    //     })
+    //     .collect::<Vec<Post>>();
     Ok(Json(posts))
 }

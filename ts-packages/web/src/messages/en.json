@@ -23,7 +23,16 @@
     "terms_of_service": "Terms of Service",
     "invalid_email_format": "Please enter a valid email address.",
     "unregistered_email": "This email is not registered.",
-    "invalid_password_format": "Password must contain letters, numbers, and special characters (min 8 chars)."
+    "invalid_password_format": "Password must contain letters, numbers, and special characters (min 8 chars).",
+
+    "GoogleLogin": {
+      "label": "Sign in with Google",
+      "loading_description": "Signing in with Google..."
+    },
+    "EmailLogin": {
+      "label": "Sign in with Email",
+      "loading_description": "Signing in with Email..."
+    }
   },
   "Signup": {
     "signing_in": "Signing you in...",
@@ -52,8 +61,56 @@
     "display_name_warning": "Please remove the test keyword from your display name.",
     "invalid_username_format": "Only numbers, lowercase letters, -, _ and more than one character can be entered.",
     "user_name_warning": "Please remove the test keyword from your username.",
-    "already_exists_user": "This username is already taken."
+    "already_exists_user": "This username is already taken.",
+
+    "sign_in": "Sign in",
+
+    "CommonError": {
+      "test_word": "Please remove the <b>test</b> keyword",
+      "required": "{fieldName} is required."
+    },
+    "Email": {
+      "label": "Email",
+      "placeholder": "Enter your email address",
+      "error": {
+        "invalid": "Please enter a valid email address.",
+        "unregistered": "This email is not registered."
+      },
+      "send_button_label": "Send"
+    },
+    "Code": {
+      "placeholder": "Enter the verification code",
+      "error": {
+        "invalid": "The verification code is incorrect or has expired."
+      },
+      "verify_button_label": "Verify"
+    },
+    "Username": {
+      "label": "User Name",
+      "placeholder": "Enter your user name"
+    },
+    "Nickname": {
+      "label": "Nick Name",
+      "placeholder": "Enter your nickname",
+      "error": {
+        "invalid": "Only numbers, lowercase letters, -, _ and more than one character can be entered."
+      }
+    },
+    "Password": {
+      "label": "Password",
+      "placeholder": "Enter your password",
+      "error": {
+        "required": "Password is required.",
+        "invalid": "Password must contain letters, numbers, and special characters (min 8 chars)."
+      }
+    },
+    "Term": {
+      "error": {
+        "required": "You must agree to the Terms of Service to proceed."
+      }
+    }
   },
+
   "Threads": {
     "edit": "Edit",
     "make_public": "Make Public",
@@ -220,9 +277,9 @@
     "make_public_desc_line2_strong": "cannot be made private again.",
     "cancel": "Cancel",
 
-    "make_public_save_title": "Save first, make public?",
+    "make_public_save_title": "Save first, make publish?",
     "unsaved_notice_line1": "Looks like you haven’t saved yet.",
-    "unsaved_notice_line2": "Want to save your changes before going public.",
+    "unsaved_notice_line2": "Want to save your changes before going publish.",
     "unsaved_notice_line3": "or skip it and publish anyway?",
     "just_publish": "Just Publish",
     "save_and_publish": "Save & Publish",
@@ -527,5 +584,65 @@
     "language": "Language",
     "select_language": "Select a language",
     "cancel": "Cancel"
+  },
+  "Subscribe": {
+    "subscribe_desc_1": "Premium products loved around the world",
+    "subscribe_desc_2": "Stay ahead with Ratel Premium.",
+    "subscribe_desc_3": "Start using it now.",
+    "subscribe_info": "Plans can be changed or cancelled at any time.",
+    "select": "Select",
+    "success_subscribe_info": "Success to subscribe ratel service",
+    "unsubscribe": "UnSubscribe"
+  },
+
+  "Connect": {
+    "title": "Connect to {service}",
+    "description": "Do you want to connect your {service} account to Ratel?",
+    "ConfirmButton": {
+      "label": "Connect",
+      "loading": "Connecting..."
+    },
+    "CancelButton": {
+      "label": "Cancel"
+    }
+  },
+
+  "SpaceHeader": {
+    "unsave_notice_modal": "Save your changes?",
+    "publish_modal_title": "Publish this space",
+    "make_public_modal_title": "You’re About to Go Public"
+  },
+
+  "SpaceUnsaveModal": {
+    "description": "Looks like you haven’t saved yet.<br></br>Want to save your changes before continuing,<br></br>or skip it and continue anyway?",
+    "button_skip": "Just Publish",
+    "button_save": "Save & Publish"
+  },
+
+  "SpacePublishModal": {
+    "description": "Once published, this Space will be visible to everyone and cannot be made private again.",
+    "public_publish_label": "Public Publish",
+    "public_publish_description": "Anyone can access and participate in this space.",
+    "private_publish_label": "Private Publish",
+    "private_publish_description": "Only your team members will be able to access this space.",
+
+    "button_publish": "Publish"
+  },
+
+  "SpaceMakePublicModal": {
+    "description": "Once made public,<br></br>this Space will be visible to everyone and<br></br><b>cannot be made private again.</b>",
+    "button_cancel": "Cancel",
+    "button_make_public": "Make Public"
+  },
+
+  "EditArtworkPost": {
+    "artwork_name": "Artwork Name",
+    "description": "Description",
+    "artist_name": "Artist Name",
+    "background_color": "Background Color",
+    "size": "Size",
+    "year": "Year",
+    "medium": "Medium",
+    "placeholder": "Enter {fieldName}"
   }
 }

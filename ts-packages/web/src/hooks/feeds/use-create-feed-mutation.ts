@@ -80,15 +80,15 @@ export async function createComment(
   });
 }
 
-export function useDraftMutations(targetId: number) {
+export function useDraftMutations(listId: number) {
   const queryClient = getQueryClient();
 
   const createMutation = useMutation({
-    mutationFn: (userId: number) => createDraft(userId),
+    mutationFn: (targetId: number) => createDraft(targetId),
     onSuccess: (newDraft) => {
       queryClient.setQueryData(feedKeys.detail(newDraft.id), newDraft);
       const listQueryKey = feedKeys.list({
-        userId: targetId,
+        userId: listId,
         status: FeedStatus.Draft,
       });
       queryClient.setQueriesData<InfiniteData<Feed[]>>(
@@ -103,7 +103,8 @@ export function useDraftMutations(targetId: number) {
     },
     onError: (error: Error) => {
       //FIXME: i18n
-      showErrorToast(error.message || 'Failed to create draft');
+      console.error('Create draft error:', error);
+      throw new Error(error.message || 'Failed to create draft');
     },
   });
 
@@ -111,15 +112,20 @@ export function useDraftMutations(targetId: number) {
     mutationFn: ({
       postId,
       req,
+      teamId = undefined,
     }: {
       postId: number;
       req: Partial<UpdatePostRequest>;
-    }) => updatePost(postId, req),
+      teamId?: number;
+    }) => {
+      req.team_id = teamId;
+      return updatePost(postId, req);
+    },
 
     onMutate: async ({ postId, req }) => {
       const detailQueryKey = feedKeys.detail(postId);
       const listQueryKey = feedKeys.list({
-        userId: targetId,
+        userId: listId,
         status: FeedStatus.Draft,
       });
 

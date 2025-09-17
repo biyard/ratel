@@ -1,16 +1,20 @@
-export interface TgWebParams {
-  command: TgWebCommand;
+/*
+#[derive(Serialize)]
+struct WebParams {
+    pub command: TelegramWebCommand,
 }
 
-export type TgWebCommand =
-  | {
-      Subscribe: {
-        chat_id: number;
-        lang?: string;
-      };
-    }
-  | {
-      SprintLeague: {
-        space_id: number;
-      };
-    };
+#[derive(Serialize)]
+pub enum TelegramWebCommand {
+    OpenSpacePage { space_id: i64 },
+}
+*/
+export interface TgWebParams {
+  command: TelegramWebCommand;
+}
+
+export type TelegramWebCommand = {
+  OpenSpacePage: {
+    space_id: number;
+  };
+};

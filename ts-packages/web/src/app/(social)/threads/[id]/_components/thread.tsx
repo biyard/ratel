@@ -13,7 +13,6 @@ export default function Thread({ postId }: { postId: number }) {
   const t = useTranslations('Threads');
 
   const { data: post } = useFeedById(postId);
-
   return (
     <div className="flex flex-col w-full gap-2.5">
       <DisableBorderCard>
@@ -55,9 +54,7 @@ function Artwork({ post }: { post: Feed }) {
         title={post.title || ''}
         content={post.html_contents || ''}
         image={post.url || ''}
-        artistName={artworkMetadata.artist_name}
-        backgroundColor={artworkMetadata.background_color}
-        size={artworkMetadata.size}
+        traits={artworkMetadata.traits || []}
       />
     </div>
   );

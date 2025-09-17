@@ -4,6 +4,7 @@ import { Space } from './models/spaces';
 import { config } from '@/config';
 import {
   QK_GET_FEED_BY_FEED_ID,
+  QK_GET_HOME_DATA,
   QK_GET_NETWORK,
   QK_GET_POSTS,
   QK_GET_POSTS_BY_USER_ID,
@@ -24,6 +25,7 @@ import { Promotion } from './models/promotion';
 import { User } from './models/user';
 import { QueryResponse } from './models/common';
 import { Team } from './models/team';
+import { HomeGatewayResponse } from './models/home';
 import { InfiniteData } from '@tanstack/react-query';
 
 async function getDataFromServer<T>(
@@ -189,12 +191,25 @@ export async function prefetchPostInfinite(pageSize: number) {
   };
 
   queryClient.setQueryData<InfiniteData<QueryResponse<Feed>>>(
-    [QK_GET_POSTS],
+    [QK_GET_POSTS, pageSize],
     infiniteData,
   );
 
   return {
-    key: [QK_GET_POSTS],
+    key: [QK_GET_POSTS, pageSize],
     data: infiniteData,
   };
+}
+
+export async function getHomeData(
+  feedLimit?: number,
+  newsLimit?: number,
+): Promise<{
+  key: (string | number)[];
+  data: HomeGatewayResponse | null;
+}> {
+  return getDataFromServer<HomeGatewayResponse>(
+    [QK_GET_HOME_DATA, feedLimit ?? '', newsLimit ?? ''],
+    ratelApi.home.getHomeData(feedLimit, newsLimit),
+  );
 }

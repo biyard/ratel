@@ -94,14 +94,12 @@ pub async fn create_conversation_handler(
         )
         .await?;
 
-
     let unique_ids: HashSet<i64> = req
         .participant_ids
         .into_iter()
         .filter(|&id| id != user_id)
         .collect();
     for participant_id in unique_ids {
-
         let user_exists = User::query_builder()
             .id_equals(participant_id)
             .query()

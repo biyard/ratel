@@ -1,9 +1,14 @@
+pub type Result<T> = dto::Result<T>;
+pub type Error = dto::Error;
+pub type Error2 = crate::error::Error;
+
+pub mod error;
 pub mod controllers {
-    pub mod m1;
     pub mod mcp;
     pub mod v1;
     pub mod v2 {
         pub mod users {
+            pub mod connect_telegram;
             pub mod find_user;
             pub mod logout;
         }
@@ -104,6 +109,25 @@ pub mod controllers {
         pub mod themes {
             pub mod change_theme;
         }
+
+        pub mod telegram {
+            pub mod get_telegram_info;
+            pub mod verify_telegram_raw;
+        }
+
+        pub mod binances {
+            pub mod binance_webhook;
+            pub mod create_subscription;
+            pub mod unsubscribe;
+        }
+    }
+    pub mod v3 {
+        pub mod users {
+            pub mod email_signup;
+            pub mod verify_email;
+            pub mod request_verification_code;
+            pub mod email_login;
+        }
     }
     pub mod m2 {
         pub mod noncelab {
@@ -111,17 +135,28 @@ pub mod controllers {
                 pub mod register_users;
             }
         }
+        pub mod migration {
+            pub mod postgres_to_dynamodb;
+        }
+        pub mod binances {
+            pub mod get_merchant_balance;
+        }
     }
     pub mod well_known {
         pub mod get_did_document;
+    }
+    pub mod wg {
+        pub mod get_home;
     }
 }
 
 pub mod api_main;
 pub mod config;
+pub mod etl;
 pub mod models;
 pub mod route;
 pub mod security;
+pub mod types;
 pub mod utils;
 
 pub use bdk::prelude::*;

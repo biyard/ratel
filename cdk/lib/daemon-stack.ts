@@ -17,14 +17,13 @@ export interface DaemonStackProps {
 
 export class DaemonStack {
   constructor(scope: RegionalServiceStack, props: DaemonStackProps) {
-    const { vpc, cluster, listener, taskExecutionRole } = props;
-    const healthPath = "/version";
+    const { cluster, taskExecutionRole } = props;
     const fetcherContainerName = "FetcherContainer";
     const fetcherRepoName = "ratel/fetcher";
 
     const taskDefinition = new ecs.TaskDefinition(
       scope,
-      "FetcherTasksDefinition",
+      "DaemonTaskDefinitionV2",
       {
         compatibility: ecs.Compatibility.FARGATE,
         cpu: "256",

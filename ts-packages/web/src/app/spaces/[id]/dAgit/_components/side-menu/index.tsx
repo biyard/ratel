@@ -5,7 +5,6 @@ import useDagitBySpaceId from '@/hooks/use-dagit';
 
 export default function SideMenu({ spaceId }: { spaceId: number }) {
   const { data: dagit } = useDagitBySpaceId(spaceId);
-  console.log('dagit', dagit);
   const items = [];
   items.push({
     label: 'Created',

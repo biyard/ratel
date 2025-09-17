@@ -23,6 +23,7 @@ export interface User {
   badges: Badge[];
 
   theme?: ThemeType;
+  membership: MembershipType;
 
   html_contents: string;
 
@@ -48,6 +49,14 @@ export enum ThemeType {
   Light = 1,
   Dark = 2,
   SystemDefault = 3,
+}
+
+export enum MembershipType {
+  Free = 1,
+  Paid1 = 2,
+  Paid2 = 3,
+  Paid3 = 4,
+  Admin = 99,
 }
 
 export interface Badge {

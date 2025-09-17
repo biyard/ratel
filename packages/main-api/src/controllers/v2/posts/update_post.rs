@@ -43,14 +43,14 @@ pub async fn update_post_handler(
     /*
     Permission Check
 
-    When team_id is provided, check if the user has permission to edit posts in that team.
+    When team_id is provided, checking user has permission to edit posts in that team.
      */
     let (user, authorize_user_id) = if let Some(team_id) = req.team_id {
         let user = check_perm(
             &pool,
             auth,
             RatelResource::Post { team_id: team_id },
-            GroupPermission::WritePendingPosts,
+            GroupPermission::WritePosts,
         )
         .await?;
         (user, team_id)
@@ -59,7 +59,6 @@ pub async fn update_post_handler(
         let user_id = user.id;
         (user, user_id)
     };
-
     let post = Post::query_builder(user.id)
         .id_equals(params.id)
         .query()

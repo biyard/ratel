@@ -75,3 +75,45 @@ export function toContentType(fileType: FileType): string {
       return '';
   }
 }
+
+export function parseFileType(mime: string): FileType {
+  switch (mime) {
+    case 'image/png':
+      return FileType.PNG;
+    case 'image/jpeg':
+      return FileType.JPG;
+    case 'image/gif':
+      return FileType.GIF;
+    case 'image/webp':
+      return FileType.WEBM;
+    case 'image/svg+xml':
+      return FileType.SVG;
+    case 'application/postscript':
+      return FileType.AI;
+    case 'application/pdf':
+      return FileType.PDF;
+    case 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
+      return FileType.XLSX;
+    case 'model/gltf-binary':
+      return FileType.GLB;
+    case 'model/gltf+json':
+      return FileType.GLTF;
+    case 'audio/mpeg':
+      return FileType.MP3;
+    case 'audio/wav':
+      return FileType.WAV;
+    case 'video/mp4':
+      return FileType.MP4;
+    case 'video/mov':
+      return FileType.MOV;
+    case 'application/vnd.openxmlformats-officedocument.presentationml.presentation':
+      return FileType.PPTX;
+    default:
+      return FileType.None;
+  }
+}
+
+export const dataUrlToBlob = async (dataUrl: string): Promise<Blob> => {
+  const res = await fetch(dataUrl);
+  return await res.blob();
+};

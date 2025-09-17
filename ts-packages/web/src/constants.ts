@@ -45,6 +45,8 @@ export const QK_GET_DAGIT = 'get-dagit';
 export const QK_GET_ARTWORK = 'get-artwork';
 export const QK_GET_ARTWORK_CERTIFICATE = 'get-artwork-certificate';
 
+export const QK_GET_HOME_DATA = 'get-home-data';
+
 function sortObjectKeys<T extends object>(obj: T): T {
   const sortedKeys = Object.keys(obj).sort() as Array<keyof T>;
   return sortedKeys.reduce((result, key) => {
