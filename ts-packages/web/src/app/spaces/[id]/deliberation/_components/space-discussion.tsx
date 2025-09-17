@@ -99,7 +99,6 @@ function DiscussionSchedules() {
 
 export function DiscussionRoom({
   userId,
-  status,
   startDate,
   endDate,
   title,
@@ -175,7 +174,7 @@ export function DiscussionRoom({
           </div>
         </div>
 
-        {isLive && status == SpaceStatus.InProgress && isMember && (
+        {isLive && isMember && (
           <div className="flex flex-row w-full justify-end">
             <JoinButton
               onClick={() => {

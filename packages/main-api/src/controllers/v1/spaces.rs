@@ -66,6 +66,8 @@ impl SpaceController {
             .fetch_one(&self.pool)
             .await?;
 
+        tracing::debug!("query space: {:?}", space);
+
         // Access control for notice spaces
         if space.space_type == SpaceType::Notice {
             let is_owner = user_id == space.owner_id;
