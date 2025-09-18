@@ -10,7 +10,7 @@ use dto::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::security::check_perm;
+use crate::security::check_perm_without_error;
 
 #[derive(
     Debug,
@@ -42,7 +42,13 @@ pub async fn has_team_permission_handler(
         permission,
     }): Query<HasPostPermissionQuery>,
 ) -> Result<Json<HasPostPermissionResponse>> {
-    let has_permission = check_perm(
+    if team_id.is_none() || team_id.unwrap() == 0 {
+        return Ok(Json(HasPostPermissionResponse {
+            has_permission: false,
+        }));
+    }
+
+    match check_perm_without_error(
         &pool,
         auth,
         RatelResource::Team {
@@ -51,6 +57,12 @@ pub async fn has_team_permission_handler(
         permission.unwrap_or_default(),
     )
     .await
-    .is_ok();
-    Ok(Json(HasPostPermissionResponse { has_permission }))
+    {
+        Ok(_) => Ok(Json(HasPostPermissionResponse {
+            has_permission: true,
+        })),
+        Err(_) => Ok(Json(HasPostPermissionResponse {
+            has_permission: false,
+        })),
+    }
 }
