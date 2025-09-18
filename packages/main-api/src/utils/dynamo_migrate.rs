@@ -40,7 +40,7 @@ impl DynamoTable {
 }
 
 pub async fn create_dynamo_tables(tables: Vec<DynamoTable>) -> Result<()> {
-    let client = DynamoClient::new("dummy"); // We'll use the raw client
+    let client = DynamoClient::new(); // We'll use the raw client
 
     for table in tables {
         create_table(&client, &table).await?;
@@ -205,7 +205,6 @@ async fn create_table(dynamo_client: &DynamoClient, table_config: &DynamoTable) 
     tracing::info!("Successfully created table: {}", table_config.name);
     Ok(())
 }
-
 
 pub fn get_user_tables() -> Vec<DynamoTable> {
     vec![DynamoTable::new("users", "PK", Some("SK")).with_gsi("GSI1", "GSI1_PK", Some("GSI1_SK"))]
