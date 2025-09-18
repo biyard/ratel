@@ -97,12 +97,12 @@ use crate::{
                 logout::logout_handler,
             },
         },
-        v3::auth::email_login::email_login_handler,
+        v3::auth::login::login_handler,
         well_known::get_did_document::get_did_document_handler,
         wg::get_home::get_home_handler,
     },
     utils::{
-        aws::{BedrockClient, DynamoClient, RekognitionClient, S3Client, TextractClient, dynamo},
+        aws::{BedrockClient, DynamoClient, RekognitionClient, S3Client, TextractClient},
         sqs_client::SqsClient,
         telegram::TelegramBot,
     },
@@ -706,7 +706,7 @@ pub async fn route(deps: RouteDeps) -> Result<by_axum::axum::Router> {
                     axum::Router::new().route(
                         "/login",
                         post_with(
-                            email_login_handler,
+                            login_handler,
                             api_docs!("User Login", "Login user with email and password"),
                         ),
                     ),

@@ -127,8 +127,7 @@ pub mod controllers {
         // }
 
         pub mod auth {
-            pub mod email_login;
-            pub mod signup;
+            pub mod login;
             // pub mod verification {
             //     pub mod send_code;
             //     pub mod verify_code;
