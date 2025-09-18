@@ -18,10 +18,10 @@ pub async fn list_news_handler(
     State(pool): State<PgPool>,
     Query(ListNewsQuery { limit }): Query<ListNewsQuery>,
 ) -> Result<Json<Vec<NewsSummary>>> {
-    let limit = limit.unwrap_or(3).clamp(1, 100);
+    let limit = limit.unwrap_or(3).clamp(1, 100) as i32;
 
     let items: Vec<NewsSummary> = NewsSummary::query_builder()
-        .limit(limit as i64)
+        .limit(limit)
         .order_by_created_at_desc()
         .query()
         .map(NewsSummary::from)
