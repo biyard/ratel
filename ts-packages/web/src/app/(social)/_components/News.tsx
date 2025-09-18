@@ -2,7 +2,7 @@
 import { LoadingIndicator } from '@/app/loading';
 import { Col } from '@/components/ui/col';
 import { ratelApi } from '@/lib/api/ratel_api';
-import { useSuspenseQuery } from '@apollo/client';
+import { useSuspenseQuery } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
 import {
   ErrorBoundary,
@@ -11,6 +11,7 @@ import {
 import { useRouter } from 'next/navigation';
 import React, { Suspense } from 'react';
 import DisableBorderCard from './disable-border-card';
+import { useApiCall } from '@/lib/api/use-send';
 
 export interface NewsItem {
   id: number;
@@ -35,11 +36,15 @@ export default function Wrapper() {
 function News() {
   const t = useTranslations('Home');
   const router = useRouter();
-  const q = ratelApi.graphql.listNews(3);
-  const {
-    data: { news },
-  }: { data: { news: NewsItem[] } } = useSuspenseQuery(q.query, {
-    variables: q.variables,
+  const { get } = useApiCall();
+
+  const { data: news } = useSuspenseQuery<NewsItem[]>({
+    queryKey: ['news', 3],
+    queryFn: async () => {
+      // Backend returns Vec<NewsSummary>; useApiCall.get returns parsed JSON.
+      return (await get(ratelApi.news.list(3))) as NewsItem[];
+    },
+    refetchOnWindowFocus: false,
   });
 
   const handleNewsNavigation = (id: number) => {

@@ -7,6 +7,9 @@ pub mod controllers {
     pub mod mcp;
     pub mod v1;
     pub mod v2 {
+        pub mod news {
+            pub mod list_news;
+        }
         pub mod users {
             pub mod connect_telegram;
             pub mod find_user;

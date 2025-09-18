@@ -27,6 +27,7 @@ use crate::{
             },
         },
         v2::{
+            news::list_news::list_news_handler,
             binances::{
                 binance_webhook::binance_webhook_handler,
                 create_subscription::create_subscription_handler, unsubscribe::unsubscribe_handler,
@@ -357,6 +358,17 @@ pub async fn route(
             get_with(
                 list_industries_handler,
                 api_docs!("List Industries", "List industry types"),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/v2/news",
+            get_with(
+                list_news_handler,
+                api_docs!(
+                    "List News",
+                    "List latest news ordered by created_at descending; supports optional limit query param"
+                ),
             )
             .with_state(pool.clone()),
         )

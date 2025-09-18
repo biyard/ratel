@@ -227,6 +227,10 @@ export const ratelApi = {
   },
   news: {
     getNewsDetails: (news_id: number) => `/v1/news/${news_id}`,
+    list: (limit: number) => `/v2/news?limit=${limit}`,
+  },
+  industries: {
+    list: () => `/v2/industries`,
   },
   themes: {
     changeTheme: () => '/v2/themes',
