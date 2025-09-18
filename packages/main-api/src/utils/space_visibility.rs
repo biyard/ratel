@@ -1,4 +1,4 @@
-use dto::{Space, SpaceStatus};
+use dto::{PublishingScope, Space, SpaceStatus};
 
 #[derive(Debug, Clone)]
 pub struct ViewerCtx {
@@ -20,7 +20,7 @@ pub fn scope_space_for_viewer(space: Space, ctx: &ViewerCtx) -> Option<Space> {
         .iter()
         .any(|a| ctx.team_ids.iter().any(|&tid| tid == a.id));
 
-    if space.status == SpaceStatus::Draft {
+    if space.status == SpaceStatus::Draft || space.publishing_scope == PublishingScope::Private {
         return if !is_anonymous && (is_author || is_team_author) {
             Some(space)
         } else {
