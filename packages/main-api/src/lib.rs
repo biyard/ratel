@@ -52,6 +52,10 @@ pub mod controllers {
             pub mod get_my_space;
         }
 
+        pub mod permissions {
+            pub mod has_team_permission;
+        }
+
         pub mod dagits {
             pub mod add_oracle;
             pub mod get_dagit;
@@ -126,10 +130,10 @@ pub mod controllers {
     }
     pub mod v3 {
         pub mod users {
-            pub mod email_signup;
-            pub mod verify_email;
-            pub mod request_verification_code;
             pub mod email_login;
+            pub mod email_signup;
+            pub mod request_verification_code;
+            pub mod verify_email;
         }
     }
     pub mod m2 {
