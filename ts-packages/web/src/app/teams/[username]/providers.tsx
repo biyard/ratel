@@ -1,11 +1,16 @@
 import { ReactNode } from 'react';
 import { initData } from '@/providers/getQueryClient';
-import { getTeamByUsername, getUserInfo } from '@/lib/api/ratel_api.server';
+import {
+  getPermission,
+  getTeamByUsername,
+  getUserInfo,
+} from '@/lib/api/ratel_api.server';
 import { getServerQueryClient } from '@/lib/query-utils.server';
 import { client } from '@/lib/apollo';
 import { ratelApi } from '@/lib/api/ratel_api';
 import ClientProviders from './providers.client';
 import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
+import { GroupPermission } from '@/lib/api/models/group';
 
 export default async function Provider({
   children,
@@ -29,9 +34,30 @@ export default async function Provider({
   const team = await getTeamByUsername(username);
   const user = await getUserInfo();
 
+  const invitePermission = await getPermission(
+    team.data?.id ?? 0,
+    GroupPermission.InviteMember,
+  );
+
+  const writePostPermission = await getPermission(
+    team.data?.id ?? 0,
+    GroupPermission.WritePosts,
+  );
+
+  const updateGroupPermission = await getPermission(
+    team.data?.id ?? 0,
+    GroupPermission.UpdateGroup,
+  );
+
   try {
     // Initialize the query client with the space data
-    initData(queryClient, [team, user]);
+    initData(queryClient, [
+      team,
+      user,
+      invitePermission,
+      writePostPermission,
+      updateGroupPermission,
+    ]);
   } catch (error) {
     console.error('Failed to fetch data', error);
     throw error;

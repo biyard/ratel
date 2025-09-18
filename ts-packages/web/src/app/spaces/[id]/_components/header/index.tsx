@@ -31,6 +31,8 @@ import { useTranslations } from 'next-intl';
 import PublishForm from '../../notice/_components/modal/publish-form';
 import { PublishingScope } from '@/lib/api/models/notice';
 import GoPublicModal from '../../notice/_components/modal/go-public-modal';
+import { GroupPermission } from '@/lib/api/models/group';
+import { usePermission } from '@/app/(social)/_hooks/use-permission';
 
 export default function SpaceHeader({
   space,
@@ -120,6 +122,11 @@ export default function SpaceHeader({
   const rewards = feed.rewards;
   const { isOpen, toggle, close, dropdownRef } = useDropdown();
 
+  const writePostPermission = usePermission(
+    space.author[0]?.id ?? 0,
+    GroupPermission.WritePosts,
+  ).data.has_permission;
+
   return (
     <div className="flex flex-col w-full gap-2.5 mb-10">
       <div className="flex flex-row justify-between items-center w-full">
@@ -133,7 +140,7 @@ export default function SpaceHeader({
           )}
         </div>
 
-        {(authorId === userId || selectedTeam) && (
+        {(authorId === userId || selectedTeam) && writePostPermission && (
           <div className="flex flex-row items-center gap-2 text-sm text-white">
             {isEdit ? (
               <button
@@ -186,86 +193,95 @@ export default function SpaceHeader({
                 </button>
               )}
 
-            <div className="relative" ref={dropdownRef}>
-              <button
-                onClick={toggle}
-                aria-expanded={isOpen}
-                aria-label="Space options menu"
-                aria-haspopup="menu"
-                className="w-fit p-2 rounded-md bg-neutral-800 light:bg-transparent"
-                onKeyDown={(e) => {
-                  // if (
-                  //   e.key === 'Enter' ||
-                  //   e.key === ' ' ||
-                  //   e.key === 'ArrowDown'
-                  // ) {
-                  //   e.preventDefault();
-                  //   toggle();
-                  //   if (!isOpen) {
-                  //     setTimeout(() => {
-                  //       const firstMenuItem =
-                  //         dropdownRef.current?.querySelector(
-                  //           '[role="menuitem"]:not([aria-disabled="true"])',
-                  //         );
-                  //       (firstMenuItem as HTMLElement)?.focus();
-                  //     }, 0);
-                  //   }
-                  // }
+            {writePostPermission ? (
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={toggle}
+                  aria-expanded={isOpen}
+                  aria-label="Space options menu"
+                  aria-haspopup="menu"
+                  className="w-fit p-2 rounded-md bg-neutral-800 light:bg-transparent"
+                  onKeyDown={(e) => {
+                    // if (
+                    //   e.key === 'Enter' ||
+                    //   e.key === ' ' ||
+                    //   e.key === 'ArrowDown'
+                    // ) {
+                    //   e.preventDefault();
+                    //   toggle();
+                    //   if (!isOpen) {
+                    //     setTimeout(() => {
+                    //       const firstMenuItem =
+                    //         dropdownRef.current?.querySelector(
+                    //           '[role="menuitem"]:not([aria-disabled="true"])',
+                    //         );
+                    //       (firstMenuItem as HTMLElement)?.focus();
+                    //     }, 0);
+                    //   }
+                    // }
 
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    if (!isOpen) {
-                      toggle(); // open
-                      setTimeout(() => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      if (!isOpen) {
+                        toggle(); // open
+                        setTimeout(() => {
+                          const firstMenuItem =
+                            dropdownRef.current?.querySelector(
+                              '[role="menuitem"]:not([aria-disabled="true"])',
+                            );
+                          (firstMenuItem as HTMLElement)?.focus();
+                        }, 0);
+                      } else {
+                        // move focus into menu if already open
                         const firstMenuItem =
                           dropdownRef.current?.querySelector(
                             '[role="menuitem"]:not([aria-disabled="true"])',
                           );
                         (firstMenuItem as HTMLElement)?.focus();
-                      }, 0);
-                    } else {
-                      // move focus into menu if already open
-                      const firstMenuItem = dropdownRef.current?.querySelector(
-                        '[role="menuitem"]:not([aria-disabled="true"])',
-                      );
-                      (firstMenuItem as HTMLElement)?.focus();
-                    }
-                  } else if (e.key === 'ArrowDown') {
-                    e.preventDefault();
-                    if (!isOpen) {
-                      toggle(); // open
-                      setTimeout(() => {
+                      }
+                    } else if (e.key === 'ArrowDown') {
+                      e.preventDefault();
+                      if (!isOpen) {
+                        toggle(); // open
+                        setTimeout(() => {
+                          const firstMenuItem =
+                            dropdownRef.current?.querySelector(
+                              '[role="menuitem"]:not([aria-disabled="true"])',
+                            );
+                          (firstMenuItem as HTMLElement)?.focus();
+                        }, 0);
+                      } else {
                         const firstMenuItem =
                           dropdownRef.current?.querySelector(
                             '[role="menuitem"]:not([aria-disabled="true"])',
                           );
                         (firstMenuItem as HTMLElement)?.focus();
-                      }, 0);
-                    } else {
-                      const firstMenuItem = dropdownRef.current?.querySelector(
-                        '[role="menuitem"]:not([aria-disabled="true"])',
-                      );
-                      (firstMenuItem as HTMLElement)?.focus();
-                    }
-                  }
-                }}
-              >
-                <Extra />
-              </button>
-              {isOpen && (
-                <div
-                  role="menu"
-                  className="absolute top-full mt-2 right-0 z-50"
-                  onBlur={(e) => {
-                    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-                      close();
+                      }
                     }
                   }}
                 >
-                  <DropdownMenu onclose={close} ondelete={handleDeleteClick} />
-                </div>
-              )}
-            </div>
+                  <Extra />
+                </button>
+                {isOpen && (
+                  <div
+                    role="menu"
+                    className="absolute top-full mt-2 right-0 z-50"
+                    onBlur={(e) => {
+                      if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                        close();
+                      }
+                    }}
+                  >
+                    <DropdownMenu
+                      onclose={close}
+                      ondelete={handleDeleteClick}
+                    />
+                  </div>
+                )}
+              </div>
+            ) : (
+              <></>
+            )}
           </div>
         )}
       </div>
