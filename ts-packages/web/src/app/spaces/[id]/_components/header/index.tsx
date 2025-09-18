@@ -31,6 +31,10 @@ import { useTranslations } from 'next-intl';
 import PublishForm from '../../notice/_components/modal/publish-form';
 import { PublishingScope } from '@/lib/api/models/notice';
 import GoPublicModal from '../../notice/_components/modal/go-public-modal';
+import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
+import { useTeamByUsername } from '@/app/teams/_hooks/use-team';
+import checkGroupPermission from '@/lib/group/check-group-permission';
+import { GroupPermission } from '@/lib/group/group-permission';
 
 export default function SpaceHeader({
   space,
@@ -120,6 +124,9 @@ export default function SpaceHeader({
   const rewards = feed.rewards;
   const { isOpen, toggle, close, dropdownRef } = useDropdown();
 
+  const { data: user } = useSuspenseUserInfo();
+  const { data: team } = useTeamByUsername(space.author[0].username);
+
   return (
     <div className="flex flex-col w-full gap-2.5 mb-10">
       <div className="flex flex-row justify-between items-center w-full">
@@ -133,141 +140,163 @@ export default function SpaceHeader({
           )}
         </div>
 
-        {(authorId === userId || selectedTeam) && (
-          <div className="flex flex-row items-center gap-2 text-sm text-white">
-            {isEdit ? (
-              <button
-                className="flex flex-row w-fit px-3.5 py-2 rounded-md bg-white light:border-[#e5e5e5] gap-1"
-                onClick={handleSave}
-              >
-                <Save className="stroke-neutral-600 [&>path]:stroke-2 w-5 h-5" />
-                <div className="font-bold text-zinc-900 text-sm">
-                  {t('save')}
-                </div>
-              </button>
-            ) : (
-              <button
-                className="flex flex-row w-fit px-3.5 py-2 rounded-md bg-white light:border-[#e5e5e5] gap-1"
-                onClick={handleEdit}
-              >
-                <Edit1 className="stroke-neutral-600 [&>path]:stroke-2 w-5 h-5" />
-                <div className="font-bold text-zinc-900 text-sm">
-                  {t('edit')}
-                </div>
-              </button>
-            )}
+        {(authorId === userId || selectedTeam) &&
+          checkGroupPermission(
+            user,
+            space.author[0].id,
+            GroupPermission.WritePosts,
+            team.user_type == UserType.Team ? team.parent_id : null,
+          ) && (
+            <div className="flex flex-row items-center gap-2 text-sm text-white">
+              {isEdit ? (
+                <button
+                  className="flex flex-row w-fit px-3.5 py-2 rounded-md bg-white light:border-[#e5e5e5] gap-1"
+                  onClick={handleSave}
+                >
+                  <Save className="stroke-neutral-600 [&>path]:stroke-2 w-5 h-5" />
+                  <div className="font-bold text-zinc-900 text-sm">
+                    {t('save')}
+                  </div>
+                </button>
+              ) : (
+                <button
+                  className="flex flex-row w-fit px-3.5 py-2 rounded-md bg-white light:border-[#e5e5e5] gap-1"
+                  onClick={handleEdit}
+                >
+                  <Edit1 className="stroke-neutral-600 [&>path]:stroke-2 w-5 h-5" />
+                  <div className="font-bold text-zinc-900 text-sm">
+                    {t('edit')}
+                  </div>
+                </button>
+              )}
 
-            {!isEdit && status === SpaceStatus.Draft && (
-              <button
-                className="flex flex-row w-fit px-3.5 py-2 rounded-md bg-white gap-1"
-                onClick={async () => {
-                  await handlePost();
-                }}
-              >
-                <ArrowUp className="stroke-neutral-500 [&>path]:stroke-2 w-5 h-5" />
-                <div className="font-bold text-zinc-900 text-sm">
-                  {t('publish')}
-                </div>
-              </button>
-            )}
-            {!isEdit &&
-              status !== SpaceStatus.Draft &&
-              isPrivatelyPublished && (
+              {!isEdit && status === SpaceStatus.Draft && (
                 <button
                   className="flex flex-row w-fit px-3.5 py-2 rounded-md bg-white gap-1"
                   onClick={async () => {
                     await handlePost();
                   }}
                 >
-                  <Internet className="stroke-neutral-500 [&>path]:stroke-2 w-5 h-5" />
+                  <ArrowUp className="stroke-neutral-500 [&>path]:stroke-2 w-5 h-5" />
                   <div className="font-bold text-zinc-900 text-sm">
-                    {t('go_public')}
+                    {t('publish')}
                   </div>
                 </button>
               )}
+              {!isEdit &&
+                status !== SpaceStatus.Draft &&
+                isPrivatelyPublished && (
+                  <button
+                    className="flex flex-row w-fit px-3.5 py-2 rounded-md bg-white gap-1"
+                    onClick={async () => {
+                      await handlePost();
+                    }}
+                  >
+                    <Internet className="stroke-neutral-500 [&>path]:stroke-2 w-5 h-5" />
+                    <div className="font-bold text-zinc-900 text-sm">
+                      {t('go_public')}
+                    </div>
+                  </button>
+                )}
 
-            <div className="relative" ref={dropdownRef}>
-              <button
-                onClick={toggle}
-                aria-expanded={isOpen}
-                aria-label="Space options menu"
-                aria-haspopup="menu"
-                className="w-fit p-2 rounded-md bg-neutral-800 light:bg-transparent"
-                onKeyDown={(e) => {
-                  // if (
-                  //   e.key === 'Enter' ||
-                  //   e.key === ' ' ||
-                  //   e.key === 'ArrowDown'
-                  // ) {
-                  //   e.preventDefault();
-                  //   toggle();
-                  //   if (!isOpen) {
-                  //     setTimeout(() => {
-                  //       const firstMenuItem =
-                  //         dropdownRef.current?.querySelector(
-                  //           '[role="menuitem"]:not([aria-disabled="true"])',
-                  //         );
-                  //       (firstMenuItem as HTMLElement)?.focus();
-                  //     }, 0);
-                  //   }
-                  // }
+              {checkGroupPermission(
+                user,
+                space.author[0].id,
+                GroupPermission.WritePosts,
+                team.user_type == UserType.Team ? team.parent_id : null,
+              ) ? (
+                <div className="relative" ref={dropdownRef}>
+                  <button
+                    onClick={toggle}
+                    aria-expanded={isOpen}
+                    aria-label="Space options menu"
+                    aria-haspopup="menu"
+                    className="w-fit p-2 rounded-md bg-neutral-800 light:bg-transparent"
+                    onKeyDown={(e) => {
+                      // if (
+                      //   e.key === 'Enter' ||
+                      //   e.key === ' ' ||
+                      //   e.key === 'ArrowDown'
+                      // ) {
+                      //   e.preventDefault();
+                      //   toggle();
+                      //   if (!isOpen) {
+                      //     setTimeout(() => {
+                      //       const firstMenuItem =
+                      //         dropdownRef.current?.querySelector(
+                      //           '[role="menuitem"]:not([aria-disabled="true"])',
+                      //         );
+                      //       (firstMenuItem as HTMLElement)?.focus();
+                      //     }, 0);
+                      //   }
+                      // }
 
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    if (!isOpen) {
-                      toggle(); // open
-                      setTimeout(() => {
-                        const firstMenuItem =
-                          dropdownRef.current?.querySelector(
-                            '[role="menuitem"]:not([aria-disabled="true"])',
-                          );
-                        (firstMenuItem as HTMLElement)?.focus();
-                      }, 0);
-                    } else {
-                      // move focus into menu if already open
-                      const firstMenuItem = dropdownRef.current?.querySelector(
-                        '[role="menuitem"]:not([aria-disabled="true"])',
-                      );
-                      (firstMenuItem as HTMLElement)?.focus();
-                    }
-                  } else if (e.key === 'ArrowDown') {
-                    e.preventDefault();
-                    if (!isOpen) {
-                      toggle(); // open
-                      setTimeout(() => {
-                        const firstMenuItem =
-                          dropdownRef.current?.querySelector(
-                            '[role="menuitem"]:not([aria-disabled="true"])',
-                          );
-                        (firstMenuItem as HTMLElement)?.focus();
-                      }, 0);
-                    } else {
-                      const firstMenuItem = dropdownRef.current?.querySelector(
-                        '[role="menuitem"]:not([aria-disabled="true"])',
-                      );
-                      (firstMenuItem as HTMLElement)?.focus();
-                    }
-                  }
-                }}
-              >
-                <Extra />
-              </button>
-              {isOpen && (
-                <div
-                  role="menu"
-                  className="absolute top-full mt-2 right-0 z-50"
-                  onBlur={(e) => {
-                    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-                      close();
-                    }
-                  }}
-                >
-                  <DropdownMenu onclose={close} ondelete={handleDeleteClick} />
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        if (!isOpen) {
+                          toggle(); // open
+                          setTimeout(() => {
+                            const firstMenuItem =
+                              dropdownRef.current?.querySelector(
+                                '[role="menuitem"]:not([aria-disabled="true"])',
+                              );
+                            (firstMenuItem as HTMLElement)?.focus();
+                          }, 0);
+                        } else {
+                          // move focus into menu if already open
+                          const firstMenuItem =
+                            dropdownRef.current?.querySelector(
+                              '[role="menuitem"]:not([aria-disabled="true"])',
+                            );
+                          (firstMenuItem as HTMLElement)?.focus();
+                        }
+                      } else if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        if (!isOpen) {
+                          toggle(); // open
+                          setTimeout(() => {
+                            const firstMenuItem =
+                              dropdownRef.current?.querySelector(
+                                '[role="menuitem"]:not([aria-disabled="true"])',
+                              );
+                            (firstMenuItem as HTMLElement)?.focus();
+                          }, 0);
+                        } else {
+                          const firstMenuItem =
+                            dropdownRef.current?.querySelector(
+                              '[role="menuitem"]:not([aria-disabled="true"])',
+                            );
+                          (firstMenuItem as HTMLElement)?.focus();
+                        }
+                      }
+                    }}
+                  >
+                    <Extra />
+                  </button>
+                  {isOpen && (
+                    <div
+                      role="menu"
+                      className="absolute top-full mt-2 right-0 z-50"
+                      onBlur={(e) => {
+                        if (
+                          !e.currentTarget.contains(e.relatedTarget as Node)
+                        ) {
+                          close();
+                        }
+                      }}
+                    >
+                      <DropdownMenu
+                        onclose={close}
+                        ondelete={handleDeleteClick}
+                      />
+                    </div>
+                  )}
                 </div>
+              ) : (
+                <></>
               )}
             </div>
-          </div>
-        )}
+          )}
       </div>
 
       <div className="flex flex-row w-full justify-between items-center">

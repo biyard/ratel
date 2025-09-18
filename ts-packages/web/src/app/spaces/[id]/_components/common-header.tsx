@@ -13,7 +13,6 @@ import useSpaceById, {
 } from '@/hooks/use-space-by-id';
 import { TeamContext } from '@/lib/contexts/team-context';
 import { useContext } from 'react';
-import { useUserInfo } from '@/app/(social)/_hooks/user';
 import { SpaceStatus } from '@/lib/api/models/spaces';
 import { PublishingScope } from '@/lib/api/models/notice';
 import useFeedById from '@/hooks/feeds/use-feed-by-id';
@@ -34,18 +33,25 @@ import {
 } from '@/components/post-header/buttons';
 import { useEditCoordinatorStore } from '../space-store';
 import { useTranslations } from 'next-intl';
+import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
+import { useTeamByUsername } from '@/app/teams/_hooks/use-team';
+import checkGroupPermission from '@/lib/group/check-group-permission';
+import { GroupPermission } from '@/lib/group/group-permission';
+import { UserType } from '@/lib/api/models/user';
 
 function SpaceModifySection({
   spaceId,
   isDraft,
   isPublic,
   authorId,
+  authorName,
   onEdit,
 }: {
   spaceId: number;
   isDraft: boolean;
   isPublic: boolean;
   authorId: number;
+  authorName: string;
   onEdit: () => void;
 }) {
   const router = useRouter();
@@ -59,9 +65,17 @@ function SpaceModifySection({
     spacePublishValidator,
   } = useEditCoordinatorStore();
   const { selectedTeam } = useContext(TeamContext);
-  const { data: userInfo } = useUserInfo();
+  const { data: userInfo } = useSuspenseUserInfo();
+  const { data: team } = useTeamByUsername(authorName);
+
   const hasEditPermission =
-    authorId === userInfo?.id || selectedTeam?.id === authorId;
+    (authorId === userInfo?.id || selectedTeam?.id === authorId) &&
+    checkGroupPermission(
+      userInfo,
+      authorId,
+      GroupPermission.WritePosts,
+      team.user_type == UserType.Team ? team.parent_id : null,
+    );
 
   const publishSpace = usePublishSpace(spaceId);
   const makeSpacePublic = useMakePublicSpace(spaceId);
@@ -188,6 +202,7 @@ export default function Header() {
             isDraft={isDraft}
             isPublic={isPublic}
             authorId={space.author[0]?.id}
+            authorName={space.author[0]?.username}
             spaceId={spaceId}
             onEdit={handleStartEdit}
           />

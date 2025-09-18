@@ -99,6 +99,20 @@ export default function ClientProviders({
   const queryClient = useQueryClient();
   const { spaceId } = useSpaceByIdContext();
   const { data: space, refetch } = useSpaceById(spaceId);
+  // const { data: user } = useSuspenseUserInfo();
+
+  // const { data: team } = useTeamByUsername(space.author[0].username);
+
+  // console.log(
+  //   'user groups: ',
+  //   user.groups,
+  //   checkGroupPermission(
+  //     user,
+  //     space.author[0].id,
+  //     GroupPermission.ReadPosts,
+  //     team.user_type == UserType.Team ? team.parent_id : null,
+  //   ),
+  // );
 
   const [selectedType, setSelectedType] = useState<DeliberationTabType>(
     DeliberationTab.SUMMARY,
@@ -121,6 +135,8 @@ export default function ClientProviders({
           space.publishing_scope === PublishingScope.Private,
       );
     }
+
+    console.log('deliberation space: ', space);
   }, [space]);
 
   useEffect(() => {
