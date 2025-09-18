@@ -162,7 +162,7 @@ export function CreateRePost() {
 
         {/* Quoted Content Section */}
         {(feedcontent || feedImageUrl) && (
-          <div className="px-4 pt-2 pb-3 bg-neutral-800 rounded-md mx-4 my-4">
+          <div className="px-4 pt-2 pb-3 bg-write-comment-box-bg rounded-md mx-4 my-4">
             <div className="flex items-center gap-3 relative">
               <div className="size-6 rounded-full">
                 <Image
@@ -183,7 +183,7 @@ export function CreateRePost() {
 
             {feedcontent && (
               <div
-                className="prose prose-invert text-sm p-3 bg-neutral-800 text-neutral-300 mb-3 font-light"
+                className="prose prose-invert text-sm p-3 bg-write-comment-box-bg text-neutral-300 mb-3 font-light"
                 dangerouslySetInnerHTML={{
                   __html: DOMPurify.sanitize(feedcontent),
                 }}
