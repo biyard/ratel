@@ -45,7 +45,7 @@ export default function TeamCreationPopup() {
 
   const handleCreate = async () => {
     if (isCreating) return;
-    
+
     if (
       checkString(nickname) ||
       checkString(username) ||
@@ -54,10 +54,10 @@ export default function TeamCreationPopup() {
       showErrorToast('Please remove the test keyword');
       return;
     }
-    
+
     setIsCreating(true);
     logger.debug('Team creation button clicked');
-    
+
     try {
       await post(
         ratelApi.teams.createTeam(),
@@ -89,14 +89,14 @@ export default function TeamCreationPopup() {
     try {
       const response = await fetch(
         `${config.api_url}${ratelApi.users.getUserByUsername(username)}`,
-        { 
+        {
           credentials: 'include',
           headers: {
-            'Content-Type': 'application/json'
-          }
-        }
+            'Content-Type': 'application/json',
+          },
+        },
       );
-      
+
       if (response.ok) {
         const userData = await response.json();
         if (userData) {
@@ -110,7 +110,7 @@ export default function TeamCreationPopup() {
       logger.error('Error checking username:', error);
       // On error, assume username is available to avoid blocking the user
     }
-    
+
     setInvalid(undefined);
     setUsername(username);
   };
@@ -178,7 +178,12 @@ export default function TeamCreationPopup() {
         <Button
           className="w-full"
           onClick={handleCreate}
-          disabled={isCreating || checkString(nickname) || checkString(username) || checkString(htmlContents)}
+          disabled={
+            isCreating ||
+            checkString(nickname) ||
+            checkString(username) ||
+            checkString(htmlContents)
+          }
         >
           {isCreating ? (
             <div className="flex items-center gap-2">

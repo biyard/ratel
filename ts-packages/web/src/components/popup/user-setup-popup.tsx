@@ -2,11 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { usePopup } from '@/lib/contexts/popup-service';
+import { useApiCall } from '@/lib/api/use-send';
 import { LoginPopupFooter } from './login-popup-footer';
 import { PrimaryButton } from '../button/primary-button';
 import { Checkbox } from '../checkbox/checkbox';
 import { ConfirmPopup } from './confirm-popup';
-import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { config } from '@/config';
 import { ratelApi } from '@/lib/api/ratel_api';
@@ -61,7 +61,6 @@ const UserSetupPopup = ({
   const [sentCode, setSentCode] = useState(false);
   const [isValidEmail, setIsValidEmail] = useState(email !== '');
   const [profileUrlState, setProfileUrlState] = useState(profileUrl);
-
   const query = useUserInfo();
   const auth = useAuth();
 
@@ -70,6 +69,8 @@ const UserSetupPopup = ({
   const handleProfileUrl = (url: string) => {
     setProfileUrlState(url);
   };
+
+  const { post } = useApiCall();
 
   const handleSubmit = async () => {
     if (checkString(displayName) || checkString(userName)) {
@@ -310,14 +311,14 @@ const UserSetupPopup = ({
                 try {
                   const response = await fetch(
                     `${config.api_url}${ratelApi.users.getUserByUsername(value)}`,
-                    { 
+                    {
                       credentials: 'include',
                       headers: {
-                        'Content-Type': 'application/json'
-                      }
-                    }
+                        'Content-Type': 'application/json',
+                      },
+                    },
                   );
-                  
+
                   if (!response.ok) {
                     if (response.status !== 404) {
                       throw new Error(`HTTP error! status: ${response.status}`);
@@ -327,7 +328,7 @@ const UserSetupPopup = ({
                     setIsUserNameValid(true);
                     return;
                   }
-                  
+
                   const userData = await response.json();
 
                   // If we get here, user exists

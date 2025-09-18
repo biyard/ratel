@@ -378,7 +378,9 @@ export const ratelApi = {
   graphql: {
     /** @deprecated Use v2.news.list() instead */
     listNews: (size: number) => {
-      console.warn('DEPRECATED: graphql.listNews() is deprecated. Use v2.news.list() instead');
+      console.warn(
+        'DEPRECATED: graphql.listNews() is deprecated. Use v2.news.list() instead',
+      );
       return {
         query: gql`
           query ListNews($limit: Int!) {
@@ -395,10 +397,12 @@ export const ratelApi = {
         },
       };
     },
-    
+
     /** @deprecated Use v2.industries.list() instead */
     listIndustries: () => {
-      console.warn('DEPRECATED: graphql.listIndustries() is deprecated. Use v2.industries.list() instead');
+      console.warn(
+        'DEPRECATED: graphql.listIndustries() is deprecated. Use v2.industries.list() instead',
+      );
       return {
         query: gql`
           query ListIndustries {
@@ -410,22 +414,28 @@ export const ratelApi = {
         `,
       };
     },
-    
+
     /** @deprecated Use v2.users.getByUsername() instead */
     getUserByUsername: (username: string) => {
-      console.warn('DEPRECATED: graphql.getUserByUsername() is deprecated. Use v2.users.getByUsername() instead');
+      console.warn(
+        'DEPRECATED: graphql.getUserByUsername() is deprecated. Use v2.users.getByUsername() instead',
+      );
       return `/v2/users?username=${encodeURIComponent(username)}`;
     },
 
     /** @deprecated Use v2.users.getByEmail() instead */
     getUserByEmail: (email: string) => {
-      console.warn('DEPRECATED: graphql.getUserByEmail() is deprecated. Use v2.users.getByEmail() instead');
+      console.warn(
+        'DEPRECATED: graphql.getUserByEmail() is deprecated. Use v2.users.getByEmail() instead',
+      );
       return `/v2/users?email=${encodeURIComponent(email)}`;
     },
 
     /** @deprecated Use v2.teams.getByUsername() instead */
     getTeamByTeamname: (teamname: string) => {
-      console.warn('DEPRECATED: graphql.getTeamByTeamname() is deprecated. Use v2.teams.getByUsername() instead');
+      console.warn(
+        'DEPRECATED: graphql.getTeamByTeamname() is deprecated. Use v2.teams.getByUsername() instead',
+      );
       return `/v2/teams?username=${encodeURIComponent(teamname)}`;
     },
   },
@@ -436,12 +446,14 @@ export const ratelApi = {
    */
   v2: {
     users: {
-      getByUsername: (username: string) => `/v2/users/username/${encodeURIComponent(username)}`,
-      getByEmail: (email: string) => `/v2/users/email/${encodeURIComponent(email)}`,
+      getByUsername: (username: string) =>
+        `/v2/users/username/${encodeURIComponent(username)}`,
+      getByEmail: (email: string) =>
+        `/v2/users/email/${encodeURIComponent(email)}`,
     },
     teams: {
-      getByUsername: (username: string) => `/v2/teams/username/${encodeURIComponent(username)}`,
-    
+      getByUsername: (username: string) =>
+        `/v2/teams/username/${encodeURIComponent(username)}`,
     },
     news: {
       list: (limit = 10) => `/v2/news?limit=${limit}`,
@@ -449,8 +461,7 @@ export const ratelApi = {
     },
     industries: {
       list: () => '/v2/industries',
-      getById: (id: string) => `/v2/industries/${id}`
+      getById: (id: string) => `/v2/industries/${id}`,
     },
-
   },
 };

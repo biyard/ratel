@@ -38,7 +38,7 @@ export default async function Provider({ children }: { children: ReactNode }) {
   await Promise.allSettled([prefetchInfiniteFeeds(0, FeedStatus.Published)]);
 
   const dehydratedState = dehydrate(queryClient);
-  
+
   // TODO: Remove Apollo cache after full migration to REST v2
   // @deprecated - Migrating to REST v2
   const apolloCache = '{}';

@@ -12,7 +12,7 @@ export const Context = createContext<ContextType | undefined>(undefined);
 
 export default function ClientProviders({
   children,
-  apolloCache,
+  // apolloCache,
 }: {
   children: ReactNode;
   apolloCache: string;
@@ -26,7 +26,7 @@ export default function ClientProviders({
   //     <Context.Provider value={{}}>{children}</Context.Provider>
   //   </ApolloNextAppProvider>
   // );
-  
+
   // Temporary wrapper during migration
   return <Context.Provider value={{}}>{children}</Context.Provider>;
 }
