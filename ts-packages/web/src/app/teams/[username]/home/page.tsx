@@ -1,9 +1,10 @@
 import { Metadata } from 'next';
 import TeamHome from './page.client';
-import { client } from '@/lib/apollo';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { prefetchInfiniteFeeds } from '@/hooks/feeds/use-feeds-infinite-query';
 import { FeedStatus } from '@/lib/api/models/feeds';
+import { apiFetch } from '@/lib/api/apiFetch';
+import { config } from '@/config';
 
 //FIXME: add Metadata
 export const metadata: Metadata = {
@@ -42,18 +43,19 @@ type Props = {
 
 export default async function Page({ params }: Props) {
   const { username } = await params;
-  const {
-    data: { users },
-  } = await client.query(ratelApi.graphql.getTeamByTeamname(username));
+  const userResp = await apiFetch<{ id: number } | null>(
+    `${config.api_url}${ratelApi.users.getUserByUsername(username)}`,
+    { ignoreError: true, cache: 'no-store' },
+  );
 
-  if (users.length === 0) {
+  if (!userResp?.data?.id) {
     // FIXME: fix this to use not-found.tsx
     return <div className="text-center">Team not found</div>;
   }
-  console.log('users', users[0]);
+  console.log('user', userResp.data);
   await Promise.allSettled([
-    prefetchInfiniteFeeds(users[0].id, FeedStatus.Published),
+    prefetchInfiniteFeeds(userResp.data.id, FeedStatus.Published),
   ]);
 
-  return <TeamHome teamId={users[0].id} />;
+  return <TeamHome teamId={userResp.data.id} />;
 }

@@ -1,5 +1,6 @@
 import { Feed, FeedStatus } from './models/feeds';
 import { FileType } from './models/file-type';
+// @deprecated: GraphQL client import - Will be removed in future versions
 import { gql } from '@apollo/client';
 import { Space } from './models/spaces';
 import {
@@ -370,8 +371,14 @@ export const ratelApi = {
       return `/wg/home${queryString ? `?${queryString}` : ''}`;
     },
   },
+  /**
+   * @deprecated GraphQL endpoints - Will be removed in a future version
+   * Please use the corresponding v2 REST endpoints instead
+   */
   graphql: {
+    /** @deprecated Use v2.news.list() instead */
     listNews: (size: number) => {
+      console.warn('DEPRECATED: graphql.listNews() is deprecated. Use v2.news.list() instead');
       return {
         query: gql`
           query ListNews($limit: Int!) {
@@ -388,7 +395,10 @@ export const ratelApi = {
         },
       };
     },
+    
+    /** @deprecated Use v2.industries.list() instead */
     listIndustries: () => {
+      console.warn('DEPRECATED: graphql.listIndustries() is deprecated. Use v2.industries.list() instead');
       return {
         query: gql`
           query ListIndustries {
@@ -400,57 +410,47 @@ export const ratelApi = {
         `,
       };
     },
+    
+    /** @deprecated Use v2.users.getByUsername() instead */
     getUserByUsername: (username: string) => {
-      return {
-        query: gql`
-          query GetUserByUsername($username: String!) {
-            users(where: { username: { _eq: $username } }) {
-              id
-            }
-          }
-        `,
-        variables: {
-          username,
-        },
-      };
+      console.warn('DEPRECATED: graphql.getUserByUsername() is deprecated. Use v2.users.getByUsername() instead');
+      return `/v2/users?username=${encodeURIComponent(username)}`;
     },
 
+    /** @deprecated Use v2.users.getByEmail() instead */
     getUserByEmail: (email: string) => {
-      return {
-        query: gql`
-          query GetUserByEmail($email: String!) {
-            users(where: { email: { _eq: $email } }) {
-              id
-            }
-          }
-        `,
-        variables: {
-          email,
-        },
-      };
+      console.warn('DEPRECATED: graphql.getUserByEmail() is deprecated. Use v2.users.getByEmail() instead');
+      return `/v2/users?email=${encodeURIComponent(email)}`;
     },
 
+    /** @deprecated Use v2.teams.getByUsername() instead */
     getTeamByTeamname: (teamname: string) => {
-      return {
-        query: gql`
-          query GetTeamByTeamname($teamname: String!) {
-            users(where: { username: { _eq: $teamname } }) {
-              id
-              html_contents
-              email
-              created_at
-              nickname
-              parent_id
-              profile_url
-              user_type
-              username
-            }
-          }
-        `,
-        variables: {
-          teamname,
-        },
-      };
+      console.warn('DEPRECATED: graphql.getTeamByTeamname() is deprecated. Use v2.teams.getByUsername() instead');
+      return `/v2/teams?username=${encodeURIComponent(teamname)}`;
     },
+  },
+
+  /**
+   * v2 REST API endpoints
+   * These are the new endpoints that should be used instead of the GraphQL ones
+   */
+  v2: {
+    users: {
+      getByUsername: (username: string) => `/v2/users/username/${encodeURIComponent(username)}`,
+      getByEmail: (email: string) => `/v2/users/email/${encodeURIComponent(email)}`,
+    },
+    teams: {
+      getByUsername: (username: string) => `/v2/teams/username/${encodeURIComponent(username)}`,
+    
+    },
+    news: {
+      list: (limit = 10) => `/v2/news?limit=${limit}`,
+      getById: (id: string) => `/v2/news/${id}`,
+    },
+    industries: {
+      list: () => '/v2/industries',
+      getById: (id: string) => `/v2/industries/${id}`
+    },
+
   },
 };

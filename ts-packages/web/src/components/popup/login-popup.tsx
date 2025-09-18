@@ -16,8 +16,8 @@ import { Row } from '../ui/row';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
 import { sha3 } from '@/lib/utils';
-import { useApolloClient } from '@apollo/client';
 import { ratelApi } from '@/lib/api/ratel_api';
+import { config } from '@/config';
 import { useNetwork } from '@/app/(social)/_hooks/use-network';
 import { isWebView } from '@/lib/webview-utils';
 import { TelegramIcon } from '../icons';
@@ -48,7 +48,6 @@ export const LoginModal = ({
   const network = useNetwork();
   const anonKeyPair = useEd25519KeyPair();
   const queryClient = getQueryClient();
-  const cli = useApolloClient();
 
   const { login, ed25519KeyPair, telegramRaw } = useAuth();
   const [email, setEmail] = useState('');
@@ -139,17 +138,51 @@ export const LoginModal = ({
       return;
     }
 
-    const {
-      data: { users },
-    } = await cli.query(ratelApi.graphql.getUserByEmail(email));
+    const loader = popup.open(
+      <LoaderPopup
+        title={t('signing_in')}
+        description={t('signing_in_description')}
+        logo={<GoogleIcon />}
+        logoOrigin={<GoogleIcon />}
+        msg={t('signing_in_msg')}
+        serviceName="Email"
+      />,
+    );
 
-    if (users.length === 0) {
-      setWarning(t('unregistered_email'));
-      return;
+    try {
+      const response = await fetch(
+        `${config.api_url}${ratelApi.users.getUserByEmail(email)}`,
+        {
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+
+      if (!response.ok) {
+        loader.close();
+        if (response.status === 404) {
+          setWarning(t('unregistered_email'));
+          return;
+        }
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const userData = await response.json();
+      if (!userData) {
+        loader.close();
+        setWarning(t('unregistered_email'));
+        return;
+      }
+
+      setWarning('');
+      setShowPassword(true);
+      loader.close();
+    } catch (err) {
+      logger.error('Error validating email:', err);
+      if (loader) loader.close();
     }
-
-    setWarning('');
-    setShowPassword(true);
   };
 
   const handleGoogleSignIn = async () => {

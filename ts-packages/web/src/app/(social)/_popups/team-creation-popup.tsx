@@ -12,35 +12,40 @@ import {
 import { useUserInfo } from '@/lib/api/hooks/users';
 import { createTeamRequest } from '@/lib/api/models/team';
 import { ratelApi } from '@/lib/api/ratel_api';
+// TODO: Remove Apollo Client after full migration to REST v2
+// @deprecated - Migrating to REST v2
+// import { useApolloClient } from '@apollo/client';
 import { useApiCall } from '@/lib/api/use-send';
 import { usePopup } from '@/lib/contexts/popup-service';
 import { logger } from '@/lib/logger';
 import { checkString } from '@/lib/string-filter-utils';
 import { showErrorToast } from '@/lib/toast';
 import { checkLowerAlphaNumeric } from '@/lib/valid-utils';
-import { useApolloClient } from '@apollo/client';
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
+import { config } from '@/config';
 
 export default function TeamCreationPopup() {
   const t = useTranslations('Home');
-  const popup = usePopup();
   const { post } = useApiCall();
-  const client = useApolloClient();
   const userInfo = useUserInfo();
+  const popup = usePopup();
 
   const [profileUrl, setProfileUrl] = useState('');
   const [username, setUsername] = useState('');
   const [nickname, setNickname] = useState('');
   const [invalid, setInvalid] = useState<Error | undefined>(undefined);
   const [htmlContents, setHtmlContents] = useState('');
+  const [isCreating, setIsCreating] = useState(false);
 
   const handleContents = (evt: React.FormEvent<HTMLTextAreaElement>) => {
     setHtmlContents(evt.currentTarget.value);
   };
 
   const handleCreate = async () => {
+    if (isCreating) return;
+    
     if (
       checkString(nickname) ||
       checkString(username) ||
@@ -49,14 +54,23 @@ export default function TeamCreationPopup() {
       showErrorToast('Please remove the test keyword');
       return;
     }
+    
+    setIsCreating(true);
     logger.debug('Team creation button clicked');
-    await post(
-      ratelApi.teams.createTeam(),
-      createTeamRequest(profileUrl, username, nickname, htmlContents),
-    );
-    userInfo.refetch();
-
-    popup.close();
+    
+    try {
+      await post(
+        ratelApi.teams.createTeam(),
+        createTeamRequest(profileUrl, username, nickname, htmlContents),
+      );
+      await userInfo.refetch();
+      popup.close();
+    } catch (error) {
+      logger.error('Error creating team:', error);
+      showErrorToast('Failed to create team. Please try again.');
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   const handleUsername = async (evt: React.FormEvent<HTMLInputElement>) => {
@@ -72,16 +86,31 @@ export default function TeamCreationPopup() {
       return;
     }
 
-    const {
-      data: { users },
-    } = await client.query(ratelApi.graphql.getUserByUsername(username));
-    logger.debug('graphql respons: ', users);
-
-    if (users.length > 0) {
-      setInvalid(InvalidDuplicatedUsername);
-      return;
+    try {
+      const response = await fetch(
+        `${config.api_url}${ratelApi.users.getUserByUsername(username)}`,
+        { 
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      
+      if (response.ok) {
+        const userData = await response.json();
+        if (userData) {
+          setInvalid(InvalidDuplicatedUsername);
+          return;
+        }
+      } else {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+    } catch (error) {
+      logger.error('Error checking username:', error);
+      // On error, assume username is available to avoid blocking the user
     }
-
+    
     setInvalid(undefined);
     setUsername(username);
   };
@@ -147,17 +176,18 @@ export default function TeamCreationPopup() {
           {t('cancel')}
         </Button>
         <Button
-          className={
-            checkString(nickname) ||
-            checkString(username) ||
-            checkString(htmlContents)
-              ? 'cursor-not-allowed bg-neutral-600'
-              : 'cursor-pointer bg-primary'
-          }
-          variant={'rounded_primary'}
+          className="w-full"
           onClick={handleCreate}
+          disabled={isCreating || checkString(nickname) || checkString(username) || checkString(htmlContents)}
         >
-          {t('create')}
+          {isCreating ? (
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              {t('creating_team')}
+            </div>
+          ) : (
+            t('create_team')
+          )}
         </Button>
       </Row>
     </div>

@@ -1,7 +1,9 @@
 'use client';
 
-import { makeClient } from '@/lib/apollo-client';
-import { ApolloNextAppProvider } from '@apollo/client-integration-nextjs';
+// TODO: Remove Apollo Client after full migration to REST v2
+// @deprecated - Migrating to REST v2
+// import { makeClient } from '@/lib/apollo-client';
+// import { ApolloNextAppProvider } from '@apollo/client-integration-nextjs';
 import React, { ReactNode, createContext, useContext } from 'react';
 
 type ContextType = object;
@@ -15,13 +17,18 @@ export default function ClientProviders({
   children: ReactNode;
   apolloCache: string;
 }) {
-  return (
-    <ApolloNextAppProvider
-      makeClient={() => makeClient(JSON.parse(apolloCache))}
-    >
-      {children}
-    </ApolloNextAppProvider>
-  );
+  // TODO: Remove Apollo provider after full migration to REST v2
+  // @deprecated - Migrating to REST v2
+  // return (
+  //   <ApolloNextAppProvider
+  //     makeClient={() => makeClient(JSON.parse(apolloCache))}
+  //   >
+  //     <Context.Provider value={{}}>{children}</Context.Provider>
+  //   </ApolloNextAppProvider>
+  // );
+  
+  // Temporary wrapper during migration
+  return <Context.Provider value={{}}>{children}</Context.Provider>;
 }
 
 export function useHomeContext() {
