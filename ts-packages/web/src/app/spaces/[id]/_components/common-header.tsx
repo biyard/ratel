@@ -34,17 +34,14 @@ import {
 import { useEditCoordinatorStore } from '../space-store';
 import { useTranslations } from 'next-intl';
 import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
-import { useTeamByUsername } from '@/app/teams/_hooks/use-team';
-import checkGroupPermission from '@/lib/group/check-group-permission';
-import { GroupPermission } from '@/lib/group/group-permission';
-import { UserType } from '@/lib/api/models/user';
+import { GroupPermission } from '@/lib/api/models/group';
+import { usePermission } from '@/app/(social)/_hooks/use-permission';
 
 function SpaceModifySection({
   spaceId,
   isDraft,
   isPublic,
   authorId,
-  authorName,
   onEdit,
 }: {
   spaceId: number;
@@ -66,16 +63,14 @@ function SpaceModifySection({
   } = useEditCoordinatorStore();
   const { selectedTeam } = useContext(TeamContext);
   const { data: userInfo } = useSuspenseUserInfo();
-  const { data: team } = useTeamByUsername(authorName);
 
+  const writePostPermission = usePermission(
+    authorId ?? 0,
+    GroupPermission.WritePosts,
+  ).data.has_permission;
   const hasEditPermission =
     (authorId === userInfo?.id || selectedTeam?.id === authorId) &&
-    checkGroupPermission(
-      userInfo,
-      authorId,
-      GroupPermission.WritePosts,
-      team.user_type == UserType.Team ? team.parent_id : null,
-    );
+    writePostPermission;
 
   const publishSpace = usePublishSpace(spaceId);
   const makeSpacePublic = useMakePublicSpace(spaceId);
