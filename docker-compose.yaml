@@ -162,8 +162,8 @@ services:
     working_dir: /app
     environment:
       PORT: 8080
-      API_URL: "http://main-api:3000"
-      GRAPHQL_URL: "http://hasura:8080/v1/graphql"
+      NEXT_PUBLIC_API_URL: "http://main-api:3000"
+      NEXT_PUBLIC_GRAPHQL_URL: "http://hasura:8080/v1/graphql"
       NODE_ENV: development
     command: ["bash", "scripts/web-entrypoint.sh"]
     healthcheck:
