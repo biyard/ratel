@@ -27,6 +27,8 @@ import {
   followRequest,
   unfollowRequest,
 } from '@/lib/api/models/networks/follow';
+import { GroupPermission } from '@/lib/api/models/group';
+import { usePermission } from '@/app/(social)/_hooks/use-permission';
 
 export interface TeamSidemenuProps {
   username: string;
@@ -43,7 +45,7 @@ export default function TeamSidemenu({ username }: TeamSidemenuProps) {
   const { data: user } = useUserByUsername(username);
   const data = useSuspenseUserInfo();
   const userInfo = data.data;
-  const followings = userInfo.followings;
+  const followings = userInfo?.followings ?? [];
   const isFollowing = followings.some((f: { id: number }) => f.id === user.id);
 
   const handleFollow = async (userId: number) => {
@@ -53,6 +55,14 @@ export default function TeamSidemenu({ username }: TeamSidemenuProps) {
   const handleUnFollow = async (userId: number) => {
     await post(ratelApi.networks.unfollow(userId), unfollowRequest());
   };
+
+  const writePostPermission =
+    usePermission(team?.id ?? 0, GroupPermission.WritePosts).data
+      .has_permission ?? false;
+
+  const updateGroupPermission =
+    usePermission(team?.id ?? 0, GroupPermission.UpdateGroup).data
+      .has_permission ?? false;
 
   if (!team && !user) {
     return <></>;
@@ -128,13 +138,17 @@ export default function TeamSidemenu({ username }: TeamSidemenuProps) {
           <Home className="w-6 h-6" />
           <span>{t('home')}</span>
         </Link>
-        <Link
-          href={route.teamDrafts(team.username)}
-          className="sidemenu-link text-text-primary"
-        >
-          <EditContent className="w-6 h-6 [&>path]:stroke-[#737373]" />
-          <span>{t('drafts')}</span>
-        </Link>
+        {writePostPermission ? (
+          <Link
+            href={route.teamDrafts(team.username)}
+            className="sidemenu-link text-text-primary"
+          >
+            <EditContent className="w-6 h-6 [&>path]:stroke-[#737373]" />
+            <span>{t('drafts')}</span>
+          </Link>
+        ) : (
+          <></>
+        )}
         <Link
           href={route.teamGroups(team.username)}
           className="sidemenu-link text-text-primary "
@@ -149,13 +163,17 @@ export default function TeamSidemenu({ username }: TeamSidemenuProps) {
           <UserGroup className="w-6 h-6 [&>path]:stroke-[#737373]" />
           <span>{t('members')}</span>
         </Link>
-        <Link
-          href={route.teamSettings(team.username)}
-          className="sidemenu-link text-text-primary"
-        >
-          <Settings className="w-6 h-6" />
-          <span>{t('settings')}</span>
-        </Link>
+        {updateGroupPermission ? (
+          <Link
+            href={route.teamSettings(team.username)}
+            className="sidemenu-link text-text-primary"
+          >
+            <Settings className="w-6 h-6" />
+            <span>{t('settings')}</span>
+          </Link>
+        ) : (
+          <></>
+        )}
       </nav>
 
       {/* <nav className="mt-4 px-2">
