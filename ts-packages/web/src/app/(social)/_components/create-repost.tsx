@@ -174,7 +174,7 @@ export function CreateRePost() {
                 />
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-white font-medium text-lg">
+                <span className="text-foreground font-medium text-lg">
                   {authorName || 'Anonymous'}
                 </span>
               </div>
@@ -183,7 +183,7 @@ export function CreateRePost() {
 
             {feedcontent && (
               <div
-                className="prose prose-invert text-sm p-3 bg-write-comment-box-bg text-neutral-300 mb-3 font-light"
+                className="prose prose-invert text-sm p-3 bg-write-comment-box-bg  mb-3 font-light"
                 dangerouslySetInnerHTML={{
                   __html: DOMPurify.sanitize(feedcontent),
                 }}
