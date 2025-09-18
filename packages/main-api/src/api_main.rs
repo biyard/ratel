@@ -2,7 +2,7 @@ use std::env;
 
 use crate::{
     config, controllers,
-    route::route,
+    route::{RouteDeps, route},
     utils::{
         aws::{BedrockClient, DynamoClient, RekognitionClient, S3Client, TextractClient},
         // dynamo_migrate::{create_dynamo_tables, get_user_tables},
@@ -232,8 +232,8 @@ pub async fn api_main() -> Result<Router> {
     };
     // FIXME: Is this the correct way to inject and pass the states into the route?
     // find better way to  management Axum's state or dependency injection for better modularity and testability.
-    let api_router = route(
-        pool.clone(),
+    let api_router = route(RouteDeps {
+        pool: pool.clone(),
         sqs_client,
         bedrock_client,
         rek_client,
@@ -242,7 +242,7 @@ pub async fn api_main() -> Result<Router> {
         private_s3_client,
         bot,
         dynamo_client,
-    )
+    })
     .await?
     .layer(middleware::from_fn(authorization_middleware))
     .layer(session_layer)

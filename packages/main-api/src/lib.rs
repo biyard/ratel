@@ -122,11 +122,17 @@ pub mod controllers {
         }
     }
     pub mod v3 {
-        pub mod users {
-            pub mod email_signup;
-            pub mod verify_email;
-            pub mod request_verification_code;
+        // pub mod users {
+        //     pub mod get_user_info;
+        // }
+
+        pub mod auth {
             pub mod email_login;
+            pub mod signup;
+            // pub mod verification {
+            //     pub mod send_code;
+            //     pub mod verify_code;
+            // }
         }
     }
     pub mod m2 {
