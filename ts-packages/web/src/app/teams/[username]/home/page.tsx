@@ -5,7 +5,7 @@ import { prefetchInfiniteFeeds } from '@/hooks/feeds/use-feeds-infinite-query';
 import { FeedStatus } from '@/lib/api/models/feeds';
 import { apiFetch } from '@/lib/api/apiFetch';
 import { config } from '@/config';
-
+import NotfoundPage from '@/app/not-found';
 //FIXME: add Metadata
 export const metadata: Metadata = {
   title: 'Ratel',
@@ -50,7 +50,7 @@ export default async function Page({ params }: Props) {
 
   if (!userResp?.data?.id) {
     // FIXME: fix this to use not-found.tsx
-    return <div className="text-center">Team not found</div>;
+    return <NotfoundPage />;
   }
   console.log('user', userResp.data);
   await Promise.allSettled([
