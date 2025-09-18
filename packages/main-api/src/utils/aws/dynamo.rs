@@ -283,7 +283,7 @@ impl DynamoClient {
             .behavior_version_latest();
 
         if let Some(endpoint) = endpoint {
-            builder = builder.endpoint_url(endpoint.clone());
+            builder = builder.endpoint_url(endpoint.to_string());
         }
         let config = builder.build();
         let client = Client::from_conf(config);
