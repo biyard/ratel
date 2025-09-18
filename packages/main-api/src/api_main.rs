@@ -4,7 +4,7 @@ use crate::{
     config, controllers,
     route::route,
     utils::{
-        aws::{BedrockClient, RekognitionClient, S3Client, TextractClient},
+        aws::{BedrockClient, DynamoClient, RekognitionClient, S3Client, TextractClient},
         // dynamo_migrate::{create_dynamo_tables, get_user_tables},
         mcp_middleware::mcp_middleware,
         sqs_client,
@@ -204,6 +204,8 @@ pub async fn api_main() -> Result<Router> {
     let textract_client = TextractClient::new();
     let private_s3_client = S3Client::new(conf.private_bucket_name);
     let metadata_s3_client = S3Client::new(conf.bucket.name);
+    let dynamo_client = DynamoClient::new();
+
     let is_local = conf.env == "local";
     let session_layer = SessionManagerLayer::new(session_store)
         .with_secure(!is_local)
@@ -239,6 +241,7 @@ pub async fn api_main() -> Result<Router> {
         metadata_s3_client,
         private_s3_client,
         bot,
+        dynamo_client,
     )
     .await?
     .layer(middleware::from_fn(authorization_middleware))

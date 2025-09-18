@@ -11,4 +11,4 @@ mod s3;
 pub use s3::{S3Client, S3ContentType, S3Object};
 
 pub mod dynamo;
-pub use dynamo::{DynamoClient, bool_attr, number_attr, string_attr};
+pub use dynamo::DynamoClient;
