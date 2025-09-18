@@ -83,6 +83,7 @@ use crate::{
                 register::register_handler, token::token_handler,
             },
             oracles::create_oracle::create_oracle_handler,
+            permissions::has_team_permission::has_team_permission_handler,
             posts::{
                 get_post::get_post_handler, list_posts::list_posts_handler,
                 update_post::update_post_handler,
@@ -459,6 +460,14 @@ pub async fn route(
             get_with(
                 get_bookmarks_handler,
                 api_docs!("List Bookmarks", "Retrieve bookmarked feed with user ID"),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/v2/permissions",
+            get_with(
+                has_team_permission_handler,
+                api_docs!("Has Permission", "Check user group permission"),
             )
             .with_state(pool.clone()),
         )

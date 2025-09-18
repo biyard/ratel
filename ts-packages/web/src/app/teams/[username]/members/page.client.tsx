@@ -8,8 +8,6 @@ import { checkString } from '@/lib/string-filter-utils';
 export default function TeamMembers({ username }: { username: string }) {
   const query = useTeamByUsername(username);
 
-  console.log('query data: ', query.data);
-
   const members: User[] = (query.data?.members ?? [])
     .flat()
     .filter(

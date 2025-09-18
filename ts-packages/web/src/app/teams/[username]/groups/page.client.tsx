@@ -18,6 +18,7 @@ import { useTeamByUsername } from '../../_hooks/use-team';
 import { Folder } from 'lucide-react';
 import { checkString } from '@/lib/string-filter-utils';
 import { useTranslations } from 'next-intl';
+import { usePermission } from '@/app/(social)/_hooks/use-permission';
 
 export default function TeamGroups({ username }: { username: string }) {
   const t = useTranslations('Team');
@@ -31,10 +32,18 @@ export default function TeamGroups({ username }: { username: string }) {
 
   const team = query.data;
 
+  const inviteMemberPermission =
+    usePermission(team?.id ?? 0, GroupPermission.InviteMember).data
+      .has_permission ?? false;
+
+  const updateGroupPermission =
+    usePermission(team?.id ?? 0, GroupPermission.UpdateGroup).data
+      .has_permission ?? false;
+
   return (
     <div className="flex flex-col w-full gap-2.5">
       <div className="flex flex-row w-full justify-end items-end gap-[10px]">
-        {groups && groups.length != 0 && (
+        {groups && groups.length != 0 && inviteMemberPermission && (
           <InviteMemberButton
             onClick={() => {
               popup
@@ -60,41 +69,43 @@ export default function TeamGroups({ username }: { username: string }) {
             }}
           />
         )}
-        <CreateGroupButton
-          onClick={() => {
-            popup
-              .open(
-                <CreateGroupPopup
-                  onCreate={async (
-                    profileUrl: string,
-                    groupName: string,
-                    groupDescription: string,
-                    groupPermissions: GroupPermission[],
-                  ) => {
-                    try {
-                      await post(
-                        ratelApi.groups.create_group(team.id),
-                        createGroupRequest(
-                          groupName,
-                          groupDescription,
-                          profileUrl,
-                          [],
-                          groupPermissions,
-                        ),
-                      );
+        {updateGroupPermission && (
+          <CreateGroupButton
+            onClick={() => {
+              popup
+                .open(
+                  <CreateGroupPopup
+                    onCreate={async (
+                      profileUrl: string,
+                      groupName: string,
+                      groupDescription: string,
+                      groupPermissions: GroupPermission[],
+                    ) => {
+                      try {
+                        await post(
+                          ratelApi.groups.create_group(team.id),
+                          createGroupRequest(
+                            groupName,
+                            groupDescription,
+                            profileUrl,
+                            [],
+                            groupPermissions,
+                          ),
+                        );
 
-                      query.refetch();
+                        query.refetch();
 
-                      popup.close();
-                    } catch (err) {
-                      logger.error('request failed with error: ', err);
-                    }
-                  }}
-                />,
-              )
-              .withTitle(t('create_group'));
-          }}
-        />
+                        popup.close();
+                      } catch (err) {
+                        logger.error('request failed with error: ', err);
+                      }
+                    }}
+                  />,
+                )
+                .withTitle(t('create_group'));
+            }}
+          />
+        )}
       </div>
 
       <ListGroups groups={groups ?? []} />

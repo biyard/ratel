@@ -40,6 +40,8 @@ import useFeedById from '@/hooks/feeds/use-feed-by-id';
 import { useLikeFeedMutation } from '@/hooks/feeds/use-like-feed-mutation';
 import { useDeleteFeedMutation } from '@/hooks/feeds/use-delete-feed-mutation';
 import { FeedStatus } from '@/lib/api/models/feeds';
+import { GroupPermission } from '@/lib/api/models/group';
+import { usePermission } from '@/app/(social)/_hooks/use-permission';
 
 export default function Header({ postId }: { postId: number }) {
   const t = useTranslations('Threads');
@@ -109,6 +111,16 @@ export default function Header({ postId }: { postId: number }) {
     await openPostEditorPopup(postId);
   };
 
+  const writeGroupPermission = usePermission(
+    post.author[0]?.id ?? 0,
+    GroupPermission.WritePosts,
+  ).data.has_permission;
+
+  const deletePostPermission = usePermission(
+    post.author[0]?.id ?? 0,
+    GroupPermission.DeletePosts,
+  ).data.has_permission;
+
   return (
     <div className="flex flex-col w-full gap-2.5">
       <div className="flex flex-row justify-between items-center">
@@ -125,7 +137,7 @@ export default function Header({ postId }: { postId: number }) {
                 {t('join_space')}
               </Button>
             </Link>
-          ) : isPostOwner ? (
+          ) : isPostOwner && writeGroupPermission ? (
             <>
               <Button
                 variant="rounded_secondary"
@@ -156,7 +168,7 @@ export default function Header({ postId }: { postId: number }) {
           )}
 
           {/* 3-dot overflow menu - only shown for post owners or when there's a space to join */}
-          {(isPostOwner || space_id) && (
+          {(isPostOwner || space_id) && deletePostPermission && (
             <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild>
                 <button

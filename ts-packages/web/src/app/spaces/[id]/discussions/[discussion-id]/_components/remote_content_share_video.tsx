@@ -85,7 +85,7 @@ export default function RemoteContentShareVideo({
     <video
       id="remote-content-video"
       ref={remoteContentRef}
-      className="absolute top-0 left-0 w-full h-full object-contain z-0"
+      className="absolute top-0 left-0 w-full h-full object-cover z-0"
       autoPlay
       muted
     />
