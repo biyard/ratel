@@ -140,7 +140,7 @@ export default function RemoteGalleryView({
   }, [videoTiles]);
 
   return (
-    <div className="flex flex-row w-full items-center justify-center bg-neutral-800 px-6 py-4">
+    <div className="flex flex-row w-full items-center justify-center bg-neutral-800 border-b border-neutral-700 px-6 py-4">
       {scrollIndex > 0 ? (
         <button
           onClick={() => scrollTo(scrollIndex - 1)}
