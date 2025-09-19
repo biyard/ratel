@@ -155,7 +155,7 @@ export function CreateRePost() {
             </div>
 
             <div className={cn('cursor-pointer')} onClick={resetDraft}>
-              <DoubleArrowDown className="[&>path]:stroke-text-primary"/>
+              <DoubleArrowDown className="[&>path]:stroke-text-primary" />
             </div>
           </div>
         </div>
