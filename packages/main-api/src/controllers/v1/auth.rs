@@ -8,12 +8,12 @@ use dto::*;
 
 use crate::utils::users::extract_user;
 
-#[derive(
-    Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
-)]
-pub struct UserPath {
-    pub id: i64,
-}
+// #[derive(
+//     Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
+// )]
+// pub struct UserPath {
+//     pub id: i64,
+// }
 
 #[derive(Clone, Debug)]
 pub struct AuthController {
