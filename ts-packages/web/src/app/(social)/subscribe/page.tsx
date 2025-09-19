@@ -96,7 +96,7 @@ export default function SubscribePage() {
             ? 'VIP'
             : 'Admin';
 
-  if (config.env !== 'local') {
+  if (config.env !== 'local' && config.env !== 'dev') {
     return (
       <div className="text-text-primary text-base font-medium">
         not implemented page
