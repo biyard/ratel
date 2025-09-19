@@ -8,6 +8,7 @@ pub mod generate_merchant_trade_no;
 pub mod middlewares;
 pub mod notifications;
 // pub mod openapi;
+pub mod crypto;
 pub mod parse_json;
 pub mod rds_client;
 pub mod referal_code;
