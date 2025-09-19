@@ -47,6 +47,10 @@ export default function TeamGroups({ username }: { username: string }) {
     usePermission(team?.id ?? 0, GroupPermission.UpdateGroup).data
       .has_permission ?? false;
 
+  const deleteGroupPermission =
+    usePermission(team?.id ?? 0, GroupPermission.DeleteGroup).data
+      .has_permission ?? false;
+
   const deleteGroup = async (groupId: number) => {
     await post(
       ratelApi.groups.delete_group(team.id, groupId),
@@ -124,16 +128,22 @@ export default function TeamGroups({ username }: { username: string }) {
         )}
       </div>
 
-      <ListGroups groups={groups ?? []} deleteGroup={deleteGroup} />
+      <ListGroups
+        groups={groups ?? []}
+        permission={deleteGroupPermission}
+        deleteGroup={deleteGroup}
+      />
     </div>
   );
 }
 
 function ListGroups({
   groups,
+  permission,
   deleteGroup,
 }: {
   groups: Group[];
+  permission: boolean;
   deleteGroup: (groupId: number) => void;
 }) {
   const t = useTranslations('Team');
@@ -159,32 +169,36 @@ function ListGroups({
               </div>
             </div>
 
-            <DropdownMenu modal={false}>
-              <DropdownMenuTrigger asChild>
-                <button
-                  className="p-1 hover:bg-hover rounded-full focus:outline-none transition-colors"
-                  aria-haspopup="true"
-                  aria-label="Post options"
-                >
-                  <Extra className="size-6 text-gray-400" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="end"
-                className="w-40 border-gray-700 transition ease-out duration-100"
-              >
-                <DropdownMenuItem>
+            {permission ? (
+              <DropdownMenu modal={false}>
+                <DropdownMenuTrigger asChild>
                   <button
-                    onClick={() => {
-                      deleteGroup(group.id);
-                    }}
-                    className="flex items-center w-full px-4 py-2 text-sm text-text-primary hover:bg-hover cursor-pointer"
+                    className="p-1 hover:bg-hover rounded-full focus:outline-none transition-colors"
+                    aria-haspopup="true"
+                    aria-label="Post options"
                   >
-                    <div>{t('delete_group')}</div>
+                    <Extra className="size-6 text-gray-400" />
                   </button>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  className="w-40 border-gray-700 transition ease-out duration-100"
+                >
+                  <DropdownMenuItem>
+                    <button
+                      onClick={() => {
+                        deleteGroup(group.id);
+                      }}
+                      className="flex items-center w-full px-4 py-2 text-sm text-text-primary hover:bg-hover cursor-pointer"
+                    >
+                      <div>{t('delete_group')}</div>
+                    </button>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <></>
+            )}
           </div>
         ))}
     </div>
