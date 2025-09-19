@@ -125,7 +125,9 @@ pub async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         ConversationParticipant,
         AuthClient,
         AuthCode,
+        Post,
         TelegramChannel,
+        TelegramToken,
     );
 
     // Create DynamoDB tables
@@ -202,6 +204,7 @@ pub async fn api_main() -> Result<Router> {
     let textract_client = TextractClient::new();
     let private_s3_client = S3Client::new(conf.private_bucket_name);
     let metadata_s3_client = S3Client::new(conf.bucket.name);
+
     let is_local = conf.env == "local";
     let session_layer = SessionManagerLayer::new(session_store)
         .with_secure(!is_local)
@@ -221,7 +224,11 @@ pub async fn api_main() -> Result<Router> {
     let mcp_router = by_axum::axum::Router::new()
         .nest_service("/mcp", controllers::mcp::route(pool.clone()).await?)
         .layer(middleware::from_fn(mcp_middleware));
-    let bot = TelegramBot::new(conf.telegram_token).await?;
+    let bot = if let Some(token) = conf.telegram_token {
+        Some(TelegramBot::new(token).await?)
+    } else {
+        None
+    };
     // FIXME: Is this the correct way to inject and pass the states into the route?
     // find better way to  management Axum's state or dependency injection for better modularity and testability.
     let api_router = route(
