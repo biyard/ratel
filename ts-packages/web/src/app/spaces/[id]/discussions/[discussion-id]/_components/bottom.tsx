@@ -6,7 +6,7 @@ import {
   ZoomMicOff,
   ZoomMicOn,
   ZoomParticipants,
-  ZoomRecord,
+  // ZoomRecord,
   ZoomShare,
   ZoomVideoOff,
   ZoomVideoOn,
@@ -16,10 +16,10 @@ import React, { JSX } from 'react';
 export default function Bottom({
   isVideoOn,
   isAudioOn,
-  isRecording,
+  // isRecording,
 
   onclose,
-  onRecordClick,
+  // onRecordClick,
   onParticipantsClick,
   onChatClick,
   onAudioToggle,
@@ -39,7 +39,7 @@ export default function Bottom({
   onShareToggle: () => void;
 }) {
   return (
-    <div className="flex flex-row w-full min-h-[70px] justify-between items-center bg-neutral-900 px-10 py-2.5 border-b border-neutral-800">
+    <div className="flex flex-row w-full min-h-[70px] justify-between items-center bg-neutral-900 light:bg-neutral-800 px-10 py-2.5 border-b border-neutral-800">
       <div className="flex flex-row gap-5 flex-1 justify-start">
         <IconLabel
           icon={
@@ -83,7 +83,7 @@ export default function Bottom({
             onShareToggle();
           }}
         />
-        <IconLabel
+        {/* <IconLabel
           icon={
             isRecording ? (
               <ZoomClose className="w-6 h-6" />
@@ -95,7 +95,7 @@ export default function Bottom({
           onclick={() => {
             onRecordClick();
           }}
-        />
+        /> */}
       </div>
 
       <div className="flex flex-row flex-1 gap-5 justify-end">

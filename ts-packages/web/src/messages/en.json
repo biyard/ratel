@@ -228,6 +228,7 @@
     "invalid_user": "Invalid or unregisted input.",
     "failed_search_user": "Failed to search for user.",
 
+    "delete_group": "delete",
     "username": "Username",
     "display_name": "Display name",
     "display_name_hint": "Team display name",
@@ -436,6 +437,9 @@
     "continue": "Continue",
     "invite_label": "Email, Username, or Phone Number",
     "invite_hint": "Enter email, username, or phone number (ex: john@example.com or john or 01012345678)",
+    "success_publish_space_private": "Space published privately successfully",
+    "success_publish_space_public": "Space published publicly successfully",
+    "failed_publish_space": "Failed to publish space",
     "send": "Send",
     "invalid_user": "Invalid or unregistered input.",
     "failed_search_user": "Failed to search for user.",
@@ -547,6 +551,8 @@
     "cancel": "Cancel",
     "delete_button": "Delete Space",
     "deleting": "Deleting...",
+    "go_public": "Go Public",
+    "publish": "Publish",
 
     "save": "Save",
     "edit": "Edit",

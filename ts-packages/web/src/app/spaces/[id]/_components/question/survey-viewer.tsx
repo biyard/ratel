@@ -31,6 +31,8 @@ export default function SurveyViewer({
   survey,
   answer,
   status,
+  startDate,
+  endDate,
   handleSetAnswers,
   handleSend,
   space,
@@ -60,6 +62,10 @@ export default function SurveyViewer({
   const popup = usePopup();
   const is_completed = answer.is_completed;
   const answers: Answer[] = answer.answers;
+
+  const now = Math.floor(Date.now() / 1000);
+
+  const isLive = now >= startDate && now <= endDate;
 
   logger.debug('is completed:', is_completed, ' status:', status);
 
@@ -234,7 +240,7 @@ export default function SurveyViewer({
       })}
 
       <div
-        className={`flex flex-row w-full justify-end ${is_completed || userId === 0 || status != SpaceStatus.InProgress || isEdit || questions.length == 0 || (!isMember && spaceType === SpaceType.Deliberation) ? 'hidden' : ''}`}
+        className={`flex flex-row w-full justify-end ${is_completed || !isLive || userId === 0 || status === SpaceStatus.Draft || isEdit || questions.length == 0 || (!isMember && spaceType === SpaceType.Deliberation) ? 'hidden' : ''}`}
       >
         <div
           className="cursor-pointer flex flex-row w-[180px] h-fit py-[14px] px-[40px] justify-center items-center bg-primary hover:opacity-70 rounded-lg font-bold text-[15px] text-[#000203]"
