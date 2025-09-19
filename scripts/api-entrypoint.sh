@@ -1,7 +1,7 @@
 #! /bin/bash
 
 ## TODO: Setting up KAIA keys
-apt update && apt install -y curl jq
+apt update && apt install -y curl jq build-essential cmake pkg-config libssl-dev
 
 export ADDR=$(jq ".[0].address" .build/evm-keys.json | tr -d \")
 export KEY=$(jq ".[0].private_key" .build/evm-keys.json | tr -d \")

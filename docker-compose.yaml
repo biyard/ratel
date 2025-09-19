@@ -34,7 +34,7 @@ services:
       ENV: dev
       DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/ratel}
       DYNAMODB_ENDPOINT: http://localstack:4566
-      MIGRATE: "true"
+      MIGRATE: ${MIGRATE:-true}
       AWS_REGION: us-east-1
       AWS_ACCESS_KEY_ID: test
       AWS_SECRET_ACCESS_KEY: test
@@ -46,7 +46,7 @@ services:
       REDIRECT_DOMAIN: ${REDIRECT_DOMAIN:-http://localhost:3000}
     volumes:
       - .:/app
-      - ./.build/target:/app/target
+      # - ./.build/target:/app/target
       - ./.build/main-api/target:/app/packages/main-api/target
     working_dir: /app
     command: ["bash", "scripts/api-entrypoint.sh"]
@@ -98,7 +98,7 @@ services:
       - "3001:3001"
     volumes:
       - .:/app
-      - ./.build/target:/app/target
+      # - ./.build/target:/app/target
       - ./.build/fetcher/target:/app/packages/fetcher/target
     working_dir: /app
     environment:
@@ -162,8 +162,8 @@ services:
     working_dir: /app
     environment:
       PORT: 8080
-      API_URL: "http://main-api:3000"
-      GRAPHQL_URL: "http://hasura:8080/v1/graphql"
+      NEXT_PUBLIC_API_URL: "http://main-api:3000"
+      NEXT_PUBLIC_GRAPHQL_URL: "http://hasura:8080/v1/graphql"
       NODE_ENV: development
     command: ["bash", "scripts/web-entrypoint.sh"]
     healthcheck:
@@ -252,6 +252,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
+    volumes:
+      - ./.build/localstack-data:/var/lib/localstack
     networks:
       - ratel-network
 

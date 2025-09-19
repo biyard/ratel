@@ -10,3 +10,5 @@ target
 flutter-packages
 **/.env*
 .pnpm-store
+target
+.cargo
