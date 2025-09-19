@@ -7,7 +7,6 @@ use crate::utils::aws::DynamoClient;
 
 pub struct BatchProcessor {
     client: DynamoClient,
-    table_name: String,
     batch_size: usize,
     max_retries: usize,
 }
@@ -15,8 +14,7 @@ pub struct BatchProcessor {
 impl BatchProcessor {
     pub fn new(table_name: &str) -> Self {
         Self {
-            client: DynamoClient::new(),
-            table_name: table_name.to_string(),
+            client: DynamoClient::new(table_name),
             batch_size: 25, // DynamoDB batch write limit
             max_retries: 3,
         }
@@ -125,7 +123,7 @@ impl BatchProcessor {
             write_requests.push(write_request);
         }
 
-        let table_name = self.table_name.clone();
+        let table_name = &self.client.table_name;
         let mut request_items = HashMap::new();
         request_items.insert(table_name.clone(), write_requests);
 
@@ -140,7 +138,7 @@ impl BatchProcessor {
             Ok(output) => {
                 let unprocessed_items = output
                     .unprocessed_items()
-                    .and_then(|items| items.get(&table_name))
+                    .and_then(|items| items.get(table_name))
                     .map(|requests| {
                         requests
                             .iter()

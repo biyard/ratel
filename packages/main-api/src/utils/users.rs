@@ -1,8 +1,6 @@
 use bdk::prelude::by_axum::auth::Authorization;
 use bdk::prelude::*;
 use dto::*;
-
-use crate::models::user::UserMetadata;
 pub async fn extract_user_with_allowing_anonymous(
     pool: &sqlx::Pool<sqlx::Postgres>,
     auth: Option<Authorization>,
@@ -125,6 +123,8 @@ pub async fn extract_user_with_options(
             return Err(Error::Unauthorized);
         }
     };
+
+    tracing::debug!("authorized user_id: {:?}", user);
 
     Ok(user)
 }
@@ -278,25 +278,4 @@ pub async fn extract_principal(
     };
 
     Ok(principal)
-}
-
-pub fn get_principal(auth: Option<Authorization>) -> Result<String> {
-    let principal = match auth {
-        Some(Authorization::Session(session)) => session.principal,
-        Some(Authorization::UserSig(sig)) => sig.principal().map_err(|e| {
-            tracing::error!("failed to get principal: {:?}", e);
-            Error::Unauthorized
-        })?,
-        _ => return Err(Error::Unauthorized),
-    };
-
-    Ok(principal)
-}
-
-pub async fn get_user_metadata(
-    cli: aws_sdk_dynamodb::Client,
-    user_pk: String,
-) -> Result<Vec<UserMetadata>> {
-    let metadata = UserMetadata::query(&cli, user_pk).await?;
-    Ok(metadata)
 }

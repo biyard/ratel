@@ -114,24 +114,13 @@ pub mod controllers {
             pub mod get_telegram_info;
             pub mod verify_telegram_raw;
         }
-
-        pub mod binances {
-            pub mod binance_webhook;
-            pub mod create_subscription;
-            pub mod unsubscribe;
-        }
     }
     pub mod v3 {
-        // pub mod users {
-        //     pub mod get_user_info;
-        // }
-
-        pub mod auth {
-            pub mod login;
-            // pub mod verification {
-            //     pub mod send_code;
-            //     pub mod verify_code;
-            // }
+        pub mod users {
+            pub mod email_login;
+            pub mod email_signup;
+            pub mod request_verification_code;
+            pub mod verify_email;
         }
     }
     pub mod m2 {
@@ -143,15 +132,9 @@ pub mod controllers {
         pub mod migration {
             pub mod postgres_to_dynamodb;
         }
-        pub mod binances {
-            pub mod get_merchant_balance;
-        }
     }
     pub mod well_known {
         pub mod get_did_document;
-    }
-    pub mod wg {
-        pub mod get_home;
     }
 }
 

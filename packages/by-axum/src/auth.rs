@@ -12,10 +12,9 @@ use jsonwebtoken::{Algorithm, DecodingKey, Validation};
 use rest_api::Signature;
 use serde::{Deserialize, Serialize};
 use tower_sessions::Session;
+
 static mut AUTH_CONFIG: Option<AuthConfig> = None;
 pub const USER_SESSION_KEY: &str = "user_session";
-pub const DYNAMO_USER_SESSION_KEY: &str = "dynamo_user_session";
-
 pub static mut AUTH_TOKEN_KEY: &str = "auth_token";
 
 pub fn set_auth_token_key(key: &'static str) {
@@ -59,7 +58,6 @@ pub enum Authorization {
     Bearer { claims: Claims },
     Basic { username: String, password: String },
     Session(UserSession),
-    DynamoSession(DynamoUserSession),
     ServerKey,
     SecretApiKey,
 }
@@ -69,12 +67,6 @@ pub struct UserSession {
     pub user_id: i64,
     pub principal: String,
     pub email: String,
-}
-
-#[derive(Debug, Default, Deserialize, Serialize, Clone, PartialEq, Eq)]
-pub struct DynamoUserSession {
-    pub user_pk: String,
-    pub user_type: i64,
 }
 
 /// Authorization middleware
@@ -100,12 +92,6 @@ pub async fn authorization_middleware(
         if let Ok(Some(user_session)) = session.get::<UserSession>(USER_SESSION_KEY).await {
             tracing::debug!("User session found: {:?}", user_session);
             Some(Authorization::Session(user_session))
-        } else if let Ok(Some(dynamo_session)) = session
-            .get::<DynamoUserSession>(DYNAMO_USER_SESSION_KEY)
-            .await
-        {
-            tracing::debug!("Dynamo user session found: {:?}", dynamo_session);
-            Some(Authorization::DynamoSession(dynamo_session))
         } else {
             None
         }
