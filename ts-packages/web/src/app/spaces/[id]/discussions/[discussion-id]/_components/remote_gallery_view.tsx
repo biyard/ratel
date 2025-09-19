@@ -33,11 +33,10 @@ export default function RemoteGalleryView({
   const tileWidth = 220;
   const [visibleCount, setVisibleCount] = useState(1);
 
-  // === [추가] 컨테이너 길이: 원하는 길이 vs 화면 가용폭 중 작은 값 ===
-  const DESIRED_CONTAINER_PX = 1400; // “조금 더 긴” 목표 길이
+  const DESIRED_CONTAINER_PX = 1400;
   const MIN_CONTAINER_PX = 720;
-  const SIDE_PADDING_PX = 48; // px-6 좌우
-  const ARROWS_AREA_PX = 96; // 양 옆 버튼 영역 대략
+  const SIDE_PADDING_PX = 48;
+  const ARROWS_AREA_PX = 96;
   const [containerWidthPx, setContainerWidthPx] = useState(MIN_CONTAINER_PX);
 
   const resizeContainerWidth = () => {
@@ -56,8 +55,7 @@ export default function RemoteGalleryView({
     return () => window.removeEventListener('resize', resizeContainerWidth);
   }, []);
 
-  // === [추가] gap 포함한 stride 계산 ===
-  const [colGap, setColGap] = useState(8); // Tailwind gap-2 기본 8px
+  const [colGap, setColGap] = useState(8);
   useEffect(() => {
     const readGap = () => {
       if (!rowRef.current) return;
@@ -90,7 +88,6 @@ export default function RemoteGalleryView({
 
   const videoRefs = useRef<Map<string, HTMLVideoElement>>(new Map());
 
-  // === [치환] 가시 카드 수 계산: stride / 컨테이너 실제 너비 기준 ===
   useEffect(() => {
     const updateVisibleCount = () => {
       const containerWidth =
@@ -117,7 +114,6 @@ export default function RemoteGalleryView({
 
   useEffect(() => {
     scrollTo(scrollIndex);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [users.length, visibleCount, stride, containerWidthPx]);
 
   const sortedParticipants = useMemo(() => {
@@ -159,12 +155,12 @@ export default function RemoteGalleryView({
       <div
         ref={containerRef}
         className="overflow-x-hidden scroll-smooth no-scrollbar"
-        style={{ width: `${containerWidthPx}px` }} // [추가] 동적 컨테이너 폭
+        style={{ width: `${containerWidthPx}px` }}
       >
         <div
           ref={rowRef}
           className="flex flex-row gap-2"
-          style={{ width: `${users.length * stride - colGap}px` }} // [치환] gap 포함
+          style={{ width: `${users.length * stride - colGap}px` }}
         >
           {sortedParticipants.map((p) => {
             const user = users.find((u) => u.user_id === p.id);
