@@ -1,9 +1,7 @@
-use crate::types::*;
+use crate::{types::*, utils::time::get_now_timestamp_millis};
 use bdk::prelude::*;
 
-#[derive(
-    Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default, schemars::JsonSchema,
-)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default)]
 pub struct User {
     pub pk: Partition,
     pub sk: EntityType,
@@ -55,7 +53,7 @@ impl User {
         let pk = Partition::User(uid);
         let sk = EntityType::User;
 
-        let now = chrono::Utc::now().timestamp_micros();
+        let now = get_now_timestamp_millis();
 
         Self {
             pk,

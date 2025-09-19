@@ -52,73 +52,66 @@ pub fn route(
 ) -> Result<Router, Error2> {
     Ok(Router::new()
         .nest(
-            "/v3",
-            Router::new().nest(
-                "/auth",
-                Router::new()
-                    .route(
-                        "/login",
-                        post_with(
-                            login_handler,
-                            api_docs!(LoginResponse, "Login", "Login and receive JWT token"),
-                        ),
-                    )
-                    .route(
-                        "/signup",
-                        post_with(signup_handler, api_docs!((), "Signup", "Signup user")),
-                    )
-                    .nest(
-                        "/verification",
-                        Router::new()
-                            .route(
-                                "/request_code",
-                                post_with(
-                                    send_code_handler,
-                                    api_docs!(
-                                        Json<SendCodeResponse>,
-                                        "Request Email Verification Code",
-                                        "Request a verification code to be sent to the user's email"
-                                    ),
-                                ),
-                            )
-                            .route(
-                                "/verify_code",
-                                post_with(
-                                    verify_code_handler,
-                                    api_docs!(
-                                        (),
-                                        "Verify Email Verification Code",
-                                        "Verify the code sent to the user's email"
-                                    ),
-                                ),
-                            ),
-                    ),
-            ),
-        )
-        .nest(
             "/users",
             Router::new()
                 .route(
                     "/",
                     get_with(
                         get_user_info_handler,
-                        api_docs!(
-                            Json<GetUserInfoResponse>,
-                            "List Users",
-                            "Retrieve a list of users"
-                        ),
+                        api_docs!(Json<GetUserInfoResponse>, "", ""),
                     ),
                 )
                 .route(
                     "/find",
-                    get_with(
-                        find_user_handler,
+                    get_with(find_user_handler, api_docs!(Json<FindUserResponse>, "", "")),
+                ),
+        )
+        .nest(
+            "/auth",
+            Router::new()
+                .route(
+                    "/login",
+                    post_with(
+                        login_handler,
                         api_docs!(
-                            Json<FindUserResponse>,
-                            "Find User",
-                            "Find a user by username, email, or phone number. Use Query Parameters"
+                            LoginResponse,
+                            "User login",
+                            "Authenticate user and create a session"
                         ),
                     ),
+                )
+                .route(
+                    "/signup",
+                    post_with(
+                        signup_handler,
+                        api_docs!((), "User signup", "Register a new user account"),
+                    ),
+                )
+                .nest(
+                    "/verification",
+                    Router::new()
+                        .route(
+                            "/send_verification_code",
+                            post_with(
+                                send_code_handler,
+                                api_docs!(
+                                    Json<SendCodeResponse>,
+                                    "Send verification code",
+                                    "Send a verification code to the user's email"
+                                ),
+                            ),
+                        )
+                        .route(
+                            "/verify_code",
+                            post_with(
+                                verify_code_handler,
+                                api_docs!(
+                                    (),
+                                    "Verify code",
+                                    "Verify the provided email verification code"
+                                ),
+                            ),
+                        ),
                 ),
         )
         .with_state(AppState {

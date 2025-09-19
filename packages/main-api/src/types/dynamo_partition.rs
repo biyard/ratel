@@ -2,9 +2,7 @@ use bdk::prelude::*;
 
 use serde_with::{DeserializeFromStr, SerializeDisplay};
 
-#[derive(
-    Debug, Clone, SerializeDisplay, DeserializeFromStr, Default, DynamoEnum, schemars::JsonSchema,
-)]
+#[derive(Debug, Clone, SerializeDisplay, DeserializeFromStr, Default, DynamoEnum)]
 #[dynamo_enum(error = "crate::Error2")]
 pub enum Partition {
     #[default]
