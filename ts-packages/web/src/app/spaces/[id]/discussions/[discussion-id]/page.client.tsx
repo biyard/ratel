@@ -83,17 +83,6 @@ function Page() {
             }}
           />
 
-          {meetingSession && !isSharing && !remoteContentTileOwner && (
-            <RemoteGalleryView
-              meetingSession={meetingSession}
-              videoTiles={videoTiles}
-              participants={participants}
-              u={users}
-              focusedAttendeeId={focusedAttendeeId}
-              setFocusedAttendeeId={changeFocusedAttendeeId}
-            />
-          )}
-
           <div className="relative w-full h-full">
             <div className="flex flex-col w-full justify-start items-start">
               <>
@@ -168,6 +157,17 @@ function Page() {
               </>
             </div>
           </div>
+
+          {meetingSession && !isSharing && !remoteContentTileOwner && (
+            <RemoteGalleryView
+              meetingSession={meetingSession}
+              videoTiles={videoTiles}
+              participants={participants}
+              u={users}
+              focusedAttendeeId={focusedAttendeeId}
+              setFocusedAttendeeId={changeFocusedAttendeeId}
+            />
+          )}
 
           <Bottom
             isVideoOn={isVideoOn}
