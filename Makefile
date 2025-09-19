@@ -34,6 +34,8 @@ BUILD_CDK_ENV ?= AWS_ACCESS_KEY_ID=$(ACCESS_KEY_ID) AWS_SECRET_ACCESS_KEY=$(SECR
 run: .build/evm-keys
 	COMMIT=${COMMIT} docker compose --profile development up -d --remove-orphans
 
+stop:
+	docker compose --profile development down --remove-orphans
 serve:
 	cd packages/$(SERVICE) && make serve
 
