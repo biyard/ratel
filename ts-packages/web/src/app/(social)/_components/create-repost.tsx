@@ -142,7 +142,7 @@ export function CreateRePost() {
               />
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-white font-medium text-lg">
+              <span className="text-foreground font-medium text-lg">
                 {userInfo?.nickname || 'Anonymous'}
               </span>
             </div>
@@ -150,12 +150,12 @@ export function CreateRePost() {
           </div>
 
           <div className="flex items-center space-x-4">
-            <div className="p-4 rounded-lg flex w-[320px] justify-between border-[0.5px] border-[#262626]">
-              <p className="text-left text-white text-lg">{industry}</p>
+            <div className="p-4 rounded-lg flex w-[320px] justify-between border-[0.5px] border-create-space-border">
+              <p className="text-left text-foreground text-lg">{industry}</p>
             </div>
 
             <div className={cn('cursor-pointer')} onClick={resetDraft}>
-              <DoubleArrowDown />
+              <DoubleArrowDown className="[&>path]:stroke-text-primary"/>
             </div>
           </div>
         </div>
@@ -183,7 +183,7 @@ export function CreateRePost() {
 
             {feedcontent && (
               <div
-                className="prose prose-invert text-sm p-3 bg-write-comment-box-bg  mb-3 font-light"
+                className="prose prose-invert text-sm p-3 bg-write-comment-box-bg  mb-3 font-light text-desc-text"
                 dangerouslySetInnerHTML={{
                   __html: DOMPurify.sanitize(feedcontent),
                 }}
@@ -254,12 +254,12 @@ export function CreateRePost() {
             <button
               onClick={handlePublish}
               disabled={isSubmitDisabled}
-              className="shrink-0 bg-primary text-background rounded-full hover:bg-primary/70 px-4 py-2 font-bold flex items-center gap-x-2"
+              className="shrink-0 bg-primary text-text-third rounded-full hover:bg-primary/70 px-4 py-2 font-bold flex items-center gap-x-2"
             >
               {isReposting ? (
                 <Loader className="animate-spin" />
               ) : (
-                <UserCircle />
+                <UserCircle className="[&>path]:stroke-text-third" />
               )}
               {isReposting ? '' : 'Post'}
             </button>
@@ -267,7 +267,7 @@ export function CreateRePost() {
 
           {/* URL Input Dialogs */}
           {showUrlInput && (
-            <div className="absolute top-4 left-2 z-20 bg-neutral-800 border border-neutral-600 rounded-md px-3 py-2 flex items-center gap-2 w-[90%]">
+            <div className="absolute top-4 left-2 z-20 rounded-md px-3 py-2 flex items-center gap-2 w-[90%] bg-write-comment-box-bg">
               <button onClick={handleInsertUrl}>
                 <LinkPaste />
               </button>
@@ -301,7 +301,7 @@ export function CreateRePost() {
           )}
 
           {showCommentUrlInput && (
-            <div className="absolute top-2/5 left-2 z-20 bg-neutral-800 border border-neutral-600 rounded-md px-3 py-2 flex items-center gap-2 w-[90%]">
+            <div className="absolute top-2/5 left-2 z-20 rounded-md px-3 py-2 flex items-center gap-2 w-[90%] bg-write-comment-box-bg">
               <button onClick={handleCommentUrl}>
                 <CommentPaste />
               </button>
