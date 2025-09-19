@@ -140,9 +140,10 @@ fn parse_struct_cfg(attrs: &[Attribute]) -> StructCfg {
             } else if meta.path.is_ident("sk_name") {
                 if let Ok(value) = meta.value() {
                     let v = value.to_string();
-                    tracing::info!("sk_name: {:?}", v);
-                    if v.is_empty() || &v == "None" || &v == "none" {
-                        tracing::info!("No sk_name specified, assuming no sort key");
+                    if v.is_empty()
+                        || v.trim_matches('"') == "None"
+                        || v.trim_matches('"') == "none"
+                    {
                         cfg.sk_name = None;
                     } else if let Ok(s) = value.parse::<syn::LitStr>() {
                         cfg.sk_name = Some(s.value());
@@ -535,7 +536,6 @@ fn generate_struct_impl(
     } else {
         quote! { None }
     };
-    tracing::debug!("sk_field_method: {:?}", s_cfg.sk_name);
     let sk_param = if s_cfg.sk_name.is_some() {
         quote! { sk: Option<impl std::fmt::Display>, }
     } else {
@@ -738,6 +738,11 @@ fn generate_query_option(st_name: &str, cfg: &StructCfg) -> proc_macro2::TokenSt
         quote! {}
     };
 
+    let sk_field_default = if cfg.sk_name.is_some() {
+        quote! { sk: None, }
+    } else {
+        quote! {}
+    };
     let sk_fn = if cfg.sk_name.is_some() {
         quote! {
             pub fn sk(mut self, sk: String) -> Self {
@@ -761,7 +766,7 @@ fn generate_query_option(st_name: &str, cfg: &StructCfg) -> proc_macro2::TokenSt
         impl Default for #opt_ident {
             fn default() -> Self {
                 Self {
-                    sk: None,
+                    #sk_field_default
                     bookmark: None,
                     limit: 10,
                     scan_index_forward: false,
