@@ -2,6 +2,16 @@
 
 The `DynamoEntity` derive macro automatically generates CRUD operations and query builders for Amazon DynamoDB entities in Rust. It provides a high-level, type-safe interface for interacting with DynamoDB tables.
 
+## Key Features
+
+- **Automatic CRUD Operations**: Generate create, read, update, delete operations
+- **GSI Query Support**: Field-level and struct-level Global Secondary Index configuration
+- **Update Builders**: Fluent API for atomic updates with automatic GSI consistency
+- **Enum Support**: Full DynamoEntity support for enum types with struct-level indexes
+- **Type Safety**: Preserves Rust's type system while providing DynamoDB integration
+- **Pagination**: Built-in bookmark-based pagination for large result sets
+- **Flexible Configuration**: Customizable table names, error types, and key configurations
+
 ## Table of Contents
 
 - [Quick Start](#quick-start)
@@ -44,6 +54,11 @@ Configure the DynamoEntity behavior using struct-level attributes:
 | `error_ctor` | Custom Error constructor                   | `crate::Error2`       |
 | `pk_name`    | Partition key field name                   | `"pk"`                |
 | `sk_name`    | Sort key field name (use `"none"` to disable) | `"sk"`            |
+| `pk_prefix`  | Default partition key prefix for struct-level indexes | -         |
+| `sk_prefix`  | Default sort key prefix for struct-level indexes      | -         |
+| `index`      | GSI name for struct-level index configuration         | -         |
+| `name`       | Query function name for struct-level index            | `find_by_{index}` |
+| `enable_sk`  | Enable sort key querying for struct-level index       | `false`   |
 
 ```rust
 #[derive(DynamoEntity)]
@@ -59,6 +74,8 @@ pub struct User {
     pub username: String,
 }
 ```
+
+### Struct-Level Index Configuration
 
 ## Field Attributes
 
@@ -228,6 +245,34 @@ impl MyEntityUpdater {
 }
 ```
 
+### Enhanced Update Operations
+
+The updater now automatically maintains GSI consistency when updating fields that participate in indexes:
+
+```rust
+#[derive(DynamoEntity)]
+pub struct User {
+    pub pk: String,
+    pub sk: String,
+
+    #[dynamo(prefix = "EMAIL", index = "gsi1", pk)]
+    pub email: String,
+
+    #[dynamo(prefix = "STATUS", index = "gsi2", pk)]
+    pub status: String,
+
+    pub username: String,
+}
+
+// When updating indexed fields, GSI attributes are automatically updated
+User::updater("USER#123", "PROFILE")
+    .with_email("new@example.com".to_string())  // Updates both 'email' and 'gsi1_pk'
+    .with_status("active".to_string())          // Updates both 'status' and 'gsi2_pk'
+    .remove_username()                          // Only removes 'username'
+    .execute(&client)
+    .await?;
+```
+
 ## Global Secondary Indexes (GSI)
 
 ### Index Configuration
@@ -380,6 +425,136 @@ User::updater("USER#123", "PROFILE")
     .await?;
 ```
 
+### Enum Support
+
+DynamoEntity supports enum types that bundle multiple related entity structs together. This pattern is useful for bulk operations across different but related entity types that share the same partition key.
+
+#### Entity Bundle Pattern
+
+The primary use case for DynamoEntity enums is to create a unified interface for querying multiple related entities:
+
+```rust
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity)]
+#[serde(untagged)]
+#[dynamo(
+    pk_prefix = "EMAIL",
+    sk_prefix = "AA",
+    index = "gsi1",
+    name = "find_by_email"
+)]
+pub enum UserMetadata {
+    User(User),
+    UserPrincipal(UserPrincipal),
+    UserEvmAddress(UserEvmAddress),
+    UserReferralCode(UserReferralCode),
+    UserPhoneNumber(UserPhoneNumber),
+    UserTelegram(UserTelegram),
+}
+```
+
+Each variant wraps a different DynamoEntity struct. The enum allows you to:
+
+1. **Query multiple entity types at once** using the base `query()` method
+2. **Search across entity types** using GSI queries with `find_by_*` methods
+3. **Handle heterogeneous results** in a type-safe manner
+
+#### Generated Methods for Enums
+
+```rust
+impl UserMetadata {
+    // Query all entities with the same partition key
+    pub async fn query(
+        cli: &aws_sdk_dynamodb::Client,
+        pk: impl std::fmt::Display,
+    ) -> Result<Vec<Self>, Error>;
+
+    // GSI query with optional sort key filtering
+    pub async fn find_by_email(
+        cli: &aws_sdk_dynamodb::Client,
+        pk: impl std::fmt::Display,
+        sk: Option<impl std::fmt::Display>,
+    ) -> Result<Vec<Self>, Error>;
+}
+```
+
+#### Real-World Usage Example
+
+```rust
+// Create different types of user-related entities
+let user = User::new(nickname, email.clone(), profile, true, true, UserType::Individual, None, username, password);
+user.create(&client).await?;
+
+let user_principal = UserPrincipal::new(user.pk.clone(), principal);
+user_principal.create(&client).await?;
+
+let user_evm = UserEvmAddress::new(user.pk.clone(), evm_address);
+user_evm.create(&client).await?;
+
+let user_referral = UserReferralCode::new(user.pk.clone(), referral_code);
+user_referral.create(&client).await?;
+
+// Query ALL user metadata at once using the enum
+let metadata = UserMetadata::query(&client, user.pk).await?;
+// Returns Vec<UserMetadata> containing all 4 entities as enum variants
+
+// Handle different entity types
+for item in metadata {
+    match item {
+        UserMetadata::User(u) => {
+            println!("Found user: {}", u.email);
+        }
+        UserMetadata::UserPrincipal(up) => {
+            println!("Found principal: {}", up.principal);
+        }
+        UserMetadata::UserEvmAddress(ue) => {
+            println!("Found EVM address: {}", ue.evm_address);
+        }
+        UserMetadata::UserReferralCode(ur) => {
+            println!("Found referral code: {}", ur.referral_code);
+        }
+        // ... handle other variants
+    }
+}
+
+// Query by email across all user entity types
+let users = UserMetadata::find_by_email(&client, "user@example.com", None::<String>).await?;
+// Returns all UserMetadata variants that have the specified email
+```
+
+#### Key Benefits of Enum Entities
+
+1. **Bulk Operations**: Query multiple related entity types with a single database call
+2. **Type Safety**: Handle different entity types in a unified, type-safe manner
+3. **Efficiency**: Reduce the number of DynamoDB queries needed for complex operations
+4. **Flexibility**: Use GSI queries to search across multiple entity types simultaneously
+
+#### Enum Configuration Options
+
+For enum entities, struct-level attributes control GSI behavior:
+
+- **`pk_prefix`**: Prefix applied to partition key values (e.g., "EMAIL#")
+- **`sk_prefix`**: Prefix applied to sort key values (e.g., "AA#")
+- **`enable_sk`**: Enables sort key filtering in queries without requiring a prefix
+- **`index`**: GSI name to query (creates "{index}-index")
+- **`name`**: Custom function name (defaults to "find_by_{index}")
+
+#### Important Serde Configuration
+
+Always include `#[serde(untagged)]` on DynamoEntity enums:
+
+```rust
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity)]
+#[serde(untagged)]  // ← Essential for proper deserialization
+#[dynamo(...)]
+pub enum UserMetadata {
+    User(User),
+    UserPrincipal(UserPrincipal),
+    // ...
+}
+```
+
+Without `#[serde(untagged)]`, serde will expect variant tags in the DynamoDB items, which won't be present since each variant represents a complete entity structure.
+
 ### Environment Configuration
 
 The table name is constructed from the environment variable `DYNAMO_TABLE_PREFIX`:
@@ -405,6 +580,12 @@ assert_eq!(User::table_name(), "ratel-local-users");
 4. **Handle pagination**: Always check for bookmarks in query results for large datasets
 5. **Use builders**: Leverage the generated query and update builders for cleaner code
 6. **Type safety**: The macro preserves Rust's type safety while providing DynamoDB integration
+7. **GSI consistency**: The macro automatically maintains GSI attribute consistency during updates - no manual intervention needed
+8. **Enum bundling**: Use enums to bundle related entity types that share partition keys for efficient bulk operations
+9. **Serde untagged**: Always use `#[serde(untagged)]` on DynamoEntity enums to ensure proper deserialization
+10. **Entity relationships**: Design enum variants around logical groupings (e.g., all user-related entities in UserMetadata)
+11. **Index naming**: Stick to the "gsi1", "gsi2" convention for consistent table schema across entities
+12. **Prefix strategy**: Use consistent prefixing strategies across your domain (e.g., "USER#", "POST#", "EMAIL#")
 
 ## Table Schema Requirements
 

@@ -103,7 +103,7 @@ export function PostInfoSection({
   const t = useTranslations('SprintSpace');
   return (
     <div className="flex flex-row w-full justify-between items-center max-mobile:flex-col">
-      <div className="flex flex-row w-full gap-2.5 items-center">
+      <div className="flex flex-row gap-2.5 items-center">
         {/* <SpaceType /> */}
         {!isDraft ? <Onboard /> : <></>}
       </div>

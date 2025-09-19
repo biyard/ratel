@@ -13,7 +13,6 @@ import useSpaceById, {
 } from '@/hooks/use-space-by-id';
 import { TeamContext } from '@/lib/contexts/team-context';
 import { useContext } from 'react';
-import { useUserInfo } from '@/app/(social)/_hooks/user';
 import { SpaceStatus } from '@/lib/api/models/spaces';
 import { PublishingScope } from '@/lib/api/models/notice';
 import useFeedById from '@/hooks/feeds/use-feed-by-id';
@@ -34,6 +33,9 @@ import {
 } from '@/components/post-header/buttons';
 import { useEditCoordinatorStore } from '../space-store';
 import { useTranslations } from 'next-intl';
+import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
+import { GroupPermission } from '@/lib/api/models/group';
+import { usePermission } from '@/app/(social)/_hooks/use-permission';
 
 function SpaceModifySection({
   spaceId,
@@ -46,6 +48,7 @@ function SpaceModifySection({
   isDraft: boolean;
   isPublic: boolean;
   authorId: number;
+  authorName: string;
   onEdit: () => void;
 }) {
   const router = useRouter();
@@ -59,9 +62,15 @@ function SpaceModifySection({
     spacePublishValidator,
   } = useEditCoordinatorStore();
   const { selectedTeam } = useContext(TeamContext);
-  const { data: userInfo } = useUserInfo();
+  const { data: userInfo } = useSuspenseUserInfo();
+
+  const writePostPermission = usePermission(
+    authorId ?? 0,
+    GroupPermission.WritePosts,
+  ).data.has_permission;
   const hasEditPermission =
-    authorId === userInfo?.id || selectedTeam?.id === authorId;
+    (authorId === userInfo?.id || selectedTeam?.id === authorId) &&
+    writePostPermission;
 
   const publishSpace = usePublishSpace(spaceId);
   const makeSpacePublic = useMakePublicSpace(spaceId);
@@ -188,6 +197,7 @@ export default function Header() {
             isDraft={isDraft}
             isPublic={isPublic}
             authorId={space.author[0]?.id}
+            authorName={space.author[0]?.username}
             spaceId={spaceId}
             onEdit={handleStartEdit}
           />

@@ -13,6 +13,7 @@ import {
   QK_GET_SPACE_BY_SPACE_ID,
   QK_GET_TEAM_BY_ID,
   QK_GET_TEAM_BY_USERNAME,
+  QK_GET_PERMISSION,
   QK_USERS_GET_INFO,
 } from '@/constants';
 
@@ -27,6 +28,8 @@ import { QueryResponse } from './models/common';
 import { Team } from './models/team';
 import { HomeGatewayResponse } from './models/home';
 import { InfiniteData } from '@tanstack/react-query';
+import { GroupPermission } from './models/group';
+import { Permission } from './models/permission';
 
 async function getDataFromServer<T>(
   key: (string | number)[],
@@ -148,6 +151,16 @@ export async function getUserInfo(): Promise<{
   return getDataFromServer<User>(
     [QK_USERS_GET_INFO],
     ratelApi.users.getUserInfo(),
+  );
+}
+
+export function getPermission(
+  teamId: number,
+  permission: GroupPermission,
+): Promise<{ key: (string | number)[]; data: Permission | null }> {
+  return getDataFromServer<Permission>(
+    [QK_GET_PERMISSION, teamId, permission],
+    ratelApi.permissions.getPermissions(teamId, permission),
   );
 }
 

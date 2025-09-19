@@ -23,14 +23,14 @@ pub struct GroupIdPath {
     pub id: i64,
 }
 
-#[derive(
-    Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
-)]
-pub struct GroupEmailIdPath {
-    pub team_id: i64,
-    pub id: i64,
-    pub email: String,
-}
+// #[derive(
+//     Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
+// )]
+// pub struct GroupEmailIdPath {
+//     pub team_id: i64,
+//     pub id: i64,
+//     pub email: String,
+// }
 
 #[derive(
     Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
@@ -156,11 +156,15 @@ impl GroupController {
                 team_id,
                 group_id: id,
                 image_url: Some(team.profile_url.clone()),
-                description: format!("You have been invited to join {} in {}", group.name, team.nickname),
+                description: format!(
+                    "You have been invited to join {} in {}",
+                    group.name, team.nickname
+                ),
             };
 
             // Send notification within the transaction to ensure consistency
-            if let Err(e) = send_notification(&self.pool, &mut tx, user_id, notification_data).await {
+            if let Err(e) = send_notification(&self.pool, &mut tx, user_id, notification_data).await
+            {
                 tracing::error!("Failed to send notification to user {}: {:?}", user_id, e);
                 // Don't fail the entire operation if notification fails - just log the error
                 // The transaction will still commit the main operation

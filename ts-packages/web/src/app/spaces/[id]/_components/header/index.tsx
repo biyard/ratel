@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { Input } from '@/components/ui/input';
 import { Space, SpaceStatus } from '@/lib/api/models/spaces';
 import { ArrowLeft, Play, Save } from 'lucide-react';
+import ArrowUp from '@/assets/icons/arrow-up.svg';
 import {
   Edit1,
   Unlock2,
@@ -15,18 +16,23 @@ import {
   CommentIcon,
   Rewards,
   Extra,
+  Internet,
 } from '@/components/icons';
 import { TeamContext } from '@/lib/contexts/team-context';
 import { useUserInfo } from '@/app/(social)/_hooks/user';
 import { getTimeAgo } from '@/lib/time-utils';
 import { usePopup } from '@/lib/contexts/popup-service';
-import GoPublicPopup from '../modal/go-public';
 import { Feed } from '@/lib/api/models/feeds';
 import { useSpaceContext } from './provider';
 import { useDropdown } from '../dropdown/dropdown-service';
 import DropdownMenu from '../dropdown/dropdown-menu';
 import DeleteSpacePopup from '../modal/confirm-delete';
 import { useTranslations } from 'next-intl';
+import PublishForm from '../../notice/_components/modal/publish-form';
+import { PublishingScope } from '@/lib/api/models/notice';
+import GoPublicModal from '../../notice/_components/modal/go-public-modal';
+import { GroupPermission } from '@/lib/api/models/group';
+import { usePermission } from '@/app/(social)/_hooks/use-permission';
 
 export default function SpaceHeader({
   space,
@@ -42,6 +48,7 @@ export default function SpaceHeader({
 
   const {
     isEdit,
+    isPrivatelyPublished,
     title,
     status,
     userType,
@@ -52,25 +59,39 @@ export default function SpaceHeader({
     handleSave,
     handleEdit,
     handleShare,
-    handlePostingSpace,
+    handlePublishWithScope,
     handleUpdateTitle,
     handleDelete,
   } = context;
 
   const popup = usePopup();
 
-  const handlePost = () => {
-    popup
-      .open(
-        <GoPublicPopup
-          onclose={() => popup.close()}
-          onpublic={async () => {
-            await handlePostingSpace();
-            popup.close();
-          }}
-        />,
-      )
-      .withoutBackdropClose();
+  const handlePost = async () => {
+    if (space.status === SpaceStatus.Draft) {
+      popup
+        .open(
+          <PublishForm
+            onPublish={async (scope: PublishingScope) => {
+              popup.close();
+              await handlePublishWithScope(scope);
+            }}
+            currentScope={space.publishing_scope}
+          />,
+        )
+        .withoutBackdropClose();
+    } else {
+      popup
+        .open(
+          <GoPublicModal
+            onCancel={() => popup.close()}
+            onGoPublic={async () => {
+              popup.close();
+              await handlePublishWithScope(PublishingScope.Public);
+            }}
+          />,
+        )
+        .withoutBackdropClose();
+    }
   };
 
   // Add this new handler function in SpaceHeader
@@ -101,6 +122,11 @@ export default function SpaceHeader({
   const rewards = feed.rewards;
   const { isOpen, toggle, close, dropdownRef } = useDropdown();
 
+  const writePostPermission = usePermission(
+    space.author[0]?.id ?? 0,
+    GroupPermission.WritePosts,
+  ).data.has_permission;
+
   return (
     <div className="flex flex-col w-full gap-2.5 mb-10">
       <div className="flex flex-row justify-between items-center w-full">
@@ -114,7 +140,7 @@ export default function SpaceHeader({
           )}
         </div>
 
-        {(authorId === userId || selectedTeam) && (
+        {(authorId === userId || selectedTeam) && writePostPermission && (
           <div className="flex flex-row items-center gap-2 text-sm text-white">
             {isEdit ? (
               <button
@@ -138,98 +164,124 @@ export default function SpaceHeader({
               </button>
             )}
 
-            {status === SpaceStatus.Draft && (
+            {!isEdit && status === SpaceStatus.Draft && (
               <button
-                className="flex flex-row w-fit px-3.5 py-2 rounded-md bg-white light:border-[#e5e5e5] gap-1"
-                onClick={handlePost}
+                className="flex flex-row w-fit px-3.5 py-2 rounded-md bg-white gap-1"
+                onClick={async () => {
+                  await handlePost();
+                }}
               >
-                <Unlock2 className="stroke-neutral-600 [&>path]:stroke-2 w-5 h-5" />
+                <ArrowUp className="stroke-neutral-500 [&>path]:stroke-2 w-5 h-5" />
                 <div className="font-bold text-zinc-900 text-sm">
-                  {t('make_public')}
+                  {t('publish')}
                 </div>
               </button>
             )}
+            {!isEdit &&
+              status !== SpaceStatus.Draft &&
+              isPrivatelyPublished && (
+                <button
+                  className="flex flex-row w-fit px-3.5 py-2 rounded-md bg-white gap-1"
+                  onClick={async () => {
+                    await handlePost();
+                  }}
+                >
+                  <Internet className="stroke-neutral-500 [&>path]:stroke-2 w-5 h-5" />
+                  <div className="font-bold text-zinc-900 text-sm">
+                    {t('go_public')}
+                  </div>
+                </button>
+              )}
 
-            <div className="relative" ref={dropdownRef}>
-              <button
-                onClick={toggle}
-                aria-expanded={isOpen}
-                aria-label="Space options menu"
-                aria-haspopup="menu"
-                className="w-fit p-2 rounded-md bg-neutral-800 light:bg-transparent"
-                onKeyDown={(e) => {
-                  // if (
-                  //   e.key === 'Enter' ||
-                  //   e.key === ' ' ||
-                  //   e.key === 'ArrowDown'
-                  // ) {
-                  //   e.preventDefault();
-                  //   toggle();
-                  //   if (!isOpen) {
-                  //     setTimeout(() => {
-                  //       const firstMenuItem =
-                  //         dropdownRef.current?.querySelector(
-                  //           '[role="menuitem"]:not([aria-disabled="true"])',
-                  //         );
-                  //       (firstMenuItem as HTMLElement)?.focus();
-                  //     }, 0);
-                  //   }
-                  // }
+            {writePostPermission ? (
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={toggle}
+                  aria-expanded={isOpen}
+                  aria-label="Space options menu"
+                  aria-haspopup="menu"
+                  className="w-fit p-2 rounded-md bg-neutral-800 light:bg-transparent"
+                  onKeyDown={(e) => {
+                    // if (
+                    //   e.key === 'Enter' ||
+                    //   e.key === ' ' ||
+                    //   e.key === 'ArrowDown'
+                    // ) {
+                    //   e.preventDefault();
+                    //   toggle();
+                    //   if (!isOpen) {
+                    //     setTimeout(() => {
+                    //       const firstMenuItem =
+                    //         dropdownRef.current?.querySelector(
+                    //           '[role="menuitem"]:not([aria-disabled="true"])',
+                    //         );
+                    //       (firstMenuItem as HTMLElement)?.focus();
+                    //     }, 0);
+                    //   }
+                    // }
 
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    if (!isOpen) {
-                      toggle(); // open
-                      setTimeout(() => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      if (!isOpen) {
+                        toggle(); // open
+                        setTimeout(() => {
+                          const firstMenuItem =
+                            dropdownRef.current?.querySelector(
+                              '[role="menuitem"]:not([aria-disabled="true"])',
+                            );
+                          (firstMenuItem as HTMLElement)?.focus();
+                        }, 0);
+                      } else {
+                        // move focus into menu if already open
                         const firstMenuItem =
                           dropdownRef.current?.querySelector(
                             '[role="menuitem"]:not([aria-disabled="true"])',
                           );
                         (firstMenuItem as HTMLElement)?.focus();
-                      }, 0);
-                    } else {
-                      // move focus into menu if already open
-                      const firstMenuItem = dropdownRef.current?.querySelector(
-                        '[role="menuitem"]:not([aria-disabled="true"])',
-                      );
-                      (firstMenuItem as HTMLElement)?.focus();
-                    }
-                  } else if (e.key === 'ArrowDown') {
-                    e.preventDefault();
-                    if (!isOpen) {
-                      toggle(); // open
-                      setTimeout(() => {
+                      }
+                    } else if (e.key === 'ArrowDown') {
+                      e.preventDefault();
+                      if (!isOpen) {
+                        toggle(); // open
+                        setTimeout(() => {
+                          const firstMenuItem =
+                            dropdownRef.current?.querySelector(
+                              '[role="menuitem"]:not([aria-disabled="true"])',
+                            );
+                          (firstMenuItem as HTMLElement)?.focus();
+                        }, 0);
+                      } else {
                         const firstMenuItem =
                           dropdownRef.current?.querySelector(
                             '[role="menuitem"]:not([aria-disabled="true"])',
                           );
                         (firstMenuItem as HTMLElement)?.focus();
-                      }, 0);
-                    } else {
-                      const firstMenuItem = dropdownRef.current?.querySelector(
-                        '[role="menuitem"]:not([aria-disabled="true"])',
-                      );
-                      (firstMenuItem as HTMLElement)?.focus();
-                    }
-                  }
-                }}
-              >
-                <Extra />
-              </button>
-              {isOpen && (
-                <div
-                  role="menu"
-                  className="absolute top-full mt-2 right-0 z-50"
-                  onBlur={(e) => {
-                    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-                      close();
+                      }
                     }
                   }}
                 >
-                  <DropdownMenu onclose={close} ondelete={handleDeleteClick} />
-                </div>
-              )}
-            </div>
+                  <Extra />
+                </button>
+                {isOpen && (
+                  <div
+                    role="menu"
+                    className="absolute top-full mt-2 right-0 z-50"
+                    onBlur={(e) => {
+                      if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                        close();
+                      }
+                    }}
+                  >
+                    <DropdownMenu
+                      onclose={close}
+                      ondelete={handleDeleteClick}
+                    />
+                  </div>
+                )}
+              </div>
+            ) : (
+              <></>
+            )}
           </div>
         )}
       </div>

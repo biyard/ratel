@@ -13,6 +13,7 @@ import { checkString } from '@/lib/string-filter-utils';
 import { showErrorToast } from '@/lib/toast';
 import { DiscussionInfo } from '../../types';
 import { useTranslations } from 'next-intl';
+import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 
 export default function InviteMemberPopup({
   title,
@@ -32,13 +33,38 @@ export default function InviteMemberPopup({
 }) {
   const t = useTranslations('DeliberationSpace');
   const { get } = useApiCall();
+  const { data: me } = useSuspenseUserInfo();
 
   const [selectedUsers, setSelectedUsers] = useState<TotalUser[]>(users);
   const [isError, setIsError] = useState<boolean[]>([]);
   const [searchValue, setSearchValue] = useState('');
   const [errorCount, setErrorCount] = useState(0);
 
-  const setValue = async (value: string, isEnter: boolean) => {
+  const ensureMe = (list: TotalUser[]) => {
+    if (!me) return list;
+    return list.some((u) => u.id === me.id)
+      ? list
+      : [
+          ...list,
+          {
+            id: me.id,
+            created_at: me.created_at,
+            updated_at: me.updated_at,
+            nickname: me.nickname,
+            html_contents: me.html_contents,
+            username: me.username,
+            profile_url: me.profile_url,
+            user_type: me.user_type,
+          } as TotalUser,
+        ];
+  };
+
+  const setValue = async (
+    value: string,
+    isEnter: boolean,
+  ): Promise<TotalUser[] | void> => {
+    let nextSelected = ensureMe(selectedUsers);
+
     if (value.includes(',') || isEnter) {
       const identifiers = value
         .split(',')
@@ -51,10 +77,9 @@ export default function InviteMemberPopup({
         const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input);
         const isPhone = /^\+?[0-9]\d{7,14}$/.test(input);
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        let data: any = null;
-
         try {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          let data: any = null;
           if (isEmail) {
             data = await get(ratelApi.users.getUserByEmail(input));
           } else if (isPhone) {
@@ -64,9 +89,9 @@ export default function InviteMemberPopup({
           }
 
           if (data) {
-            const exists = selectedUsers.some((u) => u.id === data.id);
+            const exists = nextSelected.some((u) => u.id === data.id);
             if (!exists) {
-              setSelectedUsers((prev) => [...prev, data]);
+              nextSelected = [...nextSelected, data];
             }
           } else {
             showErrorToast(t('invalid_user'));
@@ -77,10 +102,25 @@ export default function InviteMemberPopup({
         }
       }
 
+      setSelectedUsers(nextSelected);
       setSearchValue('');
+      return nextSelected;
     } else {
       setSearchValue(value);
     }
+  };
+
+  const handleSend = async () => {
+    const flushed = searchValue ? await setValue(searchValue, true) : undefined;
+    const participants = ensureMe(flushed ?? selectedUsers);
+
+    onadd({
+      started_at: Math.floor(startTime),
+      ended_at: Math.floor(endTime),
+      name: title,
+      description,
+      participants,
+    });
   };
 
   return (
@@ -137,18 +177,7 @@ export default function InviteMemberPopup({
         </div>
       </div>
 
-      <InviteMemberButton
-        isError={errorCount != 0}
-        onclick={() => {
-          onadd({
-            started_at: Math.floor(startTime),
-            ended_at: Math.floor(endTime),
-            name: title,
-            description,
-            participants: selectedUsers,
-          });
-        }}
-      />
+      <InviteMemberButton isError={errorCount != 0} onclick={handleSend} />
     </div>
   );
 }

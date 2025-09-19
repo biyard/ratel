@@ -236,6 +236,33 @@ export default function ClientProviders({
       audioElement.autoplay = true;
       session.audioVideo.bindAudioElement(audioElement);
 
+      session.audioVideo.setDeviceLabelTrigger(async () => {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+          video: true,
+        });
+        return stream;
+      });
+
+      try {
+        const warm = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+          video: true,
+        });
+        warm.getTracks().forEach((t) => t.stop());
+        const video = await deviceController.listVideoInputDevices();
+        const audio = await deviceController.listAudioInputDevices();
+
+        console.log('user audio, video list: ', video, audio);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (e: any) {
+        console.warn(
+          '[Devices] getUserMedia warm-up failed:',
+          e?.name,
+          e?.message ?? e,
+        );
+      }
+
       const audioInputs =
         await session.deviceController.listAudioInputDevices();
       if (audioInputs.length > 0) {

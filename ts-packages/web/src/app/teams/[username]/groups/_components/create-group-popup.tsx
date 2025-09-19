@@ -18,14 +18,14 @@ const PERMISSION_GROUPS: Record<
     { label: 'Write posts', value: GroupPermission.WritePosts },
     { label: 'Delete posts', value: GroupPermission.DeletePosts },
   ],
-  Reply: [
-    { label: 'Read replies', value: GroupPermission.ReadReplies },
-    { label: 'Write replies', value: GroupPermission.WriteReplies },
-    { label: 'Delete replies', value: GroupPermission.DeleteReplies },
-  ],
+  // Reply: [
+  //   { label: 'Read replies', value: GroupPermission.ReadReplies },
+  //   { label: 'Write replies', value: GroupPermission.WriteReplies },
+  //   { label: 'Delete replies', value: GroupPermission.DeleteReplies },
+  // ],
   Admin: [
-    { label: 'Manage promotions', value: GroupPermission.ManagePromotions },
-    { label: 'Manage news', value: GroupPermission.ManageNews },
+    // { label: 'Manage promotions', value: GroupPermission.ManagePromotions },
+    // { label: 'Manage news', value: GroupPermission.ManageNews },
     { label: 'Invite member', value: GroupPermission.InviteMember },
     { label: 'Update group', value: GroupPermission.UpdateGroup },
     { label: 'Delete group', value: GroupPermission.DeleteGroup },
