@@ -34,7 +34,7 @@ services:
       ENV: dev
       DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/ratel}
       DYNAMODB_ENDPOINT: http://localstack:4566
-      MIGRATE: "true"
+      MIGRATE: ${MIGRATE:-true}
       AWS_REGION: us-east-1
       AWS_ACCESS_KEY_ID: test
       AWS_SECRET_ACCESS_KEY: test
@@ -47,7 +47,7 @@ services:
     volumes:
       - .:/app
       # - ./.build/target:/app/target
-      # - ./.build/main-api/target:/app/packages/main-api/target
+      - ./.build/main-api/target:/app/packages/main-api/target
     working_dir: /app
     command: ["bash", "scripts/api-entrypoint.sh"]
     healthcheck:
@@ -99,7 +99,7 @@ services:
     volumes:
       - .:/app
       # - ./.build/target:/app/target
-      # - ./.build/fetcher/target:/app/packages/fetcher/target
+      - ./.build/fetcher/target:/app/packages/fetcher/target
     working_dir: /app
     environment:
       ENV: dev
