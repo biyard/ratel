@@ -16,6 +16,7 @@ use by_axum::{
 use reqwest::StatusCode;
 
 use crate::{
+    config,
     controllers::{
         self,
         m2::{
@@ -97,12 +98,16 @@ use crate::{
                 logout::logout_handler,
             },
         },
-        v3::auth::login::login_handler,
+        v3::users::{
+            email_login::v3_login_with_password_handler, email_signup::v3_email_signup_handler,
+            request_verification_code::request_verification_code_handler,
+            verify_email::email_verification_handler,
+        },
         well_known::get_did_document::get_did_document_handler,
         wg::get_home::get_home_handler,
     },
     utils::{
-        aws::{BedrockClient, DynamoClient, RekognitionClient, S3Client, TextractClient},
+        aws::{BedrockClient, RekognitionClient, S3Client, TextractClient},
         sqs_client::SqsClient,
         telegram::TelegramBot,
     },
@@ -141,30 +146,31 @@ macro_rules! api_docs {
     };
 }
 
-pub struct RouteDeps {
-    pub pool: sqlx::Pool<sqlx::Postgres>,
-    pub sqs_client: Arc<SqsClient>,
-    pub bedrock_client: BedrockClient,
-    pub rek_client: RekognitionClient,
-    pub textract_client: TextractClient,
-    pub metadata_s3_client: S3Client,
-    pub private_s3_client: S3Client,
-    pub bot: Option<TelegramBot>,
-    pub dynamo_client: DynamoClient,
-}
+pub async fn route(
+    pool: sqlx::Pool<sqlx::Postgres>,
+    sqs_client: Arc<SqsClient>,
+    bedrock_client: BedrockClient,
+    rek_client: RekognitionClient,
+    textract_client: TextractClient,
+    _metadata_s3_client: S3Client,
+    private_s3_client: S3Client,
+    bot: Option<TelegramBot>,
+) -> Result<by_axum::axum::Router> {
+    let conf = config::get();
 
-pub async fn route(deps: RouteDeps) -> Result<by_axum::axum::Router> {
-    let RouteDeps {
-        pool,
-        sqs_client,
-        bedrock_client,
-        rek_client,
-        textract_client,
-        private_s3_client,
-        bot,
-        dynamo_client,
-        ..
-    } = deps;
+    let dynamo_conf = aws_sdk_dynamodb::config::Config::builder()
+        .credentials_provider(aws_sdk_dynamodb::config::Credentials::new(
+            conf.aws.access_key_id,
+            conf.aws.secret_access_key,
+            None,
+            None,
+            "dynamo",
+        ))
+        .behavior_version_latest()
+        .build();
+
+    let dynamo_client = aws_sdk_dynamodb::Client::from_conf(dynamo_conf);
+    let dynamo_client = Arc::new(dynamo_client);
 
     Ok(by_axum::axum::Router::new()
         // For Admin routes
@@ -702,14 +708,45 @@ pub async fn route(deps: RouteDeps) -> Result<by_axum::axum::Router> {
             "/v3",
             axum::Router::new()
                 .nest(
-                    "/auth",
-                    axum::Router::new().route(
-                        "/login",
-                        post_with(
-                            login_handler,
-                            api_docs!("User Login", "Login user with email and password"),
+                    "/users",
+                    axum::Router::new()
+                        .route(
+                            "/signup",
+                            post_with(
+                                v3_email_signup_handler,
+                                api_docs!(
+                                    "V3 User Signup",
+                                    "Register a new user with email and password using V3 API"
+                                ),
+                            ),
+                        )
+                        .route(
+                            "/login",
+                            post_with(
+                                v3_login_with_password_handler,
+                                api_docs!(
+                                    "V3 User Login",
+                                    "Login user with email and password using V3 API"
+                                ),
+                            ),
+                        )
+                        .route(
+                            "/verifications",
+                            post_with(
+                                email_verification_handler,
+                                api_docs!(
+                                    "V3 Email Verification",
+                                    "Verify user's email address with verification code"
+                                ),
+                            )
+                            .get_with(
+                                request_verification_code_handler,
+                                api_docs!(
+                                    "V3 Request Verification Code",
+                                    "Send verification code to user's email address"
+                                ),
+                            ),
                         ),
-                    ),
                 )
                 .with_state(dynamo_client),
         )

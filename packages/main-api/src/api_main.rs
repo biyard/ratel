@@ -2,9 +2,9 @@ use std::env;
 
 use crate::{
     config, controllers,
-    route::{RouteDeps, route},
+    route::route,
     utils::{
-        aws::{BedrockClient, DynamoClient, RekognitionClient, S3Client, TextractClient},
+        aws::{BedrockClient, RekognitionClient, S3Client, TextractClient},
         // dynamo_migrate::{create_dynamo_tables, get_user_tables},
         mcp_middleware::mcp_middleware,
         sqs_client,
@@ -125,9 +125,7 @@ pub async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         ConversationParticipant,
         AuthClient,
         AuthCode,
-        Post,
         TelegramChannel,
-        TelegramToken,
     );
 
     // Create DynamoDB tables
@@ -204,8 +202,6 @@ pub async fn api_main() -> Result<Router> {
     let textract_client = TextractClient::new();
     let private_s3_client = S3Client::new(conf.private_bucket_name);
     let metadata_s3_client = S3Client::new(conf.bucket.name);
-    let dynamo_client = DynamoClient::new();
-
     let is_local = conf.env == "local";
     let session_layer = SessionManagerLayer::new(session_store)
         .with_secure(!is_local)
@@ -225,15 +221,11 @@ pub async fn api_main() -> Result<Router> {
     let mcp_router = by_axum::axum::Router::new()
         .nest_service("/mcp", controllers::mcp::route(pool.clone()).await?)
         .layer(middleware::from_fn(mcp_middleware));
-    let bot = if let Some(token) = conf.telegram_token {
-        Some(TelegramBot::new(token).await?)
-    } else {
-        None
-    };
+    let bot = TelegramBot::new(conf.telegram_token).await?;
     // FIXME: Is this the correct way to inject and pass the states into the route?
     // find better way to  management Axum's state or dependency injection for better modularity and testability.
-    let api_router = route(RouteDeps {
-        pool: pool.clone(),
+    let api_router = route(
+        pool.clone(),
         sqs_client,
         bedrock_client,
         rek_client,
@@ -241,8 +233,7 @@ pub async fn api_main() -> Result<Router> {
         metadata_s3_client,
         private_s3_client,
         bot,
-        dynamo_client,
-    })
+    )
     .await?
     .layer(middleware::from_fn(authorization_middleware))
     .layer(session_layer)
