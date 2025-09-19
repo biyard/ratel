@@ -1,7 +1,7 @@
 use bdk::prelude::*;
 
 use dto::{
-    FeedStatus, FeedType, GroupPermission, Post, RatelResource, Result, Space, aide,
+    FeedStatus, FeedType, Post, Result, Space, aide,
     by_axum::{
         auth::Authorization,
         axum::{
@@ -13,12 +13,9 @@ use dto::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    security::check_perm,
-    utils::{
-        space_visibility::{ViewerCtx, scope_space_opt_to_vec},
-        users::extract_user,
-    },
+use crate::utils::{
+    space_visibility::{ViewerCtx, scope_space_opt_to_vec},
+    users::extract_user,
 };
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, aide::OperationIo, JsonSchema)]
@@ -41,24 +38,24 @@ pub async fn list_posts_handler(
     let user_id = user.id;
     let teams = user.teams;
 
-    if let Some(query_user_id) = params.user_id {
-        tracing::debug!(
-            "Checking permissions for user_id: {} {}",
-            query_user_id,
-            user_id
-        );
-        if query_user_id != user_id {
-            check_perm(
-                &pool,
-                auth,
-                RatelResource::Post {
-                    team_id: query_user_id,
-                },
-                GroupPermission::ReadPosts,
-            )
-            .await?;
-        }
-    };
+    // if let Some(query_user_id) = params.user_id {
+    //     tracing::debug!(
+    //         "Checking permissions for user_id: {} {}",
+    //         query_user_id,
+    //         user_id
+    //     );
+    //     if query_user_id != user_id {
+    //         check_perm_without_error(
+    //             &pool,
+    //             auth,
+    //             RatelResource::Post {
+    //                 team_id: query_user_id,
+    //             },
+    //             GroupPermission::ReadPosts,
+    //         )
+    //         .await?;
+    //     }
+    // };
 
     let builder = Post::query_builder(user_id);
     let builder = if let Some(status) = params.status {
@@ -95,6 +92,7 @@ pub async fn list_posts_handler(
         user_id,
         team_ids: teams.iter().map(|t| t.id).collect(),
     };
+
     for post in &mut posts {
         let space = Space::query_builder(user_id)
             .feed_id_equals(post.id)

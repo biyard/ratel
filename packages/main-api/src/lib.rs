@@ -49,6 +49,10 @@ pub mod controllers {
             pub mod get_my_space;
         }
 
+        pub mod permissions {
+            pub mod has_team_permission;
+        }
+
         pub mod dagits {
             pub mod add_oracle;
             pub mod get_dagit;
