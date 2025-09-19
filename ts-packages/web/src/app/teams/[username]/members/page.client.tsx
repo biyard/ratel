@@ -17,6 +17,7 @@ export default function TeamMembers({ username }: { username: string }) {
     );
 
   const team = query.data;
+  const groups = team.groups ?? [];
 
   return (
     <div className="flex flex-col w-full max-w-[1152px] px-4 py-5 gap-[10px] bg-card-bg border border-card-border rounded-lg h-fit">
@@ -53,11 +54,27 @@ export default function TeamMembers({ username }: { username: string }) {
             </div>
           </div>
 
-          <div className="flex flex-wrap w-full justify-start items-start gap-[10px]">
+          <div className="flex flex-wrap w-full justify-start items-center gap-[10px]">
+            {team?.parent_id == member.id ? (
+              groups
+                .filter((group) => !checkString(group.name))
+                .map((group) => (
+                  <div
+                    key={group.id}
+                    className="flex flex-row w-fit h-fit px-[5px] py-[3px] border border-neutral-800 bg-black light:bg-neutral-600 light:border-transparent rounded-lg font-medium text-base text-white"
+                  >
+                    {group.name}
+                  </div>
+                ))
+            ) : (
+              <></>
+            )}
             {member.groups
               .filter(
                 (group) =>
-                  group.creator_id === team.id && !checkString(group.name),
+                  group.creator_id === team.id &&
+                  team?.parent_id != member.id &&
+                  !checkString(group.name),
               )
               .map((group) => (
                 <div
