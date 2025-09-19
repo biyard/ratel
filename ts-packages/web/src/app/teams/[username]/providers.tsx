@@ -49,6 +49,11 @@ export default async function Provider({
     GroupPermission.UpdateGroup,
   );
 
+  const deleteGroupPermission = await getPermission(
+    team.data?.id ?? 0,
+    GroupPermission.DeleteGroup,
+  );
+
   try {
     // Initialize the query client with the space data
     initData(queryClient, [
@@ -57,6 +62,7 @@ export default async function Provider({
       invitePermission,
       writePostPermission,
       updateGroupPermission,
+      deleteGroupPermission,
     ]);
   } catch (error) {
     console.error('Failed to fetch data', error);

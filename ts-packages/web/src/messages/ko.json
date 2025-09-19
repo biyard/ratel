@@ -228,6 +228,7 @@
     "invalid_user": "유효하지 않은 유저입니다.",
     "failed_search_user": "유저를 검색하는데 실패했습니다.",
 
+    "delete_group": "삭제",
     "username": "이름",
     "display_name": "이름",
     "display_name_hint": "팀 이름",

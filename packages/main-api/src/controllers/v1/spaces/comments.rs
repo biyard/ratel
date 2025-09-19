@@ -181,14 +181,14 @@ impl SpaceCommentController {
     }
 }
 
-#[derive(
-    Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
-)]
-#[serde(rename_all = "kebab-case")]
-pub struct SpaceCommentPath {
-    pub space_id: i64,
-    pub id: i64,
-}
+// #[derive(
+//     Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
+// )]
+// #[serde(rename_all = "kebab-case")]
+// pub struct SpaceCommentPath {
+//     pub space_id: i64,
+//     pub id: i64,
+// }
 
 #[derive(
     Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,

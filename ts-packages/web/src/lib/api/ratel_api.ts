@@ -224,6 +224,8 @@ export const ratelApi = {
       `/v1/teams/${team_id}/groups/${group_id}`,
     check_email: (team_id: number, group_id: number) =>
       `/v1/teams/${team_id}/groups/${group_id}`,
+    delete_group: (team_id: number, group_id: number) =>
+      `/v1/teams/${team_id}/groups/${group_id}`,
   },
   networks: {
     getNetworks: () => '/v1/network?param-type=read&action=find-one',
