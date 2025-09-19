@@ -373,6 +373,7 @@ export const ratelApi = {
       return `/wg/home${queryString ? `?${queryString}` : ''}`;
     },
   },
+
   graphql: {
     listNews: (size: number) => {
       return {
