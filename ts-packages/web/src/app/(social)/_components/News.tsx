@@ -42,7 +42,7 @@ function News() {
     queryKey: ['news', 3],
     queryFn: async () => {
       // Backend returns Vec<NewsSummary>; useApiCall.get returns parsed JSON.
-      return (await get(ratelApi.news.list(3))) as NewsItem[];
+      return ((await get(ratelApi.news.list(3))) ?? []) as NewsItem[];
     },
     refetchOnWindowFocus: false,
   });
