@@ -1,11 +1,12 @@
 'use client';
-import { Edit1 } from '@/components/icons';
+import { Edit1, Extra } from '@/components/icons';
 import { User } from '@/components/icons';
 import { usePopup } from '@/lib/contexts/popup-service';
 import React from 'react';
 import CreateGroupPopup from './_components/create-group-popup';
 import {
   createGroupRequest,
+  deleteGroupRequest,
   GroupPermission,
   inviteMemberRequest,
 } from '@/lib/api/models/group';
@@ -19,6 +20,12 @@ import { Folder } from 'lucide-react';
 import { checkString } from '@/lib/string-filter-utils';
 import { useTranslations } from 'next-intl';
 import { usePermission } from '@/app/(social)/_hooks/use-permission';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 export default function TeamGroups({ username }: { username: string }) {
   const t = useTranslations('Team');
@@ -39,6 +46,15 @@ export default function TeamGroups({ username }: { username: string }) {
   const updateGroupPermission =
     usePermission(team?.id ?? 0, GroupPermission.UpdateGroup).data
       .has_permission ?? false;
+
+  const deleteGroup = async (groupId: number) => {
+    await post(
+      ratelApi.groups.delete_group(team.id, groupId),
+      deleteGroupRequest(),
+    );
+
+    query.refetch();
+  };
 
   return (
     <div className="flex flex-col w-full gap-2.5">
@@ -108,12 +124,18 @@ export default function TeamGroups({ username }: { username: string }) {
         )}
       </div>
 
-      <ListGroups groups={groups ?? []} />
+      <ListGroups groups={groups ?? []} deleteGroup={deleteGroup} />
     </div>
   );
 }
 
-function ListGroups({ groups }: { groups: Group[] }) {
+function ListGroups({
+  groups,
+  deleteGroup,
+}: {
+  groups: Group[];
+  deleteGroup: (groupId: number) => void;
+}) {
   const t = useTranslations('Team');
   return (
     <div className="flex flex-col w-full px-4 py-5 gap-[10px] bg-component-bg rounded-lg">
@@ -122,18 +144,47 @@ function ListGroups({ groups }: { groups: Group[] }) {
         .map((group) => (
           <div
             key={group.id}
-            className="flex flex-row w-full h-fit gap-[15px] bg-transparent rounded-sm border border-card-enable-border p-5"
+            className="flex flex-row w-full h-fit justify-between items-center bg-transparent rounded-sm border border-card-enable-border p-5"
           >
-            <Folder className="w-12 h-12 stroke-neutral-400" />
+            <div className="flex flex-row w-fit gap-[15px]">
+              <Folder className="w-12 h-12 stroke-neutral-400" />
 
-            <div className="flex flex-col justify-between items-start">
-              <div className="font-bold text-text-primary text-base/[20px]">
-                {group.name}
-              </div>
-              <div className="font-semibold text-desc-text text-sm/[20px]">
-                {group.member_count} {t('member')}
+              <div className="flex flex-col justify-between items-start">
+                <div className="font-bold text-text-primary text-base/[20px]">
+                  {group.name}
+                </div>
+                <div className="font-semibold text-desc-text text-sm/[20px]">
+                  {group.member_count} {t('member')}
+                </div>
               </div>
             </div>
+
+            <DropdownMenu modal={false}>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className="p-1 hover:bg-hover rounded-full focus:outline-none transition-colors"
+                  aria-haspopup="true"
+                  aria-label="Post options"
+                >
+                  <Extra className="size-6 text-gray-400" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                className="w-40 border-gray-700 transition ease-out duration-100"
+              >
+                <DropdownMenuItem>
+                  <button
+                    onClick={() => {
+                      deleteGroup(group.id);
+                    }}
+                    className="flex items-center w-full px-4 py-2 text-sm text-text-primary hover:bg-hover cursor-pointer"
+                  >
+                    <div>{t('delete_group')}</div>
+                  </button>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         ))}
     </div>
