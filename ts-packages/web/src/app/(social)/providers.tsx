@@ -10,9 +10,10 @@ import ClientProviders from './providers.client';
 import { getServerQueryClient } from '@/lib/query-utils.server';
 import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
 import { ratelApi } from '@/lib/api/ratel_api';
-import { client } from '@/lib/apollo';
 import { FeedStatus } from '@/lib/api/models/feeds';
 import { prefetchInfiniteFeeds } from '@/hooks/feeds/use-feeds-infinite-query';
+import { apiFetch } from '@/lib/api/apiFetch';
+import { config } from '@/config';
 
 export default async function Provider({ children }: { children: ReactNode }) {
   const queryClient = await getServerQueryClient();
@@ -38,21 +39,22 @@ export default async function Provider({ children }: { children: ReactNode }) {
 
   const dehydratedState = dehydrate(queryClient);
 
-  const apolloClient = client;
-  const newsQuery = ratelApi.graphql.listNews(3);
-  let apolloCache = '{}';
   try {
-    await apolloClient.query({
-      query: newsQuery.query,
-      variables: newsQuery.variables,
+    // Prefetch news into React Query cache
+    await queryClient.prefetchQuery({
+      queryKey: ['news', 3],
+      queryFn: async () =>
+        (await apiFetch(`${config.api_url}${ratelApi.news.list(3)}`, {
+          ignoreError: true,
+          cache: 'no-store',
+        })) ?? [],
     });
-    apolloCache = JSON.stringify(apolloClient.extract());
   } catch (error) {
     console.error('Failed to fetch news', error);
   }
 
   return (
-    <ClientProviders apolloCache={apolloCache}>
+    <ClientProviders>
       <HydrationBoundary state={dehydratedState}>{children}</HydrationBoundary>
     </ClientProviders>
   );

@@ -2,14 +2,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { usePopup } from '@/lib/contexts/popup-service';
+import { useApiCall } from '@/lib/api/use-send';
 import { LoginPopupFooter } from './login-popup-footer';
 import { PrimaryButton } from '../button/primary-button';
 import { Checkbox } from '../checkbox/checkbox';
 import { ConfirmPopup } from './confirm-popup';
-import { useApiCall } from '@/lib/api/use-send';
+import { useTranslations } from 'next-intl';
+import { config } from '@/config';
 import { ratelApi } from '@/lib/api/ratel_api';
-import { logger } from '@/lib/logger';
-import { useApolloClient } from '@apollo/client';
 import { useUserInfo } from '@/lib/api/hooks/users';
 import { useAuth } from '@/lib/contexts/auth-context';
 import { checkString } from '@/lib/string-filter-utils';
@@ -21,7 +21,7 @@ import FileUploader from '../file-uploader';
 import Image from 'next/image';
 import { emailSignupRequest } from '@/lib/api/models/users/email-signup-request';
 import { signupRequest } from '@/lib/api/models/users/signup-request';
-import { useTranslations } from 'next-intl';
+import { logger } from '@/lib/logger';
 
 export interface UserSetupPopupProps {
   id?: string;
@@ -48,9 +48,6 @@ const UserSetupPopup = ({
   nickname = '',
 }: UserSetupPopupProps) => {
   const t = useTranslations('Signup');
-  const { post } = useApiCall();
-  const client = useApolloClient();
-
   const popup = usePopup();
   const [displayName, setDisplayName] = useState(nickname);
   const [userName, setUserName] = useState(username);
@@ -64,7 +61,6 @@ const UserSetupPopup = ({
   const [sentCode, setSentCode] = useState(false);
   const [isValidEmail, setIsValidEmail] = useState(email !== '');
   const [profileUrlState, setProfileUrlState] = useState(profileUrl);
-
   const query = useUserInfo();
   const auth = useAuth();
 
@@ -73,6 +69,8 @@ const UserSetupPopup = ({
   const handleProfileUrl = (url: string) => {
     setProfileUrlState(url);
   };
+
+  const { post } = useApiCall();
 
   const handleSubmit = async () => {
     if (checkString(displayName) || checkString(userName)) {
@@ -310,16 +308,37 @@ const UserSetupPopup = ({
                   setWarning('');
                   setIsUserNameValid(true);
                 }
-                const {
-                  data: { users },
-                } = await client.query(
-                  ratelApi.graphql.getUserByUsername(value),
-                );
+                try {
+                  const response = await fetch(
+                    `${config.api_url}${ratelApi.users.getUserByUsername(value)}`,
+                    {
+                      credentials: 'include',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                    },
+                  );
 
-                if (users.length > 0) {
-                  setWarning(t('already_exists_user'));
-                  setIsUserNameValid(false);
-                } else {
+                  if (!response.ok) {
+                    if (response.status !== 404) {
+                      throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    // User not found is expected, continue with validation
+                    setWarning('');
+                    setIsUserNameValid(true);
+                    return;
+                  }
+
+                  const userData = await response.json();
+
+                  // If we get here, user exists
+                  if (userData) {
+                    setWarning(t('already_exists_user'));
+                    setIsUserNameValid(false);
+                  }
+                } catch (error) {
+                  console.error('Error checking username availability:', error);
+                  // On error, assume username is available to avoid blocking the user
                   setWarning('');
                   setIsUserNameValid(true);
                 }

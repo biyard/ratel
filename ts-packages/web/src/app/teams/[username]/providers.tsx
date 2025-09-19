@@ -6,10 +6,11 @@ import {
   getUserInfo,
 } from '@/lib/api/ratel_api.server';
 import { getServerQueryClient } from '@/lib/query-utils.server';
-import { client } from '@/lib/apollo';
 import { ratelApi } from '@/lib/api/ratel_api';
 import ClientProviders from './providers.client';
 import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
+import { apiFetch } from '@/lib/api/apiFetch';
+import { config } from '@/config';
 import { GroupPermission } from '@/lib/api/models/group';
 
 export default async function Provider({
@@ -21,15 +22,16 @@ export default async function Provider({
 }) {
   const queryClient = await getServerQueryClient();
 
-  const {
-    data: { users },
-  } = await client.query(ratelApi.graphql.getTeamByTeamname(username));
+  // Lookup user by username using REST v2
+  const userResp = await apiFetch<{ id: number } | null>(
+    `${config.api_url}${ratelApi.users.getUserByUsername(username)}`,
+    { ignoreError: true, cache: 'no-store' },
+  );
 
-  if (users.length === 0) {
+  if (!userResp?.data?.id) {
     return <></>;
   }
-
-  const userId = users[0].id;
+  const userId = userResp.data.id;
 
   const team = await getTeamByUsername(username);
   const user = await getUserInfo();

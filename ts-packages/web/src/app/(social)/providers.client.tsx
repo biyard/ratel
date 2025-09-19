@@ -1,27 +1,17 @@
 'use client';
 
-import { makeClient } from '@/lib/apollo-client';
-import { ApolloNextAppProvider } from '@apollo/client-integration-nextjs';
 import React, { ReactNode, createContext, useContext } from 'react';
 
 type ContextType = object;
 
 export const Context = createContext<ContextType | undefined>(undefined);
 
-export default function ClientProviders({
-  children,
-  apolloCache,
-}: {
+type ClientProvidersProps = {
   children: ReactNode;
-  apolloCache: string;
-}) {
-  return (
-    <ApolloNextAppProvider
-      makeClient={() => makeClient(JSON.parse(apolloCache))}
-    >
-      {children}
-    </ApolloNextAppProvider>
-  );
+};
+
+export default function ClientProviders({ children }: ClientProvidersProps) {
+  return <Context.Provider value={{}}>{children}</Context.Provider>;
 }
 
 export function useHomeContext() {

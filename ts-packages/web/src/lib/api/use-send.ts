@@ -10,8 +10,8 @@ import { encode_base64 } from '../base64';
 import { Ed25519KeyIdentity } from '@dfinity/identity';
 
 export interface ApiCallFns {
-  get: (path: string) => Promise<any>;
-  post: (path: string, body?: any) => Promise<any>;
+  get: <T = any>(path: string) => Promise<T>;
+  post: <T = any>(path: string, body?: any) => Promise<T>;
 }
 
 export function useApiCall(): ApiCallFns {
@@ -19,7 +19,7 @@ export function useApiCall(): ApiCallFns {
   const cookie = useCookie();
 
   return {
-    get: async (path: string): Promise<any> => {
+    get: async <T = any>(path: string): Promise<T> => {
       const apiBaseUrl: string = config.api_url;
       let token = cookie?.token;
       let token_type = 'Bearer';
@@ -57,12 +57,12 @@ export function useApiCall(): ApiCallFns {
       });
 
       if (!response.ok) {
-        return null;
+        return null as unknown as T;
       }
 
-      return response.json();
+      return response.json() as Promise<T>;
     },
-    post: async (path: string, body?: any): Promise<any> => {
+    post: async <T = any>(path: string, body?: any): Promise<T> => {
       const apiBaseUrl: string = config.api_url;
       let token = cookie?.token;
       let token_type = 'Bearer';
@@ -105,10 +105,10 @@ export function useApiCall(): ApiCallFns {
           message: 'Failed to fetch and parse error',
         }));
         logger.error('Failed to fetch and parse error ', errorData?.message);
-        return null;
+        return null as unknown as T;
       }
 
-      return response.json();
+      return response.json() as Promise<T>;
     },
   };
 }
