@@ -18,13 +18,13 @@ use crate::models::dynamo_tables::main::user::User;
     JsonSchema,
     Validate,
 )]
-pub struct UserV3LoginRequest {
+struct UserLoginRequest {
     #[schemars(description = "User's email address")]
     #[validate(email)]
     pub email: String,
 
     #[schemars(description = "User's password")]
-    #[validate(length(min = 1))]
+    #[validate(length(min = 7))]
     pub password: String,
 }
 
@@ -38,7 +38,7 @@ pub struct UserV3LoginRequest {
     aide::OperationIo,
     JsonSchema,
 )]
-pub struct UserV3LoginResponse {
+struct UserLoginResponse {
     #[schemars(description = "User's unique identifier")]
     pub id: String,
 
@@ -58,13 +58,13 @@ pub struct UserV3LoginResponse {
     pub created_at: i64,
 }
 
-pub async fn v3_login_with_password_handler(
+pub async fn login_with_password_handler(
     by_axum::axum::extract::State(ddb): by_axum::axum::extract::State<
         std::sync::Arc<aws_sdk_dynamodb::Client>,
     >,
     Extension(session): Extension<Session>,
-    Json(req): Json<UserV3LoginRequest>,
-) -> Result<Json<UserV3LoginResponse>> {
+    Json(req): Json<UserLoginRequest>,
+) -> Result<Json<UserLoginResponse>> {
     // Validate the request
     req.validate().map_err(|_| Error::BadRequest)?;
 
@@ -130,7 +130,7 @@ pub async fn v3_login_with_password_handler(
         })?;
 
     // Return the response with basic user information
-    let response = UserV3LoginResponse {
+    let response = UserLoginResponse {
         id: dynamo_user.pk.to_string(),
         nickname: dynamo_user.display_name.clone(),
         email: dynamo_user.email.clone(),
@@ -146,8 +146,8 @@ pub async fn v3_login_with_password_handler(
 mod tests {
     use super::*;
 
-    fn create_valid_login_request() -> UserV3LoginRequest {
-        UserV3LoginRequest {
+    fn create_valid_login_request() -> UserLoginRequest {
+        UserLoginRequest {
             email: "test@example.com".to_string(),
             password: "password123".to_string(),
         }
@@ -157,11 +157,11 @@ mod tests {
     async fn test_login_validation() {
         // Test that validation catches basic issues
         let invalid_requests = vec![
-            UserV3LoginRequest {
+            UserLoginRequest {
                 email: "not-an-email".to_string(),
                 password: "password123".to_string(),
             },
-            UserV3LoginRequest {
+            UserLoginRequest {
                 email: "test@example.com".to_string(),
                 password: "".to_string(),
             },

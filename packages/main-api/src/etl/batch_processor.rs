@@ -15,7 +15,7 @@ pub struct BatchProcessor {
 impl BatchProcessor {
     pub fn new(table_name: &str) -> Self {
         Self {
-            client: DynamoClient::new(),
+            client: DynamoClient::new(None),
             table_name: table_name.to_string(),
             batch_size: 25, // DynamoDB batch write limit
             max_retries: 3,

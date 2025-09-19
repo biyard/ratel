@@ -4,7 +4,10 @@ use crate::{
     config, controllers,
     route::{RouteDeps, route},
     utils::{
-        aws::{BedrockClient, DynamoClient, RekognitionClient, S3Client, TextractClient},
+        aws::{
+            BedrockClient, DynamoClient, RekognitionClient, S3Client, SesClient, TextractClient,
+            get_aws_config,
+        },
         // dynamo_migrate::{create_dynamo_tables, get_user_tables},
         mcp_middleware::mcp_middleware,
         sqs_client,
@@ -16,16 +19,13 @@ use bdk::prelude::{by_axum::axum::Router, *};
 use by_axum::axum::middleware;
 use by_types::DatabaseConfig;
 use dto::{
-    by_axum::{
-        auth::{authorization_middleware, generate_jwt, set_auth_token_key},
-        axum::{extract::Request, http::Response, middleware::Next},
-    },
+    by_axum::auth::{authorization_middleware, set_auth_token_key},
     sqlx::PgPool,
     *,
 };
 use sqlx::postgres::PgPoolOptions;
 use tower_sessions::{
-    Session, SessionManagerLayer,
+    SessionManagerLayer,
     cookie::time::{Duration, OffsetDateTime},
 };
 use tower_sessions_sqlx_store::PostgresStore;
@@ -187,6 +187,8 @@ pub async fn api_main() -> Result<Router> {
     } else {
         panic!("Database is not initialized. Call init() first.");
     };
+    //FIXME: Change Store to dynamoDB or redis for better scalability
+    //https://crates.io/crates/tower-sessions-dynamodb-store
 
     let session_store = PostgresStore::new(pool.clone());
     if conf.migrate {
@@ -198,13 +200,17 @@ pub async fn api_main() -> Result<Router> {
         }
     }
 
+    let aws_sdk_config = get_aws_config();
+    let dynamo_client = DynamoClient::new(Some(aws_sdk_config.clone()));
+    let ses_client = SesClient::new(aws_sdk_config);
+    //FIXME: Change these clients to use `aws_sdk_config`
+    // and change 'dto::Result' to 'crate::Error2'
     let sqs_client = sqs_client::SqsClient::new().await;
     let bedrock_client = BedrockClient::new();
     let rek_client = RekognitionClient::new();
     let textract_client = TextractClient::new();
     let private_s3_client = S3Client::new(conf.private_bucket_name);
     let metadata_s3_client = S3Client::new(conf.bucket.name);
-    let dynamo_client = DynamoClient::new();
 
     let is_local = conf.env == "local";
     let session_layer = SessionManagerLayer::new(session_store)
@@ -230,8 +236,6 @@ pub async fn api_main() -> Result<Router> {
     } else {
         None
     };
-    // FIXME: Is this the correct way to inject and pass the states into the route?
-    // find better way to  management Axum's state or dependency injection for better modularity and testability.
     let api_router = route(RouteDeps {
         pool: pool.clone(),
         sqs_client,
@@ -242,67 +246,66 @@ pub async fn api_main() -> Result<Router> {
         private_s3_client,
         bot,
         dynamo_client,
+        ses_client,
     })
     .await?
     .layer(middleware::from_fn(authorization_middleware))
-    .layer(session_layer)
-    .layer(middleware::from_fn(cookie_middleware));
+    .layer(session_layer);
+    // .layer(middleware::from_fn(cookie_middleware));
 
     let app = app.merge(mcp_router).merge(api_router);
     Ok(app)
 }
 
-pub async fn cookie_middleware(
-    req: Request,
-    next: Next,
-) -> std::result::Result<Response<by_axum::axum::body::Body>, by_axum::axum::http::StatusCode> {
-    tracing::debug!("Authorization middleware {:?}", req.uri());
-    let session_initialized = if let Some(session) = req.extensions().get::<Session>() {
-        if let Ok(Some(_)) = session
-            .get::<by_axum::auth::UserSession>(by_axum::auth::USER_SESSION_KEY)
-            .await
-        {
-            true
-        } else {
-            false
-        }
-    } else {
-        false
-    };
+// pub async fn cookie_middleware(
+//     req: Request,
+//     next: Next,
+// ) -> std::result::Result<Response<by_axum::axum::body::Body>, by_axum::axum::http::StatusCode> {
+//     let session_initialized = if let Some(session) = req.extensions().get::<Session>() {
+//         if let Ok(Some(_)) = session
+//             .get::<by_axum::auth::UserSession>(by_axum::auth::USER_SESSION_KEY)
+//             .await
+//         {
+//             true
+//         } else {
+//             false
+//         }
+//     } else {
+//         false
+//     };
 
-    let mut res = next.run(req).await;
-    tracing::debug!("Authorization middleware response: {:?}", res.status());
-    if session_initialized {
-        tracing::debug!("Session not initialized, skipping cookie generation.");
-        return Ok(res);
-    }
+//     let mut res = next.run(req).await;
+//     if session_initialized {
+//         tracing::debug!("Session not initialized, skipping cookie generation.");
+//         return Ok(res);
+//     }
 
-    if let Some(ref session) = res.extensions().get::<Session>() {
-        tracing::debug!("Checking for user session in response...");
-        if let Ok(Some(user_session)) = session
-            .get::<by_axum::auth::UserSession>(by_axum::auth::USER_SESSION_KEY)
-            .await
-        {
-            tracing::debug!("User session found in response: {:?}", user_session);
-            let mut claims = by_types::Claims {
-                sub: user_session.user_id.to_string(),
-                ..Default::default()
-            };
+//     if let Some(ref session) = res.extensions().get::<Session>() {
+//         tracing::debug!("Checking for user session in response...");
+//         if let Ok(Some(user_session)) = session
+//             .get::<by_axum::auth::UserSession>(by_axum::auth::USER_SESSION_KEY)
+//             .await
+//         {
+//             tracing::debug!("User session found in response: {:?}", user_session);
+//             let mut claims = by_types::Claims {
+//                 sub: user_session.user_id.to_string(),
+//                 ..Default::default()
+//             };
 
-            let token = generate_jwt(&mut claims)?;
+//             let token = generate_jwt(&mut claims)?;
 
-            res.headers_mut().append(
-                reqwest::header::SET_COOKIE,
-                format!(
-                    "{}_auth_token={}; SameSite=Lax; Path=/; Max-Age=2586226; HttpOnly; Secure;",
-                    config::get().env,
-                    token,
-                )
-                .parse()
-                .unwrap(),
-            );
-        }
-    }
+//             res.headers_mut().append(
+//                 reqwest::header::SET_COOKIE,
+//                 format!(
+//                     "{}_auth_token={}; SameSite=Lax; Path=/; Max-Age=2586226; HttpOnly; Secure;",
+//                     config::get().env,
+//                     token,
+//                 )
+//                 .parse()
+//                 .unwrap(),
+//             );
+//         }
+//     }
 
-    return Ok(res);
-}
+//     return Ok(res);
+// }

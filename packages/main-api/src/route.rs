@@ -97,12 +97,14 @@ use crate::{
                 logout::logout_handler,
             },
         },
-        v3::auth::login::login_handler,
         well_known::get_did_document::get_did_document_handler,
         wg::get_home::get_home_handler,
     },
+    route_v3,
     utils::{
-        aws::{BedrockClient, DynamoClient, RekognitionClient, S3Client, TextractClient},
+        aws::{
+            BedrockClient, DynamoClient, RekognitionClient, S3Client, SesClient, TextractClient,
+        },
         sqs_client::SqsClient,
         telegram::TelegramBot,
     },
@@ -119,10 +121,10 @@ macro_rules! api_docs {
         |op| {
             op.summary($summary)
                 .description($description)
-                .response_with::<200, axum::Json<$success_ty>, _>(|res| {
+                .response_with::<200, by_axum::axum::Json<$success_ty>, _>(|res| {
                     res.description("Success response")
                 })
-                .response_with::<400, axum::Json<dto::Error>, _>(|res| {
+                .response_with::<400, by_axum::axum::Json<dto::Error>, _>(|res| {
                     res.description("Incorrect or invalid requests")
                         .example(dto::Error::UserAlreadyExists)
                 })
@@ -133,7 +135,7 @@ macro_rules! api_docs {
         |op| {
             op.summary($summary)
                 .description($description)
-                .response_with::<400, axum::Json<dto::Error>, _>(|res| {
+                .response_with::<400, bdk::prelude::by_axum::axum::Json<dto::Error>, _>(|res| {
                     res.description("Incorrect or invalid requests")
                         .example(dto::Error::UserAlreadyExists)
                 })
@@ -151,6 +153,7 @@ pub struct RouteDeps {
     pub private_s3_client: S3Client,
     pub bot: Option<TelegramBot>,
     pub dynamo_client: DynamoClient,
+    pub ses_client: SesClient,
 }
 
 pub async fn route(deps: RouteDeps) -> Result<by_axum::axum::Router> {
@@ -163,6 +166,7 @@ pub async fn route(deps: RouteDeps) -> Result<by_axum::axum::Router> {
         private_s3_client,
         bot,
         dynamo_client,
+        ses_client,
         ..
     } = deps;
 
@@ -227,6 +231,10 @@ pub async fn route(deps: RouteDeps) -> Result<by_axum::axum::Router> {
         )
         .layer(middleware::from_fn(authorize_admin))
         // For user routes
+        .merge(route_v3::route(route_v3::RouteDeps {
+            dynamo_client: dynamo_client.clone(),
+            ses_client: ses_client.clone(),
+        })?)
         .nest(
             "/v1",
             controllers::v1::route(pool.clone())
@@ -698,21 +706,6 @@ pub async fn route(deps: RouteDeps) -> Result<by_axum::axum::Router> {
                 .options(token_handler)
                 .with_state(pool.clone()),
         )
-        .nest(
-            "/v3",
-            axum::Router::new()
-                .nest(
-                    "/auth",
-                    axum::Router::new().route(
-                        "/login",
-                        post_with(
-                            login_handler,
-                            api_docs!("User Login", "Login user with email and password"),
-                        ),
-                    ),
-                )
-                .with_state(dynamo_client),
-        )
         .route(
             "/.well-known/oauth-authorization-server",
             get_with(
@@ -778,9 +771,11 @@ pub async fn authorize_admin(
     req: Request,
     next: Next,
 ) -> std::result::Result<Response<Body>, StatusCode> {
-    tracing::debug!("Authorization admin");
     match req.extensions().get::<Option<Authorization>>() {
         Some(Some(Authorization::SecretApiKey)) => Ok(next.run(req).await),
-        _ => Err(StatusCode::UNAUTHORIZED),
+        _ => {
+            tracing::error!("Admin route access denied: {:?}", req.uri());
+            Err(StatusCode::UNAUTHORIZED)
+        }
     }
 }

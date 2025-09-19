@@ -26,3 +26,11 @@ models
                |- ...
                |- tests.rs
 ```
+
+
+## Implement `/v3` Endpoint
+
+### Please implement 
+
+### Don't use `dto:Error`. Please Use `Error2` instead.
+

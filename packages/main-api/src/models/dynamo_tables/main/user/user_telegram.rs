@@ -1,7 +1,9 @@
-use bdk::prelude::*;
 use crate::types::*;
+use bdk::prelude::*;
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity)]
+#[derive(
+    Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, schemars::JsonSchema,
+)]
 pub struct UserTelegram {
     pub pk: Partition,
 

@@ -140,7 +140,9 @@ fn parse_struct_cfg(attrs: &[Attribute]) -> StructCfg {
             } else if meta.path.is_ident("sk_name") {
                 if let Ok(value) = meta.value() {
                     let v = value.to_string();
+                    tracing::info!("sk_name: {:?}", v);
                     if v.is_empty() || &v == "None" || &v == "none" {
+                        tracing::info!("No sk_name specified, assuming no sort key");
                         cfg.sk_name = None;
                     } else if let Ok(s) = value.parse::<syn::LitStr>() {
                         cfg.sk_name = Some(s.value());
@@ -533,7 +535,7 @@ fn generate_struct_impl(
     } else {
         quote! { None }
     };
-
+    tracing::debug!("sk_field_method: {:?}", s_cfg.sk_name);
     let sk_param = if s_cfg.sk_name.is_some() {
         quote! { sk: Option<impl std::fmt::Display>, }
     } else {

@@ -59,13 +59,15 @@ aws-sdk-rekognition = "1.85.0"
 aws-sdk-textract = "1.82.0"
 tower-http = "0.6.6"
 aws-sdk-dynamodb = "1.92.0"
-serde_dynamo = {version = "4.2.14", features = ["aws-sdk-dynamodb+1"] }
+serde_dynamo = { version = "4.2.14", features = ["aws-sdk-dynamodb+1"] }
 thiserror = "2.0.16"
 serde_repr = "0.1.20"
 strum_macros = "0.27.2"
 sha2 = "0.10"
 openssl = { version = "0.10" }
 serde_with = "3.14.0"
+bcrypt = "0.17.1"
+aws-credential-types = "1.2.6"
 
 [[bin]]
 name = "main-api"
