@@ -228,6 +228,7 @@
     "invalid_user": "Invalid or unregisted input.",
     "failed_search_user": "Failed to search for user.",
 
+    "delete_group": "delete",
     "username": "Username",
     "display_name": "Display name",
     "display_name_hint": "Team display name",
