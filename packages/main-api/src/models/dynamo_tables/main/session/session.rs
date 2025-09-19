@@ -9,11 +9,11 @@ pub struct Session {
     pub updated_at: i64,
 
     pub data: String,
-    pub expired_at: String,
+    pub expired_at: i64,
 }
 
 impl Session {
-    pub fn new(id: String, expired_at: String, data: String) -> Self {
+    pub fn new(id: String, expired_at: i64, data: String) -> Self {
         let now = chrono::Utc::now().timestamp_micros();
 
         Self {
