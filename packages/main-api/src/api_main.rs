@@ -8,7 +8,7 @@ use crate::{
             BedrockClient, DynamoClient, RekognitionClient, S3Client, SesClient, TextractClient,
             get_aws_config,
         },
-        // dynamo_migrate::{create_dynamo_tables, get_user_tables},
+        dynamo_session_store::DynamoSessionStore,
         mcp_middleware::mcp_middleware,
         sqs_client,
         telegram::TelegramBot,
@@ -28,7 +28,6 @@ use tower_sessions::{
     SessionManagerLayer,
     cookie::time::{Duration, OffsetDateTime},
 };
-use tower_sessions_sqlx_store::PostgresStore;
 
 macro_rules! migrate {
     ($pool:ident, $($table:ident),* $(,)?) => {
@@ -187,17 +186,9 @@ pub async fn api_main() -> Result<Router> {
     } else {
         panic!("Database is not initialized. Call init() first.");
     };
-    //FIXME: Change Store to dynamoDB or redis for better scalability
-    //https://crates.io/crates/tower-sessions-dynamodb-store
 
-    let session_store = PostgresStore::new(pool.clone());
     if conf.migrate {
         migration(&pool).await?;
-        let res = session_store.migrate().await;
-        if let Err(e) = res {
-            tracing::error!("Failed to migrate session store: {}", e);
-            return Err(e.into());
-        }
     }
 
     let aws_sdk_config = get_aws_config();
@@ -211,6 +202,8 @@ pub async fn api_main() -> Result<Router> {
     let textract_client = TextractClient::new();
     let private_s3_client = S3Client::new(conf.private_bucket_name);
     let metadata_s3_client = S3Client::new(conf.bucket.name);
+
+    let session_store = DynamoSessionStore::new(dynamo_client.client.clone());
 
     let is_local = conf.env == "local";
     let session_layer = SessionManagerLayer::new(session_store)
