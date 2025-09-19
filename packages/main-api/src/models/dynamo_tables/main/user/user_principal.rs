@@ -1,9 +1,7 @@
 use crate::types::*;
 use bdk::prelude::*;
 
-#[derive(
-    Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, schemars::JsonSchema,
-)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity)]
 pub struct UserPrincipal {
     pub pk: Partition,
     #[dynamo(index = "gsi1", sk)]

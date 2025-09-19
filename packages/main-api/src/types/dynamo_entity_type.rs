@@ -1,9 +1,7 @@
 use bdk::prelude::*;
 use serde_with::{DeserializeFromStr, SerializeDisplay};
 
-#[derive(
-    Debug, Clone, SerializeDisplay, DeserializeFromStr, Default, DynamoEnum, schemars::JsonSchema,
-)]
+#[derive(Debug, Clone, SerializeDisplay, DeserializeFromStr, Default, DynamoEnum)]
 pub enum EntityType {
     #[default]
     None,

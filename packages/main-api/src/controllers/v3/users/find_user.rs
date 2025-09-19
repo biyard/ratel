@@ -1,6 +1,6 @@
 use crate::{
     AppState, Error2,
-    models::user::{User, UserMetadata, UserPhoneNumber},
+    models::user::{User, UserDetailResponse, UserMetadata, UserPhoneNumber},
 };
 use bdk::prelude::*;
 use dto::{
@@ -26,7 +26,23 @@ pub struct FindUserQueryParams {
     pub phone_number: Option<String>,
 }
 
-pub type FindUserResponse = Vec<UserMetadata>;
+pub struct UserDetail {
+    pub pk: String,
+    pub email: String,
+    pub display_name: String,
+    pub profile_url: String,
+    pub content: String,
+    pub user_type: String,
+
+    pub theme: Option<String>,
+
+    pub principal: Option<String>,
+    pub evm_address: Option<String>,
+    pub phone_number: Option<String>,
+    pub telegram: Option<String>,
+    pub referral_code: Option<String>,
+}
+pub type FindUserResponse = UserDetailResponse;
 
 pub async fn find_user_handler(
     State(AppState { dynamo, .. }): State<AppState>,
@@ -77,5 +93,5 @@ pub async fn find_user_handler(
         }
     };
     let res = UserMetadata::query(&dynamo.client, user_pk).await?;
-    Ok(Json(res))
+    Ok(Json(UserDetailResponse::from(res)))
 }

@@ -231,10 +231,13 @@ pub async fn route(deps: RouteDeps) -> Result<by_axum::axum::Router> {
         )
         .layer(middleware::from_fn(authorize_admin))
         // For user routes
-        .merge(route_v3::route(route_v3::RouteDeps {
-            dynamo_client: dynamo_client.clone(),
-            ses_client: ses_client.clone(),
-        })?)
+        .nest(
+            "/v3",
+            route_v3::route(route_v3::RouteDeps {
+                dynamo_client: dynamo_client.clone(),
+                ses_client: ses_client.clone(),
+            })?,
+        )
         .nest(
             "/v1",
             controllers::v1::route(pool.clone())
