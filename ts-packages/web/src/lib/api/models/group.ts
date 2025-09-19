@@ -26,6 +26,16 @@ export function createGroupRequest(
   };
 }
 
+export interface DeleteGroupRequest {
+  delete: object;
+}
+
+export function deleteGroupRequest(): DeleteGroupRequest {
+  return {
+    delete: {},
+  };
+}
+
 export interface InviteMemberRequest {
   invite_member: {
     user_ids: number[];

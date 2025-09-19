@@ -112,8 +112,7 @@ export default function InviteMemberPopup({
 
   const handleSend = async () => {
     const flushed = searchValue ? await setValue(searchValue, true) : undefined;
-
-    const participants = flushed ?? selectedUsers;
+    const participants = ensureMe(flushed ?? selectedUsers);
 
     onadd({
       started_at: Math.floor(startTime),
