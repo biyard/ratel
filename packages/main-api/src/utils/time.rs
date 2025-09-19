@@ -10,3 +10,11 @@ where
         .single()
         .map(|dt| dt.format("%Y-%m-%d %H:%M:%S").to_string())
 }
+
+pub fn get_now_timestamp() -> i64 {
+    chrono::Utc::now().timestamp()
+}
+
+pub fn get_now_timestamp_millis() -> i64 {
+    chrono::Utc::now().timestamp_millis()
+}

@@ -1,7 +1,9 @@
 use crate::types::*;
 use bdk::prelude::*;
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default)]
+#[derive(
+    Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default, schemars::JsonSchema,
+)]
 pub struct User {
     pub pk: Partition,
     pub sk: EntityType,
@@ -39,7 +41,7 @@ pub struct User {
 
 impl User {
     pub fn new(
-        nickname: String,
+        display_name: String,
         email: String,
         profile_url: String,
         term_agreed: bool,
@@ -60,7 +62,7 @@ impl User {
             sk,
             created_at: now,
             updated_at: now,
-            display_name: nickname,
+            display_name,
             email,
             profile_url,
             term_agreed,
@@ -73,76 +75,3 @@ impl User {
         }
     }
 }
-
-// #[derive(Debug, Clone)]
-// pub struct UserUpdater {
-//     k: HashMap<String, aws_sdk_dynamodb::types::AttributeValue>,
-//     m: HashMap<String, aws_sdk_dynamodb::types::AttributeValueUpdate>,
-// }
-
-// impl User {
-//     pub fn updater(pk: Partition, sk: EntityType) -> UserUpdater {
-//         let k = HashMap::from([
-//             (
-//                 "pk".to_string(),
-//                 serde_dynamo::to_attribute_value(&pk).expect("failed to serialize `pk`"),
-//             ),
-//             (
-//                 "sk".to_string(),
-//                 serde_dynamo::to_attribute_value(&sk).expect("failed to serialize `sk`"),
-//             ),
-//         ]);
-
-//         UserUpdater {
-//             m: HashMap::new(),
-//             k,
-//         }
-//     }
-// }
-
-// impl UserUpdater {
-//     pub fn with_display_name(mut self, display_name: String) -> Self {
-//         let v = serde_dynamo::to_attribute_value(display_name)
-//             .expect("failed to serialize `display_name`");
-//         let v = aws_sdk_dynamodb::types::AttributeValueUpdate::builder()
-//             .value(v)
-//             .action(aws_sdk_dynamodb::types::AttributeAction::Put)
-//             .build();
-//         self.m.insert("display_name".to_string(), v);
-//         self
-//     }
-
-//     pub fn increase_followers_count(mut self, by: i64) -> Self {
-//         let v =
-//             serde_dynamo::to_attribute_value(by).expect("failed to serialize `followers_count`");
-//         let v = aws_sdk_dynamodb::types::AttributeValueUpdate::builder()
-//             .value(v)
-//             .action(aws_sdk_dynamodb::types::AttributeAction::Add)
-//             .build();
-//         self.m.insert("followers_count".to_string(), v);
-//         self
-//     }
-
-//     pub fn decrease_follwers_count(mut self, by: i64) -> Self {
-//         let v =
-//             serde_dynamo::to_attribute_value(-by).expect("failed to serialize `followers_count`");
-//         let v = aws_sdk_dynamodb::types::AttributeValueUpdate::builder()
-//             .value(v)
-//             .action(aws_sdk_dynamodb::types::AttributeAction::Add)
-//             .build();
-//         self.m.insert("followers_count".to_string(), v);
-//         self
-//     }
-
-//     pub async fn execute(self, cli: &aws_sdk_dynamodb::Client) -> Result<(), crate::Error2> {
-//         cli.update_item()
-//             .table_name("ratel-local-main")
-//             .set_key(Some(self.k))
-//             .set_attribute_updates(Some(self.m))
-//             .send()
-//             .await
-//             .map_err(Into::<aws_sdk_dynamodb::Error>::into)?;
-
-//         Ok(())
-//     }
-// }

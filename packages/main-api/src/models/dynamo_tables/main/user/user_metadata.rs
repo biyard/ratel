@@ -1,7 +1,9 @@
 use super::*;
 use bdk::prelude::*;
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity)]
+#[derive(
+    Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, schemars::JsonSchema,
+)]
 #[serde(untagged)]
 pub enum UserMetadata {
     User(User),

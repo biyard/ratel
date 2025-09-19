@@ -122,16 +122,18 @@ pub mod controllers {
         }
     }
     pub mod v3 {
-        // pub mod users {
-        //     pub mod get_user_info;
-        // }
-
+        pub mod users {
+            pub mod find_user;
+            pub mod get_user_info;
+        }
         pub mod auth {
+            pub mod health;
             pub mod login;
-            // pub mod verification {
-            //     pub mod send_code;
-            //     pub mod verify_code;
-            // }
+            pub mod signup;
+            pub mod verification {
+                pub mod send_code;
+                pub mod verify_code;
+            }
         }
     }
     pub mod m2 {
@@ -167,5 +169,7 @@ pub mod utils;
 pub use bdk::prelude::*;
 pub use dto::*;
 
+mod route_v3;
+pub use route_v3::*;
 #[cfg(test)]
 pub mod tests;

@@ -73,8 +73,8 @@ pub struct UserSession {
 
 #[derive(Debug, Default, Deserialize, Serialize, Clone, PartialEq, Eq)]
 pub struct DynamoUserSession {
-    pub user_pk: String,
-    pub user_type: i64,
+    pub pk: String,
+    pub typ: i64,
 }
 
 /// Authorization middleware
