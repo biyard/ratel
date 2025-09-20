@@ -19,4 +19,11 @@ pub enum Partition {
     SurveySpace(String),
 
     Team(String),
+
+    // DID/VC Partitions
+    Credential(String),
+    CredentialOffer(String),
+    StatusList(String),
+    OAuthToken(String),
+    Presentation(String),
 }

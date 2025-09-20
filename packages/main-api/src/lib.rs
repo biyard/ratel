@@ -148,6 +148,21 @@ pub mod controllers {
     }
     pub mod well_known {
         pub mod get_did_document;
+        pub mod openid_credential_issuer;
+    }
+    pub mod oid4vci {
+        pub mod credential;
+        pub mod credential_offer;
+        pub mod token;
+    }
+    pub mod vc {
+        pub mod presentations;
+        pub mod status_fetch;
+        pub mod status_update;
+        pub mod verify;
+    }
+    pub mod status {
+        pub mod bitstring_status_list;
     }
     pub mod wg {
         pub mod get_home;
