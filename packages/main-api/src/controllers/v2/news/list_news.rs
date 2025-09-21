@@ -9,7 +9,7 @@ use dto::{
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize, Default, JsonSchema, aide::OperationIo)]
 pub struct ListNewsQuery {
     /// Maximum number of items to return
-    pub limit: Option<i64>,
+    pub limit: Option<i32>,
 }
 
 /// GET /v2/news?limit=<n>
@@ -21,7 +21,7 @@ pub async fn list_news_handler(
     let limit = limit.unwrap_or(3).clamp(1, 100);
 
     let items: Vec<NewsSummary> = NewsSummary::query_builder()
-        .limit(limit as i64)
+        .limit(limit)
         .order_by_created_at_desc()
         .query()
         .map(NewsSummary::from)
