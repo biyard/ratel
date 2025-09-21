@@ -178,12 +178,13 @@ export default function TeamCreationPopup() {
         <Button
           className="w-full"
           onClick={handleCreate}
-          disabled={
+          disabled={Boolean(
             isCreating ||
-            checkString(nickname) ||
-            checkString(username) ||
-            checkString(htmlContents)
-          }
+              invalid ||
+              checkString(nickname) ||
+              checkString(username) ||
+              checkString(htmlContents),
+          )}
         >
           {isCreating ? (
             <div className="flex items-center gap-2">

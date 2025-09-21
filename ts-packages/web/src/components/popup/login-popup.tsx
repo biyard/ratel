@@ -24,6 +24,8 @@ import { TelegramIcon } from '../icons';
 import { type User as TelegramUser } from '@telegram-apps/sdk-react';
 import { getQueryClient } from '@/providers/getQueryClient';
 import { useTranslations } from 'next-intl';
+import { feedKeys } from '@/constants';
+import { FeedStatus } from '@/lib/api/models/feeds';
 
 interface LoginModalProps {
   id?: string;
@@ -119,6 +121,12 @@ export const LoginModal = ({
 
     if (info) {
       refetchUserInfo(queryClient);
+      await queryClient.invalidateQueries({
+        queryKey: feedKeys.list({
+          userId: 0,
+          status: FeedStatus.Published,
+        }),
+      });
       await updateTelegramId();
       network.refetch();
     }
@@ -223,6 +231,12 @@ export const LoginModal = ({
         });
       } else if (user?.event == EventType.Login) {
         refetchUserInfo(queryClient);
+        await queryClient.invalidateQueries({
+          queryKey: feedKeys.list({
+            userId: 0,
+            status: FeedStatus.Published,
+          }),
+        });
         network.refetch();
         await updateTelegramId();
         loader.close();
@@ -274,6 +288,13 @@ export const LoginModal = ({
         });
       } else {
         refetchUserInfo(queryClient);
+        await queryClient.invalidateQueries({
+          queryKey: feedKeys.list({
+            userId: 0,
+            status: FeedStatus.Published,
+          }),
+        });
+
         network.refetch();
         loader.close();
       }

@@ -28,6 +28,7 @@ import { useApiCall } from './use-send';
 import { RedeemCode } from './models/redeem-code';
 import { NetworkData } from './models/network';
 import { Promotion } from './models/promotion';
+import { GroupPermission } from './models/group';
 
 export function useSpaceById(id: number): UseSuspenseQueryResult<Space> {
   const { get } = useApiCall();
@@ -169,6 +170,10 @@ export const proxy = {
   },
 };
 export const ratelApi = {
+  permissions: {
+    getPermissions: (teamId: number, permission: GroupPermission) =>
+      `/v2/permissions?team_id=${teamId}&permission=${permission}`,
+  },
   users: {
     login: () => '/v1/users?action=login',
 
@@ -219,6 +224,8 @@ export const ratelApi = {
     invite_member: (team_id: number, group_id: number) =>
       `/v1/teams/${team_id}/groups/${group_id}`,
     check_email: (team_id: number, group_id: number) =>
+      `/v1/teams/${team_id}/groups/${group_id}`,
+    delete_group: (team_id: number, group_id: number) =>
       `/v1/teams/${team_id}/groups/${group_id}`,
   },
   networks: {

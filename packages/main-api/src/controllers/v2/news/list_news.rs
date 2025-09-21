@@ -1,8 +1,11 @@
+use aws_sdk_dynamodb::{
+    types::AttributeValue,
+    Client as DynamoDbClient,
+};
 use bdk::prelude::*;
 use dto::{
     Error, Result,
     by_axum::axum::{Json, extract::{Query, State}},
-    sqlx::PgPool,
     *,
 };
 
@@ -12,25 +15,45 @@ pub struct ListNewsQuery {
     pub limit: Option<i32>,
 }
 
-/// GET /v2/news?limit=<n>
-/// Returns latest news ordered by created_at desc
 pub async fn list_news_handler(
-    State(pool): State<PgPool>,
+    State(dynamo_client): State<DynamoDbClient>,
     Query(ListNewsQuery { limit }): Query<ListNewsQuery>,
 ) -> Result<Json<Vec<NewsSummary>>> {
-    let limit = limit.unwrap_or(3).clamp(1, 100);
+    let limit = limit.unwrap_or(3).clamp(1, 100) as i32;
+    let table_name = std::env::var("DYNAMODB_TABLE_NAME").unwrap_or_else(|_| "ratel-local".to_string());
 
     let items: Vec<NewsSummary> = NewsSummary::query_builder()
         .limit(limit)
         .order_by_created_at_desc()
         .query()
-        .map(NewsSummary::from)
-        .fetch_all(&pool)
+        .table_name(&table_name)
+        .index_name("GSI1")
+        .key_condition_expression("GSI1PK = :pk")
+        .expression_attribute_values(
+            ":pk",
+            AttributeValue::S("NEWS#ALL".to_string()),
+        )
+        .limit(limit)
+        .scan_index_forward(false) 
+        .send()
         .await
         .map_err(|e| {
-            tracing::error!(error=?e, "Failed to query news");
+            tracing::error!(error=?e, "Failed to query news from DynamoDB");
             Error::ServerError("failed to query news".into())
         })?;
+
+    let items = result.items.unwrap_or_default()
+        .into_iter()
+        .filter_map(|item| {
+            let html_content = item.get("html_content")
+                .and_then(|v| v.as_s().ok())
+                .map(|s| s.to_string())?;
+
+            Some(NewsSummary {
+                html_content,
+            })
+        })
+        .collect();
 
     Ok(Json(items))
 }

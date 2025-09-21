@@ -99,7 +99,9 @@ impl FeedController {
 
             if let Some(space) = space {
                 if let Some(author) = space.author.last() {
-                    let should_filter = space.status == SpaceStatus::Draft
+                    tracing::debug!("space: {:?} {:?}", space, teams);
+                    let should_filter = (space.status == SpaceStatus::Draft
+                        || space.publishing_scope == PublishingScope::Private)
                         && author.id != user_id
                         && !teams.iter().any(|t| t.id == author.id);
 

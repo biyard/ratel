@@ -71,7 +71,6 @@ export const useEditCoordinatorStore = create<State & Actions>((set, get) => ({
     return spacePublishValidatorImpl();
   },
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  setSpacePublishValidator: (handler: any) =>
-    set({ spacePublishValidatorImpl: handler }),
+  setSpacePublishValidator: (handler) =>
+    set({ spacePublishValidator: handler }),
 }));

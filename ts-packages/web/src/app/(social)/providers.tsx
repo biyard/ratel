@@ -39,21 +39,22 @@ export default async function Provider({ children }: { children: ReactNode }) {
 
   const dehydratedState = dehydrate(queryClient);
 
-  // TODO: Remove Apollo cache after full migration to REST v2
-  // @deprecated - Migrating to REST v2
-  const apolloCache = '{}';
   try {
-    // Prefetch news using REST v2
-    await apiFetch(`${config.api_url}${ratelApi.news.list(3)}`, {
-      ignoreError: true,
-      cache: 'no-store',
+    // Prefetch news into React Query cache
+    await queryClient.prefetchQuery({
+      queryKey: ['news', 3],
+      queryFn: async () =>
+        (await apiFetch(`${config.api_url}${ratelApi.news.list(3)}`, {
+          ignoreError: true,
+          cache: 'no-store',
+        })) ?? [],
     });
   } catch (error) {
     console.error('Failed to fetch news', error);
   }
 
   return (
-    <ClientProviders apolloCache={apolloCache}>
+    <ClientProviders>
       <HydrationBoundary state={dehydratedState}>{children}</HydrationBoundary>
     </ClientProviders>
   );

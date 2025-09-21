@@ -327,7 +327,9 @@ impl SpaceController {
             )
             .await
         {
-            Ok(_) => {}
+            Ok(v) => {
+                tracing::debug!("posting space res: {:?}", v);
+            }
             Err(e) => {
                 tx.rollback().await?;
                 return Err(e);
@@ -610,7 +612,10 @@ impl SpaceController {
             )
             .await
         {
-            Ok(space) => space,
+            Ok(space) => {
+                tracing::debug!("update space res: {:?}", space);
+                space
+            }
             Err(e) => {
                 tracing::error!("Failed to update space {}: {}", space_id, e);
                 tx.rollback().await?;
