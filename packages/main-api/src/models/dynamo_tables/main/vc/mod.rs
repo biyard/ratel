@@ -1,7 +1,11 @@
+pub mod credential_audit_log;
 pub mod credential_offer;
+pub mod credential_template;
 pub mod issued_credential;
+pub mod issuer_configuration;
 pub mod oauth_access_token;
 pub mod oauth_authorization_code;
+pub mod oauth_client_registration;
 pub mod presentation_submission;
 pub mod status_list_credential;
 pub mod status_list_entry;

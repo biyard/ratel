@@ -23,7 +23,11 @@ pub enum Partition {
     // DID/VC Partitions
     Credential(String),
     CredentialOffer(String),
+    CredentialTemplate(String),
     StatusList(String),
     OAuthToken(String),
+    OAuthClient(String),
+    IssuerConfig(String),
+    AuditLog(String),
     Presentation(String),
 }
