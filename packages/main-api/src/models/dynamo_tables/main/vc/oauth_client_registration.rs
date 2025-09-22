@@ -1,8 +1,8 @@
-use bdk::prelude::*;
 use crate::types::*;
+use bdk::prelude::*;
 
 /// OAuth Client Registration Entity
-/// 
+///
 /// Manages registered OAuth clients for OpenID4VCI flows.
 /// Stores client metadata, credentials, and configuration.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity)]
@@ -16,7 +16,7 @@ pub struct OAuthClientRegistration {
 
     #[dynamo(prefix = "OWNER", name = "find_by_owner", index = "gsi1", pk)]
     pub owner_id: String,
-    
+
     #[dynamo(prefix = "STATUS", name = "find_by_status", index = "gsi2", pk)]
     pub status: String,
     #[dynamo(prefix = "TYPE", index = "gsi2", sk)]

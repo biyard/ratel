@@ -1,11 +1,10 @@
-use base64::Engine;
 use bdk::prelude::*;
 use by_axum::axum::Json;
 use dto::{JsonSchema, Result, aide};
 use serde::{Deserialize, Serialize};
 
 use crate::config;
-use crate::utils::jwt::{JwtSigner, JwtVerifier};
+use crate::utils::jwt::JwtSigner;
 
 /// Verifiable Credential/Presentation Verification Request
 ///
@@ -516,7 +515,7 @@ async fn verify_jwt_signature(jwt: &str, issuer: &str) -> VerificationResult {
 }
 
 async fn verify_jsonld_proof(
-    document: &serde_json::Value,
+    _document: &serde_json::Value,
     proof: &serde_json::Value,
     issuer: &str,
 ) -> VerificationResult {

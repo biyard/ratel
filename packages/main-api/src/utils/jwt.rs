@@ -1,9 +1,8 @@
 use base64::Engine;
-use ed25519_dalek::{SigningKey as Ed25519SigningKey, VerifyingKey as Ed25519VerifyingKey};
 use jsonwebtoken::{Algorithm, DecodingKey, EncodingKey, Header, Validation, decode, encode};
 use p256::{
     PublicKey, SecretKey,
-    ecdsa::{SigningKey, VerifyingKey, signature::Signer, signature::Verifier},
+    ecdsa::{SigningKey, VerifyingKey},
     pkcs8::EncodePrivateKey,
 };
 use serde::{Deserialize, Serialize};

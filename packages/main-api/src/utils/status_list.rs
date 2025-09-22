@@ -1,24 +1,9 @@
 use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
+use dto::Error;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-#[derive(Debug, thiserror::Error)]
-pub enum StatusListError {
-    #[error("Compression error: {0}")]
-    Compression(String),
-    #[error("Decompression error: {0}")]
-    Decompression(String),
-    #[error("Index out of bounds: {index} >= {size}")]
-    IndexOutOfBounds { index: usize, size: usize },
-    #[error("Invalid bit value: {0}")]
-    InvalidBitValue(u8),
-    #[error("Serialization error: {0}")]
-    Serialization(String),
-    #[error("Base64 decode error: {0}")]
-    Base64Decode(#[from] base64::DecodeError),
-}
-
-pub type Result<T> = std::result::Result<T, StatusListError>;
+pub type Result<T> = std::result::Result<T, Error>;
 
 /// StatusList2021 implementation for W3C Verifiable Credentials
 /// Provides bitstring-based status tracking with gzip compression
@@ -40,9 +25,9 @@ impl StatusList2021 {
     pub fn new(size: usize) -> Result<Self> {
         let mut bitstring = BitString::new(size);
         bitstring.fill(false); // Initialize all to valid/not revoked
-        
+
         let encoded_list = Self::compress_bitstring(&bitstring)?;
-        
+
         Ok(Self {
             encoded_list,
             size,
@@ -54,7 +39,7 @@ impl StatusList2021 {
     pub fn from_encoded(encoded_list: String, size: usize) -> Result<Self> {
         // Validate by decompressing
         let _bitstring = Self::decompress_bitstring(&encoded_list, size)?;
-        
+
         Ok(Self {
             encoded_list,
             size,
@@ -65,7 +50,7 @@ impl StatusList2021 {
     /// Get the status at a specific index
     pub fn get_status(&self, index: usize) -> Result<bool> {
         if index >= self.size {
-            return Err(StatusListError::IndexOutOfBounds {
+            return Err(Error::StatusListIndexOutOfBounds {
                 index,
                 size: self.size,
             });
@@ -78,7 +63,7 @@ impl StatusList2021 {
     /// Set the status at a specific index
     pub fn set_status(&mut self, index: usize, status: bool) -> Result<()> {
         if index >= self.size {
-            return Err(StatusListError::IndexOutOfBounds {
+            return Err(Error::StatusListIndexOutOfBounds {
                 index,
                 size: self.size,
             });
@@ -87,7 +72,7 @@ impl StatusList2021 {
         let mut bitstring = Self::decompress_bitstring(&self.encoded_list, self.size)?;
         bitstring.set(index, status);
         self.encoded_list = Self::compress_bitstring(&bitstring)?;
-        
+
         Ok(())
     }
 
@@ -120,13 +105,13 @@ impl StatusList2021 {
     pub fn get_revoked_indices(&self) -> Result<Vec<usize>> {
         let bitstring = Self::decompress_bitstring(&self.encoded_list, self.size)?;
         let mut revoked = Vec::new();
-        
+
         for i in 0..self.size {
             if bitstring.get(i) {
                 revoked.push(i);
             }
         }
-        
+
         Ok(revoked)
     }
 
@@ -134,47 +119,49 @@ impl StatusList2021 {
     pub fn revoked_count(&self) -> Result<usize> {
         let bitstring = Self::decompress_bitstring(&self.encoded_list, self.size)?;
         let mut count = 0;
-        
+
         for i in 0..self.size {
             if bitstring.get(i) {
                 count += 1;
             }
         }
-        
+
         Ok(count)
     }
 
     /// Update multiple statuses at once
     pub fn batch_update(&mut self, updates: &[(usize, bool)]) -> Result<()> {
         let mut bitstring = Self::decompress_bitstring(&self.encoded_list, self.size)?;
-        
+
         for &(index, status) in updates {
             if index >= self.size {
-                return Err(StatusListError::IndexOutOfBounds {
+                return Err(Error::StatusListIndexOutOfBounds {
                     index,
                     size: self.size,
                 });
             }
             bitstring.set(index, status);
         }
-        
+
         self.encoded_list = Self::compress_bitstring(&bitstring)?;
         Ok(())
     }
 
     /// Compress a bitstring using gzip and encode as base64url
     fn compress_bitstring(bitstring: &BitString) -> Result<String> {
-        use flate2::{write::GzEncoder, Compression};
+        use flate2::{Compression, write::GzEncoder};
         use std::io::Write;
 
         let bytes = bitstring.to_bytes();
         let mut encoder = GzEncoder::new(Vec::new(), Compression::default());
-        encoder.write_all(&bytes)
-            .map_err(|e| StatusListError::Compression(e.to_string()))?;
-        
-        let compressed = encoder.finish()
-            .map_err(|e| StatusListError::Compression(e.to_string()))?;
-        
+        encoder
+            .write_all(&bytes)
+            .map_err(|e| Error::StatusListCompression(e.to_string()))?;
+
+        let compressed = encoder
+            .finish()
+            .map_err(|e| Error::StatusListCompression(e.to_string()))?;
+
         Ok(URL_SAFE_NO_PAD.encode(&compressed))
     }
 
@@ -183,13 +170,16 @@ impl StatusList2021 {
         use flate2::read::GzDecoder;
         use std::io::Read;
 
-        let compressed = URL_SAFE_NO_PAD.decode(encoded)?;
+        let compressed = URL_SAFE_NO_PAD
+            .decode(encoded)
+            .map_err(|e| Error::StatusListBase64Decode(e.to_string()))?;
         let mut decoder = GzDecoder::new(&compressed[..]);
         let mut decompressed = Vec::new();
-        
-        decoder.read_to_end(&mut decompressed)
-            .map_err(|e| StatusListError::Decompression(e.to_string()))?;
-        
+
+        decoder
+            .read_to_end(&mut decompressed)
+            .map_err(|e| Error::StatusListDecompression(e.to_string()))?;
+
         BitString::from_bytes(decompressed, size)
     }
 
@@ -198,7 +188,7 @@ impl StatusList2021 {
         let revoked_count = self.revoked_count()?;
         let valid_count = self.size - revoked_count;
         let compression_ratio = self.encoded_list.len() as f64 / (self.size / 8) as f64;
-        
+
         Ok(StatusListStats {
             total_size: self.size,
             valid_count,
@@ -238,29 +228,28 @@ impl BitString {
     fn from_bytes(bytes: Vec<u8>, size: usize) -> Result<Self> {
         let expected_byte_size = (size + 7) / 8;
         if bytes.len() != expected_byte_size {
-            return Err(StatusListError::Decompression(
-                format!("Invalid byte length: expected {}, got {}", expected_byte_size, bytes.len())
-            ));
+            return Err(Error::StatusListDecompression(format!(
+                "Invalid byte length: expected {}, got {}",
+                expected_byte_size,
+                bytes.len()
+            )));
         }
-        
-        Ok(Self {
-            bits: bytes,
-            size,
-        })
+
+        Ok(Self { bits: bytes, size })
     }
 
     fn get(&self, index: usize) -> bool {
         if index >= self.size {
             return false;
         }
-        
+
         let byte_index = index / 8;
         let bit_index = index % 8;
-        
+
         if byte_index >= self.bits.len() {
             return false;
         }
-        
+
         (self.bits[byte_index] & (1 << bit_index)) != 0
     }
 
@@ -268,14 +257,14 @@ impl BitString {
         if index >= self.size {
             return;
         }
-        
+
         let byte_index = index / 8;
         let bit_index = index % 8;
-        
+
         if byte_index >= self.bits.len() {
             return;
         }
-        
+
         if value {
             self.bits[byte_index] |= 1 << bit_index;
         } else {
@@ -286,13 +275,13 @@ impl BitString {
     fn fill(&mut self, value: bool) {
         let fill_byte = if value { 0xFF } else { 0x00 };
         self.bits.fill(fill_byte);
-        
+
         // Clear any extra bits in the last byte
         if self.size % 8 != 0 {
             let last_byte_index = self.bits.len() - 1;
             let valid_bits = self.size % 8;
             let mask = (1 << valid_bits) - 1;
-            
+
             if value {
                 self.bits[last_byte_index] = mask;
             } else {
@@ -318,8 +307,8 @@ pub mod constants {
 /// Helper functions for creating status list credentials
 pub mod credential_helpers {
     use super::*;
-    use serde_json::{json, Value};
-    use chrono::{DateTime, Utc};
+    use chrono::Utc;
+    use serde_json::{Value, json};
 
     /// Create a StatusList2021 credential
     pub fn create_status_list_credential(
@@ -393,17 +382,19 @@ impl StatusListManager {
 
     /// Update status in a specific list
     pub fn update_status(&mut self, list_id: &str, index: usize, status: bool) -> Result<()> {
-        let list = self.lists.get_mut(list_id)
-            .ok_or_else(|| StatusListError::Compression(format!("Status list not found: {}", list_id)))?;
-        
+        let list = self.lists.get_mut(list_id).ok_or_else(|| {
+            Error::StatusListCompression(format!("Status list not found: {}", list_id))
+        })?;
+
         list.set_status(index, status)
     }
 
     /// Check status in a specific list
     pub fn check_status(&self, list_id: &str, index: usize) -> Result<bool> {
-        let list = self.lists.get(list_id)
-            .ok_or_else(|| StatusListError::Compression(format!("Status list not found: {}", list_id)))?;
-        
+        let list = self.lists.get(list_id).ok_or_else(|| {
+            Error::StatusListCompression(format!("Status list not found: {}", list_id))
+        })?;
+
         list.get_status(index)
     }
 
@@ -433,16 +424,16 @@ mod tests {
     #[test]
     fn test_status_operations() {
         let mut status_list = StatusList2021::new(100).unwrap();
-        
+
         // Initially all should be valid (false = not revoked)
         assert!(!status_list.is_revoked(0).unwrap());
         assert!(status_list.is_valid(0).unwrap());
-        
+
         // Revoke a credential
         status_list.revoke(5).unwrap();
         assert!(status_list.is_revoked(5).unwrap());
         assert!(!status_list.is_valid(5).unwrap());
-        
+
         // Restore it
         status_list.restore(5).unwrap();
         assert!(!status_list.is_revoked(5).unwrap());
@@ -452,37 +443,36 @@ mod tests {
     #[test]
     fn test_batch_updates() {
         let mut status_list = StatusList2021::new(100).unwrap();
-        
+
         let updates = vec![
             (10, true),  // revoke
             (20, true),  // revoke
             (30, false), // restore (was already false)
         ];
-        
+
         status_list.batch_update(&updates).unwrap();
-        
+
         assert!(status_list.is_revoked(10).unwrap());
         assert!(status_list.is_revoked(20).unwrap());
         assert!(!status_list.is_revoked(30).unwrap());
-        
+
         assert_eq!(status_list.revoked_count().unwrap(), 2);
     }
 
     #[test]
     fn test_compression_decompression() {
         let mut status_list = StatusList2021::new(1000).unwrap();
-        
+
         // Revoke some credentials
         status_list.revoke(100).unwrap();
         status_list.revoke(200).unwrap();
         status_list.revoke(300).unwrap();
-        
+
         // Create new status list from encoded data
-        let status_list2 = StatusList2021::from_encoded(
-            status_list.encoded_list.clone(), 
-            status_list.size
-        ).unwrap();
-        
+        let status_list2 =
+            StatusList2021::from_encoded(status_list.encoded_list.clone(), status_list.size)
+                .unwrap();
+
         // Should have same revocation status
         assert!(status_list2.is_revoked(100).unwrap());
         assert!(status_list2.is_revoked(200).unwrap());
@@ -493,51 +483,60 @@ mod tests {
     #[test]
     fn test_out_of_bounds() {
         let status_list = StatusList2021::new(100).unwrap();
-        
+
         let result = status_list.get_status(100);
-        assert!(matches!(result, Err(StatusListError::IndexOutOfBounds { .. })));
+        assert!(matches!(
+            result,
+            Err(Error::StatusListIndexOutOfBounds { .. })
+        ));
     }
 
     #[test]
     fn test_status_list_manager() {
         let mut manager = StatusListManager::new();
-        
+
         manager.create_list("revocation".to_string(), 1000).unwrap();
         manager.create_list("suspension".to_string(), 1000).unwrap();
-        
+
         // Update statuses
         manager.update_status("revocation", 100, true).unwrap();
         manager.update_status("suspension", 200, true).unwrap();
-        
+
         // Check statuses
         assert!(manager.check_status("revocation", 100).unwrap());
         assert!(!manager.check_status("revocation", 200).unwrap());
         assert!(manager.check_status("suspension", 200).unwrap());
         assert!(!manager.check_status("suspension", 100).unwrap());
-        
+
         assert_eq!(manager.list_ids().len(), 2);
     }
 
     #[test]
     fn test_credential_helpers() {
         let status_list = StatusList2021::new(1000).unwrap();
-        
+
         let credential = credential_helpers::create_status_list_credential(
             "https://example.com/status/1",
             "https://example.com",
             &status_list,
             constants::REVOCATION_PURPOSE,
         );
-        
-        assert_eq!(credential["type"][1], constants::STATUS_LIST_2021_CREDENTIAL_TYPE);
-        assert_eq!(credential["credentialSubject"]["statusPurpose"], constants::REVOCATION_PURPOSE);
-        
+
+        assert_eq!(
+            credential["type"][1],
+            constants::STATUS_LIST_2021_CREDENTIAL_TYPE
+        );
+        assert_eq!(
+            credential["credentialSubject"]["statusPurpose"],
+            constants::REVOCATION_PURPOSE
+        );
+
         let status_entry = credential_helpers::create_status_entry(
             "https://example.com/status/1",
             100,
             constants::REVOCATION_PURPOSE,
         );
-        
+
         assert_eq!(status_entry["statusListIndex"], "100");
         assert_eq!(status_entry["statusPurpose"], constants::REVOCATION_PURPOSE);
     }

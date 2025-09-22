@@ -9,7 +9,7 @@ use std::{time::SystemTime, sync::Arc};
 use aws_sdk_dynamodb::Client as DynamoClient;
 
 use crate::utils::users_dynamo::extract_user_id_dynamo;
-use crate::utils::status_list::{StatusList2021, StatusListManager};
+use crate::utils::status_list::StatusList2021;
 
 #[derive(
     Debug,
@@ -484,11 +484,11 @@ async fn store_status_list_to_storage(status_list_id: &str, status_list: &Status
 #[allow(dead_code)]
 async fn create_status_audit_record(
     credential_id: &str,
-    status_list_index: u64,
-    status: &CredentialStatus,
-    updated_by: &str,
-    reason: &Option<String>,
-    version: u64,
+    _status_list_index: u64,
+    _status: &CredentialStatus,
+    _updated_by: &str,
+    _reason: &Option<String>,
+    _version: u64,
 ) -> Result<()> {
     tracing::debug!("Creating audit record for credential: {}", credential_id);
     

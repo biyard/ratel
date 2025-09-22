@@ -26,11 +26,11 @@ use crate::{
                 RegisterUserResponse, register_users_by_noncelab_handler,
             },
         },
-        // oid4vci::{
-        //     credential::oid4vci_credential_handler, credential_offer::credential_offer_handler,
-        //     token::oid4vci_token_handler,
-        // },
-        // status::bitstring_status_list::get_status_list_handler,
+        oid4vci::{
+            credential::oid4vci_credential_handler, credential_offer::credential_offer_handler,
+            token::oid4vci_token_handler,
+        },
+        status::bitstring_status_list::get_status_list_handler,
         v2::{
             binances::{
                 binance_webhook::binance_webhook_handler,
@@ -108,17 +108,17 @@ use crate::{
             request_verification_code::request_verification_code_handler,
             verify_email::email_verification_handler,
         },
-        // vc::{
-        //     presentations::accept_presentation_handler,
-        //     status_fetch::{get_credential_status_handler, get_detailed_credential_status_handler},
-        //     status_update::{
-        //         batch_update_credential_status_handler, update_credential_status_handler,
-        //     },
-        //     verify::verify_vc_handler,
-        // },
+        vc::{
+            presentations::accept_presentation_handler,
+            status_fetch::{get_credential_status_handler, get_detailed_credential_status_handler},
+            status_update::{
+                batch_update_credential_status_handler, update_credential_status_handler,
+            },
+            verify::verify_vc_handler,
+        },
         well_known::{
             get_did_document::get_did_document_handler,
-            // openid_credential_issuer::openid_credential_issuer_handler,
+            openid_credential_issuer::openid_credential_issuer_handler,
         },
         wg::get_home::get_home_handler,
     },
@@ -764,7 +764,7 @@ pub async fn route(
                             ),
                         ),
                 )
-                .with_state(dynamo_client),
+                .with_state(dynamo_client.clone()),
         )
         .route(
             "/.well-known/oauth-authorization-server",
@@ -799,122 +799,124 @@ pub async fn route(
                 ),
             ),
         )
-        // .route(
-        //     "/.well-known/openid-credential-issuer",
-        //     get_with(
-        //         openid_credential_issuer_handler,
-        //         api_docs!(
-        //             "OpenID Credential Issuer Metadata",
-        //             "Retrieve OpenID4VCI credential issuer capabilities and endpoints"
-        //         ),
-        //     ),
-        // )
-        // .route(
-        //     "/oid4vci/credential_offer",
-        //     get_with(
-        //         credential_offer_handler,
-        //         api_docs!(
-        //             "OpenID4VCI Credential Offer",
-        //             "Create credential offers for QR codes and wallet deep links"
-        //         ),
-        //     )
-        //     .with_state(pool.clone()),
-        // )
-        // .route(
-        //     "/oid4vci/token",
-        //     post_with(
-        //         oid4vci_token_handler,
-        //         api_docs!(
-        //             "OpenID4VCI Token",
-        //             "Exchange client authentication for access token to request credentials"
-        //         ),
-        //     )
-        //     .with_state(pool.clone()),
-        // )
-        // .route(
-        //     "/oid4vci/credential",
-        //     post_with(
-        //         oid4vci_credential_handler,
-        //         api_docs!(
-        //             "OpenID4VCI Credential Issuance",
-        //             "Issue a verifiable credential in response to a valid token and request"
-        //         ),
-        //     )
-        //     .with_state(pool.clone()),
-        // )
-        // .route(
-        //     "/vc/verify",
-        //     post_with(
-        //         verify_vc_handler,
-        //         api_docs!(
-        //             "Verify Verifiable Credential/Presentation",
-        //             "Validate authenticity, integrity, and proof of a credential or presentation"
-        //         ),
-        //     ),
-        // )
-        // .route(
-        //     "/vc/presentations",
-        //     post_with(
-        //         accept_presentation_handler,
-        //         api_docs!(
-        //             "Accept Verifiable Presentation",
-        //             "Accept and verify a verifiable presentation submitted by a holder"
-        //         ),
-        //     )
-        //     .with_state(pool.clone()),
-        // )
-        // .route(
-        //     "/vc/status/update",
-        //     post_with(
-        //         update_credential_status_handler,
-        //         api_docs!(
-        //             "Update Credential Status",
-        //             "Mark a credential as valid, suspended, or revoked in the status list"
-        //         ),
-        //     )
-        //     .with_state(pool.clone()),
-        // )
-        // .route(
-        //     "/vc/status/batch-update",
-        //     post_with(
-        //         batch_update_credential_status_handler,
-        //         api_docs!(
-        //             "Batch Update Credential Status",
-        //             "Update the status of multiple credentials in a single operation"
-        //         ),
-        //     )
-        //     .with_state(pool.clone()),
-        // )
-        // .route(
-        //     "/vc/status/:id",
-        //     get_with(
-        //         get_credential_status_handler,
-        //         api_docs!(
-        //             "Get Credential Status",
-        //             "Fetch the current status of a verifiable credential by its ID"
-        //         ),
-        //     ),
-        // )
-        // .route(
-        //     "/vc/status/:id/details",
-        //     get_with(
-        //         get_detailed_credential_status_handler,
-        //         api_docs!(
-        //             "Get Detailed Credential Status",
-        //             "Fetch detailed status information including verification and history"
-        //         ),
-        //     ),
-        // )
-        // .route(
-        //     "/status/bitstring/1.json",
-        //     get_with(
-        //         get_status_list_handler,
-        //         api_docs!(
-        //             "Credential Status List",
-        //             "Retrieve W3C StatusList2021 for credential revocation status"
-        //         ),
-        //     ),
-        // )
+        .route(
+            "/.well-known/openid-credential-issuer",
+            get_with(
+                openid_credential_issuer_handler,
+                api_docs!(
+                    "OpenID Credential Issuer Metadata",
+                    "Retrieve OpenID4VCI credential issuer capabilities and endpoints"
+                ),
+            ),
+        )
+        .route(
+            "/oid4vci/credential_offer",
+            get_with(
+                credential_offer_handler,
+                api_docs!(
+                    "OpenID4VCI Credential Offer",
+                    "Create credential offers for QR codes and wallet deep links"
+                ),
+            )
+            .with_state(dynamo_client.clone()),
+        )
+        .route(
+            "/oid4vci/token",
+            post_with(
+                oid4vci_token_handler,
+                api_docs!(
+                    "OpenID4VCI Token",
+                    "Exchange client authentication for access token to request credentials"
+                ),
+            )
+            .with_state(dynamo_client.clone()),
+        )
+        .route(
+            "/oid4vci/credential",
+            post_with(
+                oid4vci_credential_handler,
+                api_docs!(
+                    "OpenID4VCI Credential Issuance",
+                    "Issue a verifiable credential in response to a valid token and request"
+                ),
+            )
+            .with_state(dynamo_client.clone()),
+        )
+        .route(
+            "/vc/verify",
+            post_with(
+                verify_vc_handler,
+                api_docs!(
+                    "Verify Verifiable Credential/Presentation",
+                    "Validate authenticity, integrity, and proof of a credential or presentation"
+                ),
+            ),
+        )
+        .route(
+            "/vc/presentations",
+            post_with(
+                accept_presentation_handler,
+                api_docs!(
+                    "Accept Verifiable Presentation",
+                    "Accept and verify a verifiable presentation submitted by a holder"
+                ),
+            )
+            .with_state(dynamo_client.clone()),
+        )
+        .route(
+            "/vc/status/update",
+            post_with(
+                update_credential_status_handler,
+                api_docs!(
+                    "Update Credential Status",
+                    "Mark a credential as valid, suspended, or revoked in the status list"
+                ),
+            )
+            .with_state(dynamo_client.clone()),
+        )
+        .route(
+            "/vc/status/batch-update",
+            post_with(
+                batch_update_credential_status_handler,
+                api_docs!(
+                    "Batch Update Credential Status",
+                    "Update the status of multiple credentials in a single operation"
+                ),
+            )
+            .with_state(dynamo_client.clone()),
+        )
+        .route(
+            "/vc/status/:id",
+            get_with(
+                get_credential_status_handler,
+                api_docs!(
+                    "Get Credential Status",
+                    "Fetch the current status of a verifiable credential by its ID"
+                ),
+            )
+            .with_state(dynamo_client.clone()),
+        )
+        .route(
+            "/vc/status/:id/details",
+            get_with(
+                get_detailed_credential_status_handler,
+                api_docs!(
+                    "Get Detailed Credential Status",
+                    "Fetch detailed status information including verification and history"
+                ),
+            )
+            .with_state(dynamo_client.clone()),
+        )
+        .route(
+            "/status/bitstring/1.json",
+            get_with(
+                get_status_list_handler,
+                api_docs!(
+                    "Credential Status List",
+                    "Retrieve W3C StatusList2021 for credential revocation status"
+                ),
+            ),
+        )
         .layer(
             TraceLayer::new_for_http()
                 .make_span_with(|request: &axum::http::Request<_>| {

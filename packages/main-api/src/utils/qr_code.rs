@@ -1,5 +1,5 @@
 use base64::Engine;
-use image::{Rgb, RgbImage};
+use image::RgbImage;
 use qrcode::{EcLevel, QrCode};
 use std::io::Cursor;
 
@@ -48,7 +48,7 @@ impl QrCodeGenerator {
         let qr_code = QrCode::with_error_correction_level(data, self.error_correction)?;
 
         // Convert to image using qrcode's built-in renderer
-        let image = qr_code
+        let _image = qr_code
             .render::<qrcode::render::unicode::Dense1x2>()
             .max_dimensions(self.size, self.size)
             .build();
@@ -75,7 +75,7 @@ impl QrCodeGenerator {
         let qr_code = QrCode::with_error_correction_level(data, self.error_correction)?;
 
         // Convert to image using qrcode's built-in renderer
-        let image = qr_code
+        let _image = qr_code
             .render::<qrcode::render::unicode::Dense1x2>()
             .max_dimensions(self.size, self.size)
             .build();

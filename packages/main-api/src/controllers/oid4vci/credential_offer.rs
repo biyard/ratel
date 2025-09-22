@@ -1,5 +1,4 @@
 use aws_sdk_dynamodb::Client as DynamoClient;
-use base64::Engine;
 use bdk::prelude::*;
 use by_axum::{
     auth::Authorization,
