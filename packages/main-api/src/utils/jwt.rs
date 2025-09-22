@@ -307,6 +307,120 @@ impl JwtSigner {
     }
 }
 
+/// JWT verification utilities for DID VC system
+pub struct JwtVerifier;
+
+impl JwtVerifier {
+    pub fn new() -> Self {
+        Self
+    }
+
+    /// Verify a proof of possession JWT
+    pub fn verify_jwt_proof_of_possession(&self, token: &str) -> Result<serde_json::Value> {
+        // First decode to get the header and determine the algorithm
+        let header = self.decode_jwt_header(token)?;
+        let algorithm = header
+            .get("alg")
+            .and_then(|a| a.as_str())
+            .ok_or_else(|| JwtError::InvalidKey("Missing algorithm in JWT header".to_string()))?;
+
+        match algorithm {
+            "ES256" => self.verify_es256_jwt(token),
+            "EdDSA" => self.verify_eddsa_jwt(token),
+            _ => Err(JwtError::Config(format!(
+                "Unsupported algorithm: {}",
+                algorithm
+            ))),
+        }
+    }
+
+    /// Verify an ES256 JWT using the configured public key
+    fn verify_es256_jwt(&self, token: &str) -> Result<serde_json::Value> {
+        // Get the public key from configuration
+        let config = config::get();
+        let public_key_x = config.did.p256_x;
+        let public_key_y = config.did.p256_y;
+
+        // Decode public key coordinates
+        let x_bytes = base64::engine::general_purpose::URL_SAFE_NO_PAD.decode(public_key_x)?;
+        let y_bytes = base64::engine::general_purpose::URL_SAFE_NO_PAD.decode(public_key_y)?;
+
+        if x_bytes.len() != 32 || y_bytes.len() != 32 {
+            return Err(JwtError::InvalidKey(
+                "P256 coordinates must be 32 bytes each".to_string(),
+            ));
+        }
+
+        // Reconstruct the public key
+        let mut uncompressed_point = vec![0x04]; // Uncompressed point prefix
+        uncompressed_point.extend_from_slice(&x_bytes);
+        uncompressed_point.extend_from_slice(&y_bytes);
+
+        let public_key = PublicKey::from_sec1_bytes(&uncompressed_point)
+            .map_err(|e| JwtError::P256(format!("Failed to create public key: {}", e)))?;
+        let verifying_key = VerifyingKey::from(public_key);
+
+        // Create decoding key for jsonwebtoken using SEC1 encoded point
+        let sec1_bytes = verifying_key.to_encoded_point(false);
+        let decoding_key = DecodingKey::from_ec_der(sec1_bytes.as_bytes());
+
+        // Set up validation
+        let mut validation = Validation::new(Algorithm::ES256);
+        validation.validate_exp = true;
+        validation.validate_aud = false; // We'll validate audience manually
+        validation.leeway = 60; // Allow 60 seconds of clock skew
+
+        // Decode and verify the JWT
+        let token_data = decode::<serde_json::Value>(token, &decoding_key, &validation)?;
+        Ok(token_data.claims)
+    }
+
+    /// Verify an EdDSA JWT (simplified implementation)
+    fn verify_eddsa_jwt(&self, token: &str) -> Result<serde_json::Value> {
+        // For now, just decode without verification since jsonwebtoken doesn't support EdDSA
+        // In production, you'd want to use a library that properly supports EdDSA
+        tracing::warn!(
+            "EdDSA JWT verification not fully implemented - decoding without signature verification"
+        );
+
+        let payload = JwtSigner::decode_without_verification(token)?;
+
+        // Basic expiration check
+        if let Some(exp) = payload.get("exp").and_then(|e| e.as_i64()) {
+            let now = SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_secs() as i64;
+
+            if exp < now {
+                return Err(JwtError::Config("Token expired".to_string()));
+            }
+        }
+
+        Ok(payload)
+    }
+
+    /// Decode JWT header without verification
+    fn decode_jwt_header(&self, token: &str) -> Result<serde_json::Value> {
+        let parts: Vec<&str> = token.split('.').collect();
+        if parts.len() != 3 {
+            return Err(JwtError::InvalidKey("Invalid JWT format".to_string()));
+        }
+
+        let header_bytes = base64::engine::general_purpose::URL_SAFE_NO_PAD.decode(parts[0])?;
+        let header: serde_json::Value = serde_json::from_slice(&header_bytes)
+            .map_err(|_| JwtError::Config("Invalid JSON in JWT header".to_string()))?;
+
+        Ok(header)
+    }
+}
+
+impl Default for JwtVerifier {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

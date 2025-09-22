@@ -16,8 +16,13 @@ use uuid::Uuid;
 // use base64::Engine;
 
 use crate::{
-    config, models::dynamo_tables::main::vc::issued_credential::IssuedCredential,
-    types::CredentialType, utils::users_dynamo::extract_user_id_dynamo,
+    config,
+    models::dynamo_tables::main::vc::issued_credential::IssuedCredential,
+    types::CredentialType,
+    utils::{
+        jwt::{Claims, JwtSigner, JwtVerifier, VcJwtPayload},
+        users_dynamo::extract_user_id_dynamo,
+    },
 };
 
 /// OpenID4VCI Credential Request
@@ -245,18 +250,88 @@ fn validate_proof_of_possession(proof: &ProofOfPossession) -> Result<()> {
         return Err(dto::Error::Unknown("Unsupported proof type".to_string()));
     }
 
-    if proof.jwt.is_none() {
-        return Err(dto::Error::Unknown("Missing JWT proof".to_string()));
-    }
+    let jwt_token = proof
+        .jwt
+        .as_ref()
+        .ok_or_else(|| dto::Error::Unknown("Missing JWT proof".to_string()))?;
 
-    // TODO: Validate the JWT proof
-    // This should include:
-    // 1. Verify JWT signature
-    // 2. Check that the JWT contains the correct c_nonce
-    // 3. Verify the audience and issuer claims
-    // 4. Ensure the JWT is not expired
+    // Parse and validate the JWT
+    let verifier = JwtVerifier::new();
+    let claims = verifier
+        .verify_jwt_proof_of_possession(jwt_token)
+        .map_err(|e| dto::Error::Unknown(format!("JWT validation failed: {}", e)))?;
+
+    // Validate required claims for proof of possession
+    validate_proof_claims(&claims)?;
 
     tracing::debug!("Proof of possession validation passed");
+    Ok(())
+}
+
+/// Validate the claims in the proof of possession JWT
+fn validate_proof_claims(claims: &serde_json::Value) -> Result<()> {
+    // Check for required audience claim (should match issuer)
+    let aud = claims
+        .get("aud")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| dto::Error::Unknown("Missing or invalid 'aud' claim".to_string()))?;
+
+    // Get issuer from config
+    let expected_issuer = std::env::var("ISSUER_BASE_URL")
+        .map_err(|_| dto::Error::Unknown("ISSUER_BASE_URL not configured".to_string()))?;
+
+    if aud != expected_issuer {
+        return Err(dto::Error::Unknown(format!(
+            "Invalid audience: expected {}, got {}",
+            expected_issuer, aud
+        )));
+    }
+
+    // Check for nonce claim (c_nonce)
+    let _nonce = claims
+        .get("nonce")
+        .or_else(|| claims.get("c_nonce"))
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| dto::Error::Unknown("Missing 'nonce' or 'c_nonce' claim".to_string()))?;
+
+    // TODO: Validate the nonce against stored c_nonce
+    // This would require looking up the nonce from the token exchange step
+
+    // Check for issuer claim (should be the client/holder)
+    let _iss = claims
+        .get("iss")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| dto::Error::Unknown("Missing 'iss' claim".to_string()))?;
+
+    // Check expiration time
+    if let Some(exp) = claims.get("exp").and_then(|v| v.as_i64()) {
+        let current_time = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs() as i64;
+
+        if exp < current_time {
+            return Err(dto::Error::Unknown("Proof JWT has expired".to_string()));
+        }
+    } else {
+        return Err(dto::Error::Unknown("Missing 'exp' claim".to_string()));
+    }
+
+    // Check issued at time (iat)
+    if let Some(iat) = claims.get("iat").and_then(|v| v.as_i64()) {
+        let current_time = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs() as i64;
+
+        // Allow some clock skew (5 minutes)
+        if iat > current_time + 300 {
+            return Err(dto::Error::Unknown(
+                "Proof JWT issued in the future".to_string(),
+            ));
+        }
+    }
+
     Ok(())
 }
 
@@ -398,45 +473,59 @@ async fn generate_medical_credential(user_id: &str) -> Result<VerifiableCredenti
 
 /// Sign credential as JWT using the issuer's private key
 async fn sign_credential_as_jwt(credential: &VerifiableCredential) -> Result<String> {
-    // TODO: Implement proper JWT signing with the issuer's private key
-    // This should use the ES256 key configured in DidConfig
+    // Create JWT signer with configured keys
+    let signer = JwtSigner::new()
+        .map_err(|e| dto::Error::Unknown(format!("Failed to initialize JWT signer: {}", e)))?;
 
-    // For now, we'll create a simple unsigned JWT structure
-    let header = serde_json::json!({
-        "alg": "ES256",
-        "typ": "JWT",
-        "kid": "es256-1"
-    });
+    // Create the JWT payload for the verifiable credential
+    let issuer_string = credential
+        .issuer
+        .as_str()
+        .map(|s| s.to_string())
+        .or_else(|| {
+            // If issuer is an object, try to get the 'id' field
+            credential
+                .issuer
+                .get("id")
+                .and_then(|v| v.as_str())
+                .map(|s| s.to_string())
+        })
+        .unwrap_or_else(|| credential.id.clone()); // Fallback to credential ID
 
-    let payload = serde_json::json!({
-        "iss": credential.issuer,
-        "sub": credential.credential_subject.get("id"),
-        "iat": SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs(),
-        "exp": SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs() + 3600,
-        "vc": credential
-    });
+    let claims = Claims {
+        iss: issuer_string,
+        sub: credential
+            .credential_subject
+            .get("id")
+            .and_then(|v| v.as_str())
+            .map(|s| s.to_string()),
+        aud: None, // Not needed for VC JWT
+        iat: SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs(),
+        exp: SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs()
+            + 3600, // 1 hour expiry
+        jti: Some(uuid::Uuid::new_v4().to_string()),
+        nonce: None, // Not needed for VC JWT (only for proof of possession)
+    };
 
-    let header_str = serde_json::to_string(&header)
-        .map_err(|e| dto::Error::Unknown(format!("Failed to serialize header: {}", e)))?;
-    let payload_str = serde_json::to_string(&payload)
-        .map_err(|e| dto::Error::Unknown(format!("Failed to serialize payload: {}", e)))?;
+    let payload = VcJwtPayload {
+        claims,
+        vc: serde_json::to_value(credential)
+            .map_err(|e| dto::Error::Unknown(format!("Failed to serialize credential: {}", e)))?,
+    };
 
-    let encoded_header = base64::Engine::encode(
-        &base64::engine::general_purpose::URL_SAFE_NO_PAD,
-        header_str.as_bytes(),
-    );
-    let encoded_payload = base64::Engine::encode(
-        &base64::engine::general_purpose::URL_SAFE_NO_PAD,
-        payload_str.as_bytes(),
-    );
+    // Sign the JWT using ES256
+    let jwt_token = signer
+        .sign_es256(&payload)
+        .map_err(|e| dto::Error::Unknown(format!("Failed to sign credential JWT: {}", e)))?;
 
-    // TODO: Replace with actual signature
-    let fake_signature = "UNSIGNED_FOR_DEVELOPMENT_ONLY";
-
-    let jwt = format!("{}.{}.{}", encoded_header, encoded_payload, fake_signature);
-
-    tracing::warn!("Credential signed with development-only fake signature");
-    Ok(jwt)
+    tracing::debug!("Successfully signed credential as JWT with ES256");
+    Ok(jwt_token)
 }
 
 /// Generate a cryptographic nonce
