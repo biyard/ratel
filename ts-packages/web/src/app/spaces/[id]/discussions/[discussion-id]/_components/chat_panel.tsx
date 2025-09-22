@@ -66,7 +66,7 @@ export default function ChatPanel({
 
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto px-3 py-4 space-y-3 text-sm"
+        className="flex-1 overflow-y-auto overflow-x-hidden px-3 py-4 space-y-3 text-sm"
       >
         {messages.map((msg, i) => {
           const isMe = msg.senderId === myAttendeeId;
@@ -107,7 +107,7 @@ export default function ChatPanel({
                     ))}
 
                   <div
-                    className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} gap-1`}
+                    className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} gap-1 min-w-0`}
                   >
                     {!isMe && (
                       <div className="font-medium text-xs text-neutral-400">
@@ -115,7 +115,7 @@ export default function ChatPanel({
                       </div>
                     )}
 
-                    <div className="flex flex-row items-end gap-2 max-w-full">
+                    <div className="flex flex-row items-end gap-2 max-w-full min-w-0">
                       {isMe && (
                         <div className="text-[10px] text-neutral-400 whitespace-nowrap shrink-0">
                           {dayjs(msg.timestamp).format('A h:mm')}
@@ -123,19 +123,19 @@ export default function ChatPanel({
                       )}
 
                       <div
-                        className={`inline-block px-3 py-2 rounded-2xl max-w-[85%] ${
+                        className={`inline-block px-3 py-2 rounded-2xl max-w-[85%] min-w-0 ${
                           isMe
                             ? 'bg-[#3f3f3f] text-white rounded-br-none'
                             : 'bg-neutral-700 text-white rounded-bl-none'
                         }`}
                       >
-                        <div className="whitespace-pre-wrap break-words leading-snug">
+                        <div className="whitespace-pre-wrap break-words break-all leading-snug">
                           {msg.text}
                         </div>
                       </div>
 
                       {!isMe && (
-                        <div className="text-[10px] text-neutral-400 whitespace-nowrap shrink-0">
+                        <div className="text-[10px] text-neutral-400 whitespace-nowrap shrink-0 self-end">
                           {dayjs(msg.timestamp).format('A h:mm')}
                         </div>
                       )}
