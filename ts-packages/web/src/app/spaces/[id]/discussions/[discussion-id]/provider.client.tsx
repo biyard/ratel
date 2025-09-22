@@ -243,38 +243,9 @@ export default function ClientProviders({
         });
         return stream;
       });
-
-      try {
-        const warm = await navigator.mediaDevices.getUserMedia({
-          audio: true,
-          video: true,
-        });
-        warm.getTracks().forEach((t) => t.stop());
-        const video = await deviceController.listVideoInputDevices();
-        const audio = await deviceController.listAudioInputDevices();
-
-        console.log('user audio, video list: ', video, audio);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } catch (e: any) {
-        console.warn(
-          '[Devices] getUserMedia warm-up failed:',
-          e?.name,
-          e?.message ?? e,
-        );
-      }
-
-      const audioInputs =
-        await session.deviceController.listAudioInputDevices();
-      if (audioInputs.length > 0) {
-        await session.deviceController.startAudioInput(audioInputs[0].deviceId);
-        session.audioVideo.realtimeMuteLocalAudio();
-        const selfAttendeeId = configuration.credentials?.attendeeId;
-        if (selfAttendeeId) {
-          setMicStates((prev) => ({
-            ...prev,
-            [selfAttendeeId]: false,
-          }));
-        }
+      const selfAttendeeId = configuration.credentials?.attendeeId;
+      if (selfAttendeeId) {
+        setMicStates((prev) => ({ ...prev, [selfAttendeeId]: false }));
       }
 
       setMeetingSession(session);
