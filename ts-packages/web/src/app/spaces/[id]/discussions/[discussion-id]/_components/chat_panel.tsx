@@ -4,7 +4,6 @@ import { Clear, Logo } from '@/components/icons';
 import { Send } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import dayjs from 'dayjs';
-import { Input } from '@/components/ui/input';
 import { DiscussionParticipant } from '@/lib/api/models/discussion';
 import { Participant } from '@/lib/api/models/meeting';
 import Image from 'next/image';
@@ -27,6 +26,7 @@ export default function ChatPanel({
   const [visible, setVisible] = useState(false);
   const [input, setInput] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     setTimeout(() => setVisible(true), 10);
@@ -45,6 +45,10 @@ export default function ChatPanel({
     if (!input.trim()) return;
     onSend(input.trim());
     setInput('');
+    if (textareaRef.current) {
+      const el = textareaRef.current;
+      el.style.height = 'auto';
+    }
   };
 
   return (
@@ -150,20 +154,27 @@ export default function ChatPanel({
 
       <div className="border-t border-neutral-700 px-3 py-2 flex-none">
         <div className="flex items-center gap-2">
-          <Input
-            type="text"
+          <textarea
+            ref={textareaRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
-              if (e.nativeEvent.isComposing) return;
+              if (e.nativeEvent?.isComposing) return;
               if (e.key === 'Enter') {
+                if (e.shiftKey) return;
                 e.preventDefault();
-                e.stopPropagation();
                 handleSend();
               }
             }}
+            onInput={(e) => {
+              const el = e.currentTarget;
+              el.style.height = 'auto';
+              el.style.height = `${el.scrollHeight}px`;
+            }}
+            rows={1}
             placeholder="Type message here"
-            className="flex-1 rounded-full px-4 py-2 text-sm bg-[#2a2a2a] text-white border border-neutral-600 outline-none"
+            className="flex-1 resize-none overflow-hidden rounded-[8px] px-4 py-2 text-sm
+             bg-[#2a2a2a] text-white border border-neutral-600 outline-none"
           />
           <button
             onClick={handleSend}
