@@ -13,6 +13,9 @@ pub enum Error {
     SesServiceError(#[from] crate::utils::aws::ses::SesServiceError),
     #[error("SerdeDynamo error: {0}")]
     SerdeDynamo(#[from] serde_dynamo::Error),
+    #[error("SerdeJson error: {0}")]
+    SerdeJson(#[from] serde_json::Error),
+    
     #[error("Session error")]
     SessionError(#[from] tower_sessions::session::Error),
 

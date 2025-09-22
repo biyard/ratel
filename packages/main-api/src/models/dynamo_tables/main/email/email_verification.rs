@@ -6,12 +6,24 @@ pub struct EmailVerification {
     pub pk: Partition,
     pub sk: EntityType,
 
+    #[dynamo(prefix = "TS", index = "gsi1", sk)]
     pub created_at: i64,
 
-    #[dynamo(prefix = "EMAIL", name = "find_by_email", index = "gsi1", pk)]
+    #[dynamo(
+        prefix = "EMAIL#VERIFICATION",
+        name = "find_by_email",
+        index = "gsi1",
+        pk
+    )]
+    #[dynamo(
+        prefix = "EMAIL#CODE",
+        name = "find_by_email_and_code",
+        index = "gsi2",
+        pk
+    )]
     pub email: String,
-    #[dynamo(index = "gsi1", sk)]
-    pub value: String, // code
+    #[dynamo(index = "gsi2", sk)]
+    pub value: String,
     pub expired_at: i64,
     pub attempt_count: i32,
 }

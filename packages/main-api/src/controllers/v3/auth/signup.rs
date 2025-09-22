@@ -36,6 +36,7 @@ There is a problem with the validation logic for emails. For example, it's possi
 
  */
 #[derive(Debug, Clone, Deserialize, Default, aide::OperationIo, JsonSchema, Validate)]
+#[serde(rename_all = "camelCase")]
 pub struct SignupRequest {
     pub email: String,
     #[validate(custom(function = "validate_nickname"))]
@@ -61,7 +62,7 @@ pub async fn signup_handler(
     Json(req): Json<SignupRequest>,
 ) -> Result<(), Error2> {
     let user = extract_user(&dynamo.client, auth).await;
-    tracing::debug!("User: {:?}", user);
+
     let user_pk;
     let user_type;
 

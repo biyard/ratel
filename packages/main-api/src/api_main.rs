@@ -19,13 +19,16 @@ use bdk::prelude::{by_axum::axum::Router, *};
 use by_axum::axum::middleware;
 use by_types::DatabaseConfig;
 use dto::{
-    by_axum::auth::{authorization_middleware, set_auth_token_key},
+    by_axum::{
+        auth::{authorization_middleware, generate_jwt, set_auth_token_key},
+        axum::{extract::Request, http::Response, middleware::Next},
+    },
     sqlx::PgPool,
     *,
 };
 use sqlx::postgres::PgPoolOptions;
 use tower_sessions::{
-    SessionManagerLayer,
+    Session, SessionManagerLayer,
     cookie::time::{Duration, OffsetDateTime},
 };
 
@@ -243,62 +246,63 @@ pub async fn api_main() -> Result<Router> {
     })
     .await?
     .layer(middleware::from_fn(authorization_middleware))
-    .layer(session_layer);
-    // .layer(middleware::from_fn(cookie_middleware));
+    .layer(session_layer)
+    .layer(middleware::from_fn(cookie_middleware));
 
     let app = app.merge(mcp_router).merge(api_router);
     Ok(app)
 }
 
-// pub async fn cookie_middleware(
-//     req: Request,
-//     next: Next,
-// ) -> std::result::Result<Response<by_axum::axum::body::Body>, by_axum::axum::http::StatusCode> {
-//     let session_initialized = if let Some(session) = req.extensions().get::<Session>() {
-//         if let Ok(Some(_)) = session
-//             .get::<by_axum::auth::UserSession>(by_axum::auth::USER_SESSION_KEY)
-//             .await
-//         {
-//             true
-//         } else {
-//             false
-//         }
-//     } else {
-//         false
-//     };
+//FIXME: Remove this middleware
+pub async fn cookie_middleware(
+    req: Request,
+    next: Next,
+) -> std::result::Result<Response<by_axum::axum::body::Body>, by_axum::axum::http::StatusCode> {
+    let session_initialized = if let Some(session) = req.extensions().get::<Session>() {
+        if let Ok(Some(_)) = session
+            .get::<by_axum::auth::UserSession>(by_axum::auth::USER_SESSION_KEY)
+            .await
+        {
+            true
+        } else {
+            false
+        }
+    } else {
+        false
+    };
 
-//     let mut res = next.run(req).await;
-//     if session_initialized {
-//         tracing::debug!("Session not initialized, skipping cookie generation.");
-//         return Ok(res);
-//     }
+    let mut res = next.run(req).await;
+    if session_initialized {
+        tracing::debug!("Session not initialized, skipping cookie generation.");
+        return Ok(res);
+    }
 
-//     if let Some(ref session) = res.extensions().get::<Session>() {
-//         tracing::debug!("Checking for user session in response...");
-//         if let Ok(Some(user_session)) = session
-//             .get::<by_axum::auth::UserSession>(by_axum::auth::USER_SESSION_KEY)
-//             .await
-//         {
-//             tracing::debug!("User session found in response: {:?}", user_session);
-//             let mut claims = by_types::Claims {
-//                 sub: user_session.user_id.to_string(),
-//                 ..Default::default()
-//             };
+    if let Some(ref session) = res.extensions().get::<Session>() {
+        tracing::debug!("Checking for user session in response...");
+        if let Ok(Some(user_session)) = session
+            .get::<by_axum::auth::UserSession>(by_axum::auth::USER_SESSION_KEY)
+            .await
+        {
+            tracing::debug!("User session found in response: {:?}", user_session);
+            let mut claims = by_types::Claims {
+                sub: user_session.user_id.to_string(),
+                ..Default::default()
+            };
 
-//             let token = generate_jwt(&mut claims)?;
+            let token = generate_jwt(&mut claims)?;
 
-//             res.headers_mut().append(
-//                 reqwest::header::SET_COOKIE,
-//                 format!(
-//                     "{}_auth_token={}; SameSite=Lax; Path=/; Max-Age=2586226; HttpOnly; Secure;",
-//                     config::get().env,
-//                     token,
-//                 )
-//                 .parse()
-//                 .unwrap(),
-//             );
-//         }
-//     }
+            res.headers_mut().append(
+                reqwest::header::SET_COOKIE,
+                format!(
+                    "{}_auth_token={}; SameSite=Lax; Path=/; Max-Age=2586226; HttpOnly; Secure;",
+                    config::get().env,
+                    token,
+                )
+                .parse()
+                .unwrap(),
+            );
+        }
+    }
 
-//     return Ok(res);
-// }
+    return Ok(res);
+}
