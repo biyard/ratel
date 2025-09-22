@@ -8,17 +8,39 @@ use crate::config;
     Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq, aide::OperationIo, JsonSchema,
 )]
 pub struct OpenIdCredentialIssuerMetadata {
+    /// The issuer identifier
     pub credential_issuer: String,
+    /// The credential endpoint for issuing credentials
     pub credential_endpoint: String,
+    /// List of supported credentials
     pub credentials_supported: Vec<Value>,
-    // #[serde(skip_serializing_if = "Option::is_none")]
-    // pub display: Option<Vec<Value>>,
+    /// Optional authorization server metadata
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub authorization_server: Option<String>,
+    /// Token endpoint for OAuth flows
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub token_endpoint: Option<String>,
+    /// Batch credential endpoint for bulk issuance
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub batch_credential_endpoint: Option<String>,
+    /// Deferred credential endpoint
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub deferred_credential_endpoint: Option<String>,
+    /// Credential issuer display information
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub display: Option<Vec<Value>>,
+    /// Supported credential signing algorithms
     #[serde(skip_serializing_if = "Option::is_none")]
     pub credential_signing_alg_values_supported: Option<Vec<String>>,
+    /// Supported credential encryption algorithms
     #[serde(skip_serializing_if = "Option::is_none")]
     pub credential_encryption_alg_values_supported: Option<Vec<String>>,
+    /// Supported credential encryption encoding
     #[serde(skip_serializing_if = "Option::is_none")]
     pub credential_encryption_enc_values_supported: Option<Vec<String>>,
+    /// Whether proof is required
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub proof_types_supported: Option<Value>,
 }
 
 /// OpenID4VCI Credential Issuer Metadata Endpoint
@@ -29,192 +51,279 @@ pub struct OpenIdCredentialIssuerMetadata {
 /// Reference: https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html#name-credential-issuer-metadata
 pub async fn openid_credential_issuer_handler() -> Result<Json<OpenIdCredentialIssuerMetadata>> {
     let conf = config::get();
-    let domain = conf.domain;
+    let domain = &conf.domain;
     let base = format!("https://{}", domain);
 
-    let credentials_supported = vec![
+    // Build comprehensive credentials_supported array
+    let credentials_supported = build_supported_credentials(&base);
+
+    // Build issuer display information
+    let display = build_issuer_display(&base);
+
+    // Build proof types supported
+    let proof_types_supported = build_proof_types_supported();
+
+    let metadata = OpenIdCredentialIssuerMetadata {
+        credential_issuer: format!("https://{}", domain),
+        credential_endpoint: format!("{}/oid4vci/credential", base),
+        authorization_server: Some(format!("https://{}", domain)),
+        token_endpoint: Some(format!("{}/oid4vci/token", base)),
+        batch_credential_endpoint: Some(format!("{}/oid4vci/batch_credential", base)),
+        deferred_credential_endpoint: Some(format!("{}/oid4vci/deferred", base)),
+        credentials_supported,
+        display: Some(display),
+        credential_signing_alg_values_supported: Some(vec![
+            "ES256".to_string(),
+            "EdDSA".to_string(),
+        ]),
+        credential_encryption_alg_values_supported: None, // Not implemented yet
+        credential_encryption_enc_values_supported: None, // Not implemented yet
+        proof_types_supported: Some(proof_types_supported),
+    };
+
+    Ok(Json(metadata))
+}
+
+/// Build the credentials_supported array with comprehensive credential definitions
+fn build_supported_credentials(base: &str) -> Vec<Value> {
+    vec![
+        // Identity Credential
         serde_json::json!({
             "format": "jwt_vc_json",
-            "id": "PassportCredential",
+            "id": "IdentityCredential",
             "credential_definition": {
                 "type": [
                     "VerifiableCredential",
-                    "PassportCredential"
+                    "IdentityCredential"
                 ],
                 "credentialSubject": {
-                    "givenName": {
+                    "id": {
                         "mandatory": true,
                         "display": [
                             {
-                                "name": "Given Name",
+                                "name": "Subject ID",
                                 "locale": "en-US"
                             }
                         ]
                     },
-                    "familyName": {
+                    "name": {
                         "mandatory": true,
                         "display": [
                             {
-                                "name": "Family Name",
+                                "name": "Full Name",
                                 "locale": "en-US"
                             }
                         ]
                     },
-                    "birthDate": {
-                        "mandatory": true,
-                        "display": [
-                            {
-                                "name": "Date of Birth",
-                                "locale": "en-US"
-                            }
-                        ]
-                    },
-                    "nationality": {
-                        "mandatory": true,
-                        "display": [
-                            {
-                                "name": "Nationality",
-                                "locale": "en-US"
-                            }
-                        ]
-                    },
-                    "gender": {
+                    "email": {
                         "mandatory": false,
                         "display": [
                             {
-                                "name": "Gender",
+                                "name": "Email Address",
                                 "locale": "en-US"
                             }
                         ]
                     }
                 }
             },
+            "cryptographic_binding_methods_supported": [
+                "did:key",
+                "jwk"
+            ],
+            "credential_signing_alg_values_supported": [
+                "ES256",
+                "EdDSA"
+            ],
             "proof_types_supported": {
                 "jwt": {
                     "proof_signing_alg_values_supported": [
-                        "ES256",    // P-256 ECDSA
-                        "EdDSA"     // Ed25519
-                    ]
-                }
-            },
-            // "display": [
-            //     {
-            //         "name": "Passport Credential",
-            //         "description": "A verifiable credential containing passport information",
-            //         "locale": "en-US",
-            //         "logo": {
-            //             "uri": format!("{}/images/passport-credential-logo.png", base),
-            //             "alt_text": "Passport Credential Logo"
-            //         },
-            //         "background_color": "#1F2937",
-            //         "text_color": "#FFFFFF"
-            //     }
-            // ]
-        }),
-        serde_json::json!({
-            "format": "jwt_vc_json",
-            "id": "MedicalCredential",
-            "credential_definition": {
-                "type": [
-                    "VerifiableCredential",
-                    "MedicalCredential"
-                ],
-                "credentialSubject": {
-                    "height": {
-                        "mandatory": false,
-                        "display": [
-                            {
-                                "name": "Height (cm)",
-                                "locale": "en-US"
-                            }
-                        ]
-                    },
-                    "weight": {
-                        "mandatory": false,
-                        "display": [
-                            {
-                                "name": "Weight (kg)",
-                                "locale": "en-US"
-                            }
-                        ]
-                    },
-                    "bmi": {
-                        "mandatory": false,
-                        "display": [
-                            {
-                                "name": "BMI",
-                                "locale": "en-US"
-                            }
-                        ]
-                    },
-                    "bloodPressureSystolic": {
-                        "mandatory": false,
-                        "display": [
-                            {
-                                "name": "Blood Pressure Systolic",
-                                "locale": "en-US"
-                            }
-                        ]
-                    },
-                    "bloodPressureDiastolic": {
-                        "mandatory": false,
-                        "display": [
-                            {
-                                "name": "Blood Pressure Diastolic",
-                                "locale": "en-US"
-                            }
-                        ]
-                    }
-                }
-            },
-            "proof_types_supported": {
-                "jwt": {
-                    "proof_signing_alg_values_supported": [
-                        "ES256",    // P-256 ECDSA
-                        "EdDSA"     // Ed25519
+                        "ES256",
+                        "EdDSA"
                     ]
                 }
             },
             "display": [
                 {
-                    "name": "Medical Credential",
-                    "description": "A verifiable credential containing medical check-up information",
+                    "name": "Digital Identity Credential",
+                    "description": "A verifiable digital identity credential for the Ratel platform",
                     "locale": "en-US",
                     "logo": {
-                        "uri": format!("{}/images/medical-credential-logo.png", base),
-                        "alt_text": "Medical Credential Logo"
+                        "uri": format!("{}/images/identity-credential-logo.png", base),
+                        "alt_text": "Identity Credential Logo"
+                    },
+                    "background_color": "#1F2937",
+                    "text_color": "#FFFFFF"
+                }
+            ]
+        }),
+        // Verification Credential  
+        serde_json::json!({
+            "format": "jwt_vc_json",
+            "id": "VerificationCredential",
+            "credential_definition": {
+                "type": [
+                    "VerifiableCredential",
+                    "VerificationCredential"
+                ],
+                "credentialSubject": {
+                    "verificationType": {
+                        "mandatory": true,
+                        "display": [
+                            {
+                                "name": "Verification Type",
+                                "locale": "en-US"
+                            }
+                        ]
+                    },
+                    "verificationLevel": {
+                        "mandatory": true,
+                        "display": [
+                            {
+                                "name": "Verification Level",
+                                "locale": "en-US"
+                            }
+                        ]
+                    },
+                    "verifiedAt": {
+                        "mandatory": true,
+                        "display": [
+                            {
+                                "name": "Verified At",
+                                "locale": "en-US"
+                            }
+                        ]
+                    }
+                }
+            },
+            "cryptographic_binding_methods_supported": [
+                "did:key",
+                "jwk"
+            ],
+            "credential_signing_alg_values_supported": [
+                "ES256",
+                "EdDSA"
+            ],
+            "proof_types_supported": {
+                "jwt": {
+                    "proof_signing_alg_values_supported": [
+                        "ES256",
+                        "EdDSA"
+                    ]
+                }
+            },
+            "display": [
+                {
+                    "name": "Verification Credential",
+                    "description": "A credential proving completion of verification process",
+                    "locale": "en-US",
+                    "logo": {
+                        "uri": format!("{}/images/verification-credential-logo.png", base),
+                        "alt_text": "Verification Credential Logo"
                     },
                     "background_color": "#059669",
                     "text_color": "#FFFFFF"
                 }
             ]
         }),
-    ];
+        // Membership Credential
+        serde_json::json!({
+            "format": "jwt_vc_json",
+            "id": "MembershipCredential", 
+            "credential_definition": {
+                "type": [
+                    "VerifiableCredential",
+                    "MembershipCredential"
+                ],
+                "credentialSubject": {
+                    "organizationName": {
+                        "mandatory": true,
+                        "display": [
+                            {
+                                "name": "Organization",
+                                "locale": "en-US"
+                            }
+                        ]
+                    },
+                    "membershipType": {
+                        "mandatory": true,
+                        "display": [
+                            {
+                                "name": "Membership Type",
+                                "locale": "en-US"
+                            }
+                        ]
+                    },
+                    "memberSince": {
+                        "mandatory": true,
+                        "display": [
+                            {
+                                "name": "Member Since",
+                                "locale": "en-US"
+                            }
+                        ]
+                    }
+                }
+            },
+            "cryptographic_binding_methods_supported": [
+                "did:key",
+                "jwk"
+            ],
+            "credential_signing_alg_values_supported": [
+                "ES256",
+                "EdDSA"
+            ],
+            "proof_types_supported": {
+                "jwt": {
+                    "proof_signing_alg_values_supported": [
+                        "ES256",
+                        "EdDSA"
+                    ]
+                }
+            },
+            "display": [
+                {
+                    "name": "Membership Credential",
+                    "description": "A credential proving membership in an organization",
+                    "locale": "en-US",
+                    "logo": {
+                        "uri": format!("{}/images/membership-credential-logo.png", base),
+                        "alt_text": "Membership Credential Logo"
+                    },
+                    "background_color": "#7C3AED",
+                    "text_color": "#FFFFFF"
+                }
+            ]
+        })
+    ]
+}
 
-    let _display = vec![serde_json::json!({
-        "name": "Ratel Identity Issuer",
-        "description": "Decentralized identity credential issuer for the Ratel platform",
+/// Build issuer display information
+fn build_issuer_display(base: &str) -> Vec<Value> {
+    vec![serde_json::json!({
+        "name": "Ratel Credential Issuer",
+        "description": "Decentralized identity and verifiable credential issuer for the Ratel ecosystem",
         "locale": "en-US",
         "logo": {
-            // "uri": format!("{}/images/logo.png", base),
+            "uri": format!("{}/images/logo.png", base),
             "alt_text": "Ratel Logo"
         },
         "background_color": "#000000",
-        "text_color": "#FFFFFF"
-    })];
+        "text_color": "#FFFFFF",
+        "background_image": {
+            "uri": format!("{}/images/issuer-background.png", base),
+            "alt_text": "Ratel Background"
+        }
+    })]
+}
 
-    let metadata = OpenIdCredentialIssuerMetadata {
-        credential_issuer: format!("https://{}", domain),
-        credential_endpoint: format!("{}/oid4vci/credential", base),
-        credentials_supported,
-        credential_signing_alg_values_supported: Some(vec![
-            "ES256".to_string(),
-            "EdDSA".to_string(),
-        ]),
-        // Set to none until actually implemented
-        credential_encryption_alg_values_supported: None,
-        credential_encryption_enc_values_supported: None,
-    };
-
-    Ok(Json(metadata))
+/// Build proof types supported configuration
+fn build_proof_types_supported() -> Value {
+    serde_json::json!({
+        "jwt": {
+            "proof_signing_alg_values_supported": [
+                "ES256",
+                "EdDSA"
+            ]
+        }
+    })
 }
