@@ -10,10 +10,12 @@ import {
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+const EMPTY_PERMISSION: Permission = { has_permission: false } as Permission;
+
 export function usePermission(
   teamId: number,
   permission: GroupPermission,
-): UseSuspenseQueryResult<Permission | null> {
+): UseSuspenseQueryResult<Permission> {
   const { get } = useApiCall();
 
   return useSuspenseQuery({
@@ -22,29 +24,21 @@ export function usePermission(
       const maxAttempts = 3;
       const delayMs = 500;
 
-      let last: Permission | null = null;
+      let last: Permission = EMPTY_PERMISSION;
 
       for (let i = 1; i <= maxAttempts; i++) {
         const p = (await get(
           ratelApi.permissions.getPermissions(teamId, permission),
         )) as Permission | null | undefined;
 
-        last = p ?? null;
-
-        if (p && p.has_permission === true) {
-          return p;
-        }
-
-        if (i < maxAttempts) {
-          await sleep(delayMs);
-        }
+        last = p ?? EMPTY_PERMISSION;
+        if (p?.has_permission === true) return p;
+        if (i < maxAttempts) await sleep(delayMs);
       }
 
       return last;
     },
-
     retry: 0,
-
     refetchOnWindowFocus: false,
     staleTime: 0,
   });
