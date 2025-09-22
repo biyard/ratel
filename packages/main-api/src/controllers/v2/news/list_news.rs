@@ -1,11 +1,8 @@
-use aws_sdk_dynamodb::{
-    types::AttributeValue,
-    Client as DynamoDbClient,
-};
 use bdk::prelude::*;
 use dto::{
     Error, Result,
     by_axum::axum::{Json, extract::{Query, State}},
+    sqlx::{self, PgPool, Row},
     *,
 };
 
@@ -13,47 +10,78 @@ use dto::{
 pub struct ListNewsQuery {
     /// Maximum number of items to return
     pub limit: Option<i32>,
+    /// Page number (1-based)
+    pub page: Option<i32>,
 }
 
-pub async fn list_news_handler(
-    State(dynamo_client): State<DynamoDbClient>,
-    Query(ListNewsQuery { limit }): Query<ListNewsQuery>,
-) -> Result<Json<Vec<NewsSummary>>> {
-    let limit = limit.unwrap_or(3).clamp(1, 100) as i32;
-    let table_name = std::env::var("DYNAMODB_TABLE_NAME").unwrap_or_else(|_| "ratel-local".to_string());
 
-    let items: Vec<NewsSummary> = NewsSummary::query_builder()
-        .limit(limit)
-        .order_by_created_at_desc()
-        .query()
-        .table_name(&table_name)
-        .index_name("GSI1")
-        .key_condition_expression("GSI1PK = :pk")
-        .expression_attribute_values(
-            ":pk",
-            AttributeValue::S("NEWS#ALL".to_string()),
-        )
-        .limit(limit)
-        .scan_index_forward(false) 
-        .send()
+pub async fn list_news_handler(
+    State(pool): State<PgPool>,
+    Query(ListNewsQuery { limit, page }): Query<ListNewsQuery>,
+) -> Result<Json<Vec<News>>> {
+    let limit = limit.unwrap_or(10).clamp(1, 100);
+    let page = page.unwrap_or(1).max(1);
+    let offset = (page - 1) * limit;
+
+   
+    let table_names: Vec<String> = sqlx::query_scalar(
+        "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'"
+    )
+    .fetch_all(&pool)
+    .await
+    .unwrap_or_default();
+    
+    tracing::info!(tables = ?table_names, "Available tables in database");
+
+    let table_name = "news";
+    
+    if !table_names.iter().any(|t| t.eq_ignore_ascii_case(table_name)) {
+        return Err(Error::ServerError(format!(
+            "News table not found. Available tables: {:?}",
+            table_names
+        )));
+    }
+
+   
+    let query = format!(
+        r#"
+        SELECT 
+            id,
+            created_at,
+            updated_at,
+            title,
+            html_content,
+            user_id
+        FROM {}
+        ORDER BY created_at DESC
+        LIMIT $1 OFFSET $2
+        "#,
+        table_name
+    );
+
+    let rows = sqlx::query(&query)
+        .bind(limit as i32)
+        .bind(offset as i64)
+        .fetch_all(&pool)
         .await
         .map_err(|e| {
-            tracing::error!(error=?e, "Failed to query news from DynamoDB");
-            Error::ServerError("failed to query news".into())
+            tracing::error!(error = ?e, "Failed to execute news query");
+            Error::ServerError("Failed to fetch news".into())
         })?;
 
-    let items = result.items.unwrap_or_default()
+    let items = rows
         .into_iter()
-        .filter_map(|item| {
-            let html_content = item.get("html_content")
-                .and_then(|v| v.as_s().ok())
-                .map(|s| s.to_string())?;
-
-            Some(NewsSummary {
-                html_content,
+        .filter_map(|row| {
+            Some(News {
+                id: row.try_get::<i64, _>("id").ok()?,
+                created_at: row.try_get::<i64, _>("created_at").ok()?,
+                updated_at: row.try_get::<i64, _>("updated_at").ok()?,
+                title: row.try_get::<String, _>("title").ok()?,
+                html_content: row.try_get::<String, _>("html_content").ok()?,
+                user_id: row.try_get::<i64, _>("user_id").ok()?,
             })
         })
-        .collect();
+        .collect::<Vec<_>>();
 
     Ok(Json(items))
 }
