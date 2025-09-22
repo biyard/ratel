@@ -6,7 +6,7 @@ use by_axum::{
 };
 use dto::{JsonSchema, Result, aide};
 use serde::{Deserialize, Serialize};
-use serde_dynamo::{to_item, from_item, to_attribute_value};
+use serde_dynamo::{from_item, to_attribute_value, to_item};
 use serde_json::Value;
 use std::{
     sync::Arc,
@@ -18,8 +18,7 @@ use uuid::Uuid;
 use crate::{
     config,
     models::dynamo_tables::main::vc::{
-        issued_credential::IssuedCredential,
-        oauth_access_token::OAuthAccessToken,
+        issued_credential::IssuedCredential, oauth_access_token::OAuthAccessToken,
     },
     types::CredentialType,
     utils::{
@@ -555,20 +554,24 @@ async fn validate_access_token(
             // In OpenID4VCI, the access token is actually the token itself from the Authorization header
             // The claims contain the decoded JWT information, but we need the raw token
             // For now, we'll try to get it from the custom fields, or look it up by user
-            
+
             let user_id = &claims.sub;
-            
+
             // Query DynamoDB to find a valid access token for this user
             // We'll use the find_by_user GSI index
             let user_partition = crate::types::Partition::User(user_id.clone());
-            
+
             let result = dynamo_client
                 .query()
                 .table_name(table_name)
                 .index_name("gsi1")
                 .key_condition_expression("gsi1pk = :pk")
-                .expression_attribute_values(":pk", to_attribute_value(&user_partition).map_err(|e| 
-                    dto::Error::Unknown(format!("Failed to serialize user partition: {}", e)))?)
+                .expression_attribute_values(
+                    ":pk",
+                    to_attribute_value(&user_partition).map_err(|e| {
+                        dto::Error::Unknown(format!("Failed to serialize user partition: {}", e))
+                    })?,
+                )
                 .send()
                 .await;
 
@@ -582,22 +585,28 @@ async fn validate_access_token(
                                 let now = chrono::Utc::now().timestamp_micros();
                                 if access_token.expires_at > now {
                                     tracing::debug!(
-                                        "Access token validated for user: {}, client: {}", 
-                                        access_token.user_id, 
+                                        "Access token validated for user: {}, client: {}",
+                                        access_token.user_id,
                                         access_token.client_id
                                     );
                                     return Ok(());
                                 }
                             }
                         }
-                        Err(dto::Error::Unknown("No valid access token found for user".to_string()))
+                        Err(dto::Error::Unknown(
+                            "No valid access token found for user".to_string(),
+                        ))
                     } else {
-                        Err(dto::Error::Unknown("No access tokens found for user".to_string()))
+                        Err(dto::Error::Unknown(
+                            "No access tokens found for user".to_string(),
+                        ))
                     }
                 }
                 Err(e) => {
                     tracing::error!("Failed to query access tokens from DynamoDB: {}", e);
-                    Err(dto::Error::Unknown("Failed to validate access token".to_string()))
+                    Err(dto::Error::Unknown(
+                        "Failed to validate access token".to_string(),
+                    ))
                 }
             }
         }
