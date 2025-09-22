@@ -463,7 +463,7 @@ export const ratelApi = {
         `/v2/teams/username/${encodeURIComponent(username)}`,
     },
     news: {
-      list: (limit = 10) => `/v2/news?limit=${limit}`,
+      list: (limit = 10, page = 1) => `/v2/news?limit=${limit}&page=${page}`,
       getById: (id: string) => `/v2/news/${id}`,
     },
     industries: {

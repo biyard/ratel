@@ -12,6 +12,7 @@ import { useRouter } from 'next/navigation';
 import React, { Suspense } from 'react';
 import DisableBorderCard from './disable-border-card';
 import { useApiCall } from '@/lib/api/use-send';
+import { logger } from '@/lib/logger';
 
 export interface NewsItem {
   id: number;
@@ -39,10 +40,15 @@ function News() {
   const { get } = useApiCall();
 
   const { data: news } = useSuspenseQuery<NewsItem[]>({
-    queryKey: ['news', 3],
+    queryKey: ['v2', 'news', { limit: 3, page: 1 }],
     queryFn: async () => {
-      // Backend returns Vec<NewsSummary>; useApiCall.get returns parsed JSON.
-      return ((await get(ratelApi.news.list(3))) ?? []) as NewsItem[];
+      try {
+        const response = await get(ratelApi.v2.news.list(3, 1)); 
+        return (response ?? []) as NewsItem[];
+      } catch (error) {
+        logger.error('Failed to fetch news:', error);
+        return [];
+      }
     },
     refetchOnWindowFocus: false,
   });
