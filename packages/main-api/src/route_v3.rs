@@ -91,7 +91,7 @@ pub fn route(
                     "/verification",
                     Router::new()
                         .route(
-                            "/send_verification_code",
+                            "/send-verification-code",
                             post_with(
                                 send_code_handler,
                                 api_docs!(
@@ -102,7 +102,7 @@ pub fn route(
                             ),
                         )
                         .route(
-                            "/verify_code",
+                            "/verify-code",
                             post_with(
                                 verify_code_handler,
                                 api_docs!(

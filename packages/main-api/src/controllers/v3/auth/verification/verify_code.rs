@@ -20,12 +20,8 @@ pub async fn verify_code_handler(
     Json(req): Json<VerifyCodeRequest>,
 ) -> Result<(), Error2> {
     let now = get_now_timestamp();
-    let (verification_list, _) = EmailVerification::find_by_email(
-        &dynamo.client,
-        EmailVerification::compose_gsi_1_pk(&req.email),
-        Default::default(),
-    )
-    .await?;
+    let (verification_list, _) =
+        EmailVerification::find_by_email(&dynamo.client, &req.email, Default::default()).await?;
 
     if verification_list.is_empty() {
         return Err(Error2::NotFound(format!(

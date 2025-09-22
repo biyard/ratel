@@ -692,9 +692,8 @@ fn generate_enum_impl(ident: Ident, _ds: &DataEnum, s_cfg: StructCfg) -> proc_ma
                     .items
                     .unwrap_or_default()
                     .into_iter()
-                    .map(|item| serde_dynamo::from_item(item).expect("failed to parse item"))
-                    .collect();
-
+                    .map(|item| serde_dynamo::from_item(item))
+                    .collect::<Result<Vec<#ident>, _>>()?;
                 Ok(items)
             }
         }
@@ -804,13 +803,15 @@ fn generate_query_common_fn() -> proc_macro2::TokenStream {
     quote! {
         pub fn encode_lek_all(
             lek: &std::collections::HashMap<String, aws_sdk_dynamodb::types::AttributeValue>,
-        ) -> String {
+        ) -> std::result::Result<String, crate::Error2> {
             use base64::{Engine as _, engine::general_purpose::STANDARD as B64};
 
-            let v: serde_json::Value =
-                serde_dynamo::from_item(lek.clone()).expect("failed to convert lek to json");
+            let v: serde_json::Value = serde_dynamo::from_item(lek.clone())?;
 
-            B64.encode(v.to_string().as_bytes())
+            let encoded = B64.encode(v.to_string().as_bytes());
+
+            Ok(encoded)
+
         }
 
         pub fn decode_bookmark_all(
@@ -822,7 +823,7 @@ fn generate_query_common_fn() -> proc_macro2::TokenStream {
             use base64::{Engine as _, engine::general_purpose::STANDARD as B64};
 
             let bytes = B64.decode(bookmark).expect("failed to decode base64");
-            let v = serde_json::to_value(&bytes).expect("failed to parse json");
+            let v = serde_json::to_value(&bytes)?;
 
             Ok(serde_dynamo::to_item(v)?)
         }
@@ -975,11 +976,11 @@ fn generate_index_fn(
                 .items
                 .unwrap_or_default()
                 .into_iter()
-                .map(|item| serde_dynamo::from_item(item).expect("failed to parse item"))
-                .collect();
+                .map(|item| serde_dynamo::from_item(item))
+                .collect::<Result<Vec<_>, _>>()?;
 
             let bookmark = if let Some(ref last_evaluated_key) = resp.last_evaluated_key {
-                Some(Self::encode_lek_all(last_evaluated_key))
+                Some(Self::encode_lek_all(last_evaluated_key)?)
             } else {
                 None
             };

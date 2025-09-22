@@ -14,9 +14,9 @@ pub enum UserMetadata {
 
 #[derive(serde::Serialize, schemars::JsonSchema)]
 pub struct UserResponse {
-    pub pk: String,
+    pub id: String,
     pub email: String,
-    pub display_name: String,
+    pub nickname: String,
     pub profile_url: String,
     pub content: String,
     pub user_type: u8,
@@ -32,9 +32,9 @@ pub struct UserResponse {
 impl From<User> for UserResponse {
     fn from(user: User) -> Self {
         Self {
-            pk: user.pk.to_string(),
+            id: user.pk.to_string(),
             email: user.email,
-            display_name: user.display_name,
+            nickname: user.display_name,
             profile_url: user.profile_url,
             content: user.html_contents,
             user_type: user.user_type as u8,
@@ -47,6 +47,7 @@ impl From<User> for UserResponse {
     }
 }
 #[derive(Default, serde::Serialize, schemars::JsonSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct UserDetailResponse {
     #[serde(flatten)]
     pub user: Option<UserResponse>,
