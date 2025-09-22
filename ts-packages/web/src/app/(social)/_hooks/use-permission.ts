@@ -14,11 +14,27 @@ export function usePermission(
 ): UseSuspenseQueryResult<Permission> {
   const { get } = useApiCall();
 
-  const query = useSuspenseQuery({
-    queryKey: [QK_GET_PERMISSION],
-    queryFn: () => get(ratelApi.permissions.getPermissions(teamId, permission)),
-    refetchOnWindowFocus: false,
-  });
+  return useSuspenseQuery({
+    queryKey: [QK_GET_PERMISSION, teamId, permission],
+    queryFn: async () => {
+      const p = (await get(
+        ratelApi.permissions.getPermissions(teamId, permission),
+      )) as Permission | null | undefined;
 
-  return query;
+      if (!p || p.has_permission === false) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const err: any = new Error('permission_not_ready');
+        err.__retryable__ = true;
+        throw err;
+      }
+
+      return p;
+    },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    retry: (failureCount, error: any) =>
+      Boolean(error?.__retryable__) && failureCount < 4,
+    retryDelay: 500,
+    refetchOnWindowFocus: false,
+    staleTime: 0,
+  });
 }
