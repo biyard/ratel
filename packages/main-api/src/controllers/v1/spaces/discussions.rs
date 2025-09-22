@@ -10,8 +10,8 @@ use by_axum::{
 use by_types::QueryResponse;
 use dto::*;
 
-use crate::utils::users::{extract_user_with_allowing_anonymous, extract_user_with_options};
 use crate::utils::notifications::send_notification;
+use crate::utils::users::{extract_user_with_allowing_anonymous, extract_user_with_options};
 use sqlx::postgres::PgRow;
 
 #[derive(Clone, Debug)]
@@ -23,6 +23,41 @@ pub struct SpaceDiscussionController {
 }
 
 impl SpaceDiscussionController {
+    async fn ensure_current_meeting(
+        &self,
+        client: &crate::utils::aws_chime_sdk_meeting::ChimeMeetingService,
+        discussion: &Discussion,
+    ) -> Result<String> {
+        if let Some(ref mid) = discussion.meeting_id {
+            if client.get_meeting_info(mid).await.is_some() {
+                return Ok(mid.clone());
+            }
+        }
+
+        let created = client.create_meeting(&discussion.name).await.map_err(|e| {
+            tracing::error!("create_meeting failed: {:?}", e);
+            Error::AwsChimeError(e.to_string())
+        })?;
+
+        let new_id = created.meeting_id().unwrap_or_default().to_string();
+
+        self.repo
+            .update(
+                discussion.id,
+                DiscussionRepositoryUpdateRequest {
+                    meeting_id: Some(new_id.clone()),
+                    ..Default::default()
+                },
+            )
+            .await
+            .map_err(|e| {
+                tracing::error!("update meeting_id failed: {:?}", e);
+                Error::UpdateDiscussionError(e.to_string())
+            })?;
+
+        Ok(new_id)
+    }
+
     async fn query(
         &self,
         space_id: i64,
@@ -89,8 +124,8 @@ impl SpaceDiscussionController {
             .query()
             .map(DiscussionMember::from)
             .fetch_all(&mut *tx)
-            .await?;        
-        
+            .await?;
+
         for pt in pts {
             let _ = self.member_repo.delete_with_tx(&mut *tx, pt.id).await;
         }
@@ -100,16 +135,22 @@ impl SpaceDiscussionController {
                 .member_repo
                 .insert_with_tx(&mut *tx, id, participant)
                 .await;
-            
+
             // Send InviteDiscussion notification to the participant
             let notification_data = NotificationData::InviteDiscussion {
                 discussion_id: id,
                 image_url: None,
                 description: format!("You've been invited to join the discussion: {}", &name),
             };
-            
-            if let Err(e) = send_notification(&self.pool, &mut tx, participant, notification_data).await {
-                tracing::error!("Failed to send InviteDiscussion notification to user {}: {:?}", participant, e);
+
+            if let Err(e) =
+                send_notification(&self.pool, &mut tx, participant, notification_data).await
+            {
+                tracing::error!(
+                    "Failed to send InviteDiscussion notification to user {}: {:?}",
+                    participant,
+                    e
+                );
                 // Don't fail the entire operation if notification fails - just log the error
             }
         }
@@ -159,39 +200,16 @@ impl SpaceDiscussionController {
             .await?
             .ok_or(Error::DiscussionNotFound)?;
 
-        if discussion.meeting_id.is_some() {
-            return Ok(discussion);
-        }
+        let _ = self.ensure_current_meeting(&client, &discussion).await?;
 
-        let name = discussion.name;
+        let latest = Discussion::query_builder()
+            .id_equals(id)
+            .query()
+            .map(Discussion::from)
+            .fetch_one(&self.pool)
+            .await?;
 
-        let meeting = match client.create_meeting(&name).await {
-            Ok(rst) => rst,
-            Err(e) => {
-                tracing::error!("start_meeting {}", e);
-                return Err(Error::AwsChimeError(e.to_string()));
-            }
-        };
-
-        let discussion = match self
-            .repo
-            .update(
-                id,
-                DiscussionRepositoryUpdateRequest {
-                    meeting_id: Some(meeting.meeting_id.unwrap_or_default()),
-                    ..Default::default()
-                },
-            )
-            .await
-        {
-            Ok(v) => v,
-            Err(e) => {
-                tracing::error!("start_meeting {}", e);
-                return Err(Error::DiscussionNotFound);
-            }
-        };
-
-        Ok(discussion)
+        Ok(latest)
     }
 
     async fn participant_meeting(
@@ -204,7 +222,6 @@ impl SpaceDiscussionController {
 
         let user = extract_user_with_allowing_anonymous(&self.pool, auth).await?;
         let user_id = user.id;
-
         if user_id == 0 {
             return Err(Error::InvalidUser);
         }
@@ -217,65 +234,31 @@ impl SpaceDiscussionController {
             .await?
             .ok_or(Error::DiscussionNotFound)?;
 
-        if discussion.meeting_id.is_none() {
-            return Err(Error::AwsChimeError("Not Found Meeting ID".to_string()));
-        }
-
-        let participant = DiscussionParticipant::query_builder()
+        let exists = DiscussionParticipant::query_builder()
             .discussion_id_equals(discussion.id)
             .user_id_equals(user_id)
             .query()
             .map(DiscussionParticipant::from)
             .fetch_optional(&self.pool)
             .await?;
-
-        if participant.is_some() {
+        if exists.is_some() {
             return Ok(discussion);
         }
 
-        let meeting_id = discussion.meeting_id.unwrap();
+        let meeting_id = self.ensure_current_meeting(&client, &discussion).await?;
 
-        let m = client.get_meeting_info(&meeting_id).await;
-
-        let meeting = if m.is_some() {
-            m.unwrap()
-        } else {
-            let v = match client.create_meeting(&discussion.name).await {
-                Ok(v) => Ok(v),
-                Err(e) => {
-                    tracing::error!("create meeting failed with error: {:?}", e);
-                    Err(Error::AwsChimeError(e.to_string()))
-                }
-            }?;
-
-            v
-        };
-
-        let _ = match self
-            .repo
-            .update(
-                id,
-                DiscussionRepositoryUpdateRequest {
-                    meeting_id: Some(meeting.meeting_id().unwrap().to_string()),
-                    ..Default::default()
-                },
-            )
+        let m = client
+            .get_meeting_info(&meeting_id)
             .await
-        {
-            Ok(v) => v,
-            Err(e) => {
-                tracing::error!("start recording {}", e);
-                return Err(Error::UpdateDiscussionError(e.to_string()));
-            }
-        };
+            .ok_or_else(|| Error::AwsChimeError("Missing meeting from Chime".into()))?;
 
-        let mp = meeting
+        let mp = m
             .media_placement()
-            .ok_or(Error::AwsChimeError("Missing media_placement".to_string()))?;
+            .ok_or_else(|| Error::AwsChimeError("Missing media_placement".into()))?;
 
         let meeting = MeetingInfo {
-            meeting_id,
-            media_region: meeting.media_region.clone().unwrap_or_default(),
+            meeting_id: meeting_id.clone(),
+            media_region: m.media_region.clone().unwrap_or_default(),
             media_placement: MediaPlacementInfo {
                 audio_host_url: mp.audio_host_url().unwrap_or_default().to_string(),
                 audio_fallback_url: mp.audio_fallback_url().unwrap_or_default().to_string(),
@@ -287,48 +270,96 @@ impl SpaceDiscussionController {
             },
         };
 
-        let participant = match client
-            .create_attendee(&meeting, user_id.to_string().as_str())
-            .await
-        {
-            Ok(rst) => rst,
-            Err(e) => {
-                tracing::error!("create attendee {}", e);
-                return Err(Error::AwsChimeError(e.to_string()));
-            }
+        let create_attendee_once = |_mid: &str| async {
+            client
+                .create_attendee(&meeting, user_id.to_string().as_str())
+                .await
         };
 
-        let participants = DiscussionParticipant::query_builder()
+        let attendee_res = match create_attendee_once(&meeting_id).await {
+            Ok(r) => Ok(r),
+            Err(e) => {
+                let msg = e.to_string();
+                let not_found = msg.contains("NotFound")
+                    || msg.contains("NotFoundException")
+                    || msg.to_ascii_lowercase().contains("not found");
+
+                if not_found {
+                    tracing::debug!(
+                        "meeting not found on create_attendee; recreating and retrying"
+                    );
+                    let recreated_id = self.ensure_current_meeting(&client, &discussion).await?;
+                    let m2 = client
+                        .get_meeting_info(&recreated_id)
+                        .await
+                        .ok_or_else(|| Error::AwsChimeError("Recreated meeting missing".into()))?;
+                    let mp2 = m2
+                        .media_placement()
+                        .ok_or_else(|| Error::AwsChimeError("Missing media_placement".into()))?;
+                    let meeting = MeetingInfo {
+                        meeting_id: recreated_id.clone(),
+                        media_region: m2.media_region.clone().unwrap_or_default(),
+                        media_placement: MediaPlacementInfo {
+                            audio_host_url: mp2.audio_host_url().unwrap_or_default().to_string(),
+                            audio_fallback_url: mp2
+                                .audio_fallback_url()
+                                .unwrap_or_default()
+                                .to_string(),
+                            screen_data_url: mp2.screen_data_url().unwrap_or_default().to_string(),
+                            screen_sharing_url: mp2
+                                .screen_sharing_url()
+                                .unwrap_or_default()
+                                .to_string(),
+                            screen_viewing_url: mp2
+                                .screen_viewing_url()
+                                .unwrap_or_default()
+                                .to_string(),
+                            signaling_url: mp2.signaling_url().unwrap_or_default().to_string(),
+                            turn_control_url: mp2
+                                .turn_control_url()
+                                .unwrap_or_default()
+                                .to_string(),
+                        },
+                    };
+                    client
+                        .create_attendee(&meeting, user_id.to_string().as_str())
+                        .await
+                } else {
+                    Err(e)
+                }
+            }
+        }
+        .map_err(|e| {
+            tracing::error!("create_attendee error: {:?}", e);
+            Error::AwsChimeError(e.to_string())
+        })?;
+
+        let olds = DiscussionParticipant::query_builder()
             .discussion_id_equals(discussion.id)
             .user_id_equals(user_id)
             .query()
             .map(DiscussionParticipant::from)
             .fetch_all(&self.pool)
             .await?;
-
-        for participant in participants.clone() {
-            let _ = self.participation_repo.delete(participant.id).await;
+        for p in olds {
+            let _ = self.participation_repo.delete(p.id).await;
         }
 
-        tracing::debug!("meeting participants: {:?}", participants);
+        let _ = pr
+            .insert(id, user_id, attendee_res.attendee_id)
+            .await
+            .map_err(|e| {
+                tracing::error!("insert participant failed: {:?}", e);
+                Error::DiscussionCreateUserFailed(e.to_string())
+            })?;
 
-        match pr.insert(id, user_id, participant.attendee_id).await {
-            Ok(d) => d,
-            Err(e) => {
-                tracing::error!("insert db failed after create participant {}", e);
-                return Err(Error::DiscussionCreateUserFailed(e.to_string()));
-            }
-        };
-
-        let discussion = Discussion::query_builder()
+        let latest = Discussion::query_builder()
             .id_equals(id)
             .query()
             .map(Discussion::from)
-            .fetch_optional(&self.pool)
-            .await?
-            .ok_or(Error::DiscussionNotFound)?;
-
-        Ok(discussion)
+            .fetch_one(&self.pool)
+            .await?;
+        Ok(latest)
     }
 
     async fn exit_meeting(&self, id: i64, auth: Option<Authorization>) -> Result<Discussion> {
