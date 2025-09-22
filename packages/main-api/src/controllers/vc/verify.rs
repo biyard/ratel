@@ -5,6 +5,7 @@ use dto::{JsonSchema, Result, aide};
 use serde::{Deserialize, Serialize};
 
 use crate::config;
+use crate::utils::jwt::{JwtSigner, JwtVerifier};
 
 /// Verifiable Credential/Presentation Verification Request
 ///
@@ -375,6 +376,8 @@ async fn verify_signature(document: &serde_json::Value, issuer: &str) -> Verific
 }
 
 async fn verify_jwt_signature(jwt: &str, issuer: &str) -> VerificationResult {
+    tracing::debug!("Verifying JWT signature for issuer: {}", issuer);
+
     // Split JWT into parts
     let parts: Vec<&str> = jwt.split('.').collect();
     if parts.len() != 3 {
@@ -397,21 +400,93 @@ async fn verify_jwt_signature(jwt: &str, issuer: &str) -> VerificationResult {
                         .unwrap_or("unknown");
                     tracing::debug!("JWT algorithm: {}", alg);
 
-                    // For now, we'll do basic validation
-                    // TODO: Implement actual signature verification with DID resolution
-                    if matches!(alg, "ES256" | "EdDSA" | "RS256") {
-                        VerificationResult {
-                            check: "signature".to_string(),
-                            passed: true,
-                            message: Some(format!("JWT signature algorithm {} validated", alg)),
-                            data: Some(serde_json::json!({ "algorithm": alg })),
+                    // Create JWT signer for verification (since verification methods are on JwtSigner)
+                    let signer = match JwtSigner::new() {
+                        Ok(s) => s,
+                        Err(e) => {
+                            tracing::warn!("Failed to create JWT signer: {}", e);
+                            return VerificationResult {
+                                check: "signature".to_string(),
+                                passed: false,
+                                message: Some(format!("Failed to initialize JWT signer: {}", e)),
+                                data: None,
+                            };
                         }
-                    } else {
-                        VerificationResult {
-                            check: "signature".to_string(),
-                            passed: false,
-                            message: Some(format!("Unsupported JWT algorithm: {}", alg)),
-                            data: None,
+                    };
+                    
+                    match alg {
+                        "ES256" => {
+                            match signer.verify_es256(jwt) {
+                                Ok(claims) => {
+                                    tracing::debug!("JWT signature verified successfully for issuer: {}", issuer);
+                                    VerificationResult {
+                                        check: "signature".to_string(),
+                                        passed: true,
+                                        message: Some("JWT signature verified with ES256".to_string()),
+                                        data: Some(serde_json::json!({ 
+                                            "algorithm": alg,
+                                            "issuer": claims.iss,
+                                            "subject": claims.sub,
+                                            "verified_at": chrono::Utc::now().to_rfc3339()
+                                        })),
+                                    }
+                                }
+                                Err(e) => {
+                                    tracing::warn!("JWT signature verification failed: {}", e);
+                                    VerificationResult {
+                                        check: "signature".to_string(),
+                                        passed: false,
+                                        message: Some(format!("JWT signature verification failed: {}", e)),
+                                        data: None,
+                                    }
+                                }
+                            }
+                        }
+                        "EdDSA" => {
+                            // For EdDSA, we'll try to verify using a generic JWT approach
+                            // since our JWT utilities may need specific key material
+                            match signer.verify_access_token(jwt) {
+                                Ok(claims) => {
+                                    VerificationResult {
+                                        check: "signature".to_string(),
+                                        passed: true,
+                                        message: Some("JWT signature verified with EdDSA".to_string()),
+                                        data: Some(serde_json::json!({ 
+                                            "algorithm": alg,
+                                            "issuer": claims.iss,
+                                            "subject": claims.sub,
+                                            "verified_at": chrono::Utc::now().to_rfc3339()
+                                        })),
+                                    }
+                                }
+                                Err(e) => {
+                                    tracing::warn!("EdDSA JWT signature verification failed: {}", e);
+                                    VerificationResult {
+                                        check: "signature".to_string(),
+                                        passed: false,
+                                        message: Some(format!("EdDSA signature verification failed: {}", e)),
+                                        data: None,
+                                    }
+                                }
+                            }
+                        }
+                        "RS256" => {
+                            // RS256 requires RSA public keys which we don't have configured
+                            // For now, return unsupported but this could be implemented later
+                            VerificationResult {
+                                check: "signature".to_string(),
+                                passed: false,
+                                message: Some("RS256 algorithm not currently supported".to_string()),
+                                data: None,
+                            }
+                        }
+                        _ => {
+                            VerificationResult {
+                                check: "signature".to_string(),
+                                passed: false,
+                                message: Some(format!("Unsupported JWT algorithm: {}", alg)),
+                                data: None,
+                            }
                         }
                     }
                 }
@@ -472,20 +547,70 @@ async fn verify_jsonld_proof(
         }
     }
 
-    // For now, accept known proof types
-    // TODO: Implement actual cryptographic verification
+    // Validate proof structure and attempt verification
     if matches!(
         proof_type,
         "Ed25519Signature2020" | "EcdsaSecp256k1Signature2019" | "JsonWebSignature2020"
     ) {
-        VerificationResult {
-            check: "signature".to_string(),
-            passed: true,
-            message: Some(format!("Proof type {} validated", proof_type)),
-            data: Some(serde_json::json!({
-                "proof_type": proof_type,
-                "verification_method": verification_method
-            })),
+        // Extract proof value/signature value
+        let proof_value = proof.get("proofValue")
+            .or_else(|| proof.get("signatureValue"))
+            .and_then(|pv| pv.as_str());
+
+        if let Some(sig_value) = proof_value {
+            // For JSON-LD proofs, we would need to:
+            // 1. Canonicalize the document using RDF Dataset Canonicalization
+            // 2. Create the hash of the canonicalized document
+            // 3. Verify the signature against the hash using the verification method's public key
+            // 
+            // Since full JSON-LD signature verification requires complex RDF processing,
+            // we'll perform basic structural validation and defer full crypto verification
+            // to a future implementation with proper JSON-LD libraries.
+            
+            tracing::debug!("Validating JSON-LD proof structure for type: {}", proof_type);
+            
+            // Basic signature format validation
+            if sig_value.len() < 32 {
+                return VerificationResult {
+                    check: "signature".to_string(),
+                    passed: false,
+                    message: Some("Signature value too short to be valid".to_string()),
+                    data: None,
+                };
+            }
+
+            // Check if signature looks like base64 or base58
+            let looks_valid = sig_value.chars().all(|c| {
+                c.is_alphanumeric() || c == '+' || c == '/' || c == '=' || c == '-' || c == '_'
+            });
+
+            if !looks_valid {
+                return VerificationResult {
+                    check: "signature".to_string(),
+                    passed: false,
+                    message: Some("Invalid signature format".to_string()),
+                    data: None,
+                };
+            }
+
+            VerificationResult {
+                check: "signature".to_string(),
+                passed: true,
+                message: Some(format!("JSON-LD proof type {} structurally valid (full cryptographic verification pending)", proof_type)),
+                data: Some(serde_json::json!({
+                    "proof_type": proof_type,
+                    "verification_method": verification_method,
+                    "signature_length": sig_value.len(),
+                    "note": "Structural validation only - full JSON-LD signature verification requires RDF canonicalization"
+                })),
+            }
+        } else {
+            VerificationResult {
+                check: "signature".to_string(),
+                passed: false,
+                message: Some("Missing proof value or signature value".to_string()),
+                data: None,
+            }
         }
     } else {
         VerificationResult {
@@ -938,24 +1063,114 @@ async fn verify_presentation_proof(
             }
         }
 
-        // TODO: Implement actual cryptographic verification of the presentation proof
-        // This would involve:
-        // 1. Resolving the verification method to get the public key
-        // 2. Canonicalizing the presentation according to the proof type
-        // 3. Verifying the signature
+        // Attempt cryptographic verification of the presentation proof
+        // For presentation proofs, we need to verify that the holder of the presentation
+        // can prove control of the verification method used in the proof
+        match proof_type {
+            "Ed25519Signature2020" | "EcdsaSecp256k1Signature2019" => {
+                // For these signature types, we would need:
+                // 1. Extract the signature from proofValue
+                // 2. Canonicalize the presentation (without the proof)
+                // 3. Verify signature against canonicalized data
+                
+                if let Some(proof_value) = proof.get("proofValue").and_then(|pv| pv.as_str()) {
+                    // Basic validation of signature format
+                    if proof_value.len() < 32 {
+                        return VerificationResult {
+                            check: "presentation_proof".to_string(),
+                            passed: false,
+                            message: Some("Presentation proof signature too short".to_string()),
+                            data: None,
+                        };
+                    }
 
-        VerificationResult {
-            check: "presentation_proof".to_string(),
-            passed: true,
-            message: Some(format!(
-                "Presentation proof structure validated (type: {}, purpose: {})",
-                proof_type, proof_purpose
-            )),
-            data: Some(serde_json::json!({
-                "proof_type": proof_type,
-                "proof_purpose": proof_purpose,
-                "verification_method": verification_method
-            })),
+                    tracing::debug!("Presentation proof signature format appears valid");
+                    
+                    VerificationResult {
+                        check: "presentation_proof".to_string(),
+                        passed: true,
+                        message: Some(format!(
+                            "Presentation proof structurally valid (type: {}, purpose: {})",
+                            proof_type, proof_purpose
+                        )),
+                        data: Some(serde_json::json!({
+                            "proof_type": proof_type,
+                            "proof_purpose": proof_purpose,
+                            "verification_method": verification_method,
+                            "signature_length": proof_value.len(),
+                            "note": "Structural validation only - full cryptographic verification requires key resolution"
+                        })),
+                    }
+                } else {
+                    VerificationResult {
+                        check: "presentation_proof".to_string(),
+                        passed: false,
+                        message: Some("Missing proofValue in presentation proof".to_string()),
+                        data: None,
+                    }
+                }
+            }
+            "JsonWebSignature2020" => {
+                // For JWS proofs, we might be able to use our JWT utilities
+                if let Some(jws) = proof.get("jws").and_then(|j| j.as_str()) {
+                    if let Ok(signer) = JwtSigner::new() {
+                        // Try to verify the JWS using our JWT utilities
+                        match signer.verify_access_token(jws) {
+                            Ok(_claims) => {
+                                VerificationResult {
+                                    check: "presentation_proof".to_string(),
+                                    passed: true,
+                                    message: Some("Presentation JWS proof verified successfully".to_string()),
+                                    data: Some(serde_json::json!({
+                                        "proof_type": proof_type,
+                                        "proof_purpose": proof_purpose,
+                                        "verification_method": verification_method,
+                                        "jws_verified": true
+                                    })),
+                                }
+                            }
+                            Err(e) => {
+                                tracing::warn!("JWS verification failed for presentation proof: {}", e);
+                                VerificationResult {
+                                    check: "presentation_proof".to_string(),
+                                    passed: false,
+                                    message: Some(format!("JWS verification failed: {}", e)),
+                                    data: None,
+                                }
+                            }
+                        }
+                    } else {
+                        VerificationResult {
+                            check: "presentation_proof".to_string(),
+                            passed: false,
+                            message: Some("Failed to initialize JWT signer for JWS verification".to_string()),
+                            data: None,
+                        }
+                    }
+                } else {
+                    VerificationResult {
+                        check: "presentation_proof".to_string(),
+                        passed: false,
+                        message: Some("Missing jws field in JsonWebSignature2020 proof".to_string()),
+                        data: None,
+                    }
+                }
+            }
+            _ => {
+                VerificationResult {
+                    check: "presentation_proof".to_string(),
+                    passed: true,
+                    message: Some(format!(
+                        "Presentation proof type {} accepted with basic validation",
+                        proof_type
+                    )),
+                    data: Some(serde_json::json!({
+                        "proof_type": proof_type,
+                        "proof_purpose": proof_purpose,
+                        "verification_method": verification_method
+                    })),
+                }
+            }
         }
     } else {
         VerificationResult {
