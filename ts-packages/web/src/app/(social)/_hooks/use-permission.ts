@@ -8,32 +8,43 @@ import {
   useSuspenseQuery,
 } from '@tanstack/react-query';
 
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
 export function usePermission(
   teamId: number,
   permission: GroupPermission,
-): UseSuspenseQueryResult<Permission> {
+): UseSuspenseQueryResult<Permission | null> {
   const { get } = useApiCall();
 
   return useSuspenseQuery({
     queryKey: [QK_GET_PERMISSION, teamId, permission],
     queryFn: async () => {
-      const p = (await get(
-        ratelApi.permissions.getPermissions(teamId, permission),
-      )) as Permission | null | undefined;
+      const maxAttempts = 3;
+      const delayMs = 500;
 
-      if (!p || p.has_permission === false) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const err: any = new Error('permission_not_ready');
-        err.__retryable__ = true;
-        throw err;
+      let last: Permission | null = null;
+
+      for (let i = 1; i <= maxAttempts; i++) {
+        const p = (await get(
+          ratelApi.permissions.getPermissions(teamId, permission),
+        )) as Permission | null | undefined;
+
+        last = p ?? null;
+
+        if (p && p.has_permission === true) {
+          return p;
+        }
+
+        if (i < maxAttempts) {
+          await sleep(delayMs);
+        }
       }
 
-      return p;
+      return last;
     },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    retry: (failureCount, error: any) =>
-      Boolean(error?.__retryable__) && failureCount < 4,
-    retryDelay: 500,
+
+    retry: 0,
+
     refetchOnWindowFocus: false,
     staleTime: 0,
   });
