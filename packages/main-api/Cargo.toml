@@ -49,7 +49,6 @@ rand = "0.9.1"
 url = "2.5.4"
 hmac = "0.12.1"
 base64 = "0.22.1"
-flate2 = "1.0.0"
 teloxide = "0.17.0"
 photon-rs = { version = "0.3.2", git = "https://github.com/silvia-odwyer/photon" }
 aws-sdk-rdsdata = "1.83.0"
@@ -67,6 +66,17 @@ strum_macros = "0.27.2"
 sha2 = "0.10"
 openssl = { version = "0.10" }
 serde_with = "3.14.0"
+
+# DID VC Dependencies
+jsonwebtoken = "9.3.0"
+p256 = { version = "0.13.0", features = ["ecdsa", "pkcs8", "std"] }
+k256 = { version = "0.13.0", features = ["ecdsa", "pkcs8", "std"] }
+qrcode = "0.14.1"
+image = "0.24.0"
+reqwest = { version = "0.12.0", features = ["json"] }
+ring = "0.17.8"
+ed25519-dalek = { version = "2.1.1", features = ["rand_core"] }
+flate2 = "1.0.35"
 
 [[bin]]
 name = "main-api"

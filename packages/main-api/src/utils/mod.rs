@@ -23,3 +23,8 @@ pub mod wallets;
 pub mod aws;
 
 pub mod mcp_middleware;
+
+// DID VC utilities
+pub mod jwt;
+pub mod qr_code;
+pub mod status_list;

@@ -167,20 +167,16 @@ pub async fn oid4vci_credential_handler(
     let credential_types = if let Some(def) = &request.credential_definition {
         def.credential_type.clone()
     } else if let Some(id) = &request.credential_identifier {
-        match id.as_str() {
-            "PassportCredential" => vec![
+        let cred_enum = CredentialType::from_str_or_default(id);
+        match cred_enum {
+            CredentialType::Passport => vec![
                 "VerifiableCredential".to_string(),
                 "PassportCredential".to_string(),
             ],
-            "MedicalCredential" => vec![
+            CredentialType::Medical => vec![
                 "VerifiableCredential".to_string(),
                 "MedicalCredential".to_string(),
             ],
-            _ => {
-                return Err(dto::Error::Unknown(
-                    "Unknown credential identifier".to_string(),
-                ));
-            }
         }
     } else {
         return Err(dto::Error::Unknown(
@@ -457,7 +453,6 @@ fn generate_c_nonce() -> String {
     )
 }
 
-/// Validate access token from Authorization header
 async fn validate_access_token(
     _dynamo_client: &Arc<DynamoClient>,
     _table_name: &str,
@@ -473,9 +468,7 @@ async fn validate_access_token(
     }
 }
 
-/// Extract status list index from credential
 fn extract_status_list_index(credential: &VerifiableCredential) -> u64 {
-    // Extract index from credential status if available
     if let Some(status) = &credential.credential_status {
         if let Some(index_str) = status.get("statusListIndex").and_then(|v| v.as_str()) {
             if let Ok(index) = index_str.parse::<u64>() {
@@ -488,7 +481,6 @@ fn extract_status_list_index(credential: &VerifiableCredential) -> u64 {
     1000
 }
 
-/// Parse expiration date from Option<String>
 fn parse_expiration_date(exp_date: &Option<String>) -> i64 {
     match exp_date {
         Some(date_str) => {

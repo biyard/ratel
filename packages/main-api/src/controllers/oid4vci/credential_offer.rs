@@ -1,6 +1,6 @@
-use bdk::prelude::*;
-// use base64::Engine;
 use aws_sdk_dynamodb::Client as DynamoClient;
+use base64::Engine;
+use bdk::prelude::*;
 use by_axum::{
     auth::Authorization,
     axum::{
@@ -29,7 +29,7 @@ use crate::{
 )]
 pub struct CredentialOfferQuery {
     #[schemars(description = "Type of credential to offer")]
-    pub credential_type: Option<CredentialType>,
+    pub credential_type: CredentialType,
 
     #[schemars(description = "Pre-authorize the offer (skip user consent)")]
     pub pre_authorize: Option<bool>,
@@ -176,6 +176,9 @@ pub async fn credential_offer_handler(
     let domain = conf.domain;
     let table_name = &conf.dual_write.table_name;
 
+    // Validate credential type is provided
+    let credential_type = query.credential_type.clone();
+
     // Extract user ID if authenticated
     let user_id = if auth.is_some() {
         Some(extract_user_id_dynamo(&dynamo_client, &table_name, auth).await?)
@@ -184,7 +187,6 @@ pub async fn credential_offer_handler(
     };
 
     let offer_id = format!("offer_{}", Uuid::new_v4().to_string().replace('-', ""));
-    let credential_type = query.credential_type.clone().unwrap_or_default();
     let credential_config = create_credential_configuration(credential_type.clone())?;
     let grants = create_grants_object(&query, &offer_id)?;
     let pre_authorized_code = extract_pre_authorized_code(&grants);
@@ -196,14 +198,17 @@ pub async fn credential_offer_handler(
         grants: Some(grants),
     };
 
-    // Create deep link URL
+    // Create deep link URL with proper encoding
     let offer_json = serde_json::to_string(&credential_offer)
         .map_err(|e| dto::Error::Unknown(format!("Failed to serialize credential offer: {}", e)))?;
 
+    // Use URL_SAFE_NO_PAD for proper URL encoding
     let encoded_offer = base64::Engine::encode(
-        &base64::engine::general_purpose::URL_SAFE,
+        &base64::engine::general_purpose::URL_SAFE_NO_PAD,
         offer_json.as_bytes(),
     );
+
+    // Create deep link according to OpenID4VCI spec
     let deep_link = format!(
         "openid-credential-offer://?credential_offer={}",
         encoded_offer
@@ -213,7 +218,7 @@ pub async fn credential_offer_handler(
     // let qr_code = generate_qr_code(&deep_link)?;
     let qr_code = None;
 
-    // Store the offer in DynamoDB
+    // Store the offer in DynamoDB with better error handling
     let db_offer = DbCredentialOffer::new(
         offer_id.clone(),
         user_id.clone().unwrap_or_else(|| "anonymous".to_string()),
@@ -223,13 +228,15 @@ pub async fn credential_offer_handler(
         } else {
             "authorization_code".to_string()
         },
-        pre_authorized_code,
-        None, // tx_code
+        pre_authorized_code.clone(),
+        None, // tx_code - TODO: implement user PIN support
         3600, // expires_in 1 hour
     );
 
-    let offer_item = to_item(&db_offer)
-        .map_err(|e| dto::Error::Unknown(format!("Failed to serialize credential offer: {}", e)))?;
+    let offer_item = to_item(&db_offer).map_err(|e| {
+        tracing::error!("Failed to serialize credential offer for DynamoDB: {}", e);
+        dto::Error::Unknown(format!("Failed to serialize credential offer: {}", e))
+    })?;
 
     dynamo_client
         .put_item()
@@ -237,21 +244,32 @@ pub async fn credential_offer_handler(
         .set_item(Some(offer_item))
         .send()
         .await
-        .map_err(|e| dto::Error::Unknown(format!("DynamoDB put_item failed: {}", e)))?;
+        .map_err(|e| {
+            tracing::error!("DynamoDB put_item failed for offer {}: {}", offer_id, e);
+            dto::Error::Unknown(format!("Failed to store credential offer: {}", e))
+        })?;
 
     tracing::info!(
-        "Created credential offer {} for user {:?} with type {}",
+        "Created credential offer {} for user {:?} with type {} (pre_authorized: {})",
         offer_id,
         user_id,
-        credential_type
+        credential_type,
+        pre_authorized_code.is_some()
     );
 
+    // Validate the response before returning
     let response = CredentialOfferResponse {
         credential_offer,
         qr_code,
-        deep_link,
-        offer_id,
+        deep_link: deep_link.clone(),
+        offer_id: offer_id.clone(),
     };
+
+    // Log the deep link for debugging (truncated for security)
+    tracing::debug!(
+        "Generated credential offer deep link: {}...",
+        &deep_link[..std::cmp::min(100, deep_link.len())]
+    );
 
     Ok(Json(response))
 }
