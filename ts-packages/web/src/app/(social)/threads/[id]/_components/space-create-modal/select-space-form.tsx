@@ -225,7 +225,7 @@ export default function SelectSpaceForm({ feed_id }: { feed_id: number }) {
   // Show configuration form for Notice spaces
   if (showConfigForm && !!selectedType) {
     return (
-      <div className="mobile:w-[906px] max-mobile:w-full">
+      <div className=" max-mobile:w-full">
         {/* Use React.lazy or this conditional rendering pattern to 
             ensure the component only renders after initial render */}
         {showConfigForm && (

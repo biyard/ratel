@@ -10,7 +10,6 @@ import Image from 'next/image';
 import {
   BadgeIcon,
   Extra,
-  UnlockPublic,
   ThumbUp,
   CommentIcon,
   Rewards,
@@ -188,7 +187,7 @@ export default function Header({ postId }: { postId: number }) {
                   {space_id ? (
                     <DropdownMenuItem>
                       <Link href={target ?? ''}>
-                        <button className="flex items-center w-full px-4 py-2 text-sm text-white hover:bg-gray-700 cursor-pointer">
+                        <button className="flex items-center w-full px-4 py-2 text-sm max-tablet:hover:bg-transparent text-text-primary hover:bg-gray-700 cursor-pointer">
                           {t('join_space')}
                         </button>
                       </Link>
@@ -198,27 +197,27 @@ export default function Header({ postId }: { postId: number }) {
                       <DropdownMenuItem>
                         <button
                           onClick={handleCreateSpace}
-                          className="flex items-center w-full px-4 py-2 text-sm text-white hover:bg-gray-700 cursor-pointer"
+                          className="flex items-center max-tablet:justify-start gap-1 max-tablet:hover:bg-transparent w-full py-2 text-sm text-text-primary hover:bg-gray-700 cursor-pointer"
                         >
-                          <Palace className="w-4 h-4 [&>path]:stroke-white" />
+                          <Palace className="w-4 h-4 [&>path]:stroke-text-primary" />
                           {t('create_space')}
                         </button>
                       </DropdownMenuItem>
                       <DropdownMenuItem>
                         <button
                           onClick={handleEditPost}
-                          className="flex items-center w-full px-4 py-2 font-bold text-sm text-white hover:bg-gray-700 cursor-pointer"
+                          className="flex items-center max-tablet:justify-start gap-1 max-tablet:hover:bg-transparent w-full py-2 text-sm text-text-primary hover:bg-gray-700 cursor-pointer"
                         >
-                          <Edit className="w-4 h-4" />
+                          <Edit className="w-4 h-4 [&>path]:stroke-text-primary" />
                           {t('edit')}
                         </button>
                       </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <button className="flex items-center w-full px-4 py-2 font-bold text-sm text-white hover:bg-gray-700 cursor-pointer">
-                          <UnlockPublic className="w-4 h-4 [&>path]:stroke-white" />
+                      {/* <DropdownMenuItem>
+                        <button className="flex items-center max-tablet:justify-start gap-1 max-tablet:hover:bg-transparent w-full py-2 text-sm text-text-primary hover:bg-gray-700 cursor-pointer">
+                          <UnlockPublic className="w-4 h-4 [&>path]:stroke-text-primary" />
                           {t('make_public')}
                         </button>
-                      </DropdownMenuItem>
+                      </DropdownMenuItem> */}
                     </>
                   ) : null}
                 </div>
@@ -228,7 +227,7 @@ export default function Header({ postId }: { postId: number }) {
                   <DropdownMenuItem>
                     <button
                       onClick={handleDelete}
-                      className="flex items-center w-full px-4 py-2 text-sm text-red-400 hover:bg-gray-700 cursor-pointer"
+                      className="flex items-center w-full px-4 max-tablet:justify-start max-tablet:gap-1 max-tablet:hover:bg-transparent max-tablet:px-0 py-2 text-sm text-red-400 hover:bg-gray-700 cursor-pointer"
                     >
                       <Trash2 className="w-4 h-4" />
                       {t('delete')}
