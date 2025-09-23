@@ -5,9 +5,17 @@ yum update
 yum install -y awscli
 
 echo 'Waiting for LocalStack to be ready...'
-until aws dynamodb --endpoint-url=${LOCALSTACK_ENDPOINT}  list-tables >/dev/null 2>&1; do
+export AWS_ENDPOINT_URL="${LOCALSTACK_ENDPOINT:-http://localhost:4566}"
+echo "Using AWS endpoint URL: $AWS_ENDPOINT_URL"
+wait_for_localstack() {
+  echo "Waiting for LocalStack to be ready..."
+  until curl -s "${AWS_ENDPOINT_URL}/_localstack/health" | jq -e '.services.dynamodb == "running" and .services.sqs == "running"' >/dev/null 2>&1; do
     sleep 2
-done
+  done
+  echo "LocalStack is ready."
+}
+wait_for_localstack
+
 echo 'Creating ratel-local table with GSIs...'
 aws --endpoint-url=${LOCALSTACK_ENDPOINT} dynamodb create-table --cli-input-json file:///scripts/dynamodb-schema.json
 echo 'ratel-local-main table and GSIs created successfully'
