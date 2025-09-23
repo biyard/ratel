@@ -61,7 +61,7 @@ export default function ClientLayout({
         <div
           className={
             mobileExtends
-              ? 'fixed top-[80px] left-0 w-screen h-screen z-20 text-white bg-neutral-800 hidden max-tablet:flex max-tablet:flex-col max-tablet:items-start max-tablet:justify-start pt-6 px-4 gap-[50px]'
+              ? 'fixed top-[60px] left-0 w-screen h-screen z-20 text-white bg-bg hidden max-tablet:flex max-tablet:flex-col max-tablet:items-start max-tablet:justify-start pt-6 px-4 gap-[50px]'
               : 'hidden'
           }
         >
