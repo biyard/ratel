@@ -37,5 +37,5 @@ export default async function Page({
 
   logger.debug('Unknown space type:', space.data?.space_type);
 
-  return <div>{t('unsupported_space_type')}</div>;
+  return <div className="text-text-primary">{t('unsupported_space_type')}</div>;
 }

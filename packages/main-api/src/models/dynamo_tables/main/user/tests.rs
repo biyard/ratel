@@ -283,3 +283,84 @@ async fn tests_update_user() {
     assert_eq!(users.len(), 1);
     assert_eq!(users[0].email, new_email);
 }
+
+#[tokio::test]
+async fn tests_find_user_metamodel() {
+    let conf = aws_sdk_dynamodb::Config::builder()
+        .credentials_provider(aws_sdk_dynamodb::config::Credentials::new(
+            "test", "test", None, None, "dynamo",
+        ))
+        .region(Some(aws_sdk_dynamodb::config::Region::new("us-east-1")))
+        .endpoint_url("http://localhost:4566")
+        .behavior_version_latest()
+        .build();
+
+    let cli = aws_sdk_dynamodb::Client::from_conf(conf);
+    let now = chrono::Utc::now().timestamp();
+    let _expired_at = now + 3600; // 1 hour later
+    let email = format!("a+{}@example.com", now);
+    let nickname = format!("nickname-{}", now);
+    let nickname2 = format!("nickname-{}2", now);
+    let profile = "http://example.com/profile.png".to_string();
+    let username = format!("user{}", now);
+
+    let user = User::new(
+        nickname.clone(),
+        email.clone(),
+        profile.clone(),
+        true,
+        true,
+        UserType::Individual,
+        None,
+        username.clone(),
+        "password".to_string(),
+    );
+
+    let res = user.create(&cli).await;
+    assert!(res.is_ok(), "failed to create user {:?}", res.err());
+
+    let user = User::new(
+        nickname2.clone(),
+        email.clone(),
+        profile.clone(),
+        true,
+        true,
+        UserType::Individual,
+        None,
+        username.clone(),
+        "password".to_string(),
+    );
+
+    let res = user.create(&cli).await;
+    assert!(res.is_ok(), "failed to create user {:?}", res.err());
+
+    let users = UserMetadata::find_by_email(&cli, &email, None::<String>).await;
+    assert!(users.is_ok(), "failed: {:?}", users);
+    let users = users.unwrap();
+
+    assert_eq!(users.len(), 2);
+
+    if let UserMetadata::User(User {
+        email: e,
+        display_name: d,
+        ..
+    }) = &users[0]
+    {
+        assert_eq!(e, &email);
+        assert_eq!(d, &nickname);
+    } else {
+        assert!(false);
+    }
+
+    if let UserMetadata::User(User {
+        email: e,
+        display_name: d,
+        ..
+    }) = &users[1]
+    {
+        assert_eq!(e, &email);
+        assert_eq!(d, &nickname2);
+    } else {
+        assert!(false);
+    }
+}

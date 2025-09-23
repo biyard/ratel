@@ -79,14 +79,19 @@ function Editor({
   placeholder,
   content,
   updateContent,
+  maxLines,
 }: {
   disabled: boolean;
   placeholder: string;
   content: string | null;
   updateContent: (content: string) => void;
+  maxLines?: number;
 }) {
   const editorRef = useRef<LexicalEditor | null>(null);
+  const contentRef = useRef<HTMLDivElement | null>(null);
+  const [lineHeightPx, setLineHeightPx] = useState<number | null>(null);
   const isLoadingContent = useRef(false);
+
   const handleLexicalChange = (
     editorState: EditorState,
     editor: LexicalEditor,
@@ -99,6 +104,7 @@ function Editor({
       }
     });
   };
+
   const createEditorStateFromHTML = useCallback(
     (editor: LexicalEditor, htmlString: string) => {
       if (!htmlString) {
@@ -146,13 +152,41 @@ function Editor({
     }
   }, [editorRef, content, createEditorStateFromHTML]);
 
+  useEffect(() => {
+    if (!maxLines || !contentRef.current) {
+      setLineHeightPx(null);
+      return;
+    }
+    const el = contentRef.current;
+    const style = getComputedStyle(el);
+    let lh = parseFloat(style.lineHeight);
+    if (Number.isNaN(lh)) {
+      const fs = parseFloat(style.fontSize) || 16;
+      lh = fs * 1.5;
+    }
+    setLineHeightPx(lh);
+  }, [maxLines]);
+
+  const maxHeight =
+    maxLines && lineHeightPx ? Math.ceil(lineHeightPx * maxLines) : undefined;
+
   return (
     <>
       <RichTextPlugin
         contentEditable={
           <ContentEditable
+            ref={contentRef} // ← 추가: 측정 대상
             disabled={disabled}
             className="outline-none resize-none w-full min-h-[60px]"
+            style={
+              maxHeight
+                ? {
+                    maxHeight,
+                    overflowY: 'auto',
+                    overscrollBehavior: 'contain',
+                  }
+                : undefined
+            }
           />
         }
         placeholder={
@@ -163,7 +197,6 @@ function Editor({
         ErrorBoundary={LexicalErrorBoundary}
       />
       <OnChangePlugin onChange={handleLexicalChange} />
-
       <HistoryPlugin />
       <EditorRefPlugin
         setEditorRef={(editor) => (editorRef.current = editor)}
@@ -257,6 +290,7 @@ export function CreatePost() {
                 content={content}
                 updateContent={updateContent}
                 placeholder={t('write_content')}
+                maxLines={10}
               />
             </div>
 
