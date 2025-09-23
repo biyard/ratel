@@ -7,13 +7,14 @@ import {
   SuspenseWrapper,
 } from '@/components/post-header';
 import useSpaceById, {
+  useDeleteSpace,
   useMakePublicSpace,
   usePublishSpace,
   useShareSpace,
 } from '@/hooks/use-space-by-id';
 import { TeamContext } from '@/lib/contexts/team-context';
 import { useContext } from 'react';
-import { SpaceStatus } from '@/lib/api/models/spaces';
+import { spaceDeleteRequest, SpaceStatus } from '@/lib/api/models/spaces';
 import { PublishingScope } from '@/lib/api/models/notice';
 import useFeedById from '@/hooks/feeds/use-feed-by-id';
 import { useParams, useRouter } from 'next/navigation';
@@ -36,20 +37,28 @@ import { useTranslations } from 'next-intl';
 import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { GroupPermission } from '@/lib/api/models/group';
 import { usePermission } from '@/app/(social)/_hooks/use-permission';
+import { useDropdown } from './dropdown/dropdown-service';
+import { Extra } from '@/components/icons';
+import DropdownMenu from './dropdown/dropdown-menu';
+import DeleteSpacePopup from './modal/confirm-delete';
 
 function SpaceModifySection({
+  title,
   spaceId,
   isDraft,
   isPublic,
   authorId,
   onEdit,
+  onDelete,
 }: {
+  title: string | undefined;
   spaceId: number;
   isDraft: boolean;
   isPublic: boolean;
   authorId: number;
   authorName: string;
   onEdit: () => void;
+  onDelete: () => void;
 }) {
   const router = useRouter();
   const popup = usePopup();
@@ -83,6 +92,8 @@ function SpaceModifySection({
   // After Publishing ( Not Editable )
   // -> User Only Can Change from Private to Public
 
+  const { isOpen, toggle, close, dropdownRef } = useDropdown();
+
   const handleSave = async () => {
     if (!isModified) return;
     await onSave();
@@ -107,6 +118,21 @@ function SpaceModifySection({
     } catch (error) {
       console.error('Failed to make space as public:', error);
     }
+  };
+
+  const handleDeleteClick = () => {
+    popup
+      .open(
+        <DeleteSpacePopup
+          spaceName={title || t('untitled_space')}
+          onClose={() => popup.close()}
+          onDelete={async () => {
+            await onDelete();
+            popup.close();
+          }}
+        />,
+      )
+      .withoutBackdropClose();
   };
 
   const openPublishModal = () => {
@@ -158,6 +184,71 @@ function SpaceModifySection({
           {!isDraft && !isPublic && (
             <MakePublicButton onClick={openPublicModal} />
           )}
+          {writePostPermission ? (
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={toggle}
+                aria-expanded={isOpen}
+                aria-label="Space options menu"
+                aria-haspopup="menu"
+                className="w-fit p-2 rounded-md bg-neutral-800 light:bg-transparent"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    if (!isOpen) {
+                      toggle();
+                      setTimeout(() => {
+                        const firstMenuItem =
+                          dropdownRef.current?.querySelector(
+                            '[role="menuitem"]:not([aria-disabled="true"])',
+                          );
+                        (firstMenuItem as HTMLElement)?.focus();
+                      }, 0);
+                    } else {
+                      const firstMenuItem = dropdownRef.current?.querySelector(
+                        '[role="menuitem"]:not([aria-disabled="true"])',
+                      );
+                      (firstMenuItem as HTMLElement)?.focus();
+                    }
+                  } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    if (!isOpen) {
+                      toggle();
+                      setTimeout(() => {
+                        const firstMenuItem =
+                          dropdownRef.current?.querySelector(
+                            '[role="menuitem"]:not([aria-disabled="true"])',
+                          );
+                        (firstMenuItem as HTMLElement)?.focus();
+                      }, 0);
+                    } else {
+                      const firstMenuItem = dropdownRef.current?.querySelector(
+                        '[role="menuitem"]:not([aria-disabled="true"])',
+                      );
+                      (firstMenuItem as HTMLElement)?.focus();
+                    }
+                  }
+                }}
+              >
+                <Extra />
+              </button>
+              {isOpen && (
+                <div
+                  role="menu"
+                  className="absolute top-full mt-2 right-0 z-50"
+                  onBlur={(e) => {
+                    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                      close();
+                    }
+                  }}
+                >
+                  <DropdownMenu onclose={close} ondelete={handleDeleteClick} />
+                </div>
+              )}
+            </div>
+          ) : (
+            <></>
+          )}
         </div>
       )}
     </div>
@@ -165,6 +256,7 @@ function SpaceModifySection({
 }
 
 export default function Header() {
+  const router = useRouter();
   const { id } = useParams();
   const spaceId = Number(id);
   const { data: space } = useSpaceById(spaceId);
@@ -178,6 +270,7 @@ export default function Header() {
   const isPublic = space.publishing_scope === PublishingScope.Public;
 
   const shareSpace = useShareSpace(spaceId);
+  const deleteSpace = useDeleteSpace(spaceId);
   const handleShare = async () => {
     await shareSpace.mutateAsync();
   };
@@ -189,17 +282,23 @@ export default function Header() {
       ended_at: space.ended_at,
     });
   };
+  const handleDelete = async () => {
+    await deleteSpace.mutateAsync(spaceDeleteRequest(space.title ?? ''));
+    router.push('/');
+  };
   return (
     <div>
       <SuspenseWrapper>
         <div className="flex flex-col w-full gap-2.5">
           <SpaceModifySection
+            title={isEdit ? (commonData?.title ?? '') : space.title}
             isDraft={isDraft}
             isPublic={isPublic}
             authorId={space.author[0]?.id}
             authorName={space.author[0]?.username}
             spaceId={spaceId}
             onEdit={handleStartEdit}
+            onDelete={handleDelete}
           />
           <PostInfoSection
             likes={feed.likes}

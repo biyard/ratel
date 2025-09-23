@@ -58,17 +58,17 @@ export default function DraftPage() {
       </div>
     );
   }
-  const flattedDrafts = drafts?.pages.flatMap((page) => page) ?? [];
+  const flattedDrafts = drafts?.pages.flatMap((page) => page.posts) ?? [];
   return (
     <div className="flex flex-1 relative">
       <div className="flex-1 flex max-mobile:px-[10px]">
         <Col className="flex-1">
           {flattedDrafts.map((post) => (
             <Col
-              key={post.id}
+              key={post?.id}
               className="cursor-pointer pt-5 pb-2.5 bg-card-bg border border-card-enable-border rounded-lg"
               onClick={async (evt) => {
-                await openPostEditorPopup(post.id);
+                await openPostEditorPopup(post?.id);
                 evt.preventDefault();
                 evt.stopPropagation();
               }}
@@ -84,9 +84,9 @@ export default function DraftPage() {
                     e.stopPropagation();
 
                     await removeDraft(
-                      post.id,
-                      post.feed_type,
-                      post.parent_id ?? undefined,
+                      post?.id,
+                      post?.feed_type,
+                      post?.parent_id ?? undefined,
                     );
                   }}
                 >
@@ -101,7 +101,7 @@ export default function DraftPage() {
               </Row>
               <div className="flex flex-row items-center gap-1 w-full line-clamp-2 font-bold text-xl/[25px] tracking-[0.5px] align-middle text-text-primary px-5">
                 <div className="text-sm font-normal">(Draft)</div>
-                <div className="font-normal">{post.title}</div>
+                <div className="font-normal">{post?.title}</div>
               </div>
               <Row className="justify-between items-center px-5">
                 <UserBadge
@@ -109,10 +109,10 @@ export default function DraftPage() {
                   name={user.username}
                   author_type={UserType.Individual}
                 />
-                <TimeAgo timestamp={post.updated_at} />
+                <TimeAgo timestamp={post?.updated_at} />
               </Row>
               <Row className="justify-between px-5"></Row>
-              <FeedContents contents={post.html_contents} url={post.url} />
+              <FeedContents contents={post?.html_contents} url={post?.url} />
             </Col>
           ))}
           <div ref={lastPostRef} />

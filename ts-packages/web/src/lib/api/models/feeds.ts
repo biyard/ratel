@@ -23,6 +23,11 @@ export interface ArtworkMetadata {
   traits: ArtworkTrait[];
 }
 
+export interface FeedListResponse {
+  posts: Feed[];
+  is_ended: boolean | null;
+}
+
 export interface Feed {
   id: number;
   created_at: number;
