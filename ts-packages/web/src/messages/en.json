@@ -287,6 +287,8 @@
 
     "space_update_success": "Space updated successfully",
     "space_update_failed": "Failed to update space",
+    "space_delete_success": "Space deleted successfully",
+    "space_delete_failed": "Failed to delete space",
     "space_share_success": "Space shared successfully",
     "space_share_failed": "Failed to share space",
     "space_post_success": "Space posted successfully",

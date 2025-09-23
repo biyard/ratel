@@ -3,6 +3,7 @@ import { apiFetch, FetchResponse } from '@/lib/api/apiFetch';
 import {
   postingSpaceRequest,
   Space,
+  SpaceDeleteRequest,
   spaceUpdateRequest,
   SpaceUpdateRequest,
 } from '@/lib/api/models/spaces';
@@ -27,6 +28,20 @@ export async function getSpace(
 ): Promise<FetchResponse<Space | null>> {
   return apiFetch<Space | null>(
     `${config.api_url}${ratelApi.spaces.getSpaceBySpaceId(space_id)}`,
+  );
+}
+
+export async function deleteSpace(
+  space_id: number,
+  req: SpaceDeleteRequest,
+): Promise<FetchResponse<Space | null>> {
+  return apiFetch<Space | null>(
+    `${config.api_url}${ratelApi.spaces.deleteSpaceV2(space_id)}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(req),
+    },
   );
 }
 
@@ -159,6 +174,36 @@ export function useUpdateSpace(spaceId: number) {
         queryClient.setQueryData(queryKey, context.previousData);
       }
       showErrorToast(t('space_update_failed'));
+      logger.error(error);
+    },
+  });
+}
+
+export function useDeleteSpace(spaceId: number) {
+  const t = useTranslations('SprintSpace');
+  const queryClient = getQueryClient();
+  const queryKey = getQueryKey(spaceId);
+
+  return useMutation({
+    mutationFn: async (req: SpaceDeleteRequest) => {
+      const { data } = await deleteSpace(spaceId, req);
+      return data ?? null;
+    },
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey });
+      const previousData = queryClient.getQueryData<Space>(queryKey);
+      queryClient.setQueryData<Space | undefined>(queryKey, undefined);
+      return { previousData };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey });
+      showSuccessToast(t('space_delete_success'));
+    },
+    onError: (error: Error, _variables, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(queryKey, context.previousData);
+      }
+      showErrorToast(t('space_delete_failed'));
       logger.error(error);
     },
   });
