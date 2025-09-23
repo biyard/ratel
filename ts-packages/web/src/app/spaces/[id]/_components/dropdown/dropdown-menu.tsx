@@ -10,16 +10,16 @@ export default function DropdownMenu({
   const t = useTranslations('Space');
 
   const menuItems = [
-    {
-      label: t('see_committee_list'),
-      disabled: true,
-      action: () => {},
-    },
-    {
-      label: t('change_category'),
-      disabled: true,
-      action: () => {},
-    },
+    // {
+    //   label: t('see_committee_list'),
+    //   disabled: true,
+    //   action: () => {},
+    // },
+    // {
+    //   label: t('change_category'),
+    //   disabled: true,
+    //   action: () => {},
+    // },
     {
       label: t('delete'),
       disabled: false,

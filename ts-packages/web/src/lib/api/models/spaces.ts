@@ -145,6 +145,7 @@ export function createSpaceRequest(
 export interface Author {
   id: number;
   nickname: string;
+  username: string;
   principal: string;
   email: string;
   profile_url: string;

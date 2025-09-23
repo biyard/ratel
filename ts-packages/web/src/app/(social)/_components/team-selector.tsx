@@ -10,7 +10,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { usePopup } from '@/lib/contexts/popup-service';
-import { logger } from '@/lib/logger';
 import { ChevronDown } from 'lucide-react';
 import React, { useContext, useEffect } from 'react';
 import TeamCreationPopup from '../_popups/team-creation-popup';
@@ -64,68 +63,65 @@ export default function TeamSelector({ onSelect, team }: TeamSelectorProps) {
         <DropdownMenuLabel className="text-text-primary">
           {t('teams')}
         </DropdownMenuLabel>
-        <DropdownMenuGroup>
-          {teams.map((team, index) => {
-            return team.nickname != '' ? (
-              <DropdownMenuItem
-                className="focus:bg-accent focus:text-text-primary data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 dark:data-[variant=destructive]:focus:bg-destructive/20 data-[variant=destructive]:focus:text-destructive data-[variant=destructive]:*:[svg]:!text-destructive [&_svg:not([class*='text-'])]:text-text-primary relative cursor-default rounded-sm text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[inset]:pl-8 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 w-full flex flex-row items-center gap-2 px-2 py-2 hover:bg-hover"
-                key={`team-select-menu-${team.id}`}
-                asChild
-              >
-                <Link
-                  href={
-                    index === 0
-                      ? route.home()
-                      : route.teamByUsername(team.username)
-                  }
-                  className="flex items-center gap-2"
-                  onClick={() => {
-                    setSelectedTeam(index);
-                    onSelect!(index);
-                  }}
+
+        <div className="max-h-[300px] overflow-y-auto pr-1 -mr-1">
+          <DropdownMenuGroup>
+            {teams.map((team, index) =>
+              team.nickname !== '' ? (
+                <DropdownMenuItem
+                  key={`team-select-menu-${team.id}`}
+                  className="focus:bg-accent focus:text-text-primary [&_svg:not([class*='size-'])]:size-4 w-full flex flex-row items-center gap-2 px-2 py-2 hover:bg-hover"
+                  asChild
                 >
-                  {team.profile_url && team.profile_url !== '' ? (
-                    <Image
-                      src={team.profile_url}
-                      alt={team.nickname}
-                      width={24}
-                      height={24}
-                      className="w-6 h-6 rounded-full object-cover object-top"
-                    />
-                  ) : (
-                    <div className="w-6 h-6 rounded-full border border-neutral-600 bg-neutral-600" />
-                  )}
-                  <span className="text-text-primary">{team.nickname}</span>
-                </Link>
-              </DropdownMenuItem>
-            ) : (
-              <></>
-            );
-          })}
-        </DropdownMenuGroup>
+                  <Link
+                    href={
+                      index === 0
+                        ? route.home()
+                        : route.teamByUsername(team.username)
+                    }
+                    className="flex items-center gap-2"
+                    onClick={() => {
+                      setSelectedTeam(index);
+                      onSelect?.(index);
+                    }}
+                  >
+                    {team.profile_url ? (
+                      <Image
+                        src={team.profile_url}
+                        alt={team.nickname}
+                        width={24}
+                        height={24}
+                        className="w-6 h-6 rounded-full object-cover object-top"
+                      />
+                    ) : (
+                      <div className="w-6 h-6 rounded-full border border-neutral-600 bg-neutral-600" />
+                    )}
+                    <span className="text-text-primary">{team.nickname}</span>
+                  </Link>
+                </DropdownMenuItem>
+              ) : null,
+            )}
+          </DropdownMenuGroup>
+        </div>
+
         <DropdownMenuSeparator />
+
         <DropdownMenuGroup>
           <DropdownMenuItem
-            onClick={() => {
-              logger.debug('Create team clicked');
-              popup.open(<TeamCreationPopup />).withTitle(t('create_new_team'));
-            }}
+            onClick={() =>
+              popup.open(<TeamCreationPopup />).withTitle(t('create_new_team'))
+            }
           >
-            <span className="text-text-primary hover:bg-hover">
-              {t('create_team')}
-            </span>
+            <span className="text-text-primary">{t('create_team')}</span>
           </DropdownMenuItem>
 
           <DropdownMenuItem
             onClick={() => {
-              logger.debug('Create team clicked');
               logout();
               userInfo.refetch();
             }}
           >
-            <span className="text-text-primary hover:bg-hover">
-              {t('logout')}
-            </span>
+            <span className="text-text-primary">{t('logout')}</span>
           </DropdownMenuItem>
         </DropdownMenuGroup>
       </DropdownMenuContent>
