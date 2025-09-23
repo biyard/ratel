@@ -75,7 +75,7 @@ path = "src/main.rs"
 
 [dev-dependencies]
 rest-api = { workspace = true, features = ["test"] }
-
+ring = { version = "0.17.14" }
 [features]
 default = []
 full-test = []
