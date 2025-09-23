@@ -58,9 +58,17 @@ pub async fn has_team_permission_handler(
     )
     .await
     {
-        Ok(_) => Ok(Json(HasPostPermissionResponse {
-            has_permission: true,
-        })),
+        Ok(v) => {
+            if v.id == 0 {
+                Ok(Json(HasPostPermissionResponse {
+                    has_permission: false,
+                }))
+            } else {
+                Ok(Json(HasPostPermissionResponse {
+                    has_permission: true,
+                }))
+            }
+        }
         Err(_) => Ok(Json(HasPostPermissionResponse {
             has_permission: false,
         })),

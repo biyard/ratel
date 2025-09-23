@@ -8,17 +8,38 @@ import {
   useSuspenseQuery,
 } from '@tanstack/react-query';
 
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+const EMPTY_PERMISSION: Permission = { has_permission: false } as Permission;
+
 export function usePermission(
   teamId: number,
   permission: GroupPermission,
 ): UseSuspenseQueryResult<Permission> {
   const { get } = useApiCall();
 
-  const query = useSuspenseQuery({
-    queryKey: [QK_GET_PERMISSION],
-    queryFn: () => get(ratelApi.permissions.getPermissions(teamId, permission)),
-    refetchOnWindowFocus: false,
-  });
+  return useSuspenseQuery({
+    queryKey: [QK_GET_PERMISSION, teamId, permission],
+    queryFn: async () => {
+      const maxAttempts = 3;
+      const delayMs = 500;
 
-  return query;
+      let last: Permission = EMPTY_PERMISSION;
+
+      for (let i = 1; i <= maxAttempts; i++) {
+        const p = (await get(
+          ratelApi.permissions.getPermissions(teamId, permission),
+        )) as Permission | null | undefined;
+
+        last = p ?? EMPTY_PERMISSION;
+        if (p?.has_permission === true) return p;
+        if (i < maxAttempts) await sleep(delayMs);
+      }
+
+      return last;
+    },
+    retry: 0,
+    refetchOnWindowFocus: false,
+    staleTime: 0,
+  });
 }

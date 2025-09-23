@@ -5,6 +5,8 @@ type PageSaveHandler = (
   commonData: Partial<CommonEditableData>,
 ) => Promise<boolean>;
 
+type PageDeleteHandler = () => Promise<boolean>;
+
 export type CommonEditableData = Pick<
   Space,
   'title' | 'html_contents' | 'started_at' | 'ended_at'
@@ -14,6 +16,7 @@ type State = {
   isEdit: boolean;
   isModified: boolean;
   commonData: Partial<CommonEditableData> | null;
+  pageDeleteHandler: PageDeleteHandler | null;
   pageSaveHandler: PageSaveHandler | null;
   spacePublishValidatorImpl: () => boolean;
 };
@@ -25,6 +28,7 @@ type Actions = {
   updateCommonData: (data: Partial<CommonEditableData>) => void;
   triggerGlobalSave: () => Promise<void>;
   setPageSaveHandler: (handler: PageSaveHandler) => void;
+  setPageDeleteHandler: (handler: PageDeleteHandler) => void;
   spacePublishValidator: () => boolean;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   setSpacePublishValidator: (handler: any) => void;
@@ -35,6 +39,7 @@ const initialState: State = {
   isModified: false,
   commonData: null,
   pageSaveHandler: null,
+  pageDeleteHandler: null,
   spacePublishValidatorImpl: () => true,
 };
 
@@ -45,6 +50,7 @@ export const useEditCoordinatorStore = create<State & Actions>((set, get) => ({
       isEdit: true,
       isModified: false,
       commonData: initialData,
+      pageDeleteHandler: null,
       pageSaveHandler: null,
     });
   },
@@ -56,6 +62,7 @@ export const useEditCoordinatorStore = create<State & Actions>((set, get) => ({
       isModified: true,
     }));
   },
+  setPageDeleteHandler: (handler) => set({ pageDeleteHandler: handler }),
   setPageSaveHandler: (handler) => set({ pageSaveHandler: handler }),
   triggerGlobalSave: async () => {
     const { pageSaveHandler, commonData, isModified } = get();
@@ -71,7 +78,6 @@ export const useEditCoordinatorStore = create<State & Actions>((set, get) => ({
     return spacePublishValidatorImpl();
   },
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  setSpacePublishValidator: (handler: any) =>
-    set({ spacePublishValidatorImpl: handler }),
+  setSpacePublishValidator: (handler) =>
+    set({ spacePublishValidator: handler }),
 }));

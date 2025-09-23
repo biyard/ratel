@@ -131,7 +131,7 @@ export default function ClientProviders({
   useEffect(() => {
     if (space) {
       setIsPrivatelyPublished(
-        space.status === SpaceStatus.InProgress &&
+        space.status !== SpaceStatus.Draft &&
           space.publishing_scope === PublishingScope.Private,
       );
     }
