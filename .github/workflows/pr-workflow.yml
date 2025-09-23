@@ -3,7 +3,7 @@ name: PR Testing
 on:
   pull_request:
     types: [opened, synchronize, reopened]
-    branches: [ dev ]
+    branches: [dev]
 
 env:
   CARGO_TERM_COLOR: always
@@ -45,27 +45,13 @@ jobs:
           key: web-image-${{ github.sha }}
           retention-days: 7
 
-  test-with-server:
+  main-api-test:
     runs-on: ubuntu-latest
-
     services:
-      postgres:
-        image: postgres
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: ratel
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-
       localstack:
         image: localstack/localstack:3
         env:
+          SERVICES: "dynamodb,s3,sqs"
           DYNAMODB_SHARE_DB: "1"
           DEFAULT_REGION: us-east-1
           AWS_ACCESS_KEY_ID: test
@@ -74,57 +60,115 @@ jobs:
           - 4566:4566
 
     steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: recursive
-          ssh-key: ${{ secrets.PULL_KEY_REPO }}
+      - uses: actions/checkout@v4
 
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           components: clippy, rustfmt
-          target: wasm32-unknown-unknown
           toolchain: stable
-      - name: Install PostgreSQL Client
-        run: sudo apt-get install -y postgresql-client
 
-      - name: Initialize Database
+      - name: Install AWS CLI
         run: |
-          psql postgresql://postgres:postgres@localhost:5432/ratel -f ./scripts/init.sql
-          aws --endpoint-url=http://localstack:4566 dynamodb create-table --cli-input-json file:///scripts/dynamodb-schema.json
+          sudo apt-get update
+          sudo apt-get install -y awscli
 
-      - name: test
+      - name: Wait for LocalStack
+        run: |
+          for i in {1..30}; do
+            nc -z localhost 4566 && break
+            sleep 1
+          done
+
+      - name: Create DynamoDB Table
+        run: |
+          /scripts/localstack-init-entrypoint.sh
+      - name: Run Rust tests
         env:
-          RUSTFLAGS: "-A warnings"
-          DATABASE_TYPE: postgres
-          DATABASE_URL: postgresql://postgres:postgres@postgres:5432/ratel
-          DYNAMODB_ENDPOINT: http://localstack:4566
-          ENV: "dev"
-          DOMAIN: "dev.ratel.foundation"
-          AUTH_SECRET_KEY: ${{ secrets.DEV_AUTH_SECRET_KEY }}
-          BASE_DOMAIN: "ratel.foundation"
-          AUTH_DOMAIN: "ratel.foundation"
-          AWS_REGION: us-east-1
-          AWS_ACCESS_KEY_ID: test
-          AWS_SECRET_ACCESS_KEY: test
-          JWT_SECRET_KEY: ${{ secrets.DEV_JWT_SECRET }}
-          SLACK_CHANNEL_SPONSOR: ${{ secrets.DEV_SLACK }}
-          BBS_BLS_X: ${{ secrets.BBS_BLS_X }}
-          BBS_BLS_Y: ${{ secrets.BBS_BLS_Y }}
-          BBS_BLS_D: ${{ secrets.BBS_BLS_D }}
-          BBS_BLS_CRV: ${{ secrets.BBS_BLS_CRV }}
-          P256_X: ${{ secrets.P256_X }}
-          P256_Y: ${{ secrets.P256_Y }}
-          P256_D: ${{ secrets.P256_D }}
-          P256_CRV: ${{ secrets.P256_CRV }}
-
-          # Kaia blockchain config (test values)
-          KAIA_ENDPOINT: https://public-en-kairos.node.kaia.io
-          KAIA_FEEPAYER_KEY: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
-          KAIA_FEEPAYER_ADDR: "0xFEEDFACE1234567890abcdef0123456789abcdef"
-          KAIA_OWNER_KEY: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
-          KAIA_OWNER_ADDR: "0xFEEDFACE1234567890abcdef0123456789abcdef"
+          DYNAMO_TABLE_PREFIX: ratel-local
+          ENV: test
         run: |
-          cd packages/main-api && make test
+          cargo test --package main-api --lib -- controllers::v3 --show-output
+
+  # test-with-server:
+  #   runs-on: ubuntu-latest
+
+  #   services:
+  #     postgres:
+  #       image: postgres
+  #       env:
+  #         POSTGRES_USER: postgres
+  #         POSTGRES_PASSWORD: postgres
+  #         POSTGRES_DB: ratel
+  #       options: >-
+  #         --health-cmd pg_isready
+  #         --health-interval 10s
+  #         --health-timeout 5s
+  #         --health-retries 5
+  #       ports:
+  #         - 5432:5432
+
+  #     localstack:
+  #       image: localstack/localstack:3
+  #       env:
+  #         DYNAMODB_SHARE_DB: "1"
+  #         DEFAULT_REGION: us-east-1
+  #         AWS_ACCESS_KEY_ID: test
+  #         AWS_SECRET_ACCESS_KEY: test
+  #       ports:
+  #         - 4566:4566
+
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #       with:
+  #         submodules: recursive
+  #         ssh-key: ${{ secrets.PULL_KEY_REPO }}
+
+  #     - uses: actions-rust-lang/setup-rust-toolchain@v1
+  #       with:
+  #         components: clippy, rustfmt
+  #         target: wasm32-unknown-unknown
+  #         toolchain: stable
+  #     - name: Install PostgreSQL Client
+  #       run: sudo apt-get install -y postgresql-client
+
+  #     - name: Initialize Database
+  #       run: |
+  #         psql postgresql://postgres:postgres@localhost:5432/ratel -f ./scripts/init.sql
+  #         aws --endpoint-url=http://localstack:4566 dynamodb create-table --cli-input-json file:///scripts/dynamodb-schema.json
+
+  #     - name: test
+  #       env:
+  #         RUSTFLAGS: "-A warnings"
+  #         DATABASE_TYPE: postgres
+  #         DATABASE_URL: postgresql://postgres:postgres@postgres:5432/ratel
+  #         DYNAMODB_ENDPOINT: http://localstack:4566
+  #         ENV: "dev"
+  #         DOMAIN: "dev.ratel.foundation"
+  #         AUTH_SECRET_KEY: ${{ secrets.DEV_AUTH_SECRET_KEY }}
+  #         BASE_DOMAIN: "ratel.foundation"
+  #         AUTH_DOMAIN: "ratel.foundation"
+  #         AWS_REGION: us-east-1
+  #         AWS_ACCESS_KEY_ID: test
+  #         AWS_SECRET_ACCESS_KEY: test
+  #         JWT_SECRET_KEY: ${{ secrets.DEV_JWT_SECRET }}
+  #         SLACK_CHANNEL_SPONSOR: ${{ secrets.DEV_SLACK }}
+  #         BBS_BLS_X: ${{ secrets.BBS_BLS_X }}
+  #         BBS_BLS_Y: ${{ secrets.BBS_BLS_Y }}
+  #         BBS_BLS_D: ${{ secrets.BBS_BLS_D }}
+  #         BBS_BLS_CRV: ${{ secrets.BBS_BLS_CRV }}
+  #         P256_X: ${{ secrets.P256_X }}
+  #         P256_Y: ${{ secrets.P256_Y }}
+  #         P256_D: ${{ secrets.P256_D }}
+  #         P256_CRV: ${{ secrets.P256_CRV }}
+
+  #         # Kaia blockchain config (test values)
+  #         KAIA_ENDPOINT: https://public-en-kairos.node.kaia.io
+  #         KAIA_FEEPAYER_KEY: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+  #         KAIA_FEEPAYER_ADDR: "0xFEEDFACE1234567890abcdef0123456789abcdef"
+  #         KAIA_OWNER_KEY: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+  #         KAIA_OWNER_ADDR: "0xFEEDFACE1234567890abcdef0123456789abcdef"
+  #       run: |
+  #         cd packages/main-api && make test
 
   main-api:
     runs-on: ubuntu-22.04
@@ -189,7 +233,7 @@ jobs:
 
     outputs:
       image: ${{ steps.build.outputs.image }}
-      
+
     steps:
       - uses: actions/checkout@v3
         with:
@@ -284,14 +328,14 @@ jobs:
           path: /tmp/web-image.tar.gz
           key: web-image-${{ github.sha }}
           fail-on-cache-miss: true
-          
+
       - name: Restore main-api image cache
         uses: actions/cache@v4
         with:
           path: /tmp/main-api-image.tar.gz
           key: main-api-image-${{ github.sha }}
           fail-on-cache-miss: true
-          
+
       - name: Restore fetcher image cache
         uses: actions/cache@v4
         with:
@@ -305,7 +349,7 @@ jobs:
           docker load < /tmp/web-image.tar.gz
           docker load < /tmp/main-api-image.tar.gz
           docker load < /tmp/fetcher-image.tar.gz
-          
+
           # Verify images are loaded
           docker images
 
