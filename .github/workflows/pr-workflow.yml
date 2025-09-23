@@ -75,7 +75,7 @@ jobs:
 
       - name: Create DynamoDB Table
         run: |
-          /scripts/localstack-init-entrypoint.sh
+          ./scripts/localstack-init-entrypoint.sh
       - name: Run Rust tests
         env:
           DYNAMO_TABLE_PREFIX: ratel-local
