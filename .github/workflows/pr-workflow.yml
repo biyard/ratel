@@ -79,6 +79,8 @@ jobs:
           version: 2
 
       - name: Create DynamoDB Table
+        env:
+          LOCALSTACK_ENDPOINT: http://localhost:4566
         run: |
           ./scripts/localstack-init-entrypoint.sh
       - name: Run Rust tests
