@@ -133,66 +133,56 @@ export default function SpaceConfigForm({
       </div>
 
       {/* Date and Time Section */}
-      <div className="flex flex-col gap-3">
-        <div className="flex items-center gap-1">
-          <label className="text-base font-medium text-modal-label-text py-1">
-            {t('date')}
-          </label>
-          <span className="text-red-500 text-base">*</span>
+      <div className="flex gap-2 flex-row max-tablet:flex-wrap max-tabletitems-center">
+        <div className="flex flex-col w-full gap-2 sm:flex-row sm:w-auto sm:items-center">
+          <div className="w-full max-tablet:w-auto">
+            <CalendarDropdown
+              value={startTimestamp}
+              onChange={(timestamp) => {
+                const delta = endTimestamp - startTimestamp;
+                setStartTimestamp(timestamp);
+                setEndTimestamp(timestamp + delta);
+              }}
+            />
+          </div>
+          <div className="w-full sm:w-auto">
+            <TimeDropdown
+              value={startTimestamp}
+              onChange={(timestamp) => {
+                const delta = endTimestamp - startTimestamp;
+                setStartTimestamp(timestamp);
+                setEndTimestamp(timestamp + delta);
+              }}
+            />
+          </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-          {/* Start Date and Time */}
-          <div className="flex items-center gap-2">
-            <CalendarDropdown
-              value={startTimestamp}
-              onChange={(timestamp) => {
-                const delta = endTimestamp - startTimestamp;
-                setStartTimestamp(timestamp);
-                setEndTimestamp(timestamp + delta);
-              }}
-            />
-            <TimeDropdown
-              value={startTimestamp}
-              onChange={(timestamp) => {
-                const delta = endTimestamp - startTimestamp;
-                setStartTimestamp(timestamp);
-                setEndTimestamp(timestamp + delta);
-              }}
-            />
-          </div>
+        <div className="hidden sm:block w-[15px] h-0.5 self-center bg-neutral-600" />
 
-          {/* Separator */}
-          <div className="w-[15px] h-0.25 bg-neutral-600 self-center hidden sm:block" />
-
-          {/* End Time and Date */}
-          <div className="flex items-center gap-2">
+        <div className="flex flex-col w-full gap-2 sm:flex-row sm:w-auto sm:items-center max-tablet:mt-2.5">
+          <div className="w-full sm:w-auto">
             <CalendarDropdown
               value={endTimestamp}
-              onChange={(timestamp) => {
-                setEndTimestamp(timestamp);
-              }}
+              onChange={(timestamp) => setEndTimestamp(timestamp)}
             />
+          </div>
+          <div className="w-full sm:w-auto">
             <TimeDropdown
               value={endTimestamp}
-              onChange={(timestamp) => {
-                setEndTimestamp(timestamp);
-              }}
+              onChange={(timestamp) => setEndTimestamp(timestamp)}
             />
           </div>
+        </div>
 
-          {/* Timezone */}
-          {/* FIXME: use variable, not value color */}
-          <div className="flex flex-row items-center w-fit border border-select-date-border bg-select-date-bg rounded-lg px-5 py-[10.5px] gap-2.5 mt-2 sm:mt-0">
-            <div className="font-medium text-[15px]/[22.5px] text-neutral-600">
-              Pacific Time
-            </div>
-            <Internet
-              className="w-5 h-5 [&>path]:stroke-neutral-600 [&>circle]:stroke-neutral-600"
-              width="20"
-              height="20"
-            />
+        <div className="w-full sm:w-fit flex flex-row items-center border border-select-date-border bg-select-date-bg rounded-lg px-5 py-[10.5px] gap-2.5 mt-2 sm:mt-0">
+          <div className="font-medium text-[15px]/[22.5px] text-neutral-600">
+            Pacific Time
           </div>
+          <Internet
+            className="w-5 h-5 [&>path]:stroke-neutral-600 [&>circle]:stroke-neutral-600"
+            width="20"
+            height="20"
+          />
         </div>
       </div>
 

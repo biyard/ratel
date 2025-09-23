@@ -57,7 +57,7 @@ export default function TimeDropdown({ value, onChange }: TimeDropdownProps) {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button className="flex justify-between items-center w-[150px] border border-c-wg-70 rounded-lg px-[20px] py-[10.5px] font-medium text-neutral-600 border-select-date-border bg-select-date-bg text-[15px]/[22.5px] text-left shadow-sm focus:outline-none gap-[10px]">
+        <button className="flex justify-between items-center w-[150px] max-tablet:w-full border border-c-wg-70 rounded-lg px-[20px] py-[10.5px] font-medium text-neutral-600 border-select-date-border bg-select-date-bg text-[15px]/[22.5px] text-left shadow-sm focus:outline-none gap-[10px]">
           {selectedTime || 'Select'}
           <Clock className="w-5 h-5 stroke-neutral-500" />
         </button>
