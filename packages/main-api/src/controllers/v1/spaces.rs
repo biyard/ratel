@@ -66,6 +66,8 @@ impl SpaceController {
             .fetch_one(&self.pool)
             .await?;
 
+        tracing::debug!("query space: {:?}", space);
+
         // Access control for notice spaces
         if space.space_type == SpaceType::Notice {
             let is_owner = user_id == space.owner_id;
@@ -325,7 +327,9 @@ impl SpaceController {
             )
             .await
         {
-            Ok(_) => {}
+            Ok(v) => {
+                tracing::debug!("posting space res: {:?}", v);
+            }
             Err(e) => {
                 tx.rollback().await?;
                 return Err(e);
@@ -584,6 +588,8 @@ impl SpaceController {
             space.notice_quiz
         };
 
+        tracing::debug!("publish space: {:?}", publishing_scope);
+
         let res = match self
             .repo
             .update_with_tx(
@@ -606,7 +612,10 @@ impl SpaceController {
             )
             .await
         {
-            Ok(space) => space,
+            Ok(space) => {
+                tracing::debug!("update space res: {:?}", space);
+                space
+            }
             Err(e) => {
                 tracing::error!("Failed to update space {}: {}", space_id, e);
                 tx.rollback().await?;

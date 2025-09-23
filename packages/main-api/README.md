@@ -260,6 +260,26 @@ Please add this code to `settings.json`
 			"",
 		],
 		"description": "Creates a struct with common derives based on the filename."
+	},
+	"Axum Test Handler": {
+		"prefix": "axum_test_handler",
+		"body": [
+			"#[cfg(test)]",
+			"pub mod ${TM_FILENAME_BASE/(.*)/${1:/snakecase}/}_tests {",
+			"    use crate::tests::{create_app_state, create_auth, get_test_user};",
+			"    use super::*;",
+			"",
+			"    #[tokio::test]",
+			"    async fn test_${TM_FILENAME_BASE/(.*)/${1:/snakecase}/}_handler() {",
+			"        let app_state = create_app_state();",
+			"        let user = get_test_user(app_state.clone()).await;",
+			"        let auth = create_auth(user.clone()).await;",
+			"    }",
+			"",
+			"}"
+		],
+		"description": "Creates a Rust test module and handler based on the filename."
 	}
+
 ```
 

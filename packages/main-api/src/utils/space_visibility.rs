@@ -1,4 +1,4 @@
-use dto::{Space, SpaceStatus};
+use dto::{PublishingScope, Space, SpaceStatus};
 
 #[derive(Debug, Clone)]
 pub struct ViewerCtx {
@@ -20,7 +20,7 @@ pub fn scope_space_for_viewer(space: Space, ctx: &ViewerCtx) -> Option<Space> {
         .iter()
         .any(|a| ctx.team_ids.iter().any(|&tid| tid == a.id));
 
-    if space.status == SpaceStatus::Draft {
+    if space.status == SpaceStatus::Draft || space.publishing_scope == PublishingScope::Private {
         return if !is_anonymous && (is_author || is_team_author) {
             Some(space)
         } else {
@@ -40,6 +40,10 @@ pub fn scope_space_for_viewer(space: Space, ctx: &ViewerCtx) -> Option<Space> {
     //     }
     // }
     Some(space)
+}
+
+pub fn check_space_permission(space: Space, ctx: &ViewerCtx) -> bool {
+    scope_space_for_viewer(space, ctx).is_some()
 }
 
 pub fn scope_space_opt_to_vec(space: Option<Space>, ctx: &ViewerCtx) -> Vec<Space> {

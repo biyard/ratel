@@ -17,6 +17,16 @@ struct StructCfg {
     error_ctor: String,   // "crate::Error::DynamoDbError"
     pk_name: String,
     sk_name: Option<String>,
+    indice: Vec<StructIndexCfg>,
+}
+
+#[derive(Default, Clone, Debug)]
+struct StructIndexCfg {
+    pk_prefix: Option<String>,
+    sk_prefix: Option<String>,
+    index: String,
+    name: String,
+    enable_sk: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -106,12 +116,21 @@ fn parse_struct_cfg(attrs: &[Attribute]) -> StructCfg {
         error_ctor: "crate::Error2".into(),
         pk_name: "pk".into(),
         sk_name: Some("sk".into()),
+        indice: vec![],
     };
 
     for attr in attrs {
         if !attr.path().is_ident("dynamo") {
             continue;
         }
+        let mut index_cfg = StructIndexCfg {
+            pk_prefix: None,
+            sk_prefix: None,
+            index: String::new(),
+            name: String::new(),
+            enable_sk: false,
+        };
+
         let _ = attr.parse_nested_meta(|meta| {
             if meta.path.is_ident("table") {
                 if let Ok(value) = meta.value() {
@@ -149,9 +168,43 @@ fn parse_struct_cfg(attrs: &[Attribute]) -> StructCfg {
                         cfg.sk_name = Some(s.value());
                     }
                 }
+            } else if meta.path.is_ident("pk_prefix") {
+                if let Ok(value) = meta.value() {
+                    if let Ok(s) = value.parse::<syn::LitStr>() {
+                        index_cfg.pk_prefix = Some(s.value());
+                    }
+                }
+            } else if meta.path.is_ident("sk_prefix") {
+                if let Ok(value) = meta.value() {
+                    if let Ok(s) = value.parse::<syn::LitStr>() {
+                        index_cfg.sk_prefix = Some(s.value());
+                    }
+                }
+            } else if meta.path.is_ident("index") {
+                if let Ok(value) = meta.value() {
+                    if let Ok(s) = value.parse::<syn::LitStr>() {
+                        index_cfg.index = s.value();
+                        if index_cfg.name.is_empty() {
+                            index_cfg.name = format!("find_by_{}", s.value());
+                        }
+                    }
+                }
+            } else if meta.path.is_ident("name") {
+                if let Ok(value) = meta.value() {
+                    if let Ok(s) = value.parse::<syn::LitStr>() {
+                        index_cfg.name = s.value();
+                    }
+                }
+            } else if meta.path.is_ident("enable_sk") {
+                index_cfg.enable_sk = true;
             }
+
             Ok(())
         });
+
+        if !index_cfg.index.is_empty() {
+            cfg.indice.push(index_cfg);
+        }
     }
     cfg
 }
@@ -242,7 +295,7 @@ fn generate_key_composers(fields: &Vec<FieldInfo>) -> Vec<proc_macro2::TokenStre
 
     for f in fields.iter() {
         for idx in f.indice.iter() {
-            let idx_base = idx.base_index_name.to_case(convert_case::Case::Snake);
+            let idx_base = idx.base_index_name.clone();
             let cname = Ident::new(
                 &format!("compose_{}_{}", idx_base, if idx.pk { "pk" } else { "sk" }),
                 proc_macro2::Span::call_site(),
@@ -352,7 +405,7 @@ fn generate_updater(
         // Build additional GSI updates for this field (PUT on setter)
         let mut gsi_put_updates: Vec<proc_macro2::TokenStream> = vec![];
         for idx in f.indice.iter() {
-            let idx_base_snake = idx.base_index_name.to_case(convert_case::Case::Snake);
+            let idx_base_snake = &idx.base_index_name;
             let composer_ident = Ident::new(
                 &format!(
                     "compose_{}_{}",
@@ -650,6 +703,118 @@ fn generate_struct_impl(
     out.into()
 }
 
+fn generate_index_fn_for_enum(s_cfg: &StructCfg) -> Vec<proc_macro2::TokenStream> {
+    let mut out = vec![];
+    let result_ty: syn::Type = syn::parse_str(&s_cfg.result_ty).unwrap();
+    let err_ctor: syn::Path = syn::parse_str(&s_cfg.error_ctor).unwrap();
+    let table_name = syn::LitStr::new(
+        &format!("{}-{}", s_cfg.table_prefix, s_cfg.table),
+        proc_macro2::Span::call_site(),
+    );
+
+    for idx in s_cfg.indice.iter() {
+        let fn_name = format!("{}", idx.name.to_case(convert_case::Case::Snake));
+        let fn_ident = Ident::new(&fn_name, proc_macro2::Span::call_site());
+        let idx_base = idx.index.clone();
+        let pk_field = format!("{}_pk", idx_base);
+        let sk_field = format!("{}_sk", idx_base);
+
+        let pk_field_lit = syn::LitStr::new(&pk_field, proc_macro2::Span::call_site());
+        let sk_field_lit = syn::LitStr::new(&sk_field, proc_macro2::Span::call_site());
+        let idx_ident = syn::LitStr::new(
+            &format!("{}-index", idx.index),
+            proc_macro2::Span::call_site(),
+        );
+
+        let pk_param = if idx.pk_prefix.is_some() {
+            quote! { pk: impl std::fmt::Display, }
+        } else {
+            quote! { pk: impl std::fmt::Display, }
+        };
+
+        let sk_param = if idx.enable_sk || idx.sk_prefix.is_some() {
+            quote! { sk: Option<impl std::fmt::Display>, }
+        } else {
+            quote! {}
+        };
+
+        let pk_value = if let Some(ref prefix) = idx.pk_prefix {
+            let prefix = syn::LitStr::new(prefix, proc_macro2::Span::call_site());
+            quote! { aws_sdk_dynamodb::types::AttributeValue::S(format!("{}#{}", #prefix, pk)), }
+        } else {
+            quote! { aws_sdk_dynamodb::types::AttributeValue::S(format!("{}", pk)), }
+        };
+
+        let sk_condition = if let Some(ref prefix) = idx.sk_prefix.clone() {
+            let prefix = syn::LitStr::new(prefix, proc_macro2::Span::call_site());
+
+            quote! {
+                if let Some(sk) = sk {
+                    key_condition.push_str(" AND begins_with(#sk, :sk)");
+                    req = req
+                        .expression_attribute_names("#sk", #sk_field_lit)
+                        .expression_attribute_values(
+                            ":sk",
+                            aws_sdk_dynamodb::types::AttributeValue::S(format!("{}#{}", #prefix, sk)),
+                        );
+                }
+            }
+        } else if idx.enable_sk {
+            quote! {
+                if let Some(sk) = sk {
+                    key_condition.push_str(" AND begins_with(#sk, :sk)");
+                    req = req
+                        .expression_attribute_names("#sk", #sk_field_lit)
+                        .expression_attribute_values(
+                            ":sk",
+                            aws_sdk_dynamodb::types::AttributeValue::S(format!("{}", sk)),
+                        );
+                }
+            }
+        } else {
+            quote! {}
+        };
+
+        out.push(quote! {
+            pub async fn #fn_ident(
+                cli: &aws_sdk_dynamodb::Client,
+                #pk_param
+                #sk_param
+            ) -> #result_ty <Vec<Self>, #err_ctor> {
+                let mut key_condition = String::from("#pk = :pk");
+                let mut req = cli
+                    .query()
+                    .table_name(#table_name)
+                    .index_name(#idx_ident)
+                    .expression_attribute_names("#pk", #pk_field_lit)
+                    .expression_attribute_values(
+                        ":pk",
+                        #pk_value
+                    );
+
+                #sk_condition
+
+                let resp = req
+                    .key_condition_expression(key_condition)
+                    .send()
+                    .await
+                    .map_err(Into::<aws_sdk_dynamodb::Error>::into)?;
+
+                let items = resp
+                    .items
+                    .unwrap_or_default()
+                    .into_iter()
+                    .map(|item| serde_dynamo::from_item(item).expect("failed to parse item"))
+                    .collect();
+
+                Ok(items)
+            }
+        });
+    }
+
+    out.into()
+}
+
 fn generate_enum_impl(ident: Ident, _ds: &DataEnum, s_cfg: StructCfg) -> proc_macro2::TokenStream {
     let table_suffix = s_cfg.table.clone();
     let table_prefix = s_cfg.table_prefix.clone();
@@ -661,9 +826,12 @@ fn generate_enum_impl(ident: Ident, _ds: &DataEnum, s_cfg: StructCfg) -> proc_ma
     );
 
     let pk_field_name = syn::LitStr::new(&s_cfg.pk_name, proc_macro2::Span::call_site());
+    let idx_fn = generate_index_fn_for_enum(&s_cfg);
 
     quote! {
         impl #ident {
+            #(#idx_fn)*
+
             pub fn table_name() -> &'static str {
                 #table_lit_str
             }
@@ -920,17 +1088,11 @@ fn generate_index_fn(
 
     };
     let pk_composer = Ident::new(
-        &format!(
-            "compose_{}_pk",
-            idx_base_name.to_case(convert_case::Case::Snake)
-        ),
+        &format!("compose_{}_pk", idx_base_name),
         proc_macro2::Span::call_site(),
     );
     let sk_composer = Ident::new(
-        &format!(
-            "compose_{}_sk",
-            idx_base_name.to_case(convert_case::Case::Snake)
-        ),
+        &format!("compose_{}_sk", idx_base_name),
         proc_macro2::Span::call_site(),
     );
 
@@ -1011,10 +1173,7 @@ fn generate_index_fns(
 
     for idx in idx_map.keys() {
         let fields = idx_map.get(idx).unwrap();
-        let fn_name = indice_name_map.get(idx).expect(&format!(
-            "find_by_{}",
-            idx.to_case(convert_case::Case::Snake)
-        ));
+        let fn_name = indice_name_map.get(idx).expect(&format!("find_by_{}", idx));
         let fn_tokens = generate_index_fn(st_name, cfg, idx, fn_name.clone(), fields);
         out.push(fn_tokens);
     }

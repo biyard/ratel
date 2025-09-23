@@ -236,18 +236,16 @@ export default function ClientProviders({
       audioElement.autoplay = true;
       session.audioVideo.bindAudioElement(audioElement);
 
-      const audioInputs =
-        await session.deviceController.listAudioInputDevices();
-      if (audioInputs.length > 0) {
-        await session.deviceController.startAudioInput(audioInputs[0].deviceId);
-        session.audioVideo.realtimeMuteLocalAudio();
-        const selfAttendeeId = configuration.credentials?.attendeeId;
-        if (selfAttendeeId) {
-          setMicStates((prev) => ({
-            ...prev,
-            [selfAttendeeId]: false,
-          }));
-        }
+      session.audioVideo.setDeviceLabelTrigger(async () => {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+          video: true,
+        });
+        return stream;
+      });
+      const selfAttendeeId = configuration.credentials?.attendeeId;
+      if (selfAttendeeId) {
+        setMicStates((prev) => ({ ...prev, [selfAttendeeId]: false }));
       }
 
       setMeetingSession(session);
