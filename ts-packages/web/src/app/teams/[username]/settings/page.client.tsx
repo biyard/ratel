@@ -26,6 +26,8 @@ import { logger } from '@/lib/logger';
 import { getQueryClient } from '@/providers/getQueryClient';
 import { feedKeys } from '@/constants';
 import { FeedStatus } from '@/lib/api/models/feeds';
+import { GroupPermission } from '@/lib/api/models/group';
+import { usePermission } from '@/app/(social)/_hooks/use-permission';
 
 export default function SettingsPage({ username }: { username: string }) {
   const t = useTranslations('Team');
@@ -45,6 +47,10 @@ export default function SettingsPage({ username }: { username: string }) {
   const [profileUrl, setProfileUrl] = useState(team?.profile_url || '');
   const [nickname, setNickname] = useState(team?.nickname);
   const [htmlContents, setHtmlContents] = useState(team?.html_contents);
+
+  const deleteTeamPermission =
+    usePermission(team?.id ?? 0, GroupPermission.DeleteGroup).data
+      .has_permission ?? false;
 
   if (!team) {
     return <></>;
@@ -183,16 +189,20 @@ export default function SettingsPage({ username }: { username: string }) {
             {t('save')}
           </Button>
 
-          <Button
-            disabled={invalidInput}
-            className={
-              invalidInput ? 'bg-neutral-600' : 'bg-red-600 hover:bg-red-600/90'
-            }
-            variant={'rounded_primary'}
-            onClick={openDeletePopup}
-          >
-            {t('delete')}
-          </Button>
+          {deleteTeamPermission && (
+            <Button
+              disabled={invalidInput}
+              className={
+                invalidInput
+                  ? 'bg-neutral-600'
+                  : 'bg-red-600 hover:bg-red-600/90'
+              }
+              variant={'rounded_primary'}
+              onClick={openDeletePopup}
+            >
+              {t('delete')}
+            </Button>
+          )}
         </Row>
       </Col>
     </div>
