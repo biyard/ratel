@@ -67,10 +67,9 @@ jobs:
           components: clippy, rustfmt
           toolchain: stable
 
-      - name: Install AWS CLI
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y awscli
+      - uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-region: us-east-1
 
       - name: Wait for LocalStack
         run: |
