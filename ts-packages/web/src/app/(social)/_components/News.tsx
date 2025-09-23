@@ -43,7 +43,7 @@ function News() {
     queryKey: ['v2', 'news', { limit: 3, page: 1 }],
     queryFn: async () => {
       try {
-        const response = await get(ratelApi.v2.news.list(3, 1)); 
+        const response = await get(ratelApi.v2.news.list(3, 1));
         return (response ?? []) as NewsItem[];
       } catch (error) {
         logger.error('Failed to fetch news:', error);
