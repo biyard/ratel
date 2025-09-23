@@ -73,6 +73,11 @@ jobs:
             sleep 1
           done
 
+      - name: Install AWS CLI
+        uses: unfor19/install-aws-cli-action@v1
+        with:
+          version: 2
+
       - name: Create DynamoDB Table
         run: |
           ./scripts/localstack-init-entrypoint.sh
