@@ -43,7 +43,7 @@ pub async fn send_code_handler(
             // So please don't change it to use config::get()
             let env = option_env!("ENV").unwrap_or("local");
 
-            if env == "local" {
+            if env == "local" || env == "test" {
                 tracing::info!("Send email failed, Ignored error(ENV: {}): {:?}", env, e,);
             } else {
                 return Err(e.into());
