@@ -125,6 +125,7 @@ pub mod controllers {
         pub mod users {
             pub mod find_user;
             pub mod get_user_info;
+            pub mod update_user;
         }
         pub mod auth {
             pub mod health;
@@ -140,6 +141,7 @@ pub mod controllers {
             pub mod create_team;
             pub mod find_team;
             pub mod get_team;
+            pub mod update_team;
             pub mod groups {
                 pub mod add_member;
                 pub mod create_group;
@@ -183,5 +185,6 @@ pub use dto::*;
 
 mod route_v3;
 pub use route_v3::*;
+
 #[cfg(test)]
 pub mod tests;

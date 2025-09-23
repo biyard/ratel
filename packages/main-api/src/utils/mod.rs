@@ -28,3 +28,5 @@ pub mod dynamo_extractor;
 pub mod dynamo_session_store;
 
 pub mod password;
+
+pub mod security;

@@ -5,7 +5,10 @@ use crate::{
         user::UserTeamGroup,
     },
     types::{EntityType, TeamGroupPermission, TeamGroupPermissions},
-    utils::dynamo_extractor::extract_user,
+    utils::{
+        dynamo_extractor::extract_user,
+        security::{RatelResource, check_any_permission},
+    },
 };
 use dto::by_axum::{
     auth::Authorization,
@@ -43,6 +46,31 @@ pub async fn create_group_handler(
     Path(params): Path<CreateGroupPathParams>,
     Json(req): Json<CreateGroupRequest>,
 ) -> Result<Json<CreateGroupResponse>, Error2> {
+    // If Admin permissions are requested, require TeamAdmin
+    let required_permissions = if req
+        .permissions
+        .iter()
+        .any(|p| matches!(p, TeamGroupPermission::TeamAdmin))
+    {
+        vec![TeamGroupPermission::TeamAdmin]
+    } else {
+        vec![
+            TeamGroupPermission::TeamAdmin,
+            TeamGroupPermission::TeamEdit,
+        ]
+    };
+
+    check_any_permission(
+        &dynamo.client,
+        auth.clone(),
+        RatelResource::Team {
+            team_pk: params.team_id.clone(),
+        },
+        required_permissions,
+    )
+    .await?;
+    //If
+
     let user = extract_user(&dynamo.client, auth).await?;
 
     let team = Team::get(
@@ -66,6 +94,8 @@ pub async fn create_group_handler(
     group.create(&dynamo.client).await?;
     let group_pk = group.pk.clone();
     let group_sk = group.sk.clone();
+
+    // Add creator to the group
     UserTeamGroup::new(user_pk, group)
         .create(&dynamo.client)
         .await?;

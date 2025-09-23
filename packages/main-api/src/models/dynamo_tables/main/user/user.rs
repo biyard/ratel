@@ -29,7 +29,7 @@ pub struct User {
     pub followings_count: i64,
 
     // profile contents
-    pub html_contents: String,
+    pub description: String,
     pub password: String,
 
     pub membership: Membership,

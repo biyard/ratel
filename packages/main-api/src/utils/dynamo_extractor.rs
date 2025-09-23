@@ -6,6 +6,7 @@ use crate::{
     types::EntityType,
 };
 
+/// This function only uses in Signup / Login handler
 pub fn get_principal_from_auth(auth: Option<Authorization>) -> Result<String, Error2> {
     let principal = match auth {
         Some(Authorization::UserSig(sig)) => sig.principal().map_err(|e| {
@@ -18,6 +19,13 @@ pub fn get_principal_from_auth(auth: Option<Authorization>) -> Result<String, Er
     Ok(principal)
 }
 
+pub async fn extract_user_pk(auth: Option<Authorization>) -> Result<String, Error2> {
+    match auth {
+        Some(Authorization::DynamoSession(session)) => Ok(session.pk),
+        _ => Err(Error2::Unauthorized("Missing authorization".into())),
+    }
+}
+
 pub async fn extract_user(
     cli: &aws_sdk_dynamodb::Client,
     auth: Option<Authorization>,
@@ -28,6 +36,7 @@ pub async fn extract_user(
                 .await?
                 .ok_or(Error2::NotFound("User not found".into()))
         }
+
         _ => Err(Error2::Unauthorized("Missing authorization".into())),
     }
 }
