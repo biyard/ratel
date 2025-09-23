@@ -287,6 +287,8 @@
 
     "space_update_success": "스페이스가 성공적으로 업데이트되었습니다",
     "space_update_failed": "스페이스 업데이트에 실패했습니다",
+    "space_delete_success": "스페이스가 성공적으로 삭제되었습니다",
+    "space_delete_failed": "스페이스 삭제에 실패했습니다",
     "space_share_success": "스페이스가 성공적으로 공유되었습니다",
     "space_share_failed": "스페이스 공유에 실패했습니다",
     "space_post_success": "스페이스가 성공적으로 게시되었습니다",
