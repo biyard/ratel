@@ -17,8 +17,14 @@ pub mod sqs_client;
 pub mod telegram;
 pub mod time;
 pub mod users;
+pub mod users_dynamo;
 pub mod wallets;
 
 pub mod aws;
 
 pub mod mcp_middleware;
+
+// DID VC utilities
+pub mod jwt;
+pub mod qr_code;
+pub mod status_list;

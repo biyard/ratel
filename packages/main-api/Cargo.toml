@@ -67,6 +67,17 @@ sha2 = "0.10"
 openssl = { version = "0.10" }
 serde_with = "3.14.0"
 
+# DID VC Dependencies
+jsonwebtoken = "9.3.0"
+p256 = { version = "0.13.0", features = ["ecdsa", "pkcs8", "std"] }
+k256 = { version = "0.13.0", features = ["ecdsa", "pkcs8", "std"] }
+qrcode = "0.14.1"
+image = "0.24.0"
+reqwest = { version = "0.12.0", features = ["json"] }
+ring = "0.17.8"
+ed25519-dalek = { version = "2.1.1", features = ["rand_core"] }
+flate2 = "1.0.35"
+
 [[bin]]
 name = "main-api"
 path = "src/main.rs"

@@ -196,6 +196,14 @@ pub enum Error {
 
     DuplicatedTelegramUser,
     InvalidTelegramData,
+
+    // StatusList2021 errors for verifiable credentials
+    StatusListCompression(String),
+    StatusListDecompression(String),
+    StatusListIndexOutOfBounds { index: usize, size: usize },
+    StatusListInvalidBitValue(u8),
+    StatusListSerialization(String),
+    StatusListBase64Decode(String),
 }
 
 impl<E: StdError + 'static> From<E> for Error {
@@ -327,8 +335,24 @@ impl Display for Error {
                 write!(f, "DynamoDB serialization error: {}", msg)
             }
             Error::DynamoDbTableNotFound(msg) => write!(f, "DynamoDB table not found: {}", msg),
-            //FIXME
-            _ => write!(f, "Unhandled error variant"),
+            Error::DuplicatedTelegramUser => write!(f, "Duplicated Telegram user"),
+            Error::InvalidTelegramData => write!(f, "Invalid Telegram data"),
+            Error::StatusListCompression(msg) => write!(f, "StatusList compression error: {}", msg),
+            Error::StatusListDecompression(msg) => {
+                write!(f, "StatusList decompression error: {}", msg)
+            }
+            Error::StatusListIndexOutOfBounds { index, size } => {
+                write!(f, "StatusList index out of bounds: {} >= {}", index, size)
+            }
+            Error::StatusListInvalidBitValue(value) => {
+                write!(f, "StatusList invalid bit value: {}", value)
+            }
+            Error::StatusListSerialization(msg) => {
+                write!(f, "StatusList serialization error: {}", msg)
+            }
+            Error::StatusListBase64Decode(msg) => {
+                write!(f, "StatusList base64 decode error: {}", msg)
+            }
         }
     }
 }

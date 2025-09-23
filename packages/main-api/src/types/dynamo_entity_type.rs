@@ -65,4 +65,18 @@ pub enum EntityType {
     Comment,
     Badge,
     Industry,
+
+    // DID/VC Entity Types
+    IssuedCredential,
+    CredentialOffer,
+    CredentialTemplate,
+    StatusListCredential,
+    StatusListEntry(String),
+    OAuthAuthorizationCode,
+    OAuthAccessToken,
+    OAuthClientRegistration,
+    IssuerConfiguration,
+    CredentialAuditLog,
+    PresentationSubmission,
+    VerificationResult,
 }
