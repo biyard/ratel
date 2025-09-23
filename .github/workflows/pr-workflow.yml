@@ -51,7 +51,7 @@ jobs:
       localstack:
         image: localstack/localstack:3
         env:
-          SERVICES: "dynamodb,s3,sqs"
+          SERVICES: dynamodb,s3,sqs
           DYNAMODB_SHARE_DB: "1"
           DEFAULT_REGION: us-east-1
           AWS_ACCESS_KEY_ID: test
