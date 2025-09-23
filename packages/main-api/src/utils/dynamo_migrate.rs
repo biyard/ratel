@@ -206,7 +206,6 @@ async fn create_table(dynamo_client: &DynamoClient, table_config: &DynamoTable) 
     Ok(())
 }
 
-
 pub fn get_user_tables() -> Vec<DynamoTable> {
     vec![DynamoTable::new("users", "PK", Some("SK")).with_gsi("GSI1", "GSI1_PK", Some("GSI1_SK"))]
 }
