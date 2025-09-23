@@ -67,7 +67,7 @@ export default function TeamDraftPage({
       </div>
     );
   }
-  const flattedDrafts = drafts?.pages.flatMap((page) => page) ?? [];
+  const flattedDrafts = drafts?.pages.flatMap((page) => page.posts) ?? [];
 
   return (
     <div className="flex flex-1 relative">

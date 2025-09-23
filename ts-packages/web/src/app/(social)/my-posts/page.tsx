@@ -33,7 +33,7 @@ export default function MyPostsPage() {
       </div>
     );
   }
-  const flattedPosts = data?.pages.flatMap((page) => page) ?? [];
+  const flattedPosts = data?.pages.flatMap((page) => page.posts) ?? [];
 
   return (
     <div className="flex-1 flex relative">

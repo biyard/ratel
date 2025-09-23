@@ -32,7 +32,7 @@ export default function TeamHome({ teamId }: TeamHomeProps) {
       </div>
     );
   }
-  const flattedPosts = data?.pages.flatMap((page) => page) ?? [];
+  const flattedPosts = data?.pages.flatMap((page) => page.posts) ?? [];
 
   return (
     <div className="flex-1 flex max-mobile:px-[10px]">

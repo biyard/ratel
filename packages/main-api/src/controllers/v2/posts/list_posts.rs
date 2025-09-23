@@ -1,3 +1,4 @@
+#![allow(unused)]
 use bdk::prelude::*;
 
 use dto::{
@@ -14,7 +15,7 @@ use dto::{
 use serde::{Deserialize, Serialize};
 
 use crate::utils::{
-    space_visibility::{ViewerCtx, scope_space_opt_to_vec},
+    space_visibility::{ViewerCtx, check_space_permission},
     users::extract_user,
 };
 
@@ -26,11 +27,17 @@ pub struct ListPostsQueryParams {
     pub user_id: Option<i64>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, aide::OperationIo, JsonSchema)]
+pub struct ListPostsResponse {
+    pub posts: Vec<Post>,
+    pub is_ended: bool,
+}
+
 pub async fn list_posts_handler(
     Extension(auth): Extension<Option<Authorization>>,
     State(pool): State<PgPool>,
     Query(params): Query<ListPostsQueryParams>,
-) -> Result<Json<Vec<Post>>> {
+) -> Result<Json<ListPostsResponse>> {
     let size = params.size.unwrap_or(10);
     let page = params.page.unwrap_or(1);
 
@@ -38,35 +45,15 @@ pub async fn list_posts_handler(
     let user_id = user.id;
     let teams = user.teams;
 
-    // if let Some(query_user_id) = params.user_id {
-    //     tracing::debug!(
-    //         "Checking permissions for user_id: {} {}",
-    //         query_user_id,
-    //         user_id
-    //     );
-    //     if query_user_id != user_id {
-    //         check_perm_without_error(
-    //             &pool,
-    //             auth,
-    //             RatelResource::Post {
-    //                 team_id: query_user_id,
-    //             },
-    //             GroupPermission::ReadPosts,
-    //         )
-    //         .await?;
-    //     }
-    // };
-
     let builder = Post::query_builder(user_id);
     let builder = if let Some(status) = params.status {
         builder.status_equals(status)
     } else {
         builder
     };
-
-    let builder = if let Some(user_id) = params.user_id {
-        if user_id != 0 {
-            builder.user_id_equals(user_id)
+    let builder = if let Some(uid) = params.user_id {
+        if uid != 0 {
+            builder.user_id_equals(uid)
         } else {
             builder
         }
@@ -74,7 +61,7 @@ pub async fn list_posts_handler(
         builder
     };
 
-    let mut posts: Vec<Post> = builder
+    let mut fetched: Vec<Post> = builder
         .limit(size)
         .page(page)
         .feed_type_between(FeedType::Artwork, FeedType::Post)
@@ -83,6 +70,8 @@ pub async fn list_posts_handler(
         .map(Post::from)
         .fetch_all(&pool)
         .await?;
+
+    let is_ended = fetched.len() < size as usize;
 
     //FIXME: Currently, `Post::query_builder(user_id).space_builder(Space::query_builder()) ` does not work properly.
     // So, we need to fetch Space separately.
@@ -93,7 +82,8 @@ pub async fn list_posts_handler(
         team_ids: teams.iter().map(|t| t.id).collect(),
     };
 
-    for post in &mut posts {
+    let mut posts: Vec<Post> = Vec::with_capacity(fetched.len());
+    for mut post in fetched.drain(..) {
         let space = Space::query_builder(user_id)
             .feed_id_equals(post.id)
             .query()
@@ -101,26 +91,19 @@ pub async fn list_posts_handler(
             .fetch_optional(&pool)
             .await?;
 
-        post.space = scope_space_opt_to_vec(space, &viewer_ctx);
+        match space {
+            None => {
+                post.space = vec![];
+                posts.push(post);
+            }
+            Some(space) => {
+                if check_space_permission(space.clone(), &viewer_ctx) {
+                    post.space = vec![space];
+                    posts.push(post);
+                }
+            }
+        }
     }
 
-    // let posts = posts
-    //     .into_iter()
-    //     .map(|mut post| {
-    //         let space = post.space.get(0);
-    //         if let Some(space) = space {
-    //             // Check SpaceStatus::Draft and author is user or author is in user's teams
-    //             if space.status == SpaceStatus::Draft
-    //                 && space.author.get(0).is_some_and(|author| {
-    //                     author.id == user_id && teams.iter().any(|t| t.id == author.id)
-    //                 })
-    //             {
-    //                 post.space = vec![];
-    //             }
-    //         }
-
-    //         post
-    //     })
-    //     .collect::<Vec<Post>>();
-    Ok(Json(posts))
+    Ok(Json(ListPostsResponse { posts, is_ended }))
 }
