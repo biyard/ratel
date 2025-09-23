@@ -135,6 +135,18 @@ pub mod controllers {
                 pub mod verify_code;
             }
         }
+
+        pub mod teams {
+            pub mod create_team;
+            pub mod find_team;
+            pub mod get_team;
+            pub mod groups {
+                pub mod add_member;
+                pub mod create_group;
+                pub mod remove_member;
+                pub mod update_group;
+            }
+        }
     }
     pub mod m2 {
         pub mod noncelab {

@@ -1,4 +1,7 @@
 use crate::Error2;
+use crate::controllers::v3::teams::create_team::CreateTeamResponse;
+use crate::controllers::v3::teams::get_team::GetTeamResponse;
+use crate::controllers::v3::teams::groups::create_group::CreateGroupResponse;
 use crate::{
     controllers::v3::{
         auth::{
@@ -7,6 +10,14 @@ use crate::{
             verification::{
                 send_code::{SendCodeResponse, send_code_handler},
                 verify_code::verify_code_handler,
+            },
+        },
+        teams::{
+            create_team::create_team_handler,
+            get_team::get_team_handler,
+            groups::{
+                add_member::add_member_handler, create_group::create_group_handler,
+                remove_member::remove_member_handler, update_group::update_group_handler,
             },
         },
         users::{
@@ -111,6 +122,81 @@ pub fn route(
                                     "Verify the provided email verification code"
                                 ),
                             ),
+                        ),
+                ),
+        )
+        .nest(
+            "/teams",
+            Router::new()
+                .route(
+                    "/",
+                    post_with(
+                        create_team_handler,
+                        api_docs!(Json<CreateTeamResponse>, "Create team", "Create a new team"),
+                    ),
+                )
+                .nest(
+                    "/:team_id",
+                    Router::new()
+                        .route(
+                            "/",
+                            get_with(
+                                get_team_handler,
+                                api_docs!(
+                                    Json<GetTeamResponse>,
+                                    "Get team",
+                                    "Get team information"
+                                ),
+                            ),
+                        )
+                        .nest(
+                            "/groups",
+                            Router::new()
+                                .route(
+                                    "/",
+                                    post_with(
+                                        create_group_handler,
+                                        api_docs!(
+                                            Json<CreateGroupResponse>,
+                                            "Create group",
+                                            "Create a new group"
+                                        ),
+                                    ),
+                                )
+                                .nest(
+                                    "/:group_id",
+                                    Router::new()
+                                        .route(
+                                            "/",
+                                            post_with(
+                                                update_group_handler,
+                                                api_docs!(
+                                                    (),
+                                                    "Update group",
+                                                    "Update group information"
+                                                ),
+                                            ),
+                                        )
+                                        .route(
+                                            "/member",
+                                            post_with(
+                                                add_member_handler,
+                                                api_docs!(
+                                                    (),
+                                                    "Add member",
+                                                    "Add a new member to the group"
+                                                ),
+                                            )
+                                            .delete_with(
+                                                remove_member_handler,
+                                                api_docs!(
+                                                    (),
+                                                    "Remove member",
+                                                    "Remove a member from the group"
+                                                ),
+                                            ),
+                                        ),
+                                ),
                         ),
                 ),
         )

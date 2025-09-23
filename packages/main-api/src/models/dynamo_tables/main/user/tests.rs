@@ -107,6 +107,9 @@ async fn tests_create_user() {
                 assert_eq!(ut.telegram_id, telegram_id.clone());
                 assert_eq!(ut.telegram_raw, telegram_raw);
             }
+            _ => {
+                // "Skip. Testing this in team/tests.rs",
+            }
         }
     }
 
