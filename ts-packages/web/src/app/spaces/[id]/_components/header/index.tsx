@@ -321,18 +321,18 @@ export default function SpaceHeader({
             </div>
           </div>
 
-          {status == SpaceStatus.InProgress ? (
+          {isPrivatelyPublished ? (
             <div className="flex flex-row w-fit gap-1 items-center">
               <Unlock2 className="w-5 h-5" />
               <div className="font-normal text-text-primary text-[15px]">
-                {t('public')}
+                {t('private')}
               </div>
             </div>
           ) : (
             <div className="flex flex-row w-fit gap-1 items-center">
               <Lock className="w-5 h-5" />
               <div className="font-normal text-text-primary text-[15px]">
-                {t('private')}
+                {t('public')}
               </div>
             </div>
           )}
