@@ -204,6 +204,7 @@ pub async fn api_main() -> Result<Router> {
     let textract_client = TextractClient::new();
     let private_s3_client = S3Client::new(conf.private_bucket_name);
     let metadata_s3_client = S3Client::new(conf.bucket.name);
+
     let is_local = conf.env == "local";
     let session_layer = SessionManagerLayer::new(session_store)
         .with_secure(!is_local)

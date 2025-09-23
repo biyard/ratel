@@ -228,6 +228,13 @@
     "invalid_user": "Invalid or unregisted input.",
     "failed_search_user": "Failed to search for user.",
 
+    "delete_team_title": "Are you sure you want to delete your team?",
+    "delete_team_description": "Deleting a team will also delete all posts related to the team, and deleted teams cannot be recovered.",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+
+    "success_delete_team": "Success to delete team",
+    "failed_delete_team": "Failed to delete team",
     "delete_group": "delete",
     "username": "Username",
     "display_name": "Display name",
@@ -235,6 +242,7 @@
     "team_description_hint": "Please type description of your team.",
     "upload_logo": "Upload logo",
     "save": "Save",
+    "delete": "Delete",
     "remove_test_keyword": "Please remove the test keyword",
     "write_title": "Write a title...",
     "write_content": "Type here, Use Markdown, BB code, or HTML to format."
@@ -287,6 +295,8 @@
 
     "space_update_success": "Space updated successfully",
     "space_update_failed": "Failed to update space",
+    "space_delete_success": "Space deleted successfully",
+    "space_delete_failed": "Failed to delete space",
     "space_share_success": "Space shared successfully",
     "space_share_failed": "Failed to share space",
     "space_post_success": "Space posted successfully",
