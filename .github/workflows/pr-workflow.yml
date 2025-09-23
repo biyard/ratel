@@ -68,27 +68,6 @@ jobs:
             sleep 1
           done
 
-      - name: Debug LocalStack Health Endpoint
-        run: |
-          echo "---"
-          echo "1. Waiting for port 4566 to be open..."
-          for i in {1..15}; do
-            nc -z localhost 4566 && break
-            echo -n "."
-            sleep 1
-          done
-          echo "\nPort is open. Now checking health endpoint."
-          echo "---"
-
-          echo "2. Raw output from LocalStack health endpoint:"
-          curl -f http://localhost:4566/_localstack/health || echo "ERROR: Failed to curl health endpoint"
-          echo "---"
-
-          echo "3. Checking jq filter exit code:"
-          curl -s http://localhost:4566/_localstack/health | jq -e '.services.dynamodb == "running" and .services.sqs == "running"'
-          echo "JQ exit code: $?"
-          echo "---"
-
       - name: Create DynamoDB Table
         env:
           LOCALSTACK_ENDPOINT: http://localhost:4566
