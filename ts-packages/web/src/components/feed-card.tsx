@@ -31,6 +31,7 @@ import { useTranslations } from 'next-intl';
 import { BoosterType } from '@/lib/api/models/notice';
 import { usePostEditorContext } from '@/app/(social)/_components/post-editor';
 
+
 export interface FeedCardProps {
   id: number;
   industry: string;
@@ -72,6 +73,8 @@ export default function FeedCard(props: FeedCardProps) {
   const [localIsLiked, setLocalIsLiked] = useState(props.is_liked);
   const [isProcessing, setIsProcessing] = useState(false);
   const [localShares, setLocalShares] = useState(props.shares);
+
+  const router = useRouter();
 
   // const t = useTranslations('Feeds');
 
@@ -167,6 +170,12 @@ export default function FeedCard(props: FeedCardProps) {
     ? route.space(props.space_id)
     : route.threadByFeedId(props.id);
 
+  const handleCommentClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    router.push(href);
+    
+  };
+
   return (
     <Col className="relative rounded-[10px] bg-card-bg-secondary border border-card-enable-border">
       <Link href={href} className="block">
@@ -185,6 +194,7 @@ export default function FeedCard(props: FeedCardProps) {
         onLikeClick={handleLike}
         onRepostThought={handleRepostThought}
         onRepost={handleRepost}
+        onCommentClick={handleCommentClick}
       />
     </Col>
   );
@@ -407,6 +417,7 @@ interface FeedFooterProps {
   rewards: number;
   shares: number;
   is_liked: boolean;
+  onCommentClick?: (e: React.MouseEvent) => void; 
   onLikeClick?: (value: boolean) => void;
   isLikeProcessing?: boolean;
   onRepost?: (e: React.MouseEvent) => void;
@@ -422,6 +433,7 @@ export function FeedFooter({
   rewards,
   shares,
   is_liked,
+  onCommentClick,
   onLikeClick,
   isLikeProcessing,
   onRepost,
@@ -494,10 +506,15 @@ export function FeedFooter({
           />
           {convertNumberToString(likes)}
         </IconText>
-        <IconText>
+
+        <IconText onClick={(e) => {
+          e.stopPropagation();
+          onCommentClick?.(e);
+          }} className='cursor-pointer' >
           <CommentIcon />
           {convertNumberToString(comments)}
         </IconText>
+
         {booster_type && (
           <IconText>
             <Rewards />
