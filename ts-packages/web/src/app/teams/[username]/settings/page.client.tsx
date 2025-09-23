@@ -15,23 +15,42 @@ import { TeamContext } from '@/lib/contexts/team-context';
 import { useRouter } from 'next/navigation';
 import { route } from '@/route';
 import { checkString } from '@/lib/string-filter-utils';
-import { showErrorToast } from '@/lib/toast';
+import { showErrorToast, showInfoToast } from '@/lib/toast';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
+import { usePopup } from '@/lib/contexts/popup-service';
+import DeleteTeamPopup from './_components/delete-team-popup';
+import { deleteTeamRequest } from '@/lib/api/models/team';
+import { useUserInfo } from '@/app/(social)/_hooks/user';
+import { logger } from '@/lib/logger';
+import { getQueryClient } from '@/providers/getQueryClient';
+import { feedKeys } from '@/constants';
+import { FeedStatus } from '@/lib/api/models/feeds';
+import { GroupPermission } from '@/lib/api/models/group';
+import { usePermission } from '@/app/(social)/_hooks/use-permission';
 
 export default function SettingsPage({ username }: { username: string }) {
   const t = useTranslations('Team');
-  const { teams, updateSelectedTeam } = useContext(TeamContext);
+  const popup = usePopup();
+  const queryClient = getQueryClient();
+  const { teams, updateSelectedTeam, setSelectedTeam } =
+    useContext(TeamContext);
+
   const team = useMemo(() => {
     return teams.find((t) => t.username === username);
   }, [teams, username]);
 
   const { post } = useApiCall();
   const router = useRouter();
+  const userInfo = useUserInfo();
 
   const [profileUrl, setProfileUrl] = useState(team?.profile_url || '');
   const [nickname, setNickname] = useState(team?.nickname);
   const [htmlContents, setHtmlContents] = useState(team?.html_contents);
+
+  const deleteTeamPermission =
+    usePermission(team?.id ?? 0, GroupPermission.DeleteGroup).data
+      .has_permission ?? false;
 
   if (!team) {
     return <></>;
@@ -46,6 +65,41 @@ export default function SettingsPage({ username }: { username: string }) {
 
   const handleProfileUrl = (url: string) => {
     setProfileUrl(url);
+  };
+
+  const openDeletePopup = () => {
+    popup
+      .open(
+        <DeleteTeamPopup
+          onConfirm={async () => {
+            try {
+              await post(
+                ratelApi.teams.deleteTeam(),
+                deleteTeamRequest(team!.id),
+              );
+              showInfoToast(t('success_delete_team'));
+              await queryClient.invalidateQueries({
+                queryKey: feedKeys.list({
+                  userId: 0,
+                  status: FeedStatus.Published,
+                }),
+              });
+              userInfo.refetch();
+              setSelectedTeam(0);
+              router.push('/');
+            } catch (e) {
+              logger.error('failed to delete team with error: ', e);
+              showErrorToast(t('failed_delete_team'));
+            } finally {
+              popup.close();
+            }
+          }}
+          onCancel={() => {
+            popup.close();
+          }}
+        />,
+      )
+      .withTitle('');
   };
 
   const handleSave = async () => {
@@ -134,6 +188,21 @@ export default function SettingsPage({ username }: { username: string }) {
           >
             {t('save')}
           </Button>
+
+          {deleteTeamPermission && (
+            <Button
+              disabled={invalidInput}
+              className={
+                invalidInput
+                  ? 'bg-neutral-600'
+                  : 'bg-red-600 hover:bg-red-600/90'
+              }
+              variant={'rounded_primary'}
+              onClick={openDeletePopup}
+            >
+              {t('delete')}
+            </Button>
+          )}
         </Row>
       </Col>
     </div>

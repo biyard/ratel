@@ -42,6 +42,10 @@ pub fn scope_space_for_viewer(space: Space, ctx: &ViewerCtx) -> Option<Space> {
     Some(space)
 }
 
+pub fn check_space_permission(space: Space, ctx: &ViewerCtx) -> bool {
+    scope_space_for_viewer(space, ctx).is_some()
+}
+
 pub fn scope_space_opt_to_vec(space: Option<Space>, ctx: &ViewerCtx) -> Vec<Space> {
     match space {
         Some(s) => scope_space_for_viewer(s, ctx)

@@ -205,6 +205,7 @@ export const ratelApi = {
   },
   teams: {
     createTeam: () => '/v1/teams',
+    deleteTeam: () => '/v2/teams',
     getTeamById: (team_id: number) => `/v1/teams/${team_id}`,
     getTeamByUsername: (username: string) =>
       `/v1/teams?param-type=read&action=get-by-username&username=${username}`,
