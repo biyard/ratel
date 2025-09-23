@@ -1,9 +1,11 @@
+import { PublishingScope } from '@/lib/api/models/notice';
 import { SpaceStatus } from '@/lib/api/models/spaces';
 import { UserType } from '@/lib/api/models/user';
 import { createContext, useContext } from 'react';
 
 export interface SpaceContextType {
   isEdit: boolean;
+  isPrivatelyPublished: boolean;
   title: string;
   status: SpaceStatus;
   userType: UserType;
@@ -15,7 +17,7 @@ export interface SpaceContextType {
   handleSave: () => void;
   handleEdit: () => void;
   handleShare: () => void;
-  handlePostingSpace: () => Promise<void>;
+  handlePublishWithScope: (scope: PublishingScope) => Promise<void>;
   handleUpdateTitle: (value: string) => void;
   handleDelete: () => Promise<void>;
 }

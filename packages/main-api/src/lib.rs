@@ -9,6 +9,7 @@ pub mod controllers {
     pub mod v2 {
         pub mod users {
             pub mod connect_telegram;
+            pub mod delete_team;
             pub mod find_user;
             pub mod logout;
         }
@@ -47,6 +48,10 @@ pub mod controllers {
         pub mod spaces {
             pub mod delete_space;
             pub mod get_my_space;
+        }
+
+        pub mod permissions {
+            pub mod has_team_permission;
         }
 
         pub mod dagits {

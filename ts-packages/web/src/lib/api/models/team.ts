@@ -1,5 +1,15 @@
 import { Group, User, UserType } from './user';
 
+export interface DeleteTeamRequest {
+  team_id: number;
+}
+
+export function deleteTeamRequest(team_id: number): DeleteTeamRequest {
+  return {
+    team_id: team_id,
+  };
+}
+
 export interface CreateTeamRequest {
   create: {
     profile_url: string;

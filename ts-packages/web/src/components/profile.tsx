@@ -16,7 +16,6 @@ import {
 } from '@radix-ui/react-dropdown-menu';
 import Link from 'next/link';
 import { route } from '@/route';
-import { logger } from '@/lib/logger';
 import TeamCreationPopup from '@/app/(social)/_popups/team-creation-popup';
 import { useTranslations } from 'next-intl';
 
@@ -57,7 +56,6 @@ export default function Profile({ profileUrl, name }: ProfileProps) {
             ) : (
               <div className="w-6 h-6 bg-neutral-500 rounded-full" />
             )}
-
             <span className="text-menu-text group-hover:text-menu-text/80 text-[15px] font-medium transition-colors">
               {name || 'Unknown User'}
             </span>
@@ -73,52 +71,53 @@ export default function Profile({ profileUrl, name }: ProfileProps) {
           {t('teams')}
         </DropdownMenuLabel>
 
-        <DropdownMenuGroup>
-          {teams.map((team, index) => (
-            <DropdownMenuItem
-              key={`team-select-menu-${team.id}`}
-              asChild
-              className="w-full px-2 py-1.5 hover:bg-hover rounded-md cursor-pointer focus-visible:outline-none"
-            >
-              <Link
-                href={
-                  index === 0
-                    ? route.home()
-                    : route.teamByUsername(team.username)
-                }
-                className="flex items-center gap-2 w-full"
-                onClick={() => {
-                  setSelectedTeam(index);
-                  handleTeamSelect(index);
-                }}
+        <div className="max-h-[300px] overflow-y-auto pr-2 -mr-2">
+          <DropdownMenuGroup>
+            {teams.map((team, index) => (
+              <DropdownMenuItem
+                key={`team-select-menu-${team.id}`}
+                asChild
+                className="w-full px-2 py-1.5 hover:bg-hover rounded-md cursor-pointer focus-visible:outline-none"
               >
-                {team.profile_url && team.profile_url !== '' ? (
-                  <Image
-                    src={team.profile_url}
-                    alt={team.nickname}
-                    width={24}
-                    height={24}
-                    className="w-6 h-6 rounded-full object-cover object-top"
-                  />
-                ) : (
-                  <div className="w-6 h-6 bg-neutral-600 rounded-full" />
-                )}
-                <span className="text-sm text-text-primary-muted truncate">
-                  {team.nickname}
-                </span>
-              </Link>
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuGroup>
+                <Link
+                  href={
+                    index === 0
+                      ? route.home()
+                      : route.teamByUsername(team.username)
+                  }
+                  className="flex items-center gap-2 w-full"
+                  onClick={() => {
+                    setSelectedTeam(index);
+                    handleTeamSelect(index);
+                  }}
+                >
+                  {team.profile_url ? (
+                    <Image
+                      src={team.profile_url}
+                      alt={team.nickname}
+                      width={24}
+                      height={24}
+                      className="w-6 h-6 rounded-full object-cover object-top"
+                    />
+                  ) : (
+                    <div className="w-6 h-6 bg-neutral-600 rounded-full" />
+                  )}
+                  <span className="text-sm text-text-primary-muted truncate">
+                    {team.nickname}
+                  </span>
+                </Link>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuGroup>
+        </div>
 
         <DropdownMenuSeparator className="my-2 bg-neutral-700 light:bg-[#e5e5e5] h-px" />
 
         <DropdownMenuGroup>
           <DropdownMenuItem
-            onClick={() => {
-              logger.debug('Create team clicked');
-              popup.open(<TeamCreationPopup />).withTitle('Create a new team');
-            }}
+            onClick={() =>
+              popup.open(<TeamCreationPopup />).withTitle('Create a new team')
+            }
             className="w-full px-2 py-1.5 hover:bg-hover rounded-md text-sm text-text-primary-muted cursor-pointer focus-visible:outline-none"
           >
             <span>{t('create_team')}</span>

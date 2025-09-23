@@ -40,10 +40,12 @@ import { QK_GET_SPACE_BY_SPACE_ID } from '@/constants';
 import { MappedResponse, Poll, SurveyAnswer } from '../type';
 import { useTranslations } from 'next-intl';
 import useFeedById from '@/hooks/feeds/use-feed-by-id';
+import { PublishingScope } from '@/lib/api/models/notice';
 
 type ContextType = {
   spaceId: number;
   selectedType: DeliberationTabType;
+  isPrivatelyPublished: boolean;
   isEdit: boolean;
   title: string;
   startedAt: number;
@@ -83,6 +85,7 @@ type ContextType = {
   handleEdit: () => void;
   handleSave: () => Promise<void>;
   handleDelete: () => Promise<void>;
+  handlePublishWithScope: (scope: PublishingScope) => Promise<void>;
 };
 
 export const Context = createContext<ContextType | undefined>(undefined);
@@ -95,12 +98,27 @@ export default function ClientProviders({
   const t = useTranslations('DeliberationSpace');
   const queryClient = useQueryClient();
   const { spaceId } = useSpaceByIdContext();
-  const data = useSpaceById(spaceId);
-  const space = data.data;
+  const { data: space, refetch } = useSpaceById(spaceId);
+  // const { data: user } = useSuspenseUserInfo();
+
+  // const { data: team } = useTeamByUsername(space.author[0].username);
+
+  // console.log(
+  //   'user groups: ',
+  //   user.groups,
+  //   checkGroupPermission(
+  //     user,
+  //     space.author[0].id,
+  //     GroupPermission.ReadPosts,
+  //     team.user_type == UserType.Team ? team.parent_id : null,
+  //   ),
+  // );
 
   const [selectedType, setSelectedType] = useState<DeliberationTabType>(
     DeliberationTab.SUMMARY,
   );
+  const [isPrivatelyPublished, setIsPrivatelyPublished] =
+    useState<boolean>(false);
   const [isEdit, setIsEdit] = useState(false);
   const [title, setTitle] = useState(space.title ?? '');
   const [startedAt, setStartedAt] = useState(
@@ -109,6 +127,17 @@ export default function ClientProviders({
   const [endedAt, setEndedAt] = useState(
     changeEndedAt(space.ended_at ?? Date.now() / 1000),
   );
+
+  useEffect(() => {
+    if (space) {
+      setIsPrivatelyPublished(
+        space.status !== SpaceStatus.Draft &&
+          space.publishing_scope === PublishingScope.Private,
+      );
+    }
+
+    console.log('deliberation space: ', space);
+  }, [space]);
 
   useEffect(() => {
     if (space.started_at) {
@@ -181,6 +210,59 @@ export default function ClientProviders({
 
   const router = useRouter();
 
+  const handlePublishWithScope = async (scope: PublishingScope) => {
+    if (!space) return;
+    try {
+      await post(
+        ratelApi.spaces.getSpaceBySpaceId(space.id),
+        postingSpaceRequest(),
+      );
+
+      const discussions = deliberation.discussions.map((disc) => ({
+        started_at: disc.started_at,
+        ended_at: disc.ended_at,
+        name: disc.name,
+        description: disc.description,
+        participants: disc.participants.map((member) => member.id),
+        discussion_id: disc.discussion_id,
+      }));
+
+      const surveys = survey.surveys.map((survey) => ({
+        started_at: startedAt,
+        ended_at: endedAt,
+        questions: survey.questions,
+      }));
+
+      await handleUpdate(
+        title,
+        startedAt,
+        endedAt,
+        thread.html_contents,
+        scope,
+        thread.files,
+        discussions,
+        deliberation.elearnings,
+        surveys,
+        draft.drafts,
+      );
+
+      queryClient.invalidateQueries({
+        queryKey: [QK_GET_SPACE_BY_SPACE_ID, space.id],
+      });
+
+      refetch();
+
+      showSuccessToast(
+        scope === PublishingScope.Public
+          ? t('success_publish_space_public')
+          : t('success_publish_space_private'),
+      );
+    } catch (e) {
+      showErrorToast(t('failed_publish_space'));
+      logger.error(e);
+    }
+  };
+
   const handleShare = async () => {
     const space_id = space.id;
     navigator.clipboard.writeText(window.location.href).then(async () => {
@@ -190,7 +272,7 @@ export default function ClientProviders({
         });
         if (res) {
           showInfoToast(t('success_share_info'));
-          data.refetch();
+          refetch();
         }
       } catch (error) {
         logger.error('Failed to share space with error: ', error);
@@ -209,7 +291,7 @@ export default function ClientProviders({
         },
       });
       if (res) {
-        data.refetch();
+        refetch();
       }
     } catch (error) {
       logger.error('Failed to like user with error: ', error);
@@ -220,7 +302,7 @@ export default function ClientProviders({
   const handleGoBack = () => {
     if (isEdit) {
       setIsEdit(false);
-      data.refetch();
+      refetch();
     } else {
       router.back();
     }
@@ -282,7 +364,7 @@ export default function ClientProviders({
         ratelApi.responses.respond_answer(spaceId),
         surveyResponseCreateRequest(answers),
       );
-      data.refetch();
+      refetch();
       queryClient.invalidateQueries({
         queryKey: [QK_GET_SPACE_BY_SPACE_ID, spaceId],
       });
@@ -304,7 +386,7 @@ export default function ClientProviders({
         queryKey: [QK_GET_SPACE_BY_SPACE_ID, spaceId],
       });
       router.refresh();
-      data.refetch();
+      refetch();
 
       showSuccessToast(t('success_post_space'));
     } catch (err) {
@@ -409,6 +491,7 @@ export default function ClientProviders({
     started_at: number,
     ended_at: number,
     html_contents: string,
+    scope: PublishingScope,
     files: FileInfo[],
     discussions: DiscussionCreateRequest[],
     elearnings: ElearningCreateRequest[],
@@ -427,6 +510,8 @@ export default function ClientProviders({
         title,
         started_at,
         ended_at,
+        scope,
+        null,
       ),
     );
     queryClient.invalidateQueries({
@@ -543,6 +628,7 @@ export default function ClientProviders({
         startedAt,
         endedAt,
         thread.html_contents,
+        space.publishing_scope,
         thread.files,
         discussions,
         deliberation.elearnings,
@@ -554,7 +640,7 @@ export default function ClientProviders({
         queryKey: [QK_GET_SPACE_BY_SPACE_ID, spaceId],
       });
       router.refresh();
-      data.refetch();
+      refetch();
 
       showSuccessToast(t('success_update_space'));
       setIsEdit(false);
@@ -588,6 +674,8 @@ export default function ClientProviders({
         createdAt,
         status,
         mappedResponses,
+        isPrivatelyPublished,
+        handlePublishWithScope,
         handleUpdateSelectedType,
         handleUpdateStartDate,
         handleUpdateEndDate,

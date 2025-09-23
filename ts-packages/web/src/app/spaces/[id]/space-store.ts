@@ -5,6 +5,8 @@ type PageSaveHandler = (
   commonData: Partial<CommonEditableData>,
 ) => Promise<boolean>;
 
+type PageDeleteHandler = () => Promise<boolean>;
+
 export type CommonEditableData = Pick<
   Space,
   'title' | 'html_contents' | 'started_at' | 'ended_at'
@@ -14,8 +16,9 @@ type State = {
   isEdit: boolean;
   isModified: boolean;
   commonData: Partial<CommonEditableData> | null;
+  pageDeleteHandler: PageDeleteHandler | null;
   pageSaveHandler: PageSaveHandler | null;
-  spacePublishValidator: () => boolean;
+  spacePublishValidatorImpl: () => boolean;
 };
 
 type Actions = {
@@ -25,7 +28,10 @@ type Actions = {
   updateCommonData: (data: Partial<CommonEditableData>) => void;
   triggerGlobalSave: () => Promise<void>;
   setPageSaveHandler: (handler: PageSaveHandler) => void;
-  setSpacePublishValidator: (handler: () => boolean) => void;
+  setPageDeleteHandler: (handler: PageDeleteHandler) => void;
+  spacePublishValidator: () => boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  setSpacePublishValidator: (handler: any) => void;
 };
 
 const initialState: State = {
@@ -33,7 +39,8 @@ const initialState: State = {
   isModified: false,
   commonData: null,
   pageSaveHandler: null,
-  spacePublishValidator: () => true,
+  pageDeleteHandler: null,
+  spacePublishValidatorImpl: () => true,
 };
 
 export const useEditCoordinatorStore = create<State & Actions>((set, get) => ({
@@ -43,6 +50,7 @@ export const useEditCoordinatorStore = create<State & Actions>((set, get) => ({
       isEdit: true,
       isModified: false,
       commonData: initialData,
+      pageDeleteHandler: null,
       pageSaveHandler: null,
     });
   },
@@ -54,6 +62,7 @@ export const useEditCoordinatorStore = create<State & Actions>((set, get) => ({
       isModified: true,
     }));
   },
+  setPageDeleteHandler: (handler) => set({ pageDeleteHandler: handler }),
   setPageSaveHandler: (handler) => set({ pageSaveHandler: handler }),
   triggerGlobalSave: async () => {
     const { pageSaveHandler, commonData, isModified } = get();
@@ -64,10 +73,11 @@ export const useEditCoordinatorStore = create<State & Actions>((set, get) => ({
       get().stopEditing();
     }
   },
+  spacePublishValidator: () => {
+    const { spacePublishValidatorImpl } = get();
+    return spacePublishValidatorImpl();
+  },
+
   setSpacePublishValidator: (handler) =>
     set({ spacePublishValidator: handler }),
-  spacePublishValidator: () => {
-    const { spacePublishValidator } = get();
-    return spacePublishValidator();
-  },
 }));

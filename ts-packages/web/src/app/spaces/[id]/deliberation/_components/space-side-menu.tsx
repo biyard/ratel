@@ -17,6 +17,8 @@ import { usePopup } from '@/lib/contexts/popup-service';
 import SetSchedulePopup from '../../_components/modal/set-schedule';
 import { useTranslations } from 'next-intl';
 import BorderSpaceCard from '@/app/(social)/_components/border-space-card';
+import { usePermission } from '@/app/(social)/_hooks/use-permission';
+import { GroupPermission } from '@/lib/api/models/group';
 
 export default function SpaceSideMenu() {
   const t = useTranslations('DeliberationSpace');
@@ -49,6 +51,11 @@ export default function SpaceSideMenu() {
   const { data: userInfo } = useUserInfo();
   const userId = userInfo ? userInfo.id : 0;
   const createdAt = space.created_at;
+
+  const writePostPermission = usePermission(
+    space.author[0]?.id ?? 0,
+    GroupPermission.WritePosts,
+  ).data.has_permission;
 
   return (
     <div className="flex flex-col max-w-[250px] max-tablet:!hidden w-full gap-[10px]">
@@ -103,7 +110,8 @@ export default function SpaceSideMenu() {
           </div>
 
           {(space.author.some((a) => a.id === userId) || selectedTeam) &&
-            status == SpaceStatus.InProgress && (
+            status != SpaceStatus.Draft &&
+            writePostPermission && (
               <div
                 className={`cursor-pointer flex flex-row gap-1 items-center px-1 py-2 rounded-sm ${
                   selectedType == DeliberationTab.ANALYZE

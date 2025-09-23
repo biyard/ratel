@@ -50,7 +50,6 @@ export default async function Page({ params }: Props) {
     // FIXME: fix this to use not-found.tsx
     return <div className="text-center">Team not found</div>;
   }
-  console.log('users', users[0]);
   await Promise.allSettled([
     prefetchInfiniteFeeds(users[0].id, FeedStatus.Published),
   ]);

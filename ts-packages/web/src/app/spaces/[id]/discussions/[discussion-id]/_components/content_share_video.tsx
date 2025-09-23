@@ -33,7 +33,7 @@ export default function ContentShareVideo({
   return (
     <video
       ref={contentRef}
-      className="absolute top-0 left-0 w-full h-full object-contain bg-black z-0"
+      className="absolute top-0 left-0 w-full h-full object-cover bg-black z-0"
       autoPlay
       muted
     />

@@ -72,7 +72,7 @@ export default function Home({
       </div>
     );
   }
-  const flattedPosts = data?.pages.flatMap((page) => page) ?? [];
+  const flattedPosts = data?.pages.flatMap((page) => page.posts) ?? [];
   return (
     <div className="flex-1 flex relative">
       <Col className="flex-1 flex max-mobile:px-[10px]">
