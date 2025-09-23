@@ -1,7 +1,12 @@
 import { useMutation, InfiniteData } from '@tanstack/react-query';
 import { getQueryClient } from '@/providers/getQueryClient';
 import { feedKeys } from '@/constants';
-import { Feed, FeedStatus, FeedType } from '@/lib/api/models/feeds';
+import {
+  Feed,
+  FeedListResponse,
+  FeedStatus,
+  FeedType,
+} from '@/lib/api/models/feeds';
 import { showErrorToast } from '@/lib/toast';
 import { apiFetch } from '@/lib/api/apiFetch';
 import { ratelApi } from '@/lib/api/ratel_api';
@@ -15,15 +20,11 @@ export async function createDraft(user_id: number): Promise<Feed> {
     `${config.api_url}${ratelApi.feeds.createDraft()}`,
     {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(createDraftRequest(FeedType.Post, user_id)),
     },
   );
-  if (!res.data) {
-    throw new Error('Failed to create draft');
-  }
+  if (!res.data) throw new Error('Failed to create draft');
   return res.data;
 }
 
@@ -35,15 +36,11 @@ export async function updatePost(
     `${config.api_url}${ratelApi.feeds.updateDraft(post_id)}`,
     {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(req),
     },
   );
-  if (!res.data) {
-    throw new Error('Failed to update draft');
-  }
+  if (!res.data) throw new Error('Failed to update draft');
   return res.data;
 }
 
@@ -52,17 +49,11 @@ export async function publishDraft(id: number): Promise<Feed> {
     `${config.api_url}${ratelApi.feeds.publishDraft(id)}`,
     {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        publish: {},
-      }),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ publish: {} }),
     },
   );
-  if (!res.data) {
-    throw new Error('Failed to publish draft');
-  }
+  if (!res.data) throw new Error('Failed to publish draft');
   return res.data;
 }
 
@@ -73,9 +64,7 @@ export async function createComment(
 ) {
   await apiFetch(`${config.api_url}${ratelApi.feeds.comment()}`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(writeCommentRequest(content, userId, parentId)),
   });
 }
@@ -87,23 +76,33 @@ export function useDraftMutations(listId: number) {
     mutationFn: (targetId: number) => createDraft(targetId),
     onSuccess: (newDraft) => {
       queryClient.setQueryData(feedKeys.detail(newDraft.id), newDraft);
+
       const listQueryKey = feedKeys.list({
         userId: listId,
         status: FeedStatus.Draft,
       });
-      queryClient.setQueriesData<InfiniteData<Feed[]>>(
+
+      queryClient.setQueriesData<InfiniteData<FeedListResponse>>(
         { queryKey: listQueryKey },
         (oldData) => {
-          if (!oldData) return oldData;
+          if (!oldData) {
+            return {
+              pageParams: [1],
+              pages: [{ posts: [newDraft], is_ended: false }],
+            };
+          }
           const newPages = [...oldData.pages];
-          newPages[0] = [newDraft, ...newPages[0]];
+          if (newPages.length === 0) {
+            newPages.push({ posts: [newDraft], is_ended: false });
+          } else {
+            const first = newPages[0];
+            newPages[0] = { ...first, posts: [newDraft, ...first.posts] };
+          }
           return { ...oldData, pages: newPages };
         },
       );
     },
     onError: (error: Error) => {
-      //FIXME: i18n
-      console.error('Create draft error:', error);
       throw new Error(error.message || 'Failed to create draft');
     },
   });
@@ -134,8 +133,9 @@ export function useDraftMutations(listId: number) {
 
       const previousFeedDetail = queryClient.getQueryData<Feed>(detailQueryKey);
       const previousFeedLists = queryClient.getQueriesData<
-        InfiniteData<Feed[]>
+        InfiniteData<FeedListResponse>
       >({ queryKey: listQueryKey });
+
       queryClient.setQueryData<Feed>(detailQueryKey, (old) =>
         old
           ? {
@@ -155,12 +155,14 @@ export function useDraftMutations(listId: number) {
           : undefined,
       );
 
-      queryClient.setQueriesData<InfiniteData<Feed[]>>(
+      queryClient.setQueriesData<InfiniteData<FeedListResponse>>(
         { queryKey: listQueryKey },
         (oldData) => {
           if (!oldData) return oldData;
-          const newPages = oldData.pages.map((page) =>
-            page.map((post) =>
+          const newPages = oldData.pages.map((page) => ({
+            ...page,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            posts: page.posts.map((post: any) =>
               post.id === postId
                 ? {
                     ...post,
@@ -179,7 +181,7 @@ export function useDraftMutations(listId: number) {
                   }
                 : post,
             ),
-          );
+          }));
           return { ...oldData, pages: newPages };
         },
       );
@@ -215,9 +217,7 @@ export function useDraftMutations(listId: number) {
     },
     onSuccess: (draftId: number) => {
       queryClient.invalidateQueries({ queryKey: feedKeys.lists() });
-      queryClient.invalidateQueries({
-        queryKey: feedKeys.detail(draftId),
-      });
+      queryClient.invalidateQueries({ queryKey: feedKeys.detail(draftId) });
     },
     onError: (error: Error) => {
       showErrorToast(error.message || 'Failed to publish draft');
@@ -236,14 +236,13 @@ export function useDraftMutations(listId: number) {
       content: string;
     }) => createComment(userId, parentId, content),
     onSuccess: (_, { postId }) => {
-      queryClient.invalidateQueries({
-        queryKey: feedKeys.detail(postId),
-      });
+      queryClient.invalidateQueries({ queryKey: feedKeys.detail(postId) });
     },
     onError: (error: Error) => {
       showErrorToast(error.message || 'Failed to create comment');
     },
   });
+
   return {
     createDraft: createMutation,
     updateDraft: updateMutation,
