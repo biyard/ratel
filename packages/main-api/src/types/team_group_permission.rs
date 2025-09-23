@@ -10,6 +10,7 @@ use bdk::prelude::*;
     serde_repr::Deserialize_repr,
     Default,
     Translate,
+    JsonSchema,
 )]
 #[repr(u8)]
 pub enum TeamGroupPermission {

@@ -10,6 +10,8 @@ pub enum UserMetadata {
     UserReferralCode(UserReferralCode),
     UserPhoneNumber(UserPhoneNumber),
     UserTelegram(UserTelegram),
+    UserTeam(UserTeam),
+    UserTeamGroup(UserTeamGroup),
 }
 
 #[derive(serde::Serialize, schemars::JsonSchema)]
@@ -47,7 +49,6 @@ impl From<User> for UserResponse {
     }
 }
 #[derive(Default, serde::Serialize, schemars::JsonSchema)]
-#[serde(rename_all = "camelCase")]
 pub struct UserDetailResponse {
     #[serde(flatten)]
     pub user: Option<UserResponse>,
@@ -57,6 +58,7 @@ pub struct UserDetailResponse {
     pub principal: Option<String>,
     pub evm_address: Option<String>,
     pub telegram: Option<String>,
+    pub teams: Option<Vec<UserTeamResponse>>,
 }
 
 impl From<Vec<UserMetadata>> for UserDetailResponse {
@@ -67,7 +69,6 @@ impl From<Vec<UserMetadata>> for UserDetailResponse {
                 UserMetadata::User(user) => {
                     res.user = Some(user.into());
                 }
-
                 UserMetadata::UserReferralCode(user_referral_code) => {
                     res.referral_code = Some(user_referral_code.referral_code);
                 }
@@ -82,6 +83,16 @@ impl From<Vec<UserMetadata>> for UserDetailResponse {
                 }
                 UserMetadata::UserTelegram(user_telegram) => {
                     res.telegram = Some(user_telegram.telegram_raw);
+                }
+                UserMetadata::UserTeam(user_team) => {
+                    let team: UserTeamResponse = user_team.into();
+                    if res.teams.is_none() {
+                        res.teams = Some(vec![]);
+                    }
+                    res.teams.as_mut().unwrap().push(team);
+                }
+                _ => {
+                    // Skip
                 }
             }
         }

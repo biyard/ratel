@@ -20,14 +20,14 @@ impl UserTeamGroup {
     pub fn new(
         pk: Partition,
         TeamGroup {
-            pk: team_group_pk,
+            sk: team_group_sk,
             permissions: team_group_permissions,
             ..
         }: TeamGroup,
     ) -> Self {
         Self {
             pk,
-            sk: EntityType::UserTeamGroup(team_group_pk.to_string()),
+            sk: EntityType::UserTeamGroup(team_group_sk.to_string()),
             team_group_permissions,
         }
     }
