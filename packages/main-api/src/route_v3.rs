@@ -14,15 +14,18 @@ use crate::{
         },
         teams::{
             create_team::create_team_handler,
+            find_team::{FindTeamResponse, find_team_handler},
             get_team::get_team_handler,
             groups::{
                 add_member::add_member_handler, create_group::create_group_handler,
                 remove_member::remove_member_handler, update_group::update_group_handler,
             },
+            update_team::{UpdateTeamResponse, update_team_handler},
         },
         users::{
             find_user::{FindUserResponse, find_user_handler},
             get_user_info::{GetUserInfoResponse, get_user_info_handler},
+            update_user::{UpdateUserResponse, update_user_handler},
         },
     },
     utils::aws::{DynamoClient, SesClient},
@@ -66,14 +69,26 @@ pub fn route(
             "/users",
             Router::new()
                 .route(
-                    "/",
+                    "/me",
                     get_with(
                         get_user_info_handler,
-                        api_docs!(Json<GetUserInfoResponse>, "", ""),
+                        api_docs!(
+                            Json<GetUserInfoResponse>,
+                            "Get Logged-in User Info",
+                            "Get the user data of the logged-in user"
+                        ),
+                    )
+                    .patch_with(
+                        update_user_handler,
+                        api_docs!(
+                            Json<UpdateUserResponse>,
+                            "Update Logged-in User Info",
+                            "Update the user data of the logged-in user"
+                        ),
                     ),
                 )
                 .route(
-                    "/find",
+                    "/",
                     get_with(find_user_handler, api_docs!(Json<FindUserResponse>, "", "")),
                 ),
         )
@@ -133,10 +148,14 @@ pub fn route(
                     post_with(
                         create_team_handler,
                         api_docs!(Json<CreateTeamResponse>, "Create team", "Create a new team"),
+                    )
+                    .get_with(
+                        find_team_handler,
+                        api_docs!(Json<FindTeamResponse>, "Find team", "Find a team by ID"),
                     ),
                 )
                 .nest(
-                    "/:team_id",
+                    "/:team_pk",
                     Router::new()
                         .route(
                             "/",
@@ -146,6 +165,14 @@ pub fn route(
                                     Json<GetTeamResponse>,
                                     "Get team",
                                     "Get team information"
+                                ),
+                            )
+                            .patch_with(
+                                update_team_handler,
+                                api_docs!(
+                                    Json<UpdateTeamResponse>,
+                                    "Update team",
+                                    "Update team information"
                                 ),
                             ),
                         )
@@ -164,7 +191,7 @@ pub fn route(
                                     ),
                                 )
                                 .nest(
-                                    "/:group_id",
+                                    "/:group_sk",
                                     Router::new()
                                         .route(
                                             "/",

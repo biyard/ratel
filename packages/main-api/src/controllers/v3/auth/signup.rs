@@ -5,8 +5,10 @@ use crate::{
     },
     types::{Theme, UserType},
     utils::{
-        dynamo_extractor::extract_user, password::hash_password,
-        referal_code::generate_referral_code, telegram::parse_telegram_raw,
+        dynamo_extractor::{extract_user, get_principal_from_auth},
+        password::hash_password,
+        referal_code::generate_referral_code,
+        telegram::parse_telegram_raw,
         validator::validate_nickname,
     },
 };
@@ -49,18 +51,25 @@ pub struct SignupRequest {
     pub theme: Option<Theme>,
     pub password: Option<String>,
 
-    pub principal: Option<String>,
+    // pub principal: Option<String>,
     pub evm_address: Option<String>,
     pub phone_number: Option<String>,
     pub telegram_raw: Option<String>,
 }
 
+///
+/// Signup handler
+/// Anonymous users can also use this endpoint to convert to normal users.
+/// But for
+///
 pub async fn signup_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     Extension(auth): Extension<Option<Authorization>>,
     Extension(session): Extension<Session>,
     Json(req): Json<SignupRequest>,
 ) -> Result<(), Error2> {
+    //This handler is for existing Principal information only. It does not support any specific actions with Principal.    //
+    let principal = get_principal_from_auth(auth.clone()).ok();
     let user = extract_user(&dynamo.client, auth).await;
 
     let user_pk;
@@ -79,6 +88,7 @@ pub async fn signup_handler(
     let hashed_password = hash_password(&password)
         .map_err(|e| Error2::InternalServerError(format!("Password hashing error: {}", e)))?;
 
+    // When User is Anonymous, convert to normal user
     match user {
         Ok(u) if u.user_type == UserType::Anonymous => {
             // Update Anonymous user to normal user
@@ -132,7 +142,7 @@ pub async fn signup_handler(
             .create(&dynamo.client)
             .await?;
     }
-    if let Some(principal) = req.principal {
+    if let Some(principal) = principal {
         let user_principal = UserPrincipal::new(user_pk.clone(), principal);
         user_principal.create(&dynamo.client).await?;
     }

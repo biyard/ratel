@@ -58,3 +58,85 @@ pub async fn verify_code_handler(
 
     Ok(())
 }
+
+#[cfg(test)]
+pub mod verify_code_tests {
+    use dto::by_axum::axum::{Json, extract::State};
+
+    use crate::{
+        controllers::v3::auth::verification::{
+            send_code::{SendCodeRequest, send_code_handler},
+            verify_code::{VerifyCodeRequest, verify_code_handler},
+        },
+        models::email::EmailVerification,
+        tests::create_app_state,
+    };
+
+    #[tokio::test]
+    async fn test_verify_code_handler() {
+        let app_state = create_app_state();
+        let email = format!("{}@not.valid", uuid::Uuid::new_v4());
+        let res = send_code_handler(
+            State(app_state.clone()),
+            Json(SendCodeRequest {
+                email: email.clone(),
+            }),
+        )
+        .await;
+        assert!(res.is_ok());
+
+        let res = verify_code_handler(
+            State(app_state.clone()),
+            Json(VerifyCodeRequest {
+                email: "wrong@email.com".to_string(),
+                code: "SOME_CODE".to_string(),
+            }),
+        )
+        .await;
+        assert!(
+            res.is_err(),
+            "Expected error for wrong email, got {:?}",
+            res
+        );
+
+        let res = verify_code_handler(
+            State(app_state.clone()),
+            Json(VerifyCodeRequest {
+                email: email.clone(),
+                code: "SOME_CODE".to_string(),
+            }),
+        )
+        .await;
+        assert!(res.is_err(), "Expected error for wrong code, got {:?}", res);
+
+        let (verification_list, _) = EmailVerification::find_by_email(
+            &app_state.dynamo.client,
+            email.clone(),
+            Default::default(),
+        )
+        .await
+        .expect("Failed to find verification");
+
+        assert!(
+            verification_list.len() >= 1,
+            "Expected more than 1 verification record, got {}",
+            verification_list.len()
+        );
+
+        let email_verification = verification_list[0].clone();
+
+        let res = verify_code_handler(
+            State(app_state.clone()),
+            Json(VerifyCodeRequest {
+                email: email.clone(),
+                code: email_verification.value.clone(),
+            }),
+        )
+        .await;
+        assert!(
+            res.is_ok(),
+            "Expected success for correct code, got {:?}",
+            res
+        );
+    }
+}

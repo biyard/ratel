@@ -4,7 +4,10 @@ use crate::{
         team::{Team, TeamOwner},
         user::UserTeam,
     },
-    utils::dynamo_extractor::extract_user,
+    utils::{
+        dynamo_extractor::extract_user,
+        validator::{validate_description, validate_image_url, validate_nickname},
+    },
 };
 use dto::by_axum::{
     auth::Authorization,
@@ -15,14 +18,24 @@ use dto::by_axum::{
 };
 use dto::{JsonSchema, aide, schemars};
 use serde::{Deserialize, Serialize};
+use validator::Validate;
 
-#[derive(Debug, Clone, Deserialize, Default, aide::OperationIo, JsonSchema)]
+#[derive(Debug, Clone, Deserialize, Default, aide::OperationIo, JsonSchema, Validate)]
 #[serde(rename_all = "camelCase")]
 pub struct CreateTeamRequest {
-    pub nickname: String,
+    #[schemars(description = "Team name. SHOULD be unique")]
     pub username: String,
+
+    #[schemars(description = "Team display name. (3 ~ 10 Characters)")]
+    #[validate(custom(function = "validate_nickname"))]
+    pub nickname: String,
+
+    #[schemars(description = "Team profile URL to update")]
+    #[validate(custom(function = "validate_image_url"))]
     pub profile_url: String,
-    pub html_contents: String,
+    #[schemars(description = "Team description. Max length: 160 characters")]
+    #[validate(custom(function = "validate_description"))]
+    pub description: String,
 }
 
 #[derive(Debug, Clone, Serialize, Default, aide::OperationIo, JsonSchema)]
@@ -43,12 +56,7 @@ pub async fn create_team_handler(
     if !team.is_empty() {
         return Err(Error2::Duplicate("Username already taken".into()));
     }
-    let team = Team::new(
-        req.nickname,
-        req.profile_url,
-        req.username,
-        req.html_contents,
-    );
+    let team = Team::new(req.nickname, req.profile_url, req.username, req.description);
     team.create(&dynamo.client).await?;
     let user_pk = user.pk.clone();
     TeamOwner::new(team.pk.clone(), user)

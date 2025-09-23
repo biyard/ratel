@@ -45,4 +45,13 @@ impl DynamoClient {
         let client = Client::from_conf(aws_config);
         Self { client }
     }
+
+    #[cfg(test)]
+    pub fn mock(config: SdkConfig) -> Self {
+        let aws_config: aws_sdk_dynamodb::Config = aws_sdk_dynamodb::config::Builder::from(&config)
+            .endpoint_url("http://localhost:4566")
+            .build();
+        let client = Client::from_conf(aws_config);
+        Self { client }
+    }
 }

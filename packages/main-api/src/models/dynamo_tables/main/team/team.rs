@@ -30,7 +30,7 @@ pub struct Team {
         index = "gsi2",
         pk
     )]
-    pub username: String,
+    pub username: String, // Team Name
 
     pub description: String,
 }
@@ -91,6 +91,7 @@ impl From<Team> for TeamResponse {
 }
 #[derive(Default, serde::Serialize, schemars::JsonSchema)]
 pub struct TeamGroupResponse {
+    pub sk: String,
     pub name: String,
     pub description: String,
     pub members: i64,
@@ -100,6 +101,7 @@ pub struct TeamGroupResponse {
 impl From<TeamGroup> for TeamGroupResponse {
     fn from(group: TeamGroup) -> Self {
         Self {
+            sk: group.sk.to_string(),
             name: group.name,
             description: group.description,
             members: group.members,

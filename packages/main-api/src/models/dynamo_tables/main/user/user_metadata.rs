@@ -14,13 +14,13 @@ pub enum UserMetadata {
     UserTeamGroup(UserTeamGroup),
 }
 
-#[derive(serde::Serialize, schemars::JsonSchema)]
+#[derive(Default, serde::Serialize, schemars::JsonSchema)]
 pub struct UserResponse {
-    pub id: String,
+    pub pk: String,
     pub email: String,
     pub nickname: String,
     pub profile_url: String,
-    pub content: String,
+    pub description: String,
     pub user_type: u8,
 
     pub followers_count: i64,
@@ -34,11 +34,11 @@ pub struct UserResponse {
 impl From<User> for UserResponse {
     fn from(user: User) -> Self {
         Self {
-            id: user.pk.to_string(),
+            pk: user.pk.to_string(),
             email: user.email,
             nickname: user.display_name,
             profile_url: user.profile_url,
-            content: user.html_contents,
+            description: user.description,
             user_type: user.user_type as u8,
             followers_count: user.followers_count,
             followings_count: user.followings_count,
@@ -51,7 +51,7 @@ impl From<User> for UserResponse {
 #[derive(Default, serde::Serialize, schemars::JsonSchema)]
 pub struct UserDetailResponse {
     #[serde(flatten)]
-    pub user: Option<UserResponse>,
+    pub user: UserResponse,
 
     pub referral_code: Option<String>,
     pub phone_number: Option<String>,
@@ -67,7 +67,7 @@ impl From<Vec<UserMetadata>> for UserDetailResponse {
         for item in items {
             match item {
                 UserMetadata::User(user) => {
-                    res.user = Some(user.into());
+                    res.user = user.into();
                 }
                 UserMetadata::UserReferralCode(user_referral_code) => {
                     res.referral_code = Some(user_referral_code.referral_code);

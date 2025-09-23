@@ -1,6 +1,4 @@
-use crate::{
-    AppState, Error2, config, models::email::EmailVerification, utils::time::get_now_timestamp,
-};
+use crate::{AppState, Error2, models::email::EmailVerification, utils::time::get_now_timestamp};
 use bdk::prelude::*;
 use dto::{
     aide,
@@ -40,9 +38,12 @@ pub async fn send_code_handler(
     {
         Ok(_) => (),
         Err(e) => {
-            let env = config::get().env;
+            // if we use `let env = config::get().env;`, the test will fail because all the configs are not set.
+            // this code is just for ignoring the email sending error in local environment.
+            // So please don't change it to use config::get()
+            let env = option_env!("ENV").unwrap_or("local");
 
-            if env == "dev" || env == "local" {
+            if env == "local" {
                 tracing::info!("Send email failed, Ignored error(ENV: {}): {:?}", env, e,);
             } else {
                 return Err(e.into());

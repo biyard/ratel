@@ -69,4 +69,12 @@ impl SesClient {
 
         Ok(())
     }
+
+    #[cfg(test)]
+    pub fn mock(config: SdkConfig) -> Self {
+        Self {
+            client: Client::from_conf(Config::from(&config)),
+            from: "no@rep.ly".to_string(),
+        }
+    }
 }
