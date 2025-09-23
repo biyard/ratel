@@ -9,6 +9,7 @@ pub mod controllers {
     pub mod v2 {
         pub mod users {
             pub mod connect_telegram;
+            pub mod delete_team;
             pub mod find_user;
             pub mod logout;
         }

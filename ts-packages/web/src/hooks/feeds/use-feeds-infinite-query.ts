@@ -3,7 +3,7 @@ import { useSuspenseInfiniteQuery } from '@tanstack/react-query';
 import { feedKeys } from '@/constants';
 import { apiFetch } from '@/lib/api/apiFetch';
 import { config } from '@/config';
-import { Feed, FeedStatus } from '@/lib/api/models/feeds';
+import { FeedStatus, FeedListResponse } from '@/lib/api/models/feeds';
 import { getQueryClient } from '@/providers/getQueryClient';
 
 const DEFAULT_SIZE = 10;
@@ -13,12 +13,10 @@ export async function getFeeds(
   size: number,
   page: number,
   status?: FeedStatus,
-): Promise<Feed[]> {
-  const { data } = await apiFetch<Feed[]>(
+): Promise<FeedListResponse> {
+  const { data } = await apiFetch<FeedListResponse>(
     `${config.api_url}${ratelApi.feeds.getFeeds(page, size, user_id, status)}`,
-    {
-      method: 'GET',
-    },
+    { method: 'GET' },
   );
   if (!data) {
     throw new Error('Failed to fetch posts');
@@ -33,11 +31,14 @@ export function getOptions(
 ) {
   return {
     queryKey: feedKeys.list({ userId, status }),
-    queryFn: async ({ pageParam = 1 }) => {
+    queryFn: async ({ pageParam = 1 }): Promise<FeedListResponse> => {
       return getFeeds(userId, size, pageParam as number, status);
     },
-    getNextPageParam: (lastPage: Feed[], allPages: Feed[][]) => {
-      return lastPage.length === size ? allPages.length + 1 : undefined;
+    getNextPageParam: (
+      lastPage: FeedListResponse,
+      allPages: FeedListResponse[],
+    ) => {
+      return lastPage.is_ended ? undefined : allPages.length + 1;
     },
     initialPageParam: 1,
     refetchOnWindowFocus: false,
@@ -51,13 +52,9 @@ export async function prefetchInfiniteFeeds(
 ) {
   const queryClient = getQueryClient();
   const options = getOptions(userId, status, size);
-
   await queryClient.prefetchInfiniteQuery(options);
 }
 
-/*
- userId 0 means anonymous
-*/
 export default function useInfiniteFeeds(
   userId: number,
   status: FeedStatus = FeedStatus.Published,
