@@ -95,8 +95,8 @@ use crate::{
             },
             themes::change_theme::change_theme_handler,
             users::{
-                connect_telegram::connect_telegram_handler, find_user::find_user_handler,
-                logout::logout_handler,
+                connect_telegram::connect_telegram_handler, delete_team::delete_team_handler,
+                find_user::find_user_handler, logout::logout_handler,
             },
         },
         v3::users::{
@@ -479,6 +479,14 @@ pub async fn route(
                     "Get User",
                     "Retrieve users with username or phone number or email"
                 ),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/v2/teams",
+            post_with(
+                delete_team_handler,
+                api_docs!("Delete Team", "Delete Team with Team ID"),
             )
             .with_state(pool.clone()),
         )

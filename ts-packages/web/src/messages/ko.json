@@ -228,6 +228,13 @@
     "invalid_user": "유효하지 않은 유저입니다.",
     "failed_search_user": "유저를 검색하는데 실패했습니다.",
 
+    "delete_team_title": "팀을 삭제하시겠습니까?",
+    "delete_team_description": "팀을 삭제하면 팀과 관련된 게시물도 함께 삭제되며, 삭제된 팀은 복구할 수 없습니다.",
+    "confirm": "확인",
+    "cancel": "취소",
+
+    "success_delete_team": "팀을 성공적으로 삭제했습니다.",
+    "failed_delete_team": "팀 삭제에 실패했습니다.",
     "delete_group": "삭제",
     "username": "이름",
     "display_name": "이름",
@@ -235,6 +242,7 @@
     "team_description_hint": "팀의 설명을 입력해주세요.",
     "upload_logo": "로고 업로드",
     "save": "저장",
+    "delete": "삭제",
     "remove_test_keyword": "test 와 관련된 글자를 제거해주세요",
     "write_title": "제목을 입력해주세요.",
     "write_content": "여기에 마크다운 형태를 활용하여 설명을 입력해주세요."
