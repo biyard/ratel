@@ -26,9 +26,22 @@ pub async fn send_code_handler(
     State(AppState { dynamo, ses }): State<AppState>,
     Json(req): Json<SendCodeRequest>,
 ) -> Result<Json<SendCodeResponse>, Error2> {
-    // if let Err(_) = req.validate() {
-    //     return Err(Error2::BadRequest("Invalid email".into()));
-    // }
+    let (verification_list, _) =
+        EmailVerification::find_by_email(&dynamo.client, &req.email, Default::default()).await?;
+
+    if verification_list.is_empty() {
+        return Err(Error2::NotFound(format!(
+            "No verification found for email: {}",
+            req.email
+        )));
+    }
+
+    let email_verification = verification_list[0].clone();
+    if email_verification.expired_at > get_now_timestamp() {
+        return Err(Error2::BadRequest(
+            "A verification code has already been sent. Please check your email.".to_string(),
+        ));
+    }
 
     let code = generate_random_code();
     let expired_at = get_now_timestamp() + EXPIRATION_TIME as i64;
