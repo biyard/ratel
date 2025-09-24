@@ -193,12 +193,11 @@ pub async fn api_main() -> Result<Router> {
     if conf.migrate {
         migration(&pool).await?;
     }
-
+    let is_local = conf.env == "local" || conf.env == "test";
     let aws_sdk_config = get_aws_config();
     let dynamo_client = DynamoClient::new(Some(aws_sdk_config.clone()));
-    let ses_client = SesClient::new(aws_sdk_config);
-    //FIXME: Change these clients to use `aws_sdk_config`
-    // and change 'dto::Result' to 'crate::Error2'
+    let ses_client = SesClient::new(aws_sdk_config, is_local);
+
     let sqs_client = sqs_client::SqsClient::new().await;
     let bedrock_client = BedrockClient::new();
     let rek_client = RekognitionClient::new();
@@ -208,7 +207,6 @@ pub async fn api_main() -> Result<Router> {
 
     let session_store = DynamoSessionStore::new(dynamo_client.client.clone());
 
-    let is_local = conf.env == "local";
     let session_layer = SessionManagerLayer::new(session_store)
         .with_secure(!is_local)
         .with_http_only(!is_local)

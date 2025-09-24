@@ -45,28 +45,13 @@ pub async fn send_code_handler(
 
     let code = generate_random_code();
     let expired_at = get_now_timestamp() + EXPIRATION_TIME as i64;
-    match ses
-        .send_mail(
-            &req.email,
-            "Please finish to sign up within 30 minutes with your verification code",
-            format!("Verification code: {:?}", code).as_ref(),
-        )
-        .await
-    {
-        Ok(_) => (),
-        Err(e) => {
-            // if we use `let env = config::get().env;`, the test will fail because all the configs are not set.
-            // this code is just for ignoring the email sending error in local environment.
-            // So please don't change it to use config::get()
-            let env = option_env!("ENV").unwrap_or("local");
+    ses.send_mail(
+        &req.email,
+        "Please finish to sign up within 30 minutes with your verification code",
+        format!("Verification code: {:?}", code).as_ref(),
+    )
+    .await?;
 
-            if env == "local" || env == "test" {
-                tracing::info!("Send email failed, Ignored error(ENV: {}): {:?}", env, e,);
-            } else {
-                return Err(e.into());
-            }
-        }
-    }
     let email_verification = EmailVerification::new(req.email.clone(), code, expired_at);
     email_verification.create(&dynamo.client).await?;
     Ok(Json(SendCodeResponse { expired_at }))
