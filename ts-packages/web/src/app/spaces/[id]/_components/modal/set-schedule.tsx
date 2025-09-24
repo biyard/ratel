@@ -58,7 +58,7 @@ export default function SetSchedulePopup({
             )}
           </div>
 
-          <div className="flex flex-row gap-2.5 items-center">
+          <div className="flex flex-row max-tablet:flex-col gap-2.5 items-center">
             <CalendarDropdown
               value={session.start}
               onChange={(v) => {
@@ -76,25 +76,27 @@ export default function SetSchedulePopup({
                 });
               }}
             />
-            <TimeDropdown
-              value={session.start}
-              onChange={(v) => {
-                const delta = session.end - session.start;
-                const nextStart = Math.floor(v);
-                const nextEnd = nextStart + delta;
-                setSessions((prev) => {
-                  const updated = [...prev];
-                  updated[index] = {
-                    ...updated[index],
-                    start: nextStart,
-                    end: nextEnd,
-                  };
-                  return updated;
-                });
-              }}
-            />
+            <div className="w-full mb-[10px]">
+              <TimeDropdown
+                value={session.start}
+                onChange={(v) => {
+                  const delta = session.end - session.start;
+                  const nextStart = Math.floor(v);
+                  const nextEnd = nextStart + delta;
+                  setSessions((prev) => {
+                    const updated = [...prev];
+                    updated[index] = {
+                      ...updated[index],
+                      start: nextStart,
+                      end: nextEnd,
+                    };
+                    return updated;
+                  });
+                }}
+              />
+            </div>
 
-            <div className="w-[15px] h-0.25 bg-neutral-600" />
+            <div className="w-[15px] h-0.25 bg-neutral-600 max-tablet:hidden" />
 
             <CalendarDropdown
               value={session.end}
@@ -119,7 +121,7 @@ export default function SetSchedulePopup({
               }}
             />
 
-            <div className="flex flex-row items-center w-fit border border-select-date-border bg-select-date-bg rounded-lg px-5 py-[10.5px] gap-2.5 mt-2 sm:mt-0">
+            <div className="flex flex-row items-center w-fit max-tablet:w-full border border-select-date-border bg-select-date-bg rounded-lg px-5 py-[10.5px] gap-2.5 mt-2 sm:mt-0">
               <div className="font-medium text-[15px]/[22.5px] text-neutral-600">
                 Pacific Time
               </div>
