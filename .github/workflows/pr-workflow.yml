@@ -78,7 +78,7 @@ jobs:
           DYNAMO_TABLE_PREFIX: ratel-local
           ENV: test
         run: |
-          cargo test --package main-api --lib -- controllers::v3 --show-output
+          cargo test --package main-api --lib -- controllers::v3 models::dynamo_tables --show-output
 
   # test-with-server:
   #   runs-on: ubuntu-latest
