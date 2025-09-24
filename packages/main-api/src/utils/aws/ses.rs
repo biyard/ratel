@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use crate::config;
 
 use aws_config::SdkConfig;
@@ -9,7 +11,8 @@ use aws_sdk_sesv2::{
 #[derive(Clone)]
 pub struct SesClient {
     client: Client,
-    from: String,
+    from: Arc<String>,
+    allow_error: bool,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -20,13 +23,14 @@ pub enum SesServiceError {
     SendEmailFailed(String),
 }
 impl SesClient {
-    pub fn new(config: SdkConfig) -> Self {
+    pub fn new(config: SdkConfig, allow_error: bool) -> Self {
         let aws_config = Config::from(&config);
         let client = Client::from_conf(aws_config);
 
         Self {
             client,
-            from: config::get().from_email.to_string(),
+            from: Arc::new(config::get().from_email.to_string()),
+            allow_error,
         }
     }
 
@@ -54,10 +58,11 @@ impl SesClient {
         let msg = Message::builder().subject(subject).body(body).build();
 
         let content = EmailContent::builder().simple(msg).build();
-
-        self.client
+        let from = self.from.as_ref();
+        let result = self
+            .client
             .send_email()
-            .from_email_address(&self.from)
+            .from_email_address(from)
             .destination(destination)
             .content(content)
             .send()
@@ -65,8 +70,13 @@ impl SesClient {
             .map_err(|e| {
                 tracing::error!("SES Send Email Error: {:?}", e);
                 SesServiceError::SendEmailFailed(e.to_string())
-            })?;
-
+            });
+        if let Err(e) = result {
+            tracing::warn!("SES Send Email Error Ignored: {:?}", e);
+            if !self.allow_error {
+                return Err(e);
+            }
+        }
         Ok(())
     }
 
@@ -74,7 +84,8 @@ impl SesClient {
     pub fn mock(config: SdkConfig) -> Self {
         Self {
             client: Client::from_conf(Config::from(&config)),
-            from: "no@rep.ly".to_string(),
+            from: Arc::new("no@rep.ly".to_string()),
+            allow_error: true,
         }
     }
 }
