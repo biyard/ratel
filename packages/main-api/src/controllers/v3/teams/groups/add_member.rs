@@ -26,7 +26,6 @@ pub struct AddMemberPathParams {
 }
 
 #[derive(Debug, Deserialize, Default, aide::OperationIo, JsonSchema)]
-#[serde(rename_all = "camelCase")]
 pub struct AddMemberRequest {
     #[schemars(description = "User PKs to add to the group")]
     pub user_pks: Vec<String>,
@@ -59,15 +58,10 @@ pub async fn add_member_handler(
     .await?;
 
     let team = Team::get(&dynamo.client, &params.team_pk, Some(EntityType::Team)).await?;
-    if team.is_none() {
-        return Err(Error2::NotFound("Team not found".into()));
-    }
     let team_group = TeamGroup::get(&dynamo.client, &params.team_pk, Some(params.group_sk)).await?;
-    if team_group.is_none() {
-        return Err(Error2::NotFound("Team group not found".into()));
-    }
-    let team = team.unwrap();
-    let team_group = team_group.unwrap();
+
+    let team = team.ok_or(Error2::NotFound("Team not found".into()))?;
+    let team_group = team_group.ok_or(Error2::NotFound("Team group not found".into()))?;
 
     let mut success_count = 0;
     let mut failed_pks = vec![];
@@ -87,7 +81,7 @@ pub async fn add_member_handler(
         success_count += 1;
     }
     TeamGroup::updater(team_group.pk, team_group.sk)
-        .with_members(success_count)
+        .increase_members(success_count)
         .execute(&dynamo.client)
         .await?;
     Ok(Json(AddMemberResponse {
@@ -141,7 +135,7 @@ pub mod add_member_tests {
             State(app_state.clone()),
             Extension(Some(auth.clone())),
             Path(CreateGroupPathParams {
-                team_id: team.team_pk.clone(),
+                team_pk: team.team_pk.clone(),
             }),
             Json(CreateGroupRequest {
                 name: "Test Group".into(),

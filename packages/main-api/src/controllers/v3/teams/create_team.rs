@@ -21,7 +21,6 @@ use serde::{Deserialize, Serialize};
 use validator::Validate;
 
 #[derive(Debug, Clone, Deserialize, Default, aide::OperationIo, JsonSchema, Validate)]
-#[serde(rename_all = "camelCase")]
 pub struct CreateTeamRequest {
     #[schemars(description = "Team name. SHOULD be unique")]
     pub username: String,
@@ -39,7 +38,6 @@ pub struct CreateTeamRequest {
 }
 
 #[derive(Debug, Clone, Serialize, Default, aide::OperationIo, JsonSchema)]
-#[serde(rename_all = "camelCase")]
 pub struct CreateTeamResponse {
     pub team_pk: String,
 }

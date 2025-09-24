@@ -28,7 +28,7 @@ pub struct UpdateTeamPathParams {
 }
 
 #[derive(Debug, Deserialize, Default, aide::OperationIo, JsonSchema, Validate)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase")]x
 pub struct UpdateTeamRequest {
     #[schemars(description = "Team display name to update")]
     #[validate(custom(function = "validate_nickname"))]

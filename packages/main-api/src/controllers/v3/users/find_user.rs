@@ -15,7 +15,6 @@ use serde::Deserialize;
 use validator::Validate;
 
 #[derive(Debug, Clone, Deserialize, aide::OperationIo, JsonSchema, Validate)]
-#[serde(rename_all = "camelCase")]
 pub struct FindUserQueryParams {
     #[schemars(description = "email address")]
     #[validate(email)]
@@ -26,22 +25,6 @@ pub struct FindUserQueryParams {
     pub phone_number: Option<String>,
 }
 
-pub struct UserDetail {
-    pub pk: String,
-    pub email: String,
-    pub display_name: String,
-    pub profile_url: String,
-    pub content: String,
-    pub user_type: String,
-
-    pub theme: Option<String>,
-
-    pub principal: Option<String>,
-    pub evm_address: Option<String>,
-    pub phone_number: Option<String>,
-    pub telegram: Option<String>,
-    pub referral_code: Option<String>,
-}
 pub type FindUserResponse = UserDetailResponse;
 
 pub async fn find_user_handler(

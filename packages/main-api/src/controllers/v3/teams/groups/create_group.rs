@@ -22,11 +22,10 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Deserialize, aide::OperationIo, JsonSchema)]
 pub struct CreateGroupPathParams {
-    pub team_id: String,
+    pub team_pk: String,
 }
 
 #[derive(Debug, Clone, Deserialize, Default, aide::OperationIo, JsonSchema)]
-#[serde(rename_all = "camelCase")]
 pub struct CreateGroupRequest {
     pub name: String,
     pub description: String,
@@ -64,7 +63,7 @@ pub async fn create_group_handler(
         &dynamo.client,
         auth.clone(),
         RatelResource::Team {
-            team_pk: params.team_id.clone(),
+            team_pk: params.team_pk.clone(),
         },
         required_permissions,
     )
@@ -75,7 +74,7 @@ pub async fn create_group_handler(
 
     let team = Team::get(
         &dynamo.client,
-        params.team_id.clone(),
+        params.team_pk.clone(),
         Some(EntityType::Team),
     )
     .await?;
@@ -98,6 +97,11 @@ pub async fn create_group_handler(
     // Add creator to the group
     UserTeamGroup::new(user_pk, group)
         .create(&dynamo.client)
+        .await?;
+
+    TeamGroup::updater(&group_pk, &group_sk)
+        .increase_members(1)
+        .execute(&dynamo.client)
         .await?;
 
     Ok(Json(CreateGroupResponse {

@@ -23,7 +23,6 @@ use serde::Deserialize;
 use validator::Validate;
 
 #[derive(Debug, Deserialize, Default, aide::OperationIo, JsonSchema, Validate)]
-#[serde(rename_all = "camelCase")]
 pub struct UpdateUserRequest {
     #[schemars(description = "User Nickname to update")]
     #[validate(custom(function = "validate_nickname"))]

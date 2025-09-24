@@ -21,11 +21,15 @@ pub struct SendCodeResponse {
     pub expired_at: i64,
 }
 
-const EXPIRATION_TIME: u64 = 300; // 5 minutes
+const EXPIRATION_TIME: u64 = 1800; // 30 minutes
 pub async fn send_code_handler(
     State(AppState { dynamo, ses }): State<AppState>,
     Json(req): Json<SendCodeRequest>,
 ) -> Result<Json<SendCodeResponse>, Error2> {
+    // if let Err(_) = req.validate() {
+    //     return Err(Error2::BadRequest("Invalid email".into()));
+    // }
+
     let code = generate_random_code();
     let expired_at = get_now_timestamp() + EXPIRATION_TIME as i64;
     match ses

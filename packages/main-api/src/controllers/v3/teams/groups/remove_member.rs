@@ -26,7 +26,6 @@ pub struct RemoveMemberPathParams {
 }
 
 #[derive(Debug, Deserialize, Default, aide::OperationIo, JsonSchema)]
-#[serde(rename_all = "camelCase")]
 pub struct RemoveMemberRequest {
     #[schemars(description = "User PKs to remove from the group")]
     pub user_pks: Vec<String>,
@@ -60,18 +59,14 @@ pub async fn remove_member_handler(
     .await?;
 
     let team = Team::get(&dynamo.client, &params.team_pk, Some(EntityType::Team)).await?;
-    if team.is_none() {
-        return Err(Error2::NotFound("Team not found".into()));
-    }
     let team_group = TeamGroup::get(&dynamo.client, &params.team_pk, Some(params.group_sk)).await?;
-    if team_group.is_none() {
-        return Err(Error2::NotFound("Team group not found".into()));
-    }
-    let team = team.unwrap();
-    let team_group = team_group.unwrap();
+
+    let team = team.ok_or(Error2::NotFound("Team not found".into()))?;
+    let team_group = team_group.ok_or(Error2::NotFound("Team group not found".into()))?;
 
     let mut success_count = 0;
     let mut failed_pks = vec![];
+
     for member in &req.user_pks {
         let user = User::get(&dynamo.client, member, Some(EntityType::User)).await?;
         if user.is_none() {
@@ -100,6 +95,12 @@ pub async fn remove_member_handler(
         }
         success_count += 1;
     }
+
+    TeamGroup::updater(team_group.pk, team_group.sk)
+        .decrease_members(success_count)
+        .execute(&dynamo.client)
+        .await?;
+
     Ok(Json(RemoveMemberResponse {
         total_removed: success_count,
         failed_pks,

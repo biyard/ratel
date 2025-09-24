@@ -32,6 +32,12 @@ pub async fn verify_code_handler(
 
     let email_verification = verification_list[0].clone();
 
+    if email_verification.attempt_count >= MAX_ATTEMPTS {
+        return Err(Error2::BadRequest(
+            "Maximum verification attempts exceeded".to_string(),
+        ));
+    }
+
     if email_verification.expired_at < now {
         EmailVerification::delete(
             &dynamo.client,
@@ -43,11 +49,7 @@ pub async fn verify_code_handler(
             "Verification code has expired".to_string(),
         ));
     }
-    if email_verification.attempt_count >= MAX_ATTEMPTS {
-        return Err(Error2::BadRequest(
-            "Maximum verification attempts exceeded".to_string(),
-        ));
-    }
+
     if email_verification.value != req.code {
         EmailVerification::updater(email_verification.pk, email_verification.sk)
             .increase_attempt_count(1)

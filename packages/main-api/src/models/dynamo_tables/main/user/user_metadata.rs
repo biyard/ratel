@@ -63,7 +63,8 @@ pub struct UserDetailResponse {
     pub phone_number: Option<String>,
     pub principal: Option<String>,
     pub evm_address: Option<String>,
-    pub telegram: Option<String>,
+    //FIXME: Change Telegram Model
+    // pub telegram_id: Option<i64>,
     pub teams: Option<Vec<UserTeamResponse>>,
 }
 
@@ -87,9 +88,9 @@ impl From<Vec<UserMetadata>> for UserDetailResponse {
                 UserMetadata::UserEvmAddress(user_evm_address) => {
                     res.evm_address = Some(user_evm_address.evm_address);
                 }
-                UserMetadata::UserTelegram(user_telegram) => {
-                    res.telegram = Some(user_telegram.telegram_raw);
-                }
+                // UserMetadata::UserTelegram(user_telegram) => {
+                //     res.telegram = Some(user_telegram.telegram_raw);
+                // }
                 UserMetadata::UserTeam(user_team) => {
                     let team: UserTeamResponse = user_team.into();
                     if res.teams.is_none() {
@@ -105,48 +106,3 @@ impl From<Vec<UserMetadata>> for UserDetailResponse {
         res
     }
 }
-
-// impl UserMetadata {
-//     pub async fn find_by_email(
-//         cli: &aws_sdk_dynamodb::Client,
-//         pk: impl std::fmt::Display,
-//         sk: Option<impl std::fmt::Display>,
-//     ) -> std::result::Result<Vec<Self>, crate::Error2> {
-//         let mut key_condition = "#pk = :pk";
-//         let mut query = cli
-//             .query()
-//             .table_name("ratel-local-main")
-//             .index_name("gsi1-index")
-//             .expression_attribute_names("#pk", "gsi1_pk")
-//             .expression_attribute_values(
-//                 ":pk",
-//                 aws_sdk_dynamodb::types::AttributeValue::S(format!("EMAIL#{}", pk)),
-//             );
-
-//         if let Some(sk) = sk {
-//             key_condition = "#pk = :pk AND begins_with(#sk, :sk)";
-//             query = query
-//                 .expression_attribute_names("#sk", "gsi1_sk")
-//                 .expression_attribute_values(
-//                     ":sk",
-//                     aws_sdk_dynamodb::types::AttributeValue::S(format!("AA#{}", sk)),
-//                 );
-//         }
-
-//         let resp = query
-//             .key_condition_expression(key_condition)
-//             .send()
-//             .await
-//             .map_err(Into::<aws_sdk_dynamodb::Error>::into)?;
-
-//         let items = resp.items.unwrap_or_default();
-//         let ret = items
-//             .into_iter()
-//             .filter_map(|item| {
-//                 serde_dynamo::from_item(item).expect("failed to deserialize UserMetadata")
-//             })
-//             .collect();
-
-//         Ok(ret)
-//     }
-// }

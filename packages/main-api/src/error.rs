@@ -15,7 +15,7 @@ pub enum Error {
     SerdeDynamo(#[from] serde_dynamo::Error),
     #[error("SerdeJson error: {0}")]
     SerdeJson(#[from] serde_json::Error),
-    
+
     #[error("Session error")]
     SessionError(#[from] tower_sessions::session::Error),
 
@@ -43,10 +43,22 @@ pub enum Error {
 
 impl IntoResponse for Error {
     fn into_response(self) -> Response {
-        match self {
-            Error::Unauthorized(_) => (StatusCode::UNAUTHORIZED, self.to_string()).into_response(),
+        let msg = self.to_string();
 
-            _ => (StatusCode::BAD_REQUEST, self.to_string()).into_response(),
+        match self {
+            Error::Unauthorized(_) => (StatusCode::UNAUTHORIZED, msg).into_response(),
+            Error::NotFound(_) => (StatusCode::NOT_FOUND, msg).into_response(),
+            Error::AlreadyExists(_) | Error::Duplicate(_) => {
+                (StatusCode::CONFLICT, msg).into_response()
+            }
+            Error::BadRequest(_) => (StatusCode::BAD_REQUEST, msg).into_response(),
+            Error::InternalServerError(_)
+            | Error::DynamoDbError(_)
+            | Error::SerdeDynamo(_)
+            | Error::SerdeJson(_)
+            | Error::SesServiceError(_)
+            | Error::SessionError(_) => (StatusCode::INTERNAL_SERVER_ERROR, msg).into_response(),
+            _ => (StatusCode::BAD_REQUEST, msg).into_response(),
         }
     }
 }
