@@ -1,8 +1,5 @@
-use crate::Error2;
-use crate::controllers::v3::teams::create_team::CreateTeamResponse;
-use crate::controllers::v3::teams::get_team::GetTeamResponse;
-use crate::controllers::v3::teams::groups::create_group::CreateGroupResponse;
 use crate::{
+    Error2,
     controllers::v3::{
         auth::{
             login::{LoginResponse, login_handler},
@@ -12,24 +9,27 @@ use crate::{
                 verify_code::verify_code_handler,
             },
         },
+        me::{
+            get_info::{GetInfoResponse, get_info_handler},
+            update_user::{UpdateUserResponse, update_user_handler},
+        },
         teams::{
-            create_team::create_team_handler,
+            create_team::{CreateTeamResponse, create_team_handler},
             find_team::{FindTeamResponse, find_team_handler},
-            get_team::get_team_handler,
+            get_team::{GetTeamResponse, get_team_handler},
             groups::{
-                add_member::add_member_handler, create_group::create_group_handler,
-                remove_member::remove_member_handler, update_group::update_group_handler,
+                add_member::add_member_handler,
+                create_group::{CreateGroupResponse, create_group_handler},
+                remove_member::remove_member_handler,
+                update_group::update_group_handler,
             },
             update_team::{UpdateTeamResponse, update_team_handler},
         },
-        users::{
-            find_user::{FindUserResponse, find_user_handler},
-            get_user_info::{GetUserInfoResponse, get_user_info_handler},
-            update_user::{UpdateUserResponse, update_user_handler},
-        },
+        users::find_user::{FindUserResponse, find_user_handler},
     },
     utils::aws::{DynamoClient, SesClient},
 };
+
 use dto::by_axum::axum::Json;
 use dto::{
     aide::axum::routing::{get_with, post_with},
@@ -70,9 +70,9 @@ pub fn route(
             Router::new().route(
                 "/me",
                 get_with(
-                    get_user_info_handler,
+                    get_info_handler,
                     api_docs!(
-                        Json<GetUserInfoResponse>,
+                        Json<GetInfoResponse>,
                         "Get Logged-in User Info",
                         "Get the user data of the logged-in user"
                     ),

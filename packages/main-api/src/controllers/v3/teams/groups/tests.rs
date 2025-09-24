@@ -1,5 +1,6 @@
 use crate::{
     controllers::v3::{
+        me::get_info::get_info_handler,
         teams::{
             create_team::{CreateTeamRequest, create_team_handler},
             get_team::{GetTeamPathParams, get_team_handler},
@@ -9,7 +10,6 @@ use crate::{
                 update_group::{UpdateGroupPathParams, UpdateGroupRequest, update_group_handler},
             },
         },
-        users::get_user_info::get_user_info_handler,
     },
     tests::{create_app_state, create_auth, get_test_user},
     types::TeamGroupPermission,
@@ -301,8 +301,7 @@ async fn test_add_member_handler() {
         "Team group members should be 3(Owner + 2 added)"
     );
 
-    let user2 =
-        get_user_info_handler(State(app_state.clone()), Extension(Some(auth2.clone()))).await;
+    let user2 = get_info_handler(State(app_state.clone()), Extension(Some(auth2.clone()))).await;
 
     assert!(user2.is_ok(), "Failed to get user2 info: {:?}", user2.err());
     let user2 = user2.unwrap().0;
