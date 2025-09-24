@@ -19,10 +19,11 @@ interface TiptapEditorProps {
   onUpdate?: (content: string) => void;
   editable?: boolean;
   className?: string;
+  onCreate?: (editor: Editor) => void;
 }
 
 export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
-  ({ content = '', onUpdate, editable = true, className = '' }, ref) => {
+  ({ content = '', onUpdate, editable = true, className = '', onCreate }, ref) => {
     const editor = useEditor({
       extensions: [
         StarterKit.configure({
@@ -70,6 +71,10 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
       onUpdate: ({ editor }: { editor: Editor }) => {
         const html = editor.getHTML();
         onUpdate?.(html);
+      },
+
+      onCreate: ({ editor }) => {
+        onCreate?.(editor);
       },
     }) as Editor | null;
 

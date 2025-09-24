@@ -36,6 +36,7 @@ import GoPublicModal from '../../notice/_components/modal/go-public-modal';
 import { GroupPermission } from '@/lib/api/models/group';
 import { usePermission } from '@/app/(social)/_hooks/use-permission';
 import { useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 
 export default function SpaceHeader({
   space,
@@ -127,6 +128,9 @@ export default function SpaceHeader({
   const shares = feed.shares;
   const rewards = feed.rewards;
   const { isOpen, toggle, close, dropdownRef } = useDropdown();
+
+  const params = useParams();
+  const spaceId = Number(params.id);
 
   const writePostPermission = usePermission(
     space.author[0]?.id ?? 0,
@@ -310,6 +314,7 @@ export default function SpaceHeader({
             <SpaceCommentEditor
               showCommentEditor={showCommentEditor}
               setShowCommentEditor={setShowCommentEditor}
+              spaceId={spaceId}
               commentCount={commentCount}
               t={t}
             />
