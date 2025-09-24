@@ -1,12 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Clock } from 'lucide-react';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@radix-ui/react-popover';
+import * as Popover from '@radix-ui/react-popover';
+
 interface TimeDropdownProps {
   value: number;
   onChange: (newTimestamp: number) => void;
@@ -29,6 +26,22 @@ const formatAMPM = (timestamp: number): string => {
 export default function TimeDropdown({ value, onChange }: TimeDropdownProps) {
   const [open, setOpen] = useState(false);
   const selectedTime = value ? formatAMPM(value) : null;
+
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const [contentWidth, setContentWidth] = useState<number>(150);
+  useEffect(() => {
+    const el = triggerRef.current;
+    if (!el) return;
+    const setW = () => setContentWidth(el.offsetWidth);
+    setW();
+    const ro = new ResizeObserver(setW);
+    ro.observe(el);
+    window.addEventListener('resize', setW);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', setW);
+    };
+  }, []);
 
   const handleSelect = (time: string) => {
     const [hourStr, period] = time.split(' ');
@@ -55,31 +68,37 @@ export default function TimeDropdown({ value, onChange }: TimeDropdownProps) {
   };
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <button className="flex justify-between items-center w-[150px] border border-c-wg-70 rounded-lg px-[20px] py-[10.5px] font-medium text-neutral-600 border-select-date-border bg-select-date-bg text-[15px]/[22.5px] text-left shadow-sm focus:outline-none gap-[10px]">
+    <Popover.Root open={open} onOpenChange={setOpen}>
+      <Popover.Trigger asChild>
+        <button
+          ref={triggerRef}
+          className="flex justify-between items-center w-[150px] max-tablet:w-full border border-c-wg-70 rounded-lg px-[20px] py-[10.5px] font-medium text-neutral-600 border-select-date-border bg-select-date-bg text-[15px]/[22.5px] text-left shadow-sm focus:outline-none gap-[10px]"
+        >
           {selectedTime || 'Select'}
           <Clock className="w-5 h-5 stroke-neutral-500" />
         </button>
-      </PopoverTrigger>
+      </Popover.Trigger>
 
-      <PopoverContent
-        className="mt-1 w-[150px] rounded-md shadow-lg bg-white max-h-60 overflow-auto border border-gray-200 z-[999]"
-        align="start"
-        sideOffset={4}
-      >
-        {timeOptions.map((time) => (
-          <div
-            key={time}
-            onClick={() => handleSelect(time)}
-            className={`px-4 py-2 cursor-pointer text-sm text-black hover:bg-gray-100 ${
-              time === selectedTime ? 'font-bold' : ''
-            }`}
-          >
-            {time}
-          </div>
-        ))}
-      </PopoverContent>
-    </Popover>
+      <Popover.Portal>
+        <Popover.Content
+          align="start"
+          sideOffset={4}
+          style={{ width: contentWidth }}
+          className="mt-1 rounded-md shadow-lg bg-white max-h-60 overflow-auto border border-gray-200 z-[999]"
+        >
+          {timeOptions.map((time) => (
+            <div
+              key={time}
+              onClick={() => handleSelect(time)}
+              className={`px-4 py-2 cursor-pointer text-sm text-black hover:bg-gray-100 ${
+                time === selectedTime ? 'font-bold' : ''
+              }`}
+            >
+              {time}
+            </div>
+          ))}
+        </Popover.Content>
+      </Popover.Portal>
+    </Popover.Root>
   );
 }

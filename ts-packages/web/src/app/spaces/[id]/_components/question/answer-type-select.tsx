@@ -36,7 +36,7 @@ export default function AnswerTypeSelect({
 }) {
   return (
     <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className="border-input-box-border bg-card-bg focus:border-primary px-5 py-[10.5px] min-w-[260px] font-medium text-[15px]/[22.5px] text-neutral-600 rounded-lg focus:ring-primary !h-full">
+      <SelectTrigger className="border-input-box-border bg-card-bg focus:border-primary px-5 py-[10.5px] w-[260px] max-mobile:!w-full font-medium text-[15px]/[22.5px] text-neutral-600 rounded-lg focus:ring-primary !h-full">
         <SelectValue placeholder="Select an answer type" />
       </SelectTrigger>
       <SelectContent>

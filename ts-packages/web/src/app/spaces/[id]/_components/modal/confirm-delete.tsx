@@ -34,7 +34,7 @@ export default function DeleteSpacePopup({
   };
 
   return (
-    <div className="w-[500px] flex flex-col mt-6">
+    <div className="w-[500px] max-tablet:w-full flex flex-col mt-6">
       <div className="text-center font-bold text-modal-label-text text-[24px] mb-6">
         {t.rich('delete_title', {
           name: () => <span>'{spaceName}'</span>,

@@ -4,24 +4,26 @@ import { getTimeWithFormat } from '@/lib/time-utils';
 import React, { useContext } from 'react';
 import Clock from '@/assets/icons/clock.svg';
 import { PieChart1, Vote } from '@/components/icons';
-import { Settings } from 'lucide-react';
+// import { Settings } from 'lucide-react';
 import { SpaceStatus } from '@/lib/api/models/spaces';
 import { useUserInfo } from '@/app/(social)/_hooks/user';
 import { TeamContext } from '@/lib/contexts/team-context';
-import { usePopup } from '@/lib/contexts/popup-service';
-import SetSchedulePopup from '../../_components/modal/set-schedule';
+// import { usePopup } from '@/lib/contexts/popup-service';
+// import SetSchedulePopup from '../../_components/modal/set-schedule';
 import { useTranslations } from 'next-intl';
 import useSpaceById from '@/hooks/use-space-by-id';
-import { useEditCoordinatorStore } from '../../space-store';
+// import { useEditCoordinatorStore } from '../../space-store';
 import { Tab, usePollStore } from '../store';
 import BorderSpaceCard from '@/app/(social)/_components/border-space-card';
+import { usePermission } from '@/app/(social)/_hooks/use-permission';
+import { GroupPermission } from '@/lib/api/models/group';
 
 export default function SpaceSideMenu({ spaceId }: { spaceId: number }) {
   const t = useTranslations('PollSpace');
-  const popup = usePopup();
+  // const popup = usePopup();
   const { data: space } = useSpaceById(spaceId);
   const { status } = space;
-  const { isEdit } = useEditCoordinatorStore();
+  // const { isEdit } = useEditCoordinatorStore();
   const started_at = space?.started_at || 0;
   const ended_at = space?.ended_at || 0;
   const { activeTab, changeTab } = usePollStore();
@@ -77,7 +79,7 @@ export default function SpaceSideMenu({ spaceId }: { spaceId: number }) {
               <Clock width={20} height={20} />
               {t('timeline')}
             </div>
-            {isEdit ? (
+            {/* {isEdit ? (
               <div
                 className="cursor-pointer w-fit h-fit"
                 onClick={() => {
@@ -105,7 +107,7 @@ export default function SpaceSideMenu({ spaceId }: { spaceId: number }) {
               </div>
             ) : (
               <></>
-            )}
+            )} */}
           </div>
 
           <div className="flex flex-col pl-3.25 gap-5">
@@ -131,6 +133,115 @@ export default function SpaceSideMenu({ spaceId }: { spaceId: number }) {
           </div>
         </div>
       </BorderSpaceCard>
+    </div>
+  );
+}
+
+export function SpaceTabsMobile({ spaceId }: { spaceId: number }) {
+  const t = useTranslations('PollSpace');
+
+  const { data: space } = useSpaceById(spaceId);
+
+  const activeTab = usePollStore((s) => s.activeTab);
+  const setActiveTab = usePollStore((s) => s.changeTab);
+
+  const { data: userInfo } = useUserInfo();
+  const userId = userInfo?.id ?? 0;
+  const { teams } = React.useContext(TeamContext);
+
+  const authorId = space?.author?.[0]?.id;
+  const selectedTeam = !!authorId && teams.some((t) => t.id === authorId);
+
+  const writePostPermission =
+    usePermission(authorId ?? 0, GroupPermission.WritePosts).data
+      ?.has_permission ?? false;
+
+  const showAnalyze =
+    !!space &&
+    (space.author.some((a) => a.id === userId) || selectedTeam) &&
+    space.status !== SpaceStatus.Draft &&
+    writePostPermission;
+
+  const wrapRef = React.useRef<HTMLDivElement | null>(null);
+  const pos = React.useRef({ isDown: false, startX: 0, scrollLeft: 0 });
+
+  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    const el = wrapRef.current;
+    if (!el) return;
+
+    const target = e.target as Element;
+    if (target.closest('button')) return;
+
+    el.setPointerCapture?.(e.pointerId);
+    pos.current.isDown = true;
+    pos.current.startX = e.clientX;
+    pos.current.scrollLeft = el.scrollLeft;
+  };
+
+  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    const el = wrapRef.current;
+    if (!el || !pos.current.isDown) return;
+    const dx = e.clientX - pos.current.startX;
+    el.scrollLeft = pos.current.scrollLeft - dx;
+  };
+
+  const endDrag = (e?: React.PointerEvent<HTMLDivElement>) => {
+    const el = wrapRef.current;
+    if (!el) return;
+    pos.current.isDown = false;
+    if (e) el.releasePointerCapture?.(e.pointerId);
+  };
+
+  const TabBtn = ({
+    label,
+    active,
+    onClick,
+  }: {
+    label: string;
+    active: boolean;
+    onClick: () => void;
+  }) => (
+    <button
+      onClick={onClick}
+      className={[
+        'shrink-0 px-3 py-2 rounded-[50px] text-sm font-bold transition-colors',
+        active
+          ? 'bg-neutral-500 light:bg-white text-text-primary border border-neutral-500 light:border-white'
+          : 'bg-transparent border border-white/70 light:border-neutral-500 text-text-primary/80 hover:bg-white/5',
+      ].join(' ')}
+    >
+      {label}
+    </button>
+  );
+
+  if (!space) return null;
+
+  return (
+    <div className="max-tablet:flex hidden w-full">
+      <div
+        ref={wrapRef}
+        className="w-full overflow-x-auto no-scrollbar momentum cursor-grab select-none"
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={endDrag}
+        onPointerCancel={endDrag}
+        onPointerLeave={endDrag}
+      >
+        <div className="flex items-center gap-2 w-max pr-3">
+          <TabBtn
+            label={t('poll')}
+            active={activeTab === Tab.Poll}
+            onClick={() => setActiveTab(Tab.Poll)}
+          />
+          {showAnalyze && (
+            <TabBtn
+              label={t('analyze')}
+              active={activeTab === Tab.Analyze}
+              onClick={() => setActiveTab(Tab.Analyze)}
+            />
+          )}
+        </div>
+      </div>
     </div>
   );
 }
