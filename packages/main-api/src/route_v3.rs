@@ -66,31 +66,33 @@ pub fn route(
 ) -> Result<Router, Error2> {
     Ok(Router::new()
         .nest(
-            "/users",
-            Router::new()
-                .route(
-                    "/me",
-                    get_with(
-                        get_user_info_handler,
-                        api_docs!(
-                            Json<GetUserInfoResponse>,
-                            "Get Logged-in User Info",
-                            "Get the user data of the logged-in user"
-                        ),
-                    )
-                    .patch_with(
-                        update_user_handler,
-                        api_docs!(
-                            Json<UpdateUserResponse>,
-                            "Update Logged-in User Info",
-                            "Update the user data of the logged-in user"
-                        ),
+            "/me",
+            Router::new().route(
+                "/me",
+                get_with(
+                    get_user_info_handler,
+                    api_docs!(
+                        Json<GetUserInfoResponse>,
+                        "Get Logged-in User Info",
+                        "Get the user data of the logged-in user"
                     ),
                 )
-                .route(
-                    "/",
-                    get_with(find_user_handler, api_docs!(Json<FindUserResponse>, "", "")),
+                .patch_with(
+                    update_user_handler,
+                    api_docs!(
+                        Json<UpdateUserResponse>,
+                        "Update Logged-in User Info",
+                        "Update the user data of the logged-in user"
+                    ),
                 ),
+            ),
+        )
+        .nest(
+            "/users",
+            Router::new().route(
+                "/",
+                get_with(find_user_handler, api_docs!(Json<FindUserResponse>, "", "")),
+            ),
         )
         .nest(
             "/auth",
