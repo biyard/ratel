@@ -124,7 +124,7 @@ export default function InviteMemberPopup({
   };
 
   return (
-    <div className="flex flex-col w-[900px] min-h-[300px] max-w-[900px] min-w-[400px] max-mobile:!w-full max-mobile:!max-w-full gap-5">
+    <div className="flex flex-col min-h-[300px] w-[900px] max-w-[900px] max-tablet:!w-full max-tablet:!max-w-full gap-5">
       <div className="flex flex-col w-full">
         <div className="font-bold text-[15px]/[28px] text-modal-label-text">
           {t('invite_label')}
