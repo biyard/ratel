@@ -1,4 +1,4 @@
-use crate::{config, utils::aws::dynamo::DynamoClient};
+use crate::{config, utils::aws::dynamo::DynamoClient as DynamoClientWoTableName};
 use bdk::prelude::*;
 use dto::{
     Error, JsonSchema, Result, User, aide,
@@ -145,7 +145,20 @@ pub async fn migrate_users_handler(
 
     Ok(Json(response))
 }
+struct DynamoClient {
+    client: aws_sdk_dynamodb::Client,
+    table_name: String,
+}
 
+impl DynamoClient {
+    pub fn new(table_name: &str) -> Self {
+        let cli = DynamoClientWoTableName::new(None);
+        Self {
+            client: cli.client,
+            table_name: table_name.to_string(),
+        }
+    }
+}
 /// Get migration statistics
 pub async fn migration_stats_handler(
     State(pool): State<PgPool>,

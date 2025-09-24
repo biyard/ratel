@@ -162,8 +162,11 @@ services:
     working_dir: /app
     environment:
       PORT: 8080
-      NEXT_PUBLIC_API_URL: "http://main-api:3000"
-      NEXT_PUBLIC_GRAPHQL_URL: "http://hasura:8080/v1/graphql"
+      NEXT_PUBLIC_API_URL: "http://localhost:3000"
+      INTERNAL_API_URL: "http://main-api:3000"
+      NEXT_PUBLIC_GRAPHQL_URL: "http://localhost:28080/v1/graphql"
+      INTERNAL_GRAPHQL_URL: "http://hasura:8080/v1/graphql"
+      NEXT_PUBLIC_LOG_LEVEL: ${LOG_LEVEL:-debug}
       NODE_ENV: development
     command: ["bash", "scripts/web-entrypoint.sh"]
     healthcheck:
@@ -241,6 +244,7 @@ services:
     ports:
       - "4566:4566"
     environment:
+      - PERSISTENCE=${LOCALSTACK_PERSISTENCE:-1}
       - SERVICES=dynamodb,s3,sqs
       - DYNAMODB_SHARE_DB=1
       - SQS_ENDPOINT_STRATEGY=off
@@ -264,6 +268,7 @@ services:
       - AWS_ACCESS_KEY_ID=test
       - AWS_SECRET_ACCESS_KEY=test
       - AWS_DEFAULT_REGION=us-east-1
+      - LOCALSTACK_ENDPOINT=http://localstack:4566
     volumes:
       - ./scripts:/scripts
     networks:

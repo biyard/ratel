@@ -1,0 +1,111 @@
+use crate::{
+    AppState, Error2,
+    models::{
+        team::{Team, TeamGroup},
+        user::UserTeamGroup,
+    },
+    types::{EntityType, TeamGroupPermission, TeamGroupPermissions},
+    utils::{
+        dynamo_extractor::extract_user,
+        security::{RatelResource, check_any_permission},
+    },
+};
+use dto::by_axum::{
+    auth::Authorization,
+    axum::{
+        Extension,
+        extract::{Json, Path, State},
+    },
+};
+use dto::{JsonSchema, aide, schemars};
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Deserialize, aide::OperationIo, JsonSchema)]
+pub struct CreateGroupPathParams {
+    pub team_pk: String,
+}
+
+#[derive(Debug, Clone, Deserialize, Default, aide::OperationIo, JsonSchema)]
+pub struct CreateGroupRequest {
+    pub name: String,
+    pub description: String,
+    pub image_url: String,
+    pub permissions: Vec<TeamGroupPermission>,
+}
+
+#[derive(Debug, Clone, Serialize, Default, aide::OperationIo, JsonSchema)]
+pub struct CreateGroupResponse {
+    pub group_pk: String,
+    pub group_sk: String,
+}
+
+pub async fn create_group_handler(
+    State(AppState { dynamo, .. }): State<AppState>,
+    Extension(auth): Extension<Option<Authorization>>,
+    Path(params): Path<CreateGroupPathParams>,
+    Json(req): Json<CreateGroupRequest>,
+) -> Result<Json<CreateGroupResponse>, Error2> {
+    // If Admin permissions are requested, require TeamAdmin
+    let required_permissions = if req
+        .permissions
+        .iter()
+        .any(|p| matches!(p, TeamGroupPermission::TeamAdmin))
+    {
+        vec![TeamGroupPermission::TeamAdmin]
+    } else {
+        vec![
+            TeamGroupPermission::TeamAdmin,
+            TeamGroupPermission::TeamEdit,
+        ]
+    };
+
+    check_any_permission(
+        &dynamo.client,
+        auth.clone(),
+        RatelResource::Team {
+            team_pk: params.team_pk.clone(),
+        },
+        required_permissions,
+    )
+    .await?;
+    //If
+
+    let user = extract_user(&dynamo.client, auth).await?;
+
+    let team = Team::get(
+        &dynamo.client,
+        params.team_pk.clone(),
+        Some(EntityType::Team),
+    )
+    .await?;
+    if team.is_none() {
+        return Err(Error2::NotFound("Team not found".into()));
+    }
+    let team = team.unwrap();
+    let user_pk = user.pk.clone();
+    let group = TeamGroup::new(
+        team.pk,
+        req.name,
+        req.description,
+        TeamGroupPermissions(req.permissions),
+    );
+
+    group.create(&dynamo.client).await?;
+    let group_pk = group.pk.clone();
+    let group_sk = group.sk.clone();
+
+    // Add creator to the group
+    UserTeamGroup::new(user_pk, group)
+        .create(&dynamo.client)
+        .await?;
+
+    TeamGroup::updater(&group_pk, &group_sk)
+        .increase_members(1)
+        .execute(&dynamo.client)
+        .await?;
+
+    Ok(Json(CreateGroupResponse {
+        group_pk: group_pk.to_string(),
+        group_sk: group_sk.to_string(),
+    }))
+}
