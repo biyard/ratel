@@ -3,12 +3,7 @@ use bdk::prelude::*;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity)]
 #[serde(untagged)]
-#[dynamo(
-    pk_prefix = "EMAIL",
-    sk_prefix = "AA",
-    index = "gsi1",
-    name = "find_by_email"
-)]
+#[dynamo(pk_prefix = "EMAIL", index = "gsi3", name = "find_by_email")]
 pub enum UserMetadata {
     User(User),
     UserPrincipal(UserPrincipal),

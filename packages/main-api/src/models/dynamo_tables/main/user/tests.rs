@@ -1,6 +1,6 @@
 use super::*;
 use crate::{
-    tests::{get_test_aws_config, get_test_user},
+    tests::{create_nick_name, get_test_aws_config, get_test_user},
     types::*,
     utils::aws::DynamoClient,
 };
@@ -266,8 +266,8 @@ async fn tests_find_user_metamodel() {
     let uuid = uuid::Uuid::new_v4();
 
     let email = format!("a+{}@example.com", uuid);
-    let nickname = format!("nickname-{}", uuid);
-    let nickname2 = format!("nickname-{}2", uuid);
+    let nickname = create_nick_name();
+    let nickname2 = create_nick_name();
     let profile = "http://example.com/profile.png".to_string();
     let username = format!("user{}", uuid);
 
@@ -281,7 +281,6 @@ async fn tests_find_user_metamodel() {
         username.clone(),
         Some("password".to_string()),
     );
-
     let res = user.create(&cli).await;
     assert!(res.is_ok(), "failed to create user {:?}", res.err());
 
@@ -295,11 +294,10 @@ async fn tests_find_user_metamodel() {
         username.clone(),
         Some("password".to_string()),
     );
-
     let res = user.create(&cli).await;
     assert!(res.is_ok(), "failed to create user {:?}", res.err());
 
-    let users = UserMetadata::find_by_email(&cli, &email, None::<String>).await;
+    let users = UserMetadata::find_by_email(&cli, &email).await;
     assert!(users.is_ok(), "failed: {:?}", users);
     let users = users.unwrap();
 

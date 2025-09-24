@@ -12,7 +12,7 @@ async fn test_find_user() {
     let app_state = create_app_state();
     let cli = app_state.dynamo.client.clone();
     let user = get_test_user(&cli).await;
-    let phone_number = "+821012345678".to_string();
+    let phone_number = uuid::Uuid::new_v4().to_string();
     let res = UserPhoneNumber::new(user.pk.clone(), phone_number.clone())
         .create(&cli)
         .await;
