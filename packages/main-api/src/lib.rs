@@ -131,11 +131,15 @@ pub mod controllers {
             pub mod find_user;
             pub mod get_user_info;
             pub mod update_user;
+
+            #[cfg(test)]
+            pub mod tests;
         }
         pub mod auth {
             pub mod health;
             pub mod login;
             pub mod signup;
+
             pub mod verification {
                 pub mod send_code;
                 pub mod verify_code;
@@ -147,11 +151,18 @@ pub mod controllers {
             pub mod find_team;
             pub mod get_team;
             pub mod update_team;
+
+            #[cfg(test)]
+            pub mod tests;
+
             pub mod groups {
                 pub mod add_member;
                 pub mod create_group;
                 pub mod remove_member;
                 pub mod update_group;
+
+                #[cfg(test)]
+                pub mod tests;
             }
         }
     }
