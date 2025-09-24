@@ -2,8 +2,8 @@
 
 import { getTimeAgo } from '@/lib/time-utils';
 import Image from 'next/image';
-import { ChevronDown, Loader2 } from 'lucide-react';
-import { BendArrowRight, CommentIcon, ThumbUp } from '@/components/icons';
+import { ChevronDown } from 'lucide-react';
+import { BendArrowRight, ThumbUp } from '@/components/icons';
 import { Comment as CommentType, FeedType } from '@/lib/api/models/feeds';
 import LexicalHtmlViewer from '@/components/lexical/lexical-html-viewer';
 import {
@@ -16,7 +16,6 @@ import { useEffect, useRef, useState } from 'react';
 import { logger } from '@/lib/logger';
 import { useTranslations } from 'next-intl';
 import { useLikeFeedMutation } from '@/hooks/feeds/use-like-feed-mutation';
-import { Button } from '../ui/button';
 
 interface CommentProps {
   comment: CommentType;
@@ -249,18 +248,8 @@ export function NewComment({
   return (
     <div
       ref={ref}
-      className="flex w-full bg-comment-box-bg border rounded-lg border-primary max-w-desktop"
+      className="flex flex-col w-full justify-end items-end bg-comment-box-bg border rounded-lg border-primary max-w-desktop"
     >
-      <div className="flex-1">
-        <LexicalHtmlEditor
-          placeholder={t('contents_hint')}
-          className={className}
-          ref={editorRef}
-          onChange={(content) => {
-            setDisabled(content.trim() === '' || !validateString(content));
-          }}
-        />
-      </div>
       <div className="p-3 flex flex-col justify-between">
         <button className="p-1 flex flex-row justify-center" onClick={onClose}>
           <ChevronDoubleDownIcon
@@ -269,25 +258,19 @@ export function NewComment({
             className="[&>path]:light:stroke-write-comment-box-icon"
           />
         </button>
-        <div>
-          <Button
-            variant="rounded_primary"
-            size="default"
-            onClick={handleSubmit}
-            disabled={disabled}
-            className="gap-2"
-          >
-            {isLoading ? (
-              <Loader2 className="animate-spin size-6" />
-            ) : (
-              <CommentIcon
-                width={24}
-                height={24}
-                className="[&>path]:stroke-black [&>line]:stroke-black"
-              />
-            )}
-          </Button>
-        </div>
+      </div>
+      <div className="flex-1 w-full">
+        <LexicalHtmlEditor
+          placeholder={t('contents_hint')}
+          className={className}
+          ref={editorRef}
+          onChange={(content) => {
+            setDisabled(content.trim() === '' || !validateString(content));
+          }}
+          enableButton={true}
+          handleSubmit={handleSubmit}
+          disabled={disabled}
+        />
       </div>
     </div>
   );
