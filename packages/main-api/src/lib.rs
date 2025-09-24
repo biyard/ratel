@@ -127,10 +127,15 @@ pub mod controllers {
         }
     }
     pub mod v3 {
+        pub mod me {
+            pub mod get_info;
+            pub mod update_user;
+
+            #[cfg(test)]
+            pub mod tests;
+        }
         pub mod users {
             pub mod find_user;
-            pub mod get_user_info;
-            pub mod update_user;
 
             #[cfg(test)]
             pub mod tests;

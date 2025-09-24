@@ -8,12 +8,12 @@ use dto::by_axum::{
     axum::{Extension, Json, extract::State},
 };
 
-pub type GetUserInfoResponse = UserDetailResponse;
+pub type GetInfoResponse = UserDetailResponse;
 
-pub async fn get_user_info_handler(
+pub async fn get_info_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     Extension(auth): Extension<Option<Authorization>>,
-) -> Result<Json<GetUserInfoResponse>, Error2> {
+) -> Result<Json<GetInfoResponse>, Error2> {
     let user: Vec<UserMetadata> = extract_user_metadata(&dynamo.client, auth).await?;
     let user = UserDetailResponse::from(user);
     Ok(Json(user))
