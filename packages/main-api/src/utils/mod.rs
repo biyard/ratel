@@ -18,6 +18,7 @@ pub mod telegram;
 pub mod time;
 pub mod users;
 pub mod wallets;
+pub mod users_dynamo;
 
 pub mod aws;
 
