@@ -47,8 +47,7 @@ async fn tests_create_user() {
 
     // create user telegram
     let telegram_id = now;
-    let telegram_raw = format!("{{\"id\":{}}}", now);
-    let user_telegram = UserTelegram::new(user.pk.clone(), telegram_id, telegram_raw.clone());
+    let user_telegram = UserTelegram::new(user.pk.clone(), telegram_id);
     let res = user_telegram.create(&cli).await;
     assert!(res.is_ok());
 
@@ -81,7 +80,6 @@ async fn tests_create_user() {
             }
             UserMetadata::UserTelegram(ut) => {
                 assert_eq!(ut.telegram_id, telegram_id.clone());
-                assert_eq!(ut.telegram_raw, telegram_raw);
             }
             _ => {
                 // "Skip. Testing this in team/tests.rs",
@@ -158,9 +156,8 @@ async fn tests_update_user() {
         true,
         true,
         UserType::Individual,
-        None,
         username,
-        "password".to_string(),
+        Some("password".to_string()),
     );
 
     let res = user.create(&cli).await;
@@ -281,9 +278,8 @@ async fn tests_find_user_metamodel() {
         true,
         true,
         UserType::Individual,
-        None,
         username.clone(),
-        "password".to_string(),
+        Some("password".to_string()),
     );
 
     let res = user.create(&cli).await;
@@ -296,9 +292,8 @@ async fn tests_find_user_metamodel() {
         true,
         true,
         UserType::Individual,
-        None,
         username.clone(),
-        "password".to_string(),
+        Some("password".to_string()),
     );
 
     let res = user.create(&cli).await;

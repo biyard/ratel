@@ -29,4 +29,5 @@ pub mod dynamo_session_store;
 
 pub mod password;
 
+pub mod firebase;
 pub mod security;

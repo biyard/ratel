@@ -28,14 +28,13 @@ pub async fn health_handler(
     } else {
         let user = User::new(
             "".to_string(),
-            "anonymous@invalid.email".to_string(),
+            format!("{}@invalid.email", uuid::Uuid::new_v4()),
             "".to_string(),
             false,
             false,
             UserType::Anonymous,
+            "".to_string(),
             None,
-            "".to_string(),
-            "".to_string(),
         );
 
         user.create(&dynamo.client).await?;
