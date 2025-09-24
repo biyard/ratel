@@ -31,7 +31,7 @@ export default function NewDiscussion({
     discussion.ended_at - discussion.started_at,
   );
   return (
-    <div className="max-w-[900px] w-full">
+    <div className="max-w-[900px] w-full max-tablet:w-full">
       <div className="flex flex-col py-2.5 gap-[5px]">
         <label className="flex flex-row justify-start items-center text-[15px]/[28px] text-modal-label-text font-bold  gap-1">
           {t('title')} <span className="text-error">*</span>
@@ -68,7 +68,7 @@ export default function NewDiscussion({
         <label className="flex flex-row justify-start items-center text-[15px]/[28px]font-bold  gap-1 text-modal-label-text">
           {t('date')} <span className="text-error">*</span>
         </label>
-        <div className="flex flex-row gap-2.5 items-center">
+        <div className="flex flex-row max-tablet:flex-col gap-2.5 items-center">
           <CalendarDropdown
             value={startTime}
             onChange={(date) => {
@@ -86,16 +86,18 @@ export default function NewDiscussion({
               setEndTime(newStart + diff);
             }}
           />
-          <TimeDropdown
-            value={startTime}
-            onChange={(timestamp) => {
-              const newStart = Math.floor(timestamp);
+          <div className="max-tablet:mb-[20px] max-tablet:w-full">
+            <TimeDropdown
+              value={startTime}
+              onChange={(timestamp) => {
+                const newStart = Math.floor(timestamp);
 
-              setStartTime(newStart);
-              setEndTime(newStart + diff);
-            }}
-          />
-          <div className="w-[15px] h-0.25 bg-neutral-600" />
+                setStartTime(newStart);
+                setEndTime(newStart + diff);
+              }}
+            />
+          </div>
+          <div className="w-[15px] h-0.25 bg-neutral-600 max-tablet:hidden" />
           <CalendarDropdown
             value={endTime}
             onChange={(date) => {
@@ -138,7 +140,7 @@ export default function NewDiscussion({
               setEndTime(newEnd);
             }}
           />
-          <div className="flex flex-row items-center w-fit border border-select-date-border bg-select-date-bg rounded-lg px-5 py-[10.5px] gap-2.5 mt-2 sm:mt-0">
+          <div className="flex flex-row items-center w-fit max-tablet:w-full max-tablet:justify-between border border-select-date-border bg-select-date-bg rounded-lg px-5 py-[10.5px] gap-2.5 mt-2 sm:mt-0">
             <div className="font-medium text-[15px]/[22.5px] text-neutral-600">
               Pacific Time
             </div>
