@@ -15,6 +15,8 @@ pub enum Error {
     SerdeDynamo(#[from] serde_dynamo::Error),
     #[error("SerdeJson error: {0}")]
     SerdeJson(#[from] serde_json::Error),
+    #[error("Validation error: {0}")]
+    ValidationError(#[from] validator::ValidationError),
 
     #[error("Session error")]
     SessionError(#[from] tower_sessions::session::Error),

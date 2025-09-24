@@ -2,9 +2,9 @@ use validator::ValidationError;
 
 pub fn validate_nickname(name: &str) -> Result<(), ValidationError> {
     let len = name.chars().count();
-    if len < 3 || len > 10 {
+    if len < 3 || len > 20 {
         return Err(ValidationError::new(
-            "Nickname must be between 3 and 10 characters",
+            "Nickname must be between 3 and 20 characters",
         ));
     }
     let re = regex::Regex::new(r"^[a-z0-9_-]+$").unwrap();
