@@ -31,7 +31,6 @@ import { useTranslations } from 'next-intl';
 import { BoosterType } from '@/lib/api/models/notice';
 import { usePostEditorContext } from '@/app/(social)/_components/post-editor';
 
-
 export interface FeedCardProps {
   id: number;
   industry: string;
@@ -173,7 +172,6 @@ export default function FeedCard(props: FeedCardProps) {
   const handleCommentClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     router.push(href);
-    
   };
 
   return (
@@ -417,7 +415,7 @@ interface FeedFooterProps {
   rewards: number;
   shares: number;
   is_liked: boolean;
-  onCommentClick?: (e: React.MouseEvent) => void; 
+  onCommentClick?: (e: React.MouseEvent) => void;
   onLikeClick?: (value: boolean) => void;
   isLikeProcessing?: boolean;
   onRepost?: (e: React.MouseEvent) => void;
@@ -507,10 +505,13 @@ export function FeedFooter({
           {convertNumberToString(likes)}
         </IconText>
 
-        <IconText onClick={(e) => {
-          e.stopPropagation();
-          onCommentClick?.(e);
-          }} className='cursor-pointer' >
+        <IconText
+          onClick={(e) => {
+            e.stopPropagation();
+            onCommentClick?.(e);
+          }}
+          className="cursor-pointer"
+        >
           <CommentIcon />
           {convertNumberToString(comments)}
         </IconText>

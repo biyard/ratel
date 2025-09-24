@@ -23,7 +23,10 @@ interface TiptapEditorProps {
 }
 
 export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
-  ({ content = '', onUpdate, editable = true, className = '', onCreate }, ref) => {
+  (
+    { content = '', onUpdate, editable = true, className = '', onCreate },
+    ref,
+  ) => {
     const editor = useEditor({
       extensions: [
         StarterKit.configure({

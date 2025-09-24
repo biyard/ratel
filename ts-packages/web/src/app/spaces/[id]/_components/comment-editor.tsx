@@ -616,17 +616,15 @@
 //   );
 // }
 
-
-
-
-
 'use client';
 
 import { useState, useRef } from 'react';
 import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
-import { Button } from '@/components/ui/button';
 import { TiptapEditor } from '@/components/text-editor/tiptap-editor';
-import { showSuccessToast, showErrorToast } from '@/components/custom-toast/toast';
+import {
+  showSuccessToast,
+  showErrorToast,
+} from '@/components/custom-toast/toast';
 import { useDraftMutations } from '@/hooks/feeds/use-create-feed-mutation';
 import CommentIcon from '@/assets/icons/comment.svg';
 import { Editor } from '@tiptap/core';
@@ -638,6 +636,7 @@ import SaveIcon from '@/assets/icons/save.svg';
 import LinkPaste from '@/assets/icons/editor/link-paste.svg';
 import CommentPaste from '@/assets/icons/editor/comment-paste.svg';
 import { cn } from '@/lib/utils';
+import { logger } from '@/lib/logger';
 
 interface SpaceCommentEditorProps {
   showCommentEditor: boolean;
@@ -652,7 +651,6 @@ export default function SpaceCommentEditor({
   showCommentEditor,
   setShowCommentEditor,
   commentCount,
-  t,
   spaceId = 0,
   onCommentPosted = () => {},
 }: SpaceCommentEditorProps) {
@@ -681,6 +679,7 @@ export default function SpaceCommentEditor({
       onCommentPosted();
       showSuccessToast('Comment posted successfully');
     } catch (error) {
+      logger.debug('Failed to post comment', error);
       showErrorToast('Failed to post comment');
     }
   };
@@ -722,7 +721,7 @@ export default function SpaceCommentEditor({
         >
           <div
             className="w-full bg-comment-box-bg border-t-6 border-x border-b border-primary rounded-t-lg overflow-hidden max-w-6xl"
-            onClick={e => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
           >
             <div className="p-4 flex justify-between items-center">
               <h3 className="font-medium text-foreground">Add a comment</h3>
@@ -762,8 +761,8 @@ export default function SpaceCommentEditor({
                       onClick={handleSubmit}
                       disabled={!content.trim() || createComment.isPending}
                       className={cn(
-                        "shrink-0 bg-primary text-text-third rounded-full hover:bg-primary/70 px-4 py-2 font-bold flex items-center gap-x-2",
-                        createComment.isPending && "opacity-70"
+                        'shrink-0 bg-primary text-text-third rounded-full hover:bg-primary/70 px-4 py-2 font-bold flex items-center gap-x-2',
+                        createComment.isPending && 'opacity-70',
                       )}
                     >
                       {createComment.isPending ? (
@@ -785,8 +784,8 @@ export default function SpaceCommentEditor({
                     <input
                       autoFocus
                       value={url}
-                      onChange={e => setUrl(e.target.value)}
-                      onKeyDown={e => e.key === 'Enter' && handleInsertUrl()}
+                      onChange={(e) => setUrl(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleInsertUrl()}
                       placeholder="Paste or search for the relevant discussion or topic URL"
                       className="bg-transparent text-white text-sm placeholder-neutral-400 outline-none flex-1"
                     />
@@ -812,8 +811,10 @@ export default function SpaceCommentEditor({
                     <input
                       autoFocus
                       value={commentUrl}
-                      onChange={e => setCommentUrl(e.target.value)}
-                      onKeyDown={e => e.key === 'Enter' && handleInsertCommentUrl()}
+                      onChange={(e) => setCommentUrl(e.target.value)}
+                      onKeyDown={(e) =>
+                        e.key === 'Enter' && handleInsertCommentUrl()
+                      }
                       placeholder="Please paste or search for the comment to quote"
                       className="bg-transparent text-white text-sm placeholder-neutral-400 outline-none flex-1"
                     />

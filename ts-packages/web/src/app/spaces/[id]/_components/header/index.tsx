@@ -13,7 +13,6 @@ import {
   Expand,
   ThumbUp,
   Share2,
-  CommentIcon,
   Rewards,
   Extra,
   Internet,
@@ -35,7 +34,6 @@ import SpaceCommentEditor from '../comment-editor';
 import GoPublicModal from '../../notice/_components/modal/go-public-modal';
 import { GroupPermission } from '@/lib/api/models/group';
 import { usePermission } from '@/app/(social)/_hooks/use-permission';
-import { useRouter } from 'next/navigation';
 import { useParams } from 'next/navigation';
 
 export default function SpaceHeader({
@@ -51,8 +49,9 @@ export default function SpaceHeader({
     throw new Error('SpaceHeader must be used within SpaceHeaderProvider');
 
   const [showCommentEditor, setShowCommentEditor] = useState(true);
-  const [commentCount, setCommentCount] = useState(space.feed_comments?.length || 0);
-  
+  const [commentCount, setCommentCount] = useState(
+    space.feed_comments?.length || 0,
+  );
 
   const {
     isEdit,
@@ -317,6 +316,7 @@ export default function SpaceHeader({
               spaceId={spaceId}
               commentCount={commentCount}
               t={t}
+              onCommentPosted={() => setCommentCount((c) => c + 1)}
             />
           </div>
 
