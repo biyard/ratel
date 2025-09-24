@@ -1,6 +1,4 @@
-#![allow(unused)]
 use async_trait::async_trait;
-use serde::Serialize;
 use tower_sessions::{
     SessionStore,
     session::{Id, Record},
@@ -72,8 +70,4 @@ impl SessionStore for DynamoSessionStore {
             .map_err(|e| session_store::Error::Backend(format!("Failed to delete entry: {}", e)))?;
         Ok(())
     }
-}
-
-fn touch(a: String) -> session_store::Result<()> {
-    Ok(())
 }

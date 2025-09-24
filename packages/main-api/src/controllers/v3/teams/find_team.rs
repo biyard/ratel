@@ -1,8 +1,6 @@
-//NOTE: REMOVE
-#![allow(unused)]
 use crate::{
     AppState, Error2,
-    models::team::{Team, TeamMetadata, TeamResponse},
+    models::team::{Team, TeamResponse},
 };
 use dto::by_axum::{
     auth::Authorization,
@@ -27,7 +25,7 @@ pub struct FindTeamResponse {
 
 pub async fn find_team_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    Extension(auth): Extension<Option<Authorization>>,
+    Extension(_auth): Extension<Option<Authorization>>,
     Query(params): Query<FindTeamQueryParams>,
 ) -> Result<Json<FindTeamResponse>, Error2> {
     if let Some(username) = params.username {
