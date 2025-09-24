@@ -21,7 +21,6 @@ pub struct UpdateGroupPathParams {
 }
 
 #[derive(Debug, Clone, Deserialize, Default, aide::OperationIo, JsonSchema)]
-#[serde(rename_all = "camelCase")]
 pub struct UpdateGroupRequest {
     #[schemars(description = "Group name to update")]
     pub name: Option<String>,
@@ -121,7 +120,7 @@ pub mod update_group_tests {
             State(app_state.clone()),
             Extension(Some(auth.clone())),
             Path(CreateGroupPathParams {
-                team_id: team.team_pk.clone(),
+                team_pk: team.team_pk.clone(),
             }),
             Json(CreateGroupRequest {
                 name: "Test Group".into(),
@@ -187,7 +186,7 @@ pub mod update_group_tests {
             State(app_state.clone()),
             Extension(Some(auth.clone())),
             Path(CreateGroupPathParams {
-                team_id: team.team_pk.clone(),
+                team_pk: team.team_pk.clone(),
             }),
             Json(CreateGroupRequest {
                 name: "Test Group".into(),

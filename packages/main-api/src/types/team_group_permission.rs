@@ -53,11 +53,6 @@ impl Default for TeamGroupPermissions {
             TeamGroupPermission::SpaceWrite,
             TeamGroupPermission::SpaceEdit,
             TeamGroupPermission::SpaceDelete,
-            TeamGroupPermission::TeamAdmin,
-            TeamGroupPermission::TeamEdit,
-            TeamGroupPermission::GroupEdit,
-            TeamGroupPermission::ManagePromotions,
-            TeamGroupPermission::ManageNews,
         ])
     }
 }

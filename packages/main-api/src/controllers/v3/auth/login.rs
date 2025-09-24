@@ -31,7 +31,6 @@ pub struct LoginRequest {
 
 pub type LoginResponse = (HeaderMap, ()); // Define the response type
 
-#[tracing::instrument(skip_all, fields(email = ?req.email))]
 pub async fn login_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     Extension(session): Extension<Session>,
@@ -115,5 +114,5 @@ pub async fn login_handler(
         return Ok((headers, ()));
     }
 
-    Err(Error2::Unauthorized("User not found".into())).into()
+    Err(Error2::Unauthorized("User not found".into()))
 }

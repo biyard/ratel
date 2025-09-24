@@ -6,7 +6,7 @@ use dto::by_axum::{
     auth::Authorization,
     axum::{
         Extension, Json,
-        extract::{Path, Query, State},
+        extract::{Query, State},
     },
 };
 use dto::{JsonSchema, aide, schemars};
