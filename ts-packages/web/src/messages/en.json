@@ -570,6 +570,7 @@
     "see_committee_list": "See committee list",
     "change_category": "Change Category",
     "delete": "Delete",
+    "comment_count": "{count, plural, =0 {comments} one {comment} other {comments}}",
 
     "private": "Private",
     "public": "Public",

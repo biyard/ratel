@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import Badge from '@/assets/icons/badge.svg';
 import { UserType } from '@/lib/api/models/user';
 import Image from 'next/image';
@@ -30,9 +30,12 @@ import DeleteSpacePopup from '../modal/confirm-delete';
 import { useTranslations } from 'next-intl';
 import PublishForm from '../../notice/_components/modal/publish-form';
 import { PublishingScope } from '@/lib/api/models/notice';
+// import { SpaceCommentEditor } from './comment-editor';
+import SpaceCommentEditor from '../comment-editor';
 import GoPublicModal from '../../notice/_components/modal/go-public-modal';
 import { GroupPermission } from '@/lib/api/models/group';
 import { usePermission } from '@/app/(social)/_hooks/use-permission';
+import { useRouter } from 'next/navigation';
 
 export default function SpaceHeader({
   space,
@@ -45,6 +48,10 @@ export default function SpaceHeader({
   const context = useSpaceContext();
   if (!context)
     throw new Error('SpaceHeader must be used within SpaceHeaderProvider');
+
+  const [showCommentEditor, setShowCommentEditor] = useState(false);
+  const [commentCount, setCommentCount] = useState(space.feed_comments?.length || 0);
+  const router = useRouter();
 
   const {
     isEdit,
@@ -118,7 +125,6 @@ export default function SpaceHeader({
 
   const likes = feed.likes;
   const shares = feed.shares;
-  const comments = feed.comments;
   const rewards = feed.rewards;
   const { isOpen, toggle, close, dropdownRef } = useDropdown();
 
@@ -301,10 +307,12 @@ export default function SpaceHeader({
           </div>
 
           <div className="flex flex-row w-fit gap-1 items-center">
-            <CommentIcon width={20} height={20} />
-            <div className="font-medium text-[15px] text-text-primary">
-              {comments ?? 0}
-            </div>
+            <SpaceCommentEditor
+              showCommentEditor={showCommentEditor}
+              setShowCommentEditor={setShowCommentEditor}
+              commentCount={commentCount}
+              t={t}
+            />
           </div>
 
           <div className="flex flex-row w-fit gap-1 items-center">
