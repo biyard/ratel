@@ -51,8 +51,8 @@ export default function SurveyViewer({
   const { data: userInfo } = useSuspenseUserInfo();
   const userId = userInfo?.id || 0;
 
-  const members = space.discussions.flatMap((discussion) => discussion.members);
-  const isMember = members.some((member) => member.id === userId);
+  // const members = space.discussions.flatMap((discussion) => discussion.members);
+  // const isMember = members.some((member) => member.id === userId);
 
   const spaceType = space.space_type;
 
@@ -240,7 +240,7 @@ export default function SurveyViewer({
       })}
 
       <div
-        className={`flex flex-row w-full justify-end ${is_completed || !isLive || userId === 0 || status === SpaceStatus.Draft || isEdit || questions.length == 0 || (!isMember && spaceType === SpaceType.Deliberation) ? 'hidden' : ''}`}
+        className={`flex flex-row w-full justify-end ${is_completed || !isLive || userId === 0 || status === SpaceStatus.Draft || isEdit || questions.length == 0 ? 'hidden' : ''}`}
       >
         <div
           className="cursor-pointer flex flex-row w-[180px] h-fit py-[14px] px-[40px] justify-center items-center bg-primary hover:opacity-70 rounded-lg font-bold text-[15px] text-[#000203]"
