@@ -40,8 +40,8 @@ pub async fn get_test_user(cli: &aws_sdk_dynamodb::Client) -> User {
 
     let profile = "http://example.com/profile.png".to_string();
     let username = create_user_name();
-    let email = format!("a+{}@example.com", username);
-    let nickname = format!("nickname-{}", username);
+    let nickname = create_nick_name();
+    let email = format!("a+{}@example.com", nickname);
 
     let user = User::new(
         nickname,
@@ -96,4 +96,9 @@ pub fn mock_principal_token() -> String {
 pub fn create_user_name() -> String {
     let uuid = uuid::Uuid::new_v4();
     format!("user{}", uuid)
+}
+
+pub fn create_nick_name() -> String {
+    let short_uuid = &uuid::Uuid::new_v4().simple().to_string()[..6];
+    format!("nickname{}", short_uuid)
 }

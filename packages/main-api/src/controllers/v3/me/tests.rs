@@ -1,5 +1,5 @@
 use crate::controllers::v3::me::update_user::{UpdateUserRequest, update_user_handler};
-use crate::tests::create_user_name;
+use crate::tests::{create_nick_name, create_user_name};
 use crate::{
     tests::{create_app_state, create_auth, get_test_user},
     types::Theme,
@@ -45,22 +45,19 @@ async fn test_update_user_with_team_handler() {
     let team = create_res.unwrap().0;
 
     // Update User
-    let new_username = create_user_name();
-    let new_nickname = format!("updated_nickname_{}", new_username);
-    let new_profile_url = format!("https://new.url/profile_{}.png", new_username);
-    let new_description = "This is the updated description.".to_string();
-    let new_theme = Theme::Dark;
+    let new_nickname = create_nick_name();
+    println!("New Nickname: {}", new_nickname);
+    let new_profile_url = format!("https://new.url/profile_{}.png", new_nickname);
+    let new_description = format!("This is {}'s new description", new_nickname);
 
+    // Update Profile
     let update_user_res = update_user_handler(
         State(app_state.clone()),
         Extension(Some(auth.clone())),
-        Json(UpdateUserRequest {
-            nickname: Some(new_nickname.clone()),
-            profile_url: Some(new_profile_url.clone()),
-            description: Some(new_description.clone()),
-            theme: Some(new_theme.clone()),
-            evm_address: None,
-            telegram_raw: None,
+        Json(UpdateUserRequest::Profile {
+            nickname: new_nickname.clone(),
+            profile_url: new_profile_url,
+            description: new_description,
         }),
     )
     .await;
@@ -95,45 +92,22 @@ async fn test_update_user_handler() {
     let user = get_test_user(&cli).await;
     let auth = create_auth(user.clone()).await;
 
-    let now = chrono::Utc::now().timestamp();
-    let new_nickname = format!("updated_nickname_{}", now);
-    let new_profile_url = format!("https://new.url/profile_{}.png", now);
-    let new_description = "This is the updated description.".to_string();
-    let new_theme = Theme::Dark;
-    let new_evm_address = "0x1234567890123456789012345678901234567890".to_string();
-
-    let req = UpdateUserRequest {
-        nickname: Some(new_nickname.clone()),
-        profile_url: Some(new_profile_url.clone()),
-        description: Some(new_description.clone()),
-        theme: Some(new_theme.clone()),
-        evm_address: Some(new_evm_address.clone()),
-        telegram_raw: None,
+    let new_theme = if user.theme == Theme::Light {
+        Theme::Dark
+    } else {
+        Theme::Light
     };
 
-    let res = update_user_handler(State(app_state), Extension(Some(auth)), Json(req)).await;
+    let res = update_user_handler(
+        State(app_state),
+        Extension(Some(auth)),
+        Json(UpdateUserRequest::Theme { theme: new_theme }),
+    )
+    .await;
 
     assert!(res.is_ok(), "Failed to update user: {:?}", res.err());
     let updated_user_response = res.unwrap().0;
     let user_detail = updated_user_response.user;
 
-    assert_eq!(
-        user_detail.nickname, new_nickname,
-        "Nickname was not updated."
-    );
-    assert_eq!(
-        user_detail.profile_url, new_profile_url,
-        "Profile URL was not updated."
-    );
-    assert_eq!(
-        user_detail.description, new_description,
-        "Description was not updated."
-    );
-
     assert_eq!(user_detail.theme, new_theme as u8, "Theme was not updated.");
-
-    let has_evm_address = updated_user_response
-        .evm_address
-        .is_some_and(|v| v == new_evm_address);
-    assert!(has_evm_address, "EVM address was not added or updated.");
 }

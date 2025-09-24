@@ -6,8 +6,8 @@ pub struct User {
     pub pk: Partition,
     pub sk: EntityType,
 
-    #[dynamo(prefix = "TS", index = "gsi1", sk)]
     #[dynamo(prefix = "TS", index = "gsi2", sk)]
+    #[dynamo(prefix = "TS", index = "gsi3", sk)]
     pub created_at: i64,
     pub updated_at: i64,
 
@@ -35,7 +35,7 @@ pub struct User {
 
     // profile contents
     pub description: String,
-    #[dynamo(index = "gsi3", sk)]
+    #[dynamo(index = "gsi1", sk)]
     pub password: Option<String>,
 
     pub membership: Membership,
