@@ -7,3 +7,6 @@ pub use team::*;
 pub use team_group::*;
 pub use team_metadata::*;
 pub use team_owner::*;
+
+#[cfg(test)]
+mod tests;

@@ -1,17 +1,17 @@
 use crate::controllers::v3::users::update_user::{UpdateUserRequest, update_user_handler};
+use crate::{
+    tests::{create_app_state, create_auth, get_test_user},
+    types::Theme,
+};
 use dto::by_axum::axum::{
     Json,
     extract::{Extension, State},
 };
 #[tokio::test]
 async fn test_update_user_handler() {
-    use crate::{
-        tests::{create_app_state, create_auth, get_test_user},
-        types::Theme,
-    };
-
     let app_state = create_app_state();
-    let user = get_test_user(app_state.clone()).await;
+    let cli = app_state.dynamo.client.clone();
+    let user = get_test_user(&cli).await;
     let auth = create_auth(user.clone()).await;
 
     let now = chrono::Utc::now().timestamp();
@@ -72,7 +72,8 @@ pub mod update_user_tests {
     #[tokio::test]
     async fn test_update_user_with_team_handler() {
         let app_state = create_app_state();
-        let user = get_test_user(app_state.clone()).await;
+        let cli = app_state.dynamo.client.clone();
+        let user = get_test_user(&cli).await;
         let auth = create_auth(user.clone()).await;
         let username = create_user_name();
         let team_display_name = format!("test_team_{}", username);
