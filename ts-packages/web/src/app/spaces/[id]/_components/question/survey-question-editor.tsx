@@ -189,7 +189,8 @@ export default function SurveyQuestionEditor({
           <Image
             width={300}
             height={300}
-            className="object-contain max-w-75"
+            sizes="(max-width: 500px) 100vw, 300px"
+            className="object-contain max-w-75 max-mobile:max-w-full max-mobile:w-full h-auto"
             src={imageUrl}
             alt={title || 'Question Title'}
           />
@@ -221,7 +222,7 @@ export default function SurveyQuestionEditor({
           )}
         </div>
         <div className="flex flex-row w-full justify-end items-center">
-          <div className="flex flex-row w-fit gap-10">
+          <div className="flex flex-wrap w-fit max-tablet:gap-4 max-tablet:justify-end gap-10">
             {questionType == 'checkbox' && (
               <LabelSwitchButton
                 bgColor="bg-blue-500"
