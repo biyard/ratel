@@ -1,39 +1,15 @@
 use super::*;
-use crate::types::*;
+use crate::{
+    tests::{get_test_aws_config, get_test_user},
+    types::*,
+    utils::aws::DynamoClient,
+};
 
 #[tokio::test]
 async fn tests_create_user() {
-    let conf = aws_sdk_dynamodb::Config::builder()
-        .credentials_provider(aws_sdk_dynamodb::config::Credentials::new(
-            "test", "test", None, None, "dynamo",
-        ))
-        .region(Some(aws_sdk_dynamodb::config::Region::new("us-east-1")))
-        .endpoint_url("http://localhost:4566")
-        .behavior_version_latest()
-        .build();
+    let cli = DynamoClient::mock(get_test_aws_config()).client;
 
-    let cli = aws_sdk_dynamodb::Client::from_conf(conf);
-    let now = chrono::Utc::now().timestamp();
-    let _expired_at = now + 3600; // 1 hour later
-    let email = format!("a+{}@example.com", now);
-    let nickname = format!("nickname-{}", now);
-    let profile = "http://example.com/profile.png".to_string();
-    let username = format!("user{}", now);
-
-    let user = User::new(
-        nickname,
-        email,
-        profile,
-        true,
-        true,
-        UserType::Individual,
-        None,
-        username,
-        "password".to_string(),
-    );
-
-    let res = user.create(&cli).await;
-    assert!(res.is_ok(), "failed to create user {:?}", res.err());
+    let user = get_test_user(&cli).await;
 
     let fetched_user = User::get(&cli, user.pk.clone(), Some(user.sk)).await;
     assert!(fetched_user.is_ok());
@@ -45,7 +21,7 @@ async fn tests_create_user() {
     assert_eq!(fetched_user.email, user.email);
     assert_eq!(fetched_user.display_name, user.display_name);
     assert_eq!(fetched_user.username, user.username);
-
+    let now = chrono::Utc::now().timestamp();
     // create user principal
     let principal = format!("principal-{}", now);
     let user_principal = UserPrincipal::new(user.pk.clone(), principal.clone());
@@ -289,23 +265,14 @@ async fn tests_update_user() {
 
 #[tokio::test]
 async fn tests_find_user_metamodel() {
-    let conf = aws_sdk_dynamodb::Config::builder()
-        .credentials_provider(aws_sdk_dynamodb::config::Credentials::new(
-            "test", "test", None, None, "dynamo",
-        ))
-        .region(Some(aws_sdk_dynamodb::config::Region::new("us-east-1")))
-        .endpoint_url("http://localhost:4566")
-        .behavior_version_latest()
-        .build();
+    let cli = DynamoClient::mock(get_test_aws_config()).client;
+    let uuid = uuid::Uuid::new_v4();
 
-    let cli = aws_sdk_dynamodb::Client::from_conf(conf);
-    let now = chrono::Utc::now().timestamp();
-    let _expired_at = now + 3600; // 1 hour later
-    let email = format!("a+{}@example.com", now);
-    let nickname = format!("nickname-{}", now);
-    let nickname2 = format!("nickname-{}2", now);
+    let email = format!("a+{}@example.com", uuid);
+    let nickname = format!("nickname-{}", uuid);
+    let nickname2 = format!("nickname-{}2", uuid);
     let profile = "http://example.com/profile.png".to_string();
-    let username = format!("user{}", now);
+    let username = format!("user{}", uuid);
 
     let user = User::new(
         nickname.clone(),

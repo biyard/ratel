@@ -34,7 +34,8 @@ pub fn create_app_state() -> AppState {
         ses: SesClient::mock(aws_config),
     }
 }
-pub async fn get_test_user(AppState { dynamo, .. }: AppState) -> User {
+
+pub async fn get_test_user(cli: &aws_sdk_dynamodb::Client) -> User {
     use crate::types::UserType;
 
     let profile = "http://example.com/profile.png".to_string();
@@ -53,7 +54,7 @@ pub async fn get_test_user(AppState { dynamo, .. }: AppState) -> User {
         username,
         "password".to_string(),
     );
-    user.create(&dynamo.client).await.unwrap();
+    user.create(cli).await.unwrap();
 
     return user;
 }

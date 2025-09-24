@@ -21,7 +21,8 @@ use dto::by_axum::axum::{
 #[tokio::test]
 async fn test_update_group_handler() {
     let app_state = create_app_state();
-    let user = get_test_user(app_state.clone()).await;
+    let cli = app_state.dynamo.client.clone();
+    let user = get_test_user(&cli).await;
     let auth = create_auth(user.clone()).await;
 
     let team_username = format!("TEAM{}", uuid::Uuid::new_v4().to_string());
@@ -87,7 +88,8 @@ async fn test_update_group_handler() {
 #[tokio::test]
 async fn test_update_with_permisison() {
     let app_state = create_app_state();
-    let user = get_test_user(app_state.clone()).await;
+    let cli = app_state.dynamo.client.clone();
+    let user = get_test_user(&cli).await;
     let auth = create_auth(user.clone()).await;
 
     let team_username = format!("TEAM{}", uuid::Uuid::new_v4().to_string());
@@ -130,7 +132,7 @@ async fn test_update_with_permisison() {
 
     let team_group = team_group.unwrap().0;
 
-    let user2 = get_test_user(app_state.clone()).await;
+    let user2 = get_test_user(&cli).await;
 
     let res = add_member_handler(
         State(app_state.clone()),
@@ -203,7 +205,8 @@ async fn test_update_with_permisison() {
 #[tokio::test]
 async fn test_add_member_handler() {
     let app_state = create_app_state();
-    let user = get_test_user(app_state.clone()).await;
+    let cli = app_state.dynamo.client.clone();
+    let user = get_test_user(&cli).await;
     let auth = create_auth(user.clone()).await;
     let team_username = format!("TEAM{}", uuid::Uuid::new_v4().to_string());
     // Create a team
@@ -246,10 +249,10 @@ async fn test_add_member_handler() {
     let team_group = team_group.unwrap().0;
 
     // Create Some users to be added
-    let user2 = get_test_user(app_state.clone()).await;
+    let user2 = get_test_user(&cli).await;
     let auth2 = create_auth(user2.clone()).await;
 
-    let user3 = get_test_user(app_state.clone()).await;
+    let user3 = get_test_user(&cli).await;
 
     // Call add_member_handler
     let add_member_res = add_member_handler(

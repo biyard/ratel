@@ -14,7 +14,8 @@ use crate::{
 #[tokio::test]
 async fn test_update_team_without_permission() {
     let app_state = create_app_state();
-    let user = get_test_user(app_state.clone()).await;
+    let cli = app_state.dynamo.client.clone();
+    let user = get_test_user(&cli).await;
     let auth = create_auth(user.clone()).await;
     let username = create_user_name();
     let team = create_team_handler(
@@ -32,7 +33,7 @@ async fn test_update_team_without_permission() {
     let team = team.unwrap().0;
     let team_pk = team.team_pk;
 
-    let another_user = get_test_user(app_state.clone()).await;
+    let another_user = get_test_user(&cli).await;
     let another_auth = create_auth(another_user.clone()).await;
 
     let res = update_team_handler(
@@ -71,7 +72,8 @@ async fn test_update_team() {
     use crate::tests::{create_app_state, create_auth, get_test_user};
 
     let app_state = create_app_state();
-    let user = get_test_user(app_state.clone()).await;
+    let cli = app_state.dynamo.client.clone();
+    let user = get_test_user(&cli).await;
     let auth = create_auth(user.clone()).await;
     let username = create_user_name();
     let team_username = format!("team_{}", username);
@@ -140,7 +142,8 @@ async fn test_update_team() {
 #[tokio::test]
 async fn test_get_team() {
     let app_state = create_app_state();
-    let user = get_test_user(app_state.clone()).await;
+    let cli = app_state.dynamo.client.clone();
+    let user = get_test_user(&cli).await;
     let auth = create_auth(user.clone()).await;
     let now = chrono::Utc::now().timestamp();
     let team_display_name = format!("test_team_{}", now);
