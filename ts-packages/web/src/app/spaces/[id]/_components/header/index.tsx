@@ -50,9 +50,9 @@ export default function SpaceHeader({
   if (!context)
     throw new Error('SpaceHeader must be used within SpaceHeaderProvider');
 
-  const [showCommentEditor, setShowCommentEditor] = useState(false);
+  const [showCommentEditor, setShowCommentEditor] = useState(true);
   const [commentCount, setCommentCount] = useState(space.feed_comments?.length || 0);
-  const router = useRouter();
+  
 
   const {
     isEdit,

@@ -685,7 +685,7 @@ export default function SpaceCommentEditor({
     }
   };
 
-  // Insert a regular link
+  //  regular link
   const handleInsertUrl = () => {
     const urlToInsert = url?.trim();
     if (!urlToInsert) return;
@@ -694,7 +694,7 @@ export default function SpaceCommentEditor({
     setUrl('');
   };
 
-  // Insert a quoted comment (could be styled differently if needed)
+  //  quoted comment link
   const handleInsertCommentUrl = () => {
     const commentToInsert = commentUrl?.trim();
     if (!commentToInsert) return;
