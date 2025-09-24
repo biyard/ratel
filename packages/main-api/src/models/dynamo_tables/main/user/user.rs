@@ -33,6 +33,7 @@ pub struct User {
     pub password: String,
 
     pub membership: Membership,
+    pub membership_info: MembershipInfo,
     pub theme: Theme,
     pub points: i64,
 }
@@ -69,6 +70,7 @@ impl User {
             parent_id,
             username,
             password,
+            membership_info: MembershipInfo::new_free(),
             ..Default::default()
         }
     }
