@@ -33,6 +33,12 @@ pub async fn verify_code_handler(
     let email_verification = verification_list[0].clone();
 
     if email_verification.attempt_count >= MAX_ATTEMPTS {
+        EmailVerification::delete(
+            &dynamo.client,
+            email_verification.pk,
+            Some(email_verification.sk),
+        )
+        .await?;
         return Err(Error2::BadRequest(
             "Maximum verification attempts exceeded".to_string(),
         ));
