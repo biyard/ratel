@@ -29,6 +29,7 @@ interface ToolbarPluginProps {
   enableImage?: boolean;
   onTriggerLinkPaste?: () => void;
   onCommentPaste?: () => void;
+  onUrlInsert?: () => void;
 }
 
 export default function ToolbarPlugin({
