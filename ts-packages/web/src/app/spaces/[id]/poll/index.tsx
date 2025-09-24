@@ -7,7 +7,7 @@ import { getOption as getDagitByIdOption } from '@/hooks/use-dagit';
 import Initial from './_components/initial';
 import MainTab from './_components/main';
 import Content from './_components/content';
-import SpaceSideMenu from './_components/side-menu';
+import SpaceSideMenu, { SpaceTabsMobile } from './_components/side-menu';
 
 export default async function PollPage({ spaceId }: { spaceId: number }) {
   const queryClient = getQueryClient();
@@ -25,6 +25,9 @@ export default async function PollPage({ spaceId }: { spaceId: number }) {
         <div className="flex flex-col w-full min-h-full gap-6.25">
           <Header />
           <Content spaceId={spaceId} />
+          <div className="hidden max-tablet:block w-full">
+            <SpaceTabsMobile spaceId={spaceId} />
+          </div>
           <MainTab spaceId={spaceId} />
         </div>
         <SpaceSideMenu spaceId={spaceId} />
