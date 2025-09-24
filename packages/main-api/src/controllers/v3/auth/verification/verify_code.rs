@@ -91,7 +91,7 @@ pub mod verify_code_tests {
             }),
         )
         .await;
-        assert!(res.is_ok());
+        assert!(res.is_ok(), "Failed to send code: {:?}", res);
 
         let res = verify_code_handler(
             State(app_state.clone()),

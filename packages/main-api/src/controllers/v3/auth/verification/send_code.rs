@@ -29,18 +29,13 @@ pub async fn send_code_handler(
     let (verification_list, _) =
         EmailVerification::find_by_email(&dynamo.client, &req.email, Default::default()).await?;
 
-    if verification_list.is_empty() {
-        return Err(Error2::NotFound(format!(
-            "No verification found for email: {}",
-            req.email
-        )));
-    }
-
-    let email_verification = verification_list[0].clone();
-    if email_verification.expired_at > get_now_timestamp() {
-        return Err(Error2::BadRequest(
-            "A verification code has already been sent. Please check your email.".to_string(),
-        ));
+    if !verification_list.is_empty() {
+        let email_verification = verification_list[0].clone();
+        if email_verification.expired_at > get_now_timestamp() {
+            return Err(Error2::BadRequest(
+                "A verification code has already been sent. Please check your email.".to_string(),
+            ));
+        }
     }
 
     let code = generate_random_code();
