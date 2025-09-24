@@ -384,7 +384,9 @@ const LabeledInput = ({
       value={value}
       onChange={(e) => onInput(e.target.value)}
     />
-    {warning !== '' && <span className="text-sm text-c-p-50">{warning}</span>}
+    {warning !== '' && (
+      <span className="text-sm text-c-p-50 light:text-red-600">{warning}</span>
+    )}
   </div>
 );
 

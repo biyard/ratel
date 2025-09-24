@@ -65,7 +65,7 @@ export const PopupZone = () => {
           {title && (
             <div
               id="popup-title"
-              className="text-[20px] font-bold text-text-primary"
+              className="text-[20px] font-bold text-text-primary max-tablet:mt-6"
             >
               {title}
             </div>

@@ -63,6 +63,18 @@ export function postingSpaceRequest(): PostingSpaceRequest {
   };
 }
 
+export interface SpaceDeleteRequest {
+  confirmation: boolean;
+  space_name: string;
+}
+
+export function spaceDeleteRequest(space_name: string): SpaceDeleteRequest {
+  return {
+    confirmation: true,
+    space_name: space_name,
+  };
+}
+
 export interface SpaceUpdateRequest {
   update_space: {
     title?: string;

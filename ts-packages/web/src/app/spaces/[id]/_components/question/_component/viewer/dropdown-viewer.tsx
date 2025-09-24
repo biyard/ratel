@@ -36,7 +36,7 @@ export default function DropdownViewer({
         isMulti={false}
         title={title}
       />
-      <div className="relative w-65">
+      <div className="relative w-65 max-tablet:w-full">
         <select
           disabled={isCompleted}
           value={
@@ -45,7 +45,7 @@ export default function DropdownViewer({
           onChange={(e) =>
             handleSelect(index, parseInt(e.target.value, 10), 'dropdown')
           }
-          className="w-full appearance-none bg-input-box-bg border border-input-box-border focus:border-primary px-5 py-[10.5px] pr-10 font-medium text-[15px]/[22.5px] text-neutral-600 light:text-text-primary rounded-lg truncate"
+          className="w-full min-w-0 appearance-none bg-input-box-bg border border-input-box-border focus:border-primary px-5 py-[10.5px] pr-10 font-medium text-[15px]/[22.5px] text-neutral-600 light:text-text-primary rounded-lg truncate"
         >
           <option className="truncate" value="" disabled>
             {t('choose')}

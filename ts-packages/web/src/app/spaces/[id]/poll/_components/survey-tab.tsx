@@ -5,6 +5,7 @@ import SpaceSurvey from '../../_components/space-survey';
 import { useEditCoordinatorStore } from '../../space-store';
 import { usePollStore } from '../store';
 import { usePollMutation } from '@/hooks/use-poll';
+import { getTimeWithFormat } from '@/lib/time-utils';
 
 export function PollSurveyPage({ space }: { space: Space }) {
   const { isEdit } = useEditCoordinatorStore();
@@ -14,6 +15,11 @@ export function PollSurveyPage({ space }: { space: Space }) {
   return (
     <div className="flex flex-col w-full">
       <div className="flex flex-col gap-2.5">
+        <div className="hidden max-tablet:flex flex-row w-full justify-end items-center font-medium text-neutral-80 text-xs/[12px] gap-[10px]">
+          <div>{getTimeWithFormat(started_at ?? 0)}</div>
+          <div>~</div>
+          <div>{getTimeWithFormat(ended_at ?? 0)}</div>
+        </div>
         <SpaceSurvey
           isEdit={isEdit}
           startDate={started_at || 0}

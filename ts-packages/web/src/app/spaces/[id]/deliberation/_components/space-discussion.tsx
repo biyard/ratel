@@ -84,7 +84,7 @@ function DiscussionSchedules() {
                   }}
                 />
                 {index !== discussions.length - 1 ? (
-                  <div className=" w-full h-0.25 gap-1 bg-neutral-800" />
+                  <div className=" w-full h-0.25 gap-1 bg-divider" />
                 ) : (
                   <></>
                 )}
@@ -139,8 +139,8 @@ export function DiscussionRoom({
   const isMember = members.some((member) => member.id === userId);
 
   return (
-    <div className="flex flex-row w-full items-start justify-between gap-5">
-      <div className="relative w-[240px] h-[150px] rounded-lg overflow-hidden">
+    <div className="flex flex-row w-full items-start justify-between max-tablet:flex-col gap-5">
+      <div className="relative w-[240px] h-[150px] rounded-lg overflow-hidden max-tablet:w-[350px] max-mobile:w-full max-tablet:aspect-[16/9] max-tablet:h-auto">
         <Image
           src={discussionImg}
           alt="Discussion Thumbnail"
@@ -154,10 +154,15 @@ export function DiscussionRoom({
         )}
       </div>
 
-      <div className="flex flex-col flex-1 h-full justify-between items-start">
-        <div className="flex flex-col flex-1 gap-1">
-          <div className="text-sm text-neutral-400 light:text-[#737373] font-normal">
-            {statusLabel}
+      <div className="flex flex-col flex-1 h-full justify-between items-start w-full">
+        <div className="flex flex-col flex-1 gap-1 w-full">
+          <div className="flex w-full items-start justify-between">
+            <div className="text-sm text-neutral-400 light:text-[#737373] font-normal">
+              {statusLabel}
+            </div>
+            <div className="relative w-fit h-fit hidden max-tablet:block">
+              <Extra2 className="cursor-pointer w-6 h-6" onClick={() => {}} />
+            </div>
           </div>
           <div className="text-lg text-text-primary font-bold">{title}</div>
           <div className="text-sm text-[#6d6d6d] light:text-[#737373] font-normal">
@@ -372,6 +377,7 @@ function EditableDiscussionInfo({
   const [users, setUsers] = useState<TotalUser[]>(participants);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
 
   const isLive = now >= startTime && now <= endTime;
   const isUpcoming = now < startTime;
@@ -395,7 +401,13 @@ function EditableDiscussionInfo({
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(target) &&
+        mobileMenuRef.current &&
+        !mobileMenuRef.current.contains(target)
+      ) {
         setMenuOpen(false);
       }
     };
@@ -405,8 +417,8 @@ function EditableDiscussionInfo({
 
   return (
     <div className="w-full flex flex-col gap-4 relative">
-      <div className="flex flex-row w-full items-start justify-between gap-5">
-        <div className="relative w-[240px] h-[150px] rounded-lg overflow-hidden">
+      <div className="flex flex-row w-full items-start justify-between max-tablet:flex-col gap-5">
+        <div className="relative w-[240px] h-[150px] rounded-lg overflow-hidden max-tablet:w-[350px] max-mobile:w-full max-tablet:aspect-[16/9] max-tablet:h-auto">
           <Image
             src={discussionImg}
             alt="Discussion Thumbnail"
@@ -420,10 +432,60 @@ function EditableDiscussionInfo({
           )}
         </div>
 
-        <div className="flex flex-col flex-1 h-full justify-between items-start">
-          <div className="flex flex-col flex-1 gap-1">
-            <div className="text-sm text-neutral-400 light:text-[#737373] font-normal">
-              {statusLabel}
+        <div className="flex flex-col flex-1 h-full justify-between items-start w-full">
+          <div className="flex flex-col flex-1 gap-1 w-full">
+            <div className="flex w-full items-start justify-between">
+              <div className="text-sm text-neutral-400 light:text-[#737373] font-normal">
+                {statusLabel}
+              </div>
+              <div
+                className="relative w-fit h-fit hidden max-tablet:block"
+                ref={mobileMenuRef}
+              >
+                <Extra2
+                  className="cursor-pointer w-6 h-6"
+                  onClick={() => setMenuOpen(!menuOpen)}
+                />
+                {menuOpen && (
+                  <div className="absolute right-0 mt-2 w-25 bg-white text-black rounded shadow-lg text-sm z-50 overflow-hidden">
+                    <div
+                      className="px-4 py-2 hover:bg-neutral-200 cursor-pointer whitespace-nowrap"
+                      onClick={() => {
+                        popup
+                          .open(
+                            <NewDiscussion
+                              discussion={{
+                                started_at: Math.floor(startedAt * 1000),
+                                ended_at: Math.floor(endedAt * 1000),
+                                name,
+                                description,
+                                participants: users,
+                              }}
+                              onadd={(discussion: DiscussionInfo) => {
+                                onupdate(index, discussion);
+                              }}
+                            />,
+                          )
+                          .withTitle('New Discussion')
+                          .overflow(true)
+                          .withoutBackdropClose();
+                        setMenuOpen(false);
+                      }}
+                    >
+                      {t('update')}
+                    </div>
+                    <div
+                      className="px-4 py-2 hover:bg-neutral-200 cursor-pointer whitespace-nowrap"
+                      onClick={() => {
+                        onremove(index);
+                        setMenuOpen(false);
+                      }}
+                    >
+                      {t('delete')}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
             <div className="text-lg text-text-primary font-bold">{title}</div>
             <div className="text-sm text-[#6d6d6d] light:text-[#737373] font-normal">
@@ -442,7 +504,7 @@ function EditableDiscussionInfo({
           </div>
         </div>
 
-        <div className="relative w-fit h-fit" ref={menuRef}>
+        <div className="relative w-fit h-fit max-tablet:hidden" ref={menuRef}>
           <Extra2
             className="cursor-pointer w-6 h-6"
             onClick={() => setMenuOpen(!menuOpen)}
