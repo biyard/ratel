@@ -129,51 +129,53 @@ export default function InviteMemberPopup({
         <div className="font-bold text-[15px]/[28px] text-modal-label-text">
           {t('invite_label')}
         </div>
-        <div className="mt-[10px]">
-          <SearchInput
-            value={searchValue}
-            placeholder={t('invite_hint')}
-            setValue={async (value) => {
-              setValue(value, false);
-            }}
-            onenter={async () => {
-              setValue(searchValue, true);
-            }}
-          />
-        </div>
-      </div>
+        <div className="flex flex-col w-full max-mobile:max-h-[350px] max-mobile:overflow-y-auto">
+          <div className="mt-[10px]">
+            <SearchInput
+              value={searchValue}
+              placeholder={t('invite_hint')}
+              setValue={async (value) => {
+                setValue(value, false);
+              }}
+              onenter={async () => {
+                setValue(searchValue, true);
+              }}
+            />
+          </div>
 
-      <div className="flex flex-col w-full gap-[10px]">
-        <div className="flex flex-wrap gap-1">
-          {selectedUsers.map((user, index) => {
-            return (
-              <SelectedUserInfo
-                key={user.id}
-                username={user.nickname}
-                isError={isError[index]}
-                onremove={() => {
-                  setSelectedUsers((prevUsers) => {
-                    const newUsers = [...prevUsers];
-                    newUsers.splice(index, 1);
-                    return newUsers;
-                  });
+          <div className="flex flex-col w-full gap-[10px] mt-[10px]">
+            <div className="flex flex-wrap gap-1">
+              {selectedUsers.map((user, index) => {
+                return (
+                  <SelectedUserInfo
+                    key={user.id}
+                    username={user.nickname}
+                    isError={isError[index]}
+                    onremove={() => {
+                      setSelectedUsers((prevUsers) => {
+                        const newUsers = [...prevUsers];
+                        newUsers.splice(index, 1);
+                        return newUsers;
+                      });
 
-                  setIsError((prevErrors) => {
-                    const newErrors = [...prevErrors];
-                    const v = newErrors.splice(index, 1)[0];
-                    logger.debug('value: ', v);
+                      setIsError((prevErrors) => {
+                        const newErrors = [...prevErrors];
+                        const v = newErrors.splice(index, 1)[0];
+                        logger.debug('value: ', v);
 
-                    const newErrorCount = newErrors.filter(
-                      (e) => e === true,
-                    ).length;
-                    setErrorCount(newErrorCount);
+                        const newErrorCount = newErrors.filter(
+                          (e) => e === true,
+                        ).length;
+                        setErrorCount(newErrorCount);
 
-                    return newErrors;
-                  });
-                }}
-              />
-            );
-          })}
+                        return newErrors;
+                      });
+                    }}
+                  />
+                );
+              })}
+            </div>
+          </div>
         </div>
       </div>
 

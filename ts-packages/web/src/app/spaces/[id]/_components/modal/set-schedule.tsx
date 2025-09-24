@@ -58,25 +58,28 @@ export default function SetSchedulePopup({
             )}
           </div>
 
-          <div className="flex flex-row max-tablet:flex-col gap-2.5 items-center">
-            <CalendarDropdown
-              value={session.start}
-              onChange={(v) => {
-                const delta = session.end - session.start;
-                const nextStart = Math.floor(v);
-                const nextEnd = nextStart + delta;
-                setSessions((prev) => {
-                  const updated = [...prev];
-                  updated[index] = {
-                    ...updated[index],
-                    start: nextStart,
-                    end: nextEnd,
-                  };
-                  return updated;
-                });
-              }}
-            />
-            <div className="w-full mb-[10px]">
+          <div className="flex flex-wrap items-center gap-2.5 justify-start">
+            <div className="shrink-0 max-tablet:w-full">
+              <CalendarDropdown
+                value={session.start}
+                onChange={(v) => {
+                  const delta = session.end - session.start;
+                  const nextStart = Math.floor(v);
+                  const nextEnd = nextStart + delta;
+                  setSessions((prev) => {
+                    const updated = [...prev];
+                    updated[index] = {
+                      ...updated[index],
+                      start: nextStart,
+                      end: nextEnd,
+                    };
+                    return updated;
+                  });
+                }}
+              />
+            </div>
+
+            <div className="shrink-0 max-tablet:w-full max-tablet:mb-[10px]">
               <TimeDropdown
                 value={session.start}
                 onChange={(v) => {
@@ -96,32 +99,35 @@ export default function SetSchedulePopup({
               />
             </div>
 
-            <div className="w-[15px] h-0.25 bg-neutral-600 max-tablet:hidden" />
+            <span className="px-1 text-neutral-500 max-tablet:hidden">–</span>
 
-            <CalendarDropdown
-              value={session.end}
-              onChange={(v) => {
-                if (v < session.start) {
-                  showErrorToast(t('end_date_warning'));
-                  return;
-                }
+            <div className="shrink-0 max-tablet:w-full">
+              <CalendarDropdown
+                value={session.end}
+                onChange={(v) => {
+                  if (v < session.start) {
+                    showErrorToast(t('end_date_warning'));
+                    return;
+                  }
+                  handleChange(index, 'end', Math.floor(v));
+                }}
+              />
+            </div>
 
-                handleChange(index, 'end', Math.floor(v));
-              }}
-            />
-            <TimeDropdown
-              value={session.end}
-              onChange={(v) => {
-                if (v < session.start) {
-                  showErrorToast(t('end_date_warning'));
-                  return;
-                }
+            <div className="shrink-0 max-tablet:w-full max-tablet:mb-[10px]">
+              <TimeDropdown
+                value={session.end}
+                onChange={(v) => {
+                  if (v < session.start) {
+                    showErrorToast(t('end_date_warning'));
+                    return;
+                  }
+                  handleChange(index, 'end', Math.floor(v));
+                }}
+              />
+            </div>
 
-                handleChange(index, 'end', Math.floor(v));
-              }}
-            />
-
-            <div className="flex flex-row items-center w-fit max-tablet:w-full border border-select-date-border bg-select-date-bg rounded-lg px-5 py-[10.5px] gap-2.5 mt-2 sm:mt-0">
+            <div className="ml-auto max-tablet:ml-0 flex items-center w-fit max-tablet:w-full border border-select-date-border bg-select-date-bg rounded-lg px-5 py-[10.5px] gap-2.5">
               <div className="font-medium text-[15px]/[22.5px] text-neutral-600">
                 Pacific Time
               </div>

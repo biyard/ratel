@@ -121,176 +121,180 @@ export default function SpaceConfigForm({
 
       {/* Warning Message */}
 
-      <div className="text-base text-create-space-desc pt-5">
-        <p>
-          {t.rich('SetBoostModal.description', {
-            spaceType: getSpaceTypeTitle(spaceType),
-            b: (chunks) => (
-              <span className="font-semibold text-desc-text">{chunks}</span>
-            ),
-          })}
-        </p>
-      </div>
+      <div className="flex flex-col w-full gap-2 max-mobile:h-[350px] max-mobile:overflow-y-scroll">
+        <div className="text-base text-create-space-desc pt-5">
+          <p>
+            {t.rich('SetBoostModal.description', {
+              spaceType: getSpaceTypeTitle(spaceType),
+              b: (chunks) => (
+                <span className="font-semibold text-desc-text">{chunks}</span>
+              ),
+            })}
+          </p>
+        </div>
 
-      {/* Date and Time Section */}
-      <div className="flex gap-2 flex-row max-tablet:flex-wrap max-tabletitems-center">
-        <div className="flex flex-col w-full gap-2 sm:flex-row sm:w-auto sm:items-center">
-          <div className="w-full max-tablet:w-auto">
-            <CalendarDropdown
-              value={startTimestamp}
-              onChange={(timestamp) => {
-                const delta = endTimestamp - startTimestamp;
-                setStartTimestamp(timestamp);
-                setEndTimestamp(timestamp + delta);
+        {/* Date and Time Section */}
+        <div className="flex gap-2 flex-row max-tablet:flex-wrap max-tabletitems-center">
+          <div className="flex flex-col w-full gap-2 sm:flex-row sm:w-auto sm:items-center">
+            <div className="w-full max-tablet:w-auto">
+              <CalendarDropdown
+                value={startTimestamp}
+                onChange={(timestamp) => {
+                  const delta = endTimestamp - startTimestamp;
+                  setStartTimestamp(timestamp);
+                  setEndTimestamp(timestamp + delta);
+                }}
+              />
+            </div>
+            <div className="w-full sm:w-auto">
+              <TimeDropdown
+                value={startTimestamp}
+                onChange={(timestamp) => {
+                  const delta = endTimestamp - startTimestamp;
+                  setStartTimestamp(timestamp);
+                  setEndTimestamp(timestamp + delta);
+                }}
+              />
+            </div>
+          </div>
+
+          <div className="hidden sm:block w-[15px] h-0.5 self-center bg-neutral-600" />
+
+          <div className="flex flex-col w-full gap-2 sm:flex-row sm:w-auto sm:items-center max-tablet:mt-2.5">
+            <div className="w-full sm:w-auto">
+              <CalendarDropdown
+                value={endTimestamp}
+                onChange={(timestamp) => setEndTimestamp(timestamp)}
+              />
+            </div>
+            <div className="w-full sm:w-auto">
+              <TimeDropdown
+                value={endTimestamp}
+                onChange={(timestamp) => setEndTimestamp(timestamp)}
+              />
+            </div>
+          </div>
+
+          <div className="w-full sm:w-fit flex flex-row items-center border border-select-date-border bg-select-date-bg rounded-lg px-5 py-[10.5px] gap-2.5 mt-2 sm:mt-0">
+            <div className="font-medium text-[15px]/[22.5px] text-neutral-600">
+              Pacific Time
+            </div>
+            <Internet
+              className="w-5 h-5 [&>path]:stroke-neutral-600 [&>circle]:stroke-neutral-600"
+              width="20"
+              height="20"
+            />
+          </div>
+        </div>
+
+        {/* Boost Section */}
+        <div className="flex flex-col gap-3">
+          <h3 className="text-base font-semibold text-modal-label-text py-1">
+            {t('boost')}
+          </h3>
+
+          <div className="flex items-start gap-2">
+            <input
+              type="checkbox"
+              id="activateBooster"
+              checked={formConfig.activateBooster}
+              onChange={(e) =>
+                setFormConfig({
+                  ...formConfig,
+                  activateBooster: e.target.checked,
+                })
+              }
+              className="mt-0.5 w-4 h-4 rounded border-[var(--color-c-wg-70)] checked:bg-[var(--color-primary)] checked:border-[var(--color-primary)] focus:ring-[var(--color-primary)] focus:ring-offset-0 accent-[var(--color-primary)] cursor-pointer"
+              style={{
+                accentColor: 'var(--color-primary)',
+                backgroundColor: 'inherit',
               }}
             />
-          </div>
-          <div className="w-full sm:w-auto">
-            <TimeDropdown
-              value={startTimestamp}
-              onChange={(timestamp) => {
-                const delta = endTimestamp - startTimestamp;
-                setStartTimestamp(timestamp);
-                setEndTimestamp(timestamp + delta);
-              }}
-            />
-          </div>
-        </div>
-
-        <div className="hidden sm:block w-[15px] h-0.5 self-center bg-neutral-600" />
-
-        <div className="flex flex-col w-full gap-2 sm:flex-row sm:w-auto sm:items-center max-tablet:mt-2.5">
-          <div className="w-full sm:w-auto">
-            <CalendarDropdown
-              value={endTimestamp}
-              onChange={(timestamp) => setEndTimestamp(timestamp)}
-            />
-          </div>
-          <div className="w-full sm:w-auto">
-            <TimeDropdown
-              value={endTimestamp}
-              onChange={(timestamp) => setEndTimestamp(timestamp)}
-            />
-          </div>
-        </div>
-
-        <div className="w-full sm:w-fit flex flex-row items-center border border-select-date-border bg-select-date-bg rounded-lg px-5 py-[10.5px] gap-2.5 mt-2 sm:mt-0">
-          <div className="font-medium text-[15px]/[22.5px] text-neutral-600">
-            Pacific Time
-          </div>
-          <Internet
-            className="w-5 h-5 [&>path]:stroke-neutral-600 [&>circle]:stroke-neutral-600"
-            width="20"
-            height="20"
-          />
-        </div>
-      </div>
-
-      {/* Boost Section */}
-      <div className="flex flex-col gap-3">
-        <h3 className="text-base font-semibold text-modal-label-text py-1">
-          {t('boost')}
-        </h3>
-
-        <div className="flex items-start gap-2">
-          <input
-            type="checkbox"
-            id="activateBooster"
-            checked={formConfig.activateBooster}
-            onChange={(e) =>
-              setFormConfig({
-                ...formConfig,
-                activateBooster: e.target.checked,
-              })
-            }
-            className="mt-0.5 w-4 h-4 rounded border-[var(--color-c-wg-70)] checked:bg-[var(--color-primary)] checked:border-[var(--color-primary)] focus:ring-[var(--color-primary)] focus:ring-offset-0 accent-[var(--color-primary)] cursor-pointer"
-            style={{
-              accentColor: 'var(--color-primary)',
-              backgroundColor: 'inherit',
-            }}
-          />
-          <div className="flex-1">
-            <label
-              htmlFor="activateBooster"
-              className="text-base font-medium text-text-primary cursor-pointer"
-            >
-              {t('active_booster')}
-            </label>
-            <p className="text-base text-desc-text mt-0.5">
-              {t.rich('active_booster_desc', {
-                btn: (chunks) => (
-                  <button className="text-desc-text underline">{chunks}</button>
-                ),
-              })}
-            </p>
-          </div>
-        </div>
-
-        {formConfig.activateBooster && (
-          <div className="ml-7 flex flex-col gap-2">
-            <label className="text-base font-medium text-text-primary py-1">
-              {t('booster')}
-            </label>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  type="button"
-                  className="border border-[var(--color-c-wg-70)] bg-transparent text-text-primary pl-14 pr-4 py-3 rounded-md focus:outline-none focus:ring-2 focus:ring-primary w-full text-base font-medium cursor-pointer relative z-1"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-text-primary">
-                      Booster x{' '}
-                      {Object.entries(BoosterType)
-                        .find(
-                          ([, value]) => value === formConfig.boosterType,
-                        )?.[0]
-                        ?.replace('X', '') || ''}
-                    </span>
-                    <svg
-                      className="w-8 h-8 text-[var(--color-secondary)]"
-                      fill="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path d="M7 10l5 5 5-5z" />
-                    </svg>
-                  </div>
-                  <Fire className="absolute left-5 top-1/2 transform -translate-y-1/2 w-6 h-6 text-[var(--color-primary)] pointer-events-none" />
-                </button>
-              </DropdownMenuTrigger>
-
-              <DropdownMenuContent
-                align="start"
-                className="w-[var(--radix-dropdown-menu-trigger-width)] bg-[var(--color-background)] border-[var(--color-c-wg-70)] text-text-primary"
+            <div className="flex-1">
+              <label
+                htmlFor="activateBooster"
+                className="text-base font-medium text-text-primary cursor-pointer"
               >
-                {Object.entries(BoosterType)
-                  .filter(
-                    ([, value]) =>
-                      typeof value === 'number' &&
-                      value !== BoosterType.NoBoost,
-                  )
-                  .map(([key, value]) => {
-                    const multiplier = key.replace('X', '');
-                    return (
-                      <DropdownMenuItem
-                        key={value}
-                        onSelect={() => {
-                          setFormConfig({
-                            ...formConfig,
-                            boosterType: value as BoosterType,
-                          });
-                        }}
-                        className={`px-4 py-3 hover:bg-black/10 flex items-center w-full ${formConfig.boosterType === value ? 'bg-black/10' : ''}`}
-                      >
-                        <Fire className="w-5 h-5 mr-3 text-[var(--color-primary)]" />
-                        <span>Booster x {multiplier}</span>
-                      </DropdownMenuItem>
-                    );
-                  })}
-              </DropdownMenuContent>
-            </DropdownMenu>
+                {t('active_booster')}
+              </label>
+              <p className="text-base text-desc-text mt-0.5">
+                {t.rich('active_booster_desc', {
+                  btn: (chunks) => (
+                    <button className="text-desc-text underline">
+                      {chunks}
+                    </button>
+                  ),
+                })}
+              </p>
+            </div>
           </div>
-        )}
+
+          {formConfig.activateBooster && (
+            <div className="ml-7 flex flex-col gap-2">
+              <label className="text-base font-medium text-text-primary py-1">
+                {t('booster')}
+              </label>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    className="border border-[var(--color-c-wg-70)] bg-transparent text-text-primary pl-14 pr-4 py-3 rounded-md focus:outline-none focus:ring-2 focus:ring-primary w-full text-base font-medium cursor-pointer relative z-1"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-text-primary">
+                        Booster x{' '}
+                        {Object.entries(BoosterType)
+                          .find(
+                            ([, value]) => value === formConfig.boosterType,
+                          )?.[0]
+                          ?.replace('X', '') || ''}
+                      </span>
+                      <svg
+                        className="w-8 h-8 text-[var(--color-secondary)]"
+                        fill="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path d="M7 10l5 5 5-5z" />
+                      </svg>
+                    </div>
+                    <Fire className="absolute left-5 top-1/2 transform -translate-y-1/2 w-6 h-6 text-[var(--color-primary)] pointer-events-none" />
+                  </button>
+                </DropdownMenuTrigger>
+
+                <DropdownMenuContent
+                  align="start"
+                  className="w-[var(--radix-dropdown-menu-trigger-width)] bg-[var(--color-background)] border-[var(--color-c-wg-70)] text-text-primary"
+                >
+                  {Object.entries(BoosterType)
+                    .filter(
+                      ([, value]) =>
+                        typeof value === 'number' &&
+                        value !== BoosterType.NoBoost,
+                    )
+                    .map(([key, value]) => {
+                      const multiplier = key.replace('X', '');
+                      return (
+                        <DropdownMenuItem
+                          key={value}
+                          onSelect={() => {
+                            setFormConfig({
+                              ...formConfig,
+                              boosterType: value as BoosterType,
+                            });
+                          }}
+                          className={`px-4 py-3 hover:bg-black/10 flex items-center w-full ${formConfig.boosterType === value ? 'bg-black/10' : ''}`}
+                        >
+                          <Fire className="w-5 h-5 mr-3 text-[var(--color-primary)]" />
+                          <span>Booster x {multiplier}</span>
+                        </DropdownMenuItem>
+                      );
+                    })}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Create Button */}
