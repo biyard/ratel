@@ -78,7 +78,7 @@ pub async fn update_user_handler(
 
     if let Some(telegram_raw) = req.telegram_raw {
         let telegram_user = parse_telegram_raw(telegram_raw.clone())?;
-        UserTelegram::new(user.pk.clone(), telegram_user.id, telegram_raw)
+        UserTelegram::new(user.pk.clone(), telegram_user.id)
             .create(&dynamo.client)
             .await?;
     }

@@ -1,15 +1,16 @@
 use crate::{
     AppState, Error2,
     models::user::{
-        User, UserEvmAddress, UserPhoneNumber, UserPrincipal, UserReferralCode, UserTelegram,
+        User, UserEvmAddress, UserOAuth, UserOAuthQueryOption, UserPhoneNumber, UserReferralCode,
     },
-    types::{Theme, UserType},
+    types::{Provider, UserType},
     utils::{
-        dynamo_extractor::{extract_user, get_principal_from_auth},
+        dynamo_extractor::extract_user,
+        firebase,
         password::hash_password,
         referal_code::generate_referral_code,
         telegram::parse_telegram_raw,
-        validator::validate_nickname,
+        validator::{validate_description, validate_image_url, validate_nickname},
     },
 };
 use bdk::prelude::*;
@@ -25,38 +26,41 @@ use dto::{
 };
 use serde::Deserialize;
 use tower_sessions::Session;
-use uuid::Uuid;
 use validator::Validate;
 
-/*
-FIXME:
-There is a problem with the validation logic for emails. For example, it's possible to sign up with an arbitrary email via an API call, regardless of whether the email has been verified.
-
-1. Email/Password signup -> Receive Email Verification ID and verify `EmailVerification Entry` Email
-2. Google OAuth signup -> Extract Email from Google Token
-3. Telegram OAuth signup -> Use randomly generated Email (e.g. tg_<telegram_id>@noemail.local)
-
- */
-#[derive(Debug, Clone, Deserialize, Default, aide::OperationIo, JsonSchema, Validate)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, Clone, Deserialize, aide::OperationIo, JsonSchema, Validate)]
 pub struct SignupRequest {
-    pub email: String,
+    #[serde(flatten)]
+    pub signup_type: SignupType,
     #[validate(custom(function = "validate_nickname"))]
     pub display_name: String,
     pub username: String,
+    #[validate(custom(function = "validate_image_url"))]
     pub profile_url: String,
-    pub content: String,
+    #[validate(custom(function = "validate_description"))]
+    pub description: String,
     pub term_agreed: bool,
     pub informed_agreed: bool,
-    pub theme: Option<Theme>,
-    pub password: Option<String>,
 
-    // pub principal: Option<String>,
     pub evm_address: Option<String>,
     pub phone_number: Option<String>,
-    pub telegram_raw: Option<String>,
 }
 
+#[derive(Debug, Clone, Deserialize, aide::OperationIo, JsonSchema)]
+pub enum SignupType {
+    Email {
+        #[validate(email)]
+        email: String,
+        password: String,
+    },
+    OAuth {
+        provider: Provider,
+        token: String,
+    },
+    Telegram {
+        telegram_raw: String,
+    },
+}
 ///
 /// Signup handler
 /// Anonymous users can also use this endpoint to convert to normal users.
@@ -68,86 +72,77 @@ pub async fn signup_handler(
     Extension(session): Extension<Session>,
     Json(req): Json<SignupRequest>,
 ) -> Result<(), Error2> {
-    //This handler is for existing Principal information only. It does not support any specific actions with Principal.    //
-    let principal = get_principal_from_auth(auth.clone()).ok();
-    let user = extract_user(&dynamo.client, auth).await;
+    req.validate()
+        .map_err(|e| Error2::BadRequest(format!("Invalid input: {}", e)))?;
 
-    let user_pk;
-    let user_type;
+    let anonymous_user = extract_user(&dynamo.client, auth).await.ok();
+    let mut payload = UserPayload {
+        display_name: req.display_name,
+        username: req.username,
+        profile_url: req.profile_url,
+        description: req.description,
+        term_agreed: req.term_agreed,
+        informed_agreed: req.informed_agreed,
+        email: match &req.signup_type {
+            SignupType::Email { email, .. } => email.clone(),
+            _ => "".to_string(),
+        },
+        password: match &req.signup_type {
+            SignupType::Email { password, .. } => Some(password.clone()),
+            _ => None,
+        },
+    };
+    // Validate Duplicate
+    let user = match req.signup_type {
+        SignupType::Email { email, password } => {
+            let (users, _) =
+                User::find_by_email(&dynamo.client, &email, Default::default()).await?;
+            if users.len() > 0 {
+                return Err(Error2::Duplicate(format!(
+                    "Email already registered: {}",
+                    email
+                )));
+            }
+            payload.email = email;
+            let hashed_password = hash_password(&password).map_err(|e| {
+                Error2::InternalServerError(format!("Password hashing failed: {}", e))
+            })?;
+            payload.password = Some(hashed_password);
 
-    // check email is duplicate
-    let (users, bookmarks) =
-        User::find_by_email(&dynamo.client, &req.email, Default::default()).await?;
-    if users.len() > 0 || bookmarks.is_some() {
-        return Err(Error2::Duplicate(format!(
-            "Email already registered: {}",
-            req.email
-        )));
-    }
-    let password = req.password.unwrap_or(Uuid::new_v4().to_string());
-    let hashed_password = hash_password(&password)
-        .map_err(|e| Error2::InternalServerError(format!("Password hashing error: {}", e)))?;
-
-    // When User is Anonymous, convert to normal user
-    match user {
-        Ok(u) if u.user_type == UserType::Anonymous => {
-            // Update Anonymous user to normal user
-            User::updater(u.pk.clone(), u.sk.clone())
-                .with_display_name(req.display_name)
-                .with_email(req.email)
-                .with_profile_url(req.profile_url)
-                .with_term_agreed(req.term_agreed)
-                .with_informed_agreed(req.informed_agreed)
-                .with_user_type(UserType::Individual)
-                .with_theme(req.theme.unwrap_or_default())
-                .with_password(hashed_password)
-                .execute(&dynamo.client)
-                .await?;
-            user_pk = u.pk;
-            user_type = UserType::Individual;
+            create_or_update_user(&dynamo.client, anonymous_user, payload).await?
         }
-        _ => {
-            // Create new User
-
-            let user = User::new(
-                req.display_name,
-                req.email,
-                req.profile_url,
-                req.term_agreed,
-                req.informed_agreed,
-                UserType::Individual,
-                None,
-                req.username,
-                hashed_password,
-            );
-            user.create(&dynamo.client).await?;
-            user_pk = user.pk;
-            user_type = user.user_type;
+        SignupType::OAuth { provider, token } => {
+            let uid = match provider {
+                Provider::Google => firebase::oauth::verify_token(&token).await?,
+            };
+            let (user_oauths, _) = UserOAuth::find_by_provider_and_uid(
+                &dynamo.client,
+                provider.to_string(),
+                UserOAuthQueryOption::builder().sk(uid.clone()),
+            )
+            .await?;
+            if user_oauths.len() > 0 {
+                return Err(Error2::Duplicate(format!("OAuth already registered")));
+            }
+            create_or_update_user(&dynamo.client, anonymous_user, payload).await?
         }
-    }
+        SignupType::Telegram { telegram_raw } => {
+            let _telegram_user = parse_telegram_raw(telegram_raw);
 
+            return Err(Error2::InternalServerError("Not implemented yet".into()));
+        }
+    };
     if let Some(evm_address) = req.evm_address {
-        UserEvmAddress::new(user_pk.clone(), evm_address)
+        UserEvmAddress::new(user.pk.clone(), evm_address)
             .create(&dynamo.client)
             .await?;
     }
     if let Some(phone_number) = req.phone_number {
-        UserPhoneNumber::new(user_pk.clone(), phone_number)
+        UserPhoneNumber::new(user.pk.clone(), phone_number)
             .create(&dynamo.client)
             .await?;
     }
-    if let Some(telegram_raw) = req.telegram_raw {
-        let telegram_user = parse_telegram_raw(telegram_raw.clone())?;
-        UserTelegram::new(user_pk.clone(), telegram_user.id, telegram_raw)
-            .create(&dynamo.client)
-            .await?;
-    }
-    if let Some(principal) = principal {
-        let user_principal = UserPrincipal::new(user_pk.clone(), principal);
-        user_principal.create(&dynamo.client).await?;
-    }
-
-    UserReferralCode::new(user_pk.clone(), generate_referral_code())
+    UserReferralCode::new(user.pk.clone(), generate_referral_code())
         .create(&dynamo.client)
         .await?;
 
@@ -155,11 +150,56 @@ pub async fn signup_handler(
         .insert(
             DYNAMO_USER_SESSION_KEY,
             DynamoUserSession {
-                pk: user_pk.to_string(),
-                typ: user_type as i64,
+                pk: user.pk.to_string(),
+                typ: user.user_type as i64,
             },
         )
         .await?;
 
     Ok(())
+}
+
+struct UserPayload {
+    display_name: String,
+    username: String,
+    profile_url: String,
+    description: String,
+    term_agreed: bool,
+    informed_agreed: bool,
+    email: String,
+    password: Option<String>,
+}
+
+async fn create_or_update_user(
+    dynamo: &aws_sdk_dynamodb::Client,
+    user: Option<User>,
+    payload: UserPayload,
+) -> Result<User, Error2> {
+    if let Some(existing_user) = user {
+        let mut updater = User::updater(&existing_user.pk, &existing_user.sk)
+            .with_display_name(payload.display_name)
+            .with_profile_url(payload.profile_url)
+            .with_username(payload.username)
+            .with_email(payload.email)
+            .with_description(payload.description);
+
+        if let Some(password) = payload.password {
+            updater = updater.with_password(password)
+        };
+        updater.execute(dynamo).await?;
+        Ok(existing_user)
+    } else {
+        let user = User::new(
+            payload.display_name,
+            payload.email,
+            payload.profile_url,
+            payload.term_agreed,
+            payload.informed_agreed,
+            UserType::Individual,
+            payload.username,
+            payload.password,
+        );
+        user.create(dynamo).await?;
+        Ok(user)
+    }
 }

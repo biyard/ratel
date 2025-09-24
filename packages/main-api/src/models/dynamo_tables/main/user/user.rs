@@ -13,7 +13,13 @@ pub struct User {
 
     pub display_name: String,
     pub profile_url: String,
-    #[dynamo(prefix = "EMAIL", name = "find_by_email", index = "gsi1", pk)]
+    #[dynamo(
+        prefix = "EMAIL#PASSWORD",
+        name = "find_by_email_and_password",
+        index = "gsi1",
+        pk
+    )]
+    #[dynamo(prefix = "EMAIL", name = "find_by_email", index = "gsi3", pk)]
     pub email: String,
     // NOTE: username is linked with gsi2-index of team model.
     #[dynamo(prefix = "USERNAME", name = "find_by_username", index = "gsi2", pk)]
@@ -23,14 +29,14 @@ pub struct User {
     pub informed_agreed: bool,
 
     pub user_type: UserType,
-    pub parent_id: Option<String>,
 
     pub followers_count: i64,
     pub followings_count: i64,
 
     // profile contents
     pub description: String,
-    pub password: String,
+    #[dynamo(index = "gsi3", sk)]
+    pub password: Option<String>,
 
     pub membership: Membership,
     pub theme: Theme,
@@ -45,9 +51,8 @@ impl User {
         term_agreed: bool,
         informed_agreed: bool,
         user_type: UserType,
-        parent_id: Option<String>,
         username: String,
-        password: String,
+        password: Option<String>,
     ) -> Self {
         let uid = uuid::Uuid::new_v4().to_string();
         let pk = Partition::User(uid);
@@ -66,7 +71,6 @@ impl User {
             term_agreed,
             informed_agreed,
             user_type,
-            parent_id,
             username,
             password,
             ..Default::default()

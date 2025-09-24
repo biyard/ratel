@@ -1,7 +1,11 @@
 use crate::{
     AppState, Error2, config,
-    models::user::{User, UserPrincipal, UserPrincipalQueryOption},
-    utils::{dynamo_extractor::get_principal_from_auth, password::verify_password},
+    models::user::{
+        User, UserOAuth, UserOAuthQueryOption, UserPrincipal, UserPrincipalQueryOption,
+        UserQueryOption,
+    },
+    types::Provider,
+    utils::{dynamo_extractor::get_principal_from_auth, firebase, password::hash_password},
 };
 use bdk::prelude::*;
 
@@ -21,15 +25,14 @@ use dto::{
 use serde::Deserialize;
 use tower_sessions::Session;
 
-#[derive(Debug, Clone, Deserialize, Default, aide::OperationIo, JsonSchema)]
-pub struct LoginRequest {
-    email: Option<String>,
-    password: Option<String>,
-
-    telegram_raw: Option<String>,
+#[derive(Debug, Clone, Deserialize, aide::OperationIo, JsonSchema)]
+pub enum LoginRequest {
+    Email { email: String, password: String },
+    OAuth { provider: Provider, token: String },
+    Telegram { telegram_raw: String },
 }
 
-pub type LoginResponse = (HeaderMap, ()); // Define the response type
+pub type LoginResponse = (HeaderMap, ());
 
 pub async fn login_handler(
     State(AppState { dynamo, .. }): State<AppState>,
@@ -37,82 +40,89 @@ pub async fn login_handler(
     Extension(auth): Extension<Option<Authorization>>,
     Json(req): Json<LoginRequest>,
 ) -> Result<(HeaderMap, ()), Error2> {
-    let principal = get_principal_from_auth(auth);
-    let mut user: Option<User> = None;
-    if let Ok(principal) = principal {
-        let (user_principal, _) = UserPrincipal::find_by_principal(
-            &dynamo.client,
-            principal,
-            UserPrincipalQueryOption::builder(),
-        )
-        .await?;
-        if user_principal.len() == 1 {
-            let user_principal = user_principal.get(0).unwrap();
-            user = Some(
-                User::get(&dynamo.client, &user_principal.pk, None::<String>)
-                    .await?
-                    .ok_or(Error2::NotFound("User not found".into()))?,
-            );
+    let user = match req {
+        LoginRequest::Email { email, password } => {
+            let hashed_password = hash_password(&password).map_err(|e| {
+                Error2::InternalServerError(format!("Password hashing failed: {}", e))
+            })?;
+            let (u, _) = User::find_by_email_and_password(
+                &dynamo.client,
+                &email,
+                UserQueryOption::builder().sk(hashed_password),
+            )
+            .await?;
+            u.get(0)
+                .cloned()
+                .ok_or(Error2::Unauthorized("Invalid email or password".into()))?
         }
-    }
-    match (req.email, req.password, req.telegram_raw) {
-        (Some(email), Some(password), None) => {
-            let (u, _bookmark) =
-                User::find_by_email(&dynamo.client, &email, Default::default()).await?;
-            if u.len() == 0 || u.len() > 1 {
-                tracing::debug!("Found {} users for email: {}", u.len(), email);
+        LoginRequest::OAuth { provider, token } => match provider {
+            Provider::Google => {
+                let uid = firebase::oauth::verify_token(&token).await?;
 
-                return Err(Error2::Unauthorized("Invalid email or password".into()));
+                // For Migration from Principal Login to Google OAuth.
+                // Remove this code after the users have logged in with Google OAuth.
+                if let Ok(principal) = get_principal_from_auth(auth) {
+                    let (user_principal, _) = UserPrincipal::find_by_principal(
+                        &dynamo.client,
+                        principal,
+                        UserPrincipalQueryOption::builder(),
+                    )
+                    .await?;
+                    let user = user_principal
+                        .get(0)
+                        .cloned()
+                        .ok_or(Error2::Unauthorized("Invalid email or password".into()))?;
+                    UserOAuth::new(user.pk, Provider::Google, uid.clone())
+                        .create(&dynamo.client)
+                        .await?;
+                }
+                let (u, _) = UserOAuth::find_by_provider_and_uid(
+                    &dynamo.client,
+                    uid,
+                    UserOAuthQueryOption::builder().sk(token),
+                )
+                .await?;
+                let user_oauth = u
+                    .get(0)
+                    .cloned()
+                    .ok_or(Error2::NotFound("Invalid OAuth token".into()))?;
+                User::get(&dynamo.client, user_oauth.pk, None::<String>)
+                    .await?
+                    .ok_or(Error2::NotFound("User not found".into()))?
             }
-            let u = u.get(0).unwrap();
-            if verify_password(&password, &u.password)
-                .map_err(|e| Error2::InternalServerError(format!("Password verify error: {}", e)))?
-                == true
-            {
-                user = Some(u.clone());
-            }
-        }
-        (None, None, Some(_telegram_raw)) => {
+        },
+        LoginRequest::Telegram { .. } => {
             // Handle Telegram login
-            //Not implemented yet
+            // Not implemented yet
             return Err(Error2::BadRequest("Telegram login not implemented".into()));
         }
-        _ => {
-            return Err(Error2::BadRequest(
-                "Invalid login request. Please provide either email and password or telegram_raw."
-                    .into(),
-            ));
-        }
-    }
-    if let Some(user) = user {
-        let user_session = DynamoUserSession {
-            pk: user.pk.to_string(),
-            typ: user.user_type as i64,
-        };
-        session
-            .insert(DYNAMO_USER_SESSION_KEY, user_session)
-            .await?;
+    };
 
-        let mut claims = Claims {
-            sub: user.pk.to_string(),
-            ..Default::default()
-        };
-        let token = generate_jwt(&mut claims)
-            .map_err(|e| Error2::InternalServerError(format!("JWT generation error: {}", e)))?;
-        let mut headers = HeaderMap::new();
-        headers.insert(
-            SET_COOKIE,
-            format!(
-                "{}_auth_token={}; SameSite=Lax; Path=/; Max-Age=2586226; HttpOnly; Secure;",
-                config::get().env,
-                token,
-            )
-            .parse()
-            .unwrap(),
-        );
+    let user_session = DynamoUserSession {
+        pk: user.pk.to_string(),
+        typ: user.user_type as i64,
+    };
+    session
+        .insert(DYNAMO_USER_SESSION_KEY, user_session)
+        .await?;
 
-        return Ok((headers, ()));
-    }
+    let mut claims = Claims {
+        sub: user.pk.to_string(),
+        ..Default::default()
+    };
+    let token = generate_jwt(&mut claims)
+        .map_err(|e| Error2::InternalServerError(format!("JWT generation error: {}", e)))?;
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        SET_COOKIE,
+        format!(
+            "{}_auth_token={}; SameSite=Lax; Path=/; Max-Age=2586226; HttpOnly; Secure;",
+            config::get().env,
+            token,
+        )
+        .parse()
+        .unwrap(),
+    );
 
-    Err(Error2::Unauthorized("User not found".into()))
+    Ok((headers, ()))
 }

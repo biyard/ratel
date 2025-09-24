@@ -36,6 +36,7 @@ aws-sdk-chimesdkmeetings = "1.63.0"
 aws-sdk-chimesdkmediapipelines = "1.75.0"
 aws-sdk-mediaconvert = "1.82.0"
 aws-sdk-sqs = "1.81.0"
+jsonwebtoken = "9.3.0"
 
 rmcp = { version = "0.6.1", git = "https://github.com/modelcontextprotocol/rust-sdk", features = [
     "server",
@@ -68,6 +69,7 @@ openssl = { version = "0.10" }
 serde_with = "3.14.0"
 bcrypt = "0.17.1"
 aws-credential-types = "1.2.6"
+once_cell = "1.21.3"
 
 [[bin]]
 name = "main-api"

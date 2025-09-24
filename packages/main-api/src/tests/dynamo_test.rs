@@ -50,9 +50,8 @@ pub async fn get_test_user(cli: &aws_sdk_dynamodb::Client) -> User {
         true,
         true,
         UserType::Individual,
-        None,
         username,
-        "password".to_string(),
+        Some("password".to_string()),
     );
     user.create(cli).await.unwrap();
 
