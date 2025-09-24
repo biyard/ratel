@@ -1,93 +1,194 @@
 'use client';
 
 import { logger } from '@/lib/logger';
-import React, { useEffect, useRef } from 'react';
-
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { DefaultMeetingSession } from 'amazon-chime-sdk-js';
+
+type FitMode = 'contain' | 'cover';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type TileStateAny = any;
 
 export default function RemoteContentShareVideo({
   meetingSession,
   onRemoteContentTileUpdate,
 }: {
   meetingSession: DefaultMeetingSession;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onRemoteContentTileUpdate: (tileState: any) => void;
+  onRemoteContentTileUpdate: (tileState: TileStateAny | null) => void;
 }) {
-  const remoteContentRef = useRef<HTMLVideoElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
   const boundContentTileIdRef = useRef<number | null>(null);
+
+  const [fit, setFit] = useState<FitMode>('contain');
+
+  const [, setVw] = useState(0);
+  const [, setVh] = useState(0);
+  const [, setCw] = useState(0);
+  const [, setCh] = useState(0);
+
+  const [overflow, setOverflow] = useState({ x: 0, y: 0 });
+
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     const av = meetingSession.audioVideo;
-
-    if (!av) {
-      return;
-    }
+    if (!av) return;
 
     const observer = {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      videoTileDidUpdate: (tileState: any) => {
-        const isContent = tileState.isContent && !tileState.localTile;
+      videoTileDidUpdate: (tileState: TileStateAny) => {
+        const isRemoteContent = tileState.isContent && !tileState.localTile;
         const alreadyBound = boundContentTileIdRef.current === tileState.tileId;
 
-        if (isContent && tileState.tileId) {
+        if (isRemoteContent && tileState.tileId) {
           onRemoteContentTileUpdate(tileState);
         }
 
         if (
-          isContent &&
+          isRemoteContent &&
           tileState.tileId &&
-          remoteContentRef.current &&
+          videoRef.current &&
           !alreadyBound
         ) {
-          av.bindVideoElement(tileState.tileId, remoteContentRef.current);
+          av.bindVideoElement(tileState.tileId, videoRef.current);
           boundContentTileIdRef.current = tileState.tileId;
         }
       },
 
       videoTileWasRemoved: (tileId: number) => {
         logger.debug('[DEBUG] Tile removed:', tileId);
-        if (remoteContentRef.current) {
-          remoteContentRef.current.srcObject = null;
+        if (boundContentTileIdRef.current === tileId) {
+          if (videoRef.current) videoRef.current.srcObject = null;
+          boundContentTileIdRef.current = null;
+          onRemoteContentTileUpdate(null);
+          setOffset({ x: 0, y: 0 });
+          setOverflow({ x: 0, y: 0 });
         }
-
-        onRemoteContentTileUpdate(null);
       },
     };
 
     av.addObserver(observer);
-
-    const tiles = av.getAllVideoTiles();
-
-    tiles.forEach((tile) => {
-      const state = tile.state();
-      logger.debug('[FORCE CHECK] existing tile:', {
-        tileId: state.tileId,
-        isContent: state.isContent,
-        localTile: state.localTile,
-        active: state.active,
-        attendeeId: state.boundAttendeeId,
-        boundVideoElement: state.boundVideoElement,
-      });
-    });
-
-    av.realtimeSubscribeToAttendeeIdPresence((attendeeId, present) => {
-      if (attendeeId.includes('#content')) {
-        logger.debug('[CHECK] #content stream presence:', attendeeId, present);
-      }
-    });
-
     return () => {
       av.removeObserver(observer);
     };
-  }, [meetingSession]);
+  }, [meetingSession, onRemoteContentTileUpdate]);
+
+  useLayoutEffect(() => {
+    const vEl = videoRef.current;
+    const wEl = wrapRef.current;
+    if (!vEl || !wEl) return;
+
+    const update = () => {
+      const _vw = vEl.videoWidth || 0;
+      const _vh = vEl.videoHeight || 0;
+      const _cw = wEl.clientWidth || 1;
+      const _ch = wEl.clientHeight || 1;
+
+      setVw(_vw);
+      setVh(_vh);
+      setCw(_cw);
+      setCh(_ch);
+
+      if (!_vw || !_vh) {
+        setOverflow({ x: 0, y: 0 });
+        setOffset({ x: 0, y: 0 });
+        return;
+      }
+
+      const scale = Math.max(_cw / _vw, _ch / _vh);
+      const scaledW = _vw * scale;
+      const scaledH = _vh * scale;
+      const ox = Math.max(0, Math.round(scaledW - _cw));
+      const oy = Math.max(0, Math.round(scaledH - _ch));
+      setOverflow({ x: ox, y: oy });
+
+      setOffset((prev) => clampOffset(prev, ox, oy));
+    };
+
+    const ro = new ResizeObserver(update);
+    ro.observe(wEl);
+    vEl.addEventListener('loadedmetadata', update);
+    update();
+
+    return () => {
+      ro.disconnect();
+      vEl.removeEventListener('loadedmetadata', update);
+    };
+  }, []);
+
+  const clampOffset = (o: { x: number; y: number }, ox: number, oy: number) => {
+    const hx = ox / 2;
+    const hy = oy / 2;
+    return {
+      x: Math.max(-hx, Math.min(hx, o.x)),
+      y: Math.max(-hy, Math.min(hy, o.y)),
+    };
+  };
+
+  const objectPos = (() => {
+    if (fit === 'contain') return '50% 50%';
+    const toPct = (val: number, total: number) => {
+      if (total <= 0) return 50;
+      return (val / total + 0.5) * 100;
+    };
+    return `${toPct(offset.x, overflow.x)}% ${toPct(offset.y, overflow.y)}%`;
+  })();
+
+  const dragging = useRef(false);
+  const last = useRef({ x: 0, y: 0 });
+
+  const onPointerDown = (e: React.PointerEvent) => {
+    if (fit !== 'cover') return;
+    dragging.current = true;
+    last.current = { x: e.clientX, y: e.clientY };
+    (e.currentTarget as Element).setPointerCapture?.(e.pointerId);
+  };
+  const onPointerMove = (e: React.PointerEvent) => {
+    if (fit !== 'cover' || !dragging.current) return;
+    const dx = e.clientX - last.current.x;
+    const dy = e.clientY - last.current.y;
+    last.current = { x: e.clientX, y: e.clientY };
+    setOffset((prev) =>
+      clampOffset({ x: prev.x + dx, y: prev.y + dy }, overflow.x, overflow.y),
+    );
+  };
+  const onPointerUp = (e: React.PointerEvent) => {
+    if (fit !== 'cover') return;
+    dragging.current = false;
+    (e.currentTarget as Element).releasePointerCapture?.(e.pointerId);
+  };
+
+  const lastTap = useRef(0);
+  const toggleFit = () => {
+    setOffset({ x: 0, y: 0 });
+    setFit((f) => (f === 'contain' ? 'cover' : 'contain'));
+  };
+  const onDoubleClick = toggleFit;
+  const onTouchEnd = () => {
+    const now = Date.now();
+    if (now - lastTap.current < 300) toggleFit();
+    lastTap.current = now;
+  };
 
   return (
-    <video
-      id="remote-content-video"
-      ref={remoteContentRef}
-      className="absolute top-0 left-0 w-full h-full object-cover z-0"
-      autoPlay
-      muted
-    />
+    <div
+      ref={wrapRef}
+      className={`absolute inset-0 overflow-hidden bg-black touch-none select-none ${fit === 'cover' ? 'cursor-grab' : ''}`}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onDoubleClick={onDoubleClick}
+      onTouchEnd={onTouchEnd}
+    >
+      <video
+        id="remote-content-video"
+        ref={videoRef}
+        className={`absolute inset-0 w-full h-full ${fit === 'cover' ? 'object-cover' : 'object-contain'} z-0`}
+        style={{ objectPosition: objectPos }}
+        autoPlay
+        muted
+        playsInline
+      />
+    </div>
   );
 }
