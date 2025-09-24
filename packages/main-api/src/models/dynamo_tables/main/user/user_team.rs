@@ -45,7 +45,7 @@ pub struct UserTeamResponse {
     pub nickname: String,
     pub profile_url: String,
     pub username: String,
-    pub user_type: u8,
+    pub user_type: UserType,
 }
 
 impl From<UserTeam> for UserTeamResponse {
@@ -54,7 +54,7 @@ impl From<UserTeam> for UserTeamResponse {
             nickname: user_team.display_name,
             profile_url: user_team.profile_url,
             username: user_team.username,
-            user_type: UserType::Team as u8,
+            user_type: UserType::Team,
         }
     }
 }
