@@ -197,7 +197,7 @@ function Header(props: HeaderProps) {
           {props.mobileExtends ? (
             <CloseIcon className="transition-all" />
           ) : (
-            <Hamburger className="transition-all" />
+            <Hamburger className="transition-all light:[&>path]:stroke-text-primary" />
           )}
         </div>
       </nav>

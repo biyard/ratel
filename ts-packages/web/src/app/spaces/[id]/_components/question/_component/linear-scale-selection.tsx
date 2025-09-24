@@ -37,8 +37,8 @@ export default function LinearScaleSelection({
         </div>
       </div>
 
-      <div className="flex flex-col justify-start items-start">
-        <div className="flex flex-row items-center justify-start gap-5 w-80 mb-3">
+      <div className="flex flex-col justify-start items-start w-full">
+        <div className="flex flex-row items-center justify-start gap-5 w-full mb-3">
           <span className="font-medium text-text-primary text-sm w-5 text-center">
             {minValue}
           </span>
@@ -53,7 +53,7 @@ export default function LinearScaleSelection({
           />
         </div>
 
-        <div className="flex flex-row items-center justify-start gap-5 w-80">
+        <div className="flex flex-row items-center justify-start gap-5 w-full">
           <span className="font-medium text-text-primary text-sm w-5 text-center">
             {maxValue}
           </span>

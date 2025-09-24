@@ -25,7 +25,6 @@ import {
 import { $generateHtmlFromNodes, $generateNodesFromDOM } from '@lexical/html';
 import { logger } from '@/lib/logger';
 import Image from 'next/image';
-// import { showErrorToast } from '@/lib/toast';
 import ToolbarPlugin from '@/components/toolbar/toolbar';
 import { useTranslations } from 'next-intl';
 import { Input } from '@/components/ui/input';
@@ -175,7 +174,7 @@ function Editor({
       <RichTextPlugin
         contentEditable={
           <ContentEditable
-            ref={contentRef} // ← 추가: 측정 대상
+            ref={contentRef}
             disabled={disabled}
             className="outline-none resize-none w-full min-h-[60px]"
             style={
@@ -228,7 +227,6 @@ export function CreatePost() {
     updateTitle,
     image,
     updateImage,
-
     handleUpdate,
   } = usePostEditorContext();
 
@@ -238,9 +236,8 @@ export function CreatePost() {
     return null;
   }
   return (
-    <div className={`flex flex-col w-full`}>
+    <div className="flex flex-col w-full">
       <div className="w-full bg-card-bg border-t-6 border-x border-b border-primary rounded-t-lg overflow-hidden">
-        {/* Header */}
         <div className="flex items-center p-4 justify-between">
           <div className="flex items-center gap-3">
             <div className="flex flex-row items-center gap-2">
@@ -270,7 +267,6 @@ export function CreatePost() {
         </div>
         {postType === PostType.General ? (
           <LexicalComposer initialConfig={editorConfig}>
-            {/* Title input */}
             <div className="px-4 pt-4">
               <input
                 type="text"
@@ -283,7 +279,6 @@ export function CreatePost() {
               />
             </div>
 
-            {/* Lexical Content Area */}
             <div className="px-4 pt-2 min-h-[80px] relative text-text-primary text-[15px] leading-relaxed">
               <Editor
                 disabled={false}
@@ -294,7 +289,6 @@ export function CreatePost() {
               />
             </div>
 
-            {/* Image previews */}
             {image && (
               <div className="px-4 pt-2">
                 <div className="flex flex-wrap gap-2">
@@ -303,13 +297,13 @@ export function CreatePost() {
                       width={64}
                       height={64}
                       src={image}
-                      alt={`Uploaded image`}
+                      alt="Uploaded image"
                       className="object-cover rounded-lg border border-neutral-600"
                     />
                     <button
                       onClick={() => updateImage(null)}
                       className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-600 rounded-full flex items-center justify-center text-white text-xs hover:bg-red-700 border-2 border-component-bg"
-                      aria-label={`Remove uploaded image`}
+                      aria-label="Remove uploaded image"
                     >
                       <X size={12} />
                     </button>
@@ -318,21 +312,16 @@ export function CreatePost() {
               </div>
             )}
 
-            {/* Bottom toolbar */}
             <div className="flex items-center justify-between p-4 text-neutral-400">
               <ToolbarPlugin onImageUpload={(url) => updateImage(url)} />
 
               <div className="flex items-center gap-4">
-                {/* Status indicator */}
                 {status === Status.Saving && (
                   <div className="flex items-center gap-2 text-sm text-neutral-400">
                     <Loader2 className="animate-spin" size={16} />
                     <span>Saving...</span>
                   </div>
                 )}
-                {/* {status === 'error' && (
-                    <span className="text-sm text-red-500">Save failed</span>
-                  )} */}
 
                 <Button
                   variant="rounded_primary"
@@ -357,16 +346,12 @@ export function CreatePost() {
             <EditableArtworkPost />
             <div className="flex items-center justify-end p-4 text-neutral-400">
               <div className="flex items-center gap-4">
-                {/* Status indicator */}
                 {status === Status.Saving && (
                   <div className="flex items-center gap-2 text-sm text-neutral-400">
                     <Loader2 className="animate-spin" size={16} />
                     <span>Saving...</span>
                   </div>
                 )}
-                {/* {status === 'error' && (
-                    <span className="text-sm text-red-500">Save failed</span>
-                  )} */}
 
                 <Button
                   variant="rounded_primary"
@@ -423,14 +408,13 @@ function EditableArtworkPost() {
     updateContent,
     image,
     updateImage,
-
     traits,
     updateTrait,
   } = usePostEditorContext();
 
   return (
     <ArtworkPost
-      editMode={true}
+      editMode
       title={title}
       updateTitle={updateTitle}
       content={content}
@@ -451,12 +435,10 @@ export function ArtworkPost({
   updateContent = () => {},
   image,
   updateImage = () => {},
-
   traits,
   updateTrait = () => {},
 }: {
   editMode?: boolean;
-
   title: string | null;
   updateTitle?: (title: string) => void;
   content: string | null;
@@ -471,7 +453,6 @@ export function ArtworkPost({
   ) => void;
 }) {
   const t = useTranslations('EditArtworkPost');
-
   const [showColorPicker, setShowColorPicker] = useState(false);
 
   const handleImageUpload = () => {
@@ -494,13 +475,45 @@ export function ArtworkPost({
     input.onchange = handleFileChange;
     input.click();
   };
+
   const backgroundColor =
     String(
       traits.find((trait) => trait.trait_type === 'background_color')?.value,
     ) || '#ffffff';
+
   return (
-    <div className="flex flex-row p-5 gap-5">
-      <div className="flex-1 flex flex-col gap-4 p-4 [&>label]:text-text-primary [&>label]:font-sm">
+    <div className="flex flex-col md:flex-row p-5 gap-5">
+      <div
+        className="order-1 md:order-2 w-full md:flex-1 min-h-[260px] md:min-h-0"
+        style={{ backgroundColor }}
+      >
+        <button
+          disabled={!editMode}
+          onClick={handleImageUpload}
+          className="relative w-full h-[260px] md:h-full p-4 flex items-center justify-center"
+        >
+          {image ? (
+            <Image
+              layout="fill"
+              objectFit="contain"
+              src={image}
+              alt="Artwork"
+              className="max-h-full max-w-full"
+            />
+          ) : (
+            <div className="flex flex-col items-center">
+              <div className="w-full px-2 py-1 rounded-full bg-neutral-600 text-center">
+                No Image
+              </div>
+              <div className="text-neutral-400 text-sm mt-2 text-center">
+                Click to upload artwork image
+              </div>
+            </div>
+          )}
+        </button>
+      </div>
+
+      <div className="order-2 md:order-1 w-full md:flex-1 flex flex-col gap-4 p-4 [&>label]:text-text-primary [&>label]:font-sm">
         <label htmlFor="artwork">{t('artwork_name')}</label>
         <Input
           id="artwork"
@@ -509,10 +522,11 @@ export function ArtworkPost({
           disabled={!editMode}
           onChange={(e) => updateTitle(e.target.value)}
         />
+
         <label htmlFor="description">{t('description')}</label>
         <div
           id="description"
-          className="min-h-[80px] relative rounded-md border border-input-box-border bg-input-box-bg text-text-primary px-3 py-1 "
+          className="min-h-[80px] relative rounded-md border border-input-box-border bg-input-box-bg text-text-primary px-3 py-1"
         >
           <LexicalComposer initialConfig={editorConfig}>
             <Editor
@@ -523,13 +537,12 @@ export function ArtworkPost({
             />
           </LexicalComposer>
         </div>
+
         {traits.map((trait, index) => {
           let name = formatTraitType(trait.trait_type);
           try {
             name = t(trait.trait_type) || formatTraitType(trait.trait_type);
-          } catch (error) {
-            console.error('Error formatting trait name:', error);
-          }
+          } catch {}
 
           switch (trait.display_type) {
             case null:
@@ -556,7 +569,7 @@ export function ArtworkPost({
             case ArtworkTraitDisplayType.Color:
               return (
                 <div key={index} className="flex flex-col gap-1">
-                  <label htmlFor={`trait-${index}`}>{name} </label>
+                  <label htmlFor={`trait-${index}`}>{name}</label>
                   <div className="relative">
                     <Button
                       className="disabled:opacity-100"
@@ -600,34 +613,6 @@ export function ArtworkPost({
               return null;
           }
         })}
-      </div>
-
-      <div className="flex-1" style={{ backgroundColor }}>
-        <button
-          disabled={!editMode}
-          onClick={handleImageUpload}
-          className="relative w-full h-full p-4 flex items-center justify-center"
-        >
-          {image ? (
-            <Image
-              layout="fill"
-              objectFit="contain"
-              src={image}
-              alt="Artwork"
-              className="max-h-full max-w-full"
-            />
-          ) : (
-            <div className="flex flex-col items-center">
-              <div className="w-full px-2 py-1 rounded-full bg-neutral-600">
-                No Image
-              </div>
-
-              <div className="text-neutral-400 text-sm mt-2">
-                Click to upload artwork image
-              </div>
-            </div>
-          )}
-        </button>
       </div>
     </div>
   );

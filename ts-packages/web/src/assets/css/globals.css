@@ -534,6 +534,18 @@ a {
   padding: 0 !important;
 }
 
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.momentum {
+  -webkit-overflow-scrolling: touch;
+}
+
 /* ==========================================================================
    TAILWIND UTILITIES FOR SEMANTIC TOKENS
    ========================================================================== */
