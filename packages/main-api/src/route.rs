@@ -82,6 +82,7 @@ use crate::{
                 register::register_handler, token::token_handler,
             },
             oracles::create_oracle::create_oracle_handler,
+            permissions::has_team_permission::has_team_permission_handler,
             posts::{
                 get_post::get_post_handler, list_posts::list_posts_handler,
                 update_post::update_post_handler,
@@ -93,8 +94,8 @@ use crate::{
             },
             themes::change_theme::change_theme_handler,
             users::{
-                connect_telegram::connect_telegram_handler, find_user::find_user_handler,
-                logout::logout_handler,
+                connect_telegram::connect_telegram_handler, delete_team::delete_team_handler,
+                find_user::find_user_handler, logout::logout_handler,
             },
         },
         well_known::get_did_document::get_did_document_handler,
@@ -468,6 +469,14 @@ pub async fn route(deps: RouteDeps) -> Result<by_axum::axum::Router> {
             .with_state(pool.clone()),
         )
         .route(
+            "/v2/permissions",
+            get_with(
+                has_team_permission_handler,
+                api_docs!("Has Permission", "Check user group permission"),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
             "/v2/users",
             get_with(
                 find_user_handler,
@@ -475,6 +484,14 @@ pub async fn route(deps: RouteDeps) -> Result<by_axum::axum::Router> {
                     "Get User",
                     "Retrieve users with username or phone number or email"
                 ),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/v2/teams",
+            post_with(
+                delete_team_handler,
+                api_docs!("Delete Team", "Delete Team with Team ID"),
             )
             .with_state(pool.clone()),
         )
