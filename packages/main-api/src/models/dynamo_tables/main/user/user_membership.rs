@@ -244,8 +244,11 @@ impl UserMembership {
             return true; // Admin has unlimited quota
         }
 
+        if booster_type == 0 {
+            return true; // No-boost spaces are unlimited for all tiers
+        }
         if self.membership_type == Membership::Free {
-            return booster_type == 0; // Free tier can only create no-boost spaces (unlimited)
+            return false; // Free tier cannot create boosted spaces
         }
 
         let capabilities = self.get_space_capabilities();
