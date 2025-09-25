@@ -240,6 +240,10 @@ impl UserMembership {
 
     /// Check if user can create a space with the given booster type
     pub fn can_create_space(&self, booster_type: u32) -> bool {
+        if self.membership_type == Membership::Admin {
+            return true; // Admin has unlimited quota
+        }
+
         if self.membership_type == Membership::Free {
             return booster_type == 0; // Free tier can only create no-boost spaces (unlimited)
         }
