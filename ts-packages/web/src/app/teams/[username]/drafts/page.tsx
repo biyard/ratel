@@ -1,26 +1,23 @@
-import { ratelApi } from '@/lib/api/ratel_api';
 import TeamDraftPage from './page.client';
-import { client } from '@/lib/apollo';
 import { FeedStatus } from '@/lib/api/models/feeds';
 import { prefetchInfiniteFeeds } from '@/hooks/feeds/use-feeds-infinite-query';
+import { getTeamByUsername } from '@/lib/api/ratel_api.server';
 export interface TeamLayoutProps {
   params: Promise<{ username: string }>;
 }
 
 export default async function Page({ params }: TeamLayoutProps) {
   const { username } = await params;
-  const {
-    data: { users },
-  } = await client.query(ratelApi.graphql.getTeamByTeamname(username));
+  const user = await getTeamByUsername(username);
 
-  if (users.length === 0) {
+  if (user == null) {
     // FIXME: fix this to use not-found.tsx
     return <div className="text-center">Team not found</div>;
   }
 
   await Promise.allSettled([
-    prefetchInfiniteFeeds(users[0].id, FeedStatus.Draft),
+    prefetchInfiniteFeeds(user?.data?.id ?? 0, FeedStatus.Draft),
   ]);
 
-  return <TeamDraftPage teamId={users[0].id} username={username} />;
+  return <TeamDraftPage teamId={user?.data?.id ?? 0} username={username} />;
 }
