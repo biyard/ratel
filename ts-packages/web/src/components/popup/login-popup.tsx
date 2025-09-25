@@ -16,7 +16,6 @@ import { Row } from '../ui/row';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
 import { sha3 } from '@/lib/utils';
-import { useApolloClient } from '@apollo/client';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { useNetwork } from '@/app/(social)/_hooks/use-network';
 import { isWebView } from '@/lib/webview-utils';
@@ -50,7 +49,6 @@ export const LoginModal = ({
   const network = useNetwork();
   const anonKeyPair = useEd25519KeyPair();
   const queryClient = getQueryClient();
-  const cli = useApolloClient();
 
   const { login, ed25519KeyPair, telegramRaw } = useAuth();
   const [email, setEmail] = useState('');
@@ -144,15 +142,6 @@ export const LoginModal = ({
     // check if email is valid
     if (!email || !email.includes('@')) {
       setWarning(t('invalid_email_format'));
-      return;
-    }
-
-    const {
-      data: { users },
-    } = await cli.query(ratelApi.graphql.getUserByEmail(email));
-
-    if (users.length === 0) {
-      setWarning(t('unregistered_email'));
       return;
     }
 
