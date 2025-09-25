@@ -25,7 +25,6 @@ import { getQueryClient } from '@/providers/getQueryClient';
 import { useTranslations } from 'next-intl';
 import { feedKeys } from '@/constants';
 import { FeedStatus } from '@/lib/api/models/feeds';
-import { useApiCall } from '@/lib/api/use-send';
 
 interface LoginModalProps {
   id?: string;
@@ -44,7 +43,6 @@ export const LoginModal = ({
   id = 'login_popup',
   disableClose = false,
 }: LoginModalProps) => {
-  const { get } = useApiCall();
   const t = useTranslations('SignIn');
   const signupTranslate = useTranslations('Signup');
   const popup = usePopup();
@@ -144,13 +142,6 @@ export const LoginModal = ({
     // check if email is valid
     if (!email || !email.includes('@')) {
       setWarning(t('invalid_email_format'));
-      return;
-    }
-
-    const users = await get(ratelApi.users.getUserByEmail(email));
-
-    if (users.length === 0) {
-      setWarning(t('unregistered_email'));
       return;
     }
 

@@ -234,6 +234,8 @@ export const ratelApi = {
   },
   news: {
     getNewsDetails: (news_id: number) => `/v1/news/${news_id}`,
+    getNews: (page: number, size: number) =>
+      `/v1/news?param-type=query&page=${page}&size=${size}`,
   },
   themes: {
     changeTheme: () => '/v2/themes',

@@ -6,3 +6,7 @@ export interface NewsDetail {
   html_content: string;
   user_id: number;
 }
+
+export interface NewsDetailItem {
+  items: NewsDetail[];
+}
