@@ -31,7 +31,7 @@ impl DeliberationSpaceResponse {
         deliberation_pk: Partition,
         survey_pk: Partition,
         survey_type: SurveyType,
-        answer: SurveyAnswer,
+        answer: Vec<SurveyAnswer>,
 
         User {
             pk,
@@ -57,20 +57,20 @@ impl DeliberationSpaceResponse {
         }
     }
 
-    pub fn answer(&self) -> SurveyAnswer {
+    pub fn answer(&self) -> Vec<SurveyAnswer> {
         serde_json::from_str(&self.answer).unwrap_or_default()
     }
 
-    pub fn set_answer(&mut self, ans: SurveyAnswer) {
+    pub fn set_answer(&mut self, ans: Vec<SurveyAnswer>) {
         self.answer = Self::serialize_answer(&ans);
     }
 
-    pub fn try_answer(&self) -> Result<SurveyAnswer, serde_json::Error> {
+    pub fn try_answer(&self) -> Result<Vec<SurveyAnswer>, serde_json::Error> {
         serde_json::from_str(&self.answer)
     }
 
     #[inline]
-    fn serialize_answer(ans: &SurveyAnswer) -> String {
+    fn serialize_answer(ans: &Vec<SurveyAnswer>) -> String {
         serde_json::to_string(ans).unwrap_or_else(|_| "{}".to_string())
     }
 }

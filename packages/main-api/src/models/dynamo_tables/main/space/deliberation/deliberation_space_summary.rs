@@ -40,3 +40,18 @@ impl DeliberationSpaceSummary {
         serde_json::to_string(files).unwrap_or_else(|_| "[]".to_string())
     }
 }
+
+#[derive(Default, serde::Serialize, schemars::JsonSchema)]
+pub struct DeliberationSummaryResponse {
+    pub html_contents: String,
+    pub files: Vec<File>,
+}
+
+impl From<DeliberationSpaceSummary> for DeliberationSummaryResponse {
+    fn from(deliberation_summary: DeliberationSpaceSummary) -> Self {
+        Self {
+            html_contents: deliberation_summary.clone().html_contents,
+            files: deliberation_summary.clone().files(),
+        }
+    }
+}

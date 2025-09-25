@@ -49,3 +49,27 @@ impl DeliberationSpaceMember {
         }
     }
 }
+
+#[derive(Default, serde::Serialize, schemars::JsonSchema)]
+pub struct DiscussionMemberResponse {
+    pub user_pk: String,
+    pub author_display_name: String,
+    pub author_profile_url: String,
+    pub author_username: String,
+}
+
+impl From<DeliberationSpaceMember> for DiscussionMemberResponse {
+    fn from(member: DeliberationSpaceMember) -> Self {
+        let user_pk = match member.user_pk {
+            Partition::User(v) => v,
+            Partition::Team(v) => v,
+            _ => "".to_string(),
+        };
+        Self {
+            user_pk,
+            author_display_name: member.author_display_name,
+            author_profile_url: member.author_profile_url,
+            author_username: member.author_username,
+        }
+    }
+}
