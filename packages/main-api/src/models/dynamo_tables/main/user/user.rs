@@ -38,9 +38,6 @@ pub struct User {
     #[dynamo(index = "gsi1", sk)]
     pub password: Option<String>,
 
-    pub membership: Membership,
-    #[serde(default = "MembershipInfo::new_free")]
-    pub membership_info: MembershipInfo,
     pub theme: Theme,
     pub points: i64,
 }
@@ -75,7 +72,6 @@ impl User {
             user_type,
             username,
             password,
-            membership_info: MembershipInfo::new_free(),
             ..Default::default()
         }
     }

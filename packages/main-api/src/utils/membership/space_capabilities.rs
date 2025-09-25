@@ -1,5 +1,5 @@
 use crate::Error2 as Error;
-use crate::utils::users_dynamo::extract_user;
+use crate::utils::users_dynamo::{extract_user, extract_uuid_from_pk, get_user_membership_by_user_id, update_user_membership};
 use bdk::prelude::by_axum::auth::Authorization;
 use std::sync::Arc;
 
@@ -38,17 +38,22 @@ pub async fn check_space_creation_capability(
 
     // Get the user from auth
     let user = extract_user(ddb, auth).await?;
+    let user_id = extract_uuid_from_pk(&user.pk.to_string());
+    
+    // Get user membership
+    let membership = get_user_membership_by_user_id(ddb, &user_id).await?
+        .ok_or_else(|| Error::Unknown("User membership not found".to_string()))?;
 
     // Check if membership is active
-    if !user.membership_info.is_active() {
+    if !membership.is_active() {
         return Err(Error::Unknown("Membership has expired".to_string()));
     }
 
     // Check if user can create space with this booster type
-    if user.membership_info.can_create_space(booster_type) {
+    if membership.can_create_space(booster_type) {
         Ok(())
     } else {
-        match user.membership_info.membership_type {
+        match membership.membership_type {
             crate::types::Membership::Free => Err(Error::Unknown(
                 "Free tier users can only create basic (no boost) spaces".to_string(),
             )),
@@ -81,12 +86,17 @@ pub async fn consume_space_creation_quota(
         return Ok(());
     }
 
-    let mut user = extract_user(ddb, auth).await?;
+    let user = extract_user(ddb, auth).await?;
+    let user_id = extract_uuid_from_pk(&user.pk.to_string());
+    
+    // Get user membership
+    let mut membership = get_user_membership_by_user_id(ddb, &user_id).await?
+        .ok_or_else(|| Error::Unknown("User membership not found".to_string()))?;
 
     // Consume the quota
-    if user.membership_info.consume_space_quota(booster_type) {
-        // Update the user in DynamoDB
-        update_user_membership_info(ddb, &user).await?;
+    if membership.consume_space_quota(booster_type) {
+        // Update the membership in DynamoDB
+        update_user_membership(ddb, &membership).await?;
         Ok(())
     } else {
         Err(Error::Unknown(
@@ -115,30 +125,17 @@ pub async fn get_remaining_quota(
     }
 
     let user = extract_user(ddb, auth).await?;
+    let user_id = extract_uuid_from_pk(&user.pk.to_string());
+    
+    // Get user membership
+    let membership = get_user_membership_by_user_id(ddb, &user_id).await?
+        .ok_or_else(|| Error::Unknown("User membership not found".to_string()))?;
 
-    let remaining = user
-        .membership_info
-        .space_capabilities
+    let capabilities = membership.get_space_capabilities();
+    let remaining = capabilities
         .get(&booster_type)
         .copied()
         .unwrap_or(0);
 
     Ok(remaining)
-}
-
-/// Helper function to update user membership info in DynamoDB
-async fn update_user_membership_info(
-    ddb: &Arc<aws_sdk_dynamodb::Client>,
-    user: &crate::models::dynamo_tables::main::user::user::User,
-) -> Result<()> {
-    use crate::models::dynamo_tables::main::user::user::User;
-    
-    // Use the User model's updater to update the membership info
-    User::updater(user.pk.clone(), user.sk.clone())
-        .with_membership(user.membership.clone())
-        .with_membership_info(user.membership_info.clone())
-        .execute(ddb)
-        .await
-        .map_err(|e| Error::Unknown(format!("Failed to update user: {}", e)))?;
-    Ok(())
 }

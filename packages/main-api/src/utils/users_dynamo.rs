@@ -1,11 +1,12 @@
 use crate::Error2 as Error;
 use crate::models::dynamo_tables::main::user::user::User;
-use crate::models::dynamo_tables::main::user::user_principal::UserPrincipal;
+use crate::models::dynamo_tables::main::user::user_membership::UserMembership;
+use crate::models::dynamo_tables::main::user::user_principal::{
+    UserPrincipal, UserPrincipalQueryOption,
+};
 use crate::types::*;
-use aws_sdk_dynamodb::types::AttributeValue;
 use bdk::prelude::by_axum::auth::Authorization;
 use bdk::prelude::*;
-use std::collections::HashMap;
 use std::sync::Arc;
 
 type Result<T> = std::result::Result<T, Error>;
@@ -251,13 +252,19 @@ pub async fn extract_principal(
             } else {
                 format!("USER#{}", user_id)
             };
-            get_user_by_pk(ddb, &user_pk)
-                .await?
-                .ok_or_else(|| {
-                    tracing::error!("failed to get user by bearer token");
-                    Error::InvalidUser
-                })?
-                .display_name
+
+            // Verify user exists first
+            let _user = get_user_by_pk(ddb, &user_pk).await?.ok_or_else(|| {
+                tracing::error!("failed to get user by bearer token");
+                Error::InvalidUser
+            })?;
+
+
+            //FIXME: if needed
+            claims.custom.get("principal").cloned().ok_or_else(|| {
+                tracing::error!("Principal not found in Bearer token claims");
+                Error::Unauthorized("Principal not available in token".to_string())
+            })?
         }
         _ => return Err(Error::Unauthorized("Unauthorized access".to_string())),
     };
@@ -266,34 +273,27 @@ pub async fn extract_principal(
 }
 
 pub async fn get_user_by_pk(ddb: &Arc<aws_sdk_dynamodb::Client>, pk: &str) -> Result<Option<User>> {
-    User::get(ddb, pk, Some("USER"))
+    User::get(ddb, pk, Some(&EntityType::User.to_string()))
         .await
         .map_err(|e| Error::Unknown(format!("Failed to get user: {}", e)))
 }
 
-// FIXME
 async fn get_user_by_principal(
     ddb: &Arc<aws_sdk_dynamodb::Client>,
     principal: &str,
 ) -> Result<Option<User>> {
-    // For now, use a simple approach - query by the principal directly
-    // This might need to be updated based on how the UserPrincipal model is structured
-    let principal_key = format!("PRINCIPAL#{}", principal);
+    // Use the UserPrincipal::find_by_principal GSI query to find the user
+    let (user_principals, _) =
+        UserPrincipal::find_by_principal(ddb, principal, UserPrincipalQueryOption::builder())
+            .await
+            .map_err(|e| Error::Unknown(format!("Failed to query user principal: {}", e)))?;
 
-    // Try to find a UserPrincipal record that matches this principal
-    // Since we don't have the exact query method available, let's keep the original logic for now
-    let mut expression_values = HashMap::new();
-    expression_values.insert(":principal".to_string(), AttributeValue::S(principal_key));
-
-    // This would need to be replaced with the actual UserPrincipal query method
-    // For now, let's use a placeholder that will work with the existing DynamoClient interface
-    // In a real implementation, we'd use UserPrincipal::query_gsi1() or similar
-
-    // For simplicity, let's just try to get the user directly by principal for now
-    // This is a temporary solution until we can properly implement GSI queries with the User model
-    User::get(ddb, &format!("USER#{}", principal), Some("USER"))
-        .await
-        .map_err(|e| Error::Unknown(format!("Failed to get user by principal: {}", e)))
+    if let Some(user_principal) = user_principals.first() {
+        // Get the user using the pk from the UserPrincipal record
+        get_user_by_pk(ddb, &user_principal.pk.to_string()).await
+    } else {
+        Ok(None)
+    }
 }
 
 async fn create_user(
@@ -308,7 +308,7 @@ async fn create_user(
     _parent_id: Option<String>,
     username: String,
     password: String,
-    _membership: Membership,
+    membership: Membership,
     _theme: Option<Theme>,
     principal: String,
     _referral_code: Option<String>,
@@ -325,10 +325,15 @@ async fn create_user(
         Some(password),
     );
 
+    let user_id = extract_uuid_from_pk(&user.pk.to_string());
+
     // Create UserPrincipal record
     let user_principal = UserPrincipal::new(user.pk.clone(), principal);
 
-    // Save both records using the models' create methods
+    // Create UserMembership record
+    let user_membership = UserMembership::from_membership(user_id, membership);
+
+    // Save all records using the models' create methods
     user.create(ddb)
         .await
         .map_err(|e| Error::Unknown(format!("Failed to create user: {}", e)))?;
@@ -338,11 +343,82 @@ async fn create_user(
         .await
         .map_err(|e| Error::Unknown(format!("Failed to create user principal: {}", e)))?;
 
+    user_membership
+        .create(ddb)
+        .await
+        .map_err(|e| Error::Unknown(format!("Failed to create user membership: {}", e)))?;
+
     Ok(user)
 }
 
-fn extract_uuid_from_pk(pk: &str) -> String {
+pub fn extract_uuid_from_pk(pk: &str) -> String {
     pk.strip_prefix("USER#")
         .map(|id_str| id_str.to_string())
         .unwrap_or_else(|| "".to_string())
+}
+
+/// Get user membership by user pk
+pub async fn get_user_membership_by_pk(
+    ddb: &Arc<aws_sdk_dynamodb::Client>,
+    user_pk: &str,
+) -> Result<Option<UserMembership>> {
+    UserMembership::get(ddb, user_pk, Some(&EntityType::UserMembership.to_string()))
+        .await
+        .map_err(|e| Error::Unknown(format!("Failed to get user membership: {}", e)))
+}
+
+/// Get user membership by user id (strips USER# prefix if present)
+pub async fn get_user_membership_by_user_id(
+    ddb: &Arc<aws_sdk_dynamodb::Client>,
+    user_id: &str,
+) -> Result<Option<UserMembership>> {
+    let user_pk = if user_id.starts_with("USER#") {
+        user_id.to_string()
+    } else {
+        format!("USER#{}", user_id)
+    };
+    get_user_membership_by_pk(ddb, &user_pk).await
+}
+
+/// Get or create user membership (creates Free tier by default)
+pub async fn get_or_create_user_membership(
+    ddb: &Arc<aws_sdk_dynamodb::Client>,
+    user_id: &str,
+) -> Result<UserMembership> {
+    let user_pk = if user_id.starts_with("USER#") {
+        user_id.to_string()
+    } else {
+        format!("USER#{}", user_id)
+    };
+
+    if let Some(membership) = get_user_membership_by_pk(ddb, &user_pk).await? {
+        return Ok(membership);
+    }
+
+    // Create new Free membership using builder pattern
+    let uuid = extract_uuid_from_pk(&user_pk);
+    let membership = UserMembership::builder(uuid).with_free().build();
+
+    membership
+        .create(ddb)
+        .await
+        .map_err(|e| Error::Unknown(format!("Failed to create user membership: {}", e)))?;
+
+    Ok(membership)
+}
+
+/// Update user membership
+pub async fn update_user_membership(
+    ddb: &Arc<aws_sdk_dynamodb::Client>,
+    membership: &UserMembership,
+) -> Result<()> {
+    UserMembership::updater(membership.pk.clone(), membership.sk.clone())
+        .with_membership_type(membership.membership_type)
+        .with_subscription_start(membership.subscription_start)
+        .with_subscription_end(membership.subscription_end)
+        .with_space_capabilities(membership.space_capabilities.clone())
+        .with_updated_at(crate::utils::time::get_now_timestamp_millis())
+        .execute(ddb)
+        .await
+        .map_err(|e| Error::Unknown(format!("Failed to update user membership: {}", e)))
 }

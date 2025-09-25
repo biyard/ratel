@@ -1,5 +1,6 @@
 use super::*;
 use bdk::prelude::*;
+use crate::types::Membership;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity)]
 #[serde(untagged)]
@@ -43,7 +44,32 @@ impl From<User> for UserResponse {
             user_type: user.user_type as u8,
             followers_count: user.followers_count,
             followings_count: user.followings_count,
-            membership: user.membership as u8,
+            membership: Membership::Free as u8, // Default to Free, should be retrieved separately
+            theme: user.theme as u8,
+            point: user.points,
+        }
+    }
+}
+
+impl UserResponse {
+    /// Create UserResponse with specific membership
+    pub fn with_membership(mut self, membership: Membership) -> Self {
+        self.membership = membership as u8;
+        self
+    }
+
+    /// Create UserResponse from User and UserMembership
+    pub fn from_user_with_membership(user: User, membership: Membership) -> Self {
+        Self {
+            pk: user.pk.to_string(),
+            email: user.email,
+            nickname: user.display_name,
+            profile_url: user.profile_url,
+            description: user.description,
+            user_type: user.user_type as u8,
+            followers_count: user.followers_count,
+            followings_count: user.followings_count,
+            membership: membership as u8,
             theme: user.theme as u8,
             point: user.points,
         }

@@ -1,31 +1,38 @@
 use crate::{
     Error2,
-    controllers::v3::{
-        auth::{
-            login::{LoginResponse, login_handler},
-            signup::signup_handler,
-            verification::{
-                send_code::{SendCodeResponse, send_code_handler},
-                verify_code::verify_code_handler,
+    controllers::{
+        m3::membership::{
+            get_membership::{UserInfo, get_user_membership},
+            promote_to_admin::promote_user_to_admin,
+            set_membership::{SetMembershipResponse, set_user_membership},
+        },
+        v3::{
+            auth::{
+                login::{LoginResponse, login_handler},
+                signup::signup_handler,
+                verification::{
+                    send_code::{SendCodeResponse, send_code_handler},
+                    verify_code::verify_code_handler,
+                },
             },
-        },
-        me::{
-            get_info::{GetInfoResponse, get_info_handler},
-            update_user::{UpdateUserResponse, update_user_handler},
-        },
-        teams::{
-            create_team::{CreateTeamResponse, create_team_handler},
-            find_team::{FindTeamResponse, find_team_handler},
-            get_team::{GetTeamResponse, get_team_handler},
-            groups::{
-                add_member::add_member_handler,
-                create_group::{CreateGroupResponse, create_group_handler},
-                remove_member::remove_member_handler,
-                update_group::update_group_handler,
+            me::{
+                get_info::{GetInfoResponse, get_info_handler},
+                update_user::{UpdateUserResponse, update_user_handler},
             },
-            update_team::{UpdateTeamResponse, update_team_handler},
+            teams::{
+                create_team::{CreateTeamResponse, create_team_handler},
+                find_team::{FindTeamResponse, find_team_handler},
+                get_team::{GetTeamResponse, get_team_handler},
+                groups::{
+                    add_member::add_member_handler,
+                    create_group::{CreateGroupResponse, create_group_handler},
+                    remove_member::remove_member_handler,
+                    update_group::update_group_handler,
+                },
+                update_team::{UpdateTeamResponse, update_team_handler},
+            },
+            users::find_user::{FindUserResponse, find_user_handler},
         },
-        users::find_user::{FindUserResponse, find_user_handler},
     },
     utils::aws::{DynamoClient, SesClient},
 };
@@ -228,6 +235,49 @@ pub fn route(
                                 ),
                         ),
                 ),
+        )
+        .nest(
+            "/m3",
+            Router::new()
+                .nest(
+                    "/admin/users/:user_id",
+                    Router::new()
+                        .route(
+                            "/membership",
+                            get_with(
+                                get_user_membership,
+                                api_docs!(
+                                    Json<UserInfo>,
+                                    "Get User Membership",
+                                    "Get membership details for a specific user"
+                                ),
+                            )
+                            .post_with(
+                                set_user_membership,
+                                api_docs!(
+                                    Json<SetMembershipResponse>,
+                                    "Set User Membership",
+                                    "Set membership type for a specific user"
+                                ),
+                            ),
+                        )
+                        .route(
+                            "/promote",
+                            post_with(
+                                promote_user_to_admin,
+                                api_docs!(
+                                    Json<SetMembershipResponse>,
+                                    "Promote User to Admin",
+                                    "Promote a user to admin membership"
+                                ),
+                            ),
+                        )
+                        .with_state(std::sync::Arc::new(dynamo_client.client.clone())),
+                )
+                .with_state(AppState {
+                    dynamo: dynamo_client.clone(),
+                    ses: ses_client.clone(),
+                }),
         )
         .with_state(AppState {
             dynamo: dynamo_client.clone(),

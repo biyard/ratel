@@ -11,9 +11,12 @@ use dto::{
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    models::dynamo_tables::main::user::User,
-    types::{Membership, MembershipInfo},
-    utils::admin::check_admin_permission_shared_ddb,
+    models::dynamo_tables::main::user::{User, UserMembership},
+    types::Membership,
+    utils::{
+        admin::check_admin_permission_shared_ddb,
+        users_dynamo::{get_user_membership_by_user_id, update_user_membership},
+    },
 };
 
 #[derive(Debug, Deserialize, aide::OperationIo, JsonSchema)]
@@ -43,9 +46,9 @@ pub async fn promote_user_to_admin(
     // Check admin permission using shared DDB client
     check_admin_permission_shared_ddb(&ddb, auth).await?;
 
-    // Get the target user
+    // Get the target user (to verify they exist)
     let user_pk = format!("USER#{}", user_id);
-    let user = User::get(&ddb, user_pk, Some("USER".to_string()))
+    let _user = User::get(&ddb, &user_pk, Some(&crate::types::EntityType::User.to_string()))
         .await
         .map_err(|e| {
             tracing::error!("Failed to get user: {:?}", e);
@@ -53,15 +56,37 @@ pub async fn promote_user_to_admin(
         })?
         .ok_or(Error::InvalidUser)?;
 
-    // Update user's membership to admin using the generated update method
-    User::updater(user.pk.clone(), user.sk.clone())
-        .with_membership_info(MembershipInfo::from_membership(Membership::Admin))
-        .execute(&ddb)
-        .await
-        .map_err(|e| {
+    // Get or create user membership using the builder pattern
+    let mut membership = match get_user_membership_by_user_id(&ddb, &user_id).await {
+        Ok(Some(membership)) => membership,
+        Ok(None) => {
+            // Create new admin membership using builder pattern
+            UserMembership::builder(user_id.clone()).with_admin().build()
+        }
+        Err(e) => {
+            tracing::error!("Failed to get user membership: {:?}", e);
+            return Err(Error::Unknown(format!("Failed to get user membership: {}", e)));
+        }
+    };
+
+    // Update to admin membership
+    membership.membership_type = Membership::Admin;
+    membership.updated_at = crate::utils::time::get_now_timestamp_millis();
+
+    // Save the updated membership
+    if get_user_membership_by_user_id(&ddb, &user_id).await?.is_some() {
+        // Update existing membership
+        update_user_membership(&ddb, &membership).await.map_err(|e| {
             tracing::error!("Failed to update user to admin: {:?}", e);
             Error::Unknown(format!("DynamoDB error: {}", e))
         })?;
+    } else {
+        // Create new membership
+        membership.create(&ddb).await.map_err(|e| {
+            tracing::error!("Failed to create admin membership: {:?}", e);
+            Error::Unknown(format!("DynamoDB error: {}", e))
+        })?;
+    }
 
     Ok(Json(SetMembershipResponse {
         success: true,
