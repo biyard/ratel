@@ -13,6 +13,9 @@ use crate::{
             get_info::{GetInfoResponse, get_info_handler},
             update_user::{UpdateUserResponse, update_user_handler},
         },
+        spaces::deliberations::create_deliberation::{
+            CreateDeliberationResponse, create_deliberation_handler,
+        },
         teams::{
             create_team::{CreateTeamResponse, create_team_handler},
             find_team::{FindTeamResponse, find_team_handler},
@@ -141,6 +144,20 @@ pub fn route(
                             ),
                         ),
                 ),
+        )
+        .nest(
+            "/spaces",
+            Router::new().route(
+                "/deliberation",
+                post_with(
+                    create_deliberation_handler,
+                    api_docs!(
+                        Json<CreateDeliberationResponse>,
+                        "Create deliberation",
+                        "Create a new deliberation"
+                    ),
+                ),
+            ),
         )
         .nest(
             "/teams",

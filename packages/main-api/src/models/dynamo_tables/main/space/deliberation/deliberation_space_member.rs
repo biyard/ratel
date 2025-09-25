@@ -1,24 +1,33 @@
 use crate::{models::user::User, types::*};
+
 use bdk::prelude::*;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default)]
-pub struct DeliberationSpace {
+pub struct DeliberationSpaceMember {
     pub pk: Partition,
+    #[dynamo(index = "gsi1", sk)]
+    #[dynamo(index = "gsi2", sk)]
     pub sk: EntityType,
-
-    #[dynamo(prefix = "TS", index = "gsi1", sk)]
-    pub created_at: i64,
-    pub updated_at: i64,
 
     #[dynamo(prefix = "USER_PK", name = "find_by_user_pk", index = "gsi1", pk)]
     pub user_pk: Partition,
     pub author_display_name: String,
     pub author_profile_url: String,
     pub author_username: String,
+
+    #[dynamo(
+        prefix = "DISCUSSION_PK",
+        name = "find_by_discussion_pk",
+        index = "gsi2",
+        pk
+    )]
+    pub discussion_pk: Partition,
 }
 
-impl DeliberationSpace {
+impl DeliberationSpaceMember {
     pub fn new(
+        deliberation_pk: Partition,
+        discussion_pk: Partition,
         User {
             pk,
             display_name,
@@ -28,18 +37,15 @@ impl DeliberationSpace {
         }: User,
     ) -> Self {
         let uid = uuid::Uuid::new_v4().to_string();
-        let created_at = chrono::Utc::now().timestamp_micros();
 
         Self {
-            pk: Partition::DeliberationSpace(uid),
-            sk: EntityType::Space,
-            created_at,
-            updated_at: created_at,
-
+            pk: deliberation_pk,
+            sk: EntityType::DeliberationSpaceMember(uid),
             user_pk: pk,
             author_display_name: display_name,
             author_profile_url: profile_url,
             author_username: username,
+            discussion_pk,
         }
     }
 }

@@ -151,6 +151,12 @@ pub mod controllers {
             }
         }
 
+        pub mod spaces {
+            pub mod deliberations {
+                pub mod create_deliberation;
+            }
+        }
+
         pub mod teams {
             pub mod create_team;
             pub mod find_team;
