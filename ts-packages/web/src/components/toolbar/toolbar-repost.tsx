@@ -118,7 +118,7 @@ export default function ToolbarPlugin({
         className={cn(editor.isActive('code') && 'bg-neutral-600')}
         aria-label="Capslock"
       >
-        <CapsLock/>
+        <CapsLock />
       </button>
 
       <button
