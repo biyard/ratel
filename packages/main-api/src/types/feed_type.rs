@@ -10,12 +10,12 @@
 )]
 #[repr(u8)]
 pub enum FeedType {
-    Artwork = 0,
     #[default]
     Post = 1,
-
+    Repost = 2,
+    Artwork = 3,
     // Belows are kinds of comments
-    Reply = 2,
-    Repost = 3,
-    DocReview = 4,
+    // Reply = 2,
+    // Repost = 3,
+    // DocReview = 4,
 }

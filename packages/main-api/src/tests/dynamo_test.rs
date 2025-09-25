@@ -34,7 +34,7 @@ pub fn create_app_state() -> AppState {
         ses: SesClient::mock(aws_config),
     }
 }
-
+//FIXME: Rename to create_test_user
 pub async fn get_test_user(cli: &aws_sdk_dynamodb::Client) -> User {
     use crate::types::UserType;
 
