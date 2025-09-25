@@ -30,6 +30,7 @@ import { HomeGatewayResponse } from './models/home';
 import { InfiniteData } from '@tanstack/react-query';
 import { GroupPermission } from './models/group';
 import { Permission } from './models/permission';
+import { NewsDetail } from './models/news';
 
 async function getDataFromServer<T>(
   key: (string | number)[],
@@ -81,6 +82,13 @@ export function getTeamById(user_id: number) {
   return getDataFromServer<Team>(
     [QK_GET_TEAM_BY_ID, user_id],
     ratelApi.teams.getTeamById(user_id),
+  );
+}
+
+export function listNews(page: number, size: number) {
+  return getDataFromServer<NewsDetail>(
+    [QK_GET_POSTS_BY_USER_ID, user_id, page, size, status],
+    ratelApi.feeds.getPostsByUserId(user_id, page, size, status),
   );
 }
 

@@ -10,7 +10,6 @@ import ClientProviders from './providers.client';
 import { getServerQueryClient } from '@/lib/query-utils.server';
 import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
 import { ratelApi } from '@/lib/api/ratel_api';
-import { client } from '@/lib/apollo';
 import { FeedStatus } from '@/lib/api/models/feeds';
 import { prefetchInfiniteFeeds } from '@/hooks/feeds/use-feeds-infinite-query';
 
@@ -19,6 +18,8 @@ export default async function Provider({ children }: { children: ReactNode }) {
   const network = await getNetwork();
   const promotion = await getPromotion();
   const user = await getUserInfo();
+
+  const news = await listNews();
 
   const data: InitDataOptions[] = [network, promotion, user];
 
@@ -38,7 +39,6 @@ export default async function Provider({ children }: { children: ReactNode }) {
 
   const dehydratedState = dehydrate(queryClient);
 
-  const apolloClient = client;
   const newsQuery = ratelApi.graphql.listNews(3);
   let apolloCache = '{}';
   try {

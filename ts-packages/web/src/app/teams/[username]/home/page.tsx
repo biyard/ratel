@@ -1,6 +1,5 @@
 import { Metadata } from 'next';
 import TeamHome from './page.client';
-import { client } from '@/lib/apollo';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { prefetchInfiniteFeeds } from '@/hooks/feeds/use-feeds-infinite-query';
 import { FeedStatus } from '@/lib/api/models/feeds';
@@ -44,7 +43,7 @@ export default async function Page({ params }: Props) {
   const { username } = await params;
   const {
     data: { users },
-  } = await client.query(ratelApi.graphql.getTeamByTeamname(username));
+  } = await client.query(ratelApi.users.getUserByUsername(username));
 
   if (users.length === 0) {
     // FIXME: fix this to use not-found.tsx
