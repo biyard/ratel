@@ -173,8 +173,19 @@ pub mod controllers {
 
         pub mod posts {
             pub mod create_post;
+            // pub mod delete_post;
+            // pub mod get_post;
+            // pub mod like_post;
+            // pub mod list_posts;
             pub mod update_post;
             // pub mod comments {
+            //     pub mod add_comment;
+            //     pub mod delete_comment;
+            //     pub mod list_comments;
+
+            //     #[cfg(test)]
+            //     pub mod tests;
+            // }
             #[cfg(test)]
             pub mod tests;
         }

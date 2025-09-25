@@ -93,7 +93,7 @@ pub fn route(
             ),
         )
         .nest(
-            "posts",
+            "/posts",
             Router::new().route(
                 "/",
                 post_with(
