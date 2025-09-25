@@ -1,3 +1,6 @@
+use dto::{JsonSchema, schemars};
+use std::collections::HashMap;
+
 #[derive(
     Debug,
     Clone,
@@ -6,6 +9,7 @@
     Eq,
     serde_repr::Serialize_repr,
     serde_repr::Deserialize_repr,
+    JsonSchema,
     Default,
 )]
 #[repr(u8)]
@@ -18,8 +22,6 @@ pub enum Membership {
     Enterprise = 5,
     Admin = 99,
 }
-
-use std::collections::HashMap;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Default)]
 pub struct MembershipInfo {
@@ -93,6 +95,34 @@ impl MembershipInfo {
             subscription_end: chrono::Utc::now().timestamp_micros()
                 + (30 * 24 * 60 * 60 * 1_000_000),
             space_capabilities: custom_capabilities,
+        }
+    }
+
+    /// Create MembershipInfo from Membership type with default capabilities
+    pub fn from_membership(membership: Membership) -> Self {
+        match membership {
+            Membership::Free => Self::new_free(),
+            Membership::Pro => Self::new_pro(),
+            Membership::Max => Self::new_max(),
+            Membership::VIP => Self::new_vip(),
+            Membership::Enterprise => {
+                // Default enterprise capabilities
+                let mut caps = HashMap::new();
+                caps.insert(10, 100); // 10x booster: 100 spaces per month
+                caps.insert(100, 10); // 100x booster: 10 spaces per month
+                caps.insert(1000, 1); // 1000x booster: 1 space per month
+                Self::new_enterprise(caps)
+            }
+            Membership::Admin => {
+                // Admin gets unlimited capabilities
+                Self {
+                    membership_type: Membership::Admin,
+                    subscription_start: chrono::Utc::now().timestamp_micros(),
+                    subscription_end: chrono::Utc::now().timestamp_micros()
+                        + (365 * 24 * 60 * 60 * 1_000_000), // 1 year subscription
+                    space_capabilities: HashMap::new(), // Empty map means unlimited for all booster types
+                }
+            }
         }
     }
 

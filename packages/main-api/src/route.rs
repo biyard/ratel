@@ -765,7 +765,7 @@ pub async fn route(
                             ),
                         ),
                 )
-                .with_state(dynamo_client),
+                .with_state(dynamo_client.clone()),
         )
         .route(
             "/.well-known/oauth-authorization-server",

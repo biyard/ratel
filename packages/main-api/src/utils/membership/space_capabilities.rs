@@ -1,14 +1,14 @@
 use crate::Error2 as Error;
-use crate::utils::aws::dynamo::DynamoClient;
 use crate::utils::users_dynamo::extract_user;
 use bdk::prelude::by_axum::auth::Authorization;
+use std::sync::Arc;
 
 type Result<T> = std::result::Result<T, Error>;
 
 /// Check if a user has the capability to create a space with the given booster type
 ///
 /// # Arguments
-/// * `dynamo_client` - DynamoDB client
+/// * `ddb` - DynamoDB client
 /// * `auth` - User authorization
 /// * `booster_type` - Booster type as integer (0=no boost, 2=2x, 10=10x, 100=100x, 1000=1000x, etc.)
 ///
@@ -19,15 +19,15 @@ type Result<T> = std::result::Result<T, Error>;
 /// # Example Usage
 /// ```rust
 /// // In a space creation endpoint
-/// check_space_creation_capability(&dynamo_client, auth, 10).await?; // Check for 10x booster
+/// check_space_creation_capability(&ddb, auth, 10).await?; // Check for 10x booster
 ///
 /// // Create the space...
 ///
 /// // After successful creation, consume the quota
-/// consume_space_creation_quota(&dynamo_client, auth, 10).await?;
+/// consume_space_creation_quota(&ddb, auth, 10).await?;
 /// ```
 pub async fn check_space_creation_capability(
-    dynamo_client: &DynamoClient,
+    ddb: &Arc<aws_sdk_dynamodb::Client>,
     auth: Option<Authorization>,
     booster_type: u32,
 ) -> Result<()> {
@@ -37,7 +37,7 @@ pub async fn check_space_creation_capability(
     }
 
     // Get the user from auth
-    let user = extract_user(dynamo_client, auth).await?;
+    let user = extract_user(ddb, auth).await?;
 
     // Check if membership is active
     if !user.membership_info.is_active() {
@@ -64,7 +64,7 @@ pub async fn check_space_creation_capability(
 /// This should be called after a space is successfully created
 ///
 /// # Arguments
-/// * `dynamo_client` - DynamoDB client
+/// * `ddb` - DynamoDB client
 /// * `auth` - User authorization
 /// * `booster_type` - Booster type as integer (0=no boost, 2=2x, 10=10x, 100=100x, etc.)
 ///
@@ -72,7 +72,7 @@ pub async fn check_space_creation_capability(
 /// * `Ok(())` - Quota consumed successfully
 /// * `Err(Error)` - Failed to consume quota
 pub async fn consume_space_creation_quota(
-    dynamo_client: &DynamoClient,
+    ddb: &Arc<aws_sdk_dynamodb::Client>,
     auth: Option<Authorization>,
     booster_type: u32,
 ) -> Result<()> {
@@ -81,12 +81,12 @@ pub async fn consume_space_creation_quota(
         return Ok(());
     }
 
-    let mut user = extract_user(dynamo_client, auth).await?;
+    let mut user = extract_user(ddb, auth).await?;
 
     // Consume the quota
     if user.membership_info.consume_space_quota(booster_type) {
         // Update the user in DynamoDB
-        update_user_membership_info(dynamo_client, &user).await?;
+        update_user_membership_info(ddb, &user).await?;
         Ok(())
     } else {
         Err(Error::Unknown(
@@ -98,14 +98,14 @@ pub async fn consume_space_creation_quota(
 /// Get remaining quota for a booster type
 ///
 /// # Arguments
-/// * `dynamo_client` - DynamoDB client
+/// * `ddb` - DynamoDB client
 /// * `auth` - User authorization
 /// * `booster_type` - Booster type as integer (0=no boost, 1=1x, 2=2x, 10=10x, 100=100x, etc.)
 ///
 /// # Returns
 /// * Remaining quota count
 pub async fn get_remaining_quota(
-    dynamo_client: &DynamoClient,
+    ddb: &Arc<aws_sdk_dynamodb::Client>,
     auth: Option<Authorization>,
     booster_type: u32,
 ) -> Result<i32> {
@@ -114,7 +114,7 @@ pub async fn get_remaining_quota(
         return Ok(-1);
     }
 
-    let user = extract_user(dynamo_client, auth).await?;
+    let user = extract_user(ddb, auth).await?;
 
     let remaining = user
         .membership_info
@@ -128,18 +128,16 @@ pub async fn get_remaining_quota(
 
 /// Helper function to update user membership info in DynamoDB
 async fn update_user_membership_info(
-    dynamo_client: &DynamoClient,
+    ddb: &Arc<aws_sdk_dynamodb::Client>,
     user: &crate::models::dynamo_tables::main::user::user::User,
 ) -> Result<()> {
-    use aws_sdk_dynamodb::types::AttributeValue;
-    use serde_dynamo::to_item;
-    use std::collections::HashMap;
-
-    // Serialize the updated user
-    let item: HashMap<String, AttributeValue> = to_item(user).map_err(|e| Error::SerdeDynamo(e))?;
-
-    dynamo_client
-        .put_item(item)
+    use crate::models::dynamo_tables::main::user::user::User;
+    
+    // Use the User model's updater to update the membership info
+    User::updater(user.pk.clone(), user.sk.clone())
+        .with_membership(user.membership.clone())
+        .with_membership_info(user.membership_info.clone())
+        .execute(ddb)
         .await
         .map_err(|e| Error::Unknown(format!("Failed to update user: {}", e)))?;
     Ok(())
