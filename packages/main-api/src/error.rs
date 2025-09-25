@@ -60,6 +60,8 @@ impl IntoResponse for Error {
                 (StatusCode::CONFLICT, msg).into_response()
             }
             Error::BadRequest(_) => (StatusCode::BAD_REQUEST, msg).into_response(),
+            Error::InvalidUser => (StatusCode::UNAUTHORIZED, msg).into_response(),
+            Error::Unknown(_) => (StatusCode::INTERNAL_SERVER_ERROR, msg).into_response(),
             Error::InternalServerError(_)
             | Error::DynamoDbError(_)
             | Error::SerdeDynamo(_)
