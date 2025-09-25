@@ -1,8 +1,6 @@
 'use client';
 import { LoadingIndicator } from '@/app/loading';
 import { Col } from '@/components/ui/col';
-import { ratelApi } from '@/lib/api/ratel_api';
-import { useSuspenseQuery } from '@apollo/client';
 import { useTranslations } from 'next-intl';
 import {
   ErrorBoundary,
@@ -11,6 +9,7 @@ import {
 import { useRouter } from 'next/navigation';
 import React, { Suspense } from 'react';
 import DisableBorderCard from './disable-border-card';
+import { useNews } from '../_hooks/use-news';
 
 export interface NewsItem {
   id: number;
@@ -35,12 +34,7 @@ export default function Wrapper() {
 function News() {
   const t = useTranslations('Home');
   const router = useRouter();
-  const q = ratelApi.graphql.listNews(3);
-  const {
-    data: { news },
-  }: { data: { news: NewsItem[] } } = useSuspenseQuery(q.query, {
-    variables: q.variables,
-  });
+  const news = useNews().data.items;
 
   const handleNewsNavigation = (id: number) => {
     router.push(`/news/${id}`);
