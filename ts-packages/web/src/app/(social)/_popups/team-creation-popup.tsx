@@ -18,7 +18,6 @@ import { logger } from '@/lib/logger';
 import { checkString } from '@/lib/string-filter-utils';
 import { showErrorToast } from '@/lib/toast';
 import { checkLowerAlphaNumeric } from '@/lib/valid-utils';
-import { useApolloClient } from '@apollo/client';
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
@@ -26,8 +25,7 @@ import { useTranslations } from 'next-intl';
 export default function TeamCreationPopup() {
   const t = useTranslations('Home');
   const popup = usePopup();
-  const { post } = useApiCall();
-  const client = useApolloClient();
+  const { post, get } = useApiCall();
   const userInfo = useUserInfo();
 
   const [profileUrl, setProfileUrl] = useState('');
@@ -72,9 +70,8 @@ export default function TeamCreationPopup() {
       return;
     }
 
-    const {
-      data: { users },
-    } = await client.query(ratelApi.graphql.getUserByUsername(username));
+    const { users } = await get(ratelApi.users.getUserByUsername(username));
+
     logger.debug('graphql respons: ', users);
 
     if (users.length > 0) {
