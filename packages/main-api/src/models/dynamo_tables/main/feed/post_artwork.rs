@@ -1,7 +1,7 @@
 use crate::types::*;
 use bdk::prelude::*;
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default, JsonSchema)]
 pub struct PostArtwork {
     pub pk: Partition,
     pub sk: EntityType,
@@ -18,7 +18,7 @@ impl PostArtwork {
         }
     }
 }
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Default)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Default, JsonSchema)]
 pub struct PostArtworkMetadata {
     pub trait_type: String,
     pub value: serde_json::Value,

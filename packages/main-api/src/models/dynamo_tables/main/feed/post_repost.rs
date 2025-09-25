@@ -2,7 +2,7 @@ use super::Post;
 use crate::{models::user::User, types::*};
 use bdk::prelude::*;
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default, JsonSchema)]
 pub struct PostRepost {
     pub pk: Partition,
     #[dynamo(index = "gsi1", sk)]
