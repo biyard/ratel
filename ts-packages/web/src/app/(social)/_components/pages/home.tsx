@@ -18,6 +18,7 @@ import { Feed, FeedStatus } from '@/lib/api/models/feeds';
 import useInfiniteFeeds from '@/hooks/feeds/use-feeds-infinite-query';
 import { useObserver } from '@/hooks/use-observer';
 import DisableBorderCard from '../disable-border-card';
+import { usePostEditorContext } from '../post-editor/provider';
 
 export const SIZE = 10;
 
@@ -51,6 +52,7 @@ export default function Home({
   promotion: Promotion | undefined | null;
   feed: Feed | undefined | null;
 }) {
+  const { close } = usePostEditorContext();
   const { data: userInfo } = useSuspenseUserInfo();
   const userId = userInfo?.id || 0;
 
@@ -108,9 +110,11 @@ export default function Home({
         </Col>
       </Col>
 
-      <div className="tablet:hidden fixed bottom-4 right-4 z-50">
-        <CreatePostButton />
-      </div>
+      {close && (
+        <div className="hidden max-tablet:!block fixed bottom-4 right-4 z-50">
+          <CreatePostButton />
+        </div>
+      )}
 
       <aside className="w-70 pl-4 max-tablet:!hidden" aria-label="Sidebar">
         <CreatePostButton />

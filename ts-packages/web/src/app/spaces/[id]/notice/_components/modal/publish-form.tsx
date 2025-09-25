@@ -30,7 +30,7 @@ export default function PublishForm({
   };
 
   return (
-    <div className="w-[450px] h-[425px] flex flex-col justify-between">
+    <div className="w-[450px] h-[425px] max-tablet:w-full flex flex-col justify-between">
       <div>
         {/* Header */}
         <div className="mb-6">

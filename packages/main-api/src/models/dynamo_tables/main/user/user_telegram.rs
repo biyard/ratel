@@ -1,5 +1,5 @@
-use bdk::prelude::*;
 use crate::types::*;
+use bdk::prelude::*;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity)]
 pub struct UserTelegram {
@@ -10,18 +10,16 @@ pub struct UserTelegram {
 
     #[dynamo(name = "find_by_telegram_id", prefix = "TELEGRAM", index = "gsi1", pk)]
     pub telegram_id: i64,
-    pub telegram_raw: String,
 }
 
 impl UserTelegram {
-    pub fn new(pk: Partition, telegram_id: i64, telegram_raw: String) -> Self {
+    pub fn new(pk: Partition, telegram_id: i64) -> Self {
         let sk = EntityType::UserTelegram;
 
         Self {
             pk,
             sk,
             telegram_id,
-            telegram_raw,
         }
     }
 }

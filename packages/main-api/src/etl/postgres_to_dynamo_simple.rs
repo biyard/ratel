@@ -3,9 +3,7 @@ use dto::Result;
 use sqlx::PgPool;
 use tracing::info;
 
-use crate::{
-    etl::{BatchProcessor, MigrationState},
-};
+use crate::etl::{BatchProcessor, MigrationState};
 
 #[allow(dead_code)]
 pub struct PostgresToDynamoMigrator {
@@ -29,15 +27,15 @@ impl PostgresToDynamoMigrator {
 
     pub async fn migrate_all_tables(&mut self) -> Result<()> {
         info!("Starting complete migration from PostgreSQL to DynamoDB");
-        
+
         self.migration_state.start_migration();
-        
+
         // Get incomplete tables from the migration state
         let incomplete_tables: Vec<String> = self.migration_state.get_incomplete_tables();
-        
+
         for table_name in incomplete_tables {
             info!("Migrating table: {}", table_name);
-            
+
             match table_name.as_str() {
                 "users" => self.migrate_users().await?,
                 "spaces" => self.migrate_spaces().await?,
@@ -54,14 +52,14 @@ impl PostgresToDynamoMigrator {
                     continue;
                 }
             }
-            
+
             self.migration_state.mark_table_complete(&table_name);
             info!("Completed migration for table: {}", table_name);
         }
-        
+
         self.migration_state.complete_migration();
         info!("Complete migration finished successfully");
-        
+
         Ok(())
     }
 
@@ -72,7 +70,7 @@ impl PostgresToDynamoMigrator {
     pub async fn resume_migration(&mut self, checkpoint: MigrationState) -> Result<()> {
         info!("Resuming migration from checkpoint");
         self.migration_state = checkpoint;
-        
+
         // Continue with incomplete tables
         self.migrate_all_tables().await
     }
@@ -80,9 +78,10 @@ impl PostgresToDynamoMigrator {
     // Individual migration methods for each table type
     async fn migrate_users(&self) -> Result<()> {
         info!("Starting users migration");
-        
+
         // For now, just simulate migration without actual database queries
         // TODO: Implement actual PostgreSQL queries when DATABASE_URL is available
+        // TODO: Update Password with bcrypt hashing
         info!("Users migration completed (placeholder)");
 
         Ok(())

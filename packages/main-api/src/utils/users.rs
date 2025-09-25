@@ -124,6 +124,8 @@ pub async fn extract_user_with_options(
         }
     };
 
+    tracing::debug!("authorized user_id: {:?}", user);
+
     Ok(user)
 }
 
