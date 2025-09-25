@@ -58,24 +58,23 @@ async fn test_artwork_post_creation() {
     let res = post.create(&cli).await;
     assert!(res.is_ok(), "Failed to create artwork post: {:?}", res);
 
-    let post_artwork1 = PostArtworkMetadata::new(
-        post.pk.clone(),
-        "Background".to_string(),
-        "#FFFFFF".to_string(),
-        Some("Background".to_string()),
-    );
+    let post_artwork_metadata = vec![
+        PostArtworkMetadata {
+            trait_type: "Background".to_string(),
+            value: serde_json::Value::String("#FFFFFF".to_string()),
+            display_type: Some("Background".to_string()),
+        },
+        PostArtworkMetadata {
+            trait_type: "Size".to_string(),
+            value: serde_json::Value::String("10x10".to_string()),
+            display_type: None,
+        },
+    ];
 
-    let post_artwork2 = PostArtworkMetadata::new(
-        post.pk.clone(),
-        "Size".to_string(),
-        "10x10".to_string(),
-        None,
-    );
+    let post_artwork = PostArtwork::new(post.pk.clone(), post_artwork_metadata);
 
-    let res = post_artwork1.create(&cli).await;
-    assert!(res.is_ok(), "Failed to create post artwork 1: {:?}", res);
-    let res = post_artwork2.create(&cli).await;
-    assert!(res.is_ok(), "Failed to create post artwork 2: {:?}", res);
+    let res = post_artwork.create(&cli).await;
+    assert!(res.is_ok(), "Failed to create post artwork: {:?}", res);
     let post_summary = PostSummary::query(&cli, post.pk.clone()).await;
     assert!(
         post_summary.is_ok(),
@@ -86,12 +85,11 @@ async fn test_artwork_post_creation() {
 
     assert_eq!(
         post_summary.len(),
-        3,
-        "Expected 3 post summary items, got {}",
+        2,
+        "Expected 2 post summary items, got {}",
         post_summary.len()
     );
 
-    let mut artwork_count = 0;
     for post in post_summary.iter() {
         match post {
             PostSummary::Post(p) => {
@@ -100,13 +98,12 @@ async fn test_artwork_post_creation() {
                 assert_eq!(p.status, PostStatus::Draft);
                 assert_eq!(p.post_type, PostType::Artwork);
             }
-            PostSummary::PostArtworkMetadata(_) => {
-                artwork_count += 1;
+            PostSummary::PostArtwork(PostArtwork { metadata, .. }) => {
+                assert_eq!(metadata.len(), 2, "Expected 2 artwork metadata items");
             }
             _ => panic!("Expected PostSummary::Post variant"),
         }
     }
-    assert_eq!(artwork_count, 2, "Expected 2 artwork metadata items");
 }
 
 #[tokio::test]
@@ -125,24 +122,17 @@ async fn test_post_detail_response() {
     let res = post.create(&cli).await;
     assert!(res.is_ok(), "Failed to create artwork post: {:?}", res);
 
-    let post_artwork1 = PostArtworkMetadata::new(
+    let post_artwork = PostArtwork::new(
         post.pk.clone(),
-        "Background".to_string(),
-        "#FFFFFF".to_string(),
-        Some("Background".to_string()),
+        vec![PostArtworkMetadata {
+            trait_type: "Background".to_string(),
+            value: serde_json::Value::String("#FFFFFF".to_string()),
+            display_type: Some("Background".to_string()),
+        }],
     );
 
-    let post_artwork2 = PostArtworkMetadata::new(
-        post.pk.clone(),
-        "Size".to_string(),
-        "10x10".to_string(),
-        None,
-    );
-
-    let res = post_artwork1.create(&cli).await;
-    assert!(res.is_ok(), "Failed to create post artwork 1: {:?}", res);
-    let res = post_artwork2.create(&cli).await;
-    assert!(res.is_ok(), "Failed to create post artwork 2: {:?}", res);
+    let res = post_artwork.create(&cli).await;
+    assert!(res.is_ok(), "Failed to create post artwork: {:?}", res);
 
     let another_user = create_test_user(&cli).await;
 
@@ -171,8 +161,8 @@ async fn test_post_detail_response() {
     let post = post.unwrap();
     assert_eq!(
         post.len(),
-        5,
-        "Expected 5 post summary items, got {}",
+        4,
+        "Expected 4 post summary items, got {}",
         post.len()
     );
 
@@ -182,9 +172,9 @@ async fn test_post_detail_response() {
     assert_eq!(post_detail.post.status, PostStatus::Draft);
     assert_eq!(post_detail.post.post_type, PostType::Artwork);
     assert_eq!(
-        post_detail.artwork_metadatas.len(),
-        2,
-        "Expected 2 artwork items"
+        post_detail.artwork_metadata.len(),
+        1,
+        "Expected 1 artwork item"
     );
     assert_eq!(post_detail.comments.len(), 2, "Expected 2 comment items");
 }
