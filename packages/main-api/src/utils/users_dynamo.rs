@@ -1,3 +1,4 @@
+use crate::Error2 as Error;
 use crate::models::dynamo_tables::main::user::user::User;
 use crate::models::dynamo_tables::main::user::user_principal::UserPrincipal;
 use crate::types::*;
@@ -5,9 +6,10 @@ use crate::utils::aws::dynamo::DynamoClient;
 use aws_sdk_dynamodb::types::AttributeValue;
 use bdk::prelude::by_axum::auth::Authorization;
 use bdk::prelude::*;
-use dto::{Error, Result};
 use serde_dynamo::{from_item, to_item};
 use std::collections::HashMap;
+
+type Result<T> = std::result::Result<T, Error>;
 
 pub async fn extract_user_with_allowing_anonymous(
     dynamo_client: &DynamoClient,
@@ -269,7 +271,8 @@ pub async fn extract_principal(
 async fn get_user_by_pk(dynamo_client: &DynamoClient, pk: &str) -> Result<Option<User>> {
     let item = dynamo_client
         .get_item("pk", pk, Some(("sk", "USER")))
-        .await?;
+        .await
+        .map_err(|e| Error::Unknown(format!("Failed to get user: {}", e)))?;
 
     match item {
         Some(attrs) => {
@@ -293,14 +296,15 @@ async fn get_user_by_principal(
 
     let principal_items = dynamo_client
         .query_gsi("gsi1", "gsi1pk = :principal", expression_values)
-        .await?;
+        .await
+        .map_err(|e| Error::Unknown(format!("Failed to query user principal: {}", e)))?;
 
     if let Some(principal_item) = principal_items.into_iter().next() {
         // Extract the user PK from the principal item
         let user_pk = principal_item
             .get("pk")
             .and_then(|v| v.as_s().ok())
-            .ok_or_else(|| Error::DynamoDbError("Missing pk in UserPrincipal".to_string()))?;
+            .ok_or_else(|| Error::Unknown("Missing pk in UserPrincipal".to_string()))?;
 
         // Now get the user with this PK
         get_user_by_pk(dynamo_client, user_pk).await
@@ -348,15 +352,15 @@ async fn create_user(
     // Use transaction to create both records atomically
     dynamo_client
         .transact_write(vec![user_item, principal_item])
-        .await?;
+        .await
+        .map_err(|e| Error::Unknown(format!("Failed to create user: {}", e)))?;
 
     Ok(user)
 }
 
 fn serialize_user_to_dynamo(user: &User) -> Result<HashMap<String, AttributeValue>> {
-    let mut item: HashMap<String, AttributeValue> = to_item(user).map_err(|e| {
-        Error::DynamoDbSerializationError(format!("Failed to serialize user: {}", e))
-    })?;
+    let mut item: HashMap<String, AttributeValue> =
+        to_item(user).map_err(|e| Error::SerdeDynamo(e))?;
 
     // Add GSI fields that aren't part of the struct
     item.insert(
@@ -381,9 +385,7 @@ fn serialize_user_to_dynamo(user: &User) -> Result<HashMap<String, AttributeValu
 }
 
 fn deserialize_user_from_dynamo(item: HashMap<String, AttributeValue>) -> Result<User> {
-    from_item(item).map_err(|e| {
-        Error::DynamoDbSerializationError(format!("Failed to deserialize user: {}", e))
-    })
+    from_item(item).map_err(|e| Error::SerdeDynamo(e))
 }
 
 fn extract_uuid_from_pk(pk: &str) -> String {
@@ -395,9 +397,8 @@ fn extract_uuid_from_pk(pk: &str) -> String {
 fn serialize_user_principal_to_dynamo(
     user_principal: &UserPrincipal,
 ) -> Result<HashMap<String, AttributeValue>> {
-    let mut item: HashMap<String, AttributeValue> = to_item(user_principal).map_err(|e| {
-        Error::DynamoDbSerializationError(format!("Failed to serialize user principal: {}", e))
-    })?;
+    let mut item: HashMap<String, AttributeValue> =
+        to_item(user_principal).map_err(|e| Error::SerdeDynamo(e))?;
 
     // Add GSI1 for principal lookup
     item.insert(

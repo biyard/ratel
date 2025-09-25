@@ -33,6 +33,7 @@ pub struct User {
     pub password: String,
 
     pub membership: Membership,
+    #[serde(default = "MembershipInfo::new_free")]
     pub membership_info: MembershipInfo,
     pub theme: Theme,
     pub points: i64,

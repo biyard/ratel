@@ -1,7 +1,9 @@
+use crate::Error2 as Error;
 use crate::utils::aws::dynamo::DynamoClient;
 use crate::utils::users_dynamo::extract_user;
 use bdk::prelude::by_axum::auth::Authorization;
-use dto::{Error, Result};
+
+type Result<T> = std::result::Result<T, Error>;
 
 /// Check if a user has the capability to create a space with the given booster type
 ///
@@ -134,10 +136,11 @@ async fn update_user_membership_info(
     use std::collections::HashMap;
 
     // Serialize the updated user
-    let item: HashMap<String, AttributeValue> = to_item(user).map_err(|e| {
-        Error::DynamoDbSerializationError(format!("Failed to serialize user: {}", e))
-    })?;
+    let item: HashMap<String, AttributeValue> = to_item(user).map_err(|e| Error::SerdeDynamo(e))?;
 
-    dynamo_client.put_item(item).await?;
+    dynamo_client
+        .put_item(item)
+        .await
+        .map_err(|e| Error::Unknown(format!("Failed to update user: {}", e)))?;
     Ok(())
 }

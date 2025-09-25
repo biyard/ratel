@@ -32,11 +32,11 @@ pub struct MembershipInfo {
 
 impl MembershipInfo {
     pub fn new_free() -> Self {
+        let now = chrono::Utc::now().timestamp_micros();
         Self {
             membership_type: Membership::Free,
-            subscription_start: chrono::Utc::now().timestamp_micros(),
-            subscription_end: chrono::Utc::now().timestamp_micros()
-                + (30 * 24 * 60 * 60 * 1_000_000), // 30 days
+            subscription_start: now,
+            subscription_end: now + (30 * 24 * 60 * 60 * 1_000_000), // 30 days
             space_capabilities: HashMap::new(), // Free tier has unlimited basic spaces
         }
     }
