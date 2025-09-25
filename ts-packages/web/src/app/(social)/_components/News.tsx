@@ -36,8 +36,6 @@ function News() {
   const router = useRouter();
   const news = useNews().data.items;
 
-  console.log('news: ', news);
-
   const handleNewsNavigation = (id: number) => {
     router.push(`/news/${id}`);
   };
