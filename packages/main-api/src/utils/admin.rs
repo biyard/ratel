@@ -15,7 +15,9 @@ pub async fn check_admin_permission_shared_ddb(
 
     match user.membership_info.membership_type {
         Membership::Admin => Ok(()),
-        _ => Err(Error::Unauthorized),
+        _ => Err(Error::Unauthorized(
+            "User does not have admin permissions".to_string(),
+        )),
     }
 }
 
@@ -28,7 +30,9 @@ pub async fn check_admin_permission(
 
     match user.membership_info.membership_type {
         Membership::Admin => Ok(()),
-        _ => Err(Error::Unauthorized),
+        _ => Err(Error::Unauthorized(
+            "User does not have admin permissions".to_string(),
+        )),
     }
 }
 

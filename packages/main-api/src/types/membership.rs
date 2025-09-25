@@ -1,6 +1,6 @@
 use bdk::prelude::*;
 
-use dto::{JsonSchema, schemars};
+// use dto::{JsonSchema, schemars};
 use std::collections::HashMap;
 
 #[derive(

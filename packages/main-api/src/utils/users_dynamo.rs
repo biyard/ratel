@@ -18,7 +18,7 @@ pub async fn extract_user_with_allowing_anonymous(
         Some(Authorization::UserSig(sig)) => {
             let principal = sig.principal().map_err(|e| {
                 tracing::error!("failed to get principal: {:?}", e);
-                Error::Unauthorized
+                Error::Unauthorized("Failed to get principal from signature".to_string())
             })?;
             match get_user_by_principal(ddb, &principal).await {
                 Ok(Some(user)) => user,
@@ -77,7 +77,7 @@ pub async fn extract_user_with_options(
         Some(Authorization::UserSig(sig)) => {
             let principal = sig.principal().map_err(|e| {
                 tracing::error!("failed to get principal: {:?}", e);
-                Error::Unauthorized
+                Error::Unauthorized("Unauthorized access".to_string())
             })?;
             let user = get_user_by_principal(ddb, &principal)
                 .await?
@@ -109,7 +109,7 @@ pub async fn extract_user_with_options(
             user
         }
         _ => {
-            return Err(Error::Unauthorized);
+            return Err(Error::Unauthorized("Unauthorized access".to_string()));
         }
     };
 
@@ -173,7 +173,7 @@ pub async fn extract_user_id(
         Some(Authorization::UserSig(sig)) => {
             let principal = sig.principal().map_err(|e| {
                 tracing::error!("failed to get principal: {:?}", e);
-                Error::Unauthorized
+                Error::Unauthorized("Unauthorized access".to_string())
             })?;
             let user = get_user_by_principal(ddb, &principal)
                 .await?
@@ -185,7 +185,7 @@ pub async fn extract_user_id(
         }
         Some(Authorization::Bearer { claims }) => claims.sub.clone(),
         _ => {
-            return Err(Error::Unauthorized);
+            return Err(Error::Unauthorized("Unauthorized access".to_string()));
         }
     };
 
@@ -208,7 +208,7 @@ pub async fn extract_user_email(
         Some(Authorization::UserSig(sig)) => {
             let principal = sig.principal().map_err(|e| {
                 tracing::error!("failed to get principal: {:?}", e);
-                Error::Unauthorized
+                Error::Unauthorized("Unauthorized access".to_string())
             })?;
             get_user_by_principal(ddb, &principal)
                 .await?
@@ -222,7 +222,7 @@ pub async fn extract_user_email(
             Some(email) => email.clone(),
             None => extract_user(ddb, auth).await?.email,
         },
-        _ => return Err(Error::Unauthorized),
+        _ => return Err(Error::Unauthorized("Unauthorized access".to_string())),
     };
 
     Ok(email)
@@ -242,7 +242,7 @@ pub async fn extract_principal(
         }
         Some(Authorization::UserSig(sig)) => sig.principal().map_err(|e| {
             tracing::error!("failed to get principal: {:?}", e);
-            Error::Unauthorized
+            Error::Unauthorized("Unauthorized access".to_string())
         })?,
         Some(Authorization::Bearer { claims }) => {
             let user_id = claims.sub.clone();
@@ -259,7 +259,7 @@ pub async fn extract_principal(
                 })?
                 .display_name
         }
-        _ => return Err(Error::Unauthorized),
+        _ => return Err(Error::Unauthorized("Unauthorized access".to_string())),
     };
 
     Ok(principal)
@@ -271,6 +271,7 @@ pub async fn get_user_by_pk(ddb: &Arc<aws_sdk_dynamodb::Client>, pk: &str) -> Re
         .map_err(|e| Error::Unknown(format!("Failed to get user: {}", e)))
 }
 
+// FIXME
 async fn get_user_by_principal(
     ddb: &Arc<aws_sdk_dynamodb::Client>,
     principal: &str,
@@ -304,7 +305,7 @@ async fn create_user(
     term_agreed: bool,
     informed_agreed: bool,
     user_type: UserType,
-    parent_id: Option<String>,
+    _parent_id: Option<String>,
     username: String,
     password: String,
     _membership: Membership,
@@ -320,9 +321,8 @@ async fn create_user(
         term_agreed,
         informed_agreed,
         user_type,
-        parent_id,
         username,
-        password,
+        Some(password),
     );
 
     // Create UserPrincipal record
