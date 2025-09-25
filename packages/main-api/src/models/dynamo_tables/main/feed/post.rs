@@ -1,7 +1,10 @@
-use crate::{models::user::User, types::*};
+use crate::{
+    models::{team::Team, user::User},
+    types::*,
+};
 use bdk::prelude::*;
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Default, DynamoEntity)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Default, DynamoEntity, JsonSchema)]
 pub struct Post {
     pub pk: Partition,
     #[dynamo(index = "gsi1", sk)]
@@ -15,8 +18,9 @@ pub struct Post {
 
     pub title: String,
     pub html_contents: String,
-    pub feed_type: FeedType,
-    pub status: FeedStatus,
+    pub post_type: PostType,
+    pub status: PostStatus,
+    pub visibility: Visibility,
 
     pub shares: i64,
     pub likes: i64,
@@ -36,29 +40,31 @@ pub struct Post {
 }
 
 impl Post {
-    pub fn new<T: Into<String>>(
+    pub fn new<T: Into<String>, A: Into<PostAuthor>>(
         title: T,
         html_contents: T,
-        User {
+        post_type: PostType,
+        author: A,
+    ) -> Self {
+        let uid = uuid::Uuid::new_v4().to_string();
+        let created_at = chrono::Utc::now().timestamp_micros();
+        let PostAuthor {
             pk,
             display_name,
             profile_url,
             username,
-            ..
-        }: User,
-    ) -> Self {
-        let uid = uuid::Uuid::new_v4().to_string();
-        let created_at = chrono::Utc::now().timestamp_micros();
+        } = author.into();
 
         Self {
             pk: Partition::Feed(uid),
             sk: EntityType::Post,
             created_at,
             updated_at: created_at,
-            feed_type: FeedType::Post,
+            post_type,
             title: title.into(),
             html_contents: html_contents.into(),
-            status: FeedStatus::Draft,
+            status: PostStatus::Draft,
+            visibility: Visibility::Private,
             shares: 0,
             likes: 0,
             comments: 0,
@@ -75,10 +81,46 @@ impl Post {
     }
 }
 
-impl Post {
-    pub fn update_builder() -> PostUpdateBuilder {
-        PostUpdateBuilder {}
-    }
+pub struct PostAuthor {
+    pub pk: Partition,
+    pub display_name: String,
+    pub profile_url: String,
+    pub username: String,
 }
 
-pub struct PostUpdateBuilder {}
+impl From<User> for PostAuthor {
+    fn from(
+        User {
+            pk,
+            display_name,
+            profile_url,
+            username,
+            ..
+        }: User,
+    ) -> Self {
+        Self {
+            pk,
+            display_name,
+            profile_url,
+            username,
+        }
+    }
+}
+impl From<Team> for PostAuthor {
+    fn from(
+        Team {
+            pk,
+            display_name,
+            profile_url,
+            username,
+            ..
+        }: Team,
+    ) -> Self {
+        Self {
+            pk,
+            display_name,
+            profile_url,
+            username,
+        }
+    }
+}

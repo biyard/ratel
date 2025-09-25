@@ -13,6 +13,7 @@ use crate::{
             get_info::{GetInfoResponse, get_info_handler},
             update_user::{UpdateUserResponse, update_user_handler},
         },
+        posts::create_post::{CreatePostResponse, create_post_handler},
         teams::{
             create_team::{CreateTeamResponse, create_team_handler},
             find_team::{FindTeamResponse, find_team_handler},
@@ -89,6 +90,16 @@ pub fn route(
             Router::new().route(
                 "/",
                 get_with(find_user_handler, api_docs!(Json<FindUserResponse>, "", "")),
+            ),
+        )
+        .nest(
+            "posts",
+            Router::new().route(
+                "/",
+                post_with(
+                    create_post_handler,
+                    api_docs!(Json<CreatePostResponse>, "Create Post", "Create a new post"),
+                ),
             ),
         )
         .nest(
