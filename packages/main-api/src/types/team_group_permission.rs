@@ -18,7 +18,7 @@ pub enum TeamGroupPermission {
     #[default]
     // Post Permissions
     PostRead = 0,
-    PostWrite = 1,
+    PostWrite = 1, // When user want to create a post with team, they need both [PostWrite, PostEdit] permission.
     PostEdit = 2,
     PostDelete = 3,
 

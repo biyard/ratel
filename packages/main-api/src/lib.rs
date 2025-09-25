@@ -170,6 +170,14 @@ pub mod controllers {
                 pub mod tests;
             }
         }
+
+        pub mod posts {
+            pub mod create_post;
+            pub mod update_post;
+            // pub mod comments {
+            #[cfg(test)]
+            pub mod tests;
+        }
     }
     pub mod m2 {
         pub mod noncelab {

@@ -1,3 +1,5 @@
+use bdk::prelude::*;
+
 #[derive(
     Debug,
     Clone,
@@ -7,6 +9,7 @@
     serde_repr::Serialize_repr,
     serde_repr::Deserialize_repr,
     Default,
+    schemars::JsonSchema_repr,
 )]
 #[repr(u8)]
 pub enum BoosterType {
