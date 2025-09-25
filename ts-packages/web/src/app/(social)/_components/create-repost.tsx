@@ -188,16 +188,16 @@ export function CreateRePost() {
 
               {/* controller arr for closing this qouted section */}
               <div
-                className='cursor-pointer absolute right-0 transform transition-transform duration-200 hover:scale-110'
-                onClick={() => setIsQuotedSectionExpanded(!isQuotedSectionExpanded)}
+                className="cursor-pointer absolute right-0 transform transition-transform duration-200 hover:scale-110"
+                onClick={() =>
+                  setIsQuotedSectionExpanded(!isQuotedSectionExpanded)
+                }
               >
                 <ArrowDown
                   className={`w-5 h-5 transition-transform duration-200 ${isQuotedSectionExpanded ? '' : 'rotate-180'}`}
                 />
               </div>
             </div>
-
-
 
             {isQuotedSectionExpanded && (
               <div>
@@ -279,23 +279,20 @@ export function CreateRePost() {
                 Save
               </button>
 
-
               {/* Post Button */}
-            <button
-              onClick={handlePublish}
-              disabled={isSubmitDisabled}
-              className="shrink-0 bg-primary text-text-third rounded-full hover:bg-primary/70 px-4 py-2 font-bold flex items-center gap-x-2"
-            >
-              {isReposting ? (
-                <Loader className="animate-spin" />
-              ) : (
-                <UserCircle className="[&>path]:stroke-text-third" />
-              )}
-              {isReposting ? '' : 'Post'}
-            </button>
+              <button
+                onClick={handlePublish}
+                disabled={isSubmitDisabled}
+                className="shrink-0 bg-primary text-text-third rounded-full hover:bg-primary/70 px-4 py-2 font-bold flex items-center gap-x-2"
+              >
+                {isReposting ? (
+                  <Loader className="animate-spin" />
+                ) : (
+                  <UserCircle className="[&>path]:stroke-text-third" />
+                )}
+                {isReposting ? '' : 'Post'}
+              </button>
             </div>
-
-            
           </div>
 
           {/* URL Input Dialogs */}
@@ -542,11 +539,12 @@ const TruncatedContent = ({
       // Check if content needs truncation
       const lineHeight = parseInt(
         getComputedStyle(contentRef.current).lineHeight || '20',
-        10
+        10,
       );
       const maxHeight = lineHeight * maxLines;
       setNeedsTruncation(
-        contentRef.current.scrollHeight > maxHeight || content.length > minLength
+        contentRef.current.scrollHeight > maxHeight ||
+          content.length > minLength,
       );
     }
   }, [content, maxLines, minLength]);
@@ -555,8 +553,9 @@ const TruncatedContent = ({
     <div className={`${className} relative`} ref={containerRef}>
       <div
         ref={contentRef}
-        className={`${contentClassName} ${!isExpanded ? `line-clamp-${maxLines} overflow-hidden` : ''
-          }`}
+        className={`${contentClassName} ${
+          !isExpanded ? `line-clamp-${maxLines} overflow-hidden` : ''
+        }`}
         dangerouslySetInnerHTML={{
           __html: DOMPurify.sanitize(content),
         }}
