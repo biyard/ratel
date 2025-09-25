@@ -5,6 +5,7 @@ import {
   useState,
   useCallback,
   useRef,
+  useEffect,
 } from 'react';
 import { Clear } from '@/components/icons';
 import { Loader } from '@/components/icons';
@@ -30,7 +31,9 @@ import { TiptapEditor } from '@/components/text-editor/tiptap-editor';
 import { Editor } from '@tiptap/core';
 import LinkPaste from '@/assets/icons/editor/link-paste.svg';
 import CommentPaste from '@/assets/icons/editor/comment-paste.svg';
-
+import ShapeDownArrow from '@/assets/icons/editor/shape-arrow-down.svg';
+import ArrowDown from '@/assets/icons/editor/arr-down.svg';
+import SaveIcon from '@/assets/icons/save.svg';
 export function CreateRePost() {
   const {
     expand,
@@ -65,6 +68,7 @@ export function CreateRePost() {
   const router = useRouter();
   const editorRef = useRef<Editor | null>(null);
   const [isReposting, setIsReposting] = useState(false);
+  const [isQuotedSectionExpanded, setIsQuotedSectionExpanded] = useState(true);
 
   const handlePublish = async () => {
     if (!title.trim() || !content) return;
@@ -130,7 +134,7 @@ export function CreateRePost() {
     <div className={`flex flex-col w-full ${!expand ? 'hidden' : 'block'}`}>
       <div className="w-full bg-component-bg border-t-6 border-x border-b border-primary rounded-t-lg overflow-hidden">
         {/* Header */}
-        <div className="flex items-center p-4 justify-between">
+        <div className="flex items-center p-2 justify-between">
           <div className="flex items-center gap-3 relative">
             <div className="size-6 rounded-full">
               <Image
@@ -150,8 +154,10 @@ export function CreateRePost() {
           </div>
 
           <div className="flex items-center space-x-4">
-            <div className="p-4 rounded-lg flex w-[320px] justify-between border-[0.5px] border-create-space-border">
+            <div className="py-2 px-4 rounded-lg flex w-[320px] justify-between border-[0.5px] border-create-space-border">
               <p className="text-left text-foreground text-lg">{industry}</p>
+
+              <ShapeDownArrow className="w-5 h-5" />
             </div>
 
             <div className={cn('cursor-pointer')} onClick={resetDraft}>
@@ -162,7 +168,7 @@ export function CreateRePost() {
 
         {/* Quoted Content Section */}
         {(feedcontent || feedImageUrl) && (
-          <div className="px-4 pt-2 pb-3 bg-write-comment-box-bg rounded-md mx-4 my-4">
+          <div className="px-4 pt-2 pb-2 bg-write-comment-box-bg rounded-md mx-4 ">
             <div className="flex items-center gap-3 relative">
               <div className="size-6 rounded-full">
                 <Image
@@ -179,34 +185,50 @@ export function CreateRePost() {
                 </span>
               </div>
               <Certified className="size-5" />
+
+              {/* controller arr for closing this qouted section */}
+              <div
+                className='cursor-pointer absolute right-0 transform transition-transform duration-200 hover:scale-110'
+                onClick={() => setIsQuotedSectionExpanded(!isQuotedSectionExpanded)}
+              >
+                <ArrowDown
+                  className={`w-5 h-5 transition-transform duration-200 ${isQuotedSectionExpanded ? '' : 'rotate-180'}`}
+                />
+              </div>
             </div>
 
-            {feedcontent && (
-              <div
-                className="prose prose-invert text-sm p-3 bg-write-comment-box-bg  mb-3 font-light text-desc-text"
-                dangerouslySetInnerHTML={{
-                  __html: DOMPurify.sanitize(feedcontent),
-                }}
-              />
-            )}
 
-            {feedImageUrl && (
-              <div className="relative group">
-                <div className="relative w-full aspect-video rounded-md overflow-hidden max-h-40">
-                  <Image
-                    src={feedImageUrl}
-                    alt="Quoted content"
-                    fill
-                    className="object-cover"
-                    sizes="100vw"
+
+            {isQuotedSectionExpanded && (
+              <div>
+                {feedcontent && (
+                  <TruncatedContent
+                    content={feedcontent}
+                    maxLines={1}
+                    className="prose prose-invert text-sm bg-write-comment-box-bg mb-3 font-light text-desc-text"
+                    contentClassName="[&_*]:!my-0"
                   />
-                </div>
-                <button
-                  onClick={removeQuotedImage}
-                  className="absolute top-2 right-2 bg-black/70 rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <Clear className="w-4 h-4 text-white" />
-                </button>
+                )}
+
+                {feedImageUrl && (
+                  <div className="relative group">
+                    <div className="relative w-full aspect-video rounded-md overflow-hidden max-h-40">
+                      <Image
+                        src={feedImageUrl}
+                        alt="Quoted content"
+                        fill
+                        className="object-cover"
+                        sizes="100vw"
+                      />
+                    </div>
+                    <button
+                      onClick={removeQuotedImage}
+                      className="absolute top-2 right-2 bg-black/70 rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Clear className="w-4 h-4 text-white" />
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -219,7 +241,7 @@ export function CreateRePost() {
             placeholder="Here is a title line. What do you think about......."
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full bg-transparent text-white text-xl font-semibold placeholder-neutral-500 outline-none border-none"
+            className="w-full bg-transparent  text-xl font-semibold placeholder-title-text outline-none border-none"
           />
         </div>
 
@@ -250,7 +272,15 @@ export function CreateRePost() {
               />
             )}
 
-            {/* Post Button */}
+            <div className="flex flex-row gap-4">
+              {/* Save button (not implemented) */}
+              <button className="shrink-0 text-foreground rounded-full px-4 py-2 font-bold flex items-center gap-x-2">
+                <SaveIcon />
+                Save
+              </button>
+
+
+              {/* Post Button */}
             <button
               onClick={handlePublish}
               disabled={isSubmitDisabled}
@@ -263,6 +293,9 @@ export function CreateRePost() {
               )}
               {isReposting ? '' : 'Post'}
             </button>
+            </div>
+
+            
           </div>
 
           {/* URL Input Dialogs */}
@@ -474,8 +507,72 @@ export const RePostDraftProvider: React.FC<{ children: React.ReactNode }> = ({
 
 export const useRepostDraft = () => {
   const context = useContext(RePostDraftContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useRepostDraft must be used within a RePostDraftProvider');
   }
   return context;
+};
+
+interface TruncatedContentProps {
+  content: string;
+  maxLines?: number;
+  className?: string;
+  contentClassName?: string;
+  showMoreText?: string;
+  showLessText?: string;
+  minLength?: number;
+}
+
+const TruncatedContent = ({
+  content,
+  maxLines = 1,
+  className = '',
+  contentClassName = '',
+  showMoreText = 'See more',
+  showLessText = 'See less',
+  minLength = 100,
+}: TruncatedContentProps) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [needsTruncation, setNeedsTruncation] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (contentRef.current) {
+      // Check if content needs truncation
+      const lineHeight = parseInt(
+        getComputedStyle(contentRef.current).lineHeight || '20',
+        10
+      );
+      const maxHeight = lineHeight * maxLines;
+      setNeedsTruncation(
+        contentRef.current.scrollHeight > maxHeight || content.length > minLength
+      );
+    }
+  }, [content, maxLines, minLength]);
+
+  return (
+    <div className={`${className} relative`} ref={containerRef}>
+      <div
+        ref={contentRef}
+        className={`${contentClassName} ${!isExpanded ? `line-clamp-${maxLines} overflow-hidden` : ''
+          }`}
+        dangerouslySetInnerHTML={{
+          __html: DOMPurify.sanitize(content),
+        }}
+      />
+      {needsTruncation && (
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setIsExpanded(!isExpanded);
+          }}
+          className="absolute right-2/5 bottom-0 pl-2 text-text-disc hover:underline text-sm font-medium focus:outline-none transition-colors"
+        >
+          {isExpanded ? showLessText : showMoreText}
+        </button>
+      )}
+    </div>
+  );
 };
