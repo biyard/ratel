@@ -33,13 +33,16 @@ pub enum UpdatePostRequest {
         // metadata: Vec<String>,
     },
     Visibility {
-        next: Visibility,
-    },
-    Status {
-        next: PostStatus,
+        status: PostStatus,
+        visibility: UpdateVisibility,
     },
 }
 
+#[derive(Debug, Deserialize, aide::OperationIo, JsonSchema)]
+pub enum UpdateVisibility {
+    Private,
+    Public,
+}
 // #[derive(Debug, Serialize, Default, aide::OperationIo, JsonSchema)]
 // pub struct UpdatePostResponse {}
 pub type UpdatePostResponse = Post;
@@ -108,13 +111,32 @@ pub async fn update_post_handler(
             post.title = title;
             post.html_contents = content;
         }
-        UpdatePostRequest::Visibility { next } => {
-            Post::updater(&post.pk, &post.sk).with_visibility(next.clone());
-            post.visibility = next;
-        }
-        UpdatePostRequest::Status { next } => {
-            Post::updater(&post.pk, &post.sk).with_status(next);
-            post.status = next;
+        UpdatePostRequest::Visibility { status, visibility } => {
+            let now = chrono::Utc::now().timestamp_micros();
+            if post.status != PostStatus::Draft && status != PostStatus::Published {
+                return Err(Error2::BadRequest(
+                    "Only Draft posts can be updated to Published".to_string(),
+                ));
+            }
+            let visibility = match visibility {
+                UpdateVisibility::Private => Visibility::Team(post.user_pk.to_string()),
+                UpdateVisibility::Public => Visibility::Public,
+            };
+            Post::updater(&post.pk, &post.sk)
+                .with_visibility(visibility.clone())
+                .with_status(status.clone())
+                .with_compose_sort_key(Post::get_compose_key(
+                    PostStatus::Published,
+                    Some(visibility.clone()),
+                    chrono::Utc::now().timestamp_micros(),
+                ))
+                .with_updated_at(now)
+                .execute(&dynamo.client)
+                .await?;
+
+            post.updated_at = now;
+            post.status = status;
+            post.visibility = Some(visibility);
         }
     }
 

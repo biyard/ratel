@@ -21,21 +21,11 @@ async fn test_post_creation() {
     let res = post.create(&cli).await;
     assert!(res.is_ok(), "Failed to create post: {:?}", res);
 
-    let posts = Post::find_posts(&cli, EntityType::Post, Default::default()).await;
-    assert!(posts.is_ok(), "Failed to find posts: {:?}", posts);
-    let (posts, bookmark) = posts.unwrap();
-    assert!(
-        posts.len() >= 1,
-        "Expected at least 1 post, got {}",
-        posts.len()
-    );
-    assert!(
-        bookmark.is_none(),
-        "Expected no bookmark, got {:?}",
-        bookmark
-    );
-
-    let post = &posts[0];
+    let post = Post::get(&cli, &post.pk, Some(EntityType::Post)).await;
+    assert!(post.is_ok(), "Failed to find posts: {:?}", post);
+    let post = post.unwrap();
+    assert!(post.is_some(), "No posts found");
+    let post = post.unwrap();
     assert_eq!(post.title, title);
     assert_eq!(post.html_contents, html_contents);
     assert_eq!(post.status, PostStatus::Draft);
@@ -75,33 +65,33 @@ async fn test_artwork_post_creation() {
 
     let res = post_artwork.create(&cli).await;
     assert!(res.is_ok(), "Failed to create post artwork: {:?}", res);
-    let post_summary = PostSummary::query(&cli, post.pk.clone()).await;
+    let post_metadata = PostMetadata::query(&cli, post.pk.clone()).await;
     assert!(
-        post_summary.is_ok(),
-        "Failed to query post summary: {:?}",
+        post_metadata.is_ok(),
+        "Failed to query post metadata: {:?}",
         res
     );
-    let post_summary = post_summary.unwrap();
+    let post_metadata = post_metadata.unwrap();
 
     assert_eq!(
-        post_summary.len(),
+        post_metadata.len(),
         2,
-        "Expected 2 post summary items, got {}",
-        post_summary.len()
+        "Expected 2 post metadata items, got {}",
+        post_metadata.len()
     );
 
-    for post in post_summary.iter() {
+    for post in post_metadata.iter() {
         match post {
-            PostSummary::Post(p) => {
+            PostMetadata::Post(p) => {
                 assert_eq!(p.title, title);
                 assert_eq!(p.html_contents, html_contents);
                 assert_eq!(p.status, PostStatus::Draft);
                 assert_eq!(p.post_type, PostType::Artwork);
             }
-            PostSummary::PostArtwork(PostArtwork { metadata, .. }) => {
+            PostMetadata::PostArtwork(PostArtwork { metadata, .. }) => {
                 assert_eq!(metadata.len(), 2, "Expected 2 artwork metadata items");
             }
-            _ => panic!("Expected PostSummary::Post variant"),
+            _ => panic!("Expected PostMetadata::Post variant"),
         }
     }
 }
@@ -156,13 +146,13 @@ async fn test_post_detail_response() {
         res
     );
 
-    let post = PostSummary::query(&cli, post.pk.clone()).await;
-    assert!(post.is_ok(), "Failed to query post summary: {:?}", res);
+    let post = PostMetadata::query(&cli, post.pk.clone()).await;
+    assert!(post.is_ok(), "Failed to query post metadata: {:?}", res);
     let post = post.unwrap();
     assert_eq!(
         post.len(),
         4,
-        "Expected 4 post summary items, got {}",
+        "Expected 4 post metadata items, got {}",
         post.len()
     );
 
@@ -213,13 +203,13 @@ async fn test_post_reply() {
         .await;
     assert!(res.is_ok(), "Failed to create reply post: {:?}", res);
 
-    let post = PostSummary::query(&cli, reply_post.pk.clone()).await;
-    assert!(post.is_ok(), "Failed to query post summary: {:?}", post);
+    let post = PostMetadata::query(&cli, reply_post.pk.clone()).await;
+    assert!(post.is_ok(), "Failed to query post metadata: {:?}", post);
     let post = post.unwrap();
     assert_eq!(
         post.len(),
         2,
-        "Expected 2 post summary items, got {}",
+        "Expected 2 post metadata items, got {}",
         post.len()
     );
 }

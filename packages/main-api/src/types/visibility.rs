@@ -10,14 +10,7 @@ use bdk::prelude::*;
     JsonSchema,
 )]
 pub enum Visibility {
-    // Only user can access
     #[default]
-    Private,
-
-    Public,
-    // Only team members can access
-    Team(String),
-
-    // Only members in the specific team group can access
-    TeamGroupMember(String),
+    Public, // All user/team can access
+    Team(String), // Only team members with permission can access
 }

@@ -1,7 +1,7 @@
 use crate::{
     AppState, Error2,
     models::{
-        feed::{Post, PostAuthor},
+        feed::{Author, Post, PostAuthor},
         team::Team,
     },
     types::{EntityType, PostType, TeamGroupPermission},
@@ -35,10 +35,11 @@ pub async fn create_post_handler(
     Extension(auth): Extension<Option<Authorization>>,
     Json(req): Json<CreatePostRequest>,
 ) -> Result<Json<CreatePostResponse>, Error2> {
-    let author: PostAuthor = if let Some(team_pk) = req.team_pk {
+    let user = extract_user(&dynamo.client, auth.clone()).await?;
+    let author: Author = if let Some(team_pk) = req.team_pk {
         check_permission(
             &dynamo.client,
-            auth.clone(),
+            auth,
             RatelResource::Team {
                 team_pk: team_pk.clone(),
             },
@@ -50,11 +51,14 @@ pub async fn create_post_handler(
             .ok_or(Error2::NotFound("Team not found".to_string()))?;
         team.into()
     } else {
-        extract_user(&dynamo.client, auth).await?.into()
+        user.clone().into()
     };
 
     let post = Post::new("", "", PostType::default(), author);
     post.create(&dynamo.client).await?;
+    PostAuthor::new(post.pk.clone(), user)
+        .create(&dynamo.client)
+        .await?;
 
     Ok(Json(CreatePostResponse {
         post_pk: post.pk.to_string(),

@@ -5,7 +5,10 @@ use dto::by_axum::axum::{
 
 use crate::{
     controllers::v3::{
-        posts::create_post::{CreatePostRequest, create_post_handler},
+        posts::{
+            create_post::{CreatePostRequest, create_post_handler},
+            like_post::{LikePostPathParams, LikePostRequest, like_post_handler},
+        },
         teams::{
             create_team::{CreateTeamRequest, create_team_handler},
             groups::{
@@ -135,4 +138,51 @@ async fn test_create_post_by_team() {
     )
     .await;
     assert!(post.is_ok(), "Failed to create post: {:?}", post);
+}
+
+#[tokio::test]
+async fn test_post_like() {
+    let app_state = create_app_state();
+    let cli = &app_state.dynamo.client;
+    let user = create_test_user(cli).await;
+    let auth = get_auth(&user);
+
+    let username = create_user_name();
+    let nickname = create_nick_name();
+    let team = create_team_handler(
+        State(app_state.clone()),
+        Extension(Some(auth.clone())),
+        Json(CreateTeamRequest {
+            username: username.clone(),
+            nickname: nickname.clone(),
+            profile_url: "".to_string(),
+            description: "".to_string(),
+        }),
+    )
+    .await;
+    assert!(team.is_ok(), "Failed to create team: {:?}", team);
+    let team_pk = team.unwrap().0.team_pk;
+
+    let post = create_post_handler(
+        State(app_state.clone()),
+        Extension(Some(auth.clone())),
+        Json(CreatePostRequest {
+            team_pk: Some(team_pk.clone()),
+        }),
+    )
+    .await;
+    assert!(post.is_ok(), "Failed to create post: {:?}", post);
+    let post_pk = post.unwrap().0.post_pk;
+
+    let res = like_post_handler(
+        State(app_state.clone()),
+        Extension(Some(auth.clone())),
+        Path(LikePostPathParams {
+            post_pk: post_pk.clone(),
+        }),
+        Json(LikePostRequest { like: true }),
+    )
+    .await;
+    assert!(res.is_ok(), "Failed to like post: {:?}", res);
+    assert!(res.unwrap().0.like, "Post like should be true");
 }
