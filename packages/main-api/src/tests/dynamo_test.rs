@@ -34,8 +34,8 @@ pub fn create_app_state() -> AppState {
         ses: SesClient::mock(aws_config),
     }
 }
-//FIXME: Rename to create_test_user
-pub async fn get_test_user(cli: &aws_sdk_dynamodb::Client) -> User {
+
+pub async fn create_test_user(cli: &aws_sdk_dynamodb::Client) -> User {
     use crate::types::UserType;
 
     let profile = "http://example.com/profile.png".to_string();
@@ -57,7 +57,8 @@ pub async fn get_test_user(cli: &aws_sdk_dynamodb::Client) -> User {
 
     return user;
 }
-pub async fn create_auth(user: User) -> Authorization {
+
+pub fn get_auth(user: &User) -> Authorization {
     let session = DynamoUserSession {
         pk: user.pk.to_string(),
         typ: user.user_type as i64,
@@ -101,4 +102,14 @@ pub fn create_user_name() -> String {
 pub fn create_nick_name() -> String {
     let short_uuid = &uuid::Uuid::new_v4().simple().to_string()[..6];
     format!("nickname{}", short_uuid)
+}
+
+#[deprecated(note = "use create_test_user instead")]
+pub async fn get_test_user(cli: &aws_sdk_dynamodb::Client) -> User {
+    create_test_user(cli).await
+}
+
+#[deprecated(note = "use get_auth instead")]
+pub async fn create_auth(user: User) -> Authorization {
+    get_auth(&user)
 }

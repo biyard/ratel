@@ -11,7 +11,7 @@ use crate::{
             },
         },
     },
-    tests::{create_app_state, create_auth, get_test_user},
+    tests::{create_app_state, create_test_user, get_auth},
     types::TeamGroupPermission,
 };
 use dto::by_axum::axum::{
@@ -22,8 +22,8 @@ use dto::by_axum::axum::{
 async fn test_update_group_handler() {
     let app_state = create_app_state();
     let cli = app_state.dynamo.client.clone();
-    let user = get_test_user(&cli).await;
-    let auth = create_auth(user.clone()).await;
+    let user = create_test_user(&cli).await;
+    let auth = get_auth(&user);
 
     let team_username = format!("TEAM{}", uuid::Uuid::new_v4().to_string());
     // Create a team
@@ -89,8 +89,8 @@ async fn test_update_group_handler() {
 async fn test_update_with_permisison() {
     let app_state = create_app_state();
     let cli = app_state.dynamo.client.clone();
-    let user = get_test_user(&cli).await;
-    let auth = create_auth(user.clone()).await;
+    let user = create_test_user(&cli).await;
+    let auth = get_auth(&user);
 
     let team_username = format!("TEAM{}", uuid::Uuid::new_v4().to_string());
     // Create a team
@@ -132,7 +132,7 @@ async fn test_update_with_permisison() {
 
     let team_group = team_group.unwrap().0;
 
-    let user2 = get_test_user(&cli).await;
+    let user2 = create_test_user(&cli).await;
 
     let res = add_member_handler(
         State(app_state.clone()),
@@ -159,7 +159,7 @@ async fn test_update_with_permisison() {
         res.total_added
     );
 
-    let auth2 = create_auth(user2.clone()).await;
+    let auth2 = get_auth(&user2);
 
     // Try to update permission with user2 (should fail)
     let res = update_group_handler(
@@ -206,8 +206,8 @@ async fn test_update_with_permisison() {
 async fn test_add_member_handler() {
     let app_state = create_app_state();
     let cli = app_state.dynamo.client.clone();
-    let user = get_test_user(&cli).await;
-    let auth = create_auth(user.clone()).await;
+    let user = create_test_user(&cli).await;
+    let auth = get_auth(&user);
     let team_username = format!("TEAM{}", uuid::Uuid::new_v4().to_string());
     // Create a team
     let team = create_team_handler(
@@ -249,10 +249,10 @@ async fn test_add_member_handler() {
     let team_group = team_group.unwrap().0;
 
     // Create Some users to be added
-    let user2 = get_test_user(&cli).await;
-    let auth2 = create_auth(user2.clone()).await;
+    let user2 = create_test_user(&cli).await;
+    let auth2 = get_auth(&user2);
 
-    let user3 = get_test_user(&cli).await;
+    let user3 = create_test_user(&cli).await;
 
     // Call add_member_handler
     let add_member_res = add_member_handler(

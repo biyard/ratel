@@ -1,6 +1,6 @@
 use super::*;
 use crate::{
-    tests::{get_test_aws_config, get_test_user},
+    tests::{create_test_user, get_test_aws_config},
     types::*,
     utils::aws::DynamoClient,
 };
@@ -8,11 +8,16 @@ use crate::{
 #[tokio::test]
 async fn test_post_creation() {
     let cli = DynamoClient::mock(get_test_aws_config()).client;
-    let user = get_test_user(&cli).await;
+    let user = create_test_user(&cli).await;
 
     let title = uuid::Uuid::new_v4().to_string();
     let html_contents = "<p>This is a test post</p>".to_string();
-    let post = Post::new(title.clone(), html_contents.clone(), FeedType::Post, user);
+    let post = Post::new(
+        title.clone(),
+        html_contents.clone(),
+        PostType::Post,
+        user.clone(),
+    );
     let res = post.create(&cli).await;
     assert!(res.is_ok(), "Failed to create post: {:?}", res);
 
@@ -33,21 +38,21 @@ async fn test_post_creation() {
     let post = &posts[0];
     assert_eq!(post.title, title);
     assert_eq!(post.html_contents, html_contents);
-    assert_eq!(post.status, FeedStatus::Draft);
-    assert_eq!(post.feed_type, FeedType::Post);
+    assert_eq!(post.status, PostStatus::Draft);
+    assert_eq!(post.post_type, PostType::Post);
 }
 
 #[tokio::test]
 async fn test_artwork_post_creation() {
     let cli = DynamoClient::mock(get_test_aws_config()).client;
-    let user = get_test_user(&cli).await;
+    let user = create_test_user(&cli).await;
 
     let title = uuid::Uuid::new_v4().to_string();
     let html_contents = "<p>This is a test artwork post</p>".to_string();
     let post = Post::new(
         title.clone(),
         html_contents.clone(),
-        FeedType::Artwork,
+        PostType::Artwork,
         user,
     );
     let res = post.create(&cli).await;
@@ -92,8 +97,8 @@ async fn test_artwork_post_creation() {
             PostSummary::Post(p) => {
                 assert_eq!(p.title, title);
                 assert_eq!(p.html_contents, html_contents);
-                assert_eq!(p.status, FeedStatus::Draft);
-                assert_eq!(p.feed_type, FeedType::Artwork);
+                assert_eq!(p.status, PostStatus::Draft);
+                assert_eq!(p.post_type, PostType::Artwork);
             }
             PostSummary::PostArtworkMetadata(_) => {
                 artwork_count += 1;
@@ -107,14 +112,14 @@ async fn test_artwork_post_creation() {
 #[tokio::test]
 async fn test_post_detail_response() {
     let cli = DynamoClient::mock(get_test_aws_config()).client;
-    let user = get_test_user(&cli).await;
+    let user = create_test_user(&cli).await;
 
     let title = uuid::Uuid::new_v4().to_string();
     let html_contents = "<p>This is a test artwork post</p>".to_string();
     let post = Post::new(
         title.clone(),
         html_contents.clone(),
-        FeedType::Artwork,
+        PostType::Artwork,
         user.clone(),
     );
     let res = post.create(&cli).await;
@@ -139,7 +144,7 @@ async fn test_post_detail_response() {
     let res = post_artwork2.create(&cli).await;
     assert!(res.is_ok(), "Failed to create post artwork 2: {:?}", res);
 
-    let another_user = get_test_user(&cli).await;
+    let another_user = create_test_user(&cli).await;
 
     let post_comment_by_user = PostComment::new(
         post.pk.clone(),
@@ -174,8 +179,8 @@ async fn test_post_detail_response() {
     let post_detail: PostDetailResponse = post.into();
     assert_eq!(post_detail.post.title, title);
     assert_eq!(post_detail.post.html_contents, html_contents);
-    assert_eq!(post_detail.post.status, FeedStatus::Draft);
-    assert_eq!(post_detail.post.feed_type, FeedType::Artwork);
+    assert_eq!(post_detail.post.status, PostStatus::Draft);
+    assert_eq!(post_detail.post.post_type, PostType::Artwork);
     assert_eq!(
         post_detail.artwork_metadatas.len(),
         2,
@@ -187,14 +192,14 @@ async fn test_post_detail_response() {
 #[tokio::test]
 async fn test_post_reply() {
     let cli = DynamoClient::mock(get_test_aws_config()).client;
-    let user = get_test_user(&cli).await;
+    let user = create_test_user(&cli).await;
 
     let title = uuid::Uuid::new_v4().to_string();
     let html_contents = "<p>This is a Original post</p>".to_string();
     let original_post = Post::new(
         title.clone(),
         html_contents.clone(),
-        FeedType::Post,
+        PostType::Post,
         user.clone(),
     );
     let res = original_post.create(&cli).await;
@@ -205,7 +210,7 @@ async fn test_post_reply() {
     let reply_post = Post::new(
         reply_title.clone(),
         reply_html_contents.clone(),
-        FeedType::Repost,
+        PostType::Repost,
         user.clone(),
     );
     reply_post
@@ -232,20 +237,20 @@ async fn test_post_reply() {
 #[tokio::test]
 async fn test_post_like() {
     let cli = DynamoClient::mock(get_test_aws_config()).client;
-    let user = get_test_user(&cli).await;
+    let user = create_test_user(&cli).await;
 
     let title = uuid::Uuid::new_v4().to_string();
     let html_contents = "<p>This is a test post</p>".to_string();
     let post = Post::new(
         title.clone(),
         html_contents.clone(),
-        FeedType::Post,
+        PostType::Post,
         user.clone(),
     );
     let res = post.create(&cli).await;
     assert!(res.is_ok(), "Failed to create post: {:?}", res);
 
-    let user2 = get_test_user(&cli).await;
+    let user2 = create_test_user(&cli).await;
 
     let post_like = PostLike::new(post.pk.clone(), user2.clone());
     let res = post_like.create(&cli).await;
