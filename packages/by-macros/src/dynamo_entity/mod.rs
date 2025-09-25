@@ -159,7 +159,10 @@ fn parse_struct_cfg(attrs: &[Attribute]) -> StructCfg {
             } else if meta.path.is_ident("sk_name") {
                 if let Ok(value) = meta.value() {
                     let v = value.to_string();
-                    if v.is_empty() || &v == "None" || &v == "none" {
+                    if v.is_empty()
+                        || v.trim_matches('"') == "None"
+                        || v.trim_matches('"') == "none"
+                    {
                         cfg.sk_name = None;
                     } else if let Ok(s) = value.parse::<syn::LitStr>() {
                         cfg.sk_name = Some(s.value());
@@ -586,7 +589,6 @@ fn generate_struct_impl(
     } else {
         quote! { None }
     };
-
     let sk_param = if s_cfg.sk_name.is_some() {
         quote! { sk: Option<impl std::fmt::Display>, }
     } else {
@@ -858,9 +860,8 @@ fn generate_enum_impl(ident: Ident, _ds: &DataEnum, s_cfg: StructCfg) -> proc_ma
                     .items
                     .unwrap_or_default()
                     .into_iter()
-                    .map(|item| serde_dynamo::from_item(item).expect("failed to parse item"))
-                    .collect();
-
+                    .map(|item| serde_dynamo::from_item(item))
+                    .collect::<Result<Vec<#ident>, _>>()?;
                 Ok(items)
             }
         }
@@ -904,6 +905,11 @@ fn generate_query_option(st_name: &str, cfg: &StructCfg) -> proc_macro2::TokenSt
         quote! {}
     };
 
+    let sk_field_default = if cfg.sk_name.is_some() {
+        quote! { sk: None, }
+    } else {
+        quote! {}
+    };
     let sk_fn = if cfg.sk_name.is_some() {
         quote! {
             pub fn sk(mut self, sk: String) -> Self {
@@ -927,7 +933,7 @@ fn generate_query_option(st_name: &str, cfg: &StructCfg) -> proc_macro2::TokenSt
         impl Default for #opt_ident {
             fn default() -> Self {
                 Self {
-                    sk: None,
+                    #sk_field_default
                     bookmark: None,
                     limit: 10,
                     scan_index_forward: false,
@@ -965,13 +971,15 @@ fn generate_query_common_fn() -> proc_macro2::TokenStream {
     quote! {
         pub fn encode_lek_all(
             lek: &std::collections::HashMap<String, aws_sdk_dynamodb::types::AttributeValue>,
-        ) -> String {
+        ) -> std::result::Result<String, crate::Error2> {
             use base64::{Engine as _, engine::general_purpose::STANDARD as B64};
 
-            let v: serde_json::Value =
-                serde_dynamo::from_item(lek.clone()).expect("failed to convert lek to json");
+            let v: serde_json::Value = serde_dynamo::from_item(lek.clone())?;
 
-            B64.encode(v.to_string().as_bytes())
+            let encoded = B64.encode(v.to_string().as_bytes());
+
+            Ok(encoded)
+
         }
 
         pub fn decode_bookmark_all(
@@ -983,7 +991,7 @@ fn generate_query_common_fn() -> proc_macro2::TokenStream {
             use base64::{Engine as _, engine::general_purpose::STANDARD as B64};
 
             let bytes = B64.decode(bookmark).expect("failed to decode base64");
-            let v = serde_json::to_value(&bytes).expect("failed to parse json");
+            let v = serde_json::to_value(&bytes)?;
 
             Ok(serde_dynamo::to_item(v)?)
         }
@@ -1130,11 +1138,11 @@ fn generate_index_fn(
                 .items
                 .unwrap_or_default()
                 .into_iter()
-                .map(|item| serde_dynamo::from_item(item).expect("failed to parse item"))
-                .collect();
+                .map(|item| serde_dynamo::from_item(item))
+                .collect::<Result<Vec<_>, _>>()?;
 
             let bookmark = if let Some(ref last_evaluated_key) = resp.last_evaluated_key {
-                Some(Self::encode_lek_all(last_evaluated_key))
+                Some(Self::encode_lek_all(last_evaluated_key)?)
             } else {
                 None
             };
