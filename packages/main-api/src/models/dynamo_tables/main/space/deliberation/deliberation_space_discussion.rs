@@ -1,4 +1,10 @@
-use crate::{models::user::User, types::*};
+use crate::{
+    models::{
+        space::{DiscussionMemberResponse, DiscussionParticipantResponse},
+        user::User,
+    },
+    types::*,
+};
 
 use bdk::prelude::*;
 
@@ -68,3 +74,40 @@ impl DeliberationSpaceDiscussion {
         }
     }
 }
+
+#[derive(Default, serde::Serialize, schemars::JsonSchema)]
+pub struct DeliberationDiscussionResponse {
+    pub pk: String,
+
+    pub started_at: i64,
+    pub ended_at: i64,
+
+    pub name: String,
+    pub description: String,
+    pub meeting_id: Option<String>,
+    pub pipeline_id: String,
+
+    pub media_pipeline_arn: Option<String>,
+    pub record: Option<String>,
+
+    pub user_pk: String,
+    pub author_display_name: String,
+    pub author_profile_url: String,
+    pub author_username: String,
+
+    pub members: Vec<DiscussionMemberResponse>,
+    pub participants: Vec<DiscussionParticipantResponse>,
+}
+
+// impl From<DeliberationSpaceDiscussion> for DeliberationDiscussionResponse {
+//     fn from(discussion: DeliberationSpaceDiscussion) -> Self {
+//         let user_pk = match discussion.user_pk {
+//             Partition::User(v) => v,
+//             Partition::Team(v) => v,
+//             _ => "".to_string(),
+//         };
+//         Self {
+//             pk:
+//         }
+//     }
+// }

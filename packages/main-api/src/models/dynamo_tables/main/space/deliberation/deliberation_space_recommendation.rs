@@ -40,3 +40,18 @@ impl DeliberationSpaceRecommendation {
         serde_json::to_string(files).unwrap_or_else(|_| "[]".to_string())
     }
 }
+
+#[derive(Default, serde::Serialize, schemars::JsonSchema)]
+pub struct DeliberationRecommentationResponse {
+    pub html_contents: String,
+    pub files: Vec<File>,
+}
+
+impl From<DeliberationSpaceRecommendation> for DeliberationRecommentationResponse {
+    fn from(deliberation_recommendation: DeliberationSpaceRecommendation) -> Self {
+        Self {
+            html_contents: deliberation_recommendation.clone().html_contents,
+            files: deliberation_recommendation.clone().files(),
+        }
+    }
+}
