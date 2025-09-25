@@ -22,6 +22,7 @@ import NumberBullet from '@/assets/icons/editor/misc2-part.svg';
 import Bullet from '@/assets/icons/editor/misc-parts.svg';
 import RightAlign from '@/assets/icons/editor/paragraph.svg';
 import RightAlignLight from '@/assets/icons/editor/paragraph-light.svg';
+import CapsLock from '@/assets/icons/editor/capslock.svg';
 
 interface ToolbarPluginProps {
   editor: Editor | null;
@@ -110,6 +111,16 @@ export default function ToolbarPlugin({
   return (
     <div className="flex items-center gap-4 [&>button]:size-6 [&>button]:rounded [&>button]:hover:bg-neutral-700 ">
       {/*  formatting buttons */}
+
+      {/* to be implemented */}
+      <button
+        onClick={() => editor.chain().focus().toggleCode().run()}
+        className={cn(editor.isActive('code') && 'bg-neutral-600')}
+        aria-label="Capslock"
+      >
+        <CapsLock/>
+      </button>
+
       <button
         onClick={() => editor.chain().focus().toggleCode().run()}
         className={cn(editor.isActive('code') && 'bg-neutral-600')}
