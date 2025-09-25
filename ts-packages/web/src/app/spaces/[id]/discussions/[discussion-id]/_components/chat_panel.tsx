@@ -29,7 +29,8 @@ export default function ChatPanel({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    setTimeout(() => setVisible(true), 10);
+    const id = setTimeout(() => setVisible(true), 10);
+    return () => clearTimeout(id);
   }, []);
 
   useEffect(() => {
@@ -45,27 +46,38 @@ export default function ChatPanel({
     if (!input.trim()) return;
     onSend(input.trim());
     setInput('');
-    if (textareaRef.current) {
-      const el = textareaRef.current;
-      el.style.height = 'auto';
-    }
+    if (textareaRef.current) textareaRef.current.style.height = 'auto';
   };
 
   return (
-    <div
-      className={`h-full w-[320px] bg-[#1e1e1e] border-l border-neutral-800 transform transition-all duration-300 z-200 ${
-        visible ? 'translate-x-0' : 'translate-x-full'
-      } flex flex-col`}
+    <aside
+      role="dialog"
+      aria-label="Chat panel"
+      className={[
+        'fixed inset-y-0 right-0',
+        'w-[min(320px,100vw)] max-mobile:w-full',
+        'bg-[#1e1e1e] border-l border-neutral-800 text-white',
+        'transition-transform duration-300',
+        'z-[300]',
+        visible ? 'translate-x-0' : 'translate-x-full',
+        'flex flex-col',
+      ].join(' ')}
     >
-      <div className="flex justify-between items-center px-4 py-3 border-b border-neutral-700 flex-none">
-        <div className="flex flex-row w-fit gap-2.5">
-          <Logo width={24} height={24} />
-          <div className="font-semibold text-sm text-white">Chat</div>
+      <div className="sticky top-0 z-10 bg-[#1e1e1e] border-b border-neutral-700">
+        <div className="flex justify-between items-center px-4 py-3">
+          <div className="flex items-center gap-2.5">
+            <Logo width={24} height={24} />
+            <div className="font-semibold text-sm">Chat</div>
+          </div>
+          <button
+            type="button"
+            aria-label="Close chat panel"
+            onClick={handleClose}
+            className="cursor-pointer w-[22px] h-[22px] [&>path]:stroke-[#bfc8d9]"
+          >
+            <Clear />
+          </button>
         </div>
-        <Clear
-          className="cursor-pointer w-[22px] h-[22px] [&>path]:stroke-[#bfc8d9]"
-          onClick={handleClose}
-        />
       </div>
 
       <div
@@ -103,7 +115,7 @@ export default function ChatPanel({
                         width={30}
                         height={30}
                         src={senderInfo.profile_url}
-                        alt={`${senderInfo.username}'s profile`}
+                        alt={`${senderInfo?.username ?? 'user'}'s profile`}
                         className="w-7.5 h-7.5 object-cover rounded-full"
                       />
                     ) : (
@@ -152,7 +164,7 @@ export default function ChatPanel({
         })}
       </div>
 
-      <div className="border-t border-neutral-700 px-3 py-2 flex-none">
+      <div className="sticky bottom-0 z-10 bg-[#1e1e1e] border-t border-neutral-700 px-3 py-2">
         <div className="flex items-center gap-2">
           <textarea
             ref={textareaRef}
@@ -179,12 +191,13 @@ export default function ChatPanel({
           <button
             onClick={handleSend}
             className="cursor-pointer p-2 rounded-full bg-blue-600 hover:bg-blue-700"
+            aria-label="Send"
           >
             <Send className="w-4 h-4 text-white" />
           </button>
         </div>
       </div>
-    </div>
+    </aside>
   );
 }
 

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useContext } from 'react';
-import SpaceSideMenu from './_components/space-side-menu';
+import SpaceSideMenu, { SpaceTabsMobile } from './_components/space-side-menu';
 import ThreadPage from './_components/thread';
 import DeliberationPage from './_components/deliberation';
 
@@ -58,6 +58,9 @@ function Page() {
         <SpaceProvider value={context}>
           <SpaceHeader space={space} feed={feed} />
         </SpaceProvider>
+      </div>
+      <div className="hidden max-tablet:block w-full">
+        <SpaceTabsMobile />
       </div>
       <div className="flex flex-row w-full h-full gap-5">
         <div className="flex-1 flex w-full">

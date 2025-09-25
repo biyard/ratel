@@ -67,7 +67,7 @@ export default async function Page({
   return (
     <SSRHydration queryClient={queryClient}>
       <Suspense fallback={<div>Loading...</div>}>
-        <div className="flex flex-col gap-6 w-full">
+        <div className="flex flex-col gap-6 w-full max-tablet:mr-[20px]">
           <Header postId={feedId} />
           <ThreadPost postId={feedId} />
           <ThreadComment postId={feedId} />

@@ -35,6 +35,7 @@ pub struct Config {
     pub bedrock: BedrockConfig,
     pub private_bucket_name: &'static str,
     pub dual_write: DualWriteConfig,
+    pub firebase: FirebaseConfig,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -74,6 +75,11 @@ pub struct BedrockConfig {
 pub struct DualWriteConfig {
     pub enabled: bool,
     pub table_name: &'static str,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct FirebaseConfig {
+    pub project_id: &'static str,
 }
 
 impl Default for Config {
@@ -147,6 +153,9 @@ impl Default for Config {
                     .map(|s| s.parse::<bool>().unwrap_or(false))
                     .unwrap_or(false),
                 table_name: option_env!("DUAL_WRITE_TABLE_NAME").unwrap_or("ratel-main"),
+            },
+            firebase: FirebaseConfig {
+                project_id: option_env!("FIREBASE_PROJECT_ID").expect("You must set FIREBASE_PROJECT_ID"),
             },
         }
     }

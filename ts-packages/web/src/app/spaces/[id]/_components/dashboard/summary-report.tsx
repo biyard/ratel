@@ -27,7 +27,7 @@ export default function SummaryReport({
   const dateRange = formatDateRange(startDate, endDate);
 
   return (
-    <div className="flex flex-row w-full justify-start items-center gap-[10px]">
+    <div className="flex flex-row w-full justify-start items-center gap-[10px] max-tablet:hidden">
       <SummaryBox label={t('participants')} value={responseCount.toString()} />
       <SummaryBox label={t('remainings')} value={dueDate} />
       {(startDate > 0 || endDate > 0) && (

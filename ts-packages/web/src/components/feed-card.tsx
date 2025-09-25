@@ -461,16 +461,18 @@ export function FeedFooter({
       className={`items-center justify-between border-t w-full px-5 ${space_id && space_type ? 'border-divider' : 'border-divider'} `}
     >
       {space_id && space_type ? (
-        <JoinNowButton
-          onClick={() => {
-            router.push(route.space(space_id));
-          }}
-        />
+        <div className="max-tablet:!hidden">
+          <JoinNowButton
+            onClick={() => {
+              router.push(route.space(space_id));
+            }}
+          />
+        </div>
       ) : (
         <div></div>
       )}
       <div
-        className={`flex flex-row ${space_id && space_type ? 'w-fit items-center' : 'w-full justify-between items-center'}`}
+        className={`flex flex-row ${space_id && space_type ? 'w-fit items-center max-tablet:!w-full max-tablet:!justify-between max-tablet:!items-center' : 'w-full justify-between items-center'}`}
       >
         <IconText
           onClick={(evt) => {
