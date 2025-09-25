@@ -21,7 +21,6 @@ pub mod time;
 pub mod users;
 pub mod validator;
 pub mod wallets;
-pub mod users_dynamo;
 
 pub mod aws;
 

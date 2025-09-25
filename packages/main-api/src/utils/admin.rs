@@ -1,6 +1,7 @@
 use crate::Error2 as Error;
 use crate::types::Membership;
-use crate::utils::users_dynamo::{extract_user, get_user_membership_by_user_id};
+use crate::utils::dynamo_extractor::extract_user;
+use crate::models::dynamo_tables::main::user::UserMembership;
 use bdk::prelude::by_axum::auth::Authorization;
 use std::sync::Arc;
 
@@ -12,12 +13,20 @@ pub async fn check_admin_permission_shared_ddb(
     auth: Option<Authorization>,
 ) -> Result<()> {
     let user = extract_user(ddb, auth).await?;
-    let user_id = crate::utils::users_dynamo::extract_uuid_from_pk(&user.pk.to_string());
+    let user_pk_str = user.pk.to_string();
     
-    let membership = get_user_membership_by_user_id(ddb, &user_id).await?;
+    let membership = UserMembership::get(ddb, &user_pk_str, Some("MEMBERSHIP"))
+        .await?
+        .unwrap_or_else(|| {
+            // Default to Free membership if none found
+            let user_id = user_pk_str.strip_prefix("USER#").unwrap_or(&user_pk_str);
+            UserMembership::builder(user_id.to_string())
+                .with_free()
+                .build()
+        });
     
-    match membership {
-        Some(membership) if membership.membership_type == Membership::Admin => Ok(()),
+    match membership.membership_type {
+        Membership::Admin => Ok(()),
         _ => Err(Error::Unauthorized(
             "User does not have admin permissions".to_string(),
         )),
@@ -26,16 +35,24 @@ pub async fn check_admin_permission_shared_ddb(
 
 /// Check if the authenticated user has admin permissions
 pub async fn check_admin_permission(
-    ddb: &Arc<aws_sdk_dynamodb::Client>,
+    ddb: &aws_sdk_dynamodb::Client,
     auth: Option<Authorization>,
 ) -> Result<()> {
     let user = extract_user(ddb, auth).await?;
-    let user_id = crate::utils::users_dynamo::extract_uuid_from_pk(&user.pk.to_string());
+    let user_pk_str = user.pk.to_string();
     
-    let membership = get_user_membership_by_user_id(ddb, &user_id).await?;
+    let membership = UserMembership::get(ddb, &user_pk_str, Some("MEMBERSHIP"))
+        .await?
+        .unwrap_or_else(|| {
+            // Default to Free membership if none found
+            let user_id = user_pk_str.strip_prefix("USER#").unwrap_or(&user_pk_str);
+            UserMembership::builder(user_id.to_string())
+                .with_free()
+                .build()
+        });
     
-    match membership {
-        Some(membership) if membership.membership_type == Membership::Admin => Ok(()),
+    match membership.membership_type {
+        Membership::Admin => Ok(()),
         _ => Err(Error::Unauthorized(
             "User does not have admin permissions".to_string(),
         )),
@@ -44,13 +61,18 @@ pub async fn check_admin_permission(
 
 /// Check if a user has admin permissions by user ID
 pub async fn check_user_is_admin(
-    ddb: &Arc<aws_sdk_dynamodb::Client>,
+    ddb: &aws_sdk_dynamodb::Client,
     user_id: &str,
 ) -> Result<bool> {
-    let membership = get_user_membership_by_user_id(ddb, user_id).await?;
+    let user_pk = format!("USER#{}", user_id);
+    let membership = UserMembership::get(ddb, &user_pk, Some("MEMBERSHIP"))
+        .await?
+        .unwrap_or_else(|| {
+            // Default to Free membership if none found
+            UserMembership::builder(user_id.to_string())
+                .with_free()
+                .build()
+        });
     
-    match membership {
-        Some(membership) => Ok(membership.membership_type == Membership::Admin),
-        None => Ok(false),
-    }
+    Ok(membership.membership_type == Membership::Admin)
 }

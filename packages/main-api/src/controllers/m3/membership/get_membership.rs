@@ -2,20 +2,20 @@ use std::collections::HashMap;
 
 use bdk::prelude::*;
 use dto::{
-    Error, JsonSchema, Result, aide,
+    JsonSchema, aide,
     by_axum::{
         auth::Authorization,
-        axum::{Extension, Json, extract::Path},
+        axum::{
+            Extension,
+            extract::{Json, Path, State},
+        },
     },
 };
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    models::dynamo_tables::main::user::User,
-    types::Membership,
-    utils::{
-        admin::check_admin_permission_shared_ddb, users_dynamo::get_user_membership_by_user_id,
-    },
+    AppState, Error2, models::dynamo_tables::main::user::UserMembership, types::Membership,
+    utils::admin::check_admin_permission,
 };
 
 #[derive(Debug, Deserialize, aide::OperationIo, JsonSchema)]
@@ -51,41 +51,29 @@ pub struct UserInfo {
 /// Admin endpoint to get user membership details
 /// GET /m3/admin/users/{user_id}/membership
 pub async fn get_user_membership(
-    by_axum::axum::extract::State(ddb): by_axum::axum::extract::State<
-        std::sync::Arc<aws_sdk_dynamodb::Client>,
-    >,
+    State(AppState { dynamo, .. }): State<AppState>,
     Path(user_id): Path<String>,
     Extension(auth): Extension<Option<Authorization>>,
-) -> Result<Json<UserInfo>> {
-    // Check admin permission using shared DDB client
-    check_admin_permission_shared_ddb(&ddb, auth).await?;
+) -> Result<Json<UserInfo>, Error2> {
+    // Check admin permissions
+    check_admin_permission(&dynamo.client, auth).await?;
 
     // Get the target user
     let user_pk = format!("USER#{}", user_id);
-    let user = User::get(
-        &ddb,
+    let user = crate::models::user::User::get(
+        &dynamo.client,
         &user_pk,
-        Some(&crate::types::EntityType::User.to_string()),
+        Some(crate::types::EntityType::User),
     )
-    .await
-    .map_err(|e| {
-        tracing::error!("Failed to get user: {:?}", e);
-        Error::Unknown(format!("DynamoDB error: {}", e))
-    })?
-    .ok_or(Error::InvalidUser)?;
+    .await?
+    .ok_or(Error2::NotFound("User not found".into()))?;
 
     // Get user membership
-    let membership = get_user_membership_by_user_id(&ddb, &user_id)
-        .await
-        .map_err(|e| {
-            tracing::error!("Failed to get user membership: {:?}", e);
-            Error::Unknown(format!("Failed to get user membership: {}", e))
-        })?
+    let membership = UserMembership::get(&dynamo.client, &user_pk, Some("MEMBERSHIP"))
+        .await?
         .unwrap_or_else(|| {
-            // If no membership found, assume Free membership using builder pattern
-            crate::models::dynamo_tables::main::user::UserMembership::builder(user_id.clone())
-                .with_free()
-                .build()
+            // If no membership found, create default Free membership using builder pattern
+            UserMembership::builder(user_id.clone()).with_free().build()
         });
 
     Ok(Json(UserInfo {

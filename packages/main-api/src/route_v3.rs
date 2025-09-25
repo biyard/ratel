@@ -272,12 +272,7 @@ pub fn route(
                                 ),
                             ),
                         )
-                        .with_state(std::sync::Arc::new(dynamo_client.client.clone())),
-                )
-                .with_state(AppState {
-                    dynamo: dynamo_client.clone(),
-                    ses: ses_client.clone(),
-                }),
+                ),
         )
         .with_state(AppState {
             dynamo: dynamo_client.clone(),

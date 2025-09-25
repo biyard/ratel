@@ -1,5 +1,6 @@
 use crate::Error2 as Error;
-use crate::utils::users_dynamo::{extract_user, extract_uuid_from_pk, get_user_membership_by_user_id, update_user_membership};
+use crate::utils::dynamo_extractor::extract_user;
+use crate::models::dynamo_tables::main::user::UserMembership;
 use bdk::prelude::by_axum::auth::Authorization;
 use std::sync::Arc;
 
@@ -38,11 +39,18 @@ pub async fn check_space_creation_capability(
 
     // Get the user from auth
     let user = extract_user(ddb, auth).await?;
-    let user_id = extract_uuid_from_pk(&user.pk.to_string());
+    let user_pk_str = user.pk.to_string();
     
     // Get user membership
-    let membership = get_user_membership_by_user_id(ddb, &user_id).await?
-        .ok_or_else(|| Error::Unknown("User membership not found".to_string()))?;
+    let membership = UserMembership::get(ddb, &user_pk_str, Some("MEMBERSHIP"))
+        .await?
+        .unwrap_or_else(|| {
+            // Default to Free membership if none found
+            let user_id = user_pk_str.strip_prefix("USER#").unwrap_or(&user_pk_str);
+            UserMembership::builder(user_id.to_string())
+                .with_free()
+                .build()
+        });
 
     // Check if membership is active
     if !membership.is_active() {
@@ -87,16 +95,23 @@ pub async fn consume_space_creation_quota(
     }
 
     let user = extract_user(ddb, auth).await?;
-    let user_id = extract_uuid_from_pk(&user.pk.to_string());
+    let user_pk_str = user.pk.to_string();
     
     // Get user membership
-    let mut membership = get_user_membership_by_user_id(ddb, &user_id).await?
-        .ok_or_else(|| Error::Unknown("User membership not found".to_string()))?;
+    let mut membership = UserMembership::get(ddb, &user_pk_str, Some("MEMBERSHIP"))
+        .await?
+        .unwrap_or_else(|| {
+            // Default to Free membership if none found
+            let user_id = user_pk_str.strip_prefix("USER#").unwrap_or(&user_pk_str);
+            UserMembership::builder(user_id.to_string())
+                .with_free()
+                .build()
+        });
 
     // Consume the quota
     if membership.consume_space_quota(booster_type) {
         // Update the membership in DynamoDB
-        update_user_membership(ddb, &membership).await?;
+        membership.create(ddb).await?;
         Ok(())
     } else {
         Err(Error::Unknown(
@@ -125,11 +140,18 @@ pub async fn get_remaining_quota(
     }
 
     let user = extract_user(ddb, auth).await?;
-    let user_id = extract_uuid_from_pk(&user.pk.to_string());
+    let user_pk_str = user.pk.to_string();
     
     // Get user membership
-    let membership = get_user_membership_by_user_id(ddb, &user_id).await?
-        .ok_or_else(|| Error::Unknown("User membership not found".to_string()))?;
+    let membership = UserMembership::get(ddb, &user_pk_str, Some("MEMBERSHIP"))
+        .await?
+        .unwrap_or_else(|| {
+            // Default to Free membership if none found
+            let user_id = user_pk_str.strip_prefix("USER#").unwrap_or(&user_pk_str);
+            UserMembership::builder(user_id.to_string())
+                .with_free()
+                .build()
+        });
 
     let capabilities = membership.get_space_capabilities();
     let remaining = capabilities
