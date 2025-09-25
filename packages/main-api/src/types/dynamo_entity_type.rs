@@ -12,6 +12,7 @@ pub enum EntityType {
     UserEvmAddress,
     UserReferralCode,
     UserPrincipal,
+    UserOAuth,
     UserPhoneNumber,
     UserTelegram,
     UserTeam(String),      // from Team

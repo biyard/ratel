@@ -1,3 +1,5 @@
+use bdk::prelude::*;
+
 use dto::{JsonSchema, schemars};
 use std::collections::HashMap;
 

@@ -36,6 +36,7 @@ run: .build/evm-keys
 
 stop:
 	docker compose --profile development down --remove-orphans
+	
 serve:
 	cd packages/$(SERVICE) && make serve
 

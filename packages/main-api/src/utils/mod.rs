@@ -19,9 +19,18 @@ pub mod sqs_client;
 pub mod telegram;
 pub mod time;
 pub mod users;
+pub mod validator;
 pub mod wallets;
 pub mod users_dynamo;
 
 pub mod aws;
 
 pub mod mcp_middleware;
+
+pub mod dynamo_extractor;
+pub mod dynamo_session_store;
+
+pub mod password;
+
+pub mod firebase;
+pub mod security;

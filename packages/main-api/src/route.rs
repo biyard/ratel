@@ -16,7 +16,6 @@ use by_axum::{
 use reqwest::StatusCode;
 
 use crate::{
-    config,
     controllers::{
         self,
         m2::{
@@ -99,16 +98,14 @@ use crate::{
                 find_user::find_user_handler, logout::logout_handler,
             },
         },
-        v3::users::{
-            email_login::v3_login_with_password_handler, email_signup::v3_email_signup_handler,
-            request_verification_code::request_verification_code_handler,
-            verify_email::email_verification_handler,
-        },
         well_known::get_did_document::get_did_document_handler,
         wg::get_home::get_home_handler,
     },
+    route_v3,
     utils::{
-        aws::{BedrockClient, RekognitionClient, S3Client, TextractClient},
+        aws::{
+            BedrockClient, DynamoClient, RekognitionClient, S3Client, SesClient, TextractClient,
+        },
         sqs_client::SqsClient,
         telegram::TelegramBot,
     },
@@ -125,10 +122,10 @@ macro_rules! api_docs {
         |op| {
             op.summary($summary)
                 .description($description)
-                .response_with::<200, axum::Json<$success_ty>, _>(|res| {
+                .response_with::<200, by_axum::axum::Json<$success_ty>, _>(|res| {
                     res.description("Success response")
                 })
-                .response_with::<400, axum::Json<dto::Error>, _>(|res| {
+                .response_with::<400, by_axum::axum::Json<dto::Error>, _>(|res| {
                     res.description("Incorrect or invalid requests")
                         .example(dto::Error::UserAlreadyExists)
                 })
@@ -139,7 +136,7 @@ macro_rules! api_docs {
         |op| {
             op.summary($summary)
                 .description($description)
-                .response_with::<400, axum::Json<dto::Error>, _>(|res| {
+                .response_with::<400, bdk::prelude::by_axum::axum::Json<dto::Error>, _>(|res| {
                     res.description("Incorrect or invalid requests")
                         .example(dto::Error::UserAlreadyExists)
                 })
@@ -147,31 +144,32 @@ macro_rules! api_docs {
     };
 }
 
-pub async fn route(
-    pool: sqlx::Pool<sqlx::Postgres>,
-    sqs_client: Arc<SqsClient>,
-    bedrock_client: BedrockClient,
-    rek_client: RekognitionClient,
-    textract_client: TextractClient,
-    _metadata_s3_client: S3Client,
-    private_s3_client: S3Client,
-    bot: Option<TelegramBot>,
-) -> Result<by_axum::axum::Router> {
-    let conf = config::get();
+pub struct RouteDeps {
+    pub pool: sqlx::Pool<sqlx::Postgres>,
+    pub sqs_client: Arc<SqsClient>,
+    pub bedrock_client: BedrockClient,
+    pub rek_client: RekognitionClient,
+    pub textract_client: TextractClient,
+    pub metadata_s3_client: S3Client,
+    pub private_s3_client: S3Client,
+    pub bot: Option<TelegramBot>,
+    pub dynamo_client: DynamoClient,
+    pub ses_client: SesClient,
+}
 
-    let dynamo_conf = aws_sdk_dynamodb::config::Config::builder()
-        .credentials_provider(aws_sdk_dynamodb::config::Credentials::new(
-            conf.aws.access_key_id,
-            conf.aws.secret_access_key,
-            None,
-            None,
-            "dynamo",
-        ))
-        .behavior_version_latest()
-        .build();
-
-    let dynamo_client = aws_sdk_dynamodb::Client::from_conf(dynamo_conf);
-    let dynamo_client = Arc::new(dynamo_client);
+pub async fn route(deps: RouteDeps) -> Result<by_axum::axum::Router> {
+    let RouteDeps {
+        pool,
+        sqs_client,
+        bedrock_client,
+        rek_client,
+        textract_client,
+        private_s3_client,
+        bot,
+        dynamo_client,
+        ses_client,
+        ..
+    } = deps;
 
     Ok(by_axum::axum::Router::new()
         // For Admin routes
@@ -234,6 +232,13 @@ pub async fn route(
         )
         .layer(middleware::from_fn(authorize_admin))
         // For user routes
+        .nest(
+            "/v3",
+            route_v3::route(route_v3::RouteDeps {
+                dynamo_client: dynamo_client.clone(),
+                ses_client: ses_client.clone(),
+            })?,
+        )
         .nest(
             "/v1",
             controllers::v1::route(pool.clone())
@@ -721,52 +726,6 @@ pub async fn route(
                 .options(token_handler)
                 .with_state(pool.clone()),
         )
-        .nest(
-            "/v3",
-            axum::Router::new()
-                .nest(
-                    "/users",
-                    axum::Router::new()
-                        .route(
-                            "/signup",
-                            post_with(
-                                v3_email_signup_handler,
-                                api_docs!(
-                                    "V3 User Signup",
-                                    "Register a new user with email and password using V3 API"
-                                ),
-                            ),
-                        )
-                        .route(
-                            "/login",
-                            post_with(
-                                v3_login_with_password_handler,
-                                api_docs!(
-                                    "V3 User Login",
-                                    "Login user with email and password using V3 API"
-                                ),
-                            ),
-                        )
-                        .route(
-                            "/verifications",
-                            post_with(
-                                email_verification_handler,
-                                api_docs!(
-                                    "V3 Email Verification",
-                                    "Verify user's email address with verification code"
-                                ),
-                            )
-                            .get_with(
-                                request_verification_code_handler,
-                                api_docs!(
-                                    "V3 Request Verification Code",
-                                    "Send verification code to user's email address"
-                                ),
-                            ),
-                        ),
-                )
-                .with_state(dynamo_client.clone()),
-        )
         .route(
             "/.well-known/oauth-authorization-server",
             get_with(
@@ -832,9 +791,11 @@ pub async fn authorize_admin(
     req: Request,
     next: Next,
 ) -> std::result::Result<Response<Body>, StatusCode> {
-    tracing::debug!("Authorization admin");
     match req.extensions().get::<Option<Authorization>>() {
         Some(Some(Authorization::SecretApiKey)) => Ok(next.run(req).await),
-        _ => Err(StatusCode::UNAUTHORIZED),
+        _ => {
+            tracing::error!("Admin route access denied: {:?}", req.uri());
+            Err(StatusCode::UNAUTHORIZED)
+        }
     }
 }

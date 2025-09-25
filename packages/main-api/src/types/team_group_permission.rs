@@ -10,56 +10,49 @@ use bdk::prelude::*;
     serde_repr::Deserialize_repr,
     Default,
     Translate,
+    JsonSchema,
 )]
 #[repr(u8)]
 pub enum TeamGroupPermission {
+    //Avaliable Permission Value: 0 ~ 63
     #[default]
-    ReadPosts = 0,
-    WritePosts = 1,
-    DeletePosts = 2,
-    EditPosts = 13,
-    WritePendingPosts = 3,
-    ReadPostDrafts = 12,
+    // Post Permissions
+    PostRead = 0,
+    PostWrite = 1,
+    PostEdit = 2,
+    PostDelete = 3,
 
-    ReadReplies = 4,
-    WriteReplies = 5,
-    DeleteReplies = 6,
+    // Space Permissions
+    SpaceRead = 10,
+    SpaceWrite = 11,
+    SpaceEdit = 12,
+    SpaceDelete = 13,
 
-    ReadProfile = 7,
-    UpdateProfile = 8,
-
-    InviteMember = 9,
-    ManageGroup = 10,
-    DeleteGroup = 11,
-
-    // Space permission
-    ManageSpace = 20,
+    //Team Permission
+    TeamAdmin = 20, // Change Group Permissions + All Other Permissions
+    TeamEdit = 21,  // Edit Team Info, Add/Remove Group
+    GroupEdit = 22, // Edit Group Members (Invite/Kick), Change Group Info
+    // TeamDelete, //  Only Team Owner can delete the team.
 
     // Admin
     ManagePromotions = 62,
     ManageNews = 63,
 }
 
+#[derive(Debug)]
 pub struct TeamGroupPermissions(pub Vec<TeamGroupPermission>);
 
 impl Default for TeamGroupPermissions {
     fn default() -> Self {
         Self(vec![
-            TeamGroupPermission::ReadPosts,
-            TeamGroupPermission::WritePosts,
-            TeamGroupPermission::EditPosts,
-            TeamGroupPermission::DeletePosts,
-            TeamGroupPermission::WritePendingPosts,
-            TeamGroupPermission::ReadPostDrafts,
-            TeamGroupPermission::ReadReplies,
-            TeamGroupPermission::WriteReplies,
-            TeamGroupPermission::DeleteReplies,
-            TeamGroupPermission::ReadProfile,
-            TeamGroupPermission::UpdateProfile,
-            TeamGroupPermission::InviteMember,
-            TeamGroupPermission::ManageGroup,
-            TeamGroupPermission::DeleteGroup,
-            TeamGroupPermission::ManageSpace,
+            TeamGroupPermission::PostRead,
+            TeamGroupPermission::PostWrite,
+            TeamGroupPermission::PostEdit,
+            TeamGroupPermission::PostDelete,
+            TeamGroupPermission::SpaceRead,
+            TeamGroupPermission::SpaceWrite,
+            TeamGroupPermission::SpaceEdit,
+            TeamGroupPermission::SpaceDelete,
         ])
     }
 }
