@@ -50,7 +50,7 @@ impl DeliberationSpaceMember {
     }
 }
 
-#[derive(Default, serde::Serialize, schemars::JsonSchema)]
+#[derive(Debug, Clone, Default, serde::Serialize, schemars::JsonSchema)]
 pub struct DiscussionMemberResponse {
     pub user_pk: String,
     pub author_display_name: String,

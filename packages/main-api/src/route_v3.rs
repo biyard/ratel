@@ -13,8 +13,9 @@ use crate::{
             get_info::{GetInfoResponse, get_info_handler},
             update_user::{UpdateUserResponse, update_user_handler},
         },
-        spaces::deliberations::create_deliberation::{
-            CreateDeliberationResponse, create_deliberation_handler,
+        spaces::deliberations::{
+            create_deliberation::{CreateDeliberationResponse, create_deliberation_handler},
+            update_deliberation::update_deliberation_handler,
         },
         teams::{
             create_team::{CreateTeamResponse, create_team_handler},
@@ -30,6 +31,7 @@ use crate::{
         },
         users::find_user::{FindUserResponse, find_user_handler},
     },
+    models::space::DeliberationDetailResponse,
     utils::aws::{DynamoClient, SesClient},
 };
 
@@ -147,17 +149,29 @@ pub fn route(
         )
         .nest(
             "/spaces",
-            Router::new().route(
-                "/deliberation",
-                post_with(
-                    create_deliberation_handler,
-                    api_docs!(
-                        Json<CreateDeliberationResponse>,
-                        "Create deliberation",
-                        "Create a new deliberation"
+            Router::new()
+                .route(
+                    "/deliberation",
+                    post_with(
+                        create_deliberation_handler,
+                        api_docs!(
+                            Json<CreateDeliberationResponse>,
+                            "Create deliberation",
+                            "Create a new deliberation"
+                        ),
+                    ),
+                )
+                .route(
+                    "/deliberation/:id",
+                    post_with(
+                        update_deliberation_handler,
+                        api_docs!(
+                            Json<DeliberationDetailResponse>,
+                            "Update deliberation",
+                            "Update a deliberation"
+                        ),
                     ),
                 ),
-            ),
         )
         .nest(
             "/teams",

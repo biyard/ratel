@@ -75,7 +75,7 @@ impl DeliberationSpaceResponse {
     }
 }
 
-#[derive(Default, serde::Serialize, schemars::JsonSchema, Clone)]
+#[derive(Debug, Clone, Default, serde::Serialize, schemars::JsonSchema)]
 pub struct SurveyResponseResponse {
     pub user_pk: String,
     pub author_display_name: String,

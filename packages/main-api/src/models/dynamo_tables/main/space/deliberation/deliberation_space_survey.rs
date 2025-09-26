@@ -13,7 +13,17 @@ pub struct DeliberationSpaceSurvey {
     pub ended_at: i64,
 }
 
-#[derive(Default, serde::Serialize, JsonSchema, Clone)]
+#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, JsonSchema)]
+pub struct SurveyCreateRequest {
+    pub id: Option<String>,
+    pub started_at: i64,
+    pub ended_at: i64,
+    pub status: SurveyStatus,
+
+    pub questions: Vec<SurveyQuestion>,
+}
+
+#[derive(Debug, Clone, Default, serde::Serialize, JsonSchema)]
 pub struct DeliberationSurveyResponse {
     pub pk: String,
 
