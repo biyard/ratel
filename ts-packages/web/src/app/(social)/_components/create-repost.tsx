@@ -546,14 +546,13 @@ const TruncatedContent = ({
   useEffect(() => {
     const checkTruncation = () => {
       if (!contentRef.current) return;
-      
+
       const element = contentRef.current;
-      const style = getComputedStyle(element);
-      
+
       // Check if content is truncated or exceeds min length
       const isOverflowing = element.scrollHeight > element.clientHeight;
       const isLongContent = content.length > minLength;
-      
+
       setNeedsTruncation(isOverflowing || isLongContent);
     };
 
@@ -579,7 +578,9 @@ const TruncatedContent = ({
   }, [content, maxLines, minLength]);
 
   // Get the appropriate line clamp class based on maxLines
-  const lineClampClass = lineClampClasses[Math.min(maxLines, 6) as keyof typeof lineClampClasses] || '';
+  const lineClampClass =
+    lineClampClasses[Math.min(maxLines, 6) as keyof typeof lineClampClasses] ||
+    '';
 
   return (
     <div className={`${className} relative`}>
