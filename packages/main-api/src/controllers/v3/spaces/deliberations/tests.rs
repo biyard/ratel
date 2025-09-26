@@ -2,6 +2,7 @@ use crate::{
     controllers::v3::spaces::deliberations::{
         create_deliberation::{CreateDeliberationRequest, create_deliberation_handler},
         delete_deliberation::{DeliberationDeletePath, delete_deliberation_handler},
+        get_deliberation::{DeliberationGetPath, get_deliberation_handler},
         update_deliberation::{
             DeliberationPath, UpdateDeliberationRequest, update_deliberation_handler,
         },
@@ -423,4 +424,36 @@ async fn test_delete_space_handler() {
     .await;
 
     assert!(res.is_ok(), "Failed to delete deliberation {:?}", res.err());
+}
+
+#[tokio::test]
+async fn test_get_space_handler() {
+    let app_state = create_app_state();
+    let cli = app_state.dynamo.client.clone();
+    let user = create_test_user(&cli).await;
+    let auth = get_auth(&user.clone());
+    let uid = uuid::Uuid::new_v4().to_string();
+    let create_res = create_deliberation_handler(
+        State(app_state.clone()),
+        Extension(Some(auth.clone())),
+        Json(CreateDeliberationRequest { feed_id: uid }),
+    )
+    .await;
+
+    assert!(
+        create_res.is_ok(),
+        "Failed to create deliberation {:?}",
+        create_res.err()
+    );
+
+    let space_pk = create_res.unwrap().0.metadata.deliberation.pk;
+
+    let res = get_deliberation_handler(
+        State(app_state.clone()),
+        Extension(Some(auth.clone())),
+        Path(DeliberationGetPath { id: space_pk }),
+    )
+    .await;
+
+    assert!(res.is_ok(), "Failed to get deliberation {:?}", res.err());
 }
