@@ -1,0 +1,81 @@
+use crate::{
+    AppState, Error2,
+    models::space::{
+        DeliberationMetadata, DeliberationSpace, DeliberationSpaceDiscussion,
+        DeliberationSpaceElearning, DeliberationSpaceMember, DeliberationSpaceParticipant,
+        DeliberationSpaceQuestion, DeliberationSpaceRecommendation, DeliberationSpaceResponse,
+        DeliberationSpaceSummary, DeliberationSpaceSurvey, SpaceCommon,
+    },
+    types::Partition,
+};
+use dto::by_axum::{
+    auth::Authorization,
+    axum::{
+        Extension,
+        extract::{Json, Path, State},
+    },
+};
+use dto::{JsonSchema, aide, schemars};
+use serde::Serialize;
+
+#[derive(Debug, Clone, Serialize, Default, aide::OperationIo, JsonSchema)]
+pub struct DeleteDeliberationResponse {
+    pub space_id: String,
+}
+
+#[derive(
+    Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
+)]
+pub struct DeliberationDeletePath {
+    pub id: String,
+}
+
+pub async fn delete_deliberation_handler(
+    State(AppState { dynamo, .. }): State<AppState>,
+    Extension(_auth): Extension<Option<Authorization>>,
+    Path(DeliberationDeletePath { id }): Path<DeliberationDeletePath>,
+) -> Result<Json<DeleteDeliberationResponse>, Error2> {
+    let space_pk = Partition::DeliberationSpace(id.clone());
+
+    let metadata = DeliberationMetadata::query(&dynamo.client, space_pk.clone()).await?;
+
+    for data in metadata.into_iter() {
+        match data {
+            DeliberationMetadata::DeliberationSpace(v) => {
+                DeliberationSpace::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
+            }
+            DeliberationMetadata::DeliberationSpaceSurvey(v) => {
+                DeliberationSpaceSurvey::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
+            }
+            DeliberationMetadata::DeliberationSpaceSummary(v) => {
+                DeliberationSpaceSummary::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
+            }
+            DeliberationMetadata::DeliberationSpaceResponse(v) => {
+                DeliberationSpaceResponse::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
+            }
+            DeliberationMetadata::DeliberationSpaceRecommendation(v) => {
+                DeliberationSpaceRecommendation::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
+            }
+            DeliberationMetadata::DeliberationSpaceQuestion(v) => {
+                DeliberationSpaceQuestion::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
+            }
+            DeliberationMetadata::DeliberationSpaceParticipant(v) => {
+                DeliberationSpaceParticipant::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
+            }
+            DeliberationMetadata::DeliberationSpaceMember(v) => {
+                DeliberationSpaceMember::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
+            }
+            DeliberationMetadata::DeliberationSpaceElearning(v) => {
+                DeliberationSpaceElearning::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
+            }
+            DeliberationMetadata::DeliberationSpaceDiscussion(v) => {
+                DeliberationSpaceDiscussion::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
+            }
+            DeliberationMetadata::SpaceCommon(v) => {
+                SpaceCommon::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
+            }
+        }
+    }
+
+    Ok(Json(DeleteDeliberationResponse { space_id: id }))
+}

@@ -24,6 +24,7 @@ use crate::{
         },
         spaces::deliberations::{
             create_deliberation::{CreateDeliberationResponse, create_deliberation_handler},
+            delete_deliberation::delete_deliberation_handler,
             update_deliberation::update_deliberation_handler,
         },
         teams::{
@@ -231,6 +232,17 @@ pub fn route(
                             Json<DeliberationDetailResponse>,
                             "Update deliberation",
                             "Update a deliberation"
+                        ),
+                    ),
+                )
+                .route(
+                    "/deliberation/:id/delete",
+                    post_with(
+                        delete_deliberation_handler,
+                        api_docs!(
+                            Json<String>,
+                            "Delete deliberation",
+                            "Delete deliberation with id"
                         ),
                     ),
                 ),

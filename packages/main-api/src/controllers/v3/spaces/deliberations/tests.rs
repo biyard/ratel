@@ -1,6 +1,7 @@
 use crate::{
     controllers::v3::spaces::deliberations::{
         create_deliberation::{CreateDeliberationRequest, create_deliberation_handler},
+        delete_deliberation::{DeliberationDeletePath, delete_deliberation_handler},
         update_deliberation::{
             DeliberationPath, UpdateDeliberationRequest, update_deliberation_handler,
         },
@@ -288,4 +289,138 @@ async fn test_update_space_handler() {
     //     res.recommendation.html_contents,
     //     "<div>deliberation recommendation description 11</div>"
     // );
+}
+
+#[tokio::test]
+async fn test_delete_space_handler() {
+    let app_state = create_app_state();
+    let cli = app_state.dynamo.client.clone();
+    let user = create_test_user(&cli).await;
+    let auth = get_auth(&user.clone());
+    let uid = uuid::Uuid::new_v4().to_string();
+    let create_res = create_deliberation_handler(
+        State(app_state.clone()),
+        Extension(Some(auth.clone())),
+        Json(CreateDeliberationRequest { feed_id: uid }),
+    )
+    .await;
+
+    assert!(
+        create_res.is_ok(),
+        "Failed to create deliberation {:?}",
+        create_res.err()
+    );
+
+    let space_pk = create_res.unwrap().0.metadata.deliberation.pk;
+
+    // create user
+    let team_1 = match create_test_user(&cli).await.pk {
+        Partition::User(v) => v,
+        _ => "".to_string(),
+    };
+    let team_2 = match create_test_user(&cli).await.pk {
+        Partition::User(v) => v,
+        _ => "".to_string(),
+    };
+
+    let users = vec![team_1.clone(), team_2];
+
+    let now = chrono::Utc::now().timestamp();
+
+    let res = update_deliberation_handler(
+        State(app_state.clone()),
+        Extension(Some(auth.clone())),
+        Path(DeliberationPath {
+            id: space_pk.clone(),
+        }),
+        Json(UpdateDeliberationRequest {
+            title: Some("deliberation title".to_string()),
+            html_contents: Some("<div>deliberation description</div>".to_string()),
+            files: vec![File {
+                name: "deliberation summary file title".to_string(),
+                size: "15KB".to_string(),
+                ext: dto::FileExtension::PDF,
+                url: None,
+            }],
+            discussions: vec![DiscussionCreateRequest {
+                id: None,
+                started_at: now,
+                ended_at: now,
+                name: "discussion title".to_string(),
+                description: "discussion description".to_string(),
+                user_ids: users,
+            }],
+            elearning_files: vec![File {
+                name: "deliberation elearning file title".to_string(),
+                size: "15KB".to_string(),
+                ext: dto::FileExtension::PDF,
+                url: None,
+            }],
+            surveys: vec![SurveyCreateRequest {
+                id: None,
+                started_at: now,
+                ended_at: now + 10_000,
+                status: SurveyStatus::Ready,
+                questions: vec![
+                    SurveyQuestion::SingleChoice(ChoiceQuestion {
+                        title: "How did you hear about us?".into(),
+                        description: Some("Pick one".into()),
+                        image_url: None,
+                        options: vec![
+                            "Search".into(),
+                            "Friend".into(),
+                            "Social".into(),
+                            "Other".into(),
+                        ],
+                        is_required: Some(true),
+                    }),
+                    SurveyQuestion::MultipleChoice(ChoiceQuestion {
+                        title: "Which topics interest you?".into(),
+                        description: None,
+                        image_url: None,
+                        options: vec![
+                            "DeFi".into(),
+                            "NFTs".into(),
+                            "Governance".into(),
+                            "Education".into(),
+                        ],
+                        is_required: Some(false),
+                    }),
+                    SurveyQuestion::LinearScale(LinearScaleQuestion {
+                        title: "Rate your onboarding experience".into(),
+                        description: Some("1 = Poor, 5 = Excellent".into()),
+                        image_url: None,
+                        min_value: 1,
+                        max_value: 5,
+                        min_label: "Poor".into(),
+                        max_label: "Excellent".into(),
+                        is_required: Some(true),
+                    }),
+                ],
+            }],
+            recommendation_html_contents: Some(
+                "<div>deliberation recommendation description</div>".to_string(),
+            ),
+            recommendation_files: vec![File {
+                name: "deliberation recommendation file title".to_string(),
+                size: "15KB".to_string(),
+                ext: dto::FileExtension::PDF,
+                url: None,
+            }],
+        }),
+    )
+    .await;
+
+    assert!(res.is_ok(), "Failed to update deliberation {:?}", res.err());
+
+    let res = delete_deliberation_handler(
+        State(app_state.clone()),
+        Extension(Some(auth.clone())),
+        Path(DeliberationDeletePath {
+            id: space_pk.clone(),
+        }),
+    )
+    .await;
+
+    assert!(res.is_ok(), "Failed to delete deliberation {:?}", res.err());
 }
