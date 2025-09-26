@@ -22,20 +22,12 @@ import { cn } from '@/lib/utils';
 import { logger } from '@/lib/logger';
 
 interface SpaceCommentEditorProps {
-  showCommentEditor: boolean;
-  setShowCommentEditor: (show: boolean) => void;
-  commentCount: number;
-  t: (key: string) => string;
+
   spaceId?: number;
-  onCommentPosted?: () => void;
 }
 
-export default function SpaceCommentEditor({
-  showCommentEditor,
-  setShowCommentEditor,
-  commentCount,
+export default function SpaceCommentEditor1({
   spaceId = 0,
-  onCommentPosted = () => {},
 }: SpaceCommentEditorProps) {
   const [content, setContent] = useState('');
   const [showUrlInput, setShowUrlInput] = useState(false);
@@ -48,24 +40,7 @@ export default function SpaceCommentEditor({
 
   const { createComment } = useDraftMutations(user?.id || 0);
 
-  const handleSubmit = async () => {
-    if (!content.trim() || !spaceId || !user?.id) return;
-    try {
-      await createComment.mutateAsync({
-        userId: user.id,
-        parentId: spaceId,
-        postId: spaceId,
-        content: content,
-      });
-      setContent('');
-      setShowCommentEditor(false);
-      onCommentPosted();
-      showSuccessToast('Comment posted successfully');
-    } catch (error) {
-      logger.debug('Failed to post comment', error);
-      showErrorToast('Failed to post comment');
-    }
-  };
+  
 
   //  regular link
   const handleInsertUrl = () => {
@@ -87,45 +62,22 @@ export default function SpaceCommentEditor({
 
   return (
     <div className="relative">
-      <div
-        className="flex items-center gap-1 cursor-pointer"
-        onClick={() => setShowCommentEditor(true)}
-      >
-        <CommentIcon className="w-5 h-5" />
-        <span className="text-sm font-medium text-foreground">
-          {commentCount}
-        </span>
-      </div>
+  
 
-      {showCommentEditor && (
-        <div
-          className="fixed inset-0 z-50 flex items-end justify-center"
-          onClick={() => setShowCommentEditor(false)}
+<div
+          className="z-50 flex items-end justify-center"
+          
         >
           <div
-            className="w-full bg-comment-box-bg border-t-6 border-x border-b border-primary rounded-t-lg overflow-hidden max-w-6xl"
+            className="w-full bg-comment-box-bg  overflow-hidden max-w-6xl border border-space-box-border rounded-lg"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="p-4 flex justify-between items-center">
-              <h3 className="font-medium text-foreground">Add a comment</h3>
-              <button onClick={() => setShowCommentEditor(false)}>
-                <DoubleArrowDown className="[&>path]:stroke-text-primary" />
-              </button>
-            </div>
+         
 
-            <div className="p-4 relative">
-              <div>
-                <div className="min-h-[80px] text-text-primary rounded p-2">
-                  <TiptapEditor
-                    content={content}
-                    onUpdate={setContent}
-                    editable={!createComment.isPending}
-                    ref={editorRef}
-                    onCreate={() => setEditorReady(true)}
-                  />
-                </div>
+            <div className="relative p-4">
+              
 
-                <div className="flex items-center justify-between gap-4 m-2">
+              <div className="flex items-center justify-between ">
                   {editorReady && (
                     <ToolbarPlugin
                       editor={editorRef.current}
@@ -134,28 +86,6 @@ export default function SpaceCommentEditor({
                     />
                   )}
 
-                  <div className="flex flex-row gap-4">
-                    {/* Save button (not implemented) */}
-                    <button className="shrink-0 text-foreground rounded-full px-4 py-2 font-bold flex items-center gap-x-2">
-                      <SaveIcon />
-                      Save
-                    </button>
-                    <button
-                      onClick={handleSubmit}
-                      disabled={!content.trim() || createComment.isPending}
-                      className={cn(
-                        'shrink-0 bg-primary text-text-third rounded-full hover:bg-primary/70 px-4 py-2 font-bold flex items-center gap-x-2',
-                        createComment.isPending && 'opacity-70',
-                      )}
-                    >
-                      {createComment.isPending ? (
-                        <Loader className="animate-spin" />
-                      ) : (
-                        <UserCircle />
-                      )}
-                      {createComment.isPending ? 'Posting...' : 'Post'}
-                    </button>
-                  </div>
                 </div>
 
                 {/* LinkPaste input dialog */}
@@ -213,11 +143,22 @@ export default function SpaceCommentEditor({
                     </button>
                   </div>
                 )}
-              </div>
+                <div className="min-h-[80px] text-text-primary rounded p-2">
+                  <TiptapEditor
+                    content={content}
+                    onUpdate={setContent}
+                    editable={!createComment.isPending}
+                    ref={editorRef}
+                    onCreate={() => setEditorReady(true)}
+                  />
+                </div>
+
+          
             </div>
           </div>
         </div>
-      )}
+
+     
     </div>
   );
 }
