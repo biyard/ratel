@@ -30,6 +30,7 @@ PLAYWRIGHT_ENV ?= RATEL_TEST_PLAYWRIGHT_URL=$(RATEL_TEST_PLAYWRIGHT_URL)
 
 
 .build/evm-keys:
+	mkdir -p .build
 	docker run --rm ghcr.io/foundry-rs/foundry:latest "cast wallet new --json" > .build/evm-keys.json
 
 run: .build/evm-keys
