@@ -242,9 +242,7 @@ class SidePanel extends StatelessWidget {
                       label: MainLocalization.settings,
                       onTap: () {
                         onClose();
-                        // Get.rootDelegate.offAndToNamed(
-                        //   AppRoutes.boostingScreen,
-                        // );
+                        Get.rootDelegate.offAndToNamed(AppRoutes.settingScreen);
                       },
                     ),
                   ],
