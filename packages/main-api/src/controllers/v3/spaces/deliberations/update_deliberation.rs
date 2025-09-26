@@ -1,15 +1,13 @@
-#![allow(unused)]
 use crate::{
     AppState, Error2,
     models::{
         space::{
             DeliberationDetailResponse, DeliberationMetadata, DeliberationSpace,
             DeliberationSpaceDiscussion, DeliberationSpaceElearning, DeliberationSpaceMember,
-            DeliberationSpaceMemberQueryOption, DeliberationSpaceParticipant,
-            DeliberationSpaceParticipantQueryOption, DeliberationSpaceQuestion,
+            DeliberationSpaceMemberQueryOption, DeliberationSpaceQuestion,
             DeliberationSpaceQuestionQueryOption, DeliberationSpaceRecommendation,
             DeliberationSpaceSummary, DeliberationSpaceSurvey, DiscussionCreateRequest,
-            SpaceCommon, SurveyCreateRequest,
+            SurveyCreateRequest,
         },
         user::User,
     },
@@ -25,7 +23,7 @@ use dto::by_axum::{
     },
 };
 use dto::{JsonSchema, aide, schemars};
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use validator::Validate;
 
 #[derive(Debug, Clone, Deserialize, Default, aide::OperationIo, JsonSchema, Validate)]
@@ -65,7 +63,7 @@ pub async fn update_deliberation_handler(
     Json(req): Json<UpdateDeliberationRequest>,
 ) -> Result<Json<DeliberationDetailResponse>, Error2> {
     let user = extract_user(&dynamo.client, auth).await?;
-    let space = DeliberationSpace::get(
+    let _space = DeliberationSpace::get(
         &dynamo.client,
         &Partition::DeliberationSpace(id.to_string()),
         Some(EntityType::Space),
@@ -75,13 +73,6 @@ pub async fn update_deliberation_handler(
         "Space not found: (space ID: {:?})",
         id
     )))?;
-
-    let deliberation_summary = DeliberationSpaceSummary::get(
-        &dynamo.client,
-        &Partition::DeliberationSpace(id.to_string()),
-        Some(EntityType::DeliberationSpaceSummary),
-    )
-    .await?;
 
     update_summary(dynamo.clone(), id.clone(), req.html_contents, req.files).await?;
     update_discussion(dynamo.clone(), user.clone(), id.clone(), req.discussions).await?;
@@ -121,7 +112,7 @@ pub async fn update_survey(
             .execute(&dynamo.client)
             .await?;
 
-            let mut option = DeliberationSpaceQuestionQueryOption::builder();
+            let option = DeliberationSpaceQuestionQueryOption::builder();
 
             let deleted_questions = DeliberationSpaceQuestion::find_by_survey_pk(
                 &dynamo.client,
@@ -192,7 +183,7 @@ pub async fn update_discussion(
             .execute(&dynamo.client)
             .await?;
 
-            let mut option = DeliberationSpaceMemberQueryOption::builder();
+            let option = DeliberationSpaceMemberQueryOption::builder();
 
             let deleted_members = DeliberationSpaceMember::find_by_discussion_pk(
                 &dynamo.client,
