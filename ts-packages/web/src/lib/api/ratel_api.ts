@@ -1,6 +1,5 @@
 import { Feed, FeedStatus } from './models/feeds';
 import { FileType } from './models/file-type';
-import { gql } from '@apollo/client';
 import { Space } from './models/spaces';
 import {
   QuizAttempt,
@@ -235,6 +234,8 @@ export const ratelApi = {
   },
   news: {
     getNewsDetails: (news_id: number) => `/v1/news/${news_id}`,
+    getNews: (page: number, size: number) =>
+      `/v1/news?param-type=query&page=${page}&size=${size}`,
   },
   themes: {
     changeTheme: () => '/v2/themes',
@@ -372,89 +373,6 @@ export const ratelApi = {
       if (newsLimit) params.append('news_limit', newsLimit.toString());
       const queryString = params.toString();
       return `/wg/home${queryString ? `?${queryString}` : ''}`;
-    },
-  },
-  graphql: {
-    listNews: (size: number) => {
-      return {
-        query: gql`
-          query ListNews($limit: Int!) {
-            news(limit: $limit, order_by: { created_at: desc }) {
-              id
-              title
-              html_content
-              created_at
-            }
-          }
-        `,
-        variables: {
-          limit: size,
-        },
-      };
-    },
-    listIndustries: () => {
-      return {
-        query: gql`
-          query ListIndustries {
-            industries {
-              id
-              name
-            }
-          }
-        `,
-      };
-    },
-    getUserByUsername: (username: string) => {
-      return {
-        query: gql`
-          query GetUserByUsername($username: String!) {
-            users(where: { username: { _eq: $username } }) {
-              id
-            }
-          }
-        `,
-        variables: {
-          username,
-        },
-      };
-    },
-
-    getUserByEmail: (email: string) => {
-      return {
-        query: gql`
-          query GetUserByEmail($email: String!) {
-            users(where: { email: { _eq: $email } }) {
-              id
-            }
-          }
-        `,
-        variables: {
-          email,
-        },
-      };
-    },
-
-    getTeamByTeamname: (teamname: string) => {
-      return {
-        query: gql`
-          query GetTeamByTeamname($teamname: String!) {
-            users(where: { username: { _eq: $teamname } }) {
-              id
-              html_contents
-              email
-              created_at
-              nickname
-              parent_id
-              profile_url
-              user_type
-              username
-            }
-          }
-        `,
-        variables: {
-          teamname,
-        },
-      };
     },
   },
 };
