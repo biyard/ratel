@@ -7,8 +7,9 @@ use crate::{
             DeliberationSpaceDiscussion, DeliberationSpaceElearning, DeliberationSpaceMember,
             DeliberationSpaceMemberQueryOption, DeliberationSpaceParticipant,
             DeliberationSpaceParticipantQueryOption, DeliberationSpaceQuestion,
-            DeliberationSpaceQuestionQueryOption, DeliberationSpaceSummary,
-            DeliberationSpaceSurvey, DiscussionCreateRequest, SpaceCommon, SurveyCreateRequest,
+            DeliberationSpaceQuestionQueryOption, DeliberationSpaceRecommendation,
+            DeliberationSpaceSummary, DeliberationSpaceSurvey, DiscussionCreateRequest,
+            SpaceCommon, SurveyCreateRequest,
         },
         user::User,
     },
@@ -43,6 +44,11 @@ pub struct UpdateDeliberationRequest {
 
     #[schemars(description = "Deliberation surveys")]
     pub surveys: Vec<SurveyCreateRequest>,
+
+    #[schemars(description = "Final Recommendation HTML contents")]
+    pub recommendation_html_contents: Option<String>,
+    #[schemars(description = "Final Recommendation files")]
+    pub recommendation_files: Vec<File>,
 }
 
 #[derive(
@@ -81,6 +87,13 @@ pub async fn update_deliberation_handler(
     update_discussion(dynamo.clone(), user.clone(), id.clone(), req.discussions).await?;
     update_elearning(dynamo.clone(), id.clone(), req.elearning_files).await?;
     update_survey(dynamo.clone(), id.clone(), req.surveys).await?;
+    update_recommendation(
+        dynamo.clone(),
+        id.clone(),
+        req.recommendation_html_contents.unwrap_or_default(),
+        req.recommendation_files,
+    )
+    .await?;
 
     let metadata =
         DeliberationMetadata::query(&dynamo.client, Partition::DeliberationSpace(id.to_string()))
@@ -249,6 +262,40 @@ pub async fn update_discussion(
                 m.create(&dynamo.client).await?;
             }
         }
+    }
+
+    Ok(())
+}
+
+pub async fn update_recommendation(
+    dynamo: DynamoClient,
+    id: String,
+    html_contents: String,
+    files: Vec<File>,
+) -> Result<(), Error2> {
+    let recommendation = DeliberationSpaceRecommendation::get(
+        &dynamo.client,
+        &Partition::DeliberationSpace(id.to_string()),
+        Some(EntityType::DeliberationSpaceRecommendation),
+    )
+    .await?;
+
+    if recommendation.is_some() {
+        DeliberationSpaceRecommendation::updater(
+            &Partition::DeliberationSpace(id.to_string()),
+            EntityType::DeliberationSpaceRecommendation,
+        )
+        .with_html_contents(html_contents)
+        .with_file(set_files(files))
+        .execute(&dynamo.client)
+        .await?;
+    } else {
+        let recommendation = DeliberationSpaceRecommendation::new(
+            Partition::DeliberationSpace(id.to_string()),
+            html_contents,
+            files,
+        );
+        recommendation.create(&dynamo.client).await?;
     }
 
     Ok(())
