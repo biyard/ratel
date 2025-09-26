@@ -1,3 +1,4 @@
+use crate::models::space::SurveyResponseResponse;
 use crate::types::*;
 
 use bdk::prelude::*;
@@ -10,6 +11,37 @@ pub struct DeliberationSpaceSurvey {
     pub status: SurveyStatus,
     pub started_at: i64,
     pub ended_at: i64,
+}
+
+#[derive(Default, serde::Serialize, JsonSchema, Clone)]
+pub struct DeliberationSurveyResponse {
+    pub pk: String,
+
+    pub started_at: i64,
+    pub ended_at: i64,
+    pub status: SurveyStatus,
+
+    pub questions: Vec<SurveyQuestion>,
+    pub responses: Vec<SurveyResponseResponse>,
+    pub user_responses: Vec<SurveyResponseResponse>,
+}
+
+impl From<DeliberationSpaceSurvey> for DeliberationSurveyResponse {
+    fn from(survey: DeliberationSpaceSurvey) -> Self {
+        let pk = match survey.pk {
+            Partition::DeliberationSpace(v) => v,
+            _ => "".to_string(),
+        };
+        Self {
+            pk,
+            started_at: survey.started_at,
+            ended_at: survey.ended_at,
+            status: survey.status,
+            questions: vec![],
+            responses: vec![],
+            user_responses: vec![],
+        }
+    }
 }
 
 impl DeliberationSpaceSurvey {

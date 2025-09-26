@@ -4,7 +4,7 @@ use super::*;
 use crate::{
     models::{space::SpaceCommon, user::User},
     tests::{get_test_aws_config, get_test_user},
-    types::CheckboxQuestion,
+    types::{CheckboxQuestion, EntityType},
     utils::aws::DynamoClient,
 };
 
@@ -59,17 +59,24 @@ async fn tests_create_deliberation() {
     );
     let res = deliberation_discussion.create(&cli).await;
     assert!(res.is_ok());
+
+    let discussion_pk = match deliberation_discussion.sk {
+        EntityType::DeliberationSpaceDiscussion(v) => v,
+        _ => "".to_string(),
+    };
+
     let deliberation_member = DeliberationSpaceMember::new(
         deliberation.pk.clone(),
-        deliberation_discussion.pk.clone(),
+        crate::types::Partition::Discussion(discussion_pk.clone()),
         user.clone(),
     );
     let res = deliberation_member.create(&cli).await;
     assert!(res.is_ok());
     let uid = uuid::Uuid::new_v4().to_string();
+
     let deliberation_participant = DeliberationSpaceParticipant::new(
         deliberation.pk.clone(),
-        deliberation_discussion.pk.clone(),
+        crate::types::Partition::Discussion(discussion_pk.clone()),
         uid.clone(),
         user.clone(),
     );
@@ -101,31 +108,26 @@ async fn tests_create_deliberation() {
     let deliberation_question_1 = DeliberationSpaceQuestion::new(
         deliberation.pk.clone(),
         deliberation_survey.pk.clone(),
-        crate::types::SurveyQuestion::Checkbox(CheckboxQuestion {
-            title: "question 1".to_string(),
-            description: Some("question description".to_string()),
-            image_url: None,
-            options: vec!["option 1".to_string(), "option 2".to_string()],
-            is_multi: false,
-            is_required: Some(false),
-        }),
+        vec![
+            crate::types::SurveyQuestion::Checkbox(CheckboxQuestion {
+                title: "question 1".to_string(),
+                description: Some("question description".to_string()),
+                image_url: None,
+                options: vec!["option 1".to_string(), "option 2".to_string()],
+                is_multi: false,
+                is_required: Some(false),
+            }),
+            crate::types::SurveyQuestion::Checkbox(CheckboxQuestion {
+                title: "question 2".to_string(),
+                description: Some("question description 2".to_string()),
+                image_url: None,
+                options: vec!["option 1".to_string(), "option 2".to_string()],
+                is_multi: false,
+                is_required: Some(false),
+            }),
+        ],
     );
     let res = deliberation_question_1.create(&cli).await;
-    assert!(res.is_ok());
-
-    let deliberation_question_2 = DeliberationSpaceQuestion::new(
-        deliberation.pk.clone(),
-        deliberation_survey.pk.clone(),
-        crate::types::SurveyQuestion::Checkbox(CheckboxQuestion {
-            title: "question 2".to_string(),
-            description: Some("question description 2".to_string()),
-            image_url: None,
-            options: vec!["option 1".to_string(), "option 2".to_string()],
-            is_multi: false,
-            is_required: Some(false),
-        }),
-    );
-    let res = deliberation_question_2.create(&cli).await;
     assert!(res.is_ok());
 
     let deliberation_response = DeliberationSpaceResponse::new(
@@ -158,4 +160,31 @@ async fn tests_create_deliberation() {
     );
     let res = deliberation_recommendation.create(&cli).await;
     assert!(res.is_ok());
+
+    let metadata = DeliberationMetadata::query(&cli, deliberation.pk.clone()).await;
+    assert!(
+        metadata.is_ok(),
+        "failed to query user metadata {:?}",
+        metadata.err()
+    );
+    let metadatas = metadata.unwrap();
+
+    assert_eq!(metadatas.len(), 11);
+
+    let deliberation: DeliberationDetailResponse = metadatas.into();
+
+    assert_eq!(deliberation.summary.files[0].name, "excel file".to_string());
+    assert_eq!(deliberation.discussions[0].members.len(), 1);
+    assert_eq!(deliberation.discussions[0].participants.len(), 1);
+    assert_eq!(
+        deliberation.elearnings.files[0].name,
+        "elearning file".to_string()
+    );
+    assert_eq!(deliberation.surveys.questions.len(), 2);
+    assert_eq!(deliberation.surveys.responses.len(), 1);
+    //FIXME: remove this comment when metadata limit issue is fixed
+    // assert_eq!(
+    //     deliberation.recommendation.files[0].name,
+    //     "excel file recommendation"
+    // );
 }

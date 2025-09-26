@@ -1,6 +1,8 @@
 #![allow(unused)]
 use crate::{
-    AppState, Error2, models::space::DeliberationSpace, utils::dynamo_extractor::extract_user,
+    AppState, Error2,
+    models::space::{DeliberationSpace, SpaceCommon},
+    utils::dynamo_extractor::extract_user,
 };
 use dto::by_axum::{
     auth::Authorization,
@@ -14,14 +16,16 @@ use serde::{Deserialize, Serialize};
 use validator::Validate;
 
 #[derive(Debug, Clone, Deserialize, Default, aide::OperationIo, JsonSchema, Validate)]
-pub struct CreateDeliberationRequest {}
+pub struct CreateDeliberationRequest {
+    #[schemars(description = "Post ID")]
+    pub feed_id: String,
+}
 
 #[derive(Debug, Clone, Serialize, Default, aide::OperationIo, JsonSchema)]
 pub struct CreateDeliberationResponse {
-    pub is_successed: bool,
+    pub space_id: String,
 }
 
-//FIXME: implement this handler
 pub async fn create_deliberation_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     Extension(auth): Extension<Option<Authorization>>,
@@ -32,5 +36,16 @@ pub async fn create_deliberation_handler(
     let deliberation = DeliberationSpace::new(user);
     deliberation.create(&dynamo.client).await?;
 
-    Ok(Json(CreateDeliberationResponse { is_successed: true }))
+    let space_id = match deliberation.pk.clone() {
+        crate::types::Partition::DeliberationSpace(v) => v,
+        _ => "".to_string(),
+    };
+
+    let common = SpaceCommon::new(
+        deliberation.pk.clone(),
+        crate::types::Partition::Feed(req.feed_id),
+    );
+    common.create(&dynamo.client).await?;
+
+    Ok(Json(CreateDeliberationResponse { space_id }))
 }

@@ -34,3 +34,16 @@ impl DeliberationSpaceElearning {
         serde_json::to_string(files).unwrap_or_else(|_| "[]".to_string())
     }
 }
+
+#[derive(Default, serde::Serialize, schemars::JsonSchema)]
+pub struct ElearningResponse {
+    pub files: Vec<File>,
+}
+
+impl From<DeliberationSpaceElearning> for ElearningResponse {
+    fn from(elearning: DeliberationSpaceElearning) -> Self {
+        Self {
+            files: elearning.clone().files(),
+        }
+    }
+}

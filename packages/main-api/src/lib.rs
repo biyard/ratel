@@ -154,6 +154,8 @@ pub mod controllers {
         pub mod spaces {
             pub mod deliberations {
                 pub mod create_deliberation;
+                #[cfg(test)]
+                pub mod tests;
             }
         }
 

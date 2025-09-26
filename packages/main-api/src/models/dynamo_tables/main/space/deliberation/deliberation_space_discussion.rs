@@ -99,15 +99,34 @@ pub struct DeliberationDiscussionResponse {
     pub participants: Vec<DiscussionParticipantResponse>,
 }
 
-// impl From<DeliberationSpaceDiscussion> for DeliberationDiscussionResponse {
-//     fn from(discussion: DeliberationSpaceDiscussion) -> Self {
-//         let user_pk = match discussion.user_pk {
-//             Partition::User(v) => v,
-//             Partition::Team(v) => v,
-//             _ => "".to_string(),
-//         };
-//         Self {
-//             pk:
-//         }
-//     }
-// }
+impl From<DeliberationSpaceDiscussion> for DeliberationDiscussionResponse {
+    fn from(discussion: DeliberationSpaceDiscussion) -> Self {
+        let pk = match discussion.sk {
+            EntityType::DeliberationSpaceDiscussion(v) => v,
+            _ => "".to_string(),
+        };
+
+        let user_pk = match discussion.user_pk {
+            Partition::User(v) => v,
+            Partition::Team(v) => v,
+            _ => "".to_string(),
+        };
+        Self {
+            pk,
+            started_at: discussion.started_at,
+            ended_at: discussion.ended_at,
+            name: discussion.name,
+            description: discussion.description,
+            meeting_id: discussion.meeting_id,
+            pipeline_id: discussion.pipeline_id,
+            media_pipeline_arn: discussion.media_pipeline_arn,
+            record: discussion.record,
+            user_pk,
+            author_display_name: discussion.author_display_name,
+            author_profile_url: discussion.author_profile_url,
+            author_username: discussion.author_username,
+            members: vec![],
+            participants: vec![],
+        }
+    }
+}

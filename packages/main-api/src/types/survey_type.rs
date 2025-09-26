@@ -1,7 +1,13 @@
 use bdk::prelude::*;
 
 #[derive(
-    Debug, Clone, serde_with::SerializeDisplay, serde_with::DeserializeFromStr, Default, DynamoEnum,
+    Debug,
+    Clone,
+    serde_with::SerializeDisplay,
+    serde_with::DeserializeFromStr,
+    Default,
+    DynamoEnum,
+    schemars::JsonSchema,
 )]
 pub enum SurveyType {
     #[default]
