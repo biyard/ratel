@@ -111,12 +111,11 @@ export default function ToolbarPlugin({
   return (
     <div className="flex items-center gap-4 [&>button]:size-6 [&>button]:rounded [&>button]:hover:bg-neutral-700 ">
       {/*  formatting buttons */}
-
-      {/* to be implemented */}
       <button
-        onClick={() => editor.chain().focus().toggleCode().run()}
-        className={cn(editor.isActive('code') && 'bg-neutral-600')}
-        aria-label="Capslock"
+        onClick={() => editor.chain().focus().toggleCase().run()}
+        aria-label="Toggle case"
+        title="Toggle case (UPPER/lower)"
+        className={editor.isActive('textStyle', { textTransform: 'uppercase' }) ? 'bg-neutral-600' : ''}
       >
         <CapsLock />
       </button>
