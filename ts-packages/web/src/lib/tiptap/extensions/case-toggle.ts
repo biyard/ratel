@@ -15,14 +15,14 @@ export const CaseToggle = Extension.create({
     return {
       toggleCase:
         () =>
-        ({ editor, commands, state, tr }) => {
+        ({ commands, state, tr }) => {
           const { from, to, empty } = state.selection;
 
           if (empty) return false;
 
           const text = state.doc.textBetween(from, to, ' ');
           let newText = '';
-          let isUpperCase = text === text.toUpperCase();
+          const isUpperCase = text === text.toUpperCase();
 
           newText = isUpperCase ? text.toLowerCase() : text.toUpperCase();
 
