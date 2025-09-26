@@ -9,7 +9,6 @@ import { ConfirmPopup } from './confirm-popup';
 import { useApiCall } from '@/lib/api/use-send';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { logger } from '@/lib/logger';
-import { useApolloClient } from '@apollo/client';
 import { useUserInfo } from '@/lib/api/hooks/users';
 import { useAuth } from '@/lib/contexts/auth-context';
 import { checkString } from '@/lib/string-filter-utils';
@@ -49,7 +48,6 @@ const UserSetupPopup = ({
 }: UserSetupPopupProps) => {
   const t = useTranslations('Signup');
   const { post } = useApiCall();
-  const client = useApolloClient();
 
   const popup = usePopup();
   const [displayName, setDisplayName] = useState(nickname);
@@ -310,19 +308,19 @@ const UserSetupPopup = ({
                   setWarning('');
                   setIsUserNameValid(true);
                 }
-                const {
-                  data: { users },
-                } = await client.query(
-                  ratelApi.graphql.getUserByUsername(value),
-                );
 
-                if (users.length > 0) {
-                  setWarning(t('already_exists_user'));
-                  setIsUserNameValid(false);
-                } else {
-                  setWarning('');
-                  setIsUserNameValid(true);
-                }
+                setWarning('');
+                setIsUserNameValid(true);
+
+                // const users = await get(
+                //   ratelApi.users.getUserByUsername(value),
+                // );
+
+                // if (users.length > 0) {
+                //   setWarning(t('already_exists_user'));
+                //   setIsUserNameValid(false);
+                // } else {
+                // }
               }}
               warning={warning}
             />

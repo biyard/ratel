@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Row } from '@/components/ui/row';
 import { Textarea } from '@/components/ui/textarea';
 import {
-  InvalidDuplicatedUsername,
+  // InvalidDuplicatedUsername,
   InvalidLowerAlphaNumeric,
   InvalidTooShort,
 } from '@/errors';
@@ -18,7 +18,6 @@ import { logger } from '@/lib/logger';
 import { checkString } from '@/lib/string-filter-utils';
 import { showErrorToast } from '@/lib/toast';
 import { checkLowerAlphaNumeric } from '@/lib/valid-utils';
-import { useApolloClient } from '@apollo/client';
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
@@ -27,7 +26,6 @@ export default function TeamCreationPopup() {
   const t = useTranslations('Home');
   const popup = usePopup();
   const { post } = useApiCall();
-  const client = useApolloClient();
   const userInfo = useUserInfo();
 
   const [profileUrl, setProfileUrl] = useState('');
@@ -72,15 +70,14 @@ export default function TeamCreationPopup() {
       return;
     }
 
-    const {
-      data: { users },
-    } = await client.query(ratelApi.graphql.getUserByUsername(username));
-    logger.debug('graphql respons: ', users);
+    // console.log('users: ', users);
 
-    if (users.length > 0) {
-      setInvalid(InvalidDuplicatedUsername);
-      return;
-    }
+    // logger.debug('graphql respons: ', users);
+
+    // if (users.length > 0) {
+    //   setInvalid(InvalidDuplicatedUsername);
+    //   return;
+    // }
 
     setInvalid(undefined);
     setUsername(username);

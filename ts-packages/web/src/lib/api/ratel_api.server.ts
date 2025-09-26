@@ -15,6 +15,7 @@ import {
   QK_GET_TEAM_BY_USERNAME,
   QK_GET_PERMISSION,
   QK_USERS_GET_INFO,
+  QK_GET_NEWS_BY_NEWS_ID,
 } from '@/constants';
 
 import { RedeemCode } from './models/redeem-code';
@@ -30,6 +31,7 @@ import { HomeGatewayResponse } from './models/home';
 import { InfiniteData } from '@tanstack/react-query';
 import { GroupPermission } from './models/group';
 import { Permission } from './models/permission';
+import { NewsDetailItem } from './models/news';
 
 async function getDataFromServer<T>(
   key: (string | number)[],
@@ -141,6 +143,16 @@ export async function getPromotion(): Promise<{
   return getDataFromServer<Promotion>(
     [QK_GET_PROMOTION],
     ratelApi.promotions.get_promotions(),
+  );
+}
+
+export async function listNews(): Promise<{
+  key: (string | number)[];
+  data: NewsDetailItem | null;
+}> {
+  return getDataFromServer<NewsDetailItem>(
+    [QK_GET_NEWS_BY_NEWS_ID],
+    ratelApi.news.getNews(1, 3),
   );
 }
 
