@@ -5,17 +5,17 @@ use dto::{
     JsonSchema, aide,
     by_axum::{
         auth::Authorization,
-        axum::{extract::{Path, State}, Extension, Json},
+        axum::{
+            Extension, Json,
+            extract::{Path, State},
+        },
     },
 };
 use serde::{Deserialize, Serialize};
 
 use crate::{
     AppState, Error2,
-    models::{
-        dynamo_tables::main::user::UserMembership,
-        user::User,
-    },
+    models::{dynamo_tables::main::user::UserMembership, user::User},
     types::Membership,
     utils::admin::check_admin_permission,
 };
@@ -47,18 +47,25 @@ pub async fn promote_user_to_admin(
 
     // Get the target user (to verify they exist)
     let user_pk = format!("USER#{}", user_id);
-    let _user = User::get(&dynamo.client, &user_pk, Some(crate::types::EntityType::User))
-        .await?
-        .ok_or(Error2::NotFound("User not found".into()))?;
+    let _user = User::get(
+        &dynamo.client,
+        &user_pk,
+        Some(crate::types::EntityType::User),
+    )
+    .await?
+    .ok_or(Error2::NotFound("User not found".into()))?;
 
     // Get or create user membership using the builder pattern
-    let mut membership = match UserMembership::get(&dynamo.client, &user_pk, Some("MEMBERSHIP")).await? {
-        Some(membership) => membership,
-        None => {
-            // Create new admin membership using builder pattern
-            UserMembership::builder(user_id.clone()).with_admin().build()
-        }
-    };
+    let mut membership =
+        match UserMembership::get(&dynamo.client, &user_pk, Some("MEMBERSHIP")).await? {
+            Some(membership) => membership,
+            None => {
+                // Create new admin membership using builder pattern
+                UserMembership::builder(user_id.clone())
+                    .with_admin()
+                    .build()
+            }
+        };
 
     // Update to admin membership
     membership.membership_type = Membership::Admin;

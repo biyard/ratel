@@ -195,6 +195,9 @@ pub mod controllers {
             pub mod set_membership;
             pub mod get_membership;
             pub mod promote_to_admin;
+
+            #[cfg(test)]
+            pub mod tests;
         }
     }
 }
