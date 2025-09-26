@@ -184,7 +184,9 @@ async fn create_or_update_user(
             .with_description(payload.description);
 
         if let Some(password) = payload.password {
-            updater = updater.with_password(password)
+            updater = updater.with_password(password);
+        } else {
+            updater = updater.remove_password();
         };
         updater.execute(dynamo).await?;
         Ok(existing_user)
