@@ -1,6 +1,8 @@
 use crate::{
     AppState, Error2,
-    models::feed::{Post, PostArtwork, PostAuthor, PostComment, PostMetadata, PostRepost},
+    models::feed::{
+        Post, PostArtwork, PostAuthor, PostComment, PostLike, PostMetadata, PostRepost,
+    },
     types::{EntityType, Partition, TeamGroupPermission},
     utils::{
         dynamo_extractor::extract_user,
@@ -71,8 +73,13 @@ pub async fn delete_post_handler(
             PostMetadata::PostRepost(v) => {
                 PostRepost::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
             }
+            PostMetadata::PostLike(v) => {
+                PostLike::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
+            }
         };
     }
+
+    // let post_likes = PostLike::get(&dynamo.client, post.pk.clone()).await?;
 
     Ok(())
 }

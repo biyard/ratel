@@ -257,4 +257,11 @@ async fn test_post_like() {
     .is_some();
 
     assert!(!is_liked, "Expected post to not be liked");
+
+    let meta = PostMetadata::query(&cli, post.pk.clone())
+        .await
+        .expect("Failed to query post metadata");
+    let res = PostDetailResponse::from(meta);
+
+    println!("PostDetailResponse: {:?}", res);
 }
