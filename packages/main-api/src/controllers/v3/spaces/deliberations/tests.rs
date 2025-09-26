@@ -6,7 +6,7 @@ use crate::{
         },
     },
     models::space::{DiscussionCreateRequest, SurveyCreateRequest},
-    tests::{create_app_state, create_auth, get_test_user},
+    tests::{create_app_state, create_test_user, get_auth},
     types::{ChoiceQuestion, LinearScaleQuestion, Partition, SurveyQuestion, SurveyStatus},
 };
 use dto::{
@@ -21,8 +21,8 @@ use dto::{
 async fn test_create_space_handler() {
     let app_state = create_app_state();
     let cli = app_state.dynamo.client.clone();
-    let user = get_test_user(&cli).await;
-    let auth = create_auth(user.clone()).await;
+    let user = create_test_user(&cli).await;
+    let auth = get_auth(&user.clone());
     let uid = uuid::Uuid::new_v4().to_string();
     let create_res = create_deliberation_handler(
         State(app_state.clone()),
@@ -42,8 +42,8 @@ async fn test_create_space_handler() {
 async fn test_update_space_handler() {
     let app_state = create_app_state();
     let cli = app_state.dynamo.client.clone();
-    let user = get_test_user(&cli).await;
-    let auth = create_auth(user.clone()).await;
+    let user = create_test_user(&cli).await;
+    let auth = get_auth(&user.clone());
     let uid = uuid::Uuid::new_v4().to_string();
     let create_res = create_deliberation_handler(
         State(app_state.clone()),
@@ -61,11 +61,11 @@ async fn test_update_space_handler() {
     let space_pk = create_res.unwrap().0.metadata.deliberation.pk;
 
     // create user
-    let team_1 = match get_test_user(&cli).await.pk {
+    let team_1 = match create_test_user(&cli).await.pk {
         Partition::User(v) => v,
         _ => "".to_string(),
     };
-    let team_2 = match get_test_user(&cli).await.pk {
+    let team_2 = match create_test_user(&cli).await.pk {
         Partition::User(v) => v,
         _ => "".to_string(),
     };
@@ -258,7 +258,7 @@ async fn test_update_space_handler() {
         res.elearnings.files[0].name,
         "deliberation elearning update file title".to_string()
     );
-    assert_eq!("dsfsdf", format!("sdfsdfd: {:?}", space_pk));
+    // assert_eq!("dsfsdf", format!("sdfsdfd: {:?}", space_pk));
     assert_eq!(res.surveys.questions.len(), 2);
     assert_eq!(res.surveys.started_at, now);
     assert_eq!(res.surveys.ended_at, now + 20_000);

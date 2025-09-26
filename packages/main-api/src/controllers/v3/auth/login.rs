@@ -2,16 +2,14 @@ use crate::{
     AppState, Error2, config,
     models::user::{
         User, UserOAuth, UserOAuthQueryOption, UserPrincipal, UserPrincipalQueryOption,
-        UserQueryOption,
     },
     types::Provider,
-    utils::{dynamo_extractor::get_principal_from_auth, firebase, password::hash_password},
+    utils::{dynamo_extractor::get_principal_from_auth, firebase, password::verify_password},
 };
 use bdk::prelude::*;
 
 use dto::{
-    JsonSchema,
-    aide::{self},
+    JsonSchema, aide,
     by_axum::{
         auth::{Authorization, DYNAMO_USER_SESSION_KEY, DynamoUserSession, generate_jwt},
         axum::{
@@ -42,18 +40,21 @@ pub async fn login_handler(
 ) -> Result<(HeaderMap, ()), Error2> {
     let user = match req {
         LoginRequest::Email { email, password } => {
-            let hashed_password = hash_password(&password).map_err(|e| {
-                Error2::InternalServerError(format!("Password hashing failed: {}", e))
-            })?;
-            let (u, _) = User::find_by_email_and_password(
-                &dynamo.client,
-                &email,
-                UserQueryOption::builder().sk(hashed_password),
-            )
-            .await?;
-            u.get(0)
+            let (u, _) = User::find_by_email(&dynamo.client, &email, Default::default()).await?;
+            let user = u
+                .get(0)
                 .cloned()
-                .ok_or(Error2::Unauthorized("Invalid email or password".into()))?
+                .ok_or(Error2::BadRequest("Invalid email or password".into()))?;
+            let hashed_password = user
+                .password
+                .as_ref()
+                .ok_or(Error2::BadRequest("Invalid email or password".into()))?;
+            if !verify_password(&password, &hashed_password).map_err(|e| {
+                Error2::InternalServerError(format!("Password verification error: {}", e))
+            })? {
+                return Err(Error2::BadRequest("Invalid email or password".into()));
+            }
+            user
         }
         LoginRequest::OAuth { provider, token } => match provider {
             Provider::Google => {

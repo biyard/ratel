@@ -3,7 +3,7 @@ use dto::File;
 use super::*;
 use crate::{
     models::{space::SpaceCommon, user::User},
-    tests::{get_test_aws_config, get_test_user},
+    tests::{create_test_user, get_test_aws_config},
     types::{CheckboxQuestion, EntityType},
     utils::aws::DynamoClient,
 };
@@ -11,7 +11,7 @@ use crate::{
 #[tokio::test]
 async fn tests_create_deliberation() {
     let cli = DynamoClient::mock(get_test_aws_config()).client;
-    let user = get_test_user(&cli).await;
+    let user = create_test_user(&cli).await;
 
     let fetched_user = User::get(&cli, user.clone().pk.clone(), Some(user.clone().sk)).await;
     assert!(fetched_user.is_ok());
