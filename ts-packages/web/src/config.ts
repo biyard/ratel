@@ -12,7 +12,6 @@ type Config = {
   log_level: string;
   sign_domain: string;
   experiment: boolean;
-  graphql_url: string;
   telegram_botname: string;
   version: string;
 };
@@ -24,11 +23,8 @@ export enum Env {
   Prod = 'prod',
 }
 
-const enableServerConfig =
-  process.env.NEXT_PUBLIC_ENABLE_SERVER_CONFIG === 'true';
-
 export const config: Config = {
-  env: (process.env.NEXT_PUBLIC_ENV || 'dev') as Env,
+  env: (process.env.NEXT_PUBLIC_ENV || 'local') as Env,
   firebase_api_key: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || '',
   firebase_auth_domain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || '',
   firebase_project_id: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || '',
@@ -47,17 +43,7 @@ export const config: Config = {
   version: process.env.NEXT_PUBLIC_VERSION || 'unknown',
 
   // Server-customizable configuration
-  api_url:
-    (enableServerConfig
-      ? process.env.API_URL || process.env.NEXT_PUBLIC_API_URL
-      : process.env.NEXT_PUBLIC_API_URL) || 'https://api.dev.ratel.foundation',
-
-  graphql_url:
-    (enableServerConfig
-      ? process.env.GRAPHQL_URL || process.env.NEXT_PUBLIC_GRAPHQL_URL
-      : process.env.NEXT_PUBLIC_GRAPHQL_URL) ||
-    'https://graphql.dev.ratel.foundation/v1/graphql',
-
+  api_url: process.env.API_URL || process.env.NEXT_PUBLIC_API_URL!,
   telegram_botname:
     process.env.NEXT_PUBLIC_TELEGRAM_BOTNAME || 'cryto_ratel_dev_bot',
 };

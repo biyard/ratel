@@ -194,9 +194,6 @@ pub mod controllers {
                 pub mod register_users;
             }
         }
-        pub mod migration {
-            pub mod postgres_to_dynamodb;
-        }
         pub mod binances {
             pub mod get_merchant_balance;
         }
@@ -211,7 +208,6 @@ pub mod controllers {
 
 pub mod api_main;
 pub mod config;
-pub mod etl;
 pub mod models;
 pub mod route;
 pub mod security;
