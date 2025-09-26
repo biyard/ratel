@@ -1,7 +1,7 @@
 use bdk::prelude::*;
 use serde_with::{DeserializeFromStr, SerializeDisplay};
 
-#[derive(Debug, Clone, SerializeDisplay, DeserializeFromStr, Default, DynamoEnum)]
+#[derive(Debug, Clone, SerializeDisplay, DeserializeFromStr, Default, DynamoEnum, JsonSchema)]
 pub enum EntityType {
     #[default]
     None,
@@ -12,6 +12,7 @@ pub enum EntityType {
     UserEvmAddress,
     UserReferralCode,
     UserPrincipal,
+    UserOAuth,
     UserPhoneNumber,
     UserTelegram,
     UserTeam(String),      // from Team
@@ -23,7 +24,9 @@ pub enum EntityType {
     PostAuthor, // from User
     PostSpace,
     PostComment(String), // PostComment should be sorted by timestamp
-
+    PostArtwork,
+    PostRepost,       //Unique
+    PostLike(String), // PostLike#${User Pk}
     // Team entity types
     // TEAM_PK index is aligned by gsi1-index
     // TEAM_GROUP_PK index is aligned by gsi1-index

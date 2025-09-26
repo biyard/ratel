@@ -1,3 +1,5 @@
+// TODO: After migrate to DYNAMODB, remove these modules
+
 mod general_permission_verifier;
 mod space_permission_verifier;
 mod team_permission_verifier;

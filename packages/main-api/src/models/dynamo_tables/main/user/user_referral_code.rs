@@ -1,5 +1,5 @@
-use bdk::prelude::*;
 use crate::types::*;
+use bdk::prelude::*;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity)]
 pub struct UserReferralCode {

@@ -1,3 +1,5 @@
+use bdk::prelude::*;
+
 #[derive(
     Debug,
     Clone,

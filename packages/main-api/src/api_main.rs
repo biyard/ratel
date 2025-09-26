@@ -2,10 +2,13 @@ use std::env;
 
 use crate::{
     config, controllers,
-    route::route,
+    route::{RouteDeps, route},
     utils::{
-        aws::{BedrockClient, RekognitionClient, S3Client, TextractClient},
-        // dynamo_migrate::{create_dynamo_tables, get_user_tables},
+        aws::{
+            BedrockClient, DynamoClient, RekognitionClient, S3Client, SesClient, TextractClient,
+            get_aws_config,
+        },
+        dynamo_session_store::DynamoSessionStore,
         mcp_middleware::mcp_middleware,
         sqs_client,
         telegram::TelegramBot,
@@ -28,7 +31,6 @@ use tower_sessions::{
     Session, SessionManagerLayer,
     cookie::time::{Duration, OffsetDateTime},
 };
-use tower_sessions_sqlx_store::PostgresStore;
 
 macro_rules! migrate {
     ($pool:ident, $($table:ident),* $(,)?) => {
@@ -188,15 +190,13 @@ pub async fn api_main() -> Result<Router> {
         panic!("Database is not initialized. Call init() first.");
     };
 
-    let session_store = PostgresStore::new(pool.clone());
     if conf.migrate {
         migration(&pool).await?;
-        let res = session_store.migrate().await;
-        if let Err(e) = res {
-            tracing::error!("Failed to migrate session store: {}", e);
-            return Err(e.into());
-        }
     }
+    let is_local = conf.env == "local" || conf.env == "test";
+    let aws_sdk_config = get_aws_config();
+    let dynamo_client = DynamoClient::new(Some(aws_sdk_config.clone()));
+    let ses_client = SesClient::new(aws_sdk_config, is_local);
 
     let sqs_client = sqs_client::SqsClient::new().await;
     let bedrock_client = BedrockClient::new();
@@ -205,7 +205,8 @@ pub async fn api_main() -> Result<Router> {
     let private_s3_client = S3Client::new(conf.private_bucket_name);
     let metadata_s3_client = S3Client::new(conf.bucket.name);
 
-    let is_local = conf.env == "local";
+    let session_store = DynamoSessionStore::new(dynamo_client.client.clone());
+
     let session_layer = SessionManagerLayer::new(session_store)
         .with_secure(!is_local)
         .with_http_only(!is_local)
@@ -229,10 +230,8 @@ pub async fn api_main() -> Result<Router> {
     } else {
         None
     };
-    // FIXME: Is this the correct way to inject and pass the states into the route?
-    // find better way to  management Axum's state or dependency injection for better modularity and testability.
-    let api_router = route(
-        pool.clone(),
+    let api_router = route(RouteDeps {
+        pool: pool.clone(),
         sqs_client,
         bedrock_client,
         rek_client,
@@ -240,7 +239,9 @@ pub async fn api_main() -> Result<Router> {
         metadata_s3_client,
         private_s3_client,
         bot,
-    )
+        dynamo_client,
+        ses_client,
+    })
     .await?
     .layer(middleware::from_fn(authorization_middleware))
     .layer(session_layer)
@@ -250,11 +251,11 @@ pub async fn api_main() -> Result<Router> {
     Ok(app)
 }
 
+//FIXME: Remove this middleware
 pub async fn cookie_middleware(
     req: Request,
     next: Next,
 ) -> std::result::Result<Response<by_axum::axum::body::Body>, by_axum::axum::http::StatusCode> {
-    tracing::debug!("Authorization middleware {:?}", req.uri());
     let session_initialized = if let Some(session) = req.extensions().get::<Session>() {
         if let Ok(Some(_)) = session
             .get::<by_axum::auth::UserSession>(by_axum::auth::USER_SESSION_KEY)
@@ -269,7 +270,6 @@ pub async fn cookie_middleware(
     };
 
     let mut res = next.run(req).await;
-    tracing::debug!("Authorization middleware response: {:?}", res.status());
     if session_initialized {
         tracing::debug!("Session not initialized, skipping cookie generation.");
         return Ok(res);

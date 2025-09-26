@@ -1,4 +1,4 @@
-use crate::{models::user::User, types::*};
+use crate::types::*;
 use bdk::prelude::*;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default)]
@@ -29,13 +29,12 @@ impl TeamGroup {
         name: String,
         description: String,
         permissions: TeamGroupPermissions,
-        User { pk: creator_pk, .. }: User,
     ) -> Self {
         let now = chrono::Utc::now().timestamp_micros();
 
         Self {
             pk,
-            sk: EntityType::TeamGroup(creator_pk.to_string()),
+            sk: EntityType::TeamGroup(uuid::Uuid::new_v4().to_string()),
             name,
             description,
             created_at: now,

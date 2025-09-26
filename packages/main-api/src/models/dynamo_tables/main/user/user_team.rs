@@ -39,3 +39,22 @@ impl UserTeam {
         }
     }
 }
+
+#[derive(Default, serde::Serialize, schemars::JsonSchema)]
+pub struct UserTeamResponse {
+    pub nickname: String,
+    pub profile_url: String,
+    pub username: String,
+    pub user_type: UserType,
+}
+
+impl From<UserTeam> for UserTeamResponse {
+    fn from(user_team: UserTeam) -> Self {
+        Self {
+            nickname: user_team.display_name,
+            profile_url: user_team.profile_url,
+            username: user_team.username,
+            user_type: UserType::Team,
+        }
+    }
+}
