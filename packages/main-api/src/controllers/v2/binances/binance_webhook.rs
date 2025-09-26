@@ -1,5 +1,5 @@
-use base64::Engine as _;
-use base64::engine::general_purpose::STANDARD as B64;
+use crate::config;
+use crate::utils::crypto::verify_webhook_signature;
 use bdk::prelude::*;
 use by_axum::axum::{Extension, Json, body::Bytes, extract::State, http::HeaderMap};
 use dto::{
@@ -8,10 +8,9 @@ use dto::{
     by_axum::auth::Authorization,
     sqlx::{Pool, Postgres},
 };
-use openssl::{hash::MessageDigest, pkey::PKey, sign::Verifier};
+use serde::de::Error as DeError;
+use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::Value;
-
-use crate::{config, utils::wallets::sign_for_binance::sign_for_binance};
 
 pub async fn binance_webhook_handler(
     Extension(_auth): Extension<Option<Authorization>>,
@@ -45,65 +44,36 @@ pub async fn binance_webhook_handler(
     );
 
     let raw_body = String::from_utf8_lossy(&body);
-    let payload = format!("{ts}\n{nonce}\n{raw_body}\n");
-    tracing::debug!("payload composed ({} bytes)", payload.len());
 
-    let certs = fetch_all_cert_pems(&base, &api_key, &secret)
-        .await
-        .map_err(|e| dto::Error::ServerError(format!("certificates failed: {e}")))?;
-    tracing::debug!("fetched {} cert(s)", certs.len());
+    verify_webhook_signature(
+        &base, &api_key, &secret, ts, nonce, sig_b64, cert_sn, &raw_body,
+    )
+    .await?;
 
-    let mut tried = 0usize;
-    let mut verified = false;
+    let notif: BinancePayNotification = serde_json::from_str(raw_body.as_ref())
+        .map_err(|e| dto::Error::ServerError(format!("invalid webhook payload: {e}")))?;
 
-    if let Some(sn) = cert_sn {
-        if let Some(pem) = certs.iter().find_map(|(this_sn, pem)| {
-            if this_sn == sn {
-                Some(pem.as_str())
-            } else {
-                None
-            }
-        }) {
-            tried += 1;
-            if verify_rsa_sha256(pem, payload.as_bytes(), sig_b64).unwrap_or(false) {
-                verified = true;
-            } else {
-                tracing::warn!("verify failed with cert_sn={}", sn);
-            }
-        } else {
-            tracing::warn!("cert_sn from header not found in /certificates: {}", sn);
-        }
-    }
+    tracing::debug!("parsed notif: {:?}", notif);
 
-    if !verified {
-        for (this_sn, pem) in &certs {
-            tried += 1;
-            if verify_rsa_sha256(pem, payload.as_bytes(), sig_b64).unwrap_or(false) {
-                tracing::debug!("verify success with cert_sn={}", this_sn);
-                verified = true;
-                break;
-            }
-        }
-    }
-
-    tracing::debug!("verify result: {}, tried {} cert(s)", verified, tried);
-    if !verified {
-        return Err(dto::Error::Unauthorized);
-    }
-
-    let biz_status = parse_biz_status(&raw_body).unwrap_or_default();
-    tracing::debug!("biz status: {:?}", biz_status);
-
-    if biz_status != "PAY_SUCCESS" {
-        tracing::info!("binance webhook ignored: biz_status={}", biz_status);
+    if notif.biz_status != BizStatus::PaySuccess {
+        tracing::info!("binance webhook ignored: biz_status={:?}", notif.biz_status);
         return Ok(Json(serde_json::json!({
             "returnCode": "SUCCESS",
             "returnMessage": "OK"
         })));
     }
 
-    let (user_id, plan, binance_user) = parse_ids_and_plan(&raw_body)
-        .ok_or_else(|| dto::Error::ServerError("cannot parse userId/plan from payload".into()))?;
+    let plan = notif
+        .data
+        .product_name
+        .clone()
+        .or(notif.data.reference_goods_id.clone())
+        .unwrap_or_else(|| "UNKNOWN".to_string());
+
+    let binance_user = notif.data.open_user_id.clone();
+
+    let user_id = extract_user_id_from_data(&notif.data)
+        .ok_or_else(|| dto::Error::ServerError("cannot parse userId from payload".into()))?;
 
     tracing::info!(
         "binance webhook user_id={:?}, plan={:?}, binance_user={:?}",
@@ -112,12 +82,7 @@ pub async fn binance_webhook_handler(
         binance_user
     );
 
-    if user_id.is_none() {
-        return Err(dto::Error::NotFound);
-    }
-
     let user_id: i64 = user_id
-        .unwrap_or_default()
         .parse::<i64>()
         .map_err(|e| dto::Error::ServerError(format!("invalid user_id: {e}")))?;
 
@@ -177,146 +142,97 @@ fn get_header<'a>(headers: &'a HeaderMap, key: &str) -> Result<&'a str> {
         .ok_or_else(|| dto::Error::ServerError(format!("missing header: {key}")))
 }
 
-async fn fetch_all_cert_pems(
-    base: &str,
-    api_key: &str,
-    secret: &str,
-) -> std::result::Result<Vec<(String, String)>, String> {
-    let body = serde_json::json!({});
-    let (ts, nonce, sign) =
-        sign_for_binance(secret, &body).map_err(|e| format!("sign_for_binance failed: {e}"))?;
-    let url = format!("{}/certificates", base);
+#[derive(Debug, Deserialize, Serialize, PartialEq)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+enum BizStatus {
+    PaySuccess,
+    PayFail,
+    Pending,
+    OrderCancelled,
+    OrderClosed,
+    #[serde(other)]
+    Other,
+}
 
-    let client = reqwest::Client::new();
-    let resp = client
-        .post(url)
-        .header("content-type", "application/json")
-        .header("BinancePay-Timestamp", &ts)
-        .header("BinancePay-Nonce", &nonce)
-        .header("BinancePay-Certificate-SN", api_key)
-        .header("BinancePay-Signature", &sign)
-        .body(body.to_string())
-        .send()
-        .await
-        .map_err(|e| format!("request failed: {e}"))?;
+#[derive(Debug, Deserialize, Serialize, PartialEq)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+enum BizType {
+    Pay,
+    Refund,
+    #[serde(other)]
+    Other,
+}
 
-    let status = resp.status();
-    let text = resp
-        .text()
-        .await
-        .map_err(|e| format!("read body failed: {e}"))?;
-    tracing::debug!("certificates http={} body={}", status, text);
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct NotificationData {
+    #[serde(default)]
+    product_name: Option<String>,
+    #[serde(default)]
+    reference_goods_id: Option<String>,
+    #[serde(default)]
+    open_user_id: Option<String>,
 
-    let v: Value =
-        serde_json::from_str(&text).unwrap_or_else(|_| serde_json::json!({ "raw": text }));
-    if !status.is_success() || v.get("status").and_then(|s| s.as_str()) != Some("SUCCESS") {
-        let code = v.get("code").and_then(|x| x.as_str()).unwrap_or("UNKNOWN");
-        let msg = v
-            .get("errorMessage")
-            .and_then(|x| x.as_str())
-            .unwrap_or("no errorMessage");
-        return Err(format!(
-            "certificates api failed: http={status}, code={code}, msg={msg}"
-        ));
+    #[serde(default, deserialize_with = "deserialize_maybe_string_value")]
+    pass_through_info: Option<Value>,
+    #[serde(default, deserialize_with = "deserialize_maybe_string_value")]
+    merchant_attach: Option<Value>,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct BinancePayNotification {
+    biz_status: BizStatus,
+    biz_type: BizType,
+    biz_id: Option<i64>,
+    biz_id_str: Option<String>,
+
+    #[serde(deserialize_with = "deserialize_notification_data")]
+    data: NotificationData,
+}
+
+fn deserialize_notification_data<'de, D>(
+    deserializer: D,
+) -> std::result::Result<NotificationData, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let value: Value = Deserialize::deserialize(deserializer)?;
+    match value {
+        Value::String(s) => serde_json::from_str(&s).map_err(DeError::custom),
+        Value::Object(_) => serde_json::from_value(value).map_err(DeError::custom),
+        _ => Err(DeError::custom("unsupported data format")),
     }
+}
 
-    let arr = v
-        .get("data")
-        .and_then(|d| d.as_array())
-        .ok_or("no data array")?;
-    let mut out = Vec::with_capacity(arr.len());
-    for it in arr {
-        let sn = it
-            .get("certSn")
-            .or_else(|| it.get("certSerial"))
-            .and_then(|x| x.as_str())
-            .ok_or("certSn/certSerial missing")?;
-
-        let pem = it
-            .get("certPublic")
-            .and_then(|x| x.as_str())
-            .ok_or("certPublic missing")?;
-
-        if PKey::public_key_from_pem(pem.as_bytes()).is_ok() {
-            out.push((sn.to_string(), pem.to_string()));
-        } else {
-            tracing::warn!("invalid PUBLIC KEY PEM for cert serial={}", sn);
+fn deserialize_maybe_string_value<'de, D>(
+    deserializer: D,
+) -> std::result::Result<Option<Value>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let value: Option<Value> = Option::deserialize(deserializer)?;
+    match value {
+        None => Ok(None),
+        Some(Value::String(s)) => {
+            let v: Value = serde_json::from_str(&s).map_err(DeError::custom)?;
+            Ok(Some(v))
         }
+        Some(v @ Value::Object(_)) => Ok(Some(v)),
+        Some(other) => Ok(Some(other)),
     }
-    Ok(out)
 }
 
-fn verify_rsa_sha256(
-    cert_pem: &str,
-    payload: &[u8],
-    sig_b64: &str,
-) -> std::result::Result<bool, String> {
-    let pkey = PKey::public_key_from_pem(cert_pem.as_bytes())
-        .map_err(|e| format!("load pem failed: {e}"))?;
-    let sig = B64
-        .decode(sig_b64.as_bytes())
-        .map_err(|e| format!("b64 decode failed: {e}"))?;
-    let mut verifier = Verifier::new(MessageDigest::sha256(), &pkey)
-        .map_err(|e| format!("verifier init failed: {e}"))?;
-    verifier
-        .update(payload)
-        .map_err(|e| format!("verifier update failed: {e}"))?;
-    verifier
-        .verify(&sig)
-        .map_err(|e| format!("verifier verify failed: {e}"))
-}
-
-fn parse_biz_status(raw_body: &str) -> Option<String> {
-    let v: Value = serde_json::from_str(raw_body).ok()?;
-    v.get("bizStatus")
-        .and_then(|x| x.as_str().map(|s| s.to_string()))
-}
-
-fn parse_ids_and_plan(raw_body: &str) -> Option<(Option<String>, String, Option<String>)> {
-    let v: Value = serde_json::from_str(raw_body).ok()?;
-    let data_raw = v.get("data")?;
-    let data: Value = match data_raw {
-        Value::String(s) => serde_json::from_str(s).ok()?,
-        Value::Object(_) => data_raw.clone(),
-        _ => return None,
-    };
-
-    let plan = data
-        .get("productName")
-        .and_then(|x| x.as_str())
-        .map(|s| s.to_string())
-        .or_else(|| {
-            data.get("referenceGoodsId")
-                .and_then(|x| x.as_str().map(|s| s.to_string()))
-        })
-        .unwrap_or_else(|| "UNKNOWN".to_string());
-
-    let binance_user = data
-        .get("openUserId")
-        .and_then(|x| x.as_str().map(|s| s.to_string()));
-
-    let attach_obj = data
-        .get("passThroughInfo")
-        .and_then(|att| match att {
-            Value::String(s) => serde_json::from_str::<Value>(s).ok(),
-            Value::Object(_) => Some(att.clone()),
-            _ => None,
-        })
-        .or_else(|| {
-            data.get("merchantAttach").and_then(|att| match att {
-                Value::String(s) => serde_json::from_str::<Value>(s).ok(),
-                Value::Object(_) => Some(att.clone()),
-                _ => None,
-            })
-        });
-
-    let user_id = attach_obj.as_ref().and_then(|inner| {
-        inner.get("userId").and_then(|x| {
+fn extract_user_id_from_data(data: &NotificationData) -> Option<String> {
+    fn pick(v: &Value) -> Option<String> {
+        v.get("userId").and_then(|x| {
             x.as_str()
                 .map(|s| s.to_string())
                 .or_else(|| x.as_i64().map(|n| n.to_string()))
         })
-    });
-
-    Some((user_id, plan, binance_user))
+    }
+    data.pass_through_info
+        .as_ref()
+        .and_then(pick)
+        .or_else(|| data.merchant_attach.as_ref().and_then(pick))
 }
