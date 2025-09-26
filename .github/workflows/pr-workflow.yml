@@ -124,6 +124,7 @@ jobs:
           DYNAMO_TABLE_PREFIX: ratel-local
         run: |
           # Build and tag image
+          mkdir .build
           make .build/evm-keys
           make docker.build
 
