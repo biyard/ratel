@@ -1,6 +1,8 @@
 use bdk::prelude::*;
 
-#[derive(Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(
+    Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema,
+)]
 #[serde(rename_all = "snake_case", tag = "answer_type")]
 pub enum SurveyQuestion {
     SingleChoice(ChoiceQuestion),
@@ -18,7 +20,9 @@ impl Default for SurveyQuestion {
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, Default)]
+#[derive(
+    Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, Default, schemars::JsonSchema,
+)]
 pub struct LinearScaleQuestion {
     pub title: String,
     pub description: Option<String>,
@@ -30,7 +34,9 @@ pub struct LinearScaleQuestion {
     pub is_required: Option<bool>,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, Default)]
+#[derive(
+    Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, Default, schemars::JsonSchema,
+)]
 pub struct DropdownQuestion {
     pub title: String,
     pub description: Option<String>,
@@ -39,7 +45,9 @@ pub struct DropdownQuestion {
     pub is_required: Option<bool>,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, Default)]
+#[derive(
+    Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, Default, schemars::JsonSchema,
+)]
 pub struct CheckboxQuestion {
     pub title: String,
     pub description: Option<String>,
@@ -49,14 +57,18 @@ pub struct CheckboxQuestion {
     pub is_required: Option<bool>,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, Default)]
+#[derive(
+    Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, Default, schemars::JsonSchema,
+)]
 pub struct SubjectiveQuestion {
     pub title: String,
     pub description: String,
     pub is_required: Option<bool>,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, Default)]
+#[derive(
+    Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, Default, schemars::JsonSchema,
+)]
 pub struct ChoiceQuestion {
     pub title: String,
     pub description: Option<String>,

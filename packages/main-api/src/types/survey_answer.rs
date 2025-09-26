@@ -1,6 +1,8 @@
 use bdk::prelude::*;
 
-#[derive(Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(
+    Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema,
+)]
 #[serde(rename_all = "snake_case", tag = "answer_type")]
 pub enum SurveyAnswer {
     SingleChoice { answer: Option<i32> },

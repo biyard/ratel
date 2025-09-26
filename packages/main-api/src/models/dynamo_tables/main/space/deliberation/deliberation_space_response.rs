@@ -74,3 +74,33 @@ impl DeliberationSpaceResponse {
         serde_json::to_string(ans).unwrap_or_else(|_| "{}".to_string())
     }
 }
+
+#[derive(Default, serde::Serialize, schemars::JsonSchema, Clone)]
+pub struct SurveyResponseResponse {
+    pub user_pk: String,
+    pub author_display_name: String,
+    pub author_profile_url: String,
+    pub author_username: String,
+
+    pub survey_type: SurveyType,
+    pub answer: Vec<SurveyAnswer>,
+}
+
+impl From<DeliberationSpaceResponse> for SurveyResponseResponse {
+    fn from(responses: DeliberationSpaceResponse) -> Self {
+        let user_pk = match responses.clone().user_pk {
+            Partition::User(v) => v,
+            Partition::Team(v) => v,
+            _ => "".to_string(),
+        };
+        Self {
+            user_pk,
+            author_display_name: responses.clone().author_display_name,
+            author_profile_url: responses.clone().author_profile_url,
+            author_username: responses.clone().author_username,
+
+            survey_type: responses.clone().survey_type,
+            answer: responses.answer(),
+        }
+    }
+}
