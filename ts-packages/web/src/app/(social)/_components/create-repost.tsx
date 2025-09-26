@@ -587,12 +587,17 @@ const TruncatedContent = ({
       <div
         ref={contentRef}
         className={`${contentClassName} ${!isExpanded ? `${lineClampClass} overflow-hidden` : ''}`}
-        style={{
-          WebkitLineClamp: !isExpanded ? maxLines : 'unset',
-          display: '-webkit-box',
-          WebkitBoxOrient: 'vertical',
-          overflow: 'hidden',
-        }}
+        style={
+          !isExpanded
+            ? {
+                WebkitLineClamp: maxLines,
+                display: '-webkit-box',
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+              }
+            : undefined
+        }
+        // biome-ignore lint/security/noDangerouslySetInnerHtml: Sanitized with DOMPurify
         dangerouslySetInnerHTML={{
           __html: DOMPurify.sanitize(content),
         }}

@@ -115,7 +115,11 @@ export default function ToolbarPlugin({
         onClick={() => editor.chain().focus().toggleCase().run()}
         aria-label="Toggle case"
         title="Toggle case (UPPER/lower)"
-        className={editor.isActive('textStyle', { textTransform: 'uppercase' }) ? 'bg-neutral-600' : ''}
+        className={
+          editor.isActive('textStyle', { textTransform: 'uppercase' })
+            ? 'bg-neutral-600'
+            : ''
+        }
       >
         <CapsLock />
       </button>
