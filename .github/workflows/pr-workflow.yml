@@ -256,16 +256,16 @@ jobs:
           # Verify images are loaded
           docker images
 
+      - name: Setup SSH session with tmate
+        uses: mxschmitt/action-tmate@v3
+        with:
+          limit-access-to-actor: true
+
       - name: Setup test environment
         env:
           COMMIT: pr-${{ github.sha }}
         run: |
           docker-compose --profile testing up -d
-
-      # - name: Setup SSH session with tmate
-      #   uses: mxschmitt/action-tmate@v3
-      #   with:
-      #     limit-access-to-actor: true
 
       - name: Wait for services to be ready
         run: |

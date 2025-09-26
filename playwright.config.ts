@@ -32,7 +32,9 @@ export default defineConfig({
     navigationTimeout: CONFIGS.PLAYWRIGHT.NAVIGATION_TIME_OUT,
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: "on-first-retry",
+    video: "on",
   },
+  outputDir: "test-results/",
 
   /* Configure projects for major browsers */
   projects: [
