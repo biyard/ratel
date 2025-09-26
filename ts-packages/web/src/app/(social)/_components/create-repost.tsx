@@ -9,7 +9,6 @@ import {
 } from 'react';
 import { Clear } from '@/components/icons';
 import { Loader } from '@/components/icons';
-import { cn } from '@/lib/utils';
 import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { useUserInfo } from '../_hooks/user';
 import Image from 'next/image';
@@ -160,9 +159,14 @@ export function CreateRePost() {
               <ShapeDownArrow className="w-5 h-5" />
             </div>
 
-            <div className={cn('cursor-pointer')} onClick={resetDraft}>
+            <button
+              type="button"
+              onClick={resetDraft}
+              className="p-0 m-0 bg-transparent border-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 rounded-sm"
+              aria-label="Discard draft"
+            >
               <DoubleArrowDown className="[&>path]:stroke-text-primary" />
-            </div>
+            </button>
           </div>
         </div>
 
