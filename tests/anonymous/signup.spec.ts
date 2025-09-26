@@ -14,10 +14,6 @@ test.describe("Anonymous User Signup Flow", () => {
 
     await signInButton.click();
 
-    await page.screenshot({
-      path: "test-results/SU-001/01-login-popup-opened.png",
-    });
-
     const loginPopup = page.locator("#login_popup");
     await expect(loginPopup).toBeVisible();
 
@@ -31,16 +27,8 @@ test.describe("Anonymous User Signup Flow", () => {
     const signInButton = page.getByRole("button", { name: /sign in/i });
     await signInButton.click();
 
-    await page.screenshot({
-      path: "test-results/SU-002/01-login-popup-before-signup.png",
-    });
-
     const createAccountButton = page.getByText("Create an account");
     await createAccountButton.click();
-
-    await page.screenshot({
-      path: "test-results/SU-002/02-user-setup-popup-opened.png",
-    });
 
     const userSetupPopup = page.locator("#user_setup_popup");
     await expect(userSetupPopup).toBeVisible();
@@ -53,21 +41,11 @@ test.describe("Anonymous User Signup Flow", () => {
 
     await page.getByText("Create an account").click();
 
-    await page.screenshot({
-      path: "test-results/SU-003/01-signup-form-loaded.png",
-    });
-
     const emailInput = page.getByRole("textbox", { name: /email/i }).first();
     await emailInput.fill("invalid-email");
-    await page.screenshot({
-      path: "test-results/SU-003/02-invalid-email-entered.png",
-    });
 
     const sendButton = page.getByRole("button", { name: /send/i });
     await sendButton.click();
-    await page.screenshot({
-      path: "test-results/SU-003/03-after-send-invalid-email.png",
-    });
 
     await expect(
       page.locator("text=Email verification code sent"),
@@ -82,17 +60,17 @@ test.describe("Anonymous User Signup Flow", () => {
     const passwordInput = page.getByPlaceholder(/password/i);
 
     await passwordInput.fill("weakpassword");
-    await page.screenshot({
-      path: "test-results/SU-011/01-weak-password-validation.png",
-    });
-    await expect(page.getByText("Password must contain letters, numbers, and special characters (min 8 chars).")).toBeVisible();
+    await expect(
+      page.getByText(
+        "Password must contain letters, numbers, and special characters (min 8 chars).",
+      ),
+    ).toBeVisible();
 
     await passwordInput.fill("Password123!");
-    await page.screenshot({
-      path: "test-results/SU-011/02-strong-password-validation.png",
-    });
     await expect(
-      page.getByText("Password must contain letters, numbers, and special characters (min 8 chars)."),
+      page.getByText(
+        "Password must contain letters, numbers, and special characters (min 8 chars).",
+      ),
     ).not.toBeVisible();
   });
 
@@ -104,22 +82,24 @@ test.describe("Anonymous User Signup Flow", () => {
     const usernameInput = page.getByPlaceholder(/user.*name/i);
 
     await usernameInput.fill("Invalid Username!");
-    await page.screenshot({
-      path: "test-results/SU-012/01-invalid-username-validation.png",
-    });
-    await expect(page.getByText("Only numbers, lowercase letters, -, _ and more than one character can be entered.")).toBeVisible();
+    await expect(
+      page.getByText(
+        "Only numbers, lowercase letters, -, _ and more than one character can be entered.",
+      ),
+    ).toBeVisible();
 
     await usernameInput.fill("valid_username123");
 
-    await page.screenshot({
-      path: "test-results/SU-012/02-valid-username-validation.png",
-    });
     await expect(
-      page.getByText("Only numbers, lowercase letters, -, _ and more than one character can be entered."),
+      page.getByText(
+        "Only numbers, lowercase letters, -, _ and more than one character can be entered.",
+      ),
     ).not.toBeVisible();
   });
 
-  test("[SU-013] should require terms of service agreement", async ({ page }) => {
+  test("[SU-013] should require terms of service agreement", async ({
+    page,
+  }) => {
     await page.getByRole("button", { name: /sign in/i }).click();
 
     await page.getByText("Create an account").click();
@@ -135,20 +115,12 @@ test.describe("Anonymous User Signup Flow", () => {
 
     const usernameInput = page.getByPlaceholder(/user.*name/i);
     await usernameInput.fill("validuser123");
-    
-    // Wait for username validation to complete
-    await page.waitForTimeout(2000);
-    
-    await page.screenshot({ path: "test-results/SU-013/01-form-filled-before-tos.png" });
 
     const finishButton = page.getByRole("button", { name: "Finished Sign-up" });
     await expect(finishButton).toBeDisabled();
 
     const tosCheckbox = page.locator('label[for="agree_checkbox"]');
     await tosCheckbox.click();
-    await page.screenshot({
-      path: "test-results/SU-013/02-tos-checked-button-enabled.png",
-    });
 
     await expect(finishButton).not.toBeDisabled();
   });
@@ -229,7 +201,9 @@ test.describe("Anonymous User Signup Flow", () => {
     await page.screenshot({
       path: "test-results/SU-006/02-profile-image-hover-state.png",
     });
-    await expect(page.getByText(/click.*change.*profile.*image/i)).toBeVisible();
+    await expect(
+      page.getByText(/click.*change.*profile.*image/i),
+    ).toBeVisible();
   });
 
   test("[SU-007] should show newsletter subscription option", async ({
@@ -239,7 +213,9 @@ test.describe("Anonymous User Signup Flow", () => {
 
     await page.getByText("Create an account").click();
 
-    const newsletterCheckbox = page.locator('label[for="announcement_checkbox"]');
+    const newsletterCheckbox = page.locator(
+      'label[for="announcement_checkbox"]',
+    );
     await expect(newsletterCheckbox).toBeVisible();
     await page.screenshot({
       path: "test-results/SU-007/01-newsletter-checkbox-visible.png",
@@ -265,14 +241,18 @@ test.describe("Anonymous User Signup Flow", () => {
     await page.screenshot({
       path: "test-results/SU-008/01-blocked-display-name.png",
     });
-    await expect(page.getByText("Please remove the test keyword from your display name.")).toBeVisible();
+    await expect(
+      page.getByText("Please remove the test keyword from your display name."),
+    ).toBeVisible();
 
     const usernameInput = page.getByPlaceholder(/user.*name/i);
     await usernameInput.fill("test");
     await page.screenshot({
       path: "test-results/SU-008/02-blocked-username.png",
     });
-    await expect(page.getByText("Please remove the test keyword from your username.")).toBeVisible();
+    await expect(
+      page.getByText("Please remove the test keyword from your username."),
+    ).toBeVisible();
   });
 
   test("[SU-009] should check username availability", async ({ page }) => {
@@ -295,7 +275,7 @@ test.describe("Anonymous User Signup Flow", () => {
     // First access the page normally to get to the signup form
     await page.getByRole("button", { name: /sign in/i }).click();
     await page.getByText("Create an account").click();
-    
+
     // Then test mobile layout on the signup form
     await page.setViewportSize({
       width: CONFIGS.DEVICE_SCREEN_SIZES.MOBILE - 100,
@@ -310,7 +290,7 @@ test.describe("Anonymous User Signup Flow", () => {
 
     const profileImage = page.locator('img[alt="Team Logo"]');
     await expect(profileImage).toBeVisible();
-    
+
     await page.screenshot({
       path: "test-results/SU-010/02-mobile-signup-form.png",
     });
@@ -318,7 +298,7 @@ test.describe("Anonymous User Signup Flow", () => {
     // Verify form fields are still accessible in mobile layout
     const emailInput = page.getByRole("textbox", { name: /email/i }).first();
     await expect(emailInput).toBeVisible();
-    
+
     const passwordInput = page.getByPlaceholder(/password/i);
     await expect(passwordInput).toBeVisible();
   });

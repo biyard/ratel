@@ -25,6 +25,8 @@ export default defineConfig({
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: "html",
   timeout: CONFIGS.PLAYWRIGHT.TIMEOUT,
+  /* Global setup and teardown */
+  globalSetup: require.resolve("./tests/global-setup"),
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
@@ -38,9 +40,39 @@ export default defineConfig({
 
   /* Configure projects for major browsers */
   projects: [
+    // Anonymous tests (no setup required)
+    {
+      name: "anonymous",
+      testMatch: "**/anonymous/**/*.spec.ts",
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport: {
+          width: 1440,
+          height: 950,
+        },
+      },
+    },
+
+    // Authenticated tests (requires global setup)
+    {
+      name: "authenticated",
+      testMatch: "**/authenticated/**/*.spec.ts",
+      dependencies: [], // Global setup will run before this
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport: {
+          width: 1440,
+          height: 950,
+        },
+        // This will be loaded in the beforeEach of authenticated tests
+        storageState: "test-results/.auth/user.json",
+      },
+    },
+
+    // Default chromium project for other tests
     {
       name: "chromium",
-
+      testIgnore: ["**/anonymous/**", "**/authenticated/**"],
       use: {
         ...devices["Desktop Chrome"],
         viewport: {
