@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Row } from '@/components/ui/row';
 import { Textarea } from '@/components/ui/textarea';
 import {
-  InvalidDuplicatedUsername,
+  // InvalidDuplicatedUsername,
   InvalidLowerAlphaNumeric,
   InvalidTooShort,
 } from '@/errors';
@@ -25,7 +25,7 @@ import { useTranslations } from 'next-intl';
 export default function TeamCreationPopup() {
   const t = useTranslations('Home');
   const popup = usePopup();
-  const { post, get } = useApiCall();
+  const { post } = useApiCall();
   const userInfo = useUserInfo();
 
   const [profileUrl, setProfileUrl] = useState('');
@@ -70,14 +70,14 @@ export default function TeamCreationPopup() {
       return;
     }
 
-    const { users } = await get(ratelApi.users.getUserByUsername(username));
+    // console.log('users: ', users);
 
-    logger.debug('graphql respons: ', users);
+    // logger.debug('graphql respons: ', users);
 
-    if (users.length > 0) {
-      setInvalid(InvalidDuplicatedUsername);
-      return;
-    }
+    // if (users.length > 0) {
+    //   setInvalid(InvalidDuplicatedUsername);
+    //   return;
+    // }
 
     setInvalid(undefined);
     setUsername(username);
