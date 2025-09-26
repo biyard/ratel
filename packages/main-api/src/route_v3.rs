@@ -65,25 +65,22 @@ pub fn route(
     }: RouteDeps,
 ) -> Result<Router, Error2> {
     Ok(Router::new()
-        .nest(
+        .route(
             "/me",
-            Router::new().route(
-                "/me",
-                get_with(
-                    get_info_handler,
-                    api_docs!(
-                        Json<GetInfoResponse>,
-                        "Get Logged-in User Info",
-                        "Get the user data of the logged-in user"
-                    ),
-                )
-                .patch_with(
-                    update_user_handler,
-                    api_docs!(
-                        Json<UpdateUserResponse>,
-                        "Update Logged-in User Info",
-                        "Update the user data of the logged-in user"
-                    ),
+            get_with(
+                get_info_handler,
+                api_docs!(
+                    Json<GetInfoResponse>,
+                    "Get Logged-in User Info",
+                    "Get the user data of the logged-in user"
+                ),
+            )
+            .patch_with(
+                update_user_handler,
+                api_docs!(
+                    Json<UpdateUserResponse>,
+                    "Update Logged-in User Info",
+                    "Update the user data of the logged-in user"
                 ),
             ),
         )
