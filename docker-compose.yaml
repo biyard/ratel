@@ -6,8 +6,8 @@ services:
     ports:
       - "3000:3000"
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:3000/version || exit 1"]
-      interval: 30s
+      test: ["CMD-SHELL", "apt update && apt install curl -y && curl -f http://localhost:3000/version || exit 1"]
+      interval: 10s
       timeout: 10s
       retries: 100
     depends_on:
@@ -26,7 +26,7 @@ services:
 
   # Development main-api (source code mounting)
   main-api:
-    image: rust:1.89
+    image: rust
     restart: always
     ports:
       - "3000:3000"
@@ -92,7 +92,7 @@ services:
 
   # Development fetcher (source code mounting)
   fetcher:
-    image: rust:1.89
+    image: rust
     restart: always
     ports:
       - "3001:3001"
@@ -133,7 +133,6 @@ services:
     environment:
       PORT: 8080
       API_URL: "http://main-api-testing:3000"
-      GRAPHQL_URL: "http://hasura:8080/v1/graphql"
       NODE_ENV: test
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8080/api/version || exit 1"]
@@ -165,7 +164,6 @@ services:
       NEXT_PUBLIC_API_URL: "http://localhost:3000"
       INTERNAL_API_URL: "http://main-api:3000"
       NEXT_PUBLIC_GRAPHQL_URL: "http://localhost:28080/v1/graphql"
-      INTERNAL_GRAPHQL_URL: "http://hasura:8080/v1/graphql"
       NEXT_PUBLIC_LOG_LEVEL: ${LOG_LEVEL:-debug}
       NODE_ENV: development
     command: ["bash", "scripts/web-entrypoint.sh"]
@@ -294,50 +292,6 @@ services:
       - development
     networks:
       - ratel-network
-
-  hasura:
-    image: hasura/graphql-engine:v2.40.0
-    restart: unless-stopped
-    ports:
-      - "28080:8080"
-    environment:
-      HASURA_GRAPHQL_METADATA_DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/ratel}
-      HASURA_GRAPHQL_DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/ratel}
-      HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
-      HASURA_GRAPHQL_DEV_MODE: "true"
-      HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup, http-log, webhook-log, websocket-log, query-log
-      HASURA_GRAPHQL_ADMIN_SECRET: ratel_admin_secret
-      HASURA_GRAPHQL_AUTH_HOOK: http://main-api:3000/v1/auth/hasura
-      HASURA_GRAPHQL_AUTH_HOOK_MODE: POST
-      HASURA_GRAPHQL_LOG_LEVEL: debug
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/healthz"]
-      interval: 10s
-      timeout: 5s
-      retries: 20
-    depends_on:
-      postgres:
-        condition: service_healthy
-      main-api:
-        condition: service_healthy
-    networks:
-      - ratel-network
-    profiles:
-      - development
-
-  hasura-init:
-    image: hasura/graphql-engine:v2.40.0
-    environment:
-      HASURA_GRAPHQL_ENDPOINT: http://hasura:8080
-      HASURA_GRAPHQL_ADMIN_SECRET: ratel_admin_secret
-    command: ["bash", "/scripts/hasura-init-entrypoint.sh"]
-    networks:
-      - ratel-network
-    depends_on:
-      hasura:
-        condition: service_healthy
-    profiles:
-      - development
 
 networks:
   ratel-network:
