@@ -9,6 +9,7 @@ pub enum EntityType {
     // User entity types
     // USER_PK index is aligned by gsi1-index
     User,
+    UserMembership,
     UserEvmAddress,
     UserReferralCode,
     UserPrincipal,

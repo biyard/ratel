@@ -8,14 +8,16 @@ use bdk::prelude::*;
     Eq,
     serde_repr::Serialize_repr,
     serde_repr::Deserialize_repr,
+    JsonSchema,
     Default,
 )]
 #[repr(u8)]
 pub enum Membership {
     #[default]
     Free = 1,
-    Paid1 = 2,
-    Paid2 = 3,
-    Paid3 = 4,
+    Pro = 2,
+    Max = 3,
+    VIP = 4,
+    Enterprise = 5,
     Admin = 99,
 }

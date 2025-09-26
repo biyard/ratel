@@ -1,4 +1,5 @@
 pub mod user;
+pub mod user_membership;
 pub mod user_evm_address;
 pub mod user_metadata;
 pub mod user_oauth;
@@ -10,6 +11,7 @@ pub mod user_team_group;
 pub mod user_telegram;
 
 pub use user::*;
+pub use user_membership::*;
 pub use user_evm_address::*;
 pub use user_metadata::*;
 pub use user_oauth::*;

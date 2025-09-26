@@ -204,6 +204,16 @@ pub mod controllers {
     pub mod wg {
         pub mod get_home;
     }
+    pub mod m3 {
+        pub mod membership{
+            pub mod set_membership;
+            pub mod get_membership;
+            pub mod promote_to_admin;
+
+            #[cfg(test)]
+            pub mod tests;
+        }
+    }
 }
 
 pub mod api_main;
