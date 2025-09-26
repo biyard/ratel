@@ -179,15 +179,29 @@ pub mod controllers {
                 pub mod tests;
             }
         }
+
+        pub mod posts {
+            pub mod create_post;
+            pub mod delete_post;
+            pub mod get_post;
+            pub mod like_post;
+            pub mod list_posts;
+            pub mod update_post;
+            pub mod comments {
+                pub mod add_comment;
+                // pub mod delete_comment;
+                // pub mod list_comments;
+            }
+
+            #[cfg(test)]
+            pub mod tests;
+        }
     }
     pub mod m2 {
         pub mod noncelab {
             pub mod users {
                 pub mod register_users;
             }
-        }
-        pub mod migration {
-            pub mod postgres_to_dynamodb;
         }
         pub mod binances {
             pub mod get_merchant_balance;
@@ -203,7 +217,6 @@ pub mod controllers {
 
 pub mod api_main;
 pub mod config;
-pub mod etl;
 pub mod models;
 pub mod route;
 pub mod security;

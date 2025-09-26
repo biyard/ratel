@@ -238,6 +238,7 @@ jobs:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
 
           DYNAMO_TABLE_PREFIX: ratel-prod
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
           MIGRATE: false
         run: |
           make docker.build
