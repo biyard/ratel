@@ -40,3 +40,13 @@ pub fn validate_title(title: &str) -> Result<(), ValidationError> {
     }
     Ok(())
 }
+
+pub fn validate_content(content: &str) -> Result<(), ValidationError> {
+    let len = content.chars().count();
+    if len < 10 || len > 5000 {
+        return Err(ValidationError::new(
+            "Content must be between 10 and 5000 characters",
+        ));
+    }
+    Ok(())
+}

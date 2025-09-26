@@ -9,14 +9,14 @@ use crate::{
         get_team::{GetTeamPathParams, get_team_handler},
         update_team::{UpdateTeamPathParams, UpdateTeamRequest, update_team_handler},
     },
-    tests::{create_app_state, create_auth, create_user_name, get_test_user},
+    tests::{create_app_state, create_test_user, create_user_name, get_auth},
 };
 #[tokio::test]
 async fn test_update_team_without_permission() {
     let app_state = create_app_state();
     let cli = app_state.dynamo.client.clone();
-    let user = get_test_user(&cli).await;
-    let auth = create_auth(user.clone()).await;
+    let user = create_test_user(&cli).await;
+    let auth = get_auth(&user);
     let username = create_user_name();
     let team = create_team_handler(
         State(app_state.clone()),
@@ -33,8 +33,8 @@ async fn test_update_team_without_permission() {
     let team = team.unwrap().0;
     let team_pk = team.team_pk;
 
-    let another_user = get_test_user(&cli).await;
-    let another_auth = create_auth(another_user.clone()).await;
+    let another_user = create_test_user(&cli).await;
+    let another_auth = get_auth(&another_user);
 
     let res = update_team_handler(
         State(app_state.clone()),
@@ -69,12 +69,10 @@ async fn test_update_team_without_permission() {
 
 #[tokio::test]
 async fn test_update_team() {
-    use crate::tests::{create_app_state, create_auth, get_test_user};
-
     let app_state = create_app_state();
     let cli = app_state.dynamo.client.clone();
-    let user = get_test_user(&cli).await;
-    let auth = create_auth(user.clone()).await;
+    let user = create_test_user(&cli).await;
+    let auth = get_auth(&user);
     let username = create_user_name();
     let team_username = format!("team_{}", username);
     let team_display_name = format!("team_{}", username);
@@ -143,8 +141,8 @@ async fn test_update_team() {
 async fn test_get_team() {
     let app_state = create_app_state();
     let cli = app_state.dynamo.client.clone();
-    let user = get_test_user(&cli).await;
-    let auth = create_auth(user.clone()).await;
+    let user = create_test_user(&cli).await;
+    let auth = get_auth(&user);
     let now = chrono::Utc::now().timestamp();
     let team_display_name = format!("test_team_{}", now);
     let team_username = format!("test_username_{}", now);
