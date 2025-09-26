@@ -14,6 +14,7 @@ pub struct BinanceConfig {
 pub struct Config {
     pub env: &'static str,
     pub domain: &'static str,
+    // FIXME: disable for test
     pub binance: BinanceConfig,
     pub aws: AwsConfig,
     pub bucket: BucketConfig,
@@ -27,15 +28,20 @@ pub struct Config {
     pub slack_channel_abusing: &'static str,
     pub slack_channel_monitor: &'static str,
     pub kaia: KaiaConfig,
-    pub watermark_sqs_url: &'static str,
     pub from_email: &'static str,
     pub telegram_token: Option<&'static str>,
     pub noncelab_token: &'static str,
     pub did: DidConfig,
-    pub bedrock: BedrockConfig,
     pub private_bucket_name: &'static str,
-    pub dual_write: DualWriteConfig,
+
+    // Not supported features in test code
+    #[cfg(not(feature = "no-secret"))]
     pub firebase: FirebaseConfig,
+    #[cfg(not(feature = "no-secret"))]
+    pub bedrock: BedrockConfig,
+    #[cfg(not(feature = "no-secret"))]
+    // FIXME: integrate with localstack SQS
+    pub watermark_sqs_url: &'static str,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -72,12 +78,6 @@ pub struct BedrockConfig {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct DualWriteConfig {
-    pub enabled: bool,
-    pub table_name: &'static str,
-}
-
-#[derive(Debug, Clone, Copy)]
 pub struct FirebaseConfig {
     pub project_id: &'static str,
 }
@@ -85,7 +85,6 @@ pub struct FirebaseConfig {
 impl Default for Config {
     fn default() -> Self {
         Config {
-            watermark_sqs_url: option_env!("WATERMARK_QUEUE_URL").expect("You must set WATERMARK_QUEUE_URL"),
             kaia: KaiaConfig {
                 endpoint: option_env!("KAIA_ENDPOINT").unwrap_or("https://public-en-kairos.node.kaia.io"),
                 owner_key: option_env!("KAIA_OWNER_KEY").expect("You must set KAIA_OWNER_KEY"),
@@ -144,19 +143,19 @@ impl Default for Config {
                 p256_crv: option_env!("P256_CRV").expect("You must set P256_CRV"),
             },
             private_bucket_name: option_env!("PRIVATE_BUCKET_NAME").expect("You must set PRIVATE_BUCKET_NAME"),
+            #[cfg(not(feature = "no-secret"))]
+            firebase: FirebaseConfig {
+                project_id: option_env!("FIREBASE_PROJECT_ID").expect("You must set FIREBASE_PROJECT_ID"),
+            },
+
+            #[cfg(not(feature = "no-secret"))]
             bedrock: BedrockConfig {
                 nova_micro_model_id: option_env!("NOVA_MICRO_MODEL_ID").expect("You must set NOVA_MICRO_MODEL_ID"),
                 nova_lite_model_id: option_env!("NOVA_LITE_MODEL_ID").expect("You must set NOVA_LITE_MODEL_ID"),
             },
-            dual_write: DualWriteConfig {
-                enabled: option_env!("DUAL_WRITE_ENABLED")
-                    .map(|s| s.parse::<bool>().unwrap_or(false))
-                    .unwrap_or(false),
-                table_name: option_env!("DUAL_WRITE_TABLE_NAME").unwrap_or("ratel-main"),
-            },
-            firebase: FirebaseConfig {
-                project_id: option_env!("FIREBASE_PROJECT_ID").expect("You must set FIREBASE_PROJECT_ID"),
-            },
+
+            #[cfg(not(feature = "no-secret"))]
+            watermark_sqs_url: option_env!("WATERMARK_QUEUE_URL").expect("You must set WATERMARK_QUEUE_URL"),
         }
     }
 }
