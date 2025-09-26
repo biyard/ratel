@@ -25,6 +25,7 @@ use crate::{
         spaces::deliberations::{
             create_deliberation::{CreateDeliberationResponse, create_deliberation_handler},
             delete_deliberation::delete_deliberation_handler,
+            get_deliberation::get_deliberation_handler,
             update_deliberation::update_deliberation_handler,
         },
         teams::{
@@ -232,6 +233,17 @@ pub fn route(
                             Json<DeliberationDetailResponse>,
                             "Update deliberation",
                             "Update a deliberation"
+                        ),
+                    ),
+                )
+                .route(
+                    "/deliberation/:id",
+                    get_with(
+                        get_deliberation_handler,
+                        api_docs!(
+                            Json<DeliberationDetailResponse>,
+                            "Get deliberation",
+                            "Get deliberation with ID"
                         ),
                     ),
                 )
