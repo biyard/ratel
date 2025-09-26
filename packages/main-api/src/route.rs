@@ -20,7 +20,6 @@ use crate::{
         self,
         m2::{
             binances::get_merchant_balance::binance_merchant_balance_handler,
-            migration::postgres_to_dynamodb::{migrate_users_handler, migration_stats_handler},
             noncelab::users::register_users::{
                 RegisterUserResponse, register_users_by_noncelab_handler,
             },
@@ -184,47 +183,6 @@ pub async fn route(deps: RouteDeps) -> Result<by_axum::axum::Router> {
 
                     **Authorization header required**
 
-                    `Authorization: Bearer <token>`"#
-                ),
-            )
-            .with_state(pool.clone()),
-        )
-        // Migration routes
-        .route(
-            "/m2/migration/users",
-            get_with(
-                migrate_users_handler,
-                api_docs!(
-                    "Migrate Users",
-                    r#"Migrate users from PostgreSQL to DynamoDB.
-                    
-                    **Query Parameters:**
-                    - `batch_size`: Number of users to migrate (default: 100, max: 1000)
-                    - `start_user_id`: Starting user ID for batch migration
-                    - `user_id`: Specific user ID to migrate (overrides batch)
-                    - `dry_run`: Validate migration without writing to DynamoDB
-                    
-                    **Authorization header required**
-                    
-                    `Authorization: Bearer <token>`"#
-                ),
-            )
-            .with_state(pool.clone()),
-        )
-        .route(
-            "/m2/migration/stats",
-            get_with(
-                migration_stats_handler,
-                api_docs!(
-                    "Migration Statistics",
-                    r#"Get migration statistics including:
-                    - Total users in PostgreSQL
-                    - Total users in DynamoDB
-                    - Pending migration count
-                    - Last migrated user ID
-                    
-                    **Authorization header required**
-                    
                     `Authorization: Bearer <token>`"#
                 ),
             )

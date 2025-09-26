@@ -12,11 +12,18 @@ pub struct DynamoClient {
 impl DynamoClient {
     pub fn new(config: Option<SdkConfig>) -> Self {
         let conf = config::get();
-
-        let endpoint = match conf.dynamodb {
-            DatabaseConfig::DynamoDb { endpoint, .. } => endpoint,
-            _ => panic!("DynamoDB config not found"),
+        // Only for local development
+        let endpoint = if conf.env == "local" {
+            match conf.dynamodb {
+                DatabaseConfig::DynamoDb { endpoint, .. } => endpoint,
+                _ => panic!(
+                    "DynamoDB config not found. In Local env, you must set DynamoDB config with Endpoint"
+                ),
+            }
+        } else {
+            None
         };
+
         let aws_config = if let Some(config) = config {
             let mut builder = config.into_builder();
             if let Some(endpoint) = endpoint {

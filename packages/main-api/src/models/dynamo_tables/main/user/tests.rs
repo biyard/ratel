@@ -1,6 +1,6 @@
 use super::*;
 use crate::{
-    tests::{create_nick_name, get_test_aws_config, get_test_user},
+    tests::{create_nick_name, create_test_user, get_test_aws_config},
     types::*,
     utils::aws::DynamoClient,
 };
@@ -9,7 +9,7 @@ use crate::{
 async fn tests_create_user() {
     let cli = DynamoClient::mock(get_test_aws_config()).client;
 
-    let user = get_test_user(&cli).await;
+    let user = create_test_user(&cli).await;
 
     let fetched_user = User::get(&cli, user.pk.clone(), Some(user.sk)).await;
     assert!(fetched_user.is_ok());

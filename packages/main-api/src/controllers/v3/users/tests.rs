@@ -2,7 +2,7 @@ use dto::by_axum::axum::extract::{Query, State};
 
 use crate::{
     models::user::UserPhoneNumber,
-    tests::{create_app_state, get_test_user},
+    tests::{create_app_state, create_test_user},
 };
 
 use super::find_user::{FindUserQueryParams, FindUserQueryType, find_user_handler};
@@ -11,7 +11,7 @@ use super::find_user::{FindUserQueryParams, FindUserQueryType, find_user_handler
 async fn test_find_user() {
     let app_state = create_app_state();
     let cli = app_state.dynamo.client.clone();
-    let user = get_test_user(&cli).await;
+    let user = create_test_user(&cli).await;
     let phone_number = uuid::Uuid::new_v4().to_string();
     let res = UserPhoneNumber::new(user.pk.clone(), phone_number.clone())
         .create(&cli)
