@@ -31,122 +31,126 @@ export default function NewDiscussion({
     discussion.ended_at - discussion.started_at,
   );
   return (
-    <div className="max-w-[900px] w-full">
-      <div className="flex flex-col py-2.5 gap-[5px]">
-        <label className="flex flex-row justify-start items-center text-[15px]/[28px] text-neutral-400 font-bold  gap-1">
-          {t('title')} <span className="text-error">*</span>
-        </label>
-        <Input
-          className="px-5 py-[10.5px] bg-transparent border border-btn-o font-medium text-[15px]/[22.5px] placeholder:text-neutral-600 text-white"
-          placeholder={t('title_hint')}
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          maxLength={100}
-        />
-        <div className="text-right text-[15px]/[22.5px] font-medium text-neutral-600">
-          {title.length}/100
+    <div className="max-w-[900px] w-full max-tablet:w-full">
+      <div className="flex flex-col py-2.5 gap-[5px] w-full max-tablet:w-full max-tablet:h-[350px] overflow-y-auto">
+        <div className="flex flex-col ">
+          <label className="flex flex-row justify-start items-center text-[15px]/[28px] text-modal-label-text font-bold  gap-1">
+            {t('title')} <span className="text-error">*</span>
+          </label>
+          <Input
+            className="px-5 py-[10.5px] bg-input-box-bg border border-input-box-border font-medium text-[15px]/[22.5px] placeholder:text-neutral-600 text-text-primary"
+            placeholder={t('title_hint')}
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            maxLength={100}
+          />
+          <div className="text-right text-[15px]/[22.5px] font-medium text-neutral-600 ">
+            {title.length}/100
+          </div>
         </div>
-      </div>
 
-      <div className="flex flex-col py-2.5 gap-[5px]">
-        <label className="text-[15px]/[28px] text-neutral-400 font-bold">
-          {t('description')}
-        </label>
-        <Textarea
-          className="px-5 py-[10.5px] bg-transparent border border-btn-o font-normal text-sm placeholder:text-neutral-600 text-white max-h-[100px] overflow-y-auto"
-          placeholder={t('description_hint')}
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          maxLength={100}
-        />
-        <div className="text-right text-[15px]/[22.5px] font-medium text-neutral-600">
-          {description.length}/100
+        <div className="flex flex-col py-2.5 gap-[5px]">
+          <label className="text-[15px]/[28px] font-bold text-modal-label-text">
+            {t('description')}
+          </label>
+          <Textarea
+            className="px-5 py-[10.5px] bg-input-box-bg border border-input-box-border font-normal text-sm placeholder:text-neutral-600 text-text-primary max-h-[100px] overflow-y-auto"
+            placeholder={t('description_hint')}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            maxLength={100}
+          />
+          <div className="text-right text-[15px]/[22.5px] font-medium text-neutral-600">
+            {description.length}/100
+          </div>
         </div>
-      </div>
 
-      <div className="flex flex-col py-2.5 gap-[5px]">
-        <label className="flex flex-row justify-start items-center text-[15px]/[28px] text-neutral-400 font-bold  gap-1">
-          {t('date')} <span className="text-error">*</span>
-        </label>
-        <div className="flex flex-row gap-2.5 items-center">
-          <CalendarDropdown
-            value={startTime}
-            onChange={(date) => {
-              const selected = new Date(date);
-              const current = new Date(startTime);
+        <div className="flex flex-col py-2.5 gap-[5px]">
+          <label className="flex flex-row justify-start items-center text-[15px]/[28px]font-bold  gap-1 text-modal-label-text">
+            {t('date')} <span className="text-error">*</span>
+          </label>
+          <div className="flex flex-row max-tablet:flex-col gap-2.5 items-center">
+            <CalendarDropdown
+              value={startTime}
+              onChange={(date) => {
+                const selected = new Date(date);
+                const current = new Date(startTime);
 
-              selected.setHours(current.getHours());
-              selected.setMinutes(current.getMinutes());
-              selected.setSeconds(0);
-              selected.setMilliseconds(0);
+                selected.setHours(current.getHours());
+                selected.setMinutes(current.getMinutes());
+                selected.setSeconds(0);
+                selected.setMilliseconds(0);
 
-              const newStart = Math.floor(selected.getTime());
+                const newStart = Math.floor(selected.getTime());
 
-              setStartTime(newStart);
-              setEndTime(newStart + diff);
-            }}
-          />
-          <TimeDropdown
-            value={startTime}
-            onChange={(timestamp) => {
-              const newStart = Math.floor(timestamp);
-
-              setStartTime(newStart);
-              setEndTime(newStart + diff);
-            }}
-          />
-          <div className="w-[15px] h-0.25 bg-neutral-600" />
-          <CalendarDropdown
-            value={endTime}
-            onChange={(date) => {
-              const selected = new Date(date);
-              const current = new Date(endTime);
-
-              selected.setHours(current.getHours());
-              selected.setMinutes(current.getMinutes());
-              selected.setSeconds(0);
-              selected.setMilliseconds(0);
-
-              const newEnd = Math.floor(selected.getTime());
-              const diff = newEnd - startTime;
-
-              if (newEnd < startTime) {
-                showErrorToast(
-                  'The end date must be later than the start date.',
-                );
-                return;
-              }
-
-              setDiff(diff);
-              setEndTime(newEnd);
-            }}
-          />
-          <TimeDropdown
-            value={endTime}
-            onChange={(timestamp) => {
-              const newEnd = Math.floor(timestamp);
-              const diff = newEnd - startTime;
-
-              if (newEnd < startTime) {
-                showErrorToast(
-                  'The end date must be later than the start date.',
-                );
-                return;
-              }
-
-              setDiff(diff);
-              setEndTime(newEnd);
-            }}
-          />
-          <div className="flex flex-row items-center w-fit border border-c-wg-70 rounded-lg px-5 py-[10.5px] gap-2.5">
-            <div className="font-medium text-[15px]/[22.5px] text-neutral-600">
-              Pacific Time
-            </div>
-            <Internet
-              className="w-5 h-5 [&>path]:stroke-neutral-500 [&>circle]:stroke-neutral-500"
-              width="20"
-              height="20"
+                setStartTime(newStart);
+                setEndTime(newStart + diff);
+              }}
             />
+            <div className="max-tablet:mb-[20px] max-tablet:w-full">
+              <TimeDropdown
+                value={startTime}
+                onChange={(timestamp) => {
+                  const newStart = Math.floor(timestamp);
+
+                  setStartTime(newStart);
+                  setEndTime(newStart + diff);
+                }}
+              />
+            </div>
+            <div className="w-[15px] h-0.25 bg-neutral-600 max-tablet:hidden" />
+            <CalendarDropdown
+              value={endTime}
+              onChange={(date) => {
+                const selected = new Date(date);
+                const current = new Date(endTime);
+
+                selected.setHours(current.getHours());
+                selected.setMinutes(current.getMinutes());
+                selected.setSeconds(0);
+                selected.setMilliseconds(0);
+
+                const newEnd = Math.floor(selected.getTime());
+                const diff = newEnd - startTime;
+
+                if (newEnd < startTime) {
+                  showErrorToast(
+                    'The end date must be later than the start date.',
+                  );
+                  return;
+                }
+
+                setDiff(diff);
+                setEndTime(newEnd);
+              }}
+            />
+            <TimeDropdown
+              value={endTime}
+              onChange={(timestamp) => {
+                const newEnd = Math.floor(timestamp);
+                const diff = newEnd - startTime;
+
+                if (newEnd < startTime) {
+                  showErrorToast(
+                    'The end date must be later than the start date.',
+                  );
+                  return;
+                }
+
+                setDiff(diff);
+                setEndTime(newEnd);
+              }}
+            />
+            <div className="flex flex-row items-center w-fit max-tablet:w-full max-tablet:justify-between border border-select-date-border bg-select-date-bg rounded-lg px-5 py-[10.5px] gap-2.5 mt-2 sm:mt-0">
+              <div className="font-medium text-[15px]/[22.5px] text-neutral-600">
+                Pacific Time
+              </div>
+              <Internet
+                className="w-5 h-5 [&>path]:stroke-neutral-600 [&>circle]:stroke-neutral-600"
+                width="20"
+                height="20"
+              />
+            </div>
           </div>
         </div>
       </div>

@@ -1,72 +1,37 @@
-'use client';
+import { getOption as getSpaceByIdOption } from '@/hooks/use-space-by-id';
+import { getOption as getFeedByIdOption } from '@/hooks/feeds/use-feed-by-id';
+import { getQueryClient } from '@/providers/getQueryClient';
+import { SSRHydration } from '@/lib/query-utils';
+import Header from '../_components/common-header';
+import { getOption as getDagitByIdOption } from '@/hooks/use-dagit';
+import Initial from './_components/initial';
+import MainTab from './_components/main';
+import Content from './_components/content';
+import SpaceSideMenu, { SpaceTabsMobile } from './_components/side-menu';
 
-import React, { useContext } from 'react';
+export default async function PollPage({ spaceId }: { spaceId: number }) {
+  const queryClient = getQueryClient();
+  const { feed_id } = await queryClient.fetchQuery(getSpaceByIdOption(spaceId));
 
-import ClientProviders, {
-  useDeliberationFeed,
-  useDeliberationSpace,
-  usePollSpaceContext,
-} from './provider.client';
-import { TeamContext } from '@/lib/contexts/team-context';
-import { SpaceStatus } from '@/lib/api/models/spaces';
-import { useUserInfo } from '@/app/(social)/_hooks/user';
-import SpaceHeader from '../_components/header';
-import SpaceSideMenu from './_components/space-side-menu';
-import { PollTab } from './types';
-import { SpaceProvider } from '../_components/header/provider';
-import { PollAnalyzePage } from './_components/analyze-tab';
-import { PollSurveyPage } from './_components/survey-tab';
-import { useTranslations } from 'next-intl';
-
-export default function PollSpacePage() {
-  return (
-    <ClientProviders>
-      <Page />
-    </ClientProviders>
-  );
-}
-
-function Page() {
-  const t = useTranslations('Space');
-  const space = useDeliberationSpace();
-  const feed = useDeliberationFeed(space.feed_id);
-  const context = usePollSpaceContext();
-  const { selectedType } = context;
-
-  const { teams } = useContext(TeamContext);
-  const authorId = space?.author[0].id;
-  const selectedTeam = teams.some((t) => t.id === authorId);
-  const { data: userInfo } = useUserInfo();
-
-  const userId = userInfo ? userInfo.id : 0;
-
-  if (
-    space.status === SpaceStatus.Draft &&
-    !space.author.some((a) => a.id === userId) &&
-    !selectedTeam
-  ) {
-    return <div>{t('no_authorized_user')}</div>;
-  }
+  await Promise.allSettled([
+    queryClient.prefetchQuery(getFeedByIdOption(feed_id)),
+    queryClient.prefetchQuery(getDagitByIdOption(spaceId)),
+  ]);
 
   return (
-    <div className="flex flex-col w-full gap-6.25">
-      <div className="flex flex-row w-full">
-        <SpaceProvider value={context}>
-          <SpaceHeader space={space} feed={feed} />
-        </SpaceProvider>
-      </div>
-      <div className="flex flex-row w-full h-full gap-5">
-        <div className="flex-1 flex w-full">
-          <div className="flex flex-row w-full gap-5">
-            {selectedType == PollTab.POLL ? (
-              <PollSurveyPage space={space} />
-            ) : (
-              <PollAnalyzePage />
-            )}
-            <SpaceSideMenu />
+    <SSRHydration queryClient={queryClient}>
+      <Initial spaceId={spaceId} />
+      <div className="flex flex-row w-full gap-5">
+        <div className="flex flex-col w-full min-h-full gap-6.25">
+          <Header />
+          <Content spaceId={spaceId} />
+          <div className="hidden max-tablet:block w-full">
+            <SpaceTabsMobile spaceId={spaceId} />
           </div>
+          <MainTab spaceId={spaceId} />
         </div>
+        <SpaceSideMenu spaceId={spaceId} />
       </div>
-    </div>
+    </SSRHydration>
   );
 }

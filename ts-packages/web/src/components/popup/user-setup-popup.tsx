@@ -9,7 +9,6 @@ import { ConfirmPopup } from './confirm-popup';
 import { useApiCall } from '@/lib/api/use-send';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { logger } from '@/lib/logger';
-import { useApolloClient } from '@apollo/client';
 import { useUserInfo } from '@/lib/api/hooks/users';
 import { useAuth } from '@/lib/contexts/auth-context';
 import { checkString } from '@/lib/string-filter-utils';
@@ -38,7 +37,6 @@ interface LabeledInputProps {
   value: string;
   onInput: (text: string) => void;
   warning?: string;
-  children?: React.ReactNode;
 }
 
 const UserSetupPopup = ({
@@ -50,7 +48,6 @@ const UserSetupPopup = ({
 }: UserSetupPopupProps) => {
   const t = useTranslations('Signup');
   const { post } = useApiCall();
-  const client = useApolloClient();
 
   const popup = usePopup();
   const [displayName, setDisplayName] = useState(nickname);
@@ -195,10 +192,13 @@ const UserSetupPopup = ({
 
             <Row>
               <input
-                className="w-full outline-none px-5 h-11 text-white text-base placeholder-gray-500 font-medium border rounded-lg border-gray-600"
+                type="email"
+                className="bg-input-box-bg border border-input-box-border w-full outline-none px-5 h-11 text-base placeholder-gray-500 font-medium rounded-lg"
                 disabled={email !== '' || isValidEmail}
-                name={t('username')}
+                name="email"
+                aria-label="email"
                 autoComplete="email"
+                placeholder={t('email')}
                 value={emailState}
                 onChange={(e) => {
                   setEmailState(e.target.value);
@@ -207,7 +207,7 @@ const UserSetupPopup = ({
               {email === '' && (
                 <Button
                   variant={'rounded_secondary'}
-                  className="rounded-sm"
+                  className="rounded-sm border border-transparent light:border-neutral-300 light:text-text-primary"
                   onClick={handleSendCode}
                 >
                   {t('send')}
@@ -220,7 +220,7 @@ const UserSetupPopup = ({
               aria-hidden={!sentCode || isValidEmail}
             >
               <input
-                className="w-full outline-none px-5 h-11 text-white text-base placeholder-gray-500 font-medium border rounded-lg border-gray-600"
+                className="bg-input-box-bg border border-input-box-border w-full outline-none px-5 h-11 text-text-primary text-base placeholder-gray-500 font-medium rounded-lg"
                 value={authCode}
                 onChange={(e) => {
                   setAuthCode(e.target.value);
@@ -228,7 +228,7 @@ const UserSetupPopup = ({
               />
               <Button
                 variant={'rounded_secondary'}
-                className="rounded-sm"
+                className="rounded-sm border border-transparent light:border-neutral-300 light:text-text-primary"
                 onClick={handleVerify}
               >
                 {t('verify')}
@@ -243,8 +243,11 @@ const UserSetupPopup = ({
                 </span>
               </div>
               <input
-                className="w-full outline-none px-5 h-11 text-white text-base placeholder-gray-500 font-medium border rounded-lg border-gray-600"
+                className="bg-input-box-bg border border-input-box-border w-full outline-none px-5 h-11 text-text-primary text-base placeholder-gray-500 font-medium rounded-lg"
                 type="password"
+                name="password"
+                aria-label="password"
+                placeholder={t('password')}
                 value={password}
                 onChange={(e) => {
                   const val = e.target.value;
@@ -305,19 +308,19 @@ const UserSetupPopup = ({
                   setWarning('');
                   setIsUserNameValid(true);
                 }
-                const {
-                  data: { users },
-                } = await client.query(
-                  ratelApi.graphql.getUserByUsername(value),
-                );
 
-                if (users.length > 0) {
-                  setWarning(t('already_exists_user'));
-                  setIsUserNameValid(false);
-                } else {
-                  setWarning('');
-                  setIsUserNameValid(true);
-                }
+                setWarning('');
+                setIsUserNameValid(true);
+
+                // const users = await get(
+                //   ratelApi.users.getUserByUsername(value),
+                // );
+
+                // if (users.length > 0) {
+                //   setWarning(t('already_exists_user'));
+                //   setIsUserNameValid(false);
+                // } else {
+                // }
               }}
               warning={warning}
             />
@@ -366,22 +369,22 @@ const LabeledInput = ({
   placeholder,
   value,
   onInput,
-  children,
   warning = '',
 }: LabeledInputProps) => (
   <div className="w-full flex flex-col items-start gap-[5px]">
     <div className="text-c-cg-30 font-bold text-base/7">{labelName}</div>
     <input
       type="text"
-      className="w-full outline-none px-5 text-white text-base placeholder-gray-500 font-medium border rounded-lg border-gray-600"
+      className="bg-input-box-bg border border-input-box-border w-full outline-none px-5 text-text-primary text-base placeholder-gray-500 font-medium rounded-lg"
       style={{ height: 50 }}
       placeholder={placeholder}
+      aria-label={labelName}
       value={value}
       onChange={(e) => onInput(e.target.value)}
-    >
-      {children}
-    </input>
-    {warning !== '' && <span className="text-sm text-c-p-50">{warning}</span>}
+    />
+    {warning !== '' && (
+      <span className="text-sm text-c-p-50 light:text-red-600">{warning}</span>
+    )}
   </div>
 );
 

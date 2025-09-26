@@ -4,13 +4,31 @@ use bdk::prelude::*;
 use tower_http::trace::TraceLayer;
 use tracing::Level;
 
+use by_axum::{
+    auth::Authorization,
+    axum::{
+        body::Body,
+        extract::Request,
+        http::Response,
+        middleware::{self, Next},
+    },
+};
+use reqwest::StatusCode;
+
 use crate::{
     controllers::{
         self,
-        m2::noncelab::users::register_users::{
-            RegisterUserResponse, register_users_by_noncelab_handler,
+        m2::{
+            binances::get_merchant_balance::binance_merchant_balance_handler,
+            noncelab::users::register_users::{
+                RegisterUserResponse, register_users_by_noncelab_handler,
+            },
         },
         v2::{
+            binances::{
+                binance_webhook::binance_webhook_handler,
+                create_subscription::create_subscription_handler, unsubscribe::unsubscribe_handler,
+            },
             bookmarks::{
                 add_bookmark::add_bookmark_handler, list_bookmarks::get_bookmarks_handler,
                 remove_bookmark::remove_bookmark_handler,
@@ -63,72 +81,50 @@ use crate::{
                 register::register_handler, token::token_handler,
             },
             oracles::create_oracle::create_oracle_handler,
+            permissions::has_team_permission::has_team_permission_handler,
+            posts::{
+                get_post::get_post_handler, list_posts::list_posts_handler,
+                update_post::update_post_handler,
+            },
             spaces::{delete_space::delete_space_handler, get_my_space::get_my_space_controller},
-            telegram::subscribe::telegram_subscribe_handler,
-            users::{find_user::find_user_handler, logout::logout_handler},
+            telegram::{
+                get_telegram_info::get_telegram_info_handler,
+                verify_telegram_raw::verify_telegram_raw_handler,
+            },
+            themes::change_theme::change_theme_handler,
+            users::{
+                connect_telegram::connect_telegram_handler, delete_team::delete_team_handler,
+                find_user::find_user_handler, logout::logout_handler,
+            },
         },
         well_known::get_did_document::get_did_document_handler,
+        wg::get_home::get_home_handler,
     },
+    route_v3,
     utils::{
-        aws::{BedrockClient, RekognitionClient, S3Client, TextractClient},
+        aws::{
+            BedrockClient, DynamoClient, RekognitionClient, S3Client, SesClient, TextractClient,
+        },
         sqs_client::SqsClient,
+        telegram::TelegramBot,
     },
 };
 use by_axum::axum;
-use dto::Result;
+use dto::{Result, by_axum::axum::Extension};
 
 use axum::native_routing::get as nget;
 use axum::native_routing::post as npost;
 use axum::routing::{get_with, post_with};
-
-// macro_rules! wrap_api {
-//     (
-//         $method:expr,
-//         $handler:expr,
-//         $success_ty:ty,
-//         $summary:expr,
-//         $description:expr
-//     ) => {
-//         $method($handler, |op| {
-//             op.summary($summary)
-//                 .description($description)
-//                 .response_with::<200, axum::Json<$success_ty>, _>(|res| {
-//                     res.description("Success response")
-//                 })
-//                 .response_with::<400, axum::Json<dto::Error>, _>(|res| {
-//                     res.description("Incorrect or invalid requests")
-//                         .example(dto::Error::UserAlreadyExists)
-//                 })
-//         })
-//     };
-// }
-
-// macro_rules! post_api {
-//     (
-//         $handler:expr,
-//         $success_ty:ty,
-//         $summary:expr,
-//         $description:expr
-//     ) => {
-//         wrap_api!(
-//             axum::routing::post_with,
-//             $handler,
-//             $success_ty,
-//             $summary,
-//             $description
-//         )
-//     };
-// }
 
 macro_rules! api_docs {
     ($success_ty:ty, $summary:expr, $description:expr) => {
         |op| {
             op.summary($summary)
                 .description($description)
-                .response_with::<200, axum::Json<$success_ty>, _>(|res| {
+                .response_with::<200, by_axum::axum::Json<$success_ty>, _>(|res| {
                     res.description("Success response")
                 })
-                .response_with::<400, axum::Json<dto::Error>, _>(|res| {
+                .response_with::<400, by_axum::axum::Json<dto::Error>, _>(|res| {
                     res.description("Incorrect or invalid requests")
                         .example(dto::Error::UserAlreadyExists)
                 })
@@ -139,7 +135,7 @@ macro_rules! api_docs {
         |op| {
             op.summary($summary)
                 .description($description)
-                .response_with::<400, axum::Json<dto::Error>, _>(|res| {
+                .response_with::<400, bdk::prelude::by_axum::axum::Json<dto::Error>, _>(|res| {
                     res.description("Incorrect or invalid requests")
                         .example(dto::Error::UserAlreadyExists)
                 })
@@ -147,22 +143,97 @@ macro_rules! api_docs {
     };
 }
 
-pub async fn route(
-    pool: sqlx::Pool<sqlx::Postgres>,
-    sqs_client: Arc<SqsClient>,
-    bedrock_client: BedrockClient,
-    rek_client: RekognitionClient,
-    textract_client: TextractClient,
-    _metadata_s3_client: S3Client,
-    private_s3_client: S3Client,
-) -> Result<by_axum::axum::Router> {
+pub struct RouteDeps {
+    pub pool: sqlx::Pool<sqlx::Postgres>,
+    pub sqs_client: Arc<SqsClient>,
+    pub bedrock_client: BedrockClient,
+    pub rek_client: RekognitionClient,
+    pub textract_client: TextractClient,
+    pub metadata_s3_client: S3Client,
+    pub private_s3_client: S3Client,
+    pub bot: Option<TelegramBot>,
+    pub dynamo_client: DynamoClient,
+    pub ses_client: SesClient,
+}
+
+pub async fn route(deps: RouteDeps) -> Result<by_axum::axum::Router> {
+    let RouteDeps {
+        pool,
+        sqs_client,
+        bedrock_client,
+        rek_client,
+        textract_client,
+        private_s3_client,
+        bot,
+        dynamo_client,
+        ses_client,
+        ..
+    } = deps;
+
     Ok(by_axum::axum::Router::new()
-        .nest("/v1", controllers::v1::route(pool.clone()).await?)
+        // For Admin routes
+        .route(
+            "/m2/noncelab/users",
+            post_with(
+                register_users_by_noncelab_handler,
+                api_docs!(
+                    RegisterUserResponse,
+                    "Register users by Noncelab",
+                    r#"This endpoint allows you to register users by Noncelab.
+
+                    **Authorization header required**
+
+                    `Authorization: Bearer <token>`"#
+                ),
+            )
+            .with_state(pool.clone()),
+        )
+        .layer(middleware::from_fn(authorize_admin))
+        // For user routes
         .nest(
-            "/m1",
-            controllers::m1::MenaceController::route(pool.clone())?,
+            "/v3",
+            route_v3::route(route_v3::RouteDeps {
+                dynamo_client: dynamo_client.clone(),
+                ses_client: ses_client.clone(),
+            })?,
+        )
+        .nest(
+            "/v1",
+            controllers::v1::route(pool.clone())
+                .await?
+                .layer(Extension(bot.map(Arc::new))),
         )
         .native_route("/v2/users/logout", npost(logout_handler))
+        .route(
+            "/v2/binances/subscriptions",
+            post_with(
+                create_subscription_handler,
+                api_docs!(
+                    "Create Subscription",
+                    "Create subscription in ratel and get a QR code"
+                ),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/v2/binances/webhooks",
+            post_with(
+                binance_webhook_handler,
+                api_docs!(
+                    "Create Webhook",
+                    "Create binance payment api webhook handler"
+                ),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/v2/binances/unsubscribe",
+            post_with(
+                unsubscribe_handler,
+                api_docs!("Unsubscribe Service", "Unsubscribe service in ratel"),
+            )
+            .with_state(pool.clone()),
+        )
         .route(
             "/v2/conversations",
             post_with(
@@ -356,6 +427,14 @@ pub async fn route(
             .with_state(pool.clone()),
         )
         .route(
+            "/v2/permissions",
+            get_with(
+                has_team_permission_handler,
+                api_docs!("Has Permission", "Check user group permission"),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
             "/v2/users",
             get_with(
                 find_user_handler,
@@ -367,10 +446,49 @@ pub async fn route(
             .with_state(pool.clone()),
         )
         .route(
+            "/v2/teams",
+            post_with(
+                delete_team_handler,
+                api_docs!("Delete Team", "Delete Team with Team ID"),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/v2/users/telegram",
+            post_with(
+                connect_telegram_handler,
+                api_docs!("Update User Telegram Id", "Connect User with Telegram"),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/v2/telegram",
+            post_with(
+                verify_telegram_raw_handler,
+                api_docs!(
+                    "Verify Telegram Raw Data",
+                    "Verify Telegram Raw Data and return token for future connection"
+                ),
+            )
+            .get_with(
+                get_telegram_info_handler,
+                api_docs!("Get Telegram Info", "Get Telegram Info from token"),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
             "/v2/dashboards",
             get_with(
                 get_dashboard_handler,
                 api_docs!("Get Dashboards", "Retrieve dashboard in a service"),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/v2/themes",
+            post_with(
+                change_theme_handler,
+                api_docs!("Change Theme", "Change Users Theme Information"),
             )
             .with_state(pool.clone()),
         )
@@ -499,17 +617,6 @@ pub async fn route(
             }),
         )
         .route(
-            "/v2/telegram/subscribe",
-            post_with(
-                telegram_subscribe_handler,
-                api_docs!(
-                    "Subscribe to Telegram",
-                    "This endpoint allows users to subscribe to Telegram notifications."
-                ),
-            )
-            .with_state(pool.clone()),
-        )
-        .route(
             "/v2/spaces/:space_id/delete",
             post_with(
                 delete_space_handler,
@@ -528,6 +635,29 @@ pub async fn route(
                 api_docs!(
                     "Mark All Notifications Read",
                     "Mark all notifications as read for the authenticated user."
+                ),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/v2/feeds/:id",
+            post_with(
+                update_post_handler,
+                api_docs!("Update Post", "Update an existing post with new details"),
+            )
+            .get_with(
+                get_post_handler,
+                api_docs!("Get Post", "Retrieve a specific post by ID"),
+            )
+            .with_state(pool.clone()),
+        )
+        .route(
+            "/v2/feeds",
+            get_with(
+                list_posts_handler,
+                api_docs!(
+                    "List Posts",
+                    "Retrieve a paginated list of posts with optional filters"
                 ),
             )
             .with_state(pool.clone()),
@@ -567,17 +697,12 @@ pub async fn route(
             .with_state(pool.clone()),
         )
         .route(
-            "/m2/noncelab/users",
-            post_with(
-                register_users_by_noncelab_handler,
+            "/m2/binances/balance",
+            get_with(
+                binance_merchant_balance_handler,
                 api_docs!(
-                    RegisterUserResponse,
-                    "Register users by Noncelab",
-                    r#"This endpoint allows you to register users by Noncelab.
-
-                    **Authorization header required**
-
-                    `Authorization: Bearer <token>`"#
+                    "Query Owner Balance",
+                    "Query Owner Balance from inner owner wallet address"
                 ),
             )
             .with_state(pool.clone()),
@@ -605,5 +730,30 @@ pub async fn route(
                         )
                     },
                 ),
+        )
+        .route(
+            "/wg/home",
+            get_with(
+                get_home_handler,
+                api_docs!(
+                    (),
+                    "Get Home Data",
+                    "Retrieve home data including feeds, promotions, and news"
+                ),
+            )
+            .with_state(pool.clone()),
         ))
+}
+
+pub async fn authorize_admin(
+    req: Request,
+    next: Next,
+) -> std::result::Result<Response<Body>, StatusCode> {
+    match req.extensions().get::<Option<Authorization>>() {
+        Some(Some(Authorization::SecretApiKey)) => Ok(next.run(req).await),
+        _ => {
+            tracing::error!("Admin route access denied: {:?}", req.uri());
+            Err(StatusCode::UNAUTHORIZED)
+        }
+    }
 }

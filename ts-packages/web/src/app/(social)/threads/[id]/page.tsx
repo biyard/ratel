@@ -4,37 +4,36 @@ import Header from './_components/header';
 import ThreadPost from './_components/thread';
 import ThreadComment from './_components/comment';
 
-import { requestFeedByID, setInitialFeedByID } from '../../_hooks/feed';
+// import { requestFeedByID } from '../../_hooks/feed';
 import { Metadata } from 'next';
 import striptags from 'striptags';
-import { cache, Suspense } from 'react';
-import { notFound } from 'next/navigation';
+import { Suspense } from 'react';
 import { logger } from '@/lib/logger';
+import {
+  getOption as getFeedByIdOption,
+  getFeedById,
+} from '@/hooks/feeds/use-feed-by-id';
 
-interface Props {
+export async function generateMetadata({
+  params,
+}: {
   params: Promise<{ id: string }>;
-}
-
-const getCachedFeedByID = cache(async (id: number) => {
-  return requestFeedByID(id);
-});
-
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+}): Promise<Metadata> {
   const { id } = await params;
-  const feed_id = parseInt(id, 10);
+  const postId = Number(id);
 
   let title = 'Ratel Thread';
   let description = 'Ratel Thread';
   let image = '';
   try {
-    const { data: feed } = await getCachedFeedByID(feed_id);
+    const { data: feed } = await getFeedById(postId);
     if (feed) {
       title = feed.title || title;
       description = striptags(feed.html_contents);
       image = feed.url || '';
     }
   } catch (error) {
-    logger.error(`Failed to generate metadata for feed ${feed_id}:`, error);
+    logger.error(`Failed to generate metadata for post ${postId}:`, error);
   }
 
   return {
@@ -52,24 +51,26 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function Page({ params }: Props) {
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const { id } = await params;
-  const feed_id = parseInt(id, 10);
+  const feedId = Number(id);
   const queryClient = getQueryClient();
-  const { data } = await getCachedFeedByID(feed_id);
-  if (!data) {
-    notFound();
-  }
 
-  setInitialFeedByID(queryClient, feed_id, data);
+  await Promise.allSettled([
+    queryClient.prefetchQuery(getFeedByIdOption(feedId)),
+  ]);
 
   return (
     <SSRHydration queryClient={queryClient}>
       <Suspense fallback={<div>Loading...</div>}>
-        <div className="flex flex-col gap-6 w-full">
-          <Header post_id={feed_id} />
-          <ThreadPost post_id={feed_id} />
-          <ThreadComment post_id={feed_id} />
+        <div className="flex flex-col gap-6 w-full max-tablet:mr-[20px]">
+          <Header postId={feedId} />
+          <ThreadPost postId={feedId} />
+          <ThreadComment postId={feedId} />
         </div>
       </Suspense>
     </SSRHydration>

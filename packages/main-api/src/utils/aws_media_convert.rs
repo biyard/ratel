@@ -1,8 +1,7 @@
-#![allow(unused)]
 use dto::*;
 
 pub async fn merge_recording_chunks(
-    meeting_id: &str,
+    _meeting_id: &str,
     media_pipeline_arn: String,
     record: Option<String>,
 ) -> Option<String> {
@@ -18,6 +17,7 @@ pub async fn merge_recording_chunks(
         S3BucketSinkConfiguration, TranscriptionMessagesConcatenationConfiguration,
         VideoConcatenationConfiguration,
     };
+    use aws_sdk_dynamodb::error::ProvideErrorMetadata;
     use aws_sdk_s3::config::Credentials;
 
     let config = crate::config::get();
@@ -216,7 +216,7 @@ pub async fn merge_recording_chunks(
         .build();
 
     let source_config = MediaCapturePipelineSourceConfiguration::builder()
-        .media_pipeline_arn(media_pipeline_arn)
+        .media_pipeline_arn(&media_pipeline_arn)
         .chime_sdk_meeting_configuration(chime_config)
         .build()
         .unwrap();
@@ -243,22 +243,28 @@ pub async fn merge_recording_chunks(
                 .unwrap(),
         );
 
+    if media_pipeline_arn.trim().is_empty() {
+        tracing::error!("media_pipeline_arn is empty, cannot start concatenation pipeline");
+        return None;
+    }
+
     match request.send().await {
         Ok(resp) => {
             tracing::info!("Concatenation pipeline started: {:?}", resp);
-
-            if resp.media_concatenation_pipeline.is_none() {
-                return None;
-            }
-
-            match resp.media_concatenation_pipeline.unwrap().media_pipeline_id {
-                Some(v) => Some(format!("https://{}/{}", bucket_name, v)),
-                None => None,
-            }
+            resp.media_concatenation_pipeline
+                .and_then(|p| p.media_pipeline_id)
+                .map(|v| format!("https://{}/{}", bucket_name, v))
         }
         Err(err) => {
-            tracing::error!("Failed to start concatenation pipeline: {:?}", err);
-            return None;
+            let meta = err.meta();
+            tracing::error!(
+                "Concatenation pipeline failed: code={:?}, message={:?}, request_id={:?}",
+                meta.code(),
+                meta.message(),
+                meta.extra("aws_request_id")
+            );
+
+            None
         }
     }
 }

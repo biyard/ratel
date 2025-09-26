@@ -27,6 +27,8 @@ import {
   followRequest,
   unfollowRequest,
 } from '@/lib/api/models/networks/follow';
+import { GroupPermission } from '@/lib/api/models/group';
+import { usePermission } from '@/app/(social)/_hooks/use-permission';
 
 export interface TeamSidemenuProps {
   username: string;
@@ -43,7 +45,7 @@ export default function TeamSidemenu({ username }: TeamSidemenuProps) {
   const { data: user } = useUserByUsername(username);
   const data = useSuspenseUserInfo();
   const userInfo = data.data;
-  const followings = userInfo.followings;
+  const followings = userInfo?.followings ?? [];
   const isFollowing = followings.some((f: { id: number }) => f.id === user.id);
 
   const handleFollow = async (userId: number) => {
@@ -54,13 +56,21 @@ export default function TeamSidemenu({ username }: TeamSidemenuProps) {
     await post(ratelApi.networks.unfollow(userId), unfollowRequest());
   };
 
+  const writePostPermission =
+    usePermission(team?.id ?? 0, GroupPermission.WritePosts).data
+      .has_permission ?? false;
+
+  const updateGroupPermission =
+    usePermission(team?.id ?? 0, GroupPermission.UpdateGroup).data
+      .has_permission ?? false;
+
   if (!team && !user) {
     return <></>;
   }
 
   if (!team) {
     return (
-      <div className="flex flex-col gap-5 px-4 py-5 rounded-[10px] bg-component-bg min-w-[250px] h-fit">
+      <div className="flex flex-col gap-5 px-4 py-5 rounded-[10px] bg-card-bg border border-card-border min-w-[250px] h-fit">
         <div className="relative">
           {user?.profile_url && user?.profile_url !== '' ? (
             <Image
@@ -71,15 +81,15 @@ export default function TeamSidemenu({ username }: TeamSidemenuProps) {
               className="w-20 h-20 rounded-full border-2 object-cover object-top"
             />
           ) : (
-            <div className="w-20 h-20 rounded-full border border-neutral-500 bg-neutral-600" />
+            <div className="w-20 h-20 rounded-full bg-profile-bg" />
           )}
         </div>
 
-        <div className="font-medium">{user.nickname}</div>
+        <div className="font-medium text-text-primary">{user.nickname}</div>
 
         <div
           id="user-profile-description"
-          className="text-xs text-gray-400"
+          className="text-xs text-desc-text"
           dangerouslySetInnerHTML={{ __html: user.html_contents }}
         />
 
@@ -120,33 +130,50 @@ export default function TeamSidemenu({ username }: TeamSidemenuProps) {
     <div className="w-64 flex flex-col max-mobile:!hidden gap-2.5">
       <TeamProfile team={team} />
 
-      <nav className="py-5 px-3 w-full rounded-[10px] bg-component-bg">
+      <nav className="py-5 px-3 w-full rounded-[10px] bg-card-bg border border-card-border">
         <Link
           href={route.teamByUsername(team.username)}
-          className="sidemenu-link"
+          className="sidemenu-link text-text-primary [&>path]:stroke-[#737373]"
         >
-          <Home />
+          <Home className="w-6 h-6" />
           <span>{t('home')}</span>
         </Link>
-        <Link href={route.teamDrafts(team.username)} className="sidemenu-link">
-          <EditContent className="w-6 h-6 [&>path]:stroke-neutral-500" />
-          <span>{t('drafts')}</span>
-        </Link>
-        <Link href={route.teamGroups(team.username)} className="sidemenu-link">
-          <Folder className="w-6 h-6 [&>path]:stroke-neutral-500" />
+        {writePostPermission ? (
+          <Link
+            href={route.teamDrafts(team.username)}
+            className="sidemenu-link text-text-primary"
+          >
+            <EditContent className="w-6 h-6 [&>path]:stroke-[#737373]" />
+            <span>{t('drafts')}</span>
+          </Link>
+        ) : (
+          <></>
+        )}
+        <Link
+          href={route.teamGroups(team.username)}
+          className="sidemenu-link text-text-primary "
+        >
+          <Folder className="w-6 h-6 [&>path]:stroke-[#737373]" />
           <span>{t('manage_group')}</span>
         </Link>
-        <Link href={route.teamMembers(team.username)} className="sidemenu-link">
-          <UserGroup className="w-6 h-6" />
+        <Link
+          href={route.teamMembers(team.username)}
+          className="sidemenu-link text-text-primary"
+        >
+          <UserGroup className="w-6 h-6 [&>path]:stroke-[#737373]" />
           <span>{t('members')}</span>
         </Link>
-        <Link
-          href={route.teamSettings(team.username)}
-          className="sidemenu-link"
-        >
-          <Settings className="w-6 h-6" />
-          <span>{t('settings')}</span>
-        </Link>
+        {updateGroupPermission ? (
+          <Link
+            href={route.teamSettings(team.username)}
+            className="sidemenu-link text-text-primary"
+          >
+            <Settings className="w-6 h-6" />
+            <span>{t('settings')}</span>
+          </Link>
+        ) : (
+          <></>
+        )}
       </nav>
 
       {/* <nav className="mt-4 px-2">

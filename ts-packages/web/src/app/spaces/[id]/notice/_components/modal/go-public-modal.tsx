@@ -14,14 +14,14 @@ export default function GoPublicModal({
 }: GoPublicModalProps) {
   const t = useTranslations('NoticeSpace');
   return (
-    <div className="w-[500px] flex flex-col">
+    <div className="w-[500px] max-tablet:w-full flex flex-col">
       {/* Header */}
-      <div className="text-center font-bold text-white text-[24px] mb-6 mt-2">
+      <div className="text-center font-bold text-text-primary text-[24px] mb-6 max-tablet:mt-6 mt-2">
         {t('go_public_title')}
       </div>
 
       {/* Body */}
-      <div className="text-center font-medium text-neutral-400 text-base mb-8">
+      <div className="text-center font-medium text-desc-text text-base mb-8">
         {t('go_public_desc')}
       </div>
 
@@ -30,7 +30,7 @@ export default function GoPublicModal({
         {/* Left button - transparent background like space selection form */}
         <button
           onClick={onCancel}
-          className="flex-1 py-[14.5px] bg-transparent font-bold text-white text-base rounded-[10px] hover:bg-neutral-800 transition-colors"
+          className="flex-1 py-[14.5px] bg-cancel-button-bg font-bold text-cancel-button-text text-base rounded-[10px] hover:bg-hover transition-colors"
         >
           {t('cancel')}
         </button>
@@ -38,7 +38,7 @@ export default function GoPublicModal({
         {/* Right button - primary background */}
         <button
           onClick={onGoPublic}
-          className="flex-1 py-[14.5px] bg-primary font-bold text-black text-base rounded-[10px] hover:bg-primary/90 transition-colors"
+          className="flex-1 py-[14.5px] bg-submit-button-bg font-bold text-submit-button-text text-base rounded-[10px] hover:bg-primary/90 transition-colors"
         >
           {t('go_public')}
         </button>

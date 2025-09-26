@@ -22,6 +22,7 @@ export const PopupZone = () => {
   const {
     id = 'popup-zone',
     title,
+    description,
     content,
     closable = true,
     overflow = false,
@@ -30,6 +31,10 @@ export const PopupZone = () => {
 
   return (
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={title ? 'popup-title' : undefined}
+      aria-describedby={description ? 'popup-description' : undefined}
       className="fixed top-0 left-0 w-screen h-screen bg-popup-background backdrop-blur-[10px] flex justify-center items-center z-[101] bg-no-s"
       onClick={() => {
         if (backdropClosable) {
@@ -38,7 +43,7 @@ export const PopupZone = () => {
       }}
     >
       <div
-        className={`relative rounded-[20px] p-[25px] min-w-[300px] max-mobile:!w-full max-mobile:!mx-[20px] bg-bg ${overflow ? 'overflow-visible' : 'overflow-hidden'}`}
+        className={`relative rounded-[20px] p-[25px] min-w-[300px] max-mobile:!w-full max-mobile:!mx-[20px] bg-popover text-text-primary ${overflow ? 'overflow-visible' : 'overflow-hidden'}`}
         style={{
           boxShadow: '0px 0px 100px rgba(255, 206, 71, 0.25)',
         }}
@@ -58,7 +63,17 @@ export const PopupZone = () => {
           className="flex flex-col items-center justify-center gap-[25px]"
         >
           {title && (
-            <div className="text-[20px] font-bold text-white">{title}</div>
+            <div
+              id="popup-title"
+              className="text-[20px] font-bold text-text-primary max-tablet:mt-6"
+            >
+              {title}
+            </div>
+          )}
+          {description && (
+            <div id="popup-description" className="text-text-primary-muted">
+              {description}
+            </div>
           )}
           {content}
         </div>

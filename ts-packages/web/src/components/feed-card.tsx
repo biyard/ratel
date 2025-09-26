@@ -6,6 +6,7 @@ import { CommentIcon, Palace, Rewards, Shares, ThumbUp } from './icons';
 import { convertNumberToString } from '@/lib/number-utils';
 import TimeAgo from './time-ago';
 import DOMPurify from 'dompurify';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useApiCall } from '@/lib/api/use-send';
 import { ratelApi } from '@/lib/api/ratel_api';
@@ -28,6 +29,7 @@ import { Loader2 } from 'lucide-react';
 import { logger } from '@/lib/logger';
 import { useTranslations } from 'next-intl';
 import { BoosterType } from '@/lib/api/models/notice';
+import { usePostEditorContext } from '@/app/(social)/_components/post-editor';
 
 export interface FeedCardProps {
   id: number;
@@ -56,19 +58,22 @@ export interface FeedCardProps {
   onRepostThought?: () => void;
   onRepost?: (e: React.MouseEvent) => void;
   onLikeClick?: (value: boolean) => void;
-  refetch?: () => void;
   isLikeProcessing?: boolean;
+  onEdit?: (e: React.MouseEvent) => void | Promise<void>;
 }
 
 export default function FeedCard(props: FeedCardProps) {
-  const router = useRouter();
   const { post } = useApiCall();
   const { data: User } = useSuspenseUserInfo();
+
+  const { openPostEditorPopup } = usePostEditorContext();
 
   const [localLikes, setLocalLikes] = useState(props.likes);
   const [localIsLiked, setLocalIsLiked] = useState(props.is_liked);
   const [isProcessing, setIsProcessing] = useState(false);
   const [localShares, setLocalShares] = useState(props.shares);
+
+  // const t = useTranslations('Feeds');
 
   const {
     setAuthorName,
@@ -103,7 +108,6 @@ export default function FeedCard(props: FeedCardProps) {
 
       // Success - trigger callbacks
       props.onLikeClick?.(value);
-      props.refetch?.();
     } catch (error) {
       // Revert optimistic update on error
       setLocalIsLiked(props.is_liked);
@@ -130,7 +134,6 @@ export default function FeedCard(props: FeedCardProps) {
 
       setLocalShares((prev) => prev + 1);
       showSuccessToast('Reposted successfully');
-      props.refetch?.();
     } catch (error) {
       logger.error('Failed to repost:', error);
       showErrorToast('Failed to repost');
@@ -150,17 +153,32 @@ export default function FeedCard(props: FeedCardProps) {
     setExpand(true);
   };
 
+  const handleEditPost = (postId: number) => async (e: React.MouseEvent) => {
+    e?.preventDefault();
+    e?.stopPropagation();
+    try {
+      await openPostEditorPopup(postId);
+    } catch (error) {
+      console.error('Error editing post:', error);
+    }
+  };
+
+  const href = props.space_id
+    ? route.space(props.space_id)
+    : route.threadByFeedId(props.id);
+
   return (
-    <Col
-      className={`cursor-pointer border rounded-[10px] border-neutral-700`}
-      onClick={() => {
-        router.push(route.threadByFeedId(props.id));
-      }}
-    >
-      <FeedBody {...props} />
+    <Col className="relative rounded-[10px] bg-card-bg-secondary border border-card-enable-border">
+      <Link href={href} className="block">
+        <FeedBody {...props} onEdit={handleEditPost(props.id)} />
+      </Link>
       <FeedFooter
-        {...props}
+        space_id={props.space_id}
+        space_type={props.space_type}
+        booster_type={props.booster_type}
         likes={localLikes}
+        comments={props.comments}
+        rewards={props.rewards}
         shares={localShares}
         is_liked={localIsLiked}
         isLikeProcessing={isProcessing}
@@ -170,6 +188,25 @@ export default function FeedCard(props: FeedCardProps) {
       />
     </Col>
   );
+}
+
+interface FeedBodyProps {
+  id: number;
+  industry: string;
+  title: string;
+  contents: string;
+  author_profile_url: string;
+  author_name: string;
+  author_type: UserType;
+  url?: string;
+  created_at: number;
+  author_id: number;
+  user_id: number;
+  onboard: boolean;
+  space_id?: number;
+  space_type?: SpaceType;
+  currentUserId?: number;
+  onEdit?: (e: React.MouseEvent) => void | Promise<void>;
 }
 
 export function FeedBody({
@@ -183,7 +220,10 @@ export function FeedBody({
   space_id,
   space_type,
   onboard,
-}: FeedCardProps) {
+  onEdit = () => {},
+  author_id,
+  user_id,
+}: FeedBodyProps) {
   return (
     <Col className="pt-5 pb-2.5">
       <Row className="justify-between px-5">
@@ -193,8 +233,10 @@ export function FeedBody({
           {/* <IndustryTag industry={industry} /> */}
           {onboard && <OnboardingTag />}
         </div>
+
+        <div>{user_id === author_id && <EditButton onClick={onEdit} />}</div>
       </Row>
-      <h2 className="w-full line-clamp-2 font-bold text-xl/[25px] tracking-[0.5px] align-middle text-white px-5">
+      <h2 className="w-full line-clamp-2 font-bold text-xl/[25px] tracking-[0.5px] align-middle text-text-primary px-5">
         {title}
       </h2>
       <Row className="justify-between items-center px-5">
@@ -225,7 +267,7 @@ export function FeedContents({
   }, [contents]);
 
   return (
-    <div className="text-white">
+    <div className="text-desc-text">
       <p
         className="feed-content font-normal text-[15px]/[24px] align-middle tracking-[0.5px] text-c-wg-30 px-5"
         dangerouslySetInnerHTML={{ __html: sanitized }}
@@ -254,7 +296,7 @@ export function IconText({
 }: React.HTMLAttributes<HTMLDivElement> & { children: React.ReactNode }) {
   return (
     <Row
-      className={`inline-flex items-center gap-1.5 whitespace-nowrap leading-none text-white text-[15px] px-3 py-3 ${className || ''}`}
+      className={`inline-flex items-center gap-1.5 whitespace-nowrap leading-none text-text-primary text-[15px] px-3 py-3 ${className || ''}`}
       {...props}
     >
       {children}
@@ -272,18 +314,22 @@ export function UserBadge({
   name: string;
 }) {
   return (
-    <Row className="w-fit items-center med-16 text-white">
-      <Image
-        src={profile_url}
-        alt="User Profile"
-        width={24}
-        height={24}
-        className={
-          author_type == UserType.Team
-            ? 'w-6 h-6 rounded-sm object-cover'
-            : 'w-6 h-6 rounded-full object-cover'
-        }
-      />
+    <Row className="w-fit items-center med-16 text-text-primary">
+      {profile_url != '' ? (
+        <Image
+          src={profile_url}
+          alt="User Profile"
+          width={24}
+          height={24}
+          className={
+            author_type == UserType.Team
+              ? 'w-6 h-6 rounded-sm object-cover'
+              : 'w-6 h-6 rounded-full object-cover'
+          }
+        />
+      ) : (
+        <></>
+      )}
       <span>{name}</span>
     </Row>
   );
@@ -291,24 +337,45 @@ export function UserBadge({
 
 export function SpaceTag() {
   return (
-    <span className="flex flex-row justify-start items-center px-2 border border-primary/50 bg-primary gap-1 rounded-sm">
-      <Palace className="w-3.5 h-3.5 [&>path]:stroke-web-bg [&_g>path:nth-child(n+2)]:stroke-web-bg" />
-      <div className="font-semibold text-xs/[25px] text-web-bg">SPACE</div>
+    <span className="flex flex-row justify-start items-center px-2 border border-label-color-border bg-label-color-bg gap-1 rounded-sm">
+      <Palace className="w-3.5 h-3.5 [&>path]:stroke-label-color-text [&_g>path:nth-child(n+2)]:stroke-web-bg" />
+      <div className="font-semibold text-xs/[25px] text-label-color-text">
+        SPACE
+      </div>
     </span>
   );
 }
 
 export function IndustryTag({ industry }: { industry: string }) {
   return (
-    <span className="rounded-sm border border-c-wg-70 px-2 text-xs/[25px] font-semibold align-middle uppercase">
+    <span className="rounded-sm border border-label-color-border-secondary bg-label-color-bg-secondary text-label-text px-2 text-xs/[25px] font-semibold align-middle uppercase">
       {industry}
     </span>
   );
 }
 
+interface EditButtonProps {
+  onClick?: (e: React.MouseEvent) => void;
+}
+
+export function EditButton({ onClick }: EditButtonProps) {
+  return (
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        onClick?.(e);
+      }}
+      className="rounded-full p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800"
+    >
+      <Edit1 className="w-4 h-4" />
+    </button>
+  );
+}
+
 export function OnboardingTag() {
   return (
-    <span className="rounded-sm bg-primary text-white px-2 text-xs/[25px] font-semibold align-middle uppercase">
+    <span className="rounded-sm bg-label-color-bg border border-label-color-border text-label-color-text px-2 text-xs/[25px] font-semibold align-middle uppercase">
       Onboard
     </span>
   );
@@ -319,7 +386,7 @@ export function JoinNowButton({ onClick }: { onClick: () => void }) {
   return (
     <Button
       variant="rounded_primary"
-      className="cursor-pointer flex my-2.5 flex-row w-fit px-5 py-3 bg-primary rounded-[10px] font-bold text-[#000203] text-[15px]"
+      className="cursor-pointer bg-enable-button-bg hover:bg-enable-button-bg/80 flex my-2.5 flex-row w-fit px-5 py-3 rounded-[10px] font-bold text-enable-button-text text-[15px]"
       onClick={(e) => {
         e.stopPropagation();
         e.preventDefault();
@@ -331,9 +398,19 @@ export function JoinNowButton({ onClick }: { onClick: () => void }) {
   );
 }
 
-interface FeedFooterProps extends Omit<FeedCardProps, 'onRepostThought'> {
+interface FeedFooterProps {
+  space_id?: number;
+  space_type?: SpaceType;
+  booster_type?: BoosterType;
+  likes: number;
+  comments: number;
+  rewards: number;
+  shares: number;
+  is_liked: boolean;
+  onLikeClick?: (value: boolean) => void;
+  isLikeProcessing?: boolean;
+  onRepost?: (e: React.MouseEvent) => void;
   onRepostThought?: () => void;
-  // isLikeProcessing?: boolean;
 }
 
 export function FeedFooter({
@@ -381,23 +458,21 @@ export function FeedFooter({
 
   return (
     <Row
-      className={`items-center justify-between border-t w-full px-5 ${space_id && space_type ? 'border-primary/10' : 'border-neutral-800'} `}
+      className={`items-center justify-between border-t w-full px-5 ${space_id && space_type ? 'border-divider' : 'border-divider'} `}
     >
       {space_id && space_type ? (
-        <JoinNowButton
-          onClick={() => {
-            if (space_type === SpaceType.Committee) {
-              router.push(route.commiteeSpaceById(space_id ?? 0));
-            } else {
-              router.push(route.deliberationSpaceById(space_id ?? 0));
-            }
-          }}
-        />
+        <div className="max-tablet:!hidden">
+          <JoinNowButton
+            onClick={() => {
+              router.push(route.space(space_id));
+            }}
+          />
+        </div>
       ) : (
         <div></div>
       )}
       <div
-        className={`flex flex-row ${space_id && space_type ? 'w-fit items-center' : 'w-full justify-between items-center'}`}
+        className={`flex flex-row ${space_id && space_type ? 'w-fit items-center max-tablet:!w-full max-tablet:!justify-between max-tablet:!items-center' : 'w-full justify-between items-center'}`}
       >
         <IconText
           onClick={(evt) => {
@@ -451,7 +526,7 @@ export function FeedFooter({
                 <button
                   onClick={handleRepostWithThoughts}
                   disabled={isReposting}
-                  className="flex items-center gap-3 w-full px-4 py-2 rounded hover:bg-neutral-700 transition-colors text-white text-lg font-semibold"
+                  className="flex items-center gap-3 w-full px-4 py-2 rounded hover:bg-hover transition-colors text-text-primary text-lg font-semibold"
                 >
                   {isReposting ? <Loader2 /> : <Edit1 />}
                   {t('repost_with_your_thoughts')}
@@ -462,7 +537,7 @@ export function FeedFooter({
                 <button
                   onClick={handleRepost}
                   disabled={isReposting}
-                  className="flex items-center gap-3 w-full px-4 py-2 rounded hover:bg-neutral-700 transition-colors text-white text-lg font-semibold"
+                  className="flex items-center gap-3 w-full px-4 py-2 rounded hover:bg-hover transition-colors text-text-primary text-lg font-semibold"
                 >
                   {isReposting ? <Loader2 /> : <Shares />}
                   {t('repost')}

@@ -28,10 +28,10 @@ import { Question, SurveyCreateRequest } from '@/lib/api/models/survey';
 import { SpaceDraftCreateRequest } from '@/lib/api/models/space_draft';
 import { useQueryClient } from '@tanstack/react-query';
 import { QK_GET_SPACE_BY_SPACE_ID } from '@/constants';
-import { useFeedByID } from '@/app/(social)/_hooks/feed';
 import { PollTab, PollTabType } from './types';
 import { MappedResponse, Poll, SurveyAnswer } from '../type';
 import { useTranslations } from 'next-intl';
+import useFeedById from '@/hooks/feeds/use-feed-by-id';
 
 type ContextType = {
   spaceId: number;
@@ -532,7 +532,7 @@ export function useDeliberationSpace(): Space {
 }
 
 export function useDeliberationFeed(feedId: number): Feed {
-  const { data: feed } = useFeedByID(feedId);
+  const { data: feed } = useFeedById(feedId);
 
   if (!feed) {
     throw new Error('Feed data is not available');

@@ -1,5 +1,4 @@
 import React from 'react';
-import BlackBox from '@/app/(social)/_components/black-box';
 import { Answer } from '@/lib/api/models/response';
 import { usePopup } from '@/lib/contexts/popup-service';
 import CheckPopup from './check-popup';
@@ -12,6 +11,7 @@ import LinearScaleViewer from './_component/viewer/linear-scale-viewer';
 import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { Poll, SurveyAnswer } from '../../type';
 import { useTranslations } from 'next-intl';
+import BorderSpaceCard from '@/app/(social)/_components/border-space-card';
 
 interface Question {
   title: string;
@@ -28,11 +28,11 @@ interface Question {
 
 export default function SurveyViewer({
   isEdit,
-  startDate,
-  endDate,
   survey,
   answer,
   status,
+  startDate,
+  endDate,
   handleSetAnswers,
   handleSend,
   space,
@@ -50,28 +50,24 @@ export default function SurveyViewer({
   const t = useTranslations('PollSpace');
   const { data: userInfo } = useSuspenseUserInfo();
   const userId = userInfo?.id || 0;
-  const members = space.discussions.flatMap((discussion) => discussion.members);
-  const isMember = members.some((member) => member.id === userId);
+
+  // const members = space.discussions.flatMap((discussion) => discussion.members);
+  // const isMember = members.some((member) => member.id === userId);
 
   const spaceType = space.space_type;
 
   const questions: Question[] =
     survey.surveys.length != 0 ? survey.surveys[0].questions : [];
 
-  const now = Math.floor(Date.now() / 1000);
-  const isLive = startDate <= now && now <= endDate;
   const popup = usePopup();
   const is_completed = answer.is_completed;
   const answers: Answer[] = answer.answers;
 
-  logger.debug(
-    'is completed:',
-    is_completed,
-    ' status:',
-    status,
-    'isLive:',
-    isLive,
-  );
+  const now = Math.floor(Date.now() / 1000);
+
+  const isLive = now >= startDate && now <= endDate;
+
+  logger.debug('is completed:', is_completed, ' status:', status);
 
   const handleSelect = (
     qIdx: number,
@@ -178,7 +174,7 @@ export default function SurveyViewer({
         }
 
         return (
-          <BlackBox key={index}>
+          <BorderSpaceCard key={index}>
             <div className="flex flex-col w-full gap-2.5">
               {(q.answer_type === 'single_choice' ||
                 q.answer_type === 'multiple_choice' ||
@@ -239,12 +235,12 @@ export default function SurveyViewer({
                 />
               )}
             </div>
-          </BlackBox>
+          </BorderSpaceCard>
         );
       })}
 
       <div
-        className={`flex flex-row w-full justify-end ${is_completed || status != SpaceStatus.InProgress || isEdit || !isLive || questions.length == 0 || (!isMember && spaceType === SpaceType.Deliberation) ? 'hidden' : ''}`}
+        className={`flex flex-row w-full justify-end ${is_completed || !isLive || userId === 0 || status === SpaceStatus.Draft || isEdit || questions.length == 0 ? 'hidden' : ''}`}
       >
         <div
           className="cursor-pointer flex flex-row w-[180px] h-fit py-[14px] px-[40px] justify-center items-center bg-primary hover:opacity-70 rounded-lg font-bold text-[15px] text-[#000203]"
@@ -262,7 +258,7 @@ export default function SurveyViewer({
                     }}
                   />,
                 )
-                .withTitle('Please check again before voting.');
+                .withTitle(t('check_title'));
             } else {
               handleSend();
             }

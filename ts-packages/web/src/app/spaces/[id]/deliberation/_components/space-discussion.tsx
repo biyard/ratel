@@ -1,7 +1,6 @@
 'use client';
 
 import Image from 'next/image';
-import BlackBox from '@/app/(social)/_components/black-box';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { format } from 'date-fns';
 
@@ -24,6 +23,7 @@ import {
   useDeliberationSpaceContext,
 } from '../provider.client';
 import { useTranslations } from 'next-intl';
+import BorderSpaceCard from '@/app/(social)/_components/border-space-card';
 
 export default function SpaceDiscussion() {
   const { isEdit } = useDeliberationSpaceContext();
@@ -59,9 +59,9 @@ function DiscussionSchedules() {
 
   return (
     <div className="flex flex-col gap-2.5">
-      <BlackBox>
+      <BorderSpaceCard>
         <div className="flex flex-col w-full gap-5">
-          <div className="font-bold text-white text-[15px]/[20px]">
+          <div className="font-bold text-text-primary text-[15px]/[20px]">
             {t('discussions')}
           </div>
           <div className="flex flex-col w-full gap-2.5">
@@ -84,7 +84,7 @@ function DiscussionSchedules() {
                   }}
                 />
                 {index !== discussions.length - 1 ? (
-                  <div className=" w-full h-0.25 gap-1 bg-neutral-800" />
+                  <div className=" w-full h-0.25 gap-1 bg-divider" />
                 ) : (
                   <></>
                 )}
@@ -92,17 +92,17 @@ function DiscussionSchedules() {
             ))}
           </div>
         </div>
-      </BlackBox>
+      </BorderSpaceCard>
     </div>
   );
 }
 
 export function DiscussionRoom({
   userId,
-  status,
   startDate,
   endDate,
   title,
+  status,
   description,
   members,
   record,
@@ -139,8 +139,8 @@ export function DiscussionRoom({
   const isMember = members.some((member) => member.id === userId);
 
   return (
-    <div className="flex flex-row w-full items-start justify-between gap-5">
-      <div className="relative w-[240px] h-[150px] rounded-lg overflow-hidden">
+    <div className="flex flex-row w-full items-start justify-between max-tablet:flex-col gap-5">
+      <div className="relative w-[240px] h-[150px] rounded-lg overflow-hidden max-tablet:w-[350px] max-mobile:w-full max-tablet:aspect-[16/9] max-tablet:h-auto">
         <Image
           src={discussionImg}
           alt="Discussion Thumbnail"
@@ -154,17 +154,22 @@ export function DiscussionRoom({
         )}
       </div>
 
-      <div className="flex flex-col flex-1 h-full justify-between items-start">
-        <div className="flex flex-col flex-1 gap-1">
-          <div className="text-sm text-neutral-400 font-normal">
-            {statusLabel}
+      <div className="flex flex-col flex-1 h-full justify-between items-start w-full">
+        <div className="flex flex-col flex-1 gap-1 w-full">
+          <div className="flex w-full items-start justify-between">
+            <div className="text-sm text-neutral-400 light:text-[#737373] font-normal">
+              {statusLabel}
+            </div>
+            <div className="relative w-fit h-fit hidden max-tablet:block">
+              <Extra2 className="cursor-pointer w-6 h-6" onClick={() => {}} />
+            </div>
           </div>
-          <div className="text-lg text-white font-bold">{title}</div>
-          <div className="text-sm text-[#6d6d6d] font-normal">
+          <div className="text-lg text-text-primary font-bold">{title}</div>
+          <div className="text-sm text-[#6d6d6d] light:text-[#737373] font-normal">
             {formattedDate}
           </div>
           <div
-            className="text-sm text-neutral-400 font-normal overflow-hidden text-ellipsis"
+            className="text-sm text-neutral-400 light:text-[#737373] font-normal overflow-hidden text-ellipsis"
             style={{
               display: '-webkit-box',
               WebkitLineClamp: 2,
@@ -175,7 +180,7 @@ export function DiscussionRoom({
           </div>
         </div>
 
-        {isLive && status == SpaceStatus.InProgress && isMember && (
+        {isLive && isMember && status !== SpaceStatus.Draft && (
           <div className="flex flex-row w-full justify-end">
             <JoinButton
               onClick={() => {
@@ -203,7 +208,7 @@ function ViewRecord({ onClick }: { onClick: () => void }) {
   const t = useTranslations('DeliberationSpace');
   return (
     <div
-      className="cursor-pointer flex flex-row items-center w-fit h-fit px-5 py-2.5 gap-2.5 bg-white hover:bg-neutral-300 rounded-lg"
+      className="cursor-pointer flex flex-row items-center w-fit h-fit px-5 py-2.5 gap-2.5 bg-white light:bg-card-bg border border-card-border hover:bg-white/80 light:hover:bg-card-bg/50 rounded-lg"
       onClick={() => {
         onClick();
       }}
@@ -215,10 +220,10 @@ function ViewRecord({ onClick }: { onClick: () => void }) {
 }
 
 function JoinButton({ onClick }: { onClick: () => void }) {
-  const t = useTranslations('join');
+  const t = useTranslations('DeliberationSpace');
   return (
     <div
-      className="cursor-pointer flex flex-row items-center w-fit h-fit px-5 py-2.5 gap-2.5 bg-white hover:bg-neutral-300 rounded-lg"
+      className="cursor-pointer flex flex-row items-center w-fit h-fit px-5 py-2.5 gap-2.5 bg-white light:bg-card-bg border border-card-border hover:bg-white/80 light:hover:bg-card-bg/50 rounded-lg"
       onClick={() => {
         onClick();
       }}
@@ -270,10 +275,10 @@ function EditableDiscussion() {
   };
 
   return (
-    <BlackBox>
+    <BorderSpaceCard>
       <div className="flex flex-col w-full gap-5">
         <div className="flex flex-row w-full justify-between items-center">
-          <div className="font-bold text-white text-[15px]/[20px]">
+          <div className="font-bold text-text-primary text-[15px]/[20px]">
             {t('discussions')}
           </div>
 
@@ -320,7 +325,7 @@ function EditableDiscussion() {
           />
         ))}
       </div>
-    </BlackBox>
+    </BorderSpaceCard>
   );
 }
 
@@ -331,9 +336,9 @@ function AddDiscussion({ onadd }: { onadd: () => void }) {
       onClick={() => {
         onadd();
       }}
-      className="cursor-pointer flex flex-row w-fit px-[14px] py-[8px] gap-1 bg-white rounded-[6px] hover:bg-neutral-300"
+      className="cursor-pointer flex flex-row w-fit px-[14px] py-[8px] gap-1 bg-white light:bg-card-bg border border-card-border rounded-[6px] hover:bg-white/80 light:hover:bg-card-bg/50"
     >
-      <Add className="w-5 h-5 stroke-neutral-500 text-neutral-500" />
+      <Add className="w-5 h-5 stroke-neutral-600 text-neutral-600" />
       <span className=" text-[#000203] font-bold text-sm">
         {t('add_discussion')}
       </span>
@@ -372,6 +377,7 @@ function EditableDiscussionInfo({
   const [users, setUsers] = useState<TotalUser[]>(participants);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
 
   const isLive = now >= startTime && now <= endTime;
   const isUpcoming = now < startTime;
@@ -395,7 +401,13 @@ function EditableDiscussionInfo({
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(target) &&
+        mobileMenuRef.current &&
+        !mobileMenuRef.current.contains(target)
+      ) {
         setMenuOpen(false);
       }
     };
@@ -405,8 +417,8 @@ function EditableDiscussionInfo({
 
   return (
     <div className="w-full flex flex-col gap-4 relative">
-      <div className="flex flex-row w-full items-start justify-between gap-5">
-        <div className="relative w-[240px] h-[150px] rounded-lg overflow-hidden">
+      <div className="flex flex-row w-full items-start justify-between max-tablet:flex-col gap-5">
+        <div className="relative w-[240px] h-[150px] rounded-lg overflow-hidden max-tablet:w-[350px] max-mobile:w-full max-tablet:aspect-[16/9] max-tablet:h-auto">
           <Image
             src={discussionImg}
             alt="Discussion Thumbnail"
@@ -420,17 +432,67 @@ function EditableDiscussionInfo({
           )}
         </div>
 
-        <div className="flex flex-col flex-1 h-full justify-between items-start">
-          <div className="flex flex-col flex-1 gap-1">
-            <div className="text-sm text-neutral-400 font-normal">
-              {statusLabel}
+        <div className="flex flex-col flex-1 h-full justify-between items-start w-full">
+          <div className="flex flex-col flex-1 gap-1 w-full">
+            <div className="flex w-full items-start justify-between">
+              <div className="text-sm text-neutral-400 light:text-[#737373] font-normal">
+                {statusLabel}
+              </div>
+              <div
+                className="relative w-fit h-fit hidden max-tablet:block"
+                ref={mobileMenuRef}
+              >
+                <Extra2
+                  className="cursor-pointer w-6 h-6"
+                  onClick={() => setMenuOpen(!menuOpen)}
+                />
+                {menuOpen && (
+                  <div className="absolute right-0 mt-2 w-25 bg-white text-black rounded shadow-lg text-sm z-50 overflow-hidden">
+                    <div
+                      className="px-4 py-2 hover:bg-neutral-200 cursor-pointer whitespace-nowrap"
+                      onClick={() => {
+                        popup
+                          .open(
+                            <NewDiscussion
+                              discussion={{
+                                started_at: Math.floor(startedAt * 1000),
+                                ended_at: Math.floor(endedAt * 1000),
+                                name,
+                                description,
+                                participants: users,
+                              }}
+                              onadd={(discussion: DiscussionInfo) => {
+                                onupdate(index, discussion);
+                              }}
+                            />,
+                          )
+                          .withTitle('New Discussion')
+                          .overflow(true)
+                          .withoutBackdropClose();
+                        setMenuOpen(false);
+                      }}
+                    >
+                      {t('update')}
+                    </div>
+                    <div
+                      className="px-4 py-2 hover:bg-neutral-200 cursor-pointer whitespace-nowrap"
+                      onClick={() => {
+                        onremove(index);
+                        setMenuOpen(false);
+                      }}
+                    >
+                      {t('delete')}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="text-lg text-white font-bold">{title}</div>
-            <div className="text-sm text-[#6d6d6d] font-normal">
+            <div className="text-lg text-text-primary font-bold">{title}</div>
+            <div className="text-sm text-[#6d6d6d] light:text-[#737373] font-normal">
               {formattedDate}
             </div>
             <div
-              className="text-sm text-neutral-400 font-normal overflow-hidden text-ellipsis"
+              className="text-sm text-neutral-400 light:text-[#737373] font-normal overflow-hidden text-ellipsis"
               style={{
                 display: '-webkit-box',
                 WebkitLineClamp: 2,
@@ -442,7 +504,7 @@ function EditableDiscussionInfo({
           </div>
         </div>
 
-        <div className="relative w-fit h-fit" ref={menuRef}>
+        <div className="relative w-fit h-fit max-tablet:hidden" ref={menuRef}>
           <Extra2
             className="cursor-pointer w-6 h-6"
             onClick={() => setMenuOpen(!menuOpen)}

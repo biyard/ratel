@@ -22,6 +22,9 @@ export interface User {
   teams: Team[];
   badges: Badge[];
 
+  theme?: ThemeType;
+  membership: MembershipType;
+
   html_contents: string;
 
   evm_address?: string;
@@ -40,6 +43,20 @@ export enum UserType {
   Team = 2,
   Bot = 3,
   Anonymous = 99,
+}
+
+export enum ThemeType {
+  Light = 1,
+  Dark = 2,
+  SystemDefault = 3,
+}
+
+export enum MembershipType {
+  Free = 1,
+  Paid1 = 2,
+  Paid2 = 3,
+  Paid3 = 4,
+  Admin = 99,
 }
 
 export interface Badge {

@@ -1,6 +1,6 @@
 import { ratelApi } from '@/lib/api/ratel_api';
 import { QueryResponse } from '@/lib/api/models/common';
-import { Feed, FeedStatus } from '@/lib/api/models/feeds';
+import { Feed } from '@/lib/api/models/feeds';
 import { useApiCall } from '@/lib/api/use-send';
 import {
   useSuspenseInfiniteQuery,
@@ -13,18 +13,20 @@ import {
   QK_GET_POSTS_BY_USER_ID,
 } from '@/constants';
 
-export const usePostInfinite = (size = 10) => {
+export const usePostInfinite = (size = 10, initialPage = 1) => {
   const { get } = useApiCall();
 
   return useSuspenseInfiniteQuery<QueryResponse<Feed>, Error>({
-    queryKey: [QK_GET_POSTS],
-    queryFn: async ({ pageParam = 1 }) => {
+    queryKey: [QK_GET_POSTS, initialPage],
+    queryFn: async ({ pageParam = initialPage }) => {
       return get(ratelApi.feeds.getPosts(pageParam as number, size));
     },
     getNextPageParam: (lastPage, allPages) => {
-      return lastPage.items.length === size ? allPages.length + 1 : undefined;
+      return lastPage.items.length === size
+        ? initialPage - 1 + allPages.length + 1
+        : undefined;
     },
-    initialPageParam: 1,
+    initialPageParam: initialPage,
     refetchOnWindowFocus: false,
   });
 };
@@ -56,28 +58,19 @@ export function usePostByFeedId(feed_id: number): UseSuspenseQueryResult<Feed> {
   return query;
 }
 
-export const postByUserIdQk = (
+export function usePostsByUserId(
   user_id: number,
   page: number,
   size: number,
-  status: FeedStatus = FeedStatus.Published,
-) => [QK_GET_POSTS_BY_USER_ID, user_id, page, size, status];
-
-export function usePostByUserId(
-  user_id: number,
-  page: number,
-  size: number,
-  status: FeedStatus = FeedStatus.Published,
-  initialData?: QueryResponse<Feed>,
+  status: number,
 ): UseSuspenseQueryResult<QueryResponse<Feed>> {
   const { get } = useApiCall();
 
   const query = useSuspenseQuery({
-    queryKey: postByUserIdQk(user_id, page, size, status),
+    queryKey: [QK_GET_POSTS_BY_USER_ID, user_id, page, size, status],
     queryFn: () =>
       get(ratelApi.feeds.getPostsByUserId(user_id, page, size, status)),
     refetchOnWindowFocus: false,
-    initialData,
   });
 
   return query;

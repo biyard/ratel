@@ -43,6 +43,8 @@ import FileUploader from '@/components/file-uploader';
 import { logger } from '@/lib/logger';
 
 import Image from 'next/image';
+import { Button } from '../ui/button';
+import { CommentIcon } from '../icons';
 
 export const editorTheme = {
   ltr: 'text-left',
@@ -125,7 +127,7 @@ function ToolbarPlugin({
   };
 
   return (
-    <div className="flex shrink-0 items-center gap-4 [&>button]:size-6 [&>button]:rounded [&>button]:hover:bg-neutral-700">
+    <div className="flex shrink-0 items-center  gap-4 [&>button]:size-6 [&>button]:rounded [&>button]:hover:bg-hover">
       <button
         onClick={() => formatText('bold')}
         className={cn(isBold && 'bg-neutral-600 text-white')}
@@ -185,6 +187,9 @@ export const LexicalHtmlEditor = forwardRef<
     initialContent?: string;
     placeholder?: string;
     className?: string;
+    enableButton?: boolean;
+    handleSubmit?: () => Promise<void>;
+    disabled?: boolean;
   }
 >(function LexicalHtmlEditor(
   {
@@ -193,6 +198,8 @@ export const LexicalHtmlEditor = forwardRef<
     initialContent,
     placeholder = 'Type here, Use Markdown, BB code, or HTML to format.',
     className = '',
+    handleSubmit = () => {},
+    disabled = false,
   },
   ref,
 ) {
@@ -265,7 +272,7 @@ export const LexicalHtmlEditor = forwardRef<
     <div className={cn('flex flex-col min-h-50 p-4', className)}>
       <LexicalComposer initialConfig={editorConfig}>
         {/* Lexical Content Area */}
-        <div className="relative flex flex-1 text-neutral-300 ">
+        <div className="relative flex flex-1 text-text-primary">
           <RichTextPlugin
             contentEditable={
               <ContentEditable className="outline-none resize-none w-full flex-1" />
@@ -309,8 +316,23 @@ export const LexicalHtmlEditor = forwardRef<
         )}
 
         {/* Bottom toolbar */}
-        <div className="flex items-center justify-between text-neutral-400">
+        <div className="flex flex-wrap gap-[10px] items-center justify-between text-neutral-400 mt-2.5">
           <ToolbarPlugin onImageUpload={(url) => setImage(url)} />
+          <div>
+            <Button
+              variant="rounded_primary"
+              size="default"
+              onClick={handleSubmit}
+              disabled={disabled}
+              className="gap-2"
+            >
+              <CommentIcon
+                width={24}
+                height={24}
+                className="[&>path]:stroke-black [&>line]:stroke-black"
+              />
+            </Button>
+          </div>
         </div>
       </LexicalComposer>
     </div>
