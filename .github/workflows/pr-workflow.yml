@@ -253,12 +253,12 @@ jobs:
           # Verify images are loaded
           docker images
 
-      - name: Setup SSH session with tmate
-        uses: mxschmitt/action-tmate@v3
-        env:
-          COMMIT: pr-${{ github.sha }}
-        with:
-          limit-access-to-actor: true
+      # - name: Setup SSH session with tmate
+      #   uses: mxschmitt/action-tmate@v3
+      #   env:
+      #     COMMIT: pr-${{ github.sha }}
+      #   with:
+      #     limit-access-to-actor: true
 
       - name: Setup test environment
         env:
