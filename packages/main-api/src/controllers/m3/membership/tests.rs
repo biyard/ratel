@@ -8,7 +8,7 @@ mod tests {
             set_membership::{self, set_user_membership},
         },
         models::dynamo_tables::main::user::UserMembership,
-        tests::{create_app_state, create_auth, get_test_user},
+        tests::{create_app_state, create_test_user, get_auth},
         types::Membership,
     };
     use dto::by_axum::axum::{
@@ -23,7 +23,7 @@ mod tests {
         let cli = app_state.dynamo.client.clone();
 
         // Create a test user
-        let user = get_test_user(&cli).await;
+        let user = create_test_user(&cli).await;
         let user_id = user
             .pk
             .to_string()
@@ -32,8 +32,8 @@ mod tests {
             .to_string();
 
         // Create admin user and auth
-        let admin_user = get_test_user(&cli).await;
-        let admin_auth = create_auth(admin_user.clone()).await;
+        let admin_user = create_test_user(&cli).await;
+        let admin_auth = get_auth(&admin_user);
 
         // Create admin membership for the admin user
         let admin_membership = UserMembership::builder(admin_user.pk.to_string())
@@ -67,7 +67,7 @@ mod tests {
         let cli = app_state.dynamo.client.clone();
 
         // Create a test user without membership
-        let user = get_test_user(&cli).await;
+        let user = create_test_user(&cli).await;
         let user_id = user
             .pk
             .to_string()
@@ -76,8 +76,8 @@ mod tests {
             .to_string();
 
         // Create admin user and auth
-        let admin_user = get_test_user(&cli).await;
-        let admin_auth = create_auth(admin_user.clone()).await;
+        let admin_user = create_test_user(&cli).await;
+        let admin_auth = get_auth(&admin_user);
 
         // Create admin membership for the admin user
         let admin_membership = UserMembership::builder(admin_user.pk.to_string())
@@ -105,7 +105,7 @@ mod tests {
         let cli = app_state.dynamo.client.clone();
 
         // Create a test user
-        let user = get_test_user(&cli).await;
+        let user = create_test_user(&cli).await;
         let user_id = user
             .pk
             .to_string()
@@ -114,8 +114,8 @@ mod tests {
             .to_string();
 
         // Create non-admin user and auth
-        let regular_user = get_test_user(&cli).await;
-        let regular_auth = create_auth(regular_user.clone()).await;
+        let regular_user = create_test_user(&cli).await;
+        let regular_auth = get_auth(&regular_user);
 
         // Create free membership for the regular user (not admin)
         let regular_membership = UserMembership::builder(regular_user.pk.to_string())
@@ -144,8 +144,8 @@ mod tests {
         let cli = app_state.dynamo.client.clone();
 
         // Create admin user and auth
-        let admin_user = get_test_user(&cli).await;
-        let admin_auth = create_auth(admin_user.clone()).await;
+        let admin_user = create_test_user(&cli).await;
+        let admin_auth = get_auth(&admin_user);
 
         // Create admin membership for the admin user
         let admin_membership = UserMembership::builder(admin_user.pk.to_string())
@@ -178,7 +178,7 @@ mod tests {
         let cli = app_state.dynamo.client.clone();
 
         // Create a test user
-        let user = get_test_user(&cli).await;
+        let user = create_test_user(&cli).await;
         let user_id = user
             .pk
             .to_string()
@@ -187,8 +187,8 @@ mod tests {
             .to_string();
 
         // Create admin user and auth
-        let admin_user = get_test_user(&cli).await;
-        let admin_auth = create_auth(admin_user.clone()).await;
+        let admin_user = create_test_user(&cli).await;
+        let admin_auth = get_auth(&admin_user);
 
         // Create admin membership for the admin user
         let admin_membership = UserMembership::builder(admin_user.pk.to_string())
@@ -224,7 +224,7 @@ mod tests {
         let cli = app_state.dynamo.client.clone();
 
         // Create a test user
-        let user = get_test_user(&cli).await;
+        let user = create_test_user(&cli).await;
         let user_id = user
             .pk
             .to_string()
@@ -233,8 +233,8 @@ mod tests {
             .to_string();
 
         // Create admin user and auth
-        let admin_user = get_test_user(&cli).await;
-        let admin_auth = create_auth(admin_user.clone()).await;
+        let admin_user = create_test_user(&cli).await;
+        let admin_auth = get_auth(&admin_user);
 
         // Create admin membership for the admin user
         let admin_membership = UserMembership::builder(admin_user.pk.to_string())
@@ -278,7 +278,7 @@ mod tests {
         let cli = app_state.dynamo.client.clone();
 
         // Create a test user
-        let user = get_test_user(&cli).await;
+        let user = create_test_user(&cli).await;
         let user_id = user
             .pk
             .to_string()
@@ -287,8 +287,8 @@ mod tests {
             .to_string();
 
         // Create non-admin user and auth
-        let regular_user = get_test_user(&cli).await;
-        let regular_auth = create_auth(regular_user.clone()).await;
+        let regular_user = create_test_user(&cli).await;
+        let regular_auth = get_auth(&regular_user);
 
         // Create free membership for the regular user (not admin)
         let regular_membership = UserMembership::builder(regular_user.pk.to_string())
@@ -324,8 +324,8 @@ mod tests {
         let cli = app_state.dynamo.client.clone();
 
         // Create admin user and auth
-        let admin_user = get_test_user(&cli).await;
-        let admin_auth = create_auth(admin_user.clone()).await;
+        let admin_user = create_test_user(&cli).await;
+        let admin_auth = get_auth(&admin_user);
 
         // Create admin membership for the admin user
         let admin_membership = UserMembership::builder(admin_user.pk.to_string())
@@ -365,7 +365,7 @@ mod tests {
         let cli = app_state.dynamo.client.clone();
 
         // Create a test user
-        let user = get_test_user(&cli).await;
+        let user = create_test_user(&cli).await;
         let user_id = user
             .pk
             .to_string()
@@ -374,8 +374,8 @@ mod tests {
             .to_string();
 
         // Create existing admin user and auth
-        let admin_user = get_test_user(&cli).await;
-        let admin_auth = create_auth(admin_user.clone()).await;
+        let admin_user = create_test_user(&cli).await;
+        let admin_auth = get_auth(&admin_user);
 
         // Create admin membership for the admin user
         let admin_membership = UserMembership::builder(admin_user.pk.to_string())
@@ -408,7 +408,7 @@ mod tests {
         let cli = app_state.dynamo.client.clone();
 
         // Create a test user without existing membership
-        let user = get_test_user(&cli).await;
+        let user = create_test_user(&cli).await;
         let user_id = user
             .pk
             .to_string()
@@ -417,8 +417,8 @@ mod tests {
             .to_string();
 
         // Create admin user and auth
-        let admin_user = get_test_user(&cli).await;
-        let admin_auth = create_auth(admin_user.clone()).await;
+        let admin_user = create_test_user(&cli).await;
+        let admin_auth = get_auth(&admin_user);
 
         // Create admin membership for the admin user
         let admin_membership = UserMembership::builder(admin_user.pk.to_string())
@@ -450,7 +450,7 @@ mod tests {
         let cli = app_state.dynamo.client.clone();
 
         // Create a test user
-        let user = get_test_user(&cli).await;
+        let user = create_test_user(&cli).await;
         let user_id = user
             .pk
             .to_string()
@@ -459,8 +459,8 @@ mod tests {
             .to_string();
 
         // Create non-admin user and auth
-        let regular_user = get_test_user(&cli).await;
-        let regular_auth = create_auth(regular_user.clone()).await;
+        let regular_user = create_test_user(&cli).await;
+        let regular_auth = get_auth(&regular_user);
 
         // Create free membership for the regular user (not admin)
         let regular_membership = UserMembership::builder(regular_user.pk.to_string())
@@ -489,8 +489,8 @@ mod tests {
         let cli = app_state.dynamo.client.clone();
 
         // Create admin user and auth
-        let admin_user = get_test_user(&cli).await;
-        let admin_auth = create_auth(admin_user.clone()).await;
+        let admin_user = create_test_user(&cli).await;
+        let admin_auth = get_auth(&admin_user);
 
         // Create admin membership for the admin user
         let admin_membership = UserMembership::builder(admin_user.pk.to_string())
@@ -522,7 +522,7 @@ mod tests {
         let cli = app_state.dynamo.client.clone();
 
         // Create a test user
-        let user = get_test_user(&cli).await;
+        let user = create_test_user(&cli).await;
         let user_id = user
             .pk
             .to_string()
