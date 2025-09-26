@@ -1,16 +1,16 @@
 'use client';
 
 import { useNewsByID } from '@/app/(social)/_hooks/news';
-import BlackBox from '@/app/(social)/_components/black-box';
 import Image from 'next/image';
 import LexicalHtmlViewer from '../../../../../components/lexical/lexical-html-viewer';
+import DisableBorderCard from '@/app/(social)/_components/disable-border-card';
 
 export default function News({ news_id }: { news_id: number }) {
   const { data: news } = useNewsByID(news_id);
 
   return (
     <div className="flex flex-col w-full gap-2.5">
-      <BlackBox>
+      <DisableBorderCard>
         <div className="flex flex-col gap-5">
           <LexicalHtmlViewer htmlString={news?.html_content || ''} />
           {news?.user_id && (
@@ -24,7 +24,7 @@ export default function News({ news_id }: { news_id: number }) {
             </div>
           )}
         </div>
-      </BlackBox>
+      </DisableBorderCard>
     </div>
   );
 }

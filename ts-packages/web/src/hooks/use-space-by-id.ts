@@ -3,6 +3,7 @@ import { apiFetch, FetchResponse } from '@/lib/api/apiFetch';
 import {
   postingSpaceRequest,
   Space,
+  SpaceDeleteRequest,
   spaceUpdateRequest,
   SpaceUpdateRequest,
 } from '@/lib/api/models/spaces';
@@ -27,6 +28,20 @@ export async function getSpace(
 ): Promise<FetchResponse<Space | null>> {
   return apiFetch<Space | null>(
     `${config.api_url}${ratelApi.spaces.getSpaceBySpaceId(space_id)}`,
+  );
+}
+
+export async function deleteSpace(
+  space_id: number,
+  req: SpaceDeleteRequest,
+): Promise<FetchResponse<Space | null>> {
+  return apiFetch<Space | null>(
+    `${config.api_url}${ratelApi.spaces.deleteSpaceV2(space_id)}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(req),
+    },
   );
 }
 
@@ -164,6 +179,36 @@ export function useUpdateSpace(spaceId: number) {
   });
 }
 
+export function useDeleteSpace(spaceId: number) {
+  const t = useTranslations('SprintSpace');
+  const queryClient = getQueryClient();
+  const queryKey = getQueryKey(spaceId);
+
+  return useMutation({
+    mutationFn: async (req: SpaceDeleteRequest) => {
+      const { data } = await deleteSpace(spaceId, req);
+      return data ?? null;
+    },
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey });
+      const previousData = queryClient.getQueryData<Space>(queryKey);
+      queryClient.setQueryData<Space | undefined>(queryKey, undefined);
+      return { previousData };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey });
+      showSuccessToast(t('space_delete_success'));
+    },
+    onError: (error: Error, _variables, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(queryKey, context.previousData);
+      }
+      showErrorToast(t('space_delete_failed'));
+      logger.error(error);
+    },
+  });
+}
+
 export function useShareSpace(space_id: number) {
   const t = useTranslations('SprintSpace');
   const { data: userInfo } = useUserInfo();
@@ -209,7 +254,11 @@ export function useShareSpace(space_id: number) {
     },
   });
 }
-
+// FIXME: this two mutatino hooks have a lot of duplicated code, should be refactored
+// Why we need two separate hooks?
+// Because the API design is not very good, making a draft space public is different from publishing a draft space
+// Making a draft space public means changing its scope to public, which is a simple update operation
+// Publishing a draft space means changing its status from draft to published, which is a more complex operation
 export function usePublishSpace(spaceId: number) {
   const t = useTranslations('SprintSpace');
   const queryClient = getQueryClient();

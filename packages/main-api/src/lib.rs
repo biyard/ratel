@@ -1,9 +1,15 @@
+pub type Result<T> = dto::Result<T>;
+pub type Error = dto::Error;
+pub type Error2 = crate::error::Error;
+
+pub mod error;
 pub mod controllers {
-    pub mod m1;
     pub mod mcp;
     pub mod v1;
     pub mod v2 {
         pub mod users {
+            pub mod connect_telegram;
+            pub mod delete_team;
             pub mod find_user;
             pub mod logout;
         }
@@ -27,9 +33,6 @@ pub mod controllers {
             pub mod get_notifications;
             pub mod mark_all_read;
         }
-        pub mod telegram {
-            pub mod subscribe;
-        }
 
         pub mod dashboards {
             pub mod get_dashboard;
@@ -45,6 +48,10 @@ pub mod controllers {
         pub mod spaces {
             pub mod delete_space;
             pub mod get_my_space;
+        }
+
+        pub mod permissions {
+            pub mod has_team_permission;
         }
 
         pub mod dagits {
@@ -97,6 +104,89 @@ pub mod controllers {
             pub mod register;
             pub mod token;
         }
+
+        pub mod posts {
+            pub mod get_post;
+            pub mod list_posts;
+            pub mod update_post;
+        }
+
+        pub mod themes {
+            pub mod change_theme;
+        }
+
+        pub mod telegram {
+            pub mod get_telegram_info;
+            pub mod verify_telegram_raw;
+        }
+
+        pub mod binances {
+            pub mod binance_webhook;
+            pub mod create_subscription;
+            pub mod unsubscribe;
+        }
+    }
+    pub mod v3 {
+        pub mod me {
+            pub mod get_info;
+            pub mod update_user;
+
+            #[cfg(test)]
+            pub mod tests;
+        }
+        pub mod users {
+            pub mod find_user;
+
+            #[cfg(test)]
+            pub mod tests;
+        }
+        pub mod auth {
+            pub mod health;
+            pub mod login;
+            pub mod signup;
+
+            pub mod verification {
+                pub mod send_code;
+                pub mod verify_code;
+            }
+        }
+
+        pub mod teams {
+            pub mod create_team;
+            pub mod find_team;
+            pub mod get_team;
+            pub mod update_team;
+
+            #[cfg(test)]
+            pub mod tests;
+
+            pub mod groups {
+                pub mod add_member;
+                pub mod create_group;
+                pub mod remove_member;
+                pub mod update_group;
+
+                #[cfg(test)]
+                pub mod tests;
+            }
+        }
+
+        pub mod posts {
+            pub mod create_post;
+            pub mod delete_post;
+            pub mod get_post;
+            pub mod like_post;
+            pub mod list_posts;
+            pub mod update_post;
+            pub mod comments {
+                pub mod add_comment;
+                // pub mod delete_comment;
+                // pub mod list_comments;
+            }
+
+            #[cfg(test)]
+            pub mod tests;
+        }
     }
     pub mod m2 {
         pub mod noncelab {
@@ -104,9 +194,15 @@ pub mod controllers {
                 pub mod register_users;
             }
         }
+        pub mod binances {
+            pub mod get_merchant_balance;
+        }
     }
     pub mod well_known {
         pub mod get_did_document;
+    }
+    pub mod wg {
+        pub mod get_home;
     }
 }
 
@@ -115,10 +211,14 @@ pub mod config;
 pub mod models;
 pub mod route;
 pub mod security;
+pub mod types;
 pub mod utils;
 
 pub use bdk::prelude::*;
 pub use dto::*;
+
+mod route_v3;
+pub use route_v3::*;
 
 #[cfg(test)]
 pub mod tests;

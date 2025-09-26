@@ -9,10 +9,11 @@ mod responses;
 mod sprint_leagues;
 
 use std::collections::{HashMap, HashSet};
+use std::sync::Arc;
 
-use crate::config;
 use crate::security::check_perm;
 use crate::utils::aws_media_convert::merge_recording_chunks;
+use crate::utils::telegram::{TelegramBot, TelegramButton, TelegramWebCommand};
 use crate::utils::users::extract_user_id_with_no_error;
 use crate::{by_axum::axum::extract::Query, utils::users::extract_user_id};
 use bdk::prelude::*;
@@ -64,6 +65,8 @@ impl SpaceController {
             .map(Space::from)
             .fetch_one(&self.pool)
             .await?;
+
+        tracing::debug!("query space: {:?}", space);
 
         // Access control for notice spaces
         if space.space_type == SpaceType::Notice {
@@ -268,7 +271,12 @@ impl SpaceController {
         Ok(Space::default())
     }
 
-    async fn posting_space(&self, space_id: i64, auth: Option<Authorization>) -> Result<Space> {
+    async fn posting_space(
+        &self,
+        space_id: i64,
+        auth: Option<Authorization>,
+        bot: Option<Arc<TelegramBot>>,
+    ) -> Result<Space> {
         let user_id = extract_user_id(&self.pool, auth.clone())
             .await
             .unwrap_or_default();
@@ -319,37 +327,79 @@ impl SpaceController {
             )
             .await
         {
-            Ok(_) => {}
+            Ok(v) => {
+                tracing::debug!("posting space res: {:?}", v);
+            }
             Err(e) => {
                 tx.rollback().await?;
                 return Err(e);
             }
         };
 
-        if space.space_type == SpaceType::SprintLeague {
-            let client = reqwest::Client::new();
-            let payload =
-                TelegramNotificationPayload::SprintLeague(SprintLeaguePayload { space_id });
-            let res = client
-                .post(format!("{}/{}", config::get().telegram_bot_url, "notify"))
-                .json(&payload)
-                .send()
-                .await;
-            match res {
-                Ok(_) => {
-                    tracing::debug!(
-                        "Successfully sent Telegram notification for space {}",
-                        space_id
-                    );
-                }
-                Err(e) => {
-                    tracing::error!(
-                        "Failed to send Telegram notification for space {}: {}",
-                        space_id,
-                        e
-                    );
-                }
-            };
+        // When Booster Space
+        if space
+            .booster_type
+            .is_some_and(|v| v != BoosterType::NoBoost)
+        {
+            if let Some(bot) = bot {
+                let chat_ids = TelegramChannel::query_builder()
+                    .query()
+                    .map(TelegramChannel::from)
+                    .fetch_all(&self.pool.clone())
+                    .await
+                    .unwrap_or_default()
+                    .into_iter()
+                    .map(|channel| channel.chat_id)
+                    .collect::<Vec<i64>>();
+                let content = format!(
+                    "🏁 A new {} has started: *{}*!\n\nJoin now and compete with others to climb the leaderboard. Don't miss out on the fun and excitement!",
+                    match space.space_type {
+                        SpaceType::SprintLeague => "Sprint League",
+                        SpaceType::Poll => "Poll",
+                        SpaceType::Notice => "Notice",
+                        SpaceType::Deliberation => "Deliberation",
+                        _ => "Event",
+                    },
+                    space.title.clone().unwrap_or_default(),
+                );
+                bot.send_message(
+                    chat_ids,
+                    &content,
+                    Some(TelegramButton {
+                        text: "🔗 Participate Now!".to_string(),
+                        command: TelegramWebCommand::OpenSpacePage { space_id },
+                    }),
+                )
+                .await?;
+            } else {
+                tracing::warn!(
+                    "Telegram bot not available, skipping sprint league notification for space {}",
+                    space_id
+                );
+            }
+            // let client = reqwest::Client::new();
+            // let payload =
+            //     TelegramNotificationPayload::SprintLeague(SprintLeaguePayload { space_id });
+            // let res = client
+            //     .post(format!("{}/{}", config::get().telegram_bot_url, "notify"))
+            //     .json(&payload)
+            //     .send()
+            //     .await;
+            // match res {
+            //     Ok(_) => {
+            //         tracing::debug!(
+            //             "Successfully sent Telegram notification for space {}",
+            //             space_id
+            //         );
+            //     }
+            //     Err(e) => {
+            //         tracing::error!(
+            //             "Failed to send Telegram notification for space {}: {}",
+            //             space_id,
+            //             e
+            //         );
+            //     }
+            // };
         }
 
         let surveys = Survey::query_builder()
@@ -538,6 +588,8 @@ impl SpaceController {
             space.notice_quiz
         };
 
+        tracing::debug!("publish space: {:?}", publishing_scope);
+
         let res = match self
             .repo
             .update_with_tx(
@@ -560,7 +612,10 @@ impl SpaceController {
             )
             .await
         {
-            Ok(space) => space,
+            Ok(space) => {
+                tracing::debug!("update space res: {:?}", space);
+                space
+            }
             Err(e) => {
                 tracing::error!("Failed to update space {}: {}", space_id, e);
                 tx.rollback().await?;
@@ -1339,13 +1394,14 @@ impl SpaceController {
     pub async fn act_space_by_id(
         State(ctrl): State<SpaceController>,
         Extension(auth): Extension<Option<Authorization>>,
+        Extension(bot): Extension<Option<Arc<TelegramBot>>>,
         Path(SpacePath { id }): Path<SpacePath>,
         Json(body): Json<SpaceByIdAction>,
     ) -> Result<Json<Space>> {
         tracing::debug!("act_space_by_id {:?} {:?}", id, body);
         let feed = match body {
             SpaceByIdAction::UpdateSpace(param) => ctrl.update_space(id, auth, param).await?,
-            SpaceByIdAction::PostingSpace(_) => ctrl.posting_space(id, auth).await?,
+            SpaceByIdAction::PostingSpace(_) => ctrl.posting_space(id, auth, bot).await?,
             SpaceByIdAction::Like(req) => ctrl.like_space(id, auth, req.value).await?,
             SpaceByIdAction::Share(_) => ctrl.share_space(id, auth).await?,
             SpaceByIdAction::Delete(request) => {

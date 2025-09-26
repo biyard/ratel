@@ -31,18 +31,18 @@ export const LoginFailurePopup = ({
     <div id={id} className="w-100 max-mobile:!w-full gap-[35px] mt-[35px]">
       <div className="flex flex-col gap-[8px] mb-[8px]">
         <div
-          className="w-full flex flex-row pl-5 py-5.5 bg-black border-[1px] rounded-[10px] justify-start items-center gap-4.25 cursor-pointer border-c-p-50"
+          className="w-full flex flex-row pl-5 py-5.5 bg-card-bg border border-neutral-100 light:border-card-border rounded-[10px] justify-start items-center gap-4.25 cursor-pointer border-c-p-50"
           onClick={onRetry}
         >
           {logoOrigin}
           <div className="flex flex-col gap-[3px]">
-            <span className="text-white text-base/4.75 font-semibold">
+            <span className="text-text-primary text-base/4.75 font-semibold">
               {msg}
             </span>
           </div>
         </div>
 
-        <div className="w-full flex flex-row pl-5 py-2.5 bg-c-p-50-10 rounded-[10px] justify-start items-center gap-2.5">
+        <div className="w-full flex flex-row pl-5 py-2.5 bg-c-p-50-10 light:bg-white border border-transparent light:border-neutral-300 rounded-[10px] justify-start items-center gap-2.5">
           <AlertCircle color="#DB2780" />
           <div className="flex flex-col gap-[3px]">
             <span className="text-c-p-50 text-[15px]/6 font-semibold tracking-wide whitespace-pre-line">

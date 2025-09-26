@@ -1,0 +1,20 @@
+[package]
+name = "by-types"
+version = "0.3.9"
+edition = "2021"
+description = "Biyard data types"
+license = "Apache-2.0"
+keywords = ["axum", "datatypes", "api"]
+repository = "https://github.com/biyard/rust-sdk/tree/main/packages/by-types"
+
+[dependencies]
+serde = { version = "1.0.217", features = ["default", "derive"] }
+aide = { workspace = true }
+axum = { workspace = true }
+schemars = { workspace = true }
+reqwest = "0.12.12"
+sqlx.workspace = true
+validator = "0.20.0"
+tracing = "0.1.41"
+serde_json.workspace = true
+cookie = { version = "0.18.1" }

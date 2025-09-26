@@ -69,7 +69,7 @@ export default function ToolbarPlugin({
   };
 
   return (
-    <div className="flex items-center gap-4 [&>button]:size-6 [&>button]:rounded [&>button]:hover:bg-neutral-700">
+    <div className="flex items-center gap-4 [&>button]:size-6 [&>button]:rounded [&>button]:hover:bg-hover">
       <button
         onClick={() => formatText('bold')}
         className={cn(isBold && 'bg-neutral-600 text-white')}

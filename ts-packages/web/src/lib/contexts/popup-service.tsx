@@ -10,6 +10,7 @@ import React, {
 type PopupConfig = {
   id?: string;
   title?: string;
+  description?: string;
   content: ReactNode;
   closable?: boolean;
   backdropClosable?: boolean;
@@ -21,6 +22,7 @@ type PopupServiceType = {
   open: (content: ReactNode) => PopupServiceType;
   withId: (id: string) => PopupServiceType;
   withTitle: (title: string) => PopupServiceType;
+  withDescription: (description: string) => PopupServiceType;
   withoutClose: () => PopupServiceType;
   withoutBackdropClose: () => PopupServiceType;
   overflow: (overflow: boolean) => PopupServiceType;
@@ -53,6 +55,14 @@ export const PopupProvider = ({ children }: { children: ReactNode }) => {
     withTitle: (title) => {
       if (popupRef.current) {
         popupRef.current = { ...popupRef.current, title };
+        setPopup({ ...popupRef.current });
+      }
+      return service;
+    },
+
+    withDescription: (description) => {
+      if (popupRef.current) {
+        popupRef.current = { ...popupRef.current, description };
         setPopup({ ...popupRef.current });
       }
       return service;

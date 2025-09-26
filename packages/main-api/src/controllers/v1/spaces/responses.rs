@@ -170,21 +170,23 @@ impl SurveyResponseController {
         SurveyResponseRespondAnswerRequest {
             answers,
             survey_type,
-            survey_id_param,
         }: SurveyResponseRespondAnswerRequest,
     ) -> Result<Json<SurveyResponse>> {
         let user = extract_user_with_allowing_anonymous(&self.pool, auth).await?;
         let user_id = user.id;
-
+        let survey = Survey::query_builder()
+            .space_id_equals(space_id)
+            .query()
+            .map(Survey::from)
+            .fetch_optional(&self.pool)
+            .await?;
+        let survey_id = match survey {
+            Some(v) => v.id,
+            None => return Err(Error::MissingParam("survey_id".to_string())),
+        };
         let res = self
             .repo
-            .insert(
-                space_id,
-                user_id,
-                answers,
-                survey_id_param.unwrap_or_default(),
-                survey_type,
-            )
+            .insert(space_id, user_id, answers, survey_id, survey_type)
             .await?;
         Ok(Json(res))
     }

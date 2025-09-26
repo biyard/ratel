@@ -1,0 +1,37 @@
+[package]
+name = "bdk"
+version = "0.1.2"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Biyard Development Kit for Rust"
+repository = "https://github.com/biyard/rust-sdk/tree/main/packages/bdk"
+
+[dependencies]
+by-macros.workspace = true
+by-types.workspace = true
+rest-api.workspace = true
+reqwest.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tracing = "0.1.41"
+validator = { version = "0.20.0", features = ["derive"] }
+dioxus-translate = { workspace = true, features = ["ko"] }
+btracing = { workspace = true }
+
+# Backend
+by-axum = { workspace = true }
+schemars = { workspace = true }
+sqlx = { workspace = true }
+bigdecimal = { workspace = true }
+aide = { workspace = true }
+serde_urlencoded = "0.7.1"
+
+[features]
+default = []
+server = [
+    "by-macros/server",
+]
+be = [
+    "by-macros/server",
+]

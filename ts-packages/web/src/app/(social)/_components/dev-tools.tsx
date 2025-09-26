@@ -1,12 +1,9 @@
 'use client';
 import { config, Env } from '@/config';
 import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
-import { Feed, FeedType, FileInfo } from '@/lib/api/models/feeds';
+import { Feed, FeedType, FileInfo, UrlType } from '@/lib/api/models/feeds';
 import { createDraftRequest } from '@/lib/api/models/feeds/create-draft';
-import {
-  updateDraftRequest,
-  UrlType,
-} from '@/lib/api/models/feeds/update-draft-request';
+import { updatePostRequest } from '@/lib/api/models/feeds/update-post';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { useApiCall } from '@/lib/api/use-send';
 import React, { Fragment } from 'react';
@@ -38,7 +35,7 @@ export default function DevTools() {
 
     await post(
       ratelApi.feeds.updateDraft(res.id),
-      updateDraftRequest(
+      updatePostRequest(
         html_contents,
         industry_id,
         title,
@@ -53,7 +50,7 @@ export default function DevTools() {
   };
 
   return (
-    <div className="px-2 py-5 px-3 w-full rounded-[10px] bg-component-bg">
+    <div className="py-5 px-3 w-full rounded-[10px] bg-component-bg">
       <button className="sidemenu-link" onClick={handleSimulate}>
         <span>Simulate a post</span>
       </button>

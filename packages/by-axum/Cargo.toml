@@ -1,0 +1,38 @@
+[package]
+name = "by-axum"
+version = "0.2.14"
+edition.workspace = true
+description = "Library satisfying Biyard API convention"
+license.workspace = true
+keywords = ["axum", "lambda", "api", "serverless"]
+repository = "https://github.com/biyard/rust-sdk/tree/main/packages/by-axum"
+
+[dependencies]
+aide.workspace = true
+axum.workspace = true
+schemars.workspace = true
+by-types = { workspace = true }
+rest-api.workspace = true
+reqwest.workspace = true
+
+http = { version = "1.1.0" }
+serde = "1.0.217"
+slog = "2.7.0"
+slog-term = "2.9.1"
+slog-async = "2.8.0"
+static_str_ops = "0.1.2"
+tower = { version = "0.5.1" }
+tokio = { version = "1.41.1", features = ["net"] }
+tower-http = { version = "0.6.2", features = [
+    "cors",
+    "compression-gzip",
+    "compression-deflate",
+    "trace",
+] }
+tower-service = "0.3.3"
+serde_json = "1.0.135"
+tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
+tracing = "0.1.41"
+jsonwebtoken = "9.3.0"
+hyper = "1.6.0"
+tower-sessions = "0.14.0"

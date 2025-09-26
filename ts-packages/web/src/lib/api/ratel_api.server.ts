@@ -4,6 +4,7 @@ import { Space } from './models/spaces';
 import { config } from '@/config';
 import {
   QK_GET_FEED_BY_FEED_ID,
+  QK_GET_HOME_DATA,
   QK_GET_NETWORK,
   QK_GET_POSTS,
   QK_GET_POSTS_BY_USER_ID,
@@ -12,7 +13,9 @@ import {
   QK_GET_SPACE_BY_SPACE_ID,
   QK_GET_TEAM_BY_ID,
   QK_GET_TEAM_BY_USERNAME,
+  QK_GET_PERMISSION,
   QK_USERS_GET_INFO,
+  QK_GET_NEWS_BY_NEWS_ID,
 } from '@/constants';
 
 import { RedeemCode } from './models/redeem-code';
@@ -24,7 +27,11 @@ import { Promotion } from './models/promotion';
 import { User } from './models/user';
 import { QueryResponse } from './models/common';
 import { Team } from './models/team';
+import { HomeGatewayResponse } from './models/home';
 import { InfiniteData } from '@tanstack/react-query';
+import { GroupPermission } from './models/group';
+import { Permission } from './models/permission';
+import { NewsDetailItem } from './models/news';
 
 async function getDataFromServer<T>(
   key: (string | number)[],
@@ -139,6 +146,16 @@ export async function getPromotion(): Promise<{
   );
 }
 
+export async function listNews(): Promise<{
+  key: (string | number)[];
+  data: NewsDetailItem | null;
+}> {
+  return getDataFromServer<NewsDetailItem>(
+    [QK_GET_NEWS_BY_NEWS_ID],
+    ratelApi.news.getNews(1, 3),
+  );
+}
+
 export async function getUserInfo(): Promise<{
   key: (string | number)[];
   data: User | null;
@@ -146,6 +163,16 @@ export async function getUserInfo(): Promise<{
   return getDataFromServer<User>(
     [QK_USERS_GET_INFO],
     ratelApi.users.getUserInfo(),
+  );
+}
+
+export function getPermission(
+  teamId: number,
+  permission: GroupPermission,
+): Promise<{ key: (string | number)[]; data: Permission | null }> {
+  return getDataFromServer<Permission>(
+    [QK_GET_PERMISSION, teamId, permission],
+    ratelApi.permissions.getPermissions(teamId, permission),
   );
 }
 
@@ -189,12 +216,25 @@ export async function prefetchPostInfinite(pageSize: number) {
   };
 
   queryClient.setQueryData<InfiniteData<QueryResponse<Feed>>>(
-    [QK_GET_POSTS],
+    [QK_GET_POSTS, pageSize],
     infiniteData,
   );
 
   return {
-    key: [QK_GET_POSTS],
+    key: [QK_GET_POSTS, pageSize],
     data: infiniteData,
   };
+}
+
+export async function getHomeData(
+  feedLimit?: number,
+  newsLimit?: number,
+): Promise<{
+  key: (string | number)[];
+  data: HomeGatewayResponse | null;
+}> {
+  return getDataFromServer<HomeGatewayResponse>(
+    [QK_GET_HOME_DATA, feedLimit ?? '', newsLimit ?? ''],
+    ratelApi.home.getHomeData(feedLimit, newsLimit),
+  );
 }

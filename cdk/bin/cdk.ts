@@ -1,6 +1,8 @@
 import { App } from "aws-cdk-lib";
 import { RegionalServiceStack } from "../lib/regional-service-stack";
 import { GlobalAccelStack } from "../lib/global-accel-stack";
+import { GlobalTableStack } from "../lib/dynamodb-stack";
+import { ImageWorkerStack } from "../lib/image-worker-stack";
 
 const app = new App();
 
@@ -9,9 +11,25 @@ const stackName = process.env.STACK;
 const env = process.env.ENV || "dev";
 // Common host
 const host = process.env.DOMAIN || "dev.ratel.foundation";
+const webDomain = host;
+const apiDomain = `api.${host}`;
+const baseDomain = "ratel.foundation";
 
-// --- Regional stacks (ALB + Fargate) ---
-const kr = new RegionalServiceStack(app, `ratel-${env}-svc-ap-northeast-2`, {
+new ImageWorkerStack(app, `ratel-${env}-image-worker`, {
+  env: {
+    account: process.env.CDK_DEFAULT_ACCOUNT,
+    region: "ap-northeast-2",
+  },
+});
+
+new GlobalTableStack(app, `ratel-${env}-dynamodb`, {
+  env: {
+    account: process.env.CDK_DEFAULT_ACCOUNT,
+    region: "ap-northeast-2",
+  },
+});
+
+new RegionalServiceStack(app, `ratel-${env}-svc-ap-northeast-2`, {
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
     region: "ap-northeast-2",
@@ -21,9 +39,11 @@ const kr = new RegionalServiceStack(app, `ratel-${env}-svc-ap-northeast-2`, {
   commit: process.env.COMMIT!,
   pghost: process.env.PGHOST_AP!,
   enableDaemon: true,
+  baseDomain,
+  apiDomain,
 });
 
-const eu = new RegionalServiceStack(app, `ratel-${env}-svc-eu-central-1`, {
+new RegionalServiceStack(app, `ratel-${env}-svc-eu-central-1`, {
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
     region: "eu-central-1",
@@ -32,9 +52,11 @@ const eu = new RegionalServiceStack(app, `ratel-${env}-svc-eu-central-1`, {
   healthCheckPath: "/version",
   commit: process.env.COMMIT!,
   pghost: process.env.PGHOST_EU!,
+  baseDomain,
+  apiDomain,
 });
 
-const us = new RegionalServiceStack(app, `ratel-${env}-svc-us-east-1`, {
+new RegionalServiceStack(app, `ratel-${env}-svc-us-east-1`, {
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
     region: "us-east-1",
@@ -43,20 +65,20 @@ const us = new RegionalServiceStack(app, `ratel-${env}-svc-us-east-1`, {
   healthCheckPath: "/version",
   commit: process.env.COMMIT!,
   pghost: process.env.PGHOST_US!,
+  baseDomain,
+  apiDomain,
 });
 
-// --- Global Accelerator + Route53 stack ---
-// crossRegionReferences=true in all stacks lets us pass ALBs between regions
 new GlobalAccelStack(app, "GlobalAccel", {
   stackName,
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
     region: "us-east-1",
   },
-  fullDomainName: host,
-  euAlb: eu.alb,
-  usAlb: us.alb,
-  krAlb: kr.alb,
   stage: env,
   commit: process.env.COMMIT!,
+
+  webDomain,
+  apiDomain,
+  baseDomain,
 });

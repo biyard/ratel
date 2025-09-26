@@ -2,7 +2,7 @@ use by_types::QueryResponse;
 
 use bdk::prelude::*;
 
-use crate::{Badge, Follower, Group, Membership, Team, UserType};
+use crate::{Badge, Follower, Group, Membership, Team, Theme, UserType};
 use crate::{Feed, GroupRepositoryQueryBuilder};
 
 #[derive(validator::Validate)]
@@ -81,6 +81,10 @@ pub struct UserV2 {
     #[api_model(version = v0.5, type = INTEGER)]
     #[serde(default)]
     pub membership: Membership,
+
+    #[api_model(version = v1.0, type = INTEGER)]
+    #[serde(default)]
+    pub theme: Option<Theme>,
 
     #[api_model(one_to_many = user_points, foreign_key = user_id, aggregator = sum(amount))]
     pub points: i64,

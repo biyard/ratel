@@ -23,12 +23,21 @@
     "terms_of_service": "Terms of Service",
     "invalid_email_format": "Please enter a valid email address.",
     "unregistered_email": "This email is not registered.",
-    "invalid_password_format": "Password must contain letters, numbers, and special characters (min 8 chars)."
+    "invalid_password_format": "Password must contain letters, numbers, and special characters (min 8 chars).",
+
+    "GoogleLogin": {
+      "label": "Sign in with Google",
+      "loading_description": "Signing in with Google..."
+    },
+    "EmailLogin": {
+      "label": "Sign in with Email",
+      "loading_description": "Signing in with Email..."
+    }
   },
   "Signup": {
     "signing_in": "Signing you in...",
     "welcome_title": "Welcome to Ratel!",
-    "welcome_description": "Policy is shaped by civic engagement—when we speak up, policymakers listen. Ratel gives you a platform to take action and shape crypto policy. Your voice matters, so make it heard and help secure a bright future for crypto.",
+    "welcome_description": "Policy is shaped by civic engagement—when we speak up, policymakers listen. \nRatel gives you a platform to take action and shape crypto policy. \nYour voice matters, so make it heard and help secure a bright future for crypto.",
     "failureMsg": "Failed to connect to {serviceName}.\nWould you like to try again?",
     "login_failed": "Login failed",
     "telegram_login_failed_description": "Telegram authentication failed",
@@ -52,8 +61,56 @@
     "display_name_warning": "Please remove the test keyword from your display name.",
     "invalid_username_format": "Only numbers, lowercase letters, -, _ and more than one character can be entered.",
     "user_name_warning": "Please remove the test keyword from your username.",
-    "already_exists_user": "This username is already taken."
+    "already_exists_user": "This username is already taken.",
+
+    "sign_in": "Sign in",
+
+    "CommonError": {
+      "test_word": "Please remove the <b>test</b> keyword",
+      "required": "{fieldName} is required."
+    },
+    "Email": {
+      "label": "Email",
+      "placeholder": "Enter your email address",
+      "error": {
+        "invalid": "Please enter a valid email address.",
+        "unregistered": "This email is not registered."
+      },
+      "send_button_label": "Send"
+    },
+    "Code": {
+      "placeholder": "Enter the verification code",
+      "error": {
+        "invalid": "The verification code is incorrect or has expired."
+      },
+      "verify_button_label": "Verify"
+    },
+    "Username": {
+      "label": "User Name",
+      "placeholder": "Enter your user name"
+    },
+    "Nickname": {
+      "label": "Nick Name",
+      "placeholder": "Enter your nickname",
+      "error": {
+        "invalid": "Only numbers, lowercase letters, -, _ and more than one character can be entered."
+      }
+    },
+    "Password": {
+      "label": "Password",
+      "placeholder": "Enter your password",
+      "error": {
+        "required": "Password is required.",
+        "invalid": "Password must contain letters, numbers, and special characters (min 8 chars)."
+      }
+    },
+    "Term": {
+      "error": {
+        "required": "You must agree to the Terms of Service to proceed."
+      }
+    }
   },
+
   "Threads": {
     "edit": "Edit",
     "make_public": "Make Public",
@@ -99,10 +156,10 @@
       "label": "d.AGIT",
       "desc": "Create d.AGIT space for managing artworks"
     },
-
-    "notice_title": "Set a Notice Space",
-    "notice_description_1": "Once the {spaceType} Space is created, <b>the booster settings cannot be changed.</b>",
-    "notice_description_2": "Please make sure everything is correct before confirming.",
+    "SetBoostModal": {
+      "title": "Set a Boost",
+      "description": "Once the {spaceType} Space is created, <b>the booster settings cannot be changed.</b> Please make sure everything is correct before confirming."
+    },
 
     "date": "Date",
     "boost": "Boost",
@@ -171,12 +228,21 @@
     "invalid_user": "Invalid or unregisted input.",
     "failed_search_user": "Failed to search for user.",
 
+    "delete_team_title": "Are you sure you want to delete your team?",
+    "delete_team_description": "Deleting a team will also delete all posts related to the team, and deleted teams cannot be recovered.",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+
+    "success_delete_team": "Success to delete team",
+    "failed_delete_team": "Failed to delete team",
+    "delete_group": "delete",
     "username": "Username",
     "display_name": "Display name",
     "display_name_hint": "Team display name",
     "team_description_hint": "Please type description of your team.",
     "upload_logo": "Upload logo",
     "save": "Save",
+    "delete": "Delete",
     "remove_test_keyword": "Please remove the test keyword",
     "write_title": "Write a title...",
     "write_content": "Type here, Use Markdown, BB code, or HTML to format."
@@ -220,15 +286,17 @@
     "make_public_desc_line2_strong": "cannot be made private again.",
     "cancel": "Cancel",
 
-    "make_public_save_title": "Save first, make public?",
+    "make_public_save_title": "Save first, make publish?",
     "unsaved_notice_line1": "Looks like you haven’t saved yet.",
-    "unsaved_notice_line2": "Want to save your changes before going public.",
+    "unsaved_notice_line2": "Want to save your changes before going publish.",
     "unsaved_notice_line3": "or skip it and publish anyway?",
     "just_publish": "Just Publish",
     "save_and_publish": "Save & Publish",
 
     "space_update_success": "Space updated successfully",
     "space_update_failed": "Failed to update space",
+    "space_delete_success": "Space deleted successfully",
+    "space_delete_failed": "Failed to delete space",
     "space_share_success": "Space shared successfully",
     "space_share_failed": "Failed to share space",
     "space_post_success": "Space posted successfully",
@@ -379,6 +447,9 @@
     "continue": "Continue",
     "invite_label": "Email, Username, or Phone Number",
     "invite_hint": "Enter email, username, or phone number (ex: john@example.com or john or 01012345678)",
+    "success_publish_space_private": "Space published privately successfully",
+    "success_publish_space_public": "Space published publicly successfully",
+    "failed_publish_space": "Failed to publish space",
     "send": "Send",
     "invalid_user": "Invalid or unregistered input.",
     "failed_search_user": "Failed to search for user.",
@@ -472,7 +543,11 @@
     "more_option_required": "questions must have at least two options.",
     "fill_label_required": "Please fill in the labels for the linear scale.",
     "success_update_space": "Space has been updated successfully.",
-    "failed_update_space": "Failed to update the space. Please try again."
+    "failed_update_space": "Failed to update the space. Please try again.",
+
+    "check_title": "Please check again before voting.",
+    "check_desc": "For the integrity and security of the vote, all submissions are anonymous and final. Votes cannot be changed once cast, and we appreciate your understanding in ensuring reliable results.",
+    "cancel": "cancel"
   },
   "Space": {
     "unsupported_space_type": "Unsupported space type",
@@ -486,6 +561,8 @@
     "cancel": "Cancel",
     "delete_button": "Delete Space",
     "deleting": "Deleting...",
+    "go_public": "Go Public",
+    "publish": "Publish",
 
     "save": "Save",
     "edit": "Edit",
@@ -523,5 +600,65 @@
     "language": "Language",
     "select_language": "Select a language",
     "cancel": "Cancel"
+  },
+  "Subscribe": {
+    "subscribe_desc_1": "Premium products loved around the world",
+    "subscribe_desc_2": "Stay ahead with Ratel Premium.",
+    "subscribe_desc_3": "Start using it now.",
+    "subscribe_info": "Plans can be changed or cancelled at any time.",
+    "select": "Select",
+    "success_subscribe_info": "Success to subscribe ratel service",
+    "unsubscribe": "UnSubscribe"
+  },
+
+  "Connect": {
+    "title": "Connect to {service}",
+    "description": "Do you want to connect your {service} account to Ratel?",
+    "ConfirmButton": {
+      "label": "Connect",
+      "loading": "Connecting..."
+    },
+    "CancelButton": {
+      "label": "Cancel"
+    }
+  },
+
+  "SpaceHeader": {
+    "unsave_notice_modal": "Save your changes?",
+    "publish_modal_title": "Publish this space",
+    "make_public_modal_title": "You’re About to Go Public"
+  },
+
+  "SpaceUnsaveModal": {
+    "description": "Looks like you haven’t saved yet.<br></br>Want to save your changes before continuing,<br></br>or skip it and continue anyway?",
+    "button_skip": "Just Publish",
+    "button_save": "Save & Publish"
+  },
+
+  "SpacePublishModal": {
+    "description": "Once published, this Space will be visible to everyone and cannot be made private again.",
+    "public_publish_label": "Public Publish",
+    "public_publish_description": "Anyone can access and participate in this space.",
+    "private_publish_label": "Private Publish",
+    "private_publish_description": "Only your team members will be able to access this space.",
+
+    "button_publish": "Publish"
+  },
+
+  "SpaceMakePublicModal": {
+    "description": "Once made public,<br></br>this Space will be visible to everyone and<br></br><b>cannot be made private again.</b>",
+    "button_cancel": "Cancel",
+    "button_make_public": "Make Public"
+  },
+
+  "EditArtworkPost": {
+    "artwork_name": "Artwork Name",
+    "description": "Description",
+    "artist_name": "Artist Name",
+    "background_color": "Background Color",
+    "size": "Size",
+    "year": "Year",
+    "medium": "Medium",
+    "placeholder": "Enter {fieldName}"
   }
 }

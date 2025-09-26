@@ -1,4 +1,4 @@
-import { createContext } from 'react';
+import { createContext, useContext } from 'react';
 import { Team } from '@/lib/api/models/team';
 
 export interface TeamContextType {
@@ -16,3 +16,11 @@ export const TeamContext = createContext<TeamContextType>({
   setSelectedTeam: () => {},
   updateSelectedTeam: () => {},
 });
+
+export function useTeamContext() {
+  const context = useContext(TeamContext);
+  if (!context) {
+    throw new Error('useTeamContext must be used within a TeamProvider');
+  }
+  return context;
+}

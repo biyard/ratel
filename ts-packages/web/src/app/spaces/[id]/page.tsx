@@ -30,12 +30,12 @@ export default async function Page({
   } else if (space.data?.space_type === SpaceType.Notice) {
     return <NoticeSpacePage />;
   } else if (space.data?.space_type === SpaceType.Poll) {
-    return <PollSpacePage />;
+    return <PollSpacePage spaceId={spaceId} />;
   } else if (space.data?.space_type === SpaceType.dAgit) {
     return <DAgitPage spaceId={spaceId} />;
   }
 
   logger.debug('Unknown space type:', space.data?.space_type);
 
-  return <div>{t('unsupported_space_type')}</div>;
+  return <div className="text-text-primary">{t('unsupported_space_type')}</div>;
 }

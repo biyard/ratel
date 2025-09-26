@@ -1,6 +1,5 @@
 'use client';
 
-import BlackBox from '@/app/(social)/_components/black-box';
 import { FileInfo } from '@/lib/api/models/feeds';
 import React from 'react';
 
@@ -15,6 +14,7 @@ import { ratelApi } from '@/lib/api/ratel_api';
 import { useUserBadge } from '@/lib/api/hooks/user-badges';
 import { checkString } from '@/lib/string-filter-utils';
 import SpaceFile from './space_file';
+import BorderSpaceCard from '@/app/(social)/_components/border-space-card';
 
 export interface SpaceFilesProps {
   files: FileInfo[];
@@ -80,7 +80,7 @@ export default function SpaceFiles({ files, badges }: SpaceFilesProps) {
       .withTitle('Select Nft');
   };
   return (
-    <BlackBox>
+    <BorderSpaceCard>
       <div className="flex flex-col w-full gap-5">
         <div className="font-bold text-white text-[15px]/[20px]">
           Attached Files
@@ -98,6 +98,6 @@ export default function SpaceFiles({ files, badges }: SpaceFilesProps) {
             ))}
         </div>
       </div>
-    </BlackBox>
+    </BorderSpaceCard>
   );
 }

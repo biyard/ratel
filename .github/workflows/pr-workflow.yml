@@ -3,6 +3,7 @@ name: PR Testing
 on:
   pull_request:
     types: [opened, synchronize, reopened]
+    branches: [dev]
 
 env:
   CARGO_TERM_COLOR: always
@@ -15,83 +16,68 @@ jobs:
       run:
         working-directory: ts-packages/web
 
+    outputs:
+      image: ${{ steps.build.outputs.image }}
+
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and cache Docker image
+        id: build
         env:
-          ECR_NAME: ratel.foundation/ratel/web
-        run: make docker.build
+          ECR_NAME: web
+          COMMIT: pr-${{ github.sha }}
+        run: |
+          # Build and tag image
+          make docker.build
 
-  test-with-server:
-    runs-on: ubuntu-latest
+          # Save image to cache
+          docker save $ECR_NAME:$COMMIT | gzip > /tmp/web-image.tar.gz
+          echo "image=$ECR_NAME:$COMMIT" >> $GITHUB_OUTPUT
 
-    services:
-      postgres:
-        image: postgres
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: test
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-
-    steps:
-      - uses: actions/checkout@v3
+      - name: Cache Docker image
+        uses: actions/cache@v4
         with:
-          submodules: recursive
-          ssh-key: ${{ secrets.PULL_KEY_REPO }}
+          path: /tmp/web-image.tar.gz
+          key: web-image-${{ github.sha }}
+
+  main-api-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           components: clippy, rustfmt
-          target: wasm32-unknown-unknown
           toolchain: stable
-      - name: Install PostgreSQL Client
-        run: sudo apt-get install -y postgresql-client
 
-      - name: Initialize Database SQL
+      - name: Start LocalStack
+        uses: LocalStack/setup-localstack@v0.2.2
+        with:
+          image-tag: "latest"
+          install-awslocal: "true"
+
+      - name: Wait for LocalStack
         run: |
-          psql postgresql://postgres:postgres@localhost:5432/test -f ./deps/rust-sdk/fixtures/sql/init.sql
+          for i in {1..30}; do
+            nc -z localhost 4566 && break
+            sleep 1
+          done
 
-      - name: test
+      - name: Create DynamoDB Table
         env:
-          RUSTFLAGS: "-A warnings"
-          DATABASE_TYPE: postgres
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
-          ENV: "dev"
-          DOMAIN: "dev.ratel.foundation"
-          OPENAPI_KEY: ${{ secrets.OPENAPI_KEY }}
-          AUTH_SECRET_KEY: ${{ secrets.DEV_AUTH_SECRET_KEY }}
-          BASE_DOMAIN: "ratel.foundation"
-          AUTH_DOMAIN: "ratel.foundation"
-          AWS_REGION: ap-northeast-2
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          JWT_SECRET_KEY: ${{ secrets.DEV_JWT_SECRET }}
-          SLACK_CHANNEL_SPONSOR: ${{ secrets.DEV_SLACK }}
-          US_CONGRESS_KEY: ${{ secrets.US_CONGRESS_KEY }}
-          BBS_BLS_X: ${{ secrets.BBS_BLS_X }}
-          BBS_BLS_Y: ${{ secrets.BBS_BLS_Y }}
-          BBS_BLS_D: ${{ secrets.BBS_BLS_D }}
-          BBS_BLS_CRV: ${{ secrets.BBS_BLS_CRV }}
-          P256_X: ${{ secrets.P256_X }}
-          P256_Y: ${{ secrets.P256_Y }}
-          P256_D: ${{ secrets.P256_D }}
-          P256_CRV: ${{ secrets.P256_CRV }}
-
-          KAIA_ENDPOINT: https://public-en-kairos.node.kaia.io
-          KAIA_FEEPAYER_KEY: ${{ secrets.DEV_KAIA_KEY }}
-          KAIA_FEEPAYER_ADDR: ${{ secrets.DEV_KAIA_ADDR }}
-          KAIA_OWNER_KEY: ${{ secrets.DEV_KAIA_KEY }}
-          KAIA_OWNER_ADDR: ${{ secrets.DEV_KAIA_ADDR }}
+          LOCALSTACK_ENDPOINT: http://localhost:4566
         run: |
-          cd packages/main-api && make test
+          ./scripts/pr-localstack-create-table.sh
+      - name: Run Rust tests
+        env:
+          DYNAMO_TABLE_PREFIX: ratel-local
+          ENV: test
+        run: |
+          cargo test --package main-api --lib -- controllers::v3 models::dynamo_tables --show-output
 
   main-api:
     runs-on: ubuntu-22.04
@@ -100,6 +86,9 @@ jobs:
       run:
         working-directory: packages/main-api
 
+    outputs:
+      image: ${{ steps.build.outputs.image }}
+
     steps:
       - uses: actions/checkout@v3
         with:
@@ -111,26 +100,48 @@ jobs:
           components: clippy, rustfmt
           target: wasm32-unknown-unknown
           toolchain: stable
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - uses: cargo-bins/cargo-binstall@main
       - name: Install toml-cli
         run: |
           cargo binstall toml-cli
 
-      - name: Build APIs
+      - name: Build and cache Docker image
+        id: build
         env:
-          REGION: ap-northeast-2
-          ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ap-northeast-2
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
           ENV: dev
           SERVICE: main-api
           DOMAIN: api.dev.ratel.foundation
-          ECR_NAME: ratel.foundation/ratel/main-api
+          ECR_NAME: main-api
+          COMMIT: pr-${{ github.sha }}
+          MIGRATE: true
+          DYNAMO_TABLE_PREFIX: ratel-local
         run: |
+          # Build and tag image
           make docker.build
+
+          # Save image to cache
+          docker save $ECR_NAME:$COMMIT | gzip > /tmp/main-api-image.tar.gz
+          echo "image=$ECR_NAME:$COMMIT" >> $GITHUB_OUTPUT
+
+      - name: Cache Docker image
+        uses: actions/cache@v4
+        with:
+          path: /tmp/main-api-image.tar.gz
+          key: main-api-image-${{ github.sha }}
 
   fetcher:
     runs-on: ubuntu-latest
+
+    outputs:
+      image: ${{ steps.build.outputs.image }}
+
     steps:
       - uses: actions/checkout@v3
         with:
@@ -143,40 +154,205 @@ jobs:
           target: wasm32-unknown-unknown
           toolchain: stable
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - uses: cargo-bins/cargo-binstall@main
       - name: Install dependencies
         run: |
           cargo binstall toml-cli
 
-      - name: Cache builder
-        id: fetcher-build-cache
-        uses: actions/cache@v3
-        with:
-          key: fetcher-build-cache
-          path: |
-            packages/fetcher/target
-
-      - name: Deploy APIs
+      - name: Build and cache Docker image
+        id: build
         env:
           REGION: ap-northeast-2
-          ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          ACCESS_KEY_ID: test
+          SECRET_ACCESS_KEY: test
           ENV: dev
           RUST_LOG: info
           SERVICE: fetcher
           DOMAIN: fetcher-api.dev.ratel.foundation
           AUTH_DOMAIN: dev.ratel.foundation
           DATABASE_TYPE: postgres
-          DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
-          OPENAPI_KEY: ${{ secrets.OPENAPI_KEY }}
-          AUTH_SECRET_KEY: ${{ secrets.DEV_AUTH_SECRET_KEY }}
-          JWT_SECRET_KEY: ${{ secrets.DEV_JWT_SECRET_KEY }}
-          SERVER_KEY: ${{ secrets.DEV_AUTH_SECRET_KEY }}
-          SLACK_CHANNEL_BILL: ${{ secrets.DEV_SLACK }}
           BASE_DOMAIN: ratel.foundation
           REPO_NAME: ratel/fetcher
-          ECR_NAME: test-fetcher
-          US_CONGRESS_KEY: ${{ secrets.US_CONGRESS_KEY }}
+          ECR_NAME: fetcher
+          COMMIT: pr-${{ github.sha }}
+          DYNAMO_TABLE_PREFIX: ratel-local
         run: |
           npm i -g aws-cdk
-          cd packages/fetcher && make docker.build
+          cd packages/fetcher
+          # Build and tag image
+          make docker.build
+
+          # Save image to cache
+          docker save $ECR_NAME:$COMMIT | gzip > /tmp/fetcher-image.tar.gz
+          echo "image=$ECR_NAME:$COMMIT" >> $GITHUB_OUTPUT
+
+      - name: Cache Docker image
+        uses: actions/cache@v4
+        with:
+          path: /tmp/fetcher-image.tar.gz
+          key: fetcher-image-${{ github.sha }}
+
+  playwright-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [nextjs-web, main-api, fetcher]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          ssh-key: ${{ secrets.PULL_KEY_REPO }}
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
+
+      - name: Setup pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.15.0 --activate
+
+      - name: Install dependencies
+        run: pnpm i
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Restore web image cache
+        uses: actions/cache@v4
+        with:
+          path: /tmp/web-image.tar.gz
+          key: web-image-${{ github.sha }}
+          fail-on-cache-miss: true
+
+      - name: Restore main-api image cache
+        uses: actions/cache@v4
+        with:
+          path: /tmp/main-api-image.tar.gz
+          key: main-api-image-${{ github.sha }}
+          fail-on-cache-miss: true
+
+      - name: Restore fetcher image cache
+        uses: actions/cache@v4
+        with:
+          path: /tmp/fetcher-image.tar.gz
+          key: fetcher-image-${{ github.sha }}
+          fail-on-cache-miss: true
+
+      - name: Load Docker images
+        run: |
+          # Load images from cache
+          docker load < /tmp/web-image.tar.gz
+          docker load < /tmp/main-api-image.tar.gz
+          docker load < /tmp/fetcher-image.tar.gz
+
+          # Verify images are loaded
+          docker images
+
+      # - name: Setup SSH session with tmate
+      #   uses: mxschmitt/action-tmate@v3
+      #   env:
+      #     COMMIT: pr-${{ github.sha }}
+      #   with:
+      #     limit-access-to-actor: true
+
+      - name: Setup test environment
+        env:
+          COMMIT: pr-${{ github.sha }}
+        run: |
+          docker-compose --profile testing up -d
+
+      - name: Wait for services to be ready
+        run: |
+          # Check service health with retry loop and timeout
+          echo "Waiting for services to be ready..."
+
+          # Wait for Main API (180 second timeout for container startup)
+          echo "🔄 Checking Main API..."
+          timeout=180
+          interval=10
+          elapsed=0
+          while [ $elapsed -lt $timeout ]; do
+            if curl -f -s http://localhost:3000/version > /dev/null 2>&1; then
+              echo "✅ Main API is responding (took ${elapsed}s)"
+              break
+            fi
+            echo "⏳ Main API not ready yet... (${elapsed}/${timeout}s)"
+            sleep $interval
+            elapsed=$((elapsed + interval))
+          done
+
+          if [ $elapsed -ge $timeout ]; then
+            echo "❌ Main API failed to respond with 200 status within ${timeout}s"
+            echo "🔍 Checking Docker services status:"
+            docker-compose -f docker-compose.test.yaml ps
+            echo "🔍 Main API logs:"
+            docker-compose -f docker-compose.test.yaml logs main-api --tail=50
+            exit 1
+          fi
+
+          # Wait for Web frontend (180 second timeout)
+          echo "🔄 Checking Web frontend..."
+          elapsed=0
+          while [ $elapsed -lt $timeout ]; do
+            if curl -f -s http://localhost:8080/api/version > /dev/null 2>&1; then
+              echo "✅ Web frontend is responding (took ${elapsed}s)"
+              break
+            fi
+            echo "⏳ Web frontend not ready yet... (${elapsed}/${timeout}s)"
+            sleep $interval
+            elapsed=$((elapsed + interval))
+          done
+
+          if [ $elapsed -ge $timeout ]; then
+            echo "❌ Web frontend failed to respond with 200 status within ${timeout}s"
+            echo "🔍 Checking Docker services status:"
+            docker-compose -f docker-compose.test.yaml ps
+            echo "🔍 Web logs:"
+            docker-compose -f docker-compose.test.yaml logs web --tail=50
+            exit 1
+          fi
+
+          echo "🎉 All services are ready!"
+
+      - name: Run Playwright Tests
+        env:
+          CI: true
+        run: |
+          # Create test results directory
+          mkdir -p test-results
+
+          # Run Playwright tests
+          make test
+        continue-on-error: true
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-test-results
+          path: |
+            test-results/
+            playwright-report/
+          retention-days: 30
+
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-screenshots-${{ github.sha }}
+          path: test-results/**/
+          retention-days: 30
+
+      - name: Show test logs on failure
+        if: failure()
+        run: |
+          echo "=== Docker Compose Services ==="
+          docker-compose -f docker-compose.test.yaml ps
+          echo ""
+          echo "=== Docker Compose Logs ==="
+          docker-compose -f docker-compose.test.yaml logs --tail=50

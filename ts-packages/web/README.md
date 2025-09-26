@@ -8,6 +8,9 @@ This is a repository for Ratel web on https://ratel.foundation
 
 - Refer to pnpm [official documentation](https://pnpm.io/installation).
 
+### Setup Firebase
+- Refer to [Firebase setup](../../docs/FIREBASE_SETUP.md)
+
 ## Running a server
 
 ```bash

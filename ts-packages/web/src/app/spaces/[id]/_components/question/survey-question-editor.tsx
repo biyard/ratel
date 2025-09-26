@@ -157,7 +157,7 @@ export default function SurveyQuestionEditor({
   };
 
   return (
-    <div className="flex flex-col w-full bg-component-bg rounded-[10px] px-4 pb-5 pt-1">
+    <div className="flex flex-col w-full bg-card-bg-secondary border border-card-border rounded-[10px] px-4 pb-5 pt-1">
       <div className="flex flex-row w-full justify-center items-center mb-2.5">
         <DialPad className="w-6 h-6" />
       </div>
@@ -165,7 +165,7 @@ export default function SurveyQuestionEditor({
         <div className="flex gap-2 max-tablet:flex-col">
           <AnswerTypeSelect value={questionType} onChange={handleTypeChange} />
           <Input
-            className="bg-neutral-800 border border-neutral-700 rounded-lg w-full px-4 !py-5.5 font-medium text-[15px]/[22.5px] text-white placeholder:text-neutral-600 "
+            className="bg-input-box-bg border border-input-box-border rounded-lg w-full px-4 !py-5.5 font-medium text-[15px]/[22.5px] text-text-primary placeholder:text-neutral-600 "
             type="text"
             placeholder={t('title_hint')}
             value={questionTitle}
@@ -177,7 +177,7 @@ export default function SurveyQuestionEditor({
           questionType === 'multiple_choice' ||
           questionType === 'linear_scale' ? (
             <FileUploader onUploadSuccess={handleImageChange}>
-              <div className="cursor-pointer flex flex-row w-fit h-fit p-[10.59px] bg-white rounded-lg">
+              <div className="cursor-pointer flex flex-row w-fit h-fit p-[10.59px] bg-white border border-transparent light:border-[#e5e5e5] rounded-lg">
                 <Image2 className="w-[22.81px] h-[22.81px] " />
               </div>
             </FileUploader>
@@ -189,7 +189,8 @@ export default function SurveyQuestionEditor({
           <Image
             width={300}
             height={300}
-            className="object-contain max-w-75"
+            sizes="(max-width: 500px) 100vw, 300px"
+            className="object-contain max-w-75 max-mobile:max-w-full max-mobile:w-full h-auto"
             src={imageUrl}
             alt={title || 'Question Title'}
           />
@@ -221,7 +222,7 @@ export default function SurveyQuestionEditor({
           )}
         </div>
         <div className="flex flex-row w-full justify-end items-center">
-          <div className="flex flex-row w-fit gap-10">
+          <div className="flex flex-wrap w-fit max-tablet:gap-4 max-tablet:justify-end gap-10">
             {questionType == 'checkbox' && (
               <LabelSwitchButton
                 bgColor="bg-blue-500"
@@ -245,7 +246,7 @@ export default function SurveyQuestionEditor({
               <div className="text-[15px] text-neutral-500 font-medium cursor-pointer">
                 {t('delete')}
               </div>
-              <Trash2 className="w-4.5 h-4.5 stroke-neutral-500 cursor-pointer" />
+              <Trash2 className="w-4.5 h-4.5 stroke-white light:stroke-neutral-500 cursor-pointer" />
             </div>
           </div>
         </div>

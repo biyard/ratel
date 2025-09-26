@@ -44,6 +44,7 @@ pub struct PassportInfo {
     #[serde(deserialize_with = "date_format::deserialize")]
     pub expiration_date: i64,
     pub gender: Gender,
+    pub place_of_birth: Option<String>,
 }
 
 mod date_format {
@@ -158,6 +159,9 @@ async fn worker(state: &PassportHandlerState, req: &PassportRequest) -> Result<P
         You are an expert data extraction AI.
         From the passport OCR text below, extract the `first_name`, `last_name`, `nationality`, `birth_date`, `sex`, and `expiration_date`. Pay close attention to the Machine Readable Zone (MRZ).
 
+        For nationality, always use the ISO 3166-1 alpha-3 country code (e.g., "KOR" for South Korea, "USA" for United States, "GBR" for United Kingdom).
+        For `place_of_birth`, if the information is missing or not present in the passport, use null.
+
         Your response **must** be a single, raw JSON object. Use `null` for missing fields. Add no explanations or markdown.
 
         **-- Example --**
@@ -188,8 +192,7 @@ Date of expiry
 01 /JAN 2020
 01 /JAN 2030
         **JSON Output:**
-        `{{"first_name":"GILDONG", "last_name":"HONG", "nationality":"ROK","birth_date":"2000/01/01","gender":"Male","expiration_date":"2030/01/01"}}`
-
+        `{{"first_name":"GILDONG", "last_name":"HONG", "nationality":"KOR","birth_date":"2000/01/01","gender":"Male","expiration_date":"2030/01/01","place_of_birth":null}}`
         **-- Task --**
         **Input Text:**
         `{}`

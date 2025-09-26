@@ -86,10 +86,18 @@ export 'presentations/spaces/spaces_controller.dart';
 export 'presentations/spaces/spaces_screen.dart';
 export 'presentations/spaces/spaces_model.dart';
 
+export 'presentations/space/deliberation/space_controller.dart';
+export 'presentations/space/deliberation/space_screen.dart';
+export 'presentations/space/deliberation/space_model.dart';
+export 'presentations/space/deliberation/space_binding.dart';
+export 'presentations/space/notice/space_controller.dart';
+export 'presentations/space/notice/space_screen.dart';
+export 'presentations/space/notice/space_model.dart';
+export 'presentations/space/notice/space_binding.dart';
 export 'presentations/space/space_binding.dart';
-export 'presentations/space/space_controller.dart';
-export 'presentations/space/space_screen.dart';
-export 'presentations/space/space_model.dart';
+export 'presentations/space/not-found/not_found_controller.dart';
+export 'presentations/space/not-found/not_found_screen.dart';
+export 'presentations/space/not-found/not_found_binding.dart';
 
 export 'presentations/connection/connection_binding.dart';
 export 'presentations/connection/connection_model.dart';

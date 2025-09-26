@@ -1,6 +1,5 @@
 import { Feed, FeedStatus } from './models/feeds';
 import { FileType } from './models/file-type';
-import { gql } from '@apollo/client';
 import { Space } from './models/spaces';
 import {
   QuizAttempt,
@@ -27,6 +26,7 @@ import { useApiCall } from './use-send';
 import { RedeemCode } from './models/redeem-code';
 import { NetworkData } from './models/network';
 import { Promotion } from './models/promotion';
+import { GroupPermission } from './models/group';
 
 export function useSpaceById(id: number): UseSuspenseQueryResult<Space> {
   const { get } = useApiCall();
@@ -168,6 +168,10 @@ export const proxy = {
   },
 };
 export const ratelApi = {
+  permissions: {
+    getPermissions: (teamId: number, permission: GroupPermission) =>
+      `/v2/permissions?team_id=${teamId}&permission=${permission}`,
+  },
   users: {
     login: () => '/v1/users?action=login',
 
@@ -176,8 +180,6 @@ export const ratelApi = {
       `/v1/users?action=login-by-password&email=${encodeURIComponent(email)}&password=${password}`,
     loginWithTelegram: (raw: string) =>
       `/v1/users?action=login-by-telegram&telegram_raw=${raw}`,
-    getTotalInfo: (page: number, size: number) =>
-      `/v1/totals?param-type=query&bookmark=${page}&size=${size}`,
     getUserInfo: () => '/v1/users?action=user-info',
     getUserByEmail: (email: string) => `/v2/users?email=${email}`,
     getUserByUsername: (username: string) => `/v2/users?username=${username}`,
@@ -188,10 +190,11 @@ export const ratelApi = {
     editProfile: (user_id: number) => `/v1/users/${user_id}`,
     updateEvmAddress: () => '/v1/users',
 
-    updateTelegramId: () => '/v1/users',
+    updateTelegramId: () => '/v2/users/telegram',
 
     sendVerificationCode: () => '/v1/users/verifications',
   },
+
   assets: {
     getPresignedUrl: (file_type: FileType, total_count = 1) =>
       `/v1/assets?action=get-presigned-uris&file_type=${file_type}&total_count=${total_count}`,
@@ -201,6 +204,7 @@ export const ratelApi = {
   },
   teams: {
     createTeam: () => '/v1/teams',
+    deleteTeam: () => '/v2/teams',
     getTeamById: (team_id: number) => `/v1/teams/${team_id}`,
     getTeamByUsername: (username: string) =>
       `/v1/teams?param-type=read&action=get-by-username&username=${username}`,
@@ -220,6 +224,8 @@ export const ratelApi = {
       `/v1/teams/${team_id}/groups/${group_id}`,
     check_email: (team_id: number, group_id: number) =>
       `/v1/teams/${team_id}/groups/${group_id}`,
+    delete_group: (team_id: number, group_id: number) =>
+      `/v1/teams/${team_id}/groups/${group_id}`,
   },
   networks: {
     getNetworks: () => '/v1/network?param-type=read&action=find-one',
@@ -228,12 +234,21 @@ export const ratelApi = {
   },
   news: {
     getNewsDetails: (news_id: number) => `/v1/news/${news_id}`,
+    getNews: (page: number, size: number) =>
+      `/v1/news?param-type=query&page=${page}&size=${size}`,
+  },
+  themes: {
+    changeTheme: () => '/v2/themes',
+  },
+  binances: {
+    createSubscription: () => '/v2/binances/subscriptions',
+    unsubscribe: () => '/v2/binances/unsubscribe',
   },
   feeds: {
     comment: () => '/v1/feeds',
     writePost: () => '/v1/feeds',
     createDraft: () => '/v1/feeds',
-    updateDraft: (post_id: number) => `/v1/feeds/${post_id}`,
+    updateDraft: (post_id: number) => `/v2/feeds/${post_id}`,
     editPost: (post_id: number) => `/v1/feeds/${post_id}`,
     publishDraft: (post_id: number) => `/v1/feeds/${post_id}`,
     removeDraft: (post_id: number) => `/v1/feeds/${post_id}?action=delete`,
@@ -251,6 +266,23 @@ export const ratelApi = {
     getFeedsByFeedId: (feed_id: number) => `/v1/feeds/${feed_id}`,
     getPosts: (page: number, size: number) =>
       `/v1/feeds?param-type=query&bookmark=${page}&size=${size}`,
+
+    getFeed: (post_id: number) => `/v2/feeds/${post_id}`,
+    getFeeds: (
+      page: number,
+      size: number,
+      user_id?: number,
+      status?: FeedStatus,
+    ) => {
+      let url = `/v2/feeds?page=${page}&size=${size}`;
+      if (user_id) {
+        url += `&user_id=${user_id}`;
+      }
+      if (status) {
+        url += `&status=${status}`;
+      }
+      return url;
+    },
   },
   redeems: {
     useRedeemCode: (redeem_id: number) => `/v1/redeems/${redeem_id}`,
@@ -332,89 +364,15 @@ export const ratelApi = {
       `/v2/dagits/${spaceId}/artworks/${artworkId}/vote`,
   },
   telegram: {
-    subscribe: () => '/v2/telegram/subscribe',
+    verifyTelegramRaw: () => `/v2/telegram`,
   },
-  graphql: {
-    listNews: (size: number) => {
-      return {
-        query: gql`
-          query ListNews($limit: Int!) {
-            news(limit: $limit, order_by: { created_at: desc }) {
-              id
-              title
-              html_content
-              created_at
-            }
-          }
-        `,
-        variables: {
-          limit: size,
-        },
-      };
-    },
-    listIndustries: () => {
-      return {
-        query: gql`
-          query ListIndustries {
-            industries {
-              id
-              name
-            }
-          }
-        `,
-      };
-    },
-    getUserByUsername: (username: string) => {
-      return {
-        query: gql`
-          query GetUserByUsername($username: String!) {
-            users(where: { username: { _eq: $username } }) {
-              id
-            }
-          }
-        `,
-        variables: {
-          username,
-        },
-      };
-    },
-
-    getUserByEmail: (email: string) => {
-      return {
-        query: gql`
-          query GetUserByEmail($email: String!) {
-            users(where: { email: { _eq: $email } }) {
-              id
-            }
-          }
-        `,
-        variables: {
-          email,
-        },
-      };
-    },
-
-    getTeamByTeamname: (teamname: string) => {
-      return {
-        query: gql`
-          query GetTeamByTeamname($teamname: String!) {
-            users(where: { username: { _eq: $teamname } }) {
-              id
-              html_contents
-              email
-              created_at
-              nickname
-              parent_id
-              profile_url
-              user_type
-              username
-            }
-          }
-        `,
-        variables: {
-          teamname,
-        },
-      };
+  home: {
+    getHomeData: (feedLimit?: number, newsLimit?: number) => {
+      const params = new URLSearchParams();
+      if (feedLimit) params.append('feed_limit', feedLimit.toString());
+      if (newsLimit) params.append('news_limit', newsLimit.toString());
+      const queryString = params.toString();
+      return `/wg/home${queryString ? `?${queryString}` : ''}`;
     },
   },
 };

@@ -101,6 +101,7 @@ pub struct Feed {
 #[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub enum FeedType {
+    Artwork = 0,
     #[default]
     Post = 1,
 

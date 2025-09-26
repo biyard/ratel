@@ -64,14 +64,16 @@ export function TitleSection({
     <div>
       {isEdit ? (
         <Input
-          className="border-b border-transparent !border-b-white focus:!border-transparent focus:rounded-md font-bold text-white text-[24px]/[30px] placeholder:text-neutral-300 placeholder:font-medium rounded-none"
+          className="border-b border-transparent !border-b-white focus:!border-transparent focus:rounded-md font-bold text-text-primary text-[24px]/[30px] placeholder:text-neutral-300 placeholder:font-medium rounded-none"
           value={title || ''}
           onChange={(e) => setTitle(e.target.value)}
           placeholder={t('title_hint')}
         />
       ) : (
         <div className="flex flex-row w-full justify-between items-center overflow-ellipsis">
-          <div className="font-bold text-white text-[20px]/[30px]">{title}</div>
+          <div className="font-bold text-text-primary text-[20px]/[30px]">
+            {title}
+          </div>
           <div className="cursor-pointer w-fit h-fit" onClick={handleShare}>
             <Expand />
           </div>
@@ -100,50 +102,58 @@ export function PostInfoSection({
 }: PostInfoSectionProps) {
   const t = useTranslations('SprintSpace');
   return (
-    <div className="flex flex-row w-full justify-between items-center">
-      <div className="flex flex-row w-fit gap-2.5 items-center">
+    <div className="flex flex-row w-full justify-between items-center max-mobile:flex-col">
+      <div className="flex flex-row gap-2.5 items-center max-tablet:hidden">
         {/* <SpaceType /> */}
         {!isDraft ? <Onboard /> : <></>}
       </div>
-      <div className="flex flex-row w-fit gap-5 [&>*>svg>*]:stroke-neutral-500 [&>*>svg]:size-5">
-        <div className="flex flex-row w-fit gap-1 items-center">
-          <ThumbsUp />
-          <div className="font-medium text-[15px] text-white">{likes}</div>
+      <div className="flex flex-row gap-5 [&>*>svg>*]:stroke-neutral-500 [&>*>svg]:size-5">
+        <div className="flex flex-row gap-1">
+          <ThumbsUp className="[&>path]:stroke-neutral-500" />
+          <div className="font-medium text-[15px] text-text-primary">
+            {likes}
+          </div>
         </div>
 
-        <div className="flex flex-row w-fit gap-1 items-center">
+        <div className="flex flex-row gap-1">
           <RoundBubble />
-          <div className="font-medium text-[15px] text-white">{comments}</div>
+          <div className="font-medium text-[15px] text-text-primary">
+            {comments}
+          </div>
         </div>
 
-        <div className="flex flex-row w-fit gap-1 items-center">
+        <div className="flex flex-row gap-1">
           <RewardCoin />
-          <div className="font-medium text-[15px] text-white">{rewards}</div>
+          <div className="font-medium text-[15px] text-text-primary">
+            {rewards}
+          </div>
         </div>
 
-        <div className="flex flex-row w-fit gap-1 items-center">
+        <div className="flex flex-row gap-1">
           <Repost />
-          <div className="font-medium text-[15px] text-white">{shares}</div>
+          <div className="font-medium text-[15px] text-text-primary">
+            {shares}
+          </div>
         </div>
-        <div className="flex flex-row w-fit gap-1 items-center">
+        <div className="flex flex-row gap-1">
           {isDraft ? (
             <>
               <File />
-              <div className="font-normal text-white text-[15px]">
+              <div className="font-normal text-text-primary text-[15px]">
                 {t('draft')}
               </div>
             </>
           ) : isPublic ? (
             <>
               <Unlock2 />
-              <div className="font-normal text-white text-[15px]">
+              <div className="font-normal text-text-primary text-[15px]">
                 {t('public')}
               </div>
             </>
           ) : (
             <>
               <Lock2 />
-              <div className="font-normal text-white text-[15px]">
+              <div className="font-normal text-text-primary text-[15px]">
                 {t('private')}
               </div>
             </>
@@ -183,10 +193,10 @@ export function AuthorSection({
               : 'rounded-full object-cover object-top w-6 h-6'
           }
         />
-        <span className="text-white font-medium">{name}</span>
+        <span className="text-text-primary font-medium">{name}</span>
         {isCertified && <Badge />}
       </div>
-      <div className="font-light text-white text-sm">
+      <div className="font-light text-text-primary text-sm">
         {getTimeAgo(createdAt)}
       </div>
     </div>

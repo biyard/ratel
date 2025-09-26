@@ -1,10 +1,3 @@
-pub mod openapi {
-    pub mod national_assembly;
-    pub mod national_bill;
-    pub mod national_proposer;
-    pub mod national_vote;
-}
-
 pub mod folder_type {
     pub mod folder_type;
 }
@@ -15,3 +8,7 @@ pub mod oauth {
     pub mod response_type;
     pub mod scope;
 }
+
+pub mod dynamo_tables;
+
+pub use dynamo_tables::*;

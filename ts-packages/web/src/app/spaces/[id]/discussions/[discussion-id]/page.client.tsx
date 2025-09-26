@@ -83,17 +83,6 @@ function Page() {
             }}
           />
 
-          {meetingSession && !isSharing && !remoteContentTileOwner && (
-            <RemoteGalleryView
-              meetingSession={meetingSession}
-              videoTiles={videoTiles}
-              participants={participants}
-              u={users}
-              focusedAttendeeId={focusedAttendeeId}
-              setFocusedAttendeeId={changeFocusedAttendeeId}
-            />
-          )}
-
           <div className="relative w-full h-full">
             <div className="flex flex-col w-full justify-start items-start">
               <>
@@ -105,7 +94,6 @@ function Page() {
                         changeRemoteContentTileOwner(null);
                         return;
                       }
-
                       const attendeeId = tileState.boundAttendeeId;
                       if (
                         attendeeId &&
@@ -144,7 +132,6 @@ function Page() {
                       autoPlay
                       muted={false}
                     />
-
                     <div className="absolute bottom-2 right-2 z-50 w-fit max-w-[100px] h-fit px-[10px] py-[5px] bg-neutral-800 text-white text-sm rounded-lg overflow-hidden text-ellipsis whitespace-nowrap">
                       {focusedNickname}
                     </div>
@@ -169,6 +156,19 @@ function Page() {
             </div>
           </div>
 
+          <div className="flex flex-row w-full max-tablet:hidden">
+            {meetingSession && !isSharing && !remoteContentTileOwner && (
+              <RemoteGalleryView
+                meetingSession={meetingSession}
+                videoTiles={videoTiles}
+                participants={participants}
+                u={users}
+                focusedAttendeeId={focusedAttendeeId}
+                setFocusedAttendeeId={changeFocusedAttendeeId}
+              />
+            )}
+          </div>
+
           <Bottom
             isVideoOn={isVideoOn}
             isAudioOn={isAudioOn}
@@ -185,13 +185,11 @@ function Page() {
             onRecordClick={async () => {
               if (!meetingSession) return;
               const av = meetingSession.audioVideo;
-
               if (!isRecording) {
                 await post(
                   ratelApi.discussions.actDiscussionById(spaceId, discussionId),
                   startRecordingRequest(),
                 );
-
                 av.realtimeSendDataMessage(
                   'recording-status',
                   new TextEncoder().encode('start'),
@@ -224,13 +222,10 @@ function Page() {
             }}
             onShareToggle={async () => {
               if (!meetingSession) return;
-
               const av = meetingSession.audioVideo;
-
               if (!isSharing) {
                 try {
                   await av.startContentShareFromScreenCapture();
-
                   changeIsSharing(true);
                 } catch (err) {
                   logger.error('Failed to share video with error: ', err);
@@ -240,18 +235,50 @@ function Page() {
                 changeIsSharing(false);
               }
             }}
-            onAudioToggle={() => {
+            onAudioToggle={async () => {
               if (!meetingSession) return;
-
               const av = meetingSession.audioVideo;
 
               if (isAudioOn) {
                 av.realtimeMuteLocalAudio();
-              } else {
-                av.realtimeUnmuteLocalAudio();
+                changeIsAudioOn(false);
+                return;
               }
 
-              changeIsAudioOn(!isAudioOn);
+              try {
+                const dc = meetingSession.deviceController;
+
+                let inputs = await dc.listAudioInputDevices();
+
+                if (!inputs.length) {
+                  try {
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                      audio: true,
+                    });
+                    stream.getTracks().forEach((t) => t.stop());
+                    inputs = await dc.listAudioInputDevices();
+                  } catch (permErr) {
+                    console.warn(
+                      '[Audio] permission denied or no device:',
+                      permErr,
+                    );
+                    return;
+                  }
+                }
+
+                if (!inputs.length) {
+                  console.warn(
+                    '[Audio] no input devices found after permission',
+                  );
+                  return;
+                }
+
+                await dc.startAudioInput(inputs[0].deviceId);
+                av.realtimeUnmuteLocalAudio();
+                changeIsAudioOn(true);
+              } catch (err) {
+                console.warn('[Audio] enable failed:', err);
+              }
             }}
           />
         </div>

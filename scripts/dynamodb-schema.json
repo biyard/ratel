@@ -1,0 +1,191 @@
+{
+  "TableName": "ratel-local-main",
+  "AttributeDefinitions": [
+    {
+      "AttributeName": "pk",
+      "AttributeType": "S"
+    },
+    {
+      "AttributeName": "sk",
+      "AttributeType": "S"
+    },
+    {
+      "AttributeName": "type",
+      "AttributeType": "S"
+    },
+    {
+      "AttributeName": "gsi1_pk",
+      "AttributeType": "S"
+    },
+    {
+      "AttributeName": "gsi1_sk",
+      "AttributeType": "S"
+    },
+    {
+      "AttributeName": "gsi2_pk",
+      "AttributeType": "S"
+    },
+    {
+      "AttributeName": "gsi2_sk",
+      "AttributeType": "S"
+    },
+    {
+      "AttributeName": "gsi3_pk",
+      "AttributeType": "S"
+    },
+    {
+      "AttributeName": "gsi3_sk",
+      "AttributeType": "S"
+    },
+    {
+      "AttributeName": "gsi4_pk",
+      "AttributeType": "S"
+    },
+    {
+      "AttributeName": "gsi4_sk",
+      "AttributeType": "S"
+    },
+    {
+      "AttributeName": "gsi5_pk",
+      "AttributeType": "S"
+    },
+    {
+      "AttributeName": "gsi5_sk",
+      "AttributeType": "S"
+    },
+    {
+      "AttributeName": "gsi6_pk",
+      "AttributeType": "S"
+    },
+    {
+      "AttributeName": "gsi6_sk",
+      "AttributeType": "S"
+    }
+  ],
+  "KeySchema": [
+    {
+      "AttributeName": "pk",
+      "KeyType": "HASH"
+    },
+    {
+      "AttributeName": "sk",
+      "KeyType": "RANGE"
+    }
+  ],
+  "BillingMode": "PAY_PER_REQUEST",
+  "GlobalSecondaryIndexes": [
+    {
+      "IndexName": "type-index",
+      "KeySchema": [
+        {
+          "AttributeName": "type",
+          "KeyType": "HASH"
+        },
+        {
+          "AttributeName": "sk",
+          "KeyType": "RANGE"
+        }
+      ],
+      "Projection": {
+        "ProjectionType": "ALL"
+      }
+    },
+
+    {
+      "IndexName": "gsi1-index",
+      "KeySchema": [
+        {
+          "AttributeName": "gsi1_pk",
+          "KeyType": "HASH"
+        },
+        {
+          "AttributeName": "gsi1_sk",
+          "KeyType": "RANGE"
+        }
+      ],
+      "Projection": {
+        "ProjectionType": "ALL"
+      }
+    },
+    {
+      "IndexName": "gsi2-index",
+      "KeySchema": [
+        {
+          "AttributeName": "gsi2_pk",
+          "KeyType": "HASH"
+        },
+        {
+          "AttributeName": "gsi2_sk",
+          "KeyType": "RANGE"
+        }
+      ],
+      "Projection": {
+        "ProjectionType": "ALL"
+      }
+    },
+    {
+      "IndexName": "gsi3-index",
+      "KeySchema": [
+        {
+          "AttributeName": "gsi3_pk",
+          "KeyType": "HASH"
+        },
+        {
+          "AttributeName": "gsi3_sk",
+          "KeyType": "RANGE"
+        }
+      ],
+      "Projection": {
+        "ProjectionType": "ALL"
+      }
+    },
+    {
+      "IndexName": "gsi4-index",
+      "KeySchema": [
+        {
+          "AttributeName": "gsi4_pk",
+          "KeyType": "HASH"
+        },
+        {
+          "AttributeName": "gsi4_sk",
+          "KeyType": "RANGE"
+        }
+      ],
+      "Projection": {
+        "ProjectionType": "ALL"
+      }
+    },
+    {
+      "IndexName": "gsi5-index",
+      "KeySchema": [
+        {
+          "AttributeName": "gsi5_pk",
+          "KeyType": "HASH"
+        },
+        {
+          "AttributeName": "gsi5_sk",
+          "KeyType": "RANGE"
+        }
+      ],
+      "Projection": {
+        "ProjectionType": "ALL"
+      }
+    },
+    {
+      "IndexName": "gsi6-index",
+      "KeySchema": [
+        {
+          "AttributeName": "gsi6_pk",
+          "KeyType": "HASH"
+        },
+        {
+          "AttributeName": "gsi6_sk",
+          "KeyType": "RANGE"
+        }
+      ],
+      "Projection": {
+        "ProjectionType": "ALL"
+      }
+    }
+  ]
+}

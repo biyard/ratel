@@ -23,7 +23,7 @@ export default function SubjectiveResponse({
 
   return (
     <div className="w-full p-5 bg-transparent rounded-xl flex flex-col gap-5 border border-neutral-500">
-      <div className="flex items-center justify-between border-b border-neutral-500 pb-2">
+      <div className="flex items-center justify-between border-b border-divider pb-2">
         <div className="text-base font-semibold text-neutral-400">
           {question.title}
         </div>
@@ -36,7 +36,7 @@ export default function SubjectiveResponse({
         {validAnswers.map((answer, idx) => (
           <div
             key={idx}
-            className="px-4 py-2 bg-neutral-700 rounded-md text-sm text-neutral-300 whitespace-pre-wrap"
+            className="px-4 py-2 bg-input-box-bg border border-input-box-border rounded-md text-sm text-text-primary whitespace-pre-wrap"
           >
             {answer}
           </div>

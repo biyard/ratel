@@ -1,4 +1,4 @@
-import BlackBox from '@/app/(social)/_components/black-box';
+import BorderSpaceCard from '@/app/(social)/_components/border-space-card';
 import { RewardCoin } from '@/assets/icons/money-payment';
 import { Settings2 } from '@/assets/icons/settings';
 import { useTranslations } from 'next-intl';
@@ -32,7 +32,7 @@ export default function RewardMenu({
 }) {
   const s = useTranslations('SprintSpace');
   return (
-    <BlackBox>
+    <BorderSpaceCard>
       <div className="flex flex-col w-full text-neutral-500 gap-5">
         <div className="flex flex-row font-bold text-sm justify-between">
           <div className="flex flex-row gap-2">
@@ -60,7 +60,7 @@ export default function RewardMenu({
           ))}
         </div>
       </div>
-    </BlackBox>
+    </BorderSpaceCard>
   );
 }
 
@@ -69,7 +69,7 @@ function RewardItem({ amount, text }: RewardProps) {
     <div className="flex flex-row w-full gap-2.5 text-[12px]/[12px] text-neutral-500">
       <span>+</span>
       <div className="flex flex-col gap-1">
-        <span className="text-white text-[15px]/[12px] font-medium">
+        <span className="text-text-primary text-[15px]/[12px] font-medium">
           {amount.toLocaleString()} P
         </span>
         <span>{text}</span>

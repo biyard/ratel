@@ -15,7 +15,6 @@ import { useQueryClient } from '@tanstack/react-query';
 import { QK_GET_SPACE_BY_SPACE_ID, QK_LATEST_QUIZ_ATTEMPT } from '@/constants';
 import { useUserInfo } from '@/app/(social)/_hooks/user';
 import { useQuizUpdates } from '@/hooks/use-quiz-updates';
-import { useFeedByID } from '@/app/(social)/_hooks/feed';
 import { ratelApi } from '@/lib/api/ratel_api';
 import {
   postingSpaceRequest,
@@ -81,6 +80,7 @@ import {
   convertQuizQuestionsToQuestions,
 } from './_components/quiz-builder-ui';
 import { useTranslations } from 'next-intl';
+import useFeedById from '@/hooks/feeds/use-feed-by-id';
 
 type ContextType = {
   spaceId: number;
@@ -787,7 +787,7 @@ export function useNoticeSpace() {
 }
 
 export function useNoticeFeed(feedId: number) {
-  const { data: feed } = useFeedByID(feedId);
+  const { data: feed } = useFeedById(feedId);
   if (!feed) {
     throw new Error('Feed not found');
   }

@@ -2,11 +2,16 @@ use std::env;
 
 use crate::{
     config, controllers,
-    route::route,
+    route::{RouteDeps, route},
     utils::{
-        aws::{BedrockClient, RekognitionClient, S3Client, TextractClient},
+        aws::{
+            BedrockClient, DynamoClient, RekognitionClient, S3Client, SesClient, TextractClient,
+            get_aws_config,
+        },
+        dynamo_session_store::DynamoSessionStore,
         mcp_middleware::mcp_middleware,
         sqs_client,
+        telegram::TelegramBot,
     },
 };
 
@@ -26,7 +31,6 @@ use tower_sessions::{
     Session, SessionManagerLayer,
     cookie::time::{Duration, OffsetDateTime},
 };
-use tower_sessions_sqlx_store::PostgresStore;
 
 macro_rules! migrate {
     ($pool:ident, $($table:ident),* $(,)?) => {
@@ -51,15 +55,15 @@ pub async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         User,
         Group,
         GroupMember,
-        AssemblyMember,
-        BillWriter,
-        Vote,
-        Proposer,
-        Support,
+        // AssemblyMember,
+        // BillWriter,
+        // Vote,
+        // Proposer,
+        // Support,
         Subscription,
-        PresidentialCandidate,
-        ElectionPledge,
-        ElectionPledgeLike,
+        // PresidentialCandidate,
+        // ElectionPledge,
+        // ElectionPledgeLike,
         Industry,
         UserIndustry,
         Feed,
@@ -87,14 +91,15 @@ pub async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         SprintLeagueVote,
         TeamMember,
         News,
-        Quiz,
-        QuizResult,
-        ElectionPledgeQuizLike,
-        ElectionPledgeQuizDislike,
+        Purchase,
+        // Quiz,
+        // QuizResult,
+        // ElectionPledgeQuizLike,
+        // ElectionPledgeQuizDislike,
         Promotion,
-        AdvocacyCampaign,
-        AdvocacyCampaignAuthor,
-        AdvocacyCampaignVoter,
+        // AdvocacyCampaign,
+        // AdvocacyCampaignAuthor,
+        // AdvocacyCampaignVoter,
         EventLog,
         Badge,
         UserBadge,
@@ -108,7 +113,6 @@ pub async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         Notification,
         NoticeQuizAnswer,
         NoticeQuizAttempt,
-        TelegramSubscribe,
         Dagit,
         Artwork,
         Oracle,
@@ -123,70 +127,16 @@ pub async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
         ConversationParticipant,
         AuthClient,
         AuthCode,
+        Post,
+        TelegramChannel,
+        TelegramToken,
     );
 
-    if Industry::query_builder()
-        .id_equals(1)
-        .query()
-        .map(Industry::from)
-        .fetch_optional(pool)
-        .await?
-        .is_none()
-    {
-        Industry::get_repository(pool.clone())
-            .insert("Crypto".to_string())
-            .await?;
-    }
-
-    if User::query_builder()
-        .id_equals(1)
-        .query()
-        .map(User::from)
-        .fetch_optional(pool)
-        .await?
-        .is_none()
-    {
-        User::get_repository(pool.clone())
-            .insert(
-                "ServiceAdmin".to_string(),
-                "user-principal-1".to_string(),
-                "".to_string(),
-                "https://metadata.ratel.foundation/metadata/0faf45ec-35e1-40e9-bff2-c61bb52c7d19"
-                    .to_string(),
-                true,
-                true,
-                UserType::Individual,
-                None,
-                "admin".to_string(),
-                "".to_string(),
-                "0x000".to_string(),
-                "password".to_string(),
-                Membership::Free,
-                "".to_string(),
-                None,
-                None,
-            )
-            .await?;
-    }
-
-    if Group::query_builder()
-        .id_equals(1)
-        .query()
-        .map(Group::from)
-        .fetch_optional(pool)
-        .await?
-        .is_none()
-    {
-        Group::get_repository(pool.clone())
-            .insert(
-                "ServiceAdmin".to_string(),
-                "".to_string(),
-                "".to_string(),
-                1,
-                0xffffffffffffffffu64 as i64,
-            )
-            .await?;
-    }
+    // Create DynamoDB tables
+    // tracing::info!("Creating DynamoDB tables");
+    // let dynamo_tables = get_user_tables();
+    // create_dynamo_tables(dynamo_tables).await?;
+    // tracing::info!("DynamoDB tables created successfully");
 
     tracing::info!("Migration done");
     Ok(())
@@ -240,15 +190,13 @@ pub async fn api_main() -> Result<Router> {
         panic!("Database is not initialized. Call init() first.");
     };
 
-    let session_store = PostgresStore::new(pool.clone());
     if conf.migrate {
         migration(&pool).await?;
-        let res = session_store.migrate().await;
-        if let Err(e) = res {
-            tracing::error!("Failed to migrate session store: {}", e);
-            return Err(e.into());
-        }
     }
+    let is_local = conf.env == "local" || conf.env == "test";
+    let aws_sdk_config = get_aws_config();
+    let dynamo_client = DynamoClient::new(Some(aws_sdk_config.clone()));
+    let ses_client = SesClient::new(aws_sdk_config, is_local);
 
     let sqs_client = sqs_client::SqsClient::new().await;
     let bedrock_client = BedrockClient::new();
@@ -256,7 +204,9 @@ pub async fn api_main() -> Result<Router> {
     let textract_client = TextractClient::new();
     let private_s3_client = S3Client::new(conf.private_bucket_name);
     let metadata_s3_client = S3Client::new(conf.bucket.name);
-    let is_local = conf.env == "local";
+
+    let session_store = DynamoSessionStore::new(dynamo_client.client.clone());
+
     let session_layer = SessionManagerLayer::new(session_store)
         .with_secure(!is_local)
         .with_http_only(!is_local)
@@ -275,17 +225,23 @@ pub async fn api_main() -> Result<Router> {
     let mcp_router = by_axum::axum::Router::new()
         .nest_service("/mcp", controllers::mcp::route(pool.clone()).await?)
         .layer(middleware::from_fn(mcp_middleware));
-    // let bot = teloxide::Bot::new(conf.telegram_token);
-    // let bot = std::sync::Arc::new(bot);
-    let api_router = route(
-        pool.clone(),
+    let bot = if let Some(token) = conf.telegram_token {
+        Some(TelegramBot::new(token).await?)
+    } else {
+        None
+    };
+    let api_router = route(RouteDeps {
+        pool: pool.clone(),
         sqs_client,
         bedrock_client,
         rek_client,
         textract_client,
         metadata_s3_client,
         private_s3_client,
-    )
+        bot,
+        dynamo_client,
+        ses_client,
+    })
     .await?
     .layer(middleware::from_fn(authorization_middleware))
     .layer(session_layer)
@@ -295,11 +251,11 @@ pub async fn api_main() -> Result<Router> {
     Ok(app)
 }
 
+//FIXME: Remove this middleware
 pub async fn cookie_middleware(
     req: Request,
     next: Next,
 ) -> std::result::Result<Response<by_axum::axum::body::Body>, by_axum::axum::http::StatusCode> {
-    tracing::debug!("Authorization middleware {:?}", req.uri());
     let session_initialized = if let Some(session) = req.extensions().get::<Session>() {
         if let Ok(Some(_)) = session
             .get::<by_axum::auth::UserSession>(by_axum::auth::USER_SESSION_KEY)
@@ -314,7 +270,6 @@ pub async fn cookie_middleware(
     };
 
     let mut res = next.run(req).await;
-    tracing::debug!("Authorization middleware response: {:?}", res.status());
     if session_initialized {
         tracing::debug!("Session not initialized, skipping cookie generation.");
         return Ok(res);

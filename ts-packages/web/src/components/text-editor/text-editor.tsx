@@ -94,39 +94,39 @@ export default function TextEditor({
   if (!editor) return null;
 
   return (
-    <div className="w-full rounded-lg px-4 py-5 bg-component-bg text-white gap-5">
+    <div className="w-full rounded-lg px-4 py-5 bg-card-bg-secondary border border-card-border-secondary  text-white gap-5">
       <div className="flex flex-wrap gap-2 mb-4 text-sm items-center">
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setDropdownOpen((prev) => !prev)}
-            className="px-3 py-1 rounded bg-neutral-800 text-sm"
+            className="px-3 py-1 rounded bg-card-bg-secondary  text-sm text-text-primary"
           >
             {headingLabel()}
           </button>
           {dropdownOpen && (
-            <div className="absolute left-0 mt-2 w-40 rounded-md shadow-lg bg-neutral-800 border border-neutral-700 z-10">
+            <div className="absolute left-0 mt-2 w-40 rounded-md shadow-lg bg-neutral-800 border border-neutral-700 light:bg-white z-10">
               <div className="py-1">
                 <button
                   onClick={() => applyHeading('1')}
-                  className="block w-full text-left px-4 py-2 text-white hover:bg-neutral-700 text-xl"
+                  className="block w-full text-left px-4 py-2 hover:bg-neutral-600 light:bg-white text-text-primary text-xl"
                 >
                   Heading 1
                 </button>
                 <button
                   onClick={() => applyHeading('2')}
-                  className="block w-full text-left px-4 py-2 text-white hover:bg-neutral-700 text-lg"
+                  className="block w-full text-left px-4 py-2  hover:bg-neutral-600 light:bg-white text-text-primary text-lg"
                 >
                   Heading 2
                 </button>
                 <button
                   onClick={() => applyHeading('3')}
-                  className="block w-full text-left px-4 py-2 text-white hover:bg-neutral-700 text-base"
+                  className="block w-full text-left px-4 py-2  hover:bg-neutral-600 light:bg-white text-text-primary text-base"
                 >
                   Heading 3
                 </button>
                 <button
                   onClick={() => applyHeading('paragraph')}
-                  className="block w-full text-left px-4 py-2 text-white hover:bg-neutral-700 text-sm"
+                  className="block w-full text-left px-4 py-2  hover:bg-neutral-600 light:bg-white text-text-primary text-sm"
                 >
                   Normal
                 </button>
@@ -186,7 +186,7 @@ export default function TextEditor({
 
       <EditorContent
         editor={editor}
-        className="tiptap prose prose-invert h-[300px] overflow-y-auto bg-neutral-800 border border-neutral-700 px-3 py-4 rounded-lg
+        className="tiptap prose prose-invert h-[300px] overflow-y-auto bg-neutral-800 light:bg-card-bg light:border-neutral-300 text-text-primary border border-neutral-700 px-3 py-4 rounded-lg
     focus:outline-none focus:ring-0 focus-visible:ring-0 focus:border-transparent focus-visible:border-transparent
     list-disc list-inside
     [&_ul]:list-disc [&_ol]:list-decimal [&_li]:ml-4

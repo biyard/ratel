@@ -16,7 +16,6 @@ import { Row } from '../ui/row';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
 import { sha3 } from '@/lib/utils';
-import { useApolloClient } from '@apollo/client';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { useNetwork } from '@/app/(social)/_hooks/use-network';
 import { isWebView } from '@/lib/webview-utils';
@@ -24,6 +23,8 @@ import { TelegramIcon } from '../icons';
 import { type User as TelegramUser } from '@telegram-apps/sdk-react';
 import { getQueryClient } from '@/providers/getQueryClient';
 import { useTranslations } from 'next-intl';
+import { feedKeys } from '@/constants';
+import { FeedStatus } from '@/lib/api/models/feeds';
 
 interface LoginModalProps {
   id?: string;
@@ -35,6 +36,8 @@ interface LoginBoxProps {
   label: string;
   onClick: () => void;
 }
+//FIXME: In Telegram MiniApp, google login not working for now.
+//Please use `/login` route instead of LoginPopup in Telegram MiniApp.
 
 export const LoginModal = ({
   id = 'login_popup',
@@ -46,7 +49,6 @@ export const LoginModal = ({
   const network = useNetwork();
   const anonKeyPair = useEd25519KeyPair();
   const queryClient = getQueryClient();
-  const cli = useApolloClient();
 
   const { login, ed25519KeyPair, telegramRaw } = useAuth();
   const [email, setEmail] = useState('');
@@ -67,9 +69,7 @@ export const LoginModal = ({
             },
             credentials: 'include',
             body: JSON.stringify({
-              update_telegram_id: {
-                telegram_raw: telegramRaw,
-              },
+              telegram_raw: telegramRaw,
             }),
           },
         );
@@ -120,6 +120,12 @@ export const LoginModal = ({
 
     if (info) {
       refetchUserInfo(queryClient);
+      await queryClient.invalidateQueries({
+        queryKey: feedKeys.list({
+          userId: 0,
+          status: FeedStatus.Published,
+        }),
+      });
       await updateTelegramId();
       network.refetch();
     }
@@ -136,15 +142,6 @@ export const LoginModal = ({
     // check if email is valid
     if (!email || !email.includes('@')) {
       setWarning(t('invalid_email_format'));
-      return;
-    }
-
-    const {
-      data: { users },
-    } = await cli.query(ratelApi.graphql.getUserByEmail(email));
-
-    if (users.length === 0) {
-      setWarning(t('unregistered_email'));
       return;
     }
 
@@ -190,6 +187,12 @@ export const LoginModal = ({
         });
       } else if (user?.event == EventType.Login) {
         refetchUserInfo(queryClient);
+        await queryClient.invalidateQueries({
+          queryKey: feedKeys.list({
+            userId: 0,
+            status: FeedStatus.Published,
+          }),
+        });
         network.refetch();
         await updateTelegramId();
         loader.close();
@@ -241,6 +244,13 @@ export const LoginModal = ({
         });
       } else {
         refetchUserInfo(queryClient);
+        await queryClient.invalidateQueries({
+          queryKey: feedKeys.list({
+            userId: 0,
+            status: FeedStatus.Published,
+          }),
+        });
+
         network.refetch();
         loader.close();
       }
@@ -272,9 +282,11 @@ export const LoginModal = ({
     >
       <Col className="gap-4">
         <Row className="justify-start items-center text-sm gap-1">
-          <label className="text-white font-medium">{t('new_user')}</label>
+          <label className="text-text-primary font-medium">
+            {t('new_user')}
+          </label>
           <button
-            className="text-primary/70 hover:text-primary"
+            className="text-primary/70 light:text-primary hover:text-primary"
             onClick={handleSignUp}
           >
             {t('create_account')}
@@ -287,7 +299,7 @@ export const LoginModal = ({
             name="username"
             autoComplete="email"
             placeholder={t('email_address_hint')}
-            className="w-full bg-[#000203] rounded-[10px] px-5 py-5.5 text-white font-light"
+            className="w-full bg-input-box-bg border border-input-box-border rounded-[10px] px-5 py-5.5 text-text-primary font-light"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             onKeyDown={(e) => {
@@ -307,7 +319,7 @@ export const LoginModal = ({
           <Input
             type="password"
             placeholder={t('password_hint')}
-            className="w-full bg-[#000203] rounded-[10px] px-5 py-5.5 text-white font-light"
+            className="w-full rounded-[10px] px-5 py-5.5 font-light"
             value={password}
             onChange={(e) => handleChangePassword(e.target.value)}
           />
@@ -319,7 +331,7 @@ export const LoginModal = ({
         <Row className="justify-end items-center text-sm">
           <Button
             variant={'rounded_secondary'}
-            className="text-xs py-1.5 px-4"
+            className="text-xs py-1.5 px-4 light:bg-neutral-600"
             onClick={handleContinue}
           >
             {showPassword ? t('sign_in') : t('continue')}
