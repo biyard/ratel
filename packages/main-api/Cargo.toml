@@ -81,3 +81,4 @@ ring = { version = "0.17.14" }
 [features]
 default = []
 full-test = []
+no-secret = []
