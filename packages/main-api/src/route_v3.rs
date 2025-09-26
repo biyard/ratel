@@ -13,6 +13,15 @@ use crate::{
             get_info::{GetInfoResponse, get_info_handler},
             update_user::{UpdateUserResponse, update_user_handler},
         },
+        posts::{
+            comments::add_comment::{AddCommentResponse, add_comment_handler},
+            create_post::{CreatePostResponse, create_post_handler},
+            delete_post::delete_post_handler,
+            get_post::{GetPostResponse, get_post_handler},
+            like_post::{LikePostResponse, like_post_handler},
+            list_posts::{ListPostsResponse, list_posts_handler},
+            update_post::{UpdatePostResponse, update_post_handler},
+        },
         teams::{
             create_team::{CreateTeamResponse, create_team_handler},
             find_team::{FindTeamResponse, find_team_handler},
@@ -65,25 +74,22 @@ pub fn route(
     }: RouteDeps,
 ) -> Result<Router, Error2> {
     Ok(Router::new()
-        .nest(
+        .route(
             "/me",
-            Router::new().route(
-                "/me",
-                get_with(
-                    get_info_handler,
-                    api_docs!(
-                        Json<GetInfoResponse>,
-                        "Get Logged-in User Info",
-                        "Get the user data of the logged-in user"
-                    ),
-                )
-                .patch_with(
-                    update_user_handler,
-                    api_docs!(
-                        Json<UpdateUserResponse>,
-                        "Update Logged-in User Info",
-                        "Update the user data of the logged-in user"
-                    ),
+            get_with(
+                get_info_handler,
+                api_docs!(
+                    Json<GetInfoResponse>,
+                    "Get Logged-in User Info",
+                    "Get the user data of the logged-in user"
+                ),
+            )
+            .patch_with(
+                update_user_handler,
+                api_docs!(
+                    Json<UpdateUserResponse>,
+                    "Update Logged-in User Info",
+                    "Update the user data of the logged-in user"
                 ),
             ),
         )
@@ -93,6 +99,62 @@ pub fn route(
                 "/",
                 get_with(find_user_handler, api_docs!(Json<FindUserResponse>, "", "")),
             ),
+        )
+        .nest(
+            "/posts",
+            Router::new()
+                .route(
+                    "/",
+                    post_with(
+                        create_post_handler,
+                        api_docs!(Json<CreatePostResponse>, "Create Post", "Create a new post"),
+                    )
+                    .get_with(
+                        list_posts_handler,
+                        api_docs!(Json<ListPostsResponse>, "List Posts", "List all posts"),
+                    ),
+                )
+                .route(
+                    "/:post_pk/like",
+                    post_with(
+                        like_post_handler,
+                        api_docs!(
+                            Json<LikePostResponse>,
+                            "Like/Unlike Post",
+                            "Like or unlike a post by ID"
+                        ),
+                    ),
+                )
+                .route(
+                    "/:post_pk/comments",
+                    post_with(
+                        add_comment_handler,
+                        api_docs!(
+                            Json<AddCommentResponse>,
+                            "Add Comment",
+                            "Add a comment to a post by ID"
+                        ),
+                    ),
+                )
+                .route(
+                    "/:post_pk",
+                    get_with(
+                        get_post_handler,
+                        api_docs!(Json<GetPostResponse>, "Get Post", "Get a post by ID"),
+                    )
+                    .put_with(
+                        update_post_handler,
+                        api_docs!(
+                            Json<UpdatePostResponse>,
+                            "Update Post",
+                            "Update a post by ID"
+                        ),
+                    )
+                    .delete_with(
+                        delete_post_handler,
+                        api_docs!((), "Delete Post", "Delete a post by ID"),
+                    ),
+                ),
         )
         .nest(
             "/auth",

@@ -4,7 +4,8 @@ use convert_case::Casing;
 use proc_macro::TokenStream;
 use quote::{quote, ToTokens};
 use syn::{
-    parse_macro_input, Attribute, Data, DataEnum, DataStruct, DeriveInput, Fields, Ident, Type,
+    parse_macro_input, Attribute, Data, DataEnum, DataStruct, DeriveInput, Fields, Ident,
+    PathArguments, Type, TypePath,
 };
 
 use crate::write_file;
@@ -73,19 +74,23 @@ impl FieldInfo {
     //         .to_string()
     //         .starts_with("Option <")
     // }
-    pub fn native_type(&self) -> Ident {
-        let ty_str = self.ty.to_token_stream().to_string();
-        let ty_str = if self.is_option() {
-            ty_str
-                .trim_start_matches("Option <")
-                .trim_end_matches('>')
-                .trim()
-                .to_string()
-        } else {
-            ty_str
-        };
 
-        Ident::new(&ty_str, proc_macro2::Span::call_site())
+    // Parse Option<A> => A, otherwise return original type
+    pub fn inner_type(&self) -> Type {
+        if let Type::Path(TypePath { path, .. }) = &self.ty {
+            if let Some(seg) = path.segments.last() {
+                if seg.ident == "Option" {
+                    if let PathArguments::AngleBracketed(args) = &seg.arguments {
+                        for arg in &args.args {
+                            if let syn::GenericArgument::Type(inner_ty) = arg {
+                                return inner_ty.clone();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        self.ty.clone()
     }
 
     pub fn is_number_type(&self) -> bool {
@@ -209,7 +214,10 @@ fn parse_struct_cfg(attrs: &[Attribute]) -> StructCfg {
     cfg
 }
 
-fn parse_fields(ds: &DataStruct, cfg: &StructCfg) -> (Vec<FieldInfo>, HashMap<String, String>) {
+fn parse_fields(
+    ds: &DataStruct,
+    cfg: &StructCfg,
+) -> Result<(Vec<FieldInfo>, HashMap<String, String>), syn::Error> {
     let mut out = vec![];
     let pk = &cfg.pk_name;
     let sk = cfg.sk_name.clone().unwrap_or_default();
@@ -287,7 +295,7 @@ fn parse_fields(ds: &DataStruct, cfg: &StructCfg) -> (Vec<FieldInfo>, HashMap<St
         }
     }
 
-    (out, indice_fn)
+    Ok((out, indice_fn))
 }
 
 fn generate_key_composers(fields: &Vec<FieldInfo>) -> Vec<proc_macro2::TokenStream> {
@@ -372,8 +380,7 @@ fn generate_updater(
             continue;
         }
         let var_name = &f.ident;
-        let var_ty = f.native_type();
-
+        let var_ty = f.inner_type();
         let fn_setter = Ident::new(
             &format!(
                 "with_{}",
@@ -570,7 +577,10 @@ fn generate_struct_impl(
 ) -> proc_macro2::TokenStream {
     let st_name = ident.to_string();
 
-    let (fields, indice_fn) = parse_fields(ds, &s_cfg);
+    let (fields, indice_fn) = match parse_fields(ds, &s_cfg) {
+        Ok(v) => v,
+        Err(e) => return e.to_compile_error(),
+    };
 
     let table_suffix = s_cfg.table.clone();
     let table_prefix = s_cfg.table_prefix.clone();
