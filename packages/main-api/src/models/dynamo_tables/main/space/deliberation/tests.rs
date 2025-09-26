@@ -105,9 +105,14 @@ async fn tests_create_deliberation() {
     let res = deliberation_survey.create(&cli).await;
     assert!(res.is_ok());
 
+    let survey_pk = match deliberation_survey.sk {
+        EntityType::DeliberationSpaceSurvey(v) => v,
+        _ => "".to_string(),
+    };
+
     let deliberation_question_1 = DeliberationSpaceQuestion::new(
         deliberation.pk.clone(),
-        deliberation_survey.pk.clone(),
+        crate::types::Partition::Survey(survey_pk.clone()),
         vec![
             crate::types::SurveyQuestion::Checkbox(CheckboxQuestion {
                 title: "question 1".to_string(),
@@ -132,7 +137,7 @@ async fn tests_create_deliberation() {
 
     let deliberation_response = DeliberationSpaceResponse::new(
         deliberation.pk.clone(),
-        deliberation_survey.pk.clone(),
+        crate::types::Partition::Survey(survey_pk.clone()),
         crate::types::SurveyType::Sample,
         vec![
             crate::types::SurveyAnswer::Checkbox {

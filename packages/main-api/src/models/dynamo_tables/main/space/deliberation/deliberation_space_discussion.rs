@@ -8,6 +8,17 @@ use crate::{
 
 use bdk::prelude::*;
 
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Default, JsonSchema)]
+pub struct DiscussionCreateRequest {
+    pub id: Option<String>,
+    pub started_at: i64,
+    pub ended_at: i64,
+
+    pub name: String,
+    pub description: String,
+    pub user_ids: Vec<String>,
+}
+
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default)]
 pub struct DeliberationSpaceDiscussion {
     pub pk: Partition,
@@ -75,7 +86,7 @@ impl DeliberationSpaceDiscussion {
     }
 }
 
-#[derive(Default, serde::Serialize, schemars::JsonSchema)]
+#[derive(Debug, Clone, Default, serde::Serialize, schemars::JsonSchema)]
 pub struct DeliberationDiscussionResponse {
     pub pk: String,
 

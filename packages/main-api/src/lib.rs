@@ -156,6 +156,7 @@ pub mod controllers {
                 pub mod create_deliberation;
                 #[cfg(test)]
                 pub mod tests;
+                pub mod update_deliberation;
             }
         }
 

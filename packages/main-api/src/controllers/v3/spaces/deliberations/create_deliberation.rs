@@ -1,7 +1,8 @@
-#![allow(unused)]
 use crate::{
     AppState, Error2,
-    models::space::{DeliberationSpace, SpaceCommon},
+    models::space::{
+        DeliberationDetailResponse, DeliberationMetadata, DeliberationSpace, SpaceCommon,
+    },
     utils::dynamo_extractor::extract_user,
 };
 use dto::by_axum::{
@@ -23,7 +24,7 @@ pub struct CreateDeliberationRequest {
 
 #[derive(Debug, Clone, Serialize, Default, aide::OperationIo, JsonSchema)]
 pub struct CreateDeliberationResponse {
-    pub space_id: String,
+    pub metadata: DeliberationDetailResponse,
 }
 
 pub async fn create_deliberation_handler(
@@ -36,16 +37,14 @@ pub async fn create_deliberation_handler(
     let deliberation = DeliberationSpace::new(user);
     deliberation.create(&dynamo.client).await?;
 
-    let space_id = match deliberation.pk.clone() {
-        crate::types::Partition::DeliberationSpace(v) => v,
-        _ => "".to_string(),
-    };
-
     let common = SpaceCommon::new(
         deliberation.pk.clone(),
         crate::types::Partition::Feed(req.feed_id),
     );
     common.create(&dynamo.client).await?;
 
-    Ok(Json(CreateDeliberationResponse { space_id }))
+    let metadata = DeliberationMetadata::query(&dynamo.client, deliberation.pk.clone()).await?;
+
+    let metadata: DeliberationDetailResponse = metadata.into();
+    Ok(Json(CreateDeliberationResponse { metadata }))
 }
