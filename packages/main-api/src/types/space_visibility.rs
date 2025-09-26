@@ -1,7 +1,13 @@
 use bdk::prelude::*;
 
 #[derive(
-    Debug, Clone, serde_with::SerializeDisplay, serde_with::DeserializeFromStr, Default, DynamoEnum,
+    Debug,
+    Clone,
+    serde_with::SerializeDisplay,
+    serde_with::DeserializeFromStr,
+    Default,
+    DynamoEnum,
+    JsonSchema,
 )]
 pub enum SpaceVisibility {
     #[default]

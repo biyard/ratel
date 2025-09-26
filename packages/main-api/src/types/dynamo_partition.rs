@@ -29,5 +29,8 @@ pub enum Partition {
     PollSpace(String),
     SurveySpace(String),
 
+    Discussion(String),
+    Survey(String),
+
     Team(String),
 }

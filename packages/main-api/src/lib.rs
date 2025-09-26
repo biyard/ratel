@@ -151,6 +151,17 @@ pub mod controllers {
             }
         }
 
+        pub mod spaces {
+            pub mod deliberations {
+                pub mod create_deliberation;
+                pub mod delete_deliberation;
+                pub mod get_deliberation;
+                #[cfg(test)]
+                pub mod tests;
+                pub mod update_deliberation;
+            }
+        }
+
         pub mod teams {
             pub mod create_team;
             pub mod find_team;
