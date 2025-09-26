@@ -21,6 +21,8 @@ import { SpaceProvider } from '../_components/header/provider';
 import DeliberationAnalyzePage from './_components/analyze-tab';
 import { DeliberationSurveyPage } from './_components/survey-tab';
 import { useTranslations } from 'next-intl';
+import SpaceCommentEditor1 from '@/app/(social)/_components/space-editor';
+import SpaceCommentMenu from '../_components/space-comment-menu';
 
 export default function DeliberationSpacePage() {
   return (
@@ -62,21 +64,28 @@ function Page() {
       <div className="hidden max-tablet:block w-full">
         <SpaceTabsMobile />
       </div>
+
       <div className="flex flex-row w-full h-full gap-5">
         <div className="flex-1 flex w-full">
           <div className="flex flex-row w-full gap-5">
-            {selectedType == DeliberationTab.SUMMARY ? (
-              <ThreadPage />
-            ) : selectedType == DeliberationTab.DELIBERATION ? (
-              <DeliberationPage />
-            ) : selectedType == DeliberationTab.POLL ? (
-              <DeliberationSurveyPage space={space} />
-            ) : selectedType == DeliberationTab.RECOMMANDATION ? (
-              <FinalConsensusPage />
-            ) : (
-              <DeliberationAnalyzePage />
-            )}
+            <div className="flex flex-col w-full">
+              <SpaceCommentEditor1 spaceId={space.id} />
+              {selectedType == DeliberationTab.SUMMARY ? (
+                <ThreadPage />
+              ) : selectedType == DeliberationTab.DELIBERATION ? (
+                <DeliberationPage />
+              ) : selectedType == DeliberationTab.POLL ? (
+                <DeliberationSurveyPage space={space} />
+              ) : selectedType == DeliberationTab.RECOMMANDATION ? (
+                <FinalConsensusPage />
+              ) : (
+                <DeliberationAnalyzePage />
+              )}
+            </div>
+            <div className="flex flex-col gap-5">
             <SpaceSideMenu />
+            <SpaceCommentMenu />
+            </div>
           </div>
         </div>
       </div>

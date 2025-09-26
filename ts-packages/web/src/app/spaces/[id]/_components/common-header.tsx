@@ -41,7 +41,7 @@ import { useDropdown } from './dropdown/dropdown-service';
 import { Extra } from '@/components/icons';
 import DropdownMenu from './dropdown/dropdown-menu';
 import DeleteSpacePopup from './modal/confirm-delete';
-import SpaceCommentEditor1 from './space-editor';
+import SpaceCommentEditor1 from '../../../(social)/_components/space-editor';
 
 
 function SpaceModifySection({

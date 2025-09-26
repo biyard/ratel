@@ -29,12 +29,11 @@ import DeleteSpacePopup from '../modal/confirm-delete';
 import { useTranslations } from 'next-intl';
 import PublishForm from '../../notice/_components/modal/publish-form';
 import { PublishingScope } from '@/lib/api/models/notice';
-// import { SpaceCommentEditor } from './comment-editor';
-import SpaceCommentEditor from '../comment-editor';
 import GoPublicModal from '../../notice/_components/modal/go-public-modal';
 import { GroupPermission } from '@/lib/api/models/group';
 import { usePermission } from '@/app/(social)/_hooks/use-permission';
 import { useParams } from 'next/navigation';
+import SpaceCommentEditor1 from '@/app/(social)/_components/space-editor';
 
 export default function SpaceHeader({
   space,
@@ -309,16 +308,7 @@ export default function SpaceHeader({
             </div>
           </div>
 
-          <div className="flex flex-row w-fit gap-1 items-center">
-            <SpaceCommentEditor
-              showCommentEditor={showCommentEditor}
-              setShowCommentEditor={setShowCommentEditor}
-              spaceId={spaceId}
-              commentCount={commentCount}
-              t={t}
-              onCommentPosted={() => setCommentCount((c) => c + 1)}
-            />
-          </div>
+      
 
           <div className="flex flex-row w-fit gap-1 items-center">
             <Rewards width={20} height={20} />
@@ -400,6 +390,7 @@ export default function SpaceHeader({
           {getTimeAgo(createdAt)}
         </div>
       </div>
+
     </div>
   );
 }

@@ -61,7 +61,7 @@ export default function SpaceCommentEditor1({
   };
 
   return (
-    <div className="relative">
+    <div className="relative mb-2">
   
 
 <div
@@ -144,6 +144,7 @@ export default function SpaceCommentEditor1({
                   </div>
                 )}
                 <div className="min-h-[80px] text-text-primary rounded p-2 border border-write-comment-box-border">
+                  <p className="text-home-side">Let's start!</p>
                   <TiptapEditor
                     content={content}
                     onUpdate={setContent}
