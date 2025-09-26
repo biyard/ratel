@@ -43,7 +43,6 @@ jobs:
         with:
           path: /tmp/web-image.tar.gz
           key: web-image-${{ github.sha }}
-          retention-days: 7
 
   main-api-test:
     runs-on: ubuntu-latest
@@ -80,87 +79,6 @@ jobs:
         run: |
           cargo test --package main-api --lib -- controllers::v3 models::dynamo_tables --show-output
 
-  # test-with-server:
-  #   runs-on: ubuntu-latest
-
-  #   services:
-  #     postgres:
-  #       image: postgres
-  #       env:
-  #         POSTGRES_USER: postgres
-  #         POSTGRES_PASSWORD: postgres
-  #         POSTGRES_DB: ratel
-  #       options: >-
-  #         --health-cmd pg_isready
-  #         --health-interval 10s
-  #         --health-timeout 5s
-  #         --health-retries 5
-  #       ports:
-  #         - 5432:5432
-
-  #     localstack:
-  #       image: localstack/localstack:3
-  #       env:
-  #         DYNAMODB_SHARE_DB: "1"
-  #         DEFAULT_REGION: us-east-1
-  #         AWS_ACCESS_KEY_ID: test
-  #         AWS_SECRET_ACCESS_KEY: test
-  #       ports:
-  #         - 4566:4566
-
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #       with:
-  #         submodules: recursive
-  #         ssh-key: ${{ secrets.PULL_KEY_REPO }}
-
-  #     - uses: actions-rust-lang/setup-rust-toolchain@v1
-  #       with:
-  #         components: clippy, rustfmt
-  #         target: wasm32-unknown-unknown
-  #         toolchain: stable
-  #     - name: Install PostgreSQL Client
-  #       run: sudo apt-get install -y postgresql-client
-
-  #     - name: Initialize Database
-  #       run: |
-  #         psql postgresql://postgres:postgres@localhost:5432/ratel -f ./scripts/init.sql
-  #         aws --endpoint-url=http://localstack:4566 dynamodb create-table --cli-input-json file:///scripts/dynamodb-schema.json
-
-  #     - name: test
-  #       env:
-  #         RUSTFLAGS: "-A warnings"
-  #         DATABASE_TYPE: postgres
-  #         DATABASE_URL: postgresql://postgres:postgres@postgres:5432/ratel
-  #         DYNAMODB_ENDPOINT: http://localstack:4566
-  #         ENV: "dev"
-  #         DOMAIN: "dev.ratel.foundation"
-  #         AUTH_SECRET_KEY: ${{ secrets.DEV_AUTH_SECRET_KEY }}
-  #         BASE_DOMAIN: "ratel.foundation"
-  #         AUTH_DOMAIN: "ratel.foundation"
-  #         AWS_REGION: us-east-1
-  #         AWS_ACCESS_KEY_ID: test
-  #         AWS_SECRET_ACCESS_KEY: test
-  #         JWT_SECRET_KEY: ${{ secrets.DEV_JWT_SECRET }}
-  #         SLACK_CHANNEL_SPONSOR: ${{ secrets.DEV_SLACK }}
-  #         BBS_BLS_X: ${{ secrets.BBS_BLS_X }}
-  #         BBS_BLS_Y: ${{ secrets.BBS_BLS_Y }}
-  #         BBS_BLS_D: ${{ secrets.BBS_BLS_D }}
-  #         BBS_BLS_CRV: ${{ secrets.BBS_BLS_CRV }}
-  #         P256_X: ${{ secrets.P256_X }}
-  #         P256_Y: ${{ secrets.P256_Y }}
-  #         P256_D: ${{ secrets.P256_D }}
-  #         P256_CRV: ${{ secrets.P256_CRV }}
-
-  #         # Kaia blockchain config (test values)
-  #         KAIA_ENDPOINT: https://public-en-kairos.node.kaia.io
-  #         KAIA_FEEPAYER_KEY: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
-  #         KAIA_FEEPAYER_ADDR: "0xFEEDFACE1234567890abcdef0123456789abcdef"
-  #         KAIA_OWNER_KEY: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
-  #         KAIA_OWNER_ADDR: "0xFEEDFACE1234567890abcdef0123456789abcdef"
-  #       run: |
-  #         cd packages/main-api && make test
-
   main-api:
     runs-on: ubuntu-22.04
 
@@ -194,9 +112,9 @@ jobs:
       - name: Build and cache Docker image
         id: build
         env:
-          REGION: ap-northeast-2
-          ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ap-northeast-2
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
           ENV: dev
           SERVICE: main-api
           DOMAIN: api.dev.ratel.foundation
@@ -217,7 +135,6 @@ jobs:
         with:
           path: /tmp/main-api-image.tar.gz
           key: main-api-image-${{ github.sha }}
-          retention-days: 7
 
   fetcher:
     runs-on: ubuntu-latest
@@ -249,25 +166,18 @@ jobs:
         id: build
         env:
           REGION: ap-northeast-2
-          ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          ACCESS_KEY_ID: test
+          SECRET_ACCESS_KEY: test
           ENV: dev
           RUST_LOG: info
           SERVICE: fetcher
           DOMAIN: fetcher-api.dev.ratel.foundation
           AUTH_DOMAIN: dev.ratel.foundation
           DATABASE_TYPE: postgres
-          DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
-          OPENAPI_KEY: ${{ secrets.OPENAPI_KEY }}
-          AUTH_SECRET_KEY: ${{ secrets.DEV_AUTH_SECRET_KEY }}
-          JWT_SECRET_KEY: ${{ secrets.DEV_JWT_SECRET_KEY }}
-          SERVER_KEY: ${{ secrets.DEV_AUTH_SECRET_KEY }}
-          SLACK_CHANNEL_BILL: ${{ secrets.DEV_SLACK }}
           BASE_DOMAIN: ratel.foundation
           REPO_NAME: ratel/fetcher
           ECR_NAME: fetcher
           COMMIT: pr-${{ github.sha }}
-          US_CONGRESS_KEY: ${{ secrets.US_CONGRESS_KEY }}
           DYNAMO_TABLE_PREFIX: ratel-local
         run: |
           npm i -g aws-cdk
@@ -284,7 +194,6 @@ jobs:
         with:
           path: /tmp/fetcher-image.tar.gz
           key: fetcher-image-${{ github.sha }}
-          retention-days: 7
 
   playwright-tests:
     runs-on: ubuntu-latest
@@ -344,16 +253,18 @@ jobs:
           # Verify images are loaded
           docker images
 
+      # - name: Setup SSH session with tmate
+      #   uses: mxschmitt/action-tmate@v3
+      #   env:
+      #     COMMIT: pr-${{ github.sha }}
+      #   with:
+      #     limit-access-to-actor: true
+
       - name: Setup test environment
         env:
           COMMIT: pr-${{ github.sha }}
         run: |
           docker-compose --profile testing up -d
-
-      # - name: Setup SSH session with tmate
-      #   uses: mxschmitt/action-tmate@v3
-      #   with:
-      #     limit-access-to-actor: true
 
       - name: Wait for services to be ready
         run: |
