@@ -12,6 +12,7 @@ import TableRow from '@tiptap/extension-table-row';
 import TableHeader from '@tiptap/extension-table-header';
 import TableCell from '@tiptap/extension-table-cell';
 import { forwardRef, useEffect, useImperativeHandle } from 'react';
+import { CaseToggle } from '@/lib/tiptap/extensions/case-toggle';
 import { Editor } from '@tiptap/core';
 
 interface TiptapEditorProps {
@@ -34,6 +35,7 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
           },
         }),
         TextStyle,
+        CaseToggle,
         Color,
         Highlight.configure({ multicolor: true }),
         TextAlign.configure({
