@@ -38,8 +38,8 @@ pub struct DeliberationSurveyResponse {
 
 impl From<DeliberationSpaceSurvey> for DeliberationSurveyResponse {
     fn from(survey: DeliberationSpaceSurvey) -> Self {
-        let pk = match survey.pk {
-            Partition::DeliberationSpace(v) => v,
+        let pk = match survey.sk {
+            EntityType::DeliberationSpaceSurvey(v) => v,
             _ => "".to_string(),
         };
         Self {
