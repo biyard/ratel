@@ -31,7 +31,7 @@ export default function ObjectiveOption({
           <DialPad2 className="w-6 h-6" />
 
           {questionType == 'checkbox' && (
-            <div className="w-6 h-6 rounded-sm border border-c-wg-50 light:border-[#e5e5e5]" />
+            <div className="w-6 h-6 rounded-sm border border-c-wg-50 light:border-[#e5e5e5] max-tablet:hidden" />
           )}
 
           <Input

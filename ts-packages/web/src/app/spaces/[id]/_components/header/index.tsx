@@ -295,8 +295,8 @@ export default function SpaceHeader({
         )}
       </div>
 
-      <div className="flex flex-row w-full justify-between items-center">
-        <div className="flex flex-row w-fit gap-2.5 items-center">
+      <div className="flex flex-row w-full justify-between max-tablet:justify-end items-center">
+        <div className="flex flex-row w-fit gap-2.5 items-center max-tablet:hidden">
           {/* <SpaceType /> */}
           {status == SpaceStatus.InProgress ? <Onboard /> : <></>}
         </div>

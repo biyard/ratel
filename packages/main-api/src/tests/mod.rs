@@ -10,3 +10,6 @@ pub mod test_utils;
 
 // Re-export commonly used items for backward compatibility
 pub use test_utils::*;
+
+pub mod dynamo_test;
+pub use dynamo_test::*;

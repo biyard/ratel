@@ -60,6 +60,8 @@ export interface PostEditorContextType {
 
   handleUpdate: () => Promise<void>;
 
+  close: boolean;
+  setClose: (value: boolean) => void;
   isSubmitDisabled: boolean;
   status: Status;
 }
@@ -100,6 +102,7 @@ export function PostEditorProvider({
 
   //Interal State
   const router = useRouter();
+  const [close, setClose] = useState(true);
   const [expand, setExpand] = useState(false);
   const [status, setStatus] = useState<Status>(Status.Idle);
   const [feed, setFeed] = useState<Feed | null>(null);
@@ -177,6 +180,7 @@ export function PostEditorProvider({
 
   const toggleExpand = useCallback(() => {
     setExpand((prev) => !prev);
+    setClose(true);
   }, []);
 
   const updateTitle = (newTitle: string) => {
@@ -256,6 +260,7 @@ export function PostEditorProvider({
       throw new Error('Failed to load draft');
     } finally {
       setStatus(Status.Idle);
+      setClose(false);
     }
   };
 
@@ -286,6 +291,7 @@ export function PostEditorProvider({
         req,
         teamId: teamId || undefined,
       });
+      setClose(true);
       return id;
     },
     [
@@ -411,6 +417,8 @@ export function PostEditorProvider({
     traits,
     updateTrait,
     handleUpdate,
+    close,
+    setClose,
     isSubmitDisabled: !isAllFieldsFilled,
     status,
   };

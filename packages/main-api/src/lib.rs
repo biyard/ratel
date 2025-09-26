@@ -127,11 +127,65 @@ pub mod controllers {
         }
     }
     pub mod v3 {
+        pub mod me {
+            pub mod get_info;
+            pub mod update_user;
+
+            #[cfg(test)]
+            pub mod tests;
+        }
         pub mod users {
-            pub mod email_login;
-            pub mod email_signup;
-            pub mod request_verification_code;
-            pub mod verify_email;
+            pub mod find_user;
+
+            #[cfg(test)]
+            pub mod tests;
+        }
+        pub mod auth {
+            pub mod health;
+            pub mod login;
+            pub mod signup;
+
+            pub mod verification {
+                pub mod send_code;
+                pub mod verify_code;
+            }
+        }
+
+        pub mod teams {
+            pub mod create_team;
+            pub mod find_team;
+            pub mod get_team;
+            pub mod update_team;
+
+            #[cfg(test)]
+            pub mod tests;
+
+            pub mod groups {
+                pub mod add_member;
+                pub mod create_group;
+                pub mod remove_member;
+                pub mod update_group;
+
+                #[cfg(test)]
+                pub mod tests;
+            }
+        }
+
+        pub mod posts {
+            pub mod create_post;
+            pub mod delete_post;
+            pub mod get_post;
+            pub mod like_post;
+            pub mod list_posts;
+            pub mod update_post;
+            pub mod comments {
+                pub mod add_comment;
+                // pub mod delete_comment;
+                // pub mod list_comments;
+            }
+
+            #[cfg(test)]
+            pub mod tests;
         }
     }
     pub mod m2 {
@@ -166,6 +220,9 @@ pub mod utils;
 
 pub use bdk::prelude::*;
 pub use dto::*;
+
+mod route_v3;
+pub use route_v3::*;
 
 #[cfg(test)]
 pub mod tests;
