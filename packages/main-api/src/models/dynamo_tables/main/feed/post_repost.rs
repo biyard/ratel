@@ -9,7 +9,7 @@ pub struct PostRepost {
     #[dynamo(index = "gsi2", sk)]
     pub sk: EntityType,
 
-    #[dynamo(prefix = "USER_PK", name = "find_by_post_pk", index = "gsi2", pk)]
+    #[dynamo(prefix = "POST_PK", name = "find_by_post_pk", index = "gsi2", pk)]
     pub post_pk: Partition,
     pub post_title: String,
     pub post_html_contents: String,

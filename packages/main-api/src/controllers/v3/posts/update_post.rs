@@ -113,7 +113,9 @@ pub async fn update_post_handler(
         }
         UpdatePostRequest::Visibility { status, visibility } => {
             let now = chrono::Utc::now().timestamp_micros();
-            if post.status != PostStatus::Draft && status != PostStatus::Published {
+            let allowed = (post.status == PostStatus::Draft && status == PostStatus::Published)
+                || (post.status == PostStatus::Published && status == PostStatus::Published);
+            if !allowed {
                 return Err(Error2::BadRequest(
                     "Only Draft posts can be updated to Published".to_string(),
                 ));
@@ -126,9 +128,9 @@ pub async fn update_post_handler(
                 .with_visibility(visibility.clone())
                 .with_status(status.clone())
                 .with_compose_sort_key(Post::get_compose_key(
-                    PostStatus::Published,
+                    status.clone(),
                     Some(visibility.clone()),
-                    chrono::Utc::now().timestamp_micros(),
+                    now,
                 ))
                 .with_updated_at(now)
                 .execute(&dynamo.client)
