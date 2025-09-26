@@ -134,13 +134,13 @@ export function CreateRePost() {
     <div className={`flex flex-col w-full ${!expand ? 'hidden' : 'block'}`}>
       <div className="w-full bg-component-bg border-t-6 border-x border-b border-primary rounded-t-lg overflow-hidden">
         {/* Header */}
-        <div className="flex items-center p-2 justify-between">
+        <div className="flex items-center p-4 justify-between">
           <div className="flex items-center gap-3 relative">
             <div className="size-6 rounded-full">
               <Image
                 width={40}
                 height={40}
-                src={userInfo?.profile_url || '/default-profile.png'}
+                src={userInfo?.profile_url || '/images/default-profile.png'}
                 alt="Profile"
                 className="w-full h-full object-cover rounded-full"
               />
@@ -174,7 +174,7 @@ export function CreateRePost() {
                 <Image
                   width={40}
                   height={40}
-                  src={authorProfileUrl || '/default-profile.png'}
+                  src={authorProfileUrl || '/images/default-profile.png'}
                   alt="Profile"
                   className="w-full h-full object-cover rounded-full"
                 />
@@ -194,7 +194,7 @@ export function CreateRePost() {
                 }
               >
                 <ArrowDown
-                  className={`w-5 h-5 transition-transform duration-200 ${isQuotedSectionExpanded ? '' : 'rotate-180'}`}
+                  className={`w-5 h-5 transition-transform duration-200 ${isQuotedSectionExpanded ? 'rotate-180' : ''}`}
                 />
               </div>
             </div>
@@ -205,7 +205,7 @@ export function CreateRePost() {
                   <TruncatedContent
                     content={feedcontent}
                     maxLines={1}
-                    className="prose prose-invert text-sm bg-write-comment-box-bg mb-3 font-light text-desc-text"
+                    className="prose prose-invert text-sm bg-write-comment-box-bg mb-3 font-light text-desc-text text-start ml-[0.5px]"
                     contentClassName="[&_*]:!my-0"
                   />
                 )}
@@ -520,6 +520,16 @@ interface TruncatedContentProps {
   minLength?: number;
 }
 
+// CSS class names for different max lines that Tailwind can detect
+const lineClampClasses = {
+  1: 'line-clamp-1',
+  2: 'line-clamp-2',
+  3: 'line-clamp-3',
+  4: 'line-clamp-4',
+  5: 'line-clamp-5',
+  6: 'line-clamp-6',
+};
+
 const TruncatedContent = ({
   content,
   maxLines = 1,
@@ -530,44 +540,71 @@ const TruncatedContent = ({
   minLength = 100,
 }: TruncatedContentProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const contentRef = useRef<HTMLDivElement>(null);
   const [needsTruncation, setNeedsTruncation] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const checkTruncation = () => {
+      if (!contentRef.current) return;
+      
+      const element = contentRef.current;
+      const style = getComputedStyle(element);
+      
+      // Check if content is truncated or exceeds min length
+      const isOverflowing = element.scrollHeight > element.clientHeight;
+      const isLongContent = content.length > minLength;
+      
+      setNeedsTruncation(isOverflowing || isLongContent);
+    };
+
+    // Use requestAnimationFrame to ensure the DOM is updated
+    const rafId = requestAnimationFrame(() => {
+      checkTruncation();
+    });
+
+    // Add resize observer to handle window resizing
+    const resizeObserver = new ResizeObserver(checkTruncation);
     if (contentRef.current) {
-      // Check if content needs truncation
-      const lineHeight = parseInt(
-        getComputedStyle(contentRef.current).lineHeight || '20',
-        10,
-      );
-      const maxHeight = lineHeight * maxLines;
-      setNeedsTruncation(
-        contentRef.current.scrollHeight > maxHeight ||
-          content.length > minLength,
-      );
+      resizeObserver.observe(contentRef.current);
     }
+
+    // Initial check after a small delay to ensure styles are applied
+    const timeoutId = setTimeout(checkTruncation, 100);
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      clearTimeout(timeoutId);
+      resizeObserver.disconnect();
+    };
   }, [content, maxLines, minLength]);
 
+  // Get the appropriate line clamp class based on maxLines
+  const lineClampClass = lineClampClasses[Math.min(maxLines, 6) as keyof typeof lineClampClasses] || '';
+
   return (
-    <div className={`${className} relative`} ref={containerRef}>
+    <div className={`${className} relative`}>
       <div
         ref={contentRef}
-        className={`${contentClassName} ${
-          !isExpanded ? `line-clamp-${maxLines} overflow-hidden` : ''
-        }`}
+        className={`${contentClassName} ${!isExpanded ? `${lineClampClass} overflow-hidden` : ''}`}
+        style={{
+          WebkitLineClamp: !isExpanded ? maxLines : 'unset',
+          display: '-webkit-box',
+          WebkitBoxOrient: 'vertical',
+          overflow: 'hidden',
+        }}
         dangerouslySetInnerHTML={{
           __html: DOMPurify.sanitize(content),
         }}
       />
       {needsTruncation && (
         <button
+          type="button"
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
             setIsExpanded(!isExpanded);
           }}
-          className="absolute right-2/5 bottom-0 pl-2 text-text-disc hover:underline text-sm font-medium focus:outline-none transition-colors"
+          className="mt-1 text-foreground hover:underline text-sm font-medium focus:outline-none transition-colors inline-block"
         >
           {isExpanded ? showLessText : showMoreText}
         </button>

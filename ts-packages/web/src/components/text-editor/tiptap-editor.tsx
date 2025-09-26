@@ -99,7 +99,7 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
       <div className={`flex flex-col ${className}`}>
         <EditorContent
           editor={editor}
-          className="outline-none min-h-[100px] text-desc-text"
+          className="outline-none min-h-[100px] text-desc-text [&_.ProseMirror]:outline-none [&_.ProseMirror]:border-0 [&_.ProseMirror]:ring-0 [&_.ProseMirror]:focus:outline-none [&_.ProseMirror]:focus:border-0 [&_.ProseMirror]:focus:ring-0 [&_.ProseMirror]:focus:shadow-none [&_.ProseMirror]:focus-within:outline-none [&_.ProseMirror]:focus-within:ring-0 [&_.ProseMirror]:focus-within:border-0 [&_.ProseMirror]:focus-within:shadow-none"
         />
       </div>
     );
