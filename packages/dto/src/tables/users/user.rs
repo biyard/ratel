@@ -88,7 +88,7 @@ pub struct User {
     #[serde(default)]
     pub membership: Membership,
 
-    #[api_model(version = v1.0, type = INTEGER)]
+    #[api_model(version = v1.0, type = INTEGER, nullable)]
     #[serde(default)]
     pub theme: Option<Theme>,
 
