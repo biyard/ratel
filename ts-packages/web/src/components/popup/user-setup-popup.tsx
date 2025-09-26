@@ -47,7 +47,7 @@ const UserSetupPopup = ({
   nickname = '',
 }: UserSetupPopupProps) => {
   const t = useTranslations('Signup');
-  const { get, post } = useApiCall();
+  const { post } = useApiCall();
 
   const popup = usePopup();
   const [displayName, setDisplayName] = useState(nickname);
@@ -309,17 +309,18 @@ const UserSetupPopup = ({
                   setIsUserNameValid(true);
                 }
 
-                const users = await get(
-                  ratelApi.users.getUserByUsername(value),
-                );
+                setWarning('');
+                setIsUserNameValid(true);
 
-                if (users.length > 0) {
-                  setWarning(t('already_exists_user'));
-                  setIsUserNameValid(false);
-                } else {
-                  setWarning('');
-                  setIsUserNameValid(true);
-                }
+                // const users = await get(
+                //   ratelApi.users.getUserByUsername(value),
+                // );
+
+                // if (users.length > 0) {
+                //   setWarning(t('already_exists_user'));
+                //   setIsUserNameValid(false);
+                // } else {
+                // }
               }}
               warning={warning}
             />
