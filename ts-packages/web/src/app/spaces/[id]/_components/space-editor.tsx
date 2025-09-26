@@ -143,7 +143,7 @@ export default function SpaceCommentEditor1({
                     </button>
                   </div>
                 )}
-                <div className="min-h-[80px] text-text-primary rounded p-2">
+                <div className="min-h-[80px] text-text-primary rounded p-2 border border-write-comment-box-border">
                   <TiptapEditor
                     content={content}
                     onUpdate={setContent}
