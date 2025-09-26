@@ -266,15 +266,15 @@ Please add this code to `settings.json`
 		"body": [
 			"#[cfg(test)]",
 			"pub mod ${TM_FILENAME_BASE/(.*)/${1:/snakecase}/}_tests {",
-			"    use crate::tests::{create_app_state, create_auth, get_test_user};",
+			"    use crate::tests::{create_app_state, get_auth, create_test_user};",
 			"    use super::*;",
 			"",
 			"    #[tokio::test]",
 			"    async fn test_${TM_FILENAME_BASE/(.*)/${1:/snakecase}/}_handler() {",
 			"        let app_state = create_app_state();",
 			"        let cli = app_state.dynamo.client.clone()",
-			"        let user = get_test_user(&cli).await;",
-			"        let auth = create_auth(user.clone()).await;",
+			"        let user = create_test_user(&cli).await;",
+			"        let auth = get_auth(&user);",
 			"    }",
 			"",
 			"}"

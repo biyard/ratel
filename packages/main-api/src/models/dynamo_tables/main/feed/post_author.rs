@@ -1,7 +1,7 @@
 use crate::{models::user::User, types::*};
 use bdk::prelude::*;
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default, JsonSchema)]
 pub struct PostAuthor {
     pub pk: Partition,
     pub sk: EntityType,

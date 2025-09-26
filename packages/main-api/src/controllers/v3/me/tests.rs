@@ -1,7 +1,7 @@
 use crate::controllers::v3::me::update_user::{UpdateUserRequest, update_user_handler};
 use crate::tests::{create_nick_name, create_user_name};
 use crate::{
-    tests::{create_app_state, create_auth, get_test_user},
+    tests::{create_app_state, create_test_user, get_auth},
     types::Theme,
 };
 use dto::by_axum::axum::{
@@ -19,8 +19,8 @@ use dto::by_axum::axum::extract::Path;
 async fn test_update_user_with_team_handler() {
     let app_state = create_app_state();
     let cli = app_state.dynamo.client.clone();
-    let user = get_test_user(&cli).await;
-    let auth = create_auth(user.clone()).await;
+    let user = create_test_user(&cli).await;
+    let auth = get_auth(&user);
     let username = create_user_name();
     let team_display_name = format!("test_team_{}", username);
     let team_username = format!("test_username_{}", username);
@@ -89,8 +89,8 @@ async fn test_update_user_with_team_handler() {
 async fn test_update_user_handler() {
     let app_state = create_app_state();
     let cli = app_state.dynamo.client.clone();
-    let user = get_test_user(&cli).await;
-    let auth = create_auth(user.clone()).await;
+    let user = create_test_user(&cli).await;
+    let auth = get_auth(&user);
 
     let new_theme = if user.theme == Theme::Light {
         Theme::Dark

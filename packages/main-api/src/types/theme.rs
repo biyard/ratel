@@ -1,5 +1,4 @@
 use bdk::prelude::*;
-use dto::schemars::JsonSchema_repr;
 
 #[derive(
     Debug,
@@ -10,7 +9,7 @@ use dto::schemars::JsonSchema_repr;
     serde_repr::Serialize_repr,
     serde_repr::Deserialize_repr,
     Default,
-    JsonSchema_repr,
+    schemars::JsonSchema_repr,
 )]
 #[repr(u8)]
 pub enum Theme {
