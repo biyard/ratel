@@ -1,9 +1,11 @@
 import { useState } from "react";
-import { Search, CheckCircle } from "lucide-react";
+import { Search } from "lucide-react";
 import BorderSpaceCard from "@/app/(social)/_components/border-space-card";
 import CommentIcon from "@/assets/icons/comment.svg";
-import CheckIcon from "@/assets/icons/check.svg";
 import SearchIcon from "@/assets/icons/search.svg";
+import HamburgerIcon from "@/assets/icons/hamburger2.svg";
+import Check from "@/assets/icons/check-dynamic.svg"
+import CheckCircle from "@/assets/icons/check-circle.svg"
 
 
 interface CommentProps {
@@ -73,19 +75,19 @@ export default function SideCommentMenu() {
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b">
           <h2 className="font-semibold flex items-center gap-2">
-            <CommentIcon/> Comments
+            <CommentIcon /> Comments
           </h2>
-          <button className="text-gray-500">≡</button>
+          <HamburgerIcon />
         </div>
 
         {/* Search */}
         <div className="px-4 py-2">
           <div className="flex items-center bg-write-comment-box-bg rounded-lg px-3 py-2">
-            <SearchIcon className="text-gray-400 mr-2" />
+            <SearchIcon className=" mr-2" />
             <input
               type="text"
               placeholder="Search"
-              className="bg-write-comment-box-bg outline-none text-sm w-full placeholder:text-modal-label-text"
+              className="bg-write-comment-box-bg outline-none text-sm w-full placeholder:text-modal-label-text text-modal-label-text"
             />
           </div>
         </div>
@@ -120,12 +122,10 @@ function CommentBox({
   replies,
   avatarGroup,
   status,
-  highlighted,
 }: CommentProps) {
   return (
     <div
-      className={`p-3 rounded-xl border flex flex-col gap-1 relative ${highlighted ? "bg-gray-100" : "bg-white"
-        }`}
+      className={`p-3 rounded-xl border flex flex-col gap-1 relative hover:bg-button-bg `}
     >
       {/* Avatars + status */}
       <div className="flex items-center justify-between">
@@ -140,24 +140,26 @@ function CommentBox({
           ))}
         </div>
         {status === "done" ? (
-          <CheckIcon className="text-gray-400" />
+          <CheckCircle/>
         ) : (
-          <CheckIcon className="text-yellow-500 fill-yellow-500" />
+         
+          <Check className="bg-follow-button-bg-secondary rounded-full"/>
         )}
       </div>
 
       {/* Text */}
-      <div className="text-sm">
-        <p className=" text-text-primary">{author}</p>
+      <div className="text-sm cursor-pointer">
+        <div className=" text-text-primary flex items-center justify-between">{author}  <span className="text-[12px] text-title-text font-normal">{time}</span></div>
+
         <p className="text-text-primary">
-          <span className="text-yellow-600 font-medium">{mention}</span> {text}
+          <span className="text-home-side font-medium">{mention}</span> {text}
         </p>
       </div>
 
       {/* Footer */}
       <div className="flex justify-between text-xs text-gray-500 mt-1">
-        <span>{time}</span>
-        <span className="text-yellow-600 cursor-pointer">{replies} replies</span>
+
+        <span className="text-home-side cursor-pointer">{replies} replies</span>
       </div>
     </div>
   );
