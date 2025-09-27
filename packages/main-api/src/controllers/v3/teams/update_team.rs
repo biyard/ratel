@@ -1,7 +1,7 @@
 use crate::{
     AppState, Error2,
     models::{
-        team::{Team, TeamResponse},
+        team::Team,
         user::{UserTeam, UserTeamQueryOption},
     },
     types::{EntityType, TeamGroupPermission},
@@ -10,6 +10,8 @@ use crate::{
         validator::{validate_description, validate_image_url, validate_nickname},
     },
 };
+
+use super::dto::*;
 use dto::by_axum::{
     auth::Authorization,
     axum::{

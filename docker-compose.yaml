@@ -32,8 +32,9 @@ services:
       - "3000:3000"
     environment:
       ENV: dev
+      RUST_LOG: ${RUST_LOG:-info}
       DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/ratel}
-      DYNAMODB_ENDPOINT: http://localstack:4566
+      DYNAMO_ENDPOINT: http://localstack:4566
       MIGRATE: ${MIGRATE:-true}
       AWS_REGION: us-east-1
       AWS_ACCESS_KEY_ID: test
@@ -161,9 +162,9 @@ services:
     environment:
       PORT: 8080
       NEXT_PUBLIC_API_URL: "http://localhost:3000"
-      INTERNAL_API_URL: "http://main-api:3000"
+      API_URL: "http://main-api:3000"
       NEXT_PUBLIC_GRAPHQL_URL: "http://localhost:28080/v1/graphql"
-      NEXT_PUBLIC_LOG_LEVEL: ${LOG_LEVEL:-debug}
+      NEXT_PUBLIC_LOG_LEVEL: ${LOG_LEVEL:-info}
       NODE_ENV: development
     command: ["bash", "scripts/web-entrypoint.sh"]
     healthcheck:

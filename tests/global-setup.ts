@@ -1,4 +1,4 @@
-import { chromium, FullConfig } from "@playwright/test";
+import { chromium, expect, FullConfig } from "@playwright/test";
 import { CONFIGS } from "./config";
 import * as fs from "fs";
 import * as path from "path";
@@ -10,11 +10,6 @@ async function globalSetup(config: FullConfig) {
   const authDir = "test-results/.auth";
   if (!fs.existsSync(authDir)) {
     fs.mkdirSync(authDir, { recursive: true });
-  }
-
-  const setupDir = "test-results/SETUP";
-  if (!fs.existsSync(setupDir)) {
-    fs.mkdirSync(setupDir, { recursive: true });
   }
 
   // Launch browser
@@ -42,35 +37,23 @@ async function globalSetup(config: FullConfig) {
     );
 
     await page.goto(CONFIGS.PLAYWRIGHT.BASE_URL!);
-    // screenshot
-    await page.screenshot({
-      path: "test-results/SETUP/01.png",
-    });
-
     await page.getByRole("button", { name: /sign in/i }).click();
     await page.getByText("Create an account").click();
 
     await page.getByPlaceholder(/email/i).fill(email);
     await page.getByText("Send").click();
-    // await page.waitForTimeout(2000); // Wait for email verification
 
     await page.getByText("Verify").click();
-    // await page.waitForTimeout(1000);
 
     await page.getByPlaceholder(/password/i).fill(password);
     await page.getByPlaceholder(/display name/i).fill(displayName);
     await page.getByPlaceholder(/user name/i).fill(userName);
 
-    // Wait for username validation
-    // await page.waitForTimeout(2000);
-
     // Accept terms by clicking the label (checkbox is hidden)
     const tosCheckbox = page.locator('label[for="agree_checkbox"]');
     await tosCheckbox.click();
-    await page.getByText(/finished sign-up/i).click();
-
-    // Wait for signup completion
-    // await page.waitForTimeout(3000);
+    await page.getByRole("button", { name: /finished sign-up/i }).click();
+    await expect(page.getByText(/start/i)).toBeVisible();
 
     // Save Playwright storage state for authenticated tests
     await page.context().storageState({ path: "test-results/.auth/user.json" });
@@ -80,14 +63,6 @@ async function globalSetup(config: FullConfig) {
     console.log(`🔐 Storage state saved to: test-results/.auth/user.json`);
   } catch (error) {
     console.error("❌ Global setup failed:", error);
-    // Take error screenshot for debugging
-    try {
-      await page.screenshot({
-        path: "test-results/SETUP/ERROR-global-setup-failed.png",
-      });
-    } catch (screenshotError) {
-      console.error("Failed to take error screenshot:", screenshotError);
-    }
     throw error;
   } finally {
     await browser.close();

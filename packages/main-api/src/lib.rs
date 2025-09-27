@@ -157,6 +157,7 @@ pub mod controllers {
             pub mod get_team;
             pub mod update_team;
 
+            pub mod dto;
             #[cfg(test)]
             pub mod tests;
 

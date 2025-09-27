@@ -23,7 +23,7 @@ export default defineConfig({
   /* Opt out of parallel tests on CI. */
   workers: process.env.CI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: "html",
+  reporter: [["html", { host: "0.0.0.0", port: 8900 }]],
   timeout: CONFIGS.PLAYWRIGHT.TIMEOUT,
   /* Global setup and teardown */
   globalSetup: require.resolve("./tests/global-setup"),
@@ -33,10 +33,9 @@ export default defineConfig({
     baseURL: CONFIGS.PLAYWRIGHT.BASE_URL,
     navigationTimeout: CONFIGS.PLAYWRIGHT.NAVIGATION_TIME_OUT,
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: "on-first-retry",
+    trace: "on",
     video: "on",
   },
-  outputDir: "test-results/",
 
   /* Configure projects for major browsers */
   projects: [

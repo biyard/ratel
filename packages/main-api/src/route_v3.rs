@@ -60,17 +60,20 @@ macro_rules! api_docs {
 pub struct AppState {
     pub dynamo: DynamoClient,
     pub ses: SesClient,
+    pub pool: bdk::prelude::sqlx::PgPool,
 }
 
 pub struct RouteDeps {
     pub dynamo_client: DynamoClient,
     pub ses_client: SesClient,
+    pub pool: bdk::prelude::sqlx::PgPool,
 }
 
 pub fn route(
     RouteDeps {
         dynamo_client,
         ses_client,
+        pool,
     }: RouteDeps,
 ) -> Result<Router, Error2> {
     Ok(Router::new()
@@ -292,7 +295,8 @@ pub fn route(
                 ),
         )
         .with_state(AppState {
-            dynamo: dynamo_client.clone(),
-            ses: ses_client.clone(),
+            dynamo: dynamo_client,
+            ses: ses_client,
+            pool,
         }))
 }

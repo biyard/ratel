@@ -128,38 +128,29 @@ test.describe("Anonymous User Signup Flow", () => {
   test("[SU-004] should handle complete signup flow (email signup)", async ({
     page,
   }) => {
+    const id = CONFIGS.PLAYWRIGHT.ID;
+    const email = `su004+${id}@ratel.foundation`;
+    const password = "password1234!@#$";
+    const displayName = `Playwright User ${id}`;
+    const userName = `su004-${id}`;
+
     await page.getByRole("button", { name: /sign in/i }).click();
-
     await page.getByText("Create an account").click();
-    await page.screenshot({
-      path: "test-results/SU-004-01-create-an-account.png",
-    });
 
-    // get timestamp epoch
-    const no = Date.now();
+    await page.getByPlaceholder(/email/i).fill(email);
+    await page.getByText("Send").click();
 
-    await page
-      .getByRole("textbox", { name: /email/i })
-      .first()
-      .fill("test@example.com");
-    await page.getByPlaceholder(/password/i).fill("Password123!");
-    await page.getByPlaceholder(/display.*name/i).fill("Local User");
-    await page.getByPlaceholder(/user.*name/i).fill(`localuser${no}`);
-    await page.screenshot({
-      path: "test-results/SU-004-02-complete-signup-form-filled.png",
-    });
+    await page.getByText("Verify").click();
 
+    await page.getByPlaceholder(/password/i).fill(password);
+    await page.getByPlaceholder(/display name/i).fill(displayName);
+    await page.getByPlaceholder(/user name/i).fill(userName);
+
+    // Accept terms by clicking the label (checkbox is hidden)
     const tosCheckbox = page.locator('label[for="agree_checkbox"]');
     await tosCheckbox.click();
-
-    const finishButton = page.getByRole("button", { name: "Finished Sign-up" });
-    await expect(finishButton).not.toBeDisabled();
-
-    await finishButton.click();
-
-    await page.screenshot({
-      path: "test-results/SU-004/03-after-signup-submit.png",
-    });
+    await page.getByRole("button", { name: /finished sign-up/i }).click();
+    await expect(page.getByText(/start/i)).toBeVisible();
   });
 
   test("[SU-005] should handle Google signup button visibility", async ({
@@ -168,21 +159,11 @@ test.describe("Anonymous User Signup Flow", () => {
     const signInButton = page.getByRole("button", { name: /sign in/i });
     await signInButton.click();
 
-    await page.screenshot({
-      path: "test-results/SU-005/01-google-button-visibility-check.png",
-    });
-
     const googleButton = page.getByText("Continue With Google");
     if (await googleButton.isVisible()) {
       await expect(googleButton).toBeVisible();
       await expect(googleButton).toBeEnabled();
-      await page.screenshot({
-        path: "test-results/SU-005/02-google-button-visible.png",
-      });
     } else {
-      await page.screenshot({
-        path: "test-results/SU-005/02-google-button-not-visible.png",
-      });
     }
   });
 
@@ -193,14 +174,8 @@ test.describe("Anonymous User Signup Flow", () => {
 
     const profileImage = page.locator('img[alt="Team Logo"]');
     await expect(profileImage).toBeVisible();
-    await page.screenshot({
-      path: "test-results/SU-006/01-profile-image-uploader.png",
-    });
 
     await profileImage.hover({ force: true });
-    await page.screenshot({
-      path: "test-results/SU-006/02-profile-image-hover-state.png",
-    });
     await expect(
       page.getByText(/click.*change.*profile.*image/i),
     ).toBeVisible();
@@ -217,14 +192,8 @@ test.describe("Anonymous User Signup Flow", () => {
       'label[for="announcement_checkbox"]',
     );
     await expect(newsletterCheckbox).toBeVisible();
-    await page.screenshot({
-      path: "test-results/SU-007/01-newsletter-checkbox-visible.png",
-    });
 
     await newsletterCheckbox.click();
-    await page.screenshot({
-      path: "test-results/SU-007/02-newsletter-checkbox-checked.png",
-    });
     const actualCheckbox = page.locator("#announcement_checkbox");
     await expect(actualCheckbox).toBeChecked();
   });
@@ -238,18 +207,12 @@ test.describe("Anonymous User Signup Flow", () => {
 
     const displayNameInput = page.getByPlaceholder(/display.*name/i);
     await displayNameInput.fill("test");
-    await page.screenshot({
-      path: "test-results/SU-008/01-blocked-display-name.png",
-    });
     await expect(
       page.getByText("Please remove the test keyword from your display name."),
     ).toBeVisible();
 
     const usernameInput = page.getByPlaceholder(/user.*name/i);
     await usernameInput.fill("test");
-    await page.screenshot({
-      path: "test-results/SU-008/02-blocked-username.png",
-    });
     await expect(
       page.getByText("Please remove the test keyword from your username."),
     ).toBeVisible();
@@ -262,13 +225,6 @@ test.describe("Anonymous User Signup Flow", () => {
 
     const usernameInput = page.getByPlaceholder(/user.*name/i);
     await usernameInput.fill("validusername123");
-    await page.screenshot({
-      path: "test-results/SU-009/01-username-availability-check.png",
-    });
-
-    await page.screenshot({
-      path: "test-results/SU-009/02-username-availability-result.png",
-    });
   });
 
   test("[SU-010] should handle mobile responsive layout", async ({ page }) => {
@@ -281,19 +237,12 @@ test.describe("Anonymous User Signup Flow", () => {
       width: CONFIGS.DEVICE_SCREEN_SIZES.MOBILE - 100,
       height: 800,
     });
-    await page.screenshot({
-      path: "test-results/SU-010/01-mobile-viewport-set.png",
-    });
 
     const userSetupPopup = page.locator("#user_setup_popup");
     await expect(userSetupPopup).toBeVisible();
 
     const profileImage = page.locator('img[alt="Team Logo"]');
     await expect(profileImage).toBeVisible();
-
-    await page.screenshot({
-      path: "test-results/SU-010/02-mobile-signup-form.png",
-    });
 
     // Verify form fields are still accessible in mobile layout
     const emailInput = page.getByRole("textbox", { name: /email/i }).first();
