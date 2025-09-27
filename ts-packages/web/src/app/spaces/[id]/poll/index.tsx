@@ -8,6 +8,7 @@ import Initial from './_components/initial';
 import MainTab from './_components/main';
 import Content from './_components/content';
 import SpaceSideMenu, { SpaceTabsMobile } from './_components/side-menu';
+import SideCommentMenu from '../_components/space-comment-menu';
 
 export default async function PollPage({ spaceId }: { spaceId: number }) {
   const queryClient = getQueryClient();
@@ -30,7 +31,11 @@ export default async function PollPage({ spaceId }: { spaceId: number }) {
           </div>
           <MainTab spaceId={spaceId} />
         </div>
-        <SpaceSideMenu spaceId={spaceId} />
+        <div className='flex flex-col gap-5'>
+          <SpaceSideMenu spaceId={spaceId} />
+          <SideCommentMenu />
+        </div>
+
       </div>
     </SSRHydration>
   );

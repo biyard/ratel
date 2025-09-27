@@ -1,6 +1,6 @@
+"use client"
 import { useState } from "react";
 import { Search } from "lucide-react";
-import BorderSpaceCard from "@/app/(social)/_components/border-space-card";
 import CommentIcon from "@/assets/icons/comment.svg";
 import SearchIcon from "@/assets/icons/search.svg";
 import HamburgerIcon from "@/assets/icons/hamburger2.svg";
@@ -74,7 +74,7 @@ export default function SideCommentMenu() {
       <div className="border border-card-border rounded-[10px] bg-card-bg-secondary border">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="font-semibold flex items-center gap-2">
+          <h2 className="font-semibold flex items-center gap-2 text-text-primary">
             <CommentIcon /> Comments
           </h2>
           <HamburgerIcon />
@@ -142,7 +142,6 @@ function CommentBox({
         {status === "done" ? (
           <CheckCircle/>
         ) : (
-         
           <Check className="bg-follow-button-bg-secondary rounded-full"/>
         )}
       </div>
