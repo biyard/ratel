@@ -19,7 +19,7 @@ import { useTranslations } from 'next-intl';
 import BorderSpaceCard from '@/app/(social)/_components/border-space-card';
 import { usePermission } from '@/app/(social)/_hooks/use-permission';
 import { GroupPermission } from '@/lib/api/models/group';
-import SpaceCommentMenu from '@/app/spaces/[id]/_components/space-comment-menu';
+
 export default function SpaceSideMenu() {
   const t = useTranslations('DeliberationSpace');
   const popup = usePopup();

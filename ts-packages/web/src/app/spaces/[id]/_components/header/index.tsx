@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext } from 'react';
 import Badge from '@/assets/icons/badge.svg';
 import { UserType } from '@/lib/api/models/user';
 import Image from 'next/image';
@@ -32,8 +32,6 @@ import { PublishingScope } from '@/lib/api/models/notice';
 import GoPublicModal from '../../notice/_components/modal/go-public-modal';
 import { GroupPermission } from '@/lib/api/models/group';
 import { usePermission } from '@/app/(social)/_hooks/use-permission';
-import { useParams } from 'next/navigation';
-import SpaceCommentEditor1 from '@/app/(social)/_components/space-editor';
 
 export default function SpaceHeader({
   space,
@@ -46,11 +44,6 @@ export default function SpaceHeader({
   const context = useSpaceContext();
   if (!context)
     throw new Error('SpaceHeader must be used within SpaceHeaderProvider');
-
-  const [showCommentEditor, setShowCommentEditor] = useState(true);
-  const [commentCount, setCommentCount] = useState(
-    space.feed_comments?.length || 0,
-  );
 
   const {
     isEdit,
@@ -126,9 +119,6 @@ export default function SpaceHeader({
   const shares = feed.shares;
   const rewards = feed.rewards;
   const { isOpen, toggle, close, dropdownRef } = useDropdown();
-
-  const params = useParams();
-  const spaceId = Number(params.id);
 
   const writePostPermission = usePermission(
     space.author[0]?.id ?? 0,
@@ -308,8 +298,6 @@ export default function SpaceHeader({
             </div>
           </div>
 
-      
-
           <div className="flex flex-row w-fit gap-1 items-center">
             <Rewards width={20} height={20} />
             <div className="font-medium text-[15px] text-text-primary">
@@ -390,7 +378,6 @@ export default function SpaceHeader({
           {getTimeAgo(createdAt)}
         </div>
       </div>
-
     </div>
   );
 }

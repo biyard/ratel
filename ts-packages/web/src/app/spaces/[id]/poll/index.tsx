@@ -31,11 +31,10 @@ export default async function PollPage({ spaceId }: { spaceId: number }) {
           </div>
           <MainTab spaceId={spaceId} />
         </div>
-        <div className='flex flex-col gap-5'>
+        <div className="flex flex-col gap-5">
           <SpaceSideMenu spaceId={spaceId} />
           <SideCommentMenu />
         </div>
-
       </div>
     </SSRHydration>
   );

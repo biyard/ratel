@@ -83,8 +83,8 @@ function Page() {
               )}
             </div>
             <div className="flex flex-col gap-5">
-            <SpaceSideMenu />
-            <SpaceCommentMenu />
+              <SpaceSideMenu />
+              <SpaceCommentMenu />
             </div>
           </div>
         </div>
