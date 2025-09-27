@@ -123,6 +123,7 @@ export const LoginModal = ({
     });
 
     if (info) {
+      console.log('Sign in user info:', info);
       refetchUserInfo(queryClient);
       await queryClient.invalidateQueries({
         queryKey: feedKeys.list({
