@@ -22,7 +22,7 @@ use dto::{
             http::{HeaderMap, header::SET_COOKIE},
         },
     },
-    by_types::Claims,
+    by_types::{Claims, JsonWithHeaders},
 };
 use serde::Deserialize;
 use tower_sessions::Session;
@@ -42,7 +42,7 @@ pub async fn login_handler(
     Extension(session): Extension<Session>,
     Extension(auth): Extension<Option<Authorization>>,
     Json(req): Json<LoginRequest>,
-) -> Result<(HeaderMap, ()), Error2> {
+) -> Result<JsonWithHeaders<User>, Error2> {
     let user = match req {
         LoginRequest::Email { email, password } => {
             login_with_email(&dynamo.client, &pool, email, password).await?
@@ -116,7 +116,10 @@ pub async fn login_handler(
         .unwrap(),
     );
 
-    Ok((headers, ()))
+    Ok(JsonWithHeaders {
+        body: user,
+        headers,
+    })
 }
 
 pub async fn login_with_email(
