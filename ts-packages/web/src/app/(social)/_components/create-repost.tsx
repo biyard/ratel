@@ -5,7 +5,6 @@ import {
   useState,
   useCallback,
   useRef,
-  useEffect,
 } from 'react';
 import { Clear } from '@/components/icons';
 import { Loader } from '@/components/icons';
@@ -208,7 +207,6 @@ export function CreateRePost() {
                 {feedcontent && (
                   <TruncatedContent
                     content={feedcontent}
-                    maxLines={1}
                     className="prose prose-invert text-sm bg-write-comment-box-bg mb-3 font-light text-desc-text text-start ml-[0.5px]"
                     contentClassName="[&_*]:!my-0"
                   />
@@ -516,94 +514,41 @@ export const useRepostDraft = () => {
 
 interface TruncatedContentProps {
   content: string;
-  maxLines?: number;
   className?: string;
   contentClassName?: string;
   showMoreText?: string;
   showLessText?: string;
-  minLength?: number;
 }
 
-// CSS class names for different max lines that Tailwind can detect
-const lineClampClasses = {
-  1: 'line-clamp-1',
-  2: 'line-clamp-2',
-  3: 'line-clamp-3',
-  4: 'line-clamp-4',
-  5: 'line-clamp-5',
-  6: 'line-clamp-6',
-};
-
-const TruncatedContent = ({
+const SimpleTruncatedContent = ({
   content,
-  maxLines = 1,
   className = '',
   contentClassName = '',
   showMoreText = 'See more',
   showLessText = 'See less',
-  minLength = 100,
 }: TruncatedContentProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [needsTruncation, setNeedsTruncation] = useState(false);
-  const contentRef = useRef<HTMLDivElement>(null);
+  const maxWords = 14;
 
-  useEffect(() => {
-    const checkTruncation = () => {
-      if (!contentRef.current) return;
+  const plainText = content
+    .replace(/<[^>]*>?/gm, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  const words = plainText.split(' ');
+  const needsTruncation = words.length > maxWords;
 
-      const element = contentRef.current;
-
-      // Check if content is truncated or exceeds min length
-      const isOverflowing = element.scrollHeight > element.clientHeight;
-      const isLongContent = content.length > minLength;
-
-      setNeedsTruncation(isOverflowing || isLongContent);
-    };
-
-    // Use requestAnimationFrame to ensure the DOM is updated
-    const rafId = requestAnimationFrame(() => {
-      checkTruncation();
-    });
-
-    // Add resize observer to handle window resizing
-    const resizeObserver = new ResizeObserver(checkTruncation);
-    if (contentRef.current) {
-      resizeObserver.observe(contentRef.current);
-    }
-
-    // Initial check after a small delay to ensure styles are applied
-    const timeoutId = setTimeout(checkTruncation, 100);
-
-    return () => {
-      cancelAnimationFrame(rafId);
-      clearTimeout(timeoutId);
-      resizeObserver.disconnect();
-    };
-  }, [content, maxLines, minLength]);
-
-  // Get the appropriate line clamp class based on maxLines
-  const lineClampClass =
-    lineClampClasses[Math.min(maxLines, 6) as keyof typeof lineClampClasses] ||
-    '';
+  // Get truncated text with ellipsis
+  const truncatedText = needsTruncation
+    ? words.slice(0, maxWords).join(' ') + '...'
+    : plainText;
 
   return (
-    <div className={`${className} relative`}>
+    <div className={`flex ${className}`}>
       <div
-        ref={contentRef}
-        className={`${contentClassName} ${!isExpanded ? `${lineClampClass} overflow-hidden` : ''}`}
-        style={
-          !isExpanded
-            ? {
-                WebkitLineClamp: maxLines,
-                display: '-webkit-box',
-                WebkitBoxOrient: 'vertical',
-                overflow: 'hidden',
-              }
-            : undefined
-        }
+        className={contentClassName}
         // biome-ignore lint/security/noDangerouslySetInnerHtml: Sanitized with DOMPurify
         dangerouslySetInnerHTML={{
-          __html: DOMPurify.sanitize(content),
+          __html: DOMPurify.sanitize(isExpanded ? content : truncatedText),
         }}
       />
       {needsTruncation && (
@@ -614,7 +559,7 @@ const TruncatedContent = ({
             e.stopPropagation();
             setIsExpanded(!isExpanded);
           }}
-          className="mt-1 text-foreground hover:underline text-sm font-medium focus:outline-none transition-colors inline-block"
+          className="text-foreground hover:underline text-sm font-medium focus:outline-none transition-colors inline-block"
         >
           {isExpanded ? showLessText : showMoreText}
         </button>
@@ -622,3 +567,12 @@ const TruncatedContent = ({
     </div>
   );
 };
+
+export const TruncatedContent = SimpleTruncatedContent;
+
+// Truuncation algo
+// Implementation of simle trucnation ..
+// Check for the number of words
+// if the number of words in the first line is greater than  the max words which I will set to to something like 14 words..
+// then truncate the content to the max words and add ... to the end a
+// Show the reamining truccated tootltip by adding 'see more' and 'see less'  functionality at the end of the trucnated line..
