@@ -26,6 +26,8 @@ interface SpaceCommentEditorProps {
   spaceId?: number;
 }
 
+// custom  function for handling creating of comments, to be implemented.
+
 export default function SpaceCommentEditor1({
   spaceId = 0,
 }: SpaceCommentEditorProps) {
