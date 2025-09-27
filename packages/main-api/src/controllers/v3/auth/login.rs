@@ -28,6 +28,7 @@ use serde::Deserialize;
 use tower_sessions::Session;
 
 #[derive(Debug, Clone, Deserialize, aide::OperationIo, JsonSchema)]
+#[serde(untagged)]
 pub enum LoginRequest {
     Email { email: String, password: String },
     OAuth { provider: Provider, token: String },

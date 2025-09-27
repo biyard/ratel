@@ -25,6 +25,7 @@ import { getQueryClient } from '@/providers/getQueryClient';
 import { useTranslations } from 'next-intl';
 import { feedKeys } from '@/constants';
 import { FeedStatus } from '@/lib/api/models/feeds';
+import { useApiCall } from '@/lib/api/use-send';
 
 interface LoginModalProps {
   id?: string;
@@ -56,6 +57,7 @@ export const LoginModal = ({
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [passwordWarning, setPasswordWarning] = useState('');
+  const { post } = useApiCall();
 
   const updateTelegramId = async () => {
     if (telegramRaw) {
@@ -115,8 +117,10 @@ export const LoginModal = ({
 
   const handleSignIn = async () => {
     const hashedPassword = sha3(password);
-    const url = `/api/login?email=${encodeURIComponent(email)}&password=${hashedPassword}`;
-    const info = await send(anonKeyPair, url, '');
+    const info = await post('/v3/auth/login', {
+      email,
+      password: hashedPassword,
+    });
 
     if (info) {
       refetchUserInfo(queryClient);
