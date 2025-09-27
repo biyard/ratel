@@ -46,13 +46,12 @@ ECR_NAME ?= $(shell aws ecr describe-repositories --repository-names $(REPO_NAME
 DATABASE_TYPE ?= postgres
 DATABASE_URL ?= "postgresql://postgres:postgres@postgres:5432/ratel"
 DYNAMO_ENDPOINT ?= http://localstack:4566
-DYNAMO_TABLE ?= ratel-$(ENV)
+DYNAMO_TABLE_PREFIX ?= ratel-$(ENV)
 KAIA_ENDPOINT ?= https://public-en-kairos.node.kaia.io
 KAIA_OWNER_ADDR ?= $(strip $(shell ./key.sh | awk '{print $$1}'))
 KAIA_OWNER_KEY ?= $(strip $(shell ./key.sh | awk '{print $$2}'))
 KAIA_FEEPAYER_ADDR ?= $(strip $(shell ./key.sh | awk '{print $$1}'))
 KAIA_FEEPAYER_KEY ?= $(strip $(shell ./key.sh | awk '{print $$2}'))
-DYNAMO_TABLE_PREFIX ?= ratel-$(ENV)
 TELEGRAM_TOKEN ?=
 FIREBASE_PROJECT_ID ?=
 
@@ -104,6 +103,7 @@ BUILD_ENV ?= ENV=$(ENV) \
 								NOVA_LITE_MODEL_ID=$(NOVA_LITE_MODEL_ID) \
 								PRIVATE_BUCKET_NAME=$(PRIVATE_BUCKET_NAME) \
 								TELEGRAM_TOKEN=$(TELEGRAM_TOKEN) \
+								DYNAMO_ENDPOINT=$(DYNAMO_ENDPOINT) \
 								DYNAMO_TABLE_PREFIX=$(DYNAMO_TABLE_PREFIX) \
 								BINANCE_API_KEY=$(BINANCE_API_KEY) \
 								BINANCE_SECRET_KEY=$(BINANCE_SECRET_KEY) \

@@ -1,10 +1,22 @@
 use bdk::prelude::*;
 use serde_with::{DeserializeFromStr, SerializeDisplay};
 
-#[derive(Debug, Clone, SerializeDisplay, DeserializeFromStr, Default, DynamoEnum, JsonSchema)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    SerializeDisplay,
+    DeserializeFromStr,
+    Default,
+    DynamoEnum,
+    JsonSchema,
+)]
 pub enum EntityType {
     #[default]
     None,
+
+    Session,
 
     // User entity types
     // USER_PK index is aligned by gsi1-index
@@ -18,6 +30,7 @@ pub enum EntityType {
     UserTeam(String),      // from Team
     UserTeamGroup(String), // from TeamGroup
     EmailVerification,
+    UserRelationship(String),
 
     // Feed entity types
     Post,

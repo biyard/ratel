@@ -1,10 +1,14 @@
 use crate::{
     AppState, Error2, config,
-    models::user::{
-        User, UserOAuth, UserOAuthQueryOption, UserPrincipal, UserPrincipalQueryOption,
+    models::{
+        migrators::user::migrate_by_email_password,
+        user::{
+            User, UserOAuth, UserOAuthQueryOption, UserPrincipal, UserPrincipalQueryOption,
+            UserQueryOption,
+        },
     },
     types::Provider,
-    utils::{dynamo_extractor::get_principal_from_auth, firebase, password::verify_password},
+    utils::{dynamo_extractor::get_principal_from_auth, firebase},
 };
 use bdk::prelude::*;
 
@@ -33,28 +37,14 @@ pub enum LoginRequest {
 pub type LoginResponse = (HeaderMap, ());
 
 pub async fn login_handler(
-    State(AppState { dynamo, .. }): State<AppState>,
+    State(AppState { dynamo, pool, .. }): State<AppState>,
     Extension(session): Extension<Session>,
     Extension(auth): Extension<Option<Authorization>>,
     Json(req): Json<LoginRequest>,
 ) -> Result<(HeaderMap, ()), Error2> {
     let user = match req {
         LoginRequest::Email { email, password } => {
-            let (u, _) = User::find_by_email(&dynamo.client, &email, Default::default()).await?;
-            let user = u
-                .get(0)
-                .cloned()
-                .ok_or(Error2::BadRequest("Invalid email or password".into()))?;
-            let hashed_password = user
-                .password
-                .as_ref()
-                .ok_or(Error2::BadRequest("Invalid email or password".into()))?;
-            if !verify_password(&password, &hashed_password).map_err(|e| {
-                Error2::InternalServerError(format!("Password verification error: {}", e))
-            })? {
-                return Err(Error2::BadRequest("Invalid email or password".into()));
-            }
-            user
+            login_with_email(&dynamo.client, &pool, email, password).await?
         }
         LoginRequest::OAuth { provider, token } => match provider {
             Provider::Google => {
@@ -126,4 +116,28 @@ pub async fn login_handler(
     );
 
     Ok((headers, ()))
+}
+
+pub async fn login_with_email(
+    cli: &aws_sdk_dynamodb::Client,
+    pool: &sqlx::PgPool,
+    email: String,
+    password: String,
+) -> Result<User, Error2> {
+    let (u, _) = User::find_by_email_and_password(
+        cli,
+        &email,
+        UserQueryOption::builder().sk(password.to_string()),
+    )
+    .await?;
+    let user = u.get(0).cloned();
+
+    // FIXME(migrate): fallback to tricky migration from postgres
+    let user = if user.is_none() {
+        migrate_by_email_password(cli, pool, email, password).await?
+    } else {
+        user.unwrap()
+    };
+
+    Ok(user)
 }
