@@ -23,30 +23,48 @@ export default defineConfig({
   /* Opt out of parallel tests on CI. */
   workers: process.env.CI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: "html",
+  reporter: [["html", { host: "0.0.0.0", port: 8900 }]],
   timeout: CONFIGS.PLAYWRIGHT.TIMEOUT,
+  /* Global setup and teardown */
+  globalSetup: require.resolve("./tests/global-setup"),
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
     baseURL: CONFIGS.PLAYWRIGHT.BASE_URL,
     navigationTimeout: CONFIGS.PLAYWRIGHT.NAVIGATION_TIME_OUT,
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: "on-first-retry",
+    trace: "on",
     video: "on",
   },
-  outputDir: "test-results/",
 
   /* Configure projects for major browsers */
   projects: [
+    // Anonymous tests (no setup required)
     {
-      name: "chromium",
-
+      name: "anonymous",
+      testMatch: "**/*.anon.spec.ts",
       use: {
         ...devices["Desktop Chrome"],
         viewport: {
           width: 1440,
           height: 950,
         },
+      },
+    },
+
+    // Authenticated tests (requires global setup)
+    {
+      name: "authenticated",
+      testMatch: "**/*.auth.spec.ts",
+      dependencies: [], // Global setup will run before this
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport: {
+          width: 1440,
+          height: 950,
+        },
+        // This will be loaded in the beforeEach of authenticated tests
+        storageState: "test-results/.auth/user.json",
       },
     },
 

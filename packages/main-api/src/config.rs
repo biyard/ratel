@@ -107,7 +107,7 @@ impl Default for Config {
             },
             dynamodb: DatabaseConfig::DynamoDb {
                 aws: AwsConfig::default(),
-                endpoint: option_env!("DYNAMODB_ENDPOINT"),
+                endpoint: option_env!("DYNAMO_ENDPOINT"),
                 table_prefix: option_env!("DYNAMO_TABLE_PREFIX").expect("You must set TABLE_PREFIX"),
             },
             auth: AuthConfig::default(),

@@ -76,7 +76,7 @@ pub struct User {
     #[serde(default)]
     pub badges: Vec<Badge>,
 
-    #[api_model(version = v0.3, indexed, unique, action = signup, action = update_evm_address)]
+    #[api_model(version = v0.3, indexed, action = signup, action = update_evm_address)]
     #[serde(default)]
     pub evm_address: String,
 
@@ -88,14 +88,14 @@ pub struct User {
     #[serde(default)]
     pub membership: Membership,
 
-    #[api_model(version = v1.0, type = INTEGER)]
+    #[api_model(version = v1.0, type = INTEGER, nullable)]
     #[serde(default)]
     pub theme: Option<Theme>,
 
     #[api_model(one_to_many = user_points, foreign_key = user_id, aggregator = sum(amount))]
     pub points: i64,
 
-    #[api_model(version = v0.6, unique, indexed)]
+    #[api_model(version = v0.6, indexed)]
     #[serde(default)]
     pub referral_code: String,
 

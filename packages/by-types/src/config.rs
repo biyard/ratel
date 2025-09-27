@@ -1,3 +1,5 @@
+use std::env;
+
 #[derive(Debug)]
 pub struct AwsConfig {
     pub region: &'static str,
@@ -7,8 +9,11 @@ pub struct AwsConfig {
 
 impl Default for AwsConfig {
     fn default() -> Self {
+        let region = option_env!("AWS_REGION").expect("You must set AWS_REGION");
+        let region = env::var("REGION").unwrap_or_else(|_| region.to_string());
+
         AwsConfig {
-            region: option_env!("AWS_REGION").expect("You must set AWS_REGION"),
+            region: Box::leak(region.into_boxed_str()),
             access_key_id: option_env!("AWS_ACCESS_KEY_ID")
                 .expect("You must set AWS_ACCESS_KEY_ID"),
             secret_access_key: option_env!("AWS_SECRET_ACCESS_KEY")
@@ -71,7 +76,16 @@ impl Default for DatabaseConfig {
         {
             "dynamo" | "dynamodb" => DatabaseConfig::DynamoDb {
                 aws: AwsConfig::default(),
-                endpoint: option_env!("DYNAMODB_ENDPOINT"),
+                endpoint: match option_env!("DYNAMODB_ENDPOINT") {
+                    Some(endpoint) => {
+                        if endpoint.is_empty() || endpoint == "none" {
+                            None
+                        } else {
+                            Some(endpoint)
+                        }
+                    }
+                    None => None,
+                },
                 table_prefix: option_env!("TABLE_PREFIX").expect("You must set TABLE_PREFIX"),
             },
             "rds" | "postgres" => DatabaseConfig::Postgres {

@@ -1,9 +1,11 @@
 use bdk::prelude::*;
 
+use crate::types::{EntityType, Partition};
+
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity)]
-#[dynamo(table = "session", pk_name = "id", sk_name = "none")]
 pub struct Session {
-    pub id: String,
+    pub pk: Partition,
+    pub sk: EntityType,
 
     pub created_at: i64,
     pub updated_at: i64,
@@ -17,7 +19,8 @@ impl Session {
         let now = chrono::Utc::now().timestamp_micros();
 
         Self {
-            id,
+            pk: Partition::Session(id),
+            sk: EntityType::Session,
             created_at: now,
             updated_at: now,
             data,

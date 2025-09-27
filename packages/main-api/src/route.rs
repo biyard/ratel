@@ -193,6 +193,7 @@ pub async fn route(deps: RouteDeps) -> Result<by_axum::axum::Router> {
         .nest(
             "/v3",
             route_v3::route(route_v3::RouteDeps {
+                pool: pool.clone(),
                 dynamo_client: dynamo_client.clone(),
                 ses_client: ses_client.clone(),
             })?,

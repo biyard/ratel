@@ -39,6 +39,11 @@ function News() {
   const handleNewsNavigation = (id: number) => {
     router.push(`/news/${id}`);
   };
+
+  if (!news || news.length === 0) {
+    return <div></div>;
+  }
+
   return (
     <DisableBorderCard>
       <Col className="w-full rounded-[10px]">
