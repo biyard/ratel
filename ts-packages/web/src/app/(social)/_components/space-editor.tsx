@@ -65,7 +65,7 @@ export default function SpaceCommentEditor1({
   
 
 <div
-          className="z-50 flex items-end justify-center"
+          className="z-100 flex items-end justify-center"
           
         >
           <div
