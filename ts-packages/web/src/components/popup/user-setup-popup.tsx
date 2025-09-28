@@ -18,8 +18,6 @@ import { Button } from '../ui/button';
 import { sha3 } from '@/lib/utils';
 import FileUploader from '../file-uploader';
 import Image from 'next/image';
-import { emailSignupRequest } from '@/lib/api/models/users/email-signup-request';
-import { signupRequest } from '@/lib/api/models/users/signup-request';
 import { useTranslations } from 'next-intl';
 
 export interface UserSetupPopupProps {
@@ -92,29 +90,27 @@ const UserSetupPopup = ({
     }
 
     try {
-      let req;
-      if (email === '') {
-        req = emailSignupRequest(
-          displayName,
-          emailState,
-          profileUrlState,
-          agreed,
-          announcementAgreed,
-          userName,
-          sha3(password),
-          auth.telegramRaw,
-        );
-      } else {
-        req = signupRequest(
-          displayName,
-          emailState,
-          profileUrlState,
-          agreed,
-          announcementAgreed,
-          userName,
-          auth.evmWallet!.address,
-          auth.telegramRaw,
-        );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const req: any = {
+        display_name: displayName,
+        username: userName,
+        profile_url: profileUrlState,
+        description: '',
+        term_agreed: agreed,
+        informed_agreed: announcementAgreed,
+      };
+      if (emailState !== '' && password !== '') {
+        // NOTE: Signup with email and password
+        req.email = emailState;
+        req.password = sha3(password);
+      } else if (auth.telegramRaw) {
+        // NOTE: First signup for telegram
+        // FIXME: Update email and password for telegram user
+        //        But, v3 does not support now.
+        //        Consider just update email and password in my profile
+        req.telegram_raw = auth.telegramRaw;
+        // FIXME: EVM address must be verified by signature in server-side
+        req.evm_address = auth.evmWallet?.address;
       }
 
       if (await post(ratelApi.users.signup(), req)) {

@@ -190,9 +190,9 @@ pub async fn api_main() -> Result<Router> {
         panic!("Database is not initialized. Call init() first.");
     };
 
-    if conf.migrate {
-        migration(&pool).await?;
-    }
+    // if conf.migrate {
+    //     migration(&pool).await?;
+    // }
     let is_local = conf.env == "local" || conf.env == "test";
     let aws_sdk_config = get_aws_config();
     let dynamo_client = DynamoClient::new(Some(aws_sdk_config.clone()));
@@ -244,8 +244,8 @@ pub async fn api_main() -> Result<Router> {
     })
     .await?
     .layer(middleware::from_fn(authorization_middleware))
-    .layer(session_layer)
-    .layer(middleware::from_fn(cookie_middleware));
+    .layer(session_layer);
+    // .layer(middleware::from_fn(cookie_middleware))
 
     let app = app.merge(mcp_router).merge(api_router);
     Ok(app)

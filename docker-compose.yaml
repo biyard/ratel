@@ -32,7 +32,7 @@ services:
       - "3000:3000"
     environment:
       ENV: dev
-      RUST_LOG: ${RUST_LOG:-info}
+      RUST_LOG: ${RUST_LOG:-debug}
       DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/ratel}
       DYNAMO_ENDPOINT: http://localstack:4566
       MIGRATE: ${MIGRATE:-true}
@@ -47,7 +47,7 @@ services:
       REDIRECT_DOMAIN: ${REDIRECT_DOMAIN:-http://localhost:3000}
     volumes:
       - .:/app
-      # - ./.build/target:/app/target
+      - ./.build/target:/app/target
       - ./.build/main-api/target:/app/packages/main-api/target
     working_dir: /app
     command: ["bash", "scripts/api-entrypoint.sh"]
@@ -164,7 +164,7 @@ services:
       NEXT_PUBLIC_API_URL: "http://localhost:3000"
       API_URL: "http://main-api:3000"
       NEXT_PUBLIC_GRAPHQL_URL: "http://localhost:28080/v1/graphql"
-      NEXT_PUBLIC_LOG_LEVEL: ${LOG_LEVEL:-info}
+      NEXT_PUBLIC_LOG_LEVEL: ${LOG_LEVEL:-debug}
       NODE_ENV: development
     command: ["bash", "scripts/web-entrypoint.sh"]
     healthcheck:

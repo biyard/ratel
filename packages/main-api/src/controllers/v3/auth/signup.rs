@@ -1,5 +1,6 @@
 use crate::{
     AppState, Error2,
+    constants::SESSION_KEY_USER_ID,
     models::user::{
         User, UserEvmAddress, UserOAuth, UserOAuthQueryOption, UserPhoneNumber, UserReferralCode,
     },
@@ -10,14 +11,14 @@ use crate::{
         password::hash_password,
         referal_code::generate_referral_code,
         telegram::parse_telegram_raw,
-        validator::{validate_description, validate_image_url, validate_nickname},
+        validator::{validate_image_url, validate_nickname},
     },
 };
 use bdk::prelude::*;
 use dto::{
     JsonSchema, aide,
     by_axum::{
-        auth::{Authorization, DYNAMO_USER_SESSION_KEY, DynamoUserSession},
+        auth::Authorization,
         axum::{
             Extension,
             extract::{Json, State},
@@ -37,7 +38,6 @@ pub struct SignupRequest {
     pub username: String,
     #[validate(custom(function = "validate_image_url"))]
     pub profile_url: String,
-    #[validate(custom(function = "validate_description"))]
     pub description: String,
     pub term_agreed: bool,
     pub informed_agreed: bool,
@@ -47,6 +47,7 @@ pub struct SignupRequest {
 }
 
 #[derive(Debug, Clone, Deserialize, aide::OperationIo, JsonSchema)]
+#[serde(untagged)]
 pub enum SignupType {
     Email {
         #[validate(email)]
@@ -71,7 +72,7 @@ pub async fn signup_handler(
     Extension(auth): Extension<Option<Authorization>>,
     Extension(session): Extension<Session>,
     Json(req): Json<SignupRequest>,
-) -> Result<(), Error2> {
+) -> Result<Json<User>, Error2> {
     req.validate()
         .map_err(|e| Error2::BadRequest(format!("Invalid input: {}", e)))?;
 
@@ -147,16 +148,10 @@ pub async fn signup_handler(
         .await?;
 
     session
-        .insert(
-            DYNAMO_USER_SESSION_KEY,
-            DynamoUserSession {
-                pk: user.pk.to_string(),
-                typ: user.user_type as i64,
-            },
-        )
+        .insert(SESSION_KEY_USER_ID, user.pk.to_string())
         .await?;
 
-    Ok(())
+    Ok(Json(user))
 }
 
 struct UserPayload {

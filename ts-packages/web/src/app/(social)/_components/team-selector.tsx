@@ -52,7 +52,7 @@ export default function TeamSelector({ onSelect, team }: TeamSelectorProps) {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button className="w-full flex items-center justify-between px-2 py-2 focus:outline-none">
-          <span className="font-bold text-[18px] text-text-primary">
+          <span className="font-bold text-[18px] text-text-primary truncate">
             {teams[selectedIndex].nickname}
           </span>
           <ChevronDown size={16} className="text-text-primary" />
