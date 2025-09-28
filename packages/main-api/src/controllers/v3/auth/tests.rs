@@ -17,7 +17,7 @@ async fn test_email_with_password_signup() {
 
     let (status, headers, user) = post_with_body! {
         app: app,
-        path: "/v3/auth/login",
+        path: "/v3/auth/signup",
         body: {
             "email": email,
             "password": "0x1111",
