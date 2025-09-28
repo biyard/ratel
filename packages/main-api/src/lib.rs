@@ -147,6 +147,9 @@ pub mod controllers {
             pub mod logout;
             pub mod signup;
 
+            #[cfg(test)]
+            pub mod tests;
+
             pub mod verification {
                 pub mod send_code;
                 pub mod verify_code;
