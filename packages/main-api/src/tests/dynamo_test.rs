@@ -32,6 +32,7 @@ pub fn create_app_state() -> AppState {
     AppState {
         dynamo: DynamoClient::mock(aws_config.clone()),
         ses: SesClient::mock(aws_config),
+        ..
     }
 }
 
