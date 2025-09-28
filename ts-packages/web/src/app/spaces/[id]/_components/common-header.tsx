@@ -41,7 +41,7 @@ import { useDropdown } from './dropdown/dropdown-service';
 import { Extra } from '@/components/icons';
 import DropdownMenu from './dropdown/dropdown-menu';
 import DeleteSpacePopup from './modal/confirm-delete';
-import SpaceCommentEditor1 from '../../../(social)/_components/space-editor';
+import SpaceCommentEditor from '../../../(social)/_components/space-editor';
 
 function SpaceModifySection({
   title,
@@ -323,7 +323,7 @@ export default function Header() {
             createdAt={space.created_at}
           />
 
-          <SpaceCommentEditor1 spaceId={spaceId} />
+          <SpaceCommentEditor spaceId={spaceId} postId={space.feed_id} />
         </div>
       </SuspenseWrapper>
     </div>

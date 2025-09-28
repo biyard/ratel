@@ -21,7 +21,7 @@ import { SpaceProvider } from '../_components/header/provider';
 import DeliberationAnalyzePage from './_components/analyze-tab';
 import { DeliberationSurveyPage } from './_components/survey-tab';
 import { useTranslations } from 'next-intl';
-import SpaceCommentEditor1 from '@/app/(social)/_components/space-editor';
+import SpaceCommentEditor from '@/app/(social)/_components/space-editor';
 import SpaceCommentMenu from '../_components/space-comment-menu';
 
 export default function DeliberationSpacePage() {
@@ -69,7 +69,7 @@ function Page() {
         <div className="flex-1 flex w-full">
           <div className="flex flex-row w-full gap-5">
             <div className="flex flex-col w-full">
-              <SpaceCommentEditor1 spaceId={space.id} />
+              <SpaceCommentEditor spaceId={space.id} />
               {selectedType == DeliberationTab.SUMMARY ? (
                 <ThreadPage />
               ) : selectedType == DeliberationTab.DELIBERATION ? (

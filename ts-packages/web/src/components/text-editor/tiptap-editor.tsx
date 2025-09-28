@@ -19,7 +19,7 @@ interface TiptapEditorProps {
   onUpdate?: (content: string) => void;
   editable?: boolean;
   className?: string;
-  onCreate?: (editor: Editor) => void;
+  onCreate?: ((editor: Editor) => void) | (() => void);
 }
 
 export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
@@ -66,6 +66,8 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
         }),
         Link.configure({
           openOnClick: false,
+          autolink: true,
+          linkOnPaste: true,
         }),
         Underline,
       ],
@@ -76,9 +78,15 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
         onUpdate?.(html);
       },
 
-      onCreate: ({ editor }) => {
-        onCreate?.(editor);
-      },
+      onCreate: onCreate
+        ? ({ editor }) => {
+            if (onCreate.length > 0) {
+              (onCreate as (editor: Editor) => void)(editor);
+            } else {
+              (onCreate as () => void)();
+            }
+          }
+        : undefined,
     }) as Editor | null;
 
     useImperativeHandle<Editor | null, Editor | null>(ref, () => editor, [
