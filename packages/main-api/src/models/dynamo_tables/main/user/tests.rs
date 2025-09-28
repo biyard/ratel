@@ -48,7 +48,7 @@ async fn tests_create_user() {
 
     // create user telegram
     let telegram_id = now;
-    let user_telegram = UserTelegram::new(user.pk.clone(), telegram_id);
+    let user_telegram = UserTelegram::new(user.pk.clone(), telegram_id, "dummy".to_string());
     let res = user_telegram.create(&cli).await;
     assert!(res.is_ok());
 

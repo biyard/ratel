@@ -162,7 +162,7 @@ pub fn route(
             "/auth",
             Router::new()
                 .route("/login", post(login_handler))
-                .native_route("/logout", native_routing::post(logout_handler))
+                .route("/logout", post(logout_handler))
                 .route("/signup", post(signup_handler))
                 .nest(
                     "/verification",
