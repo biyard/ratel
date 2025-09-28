@@ -52,6 +52,7 @@ jobs:
           make cdk/public
           make cdk/.build/image-worker/bootstrap
           make cdk-deploy-v2
+
   main-api:
     runs-on: ubuntu-22.04
     defaults:

@@ -27,3 +27,4 @@ teloxide = { version = "0.17.0", features = ["macros"] }
 [features]
 default = ["server"]
 server = ["dto/server"]
+no-secret = []
