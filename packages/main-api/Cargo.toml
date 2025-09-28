@@ -78,6 +78,8 @@ path = "src/main.rs"
 [dev-dependencies]
 rest-api = { workspace = true, features = ["test"] }
 ring = { version = "0.17.14" }
+reqwest.workspace = true
+
 [features]
 default = []
 full-test = []
