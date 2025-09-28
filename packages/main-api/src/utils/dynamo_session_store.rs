@@ -71,6 +71,7 @@ impl SessionStore for DynamoSessionStore {
     }
 
     async fn delete(&self, session_id: &Id) -> session_store::Result<()> {
+        tracing::debug!("Deleting session with ID: {}", session_id);
         let pk = session_id.to_string();
         Session::delete(
             &self.client,

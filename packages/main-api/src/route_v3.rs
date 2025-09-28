@@ -2,7 +2,8 @@ use crate::{
     Error2,
     controllers::v3::{
         auth::{
-            login::{LoginResponse, login_handler},
+            login::login_handler,
+            logout::logout_handler,
             signup::signup_handler,
             verification::{
                 send_code::{SendCodeResponse, send_code_handler},
@@ -39,11 +40,9 @@ use crate::{
     utils::aws::{DynamoClient, SesClient},
 };
 
-use dto::by_axum::axum::Json;
-use dto::{
-    aide::axum::routing::{get_with, post_with},
-    by_axum::axum::Router,
-};
+use bdk::prelude::*;
+use by_axum::aide::axum::routing::*;
+use by_axum::axum::*;
 
 macro_rules! api_docs {
     ($success_ty:ty, $summary:expr, $description:expr) => {
@@ -162,24 +161,9 @@ pub fn route(
         .nest(
             "/auth",
             Router::new()
-                .route(
-                    "/login",
-                    post_with(
-                        login_handler,
-                        api_docs!(
-                            LoginResponse,
-                            "User login",
-                            "Authenticate user and create a session"
-                        ),
-                    ),
-                )
-                .route(
-                    "/signup",
-                    post_with(
-                        signup_handler,
-                        api_docs!((), "User signup", "Register a new user account"),
-                    ),
-                )
+                .route("/login", post(login_handler))
+                .native_route("/logout", native_routing::post(logout_handler))
+                .route("/signup", post(signup_handler))
                 .nest(
                     "/verification",
                     Router::new()

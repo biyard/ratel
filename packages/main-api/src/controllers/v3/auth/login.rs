@@ -1,5 +1,6 @@
 use crate::{
-    AppState, Error2, config,
+    AppState, Error2,
+    constants::SESSION_KEY_USER_ID,
     models::{
         migrators::user::migrate_by_email_password,
         user::{
@@ -15,14 +16,12 @@ use bdk::prelude::*;
 use dto::{
     JsonSchema, aide,
     by_axum::{
-        auth::{Authorization, DYNAMO_USER_SESSION_KEY, DynamoUserSession, generate_jwt},
+        auth::Authorization,
         axum::{
             Extension,
             extract::{Json, State},
-            http::{HeaderMap, header::SET_COOKIE},
         },
     },
-    by_types::{Claims, JsonWithHeaders},
 };
 use serde::Deserialize;
 use tower_sessions::Session;
@@ -35,14 +34,12 @@ pub enum LoginRequest {
     Telegram { telegram_raw: String },
 }
 
-pub type LoginResponse = (HeaderMap, ());
-
 pub async fn login_handler(
     State(AppState { dynamo, pool, .. }): State<AppState>,
     Extension(session): Extension<Session>,
     Extension(auth): Extension<Option<Authorization>>,
     Json(req): Json<LoginRequest>,
-) -> Result<JsonWithHeaders<User>, Error2> {
+) -> Result<Json<User>, Error2> {
     let user = match req {
         LoginRequest::Email { email, password } => {
             login_with_email(&dynamo.client, &pool, email, password).await?
@@ -90,36 +87,11 @@ pub async fn login_handler(
         }
     };
 
-    let user_session = DynamoUserSession {
-        pk: user.pk.to_string(),
-        typ: user.user_type as i64,
-    };
     session
-        .insert(DYNAMO_USER_SESSION_KEY, user_session)
+        .insert(SESSION_KEY_USER_ID, user.pk.to_string())
         .await?;
 
-    let mut claims = Claims {
-        sub: user.pk.to_string(),
-        ..Default::default()
-    };
-    let token = generate_jwt(&mut claims)
-        .map_err(|e| Error2::InternalServerError(format!("JWT generation error: {}", e)))?;
-    let mut headers = HeaderMap::new();
-    headers.insert(
-        SET_COOKIE,
-        format!(
-            "{}_auth_token={}; SameSite=Lax; Path=/; Max-Age=2586226; HttpOnly; Secure;",
-            config::get().env,
-            token,
-        )
-        .parse()
-        .unwrap(),
-    );
-
-    Ok(JsonWithHeaders {
-        body: user,
-        headers,
-    })
+    Ok(Json(user))
 }
 
 pub async fn login_with_email(

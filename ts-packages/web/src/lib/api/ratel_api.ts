@@ -180,13 +180,14 @@ export const ratelApi = {
       `/v1/users?action=login-by-password&email=${encodeURIComponent(email)}&password=${password}`,
     loginWithTelegram: (raw: string) =>
       `/v1/users?action=login-by-telegram&telegram_raw=${raw}`,
-    getUserInfo: () => '/v1/users?action=user-info',
-    getUserByEmail: (email: string) => `/v2/users?email=${email}`,
-    getUserByUsername: (username: string) => `/v2/users?username=${username}`,
+    // getUserInfo: () => '/v1/users?action=user-info',
+    getUserInfo: () => '/v3/me',
+    getUserByEmail: (email: string) => `/v3/users?email=${email}`,
+    getUserByUsername: (username: string) => `/v3/users?username=${username}`,
     getUserByPhoneNumber: (phoneNumber: string) =>
-      `/v2/users?phone-number=${phoneNumber}`,
+      `/v3/users?phone-number=${phoneNumber}`,
 
-    signup: () => '/v1/users?action=signup',
+    signup: () => '/v3/auth/signup',
     editProfile: (user_id: number) => `/v1/users/${user_id}`,
     updateEvmAddress: () => '/v1/users',
 
