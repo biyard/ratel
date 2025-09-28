@@ -1,3 +1,4 @@
+#![allow(warnings)]
 use crate::{
     controllers::v3::{
         me::get_info::get_info_handler,

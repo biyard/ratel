@@ -6,7 +6,7 @@ use crate::{
     },
     types::{Provider, UserType},
     utils::{
-        dynamo_extractor::extract_user,
+        dynamo_extractor::extract_user_from_session,
         firebase,
         password::hash_password,
         referal_code::generate_referral_code,
@@ -17,12 +17,9 @@ use crate::{
 use bdk::prelude::*;
 use dto::{
     JsonSchema, aide,
-    by_axum::{
-        auth::Authorization,
-        axum::{
-            Extension,
-            extract::{Json, State},
-        },
+    by_axum::axum::{
+        Extension,
+        extract::{Json, State},
     },
 };
 use serde::Deserialize;
@@ -69,14 +66,16 @@ pub enum SignupType {
 ///
 pub async fn signup_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    Extension(auth): Extension<Option<Authorization>>,
     Extension(session): Extension<Session>,
     Json(req): Json<SignupRequest>,
 ) -> Result<Json<User>, Error2> {
+    tracing::info!("signup_handler: req = {:?}", req);
     req.validate()
         .map_err(|e| Error2::BadRequest(format!("Invalid input: {}", e)))?;
 
-    let anonymous_user = extract_user(&dynamo.client, auth).await.ok();
+    let anonymous_user = extract_user_from_session(&dynamo.client, &session)
+        .await
+        .ok();
     let mut payload = UserPayload {
         display_name: req.display_name,
         username: req.username,
