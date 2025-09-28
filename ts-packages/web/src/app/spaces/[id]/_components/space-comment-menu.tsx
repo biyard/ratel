@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { formatDistanceToNow } from 'date-fns';
 import { useTranslations } from 'next-intl';
@@ -65,26 +65,46 @@ const CommentBox = ({
   const truncatedText =
     text.length > 100 ? `${text.substring(0, 100)}...` : text;
 
+  const handleActivate = useCallback(() => {
+    const element = document.getElementById(`comment-${id}`);
+    if (!element) return;
+
+    // Scroll to comment
+    element.scrollIntoView({ behavior: 'smooth' });
+
+    // Add highlight class
+    element.classList.add('bg-blue-50', 'transition-colors', 'duration-1000');
+
+    // Remove highlight class after animation completes
+    const timeoutId = setTimeout(() => {
+      element.classList.remove('bg-blue-50');
+    }, 1000);
+
+    // Cleanup function to clear timeout if component unmounts
+    return () => clearTimeout(timeoutId);
+  }, [id]);
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      // Handle both Space and Enter keys
+      if (e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault();
+        handleActivate();
+      }
+    },
+    [handleActivate],
+  );
+
   return (
     <div
+      role="button"
+      tabIndex={0}
       className={`p-3 rounded-lg border ${
         highlighted ? 'bg-blue-50 border-blue-200' : 'border-gray-200'
-      } hover:bg-gray-50 transition-colors cursor-pointer`}
-      onClick={() => {
-        // Scroll to comment in main thread when clicked
-        const element = document.getElementById(`comment-${id}`);
-        if (element) {
-          element.scrollIntoView({ behavior: 'smooth' });
-          element.classList.add(
-            'bg-blue-50',
-            'transition-colors',
-            'duration-1000',
-          );
-          setTimeout(() => {
-            element.classList.remove('bg-blue-50');
-          }, 1000);
-        }
-      }}
+      } hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors cursor-pointer`}
+      onClick={handleActivate}
+      onKeyDown={handleKeyDown}
+      aria-label={`Comment by ${author}: ${truncatedText}`}
     >
       <div className="flex items-start justify-between">
         <div className="flex-1 min-w-0">
@@ -111,10 +131,18 @@ const CommentBox = ({
                 <img
                   src={avatar}
                   alt=""
+                  aria-hidden="true"
                   className="w-6 h-6 rounded-full border-2 border-white bg-gray-100"
+                  loading="lazy"
+                  decoding="async"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
-                    target.src = '/default-avatar.png';
+                    // Only replace if not already set to default avatar
+                    if (!target.src.endsWith('/default-avatar.png')) {
+                      target.src = '/default-avatar.png';
+                      // Prevent infinite loop if default avatar fails
+                      target.onerror = null;
+                    }
                   }}
                 />
                 {idx === 2 && avatarGroup.length > 3 && (

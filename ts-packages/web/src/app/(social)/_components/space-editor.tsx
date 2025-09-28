@@ -3,13 +3,17 @@ import { useState, useRef, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { TiptapEditor } from '@/components/text-editor/tiptap-editor';
-import { showErrorToast } from '@/components/custom-toast/toast';
+import {
+  showErrorToast,
+  showSuccessToast,
+} from '@/components/custom-toast/toast';
 import { useDraftMutations } from '@/hooks/feeds/use-create-feed-mutation';
 import { Editor } from '@tiptap/core';
 import ToolbarPlugin from '@/components/toolbar/toolbar-repost';
 import DoubleArrowDown from '@/assets/icons/double-arrow-down.svg';
 import LinkPaste from '@/assets/icons/editor/link-paste.svg';
 import CommentPaste from '@/assets/icons/editor/comment-paste.svg';
+import { logger } from '@/lib/logger';
 
 interface SpaceCommentEditorProps {
   spaceId?: number;
@@ -63,22 +67,31 @@ export default function SpaceCommentEditor({
         return;
       }
 
-      // Validate content
-      if (!isContentValid(content)) {
-        showErrorToast('Comment cannot be empty');
-        return;
-      }
-
       // Prevent double submission
       if (isSubmitting) return;
+
+      // Compute guarded targetId with proper fallback
+      const targetId =
+        postId > 0
+          ? postId
+          : spaceId > 0
+            ? spaceId
+            : parentId > 0
+              ? parentId
+              : undefined;
+
+      if (!targetId) {
+        showErrorToast('Missing required information to post comment');
+        return;
+      }
 
       try {
         setIsSubmitting(true);
 
         await mutateAsync({
           userId: user.id,
-          parentId,
-          postId: postId || spaceId,
+          parentId: targetId, // Use computed targetId
+          postId: targetId, // Use the same targetId for both fields
           content,
         });
 
@@ -88,9 +101,10 @@ export default function SpaceCommentEditor({
 
         // Call onSuccess callback if provided
         onSuccess?.();
+        showSuccessToast('Comment posted successfully');
       } catch (error) {
-        console.error('Error submitting comment:', error);
-        showErrorToast('Failed to post comment. Please try again.');
+        logger.debug('Failed to post comment', error);
+        showErrorToast('Failed to post comment');
       } finally {
         setIsSubmitting(false);
       }
@@ -104,7 +118,7 @@ export default function SpaceCommentEditor({
       parentId,
       postId,
       spaceId,
-      user,
+      user?.id,
     ],
   );
 
@@ -112,24 +126,63 @@ export default function SpaceCommentEditor({
     setEditorReady(true);
   }, []);
 
+  const normalizeAndValidateUrl = (input: string): string | null => {
+    try {
+      // Trim and return null for empty input
+      const trimmed = input.trim();
+      if (!trimmed) return null;
+
+      // Add https:// if no protocol is present
+      let href = trimmed;
+      if (!/^https?:\/\//i.test(trimmed)) {
+        href = `https://${trimmed}`;
+      }
+
+      // Parse and validate the URL
+      const url = new URL(href);
+
+      // Only allow http and https protocols
+      if (!['http:', 'https:'].includes(url.protocol)) {
+        return null;
+      }
+
+      // Return the normalized URL
+      return url.toString();
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (error) {
+      // Return null for any parsing errors
+      return null;
+    }
+  };
+
   const handleInsertUrl = () => {
-    const urlToInsert = url?.trim();
-    if (!urlToInsert) return;
+    if (!url) return;
+
+    const normalizedUrl = normalizeAndValidateUrl(url);
+    if (!normalizedUrl) {
+      showErrorToast('Please enter a valid URL (http:// or https://)');
+      return;
+    }
 
     const editor = editorRef.current;
     if (!editor) return;
+
+    // Extract display text (remove protocol and trailing slashes for cleaner display)
+    const displayText = normalizedUrl
+      .replace(/^https?:\/\//, '')
+      .replace(/\/$/, '');
 
     editor
       .chain()
       .focus()
       .insertContent({
         type: 'text',
-        text: urlToInsert,
+        text: displayText,
         marks: [
           {
             type: 'link',
             attrs: {
-              href: urlToInsert,
+              href: normalizedUrl,
               target: '_blank',
               rel: 'noopener noreferrer',
             },
@@ -143,23 +196,33 @@ export default function SpaceCommentEditor({
   };
 
   const handleInsertCommentUrl = () => {
-    const urlToInsert = commentUrl?.trim();
-    if (!urlToInsert) return;
+    if (!commentUrl) return;
+
+    const normalizedUrl = normalizeAndValidateUrl(commentUrl);
+    if (!normalizedUrl) {
+      showErrorToast('Please enter a valid URL (http:// or https://)');
+      return;
+    }
 
     const editor = editorRef.current;
     if (!editor) return;
+
+    // Extract display text (remove protocol and trailing slashes for cleaner display)
+    const displayText = normalizedUrl
+      .replace(/^https?:\/\//, '')
+      .replace(/\/$/, '');
 
     editor
       .chain()
       .focus()
       .insertContent({
         type: 'text',
-        text: urlToInsert,
+        text: displayText,
         marks: [
           {
             type: 'link',
             attrs: {
-              href: urlToInsert,
+              href: normalizedUrl,
               target: '_blank',
               rel: 'noopener noreferrer',
             },
