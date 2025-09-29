@@ -8,7 +8,7 @@ import { LoginFailurePopup } from './login-failure-popup';
 import UserSetupPopup, { type UserSetupPopupProps } from './user-setup-popup';
 import { logger } from '@/lib/logger';
 import { useAuth, useEd25519KeyPair } from '@/lib/contexts/auth-context';
-import { AuthUserInfo, EventType } from '@/lib/service/firebase-service';
+import { AuthUserInfo } from '@/lib/service/firebase-service';
 import { send } from '@/lib/api/send';
 import { refetchUserInfo } from '@/lib/api/hooks/users';
 import { Col } from '../ui/col';
@@ -27,6 +27,7 @@ import { feedKeys } from '@/constants';
 import { FeedStatus } from '@/lib/api/models/feeds';
 import { useApiCall } from '@/lib/api/use-send';
 import { OAuthProvider } from '@/types/oauth-provider';
+import { ratelSdk } from '@/lib/api/ratel';
 
 interface LoginModalProps {
   id?: string;
@@ -178,23 +179,12 @@ export const LoginModal = ({
         'edkeypair principal:',
         ed25519KeyPair?.getPrincipal().toText(),
       );
-      const info = await send(user.keyPair!, '/api/login', '');
+      try {
+        await ratelSdk.users.login_with_oauth(
+          OAuthProvider.Google,
+          user.accessToken,
+        );
 
-      if (!info) {
-        user.event = EventType.SignUp;
-      }
-
-      if (user?.event == EventType.SignUp) {
-        openUserSetupPopup({
-          email: user.email ?? '',
-          nickname: user.displayName ?? undefined,
-          profileUrl: user.photoURL ?? undefined,
-          principal: user.principal ?? undefined,
-          idToken: user.idToken,
-          accessToken: user.accessToken,
-          provider: OAuthProvider.Google,
-        });
-      } else if (user?.event == EventType.Login) {
         refetchUserInfo(queryClient);
         await queryClient.invalidateQueries({
           queryKey: feedKeys.list({
@@ -205,6 +195,17 @@ export const LoginModal = ({
         network.refetch();
         await updateTelegramId();
         loader.close();
+      } catch (e) {
+        logger.debug('Ratel login with Google failed:', e);
+        openUserSetupPopup({
+          email: user.email ?? '',
+          nickname: user.displayName ?? undefined,
+          profileUrl: user.photoURL ?? undefined,
+          principal: user.principal ?? undefined,
+          idToken: user.idToken,
+          accessToken: user.accessToken,
+          provider: OAuthProvider.Google,
+        });
       }
     } catch (err) {
       popup.open(
