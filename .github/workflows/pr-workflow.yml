@@ -393,16 +393,14 @@ jobs:
 
           # Run Playwright tests
           make test
-          zip -r playwright-report.zip playwright-report
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
-        id: deployment
         if: always()
         with:
           name: playwright-test-results
           path: |
-            playwright-report.zip
+            playwright-report/
           retention-days: 30
 
       - name: Lookup artifact URL for this run
@@ -440,7 +438,10 @@ jobs:
 
             const comment = `## 🎭 Playwright Test Results
 
-            **📊 Test Report:** [Download artifact](${artifactUrl})
+            **📊 Test Report:**
+            - [Download artifact](${artifactUrl})
+            - Extract by \`unzip playwright-report.zip\`
+            - Show report by \`npx playwright show-report\`
 
             **📁 Test Artifacts:**
             - All artifacts: [Run artifacts page](${runUrl}#artifacts)
