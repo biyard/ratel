@@ -440,7 +440,7 @@ jobs:
 
             **📊 Test Report:**
             - [Download artifact](${artifactUrl})
-            - Extract by \`unzip playwright-report.zip\`
+            - Extract by \`unzip -d playwright-report playwright-report.zip\`
             - Show report by \`npx playwright show-report\`
 
             **📁 Test Artifacts:**
