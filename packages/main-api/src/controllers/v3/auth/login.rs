@@ -6,7 +6,7 @@ use crate::{
         user::{User, UserQueryOption},
     },
     types::Provider,
-    utils::{firebase, password::hash_password},
+    utils::password::hash_password,
 };
 use bdk::prelude::*;
 
@@ -23,9 +23,17 @@ use tower_sessions::Session;
 #[derive(Debug, Clone, Deserialize, aide::OperationIo, JsonSchema)]
 #[serde(untagged)]
 pub enum LoginRequest {
-    Email { email: String, password: String },
-    OAuth { provider: Provider, token: String },
-    Telegram { telegram_raw: String },
+    Email {
+        email: String,
+        password: String,
+    },
+    OAuth {
+        provider: Provider,
+        access_token: String,
+    },
+    Telegram {
+        telegram_raw: String,
+    },
 }
 
 pub async fn login_handler(
@@ -37,9 +45,10 @@ pub async fn login_handler(
         LoginRequest::Email { email, password } => {
             login_with_email(&dynamo.client, &pool, email, password).await?
         }
-        LoginRequest::OAuth { provider, token } => match provider {
-            Provider::Google => login_with_google(&dynamo.client, &pool, token).await?,
-        },
+        LoginRequest::OAuth {
+            provider,
+            access_token,
+        } => login_with_oauth(&dynamo.client, &pool, provider, access_token).await?,
         LoginRequest::Telegram { .. } => {
             // Handle Telegram login
             // Not implemented yet
@@ -54,12 +63,13 @@ pub async fn login_handler(
     Ok(Json(user))
 }
 
-pub async fn login_with_google(
+pub async fn login_with_oauth(
     cli: &aws_sdk_dynamodb::Client,
     pool: &sqlx::PgPool,
-    id_token: String,
+    provider: Provider,
+    access_token: String,
 ) -> Result<User, Error2> {
-    let email = firebase::oauth::verify_token(&id_token).await?;
+    let email = provider.get_email(&access_token).await?;
 
     let user = User::find_by_email(cli, &email, UserQueryOption::builder().limit(1))
         .await?

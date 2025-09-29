@@ -124,7 +124,7 @@ build:
 	cp $(CARGO_TARGET_DIR)/release/$(SERVICE) $(WORKSPACE_ROOT)/.build/$(SERVICE)/bootstrap
 
 test:
-	$(BUILD_ENV) cargo test --package main-api --lib -- controllers::v3 models::dynamo_tables --show-output $(RUST_FLAG)
+	$(BUILD_ENV) cargo test $(RUST_FLAG) --lib -- controllers::v3 models::dynamo_tables --show-output 
 
 test-one:
 	$(BUILD_ENV) cargo test -p main-api --lib '$(T)' -- --nocapture
