@@ -1,27 +1,25 @@
 use crate::{
     AppState, Error2,
+    constants::SESSION_KEY_USER_ID,
     models::user::{
         User, UserEvmAddress, UserOAuth, UserOAuthQueryOption, UserPhoneNumber, UserReferralCode,
     },
     types::{Provider, UserType},
     utils::{
-        dynamo_extractor::extract_user,
+        dynamo_extractor::extract_user_from_session,
         firebase,
         password::hash_password,
         referal_code::generate_referral_code,
         telegram::parse_telegram_raw,
-        validator::{validate_description, validate_image_url, validate_nickname},
+        validator::{validate_image_url, validate_nickname},
     },
 };
 use bdk::prelude::*;
 use dto::{
     JsonSchema, aide,
-    by_axum::{
-        auth::{Authorization, DYNAMO_USER_SESSION_KEY, DynamoUserSession},
-        axum::{
-            Extension,
-            extract::{Json, State},
-        },
+    by_axum::axum::{
+        Extension,
+        extract::{Json, State},
     },
 };
 use serde::Deserialize;
@@ -37,7 +35,6 @@ pub struct SignupRequest {
     pub username: String,
     #[validate(custom(function = "validate_image_url"))]
     pub profile_url: String,
-    #[validate(custom(function = "validate_description"))]
     pub description: String,
     pub term_agreed: bool,
     pub informed_agreed: bool,
@@ -47,6 +44,7 @@ pub struct SignupRequest {
 }
 
 #[derive(Debug, Clone, Deserialize, aide::OperationIo, JsonSchema)]
+#[serde(untagged)]
 pub enum SignupType {
     Email {
         #[validate(email)]
@@ -68,14 +66,16 @@ pub enum SignupType {
 ///
 pub async fn signup_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    Extension(auth): Extension<Option<Authorization>>,
     Extension(session): Extension<Session>,
     Json(req): Json<SignupRequest>,
-) -> Result<(), Error2> {
+) -> Result<Json<User>, Error2> {
+    tracing::info!("signup_handler: req = {:?}", req);
     req.validate()
         .map_err(|e| Error2::BadRequest(format!("Invalid input: {}", e)))?;
 
-    let anonymous_user = extract_user(&dynamo.client, auth).await.ok();
+    let anonymous_user = extract_user_from_session(&dynamo.client, &session)
+        .await
+        .ok();
     let mut payload = UserPayload {
         display_name: req.display_name,
         username: req.username,
@@ -147,16 +147,10 @@ pub async fn signup_handler(
         .await?;
 
     session
-        .insert(
-            DYNAMO_USER_SESSION_KEY,
-            DynamoUserSession {
-                pk: user.pk.to_string(),
-                typ: user.user_type as i64,
-            },
-        )
+        .insert(SESSION_KEY_USER_ID, user.pk.to_string())
         .await?;
 
-    Ok(())
+    Ok(Json(user))
 }
 
 struct UserPayload {

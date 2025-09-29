@@ -2,7 +2,8 @@ use crate::{
     Error2,
     controllers::v3::{
         auth::{
-            login::{LoginResponse, login_handler},
+            login::login_handler,
+            logout::logout_handler,
             signup::signup_handler,
             verification::{
                 send_code::{SendCodeResponse, send_code_handler},
@@ -46,11 +47,9 @@ use crate::{
     utils::aws::{DynamoClient, SesClient},
 };
 
-use dto::by_axum::axum::Json;
-use dto::{
-    aide::axum::routing::{get_with, post_with},
-    by_axum::axum::Router,
-};
+use bdk::prelude::*;
+use by_axum::aide::axum::routing::*;
+use by_axum::axum::*;
 
 macro_rules! api_docs {
     ($success_ty:ty, $summary:expr, $description:expr) => {
@@ -67,17 +66,20 @@ macro_rules! api_docs {
 pub struct AppState {
     pub dynamo: DynamoClient,
     pub ses: SesClient,
+    pub pool: bdk::prelude::sqlx::PgPool,
 }
 
 pub struct RouteDeps {
     pub dynamo_client: DynamoClient,
     pub ses_client: SesClient,
+    pub pool: bdk::prelude::sqlx::PgPool,
 }
 
 pub fn route(
     RouteDeps {
         dynamo_client,
         ses_client,
+        pool,
     }: RouteDeps,
 ) -> Result<Router, Error2> {
     Ok(Router::new()
@@ -166,24 +168,9 @@ pub fn route(
         .nest(
             "/auth",
             Router::new()
-                .route(
-                    "/login",
-                    post_with(
-                        login_handler,
-                        api_docs!(
-                            LoginResponse,
-                            "User login",
-                            "Authenticate user and create a session"
-                        ),
-                    ),
-                )
-                .route(
-                    "/signup",
-                    post_with(
-                        signup_handler,
-                        api_docs!((), "User signup", "Register a new user account"),
-                    ),
-                )
+                .route("/login", post(login_handler))
+                .route("/logout", post(logout_handler))
+                .route("/signup", post(signup_handler))
                 .nest(
                     "/verification",
                     Router::new()
@@ -347,7 +334,8 @@ pub fn route(
                 ),
         )
         .with_state(AppState {
-            dynamo: dynamo_client.clone(),
-            ses: ses_client.clone(),
+            dynamo: dynamo_client,
+            ses: ses_client,
+            pool,
         }))
 }

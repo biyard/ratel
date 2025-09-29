@@ -1,7 +1,16 @@
 use crate::{types::*, utils::time::get_now_timestamp_millis};
 use bdk::prelude::*;
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default)]
+#[derive(
+    Debug,
+    Clone,
+    serde::Serialize,
+    serde::Deserialize,
+    DynamoEntity,
+    Default,
+    schemars::JsonSchema,
+    aide::OperationIo,
+)]
 pub struct User {
     pub pk: Partition,
     pub sk: EntityType,

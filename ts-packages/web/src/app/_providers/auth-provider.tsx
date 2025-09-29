@@ -20,6 +20,7 @@ import { Ed25519KeyIdentity } from '@dfinity/identity';
 import { HDNodeWallet } from 'ethers';
 import { removeUserInfo } from '@/lib/api/hooks/users';
 import { useQueryClient } from '@tanstack/react-query';
+import { config } from '@/config';
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | undefined>(undefined);
@@ -130,7 +131,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const logoutUser = async () => {
     await logout();
-    await fetch('/api/logout', { method: 'POST' });
+    const url = config.api_url;
+    await fetch(`${url}/v3/auth/logout`, {
+      method: 'POST',
+      credentials: 'include',
+    });
     setUser(undefined);
     setAuthUser(undefined);
     localStorage.removeItem(SK_IDENTITY_KEY);

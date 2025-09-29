@@ -2,6 +2,7 @@ pub type Result<T> = dto::Result<T>;
 pub type Error = dto::Error;
 pub type Error2 = crate::error::Error;
 
+pub mod constants;
 pub mod error;
 pub mod controllers {
     pub mod mcp;
@@ -143,7 +144,11 @@ pub mod controllers {
         pub mod auth {
             pub mod health;
             pub mod login;
+            pub mod logout;
             pub mod signup;
+
+            #[cfg(test)]
+            pub mod tests;
 
             pub mod verification {
                 pub mod send_code;
@@ -168,6 +173,7 @@ pub mod controllers {
             pub mod get_team;
             pub mod update_team;
 
+            pub mod dto;
             #[cfg(test)]
             pub mod tests;
 

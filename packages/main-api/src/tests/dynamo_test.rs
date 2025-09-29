@@ -1,6 +1,8 @@
+#![allow(warnings)]
 use aws_config::BehaviorVersion;
 use aws_credential_types::Credentials;
 use base64::{Engine as _, engine::general_purpose};
+use bdk::prelude::*;
 use dto::by_axum::auth::{Authorization, DynamoUserSession};
 
 use crate::{
@@ -32,6 +34,7 @@ pub fn create_app_state() -> AppState {
     AppState {
         dynamo: DynamoClient::mock(aws_config.clone()),
         ses: SesClient::mock(aws_config),
+        pool: sqlx::Pool::connect_lazy("postgres://postgres:password@localhost/postgres").unwrap(),
     }
 }
 

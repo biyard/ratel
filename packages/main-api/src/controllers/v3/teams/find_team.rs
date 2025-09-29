@@ -1,7 +1,4 @@
-use crate::{
-    AppState, Error2,
-    models::team::{Team, TeamResponse},
-};
+use crate::{AppState, Error2, models::team::Team};
 use dto::by_axum::{
     auth::Authorization,
     axum::{
@@ -11,6 +8,8 @@ use dto::by_axum::{
 };
 use dto::{JsonSchema, aide, schemars};
 use serde::{Deserialize, Serialize};
+
+use super::dto::*;
 
 #[derive(Debug, Deserialize, aide::OperationIo, JsonSchema)]
 pub struct FindTeamQueryParams {

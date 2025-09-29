@@ -56,7 +56,7 @@ export default function Profile({ profileUrl, name }: ProfileProps) {
             ) : (
               <div className="w-6 h-6 bg-neutral-500 rounded-full" />
             )}
-            <span className="text-menu-text group-hover:text-menu-text/80 text-[15px] font-medium transition-colors">
+            <span className="text-menu-text group-hover:text-menu-text/80 text-[15px] font-medium transition-colors max-w-20 truncate">
               {name || 'Unknown User'}
             </span>
           </div>
