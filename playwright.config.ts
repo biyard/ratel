@@ -26,7 +26,7 @@ export default defineConfig({
   reporter: [["html", { host: "0.0.0.0", port: 8900 }]],
   timeout: CONFIGS.PLAYWRIGHT.TIMEOUT,
   /* Global setup and teardown */
-  globalSetup: require.resolve("./tests/global-setup"),
+  // globalSetup: require.resolve("./tests/global-setup"),
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
@@ -54,9 +54,13 @@ export default defineConfig({
 
     // Authenticated tests (requires global setup)
     {
+      name: "auth-setup",
+      testMatch: "./tests/global-setup.ts",
+    },
+    {
       name: "authenticated",
       testMatch: "**/*.auth.spec.ts",
-      dependencies: [], // Global setup will run before this
+      dependencies: ["auth-setup"],
       use: {
         ...devices["Desktop Chrome"],
         viewport: {
