@@ -11,6 +11,30 @@ use dto::Group as G;
 use dto::Team as T;
 use dto::User as U;
 
+pub async fn migrate_by_email(
+    cli: &aws_sdk_dynamodb::Client,
+    pool: &sqlx::PgPool,
+    email: String,
+) -> Result<User, crate::Error2> {
+    migrate_user(
+        cli,
+        dto::User::query_builder()
+            .email_equals(email)
+            .user_type_equals(dto::UserType::Individual)
+            .query()
+            .map(dto::User::from)
+            .fetch_one(pool)
+            .await
+            .map_err(|e| {
+                crate::Error2::InternalServerError(format!(
+                    "Failed to fetch user from Postgres: {}",
+                    e
+                ))
+            })?,
+    )
+    .await
+}
+
 pub async fn migrate_by_email_password(
     cli: &aws_sdk_dynamodb::Client,
     pool: &sqlx::PgPool,

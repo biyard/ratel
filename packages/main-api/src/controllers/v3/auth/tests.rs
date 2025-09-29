@@ -33,5 +33,21 @@ async fn test_email_with_password_signup() {
 
     assert_eq!(status, 200);
     assert!(headers.get("set-cookie").is_some());
-    // assert_eq!(user.nickname, "testuser");
+    assert_eq!(user.username, username);
+    assert_eq!(user.email, email);
+
+    let (status, headers, user) = post_with_body! {
+        app: app,
+        path: "/v3/auth/login",
+        body: {
+            "email": email,
+            "password": "0x1111",
+        },
+        response_type: crate::models::user::User,
+    };
+
+    assert_eq!(status, 200);
+    assert!(headers.get("set-cookie").is_some());
+    assert_eq!(user.username, username);
+    assert_eq!(user.email, email);
 }

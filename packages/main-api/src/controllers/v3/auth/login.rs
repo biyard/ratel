@@ -2,25 +2,19 @@ use crate::{
     AppState, Error2,
     constants::SESSION_KEY_USER_ID,
     models::{
-        migrators::user::migrate_by_email_password,
-        user::{
-            User, UserOAuth, UserOAuthQueryOption, UserPrincipal, UserPrincipalQueryOption,
-            UserQueryOption,
-        },
+        migrators::user::{migrate_by_email, migrate_by_email_password},
+        user::{User, UserQueryOption},
     },
     types::Provider,
-    utils::{dynamo_extractor::get_principal_from_auth, firebase},
+    utils::firebase,
 };
 use bdk::prelude::*;
 
 use dto::{
     JsonSchema, aide,
-    by_axum::{
-        auth::Authorization,
-        axum::{
-            Extension,
-            extract::{Json, State},
-        },
+    by_axum::axum::{
+        Extension,
+        extract::{Json, State},
     },
 };
 use serde::Deserialize;
@@ -37,7 +31,6 @@ pub enum LoginRequest {
 pub async fn login_handler(
     State(AppState { dynamo, pool, .. }): State<AppState>,
     Extension(session): Extension<Session>,
-    Extension(auth): Extension<Option<Authorization>>,
     Json(req): Json<LoginRequest>,
 ) -> Result<Json<User>, Error2> {
     let user = match req {
@@ -45,40 +38,7 @@ pub async fn login_handler(
             login_with_email(&dynamo.client, &pool, email, password).await?
         }
         LoginRequest::OAuth { provider, token } => match provider {
-            Provider::Google => {
-                let uid = firebase::oauth::verify_token(&token).await?;
-
-                // For Migration from Principal Login to Google OAuth.
-                // Remove this code after the users have logged in with Google OAuth.
-                if let Ok(principal) = get_principal_from_auth(auth) {
-                    let (user_principal, _) = UserPrincipal::find_by_principal(
-                        &dynamo.client,
-                        principal,
-                        UserPrincipalQueryOption::builder(),
-                    )
-                    .await?;
-                    let user = user_principal
-                        .get(0)
-                        .cloned()
-                        .ok_or(Error2::Unauthorized("Invalid email or password".into()))?;
-                    UserOAuth::new(user.pk, Provider::Google, uid.clone())
-                        .create(&dynamo.client)
-                        .await?;
-                }
-                let (u, _) = UserOAuth::find_by_provider_and_uid(
-                    &dynamo.client,
-                    uid,
-                    UserOAuthQueryOption::builder().sk(token),
-                )
-                .await?;
-                let user_oauth = u
-                    .get(0)
-                    .cloned()
-                    .ok_or(Error2::NotFound("Invalid OAuth token".into()))?;
-                User::get(&dynamo.client, user_oauth.pk, None::<String>)
-                    .await?
-                    .ok_or(Error2::NotFound("User not found".into()))?
-            }
+            Provider::Google => login_with_google(&dynamo.client, &pool, token).await?,
         },
         LoginRequest::Telegram { .. } => {
             // Handle Telegram login
@@ -92,6 +52,26 @@ pub async fn login_handler(
         .await?;
 
     Ok(Json(user))
+}
+
+pub async fn login_with_google(
+    cli: &aws_sdk_dynamodb::Client,
+    pool: &sqlx::PgPool,
+    id_token: String,
+) -> Result<User, Error2> {
+    let email = firebase::oauth::verify_token(&id_token).await?;
+
+    let user = User::find_by_email(cli, &email, UserQueryOption::builder().limit(1))
+        .await?
+        .0
+        .get(0)
+        .cloned();
+
+    if let Some(user) = user {
+        return Ok(user);
+    }
+
+    migrate_by_email(cli, pool, email).await
 }
 
 pub async fn login_with_email(

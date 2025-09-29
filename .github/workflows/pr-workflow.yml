@@ -46,6 +46,9 @@ jobs:
 
   main-api-test:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [nextjs-web, main-api, fetcher]
+
     steps:
       - uses: actions/checkout@v4
 
@@ -54,30 +57,57 @@ jobs:
           components: clippy, rustfmt
           toolchain: stable
 
-      - name: Start LocalStack
-        uses: LocalStack/setup-localstack@v0.2.2
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
+
+      - name: Restore web image cache
+        uses: actions/cache@v4
         with:
-          image-tag: "latest"
-          install-awslocal: "true"
+          path: /tmp/web-image.tar.gz
+          key: web-image-${{ github.sha }}
+          fail-on-cache-miss: true
 
-      - name: Wait for LocalStack
+      - name: Restore main-api image cache
+        uses: actions/cache@v4
+        with:
+          path: /tmp/main-api-image.tar.gz
+          key: main-api-image-${{ github.sha }}
+          fail-on-cache-miss: true
+
+      - name: Restore fetcher image cache
+        uses: actions/cache@v4
+        with:
+          path: /tmp/fetcher-image.tar.gz
+          key: fetcher-image-${{ github.sha }}
+          fail-on-cache-miss: true
+
+      - name: Load Docker images
         run: |
-          for i in {1..30}; do
-            nc -z localhost 4566 && break
-            sleep 1
-          done
+          # Load images from cache
+          docker load < /tmp/web-image.tar.gz
+          docker load < /tmp/main-api-image.tar.gz
+          docker load < /tmp/fetcher-image.tar.gz
 
-      - name: Create DynamoDB Table
+          # Verify images are loaded
+          docker images
+
+      - name: Setup test environment
         env:
-          LOCALSTACK_ENDPOINT: http://localhost:4566
+          COMMIT: pr-${{ github.sha }}
         run: |
-          ./scripts/pr-localstack-create-table.sh
+          docker-compose --profile testing up -d
+
       - name: Run Rust tests
         env:
           DYNAMO_TABLE_PREFIX: ratel-local
           ENV: test
+          RUST_FLAG: "--features no-secret"
         run: |
-          cargo test --package main-api --lib -- controllers::v3 models::dynamo_tables --show-output
+          make .build/evm-keys
+          cd packages/main-api
+          make test
 
   main-api:
     runs-on: ubuntu-22.04
