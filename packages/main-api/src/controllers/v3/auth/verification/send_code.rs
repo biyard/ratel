@@ -1,4 +1,8 @@
-use crate::{AppState, Error2, models::email::EmailVerification, utils::time::get_now_timestamp};
+use crate::{
+    AppState, Error2, config,
+    models::email::{EmailVerification, EmailVerificationQueryOption},
+    utils::time::get_now_timestamp,
+};
 use bdk::prelude::*;
 use dto::{
     aide,
@@ -22,33 +26,58 @@ pub struct SendCodeResponse {
 }
 
 const EXPIRATION_TIME: u64 = 1800; // 30 minutes
+const MAX_ATTEMPT_COUNT: i32 = 5;
+
 pub async fn send_code_handler(
     State(AppState { dynamo, ses, .. }): State<AppState>,
     Json(req): Json<SendCodeRequest>,
 ) -> Result<Json<SendCodeResponse>, Error2> {
-    let (verification_list, _) =
-        EmailVerification::find_by_email(&dynamo.client, &req.email, Default::default()).await?;
-
-    if !verification_list.is_empty() {
-        let email_verification = verification_list[0].clone();
-        if email_verification.expired_at > get_now_timestamp() {
-            return Err(Error2::BadRequest(
-                "A verification code has already been sent. Please check your email.".to_string(),
-            ));
-        }
-    }
-
-    let code = generate_random_code();
-    let expired_at = get_now_timestamp() + EXPIRATION_TIME as i64;
-    ses.send_mail(
+    let (verification_list, _) = EmailVerification::find_by_email(
+        &dynamo.client,
         &req.email,
-        "Please finish to sign up within 30 minutes with your verification code",
-        format!("Verification code: {:?}", code).as_ref(),
+        EmailVerificationQueryOption::builder().limit(1),
     )
     .await?;
 
-    let email_verification = EmailVerification::new(req.email.clone(), code, expired_at);
-    email_verification.create(&dynamo.client).await?;
+    let EmailVerification {
+        value, expired_at, ..
+    } = if !verification_list.is_empty()
+        && verification_list[0].expired_at > get_now_timestamp()
+        && verification_list[0].attempt_count < MAX_ATTEMPT_COUNT
+    {
+        verification_list[0].clone()
+    } else if !verification_list.is_empty()
+        && verification_list[0].attempt_count >= MAX_ATTEMPT_COUNT
+    {
+        return Err(Error2::ExceededAttemptEmailVerification);
+    } else {
+        let code = generate_random_code();
+        let expired_at = get_now_timestamp() + EXPIRATION_TIME as i64;
+        let email_verification = EmailVerification::new(req.email.clone(), code, expired_at);
+        email_verification.create(&dynamo.client).await?;
+        email_verification
+    };
+
+    let mut i = 0;
+    while let Err(e) = ses
+        .send_mail(
+            &req.email,
+            "Please finish to sign up within 30 minutes with your verification code",
+            format!("Verification code: {:?}", value).as_ref(),
+        )
+        .await
+    {
+        btracing::notify!(
+            config::get().slack_channel_monitor,
+            &format!("Failed to send email: {:?}", e)
+        );
+        tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+        i += 1;
+        if i >= 3 {
+            return Err(Error2::AwsSesSendEmailException(e.to_string()));
+        }
+    }
+
     Ok(Json(SendCodeResponse { expired_at }))
 }
 
