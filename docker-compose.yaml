@@ -33,6 +33,7 @@ services:
     environment:
       ENV: dev
       RUST_LOG: ${RUST_LOG:-debug}
+      RUST_FLAG: ${RUST_FLAG:-"--features bypass"}
       DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/ratel}
       DYNAMO_ENDPOINT: http://localstack:4566
       MIGRATE: ${MIGRATE:-true}

@@ -128,7 +128,7 @@ jobs:
           COMMIT: pr-${{ github.sha }}
           MIGRATE: true
           DYNAMO_TABLE_PREFIX: ratel-local
-          RUST_FLAG: --features bypass
+          RUST_FLAG: "--features bypass"
         run: |
           # Build and tag image
           make docker.build
@@ -343,16 +343,7 @@ jobs:
         with:
           name: playwright-test-results
           path: |
-            test-results/
             playwright-report/
-          retention-days: 30
-
-      - name: Upload screenshots
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: playwright-screenshots-${{ github.sha }}
-          path: test-results/**/
           retention-days: 30
 
       - name: Show test logs on failure
