@@ -25,6 +25,7 @@ use crate::{
         },
         spaces::deliberations::{
             create_deliberation::{CreateDeliberationResponse, create_deliberation_handler},
+            create_response_answer::create_response_answer_handler,
             delete_deliberation::delete_deliberation_handler,
             get_deliberation::get_deliberation_handler,
             update_deliberation::update_deliberation_handler,
@@ -242,6 +243,17 @@ pub fn route(
                             Json<String>,
                             "Delete deliberation",
                             "Delete deliberation with id"
+                        ),
+                    ),
+                )
+                .route(
+                    "/deliberation/:id/surveys",
+                    post_with(
+                        create_response_answer_handler,
+                        api_docs!(
+                            Json<CreateDeliberationResponse>,
+                            "Create response answer",
+                            "Create response answer with id"
                         ),
                     ),
                 ),
