@@ -1,3 +1,24 @@
+pub mod deliberation_metadata;
 pub mod deliberation_space;
+pub mod deliberation_space_discussion;
+pub mod deliberation_space_elearning;
+pub mod deliberation_space_member;
+pub mod deliberation_space_participant;
+pub mod deliberation_space_question;
+pub mod deliberation_space_response;
+pub mod deliberation_space_summary;
+pub mod deliberation_space_survey;
 
+pub use deliberation_metadata::*;
 pub use deliberation_space::*;
+pub use deliberation_space_discussion::*;
+pub use deliberation_space_elearning::*;
+pub use deliberation_space_member::*;
+pub use deliberation_space_participant::*;
+pub use deliberation_space_question::*;
+pub use deliberation_space_response::*;
+pub use deliberation_space_summary::*;
+pub use deliberation_space_survey::*;
+
+#[cfg(test)]
+mod tests;

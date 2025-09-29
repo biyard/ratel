@@ -11,10 +11,8 @@ export KEY=$(jq ".[0].private_key" .build/evm-keys.json | tr -d \")
 
 export POOL_SIZE="1"
 export DATABASE_TYPE="postgres"
-export OPENAPI_KEY=dummy
 export BASE_DOMAIN=dev.ratel.foundation
 export AUTH_DOMAIN=dev.ratel.foundation
-export HASURA_GRAPHQL_AUTH_HOOK=https://api.dev.ratel.foundation/v1/auth/hasura
 export MAIN_API_ENDPOINT="https://api.dev.ratel.foundation"
 
 export JWT_SECRET_KEY=ratel-jwt-secret-key

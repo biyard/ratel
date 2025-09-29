@@ -73,6 +73,8 @@ export interface AuthUserInfo {
   principal: string | null;
   event: EventType | null;
   contents: string | null;
+  idToken: string;
+  accessToken: string;
   email: string | null;
   displayName: string | null;
   photoURL: string | null;
@@ -89,7 +91,7 @@ if (isFirebaseConfigValid) {
     app = initializeApp(firebaseConfig);
     auth = getAuth(app);
     provider = new GoogleAuthProvider();
-    logger.info('🔥 Firebase initialized successfully');
+    logger.debug('🔥 Firebase initialized successfully');
   } catch (error) {
     logger.error('🔥 Failed to initialize Firebase:', error);
     app = null;
@@ -108,6 +110,8 @@ export type GoogleLoginInfo = {
   eventType: EventType;
   keyPair: Ed25519KeyIdentity;
   contents: string;
+  idToken: string;
+  accessToken: string;
 
   email: string | null;
   displayName: string | null;
@@ -138,6 +142,7 @@ export const loginWithGoogle = async (
     provider.addScope('https://www.googleapis.com/auth/drive.appdata');
     const result = await signInWithPopup(auth, provider);
     const user = result.user;
+    logger.debug('Google user info:', user);
     const accessToken =
       GoogleAuthProvider.credentialFromResult(result)?.accessToken ?? '';
     const idToken = await user.getIdToken();
@@ -187,6 +192,8 @@ export const loginWithGoogle = async (
       keyPair,
       eventType,
       contents,
+      idToken,
+      accessToken,
       email: user.email,
       photoURL: user.photoURL,
       displayName: user.displayName,
