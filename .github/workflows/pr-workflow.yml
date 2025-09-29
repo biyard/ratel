@@ -65,6 +65,7 @@ jobs:
         env:
           COMMIT: pr-${{ github.sha }}
         run: |
+          mkdir -p .build
           docker-compose --profile infra up -d
 
       - name: Run Rust tests
