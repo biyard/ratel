@@ -151,16 +151,7 @@ async fn signup_with_oauth(
     access_token: String,
 ) -> Result<User, Error2> {
     tracing::debug!("Verifying id_token with provider: {:?}", provider);
-    let url = provider.oidc_userinfo_url();
-    tracing::debug!("Fetching token info from: {}", url);
-    let UserInfo { email } = reqwest::Client::new()
-        .get(url)
-        .bearer_auth(access_token)
-        .send()
-        .await?
-        .error_for_status()?
-        .json()
-        .await?;
+    let email = provider.get_email(&access_token).await?;
 
     let (user, _bookmark) =
         User::find_by_email(cli, &email, UserQueryOption::builder().limit(1)).await?;
@@ -184,9 +175,4 @@ async fn signup_with_oauth(
     user.create(cli).await?;
 
     Ok(user)
-}
-
-#[derive(Debug, serde::Deserialize)]
-struct UserInfo {
-    email: String,
 }
