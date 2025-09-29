@@ -22,6 +22,7 @@ pub enum Partition {
     Email(String),
     Feed(String),
     PostLike(String),
+    Session(String),
 
     // Spaces
     Space(String),

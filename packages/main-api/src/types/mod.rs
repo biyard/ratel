@@ -9,6 +9,7 @@ pub mod post_status;
 pub mod post_type;
 pub mod visibility;
 
+pub mod relationship;
 pub mod space_type;
 pub mod space_visibility;
 pub mod survey_answer;
@@ -31,6 +32,7 @@ pub use post_status::*;
 pub use post_type::*;
 pub use visibility::*;
 
+pub use relationship::*;
 pub use space_type::*;
 pub use space_visibility::*;
 pub use survey_answer::*;

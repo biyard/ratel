@@ -112,6 +112,40 @@ cd ts-packages/web && npm run lint
 - **Infrastructure**: AWS (Lambda, S3, RDS), Docker
 - **Blockchain**: Ethereum-compatible contracts
 
+## Testing
+
+### Playwright Tests
+
+Playwright tests are located in the `tests/` directory and follow a specific structure that mirrors the app router structure:
+
+#### Directory Structure
+Tests should be organized to match the Next.js app router directory structure:
+- `tests/(social)/` - Tests for pages in `ts-packages/web/src/app/(social)/`
+- `tests/teams/` - Tests for pages in `ts-packages/web/src/app/teams/`
+- etc.
+
+#### Naming Convention
+Test files should follow this naming pattern:
+- `{test-name}.auth.spec.ts` - Tests for authenticated users
+- `{test-name}.anon.spec.ts` - Tests for anonymous/guest users
+
+#### Examples
+- Tests for `ts-packages/web/src/app/(social)/page.tsx` → `tests/(social)/homepage.auth.spec.ts` and `tests/(social)/homepage.anon.spec.ts`
+- Tests for `ts-packages/web/src/app/teams/[username]/page.tsx` → `tests/teams/[username]/team-page.auth.spec.ts`
+
+#### Test Structure
+All test files should use the standard Playwright test structure with describe blocks:
+
+```typescript
+import { test, expect } from '@playwright/test';
+
+test.describe('Feature Name', () => {
+  test('should perform specific action', async ({ page }) => {
+    // Test implementation
+  });
+});
+```
+
 ## Database
 
 - Now, SQLx has been deprecated.
@@ -430,3 +464,4 @@ mod tests {
     }
 }
 ```
+- Please make sure that your playwright code is alway success by executing `make test` yourself.

@@ -86,6 +86,7 @@ export class RegionalServiceStack extends Stack {
       }),
       environment: {
         PGHOST: props.pghost,
+        REGION: this.region,
       },
     });
 

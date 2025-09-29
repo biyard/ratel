@@ -1,8 +1,7 @@
 'use client';
 
-import { Suspense, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Header from '@/components/header';
-import Loading from '@/app/loading';
 import Link from 'next/link';
 import { route } from '@/route';
 import { useAuth } from '@/lib/contexts/auth-context';
@@ -47,15 +46,7 @@ export default function ClientLayout({
         />
       )}
 
-      <Suspense
-        fallback={
-          <div className="w-full h-full flex items-center justify-center">
-            <Loading />
-          </div>
-        }
-      >
-        {children}
-      </Suspense>
+      {children}
 
       {!isDiscussionPage && (
         <div

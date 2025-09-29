@@ -23,7 +23,7 @@ pub struct SendCodeResponse {
 
 const EXPIRATION_TIME: u64 = 1800; // 30 minutes
 pub async fn send_code_handler(
-    State(AppState { dynamo, ses }): State<AppState>,
+    State(AppState { dynamo, ses, .. }): State<AppState>,
     Json(req): Json<SendCodeRequest>,
 ) -> Result<Json<SendCodeResponse>, Error2> {
     let (verification_list, _) =
