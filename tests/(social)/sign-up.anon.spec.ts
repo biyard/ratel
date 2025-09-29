@@ -137,9 +137,12 @@ test.describe("Anonymous User Signup Flow", () => {
     await page.getByRole("button", { name: /sign in/i }).click();
     await page.getByText("Create an account").click();
 
-    await page.getByPlaceholder(/email/i).fill(email);
+    await page.getByPlaceholder("Email", { exact: true }).fill(email);
     await page.getByText("Send").click();
 
+    await page
+      .getByPlaceholder("Verify code in your email.", { exact: true })
+      .fill("000000");
     await page.getByText("Verify").click();
 
     await page.getByPlaceholder(/password/i).fill(password);
