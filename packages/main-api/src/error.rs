@@ -46,6 +46,12 @@ pub enum Error {
     AwsChimeError(String),
     #[error("Other error: {0}")]
     ReqwestError(#[from] reqwest::Error),
+
+    // /v3/auth endpoints
+    #[error("Exceeded maximum attempt for email verification")]
+    ExceededAttemptEmailVerification,
+    #[error("Failed to send email via AWS SES: {0}")]
+    AwsSesSendEmailException(String),
 }
 
 impl IntoResponse for Error {
