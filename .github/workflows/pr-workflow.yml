@@ -85,6 +85,63 @@ jobs:
           cd packages/main-api
           make test
 
+  main-api-clean-build:
+    runs-on: ubuntu-22.04
+
+    defaults:
+      run:
+        working-directory: packages/main-api
+
+    outputs:
+      image: ${{ steps.build.outputs.image }}
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          ssh-key: ${{ secrets.PULL_KEY_REPO }}
+
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          components: clippy, rustfmt
+          target: wasm32-unknown-unknown
+          toolchain: stable
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - uses: cargo-bins/cargo-binstall@main
+      - name: Install toml-cli
+        run: |
+          cargo binstall toml-cli
+
+      - name: Build and cache Docker image
+        id: build
+        env:
+          AWS_REGION: ap-northeast-2
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+          ENV: dev
+          SERVICE: main-api
+          DOMAIN: api.dev.ratel.foundation
+          ECR_NAME: main-api
+          COMMIT: pr-${{ github.sha }}
+          MIGRATE: true
+          DYNAMO_TABLE_PREFIX: ratel-local
+        run: |
+          # Build and tag image
+          make docker.build
+
+          # Save image to cache
+          docker save $ECR_NAME:$COMMIT | gzip > /tmp/main-api-image.tar.gz
+          echo "image=$ECR_NAME:$COMMIT" >> $GITHUB_OUTPUT
+
+      - name: Cache Docker image
+        uses: actions/cache@v4
+        with:
+          path: /tmp/main-api-image.tar.gz
+          key: main-api-image-${{ github.sha }}
+
   main-api:
     runs-on: ubuntu-22.04
 
