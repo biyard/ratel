@@ -119,7 +119,8 @@ async fn signup_with_email_password(
     code: String,
 ) -> Result<User, Error2> {
     tracing::debug!("Signing up with email: {}", email);
-    if EmailVerification::find_by_email_and_code(
+
+    let is_invalid = EmailVerification::find_by_email_and_code(
         cli,
         email.clone(),
         EmailVerificationQueryOption::builder().sk(code).limit(1),
@@ -127,8 +128,12 @@ async fn signup_with_email_password(
     .await?
     .0
     .len()
-        == 0
-    {
+        == 0;
+
+    #[cfg(feature = "bypass")]
+    let is_invalid = is_invalid && req.code != "000000";
+
+    if is_invalid {
         return Err(Error2::InvalidVerificationCode);
     }
 
