@@ -41,14 +41,11 @@ pub enum Error {
 
     #[error("Duplicate entry: {0}")]
     Duplicate(String),
-<<<<<<< HEAD
 
     #[error("Aws chime error: {0}")]
     AwsChimeError(String),
-=======
     #[error("Other error: {0}")]
     ReqwestError(#[from] reqwest::Error),
->>>>>>> caa3f52761a6895e56804fefe06f4ab1936be0fe
 }
 
 impl IntoResponse for Error {
