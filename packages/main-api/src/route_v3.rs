@@ -1,7 +1,8 @@
 use crate::controllers::v3::spaces::deliberations::discussions::create_discussion::create_discussion_handler;
+use crate::controllers::v3::spaces::deliberations::discussions::start_meeting::start_meeting_handler;
 use crate::controllers::v3::spaces::deliberations::responses::create_response_answer::create_response_answer_handler;
 use crate::controllers::v3::spaces::deliberations::responses::get_response_answer::get_response_answer_handler;
-use crate::models::space::DeliberationSpaceResponse;
+use crate::models::space::{DeliberationDiscussionResponse, DeliberationSpaceResponse};
 use crate::{
     Error2,
     controllers::v3::{
@@ -235,17 +236,29 @@ pub fn route(
                     )
                     .nest(
                         "/:deliberation_id/discussions",
-                        Router::new().route(
-                            "/",
-                            post_with(
-                                create_discussion_handler,
-                                api_docs!(
-                                    Json<String>,
-                                    "Create discussion",
-                                    "Create discussion under deliberation with id"
+                        Router::new()
+                            .route(
+                                "/",
+                                post_with(
+                                    create_discussion_handler,
+                                    api_docs!(
+                                        Json<DeliberationDiscussionResponse>,
+                                        "Create discussion",
+                                        "Create discussion under deliberation with id"
+                                    ),
+                                ),
+                            )
+                            .route(
+                                "/:id/start-meeting",
+                                post_with(
+                                    start_meeting_handler,
+                                    api_docs!(
+                                        Json<DeliberationDiscussionResponse>,
+                                        "Start meeting",
+                                        "Start meeting for discussion with id"
+                                    ),
                                 ),
                             ),
-                        ),
                     )
                     .route(
                         "/",

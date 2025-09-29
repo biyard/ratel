@@ -41,6 +41,9 @@ pub enum Error {
 
     #[error("Duplicate entry: {0}")]
     Duplicate(String),
+
+    #[error("Aws chime error: {0}")]
+    AwsChimeError(String),
 }
 
 impl IntoResponse for Error {
