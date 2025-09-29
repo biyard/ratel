@@ -68,12 +68,12 @@ pub struct DeliberationDetailResponse {
     #[serde(flatten)]
     pub deliberation: DeliberationResponse,
 
-    pub summary: DeliberationSummaryResponse,
+    pub summary: DeliberationContentResponse,
     pub discussions: Vec<DeliberationDiscussionResponse>,
     pub elearnings: ElearningResponse,
     pub surveys: DeliberationSurveyResponse,
 
-    pub recommendation: DeliberationRecommentationResponse,
+    pub recommendation: DeliberationContentResponse,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity)]
@@ -81,9 +81,8 @@ pub struct DeliberationDetailResponse {
 pub enum DeliberationMetadata {
     DeliberationSpace(DeliberationSpace),
     DeliberationSpaceSurvey(DeliberationSpaceSurvey),
-    DeliberationSpaceSummary(DeliberationSpaceSummary),
     DeliberationSpaceResponse(DeliberationSpaceResponse),
-    DeliberationSpaceRecommendation(DeliberationSpaceRecommendation),
+    DeliberationSpaceContent(DeliberationSpaceContent),
     DeliberationSpaceQuestion(DeliberationSpaceQuestion),
     DeliberationSpaceParticipant(DeliberationSpaceParticipant),
     DeliberationSpaceMember(DeliberationSpaceMember),
@@ -115,29 +114,25 @@ impl From<Vec<DeliberationMetadata>> for DeliberationDetailResponse {
                     res.surveys.responses = prev.responses;
                     res.surveys.user_responses = prev.user_responses;
                 }
-                DeliberationMetadata::DeliberationSpaceSummary(deliberation_space_summary) => {
-                    match deliberation_space_summary.sk {
-                        EntityType::DeliberationSpaceSummary => {
-                            res.summary = deliberation_space_summary.into();
-                        }
-                        EntityType::DeliberationSpaceRecommendation => {
-                            res.recommendation = DeliberationRecommentationResponse {
-                                html_contents: deliberation_space_summary.clone().html_contents,
-                                files: deliberation_space_summary.clone().files(),
-                            };
-                        }
-                        _ => continue,
+                DeliberationMetadata::DeliberationSpaceContent(content) => match content.sk {
+                    EntityType::DeliberationSpaceSummary => {
+                        res.summary = DeliberationContentResponse {
+                            html_contents: content.html_contents,
+                            files: content.files,
+                        };
                     }
-                }
+                    EntityType::DeliberationSpaceRecommendation => {
+                        res.recommendation = DeliberationContentResponse {
+                            html_contents: content.html_contents,
+                            files: content.files,
+                        };
+                    }
+                    _ => continue,
+                },
                 DeliberationMetadata::DeliberationSpaceResponse(response) => {
                     let response: SurveyResponseResponse = response.into();
                     res.surveys.responses.push(response);
                     //FIXME: add user response
-                }
-                DeliberationMetadata::DeliberationSpaceRecommendation(
-                    deliberation_space_recommendation,
-                ) => {
-                    res.recommendation = deliberation_space_recommendation.into();
                 }
                 DeliberationMetadata::DeliberationSpaceQuestion(question) => {
                     res.surveys.questions = question.question();

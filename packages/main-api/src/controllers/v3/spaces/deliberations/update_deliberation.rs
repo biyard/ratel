@@ -3,10 +3,9 @@ use crate::{
     models::{
         space::{
             DeliberationDetailResponse, DeliberationMetadata, DeliberationSpace,
-            DeliberationSpaceDiscussion, DeliberationSpaceElearning, DeliberationSpaceMember,
-            DeliberationSpaceMemberQueryOption, DeliberationSpaceQuestion,
-            DeliberationSpaceQuestionQueryOption, DeliberationSpaceRecommendation,
-            DeliberationSpaceSummary, DeliberationSpaceSurvey, DiscussionCreateRequest,
+            DeliberationSpaceContent, DeliberationSpaceDiscussion, DeliberationSpaceElearning,
+            DeliberationSpaceMember, DeliberationSpaceMemberQueryOption, DeliberationSpaceQuestion,
+            DeliberationSpaceQuestionQueryOption, DeliberationSpaceSurvey, DiscussionCreateRequest,
             SurveyCreateRequest,
         },
         user::User,
@@ -264,7 +263,7 @@ pub async fn update_recommendation(
     html_contents: String,
     files: Vec<File>,
 ) -> Result<(), Error2> {
-    let recommendation = DeliberationSpaceRecommendation::get(
+    let recommendation = DeliberationSpaceContent::get(
         &dynamo.client,
         &Partition::DeliberationSpace(id.to_string()),
         Some(EntityType::DeliberationSpaceRecommendation),
@@ -272,17 +271,18 @@ pub async fn update_recommendation(
     .await?;
 
     if recommendation.is_some() {
-        DeliberationSpaceRecommendation::updater(
+        DeliberationSpaceContent::updater(
             &Partition::DeliberationSpace(id.to_string()),
             EntityType::DeliberationSpaceRecommendation,
         )
         .with_html_contents(html_contents)
-        .with_file(set_files(files))
+        .with_files(files)
         .execute(&dynamo.client)
         .await?;
     } else {
-        let recommendation = DeliberationSpaceRecommendation::new(
+        let recommendation = DeliberationSpaceContent::new(
             Partition::DeliberationSpace(id.to_string()),
+            EntityType::DeliberationSpaceRecommendation,
             html_contents,
             files,
         );
@@ -309,7 +309,7 @@ pub async fn update_elearning(
             &Partition::DeliberationSpace(id.to_string()),
             EntityType::DeliberationSpaceElearning,
         )
-        .with_file(set_files(elearning_files))
+        .with_files(elearning_files)
         .execute(&dynamo.client)
         .await?;
     } else {
@@ -329,7 +329,7 @@ pub async fn update_summary(
     html_contents: Option<String>,
     files: Vec<File>,
 ) -> Result<(), Error2> {
-    let deliberation_summary = DeliberationSpaceSummary::get(
+    let deliberation_summary = DeliberationSpaceContent::get(
         &dynamo.client,
         &Partition::DeliberationSpace(id.to_string()),
         Some(EntityType::DeliberationSpaceSummary),
@@ -337,17 +337,18 @@ pub async fn update_summary(
     .await?;
 
     if deliberation_summary.is_some() {
-        DeliberationSpaceSummary::updater(
+        DeliberationSpaceContent::updater(
             &Partition::DeliberationSpace(id.to_string()),
             EntityType::DeliberationSpaceSummary,
         )
         .with_html_contents(html_contents.unwrap_or_default())
-        .with_file(set_files(files))
+        .with_files(files)
         .execute(&dynamo.client)
         .await?;
     } else {
-        let summary = DeliberationSpaceSummary::new(
+        let summary = DeliberationSpaceContent::new(
             Partition::DeliberationSpace(id.to_string()),
+            EntityType::DeliberationSpaceSummary,
             html_contents.unwrap_or_default(),
             files,
         );
@@ -355,8 +356,4 @@ pub async fn update_summary(
     }
 
     Ok(())
-}
-
-pub fn set_files(files: Vec<File>) -> String {
-    serde_json::to_string(&files).unwrap_or_else(|_| "[]".to_string())
 }
