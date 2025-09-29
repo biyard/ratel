@@ -7,6 +7,7 @@ use bdk::prelude::*;
     serde_with::DeserializeFromStr,
     Default,
     DynamoEnum,
+    PartialEq,
     schemars::JsonSchema,
 )]
 pub enum SurveyType {
