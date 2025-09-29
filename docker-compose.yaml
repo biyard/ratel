@@ -206,6 +206,10 @@ services:
       retries: 5
     networks:
       - ratel-network
+    profiles:
+      - testing
+      - development
+      - infra
 
   postgres-init:
     image: postgres:16
@@ -265,6 +269,10 @@ services:
       - ./.build/localstack-data:/var/lib/localstack
     networks:
       - ratel-network
+    profiles:
+      - testing
+      - development
+      - infra
 
   # DynamoDB initialization
   localstack-init:
@@ -282,6 +290,10 @@ services:
     depends_on:
       localstack:
         condition: service_healthy
+    profiles:
+      - testing
+      - development
+      - infra
 
   dynamodb-admin:
     image: aaronshaf/dynamodb-admin:latest
@@ -297,6 +309,7 @@ services:
       - localstack-init
     profiles:
       - development
+      - infra
     networks:
       - ratel-network
 

@@ -85,3 +85,7 @@ test: node_modules
 
 test-head: node_modules
 	$(PLAYWRIGHT_ENV) npx playwright test --headed --project=chromium
+
+
+infra: .build/evm-keys
+	docker compose --profile infra up -d --remove-orphans

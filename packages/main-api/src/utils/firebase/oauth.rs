@@ -147,6 +147,7 @@ mod r {
 
         let claims = token_data.claims;
         let now = Utc::now().timestamp();
+        tracing::info!("Token claims: {:?}", claims);
 
         if claims.auth_time > now {
             return Err(Error2::BadRequest(
