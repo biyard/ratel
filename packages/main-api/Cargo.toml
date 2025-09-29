@@ -85,3 +85,4 @@ reqwest.workspace = true
 default = []
 full-test = []
 no-secret = []
+bypass = []

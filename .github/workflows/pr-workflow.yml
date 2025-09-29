@@ -128,6 +128,7 @@ jobs:
           COMMIT: pr-${{ github.sha }}
           MIGRATE: true
           DYNAMO_TABLE_PREFIX: ratel-local
+          RUST_FLAG: --features bypass
         run: |
           # Build and tag image
           make docker.build
