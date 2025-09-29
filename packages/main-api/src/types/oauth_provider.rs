@@ -17,11 +17,9 @@ pub enum Provider {
 }
 
 impl Provider {
-    pub fn token_info(&self, id_token: &str) -> String {
+    pub fn oidc_userinfo_url(&self) -> &'static str {
         match self {
-            Provider::Google => {
-                format!("https://oauth2.googleapis.com/tokeninfo?id_token={id_token}")
-            }
+            Provider::Google => "https://openidconnect.googleapis.com/v1/userinfo",
         }
     }
 }
