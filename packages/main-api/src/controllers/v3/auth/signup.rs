@@ -118,8 +118,7 @@ async fn signup_with_email_password(
             email
         )));
     }
-    let hashed_password = hash_password(&password)
-        .map_err(|e| Error2::InternalServerError(format!("Password hashing failed: {}", e)))?;
+    let hashed_password = hash_password(&password);
 
     let user = User::new(
         display_name,
