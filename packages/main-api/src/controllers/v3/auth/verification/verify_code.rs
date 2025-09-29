@@ -1,4 +1,8 @@
-use crate::{AppState, Error2, models::email::EmailVerification, utils::time::get_now_timestamp};
+use crate::{
+    AppState, Error2,
+    models::email::{EmailVerification, EmailVerificationQueryOption},
+    utils::time::get_now_timestamp,
+};
 use bdk::prelude::*;
 use dto::{
     JsonSchema, aide,
@@ -20,14 +24,15 @@ pub async fn verify_code_handler(
     Json(req): Json<VerifyCodeRequest>,
 ) -> Result<(), Error2> {
     let now = get_now_timestamp();
-    let (verification_list, _) =
-        EmailVerification::find_by_email(&dynamo.client, &req.email, Default::default()).await?;
+    let (verification_list, _) = EmailVerification::find_by_email(
+        &dynamo.client,
+        &req.email,
+        EmailVerificationQueryOption::builder().limit(1),
+    )
+    .await?;
 
     if verification_list.is_empty() {
-        return Err(Error2::NotFound(format!(
-            "No verification found for email: {}",
-            req.email
-        )));
+        return Err(Error2::NotFoundVerificationCode);
     }
 
     let email_verification = verification_list[0].clone();
