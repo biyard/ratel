@@ -1,7 +1,10 @@
 use crate::{
     AppState, Error2,
     constants::SESSION_KEY_USER_ID,
-    models::user::{User, UserEvmAddress, UserQueryOption, UserReferralCode},
+    models::{
+        email::{EmailVerification, EmailVerificationQueryOption},
+        user::{User, UserEvmAddress, UserQueryOption, UserReferralCode},
+    },
     types::{Provider, UserType},
     utils::{
         password::hash_password,
@@ -45,6 +48,7 @@ pub enum SignupType {
         #[validate(email)]
         email: String,
         password: String,
+        code: String,
     },
     OAuth {
         provider: Provider,
@@ -70,9 +74,11 @@ pub async fn signup_handler(
 
     let evm_address = req.evm_address.clone();
     let user = match req.signup_type.clone() {
-        SignupType::Email { email, password } => {
-            signup_with_email_password(&dynamo.client, req, email, password).await?
-        }
+        SignupType::Email {
+            email,
+            password,
+            code,
+        } => signup_with_email_password(&dynamo.client, req, email, password, code).await?,
         SignupType::OAuth {
             provider,
             access_token,
@@ -110,8 +116,22 @@ async fn signup_with_email_password(
     }: SignupRequest,
     email: String,
     password: String,
+    code: String,
 ) -> Result<User, Error2> {
     tracing::debug!("Signing up with email: {}", email);
+    if EmailVerification::find_by_email_and_code(
+        cli,
+        email.clone(),
+        EmailVerificationQueryOption::builder().sk(code).limit(1),
+    )
+    .await?
+    .0
+    .len()
+        == 0
+    {
+        return Err(Error2::InvalidVerificationCode);
+    }
+
     let (users, _) = User::find_by_email(cli, &email, UserQueryOption::builder().limit(1)).await?;
     if users.len() > 0 {
         return Err(Error2::Duplicate(format!(

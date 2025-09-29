@@ -20,6 +20,7 @@ import FileUploader from '../file-uploader';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { OAuthProvider } from '@/types/oauth-provider';
+import { ratelSdk } from '@/lib/api/ratel';
 
 export interface UserSetupPopupProps {
   id?: string;
@@ -109,6 +110,7 @@ const UserSetupPopup = ({
         // NOTE: Signup with email and password
         req.email = emailState;
         req.password = sha3(password);
+        req.code = authCode;
       } else if (provider && accessToken) {
         req.provider = provider;
         req.access_token = accessToken;
@@ -142,23 +144,25 @@ const UserSetupPopup = ({
 
   const handleSendCode = async () => {
     logger.debug('Sending verification code to email:', emailState);
-    await post(ratelApi.users.sendVerificationCode(), {
-      send_verification_code: {
-        email: emailState,
-      },
-    });
-    setSentCode(true);
+    try {
+      await ratelSdk.auth.sendVerificationCode(emailState);
+      setSentCode(true);
+    } catch (err) {
+      showErrorToast(t('failed_send_code'));
+      logger.error('failed to send verification code with error: ', err);
+    }
   };
 
   const handleVerify = async () => {
     logger.debug('Sending verification code to email:', emailState);
-    await post(ratelApi.users.sendVerificationCode(), {
-      verify: {
-        email: emailState,
-        value: authCode,
-      },
-    });
-    setIsValidEmail(true);
+    try {
+      await ratelSdk.auth.verifyCode(emailState, authCode);
+
+      setIsValidEmail(true);
+    } catch (err) {
+      showErrorToast(t('failed_verify_code'));
+      logger.error('failed to verify code with error: ', err);
+    }
   };
 
   useEffect(() => {

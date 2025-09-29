@@ -1,7 +1,5 @@
-import { login_with_oauth } from './auth.v3';
+import * as auth from './auth.v3';
 
 export const ratelSdk = {
-  users: {
-    login_with_oauth,
-  },
+  auth,
 };

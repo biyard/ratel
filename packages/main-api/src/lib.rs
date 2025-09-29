@@ -153,6 +153,9 @@ pub mod controllers {
             pub mod verification {
                 pub mod send_code;
                 pub mod verify_code;
+
+                #[cfg(test)]
+                pub mod tests;
             }
         }
 

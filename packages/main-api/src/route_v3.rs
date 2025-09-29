@@ -1,3 +1,4 @@
+use crate::controllers::v3::auth::verification::verify_code::VerifyCodeResponse;
 use crate::controllers::v3::spaces::deliberations::discussions::create_discussion::create_discussion_handler;
 use crate::controllers::v3::spaces::deliberations::discussions::end_recording::end_recording_handler;
 use crate::controllers::v3::spaces::deliberations::discussions::exit_meeting::exit_meeting_handler;
@@ -199,7 +200,7 @@ pub fn route(
                             post_with(
                                 verify_code_handler,
                                 api_docs!(
-                                    (),
+                                    Json<VerifyCodeResponse>,
                                     "Verify code",
                                     "Verify the provided email verification code"
                                 ),
