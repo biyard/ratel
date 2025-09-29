@@ -1,3 +1,4 @@
+use crate::controllers::v3::spaces::deliberations::discussions::create_discussion::create_discussion_handler;
 use crate::controllers::v3::spaces::deliberations::responses::create_response_answer::create_response_answer_handler;
 use crate::controllers::v3::spaces::deliberations::responses::get_response_answer::get_response_answer_handler;
 use crate::models::space::DeliberationSpaceResponse;
@@ -231,6 +232,20 @@ pub fn route(
                                     ),
                                 ),
                             ),
+                    )
+                    .nest(
+                        "/:deliberation_id/discussions",
+                        Router::new().route(
+                            "/",
+                            post_with(
+                                create_discussion_handler,
+                                api_docs!(
+                                    Json<String>,
+                                    "Create discussion",
+                                    "Create discussion under deliberation with id"
+                                ),
+                            ),
+                        ),
                     )
                     .route(
                         "/",
