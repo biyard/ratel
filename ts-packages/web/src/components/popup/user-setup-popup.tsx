@@ -47,7 +47,6 @@ const UserSetupPopup = ({
   profileUrl = 'https://metadata.ratel.foundation/ratel/default-profile.png',
   username = '',
   nickname = '',
-  idToken,
   provider,
   accessToken,
 }: UserSetupPopupProps) => {
