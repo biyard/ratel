@@ -450,7 +450,7 @@ jobs:
             - Workflow: Playwright Tests  
             - Trigger: ${{ github.event_name }}
             - Commit: ${{ github.sha }}
-            - Status: ${{ needs.test.result }}
+            - Status: ${{ job.status }}
 
             ---
             *Artifact produced by this workflow run.*`;
