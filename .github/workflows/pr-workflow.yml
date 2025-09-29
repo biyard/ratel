@@ -73,6 +73,7 @@ jobs:
           DYNAMO_TABLE_PREFIX: ratel-local
           ENV: test
           RUST_FLAG: "--features no-secret"
+          RUSTFLAGS: "-A warnings"
         run: |
           make .build/evm-keys
           cd packages/main-api
