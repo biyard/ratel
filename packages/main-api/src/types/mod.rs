@@ -1,4 +1,5 @@
 pub mod booster_type;
+pub mod deliberation_content_type;
 pub mod dynamo_entity_type;
 pub mod dynamo_partition;
 pub mod invitation_status;

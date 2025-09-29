@@ -1,57 +1,49 @@
 use crate::types::*;
 
+use crate::types::deliberation_content_type::DeliberationContentType;
 use bdk::prelude::*;
 use dto::File;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default)]
-pub struct DeliberationSpaceSummary {
+pub struct DeliberationSpaceContent {
     pub pk: Partition,
     pub sk: EntityType,
 
     pub html_contents: String,
-    // INFO: Serialize multiple file vectors and save them in String format
-    pub file: String,
+    pub files: Vec<File>,
+    pub content_type: DeliberationContentType,
 }
 
-impl DeliberationSpaceSummary {
-    pub fn new(pk: Partition, html_contents: String, files: Vec<File>) -> Self {
-        let sk = EntityType::DeliberationSpaceSummary;
-
-        let file = Self::serialize_files(&files);
+impl DeliberationSpaceContent {
+    pub fn new(
+        pk: Partition,
+        entity_type: EntityType,
+        html_contents: String,
+        files: Vec<File>,
+    ) -> Self {
+        let sk = entity_type;
 
         Self {
             pk,
             sk,
             html_contents,
-            file,
+            files,
+            content_type: DeliberationContentType::Summary,
         }
-    }
-
-    pub fn files(&self) -> Vec<File> {
-        serde_json::from_str(&self.file).unwrap_or_default()
-    }
-
-    pub fn set_files(&mut self, files: Vec<File>) {
-        self.file = serde_json::to_string(&files).unwrap_or_else(|_| "[]".to_string());
-    }
-
-    #[inline]
-    fn serialize_files(files: &[File]) -> String {
-        serde_json::to_string(files).unwrap_or_else(|_| "[]".to_string())
     }
 }
 
 #[derive(Debug, Clone, Default, serde::Serialize, schemars::JsonSchema)]
-pub struct DeliberationSummaryResponse {
+pub struct DeliberationContentResponse {
     pub html_contents: String,
     pub files: Vec<File>,
 }
 
-impl From<DeliberationSpaceSummary> for DeliberationSummaryResponse {
-    fn from(deliberation_summary: DeliberationSpaceSummary) -> Self {
+impl From<DeliberationSpaceContent> for DeliberationContentResponse {
+    fn from(deliberation_content: DeliberationSpaceContent) -> Self {
         Self {
-            html_contents: deliberation_summary.clone().html_contents,
-            files: deliberation_summary.clone().files(),
+            html_contents: deliberation_content.clone().html_contents,
+            files: deliberation_content.clone().files,
         }
     }
 }

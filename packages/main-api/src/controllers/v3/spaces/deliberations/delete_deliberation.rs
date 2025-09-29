@@ -1,10 +1,10 @@
 use crate::{
     AppState, Error2,
     models::space::{
-        DeliberationMetadata, DeliberationSpace, DeliberationSpaceDiscussion,
-        DeliberationSpaceElearning, DeliberationSpaceMember, DeliberationSpaceParticipant,
-        DeliberationSpaceQuestion, DeliberationSpaceRecommendation, DeliberationSpaceResponse,
-        DeliberationSpaceSummary, DeliberationSpaceSurvey, SpaceCommon,
+        DeliberationMetadata, DeliberationSpace, DeliberationSpaceContent,
+        DeliberationSpaceDiscussion, DeliberationSpaceElearning, DeliberationSpaceMember,
+        DeliberationSpaceParticipant, DeliberationSpaceQuestion, DeliberationSpaceResponse,
+        DeliberationSpaceSurvey, SpaceCommon,
     },
     types::Partition,
 };
@@ -47,14 +47,11 @@ pub async fn delete_deliberation_handler(
             DeliberationMetadata::DeliberationSpaceSurvey(v) => {
                 DeliberationSpaceSurvey::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
             }
-            DeliberationMetadata::DeliberationSpaceSummary(v) => {
-                DeliberationSpaceSummary::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
+            DeliberationMetadata::DeliberationSpaceContent(v) => {
+                DeliberationSpaceContent::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
             }
             DeliberationMetadata::DeliberationSpaceResponse(v) => {
                 DeliberationSpaceResponse::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
-            }
-            DeliberationMetadata::DeliberationSpaceRecommendation(v) => {
-                DeliberationSpaceRecommendation::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
             }
             DeliberationMetadata::DeliberationSpaceQuestion(v) => {
                 DeliberationSpaceQuestion::delete(&dynamo.client, v.pk, Some(v.sk)).await?;

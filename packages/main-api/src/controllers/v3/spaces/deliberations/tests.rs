@@ -62,6 +62,8 @@ async fn test_update_space_handler() {
 
     let space_pk = create_res.unwrap().0.metadata.deliberation.pk;
 
+    eprintln!("space_pk: {:?}", space_pk);
+
     // create user
     let team_1 = match create_test_user(&cli).await.pk {
         Partition::User(v) => v,

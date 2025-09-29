@@ -30,8 +30,9 @@ async fn tests_create_deliberation() {
     let res = space_common.create(&cli).await;
     assert!(res.is_ok());
 
-    let deliberation_summary = DeliberationSpaceSummary::new(
+    let deliberation_summary = DeliberationSpaceContent::new(
         deliberation.pk.clone(),
+        EntityType::DeliberationSpaceSummary,
         "<div>deliberation space</div>".to_string(),
         [File {
             name: "excel file".to_string(),
@@ -152,8 +153,9 @@ async fn tests_create_deliberation() {
     let res = deliberation_response.create(&cli).await;
     assert!(res.is_ok());
 
-    let deliberation_recommendation = DeliberationSpaceRecommendation::new(
+    let deliberation_recommendation = DeliberationSpaceContent::new(
         deliberation.pk.clone(),
+        crate::types::EntityType::DeliberationSpaceRecommendation,
         "<div>deliberation space recommendation</div>".to_string(),
         [File {
             name: "excel file recommendation".to_string(),
