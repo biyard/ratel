@@ -104,10 +104,7 @@ pub async fn signup_handler(
                 )));
             }
             payload.email = email;
-            let hashed_password = hash_password(&password).map_err(|e| {
-                Error2::InternalServerError(format!("Password hashing failed: {}", e))
-            })?;
-            payload.password = Some(hashed_password);
+            payload.password = Some(hash_password(&password));
 
             create_or_update_user(&dynamo.client, anonymous_user, payload).await?
         }
