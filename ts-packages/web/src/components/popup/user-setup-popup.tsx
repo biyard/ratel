@@ -19,6 +19,7 @@ import { sha3 } from '@/lib/utils';
 import FileUploader from '../file-uploader';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
+import { OAuthProvider } from '@/types/oauth-provider';
 
 export interface UserSetupPopupProps {
   id?: string;
@@ -27,6 +28,8 @@ export interface UserSetupPopupProps {
   profileUrl?: string;
   email: string;
   principal?: string;
+  idToken?: string;
+  provider?: OAuthProvider;
 }
 
 interface LabeledInputProps {
@@ -43,6 +46,8 @@ const UserSetupPopup = ({
   profileUrl = 'https://metadata.ratel.foundation/ratel/default-profile.png',
   username = '',
   nickname = '',
+  idToken,
+  provider,
 }: UserSetupPopupProps) => {
   const t = useTranslations('Signup');
   const { post } = useApiCall();
@@ -103,6 +108,9 @@ const UserSetupPopup = ({
         // NOTE: Signup with email and password
         req.email = emailState;
         req.password = sha3(password);
+      } else if (provider && idToken) {
+        req.provider = provider;
+        req.id_token = idToken;
       } else if (auth.telegramRaw) {
         // NOTE: First signup for telegram
         // FIXME: Update email and password for telegram user

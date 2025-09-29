@@ -26,6 +26,7 @@ import { useTranslations } from 'next-intl';
 import { feedKeys } from '@/constants';
 import { FeedStatus } from '@/lib/api/models/feeds';
 import { useApiCall } from '@/lib/api/use-send';
+import { OAuthProvider } from '@/types/oauth-provider';
 
 interface LoginModalProps {
   id?: string;
@@ -189,6 +190,8 @@ export const LoginModal = ({
           nickname: user.displayName ?? undefined,
           profileUrl: user.photoURL ?? undefined,
           principal: user.principal ?? undefined,
+          idToken: user.idToken,
+          provider: OAuthProvider.Google,
         });
       } else if (user?.event == EventType.Login) {
         refetchUserInfo(queryClient);

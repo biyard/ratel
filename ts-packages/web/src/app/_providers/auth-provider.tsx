@@ -113,6 +113,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       displayName: '',
       photoURL: info.photoURL,
       keyPair: info.keyPair,
+      idToken: info.idToken,
     };
 
     localStorage.setItem(SK_IDENTITY_KEY, info.contents);

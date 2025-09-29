@@ -7,7 +7,7 @@ use crate::{
     types::{EntityType, TeamGroupPermission},
     utils::{
         security::{RatelResource, check_any_permission},
-        validator::{validate_description, validate_image_url, validate_nickname},
+        validator::{validate_description, validate_image_url},
     },
 };
 
@@ -32,7 +32,6 @@ pub struct UpdateTeamPathParams {
 #[derive(Debug, Deserialize, Default, aide::OperationIo, JsonSchema, Validate)]
 pub struct UpdateTeamRequest {
     #[schemars(description = "Team display name to update")]
-    #[validate(custom(function = "validate_nickname"))]
     pub nickname: Option<String>,
     #[schemars(description = "Team description to update")]
     #[validate(custom(function = "validate_description"))]
