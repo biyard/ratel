@@ -1,7 +1,9 @@
 use crate::{
     AppState, Error2,
     models::{
-        space::{DeliberationSpaceDiscussion, DeliberationSpaceMember},
+        space::{
+            DeliberationDiscussionResponse, DeliberationSpaceDiscussion, DeliberationSpaceMember,
+        },
         user::User,
     },
     types::{EntityType, Partition},
@@ -50,7 +52,7 @@ pub async fn create_discussion_handler(
     Extension(auth): Extension<Option<Authorization>>,
     Path(DeliberationDiscussionPath { deliberation_id }): Path<DeliberationDiscussionPath>,
     Json(req): Json<CreateDiscussionRequest>,
-) -> Result<Json<CreateDiscussionResponse>, Error2> {
+) -> Result<Json<DeliberationDiscussionResponse>, Error2> {
     let user = extract_user(&dynamo.client, auth).await?;
 
     let disc = DeliberationSpaceDiscussion::new(
@@ -91,7 +93,14 @@ pub async fn create_discussion_handler(
         m.create(&dynamo.client).await?;
     }
 
-    Ok(Json(CreateDiscussionResponse {
-        deliberation_id: deliberation_id.clone(),
-    }))
+    let disc = DeliberationSpaceDiscussion::get(
+        &dynamo.client,
+        &Partition::DeliberationSpace(deliberation_id.to_string()),
+        Some(EntityType::DeliberationSpaceDiscussion(disc_id.to_string())),
+    )
+    .await?;
+
+    let disc = disc.unwrap().into();
+
+    Ok(Json(disc))
 }

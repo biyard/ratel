@@ -165,6 +165,10 @@ pub mod controllers {
 
                 pub mod discussions {
                     pub mod create_discussion;
+                    pub mod delete_discussion;
+                    pub mod participant_meeting;
+                    pub mod start_meeting;
+                    pub mod update_discussion;
 
                     #[cfg(test)]
                     pub mod tests;

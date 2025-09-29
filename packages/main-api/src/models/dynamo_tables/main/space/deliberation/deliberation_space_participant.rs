@@ -9,7 +9,7 @@ pub struct DeliberationSpaceParticipant {
     #[dynamo(index = "gsi2", sk)]
     pub sk: EntityType,
 
-    pub participant_id: String,
+    pub participant_id: Option<String>,
 
     #[dynamo(prefix = "USER_PK", name = "find_by_user_pk", index = "gsi1", pk)]
     pub user_pk: Partition,
@@ -44,12 +44,22 @@ impl DeliberationSpaceParticipant {
         Self {
             pk: deliberation_pk,
             sk: EntityType::DeliberationSpaceParticipant(uid),
-            participant_id,
+            participant_id: Some(participant_id),
             user_pk: pk,
             author_display_name: display_name,
             author_profile_url: profile_url,
             author_username: username,
             discussion_pk,
+        }
+    }
+
+    pub fn id(&self) -> String {
+        if let Some(id) = &self.participant_id {
+            return id.clone();
+        }
+        match &self.sk {
+            EntityType::DeliberationSpaceParticipant(v) => v.clone(),
+            _ => String::new(),
         }
     }
 }
@@ -65,17 +75,17 @@ pub struct DiscussionParticipantResponse {
 
 impl From<DeliberationSpaceParticipant> for DiscussionParticipantResponse {
     fn from(participant: DeliberationSpaceParticipant) -> Self {
-        let user_pk = match participant.user_pk {
+        let user_pk = match participant.clone().user_pk {
             Partition::User(v) => v,
             Partition::Team(v) => v,
             _ => "".to_string(),
         };
         Self {
             user_pk,
-            author_display_name: participant.author_display_name,
-            author_profile_url: participant.author_profile_url,
-            author_username: participant.author_username,
-            participant_id: participant.participant_id,
+            author_display_name: participant.clone().author_display_name,
+            author_profile_url: participant.clone().author_profile_url,
+            author_username: participant.clone().author_username,
+            participant_id: participant.clone().id(),
         }
     }
 }
