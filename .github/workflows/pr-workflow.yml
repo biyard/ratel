@@ -296,9 +296,9 @@ jobs:
           if [ $elapsed -ge $timeout ]; then
             echo "❌ Main API failed to respond with 200 status within ${timeout}s"
             echo "🔍 Checking Docker services status:"
-            docker-compose -f docker-compose.test.yaml ps
+            docker-compose -f docker-compose.yaml ps
             echo "🔍 Main API logs:"
-            docker-compose -f docker-compose.test.yaml logs main-api --tail=50
+            docker-compose -f docker-compose.yaml logs main-api-testing --tail=50
             exit 1
           fi
 
@@ -318,9 +318,9 @@ jobs:
           if [ $elapsed -ge $timeout ]; then
             echo "❌ Web frontend failed to respond with 200 status within ${timeout}s"
             echo "🔍 Checking Docker services status:"
-            docker-compose -f docker-compose.test.yaml ps
+            docker-compose -f docker-compose.yaml ps
             echo "🔍 Web logs:"
-            docker-compose -f docker-compose.test.yaml logs web --tail=50
+            docker-compose -f docker-compose.yaml logs web-testing --tail=50
             exit 1
           fi
 
@@ -344,12 +344,3 @@ jobs:
           path: |
             playwright-report/
           retention-days: 30
-
-      - name: Show test logs on failure
-        if: failure()
-        run: |
-          echo "=== Docker Compose Services ==="
-          docker-compose -f docker-compose.test.yaml ps
-          echo ""
-          echo "=== Docker Compose Logs ==="
-          docker-compose -f docker-compose.test.yaml logs --tail=50
