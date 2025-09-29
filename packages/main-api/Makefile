@@ -46,13 +46,12 @@ ECR_NAME ?= $(shell aws ecr describe-repositories --repository-names $(REPO_NAME
 DATABASE_TYPE ?= postgres
 DATABASE_URL ?= "postgresql://postgres:postgres@postgres:5432/ratel"
 DYNAMO_ENDPOINT ?= http://localstack:4566
-DYNAMO_TABLE ?= ratel-$(ENV)
+DYNAMO_TABLE_PREFIX ?= ratel-$(ENV)
 KAIA_ENDPOINT ?= https://public-en-kairos.node.kaia.io
 KAIA_OWNER_ADDR ?= $(strip $(shell ./key.sh | awk '{print $$1}'))
 KAIA_OWNER_KEY ?= $(strip $(shell ./key.sh | awk '{print $$2}'))
 KAIA_FEEPAYER_ADDR ?= $(strip $(shell ./key.sh | awk '{print $$1}'))
 KAIA_FEEPAYER_KEY ?= $(strip $(shell ./key.sh | awk '{print $$2}'))
-DYNAMO_TABLE_PREFIX ?= ratel-$(ENV)
 TELEGRAM_TOKEN ?=
 FIREBASE_PROJECT_ID ?=
 
@@ -104,6 +103,7 @@ BUILD_ENV ?= ENV=$(ENV) \
 								NOVA_LITE_MODEL_ID=$(NOVA_LITE_MODEL_ID) \
 								PRIVATE_BUCKET_NAME=$(PRIVATE_BUCKET_NAME) \
 								TELEGRAM_TOKEN=$(TELEGRAM_TOKEN) \
+								DYNAMO_ENDPOINT=$(DYNAMO_ENDPOINT) \
 								DYNAMO_TABLE_PREFIX=$(DYNAMO_TABLE_PREFIX) \
 								BINANCE_API_KEY=$(BINANCE_API_KEY) \
 								BINANCE_SECRET_KEY=$(BINANCE_SECRET_KEY) \
@@ -116,7 +116,7 @@ BUILD_ENV ?= ENV=$(ENV) \
 
 
 run:
-	$(BUILD_ENV) cargo watch -x run -w src -w $(PWD)/..
+	$(BUILD_ENV) cargo watch -x "run $(RUST_FLAG)" -w src -w $(PWD)/..
 
 build:
 	$(BUILD_ENV) cargo build --release -p $(SERVICE) --features lambda
@@ -124,7 +124,10 @@ build:
 	cp $(CARGO_TARGET_DIR)/release/$(SERVICE) $(WORKSPACE_ROOT)/.build/$(SERVICE)/bootstrap
 
 test:
-	$(BUILD_ENV) cargo test --package main-api --lib -- controllers::v3 models::dynamo_tables --show-output
+	$(BUILD_ENV) cargo test $(RUST_FLAG) --lib -- controllers::v3 models::dynamo_tables --show-output
+
+test-one:
+	$(BUILD_ENV) cargo test -p main-api --lib '$(T)' -- --nocapture
 
 docker.build:
 	docker run --rm --name $(SERVICE) -v $(PWD)/../..:/app -w /app/packages/$(SERVICE) rust:slim-bookworm sh -c 'apt-get update && apt-get install -y libssl-dev pkg-config ca-certificates && $(BUILD_ENV) CARGO_TARGET_DIR=/app/packages/$(SERVICE)/target cargo build --release $(RUST_FLAG)'

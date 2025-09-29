@@ -4,6 +4,7 @@ import { Answer } from '@/lib/api/models/response';
 import { Question } from '@/lib/api/models/survey';
 import React from 'react';
 import Wrapper from './_components/wrapper';
+import { logger } from '@/lib/logger';
 
 export default function LinearScaleViewer({
   answerType,
@@ -69,8 +70,9 @@ export default function LinearScaleViewer({
     pos.current.isDown = false;
     try {
       el.releasePointerCapture(e.pointerId);
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (_) {}
+    } catch (e) {
+      logger.error('Failed to release pointer capture', e);
+    }
   };
 
   return (

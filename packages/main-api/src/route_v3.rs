@@ -1,8 +1,19 @@
+use crate::controllers::v3::auth::verification::verify_code::VerifyCodeResponse;
+use crate::controllers::v3::spaces::deliberations::discussions::create_discussion::create_discussion_handler;
+use crate::controllers::v3::spaces::deliberations::discussions::end_recording::end_recording_handler;
+use crate::controllers::v3::spaces::deliberations::discussions::exit_meeting::exit_meeting_handler;
+use crate::controllers::v3::spaces::deliberations::discussions::participant_meeting::participant_meeting_handler;
+use crate::controllers::v3::spaces::deliberations::discussions::start_meeting::start_meeting_handler;
+use crate::controllers::v3::spaces::deliberations::discussions::start_recording::start_recording_handler;
+use crate::controllers::v3::spaces::deliberations::responses::create_response_answer::create_response_answer_handler;
+use crate::controllers::v3::spaces::deliberations::responses::get_response_answer::get_response_answer_handler;
+use crate::models::space::{DeliberationDiscussionResponse, DeliberationSpaceResponse};
 use crate::{
     Error2,
     controllers::v3::{
         auth::{
-            login::{LoginResponse, login_handler},
+            login::login_handler,
+            logout::logout_handler,
             signup::signup_handler,
             verification::{
                 send_code::{SendCodeResponse, send_code_handler},
@@ -22,6 +33,12 @@ use crate::{
             list_posts::{ListPostsResponse, list_posts_handler},
             update_post::{UpdatePostResponse, update_post_handler},
         },
+        spaces::deliberations::{
+            create_deliberation::{CreateDeliberationResponse, create_deliberation_handler},
+            delete_deliberation::delete_deliberation_handler,
+            get_deliberation::get_deliberation_handler,
+            update_deliberation::update_deliberation_handler,
+        },
         teams::{
             create_team::{CreateTeamResponse, create_team_handler},
             find_team::{FindTeamResponse, find_team_handler},
@@ -36,14 +53,13 @@ use crate::{
         },
         users::find_user::{FindUserResponse, find_user_handler},
     },
+    models::space::DeliberationDetailResponse,
     utils::aws::{DynamoClient, SesClient},
 };
 
-use dto::by_axum::axum::Json;
-use dto::{
-    aide::axum::routing::{get_with, post_with},
-    by_axum::axum::Router,
-};
+use bdk::prelude::*;
+use by_axum::aide::axum::routing::*;
+use by_axum::axum::*;
 
 macro_rules! api_docs {
     ($success_ty:ty, $summary:expr, $description:expr) => {
@@ -60,17 +76,20 @@ macro_rules! api_docs {
 pub struct AppState {
     pub dynamo: DynamoClient,
     pub ses: SesClient,
+    pub pool: bdk::prelude::sqlx::PgPool,
 }
 
 pub struct RouteDeps {
     pub dynamo_client: DynamoClient,
     pub ses_client: SesClient,
+    pub pool: bdk::prelude::sqlx::PgPool,
 }
 
 pub fn route(
     RouteDeps {
         dynamo_client,
         ses_client,
+        pool,
     }: RouteDeps,
 ) -> Result<Router, Error2> {
     Ok(Router::new()
@@ -159,24 +178,9 @@ pub fn route(
         .nest(
             "/auth",
             Router::new()
-                .route(
-                    "/login",
-                    post_with(
-                        login_handler,
-                        api_docs!(
-                            LoginResponse,
-                            "User login",
-                            "Authenticate user and create a session"
-                        ),
-                    ),
-                )
-                .route(
-                    "/signup",
-                    post_with(
-                        signup_handler,
-                        api_docs!((), "User signup", "Register a new user account"),
-                    ),
-                )
+                .route("/login", post(login_handler))
+                .route("/logout", post(logout_handler))
+                .route("/signup", post(signup_handler))
                 .nest(
                     "/verification",
                     Router::new()
@@ -196,13 +200,160 @@ pub fn route(
                             post_with(
                                 verify_code_handler,
                                 api_docs!(
-                                    (),
+                                    Json<VerifyCodeResponse>,
                                     "Verify code",
                                     "Verify the provided email verification code"
                                 ),
                             ),
                         ),
                 ),
+        )
+        .nest(
+            "/spaces",
+            Router::new().nest(
+                "/deliberation",
+                Router::new()
+                    .nest(
+                        "/:deliberation_id/responses",
+                        Router::new()
+                            .route(
+                                "/",
+                                post_with(
+                                    create_response_answer_handler,
+                                    api_docs!(
+                                        Json<CreateDeliberationResponse>,
+                                        "Create response answer",
+                                        "Create response answer with survey id"
+                                    ),
+                                ),
+                            )
+                            .route(
+                                "/:id",
+                                get_with(
+                                    get_response_answer_handler,
+                                    api_docs!(
+                                        Json<DeliberationSpaceResponse>,
+                                        "Get response answer",
+                                        "Get response answer with response id"
+                                    ),
+                                ),
+                            ),
+                    )
+                    .nest(
+                        "/:deliberation_id/discussions",
+                        Router::new()
+                            .route(
+                                "/",
+                                post_with(
+                                    create_discussion_handler,
+                                    api_docs!(
+                                        Json<DeliberationDiscussionResponse>,
+                                        "Create discussion",
+                                        "Create discussion under deliberation with id"
+                                    ),
+                                ),
+                            )
+                            .route(
+                                "/:id/start-meeting",
+                                post_with(
+                                    start_meeting_handler,
+                                    api_docs!(
+                                        Json<DeliberationDiscussionResponse>,
+                                        "Start meeting",
+                                        "Start meeting for discussion with id"
+                                    ),
+                                ),
+                            )
+                            .route(
+                                "/:id/participant-meeting",
+                                post_with(
+                                    participant_meeting_handler,
+                                    api_docs!(
+                                        Json<DeliberationDiscussionResponse>,
+                                        "Participant meeting",
+                                        "Participant meeting for discussion with id"
+                                    ),
+                                ),
+                            )
+                            .route(
+                                "/:id/start-recording",
+                                post_with(
+                                    start_recording_handler,
+                                    api_docs!(
+                                        Json<DeliberationDiscussionResponse>,
+                                        "Start recording",
+                                        "Start recording for discussion with id"
+                                    ),
+                                ),
+                            )
+                            .route(
+                                "/:id/end-recording",
+                                post_with(
+                                    end_recording_handler,
+                                    api_docs!(
+                                        Json<DeliberationDiscussionResponse>,
+                                        "End recording",
+                                        "End recording for discussion with id"
+                                    ),
+                                ),
+                            )
+                            .route(
+                                "/:id/exit-meeting",
+                                post_with(
+                                    exit_meeting_handler,
+                                    api_docs!(
+                                        Json<DeliberationDiscussionResponse>,
+                                        "Exit meeting",
+                                        "Exit meeting for discussion with id"
+                                    ),
+                                ),
+                            ),
+                    )
+                    .route(
+                        "/",
+                        post_with(
+                            create_deliberation_handler,
+                            api_docs!(
+                                Json<CreateDeliberationResponse>,
+                                "Create deliberation",
+                                "Create a new deliberation"
+                            ),
+                        ),
+                    )
+                    .route(
+                        "/:id",
+                        post_with(
+                            update_deliberation_handler,
+                            api_docs!(
+                                Json<DeliberationDetailResponse>,
+                                "Update deliberation",
+                                "Update a deliberation"
+                            ),
+                        ),
+                    )
+                    .route(
+                        "/:id",
+                        get_with(
+                            get_deliberation_handler,
+                            api_docs!(
+                                Json<DeliberationDetailResponse>,
+                                "Get deliberation",
+                                "Get deliberation with ID"
+                            ),
+                        ),
+                    )
+                    .route(
+                        "/:id/delete",
+                        post_with(
+                            delete_deliberation_handler,
+                            api_docs!(
+                                Json<String>,
+                                "Delete deliberation",
+                                "Delete deliberation with id"
+                            ),
+                        ),
+                    ),
+            ),
         )
         .nest(
             "/teams",
@@ -292,7 +443,8 @@ pub fn route(
                 ),
         )
         .with_state(AppState {
-            dynamo: dynamo_client.clone(),
-            ses: ses_client.clone(),
+            dynamo: dynamo_client,
+            ses: ses_client,
+            pool,
         }))
 }

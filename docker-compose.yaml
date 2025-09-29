@@ -32,12 +32,14 @@ services:
       - "3000:3000"
     environment:
       ENV: dev
+      RUST_LOG: ${RUST_LOG:-debug}
+      RUST_FLAG: ${RUST_FLAG:-"--features bypass"}
       DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/ratel}
-      DYNAMODB_ENDPOINT: http://localstack:4566
+      DYNAMO_ENDPOINT: http://localstack:4566
       MIGRATE: ${MIGRATE:-true}
-      AWS_REGION: us-east-1
-      AWS_ACCESS_KEY_ID: test
-      AWS_SECRET_ACCESS_KEY: test
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-test}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-test}
+      AWS_REGION: ${AWS_REGION:-us-east-1}
       TELEGRAM_TOKEN: ${TELEGRAM_TOKEN}
       DYNAMO_TABLE_PREFIX: ratel-local
       BINANCE_API_KEY: ${BINANCE_API_KEY:-dummy}
@@ -46,7 +48,7 @@ services:
       REDIRECT_DOMAIN: ${REDIRECT_DOMAIN:-http://localhost:3000}
     volumes:
       - .:/app
-      # - ./.build/target:/app/target
+      - ./.build/target:/app/target
       - ./.build/main-api/target:/app/packages/main-api/target
     working_dir: /app
     command: ["bash", "scripts/api-entrypoint.sh"]
@@ -155,15 +157,23 @@ services:
     volumes:
       - ./.build/node_modules:/app/node_modules
       - ./.build/web_node_modules:/app/ts-packages/web/node_modules
+      - ./.build/web_next:/app/ts-packages/web/.next
       - ./.build/pnpm-store:/app/.pnpm-store
       - .:/app
     working_dir: /app
     environment:
       PORT: 8080
       NEXT_PUBLIC_API_URL: "http://localhost:3000"
-      INTERNAL_API_URL: "http://main-api:3000"
-      NEXT_PUBLIC_GRAPHQL_URL: "http://localhost:28080/v1/graphql"
-      NEXT_PUBLIC_LOG_LEVEL: ${LOG_LEVEL:-debug}
+      API_URL: "http://main-api:3000"
+      NEXT_PUBLIC_LOG_LEVEL: ${NEXT_PUBLIC_LOG_LEVEL:-debug}
+      NEXT_PUBLIC_FIREBASE_API_KEY: ${NEXT_PUBLIC_FIREBASE_API_KEY:-dummy}
+      NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN:-dummy}
+      NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${NEXT_PUBLIC_FIREBASE_PROJECT_ID:-dummy}
+      NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ${NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET:-dummy}
+      NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID:-dummy}
+      NEXT_PUBLIC_FIREBASE_APP_ID: ${NEXT_PUBLIC_FIREBASE_APP_ID:-dummy}
+      NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: ${NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID:-dummy}
+
       NODE_ENV: development
     command: ["bash", "scripts/web-entrypoint.sh"]
     healthcheck:
@@ -198,6 +208,10 @@ services:
       retries: 5
     networks:
       - ratel-network
+    profiles:
+      - testing
+      - development
+      - infra
 
   postgres-init:
     image: postgres:16
@@ -241,13 +255,13 @@ services:
     ports:
       - "4566:4566"
     environment:
-      - PERSISTENCE=${LOCALSTACK_PERSISTENCE:-1}
-      - SERVICES=dynamodb,s3,sqs
-      - DYNAMODB_SHARE_DB=1
-      - SQS_ENDPOINT_STRATEGY=off
-      - AWS_ACCESS_KEY_ID=test
-      - AWS_SECRET_ACCESS_KEY=test
-      - AWS_DEFAULT_REGION=us-east-1
+      PERSISTENCE: ${LOCALSTACK_PERSISTENCE:-1}
+      SERVICES: dynamodb,s3,sqs
+      DYNAMODB_SHARE_DB: 1
+      SQS_ENDPOINT_STRATEGY: "off"
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-test}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-test}
+      AWS_DEFAULT_REGION: ${AWS_REGION:-us-east-1}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
       interval: 10s
@@ -257,15 +271,19 @@ services:
       - ./.build/localstack-data:/var/lib/localstack
     networks:
       - ratel-network
+    profiles:
+      - testing
+      - development
+      - infra
 
   # DynamoDB initialization
   localstack-init:
     image: amazonlinux:2023
     environment:
-      - AWS_ACCESS_KEY_ID=test
-      - AWS_SECRET_ACCESS_KEY=test
-      - AWS_DEFAULT_REGION=us-east-1
-      - LOCALSTACK_ENDPOINT=http://localstack:4566
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-test}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-test}
+      AWS_DEFAULT_REGION: ${AWS_REGION:-us-east-1}
+      LOCALSTACK_ENDPOINT: http://localstack:4566
     volumes:
       - ./scripts:/scripts
     networks:
@@ -274,6 +292,10 @@ services:
     depends_on:
       localstack:
         condition: service_healthy
+    profiles:
+      - testing
+      - development
+      - infra
 
   dynamodb-admin:
     image: aaronshaf/dynamodb-admin:latest
@@ -281,14 +303,15 @@ services:
     ports:
       - "8081:8001"
     environment:
-      - DYNAMO_ENDPOINT=http://localstack:4566
-      - AWS_ACCESS_KEY_ID=test
-      - AWS_SECRET_ACCESS_KEY=test
-      - AWS_DEFAULT_REGION=us-east-1
+      DYNAMO_ENDPOINT: http://localstack:4566
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-test}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-test}
+      AWS_DEFAULT_REGION: ${AWS_REGION:-us-east-1}
     depends_on:
       - localstack-init
     profiles:
       - development
+      - infra
     networks:
       - ratel-network
 

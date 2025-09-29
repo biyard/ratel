@@ -22,12 +22,17 @@ pub enum Partition {
     Email(String),
     Feed(String),
     PostLike(String),
+    Session(String),
 
     // Spaces
     Space(String),
     DeliberationSpace(String),
     PollSpace(String),
     SurveySpace(String),
+
+    Discussion(String),
+    DiscussionUser(String),
+    Survey(String),
 
     Team(String),
 }

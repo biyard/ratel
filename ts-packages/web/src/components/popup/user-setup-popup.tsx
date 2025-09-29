@@ -18,9 +18,9 @@ import { Button } from '../ui/button';
 import { sha3 } from '@/lib/utils';
 import FileUploader from '../file-uploader';
 import Image from 'next/image';
-import { emailSignupRequest } from '@/lib/api/models/users/email-signup-request';
-import { signupRequest } from '@/lib/api/models/users/signup-request';
 import { useTranslations } from 'next-intl';
+import { OAuthProvider } from '@/types/oauth-provider';
+import { ratelSdk } from '@/lib/api/ratel';
 
 export interface UserSetupPopupProps {
   id?: string;
@@ -29,6 +29,9 @@ export interface UserSetupPopupProps {
   profileUrl?: string;
   email: string;
   principal?: string;
+  idToken?: string;
+  accessToken?: string;
+  provider?: OAuthProvider;
 }
 
 interface LabeledInputProps {
@@ -45,6 +48,8 @@ const UserSetupPopup = ({
   profileUrl = 'https://metadata.ratel.foundation/ratel/default-profile.png',
   username = '',
   nickname = '',
+  provider,
+  accessToken,
 }: UserSetupPopupProps) => {
   const t = useTranslations('Signup');
   const { post } = useApiCall();
@@ -92,29 +97,31 @@ const UserSetupPopup = ({
     }
 
     try {
-      let req;
-      if (email === '') {
-        req = emailSignupRequest(
-          displayName,
-          emailState,
-          profileUrlState,
-          agreed,
-          announcementAgreed,
-          userName,
-          sha3(password),
-          auth.telegramRaw,
-        );
-      } else {
-        req = signupRequest(
-          displayName,
-          emailState,
-          profileUrlState,
-          agreed,
-          announcementAgreed,
-          userName,
-          auth.evmWallet!.address,
-          auth.telegramRaw,
-        );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const req: any = {
+        display_name: displayName,
+        username: userName,
+        profile_url: profileUrlState,
+        description: '',
+        term_agreed: agreed,
+        informed_agreed: announcementAgreed,
+      };
+      if (emailState !== '' && password !== '') {
+        // NOTE: Signup with email and password
+        req.email = emailState;
+        req.password = sha3(password);
+        req.code = authCode;
+      } else if (provider && accessToken) {
+        req.provider = provider;
+        req.access_token = accessToken;
+      } else if (auth.telegramRaw) {
+        // NOTE: First signup for telegram
+        // FIXME: Update email and password for telegram user
+        //        But, v3 does not support now.
+        //        Consider just update email and password in my profile
+        req.telegram_raw = auth.telegramRaw;
+        // FIXME: EVM address must be verified by signature in server-side
+        req.evm_address = auth.evmWallet?.address;
       }
 
       if (await post(ratelApi.users.signup(), req)) {
@@ -137,23 +144,25 @@ const UserSetupPopup = ({
 
   const handleSendCode = async () => {
     logger.debug('Sending verification code to email:', emailState);
-    await post(ratelApi.users.sendVerificationCode(), {
-      send_verification_code: {
-        email: emailState,
-      },
-    });
-    setSentCode(true);
+    try {
+      await ratelSdk.auth.sendVerificationCode(emailState);
+      setSentCode(true);
+    } catch (err) {
+      showErrorToast(t('failed_send_code'));
+      logger.error('failed to send verification code with error: ', err);
+    }
   };
 
   const handleVerify = async () => {
     logger.debug('Sending verification code to email:', emailState);
-    await post(ratelApi.users.sendVerificationCode(), {
-      verify: {
-        email: emailState,
-        value: authCode,
-      },
-    });
-    setIsValidEmail(true);
+    try {
+      await ratelSdk.auth.verifyCode(emailState, authCode);
+
+      setIsValidEmail(true);
+    } catch (err) {
+      showErrorToast(t('failed_verify_code'));
+      logger.error('failed to verify code with error: ', err);
+    }
   };
 
   useEffect(() => {
@@ -220,8 +229,11 @@ const UserSetupPopup = ({
               aria-hidden={!sentCode || isValidEmail}
             >
               <input
+                id="otp"
+                name="otp"
                 className="bg-input-box-bg border border-input-box-border w-full outline-none px-5 h-11 text-text-primary text-base placeholder-gray-500 font-medium rounded-lg"
                 value={authCode}
+                placeholder={t('verification_code')}
                 onChange={(e) => {
                   setAuthCode(e.target.value);
                 }}
