@@ -41,6 +41,8 @@ macro_rules! send {
         body: { $($body:tt)* },
         response_type: $resp_ty:ty
     ) => {{
+        use bdk::prelude::by_axum::axum;
+
         let body = axum::body::Body::from(
             serde_json::to_vec(&serde_json::json!({ $($body)* })).unwrap()
         );
@@ -58,6 +60,8 @@ macro_rules! send {
         path: $path:expr,
         body: { $($body:tt)* }
     ) => {{
+        use bdk::prelude::by_axum::axum;
+
         let body = axum::body::Body::from(
             serde_json::to_vec(&serde_json::json!({ $($body)* })).unwrap()
         );
@@ -70,6 +74,8 @@ macro_rules! send {
         method: $method:expr,
         path: $path:expr,
     ) => {{
+        use bdk::prelude::by_axum::axum;
+
         let body = axum::body::Body::empty();
 
         $crate::call! { app: $app, path: $path, method: $method, body: body }

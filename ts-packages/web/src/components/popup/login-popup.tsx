@@ -180,7 +180,7 @@ export const LoginModal = ({
         ed25519KeyPair?.getPrincipal().toText(),
       );
       try {
-        await ratelSdk.users.login_with_oauth(
+        await ratelSdk.auth.loginWithOAuth(
           OAuthProvider.Google,
           user.accessToken,
         );

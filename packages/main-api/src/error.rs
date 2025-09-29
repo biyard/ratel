@@ -54,6 +54,10 @@ pub enum Error {
     AwsSesSendEmailException(String),
     #[error("Verification code not found or expired")]
     NotFoundVerificationCode,
+    #[error("Verification code has expired")]
+    ExpiredVerification,
+    #[error("Invalid verification code")]
+    InvalidVerificationCode,
 }
 
 impl IntoResponse for Error {

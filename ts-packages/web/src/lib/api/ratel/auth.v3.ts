@@ -1,7 +1,20 @@
 import { OAuthProvider } from '@/types/oauth-provider';
 import { call } from './call';
 
-export async function login_with_oauth(
+export async function sendVerificationCode(email: string): Promise<void> {
+  await call('POST', '/v3/auth/verification/send-verification-code', {
+    email,
+  });
+}
+
+export async function verifyCode(email: string, code: string): Promise<void> {
+  await call('POST', '/v3/auth/verification/verify-code', {
+    email,
+    code,
+  });
+}
+
+export async function loginWithOAuth(
   provider: OAuthProvider,
   access_token: string,
 ): Promise<User> {
