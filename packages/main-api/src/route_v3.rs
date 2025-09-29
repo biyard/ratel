@@ -1,4 +1,6 @@
 use crate::controllers::v3::spaces::deliberations::responses::create_response_answer::create_response_answer_handler;
+use crate::controllers::v3::spaces::deliberations::responses::get_response_answer::get_response_answer_handler;
+use crate::models::space::DeliberationSpaceResponse;
 use crate::{
     Error2,
     controllers::v3::{
@@ -205,18 +207,30 @@ pub fn route(
                 "/deliberation",
                 Router::new()
                     .nest(
-                        "/:id/responses",
-                        Router::new().route(
-                            "/",
-                            post_with(
-                                create_response_answer_handler,
-                                api_docs!(
-                                    Json<CreateDeliberationResponse>,
-                                    "Create response answer",
-                                    "Create response answer with id"
+                        "/:deliberation_id/responses",
+                        Router::new()
+                            .route(
+                                "/",
+                                post_with(
+                                    create_response_answer_handler,
+                                    api_docs!(
+                                        Json<CreateDeliberationResponse>,
+                                        "Create response answer",
+                                        "Create response answer with survey id"
+                                    ),
+                                ),
+                            )
+                            .route(
+                                "/:id",
+                                get_with(
+                                    get_response_answer_handler,
+                                    api_docs!(
+                                        Json<DeliberationSpaceResponse>,
+                                        "Get response answer",
+                                        "Get response answer with response id"
+                                    ),
                                 ),
                             ),
-                        ),
                     )
                     .route(
                         "/",

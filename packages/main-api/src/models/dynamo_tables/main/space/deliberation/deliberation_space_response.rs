@@ -2,7 +2,9 @@ use crate::{models::user::User, types::*};
 use bdk::prelude::*;
 use serde_json;
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default)]
+#[derive(
+    Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default, schemars::JsonSchema,
+)]
 pub struct DeliberationSpaceResponse {
     pub pk: Partition,
 
@@ -21,9 +23,7 @@ pub struct DeliberationSpaceResponse {
     pub survey_pk: Partition,
 
     pub survey_type: SurveyType,
-
-    // INFO: Serialize multiple answer vectors and save them in String format
-    pub answer: String,
+    pub answers: Vec<SurveyAnswer>,
 }
 
 impl DeliberationSpaceResponse {
@@ -31,7 +31,7 @@ impl DeliberationSpaceResponse {
         deliberation_pk: Partition,
         survey_pk: Partition,
         survey_type: SurveyType,
-        answer: Vec<SurveyAnswer>,
+        answers: Vec<SurveyAnswer>,
 
         User {
             pk,
@@ -53,37 +53,22 @@ impl DeliberationSpaceResponse {
             author_username: username.into(),
             survey_pk,
             survey_type,
-            answer: Self::serialize_answer(&answer),
+            answers,
         }
-    }
-
-    pub fn answer(&self) -> Vec<SurveyAnswer> {
-        serde_json::from_str(&self.answer).unwrap_or_default()
-    }
-
-    pub fn set_answer(&mut self, ans: Vec<SurveyAnswer>) {
-        self.answer = Self::serialize_answer(&ans);
-    }
-
-    pub fn try_answer(&self) -> Result<Vec<SurveyAnswer>, serde_json::Error> {
-        serde_json::from_str(&self.answer)
-    }
-
-    #[inline]
-    fn serialize_answer(ans: &Vec<SurveyAnswer>) -> String {
-        serde_json::to_string(ans).unwrap_or_else(|_| "{}".to_string())
     }
 }
 
 #[derive(Debug, Clone, Default, serde::Serialize, schemars::JsonSchema)]
 pub struct SurveyResponseResponse {
+    pub pk: String,
+
     pub user_pk: String,
     pub author_display_name: String,
     pub author_profile_url: String,
     pub author_username: String,
 
     pub survey_type: SurveyType,
-    pub answer: Vec<SurveyAnswer>,
+    pub answers: Vec<SurveyAnswer>,
 }
 
 impl From<DeliberationSpaceResponse> for SurveyResponseResponse {
@@ -93,14 +78,21 @@ impl From<DeliberationSpaceResponse> for SurveyResponseResponse {
             Partition::Team(v) => v,
             _ => "".to_string(),
         };
+
+        let pk = match responses.clone().sk {
+            EntityType::DeliberationSpaceResponse(v) => v,
+            _ => "".to_string(),
+        };
+
         Self {
+            pk,
             user_pk,
             author_display_name: responses.clone().author_display_name,
             author_profile_url: responses.clone().author_profile_url,
             author_username: responses.clone().author_username,
 
             survey_type: responses.clone().survey_type,
-            answer: responses.answer(),
+            answers: responses.answers,
         }
     }
 }

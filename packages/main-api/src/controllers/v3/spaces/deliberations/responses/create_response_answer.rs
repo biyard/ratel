@@ -1,6 +1,5 @@
 use crate::{
     AppState, Error2,
-    controllers::v3::spaces::deliberations::update_deliberation::DeliberationPath,
     models::space::{DeliberationDetailResponse, DeliberationMetadata, DeliberationSpaceResponse},
     types::{Partition, SurveyAnswer, SurveyType},
     utils::dynamo_extractor::extract_user,
@@ -32,14 +31,21 @@ pub struct CreateDeliberationResponse {
     pub metadata: DeliberationDetailResponse,
 }
 
+#[derive(
+    Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
+)]
+pub struct DeliberationResponsePath {
+    pub deliberation_id: String,
+}
+
 pub async fn create_response_answer_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     Extension(auth): Extension<Option<Authorization>>,
-    Path(DeliberationPath { id }): Path<DeliberationPath>,
+    Path(DeliberationResponsePath { deliberation_id }): Path<DeliberationResponsePath>,
     Json(req): Json<CreateResponseAnswerRequest>,
 ) -> Result<Json<CreateDeliberationResponse>, Error2> {
     let user = extract_user(&dynamo.client, auth).await?;
-    let deliberation_pk = Partition::DeliberationSpace(id.to_string());
+    let deliberation_pk = Partition::DeliberationSpace(deliberation_id.to_string());
     let user_pk = match user.pk.clone() {
         Partition::User(v) => v,
         Partition::Team(v) => v,
