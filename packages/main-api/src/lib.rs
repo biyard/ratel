@@ -165,10 +165,11 @@ pub mod controllers {
 
                 pub mod discussions {
                     pub mod create_discussion;
-                    pub mod delete_discussion;
+                    pub mod end_recording;
+                    pub mod exit_meeting;
                     pub mod participant_meeting;
                     pub mod start_meeting;
-                    pub mod update_discussion;
+                    pub mod start_recording;
 
                     #[cfg(test)]
                     pub mod tests;

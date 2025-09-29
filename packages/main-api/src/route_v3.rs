@@ -1,5 +1,9 @@
 use crate::controllers::v3::spaces::deliberations::discussions::create_discussion::create_discussion_handler;
+use crate::controllers::v3::spaces::deliberations::discussions::end_recording::end_recording_handler;
+use crate::controllers::v3::spaces::deliberations::discussions::exit_meeting::exit_meeting_handler;
+use crate::controllers::v3::spaces::deliberations::discussions::participant_meeting::participant_meeting_handler;
 use crate::controllers::v3::spaces::deliberations::discussions::start_meeting::start_meeting_handler;
+use crate::controllers::v3::spaces::deliberations::discussions::start_recording::start_recording_handler;
 use crate::controllers::v3::spaces::deliberations::responses::create_response_answer::create_response_answer_handler;
 use crate::controllers::v3::spaces::deliberations::responses::get_response_answer::get_response_answer_handler;
 use crate::models::space::{DeliberationDiscussionResponse, DeliberationSpaceResponse};
@@ -256,6 +260,50 @@ pub fn route(
                                         Json<DeliberationDiscussionResponse>,
                                         "Start meeting",
                                         "Start meeting for discussion with id"
+                                    ),
+                                ),
+                            )
+                            .route(
+                                "/:id/participant-meeting",
+                                post_with(
+                                    participant_meeting_handler,
+                                    api_docs!(
+                                        Json<DeliberationDiscussionResponse>,
+                                        "Participant meeting",
+                                        "Participant meeting for discussion with id"
+                                    ),
+                                ),
+                            )
+                            .route(
+                                "/:id/start-recording",
+                                post_with(
+                                    start_recording_handler,
+                                    api_docs!(
+                                        Json<DeliberationDiscussionResponse>,
+                                        "Start recording",
+                                        "Start recording for discussion with id"
+                                    ),
+                                ),
+                            )
+                            .route(
+                                "/:id/end-recording",
+                                post_with(
+                                    end_recording_handler,
+                                    api_docs!(
+                                        Json<DeliberationDiscussionResponse>,
+                                        "End recording",
+                                        "End recording for discussion with id"
+                                    ),
+                                ),
+                            )
+                            .route(
+                                "/:id/exit-meeting",
+                                post_with(
+                                    exit_meeting_handler,
+                                    api_docs!(
+                                        Json<DeliberationDiscussionResponse>,
+                                        "Exit meeting",
+                                        "Exit meeting for discussion with id"
                                     ),
                                 ),
                             ),
