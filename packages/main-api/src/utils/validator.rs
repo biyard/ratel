@@ -1,6 +1,6 @@
 use validator::ValidationError;
 
-pub fn validate_nickname(name: &str) -> Result<(), ValidationError> {
+pub fn validate_username(name: &str) -> Result<(), ValidationError> {
     let len = name.chars().count();
     if len < 3 || len > 20 {
         return Err(ValidationError::new(
