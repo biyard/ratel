@@ -27,12 +27,15 @@ pub enum Partition {
     // Spaces
     Space(String),
     DeliberationSpace(String),
-    PollSpace(String),
     SurveySpace(String),
 
     Discussion(String),
     DiscussionUser(String),
     Survey(String),
+
+    // Poll Space
+    PollSpace(String),
+    PollSpaceResponse(String), // user_pk
 
     Team(String),
 }

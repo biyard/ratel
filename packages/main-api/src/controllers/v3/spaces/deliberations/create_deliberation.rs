@@ -34,12 +34,13 @@ pub async fn create_deliberation_handler(
 ) -> Result<Json<CreateDeliberationResponse>, Error2> {
     let user = extract_user(&dynamo.client, auth).await?;
 
-    let deliberation = DeliberationSpace::new(user);
+    let deliberation = DeliberationSpace::new(user.clone());
     deliberation.create(&dynamo.client).await?;
 
     let common = SpaceCommon::new(
         deliberation.pk.clone(),
         crate::types::Partition::Feed(req.feed_id),
+        user,
     );
     common.create(&dynamo.client).await?;
 

@@ -54,6 +54,8 @@ pub enum EntityType {
 
     // Poll Space entity types
     PollSpace,
+    PollSpaceSurvey,
+    PollSpaceSurveyResponse(String), //space_pk
 
     // Survery space entity types
     SurveySpace,
