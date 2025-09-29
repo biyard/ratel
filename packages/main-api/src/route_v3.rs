@@ -1,3 +1,4 @@
+use crate::controllers::v3::spaces::deliberations::responses::create_response_answer::create_response_answer_handler;
 use crate::{
     Error2,
     controllers::v3::{
@@ -25,7 +26,6 @@ use crate::{
         },
         spaces::deliberations::{
             create_deliberation::{CreateDeliberationResponse, create_deliberation_handler},
-            create_response_answer::create_response_answer_handler,
             delete_deliberation::delete_deliberation_handler,
             get_deliberation::get_deliberation_handler,
             update_deliberation::update_deliberation_handler,
@@ -201,62 +201,68 @@ pub fn route(
         )
         .nest(
             "/spaces",
-            Router::new()
-                .route(
-                    "/deliberation",
-                    post_with(
-                        create_deliberation_handler,
-                        api_docs!(
-                            Json<CreateDeliberationResponse>,
-                            "Create deliberation",
-                            "Create a new deliberation"
+            Router::new().nest(
+                "/deliberation",
+                Router::new()
+                    .nest(
+                        "/:id/responses",
+                        Router::new().route(
+                            "/",
+                            post_with(
+                                create_response_answer_handler,
+                                api_docs!(
+                                    Json<CreateDeliberationResponse>,
+                                    "Create response answer",
+                                    "Create response answer with id"
+                                ),
+                            ),
+                        ),
+                    )
+                    .route(
+                        "/",
+                        post_with(
+                            create_deliberation_handler,
+                            api_docs!(
+                                Json<CreateDeliberationResponse>,
+                                "Create deliberation",
+                                "Create a new deliberation"
+                            ),
+                        ),
+                    )
+                    .route(
+                        "/:id",
+                        post_with(
+                            update_deliberation_handler,
+                            api_docs!(
+                                Json<DeliberationDetailResponse>,
+                                "Update deliberation",
+                                "Update a deliberation"
+                            ),
+                        ),
+                    )
+                    .route(
+                        "/:id",
+                        get_with(
+                            get_deliberation_handler,
+                            api_docs!(
+                                Json<DeliberationDetailResponse>,
+                                "Get deliberation",
+                                "Get deliberation with ID"
+                            ),
+                        ),
+                    )
+                    .route(
+                        "/:id/delete",
+                        post_with(
+                            delete_deliberation_handler,
+                            api_docs!(
+                                Json<String>,
+                                "Delete deliberation",
+                                "Delete deliberation with id"
+                            ),
                         ),
                     ),
-                )
-                .route(
-                    "/deliberation/:id",
-                    post_with(
-                        update_deliberation_handler,
-                        api_docs!(
-                            Json<DeliberationDetailResponse>,
-                            "Update deliberation",
-                            "Update a deliberation"
-                        ),
-                    ),
-                )
-                .route(
-                    "/deliberation/:id",
-                    get_with(
-                        get_deliberation_handler,
-                        api_docs!(
-                            Json<DeliberationDetailResponse>,
-                            "Get deliberation",
-                            "Get deliberation with ID"
-                        ),
-                    ),
-                )
-                .route(
-                    "/deliberation/:id/delete",
-                    post_with(
-                        delete_deliberation_handler,
-                        api_docs!(
-                            Json<String>,
-                            "Delete deliberation",
-                            "Delete deliberation with id"
-                        ),
-                    ),
-                )
-                .route(
-                    "/deliberation/:id/surveys",
-                    post_with(
-                        create_response_answer_handler,
-                        api_docs!(
-                            Json<CreateDeliberationResponse>,
-                            "Create response answer",
-                            "Create response answer with id"
-                        ),
-                    ),
-                ),
+            ),
         )
         .nest(
             "/teams",
