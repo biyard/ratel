@@ -123,7 +123,9 @@ async fn signup_with_email_password(
     let is_invalid = EmailVerification::find_by_email_and_code(
         cli,
         email.clone(),
-        EmailVerificationQueryOption::builder().sk(code).limit(1),
+        EmailVerificationQueryOption::builder()
+            .sk(code.clone())
+            .limit(1),
     )
     .await?
     .0

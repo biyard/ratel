@@ -43,8 +43,11 @@ pub async fn verify_code_handler(
         return Err(Error2::NotFoundVerificationCode);
     }
 
+    tracing::debug!("code {}", req.code);
+    // string equals
+
     #[cfg(feature = "bypass")]
-    if req.code == "000000" {
+    if req.code.eq("000000") {
         return Ok(Json(VerifyCodeResponse { success: true }));
     }
 
