@@ -71,7 +71,7 @@ pub async fn send_code_handler(
         }
     };
 
-    #[cfg(not(test))]
+    #[cfg(all(not(test), not(feature = "no-secret")))]
     {
         let mut i = 0;
         while let Err(e) = ses
