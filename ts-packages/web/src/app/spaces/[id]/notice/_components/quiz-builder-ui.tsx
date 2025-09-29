@@ -388,6 +388,7 @@ export default function QuizBuilderUI({
         }),
       );
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [questions, onQuestionsChange, isQuizEditingDisabled],
   );
 
