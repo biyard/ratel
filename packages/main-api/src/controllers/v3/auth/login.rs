@@ -6,7 +6,7 @@ use crate::{
         user::{User, UserQueryOption},
     },
     types::Provider,
-    utils::firebase,
+    utils::{firebase, password::hash_password},
 };
 use bdk::prelude::*;
 
@@ -80,10 +80,11 @@ pub async fn login_with_email(
     email: String,
     password: String,
 ) -> Result<User, Error2> {
+    let hashed_password = hash_password(&password);
     let (u, _) = User::find_by_email_and_password(
         cli,
         &email,
-        UserQueryOption::builder().sk(password.to_string()),
+        UserQueryOption::builder().sk(hashed_password),
     )
     .await?;
     let user = u.get(0).cloned();

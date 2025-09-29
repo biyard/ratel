@@ -6,6 +6,7 @@ use crate::{
         user::*,
     },
     types::{EntityType, Partition, Theme},
+    utils::password::hash_password,
 };
 use dto::Group as G;
 use dto::Team as T;
@@ -109,7 +110,8 @@ pub async fn migrate_user(
         if password.is_empty() {
             None
         } else {
-            Some(password)
+            let hashed_password = hash_password(&password);
+            Some(hashed_password)
         },
     );
     user.pk = pk.clone();
