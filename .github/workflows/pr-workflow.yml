@@ -406,6 +406,7 @@ jobs:
       - name: Lookup artifact URL for this run
         id: artifact
         uses: actions/github-script@v7
+        if: always()
         with:
           script: |
             const {owner, repo} = context.repo;
@@ -431,6 +432,7 @@ jobs:
 
       - name: Comment PR with test report link
         uses: actions/github-script@v7
+        if: always()
         with:
           script: |
             const artifactUrl = `${{ steps.artifact.outputs.artifact_ui_url }}`;
