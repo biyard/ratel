@@ -1,6 +1,6 @@
 use crate::{
     models::space::SpaceCommon,
-    types::{Partition, SpaceVisibility},
+    types::{EntityType, Partition, SpaceVisibility},
 };
 
 use super::*;
@@ -116,7 +116,18 @@ impl From<Vec<DeliberationMetadata>> for DeliberationDetailResponse {
                     res.surveys.user_responses = prev.user_responses;
                 }
                 DeliberationMetadata::DeliberationSpaceSummary(deliberation_space_summary) => {
-                    res.summary = deliberation_space_summary.into();
+                    match deliberation_space_summary.sk {
+                        EntityType::DeliberationSpaceSummary => {
+                            res.summary = deliberation_space_summary.into();
+                        }
+                        EntityType::DeliberationSpaceRecommendation => {
+                            res.recommendation = DeliberationRecommentationResponse {
+                                html_contents: deliberation_space_summary.clone().html_contents,
+                                files: deliberation_space_summary.clone().files(),
+                            };
+                        }
+                        _ => continue,
+                    }
                 }
                 DeliberationMetadata::DeliberationSpaceResponse(response) => {
                     let response: SurveyResponseResponse = response.into();

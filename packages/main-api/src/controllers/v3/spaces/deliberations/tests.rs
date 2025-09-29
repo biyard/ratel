@@ -181,11 +181,10 @@ async fn test_update_space_handler() {
     assert_eq!(res.surveys.questions.len(), 3);
     assert_eq!(res.surveys.started_at, now);
     assert_eq!(res.surveys.ended_at, now + 10_000);
-    //FIXME: fix this parsing bug
-    // assert_eq!(
-    //     res.recommendation.html_contents,
-    //     "<div>deliberation recommendation description</div>"
-    // );
+    assert_eq!(
+        res.recommendation.html_contents,
+        "<div>deliberation recommendation description</div>"
+    );
 
     let discussion_id = res.discussions[0].pk.clone();
     let survey_id = res.surveys.pk.clone();
@@ -277,7 +276,6 @@ async fn test_update_space_handler() {
         "<div>deliberation description 11</div>".to_string()
     );
     assert_eq!(res.discussions.len(), 1);
-    // assert_eq!("deliberation id", format!("deliberation: {:?}", space_pk));
     assert_eq!(res.discussions[0].members.len(), 1);
     assert_eq!(
         res.elearnings.files[0].name,
@@ -286,10 +284,10 @@ async fn test_update_space_handler() {
     assert_eq!(res.surveys.questions.len(), 2);
     assert_eq!(res.surveys.started_at, now);
     assert_eq!(res.surveys.ended_at, now + 20_000);
-    // assert_eq!(
-    //     res.recommendation.html_contents,
-    //     "<div>deliberation recommendation description 11</div>"
-    // );
+    assert_eq!(
+        res.recommendation.html_contents,
+        "<div>deliberation recommendation description 11</div>"
+    );
 }
 
 #[tokio::test]

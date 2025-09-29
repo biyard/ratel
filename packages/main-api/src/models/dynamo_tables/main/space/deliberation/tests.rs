@@ -187,9 +187,8 @@ async fn tests_create_deliberation() {
     );
     assert_eq!(deliberation.surveys.questions.len(), 2);
     assert_eq!(deliberation.surveys.responses.len(), 1);
-    //FIXME: remove this comment when metadata limit issue is fixed
-    // assert_eq!(
-    //     deliberation.recommendation.files[0].name,
-    //     "excel file recommendation"
-    // );
+    assert_eq!(
+        deliberation.recommendation.files[0].name,
+        "excel file recommendation"
+    );
 }
