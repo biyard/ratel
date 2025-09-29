@@ -26,6 +26,7 @@ async fn tests_create_deliberation() {
     let space_common = SpaceCommon::new(
         deliberation.pk.clone(),
         crate::types::Partition::Feed(post_pk),
+        user.clone(),
     );
     let res = space_common.create(&cli).await;
     assert!(res.is_ok());
