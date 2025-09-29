@@ -174,6 +174,7 @@ pub mod controllers {
                     pub mod start_meeting;
                     pub mod start_recording;
 
+                    #[cfg(not(feature = "no-secret"))]
                     #[cfg(test)]
                     pub mod tests;
                 }
