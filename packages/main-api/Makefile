@@ -124,7 +124,7 @@ build:
 	cp $(CARGO_TARGET_DIR)/release/$(SERVICE) $(WORKSPACE_ROOT)/.build/$(SERVICE)/bootstrap
 
 test:
-	$(BUILD_ENV) cargo test --package main-api --lib -- controllers::v3 models::dynamo_tables --show-output
+	$(BUILD_ENV) cargo test --package main-api --lib -- controllers::v3 models::dynamo_tables --show-output $(RUST_FLAG)
 
 docker.build:
 	docker run --rm --name $(SERVICE) -v $(PWD)/../..:/app -w /app/packages/$(SERVICE) rust:slim-bookworm sh -c 'apt-get update && apt-get install -y libssl-dev pkg-config ca-certificates && $(BUILD_ENV) CARGO_TARGET_DIR=/app/packages/$(SERVICE)/target cargo build --release $(RUST_FLAG)'

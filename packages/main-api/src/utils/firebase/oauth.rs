@@ -56,7 +56,9 @@ mod r {
             .get(GOOGLE_PUBLIC_KEYS_URL)
             .send()
             .await
-            .map_err(|e| Error2::InternalServerError(format!("Failed to fetch public keys: {}", e)))?;
+            .map_err(|e| {
+                Error2::InternalServerError(format!("Failed to fetch public keys: {}", e))
+            })?;
 
         let cache_control = response
             .headers()
@@ -79,7 +81,9 @@ mod r {
             .map(|(kid, pem)| {
                 DecodingKey::from_rsa_pem(pem.as_bytes())
                     .map(|key| (kid, key))
-                    .map_err(|e| Error2::InternalServerError(format!("Invalid PEM for kid {:?}", e)))
+                    .map_err(|e| {
+                        Error2::InternalServerError(format!("Invalid PEM for kid {:?}", e))
+                    })
             })
             .collect::<Result<HashMap<_, _>, _>>()?;
 
@@ -155,6 +159,7 @@ mod r {
             ));
         }
 
+        // FIXME: return email
         Ok(claims.sub)
     }
 }
@@ -167,6 +172,7 @@ mod noop {
     ///
     /// Always returns the token string as uid.
     pub async fn verify_token(token_str: &str) -> Result<String, Error2> {
+        // NOTE: token_str must be email address.
         Ok(token_str.to_string())
     }
 }
