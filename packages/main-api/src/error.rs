@@ -1,17 +1,16 @@
 use bdk::prelude::*;
-use by_axum::axum::{
-    http::StatusCode,
-    response::{IntoResponse, Response},
-};
 use thiserror::Error;
 
-#[derive(Debug, Error, aide::OperationIo)]
+#[derive(Debug, Error, RestError, aide::OperationIo)]
 pub enum Error {
     #[error("DynamoDB error: {0}")]
+    #[rest_error(code = 100)]
     DynamoDbError(#[from] aws_sdk_dynamodb::Error),
     #[error("AWS Ses error: {0}")]
+    #[rest_error(status = 500)]
     SesServiceError(#[from] crate::utils::aws::ses::SesServiceError),
     #[error("SerdeDynamo error: {0}")]
+    #[rest_error(status = 500)]
     SerdeDynamo(#[from] serde_dynamo::Error),
     #[error("SerdeJson error: {0}")]
     SerdeJson(#[from] serde_json::Error),
@@ -25,6 +24,7 @@ pub enum Error {
     InvalidPartitionKey(String),
 
     #[error("Item not found: {0}")]
+    #[rest_error(status = 404)]
     NotFound(String),
 
     #[error("Item already exists: {0}")]
@@ -34,9 +34,11 @@ pub enum Error {
     BadRequest(String),
 
     #[error("Unauthorized: {0}")]
+    #[rest_error(status = 401)]
     Unauthorized(String),
 
     #[error("Internal server error: {0}")]
+    #[rest_error(status = 500)]
     InternalServerError(String),
 
     #[error("Duplicate entry: {0}")]
@@ -47,8 +49,9 @@ pub enum Error {
     #[error("Other error: {0}")]
     ReqwestError(#[from] reqwest::Error),
 
-    // /v3/auth endpoints
+    // /v3/auth endpoints 1000 ~
     #[error("Exceeded maximum attempt for email verification")]
+    #[rest_error(code = 1000)]
     ExceededAttemptEmailVerification,
     #[error("Failed to send email via AWS SES: {0}")]
     AwsSesSendEmailException(String),
@@ -58,26 +61,4 @@ pub enum Error {
     ExpiredVerification,
     #[error("Invalid verification code")]
     InvalidVerificationCode,
-}
-
-impl IntoResponse for Error {
-    fn into_response(self) -> Response {
-        let msg = self.to_string();
-
-        match self {
-            Error::Unauthorized(_) => (StatusCode::UNAUTHORIZED, msg).into_response(),
-            Error::NotFound(_) => (StatusCode::NOT_FOUND, msg).into_response(),
-            Error::AlreadyExists(_) | Error::Duplicate(_) => {
-                (StatusCode::CONFLICT, msg).into_response()
-            }
-            Error::BadRequest(_) => (StatusCode::BAD_REQUEST, msg).into_response(),
-            Error::InternalServerError(_)
-            | Error::DynamoDbError(_)
-            | Error::SerdeDynamo(_)
-            | Error::SerdeJson(_)
-            | Error::SesServiceError(_)
-            | Error::SessionError(_) => (StatusCode::INTERNAL_SERVER_ERROR, msg).into_response(),
-            _ => (StatusCode::BAD_REQUEST, msg).into_response(),
-        }
-    }
 }
