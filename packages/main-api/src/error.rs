@@ -16,34 +16,25 @@ pub enum Error {
     SerdeJson(#[from] serde_json::Error),
     #[error("Validation error: {0}")]
     ValidationError(#[from] validator::ValidationError),
-
     #[error("Session error")]
     SessionError(#[from] tower_sessions::session::Error),
-
     #[error("Invalid partition key: {0}")]
     InvalidPartitionKey(String),
-
     #[error("Item not found: {0}")]
     #[rest_error(status = 404)]
     NotFound(String),
-
     #[error("Item already exists: {0}")]
     AlreadyExists(String),
-
     #[error("Bad request: {0}")]
     BadRequest(String),
-
     #[error("Unauthorized: {0}")]
     #[rest_error(status = 401)]
     Unauthorized(String),
-
     #[error("Internal server error: {0}")]
     #[rest_error(status = 500)]
     InternalServerError(String),
-
     #[error("Duplicate entry: {0}")]
     Duplicate(String),
-
     #[error("Aws chime error: {0}")]
     AwsChimeError(String),
     #[error("Other error: {0}")]
