@@ -159,9 +159,16 @@ pub mod controllers {
         pub mod spaces {
             pub mod deliberations {
                 pub mod create_deliberation;
-                pub mod create_response_answer;
+
                 pub mod delete_deliberation;
                 pub mod get_deliberation;
+
+                pub mod responses {
+                    pub mod create_response_answer;
+
+                    #[cfg(test)]
+                    pub mod tests;
+                }
                 #[cfg(test)]
                 pub mod tests;
                 pub mod update_deliberation;
