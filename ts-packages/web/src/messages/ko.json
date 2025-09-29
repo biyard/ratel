@@ -35,6 +35,7 @@
     }
   },
   "Signup": {
+    "verification_code": "이메일로 받은 인증코드",
     "failed_verify_code": "인증 코드 확인에 실패했습니다. 잠시 후 다시 시도해주세요.",
     "failed_send_code": "인증 코드 전송에 실패했습니다. 잠시 후 다시 시도해주세요.",
     "signing_in": "로그인 중...",

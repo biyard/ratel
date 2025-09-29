@@ -229,8 +229,11 @@ const UserSetupPopup = ({
               aria-hidden={!sentCode || isValidEmail}
             >
               <input
+                id="otp"
+                name="otp"
                 className="bg-input-box-bg border border-input-box-border w-full outline-none px-5 h-11 text-text-primary text-base placeholder-gray-500 font-medium rounded-lg"
                 value={authCode}
+                placeholder={t('verification_code')}
                 onChange={(e) => {
                   setAuthCode(e.target.value);
                 }}

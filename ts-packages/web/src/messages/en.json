@@ -35,6 +35,7 @@
     }
   },
   "Signup": {
+    "verification_code": "Verify code in your email.",
     "failed_verify_code": "Verification code is incorrect or has expired.",
     "failed_send_code": "Failed to send verification code. Please try again.",
     "signing_in": "Signing you in...",

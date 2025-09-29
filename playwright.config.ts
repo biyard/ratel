@@ -55,7 +55,7 @@ export default defineConfig({
     // Authenticated tests (requires global setup)
     {
       name: "auth-setup",
-      testMatch: "./tests/global-setup.ts",
+      testMatch: "**/*.auth.setup.ts",
     },
     {
       name: "authenticated",
@@ -68,7 +68,7 @@ export default defineConfig({
           height: 950,
         },
         // This will be loaded in the beforeEach of authenticated tests
-        storageState: "test-results/.auth/user.json",
+        storageState: "user.json",
       },
     },
 

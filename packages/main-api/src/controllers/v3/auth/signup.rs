@@ -133,7 +133,7 @@ async fn signup_with_email_password(
         == 0;
 
     #[cfg(feature = "bypass")]
-    let is_invalid = is_invalid && code.eq("000000");
+    let is_invalid = is_invalid && !code.eq("000000");
 
     if is_invalid {
         return Err(Error2::InvalidVerificationCode);
