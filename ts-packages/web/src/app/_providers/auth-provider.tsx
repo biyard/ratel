@@ -113,6 +113,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       displayName: '',
       photoURL: info.photoURL,
       keyPair: info.keyPair,
+      accessToken: info.accessToken,
       idToken: info.idToken,
     };
 

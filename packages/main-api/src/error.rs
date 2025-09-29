@@ -41,6 +41,8 @@ pub enum Error {
 
     #[error("Duplicate entry: {0}")]
     Duplicate(String),
+    #[error("Other error: {0}")]
+    ReqwestError(#[from] reqwest::Error),
 }
 
 impl IntoResponse for Error {

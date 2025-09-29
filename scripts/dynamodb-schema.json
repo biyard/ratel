@@ -78,12 +78,8 @@
       "IndexName": "type-index",
       "KeySchema": [
         {
-          "AttributeName": "type",
-          "KeyType": "HASH"
-        },
-        {
           "AttributeName": "sk",
-          "KeyType": "RANGE"
+          "KeyType": "HASH"
         }
       ],
       "Projection": {

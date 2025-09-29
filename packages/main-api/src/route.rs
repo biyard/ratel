@@ -742,6 +742,16 @@ pub async fn route(deps: RouteDeps) -> Result<by_axum::axum::Router> {
                         } else {
                             Level::INFO
                         };
+
+                        if !response.status().is_success() {
+                            tracing::error!(
+                                status = %response.status(),
+                                latency = ?latency,
+                                "response generated"
+                            );
+                            return;
+                        }
+
                         if level == Level::WARN {
                             tracing::warn!(
                                 status = %response.status(),
