@@ -52,6 +52,8 @@ pub enum Error {
     ExceededAttemptEmailVerification,
     #[error("Failed to send email via AWS SES: {0}")]
     AwsSesSendEmailException(String),
+    #[error("Verification code not found or expired")]
+    NotFoundVerificationCode,
 }
 
 impl IntoResponse for Error {
