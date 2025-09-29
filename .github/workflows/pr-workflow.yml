@@ -47,7 +47,6 @@ jobs:
   main-api-test:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    needs: [nextjs-web, main-api, fetcher]
 
     steps:
       - uses: actions/checkout@v4
@@ -62,42 +61,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y docker-compose
 
-      - name: Restore web image cache
-        uses: actions/cache@v4
-        with:
-          path: /tmp/web-image.tar.gz
-          key: web-image-${{ github.sha }}
-          fail-on-cache-miss: true
-
-      - name: Restore main-api image cache
-        uses: actions/cache@v4
-        with:
-          path: /tmp/main-api-image.tar.gz
-          key: main-api-image-${{ github.sha }}
-          fail-on-cache-miss: true
-
-      - name: Restore fetcher image cache
-        uses: actions/cache@v4
-        with:
-          path: /tmp/fetcher-image.tar.gz
-          key: fetcher-image-${{ github.sha }}
-          fail-on-cache-miss: true
-
-      - name: Load Docker images
-        run: |
-          # Load images from cache
-          docker load < /tmp/web-image.tar.gz
-          docker load < /tmp/main-api-image.tar.gz
-          docker load < /tmp/fetcher-image.tar.gz
-
-          # Verify images are loaded
-          docker images
-
       - name: Setup test environment
         env:
           COMMIT: pr-${{ github.sha }}
         run: |
-          docker-compose --profile testing up -d
+          docker-compose --profile infra up -d
 
       - name: Run Rust tests
         env:
