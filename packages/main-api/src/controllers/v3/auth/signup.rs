@@ -73,7 +73,6 @@ pub async fn signup_handler(
         SignupType::Email { email, password } => {
             signup_with_email_password(&dynamo.client, req, email, password).await?
         }
-
         SignupType::OAuth { provider, id_token } => {
             signup_with_oauth(&dynamo.client, req, provider, id_token).await?
         }
