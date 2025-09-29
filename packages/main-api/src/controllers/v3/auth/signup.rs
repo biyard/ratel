@@ -48,7 +48,7 @@ pub enum SignupType {
     },
     OAuth {
         provider: Provider,
-        id_token: String,
+        access_token: String,
     },
     Telegram {
         telegram_raw: String,
@@ -73,9 +73,10 @@ pub async fn signup_handler(
         SignupType::Email { email, password } => {
             signup_with_email_password(&dynamo.client, req, email, password).await?
         }
-        SignupType::OAuth { provider, id_token } => {
-            signup_with_oauth(&dynamo.client, req, provider, id_token).await?
-        }
+        SignupType::OAuth {
+            provider,
+            access_token,
+        } => signup_with_oauth(&dynamo.client, req, provider, access_token).await?,
         SignupType::Telegram { .. } => {
             unimplemented!()
         }
@@ -110,6 +111,7 @@ async fn signup_with_email_password(
     email: String,
     password: String,
 ) -> Result<User, Error2> {
+    tracing::debug!("Signing up with email: {}", email);
     let (users, _) = User::find_by_email(cli, &email, UserQueryOption::builder().limit(1)).await?;
     if users.len() > 0 {
         return Err(Error2::Duplicate(format!(
@@ -136,21 +138,55 @@ async fn signup_with_email_password(
 }
 
 async fn signup_with_oauth(
-    _cli: &aws_sdk_dynamodb::Client,
-    SignupRequest { .. }: SignupRequest,
+    cli: &aws_sdk_dynamodb::Client,
+    SignupRequest {
+        display_name,
+        username,
+        profile_url,
+        term_agreed,
+        informed_agreed,
+        ..
+    }: SignupRequest,
     provider: Provider,
-    id_token: String,
+    access_token: String,
 ) -> Result<User, Error2> {
     tracing::debug!("Verifying id_token with provider: {:?}", provider);
-    let url = provider.token_info(&id_token);
+    let url = provider.oidc_userinfo_url();
     tracing::debug!("Fetching token info from: {}", url);
-    let token = reqwest::get(url)
-        .await
-        .map_err(|e| Error2::InternalServerError(format!("Failed to get token info: {}", e)))?
-        .text()
-        .await
-        .map_err(|e| Error2::InternalServerError(format!("Failed to read token info: {}", e)))?;
-    tracing::debug!("Token info: {}", token);
+    let UserInfo { email } = reqwest::Client::new()
+        .get(url)
+        .bearer_auth(access_token)
+        .send()
+        .await?
+        .error_for_status()?
+        .json()
+        .await?;
 
-    unimplemented!()
+    let (user, _bookmark) =
+        User::find_by_email(cli, &email, UserQueryOption::builder().limit(1)).await?;
+    if user.len() > 0 {
+        return Err(Error2::Duplicate(format!(
+            "Email already registered: {}",
+            email
+        )));
+    }
+    let user = User::new(
+        display_name,
+        email,
+        profile_url,
+        term_agreed,
+        informed_agreed,
+        UserType::Individual,
+        username,
+        None,
+    );
+
+    user.create(cli).await?;
+
+    Ok(user)
+}
+
+#[derive(Debug, serde::Deserialize)]
+struct UserInfo {
+    email: String,
 }

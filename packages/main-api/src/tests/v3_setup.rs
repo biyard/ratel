@@ -14,7 +14,8 @@ pub async fn setup_v3() -> TestContextV3 {
     let now = SystemTime::now()
         .duration_since(SystemTime::UNIX_EPOCH)
         .unwrap()
-        .as_nanos() as u64;
+        .as_secs() as u64
+        - 1750000000u64;
 
     let app = by_axum::finishing(app);
 

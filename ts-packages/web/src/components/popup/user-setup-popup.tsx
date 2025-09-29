@@ -29,6 +29,7 @@ export interface UserSetupPopupProps {
   email: string;
   principal?: string;
   idToken?: string;
+  accessToken?: string;
   provider?: OAuthProvider;
 }
 
@@ -46,8 +47,8 @@ const UserSetupPopup = ({
   profileUrl = 'https://metadata.ratel.foundation/ratel/default-profile.png',
   username = '',
   nickname = '',
-  idToken,
   provider,
+  accessToken,
 }: UserSetupPopupProps) => {
   const t = useTranslations('Signup');
   const { post } = useApiCall();
@@ -108,9 +109,9 @@ const UserSetupPopup = ({
         // NOTE: Signup with email and password
         req.email = emailState;
         req.password = sha3(password);
-      } else if (provider && idToken) {
+      } else if (provider && accessToken) {
         req.provider = provider;
-        req.id_token = idToken;
+        req.access_token = accessToken;
       } else if (auth.telegramRaw) {
         // NOTE: First signup for telegram
         // FIXME: Update email and password for telegram user

@@ -191,6 +191,7 @@ export const LoginModal = ({
           profileUrl: user.photoURL ?? undefined,
           principal: user.principal ?? undefined,
           idToken: user.idToken,
+          accessToken: user.accessToken,
           provider: OAuthProvider.Google,
         });
       } else if (user?.event == EventType.Login) {

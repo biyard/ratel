@@ -74,6 +74,7 @@ export interface AuthUserInfo {
   event: EventType | null;
   contents: string | null;
   idToken: string;
+  accessToken: string;
   email: string | null;
   displayName: string | null;
   photoURL: string | null;
@@ -110,6 +111,7 @@ export type GoogleLoginInfo = {
   keyPair: Ed25519KeyIdentity;
   contents: string;
   idToken: string;
+  accessToken: string;
 
   email: string | null;
   displayName: string | null;
@@ -191,6 +193,7 @@ export const loginWithGoogle = async (
       eventType,
       contents,
       idToken,
+      accessToken,
       email: user.email,
       photoURL: user.photoURL,
       displayName: user.displayName,

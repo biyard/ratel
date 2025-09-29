@@ -71,7 +71,11 @@ pub async fn login_with_google(
         return Ok(user);
     }
 
-    migrate_by_email(cli, pool, email).await
+    // FIXME(migrate): fallback to tricky migration from postgres
+    migrate_by_email(cli, pool, email).await.map_err(|e| {
+        tracing::error!("Failed to migrate user by email: {}", e);
+        Error2::Unauthorized("Invalid email or password".into())
+    })
 }
 
 pub async fn login_with_email(
@@ -91,7 +95,12 @@ pub async fn login_with_email(
 
     // FIXME(migrate): fallback to tricky migration from postgres
     let user = if user.is_none() {
-        migrate_by_email_password(cli, pool, email, password).await?
+        migrate_by_email_password(cli, pool, email, password)
+            .await
+            .map_err(|e| {
+                tracing::error!("Failed to migrate user by email: {}", e);
+                Error2::Unauthorized("Invalid email or password".into())
+            })?
     } else {
         user.unwrap()
     };
