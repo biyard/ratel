@@ -1,9 +1,14 @@
 use crate::{
     AppState, Error2,
     controllers::v3::spaces::deliberations::update_deliberation::DeliberationPath,
-    models::space::{DeliberationDetailResponse, DeliberationMetadata, SpaceCommon},
-    types::EntityType,
-    utils::dynamo_extractor::extract_user_from_session,
+    models::space::{
+        DeliberationDetailResponse, DeliberationMetadata, DeliberationSpace, SpaceCommon,
+    },
+    types::{EntityType, Partition, TeamGroupPermission},
+    utils::{
+        dynamo_extractor::extract_user_from_session,
+        security::{RatelResource, check_permission_from_session},
+    },
 };
 use dto::by_axum::axum::{
     Extension,
@@ -32,13 +37,37 @@ pub async fn posting_deliberation_handler(
     let user = extract_user_from_session(&dynamo.client, &session).await?;
     tracing::debug!("User extracted: {:?}", user);
 
+    let space = DeliberationSpace::get(&dynamo.client, &space_pk, Some(EntityType::Space))
+        .await?
+        .ok_or(Error2::NotFound("Space not found".to_string()))?;
+    let _ = match space.user_pk.clone() {
+        Partition::Team(_) => {
+            check_permission_from_session(
+                &dynamo.client,
+                &session,
+                RatelResource::Team {
+                    team_pk: space.user_pk.to_string(),
+                },
+                vec![TeamGroupPermission::SpaceEdit],
+            )
+            .await?;
+        }
+        Partition::User(_) => {
+            let user = extract_user_from_session(&dynamo.client, &session).await?;
+            if user.pk != space.user_pk {
+                return Err(Error2::Unauthorized(
+                    "You do not have permission to delete this post".into(),
+                ));
+            }
+        }
+        _ => return Err(Error2::InternalServerError("Invalid post author".into())),
+    };
+
     SpaceCommon::updater(&space_pk, EntityType::SpaceCommon)
         .with_status(dto::SpaceStatus::InProgress)
         .execute(&dynamo.client)
         .await?;
-
     let metadata = DeliberationMetadata::query(&dynamo.client, space_pk.clone()).await?;
-
     let metadata: DeliberationDetailResponse = metadata.into();
     Ok(Json(PostingDeliberationResponse { metadata }))
 }

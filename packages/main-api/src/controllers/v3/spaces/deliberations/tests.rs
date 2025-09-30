@@ -1,13 +1,16 @@
 use crate::{
-    controllers::v3::spaces::deliberations::{
-        create_deliberation::CreateDeliberationResponse,
-        delete_deliberation::DeleteDeliberationResponse,
+    controllers::v3::{
+        posts::create_post::{CreatePostRequest, create_post_handler},
+        spaces::deliberations::{
+            create_deliberation::CreateDeliberationResponse,
+            delete_deliberation::DeleteDeliberationResponse,
+        },
     },
     get,
     models::space::{DeliberationDetailResponse, DiscussionCreateRequest, SurveyCreateRequest},
     post,
     tests::{
-        create_app_state, create_test_user,
+        create_app_state, create_test_user, get_auth,
         v3_setup::{TestContextV3, setup_v3},
     },
     types::{
@@ -15,18 +18,34 @@ use crate::{
         SurveyStatus,
     },
 };
-use dto::File;
+use dto::{
+    File,
+    axum::{Extension, Json, extract::State},
+};
 
 #[tokio::test]
 async fn test_create_space_handler() {
     let TestContextV3 {
         app,
-        test_user: (_, headers),
+        test_user: (user, headers),
         ..
     } = setup_v3().await;
-    let uid = uuid::Uuid::new_v4().to_string();
-    let feed_pk = Partition::Feed(uid.clone());
 
+    //FIXME: fix by session and one test code
+    let app_state = create_app_state();
+    let auth = get_auth(&user);
+
+    let post = create_post_handler(
+        State(app_state.clone()),
+        Extension(Some(auth.clone())),
+        Json(CreatePostRequest { team_pk: None }),
+    )
+    .await;
+    assert!(post.is_ok(), "Failed to create post: {:?}", post);
+
+    let feed_pk = post.unwrap().post_pk.clone();
+
+    // SPACE
     let (status, _headers, _body) = post! {
         app: app,
         path: "/v3/spaces/deliberation",
@@ -42,16 +61,28 @@ async fn test_create_space_handler() {
 
 #[tokio::test]
 async fn test_update_space_handler() {
-    let app_state = create_app_state();
-    let cli = app_state.dynamo.client.clone();
-
     let TestContextV3 {
         app,
-        test_user: (_, headers),
+        test_user: (user, headers),
         ..
     } = setup_v3().await;
-    let uid = uuid::Uuid::new_v4().to_string();
-    let feed_pk = Partition::Feed(uid.clone());
+
+    //FIXME: fix by session and one test code
+    let app_state = create_app_state();
+    let cli = &app_state.dynamo.client;
+    let auth = get_auth(&user);
+
+    let post = create_post_handler(
+        State(app_state.clone()),
+        Extension(Some(auth.clone())),
+        Json(CreatePostRequest { team_pk: None }),
+    )
+    .await;
+    assert!(post.is_ok(), "Failed to create post: {:?}", post);
+
+    let feed_pk = post.unwrap().post_pk.clone();
+
+    // SPACE
 
     let (_status, _headers, body) = post! {
         app: app,
@@ -292,15 +323,28 @@ async fn test_update_space_handler() {
 
 #[tokio::test]
 async fn test_delete_space_handler() {
-    let app_state = create_app_state();
-    let cli = app_state.dynamo.client.clone();
     let TestContextV3 {
         app,
-        test_user: (_, headers),
+        test_user: (user, headers),
         ..
     } = setup_v3().await;
-    let uid = uuid::Uuid::new_v4().to_string();
-    let feed_pk = Partition::Feed(uid.clone());
+
+    //FIXME: fix by session and one test code
+    let app_state = create_app_state();
+    let cli = &app_state.dynamo.client;
+    let auth = get_auth(&user);
+
+    let post = create_post_handler(
+        State(app_state.clone()),
+        Extension(Some(auth.clone())),
+        Json(CreatePostRequest { team_pk: None }),
+    )
+    .await;
+    assert!(post.is_ok(), "Failed to create post: {:?}", post);
+
+    let feed_pk = post.unwrap().post_pk.clone();
+
+    // SPACE
 
     let (status, _headers, body) = post! {
         app: app,
@@ -436,12 +480,25 @@ async fn test_delete_space_handler() {
 async fn test_get_space_handler() {
     let TestContextV3 {
         app,
-        test_user: (_, headers),
+        test_user: (user, headers),
         ..
     } = setup_v3().await;
-    let uid = uuid::Uuid::new_v4().to_string();
-    let feed_pk = Partition::Feed(uid.clone());
 
+    //FIXME: fix by session and one test code
+    let app_state = create_app_state();
+    let auth = get_auth(&user);
+
+    let post = create_post_handler(
+        State(app_state.clone()),
+        Extension(Some(auth.clone())),
+        Json(CreatePostRequest { team_pk: None }),
+    )
+    .await;
+    assert!(post.is_ok(), "Failed to create post: {:?}", post);
+
+    let feed_pk = post.unwrap().post_pk.clone();
+
+    // SPACE
     let (status, _headers, body) = post! {
         app: app,
         path: "/v3/spaces/deliberation",

@@ -1,18 +1,24 @@
 use crate::{
-    controllers::v3::spaces::deliberations::responses::create_response_answer::CreateDeliberationResponse,
+    controllers::v3::{
+        posts::create_post::{CreatePostRequest, create_post_handler},
+        spaces::deliberations::responses::create_response_answer::CreateDeliberationResponse,
+    },
     get,
     models::space::{
         DeliberationDetailResponse, DeliberationSpaceResponse, DiscussionCreateRequest,
         SurveyCreateRequest,
     },
     post,
-    tests::v3_setup::{TestContextV3, setup_v3},
-    types::{
-        ChoiceQuestion, LinearScaleQuestion, Partition, SpaceVisibility, SurveyQuestion,
-        SurveyStatus,
+    tests::{
+        create_app_state, get_auth,
+        v3_setup::{TestContextV3, setup_v3},
     },
+    types::{ChoiceQuestion, LinearScaleQuestion, SpaceVisibility, SurveyQuestion, SurveyStatus},
 };
-use dto::File;
+use dto::{
+    File,
+    axum::{Extension, Json, extract::State},
+};
 
 use crate::types::SurveyAnswer;
 
@@ -20,12 +26,25 @@ use crate::types::SurveyAnswer;
 async fn test_create_response_answer_handler() {
     let TestContextV3 {
         app,
-        test_user: (_, headers),
+        test_user: (user, headers),
         ..
     } = setup_v3().await;
-    let uid = uuid::Uuid::new_v4().to_string();
-    let feed_pk = Partition::Feed(uid.clone());
 
+    //FIXME: fix by session and one test code
+    let app_state = create_app_state();
+    let auth = get_auth(&user);
+
+    let post = create_post_handler(
+        State(app_state.clone()),
+        Extension(Some(auth.clone())),
+        Json(CreatePostRequest { team_pk: None }),
+    )
+    .await;
+    assert!(post.is_ok(), "Failed to create post: {:?}", post);
+
+    let feed_pk = post.unwrap().post_pk.clone();
+
+    // SPACE
     let (status, _headers, body) = post! {
         app: app,
         path: "/v3/spaces/deliberation",
@@ -175,11 +194,25 @@ async fn test_create_response_answer_handler() {
 async fn test_get_response_answer_handler() {
     let TestContextV3 {
         app,
-        test_user: (_, headers),
+        test_user: (user, headers),
         ..
     } = setup_v3().await;
-    let uid = uuid::Uuid::new_v4().to_string();
-    let feed_pk = Partition::Feed(uid.clone());
+
+    //FIXME: fix by session and one test code
+    let app_state = create_app_state();
+    let auth = get_auth(&user);
+
+    let post = create_post_handler(
+        State(app_state.clone()),
+        Extension(Some(auth.clone())),
+        Json(CreatePostRequest { team_pk: None }),
+    )
+    .await;
+    assert!(post.is_ok(), "Failed to create post: {:?}", post);
+
+    let feed_pk = post.unwrap().post_pk.clone();
+
+    // SPACE
 
     let (status, _headers, body) = post! {
         app: app,

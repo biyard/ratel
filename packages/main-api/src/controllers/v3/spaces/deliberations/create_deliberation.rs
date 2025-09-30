@@ -1,9 +1,14 @@
 use crate::{
     AppState, Error2,
-    models::space::{
-        DeliberationDetailResponse, DeliberationMetadata, DeliberationSpace, SpaceCommon,
+    models::{
+        feed::Post,
+        space::{DeliberationDetailResponse, DeliberationMetadata, DeliberationSpace, SpaceCommon},
     },
-    utils::dynamo_extractor::extract_user_from_session,
+    types::{EntityType, Partition, TeamGroupPermission},
+    utils::{
+        dynamo_extractor::extract_user_from_session,
+        security::{RatelResource, check_permission_from_session},
+    },
 };
 use dto::by_axum::axum::{
     Extension,
@@ -33,11 +38,43 @@ pub async fn create_deliberation_handler(
     let feed_pk = req.feed_pk.replace("%23", "#");
     let feed_id = feed_pk.split('#').last().unwrap().to_string();
 
+    let post = Post::get(&dynamo.client, &feed_pk, Some(EntityType::Post))
+        .await?
+        .ok_or(Error2::NotFound("Post not found".to_string()))?;
+
+    tracing::debug!("post info: {:?}", post);
+    let _ = match post.user_pk.clone() {
+        Partition::Team(_) => {
+            check_permission_from_session(
+                &dynamo.client,
+                &session,
+                RatelResource::Team {
+                    team_pk: post.user_pk.to_string(),
+                },
+                vec![TeamGroupPermission::SpaceWrite],
+            )
+            .await?;
+        }
+        Partition::User(_) => {
+            let user = extract_user_from_session(&dynamo.client, &session).await?;
+            if user.pk != post.user_pk {
+                return Err(Error2::Unauthorized(
+                    "You do not have permission to delete this post".into(),
+                ));
+            }
+        }
+        _ => return Err(Error2::InternalServerError("Invalid post author".into())),
+    };
+
     tracing::debug!("create_deliberation_handler called with req: {:?}", req,);
     let user = extract_user_from_session(&dynamo.client, &session).await?;
     tracing::debug!("User extracted: {:?}", user);
 
-    let deliberation = DeliberationSpace::new(user);
+    let mut deliberation = DeliberationSpace::new(user);
+    deliberation.user_pk = post.user_pk;
+    deliberation.author_display_name = post.author_display_name;
+    deliberation.author_profile_url = post.author_profile_url;
+    deliberation.author_username = post.author_username;
     deliberation.create(&dynamo.client).await?;
 
     let common = SpaceCommon::new(
