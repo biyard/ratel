@@ -72,6 +72,11 @@ pub async fn send_code_handler(
             email_verification
         }
     };
+    #[cfg(any(test, feature = "no-secret"))]
+    {
+        let _ = ses;
+        tracing::warn!("sending email will be skipped for {}: {}", req.email, value);
+    }
 
     #[cfg(all(not(test), not(feature = "no-secret")))]
     {

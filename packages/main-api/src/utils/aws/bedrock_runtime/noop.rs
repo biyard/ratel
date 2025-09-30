@@ -10,14 +10,14 @@ pub struct BedrockClient {}
 
 impl BedrockClient {
     pub fn new() -> Self {
-        Self {  }
+        Self {}
     }
 
     pub async fn send_message(
         &self,
-        model: BedrockModel,
+        _model: BedrockModel,
         prompt: String,
-        content: Option<Vec<ContentBlock>>,
+        _content: Option<Vec<ContentBlock>>,
     ) -> dto::Result<String> {
         Ok(prompt)
     }
