@@ -52,14 +52,7 @@ async fn test_poll_space_creation() {
         }),
     ];
 
-    let answers = vec![
-        SurveyAnswer::SingleChoice { answer: Some(1) },
-        SurveyAnswer::MultipleChoice {
-            answer: Some(vec![0, 2]),
-        },
-    ];
-
-    let survey = PollSpaceSurvey::new(poll.pk.clone(), questions, answers);
+    let survey = PollSpaceSurvey::new(poll.pk.clone(), questions);
 
     survey.create(&cli).await.expect("failed to create survey");
 
