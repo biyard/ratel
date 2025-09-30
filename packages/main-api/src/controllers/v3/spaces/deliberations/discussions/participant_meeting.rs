@@ -25,22 +25,30 @@ pub async fn participant_meeting_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     Extension(auth): Extension<Option<Authorization>>,
     Path(DeliberationDiscussionByIdPath {
-        deliberation_id,
-        id,
+        space_pk,
+        discussion_pk,
     }): Path<DeliberationDiscussionByIdPath>,
 ) -> Result<Json<DeliberationDiscussionResponse>, Error2> {
     let client = crate::utils::aws_chime_sdk_meeting::ChimeMeetingService::new().await;
+    let space_id = space_pk.split("#").last().unwrap_or_default().to_string();
+    let discussion_id = discussion_pk
+        .split("#")
+        .last()
+        .unwrap_or_default()
+        .to_string();
+
     let user = extract_user(&dynamo.client, auth).await?;
     let user_pk = match user.pk.clone() {
         Partition::User(v) => v,
         _ => String::new(),
     };
 
-    let (disc_initial, disc_pk) = fetch_discussion_and_pk(&dynamo, &deliberation_id, &id).await?;
+    let (disc_initial, disc_pk) =
+        fetch_discussion_and_pk(&dynamo, &space_id, &discussion_id).await?;
     let members_resp = list_members_resp(&dynamo, &disc_pk).await?;
     let mut participants_resp = list_participants_resp(&dynamo, &disc_pk).await?;
 
-    if participants_resp.iter().any(|p| p.user_pk == user_pk) {
+    if participants_resp.iter().any(|p| p.user_pk == user.pk) {
         let mut res: DeliberationDiscussionResponse = disc_initial.into();
         res.members = members_resp;
         res.participants = participants_resp;
@@ -50,8 +58,8 @@ pub async fn participant_meeting_handler(
     let meeting_id = ensure_current_meeting(
         dynamo.clone(),
         &client,
-        deliberation_id.clone(),
-        id.clone(),
+        space_id.clone(),
+        discussion_id.clone(),
         &disc_initial,
     )
     .await?;
@@ -78,8 +86,8 @@ pub async fn participant_meeting_handler(
                 let recreated_id = ensure_current_meeting(
                     dynamo.clone(),
                     &client,
-                    deliberation_id.clone(),
-                    id.clone(),
+                    space_id.clone(),
+                    discussion_id.clone(),
                     &disc_initial,
                 )
                 .await?;
@@ -100,7 +108,7 @@ pub async fn participant_meeting_handler(
     let opt = DeliberationSpaceParticipantQueryOption::builder();
     let olds = DeliberationSpaceParticipant::find_by_discussion_user_pk(
         &dynamo.client,
-        Partition::DiscussionUser(format!("{}#{}", id, user_pk)),
+        Partition::DiscussionUser(format!("{}#{}", discussion_id, user_pk)),
         opt,
     )
     .await?
@@ -110,14 +118,14 @@ pub async fn participant_meeting_handler(
     }
 
     let participant = DeliberationSpaceParticipant::new(
-        Partition::DeliberationSpace(deliberation_id.to_string()),
-        Partition::Discussion(id.to_string()),
+        Partition::DeliberationSpace(space_id.to_string()),
+        Partition::Discussion(discussion_id.to_string()),
         attendee_res.attendee_id,
         user,
     );
     participant.create(&dynamo.client).await?;
 
-    let (disc_final, disc_pk) = fetch_discussion_and_pk(&dynamo, &deliberation_id, &id).await?;
+    let (disc_final, disc_pk) = fetch_discussion_and_pk(&dynamo, &space_id, &discussion_id).await?;
     let members_resp = list_members_resp(&dynamo, &disc_pk).await?;
     participants_resp = list_participants_resp(&dynamo, &disc_pk).await?;
 

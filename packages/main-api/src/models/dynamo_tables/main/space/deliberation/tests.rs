@@ -181,16 +181,16 @@ async fn tests_create_deliberation() {
     let deliberation: DeliberationDetailResponse = metadatas.into();
 
     assert_eq!(deliberation.summary.files[0].name, "excel file".to_string());
-    // assert_eq!(deliberation.discussions[0].members.len(), 1);
-    // assert_eq!(deliberation.discussions[0].participants.len(), 1);
-    // assert_eq!(
-    //     deliberation.elearnings.files[0].name,
-    //     "elearning file".to_string()
-    // );
-    // assert_eq!(deliberation.surveys.questions.len(), 2);
-    // assert_eq!(deliberation.surveys.responses.len(), 1);
-    // assert_eq!(
-    //     deliberation.recommendation.files[0].name,
-    //     "excel file recommendation"
-    // );
+    assert_eq!(deliberation.discussions[0].members.len(), 1);
+    assert_eq!(deliberation.discussions[0].participants.len(), 1);
+    assert_eq!(
+        deliberation.elearnings.files[0].name,
+        "elearning file".to_string()
+    );
+    assert_eq!(deliberation.surveys.questions.len(), 2);
+    assert_eq!(deliberation.surveys.responses.len(), 1);
+    assert_eq!(
+        deliberation.recommendation.files[0].name,
+        "excel file recommendation"
+    );
 }

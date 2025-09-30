@@ -15,7 +15,7 @@ pub struct DeliberationSpaceSurvey {
 
 #[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, JsonSchema)]
 pub struct SurveyCreateRequest {
-    pub id: Option<String>,
+    pub survey_pk: Option<String>,
     pub started_at: i64,
     pub ended_at: i64,
     pub status: SurveyStatus,
@@ -25,7 +25,7 @@ pub struct SurveyCreateRequest {
 
 #[derive(Debug, Clone, Default, serde::Serialize, JsonSchema)]
 pub struct DeliberationSurveyResponse {
-    pub pk: String,
+    pub pk: Partition,
 
     pub started_at: i64,
     pub ended_at: i64,
@@ -43,7 +43,7 @@ impl From<DeliberationSpaceSurvey> for DeliberationSurveyResponse {
             _ => "".to_string(),
         };
         Self {
-            pk,
+            pk: Partition::Survey(pk.to_string()),
             started_at: survey.started_at,
             ended_at: survey.ended_at,
             status: survey.status,

@@ -101,7 +101,7 @@ impl DeliberationSpaceParticipant {
 
 #[derive(Debug, Clone, Default, serde::Serialize, schemars::JsonSchema)]
 pub struct DiscussionParticipantResponse {
-    pub user_pk: String,
+    pub user_pk: Partition,
     pub author_display_name: String,
     pub author_profile_url: String,
     pub author_username: String,
@@ -110,12 +110,8 @@ pub struct DiscussionParticipantResponse {
 
 impl From<DeliberationSpaceParticipant> for DiscussionParticipantResponse {
     fn from(p: DeliberationSpaceParticipant) -> Self {
-        let user_pk = match p.clone().user_pk {
-            Partition::User(v) | Partition::Team(v) => v,
-            _ => String::new(),
-        };
         Self {
-            user_pk,
+            user_pk: p.clone().user_pk,
             author_display_name: p.clone().author_display_name,
             author_profile_url: p.clone().author_profile_url,
             author_username: p.clone().author_username,

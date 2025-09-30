@@ -2,7 +2,7 @@ use crate::controllers::v3::auth::verification::verify_code::VerifyCodeResponse;
 use crate::controllers::v3::spaces::deliberations::discussions::create_discussion::create_discussion_handler;
 use crate::controllers::v3::spaces::deliberations::discussions::end_recording::end_recording_handler;
 use crate::controllers::v3::spaces::deliberations::discussions::exit_meeting::exit_meeting_handler;
-use crate::controllers::v3::spaces::deliberations::discussions::participant_meeting::participant_meeting_handler;
+// use crate::controllers::v3::spaces::deliberations::discussions::participant_meeting::participant_meeting_handler;
 use crate::controllers::v3::spaces::deliberations::discussions::start_meeting::start_meeting_handler;
 use crate::controllers::v3::spaces::deliberations::discussions::start_recording::start_recording_handler;
 use crate::controllers::v3::spaces::deliberations::responses::create_response_answer::create_response_answer_handler;
@@ -264,17 +264,17 @@ pub fn route(
                                     ),
                                 ),
                             )
-                            .route(
-                                "/:id/participant-meeting",
-                                post_with(
-                                    participant_meeting_handler,
-                                    api_docs!(
-                                        Json<DeliberationDiscussionResponse>,
-                                        "Participant meeting",
-                                        "Participant meeting for discussion with id"
-                                    ),
-                                ),
-                            )
+                            // .route(
+                            //     "/:id/participant-meeting",
+                            //     post_with(
+                            //         participant_meeting_handler,
+                            //         api_docs!(
+                            //             Json<DeliberationDiscussionResponse>,
+                            //             "Participant meeting",
+                            //             "Participant meeting for discussion with id"
+                            //         ),
+                            //     ),
+                            // )
                             .route(
                                 "/:id/start-recording",
                                 post_with(

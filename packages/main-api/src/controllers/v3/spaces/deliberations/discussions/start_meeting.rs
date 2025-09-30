@@ -23,24 +23,32 @@ use dto::{aide, schemars};
     Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
 )]
 pub struct DeliberationDiscussionByIdPath {
-    pub deliberation_id: String,
-    pub id: String,
+    pub space_pk: String,
+    pub discussion_pk: String,
 }
 
 pub async fn start_meeting_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     Extension(_auth): Extension<Option<Authorization>>,
     Path(DeliberationDiscussionByIdPath {
-        deliberation_id,
-        id,
+        space_pk,
+        discussion_pk,
     }): Path<DeliberationDiscussionByIdPath>,
 ) -> Result<Json<DeliberationDiscussionResponse>, Error2> {
     let client = crate::utils::aws_chime_sdk_meeting::ChimeMeetingService::new().await;
+    let space_id = space_pk.split("#").last().unwrap_or_default().to_string();
+    let discussion_id = discussion_pk
+        .split("#")
+        .last()
+        .unwrap_or_default()
+        .to_string();
 
     let disc = DeliberationSpaceDiscussion::get(
         &dynamo.client,
-        &Partition::DeliberationSpace(deliberation_id.to_string()),
-        Some(EntityType::DeliberationSpaceDiscussion(id.to_string())),
+        &space_pk,
+        Some(EntityType::DeliberationSpaceDiscussion(
+            discussion_id.to_string(),
+        )),
     )
     .await?;
 
@@ -53,16 +61,18 @@ pub async fn start_meeting_handler(
     let _ = ensure_current_meeting(
         dynamo.clone(),
         &client,
-        deliberation_id.clone(),
-        id.clone(),
+        space_id.clone(),
+        discussion_id.clone(),
         &disc,
     )
     .await;
 
     let disc = DeliberationSpaceDiscussion::get(
         &dynamo.client,
-        &Partition::DeliberationSpace(deliberation_id.to_string()),
-        Some(EntityType::DeliberationSpaceDiscussion(id.to_string())),
+        &space_pk,
+        Some(EntityType::DeliberationSpaceDiscussion(
+            discussion_id.to_string(),
+        )),
     )
     .await?;
 
