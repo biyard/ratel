@@ -69,20 +69,18 @@ mod r {
     }
 }
 
-
 #[cfg(feature = "no-secret")]
 mod noop {
     use std::sync::Arc;
 
-    pub struct SqsClient {
-    }
+    pub struct SqsClient {}
 
     impl SqsClient {
         pub async fn new() -> Arc<Self> {
             Arc::new(Self {})
         }
 
-        pub async fn send_message(&self, message: &str) -> dto::Result<()> {
+        pub async fn send_message(&self, _message: &str) -> dto::Result<()> {
             Ok(())
         }
     }

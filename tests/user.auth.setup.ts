@@ -14,11 +14,13 @@ test("create storage state", async ({ page }) => {
   await page.getByText("Create an account").click();
 
   await page.getByPlaceholder("Email", { exact: true }).fill(email);
-  await page.getByText("Send").click();
+  await page.getByText("Send", { exact: true }).click();
 
-  await page
-    .getByPlaceholder("Verify code in your email.", { exact: true })
-    .fill("000000");
+  const codeInput = page.getByPlaceholder("Verify code in your email.", {
+    exact: true,
+  });
+  await expect(codeInput).toBeVisible({ timeout: CONFIGS.PAGE_WAIT_TIME });
+  await codeInput.fill("000000");
   await page.getByText("Verify").click();
 
   await page.getByPlaceholder(/password/i).fill(password);
