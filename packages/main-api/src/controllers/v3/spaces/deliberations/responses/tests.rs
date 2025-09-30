@@ -6,10 +6,7 @@ use crate::{
         SurveyCreateRequest,
     },
     post,
-    tests::{
-        ensure_logged_in_and_get_cookie,
-        v3_setup::{TestContextV3, setup_v3},
-    },
+    tests::v3_setup::{TestContextV3, setup_v3},
     types::{ChoiceQuestion, LinearScaleQuestion, SurveyQuestion, SurveyStatus},
 };
 use dto::File;
@@ -18,16 +15,17 @@ use crate::types::SurveyAnswer;
 
 #[tokio::test]
 async fn test_create_response_answer_handler() {
-    let TestContextV3 { app, now, ddb, .. } = setup_v3().await;
+    let TestContextV3 {
+        app,
+        test_user: (_, headers),
+        ..
+    } = setup_v3().await;
     let uid = uuid::Uuid::new_v4().to_string();
-
-    let (cookie, _email, _username) =
-        ensure_logged_in_and_get_cookie(app.clone(), ddb.clone(), now).await;
 
     let (status, _headers, body) = post! {
         app: app,
         path: "/v3/spaces/deliberation",
-        cookie: cookie,
+        headers: headers.clone(),
         body: {
             "feed_id": uid
         },
@@ -44,7 +42,7 @@ async fn test_create_response_answer_handler() {
     let (status, _headers, _body) = post! {
         app: app,
         path: path.clone(),
-        cookie: cookie,
+        headers: headers.clone(),
         body: {
             "title": Some("deliberation title".to_string()),
             "html_contents": Some("<div>deliberation description</div>".to_string()),
@@ -134,7 +132,7 @@ async fn test_create_response_answer_handler() {
     let (status, _headers, body) = post! (
         app: app,
         path: path.clone(),
-        cookie: cookie,
+        headers: headers.clone(),
         body: {
             "survey_pk": survey_pk.to_string(),
             "survey_type": crate::types::SurveyType::Survey,
@@ -168,16 +166,17 @@ async fn test_create_response_answer_handler() {
 
 #[tokio::test]
 async fn test_get_response_answer_handler() {
-    let TestContextV3 { app, now, ddb, .. } = setup_v3().await;
+    let TestContextV3 {
+        app,
+        test_user: (_, headers),
+        ..
+    } = setup_v3().await;
     let uid = uuid::Uuid::new_v4().to_string();
-
-    let (cookie, _email, _username) =
-        ensure_logged_in_and_get_cookie(app.clone(), ddb.clone(), now).await;
 
     let (status, _headers, body) = post! {
         app: app,
         path: "/v3/spaces/deliberation",
-        cookie: cookie,
+        headers: headers.clone(),
         body: {
             "feed_id": uid
         },
@@ -194,7 +193,7 @@ async fn test_get_response_answer_handler() {
     let (status, _headers, _body) = post! {
         app: app,
         path: path.clone(),
-        cookie: cookie,
+        headers: headers.clone(),
         body: {
             "title": Some("deliberation title".to_string()),
             "html_contents": Some("<div>deliberation description</div>".to_string()),
@@ -284,7 +283,7 @@ async fn test_get_response_answer_handler() {
     let (status, _headers, body) = post! (
         app: app,
         path: path.clone(),
-        cookie: cookie,
+        headers: headers.clone(),
         body: {
             "survey_pk": survey_pk.to_string(),
             "survey_type": crate::types::SurveyType::Survey,
@@ -324,8 +323,8 @@ async fn test_get_response_answer_handler() {
     let (_status, _headers, body) = get! (
         app: app,
         path: path.clone(),
-        cookie: cookie,
-        response_type: DeliberationSpaceResponse,
+        headers: headers,
+        response_type: DeliberationSpaceResponse
     );
 
     eprintln!("response_answer: {:?}", body);
