@@ -87,6 +87,12 @@ pub async fn migrate_posts(
             dto::FeedStatus::Published => crate::types::PostStatus::Published,
         };
         post.user_pk = author.pk.clone();
+
+        if let Err(e) = post.create(cli).await {
+            tracing::error!("Failed to create post {}: {:?}", id, e);
+        } else {
+            tracing::info!("Successfully migrated post {}", id);
+        }
     }
 
     Ok(())
