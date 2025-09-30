@@ -10,8 +10,12 @@ use crate::{
         },
         user::User,
     },
-    types::{EntityType, Partition, SpaceVisibility},
-    utils::{aws::DynamoClient, dynamo_extractor::extract_user_from_session},
+    types::{EntityType, Partition, SpaceVisibility, TeamGroupPermission},
+    utils::{
+        aws::DynamoClient,
+        dynamo_extractor::extract_user_from_session,
+        security::{RatelResource, check_permission_from_session},
+    },
 };
 use dto::File;
 use dto::by_axum::axum::{
@@ -68,12 +72,32 @@ pub async fn update_deliberation_handler(
 ) -> Result<Json<DeliberationDetailResponse>, Error2> {
     let space_pk = space_pk.replace("%23", "#");
     let user = extract_user_from_session(&dynamo.client, &session).await?;
-    let _space = DeliberationSpace::get(&dynamo.client, &space_pk, Some(EntityType::Space))
+    let space = DeliberationSpace::get(&dynamo.client, &space_pk, Some(EntityType::Space))
         .await?
-        .ok_or(Error2::NotFound(format!(
-            "Space not found: (space ID: {:?})",
-            space_pk
-        )))?;
+        .ok_or(Error2::NotFound("Space not found".to_string()))?;
+
+    let _ = match space.user_pk.clone() {
+        Partition::Team(_) => {
+            check_permission_from_session(
+                &dynamo.client,
+                &session,
+                RatelResource::Team {
+                    team_pk: space.user_pk.to_string(),
+                },
+                vec![TeamGroupPermission::SpaceEdit],
+            )
+            .await?;
+        }
+        Partition::User(_) => {
+            let user = extract_user_from_session(&dynamo.client, &session).await?;
+            if user.pk != space.user_pk {
+                return Err(Error2::Unauthorized(
+                    "You do not have permission to delete this post".into(),
+                ));
+            }
+        }
+        _ => return Err(Error2::InternalServerError("Invalid post author".into())),
+    };
 
     SpaceCommon::updater(&space_pk, EntityType::SpaceCommon)
         .with_visibility(req.visibility)

@@ -1,8 +1,16 @@
 use crate::{
     AppState, Error2,
-    models::space::{DeliberationDetailResponse, DeliberationMetadata, DeliberationSpaceResponse},
-    types::{Partition, SurveyAnswer, SurveyType},
-    utils::dynamo_extractor::extract_user_from_session,
+    models::space::{
+        DeliberationDetailResponse, DeliberationMetadata, DeliberationSpace,
+        DeliberationSpaceResponse, SpaceCommon,
+    },
+    types::{
+        EntityType, Partition, SpaceVisibility, SurveyAnswer, SurveyType, TeamGroupPermission,
+    },
+    utils::{
+        dynamo_extractor::extract_user_from_session,
+        security::{RatelResource, check_permission_from_session},
+    },
 };
 use dto::by_axum::axum::{
     Extension,
@@ -51,6 +59,39 @@ pub async fn create_response_answer_handler(
         .last()
         .unwrap_or_default()
         .to_string();
+
+    let space = DeliberationSpace::get(&dynamo.client, &space_pk, Some(EntityType::Space))
+        .await?
+        .ok_or(Error2::NotFound("Space not found".to_string()))?;
+
+    let space_common = SpaceCommon::get(&dynamo.client, &space_pk, Some(EntityType::SpaceCommon))
+        .await?
+        .ok_or(Error2::NotFound("Space not found".to_string()))?;
+
+    if space_common.visibility != SpaceVisibility::Public {
+        let _ = match space.user_pk.clone() {
+            Partition::Team(_) => {
+                check_permission_from_session(
+                    &dynamo.client,
+                    &session,
+                    RatelResource::Team {
+                        team_pk: space.user_pk.to_string(),
+                    },
+                    vec![TeamGroupPermission::SpaceRead],
+                )
+                .await?;
+            }
+            Partition::User(_) => {
+                let user = extract_user_from_session(&dynamo.client, &session).await?;
+                if user.pk != space.user_pk {
+                    return Err(Error2::Unauthorized(
+                        "You do not have permission to delete this post".into(),
+                    ));
+                }
+            }
+            _ => return Err(Error2::InternalServerError("Invalid post author".into())),
+        };
+    }
 
     let response = DeliberationSpaceResponse::new(
         Partition::DeliberationSpace(pk_id.to_string()),
