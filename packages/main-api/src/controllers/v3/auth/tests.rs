@@ -129,7 +129,7 @@ async fn test_email_with_invalid_password() {
         body: {
             "email": email,
             "password": "0x11112",
-        },
+        }
     };
 
     assert_eq!(status, 401);
@@ -166,7 +166,7 @@ async fn test_email_with_password_signup_with_invalid_code() {
             "description": "This is a test user.",
             "term_agreed": true,
             "informed_agreed": true,
-        },
+        }
     };
 
     assert_eq!(status, 400);
