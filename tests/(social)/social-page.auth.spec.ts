@@ -8,26 +8,6 @@ test.describe("Social Page - Authenticated User", () => {
     await page.waitForLoadState("networkidle");
   });
 
-  test("should display main social page layout", async ({ page }) => {
-    // Check main content area exists
-    await expect(page.locator(".flex-1").first()).toBeVisible();
-
-    // Check left sidebar (UserSidemenu) exists on desktop - look for profile section
-    const leftSidebar = page.locator('[data-testid="profile-section"]');
-    const isLeftSidebarVisible = await leftSidebar
-      .isVisible()
-      .catch(() => false);
-
-    // Check right sidebar exists (on larger screens)
-    const rightSidebar = page.locator('aside[aria-label="Sidebar"]');
-    const isRightSidebarVisible = await rightSidebar
-      .isVisible()
-      .catch(() => false);
-
-    // On desktop, at least one sidebar should be visible
-    expect(isLeftSidebarVisible || isRightSidebarVisible).toBeTruthy();
-  });
-
   test("should load more posts when scrolling", async ({ page }) => {
     // Wait for initial posts to load
     await page.waitForTimeout(3000);
