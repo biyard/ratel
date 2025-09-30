@@ -19,13 +19,14 @@ async fn test_create_discussion_handler() {
         ..
     } = setup_v3().await;
     let uid = uuid::Uuid::new_v4().to_string();
+    let feed_pk = Partition::Feed(uid.clone());
 
     let (status, _headers, body) = post! {
         app: app,
         path: "/v3/spaces/deliberation",
         headers: headers.clone(),
         body: {
-            "feed_id": uid
+            "feed_pk": feed_pk
         },
         response_type: CreateDeliberationResponse
     };
@@ -78,13 +79,14 @@ async fn test_start_meeting_handler() {
         ..
     } = setup_v3().await;
     let uid = uuid::Uuid::new_v4().to_string();
+    let feed_pk = Partition::Feed(uid.clone());
 
     let (status, _headers, body) = post! {
         app: app,
         path: "/v3/spaces/deliberation",
         headers: headers.clone(),
         body: {
-            "feed_id": uid
+            "feed_pk": feed_pk
         },
         response_type: CreateDeliberationResponse
     };
@@ -155,13 +157,14 @@ async fn test_create_participants_handler() {
         ..
     } = setup_v3().await;
     let uid = uuid::Uuid::new_v4().to_string();
+    let feed_pk = Partition::Feed(uid.clone());
 
     let (status, _headers, body) = post! {
         app: app,
         path: "/v3/spaces/deliberation",
         headers: headers.clone(),
         body: {
-            "feed_id": uid
+            "feed_pk": feed_pk
         },
         response_type: CreateDeliberationResponse
     };
@@ -237,13 +240,14 @@ async fn test_exit_meeting_handler() {
         ..
     } = setup_v3().await;
     let uid = uuid::Uuid::new_v4().to_string();
+    let feed_pk = Partition::Feed(uid.clone());
 
     let (status, _headers, body) = post! {
         app: app,
         path: "/v3/spaces/deliberation",
         headers: headers.clone(),
         body: {
-            "feed_id": uid
+            "feed_pk": feed_pk
         },
         response_type: CreateDeliberationResponse
     };
@@ -360,12 +364,13 @@ async fn test_start_recording_handler() {
         ..
     } = setup_v3().await;
     let uid = uuid::Uuid::new_v4().to_string();
+    let feed_pk = Partition::Feed(uid.clone());
 
     let (status, _headers, body) = post! {
         app: app,
         path: "/v3/spaces/deliberation",
         headers: headers.clone(),
-        body: { "feed_id": uid },
+        body: { "feed_pk": feed_pk },
         response_type: CreateDeliberationResponse
     };
     assert_eq!(status, 200);
@@ -445,12 +450,13 @@ async fn test_end_recording_handler() {
         ..
     } = setup_v3().await;
     let uid = uuid::Uuid::new_v4().to_string();
+    let feed_pk = Partition::Feed(uid.clone());
 
     let (status, _headers, created_space) = post! {
         app: app,
         path: "/v3/spaces/deliberation",
         headers: headers.clone(),
-        body: { "feed_id": uid },
+        body: { "feed_pk": feed_pk },
         response_type: CreateDeliberationResponse
     };
     assert_eq!(status, 200);

@@ -1,5 +1,6 @@
 use crate::types::*;
 use bdk::prelude::*;
+use dto::SpaceStatus;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default)]
 pub struct SpaceCommon {
@@ -17,6 +18,8 @@ pub struct SpaceCommon {
 
     #[dynamo(prefix = "POST_PK", name = "find_by_post_pk", index = "gsi1", pk)]
     pub post_pk: Partition,
+
+    pub status: SpaceStatus,
 }
 
 impl SpaceCommon {
@@ -27,6 +30,7 @@ impl SpaceCommon {
             post_pk,
             participants: 0,
             visibility: SpaceVisibility::Public,
+            status: SpaceStatus::Draft,
         }
     }
 

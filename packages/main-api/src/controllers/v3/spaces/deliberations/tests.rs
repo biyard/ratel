@@ -22,13 +22,14 @@ async fn test_create_space_handler() {
         ..
     } = setup_v3().await;
     let uid = uuid::Uuid::new_v4().to_string();
+    let feed_pk = Partition::Feed(uid.clone());
 
     let (status, _headers, _body) = post! {
         app: app,
         path: "/v3/spaces/deliberation",
         headers: headers,
         body: {
-            "feed_id": uid
+            "feed_pk": feed_pk
         },
         response_type: CreateDeliberationResponse
     };
@@ -47,13 +48,14 @@ async fn test_update_space_handler() {
         ..
     } = setup_v3().await;
     let uid = uuid::Uuid::new_v4().to_string();
+    let feed_pk = Partition::Feed(uid.clone());
 
     let (_status, _headers, body) = post! {
         app: app,
         path: "/v3/spaces/deliberation",
         headers: headers.clone(),
         body: {
-            "feed_id": uid
+            "feed_pk": feed_pk
         },
         response_type: CreateDeliberationResponse
     };
@@ -289,13 +291,14 @@ async fn test_delete_space_handler() {
         ..
     } = setup_v3().await;
     let uid = uuid::Uuid::new_v4().to_string();
+    let feed_pk = Partition::Feed(uid.clone());
 
     let (status, _headers, body) = post! {
         app: app,
         path: "/v3/spaces/deliberation",
         headers: headers.clone(),
         body: {
-            "feed_id": uid
+            "feed_pk": feed_pk
         },
         response_type: CreateDeliberationResponse
     };
@@ -425,13 +428,14 @@ async fn test_get_space_handler() {
         ..
     } = setup_v3().await;
     let uid = uuid::Uuid::new_v4().to_string();
+    let feed_pk = Partition::Feed(uid.clone());
 
     let (status, _headers, body) = post! {
         app: app,
         path: "/v3/spaces/deliberation",
         headers: headers.clone(),
         body: {
-            "feed_id": uid
+            "feed_pk": feed_pk
         },
         response_type: CreateDeliberationResponse
     };

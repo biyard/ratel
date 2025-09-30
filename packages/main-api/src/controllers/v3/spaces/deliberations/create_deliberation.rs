@@ -17,7 +17,7 @@ use validator::Validate;
 #[derive(Debug, Clone, Deserialize, Default, aide::OperationIo, JsonSchema, Validate)]
 pub struct CreateDeliberationRequest {
     #[schemars(description = "Post ID")]
-    pub feed_id: String,
+    pub feed_pk: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, aide::OperationIo, JsonSchema)]
@@ -30,6 +30,9 @@ pub async fn create_deliberation_handler(
     Extension(session): Extension<Session>,
     Json(req): Json<CreateDeliberationRequest>,
 ) -> Result<Json<CreateDeliberationResponse>, Error2> {
+    let feed_pk = req.feed_pk.replace("%23", "#");
+    let feed_id = feed_pk.split('#').last().unwrap().to_string();
+
     tracing::debug!("create_deliberation_handler called with req: {:?}", req,);
     let user = extract_user_from_session(&dynamo.client, &session).await?;
     tracing::debug!("User extracted: {:?}", user);
@@ -39,7 +42,7 @@ pub async fn create_deliberation_handler(
 
     let common = SpaceCommon::new(
         deliberation.pk.clone(),
-        crate::types::Partition::Feed(req.feed_id),
+        crate::types::Partition::Feed(feed_id),
     );
     common.create(&dynamo.client).await?;
 
