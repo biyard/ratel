@@ -5,12 +5,13 @@ use bdk::prelude::*;
 use dto::by_types::DatabaseConfig;
 use std::time::SystemTime;
 
-use crate::{api_main, config};
+use crate::{api_main, config, models::user::User, tests::create_user_session};
 
 pub struct TestContextV3 {
     pub app: AxumRouter,
     pub now: u64,
     pub ddb: aws_sdk_dynamodb::Client,
+    pub test_user: (User, axum::http::HeaderMap),
 }
 
 pub async fn setup_v3() -> TestContextV3 {
@@ -48,6 +49,12 @@ pub async fn setup_v3() -> TestContextV3 {
     let aws_config = builder.build();
 
     let ddb = Client::from_conf(aws_config);
+    let (user, headers) = create_user_session(app.clone(), &ddb).await;
 
-    TestContextV3 { app, now, ddb }
+    TestContextV3 {
+        app,
+        now,
+        ddb,
+        test_user: (user, headers),
+    }
 }
