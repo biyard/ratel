@@ -7,7 +7,7 @@ use crate::{
     },
     post,
     tests::v3_setup::{TestContextV3, setup_v3},
-    types::{ChoiceQuestion, LinearScaleQuestion, SurveyQuestion, SurveyStatus},
+    types::{ChoiceQuestion, LinearScaleQuestion, Partition, SurveyQuestion, SurveyStatus},
 };
 use dto::File;
 
@@ -21,13 +21,14 @@ async fn test_create_response_answer_handler() {
         ..
     } = setup_v3().await;
     let uid = uuid::Uuid::new_v4().to_string();
+    let feed_pk = Partition::Feed(uid.clone());
 
     let (status, _headers, body) = post! {
         app: app,
         path: "/v3/spaces/deliberation",
         headers: headers.clone(),
         body: {
-            "feed_id": uid
+            "feed_pk": feed_pk
         },
         response_type: CreateDeliberationResponse
     };
@@ -172,13 +173,14 @@ async fn test_get_response_answer_handler() {
         ..
     } = setup_v3().await;
     let uid = uuid::Uuid::new_v4().to_string();
+    let feed_pk = Partition::Feed(uid.clone());
 
     let (status, _headers, body) = post! {
         app: app,
         path: "/v3/spaces/deliberation",
         headers: headers.clone(),
         body: {
-            "feed_id": uid
+            "feed_pk": feed_pk
         },
         response_type: CreateDeliberationResponse
     };

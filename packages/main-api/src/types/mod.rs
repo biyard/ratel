@@ -11,6 +11,7 @@ pub mod post_type;
 pub mod visibility;
 
 pub mod relationship;
+pub mod space_status;
 pub mod space_type;
 pub mod space_visibility;
 pub mod survey_answer;

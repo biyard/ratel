@@ -45,7 +45,7 @@ ECR_NAME ?= $(shell aws ecr describe-repositories --repository-names $(REPO_NAME
 
 DATABASE_TYPE ?= postgres
 DATABASE_URL ?= "postgresql://postgres:postgres@postgres:5432/ratel"
-DYNAMO_ENDPOINT ?= http://localstack:4566
+DYNAMO_ENDPOINT ?= http://localhost:4566
 DYNAMO_TABLE_PREFIX ?= ratel-$(ENV)
 KAIA_ENDPOINT ?= https://public-en-kairos.node.kaia.io
 KAIA_OWNER_ADDR ?= $(strip $(shell ./key.sh | awk '{print $$1}'))
