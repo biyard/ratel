@@ -7,14 +7,17 @@ use dto::{
     axum::AxumRouter,
     by_axum::auth::{Authorization, DynamoUserSession},
 };
-use reqwest::header::HeaderValue;
+use tower_sessions::Session;
 
 use crate::{
     AppState,
-    models::{email::EmailVerification, user::User},
+    models::user::User,
     post,
-    types::{EntityType, Partition},
-    utils::aws::{DynamoClient, SesClient},
+    types::UserType,
+    utils::{
+        aws::{DynamoClient, SesClient},
+        password::hash_password,
+    },
 };
 
 pub fn get_test_aws_config() -> aws_config::SdkConfig {
@@ -42,68 +45,6 @@ pub fn create_app_state() -> AppState {
         ses: SesClient::mock(aws_config),
         pool: sqlx::Pool::connect_lazy("postgres://postgres:password@localhost/postgres").unwrap(),
     }
-}
-
-pub async fn ensure_logged_in_and_get_cookie(
-    app: AxumRouter,
-    ddb: aws_sdk_dynamodb::Client,
-    now: u64,
-) -> (HeaderValue, String, String) {
-    let email = format!("testuser{}@example.com", now);
-    let username = format!("testuser{:x}", now);
-
-    let (status, _headers, body) = post! {
-        app: app,
-        path: "/v3/auth/verification/send-verification-code",
-        body: { "email": email.clone() },
-        response_type: crate::controllers::v3::auth::verification::send_code::SendCodeResponse,
-    };
-    assert_eq!(status, 200, "send-verification-code failed");
-    assert!(body.expired_at > now as i64, "expired_at must be in future");
-
-    let EmailVerification { value: code, .. } = EmailVerification::get(
-        &ddb,
-        Partition::Email(email.clone()),
-        Some(EntityType::EmailVerification),
-    )
-    .await
-    .expect("EmailVerification::get failed")
-    .expect("verification row not found");
-
-    let (status, _headers, _user) = post! {
-        app: app,
-        path: "/v3/auth/signup",
-        body: {
-            "email": email.clone(),
-            "password": "0x1111",
-            "code": code,
-            "display_name": "testuser",
-            "username": username.clone(),
-            "profile_url": "https://example.com/profile.png",
-            "description": "This is a test user.",
-            "term_agreed": true,
-            "informed_agreed": true,
-        },
-        response_type: crate::models::user::User,
-    };
-    assert_eq!(status, 200, "signup failed");
-
-    let (status, headers, _user) = post! {
-        app: app,
-        path: "/v3/auth/login",
-        body: {
-            "email": email.clone(),
-            "password": "0x1111",
-        },
-        response_type: crate::models::user::User,
-    };
-    assert_eq!(status, 200, "login failed");
-    let cookie = headers
-        .get("set-cookie")
-        .cloned()
-        .expect("missing set-cookie header after login");
-
-    (cookie, email, username)
 }
 
 pub async fn create_test_user(cli: &aws_sdk_dynamodb::Client) -> User {
@@ -183,4 +124,43 @@ pub async fn get_test_user(cli: &aws_sdk_dynamodb::Client) -> User {
 #[deprecated(note = "use get_auth instead")]
 pub async fn create_auth(user: User) -> Authorization {
     get_auth(&user)
+}
+
+pub async fn create_user_session(
+    app: AxumRouter,
+    cli: &aws_sdk_dynamodb::Client,
+) -> (User, axum::http::HeaderMap) {
+    let uid = uuid::Uuid::new_v4().to_string();
+    let email = format!("{}@example.com", uid);
+    let password = hash_password(&uid);
+    let user = User::new(
+        format!("displayName{}", uid),
+        email.clone(),
+        "https://example.com/profile.png".to_string(),
+        true,
+        true,
+        UserType::Individual,
+        uid.clone(),
+        Some(password),
+    );
+
+    user.create(&cli).await.expect("Failed to create user");
+    // For mocking user.
+    let (_, header, _) = post! {
+        app: app,
+        path: "/v3/auth/login",
+        body: {
+            "email": email,
+            "password": uid,
+        }
+    };
+    let session_cookie = header
+        .get("set-cookie")
+        .expect("No set-cookie header found")
+        .to_str()
+        .expect("Failed to convert set-cookie header to str")
+        .to_string();
+    let mut headers = axum::http::HeaderMap::new();
+    headers.insert("cookie", session_cookie.parse().unwrap());
+    (user, headers)
 }

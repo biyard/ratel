@@ -7,7 +7,7 @@ use crate::{
     models::space::{DeliberationDetailResponse, DiscussionCreateRequest, SurveyCreateRequest},
     post,
     tests::{
-        create_app_state, create_test_user, ensure_logged_in_and_get_cookie,
+        create_app_state, create_test_user,
         v3_setup::{TestContextV3, setup_v3},
     },
     types::{ChoiceQuestion, LinearScaleQuestion, Partition, SurveyQuestion, SurveyStatus},
@@ -16,16 +16,17 @@ use dto::File;
 
 #[tokio::test]
 async fn test_create_space_handler() {
-    let TestContextV3 { app, now, ddb, .. } = setup_v3().await;
+    let TestContextV3 {
+        app,
+        test_user: (_, headers),
+        ..
+    } = setup_v3().await;
     let uid = uuid::Uuid::new_v4().to_string();
-
-    let (cookie, _email, _username) =
-        ensure_logged_in_and_get_cookie(app.clone(), ddb.clone(), now).await;
 
     let (status, _headers, _body) = post! {
         app: app,
         path: "/v3/spaces/deliberation",
-        cookie: cookie,
+        headers: headers,
         body: {
             "feed_id": uid
         },
@@ -39,16 +40,18 @@ async fn test_create_space_handler() {
 async fn test_update_space_handler() {
     let app_state = create_app_state();
     let cli = app_state.dynamo.client.clone();
-    let TestContextV3 { app, now, ddb, .. } = setup_v3().await;
-    let uid = uuid::Uuid::new_v4().to_string();
 
-    let (cookie, _email, _username) =
-        ensure_logged_in_and_get_cookie(app.clone(), ddb.clone(), now).await;
+    let TestContextV3 {
+        app,
+        test_user: (_, headers),
+        ..
+    } = setup_v3().await;
+    let uid = uuid::Uuid::new_v4().to_string();
 
     let (_status, _headers, body) = post! {
         app: app,
         path: "/v3/spaces/deliberation",
-        cookie: cookie,
+        headers: headers.clone(),
         body: {
             "feed_id": uid
         },
@@ -79,7 +82,7 @@ async fn test_update_space_handler() {
     let (status, _headers, body) = post! {
         app: app,
         path: path.clone(),
-        cookie: cookie,
+        headers: headers.clone(),
         body: {
             "title": Some("deliberation title".to_string()),
             "html_contents": Some("<div>deliberation description</div>".to_string()),
@@ -186,7 +189,7 @@ async fn test_update_space_handler() {
     let (status, _headers, body) = post! {
         app: app,
         path: path.clone(),
-        cookie: cookie,
+        headers: headers.clone(),
         body: {
             "title": Some("deliberation title".to_string()),
             "html_contents": Some("<div>deliberation description 11</div>".to_string()),
@@ -280,16 +283,17 @@ async fn test_update_space_handler() {
 async fn test_delete_space_handler() {
     let app_state = create_app_state();
     let cli = app_state.dynamo.client.clone();
-    let TestContextV3 { app, now, ddb, .. } = setup_v3().await;
+    let TestContextV3 {
+        app,
+        test_user: (_, headers),
+        ..
+    } = setup_v3().await;
     let uid = uuid::Uuid::new_v4().to_string();
-
-    let (cookie, _email, _username) =
-        ensure_logged_in_and_get_cookie(app.clone(), ddb.clone(), now).await;
 
     let (status, _headers, body) = post! {
         app: app,
         path: "/v3/spaces/deliberation",
-        cookie: cookie,
+        headers: headers.clone(),
         body: {
             "feed_id": uid
         },
@@ -318,7 +322,7 @@ async fn test_delete_space_handler() {
     let (status, _headers, _body) = post! {
         app: app,
         path: path.clone(),
-        cookie: cookie,
+        headers: headers.clone(),
         body: {
             "title": Some("deliberation title".to_string()),
             "html_contents": Some("<div>deliberation description</div>".to_string()),
@@ -405,7 +409,7 @@ async fn test_delete_space_handler() {
     let (status, _headers, _body) = post! {
         app: app,
         path: path.clone(),
-        cookie: cookie,
+        headers: headers.clone(),
         body: {},
         response_type: DeleteDeliberationResponse
     };
@@ -415,16 +419,17 @@ async fn test_delete_space_handler() {
 
 #[tokio::test]
 async fn test_get_space_handler() {
-    let TestContextV3 { app, now, ddb, .. } = setup_v3().await;
+    let TestContextV3 {
+        app,
+        test_user: (_, headers),
+        ..
+    } = setup_v3().await;
     let uid = uuid::Uuid::new_v4().to_string();
-
-    let (cookie, _email, _username) =
-        ensure_logged_in_and_get_cookie(app.clone(), ddb.clone(), now).await;
 
     let (status, _headers, body) = post! {
         app: app,
         path: "/v3/spaces/deliberation",
-        cookie: cookie,
+        headers: headers.clone(),
         body: {
             "feed_id": uid
         },
@@ -443,8 +448,7 @@ async fn test_get_space_handler() {
     let (status, _headers, body) = get! {
         app: app,
         path: &path,
-        cookie: cookie,
-        response_type: DeliberationDetailResponse,
+        headers: headers
     };
 
     eprintln!("Get deliberation response body: {:?}", body);

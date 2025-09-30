@@ -3,7 +3,7 @@ use crate::{
     models::space::DeliberationDiscussionResponse,
     post,
     tests::{
-        create_app_state, create_test_user, ensure_logged_in_and_get_cookie,
+        create_app_state, create_test_user,
         v3_setup::{TestContextV3, setup_v3},
     },
     types::Partition,
@@ -13,16 +13,17 @@ use crate::{
 async fn test_create_discussion_handler() {
     let app_state = create_app_state();
     let cli = app_state.dynamo.client.clone();
-    let TestContextV3 { app, now, ddb, .. } = setup_v3().await;
+    let TestContextV3 {
+        app,
+        test_user: (_, headers),
+        ..
+    } = setup_v3().await;
     let uid = uuid::Uuid::new_v4().to_string();
-
-    let (cookie, _email, _username) =
-        ensure_logged_in_and_get_cookie(app.clone(), ddb.clone(), now).await;
 
     let (status, _headers, body) = post! {
         app: app,
         path: "/v3/spaces/deliberation",
-        cookie: cookie,
+        headers: headers.clone(),
         body: {
             "feed_id": uid
         },
@@ -51,7 +52,7 @@ async fn test_create_discussion_handler() {
     let (status, _headers, body) = post! {
         app: app,
         path: path.clone(),
-        cookie: cookie,
+        headers: headers.clone(),
         body: {
             "name": "Test discussion title",
             "description": "Test disscussion description",
@@ -71,16 +72,17 @@ async fn test_create_discussion_handler() {
 async fn test_start_meeting_handler() {
     let app_state = create_app_state();
     let cli = app_state.dynamo.client.clone();
-    let TestContextV3 { app, now, ddb, .. } = setup_v3().await;
+    let TestContextV3 {
+        app,
+        test_user: (_, headers),
+        ..
+    } = setup_v3().await;
     let uid = uuid::Uuid::new_v4().to_string();
-
-    let (cookie, _email, _username) =
-        ensure_logged_in_and_get_cookie(app.clone(), ddb.clone(), now).await;
 
     let (status, _headers, body) = post! {
         app: app,
         path: "/v3/spaces/deliberation",
-        cookie: cookie,
+        headers: headers.clone(),
         body: {
             "feed_id": uid
         },
@@ -109,7 +111,7 @@ async fn test_start_meeting_handler() {
     let (status, _headers, body) = post! {
         app: app,
         path: path.clone(),
-        cookie: cookie,
+        headers: headers.clone(),
         body: {
             "name": "Test discussion title",
             "description": "Test disscussion description",
@@ -133,7 +135,7 @@ async fn test_start_meeting_handler() {
     let (status, _headers, body) = post! {
         app: app,
         path: path.clone(),
-        cookie: cookie,
+        headers: headers.clone(),
         body: {},
         response_type: DeliberationDiscussionResponse
     };
@@ -147,16 +149,17 @@ async fn test_start_meeting_handler() {
 async fn test_create_participants_handler() {
     let app_state = create_app_state();
     let cli = app_state.dynamo.client.clone();
-    let TestContextV3 { app, now, ddb, .. } = setup_v3().await;
+    let TestContextV3 {
+        app,
+        test_user: (_, headers),
+        ..
+    } = setup_v3().await;
     let uid = uuid::Uuid::new_v4().to_string();
-
-    let (cookie, _email, _username) =
-        ensure_logged_in_and_get_cookie(app.clone(), ddb.clone(), now).await;
 
     let (status, _headers, body) = post! {
         app: app,
         path: "/v3/spaces/deliberation",
-        cookie: cookie,
+        headers: headers.clone(),
         body: {
             "feed_id": uid
         },
@@ -185,7 +188,7 @@ async fn test_create_participants_handler() {
     let (status, _headers, body) = post! {
         app: app,
         path: path.clone(),
-        cookie: cookie,
+        headers: headers.clone(),
         body: {
             "name": "Test discussion title",
             "description": "Test disscussion description",
@@ -209,7 +212,7 @@ async fn test_create_participants_handler() {
     let (status, _headers, body) = post! {
         app: app,
         path: path.clone(),
-        cookie: cookie,
+        headers: headers.clone(),
         body: {},
         response_type: DeliberationDiscussionResponse
     };
@@ -228,16 +231,17 @@ async fn test_create_participants_handler() {
 async fn test_exit_meeting_handler() {
     let app_state = create_app_state();
     let cli = app_state.dynamo.client.clone();
-    let TestContextV3 { app, now, ddb, .. } = setup_v3().await;
+    let TestContextV3 {
+        app,
+        test_user: (_, headers),
+        ..
+    } = setup_v3().await;
     let uid = uuid::Uuid::new_v4().to_string();
-
-    let (cookie, _email, _username) =
-        ensure_logged_in_and_get_cookie(app.clone(), ddb.clone(), now).await;
 
     let (status, _headers, body) = post! {
         app: app,
         path: "/v3/spaces/deliberation",
-        cookie: cookie,
+        headers: headers.clone(),
         body: {
             "feed_id": uid
         },
@@ -266,7 +270,7 @@ async fn test_exit_meeting_handler() {
     let (status, _headers, body) = post! {
         app: app,
         path: path.clone(),
-        cookie: cookie,
+        headers: headers.clone(),
         body: {
             "name": "Test discussion title",
             "description": "Test disscussion description",
@@ -290,7 +294,7 @@ async fn test_exit_meeting_handler() {
     let (status, _headers, _body) = post! {
         app: app,
         path: path.clone(),
-        cookie: cookie,
+        headers: headers.clone(),
         body: {},
         response_type: DeliberationDiscussionResponse
     };
@@ -305,7 +309,7 @@ async fn test_exit_meeting_handler() {
     let (status, _headers, body) = post! {
         app: app,
         path: path.clone(),
-        cookie: cookie,
+        headers: headers.clone(),
         body: {},
         response_type: DeliberationDiscussionResponse
     };
@@ -334,7 +338,7 @@ async fn test_exit_meeting_handler() {
     let (status, _headers, body) = post! {
         app: app,
         path: path.clone(),
-        cookie: cookie,
+        headers: headers.clone(),
         body: {},
         response_type: DeliberationDiscussionResponse
     };
@@ -350,16 +354,17 @@ async fn test_exit_meeting_handler() {
 async fn test_start_recording_handler() {
     let app_state = create_app_state();
     let cli = app_state.dynamo.client.clone();
-    let TestContextV3 { app, now, ddb, .. } = setup_v3().await;
+    let TestContextV3 {
+        app,
+        test_user: (_, headers),
+        ..
+    } = setup_v3().await;
     let uid = uuid::Uuid::new_v4().to_string();
-
-    let (cookie, _email, _username) =
-        ensure_logged_in_and_get_cookie(app.clone(), ddb.clone(), now).await;
 
     let (status, _headers, body) = post! {
         app: app,
         path: "/v3/spaces/deliberation",
-        cookie: cookie,
+        headers: headers.clone(),
         body: { "feed_id": uid },
         response_type: CreateDeliberationResponse
     };
@@ -384,7 +389,7 @@ async fn test_start_recording_handler() {
     let (status, _headers, disc_body) = post! {
         app: app,
         path: create_disc_path,
-        cookie: cookie,
+        headers: headers.clone(),
         body: {
             "name": "recording test",
             "description": "recording test desc",
@@ -406,7 +411,7 @@ async fn test_start_recording_handler() {
     let (status, _headers, _started_meeting) = post! {
         app: app,
         path: start_meeting_path,
-        cookie: cookie,
+        headers: headers.clone(),
         body: {},
         response_type: DeliberationDiscussionResponse
     };
@@ -419,7 +424,7 @@ async fn test_start_recording_handler() {
     let (status, _headers, resp) = post! {
         app: app,
         path: start_recording_path,
-        cookie: cookie,
+        headers: headers.clone(),
         body: {},
         response_type: DeliberationDiscussionResponse
     };
@@ -434,16 +439,17 @@ async fn test_start_recording_handler() {
 async fn test_end_recording_handler() {
     let app_state = create_app_state();
     let cli = app_state.dynamo.client.clone();
-    let TestContextV3 { app, now, ddb, .. } = setup_v3().await;
+    let TestContextV3 {
+        app,
+        test_user: (_, headers),
+        ..
+    } = setup_v3().await;
     let uid = uuid::Uuid::new_v4().to_string();
-
-    let (cookie, _email, _username) =
-        ensure_logged_in_and_get_cookie(app.clone(), ddb.clone(), now).await;
 
     let (status, _headers, created_space) = post! {
         app: app,
         path: "/v3/spaces/deliberation",
-        cookie: cookie,
+        headers: headers.clone(),
         body: { "feed_id": uid },
         response_type: CreateDeliberationResponse
     };
@@ -468,7 +474,7 @@ async fn test_end_recording_handler() {
     let (status, _headers, disc_body) = post! {
         app: app,
         path: create_disc_path,
-        cookie: cookie,
+        headers: headers.clone(),
         body: {
             "name": "recording test",
             "description": "recording test desc",
@@ -490,7 +496,7 @@ async fn test_end_recording_handler() {
     let (status, _, _) = post! {
         app: app,
         path: start_meeting_path,
-        cookie: cookie,
+        headers: headers.clone(),
         body: {},
         response_type: DeliberationDiscussionResponse
     };
@@ -503,7 +509,7 @@ async fn test_end_recording_handler() {
     let (status, _, _) = post! {
         app: app,
         path: start_recording_path,
-        cookie: cookie,
+        headers: headers.clone(),
         body: {},
         response_type: DeliberationDiscussionResponse
     };
@@ -516,7 +522,7 @@ async fn test_end_recording_handler() {
     let (status, _headers, resp) = post! {
         app: app,
         path: end_recording_path,
-        cookie: cookie,
+        headers: headers.clone(),
         body: {},
         response_type: DeliberationDiscussionResponse
     };
