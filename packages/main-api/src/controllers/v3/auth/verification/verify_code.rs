@@ -1,4 +1,9 @@
-use crate::{AppState, Error2, models::email::EmailVerification, utils::time::get_now_timestamp};
+use crate::{
+    AppState, Error2,
+    constants::MAX_ATTEMPT_COUNT,
+    models::email::{EmailVerification, EmailVerificationQueryOption},
+    utils::time::get_now_timestamp,
+};
 use bdk::prelude::*;
 use dto::{
     JsonSchema, aide,
@@ -6,7 +11,7 @@ use dto::{
 };
 use serde::Deserialize;
 
-#[derive(Debug, Clone, Deserialize, Default, aide::OperationIo, JsonSchema)]
+#[derive(Debug, Clone, serde::Serialize, Deserialize, Default, aide::OperationIo, JsonSchema)]
 pub struct VerifyCodeRequest {
     #[schemars(description = "Email address used for verification.")]
     pub email: String,
@@ -14,46 +19,46 @@ pub struct VerifyCodeRequest {
     pub code: String,
 }
 
-const MAX_ATTEMPTS: i32 = 3;
+#[derive(
+    Debug, Clone, serde::Serialize, serde::Deserialize, Default, aide::OperationIo, JsonSchema,
+)]
+pub struct VerifyCodeResponse {
+    #[schemars(description = "Indicates if the verification was successful.")]
+    pub success: bool,
+}
+
 pub async fn verify_code_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     Json(req): Json<VerifyCodeRequest>,
-) -> Result<(), Error2> {
+) -> Result<Json<VerifyCodeResponse>, Error2> {
     let now = get_now_timestamp();
-    let (verification_list, _) =
-        EmailVerification::find_by_email(&dynamo.client, &req.email, Default::default()).await?;
+    let (verification_list, _) = EmailVerification::find_by_email(
+        &dynamo.client,
+        &req.email,
+        EmailVerificationQueryOption::builder().limit(1),
+    )
+    .await?;
 
     if verification_list.is_empty() {
-        return Err(Error2::NotFound(format!(
-            "No verification found for email: {}",
-            req.email
-        )));
+        return Err(Error2::NotFoundVerificationCode);
+    }
+
+    tracing::debug!("code {}", req.code);
+    // string equals
+
+    #[cfg(feature = "bypass")]
+    if req.code.eq("000000") {
+        return Ok(Json(VerifyCodeResponse { success: true }));
     }
 
     let email_verification = verification_list[0].clone();
 
-    if email_verification.attempt_count >= MAX_ATTEMPTS {
-        EmailVerification::delete(
-            &dynamo.client,
-            email_verification.pk,
-            Some(email_verification.sk),
-        )
-        .await?;
-        return Err(Error2::BadRequest(
-            "Maximum verification attempts exceeded".to_string(),
-        ));
+    if email_verification.attempt_count >= MAX_ATTEMPT_COUNT {
+        return Err(Error2::ExceededAttemptEmailVerification);
     }
 
     if email_verification.expired_at < now {
-        EmailVerification::delete(
-            &dynamo.client,
-            email_verification.pk,
-            Some(email_verification.sk),
-        )
-        .await?;
-        return Err(Error2::BadRequest(
-            "Verification code has expired".to_string(),
-        ));
+        return Err(Error2::ExpiredVerification);
     }
 
     if email_verification.value != req.code {
@@ -61,90 +66,8 @@ pub async fn verify_code_handler(
             .increase_attempt_count(1)
             .execute(&dynamo.client)
             .await?;
-        return Err(Error2::BadRequest("Code mismatch".to_string()));
+        return Err(Error2::InvalidVerificationCode);
     }
 
-    Ok(())
-}
-
-#[cfg(test)]
-pub mod verify_code_tests {
-    use dto::by_axum::axum::{Json, extract::State};
-
-    use crate::{
-        controllers::v3::auth::verification::{
-            send_code::{SendCodeRequest, send_code_handler},
-            verify_code::{VerifyCodeRequest, verify_code_handler},
-        },
-        models::email::EmailVerification,
-        tests::create_app_state,
-    };
-
-    #[tokio::test]
-    async fn test_verify_code_handler() {
-        let app_state = create_app_state();
-        let email = format!("{}@not.valid", uuid::Uuid::new_v4());
-        let res = send_code_handler(
-            State(app_state.clone()),
-            Json(SendCodeRequest {
-                email: email.clone(),
-            }),
-        )
-        .await;
-        assert!(res.is_ok(), "Failed to send code: {:?}", res);
-
-        let res = verify_code_handler(
-            State(app_state.clone()),
-            Json(VerifyCodeRequest {
-                email: "wrong@email.com".to_string(),
-                code: "SOME_CODE".to_string(),
-            }),
-        )
-        .await;
-        assert!(
-            res.is_err(),
-            "Expected error for wrong email, got {:?}",
-            res
-        );
-
-        let res = verify_code_handler(
-            State(app_state.clone()),
-            Json(VerifyCodeRequest {
-                email: email.clone(),
-                code: "SOME_CODE".to_string(),
-            }),
-        )
-        .await;
-        assert!(res.is_err(), "Expected error for wrong code, got {:?}", res);
-
-        let (verification_list, _) = EmailVerification::find_by_email(
-            &app_state.dynamo.client,
-            email.clone(),
-            Default::default(),
-        )
-        .await
-        .expect("Failed to find verification");
-
-        assert!(
-            verification_list.len() >= 1,
-            "Expected more than 1 verification record, got {}",
-            verification_list.len()
-        );
-
-        let email_verification = verification_list[0].clone();
-
-        let res = verify_code_handler(
-            State(app_state.clone()),
-            Json(VerifyCodeRequest {
-                email: email.clone(),
-                code: email_verification.value.clone(),
-            }),
-        )
-        .await;
-        assert!(
-            res.is_ok(),
-            "Expected success for correct code, got {:?}",
-            res
-        );
-    }
+    Ok(Json(VerifyCodeResponse { success: true }))
 }

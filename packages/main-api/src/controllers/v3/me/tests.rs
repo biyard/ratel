@@ -1,4 +1,6 @@
 use crate::controllers::v3::me::update_user::{UpdateUserRequest, update_user_handler};
+use crate::get;
+use crate::tests::v3_setup::{TestContextV3, setup_v3};
 use crate::tests::{create_nick_name, create_user_name};
 use crate::{
     tests::{create_app_state, create_test_user, get_auth},
@@ -110,4 +112,28 @@ async fn test_update_user_handler() {
     let user_detail = updated_user_response.user;
 
     assert_eq!(user_detail.theme, new_theme as u8, "Theme was not updated.");
+}
+
+#[tokio::test]
+async fn test_get_user_info() {
+    let TestContextV3 {
+        app,
+        test_user: (_, headers),
+        ..
+    } = setup_v3().await;
+
+    let (status, _, _) = get! {
+        app: app,
+        path: "/v3/me"
+    };
+    assert_eq!(status, 401);
+
+    // Test Create Team With Auth
+    let (status, _, _) = get! {
+        app: app,
+        path: "/v3/me",
+        headers: headers
+
+    };
+    assert_eq!(status, 200);
 }

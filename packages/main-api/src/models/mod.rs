@@ -10,5 +10,6 @@ pub mod oauth {
 }
 
 pub mod dynamo_tables;
+pub mod migrators;
 
 pub use dynamo_tables::*;

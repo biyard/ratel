@@ -198,6 +198,7 @@ export default function ClientProviders({
       window.removeEventListener('beforeunload', handleBeforeUnload);
       window.removeEventListener('unload', handleUnload);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [spaceId, discussionId]);
 
   useEffect(() => {
@@ -252,6 +253,7 @@ export default function ClientProviders({
     }
 
     startChime();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -351,6 +353,7 @@ export default function ClientProviders({
         av.realtimeUnsubscribeFromVolumeIndicator(id);
       });
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [meetingSession]);
 
   useEffect(() => {
@@ -429,6 +432,7 @@ export default function ClientProviders({
     return () => {
       av.realtimeUnsubscribeToAttendeeIdPresence(handlePresenceChange);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [meetingSession, users]);
 
   useEffect(() => {

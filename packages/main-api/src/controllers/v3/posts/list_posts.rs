@@ -60,12 +60,7 @@ pub async fn list_posts_handler(
         return Err(Error2::BadRequest(e.to_string()));
     }
 
-    let mut query_options = PostQueryOption::builder();
-    query_options = if let Some(limit) = params.limit {
-        query_options.limit(limit)
-    } else {
-        query_options.limit(20)
-    };
+    let mut query_options = PostQueryOption::builder().limit(params.limit.unwrap_or(20));
 
     if let Some(bookmark) = params.bookmark {
         query_options = query_options.bookmark(bookmark);
