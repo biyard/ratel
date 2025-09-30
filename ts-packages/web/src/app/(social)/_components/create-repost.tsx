@@ -144,7 +144,7 @@ export function CreateRePost() {
               />
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-foreground font-medium text-lg">
+              <span className="text-foreground font-medium text-xl">
                 {userInfo?.nickname || 'Anonymous'}
               </span>
             </div>
@@ -161,7 +161,7 @@ export function CreateRePost() {
             <button
               type="button"
               onClick={resetDraft}
-              className="p-0 m-0 bg-transparent border-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 rounded-sm"
+              className="p-0 m-0 bg-transparent border-none cursor-pointer focus:outline-none  rounded-sm"
               aria-label="Discard draft"
             >
               <DoubleArrowDown className="[&>path]:stroke-text-primary" />
