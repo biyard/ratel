@@ -10,7 +10,7 @@ export class GlobalTableStack extends Stack {
     const env = process.env.ENV;
 
     new dynamodb.Table(this, "GlobalTable", {
-      tableName: `ratel-${env}-global-table`,
+      tableName: `ratel-${env}-main`,
       partitionKey: { name: "pk", type: dynamodb.AttributeType.STRING },
       sortKey: { name: "sk", type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,

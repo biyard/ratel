@@ -17,6 +17,7 @@ pub mod prelude {
     pub use aide;
     pub use bigdecimal;
     pub use by_axum;
+    pub use by_axum::axum;
     pub use schemars;
     pub use schemars::JsonSchema;
     pub use sqlx;

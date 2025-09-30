@@ -43,7 +43,10 @@ export const config: Config = {
   version: process.env.NEXT_PUBLIC_VERSION || 'unknown',
 
   // Server-customizable configuration
-  api_url: process.env.API_URL || process.env.NEXT_PUBLIC_API_URL!,
+  api_url:
+    typeof window !== 'undefined'
+      ? process.env.NEXT_PUBLIC_API_URL!
+      : process.env.API_URL || process.env.NEXT_PUBLIC_API_URL!,
   telegram_botname:
     process.env.NEXT_PUBLIC_TELEGRAM_BOTNAME || 'cryto_ratel_dev_bot',
 };

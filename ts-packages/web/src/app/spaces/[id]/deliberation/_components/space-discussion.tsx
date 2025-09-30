@@ -242,6 +242,7 @@ function EditableDiscussion() {
   const popup = usePopup();
   const stableKeys = useMemo(
     () => discussions.map(() => uuidv4()),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [discussions.length],
   );
 

@@ -114,6 +114,7 @@ export default function RemoteGalleryView({
 
   useEffect(() => {
     scrollTo(scrollIndex);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [users.length, visibleCount, stride, containerWidthPx]);
 
   const sortedParticipants = useMemo(() => {
@@ -137,6 +138,7 @@ export default function RemoteGalleryView({
         meetingSession.audioVideo.unbindVideoElement(tileId);
       });
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [videoTiles]);
 
   return (

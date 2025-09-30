@@ -15,6 +15,7 @@ import { route } from '@/route';
 import { useTranslations } from 'next-intl';
 import GoogleIcon from '@/assets/icons/google.svg';
 import Logo from '@/assets/icons/logo.svg';
+import { useApiCall } from '@/lib/api/use-send';
 function LoginLoader({ type }: { type: LoginType }) {
   const t = useTranslations('SignIn');
 
@@ -88,6 +89,7 @@ function useLoginMutation() {
   const [isLoading, setLoading] = useState<LoginType | null>(null);
   const router = useRouter();
   const { updateUserInfo, redirectUrl, service } = useAuthStore();
+  const { post } = useApiCall();
 
   const handleOnSuccess = (signupRequired: boolean) => {
     const userQueryKey = getUserKey();
@@ -114,11 +116,13 @@ function useLoginMutation() {
     }) => {
       setLoading(LoginType.Email);
       const hashedPassword = sha3(password);
-      const url = `/api/login?email=${encodeURIComponent(email)}&password=${hashedPassword}`;
       if (!ed25519KeyPair) {
         throw new Error('Ed25519 key pair is not available');
       }
-      const res = await send(ed25519KeyPair, url, '');
+      const res = await post('/v3/auth/login', {
+        email,
+        password: hashedPassword,
+      });
       if (!res) {
         throw new Error('Login failed');
       }

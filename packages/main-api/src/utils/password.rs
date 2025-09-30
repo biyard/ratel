@@ -1,9 +1,8 @@
-use bcrypt::{DEFAULT_COST, hash, verify};
+use sha3::{Digest, Sha3_256};
 
-pub fn hash_password(password: &str) -> Result<String, bcrypt::BcryptError> {
-    hash(password, DEFAULT_COST)
-}
-
-pub fn verify_password(password: &str, hashed: &str) -> Result<bool, bcrypt::BcryptError> {
-    verify(password, hashed)
+pub fn hash_password(password: &str) -> String {
+    let mut hasher = Sha3_256::new();
+    hasher.update(password.as_bytes());
+    let result = hasher.finalize();
+    hex::encode(result)
 }

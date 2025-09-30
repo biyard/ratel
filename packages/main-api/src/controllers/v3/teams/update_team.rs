@@ -1,15 +1,17 @@
 use crate::{
     AppState, Error2,
     models::{
-        team::{Team, TeamResponse},
+        team::Team,
         user::{UserTeam, UserTeamQueryOption},
     },
     types::{EntityType, TeamGroupPermission},
     utils::{
         security::{RatelResource, check_any_permission},
-        validator::{validate_description, validate_image_url, validate_nickname},
+        validator::{validate_description, validate_image_url},
     },
 };
+
+use super::dto::*;
 use dto::by_axum::{
     auth::Authorization,
     axum::{
@@ -30,7 +32,6 @@ pub struct UpdateTeamPathParams {
 #[derive(Debug, Deserialize, Default, aide::OperationIo, JsonSchema, Validate)]
 pub struct UpdateTeamRequest {
     #[schemars(description = "Team display name to update")]
-    #[validate(custom(function = "validate_nickname"))]
     pub nickname: Option<String>,
     #[schemars(description = "Team description to update")]
     #[validate(custom(function = "validate_description"))]

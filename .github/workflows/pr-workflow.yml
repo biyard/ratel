@@ -5,6 +5,11 @@ on:
     types: [opened, synchronize, reopened]
     branches: [dev]
 
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
 env:
   CARGO_TERM_COLOR: always
 
@@ -46,6 +51,8 @@ jobs:
 
   main-api-test:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+
     steps:
       - uses: actions/checkout@v4
 
@@ -54,30 +61,80 @@ jobs:
           components: clippy, rustfmt
           toolchain: stable
 
-      - name: Start LocalStack
-        uses: LocalStack/setup-localstack@v0.2.2
-        with:
-          image-tag: "latest"
-          install-awslocal: "true"
-
-      - name: Wait for LocalStack
+      - name: Install system dependencies
         run: |
-          for i in {1..30}; do
-            nc -z localhost 4566 && break
-            sleep 1
-          done
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
 
-      - name: Create DynamoDB Table
+      - name: Setup test environment
         env:
-          LOCALSTACK_ENDPOINT: http://localhost:4566
+          COMMIT: pr-${{ github.sha }}
         run: |
-          ./scripts/pr-localstack-create-table.sh
+          mkdir -p .build
+          docker-compose --profile infra up -d
+
       - name: Run Rust tests
         env:
           DYNAMO_TABLE_PREFIX: ratel-local
           ENV: test
+          RUST_FLAG: "--features no-secret"
+          RUSTFLAGS: "-A warnings"
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/ratel
+          DYNAMO_ENDPOINT: http://localhost:4566
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+          AWS_REGION: us-east-1
+          MIGRATE: true
         run: |
-          cargo test --package main-api --lib -- controllers::v3 models::dynamo_tables --show-output
+          make .build/evm-keys
+          cd packages/main-api
+          make test
+
+  main-api-clean-build:
+    runs-on: ubuntu-22.04
+
+    defaults:
+      run:
+        working-directory: packages/main-api
+
+    outputs:
+      image: ${{ steps.build.outputs.image }}
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          ssh-key: ${{ secrets.PULL_KEY_REPO }}
+
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          components: clippy, rustfmt
+          target: wasm32-unknown-unknown
+          toolchain: stable
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - uses: cargo-bins/cargo-binstall@main
+      - name: Install toml-cli
+        run: |
+          cargo binstall toml-cli
+
+      - name: Build and cache Docker image
+        id: build
+        env:
+          AWS_REGION: ap-northeast-2
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+          ENV: dev
+          SERVICE: main-api
+          DOMAIN: api.dev.ratel.foundation
+          ECR_NAME: main-api
+          MIGRATE: true
+          DYNAMO_TABLE_PREFIX: ratel-local
+        run: |
+          # Build and tag image
+          make docker.build
 
   main-api:
     runs-on: ubuntu-22.04
@@ -122,6 +179,7 @@ jobs:
           COMMIT: pr-${{ github.sha }}
           MIGRATE: true
           DYNAMO_TABLE_PREFIX: ratel-local
+          RUST_FLAG: "--features bypass,no-secret"
         run: |
           # Build and tag image
           make docker.build
@@ -289,9 +347,9 @@ jobs:
           if [ $elapsed -ge $timeout ]; then
             echo "❌ Main API failed to respond with 200 status within ${timeout}s"
             echo "🔍 Checking Docker services status:"
-            docker-compose -f docker-compose.test.yaml ps
+            docker-compose -f docker-compose.yaml ps
             echo "🔍 Main API logs:"
-            docker-compose -f docker-compose.test.yaml logs main-api --tail=50
+            docker-compose -f docker-compose.yaml logs main-api-testing --tail=50
             exit 1
           fi
 
@@ -311,9 +369,9 @@ jobs:
           if [ $elapsed -ge $timeout ]; then
             echo "❌ Web frontend failed to respond with 200 status within ${timeout}s"
             echo "🔍 Checking Docker services status:"
-            docker-compose -f docker-compose.test.yaml ps
+            docker-compose -f docker-compose.yaml ps
             echo "🔍 Web logs:"
-            docker-compose -f docker-compose.test.yaml logs web --tail=50
+            docker-compose -f docker-compose.yaml logs web-testing --tail=50
             exit 1
           fi
 
@@ -328,7 +386,6 @@ jobs:
 
           # Run Playwright tests
           make test
-        continue-on-error: true
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
@@ -336,23 +393,5 @@ jobs:
         with:
           name: playwright-test-results
           path: |
-            test-results/
             playwright-report/
           retention-days: 30
-
-      - name: Upload screenshots
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: playwright-screenshots-${{ github.sha }}
-          path: test-results/**/
-          retention-days: 30
-
-      - name: Show test logs on failure
-        if: failure()
-        run: |
-          echo "=== Docker Compose Services ==="
-          docker-compose -f docker-compose.test.yaml ps
-          echo ""
-          echo "=== Docker Compose Logs ==="
-          docker-compose -f docker-compose.test.yaml logs --tail=50
