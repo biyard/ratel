@@ -156,17 +156,20 @@ async fn test_post_detail_response() {
         post.len()
     );
 
-    let post_detail: PostDetailResponse = post.into();
-    assert_eq!(post_detail.post.title, title);
-    assert_eq!(post_detail.post.html_contents, html_contents);
-    assert_eq!(post_detail.post.status, PostStatus::Draft);
-    assert_eq!(post_detail.post.post_type, PostType::Artwork);
-    assert_eq!(
-        post_detail.artwork_metadata.len(),
-        1,
-        "Expected 1 artwork item"
-    );
-    assert_eq!(post_detail.comments.len(), 2, "Expected 2 comment items");
+    let PostDetailResponse {
+        post,
+        artwork_metadata,
+        comments,
+        ..
+    } = post.into();
+
+    let post = post.unwrap();
+    assert_eq!(post.title, title);
+    assert_eq!(post.html_contents, html_contents);
+    assert_eq!(post.status, PostStatus::Draft);
+    assert_eq!(post.post_type, PostType::Artwork);
+    assert_eq!(artwork_metadata.len(), 1, "Expected 1 artwork item");
+    assert_eq!(comments.len(), 2, "Expected 2 comment items");
 }
 
 #[tokio::test]
