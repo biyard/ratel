@@ -313,7 +313,7 @@ async fn test_get_response_answer_handler() {
         State(app_state.clone()),
         Extension(Some(auth.clone())),
         Path(DeliberationResponseByIdPath {
-            deliberation_pk: space_pk.to_string(),
+            space_pk: space_pk.to_string(),
             response_pk: meta.surveys.user_responses[0].pk.to_string(),
         }),
     )

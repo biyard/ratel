@@ -21,7 +21,7 @@ pub struct GetResponseAnswerRequest {
     Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
 )]
 pub struct DeliberationResponseByIdPath {
-    pub deliberation_pk: String,
+    pub space_pk: String,
     pub response_pk: String,
 }
 
@@ -29,7 +29,7 @@ pub async fn get_response_answer_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     Extension(_auth): Extension<Option<Authorization>>,
     Path(DeliberationResponseByIdPath {
-        deliberation_pk,
+        space_pk,
         response_pk,
     }): Path<DeliberationResponseByIdPath>,
 ) -> Result<Json<DeliberationSpaceResponse>, Error2> {
@@ -40,7 +40,7 @@ pub async fn get_response_answer_handler(
         .to_string();
     let response = DeliberationSpaceResponse::get(
         &dynamo.client,
-        &deliberation_pk,
+        &space_pk,
         Some(EntityType::DeliberationSpaceResponse(id.to_string())),
     )
     .await?;
