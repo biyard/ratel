@@ -60,9 +60,9 @@ impl DeliberationSpaceResponse {
 
 #[derive(Debug, Clone, Default, serde::Serialize, schemars::JsonSchema)]
 pub struct SurveyResponseResponse {
-    pub pk: String,
+    pub pk: Partition,
 
-    pub user_pk: String,
+    pub user_pk: Partition,
     pub author_display_name: String,
     pub author_profile_url: String,
     pub author_username: String,
@@ -73,20 +73,14 @@ pub struct SurveyResponseResponse {
 
 impl From<DeliberationSpaceResponse> for SurveyResponseResponse {
     fn from(responses: DeliberationSpaceResponse) -> Self {
-        let user_pk = match responses.clone().user_pk {
-            Partition::User(v) => v,
-            Partition::Team(v) => v,
-            _ => "".to_string(),
-        };
-
         let pk = match responses.clone().sk {
             EntityType::DeliberationSpaceResponse(v) => v,
             _ => "".to_string(),
         };
 
         Self {
-            pk,
-            user_pk,
+            pk: Partition::SurveyResponse(pk),
+            user_pk: responses.clone().user_pk,
             author_display_name: responses.clone().author_display_name,
             author_profile_url: responses.clone().author_profile_url,
             author_username: responses.clone().author_username,

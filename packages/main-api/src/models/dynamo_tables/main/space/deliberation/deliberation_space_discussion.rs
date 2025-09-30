@@ -10,7 +10,7 @@ use bdk::prelude::*;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Default, JsonSchema)]
 pub struct DiscussionCreateRequest {
-    pub id: Option<String>,
+    pub discussion_pk: Option<String>,
     pub started_at: i64,
     pub ended_at: i64,
 
@@ -88,7 +88,7 @@ impl DeliberationSpaceDiscussion {
 
 #[derive(Debug, Clone, Default, serde::Serialize, schemars::JsonSchema)]
 pub struct DeliberationDiscussionResponse {
-    pub pk: String,
+    pub pk: Partition,
 
     pub started_at: i64,
     pub ended_at: i64,
@@ -101,7 +101,7 @@ pub struct DeliberationDiscussionResponse {
     pub media_pipeline_arn: Option<String>,
     pub record: Option<String>,
 
-    pub user_pk: String,
+    pub user_pk: Partition,
     pub author_display_name: String,
     pub author_profile_url: String,
     pub author_username: String,
@@ -112,18 +112,11 @@ pub struct DeliberationDiscussionResponse {
 
 impl From<DeliberationSpaceDiscussion> for DeliberationDiscussionResponse {
     fn from(discussion: DeliberationSpaceDiscussion) -> Self {
-        let pk = match discussion.sk {
-            EntityType::DeliberationSpaceDiscussion(v) => v,
-            _ => "".to_string(),
-        };
-
-        let user_pk = match discussion.user_pk {
-            Partition::User(v) => v,
-            Partition::Team(v) => v,
-            _ => "".to_string(),
-        };
         Self {
-            pk,
+            pk: match discussion.sk {
+                EntityType::DeliberationSpaceDiscussion(v) => Partition::Discussion(v.to_string()),
+                _ => Partition::Discussion("".to_string()),
+            },
             started_at: discussion.started_at,
             ended_at: discussion.ended_at,
             name: discussion.name,
@@ -132,7 +125,7 @@ impl From<DeliberationSpaceDiscussion> for DeliberationDiscussionResponse {
             pipeline_id: discussion.pipeline_id,
             media_pipeline_arn: discussion.media_pipeline_arn,
             record: discussion.record,
-            user_pk,
+            user_pk: discussion.user_pk,
             author_display_name: discussion.author_display_name,
             author_profile_url: discussion.author_profile_url,
             author_username: discussion.author_username,

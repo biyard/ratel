@@ -48,7 +48,7 @@ async fn test_create_response_answer_handler() {
         State(app_state.clone()),
         Extension(Some(auth.clone())),
         Path(DeliberationPath {
-            id: space_pk.clone(),
+            space_pk: space_pk.to_string(),
         }),
         Json(UpdateDeliberationRequest {
             title: Some("deliberation title".to_string()),
@@ -60,7 +60,7 @@ async fn test_create_response_answer_handler() {
                 url: None,
             }],
             discussions: vec![DiscussionCreateRequest {
-                id: None,
+                discussion_pk: None,
                 started_at: now,
                 ended_at: now,
                 name: "discussion title".to_string(),
@@ -74,7 +74,7 @@ async fn test_create_response_answer_handler() {
                 url: None,
             }],
             surveys: vec![SurveyCreateRequest {
-                id: None,
+                survey_pk: None,
                 started_at: now,
                 ended_at: now + 10_000,
                 status: SurveyStatus::Ready,
@@ -136,10 +136,10 @@ async fn test_create_response_answer_handler() {
         State(app_state.clone()),
         Extension(Some(auth.clone())),
         Path(DeliberationResponsePath {
-            deliberation_id: space_pk.clone(),
+            space_pk: space_pk.to_string(),
         }),
         Json(CreateResponseAnswerRequest {
-            survey_id: survey_pk.clone(),
+            survey_pk: survey_pk.to_string(),
             survey_type: crate::types::SurveyType::Survey,
             answers: vec![
                 SurveyAnswer::SingleChoice { answer: Some(1) },
@@ -159,6 +159,8 @@ async fn test_create_response_answer_handler() {
 
     let resp = create_response_answer.as_ref().expect("request failed"); // &Json<...>
     let meta = &resp.0.metadata;
+
+    eprintln!("meta: {:?}", meta);
 
     assert_eq!(
         meta.surveys.user_responses.len(),
@@ -194,7 +196,7 @@ async fn test_get_response_answer_handler() {
         State(app_state.clone()),
         Extension(Some(auth.clone())),
         Path(DeliberationPath {
-            id: space_pk.clone(),
+            space_pk: space_pk.to_string(),
         }),
         Json(UpdateDeliberationRequest {
             title: Some("deliberation title".to_string()),
@@ -206,7 +208,7 @@ async fn test_get_response_answer_handler() {
                 url: None,
             }],
             discussions: vec![DiscussionCreateRequest {
-                id: None,
+                discussion_pk: None,
                 started_at: now,
                 ended_at: now,
                 name: "discussion title".to_string(),
@@ -220,7 +222,7 @@ async fn test_get_response_answer_handler() {
                 url: None,
             }],
             surveys: vec![SurveyCreateRequest {
-                id: None,
+                survey_pk: None,
                 started_at: now,
                 ended_at: now + 10_000,
                 status: SurveyStatus::Ready,
@@ -272,10 +274,10 @@ async fn test_get_response_answer_handler() {
         State(app_state.clone()),
         Extension(Some(auth.clone())),
         Path(DeliberationResponsePath {
-            deliberation_id: space_pk.clone(),
+            space_pk: space_pk.to_string(),
         }),
         Json(CreateResponseAnswerRequest {
-            survey_id: survey_pk.clone(),
+            survey_pk: survey_pk.to_string(),
             survey_type: crate::types::SurveyType::Survey,
             answers: vec![
                 SurveyAnswer::SingleChoice { answer: Some(1) },
@@ -311,8 +313,8 @@ async fn test_get_response_answer_handler() {
         State(app_state.clone()),
         Extension(Some(auth.clone())),
         Path(DeliberationResponseByIdPath {
-            deliberation_id: space_pk.clone(),
-            id: meta.surveys.user_responses[0].pk.clone(),
+            deliberation_pk: space_pk.to_string(),
+            response_pk: meta.surveys.user_responses[0].pk.to_string(),
         }),
     )
     .await;

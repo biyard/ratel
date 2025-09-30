@@ -39,20 +39,21 @@ pub struct CreateDiscussionRequest {
     Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
 )]
 pub struct DeliberationDiscussionPath {
-    pub deliberation_id: String,
+    pub space_pk: String,
 }
 
 #[derive(Debug, Clone, Serialize, Default, aide::OperationIo, JsonSchema)]
 pub struct CreateDiscussionResponse {
-    pub deliberation_id: String,
+    pub space_pk: String,
 }
 
 pub async fn create_discussion_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     Extension(auth): Extension<Option<Authorization>>,
-    Path(DeliberationDiscussionPath { deliberation_id }): Path<DeliberationDiscussionPath>,
+    Path(DeliberationDiscussionPath { space_pk }): Path<DeliberationDiscussionPath>,
     Json(req): Json<CreateDiscussionRequest>,
 ) -> Result<Json<DeliberationDiscussionResponse>, Error2> {
+    let deliberation_id = space_pk.split("#").last().unwrap_or_default().to_string();
     let user = extract_user(&dynamo.client, auth).await?;
 
     let disc = DeliberationSpaceDiscussion::new(
@@ -95,7 +96,7 @@ pub async fn create_discussion_handler(
 
     let disc = DeliberationSpaceDiscussion::get(
         &dynamo.client,
-        &Partition::DeliberationSpace(deliberation_id.to_string()),
+        &space_pk,
         Some(EntityType::DeliberationSpaceDiscussion(disc_id.to_string())),
     )
     .await?;

@@ -9,7 +9,7 @@ use std::{collections::HashMap, mem};
 
 #[derive(Debug, Clone, Default, serde::Serialize, schemars::JsonSchema)]
 pub struct DeliberationResponse {
-    pub pk: String,
+    pub pk: Partition,
     pub created_at: i64,
     pub updated_at: i64,
     pub likes: i64,
@@ -18,8 +18,8 @@ pub struct DeliberationResponse {
     pub shares: i64,
     pub visibility: SpaceVisibility,
     pub title: String,
-    pub post_pk: String,
-    pub user_pk: String,
+    pub post_pk: Partition,
+    pub user_pk: Partition,
     pub author_display_name: String,
     pub author_profile_url: String,
     pub author_username: String,
@@ -27,17 +27,8 @@ pub struct DeliberationResponse {
 
 impl From<DeliberationSpace> for DeliberationResponse {
     fn from(deliberation: DeliberationSpace) -> Self {
-        let pk = match deliberation.pk {
-            Partition::DeliberationSpace(v) => v,
-            _ => "".to_string(),
-        };
-        let user_pk = match deliberation.user_pk {
-            Partition::User(v) => v,
-            Partition::Team(v) => v,
-            _ => "".to_string(),
-        };
         Self {
-            pk,
+            pk: deliberation.pk,
             created_at: deliberation.created_at,
             updated_at: deliberation.updated_at,
             likes: 0,
@@ -46,8 +37,8 @@ impl From<DeliberationSpace> for DeliberationResponse {
             shares: 0,
             visibility: SpaceVisibility::Public,
             title: "".to_string(),
-            post_pk: "".to_string(),
-            user_pk,
+            post_pk: Partition::Feed("".to_string()),
+            user_pk: deliberation.user_pk,
             author_display_name: deliberation.author_display_name,
             author_profile_url: deliberation.author_profile_url,
             author_username: deliberation.author_username,
@@ -88,15 +79,10 @@ fn discussion_id_of(pk: &Partition) -> String {
         String::new()
     }
 }
-fn user_pk_of(pk: Partition) -> String {
-    match pk {
-        Partition::User(v) | Partition::Team(v) => v,
-        _ => String::new(),
-    }
-}
+
 fn participant_resp_from_dsp(p: &DeliberationSpaceParticipant) -> DiscussionParticipantResponse {
     DiscussionParticipantResponse {
-        user_pk: user_pk_of(p.user_pk.clone()),
+        user_pk: p.user_pk.clone(),
         author_display_name: p.author_display_name.clone(),
         author_profile_url: p.author_profile_url.clone(),
         author_username: p.author_username.clone(),
@@ -105,7 +91,7 @@ fn participant_resp_from_dsp(p: &DeliberationSpaceParticipant) -> DiscussionPart
 }
 fn member_resp_from_dsp(p: &DeliberationSpaceParticipant) -> DiscussionMemberResponse {
     DiscussionMemberResponse {
-        user_pk: user_pk_of(p.user_pk.clone()),
+        user_pk: p.user_pk.clone(),
         author_display_name: p.author_display_name.clone(),
         author_profile_url: p.author_profile_url.clone(),
         author_username: p.author_username.clone(),
@@ -113,7 +99,7 @@ fn member_resp_from_dsp(p: &DeliberationSpaceParticipant) -> DiscussionMemberRes
 }
 fn participant_resp_from_dsm(m: &DeliberationSpaceMember) -> DiscussionParticipantResponse {
     DiscussionParticipantResponse {
-        user_pk: user_pk_of(m.user_pk.clone()),
+        user_pk: m.user_pk.clone(),
         author_display_name: m.author_display_name.clone(),
         author_profile_url: m.author_profile_url.clone(),
         author_username: m.author_username.clone(),
@@ -122,7 +108,7 @@ fn participant_resp_from_dsm(m: &DeliberationSpaceMember) -> DiscussionParticipa
 }
 fn member_resp_from_dsm(m: &DeliberationSpaceMember) -> DiscussionMemberResponse {
     DiscussionMemberResponse {
-        user_pk: user_pk_of(m.user_pk.clone()),
+        user_pk: m.user_pk.clone(),
         author_display_name: m.author_display_name.clone(),
         author_profile_url: m.author_profile_url.clone(),
         author_username: m.author_username.clone(),
@@ -213,19 +199,21 @@ impl From<Vec<DeliberationMetadata>> for DeliberationDetailResponse {
                 }
                 DeliberationMetadata::SpaceCommon(space_common) => {
                     res.deliberation.visibility = space_common.visibility;
-                    res.deliberation.post_pk = match space_common.post_pk {
-                        Partition::Feed(v) => v,
-                        _ => "".to_string(),
-                    };
+                    res.deliberation.post_pk = space_common.post_pk;
                 }
             }
         }
 
         for disc in &mut res.discussions {
-            if let Some(parts) = participants_by_discussion.remove(&disc.pk) {
+            let disc_pk = match &disc.pk {
+                Partition::Discussion(v) => v.clone(),
+                _ => String::new(),
+            };
+
+            if let Some(parts) = participants_by_discussion.remove(&disc_pk) {
                 disc.participants = parts;
             }
-            if let Some(mems) = members_by_discussion.remove(&disc.pk) {
+            if let Some(mems) = members_by_discussion.remove(&disc_pk) {
                 disc.members = mems;
             }
         }

@@ -6,7 +6,6 @@ use crate::{
         DeliberationSpaceParticipant, DeliberationSpaceQuestion, DeliberationSpaceResponse,
         DeliberationSpaceSurvey, SpaceCommon,
     },
-    types::Partition,
 };
 use dto::by_axum::{
     auth::Authorization,
@@ -20,23 +19,21 @@ use serde::Serialize;
 
 #[derive(Debug, Clone, Serialize, Default, aide::OperationIo, JsonSchema)]
 pub struct DeleteDeliberationResponse {
-    pub space_id: String,
+    pub space_pk: String,
 }
 
 #[derive(
     Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
 )]
 pub struct DeliberationDeletePath {
-    pub id: String,
+    pub space_pk: String,
 }
 
 pub async fn delete_deliberation_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     Extension(_auth): Extension<Option<Authorization>>,
-    Path(DeliberationDeletePath { id }): Path<DeliberationDeletePath>,
+    Path(DeliberationDeletePath { space_pk }): Path<DeliberationDeletePath>,
 ) -> Result<Json<DeleteDeliberationResponse>, Error2> {
-    let space_pk = Partition::DeliberationSpace(id.clone());
-
     let metadata = DeliberationMetadata::query(&dynamo.client, space_pk.clone()).await?;
 
     for data in metadata.into_iter() {
@@ -74,5 +71,5 @@ pub async fn delete_deliberation_handler(
         }
     }
 
-    Ok(Json(DeleteDeliberationResponse { space_id: id }))
+    Ok(Json(DeleteDeliberationResponse { space_pk }))
 }

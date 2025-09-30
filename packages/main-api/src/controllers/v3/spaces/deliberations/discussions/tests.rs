@@ -1,3 +1,4 @@
+#![allow(unused)]
 use crate::{
     controllers::v3::spaces::deliberations::{
         create_deliberation::{CreateDeliberationRequest, create_deliberation_handler},
@@ -53,7 +54,7 @@ async fn test_create_discussion_handler() {
         State(app_state.clone()),
         Extension(Some(auth.clone())),
         Path(DeliberationDiscussionPath {
-            deliberation_id: space_pk.to_string(),
+            space_pk: space_pk.to_string(),
         }),
         Json(CreateDiscussionRequest {
             name: "Test discussion title".to_string(),
@@ -64,6 +65,8 @@ async fn test_create_discussion_handler() {
         }),
     )
     .await;
+
+    eprintln!("create discussion: {:?}", create_discussion);
 
     assert!(
         create_discussion.is_ok(),
@@ -105,7 +108,7 @@ async fn test_start_meeting_handler() {
         State(app_state.clone()),
         Extension(Some(auth.clone())),
         Path(DeliberationDiscussionPath {
-            deliberation_id: space_pk.to_string(),
+            space_pk: space_pk.to_string(),
         }),
         Json(CreateDiscussionRequest {
             name: "Test discussion title".to_string(),
@@ -130,8 +133,8 @@ async fn test_start_meeting_handler() {
         State(app_state.clone()),
         Extension(Some(auth.clone())),
         Path(DeliberationDiscussionByIdPath {
-            deliberation_id: space_pk.to_string(),
-            id: pk.to_string(),
+            space_pk: space_pk.to_string(),
+            discussion_pk: pk.to_string(),
         }),
     )
     .await;
@@ -183,7 +186,7 @@ async fn test_create_participants_handler() {
         State(app_state.clone()),
         Extension(Some(auth.clone())),
         Path(DeliberationDiscussionPath {
-            deliberation_id: space_pk.to_string(),
+            space_pk: space_pk.to_string(),
         }),
         Json(CreateDiscussionRequest {
             name: "Test discussion title".to_string(),
@@ -208,8 +211,8 @@ async fn test_create_participants_handler() {
         State(app_state.clone()),
         Extension(Some(auth.clone())),
         Path(DeliberationDiscussionByIdPath {
-            deliberation_id: space_pk.to_string(),
-            id: pk.to_string(),
+            space_pk: space_pk.to_string(),
+            discussion_pk: pk.to_string(),
         }),
     )
     .await;
@@ -224,8 +227,8 @@ async fn test_create_participants_handler() {
         State(app_state.clone()),
         Extension(Some(auth.clone())),
         Path(DeliberationDiscussionByIdPath {
-            deliberation_id: space_pk.to_string(),
-            id: pk.to_string(),
+            space_pk: space_pk.to_string(),
+            discussion_pk: pk.to_string(),
         }),
     )
     .await;
@@ -279,7 +282,7 @@ async fn test_exit_meeting_handler() {
         State(app_state.clone()),
         Extension(Some(auth.clone())),
         Path(DeliberationDiscussionPath {
-            deliberation_id: space_pk.to_string(),
+            space_pk: space_pk.to_string(),
         }),
         Json(CreateDiscussionRequest {
             name: "Test discussion title".to_string(),
@@ -304,8 +307,8 @@ async fn test_exit_meeting_handler() {
         State(app_state.clone()),
         Extension(Some(auth.clone())),
         Path(DeliberationDiscussionByIdPath {
-            deliberation_id: space_pk.to_string(),
-            id: pk.to_string(),
+            space_pk: space_pk.to_string(),
+            discussion_pk: pk.to_string(),
         }),
     )
     .await;
@@ -320,8 +323,8 @@ async fn test_exit_meeting_handler() {
         State(app_state.clone()),
         Extension(Some(auth.clone())),
         Path(DeliberationDiscussionByIdPath {
-            deliberation_id: space_pk.clone(),
-            id: pk.clone(),
+            space_pk: space_pk.to_string(),
+            discussion_pk: pk.to_string(),
         }),
     )
     .await;
@@ -330,13 +333,15 @@ async fn test_exit_meeting_handler() {
         "participant_meeting failed: {:?}",
         joined.err()
     );
-    let me_after_join = joined.unwrap().0;
+    let me_after_join: crate::models::space::DeliberationDiscussionResponse = joined.unwrap().0;
 
-    let me_user_pk = me_after_join
+    let me_user_pk: Partition = me_after_join
         .participants
         .iter()
-        .find(|p| !p.user_pk.is_empty())
-        .map(|p| p.user_pk.clone())
+        .find_map(|p| match &p.user_pk {
+            Partition::User(v) | Partition::Team(v) if !v.is_empty() => Some(p.user_pk.clone()),
+            _ => None,
+        })
         .unwrap_or_default();
 
     assert!(
@@ -351,14 +356,16 @@ async fn test_exit_meeting_handler() {
         State(app_state.clone()),
         Extension(Some(auth.clone())),
         Path(DeliberationDiscussionByIdPath {
-            deliberation_id: space_pk.clone(),
-            id: pk.clone(),
+            space_pk: space_pk.to_string(),
+            discussion_pk: pk.to_string(),
         }),
     )
     .await;
     assert!(exited.is_ok(), "exit_meeting failed: {:?}", exited.err());
 
     let exited = exited.unwrap().0;
+
+    eprintln!("exited meeting: {:?}", exited);
 
     assert!(
         exited.participants.len() == 0,
@@ -374,8 +381,8 @@ async fn test_start_recording_handler() {
         State(app_state.clone()),
         Extension(Some(auth.clone())),
         Path(DeliberationDiscussionByIdPath {
-            deliberation_id: deliberation_id.clone(),
-            id: discussion_id.clone(),
+            space_pk: deliberation_id.clone(),
+            discussion_pk: discussion_id.clone(),
         }),
     )
     .await
@@ -385,8 +392,8 @@ async fn test_start_recording_handler() {
         State(app_state.clone()),
         Extension(Some(auth.clone())),
         Path(DeliberationDiscussionByIdPath {
-            deliberation_id: deliberation_id.clone(),
-            id: discussion_id.clone(),
+            space_pk: deliberation_id.clone(),
+            discussion_pk: discussion_id.clone(),
         }),
     )
     .await;
@@ -412,8 +419,8 @@ async fn test_end_recording_handler() {
         State(app_state.clone()),
         Extension(Some(auth.clone())),
         Path(DeliberationDiscussionByIdPath {
-            deliberation_id: deliberation_id.clone(),
-            id: discussion_id.clone(),
+            space_pk: deliberation_id.clone(),
+            discussion_pk: discussion_id.clone(),
         }),
     )
     .await
@@ -423,8 +430,8 @@ async fn test_end_recording_handler() {
         State(app_state.clone()),
         Extension(Some(auth.clone())),
         Path(DeliberationDiscussionByIdPath {
-            deliberation_id: deliberation_id.clone(),
-            id: discussion_id.clone(),
+            space_pk: deliberation_id.clone(),
+            discussion_pk: discussion_id.clone(),
         }),
     )
     .await;
@@ -478,11 +485,13 @@ async fn setup_disc_with_meeting() -> (
         upk(create_test_user(&cli).await.pk),
     ];
 
+    eprintln!("members: {:?}", members);
+
     let created_disc = create_discussion_handler(
         State(app_state.clone()),
         Extension(Some(auth.clone())),
         Path(DeliberationDiscussionPath {
-            deliberation_id: space_pk.to_string(),
+            space_pk: space_pk.to_string(),
         }),
         Json(CreateDiscussionRequest {
             name: "recording test".into(),
@@ -501,8 +510,8 @@ async fn setup_disc_with_meeting() -> (
         State(app_state.clone()),
         Extension(Some(auth.clone())),
         Path(DeliberationDiscussionByIdPath {
-            deliberation_id: space_pk.to_string(),
-            id: disc_id.to_string(),
+            space_pk: space_pk.to_string(),
+            discussion_pk: disc_id.to_string(),
         }),
     )
     .await;

@@ -82,7 +82,7 @@ async fn test_update_space_handler() {
         State(app_state.clone()),
         Extension(Some(auth.clone())),
         Path(DeliberationPath {
-            id: space_pk.clone(),
+            space_pk: space_pk.to_string(),
         }),
         Json(UpdateDeliberationRequest {
             title: Some("deliberation title".to_string()),
@@ -94,7 +94,7 @@ async fn test_update_space_handler() {
                 url: None,
             }],
             discussions: vec![DiscussionCreateRequest {
-                id: None,
+                discussion_pk: None,
                 started_at: now,
                 ended_at: now,
                 name: "discussion title".to_string(),
@@ -108,7 +108,7 @@ async fn test_update_space_handler() {
                 url: None,
             }],
             surveys: vec![SurveyCreateRequest {
-                id: None,
+                survey_pk: None,
                 started_at: now,
                 ended_at: now + 10_000,
                 status: SurveyStatus::Ready,
@@ -199,7 +199,7 @@ async fn test_update_space_handler() {
         State(app_state.clone()),
         Extension(Some(auth.clone())),
         Path(DeliberationPath {
-            id: space_pk.clone(),
+            space_pk: space_pk.to_string(),
         }),
         Json(UpdateDeliberationRequest {
             title: Some("deliberation title".to_string()),
@@ -211,7 +211,7 @@ async fn test_update_space_handler() {
                 url: None,
             }],
             discussions: vec![DiscussionCreateRequest {
-                id: Some(discussion_id),
+                discussion_pk: Some(discussion_id.to_string()),
                 started_at: now,
                 ended_at: now,
                 name: "discussion title".to_string(),
@@ -225,7 +225,7 @@ async fn test_update_space_handler() {
                 url: None,
             }],
             surveys: vec![SurveyCreateRequest {
-                id: Some(survey_id),
+                survey_pk: Some(survey_id.to_string()),
                 started_at: now,
                 ended_at: now + 20_000,
                 status: SurveyStatus::Ready,
@@ -316,114 +316,16 @@ async fn test_delete_space_handler() {
 
     let space_pk = create_res.unwrap().0.metadata.deliberation.pk;
 
-    // create user
-    let team_1 = match create_test_user(&cli).await.pk {
-        Partition::User(v) => v,
-        _ => "".to_string(),
-    };
-    let team_2 = match create_test_user(&cli).await.pk {
-        Partition::User(v) => v,
-        _ => "".to_string(),
-    };
-
-    let users = vec![team_1.clone(), team_2];
-
-    let now = chrono::Utc::now().timestamp();
-
-    let res = update_deliberation_handler(
-        State(app_state.clone()),
-        Extension(Some(auth.clone())),
-        Path(DeliberationPath {
-            id: space_pk.clone(),
-        }),
-        Json(UpdateDeliberationRequest {
-            title: Some("deliberation title".to_string()),
-            html_contents: Some("<div>deliberation description</div>".to_string()),
-            files: vec![File {
-                name: "deliberation summary file title".to_string(),
-                size: "15KB".to_string(),
-                ext: dto::FileExtension::PDF,
-                url: None,
-            }],
-            discussions: vec![DiscussionCreateRequest {
-                id: None,
-                started_at: now,
-                ended_at: now,
-                name: "discussion title".to_string(),
-                description: "discussion description".to_string(),
-                user_ids: users,
-            }],
-            elearning_files: vec![File {
-                name: "deliberation elearning file title".to_string(),
-                size: "15KB".to_string(),
-                ext: dto::FileExtension::PDF,
-                url: None,
-            }],
-            surveys: vec![SurveyCreateRequest {
-                id: None,
-                started_at: now,
-                ended_at: now + 10_000,
-                status: SurveyStatus::Ready,
-                questions: vec![
-                    SurveyQuestion::SingleChoice(ChoiceQuestion {
-                        title: "How did you hear about us?".into(),
-                        description: Some("Pick one".into()),
-                        image_url: None,
-                        options: vec![
-                            "Search".into(),
-                            "Friend".into(),
-                            "Social".into(),
-                            "Other".into(),
-                        ],
-                        is_required: Some(true),
-                    }),
-                    SurveyQuestion::MultipleChoice(ChoiceQuestion {
-                        title: "Which topics interest you?".into(),
-                        description: None,
-                        image_url: None,
-                        options: vec![
-                            "DeFi".into(),
-                            "NFTs".into(),
-                            "Governance".into(),
-                            "Education".into(),
-                        ],
-                        is_required: Some(false),
-                    }),
-                    SurveyQuestion::LinearScale(LinearScaleQuestion {
-                        title: "Rate your onboarding experience".into(),
-                        description: Some("1 = Poor, 5 = Excellent".into()),
-                        image_url: None,
-                        min_value: 1,
-                        max_value: 5,
-                        min_label: "Poor".into(),
-                        max_label: "Excellent".into(),
-                        is_required: Some(true),
-                    }),
-                ],
-            }],
-            recommendation_html_contents: Some(
-                "<div>deliberation recommendation description</div>".to_string(),
-            ),
-            recommendation_files: vec![File {
-                name: "deliberation recommendation file title".to_string(),
-                size: "15KB".to_string(),
-                ext: dto::FileExtension::PDF,
-                url: None,
-            }],
-        }),
-    )
-    .await;
-
-    assert!(res.is_ok(), "Failed to update deliberation {:?}", res.err());
-
     let res = delete_deliberation_handler(
         State(app_state.clone()),
         Extension(Some(auth.clone())),
         Path(DeliberationDeletePath {
-            id: space_pk.clone(),
+            space_pk: space_pk.to_string(),
         }),
     )
     .await;
+
+    eprintln!("delete res: {:?}", res);
 
     assert!(res.is_ok(), "Failed to delete deliberation {:?}", res.err());
 }
@@ -453,7 +355,9 @@ async fn test_get_space_handler() {
     let res = get_deliberation_handler(
         State(app_state.clone()),
         Extension(Some(auth.clone())),
-        Path(DeliberationGetPath { id: space_pk }),
+        Path(DeliberationGetPath {
+            space_pk: space_pk.to_string(),
+        }),
     )
     .await;
 

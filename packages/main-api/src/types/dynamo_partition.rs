@@ -33,6 +33,7 @@ pub enum Partition {
     Discussion(String),
     DiscussionUser(String),
     Survey(String),
+    SurveyResponse(String),
 
     Team(String),
 }
