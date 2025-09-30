@@ -2,18 +2,16 @@ use crate::{
     AppState, Error2,
     models::space::{DeliberationDetailResponse, DeliberationMetadata, DeliberationSpaceResponse},
     types::{Partition, SurveyAnswer, SurveyType},
-    utils::dynamo_extractor::extract_user,
+    utils::dynamo_extractor::extract_user_from_session,
 };
-use dto::by_axum::{
-    auth::Authorization,
-    axum::{
-        Extension,
-        extract::{Json, Path, State},
-    },
+use dto::by_axum::axum::{
+    Extension,
+    extract::{Json, Path, State},
 };
 
 use dto::{JsonSchema, aide, schemars};
 use serde::{Deserialize, Serialize};
+use tower_sessions::Session;
 use validator::Validate;
 
 #[derive(Debug, Clone, Deserialize, Default, aide::OperationIo, JsonSchema, Validate)]
@@ -26,7 +24,7 @@ pub struct CreateResponseAnswerRequest {
     pub answers: Vec<SurveyAnswer>,
 }
 
-#[derive(Debug, Clone, Serialize, Default, aide::OperationIo, JsonSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, aide::OperationIo, JsonSchema)]
 pub struct CreateDeliberationResponse {
     pub metadata: DeliberationDetailResponse,
 }
@@ -40,11 +38,12 @@ pub struct DeliberationResponsePath {
 
 pub async fn create_response_answer_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    Extension(auth): Extension<Option<Authorization>>,
+    Extension(session): Extension<Session>,
     Path(DeliberationResponsePath { space_pk }): Path<DeliberationResponsePath>,
     Json(req): Json<CreateResponseAnswerRequest>,
 ) -> Result<Json<CreateDeliberationResponse>, Error2> {
-    let user = extract_user(&dynamo.client, auth).await?;
+    let space_pk = space_pk.replace("%23", "#");
+    let user = extract_user_from_session(&dynamo.client, &session).await?;
     let pk_id = space_pk.split("#").last().unwrap_or_default().to_string();
     let survey_pk_id = req
         .survey_pk

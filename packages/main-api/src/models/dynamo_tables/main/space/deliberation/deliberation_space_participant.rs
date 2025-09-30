@@ -99,7 +99,7 @@ impl DeliberationSpaceParticipant {
     }
 }
 
-#[derive(Debug, Clone, Default, serde::Serialize, schemars::JsonSchema)]
+#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct DiscussionParticipantResponse {
     pub user_pk: Partition,
     pub author_display_name: String,

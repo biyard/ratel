@@ -3,11 +3,17 @@ use aws_config::BehaviorVersion;
 use aws_credential_types::Credentials;
 use base64::{Engine as _, engine::general_purpose};
 use bdk::prelude::*;
-use dto::by_axum::auth::{Authorization, DynamoUserSession};
+use dto::{
+    axum::AxumRouter,
+    by_axum::auth::{Authorization, DynamoUserSession},
+};
+use reqwest::header::HeaderValue;
 
 use crate::{
     AppState,
-    models::user::User,
+    models::{email::EmailVerification, user::User},
+    post,
+    types::{EntityType, Partition},
     utils::aws::{DynamoClient, SesClient},
 };
 
@@ -36,6 +42,68 @@ pub fn create_app_state() -> AppState {
         ses: SesClient::mock(aws_config),
         pool: sqlx::Pool::connect_lazy("postgres://postgres:password@localhost/postgres").unwrap(),
     }
+}
+
+pub async fn ensure_logged_in_and_get_cookie(
+    app: AxumRouter,
+    ddb: aws_sdk_dynamodb::Client,
+    now: u64,
+) -> (HeaderValue, String, String) {
+    let email = format!("testuser{}@example.com", now);
+    let username = format!("testuser{:x}", now);
+
+    let (status, _headers, body) = post! {
+        app: app,
+        path: "/v3/auth/verification/send-verification-code",
+        body: { "email": email.clone() },
+        response_type: crate::controllers::v3::auth::verification::send_code::SendCodeResponse,
+    };
+    assert_eq!(status, 200, "send-verification-code failed");
+    assert!(body.expired_at > now as i64, "expired_at must be in future");
+
+    let EmailVerification { value: code, .. } = EmailVerification::get(
+        &ddb,
+        Partition::Email(email.clone()),
+        Some(EntityType::EmailVerification),
+    )
+    .await
+    .expect("EmailVerification::get failed")
+    .expect("verification row not found");
+
+    let (status, _headers, _user) = post! {
+        app: app,
+        path: "/v3/auth/signup",
+        body: {
+            "email": email.clone(),
+            "password": "0x1111",
+            "code": code,
+            "display_name": "testuser",
+            "username": username.clone(),
+            "profile_url": "https://example.com/profile.png",
+            "description": "This is a test user.",
+            "term_agreed": true,
+            "informed_agreed": true,
+        },
+        response_type: crate::models::user::User,
+    };
+    assert_eq!(status, 200, "signup failed");
+
+    let (status, headers, _user) = post! {
+        app: app,
+        path: "/v3/auth/login",
+        body: {
+            "email": email.clone(),
+            "password": "0x1111",
+        },
+        response_type: crate::models::user::User,
+    };
+    assert_eq!(status, 200, "login failed");
+    let cookie = headers
+        .get("set-cookie")
+        .cloned()
+        .expect("missing set-cookie header after login");
+
+    (cookie, email, username)
 }
 
 pub async fn create_test_user(cli: &aws_sdk_dynamodb::Client) -> User {

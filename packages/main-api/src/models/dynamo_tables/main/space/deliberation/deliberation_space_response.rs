@@ -58,7 +58,7 @@ impl DeliberationSpaceResponse {
     }
 }
 
-#[derive(Debug, Clone, Default, serde::Serialize, schemars::JsonSchema)]
+#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct SurveyResponseResponse {
     pub pk: Partition,
 

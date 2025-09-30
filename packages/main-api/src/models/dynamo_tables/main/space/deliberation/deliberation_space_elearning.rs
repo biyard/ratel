@@ -18,7 +18,7 @@ impl DeliberationSpaceElearning {
     }
 }
 
-#[derive(Debug, Clone, Default, serde::Serialize, schemars::JsonSchema)]
+#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct ElearningResponse {
     pub files: Vec<File>,
 }
